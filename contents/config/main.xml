@@ -35,6 +35,18 @@
       <label>Show quota warning markers on usage bars.</label>
       <default>true</default>
     </entry>
+    <entry name="enableNotifications" type="Bool">
+      <label>Enable Plasma notifications.</label>
+      <default>true</default>
+    </entry>
+    <entry name="notifyStatusIncidents" type="Bool">
+      <label>Notify when provider status incidents appear or change.</label>
+      <default>true</default>
+    </entry>
+    <entry name="notifyQuotaWarnings" type="Bool">
+      <label>Notify when usage crosses quota warning thresholds.</label>
+      <default>true</default>
+    </entry>
     <entry name="menuBarDisplayMode" type="String">
       <label>Menu bar text display mode.</label>
       <default>percent</default>

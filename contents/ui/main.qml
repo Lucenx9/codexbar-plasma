@@ -27,6 +27,9 @@ PlasmoidItem {
     property bool includeStatus: Plasmoid.configuration.includeStatus
     property bool usageBarsShowUsed: Plasmoid.configuration.usageBarsShowUsed === true
     property bool showQuotaWarningMarkers: Plasmoid.configuration.showQuotaWarningMarkers !== false
+    property bool enableNotifications: Plasmoid.configuration.enableNotifications !== false
+    property bool notifyStatusIncidents: Plasmoid.configuration.notifyStatusIncidents !== false
+    property bool notifyQuotaWarnings: Plasmoid.configuration.notifyQuotaWarnings !== false
     property string menuBarDisplayMode: Plasmoid.configuration.menuBarDisplayMode || "percent"
     property bool resetTimesShowAbsolute: Plasmoid.configuration.resetTimesShowAbsolute === true
     property bool showProviderChangelogs: Plasmoid.configuration.showProviderChangelogs === true
@@ -60,6 +63,8 @@ PlasmoidItem {
     property var accountErrors: ({})
     property var accountLoading: ({})
     property var pendingAccountCommands: ({})
+    property var notificationMemo: ({})
+    property bool notificationsPrimed: false
     readonly property bool overviewAvailable: provider.length === 0 && providers.length > 1
     readonly property bool overviewSelected: overviewAvailable && selectedProviderIndex < 0
     readonly property var selectedProviderData: providers.length > 0 && selectedProviderIndex >= 0
@@ -69,15 +74,20 @@ PlasmoidItem {
     onCommandSourceChanged: Qt.callLater(refreshNow)
     onProviderConfigRevisionChanged: Qt.callLater(refreshNow)
     onResetTimesShowAbsoluteChanged: Qt.callLater(refreshNow)
+    onEnableNotificationsChanged: resetNotificationMemo()
+    onNotifyStatusIncidentsChanged: resetNotificationMemo()
+    onNotifyQuotaWarningsChanged: resetNotificationMemo()
     onProvidersChanged: {
         if (providers.length === 0) {
             selectedProviderIndex = 0
             selectionInitialized = false
+            resetNotificationMemo()
             return
         }
         if (!selectionInitialized) {
             selectedProviderIndex = overviewAvailable ? -1 : 0
             selectionInitialized = true
+            Qt.callLater(processNotifications)
             return
         }
         if (!overviewAvailable && selectedProviderIndex < 0) {
@@ -86,6 +96,7 @@ PlasmoidItem {
         if (selectedProviderIndex >= providers.length) {
             selectedProviderIndex = Math.max(0, providers.length - 1)
         }
+        Qt.callLater(processNotifications)
     }
 
     Component.onCompleted: {
@@ -1325,6 +1336,183 @@ PlasmoidItem {
         ]
     }
 
+    function resetNotificationMemo() {
+        notificationMemo = ({})
+        notificationsPrimed = false
+        Qt.callLater(processNotifications)
+    }
+
+    function primeNotifications() {
+        var nextMemo = ({})
+        for (var i = 0; i < providers.length; i++) {
+            var item = providers[i]
+            if (!item) {
+                continue
+            }
+            if (notifyStatusIncidents) {
+                var statusValue = notificationStatusValue(item)
+                if (statusValue.length > 0) {
+                    nextMemo["status:" + item.provider] = statusValue
+                }
+            }
+            if (notifyQuotaWarnings) {
+                var rows = item.rows || []
+                for (var j = 0; j < rows.length; j++) {
+                    var level = quotaNotificationLevel(rows[j])
+                    if (level.length > 0) {
+                        nextMemo[quotaNotificationKey(item.provider, rows[j], j)] = level
+                    }
+                }
+            }
+        }
+        notificationMemo = nextMemo
+        notificationsPrimed = true
+    }
+
+    function processNotifications() {
+        if (!enableNotifications || providers.length === 0) {
+            return
+        }
+        if (!notificationsPrimed) {
+            primeNotifications()
+            return
+        }
+
+        var nextMemo = ({})
+        for (var i = 0; i < providers.length; i++) {
+            var item = providers[i]
+            if (!item) {
+                continue
+            }
+
+            if (notifyStatusIncidents) {
+                processStatusNotification(item, nextMemo)
+            }
+            if (notifyQuotaWarnings) {
+                processQuotaNotifications(item, nextMemo)
+            }
+        }
+        notificationMemo = nextMemo
+    }
+
+    function processStatusNotification(item, nextMemo) {
+        var key = "status:" + item.provider
+        var value = notificationStatusValue(item)
+        var previousValue = String(notificationMemo[key] || "")
+        if (value.length > 0) {
+            var previousSeverity = previousValue.length > 0 ? previousValue.split("|")[0] : ""
+            var worsened = notificationRank(item.statusSeverity) > notificationRank(previousSeverity)
+            if (previousValue.length === 0 || worsened || previousValue !== value) {
+                sendPlasmaNotification(
+                    i18n("%1 status issue", item.title),
+                    item.status,
+                    notificationUrgency(item.statusSeverity))
+            }
+            nextMemo[key] = value
+        } else {
+            delete nextMemo[key]
+        }
+    }
+
+    function processQuotaNotifications(item, nextMemo) {
+        var rows = item.rows || []
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i]
+            var key = quotaNotificationKey(item.provider, row, i)
+            var level = quotaNotificationLevel(row)
+            var previousLevel = String(notificationMemo[key] || "")
+            if (level.length > 0 && notificationRank(level) > notificationRank(previousLevel)) {
+                var body = i18n("%1 is %2% used", row.label, Math.round(row.usedPercent))
+                if (row.reset && row.reset.length > 0) {
+                    body += ". " + i18n("Resets %1", row.reset)
+                }
+                sendPlasmaNotification(
+                    level === "major" ? i18n("%1 quota critical", item.title) : i18n("%1 quota warning", item.title),
+                    body,
+                    notificationUrgency(level))
+            }
+            if (level.length > 0) {
+                nextMemo[key] = level
+            } else {
+                delete nextMemo[key]
+            }
+        }
+    }
+
+    function notificationStatusValue(item) {
+        if (!item || !item.hasIncident || !item.statusSeverity || !item.status) {
+            return ""
+        }
+        return item.statusSeverity + "|" + item.status
+    }
+
+    function quotaNotificationKey(providerID, row, index) {
+        var lane = row && row.lane ? row.lane : ""
+        var label = row && row.label ? row.label : ""
+        return "quota:" + providerID + ":" + lane + ":" + label + ":" + index
+    }
+
+    function quotaNotificationLevel(row) {
+        if (!row || !row.hasPercent) {
+            return ""
+        }
+        var used = Number(row.usedPercent)
+        if (!isFinite(used)) {
+            return ""
+        }
+        if (used >= 95) {
+            return "major"
+        }
+        if (used >= 80) {
+            return "minor"
+        }
+        return ""
+    }
+
+    function notificationRank(severity) {
+        switch (String(severity || "")) {
+        case "critical":
+            return 5
+        case "major":
+            return 4
+        case "minor":
+            return 3
+        case "maintenance":
+            return 2
+        case "unknown":
+            return 1
+        default:
+            return 0
+        }
+    }
+
+    function notificationUrgency(severity) {
+        switch (String(severity || "")) {
+        case "critical":
+        case "major":
+            return "critical"
+        case "unknown":
+            return "low"
+        default:
+            return "normal"
+        }
+    }
+
+    function sendPlasmaNotification(title, body, urgency) {
+        var cleanTitle = String(title || "CodexBar").trim()
+        var cleanBody = String(body || "").trim()
+        var cleanUrgency = String(urgency || "normal").trim()
+        if (cleanTitle.length === 0) {
+            cleanTitle = "CodexBar"
+        }
+        if (cleanUrgency !== "low" && cleanUrgency !== "normal" && cleanUrgency !== "critical") {
+            cleanUrgency = "normal"
+        }
+        var command = "if command -v notify-send >/dev/null 2>&1; then notify-send --app-name=CodexBar --icon=view-statistics --urgency="
+            + shellQuote(cleanUrgency) + " " + shellQuote(cleanTitle) + " " + shellQuote(cleanBody) + "; fi"
+        notificationSource.connectSource(command)
+    }
+
     function planText(providerID, usage, item) {
         var identity = usage.identity || ({})
         var method = identity.loginMethod || usage.loginMethod || ""
@@ -2343,6 +2531,16 @@ PlasmoidItem {
             }
             var stdoutText = data && data["stdout"] ? data["stdout"] : ""
             root.handleProviderConfigWatch(stdoutText)
+        }
+    }
+
+    Plasma5Support.DataSource {
+        id: notificationSource
+
+        engine: "executable"
+
+        onNewData: function(sourceName, data) {
+            notificationSource.disconnectSource(sourceName)
         }
     }
 

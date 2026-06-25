@@ -21,6 +21,12 @@ KCM.SimpleKCM {
     property bool cfg_usageBarsShowUsedDefault
     property alias cfg_showQuotaWarningMarkers: showQuotaWarningMarkersCheck.checked
     property bool cfg_showQuotaWarningMarkersDefault
+    property alias cfg_enableNotifications: enableNotificationsCheck.checked
+    property bool cfg_enableNotificationsDefault
+    property alias cfg_notifyStatusIncidents: notifyStatusIncidentsCheck.checked
+    property bool cfg_notifyStatusIncidentsDefault
+    property alias cfg_notifyQuotaWarnings: notifyQuotaWarningsCheck.checked
+    property bool cfg_notifyQuotaWarningsDefault
     property string cfg_menuBarDisplayMode: "percent"
     property string cfg_menuBarDisplayModeDefault
     property alias cfg_resetTimesShowAbsolute: resetTimesShowAbsoluteCheck.checked
@@ -115,6 +121,23 @@ KCM.SimpleKCM {
         Controls.CheckBox {
             id: showQuotaWarningMarkersCheck
             text: i18n("Show quota warning markers")
+        }
+
+        Controls.CheckBox {
+            id: enableNotificationsCheck
+            text: i18n("Enable Plasma notifications")
+        }
+
+        Controls.CheckBox {
+            id: notifyStatusIncidentsCheck
+            text: i18n("Notify status incidents")
+            enabled: enableNotificationsCheck.checked
+        }
+
+        Controls.CheckBox {
+            id: notifyQuotaWarningsCheck
+            text: i18n("Notify quota warnings")
+            enabled: enableNotificationsCheck.checked
         }
 
         Controls.ComboBox {

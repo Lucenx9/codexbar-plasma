@@ -17,6 +17,8 @@ come from the `codexbar` CLI.
 - Display mode controls: Percent, Pace, Percent and pace, Reset time.
 - Provider status incident badge in the panel and provider detail view.
 - Optional quota warning markers on usage bars.
+- Optional Plasma notifications for provider status incidents and 80/95% quota
+  crossings.
 - Account discovery and selection through `codexbar usage --all-accounts`.
 
 ## Requirements
@@ -24,6 +26,7 @@ come from the `codexbar` CLI.
 - KDE Plasma 6
 - `kpackagetool6`
 - `org.kde.plasma.plasma5support`
+- `notify-send` for optional Plasma notifications
 - `codexbar` CLI on `PATH`, or an absolute CLI path configured in the widget
 
 On Arch-compatible systems:
