@@ -16,4 +16,4 @@ restart:
 
 package:
 	mkdir -p dist
-	zip -r dist/codexbar-plasma.plasmoid metadata.json contents LICENSE NOTICE.md README.md
+	cmake -E tar cf dist/codexbar-plasma.plasmoid --format=zip metadata.json contents LICENSE NOTICE.md README.md
