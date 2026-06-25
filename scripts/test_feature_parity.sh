@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MAIN_QML="${ROOT_DIR}/contents/ui/main.qml"
+GENERAL_QML="${ROOT_DIR}/contents/ui/configGeneral.qml"
 PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
 README_MD="${ROOT_DIR}/README.md"
 
@@ -56,8 +57,22 @@ require_in_file "$MAIN_QML" "function primaryResetText(item)"
 require_in_file "$MAIN_QML" "function resetText(window, absolute)"
 require_in_file "$MAIN_QML" "Plasmoid.configuration.menuBarDisplayMode"
 require_in_file "$MAIN_QML" "onResetTimesShowAbsoluteChanged: Qt.callLater(refreshNow)"
+require_in_file "$MAIN_QML" "property bool showQuotaWarningMarkers"
+require_in_file "$MAIN_QML" "function statusSeverity(status)"
+require_in_file "$MAIN_QML" "function statusBadgeColor(severity)"
+require_in_file "$MAIN_QML" "function primaryIncidentProvider()"
+require_in_file "$MAIN_QML" "id: compactStatusBadge"
+require_in_file "$MAIN_QML" "id: providerStatusBadge"
+require_in_file "$MAIN_QML" "function quotaWarningMarkers(row)"
+require_in_file "$MAIN_QML" "quotaWarningMarkerRepeater"
+require_in_file "$MAIN_QML" "showQuotaWarningMarkers"
+
+require_in_file "$GENERAL_QML" "Fetch provider status"
+require_in_file "$GENERAL_QML" "Show quota warning markers"
 
 require_in_file "$README_MD" "Display mode"
+require_in_file "$README_MD" "incident badge"
+require_in_file "$README_MD" "quota warning markers"
 
 require_in_file "$README_MD" "## Upgrade"
 require_in_file "$README_MD" "yay -S codexbar-cli"

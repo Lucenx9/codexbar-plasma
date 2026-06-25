@@ -26,6 +26,7 @@ PlasmoidItem {
     property int refreshIntervalSec: Math.max(10, Plasmoid.configuration.refreshInterval || 300)
     property bool includeStatus: Plasmoid.configuration.includeStatus
     property bool usageBarsShowUsed: Plasmoid.configuration.usageBarsShowUsed === true
+    property bool showQuotaWarningMarkers: Plasmoid.configuration.showQuotaWarningMarkers !== false
     property string menuBarDisplayMode: Plasmoid.configuration.menuBarDisplayMode || "percent"
     property bool resetTimesShowAbsolute: Plasmoid.configuration.resetTimesShowAbsolute === true
     property bool showProviderChangelogs: Plasmoid.configuration.showProviderChangelogs === true
@@ -883,6 +884,7 @@ PlasmoidItem {
         var identity = usage.identity || ({})
         var error = item.error || null
         var status = item.status || null
+        var severity = statusSeverity(status)
         var credits = item.credits || null
         var placeholder = providerPlaceholder(providerID, rows, usage, item, error)
         var displayName = item.displayName || item.title || providerDisplayNames[providerID] || ""
@@ -908,6 +910,8 @@ PlasmoidItem {
                 ? Number(credits.remaining)
                 : null,
             status: status ? statusText(status) : "",
+            statusSeverity: severity,
+            hasIncident: severity.length > 0,
             error: error && error.message ? error.message : "",
             placeholder: placeholder,
             updatedAt: usage.updatedAt || (credits ? credits.updatedAt : "")
@@ -1236,6 +1240,89 @@ PlasmoidItem {
         }
         var text = labels[indicator] || indicator
         return description.length > 0 ? text + ": " + description : text
+    }
+
+    function statusSeverity(status) {
+        if (!status) {
+            return ""
+        }
+        var indicator = String(status.indicator || "").toLowerCase()
+        switch (indicator) {
+        case "minor":
+        case "maintenance":
+        case "major":
+        case "critical":
+        case "unknown":
+            return indicator
+        default:
+            return ""
+        }
+    }
+
+    function statusBadgeColor(severity) {
+        switch (String(severity || "")) {
+        case "critical":
+        case "major":
+            return Kirigami.Theme.negativeTextColor
+        case "minor":
+            return Qt.rgba(245 / 255, 158 / 255, 11 / 255, 1)
+        case "maintenance":
+            return Kirigami.Theme.neutralTextColor
+        case "unknown":
+            return Kirigami.Theme.textColor
+        default:
+            return "transparent"
+        }
+    }
+
+    function statusBadgeText(severity) {
+        switch (String(severity || "")) {
+        case "critical":
+            return i18n("Critical")
+        case "major":
+            return i18n("Major")
+        case "minor":
+            return i18n("Issue")
+        case "maintenance":
+            return i18n("Maint.")
+        case "unknown":
+            return i18n("Unknown")
+        default:
+            return ""
+        }
+    }
+
+    function primaryIncidentProvider() {
+        var ranked = {
+            "critical": 5,
+            "major": 4,
+            "minor": 3,
+            "maintenance": 2,
+            "unknown": 1
+        }
+        var best = null
+        var bestRank = 0
+        for (var i = 0; i < providers.length; i++) {
+            var item = providers[i]
+            var rank = item && item.statusSeverity ? ranked[item.statusSeverity] || 0 : 0
+            if (rank > bestRank) {
+                best = item
+                bestRank = rank
+            }
+        }
+        return best
+    }
+
+    function quotaWarningMarkers(row) {
+        if (!showQuotaWarningMarkers || !row || !row.hasPercent) {
+            return []
+        }
+        var warning = usageBarsShowUsed ? 80 : 20
+        var critical = usageBarsShowUsed ? 95 : 5
+        return [
+            { percent: warning, severity: "minor" },
+            { percent: critical, severity: "major" }
+        ]
     }
 
     function planText(providerID, usage, item) {
@@ -2263,6 +2350,7 @@ PlasmoidItem {
         id: compactRoot
 
         readonly property bool hasProviderMeters: root.compactProviders().length > 0
+        readonly property var incidentProvider: root.primaryIncidentProvider()
         readonly property string primaryText: root.compactText()
         readonly property bool showPrimaryIdentity: !hasProviderMeters || primaryText.length > 0
         readonly property int desiredWidth: Math.min(
@@ -2301,6 +2389,31 @@ PlasmoidItem {
                 color: loading ? Kirigami.Theme.textColor : root.providerColor(compactProvider)
                 Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
                 Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
+            }
+
+            Rectangle {
+                id: compactStatusBadge
+
+                visible: compactRoot.incidentProvider !== null
+                    && compactRoot.incidentProvider.hasIncident
+                Layout.preferredWidth: Kirigami.Units.smallSpacing * 1.5
+                Layout.preferredHeight: Kirigami.Units.smallSpacing * 1.5
+                radius: width / 2
+                color: compactRoot.incidentProvider
+                    ? root.statusBadgeColor(compactRoot.incidentProvider.statusSeverity)
+                    : "transparent"
+
+                Controls.ToolTip.visible: compactStatusMouse.containsMouse
+                Controls.ToolTip.text: compactRoot.incidentProvider
+                    ? i18n("%1: %2", compactRoot.incidentProvider.title, compactRoot.incidentProvider.status)
+                    : ""
+
+                MouseArea {
+                    id: compactStatusMouse
+
+                    anchors.fill: parent
+                    hoverEnabled: true
+                }
             }
 
             PlasmaComponents.Label {
@@ -2767,6 +2880,31 @@ PlasmoidItem {
                                 elide: Text.ElideRight
                             }
 
+                            Rectangle {
+                                id: providerStatusBadge
+
+                                visible: root.selectedProviderData
+                                    && root.selectedProviderData.hasIncident
+                                Layout.preferredWidth: providerStatusBadgeLabel.implicitWidth + Kirigami.Units.smallSpacing * 1.5
+                                Layout.preferredHeight: Kirigami.Units.gridUnit * 1.25
+                                radius: height / 2
+                                color: root.selectedProviderData
+                                    ? root.statusBadgeColor(root.selectedProviderData.statusSeverity)
+                                    : "transparent"
+
+                                PlasmaComponents.Label {
+                                    id: providerStatusBadgeLabel
+
+                                    anchors.centerIn: parent
+                                    text: root.selectedProviderData
+                                        ? root.statusBadgeText(root.selectedProviderData.statusSeverity)
+                                        : ""
+                                    color: root.contrastTextColor(providerStatusBadge.color)
+                                    font.pixelSize: 10
+                                    font.weight: Font.DemiBold
+                                }
+                            }
+
                             PlasmaComponents.Label {
                                 visible: root.selectedProviderData
                                     && root.selectedProviderData.account
@@ -2943,6 +3081,8 @@ PlasmoidItem {
                                 }
 
                                 Rectangle {
+                                    id: usageBar
+
                                     visible: modelData.hasPercent
                                     Layout.fillWidth: true
                                     Layout.preferredHeight: 6
@@ -2969,6 +3109,25 @@ PlasmoidItem {
                                         color: modelData.paceOnTop
                                             ? root.withAlpha(Kirigami.Theme.positiveTextColor, 0.9)
                                             : root.withAlpha(Kirigami.Theme.negativeTextColor, 0.9)
+                                    }
+
+                                    Repeater {
+                                        id: quotaWarningMarkerRepeater
+
+                                        model: root.quotaWarningMarkers(modelData)
+
+                                        delegate: Rectangle {
+                                            readonly property real markerPercent: Number(modelData.percent) || 0
+
+                                            visible: markerPercent > 0 && markerPercent < 100
+                                            x: Math.max(0, Math.min(usageBar.width - width, usageBar.width * markerPercent / 100 - width / 2))
+                                            y: 0
+                                            width: 1
+                                            height: usageBar.height
+                                            radius: width / 2
+                                            color: root.statusBadgeColor(modelData.severity)
+                                            opacity: 0.72
+                                        }
                                     }
                                 }
 

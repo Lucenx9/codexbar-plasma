@@ -15,6 +15,8 @@ come from the `codexbar` CLI.
   and login/account links.
 - Optional compact multi-provider panel meters.
 - Display mode controls: Percent, Pace, Percent and pace, Reset time.
+- Provider status incident badge in the panel and provider detail view.
+- Optional quota warning markers on usage bars.
 - Account discovery and selection through `codexbar usage --all-accounts`.
 
 ## Requirements

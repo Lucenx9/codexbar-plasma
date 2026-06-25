@@ -19,6 +19,8 @@ KCM.SimpleKCM {
     property bool cfg_includeStatusDefault
     property alias cfg_usageBarsShowUsed: usageBarsShowUsedCheck.checked
     property bool cfg_usageBarsShowUsedDefault
+    property alias cfg_showQuotaWarningMarkers: showQuotaWarningMarkersCheck.checked
+    property bool cfg_showQuotaWarningMarkersDefault
     property string cfg_menuBarDisplayMode: "percent"
     property string cfg_menuBarDisplayModeDefault
     property alias cfg_resetTimesShowAbsolute: resetTimesShowAbsoluteCheck.checked
@@ -108,6 +110,11 @@ KCM.SimpleKCM {
         Controls.CheckBox {
             id: usageBarsShowUsedCheck
             text: i18n("Show usage as percent used")
+        }
+
+        Controls.CheckBox {
+            id: showQuotaWarningMarkersCheck
+            text: i18n("Show quota warning markers")
         }
 
         Controls.ComboBox {

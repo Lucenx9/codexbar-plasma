@@ -31,6 +31,10 @@
       <label>Show usage bars as percent used instead of percent left.</label>
       <default>false</default>
     </entry>
+    <entry name="showQuotaWarningMarkers" type="Bool">
+      <label>Show quota warning markers on usage bars.</label>
+      <default>true</default>
+    </entry>
     <entry name="menuBarDisplayMode" type="String">
       <label>Menu bar text display mode.</label>
       <default>percent</default>
