@@ -1,0 +1,19 @@
+{
+  "KPackageStructure": "Plasma/Applet",
+  "KPlugin": {
+    "Authors": [
+      {
+        "Name": "Peter Steinberger and CodexBar contributors"
+      }
+    ],
+    "Category": "System Information",
+    "Description": "Shows CodexBar provider usage, quotas, credits, and status in the Plasma panel.",
+    "Icon": "view-statistics",
+    "Id": "app.codexbar.plasma",
+    "License": "MIT",
+    "Name": "CodexBar",
+    "Version": "0.1.0",
+    "Website": "https://github.com/Lucenx9/codexbar-plasma"
+  },
+  "X-Plasma-API-Minimum-Version": "6.0"
+}

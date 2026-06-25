@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+      https://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+  <kcfgfile name=""/>
+  <group name="General">
+    <entry name="commandPath" type="String">
+      <label>Path to the codexbar command.</label>
+      <default>codexbar</default>
+    </entry>
+    <entry name="provider" type="String">
+      <label>Optional provider id passed to codexbar.</label>
+      <default></default>
+    </entry>
+    <entry name="source" type="String">
+      <label>Optional CodexBar provider source override.</label>
+      <default></default>
+    </entry>
+    <entry name="refreshInterval" type="Int">
+      <label>Refresh interval in seconds.</label>
+      <default>300</default>
+      <min>10</min>
+      <max>3600</max>
+    </entry>
+    <entry name="includeStatus" type="Bool">
+      <label>Fetch provider status pages.</label>
+      <default>false</default>
+    </entry>
+    <entry name="usageBarsShowUsed" type="Bool">
+      <label>Show usage bars as percent used instead of percent left.</label>
+      <default>false</default>
+    </entry>
+    <entry name="menuBarDisplayMode" type="String">
+      <label>Menu bar text display mode.</label>
+      <default>percent</default>
+    </entry>
+    <entry name="resetTimesShowAbsolute" type="Bool">
+      <label>Show reset times as absolute local times.</label>
+      <default>false</default>
+    </entry>
+    <entry name="showProviderChangelogs" type="Bool">
+      <label>Show provider changelog links.</label>
+      <default>false</default>
+    </entry>
+    <entry name="showProviderInPanel" type="Bool">
+      <label>Show the provider name in the panel.</label>
+      <default>true</default>
+    </entry>
+    <entry name="showPercentInPanel" type="Bool">
+      <label>Show the primary usage percentage in the panel.</label>
+      <default>true</default>
+    </entry>
+    <entry name="showMultiProviderInPanel" type="Bool">
+      <label>Show multi-provider details in the panel.</label>
+      <default>false</default>
+    </entry>
+    <entry name="showCreditsInPanel" type="Bool">
+      <label>Show credits in the panel when available.</label>
+      <default>false</default>
+    </entry>
+    <entry name="providerConfigRevision" type="Int">
+      <label>Internal revision bumped when provider enablement changes.</label>
+      <default>0</default>
+    </entry>
+  </group>
+</kcfg>

@@ -1,0 +1,6 @@
+.DS_Store
+*.plasmoid
+*.zip
+build/
+dist/
+.cache/
