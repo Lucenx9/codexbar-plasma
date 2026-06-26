@@ -96,6 +96,8 @@ Panel and popup:
 - Display modes for percent used, pace, percent plus pace, and reset time.
 - Auto-select highest-usage provider for the compact panel and provider detail
   focus.
+- Overview providers can be limited to a chosen set of up to 3 providers, or
+  left on the automatic first-provider selection.
 - Usage dashboard summaries for provider payloads that expose API spend,
   request, token, model, or dashboard fields through the CLI.
 

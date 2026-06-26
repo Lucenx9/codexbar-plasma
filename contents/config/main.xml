@@ -119,6 +119,10 @@
       <label>Auto-select the highest-usage provider.</label>
       <default>false</default>
     </entry>
+    <entry name="overviewProviderIDs" type="String">
+      <label>Comma-separated provider ids shown in the Overview tab.</label>
+      <default></default>
+    </entry>
     <entry name="showCreditsInPanel" type="Bool">
       <label>Show credits in the panel when available.</label>
       <default>false</default>

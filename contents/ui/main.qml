@@ -42,6 +42,8 @@ PlasmoidItem {
     property bool resetTimesShowAbsolute: Plasmoid.configuration.resetTimesShowAbsolute === true
     property bool showProviderChangelogs: Plasmoid.configuration.showProviderChangelogs === true
     property bool autoSelectProvider: Plasmoid.configuration.autoSelectProvider === true
+    property string overviewProviderIDsRaw: Plasmoid.configuration.overviewProviderIDs || ""
+    readonly property int maxOverviewProviders: 3
     property int providerConfigRevision: Plasmoid.configuration.providerConfigRevision || 0
     property var providers: []
     property var providerDisplayNames: ({})
@@ -78,7 +80,7 @@ PlasmoidItem {
     property string updateStatusText: Plasmoid.configuration.widgetUpdateLastStatus || ""
     property string updateErrorText: Plasmoid.configuration.widgetUpdateLastError || ""
     property string lastNotifiedUpdateVersion: ""
-    readonly property bool overviewAvailable: provider.length === 0 && providers.length > 1
+    readonly property bool overviewAvailable: provider.length === 0 && providers.length > 1 && overviewProviders().length > 0
     readonly property bool overviewSelected: overviewAvailable && selectedProviderIndex < 0
     readonly property var selectedProviderData: providers.length > 0 && selectedProviderIndex >= 0
         ? providers[Math.min(selectedProviderIndex, providers.length - 1)]
@@ -90,6 +92,7 @@ PlasmoidItem {
     onProviderConfigRevisionChanged: Qt.callLater(refreshNow)
     onResetTimesShowAbsoluteChanged: Qt.callLater(refreshNow)
     onAutoSelectProviderChanged: updateSelectedProvider()
+    onOverviewProviderIDsRawChanged: updateSelectedProvider()
     onEnableNotificationsChanged: resetNotificationMemo()
     onNotifyStatusIncidentsChanged: resetNotificationMemo()
     onNotifyQuotaWarningsChanged: resetNotificationMemo()
@@ -1957,8 +1960,9 @@ PlasmoidItem {
             var previousLevel = String(notificationMemo[key] || "")
             if (level.length > 0 && notificationRank(level) > notificationRank(previousLevel)) {
                 var body = i18n("%1 is %2% used", row.label, Math.round(row.usedPercent))
-                if (row.reset && row.reset.length > 0) {
-                    body += ". " + i18n("Resets %1", row.reset)
+                var resetLine = resetLabel(row.reset)
+                if (resetLine.length > 0) {
+                    body += ". " + resetLine
                 }
                 sendPlasmaNotification(
                     level === "major" ? i18n("%1 quota critical", item.title) : i18n("%1 quota warning", item.title),
@@ -3035,13 +3039,58 @@ PlasmoidItem {
     }
 
     function overviewProviders() {
-        var result = []
+        var eligible = []
         if (!providers) {
-            return result
+            return eligible
         }
         for (var i = 0; i < providers.length; i++) {
             if (!isOverviewErrorOnly(providers[i])) {
-                result.push(providers[i])
+                eligible.push(providers[i])
+            }
+        }
+
+        var configured = configuredOverviewProviderIDs()
+        if (String(overviewProviderIDsRaw || "").trim().length === 0) {
+            return eligible.slice(0, maxOverviewProviders)
+        }
+        if (configured.length === 0) {
+            return []
+        }
+
+        var selected = ({})
+        for (var j = 0; j < configured.length; j++) {
+            selected[configured[j]] = true
+        }
+
+        var result = []
+        for (var k = 0; k < eligible.length; k++) {
+            if (selected[String(eligible[k].provider)]) {
+                result.push(eligible[k])
+                if (result.length >= maxOverviewProviders) {
+                    break
+                }
+            }
+        }
+        return result
+    }
+
+    function configuredOverviewProviderIDs() {
+        var raw = String(overviewProviderIDsRaw || "").trim()
+        if (raw.length === 0 || raw === "__none__") {
+            return []
+        }
+        var parts = raw.split(",")
+        var result = []
+        var seen = ({})
+        for (var i = 0; i < parts.length; i++) {
+            var id = String(parts[i] || "").trim()
+            if (id.length === 0 || seen[id]) {
+                continue
+            }
+            seen[id] = true
+            result.push(id)
+            if (result.length >= maxOverviewProviders) {
+                break
             }
         }
         return result
@@ -3137,9 +3186,27 @@ PlasmoidItem {
             .replace(/(am|pm)\(/ig, "$1 (")
             .replace(/\s+/g, " ")
         if (/^resets\b/i.test(text)) {
-            return text.replace(/^resets\s*/i, i18n("Resets "))
+            var rest = text.replace(/^resets\s*/i, "")
+            return resetLabelLooksLikeTime(rest) ? i18n("Resets %1", rest) : rest
         }
-        return i18n("Resets %1", text)
+        return resetLabelLooksLikeTime(text) ? i18n("Resets %1", text) : text
+    }
+
+    function resetLabelLooksLikeTime(value) {
+        var text = String(value || "").trim()
+        if (text.length === 0) {
+            return false
+        }
+        if (/^(now|today|tomorrow)\b/i.test(text)) {
+            return true
+        }
+        if (/^\d{1,2}(:\d{2})?\s*(am|pm)(\s*\([^)]+\))?$/i.test(text)) {
+            return true
+        }
+        if (/^\d{1,2}:\d{2}(\s*\([^)]+\))?$/.test(text)) {
+            return true
+        }
+        return /^\d+\s*(min|m|h|hr|hour|hours|d|day|days)(\s+\d+\s*(min|m|h|hr|hour|hours|d|day|days))*$/i.test(text)
     }
 
     function clamp(value, minimum, maximum) {
