@@ -3,6 +3,7 @@
 check:
 	scripts/test_feature_parity.sh
 	scripts/test_refresh_nonce.sh
+	scripts/test_provider_icons.sh
 	/usr/lib/qt6/bin/qmllint -I /usr/lib/qt6/qml contents/ui/main.qml contents/ui/configGeneral.qml contents/ui/configProviders.qml
 	xmllint --noout contents/config/main.xml
 	jq . metadata.json >/dev/null

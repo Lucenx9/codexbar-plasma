@@ -2420,11 +2420,6 @@ PlasmoidItem {
         return primary || secondary || firstUsageRow(item)
     }
 
-    function primaryUsedPercent(item) {
-        var row = firstUsageRow(item)
-        return row ? row.usedPercent : -1
-    }
-
     function switcherPercent(item) {
         var row = switcherMetricRow(item)
         return row ? displayPercent(row) : -1
@@ -2799,9 +2794,8 @@ PlasmoidItem {
         readonly property string primaryText: root.compactText()
         readonly property bool showPrimaryIdentity: !hasProviderMeters || primaryText.length > 0
         readonly property int desiredWidth: Math.min(
-            hasProviderMeters ? Kirigami.Units.gridUnit * 8.5 : Kirigami.Units.gridUnit * 8.5,
-            Math.max(
-                hasProviderMeters ? Kirigami.Units.gridUnit * 4.8 : Kirigami.Units.gridUnit * 4.8,
+            Kirigami.Units.gridUnit * 8.5,
+            Math.max(Kirigami.Units.gridUnit * 4.8,
                 compactRow.implicitWidth + Kirigami.Units.smallSpacing * 2))
 
         Layout.minimumWidth: desiredWidth

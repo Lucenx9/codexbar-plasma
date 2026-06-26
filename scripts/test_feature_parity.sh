@@ -13,7 +13,7 @@ require_in_file() {
   local file="$1"
   local needle="$2"
   if ! grep -Fq -- "$needle" "$file"; then
-    echo "missing expected fragment in ${file#$ROOT_DIR/}: $needle" >&2
+    echo "missing expected fragment in ${file#"$ROOT_DIR"/}: $needle" >&2
     exit 1
   fi
 }
@@ -22,7 +22,7 @@ reject_in_file() {
   local file="$1"
   local needle="$2"
   if grep -Fq -- "$needle" "$file"; then
-    echo "unexpected fragment in ${file#$ROOT_DIR/}: $needle" >&2
+    echo "unexpected fragment in ${file#"$ROOT_DIR"/}: $needle" >&2
     exit 1
   fi
 }
