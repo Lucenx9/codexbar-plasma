@@ -114,7 +114,7 @@ if [[ ! -f "$METADATA_PATH" ]]; then
   fail "metadata file not found: $METADATA_PATH"
 fi
 
-local_version="$(jq -r '.KPlugin.Version // empty' "$METADATA_PATH")"
+local_version="$(jq -r '.KPlugin.Version // empty' "$METADATA_PATH")" || fail "failed to read local widget metadata"
 if [[ -z "$local_version" || "$local_version" == "null" ]]; then
   fail "metadata does not contain KPlugin.Version"
 fi
@@ -126,7 +126,7 @@ if [[ -z "$RELEASE_JSON" ]]; then
   curl --fail --location --show-error --silent \
     -H "Accept: application/vnd.github+json" \
     -H "X-GitHub-Api-Version: ${API_VERSION}" \
-    "$release_url" > "$RELEASE_JSON"
+    "$release_url" > "$RELEASE_JSON" || fail "failed to fetch release metadata from GitHub"
 fi
 
 if [[ ! -f "$RELEASE_JSON" ]]; then
@@ -171,7 +171,7 @@ if [[ -z "$TMP_DIR" ]]; then
   TMP_DIR="$(mktemp -d)"
 fi
 package_path="${TMP_DIR}/${ASSET_NAME}"
-curl --fail --location --show-error --silent "$asset_url" --output "$package_path"
-kpackagetool6 -t Plasma/Applet -u "$package_path"
+curl --fail --location --show-error --silent "$asset_url" --output "$package_path" || fail "failed to download release asset"
+kpackagetool6 -t Plasma/Applet -u "$package_path" || fail "failed to install widget package"
 
 emit_status "installed" "widget update installed; restart Plasma to apply the update" "$local_version" "$remote_version" "$asset_url"

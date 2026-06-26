@@ -616,6 +616,9 @@ PlasmoidItem {
         var commands = copyObject(pendingAccountCommands)
         delete commands[sourceName]
         pendingAccountCommands = commands
+        // The accounts fetch is a one-shot, but usageSource polls on an interval,
+        // so it must be disconnected here or it keeps re-spawning the CLI forever.
+        usageSource.disconnectSource(sourceName)
         setAccountLoading(providerID, false)
 
         var trimmed = stdoutText.trim()
