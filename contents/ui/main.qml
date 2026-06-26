@@ -3974,22 +3974,21 @@ PlasmoidItem {
                             }
 
                             RowLayout {
-                                visible: tokenCostSection.tokenCost
-                                    && tokenCostSection.tokenCost.daily
-                                    && tokenCostSection.tokenCost.daily.length > 1
+                                readonly property var daily: tokenCostSection.tokenCost ? tokenCostSection.tokenCost.daily : null
+                                visible: daily && daily.length > 1
                                 Layout.fillWidth: true
                                 spacing: Kirigami.Units.smallSpacing
 
                                 PlasmaComponents.Label {
-                                    text: tokenCostSection.tokenCost ? root.costSparklineSummary(tokenCostSection.tokenCost.daily) : ""
+                                    text: daily ? root.costSparklineSummary(daily) : ""
                                     opacity: 0.62
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
                                 }
 
                                 PlasmaComponents.Label {
-                                    text: tokenCostSection.tokenCost
-                                        ? i18np("%1 day", "%1 days", tokenCostSection.tokenCost.daily.length)
+                                    text: daily
+                                        ? i18np("%1 day", "%1 days", daily.length)
                                         : ""
                                     opacity: 0.62
                                     horizontalAlignment: Text.AlignRight
