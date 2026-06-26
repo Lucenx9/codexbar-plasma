@@ -233,14 +233,41 @@ KCM.SimpleKCM {
     }
 
     function shouldRetryProviderListWithoutDescriptors(stdoutText, stderrText) {
-        var text = (stdoutText + "\n" + stderrText).toLowerCase()
+        return descriptorListUnsupportedMessage(stdoutText, stderrText).length > 0
+    }
+
+    function descriptorListUnsupportedMessage(stdoutText, stderrText) {
+        var stderrMessage = String(stderrText || "").trim()
+        if (isDescriptorUnsupportedMessage(stderrMessage)) {
+            return stderrMessage
+        }
+
+        var trimmed = String(stdoutText || "").trim()
+        if (trimmed.length === 0) {
+            return ""
+        }
+        try {
+            var payload = JSON.parse(trimmed)
+            var message = commandError(payload)
+            return isDescriptorUnsupportedMessage(message) ? message : ""
+        } catch (error) {
+            return ""
+        }
+    }
+
+    function isDescriptorUnsupportedMessage(message) {
+        var text = String(message || "").toLowerCase()
         if (text.indexOf("descriptor") === -1) {
             return false
         }
-        return text.indexOf("unknown") !== -1
-            || text.indexOf("unrecognized") !== -1
-            || text.indexOf("unexpected") !== -1
-            || text.indexOf("unsupported") !== -1
+        return text.indexOf("unknown option") !== -1
+            || text.indexOf("unknown argument") !== -1
+            || text.indexOf("unrecognized option") !== -1
+            || text.indexOf("unrecognized argument") !== -1
+            || text.indexOf("unexpected option") !== -1
+            || text.indexOf("unexpected argument") !== -1
+            || text.indexOf("unsupported option") !== -1
+            || text.indexOf("unsupported argument") !== -1
             || text.indexOf("invalid option") !== -1
     }
 
@@ -947,7 +974,7 @@ KCM.SimpleKCM {
                 return i
             }
         }
-        return field.options.length > 0 ? 0 : -1
+        return -1
     }
 
     function optionIDAt(options, index) {
