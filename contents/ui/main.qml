@@ -6,6 +6,7 @@ import org.kde.plasma.components as PlasmaComponents
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
+import "utils.js" as Logic
 
 PlasmoidItem {
     id: root
@@ -2691,20 +2692,7 @@ PlasmoidItem {
     }
 
     function resetLabel(value) {
-        var text = String(value || "").trim()
-        if (text.length === 0) {
-            return ""
-        }
-        text = text
-            .replace(/([A-Za-z])(\d)/g, "$1 $2")
-            .replace(/(\d)([A-Za-z])/g, "$1 $2")
-            .replace(/\)([A-Za-z])/g, ") $1")
-            .replace(/(am|pm)\(/ig, "$1 (")
-            .replace(/\s+/g, " ")
-        if (/^resets\b/i.test(text)) {
-            return text.replace(/^resets\s*/i, i18n("Resets "))
-        }
-        return i18n("Resets %1", text)
+        return Logic.resetLabel(value, i18n)
     }
 
     function clamp(value, minimum, maximum) {
