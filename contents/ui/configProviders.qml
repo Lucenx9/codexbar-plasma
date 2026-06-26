@@ -987,7 +987,7 @@ KCM.SimpleKCM {
             Kirigami.SearchField {
                 id: searchField
                 Layout.fillWidth: true
-                placeholderText: i18n("Search providers…")
+                placeholderText: i18n("Search providers...")
                 onTextChanged: page.filterText = text
             }
 
@@ -1075,7 +1075,7 @@ KCM.SimpleKCM {
 
                     Controls.Label {
                         text: page.selectedProvider
-                            ? (page.selectedProvider.enabled ? i18n("%1 · enabled", page.selectedProvider.provider) : i18n("%1 · disabled", page.selectedProvider.provider))
+                            ? (page.selectedProvider.enabled ? i18n("%1 - enabled", page.selectedProvider.provider) : i18n("%1 - disabled", page.selectedProvider.provider))
                             : ""
                         opacity: 0.62
                         font: Kirigami.Theme.smallFont
@@ -1228,7 +1228,7 @@ KCM.SimpleKCM {
             visible: page.providers.length > 0 && page.visibleProviders.length === 0
             icon.name: "search"
             text: i18n("No matching providers")
-            explanation: i18n("No provider matches “%1”.", page.filterText)
+            explanation: i18n("No provider matches \"%1\".", page.filterText)
         }
 
         Repeater {
@@ -1268,7 +1268,7 @@ KCM.SimpleKCM {
 
                         Controls.Label {
                             text: providerRow.modelData.defaultEnabled
-                                ? i18n("%1 · on by default", providerRow.modelData.provider)
+                                ? i18n("%1 - on by default", providerRow.modelData.provider)
                                 : providerRow.modelData.provider
                             elide: Text.ElideRight
                             opacity: 0.6

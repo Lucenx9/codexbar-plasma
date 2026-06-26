@@ -997,7 +997,7 @@ PlasmoidItem {
         if (!peak || peak.cost <= 0) {
             return ""
         }
-        return i18n("Peak: %1 · %2", peak.label, amountString(peak.cost, peak.currency))
+        return i18n("Peak: %1 - %2", peak.label, amountString(peak.cost, peak.currency))
     }
 
     function costAverageDailyLine(points) {
@@ -2942,7 +2942,7 @@ PlasmoidItem {
     function costLine(label, cost, tokens, currency) {
         var costValue = isFinite(Number(cost)) ? amountString(Number(cost), currency) : "—"
         if (isFinite(Number(tokens))) {
-            return i18n("%1: %2 · %3 tokens", label, costValue, tokenCountString(Number(tokens)))
+            return i18n("%1: %2 - %3 tokens", label, costValue, tokenCountString(Number(tokens)))
         }
         return i18n("%1: %2", label, costValue)
     }
@@ -3369,7 +3369,7 @@ PlasmoidItem {
             var percentText = primaryPercentText(item)
             var paceText = primaryPaceText(item)
             if (percentText.length > 0 && paceText.length > 0) {
-                return i18n("%1 · %2", percentText, paceText)
+                return i18n("%1 - %2", percentText, paceText)
             }
             return percentText.length > 0 ? percentText : paceText
         }
@@ -3852,7 +3852,7 @@ PlasmoidItem {
 
                         PlasmaComponents.Label {
                             text: lastUpdatedText.length > 0
-                                ? i18n("%1 · %2 providers", lastUpdatedText, root.overviewProviders().length)
+                                ? i18n("%1 - %2 providers", lastUpdatedText, root.overviewProviders().length)
                                 : i18n("%1 providers", root.overviewProviders().length)
                             opacity: 0.62
                             Layout.fillWidth: true

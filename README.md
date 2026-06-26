@@ -195,6 +195,12 @@ Run checks:
 make check
 ```
 
+Update the translation template after changing user-facing `i18n` strings:
+
+```sh
+make translations
+```
+
 Package locally:
 
 ```sh

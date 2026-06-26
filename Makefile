@@ -1,4 +1,4 @@
-.PHONY: check install restart package update
+.PHONY: check install restart package translations update
 
 # Override on distros where Qt6 ships QML modules elsewhere (e.g. Debian/Ubuntu
 # multiarch: make check QML_IMPORT_DIR=/usr/lib/x86_64-linux-gnu/qt6/qml).
@@ -16,6 +16,7 @@ check:
 	scripts/test_security_regressions.sh
 	scripts/test_update_widget.sh
 	scripts/test_theme_boundaries.sh
+	scripts/test_i18n_catalog.sh
 	scripts/test_qml_hardening.sh
 	$(QMLLINT) $(QMLLINT_FLAGS) -I $(QML_IMPORT_DIR) contents/ui/main.qml contents/ui/configGeneral.qml contents/ui/configProviders.qml contents/ui/configDisplay.qml contents/ui/configAdvanced.qml contents/ui/configDebug.qml
 	xmllint --noout contents/config/main.xml
@@ -34,6 +35,9 @@ restart:
 
 update:
 	scripts/update-widget.sh --install
+
+translations:
+	scripts/update_translations.sh
 
 package:
 	mkdir -p dist

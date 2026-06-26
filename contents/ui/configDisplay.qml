@@ -329,7 +329,7 @@ KCM.SimpleKCM {
             Controls.Label {
                 Layout.fillWidth: true
                 visible: page.overviewProvidersLoading
-                text: i18n("Loading providers…")
+                text: i18n("Loading providers...")
                 opacity: 0.7
             }
 

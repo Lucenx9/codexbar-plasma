@@ -21,7 +21,9 @@
   history when the CLI exposes stable history payloads. Consider compact
   burn-down/history views as Plasma equivalents to the macOS WidgetKit widgets,
   but avoid heavy delegate work in QML.
-- Translations: add gettext/catalog workflow for the existing `i18n` strings.
+- Translations: gettext template extraction is in place. Add real `.po`
+  catalogs, compiled catalog packaging, and translator contribution docs when
+  localization work starts.
 - Notification refinements: consider reset-imminent notifications if they stay
   quiet and configurable. Keep status, quota, reset, and update notifications
   tied to clear state transitions and user-visible settings.

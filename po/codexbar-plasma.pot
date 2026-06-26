@@ -1,0 +1,1192 @@
+# CodexBar Plasma translation template.
+# This file is distributed under the same license as the codexbar-plasma package.
+msgid ""
+msgstr ""
+"Project-Id-Version: codexbar-plasma\n"
+"Report-Msgid-Bugs-To: https://github.com/Lucenx9/codexbar-plasma/issues\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: contents/config/config.qml
+msgid "General"
+msgstr ""
+
+#: contents/config/config.qml
+msgid "Providers"
+msgstr ""
+
+#: contents/config/config.qml
+msgid "Display"
+msgstr ""
+
+#: contents/config/config.qml
+msgid "Advanced"
+msgstr ""
+
+#: contents/config/config.qml
+msgid "Debug"
+msgstr ""
+
+#: contents/ui/configAdvanced.qml
+msgid "Advanced provider override"
+msgstr ""
+
+#: contents/ui/configAdvanced.qml
+msgid ""
+"These options pin the widget to one provider or one source. Leave them blank "
+"to follow the providers enabled on the Providers page."
+msgstr ""
+
+#: contents/ui/configAdvanced.qml contents/ui/configDebug.qml
+msgid "Provider:"
+msgstr ""
+
+#: contents/ui/configAdvanced.qml
+msgid "Provider id (blank = all enabled)"
+msgstr ""
+
+#: contents/ui/configAdvanced.qml
+msgid "Source:"
+msgstr ""
+
+#: contents/ui/configAdvanced.qml
+msgid "Provider default (blank)"
+msgstr ""
+
+#: contents/ui/configDebug.qml contents/ui/configDisplay.qml
+#: contents/ui/configProviders.qml
+msgid "Set the codexbar command path in the General page."
+msgstr ""
+
+#: contents/ui/configDebug.qml
+msgid "No diagnostic output."
+msgstr ""
+
+#: contents/ui/configDebug.qml
+msgid ""
+"Run redacted CodexBar CLI diagnostics from Plasma. The diagnostic command "
+"omits raw tokens, cookies, auth headers, emails, account IDs, org IDs, raw "
+"responses, and billing-history records."
+msgstr ""
+
+#: contents/ui/configDebug.qml
+msgid "all"
+msgstr ""
+
+#: contents/ui/configDebug.qml
+msgid "Run redacted diagnostics"
+msgstr ""
+
+#: contents/ui/configDebug.qml
+msgid "List providers"
+msgstr ""
+
+#: contents/ui/configDebug.qml
+msgid "Diagnostic output appears here."
+msgstr ""
+
+#: contents/ui/configDisplay.qml contents/ui/configProviders.qml
+msgid "codexbar did not return provider data."
+msgstr ""
+
+#: contents/ui/configDisplay.qml contents/ui/configProviders.qml
+msgid "Could not parse codexbar provider JSON: %1"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Display mode:"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Percent"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Pace"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Percent and pace"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Reset time"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Show usage as percent used"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Show quota warning markers"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Show reset times as clock time"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Show provider changelog links"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Show provider in panel"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Show percent in panel"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Show multi-provider details in panel"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Auto-select highest-usage provider"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Overview providers:"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Choose up to %1 providers"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Loading providers..."
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "No enabled providers available for Overview."
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Use first %1 providers automatically"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Show credits in panel"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Command path:"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Refresh preset:"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Manual"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "1 min"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "2 min"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "5 min"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "15 min"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Custom"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Custom refresh:"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "%1 s"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Fetch provider status"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Show local cost usage"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Cost history days:"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Enable Plasma notifications"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Notify status incidents"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Notify quota warnings"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Notify limit resets"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Check for widget updates"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Notify when a widget update is available"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Install widget updates automatically"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Update check interval:"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "%1 hour"
+msgid_plural "%1 hours"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/configGeneral.qml
+msgid "Last update check: %1"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Last update check: never"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Last update status: %1"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "API key for %1"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Could not parse codexbar response: %1"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "%1: %2"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "%1 saved"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "%1 API key saved"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "codexbar did not return diagnostics."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Could not parse codexbar diagnostics: %1"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Set API key..."
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Docs"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Dashboard"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Account"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Login"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Provider id"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Disabled"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Enabled"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "State"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Default"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Off by default"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "On by default"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "API key setup"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Supported"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Use provider login/source"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Source"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Source mode"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Auth modes"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Auth configured"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "No"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Yes"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Fetch attempts"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Settings keys"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Load redacted settings to inspect source/auth details"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Provider diagnostics"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Search providers..."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Reload"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Reload provider list"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "%1 provider enabled"
+msgid_plural "%1 providers enabled"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/configProviders.qml
+msgid "%1 - disabled"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "%1 - enabled"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Provider settings"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Load redacted settings"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid ""
+"Provider-specific editing stays in the CodexBar CLI until it exposes a "
+"stable settings descriptor. This panel shows redacted source/auth details "
+"and exact CLI commands."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "CLI commands"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "No providers reported"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "codexbar did not return any providers."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "No matching providers"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "No provider matches \"%1\"."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "%1 - on by default"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Refresh"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Set the codexbar command path in widget settings."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "codexbar did not return JSON."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Could not parse codexbar JSON: %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Updated %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Could not load CodexBar provider configuration."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Could not parse CodexBar provider configuration: %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "No enabled CodexBar providers."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "codexbar did not return account data."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Could not parse codexbar account JSON: %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Could not parse codexbar cost JSON: %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Last 30 days"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Today"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Cost"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Latest"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Total tokens"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Input"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Output"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Cache read"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Cache write"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Peak: %1 - %2"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Average/day: %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Average: %1 / 1M tokens"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 tokens"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Codex dashboard"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "OpenAI API"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "OpenRouter"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Claude Admin"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Poe"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "DeepSeek"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "MiniMax"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Z.ai"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Code review remaining"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Credits remaining"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Plan"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Signed in"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "7d"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "30d"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "This month"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Top model"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Usage mix"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Models"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 requests"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 points"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 (%2)"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Latest dashboard day"
+msgstr ""
+
+#: contents/ui/main.qml
+#, javascript-format
+msgid "%1%"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Extra"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Limits not available"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "No usage yet"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "5-hour"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Amp Free"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Gemini Models"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Status"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Budget"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Monthly credits"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Premium"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Total"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Standard"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Requests"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Pro"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Credits"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Weekly"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Prompts"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Spend"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "API key limit"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Points"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Edit predictions"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Session"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Claude and GPT"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Balance"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Deployment"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Chat"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Auto"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Rate limit"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Flash"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "On-demand"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Tokens"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Kilo Pass"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Bonus"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Window"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Add-on credits"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Billing cycle"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Monthly"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Sonnet"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "API"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Flash Lite"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Opus"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Usage"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Extra usage"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Balance: %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Zen balance"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Quota usage"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1: %2 / %3"
+msgstr ""
+
+#: contents/ui/main.qml
+#, javascript-format
+msgid "%1% used"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Your spend: %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "API spend"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Reset credits"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 available"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "now"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 min"
+msgid_plural "%1 min"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/main.qml
+msgid "%1h"
+msgid_plural "%1h"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/main.qml
+msgid "%1h %2m"
+msgstr ""
+
+#: contents/ui/main.qml
+#, javascript-format
+msgid "%1d"
+msgid_plural "%1d"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/main.qml
+msgid "%1d %2h"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Partial outage"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Major outage"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Critical issue"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Maintenance"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Status unknown"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Critical"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Major"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Issue"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Maint."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Unknown"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 status issue"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 is %2% used"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 quota critical"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 quota warning"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 limit reset"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 is back to %2% used"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Checking for widget updates..."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Widget update check failed."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Widget update check returned no data."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Could not parse widget update JSON: %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Widget update %1 is available."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "A widget update is available."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Restart Plasma to apply the new widget version."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Widget update %1 installed. %2"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Widget update installed. %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Widget is up to date."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Widget update skipped."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Unknown widget update status: %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "CodexBar widget update available"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Version %1 is available."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "A new widget version is available."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "CodexBar widget update installed"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Version %1 was installed. %2"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "A widget update was installed. %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Accounts..."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Loading accounts..."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Usage Dashboard"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Status Page"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Changelog"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Settings..."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "About CodexBar"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Add Account..."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Switch Account..."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Open Devin..."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Open Droid in Browser..."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1: %2 - %3 tokens"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Estimated from local Codex logs for the selected account."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Estimated from local Claude logs."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Included plan"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "left"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "used"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Resets %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Loading"
+msgstr ""
+
+#: contents/ui/main.qml
+#, javascript-format
+msgid "%1cr"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 - %2"
+msgstr ""
+
+#: contents/ui/main.qml
+#, javascript-format
+msgid "%1% pace"
+msgstr ""
+
+#: contents/ui/main.qml
+#, javascript-format
+msgid "%1% pace late"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Overview"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Loading usage..."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "No provider data."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 - %2 providers"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 providers"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "No overview data available."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1% %2"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Updated just now"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Accounts"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Reload accounts"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Remaining: %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Usage dashboard"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 day"
+msgid_plural "%1 days"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/main.qml
+msgid "Cost history"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Cost drill-down"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Recent days"
+msgstr ""
