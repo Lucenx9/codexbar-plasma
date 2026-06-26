@@ -1004,12 +1004,32 @@ PlasmoidItem {
         }
 
         var nextProviders = []
+        var changed = false
         for (var i = 0; i < providers.length; i++) {
-            var item = copyObject(providers[i])
-            item.tokenCost = tokenCosts[item.provider] || null
-            nextProviders.push(item)
+            var item = providers[i]
+            var cost = tokenCosts[item.provider] || null
+
+            var costChanged = false
+            if (item.tokenCost !== cost) {
+                if (!item.tokenCost || !cost) {
+                    costChanged = true
+                } else {
+                    costChanged = JSON.stringify(item.tokenCost) !== JSON.stringify(cost)
+                }
+            }
+
+            if (costChanged) {
+                var copied = copyObject(item)
+                copied.tokenCost = cost
+                nextProviders.push(copied)
+                changed = true
+            } else {
+                nextProviders.push(item)
+            }
         }
-        providers = nextProviders
+        if (changed) {
+            providers = nextProviders
+        }
     }
 
     function selectedAccountForProvider(providerID) {
