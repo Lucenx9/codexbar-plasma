@@ -249,6 +249,15 @@ PlasmoidItem {
         return "'" + String(value).replace(/'/g, "'\\''") + "'"
     }
 
+    function hasOwnKey(item, key) {
+        return item ? Object.prototype.hasOwnProperty.call(item, key) : false
+    }
+
+    function isUnsafeObjectKey(key) {
+        var value = String(key || "")
+        return value === "__proto__" || value === "prototype" || value === "constructor"
+    }
+
     function commandWithRunNonce(command) {
         if (command.length === 0) {
             return ""
@@ -772,7 +781,7 @@ PlasmoidItem {
             for (var j = 0; j < breakdowns.length; j++) {
                 var breakdown = breakdowns[j] || ({})
                 var name = String(breakdown.modelName || breakdown.model || "").trim()
-                if (name.length === 0) {
+                if (name.length === 0 || isUnsafeObjectKey(name)) {
                     continue
                 }
                 var cost = Number(breakdown.cost !== undefined ? breakdown.cost : breakdown.totalCost)
@@ -780,7 +789,7 @@ PlasmoidItem {
                 if (!isFinite(cost) && !isFinite(tokens)) {
                     continue
                 }
-                if (!byName[name]) {
+                if (!hasOwnKey(byName, name)) {
                     byName[name] = {
                         label: name,
                         cost: 0,
@@ -799,6 +808,9 @@ PlasmoidItem {
 
         var rows = []
         for (var modelName in byName) {
+            if (!hasOwnKey(byName, modelName)) {
+                continue
+            }
             rows.push(byName[modelName])
         }
         rows.sort(function(a, b) {
@@ -889,6 +901,69 @@ PlasmoidItem {
         return rows
     }
 
+    function costHistoryRows(tokenCost) {
+        if (!tokenCost || !tokenCost.daily || tokenCost.daily.length === 0) {
+            return []
+        }
+
+        var rows = []
+        var maxCost = costSparklineMax(tokenCost.daily)
+        var first = Math.max(0, tokenCost.daily.length - 14)
+        for (var i = tokenCost.daily.length - 1; i >= first; i--) {
+            var item = tokenCost.daily[i]
+            var cost = Math.max(0, Number(item.cost) || 0)
+            var value = compactCostTokenSummary(cost, item.tokens, item.currency)
+            rows.push({
+                label: item.label && item.label.length > 0 ? item.label : i18n("Latest"),
+                value: value.length > 0 ? value : amountString(0, item.currency || "USD"),
+                percent: maxCost > 0 ? Math.max(3, cost * 100 / maxCost) : 0,
+                isPeak: maxCost > 0 && cost === maxCost
+            })
+        }
+        return rows
+    }
+
+    function costPeakLine(points) {
+        if (!points || points.length === 0) {
+            return ""
+        }
+
+        var peak = null
+        for (var i = 0; i < points.length; i++) {
+            var cost = Number(points[i].cost) || 0
+            if (!peak || cost > peak.cost) {
+                peak = {
+                    label: points[i].label && points[i].label.length > 0 ? points[i].label : i18n("Latest"),
+                    cost: cost,
+                    currency: points[i].currency || "USD"
+                }
+            }
+        }
+        if (!peak || peak.cost <= 0) {
+            return ""
+        }
+        return i18n("Peak: %1 · %2", peak.label, amountString(peak.cost, peak.currency))
+    }
+
+    function costAverageDailyLine(points) {
+        if (!points || points.length === 0) {
+            return ""
+        }
+
+        var total = 0
+        var currency = "USD"
+        for (var i = 0; i < points.length; i++) {
+            total += Math.max(0, Number(points[i].cost) || 0)
+            if (points[i].currency) {
+                currency = points[i].currency
+            }
+        }
+        if (total <= 0) {
+            return ""
+        }
+        return i18n("Average/day: %1", amountString(total / points.length, currency))
+    }
+
     function costPerMillionLine(tokenCost) {
         if (!tokenCost || !tokenCost.totals) {
             return ""
@@ -908,6 +983,17 @@ PlasmoidItem {
         }
         if (isFinite(Number(tokens)) && Number(tokens) > 0) {
             parts.push(i18n("%1 tokens", tokenCountString(Number(tokens))))
+        }
+        return parts.join(" · ")
+    }
+
+    function compactCostTokenSummary(cost, tokens, currency) {
+        var parts = []
+        if (isFinite(Number(cost)) && Number(cost) > 0) {
+            parts.push(amountString(Number(cost), currency || "USD"))
+        }
+        if (isFinite(Number(tokens)) && Number(tokens) > 0) {
+            parts.push(tokenCountString(Number(tokens)))
         }
         return parts.join(" · ")
     }
@@ -1087,7 +1173,7 @@ PlasmoidItem {
             tokenCost: tokenCosts[providerID] || null,
             planText: planText(providerID, usage, item),
             dashboardUrl: providerDashboardUrl(providerID),
-            statusUrl: status && status.url ? status.url : providerStatusUrl(providerID),
+            statusUrl: safeStatusUrl(providerID, status && status.url ? status.url : ""),
             changelogUrl: providerChangelogUrl(providerID),
             credits: credits && credits.remaining !== null && credits.remaining !== undefined && isFinite(Number(credits.remaining))
                 ? Number(credits.remaining)
@@ -1733,7 +1819,7 @@ PlasmoidItem {
             cleanUrgency = "normal"
         }
         var command = "if command -v notify-send >/dev/null 2>&1; then notify-send --app-name=CodexBar --icon=view-statistics --urgency="
-            + shellQuote(cleanUrgency) + " " + shellQuote(cleanTitle) + " " + shellQuote(cleanBody) + "; fi"
+            + shellQuote(cleanUrgency) + " -- " + shellQuote(cleanTitle) + " " + shellQuote(cleanBody) + "; fi"
         notificationSource.connectSource(command)
     }
 
@@ -2198,6 +2284,25 @@ PlasmoidItem {
         }
     }
 
+    function httpsUrlHost(url) {
+        var match = String(url || "").trim().match(/^https:\/\/([^\/?#]+)/i)
+        return match ? match[1].toLowerCase() : ""
+    }
+
+    function safeStatusUrl(providerID, url) {
+        var fallback = providerStatusUrl(providerID)
+        var fallbackHost = httpsUrlHost(fallback)
+        var candidate = String(url || "").trim()
+        var candidateHost = httpsUrlHost(candidate)
+        if (fallbackHost.length === 0) {
+            return ""
+        }
+        if (candidateHost.length === 0) {
+            return fallback
+        }
+        return candidateHost === fallbackHost ? candidate : fallback
+    }
+
     function providerChangelogUrl(providerID) {
         switch (providerKey(providerID)) {
         case "codex":
@@ -2234,7 +2339,7 @@ PlasmoidItem {
         if (item.dashboardUrl && item.dashboardUrl.length > 0) {
             rows.push({ title: i18n("Usage Dashboard"), icon: "view-statistics", action: "dashboard", enabled: true })
         }
-        if (item.statusUrl && item.statusUrl.length > 0) {
+        if (safeStatusUrl(item.provider, item.statusUrl).length > 0) {
             rows.push({ title: i18n("Status Page"), icon: "network-connect", action: "status", enabled: true })
         }
         if (showProviderChangelogs && item.changelogUrl && item.changelogUrl.length > 0) {
@@ -2278,7 +2383,7 @@ PlasmoidItem {
         if (actionID === "dashboard" && item) {
             Qt.openUrlExternally(item.dashboardUrl)
         } else if (actionID === "status" && item) {
-            Qt.openUrlExternally(item.statusUrl)
+            Qt.openUrlExternally(safeStatusUrl(item.provider, item.statusUrl))
         } else if (actionID === "changelog" && item) {
             Qt.openUrlExternally(item.changelogUrl)
         } else if (actionID === "docs" && actionRow && actionRow.url) {
@@ -2320,6 +2425,9 @@ PlasmoidItem {
     function copyObject(item) {
         var copy = ({})
         for (var key in item) {
+            if (!hasOwnKey(item, key) || isUnsafeObjectKey(key)) {
+                continue
+            }
             copy[key] = item[key]
         }
         return copy
@@ -3886,6 +3994,91 @@ PlasmoidItem {
                                     opacity: 0.62
                                     horizontalAlignment: Text.AlignRight
                                     elide: Text.ElideRight
+                                }
+                            }
+
+                            ColumnLayout {
+                                id: costHistoryChartSection
+
+                                readonly property var rows: root.costHistoryRows(tokenCostSection.tokenCost)
+                                readonly property string peakLine: tokenCostSection.tokenCost ? root.costPeakLine(tokenCostSection.tokenCost.daily) : ""
+                                readonly property string averageLine: tokenCostSection.tokenCost ? root.costAverageDailyLine(tokenCostSection.tokenCost.daily) : ""
+                                readonly property color accent: root.providerColor(root.selectedProviderData ? root.selectedProviderData.provider : "")
+
+                                visible: rows.length > 1
+                                Layout.fillWidth: true
+                                spacing: Kirigami.Units.smallSpacing / 2
+
+                                PlasmaComponents.Label {
+                                    text: i18n("Cost history")
+                                    font.weight: Font.DemiBold
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                }
+
+                                RowLayout {
+                                    visible: costHistoryChartSection.peakLine.length > 0
+                                        || costHistoryChartSection.averageLine.length > 0
+                                    Layout.fillWidth: true
+                                    spacing: Kirigami.Units.smallSpacing
+
+                                    PlasmaComponents.Label {
+                                        text: costHistoryChartSection.peakLine
+                                        opacity: 0.66
+                                        Layout.fillWidth: true
+                                        elide: Text.ElideRight
+                                    }
+
+                                    PlasmaComponents.Label {
+                                        text: costHistoryChartSection.averageLine
+                                        opacity: 0.66
+                                        horizontalAlignment: Text.AlignRight
+                                        elide: Text.ElideRight
+                                    }
+                                }
+
+                                Repeater {
+                                    model: root.costHistoryRows(tokenCostSection.tokenCost)
+
+                                    delegate: RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: Kirigami.Units.smallSpacing
+
+                                        PlasmaComponents.Label {
+                                            text: modelData.label
+                                            opacity: 0.66
+                                            Layout.preferredWidth: Kirigami.Units.gridUnit * 5
+                                            elide: Text.ElideRight
+                                        }
+
+                                        Rectangle {
+                                            id: costHistoryBarTrack
+
+                                            Layout.fillWidth: true
+                                            Layout.preferredHeight: 6
+                                            radius: height / 2
+                                            color: root.withAlpha(Kirigami.Theme.textColor, 0.12)
+                                            clip: true
+
+                                            Rectangle {
+                                                width: parent.width * Math.max(0, Math.min(100, modelData.percent)) / 100
+                                                height: parent.height
+                                                radius: parent.radius
+                                                color: modelData.isPeak
+                                                    ? root.withAlpha(costHistoryChartSection.accent, 1)
+                                                    : root.withAlpha(costHistoryChartSection.accent, 0.72)
+                                            }
+                                        }
+
+                                        PlasmaComponents.Label {
+                                            text: modelData.value
+                                            opacity: modelData.isPeak ? 0.9 : 0.7
+                                            font.weight: modelData.isPeak ? Font.DemiBold : Font.Normal
+                                            horizontalAlignment: Text.AlignRight
+                                            Layout.preferredWidth: Kirigami.Units.gridUnit * 8
+                                            elide: Text.ElideRight
+                                        }
+                                    }
                                 }
                             }
 

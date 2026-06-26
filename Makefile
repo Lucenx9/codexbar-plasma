@@ -7,13 +7,15 @@ QML_IMPORT_DIR ?= /usr/lib/qt6/qml
 # Extra qmllint flags. CI without the Plasma QML modules sets these to downgrade
 # the type/import-resolution categories that would otherwise cascade into
 # failures; locally (modules present) they are no-ops, so the check stays full.
-QMLLINT_FLAGS ?=
+QMLLINT_FLAGS ?= --unqualified disable
 
 check:
 	scripts/test_feature_parity.sh
 	scripts/test_refresh_nonce.sh
 	scripts/test_provider_icons.sh
-	$(QMLLINT) $(QMLLINT_FLAGS) -I $(QML_IMPORT_DIR) contents/ui/main.qml contents/ui/configGeneral.qml contents/ui/configProviders.qml
+	scripts/test_security_regressions.sh
+	scripts/test_qml_hardening.sh
+	$(QMLLINT) $(QMLLINT_FLAGS) -I $(QML_IMPORT_DIR) contents/ui/main.qml contents/ui/configGeneral.qml contents/ui/configProviders.qml contents/ui/configDisplay.qml contents/ui/configAdvanced.qml contents/ui/configAbout.qml contents/ui/configDebug.qml
 	xmllint --noout contents/config/main.xml
 	jq . metadata.json >/dev/null
 	@if command -v kpackagetool6 >/dev/null 2>&1; then \
@@ -30,4 +32,4 @@ restart:
 
 package:
 	mkdir -p dist
-	cmake -E tar cf dist/codexbar-plasma.plasmoid --format=zip metadata.json contents LICENSE NOTICE.md README.md
+	cmake -E tar cf dist/codexbar-plasma.plasmoid --format=zip metadata.json contents docs LICENSE NOTICE.md README.md

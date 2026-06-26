@@ -50,6 +50,9 @@ KCM.SimpleKCM {
     property var pendingDesired: ({})
     // running command source -> descriptor { kind, provider, desiredEnabled }
     property var commands: ({})
+    property var providerDiagnostics: ({})
+    property var providerDiagnosticErrors: ({})
+    property var providerDiagnosticLoading: ({})
     property string selectedProviderID: ""
 
     readonly property var visibleProviders: filterProviders(providers, filterText)
@@ -118,6 +121,21 @@ KCM.SimpleKCM {
         runCommand(command, { kind: "setApiKey", provider: providerID })
     }
 
+    function loadProviderSettings(providerID) {
+        if (commandPath.length === 0 || providerID.length === 0 || providerDiagnosticLoadingFor(providerID)) {
+            return
+        }
+        setProviderDiagnosticLoading(providerID, true)
+        setProviderDiagnosticError(providerID, "")
+        var command = [
+            shellQuote(commandPath),
+            "diagnose --provider",
+            shellQuote(providerID),
+            "--format json --redact"
+        ].join(" ")
+        runCommand(command, { kind: "diagnose", provider: providerID })
+    }
+
     function runCommand(command, descriptor) {
         var existing = copyObject(commands)
         existing[command] = descriptor
@@ -140,6 +158,8 @@ KCM.SimpleKCM {
             handleToggleResult(descriptor, stdoutText, stderrText)
         } else if (descriptor.kind === "setApiKey") {
             handleSetApiKeyResult(descriptor, stdoutText, stderrText)
+        } else if (descriptor.kind === "diagnose") {
+            handleDiagnoseResult(descriptor, stdoutText, stderrText)
         }
     }
 
@@ -264,6 +284,35 @@ KCM.SimpleKCM {
         statusText = i18n("%1 API key saved", displayNameForProvider(descriptor.provider))
     }
 
+    function handleDiagnoseResult(descriptor, stdoutText, stderrText) {
+        setProviderDiagnosticLoading(descriptor.provider, false)
+
+        var trimmed = stdoutText.trim()
+        if (trimmed.length === 0) {
+            setProviderDiagnosticError(
+                descriptor.provider,
+                stderrText.trim().length > 0 ? stderrText.trim() : i18n("codexbar did not return diagnostics."))
+            return
+        }
+
+        var payload
+        try {
+            payload = JSON.parse(trimmed)
+        } catch (error) {
+            setProviderDiagnosticError(descriptor.provider, i18n("Could not parse codexbar diagnostics: %1", error.message))
+            return
+        }
+
+        var message = commandError(payload)
+        if (message.length > 0) {
+            setProviderDiagnosticError(descriptor.provider, message)
+            return
+        }
+
+        setProviderDiagnostic(descriptor.provider, normalizeProviderDiagnostic(payload))
+        setProviderDiagnosticError(descriptor.provider, "")
+    }
+
     function commandError(payload) {
         if (!payload) {
             return ""
@@ -297,6 +346,62 @@ KCM.SimpleKCM {
             }
         }
         return null
+    }
+
+    function providerDiagnosticFor(providerID) {
+        return providerDiagnostics[providerKey(providerID)] || null
+    }
+
+    function setProviderDiagnostic(providerID, diagnostic) {
+        var next = copyObject(providerDiagnostics)
+        next[providerKey(providerID)] = diagnostic
+        providerDiagnostics = next
+    }
+
+    function providerDiagnosticErrorFor(providerID) {
+        return providerDiagnosticErrors[providerKey(providerID)] || ""
+    }
+
+    function setProviderDiagnosticError(providerID, message) {
+        var next = copyObject(providerDiagnosticErrors)
+        var key = providerKey(providerID)
+        if (message && message.length > 0) {
+            next[key] = message
+        } else {
+            delete next[key]
+        }
+        providerDiagnosticErrors = next
+    }
+
+    function providerDiagnosticLoadingFor(providerID) {
+        return providerDiagnosticLoading[providerKey(providerID)] === true
+    }
+
+    function setProviderDiagnosticLoading(providerID, value) {
+        var next = copyObject(providerDiagnosticLoading)
+        var key = providerKey(providerID)
+        if (value) {
+            next[key] = true
+        } else {
+            delete next[key]
+        }
+        providerDiagnosticLoading = next
+    }
+
+    function normalizeProviderDiagnostic(payload) {
+        var item = Array.isArray(payload) ? (payload.length > 0 ? payload[0] : ({})) : payload
+        var settings = item && item.settings ? item.settings : ({})
+        var auth = item && item.auth ? item.auth : ({})
+        return {
+            provider: item && item.provider ? String(item.provider) : "",
+            displayName: item && item.displayName ? String(item.displayName) : "",
+            source: item && item.source ? String(item.source) : "",
+            sourceMode: item && item.sourceMode ? String(item.sourceMode) : "",
+            authConfigured: auth.configured === true,
+            authModes: Array.isArray(auth.modes) ? auth.modes.join(", ") : "",
+            settingsKeys: objectKeys(settings).join(", "),
+            fetchAttempts: item && Array.isArray(item.fetchAttempts) ? item.fetchAttempts.length : 0
+        }
     }
 
     function updateProviderEnabled(providerID, enabled) {
@@ -401,6 +506,57 @@ KCM.SimpleKCM {
             rows.push({ title: item.enabled ? i18n("Account") : i18n("Login"), icon: "internet-services", action: "login", url: login, enabled: true })
         }
         return rows
+    }
+
+    function providerSettingsRows(item) {
+        if (!item) {
+            return []
+        }
+
+        var diagnostic = providerDiagnosticFor(item.provider)
+        var rows = []
+        rows.push({ label: i18n("Provider id"), value: item.provider })
+        rows.push({ label: i18n("State"), value: item.enabled ? i18n("Enabled") : i18n("Disabled") })
+        rows.push({ label: i18n("Default"), value: item.defaultEnabled ? i18n("On by default") : i18n("Off by default") })
+        rows.push({
+            label: i18n("API key setup"),
+            value: supportsApiKeySetup(item.provider) ? i18n("Supported") : i18n("Use provider login/source")
+        })
+
+        if (diagnostic) {
+            appendSettingsRow(rows, i18n("Source"), diagnostic.source)
+            appendSettingsRow(rows, i18n("Source mode"), diagnostic.sourceMode)
+            appendSettingsRow(rows, i18n("Auth modes"), diagnostic.authModes)
+            rows.push({ label: i18n("Auth configured"), value: diagnostic.authConfigured ? i18n("Yes") : i18n("No") })
+            rows.push({ label: i18n("Fetch attempts"), value: String(diagnostic.fetchAttempts) })
+            appendSettingsRow(rows, i18n("Settings keys"), diagnostic.settingsKeys)
+        } else {
+            rows.push({ label: i18n("Provider diagnostics"), value: i18n("Load redacted settings to inspect source/auth details") })
+        }
+        return rows
+    }
+
+    function appendSettingsRow(rows, label, value) {
+        if (value && String(value).length > 0) {
+            rows.push({ label: label, value: String(value) })
+        }
+    }
+
+    function providerCliCommandText(item) {
+        if (!item) {
+            return ""
+        }
+
+        var providerID = item.provider
+        var lines = [
+            shellQuote(commandPath) + " usage --provider " + shellQuote(providerID) + " --format json --json-only",
+            shellQuote(commandPath) + " diagnose --provider " + shellQuote(providerID) + " --format json --redact",
+            shellQuote(commandPath) + " config " + (item.enabled ? "disable" : "enable") + " --provider " + shellQuote(providerID) + " --format json --json-only"
+        ]
+        if (supportsApiKeySetup(providerID)) {
+            lines.push("printf '%s' \"$API_KEY\" | " + shellQuote(commandPath) + " config set-api-key --provider " + shellQuote(providerID) + " --stdin --format json --json-only")
+        }
+        return lines.join("\n")
     }
 
     function performProviderAction(row) {
@@ -680,6 +836,18 @@ KCM.SimpleKCM {
         return words.join(" ")
     }
 
+    function objectKeys(item) {
+        var keys = []
+        if (!item) {
+            return keys
+        }
+        for (var key in item) {
+            keys.push(key)
+        }
+        keys.sort()
+        return keys
+    }
+
     Plasma5Support.DataSource {
         id: configSource
 
@@ -818,6 +986,103 @@ KCM.SimpleKCM {
                         icon.name: modelData.icon
                         enabled: modelData.enabled
                         onClicked: page.performProviderAction(modelData)
+                    }
+                }
+            }
+
+            Kirigami.Separator {
+                Layout.fillWidth: true
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: Kirigami.Units.smallSpacing
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Kirigami.Units.smallSpacing
+
+                    Controls.Label {
+                        text: i18n("Provider settings")
+                        font.weight: Font.DemiBold
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                    }
+
+                    Controls.BusyIndicator {
+                        running: page.selectedProvider
+                            && page.providerDiagnosticLoadingFor(page.selectedProvider.provider)
+                        visible: running
+                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                    }
+
+                    Controls.Button {
+                        text: i18n("Load redacted settings")
+                        icon.name: "view-refresh"
+                        enabled: page.selectedProvider
+                            && !page.providerDiagnosticLoadingFor(page.selectedProvider.provider)
+                        onClicked: if (page.selectedProvider) page.loadProviderSettings(page.selectedProvider.provider)
+                    }
+                }
+
+                Controls.Label {
+                    Layout.fillWidth: true
+                    text: i18n("Provider-specific editing stays in the CodexBar CLI until it exposes a stable settings descriptor. This panel shows redacted source/auth details and exact CLI commands.")
+                    opacity: 0.66
+                    font: Kirigami.Theme.smallFont
+                    wrapMode: Text.WordWrap
+                }
+
+                Kirigami.InlineMessage {
+                    Layout.fillWidth: true
+                    type: Kirigami.MessageType.Error
+                    text: page.selectedProvider
+                        ? page.providerDiagnosticErrorFor(page.selectedProvider.provider)
+                        : ""
+                    visible: text.length > 0
+                    showCloseButton: true
+                }
+
+                Repeater {
+                    model: page.providerSettingsRows(page.selectedProvider)
+
+                    delegate: RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Kirigami.Units.smallSpacing
+
+                        Controls.Label {
+                            text: modelData.label
+                            opacity: 0.66
+                            Layout.preferredWidth: Kirigami.Units.gridUnit * 7
+                            elide: Text.ElideRight
+                        }
+
+                        Controls.Label {
+                            text: modelData.value
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                        }
+                    }
+                }
+
+                Controls.Label {
+                    text: i18n("CLI commands")
+                    font.weight: Font.DemiBold
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                }
+
+                Controls.ScrollView {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Kirigami.Units.gridUnit * 5
+
+                    Controls.TextArea {
+                        readOnly: true
+                        selectByMouse: true
+                        wrapMode: TextEdit.NoWrap
+                        text: page.providerCliCommandText(page.selectedProvider)
+                        font.family: "monospace"
                     }
                 }
             }

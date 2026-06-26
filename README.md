@@ -6,15 +6,22 @@ This repository is intentionally small: it contains only the Plasma applet. All
 provider logic, authentication, configuration, quota parsing, and JSON output
 come from the `codexbar` CLI.
 
+![CodexBar Plasma overview](docs/codexbar-plasma-overview.png)
+
+![Codex provider detail](docs/codexbar-plasma-codex.png)
+
 ## Features
 
 - Multi-provider Plasma panel indicator.
 - Provider tabs with usage bars, reset windows, credits, local token cost, and
   provider status links.
 - Local cost drill-down with token breakdowns, model summaries, recent daily spend,
-  and average cost per 1M tokens where the CLI exposes those fields.
+  cost history bars, and average cost per 1M tokens where the CLI exposes those fields.
 - Provider settings page for enable/disable, API key setup, docs, dashboards,
-  and login/account links.
+  login/account links, redacted provider diagnostics, and provider-specific CLI
+  command hints.
+- Split settings pages for general refresh/notification controls, display,
+  advanced provider overrides, about links, and redacted CLI diagnostics.
 - Optional compact multi-provider panel meters.
 - Display mode controls: Percent, Pace, Percent and pace, Reset time.
 - Refresh presets: Manual, 1 min, 2 min, 5 min, 15 min, or custom seconds.
@@ -84,11 +91,18 @@ the widget settings. On Arch/CachyOS with the AUR package this is usually:
 ```sh
 scripts/test_feature_parity.sh
 scripts/test_refresh_nonce.sh
-/usr/lib/qt6/bin/qmllint -I /usr/lib/qt6/qml contents/ui/main.qml contents/ui/configGeneral.qml contents/ui/configProviders.qml
+scripts/test_provider_icons.sh
+scripts/test_security_regressions.sh
+scripts/test_qml_hardening.sh
+/usr/lib/qt6/bin/qmllint --unqualified disable -I /usr/lib/qt6/qml contents/ui/main.qml contents/ui/configGeneral.qml contents/ui/configProviders.qml contents/ui/configDisplay.qml contents/ui/configAdvanced.qml contents/ui/configAbout.qml contents/ui/configDebug.qml
 xmllint --noout contents/config/main.xml
 jq . metadata.json >/dev/null
 kpackagetool6 --appstream-metainfo . | xmllint --noout -
 ```
+
+`make check` runs `qmllint` with `--unqualified disable` because Plasma injects
+helpers such as `i18n()` as context properties that otherwise create noisy
+false-positive warnings.
 
 ## Structure
 

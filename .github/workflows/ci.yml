@@ -16,15 +16,50 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
-  ci:
+  check:
     runs-on: ubuntu-latest
     container:
       image: kdeneon/plasma:user
       # neon `:user` images default to a non-root user; force root so apt works.
       options: --user 0
     permissions:
-      # Needed by the release step to create the GitHub Release on tags.
+      contents: read
+    steps:
+      - name: Install build-only tooling
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            make cmake git ca-certificates jq libxml2-utils qt6-declarative-dev-tools
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: make check
+        # This image ships qmllint but not the Plasma/Kirigami QML modules, so
+        # downgrade the type/import-resolution categories qmllint can't satisfy
+        # here. Syntax and JS-level checks still run; full import resolution is
+        # covered by `make check` on a Plasma desktop before pushing.
+        run: >
+          make check
+          QMLLINT_FLAGS="--import info --unresolved-type info --missing-property info --unqualified disable"
+
+      - name: make package
+        run: make package
+
+  release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    container:
+      image: kdeneon/plasma:user
+      # neon `:user` images default to a non-root user; force root so apt works.
+      options: --user 0
+    permissions:
       contents: write
     steps:
       - name: Install build-only tooling
@@ -35,6 +70,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: make check
         # This image ships qmllint but not the Plasma/Kirigami QML modules, so
@@ -43,13 +80,12 @@ jobs:
         # covered by `make check` on a Plasma desktop before pushing.
         run: >
           make check
-          QMLLINT_FLAGS="--import info --unresolved-type info --missing-property info --unqualified info"
+          QMLLINT_FLAGS="--import info --unresolved-type info --missing-property info --unqualified disable"
 
       - name: make package
         run: make package
 
       - name: Publish release
-        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           files: dist/codexbar-plasma.plasmoid
