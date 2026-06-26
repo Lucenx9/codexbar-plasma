@@ -5,6 +5,7 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as Plasma5Support
+import "Logic.js" as Logic
 import org.kde.plasma.plasmoid
 
 PlasmoidItem {
@@ -822,16 +823,6 @@ PlasmoidItem {
         return rows.slice(0, 6)
     }
 
-    function costSparklineMax(points) {
-        var maxCost = 0
-        if (!points) {
-            return maxCost
-        }
-        for (var i = 0; i < points.length; i++) {
-            maxCost = Math.max(maxCost, Number(points[i].cost) || 0)
-        }
-        return maxCost
-    }
 
     function costSparklineSummary(points) {
         if (!points || points.length === 0) {
@@ -907,7 +898,7 @@ PlasmoidItem {
         }
 
         var rows = []
-        var maxCost = costSparklineMax(tokenCost.daily)
+        var maxCost = Logic.costSparklineMax(tokenCost.daily)
         var first = Math.max(0, tokenCost.daily.length - 14)
         for (var i = tokenCost.daily.length - 1; i >= first; i--) {
             var item = tokenCost.daily[i]
@@ -3937,7 +3928,7 @@ PlasmoidItem {
                                 id: costSparkline
 
                                 property var points: tokenCostSection.tokenCost ? tokenCostSection.tokenCost.daily : []
-                                readonly property real maxValue: root.costSparklineMax(points)
+                                readonly property real maxValue: Logic.costSparklineMax(points)
                                 readonly property color accent: root.providerColor(root.selectedProviderData ? root.selectedProviderData.provider : "")
 
                                 visible: points.length > 1 && maxValue > 0
