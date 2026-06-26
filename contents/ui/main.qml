@@ -3906,6 +3906,10 @@ PlasmoidItem {
                             id: tokenCostSection
 
                             readonly property var tokenCost: root.selectedProviderData ? root.selectedProviderData.tokenCost : null
+                            readonly property var cachedCostBreakdownRows: root.costBreakdownRows(tokenCostSection.tokenCost)
+                            readonly property var cachedCostModelRows: root.costModelRows(tokenCostSection.tokenCost)
+                            readonly property var cachedCostDailyRows: root.costDailyRows(tokenCostSection.tokenCost)
+                            readonly property string cachedCostPerMillionLine: root.costPerMillionLine(tokenCostSection.tokenCost)
 
                             visible: tokenCostSection.tokenCost ? true : false
                             Layout.fillWidth: true
@@ -4086,9 +4090,9 @@ PlasmoidItem {
                                 id: costDrillDownSection
 
                                 visible: tokenCostSection.tokenCost
-                                    && (root.costBreakdownRows(tokenCostSection.tokenCost).length > 0
-                                        || root.costModelRows(tokenCostSection.tokenCost).length > 0
-                                        || root.costDailyRows(tokenCostSection.tokenCost).length > 0)
+                                    && (tokenCostSection.cachedCostBreakdownRows.length > 0
+                                        || tokenCostSection.cachedCostModelRows.length > 0
+                                        || tokenCostSection.cachedCostDailyRows.length > 0)
                                 Layout.fillWidth: true
                                 spacing: Kirigami.Units.smallSpacing
 
@@ -4100,20 +4104,20 @@ PlasmoidItem {
                                 }
 
                                 PlasmaComponents.Label {
-                                    visible: tokenCostSection.tokenCost && root.costPerMillionLine(tokenCostSection.tokenCost).length > 0
-                                    text: tokenCostSection.tokenCost ? root.costPerMillionLine(tokenCostSection.tokenCost) : ""
+                                    visible: tokenCostSection.tokenCost && tokenCostSection.cachedCostPerMillionLine.length > 0
+                                    text: tokenCostSection.tokenCost ? tokenCostSection.cachedCostPerMillionLine : ""
                                     opacity: 0.7
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
                                 }
 
                                 ColumnLayout {
-                                    visible: root.costBreakdownRows(tokenCostSection.tokenCost).length > 0
+                                    visible: tokenCostSection.cachedCostBreakdownRows.length > 0
                                     Layout.fillWidth: true
                                     spacing: Kirigami.Units.smallSpacing / 2
 
                                     Repeater {
-                                        model: root.costBreakdownRows(tokenCostSection.tokenCost)
+                                        model: tokenCostSection.cachedCostBreakdownRows
 
                                         delegate: RowLayout {
                                             Layout.fillWidth: true
@@ -4137,12 +4141,12 @@ PlasmoidItem {
                                 }
 
                                 Kirigami.Separator {
-                                    visible: root.costModelRows(tokenCostSection.tokenCost).length > 0
+                                    visible: tokenCostSection.cachedCostModelRows.length > 0
                                     Layout.fillWidth: true
                                 }
 
                                 ColumnLayout {
-                                    visible: root.costModelRows(tokenCostSection.tokenCost).length > 0
+                                    visible: tokenCostSection.cachedCostModelRows.length > 0
                                     Layout.fillWidth: true
                                     spacing: Kirigami.Units.smallSpacing / 2
 
@@ -4154,7 +4158,7 @@ PlasmoidItem {
                                     }
 
                                     Repeater {
-                                        model: root.costModelRows(tokenCostSection.tokenCost)
+                                        model: tokenCostSection.cachedCostModelRows
 
                                         delegate: RowLayout {
                                             Layout.fillWidth: true
@@ -4177,12 +4181,12 @@ PlasmoidItem {
                                 }
 
                                 Kirigami.Separator {
-                                    visible: root.costDailyRows(tokenCostSection.tokenCost).length > 0
+                                    visible: tokenCostSection.cachedCostDailyRows.length > 0
                                     Layout.fillWidth: true
                                 }
 
                                 ColumnLayout {
-                                    visible: root.costDailyRows(tokenCostSection.tokenCost).length > 0
+                                    visible: tokenCostSection.cachedCostDailyRows.length > 0
                                     Layout.fillWidth: true
                                     spacing: Kirigami.Units.smallSpacing / 2
 
@@ -4194,7 +4198,7 @@ PlasmoidItem {
                                     }
 
                                     Repeater {
-                                        model: root.costDailyRows(tokenCostSection.tokenCost)
+                                        model: tokenCostSection.cachedCostDailyRows
 
                                         delegate: RowLayout {
                                             Layout.fillWidth: true
