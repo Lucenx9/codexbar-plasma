@@ -47,17 +47,6 @@ require_command() {
   command -v "$1" >/dev/null 2>&1 || fail "missing required command: $1"
 }
 
-schedule_plasmashell_restart() {
-  if command -v systemd-run >/dev/null 2>&1; then
-    local unit_name="codexbar-plasma-restart-$$"
-    systemd-run --user --collect --unit="$unit_name" --on-active=2s \
-      systemctl --user restart plasma-plasmashell.service >/dev/null
-    return
-  fi
-
-  nohup sh -c 'sleep 2; systemctl --user restart plasma-plasmashell.service' >/dev/null 2>&1 &
-}
-
 normalize_version() {
   printf '%s\n' "${1#v}"
 }
@@ -119,7 +108,6 @@ if [[ -z "$RELEASE_JSON" ]]; then
 fi
 if [[ "$MODE" == "install" ]]; then
   require_command kpackagetool6
-  require_command systemctl
 fi
 
 if [[ ! -f "$METADATA_PATH" ]]; then
@@ -185,6 +173,5 @@ fi
 package_path="${TMP_DIR}/${ASSET_NAME}"
 curl --fail --location --show-error --silent "$asset_url" --output "$package_path"
 kpackagetool6 -t Plasma/Applet -u "$package_path"
-schedule_plasmashell_restart
 
-emit_status "installed" "widget update installed" "$local_version" "$remote_version" "$asset_url"
+emit_status "installed" "widget update installed; restart Plasma to apply the update" "$local_version" "$remote_version" "$asset_url"

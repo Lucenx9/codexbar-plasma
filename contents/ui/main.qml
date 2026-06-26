@@ -2144,9 +2144,11 @@ PlasmoidItem {
             return
         }
         if (status === "installed") {
+            var restartText = i18n("Restart Plasma to apply the new widget version.")
             setWidgetUpdateState(version.length > 0
-                ? i18n("Widget update %1 installed.", version)
-                : i18n("Widget update installed."), "")
+                ? i18n("Widget update %1 installed. %2", version, restartText)
+                : i18n("Widget update installed. %1", restartText), "")
+            notifyInstalledUpdate(version)
             return
         }
         if (status === "current") {
@@ -2177,6 +2179,19 @@ PlasmoidItem {
         var body = cleanVersion.length > 0
             ? i18n("Version %1 is available.", cleanVersion)
             : i18n("A new widget version is available.")
+        sendPlasmaNotification(title, body, "normal")
+    }
+
+    function notifyInstalledUpdate(version) {
+        if (!enableNotifications || !updateNotificationsEnabled) {
+            return
+        }
+        var cleanVersion = String(version || "").trim()
+        var title = i18n("CodexBar widget update installed")
+        var restartText = i18n("Restart Plasma to apply the new widget version.")
+        var body = cleanVersion.length > 0
+            ? i18n("Version %1 was installed. %2", cleanVersion, restartText)
+            : i18n("A widget update was installed. %1", restartText)
         sendPlasmaNotification(title, body, "normal")
     }
 
