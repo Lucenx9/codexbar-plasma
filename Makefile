@@ -16,7 +16,11 @@ check:
 	$(QMLLINT) $(QMLLINT_FLAGS) -I $(QML_IMPORT_DIR) contents/ui/main.qml contents/ui/configGeneral.qml contents/ui/configProviders.qml
 	xmllint --noout contents/config/main.xml
 	jq . metadata.json >/dev/null
-	kpackagetool6 --appstream-metainfo . | xmllint --noout -
+	@if command -v kpackagetool6 >/dev/null 2>&1; then \
+		kpackagetool6 --appstream-metainfo . | xmllint --noout -; \
+	else \
+		echo "kpackagetool6 not found; skipping appstream metainfo check"; \
+	fi
 
 install:
 	kpackagetool6 -t Plasma/Applet -u . || kpackagetool6 -t Plasma/Applet -i .
