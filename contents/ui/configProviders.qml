@@ -6,6 +6,8 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
 
+import "Shared.js" as Shared
+
 KCM.SimpleKCM {
     id: page
 
@@ -619,53 +621,7 @@ KCM.SimpleKCM {
 
     function providerDocsUrl(providerID) {
         var key = providerKey(providerID)
-        var docs = {
-            abacus: "abacus.md",
-            alibaba: "alibaba-coding-plan.md",
-            alibabatokenplan: "alibaba-token-plan.md",
-            amp: "amp.md",
-            antigravity: "antigravity.md",
-            augment: "augment.md",
-            bedrock: "bedrock.md",
-            chutes: "chutes.md",
-            claude: "claude.md",
-            codebuff: "codebuff.md",
-            commandcode: "command-code.md",
-            codex: "codex.md",
-            crof: "crof.md",
-            cursor: "cursor.md",
-            deepgram: "deepgram.md",
-            deepseek: "deepseek.md",
-            devin: "devin.md",
-            doubao: "doubao.md",
-            elevenlabs: "elevenlabs.md",
-            factory: "factory.md",
-            gemini: "gemini.md",
-            grok: "grok.md",
-            groq: "groqcloud.md",
-            jetbrains: "jetbrains.md",
-            kilo: "kilo.md",
-            kimi: "kimi.md",
-            kimik2: "kimi-k2.md",
-            kiro: "kiro.md",
-            litellm: "litellm.md",
-            llmproxy: "llm-proxy.md",
-            manus: "manus.md",
-            mimo: "mimo.md",
-            minimax: "minimax.md",
-            moonshot: "moonshot.md",
-            ollama: "ollama.md",
-            opencode: "opencode.md",
-            opencodego: "opencode.md",
-            vertexai: "vertexai.md",
-            warp: "warp.md",
-            windsurf: "windsurf.md",
-            zai: "zai.md"
-        }
-        if (!docs[key]) {
-            return ""
-        }
-        return "https://github.com/steipete/CodexBar/blob/main/docs/" + docs[key]
+        return Shared.providerDocsUrl(key)
     }
 
     function providerDashboardUrl(providerID) {
