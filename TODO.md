@@ -2,9 +2,10 @@
 
 - Provider-specific editable settings: the Providers page now includes a
   redacted settings inspector and CLI command hints. Add real editor controls
-  only when the CLI exposes a stable settings descriptor. The missing controls
-  include source/auth mode pickers, cookie source/manual cookie fields, API key
-  fields, enterprise/base URL fields, region/workspace/project/org/team fields,
+  only when the CLI exposes a stable settings descriptor matching
+  `docs/cli-provider-settings-descriptor.md`. The missing controls include
+  source/auth mode pickers, cookie source/manual cookie fields, API key fields,
+  enterprise/base URL fields, region/workspace/project/org/team fields,
   token-account add/edit/remove, provider metric pickers, and quota thresholds.
   Do not duplicate the macOS Swift provider settings logic in QML; extend
   `codexbar config` first.

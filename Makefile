@@ -17,6 +17,7 @@ check:
 	scripts/test_update_widget.sh
 	scripts/test_theme_boundaries.sh
 	scripts/test_i18n_catalog.sh
+	scripts/test_cli_descriptor_contract.sh
 	scripts/test_qml_hardening.sh
 	$(QMLLINT) $(QMLLINT_FLAGS) -I $(QML_IMPORT_DIR) contents/ui/main.qml contents/ui/configGeneral.qml contents/ui/configProviders.qml contents/ui/configDisplay.qml contents/ui/configAdvanced.qml contents/ui/configDebug.qml
 	xmllint --noout contents/config/main.xml
