@@ -3936,9 +3936,12 @@ PlasmoidItem {
                             Canvas {
                                 id: costSparkline
 
-                                property var points: tokenCostSection.tokenCost ? tokenCostSection.tokenCost.daily : []
+                                readonly property var tokenCost: tokenCostSection.tokenCost
+                                readonly property var providerData: root.selectedProviderData
+
+                                property var points: tokenCost ? tokenCost.daily : []
                                 readonly property real maxValue: root.costSparklineMax(points)
-                                readonly property color accent: root.providerColor(root.selectedProviderData ? root.selectedProviderData.provider : "")
+                                readonly property color accent: root.providerColor(providerData ? providerData.provider : "")
 
                                 visible: points.length > 1 && maxValue > 0
                                 Layout.fillWidth: true
