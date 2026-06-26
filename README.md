@@ -12,6 +12,10 @@ authentication, configuration, quota parsing, and JSON output come from the
 
 ![Codex provider detail](docs/codexbar-plasma-codex.png)
 
+Screenshots use one Plasma theme and accent color. The widget follows the
+user's Plasma theme for text, surfaces, selection, and status colors; provider
+accent colors stay stable for recognition.
+
 ## Install
 
 1. Install the `codexbar` CLI.
