@@ -6,6 +6,7 @@ import org.kde.plasma.components as PlasmaComponents
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
+import "js/utils.js" as Utils
 
 PlasmoidItem {
     id: root
@@ -2492,23 +2493,15 @@ PlasmoidItem {
         var absValue = Math.abs(value)
         var sign = value < 0 ? "-" : ""
         if (absValue >= 1000000000) {
-            return sign + scaledTokenCount(absValue / 1000000000) + "B"
+            return sign + Utils.scaledTokenCount(absValue / 1000000000) + "B"
         }
         if (absValue >= 1000000) {
-            return sign + scaledTokenCount(absValue / 1000000) + "M"
+            return sign + Utils.scaledTokenCount(absValue / 1000000) + "M"
         }
         if (absValue >= 1000) {
-            return sign + scaledTokenCount(absValue / 1000) + "K"
+            return sign + Utils.scaledTokenCount(absValue / 1000) + "K"
         }
         return Math.round(value).toString()
-    }
-
-    function scaledTokenCount(value) {
-        if (value >= 10) {
-            return Number(value).toFixed(0)
-        }
-        var text = Number(value).toFixed(1)
-        return text.replace(/\.0$/, "")
     }
 
     function tokenCostHint(providerID) {

@@ -10,6 +10,7 @@ QML_IMPORT_DIR ?= /usr/lib/qt6/qml
 QMLLINT_FLAGS ?= --unqualified disable
 
 check:
+	scripts/test_scaledTokenCount.sh
 	scripts/test_feature_parity.sh
 	scripts/test_refresh_nonce.sh
 	scripts/test_provider_icons.sh
