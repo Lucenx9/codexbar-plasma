@@ -96,7 +96,7 @@ Costs and history:
 
 - Local cost drill-down when the CLI exposes cost data.
 - Token breakdowns, model summaries, recent daily spend, cost history bars, and
-  average cost per 1M tokens.
+  average cost per 1M tokens, with a configurable cost history window.
 
 Status and notifications:
 

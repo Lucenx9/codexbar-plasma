@@ -25,6 +25,8 @@ PlasmoidItem {
     property string source: (Plasmoid.configuration.source || "").trim()
     property int refreshIntervalSec: isFinite(Number(Plasmoid.configuration.refreshInterval)) ? Math.max(0, Number(Plasmoid.configuration.refreshInterval)) : 300
     property bool includeStatus: Plasmoid.configuration.includeStatus
+    property bool costUsageEnabled: Plasmoid.configuration.costUsageEnabled !== false
+    property int costHistoryDays: isFinite(Number(Plasmoid.configuration.costHistoryDays)) ? Math.max(1, Math.min(365, Number(Plasmoid.configuration.costHistoryDays))) : 30
     property bool usageBarsShowUsed: Plasmoid.configuration.usageBarsShowUsed === true
     property bool showQuotaWarningMarkers: Plasmoid.configuration.showQuotaWarningMarkers !== false
     property bool enableNotifications: Plasmoid.configuration.enableNotifications !== false
@@ -74,6 +76,8 @@ PlasmoidItem {
         : null
 
     onCommandSourceChanged: Qt.callLater(refreshNow)
+    onCostUsageEnabledChanged: Qt.callLater(refreshCost)
+    onCostHistoryDaysChanged: Qt.callLater(refreshCost)
     onProviderConfigRevisionChanged: Qt.callLater(refreshNow)
     onResetTimesShowAbsoluteChanged: Qt.callLater(refreshNow)
     onAutoSelectProviderChanged: updateSelectedProvider()
@@ -228,13 +232,18 @@ PlasmoidItem {
         if (commandPath.length === 0) {
             return ""
         }
+        if (!costUsageEnabled) {
+            return ""
+        }
 
         var parts = [
             shellQuote(commandPath),
             "cost",
             "--format",
             "json",
-            "--json-only"
+            "--json-only",
+            "--days",
+            String(costHistoryDays)
         ]
 
         if (provider.length > 0) {
@@ -336,6 +345,7 @@ PlasmoidItem {
         if (costCommandSource.length === 0) {
             tokenCosts = ({})
             costErrorText = ""
+            applyTokenCosts()
             return
         }
 
@@ -2083,6 +2093,8 @@ PlasmoidItem {
             return "https://www.codebuff.com/usage"
         case "commandcode":
             return "https://commandcode.ai/studio"
+        case "crof":
+            return "https://crof.ai/dashboard"
         case "codex":
             return "https://chatgpt.com/codex/settings/usage"
         case "claude":
@@ -2166,12 +2178,14 @@ PlasmoidItem {
             amp: "amp.md",
             antigravity: "antigravity.md",
             augment: "augment.md",
+            azureopenai: "providers.md#azure-openai",
             bedrock: "bedrock.md",
             chutes: "chutes.md",
             claude: "claude.md",
             codebuff: "codebuff.md",
             commandcode: "command-code.md",
             codex: "codex.md",
+            copilot: "copilot.md",
             crof: "crof.md",
             cursor: "cursor.md",
             deepgram: "deepgram.md",
@@ -2192,15 +2206,25 @@ PlasmoidItem {
             llmproxy: "llm-proxy.md",
             manus: "manus.md",
             mimo: "mimo.md",
+            mistral: "providers.md#mistral",
             minimax: "minimax.md",
             moonshot: "moonshot.md",
             ollama: "ollama.md",
             opencode: "opencode.md",
             opencodego: "opencode.md",
+            openai: "openai.md",
+            openrouter: "openrouter.md",
+            perplexity: "providers.md#perplexity",
+            poe: "poe.md",
+            stepfun: "stepfun.md",
+            synthetic: "providers.md#synthetic",
+            t3chat: "providers.md#t3-chat",
+            venice: "venice.md",
             vertexai: "vertexai.md",
             warp: "warp.md",
             windsurf: "windsurf.md",
-            zai: "zai.md"
+            zai: "zai.md",
+            zed: "zed.md"
         }
         if (!docs[key]) {
             return ""

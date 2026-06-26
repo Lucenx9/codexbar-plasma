@@ -626,12 +626,14 @@ KCM.SimpleKCM {
             amp: "amp.md",
             antigravity: "antigravity.md",
             augment: "augment.md",
+            azureopenai: "providers.md#azure-openai",
             bedrock: "bedrock.md",
             chutes: "chutes.md",
             claude: "claude.md",
             codebuff: "codebuff.md",
             commandcode: "command-code.md",
             codex: "codex.md",
+            copilot: "copilot.md",
             crof: "crof.md",
             cursor: "cursor.md",
             deepgram: "deepgram.md",
@@ -652,15 +654,25 @@ KCM.SimpleKCM {
             llmproxy: "llm-proxy.md",
             manus: "manus.md",
             mimo: "mimo.md",
+            mistral: "providers.md#mistral",
             minimax: "minimax.md",
             moonshot: "moonshot.md",
             ollama: "ollama.md",
             opencode: "opencode.md",
             opencodego: "opencode.md",
+            openai: "openai.md",
+            openrouter: "openrouter.md",
+            perplexity: "providers.md#perplexity",
+            poe: "poe.md",
+            stepfun: "stepfun.md",
+            synthetic: "providers.md#synthetic",
+            t3chat: "providers.md#t3-chat",
+            venice: "venice.md",
             vertexai: "vertexai.md",
             warp: "warp.md",
             windsurf: "windsurf.md",
-            zai: "zai.md"
+            zai: "zai.md",
+            zed: "zed.md"
         }
         if (!docs[key]) {
             return ""
@@ -686,6 +698,8 @@ KCM.SimpleKCM {
             return "https://app.factory.ai/settings/billing"
         case "copilot":
             return "https://github.com/settings/copilot"
+        case "crof":
+            return "https://crof.ai/dashboard"
         case "elevenlabs":
             return "https://elevenlabs.io/app/developers/usage"
         case "openrouter":

@@ -27,6 +27,16 @@
       <label>Fetch provider status pages.</label>
       <default>false</default>
     </entry>
+    <entry name="costUsageEnabled" type="Bool">
+      <label>Show local cost usage.</label>
+      <default>true</default>
+    </entry>
+    <entry name="costHistoryDays" type="Int">
+      <label>Cost history window in days.</label>
+      <default>30</default>
+      <min>1</min>
+      <max>365</max>
+    </entry>
     <entry name="usageBarsShowUsed" type="Bool">
       <label>Show usage bars as percent used instead of percent left.</label>
       <default>false</default>

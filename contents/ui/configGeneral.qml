@@ -13,6 +13,10 @@ KCM.SimpleKCM {
     property int cfg_refreshIntervalDefault
     property alias cfg_includeStatus: includeStatusCheck.checked
     property bool cfg_includeStatusDefault
+    property alias cfg_costUsageEnabled: costUsageEnabledCheck.checked
+    property bool cfg_costUsageEnabledDefault
+    property alias cfg_costHistoryDays: costHistoryDaysSpin.value
+    property int cfg_costHistoryDaysDefault
     property alias cfg_enableNotifications: enableNotificationsCheck.checked
     property bool cfg_enableNotificationsDefault
     property alias cfg_notifyStatusIncidents: notifyStatusIncidentsCheck.checked
@@ -92,6 +96,21 @@ KCM.SimpleKCM {
         Controls.CheckBox {
             id: includeStatusCheck
             text: i18n("Fetch provider status")
+        }
+
+        Controls.CheckBox {
+            id: costUsageEnabledCheck
+            text: i18n("Show local cost usage")
+        }
+
+        Controls.SpinBox {
+            id: costHistoryDaysSpin
+            Kirigami.FormData.label: i18n("Cost history days:")
+            from: 1
+            to: 365
+            editable: true
+            enabled: costUsageEnabledCheck.checked
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 8
         }
 
         Controls.CheckBox {
