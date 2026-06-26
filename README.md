@@ -17,6 +17,9 @@ come from the `codexbar` CLI.
   and login/account links.
 - Optional compact multi-provider panel meters.
 - Display mode controls: Percent, Pace, Percent and pace, Reset time.
+- Refresh presets: Manual, 1 min, 2 min, 5 min, 15 min, or custom seconds.
+- Auto-select highest-usage provider for the compact panel and provider detail
+  focus.
 - Provider status incident badge in the panel and provider detail view.
 - Optional quota warning markers on usage bars.
 - Optional Plasma notifications for provider status incidents and 80/95% quota

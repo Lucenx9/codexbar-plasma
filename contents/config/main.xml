@@ -20,7 +20,7 @@
     <entry name="refreshInterval" type="Int">
       <label>Refresh interval in seconds.</label>
       <default>300</default>
-      <min>10</min>
+      <min>0</min>
       <max>3600</max>
     </entry>
     <entry name="includeStatus" type="Bool">
@@ -69,6 +69,10 @@
     </entry>
     <entry name="showMultiProviderInPanel" type="Bool">
       <label>Show multi-provider details in the panel.</label>
+      <default>false</default>
+    </entry>
+    <entry name="autoSelectProvider" type="Bool">
+      <label>Auto-select the highest-usage provider.</label>
       <default>false</default>
     </entry>
     <entry name="showCreditsInPanel" type="Bool">

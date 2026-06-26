@@ -23,7 +23,7 @@ PlasmoidItem {
     property string commandPath: (Plasmoid.configuration.commandPath || "codexbar").trim()
     property string provider: (Plasmoid.configuration.provider || "").trim()
     property string source: (Plasmoid.configuration.source || "").trim()
-    property int refreshIntervalSec: Math.max(10, Plasmoid.configuration.refreshInterval || 300)
+    property int refreshIntervalSec: isFinite(Number(Plasmoid.configuration.refreshInterval)) ? Math.max(0, Number(Plasmoid.configuration.refreshInterval)) : 300
     property bool includeStatus: Plasmoid.configuration.includeStatus
     property bool usageBarsShowUsed: Plasmoid.configuration.usageBarsShowUsed === true
     property bool showQuotaWarningMarkers: Plasmoid.configuration.showQuotaWarningMarkers !== false
@@ -33,6 +33,7 @@ PlasmoidItem {
     property string menuBarDisplayMode: Plasmoid.configuration.menuBarDisplayMode || "percent"
     property bool resetTimesShowAbsolute: Plasmoid.configuration.resetTimesShowAbsolute === true
     property bool showProviderChangelogs: Plasmoid.configuration.showProviderChangelogs === true
+    property bool autoSelectProvider: Plasmoid.configuration.autoSelectProvider === true
     property int providerConfigRevision: Plasmoid.configuration.providerConfigRevision || 0
     property var providers: []
     property var providerDisplayNames: ({})
@@ -74,6 +75,7 @@ PlasmoidItem {
     onCommandSourceChanged: Qt.callLater(refreshNow)
     onProviderConfigRevisionChanged: Qt.callLater(refreshNow)
     onResetTimesShowAbsoluteChanged: Qt.callLater(refreshNow)
+    onAutoSelectProviderChanged: updateSelectedProvider()
     onEnableNotificationsChanged: resetNotificationMemo()
     onNotifyStatusIncidentsChanged: resetNotificationMemo()
     onNotifyQuotaWarningsChanged: resetNotificationMemo()
@@ -84,18 +86,7 @@ PlasmoidItem {
             resetNotificationMemo()
             return
         }
-        if (!selectionInitialized) {
-            selectedProviderIndex = overviewAvailable ? -1 : 0
-            selectionInitialized = true
-            Qt.callLater(processNotifications)
-            return
-        }
-        if (!overviewAvailable && selectedProviderIndex < 0) {
-            selectedProviderIndex = 0
-        }
-        if (selectedProviderIndex >= providers.length) {
-            selectedProviderIndex = Math.max(0, providers.length - 1)
-        }
+        updateSelectedProvider()
         Qt.callLater(processNotifications)
     }
 
@@ -2567,6 +2558,83 @@ PlasmoidItem {
         return providers.length > 0 ? providers[0] : null
     }
 
+    function selectedCompactProvider() {
+        if (autoSelectProvider && selectedProviderData) {
+            return selectedProviderData
+        }
+        return primaryProvider()
+    }
+
+    function updateSelectedProvider() {
+        if (!providers || providers.length === 0) {
+            return
+        }
+
+        if (autoSelectProvider) {
+            selectedProviderIndex = autoSelectedProviderIndex()
+            selectionInitialized = true
+            return
+        }
+
+        if (!selectionInitialized) {
+            selectedProviderIndex = overviewAvailable ? -1 : 0
+            selectionInitialized = true
+            return
+        }
+        if (!overviewAvailable && selectedProviderIndex < 0) {
+            selectedProviderIndex = 0
+        }
+        if (selectedProviderIndex >= providers.length) {
+            selectedProviderIndex = Math.max(0, providers.length - 1)
+        }
+    }
+
+    function autoSelectedProviderIndex() {
+        var bestIndex = 0
+        var bestScore = -1
+        for (var i = 0; i < providers.length; i++) {
+            var score = autoSelectScore(providers[i])
+            if (score > bestScore) {
+                bestScore = score
+                bestIndex = i
+            }
+        }
+        return bestIndex
+    }
+
+    function autoSelectScore(item) {
+        if (!item || isOverviewErrorOnly(item)) {
+            return -1
+        }
+        var percent = autoSelectUsedPercent(item)
+        var incidentTieBreaker = notificationRank(item.statusSeverity) / 100
+        return percent >= 0 ? percent + incidentTieBreaker : incidentTieBreaker
+    }
+
+    function autoSelectUsedPercent(item) {
+        if (!item) {
+            return -1
+        }
+
+        var best = -1
+        var rows = item.rows || []
+        for (var i = 0; i < rows.length; i++) {
+            if (rows[i] && rows[i].hasPercent) {
+                var used = Number(rows[i].usedPercent)
+                if (isFinite(used)) {
+                    best = Math.max(best, clamp(used, 0, 100))
+                }
+            }
+        }
+        if (item.providerCost && item.providerCost.percentUsed >= 0) {
+            var providerCostUsed = Number(item.providerCost.percentUsed)
+            if (isFinite(providerCostUsed)) {
+                best = Math.max(best, clamp(providerCostUsed, 0, 100))
+            }
+        }
+        return best
+    }
+
     function compactProviders() {
         if (!providers || providers.length <= 1
                 || Plasmoid.configuration.showMultiProviderInPanel !== true) {
@@ -2583,7 +2651,7 @@ PlasmoidItem {
     }
 
     function compactText() {
-        var item = primaryProvider()
+        var item = selectedCompactProvider()
         if (!item) {
             return loading ? i18n("Loading") : "CodexBar"
         }
@@ -2666,7 +2734,7 @@ PlasmoidItem {
         id: usageSource
 
         engine: "executable"
-        interval: root.refreshIntervalSec * 1000
+        interval: root.refreshIntervalSec > 0 ? root.refreshIntervalSec * 1000 : 0
 
         onNewData: function(sourceName, data) {
             var stdoutText = data && data["stdout"] ? data["stdout"] : ""
@@ -2758,7 +2826,7 @@ PlasmoidItem {
             spacing: Kirigami.Units.smallSpacing
 
             Kirigami.Icon {
-                readonly property string compactProvider: root.primaryProvider() ? root.primaryProvider().provider : "codex"
+                readonly property string compactProvider: root.selectedCompactProvider() ? root.selectedCompactProvider().provider : "codex"
 
                 visible: compactRoot.showPrimaryIdentity
                 source: loading ? "view-refresh" : root.providerIconSource(compactProvider)

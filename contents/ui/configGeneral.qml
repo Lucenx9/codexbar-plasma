@@ -39,6 +39,8 @@ KCM.SimpleKCM {
     property bool cfg_showPercentInPanelDefault
     property alias cfg_showMultiProviderInPanel: showMultiProviderCheck.checked
     property bool cfg_showMultiProviderInPanelDefault
+    property alias cfg_autoSelectProvider: autoSelectProviderCheck.checked
+    property bool cfg_autoSelectProviderDefault
     property alias cfg_showCreditsInPanel: showCreditsCheck.checked
     property bool cfg_showCreditsInPanelDefault
     property int cfg_providerConfigRevision
@@ -51,6 +53,23 @@ KCM.SimpleKCM {
             }
         }
         return 0
+    }
+
+    function refreshPresetIndex(value) {
+        var numeric = Number(value)
+        for (var i = 0; i < refreshPresetCombo.model.length; i++) {
+            if (refreshPresetCombo.model[i].value === numeric) {
+                return i
+            }
+        }
+        return refreshPresetCombo.model.length - 1
+    }
+
+    onCfg_refreshIntervalChanged: {
+        var nextIndex = refreshPresetIndex(cfg_refreshInterval)
+        if (refreshPresetCombo.currentIndex !== nextIndex) {
+            refreshPresetCombo.currentIndex = nextIndex
+        }
     }
 
     onCfg_menuBarDisplayModeChanged: {
@@ -91,15 +110,38 @@ KCM.SimpleKCM {
             placeholderText: i18n("Provider default (blank)")
         }
 
+        Controls.ComboBox {
+            id: refreshPresetCombo
+            Kirigami.FormData.label: i18n("Refresh preset:")
+            textRole: "text"
+            valueRole: "value"
+            model: [
+                { text: i18n("Manual"), value: 0 },
+                { text: i18n("1 min"), value: 60 },
+                { text: i18n("2 min"), value: 120 },
+                { text: i18n("5 min"), value: 300 },
+                { text: i18n("15 min"), value: 900 },
+                { text: i18n("Custom"), value: -1 }
+            ]
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 12
+            Component.onCompleted: currentIndex = page.refreshPresetIndex(page.cfg_refreshInterval)
+            onActivated: {
+                if (currentValue >= 0) {
+                    page.cfg_refreshInterval = currentValue
+                }
+            }
+        }
+
         Controls.SpinBox {
             id: refreshIntervalSpin
-            Kirigami.FormData.label: i18n("Refresh:")
-            from: 10
+            Kirigami.FormData.label: i18n("Custom refresh:")
+            from: 0
             to: 3600
             stepSize: 10
             editable: true
+            visible: refreshPresetCombo.currentValue < 0
             textFromValue: function(value, locale) {
-                return i18n("%1 s", value)
+                return value <= 0 ? i18n("Manual") : i18n("%1 s", value)
             }
             valueFromText: function(text, locale) {
                 var match = text.match(/\d+/)
@@ -179,6 +221,11 @@ KCM.SimpleKCM {
         Controls.CheckBox {
             id: showMultiProviderCheck
             text: i18n("Show multi-provider details in panel")
+        }
+
+        Controls.CheckBox {
+            id: autoSelectProviderCheck
+            text: i18n("Auto-select highest-usage provider")
         }
 
         Controls.CheckBox {
