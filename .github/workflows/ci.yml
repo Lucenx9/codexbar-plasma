@@ -1,0 +1,50 @@
+name: CI
+
+# Runs the full `make check` on every push/PR to main, and on version tags
+# (`vX.Y.Z`) additionally builds the `.plasmoid` and publishes a GitHub Release.
+#
+# `make check` needs the real KDE/Plasma toolchain: `qmllint` must resolve the
+# `org.kde.plasma.*` / `org.kde.kirigami` QML imports and `kpackagetool6` must
+# exist. We therefore run inside a KDE neon container (Ubuntu-based, so the
+# hardcoded `/usr/lib/qt6/...` paths in the Makefile match) and apt-install the
+# few build-only extras the desktop image does not ship.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    container:
+      image: kdeneon/plasma:user
+      # neon `:user` images default to a non-root user; force root so apt works.
+      options: --user 0
+    permissions:
+      # Needed by the release step to create the GitHub Release on tags.
+      contents: write
+    steps:
+      - name: Install build-only tooling
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            make cmake git ca-certificates jq libxml2-utils qt6-declarative-dev-tools
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: make check
+        run: make check
+
+      - name: make package
+        run: make package
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
+        with:
+          files: dist/codexbar-plasma.plasmoid
+          generate_release_notes: true
