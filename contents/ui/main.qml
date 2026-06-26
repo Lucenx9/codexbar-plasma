@@ -4085,10 +4085,15 @@ PlasmoidItem {
                             ColumnLayout {
                                 id: costDrillDownSection
 
+                                readonly property var breakdownRows: tokenCostSection.tokenCost ? root.costBreakdownRows(tokenCostSection.tokenCost) : []
+                                readonly property var modelRows: tokenCostSection.tokenCost ? root.costModelRows(tokenCostSection.tokenCost) : []
+                                readonly property var dailyRows: tokenCostSection.tokenCost ? root.costDailyRows(tokenCostSection.tokenCost) : []
+                                readonly property string perMillionLine: tokenCostSection.tokenCost ? root.costPerMillionLine(tokenCostSection.tokenCost) : ""
+
                                 visible: tokenCostSection.tokenCost
-                                    && (root.costBreakdownRows(tokenCostSection.tokenCost).length > 0
-                                        || root.costModelRows(tokenCostSection.tokenCost).length > 0
-                                        || root.costDailyRows(tokenCostSection.tokenCost).length > 0)
+                                    && (breakdownRows.length > 0
+                                        || modelRows.length > 0
+                                        || dailyRows.length > 0)
                                 Layout.fillWidth: true
                                 spacing: Kirigami.Units.smallSpacing
 
@@ -4100,20 +4105,20 @@ PlasmoidItem {
                                 }
 
                                 PlasmaComponents.Label {
-                                    visible: tokenCostSection.tokenCost && root.costPerMillionLine(tokenCostSection.tokenCost).length > 0
-                                    text: tokenCostSection.tokenCost ? root.costPerMillionLine(tokenCostSection.tokenCost) : ""
+                                    visible: tokenCostSection.tokenCost && costDrillDownSection.perMillionLine.length > 0
+                                    text: costDrillDownSection.perMillionLine
                                     opacity: 0.7
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
                                 }
 
                                 ColumnLayout {
-                                    visible: root.costBreakdownRows(tokenCostSection.tokenCost).length > 0
+                                    visible: costDrillDownSection.breakdownRows.length > 0
                                     Layout.fillWidth: true
                                     spacing: Kirigami.Units.smallSpacing / 2
 
                                     Repeater {
-                                        model: root.costBreakdownRows(tokenCostSection.tokenCost)
+                                        model: costDrillDownSection.breakdownRows
 
                                         delegate: RowLayout {
                                             Layout.fillWidth: true
@@ -4137,12 +4142,12 @@ PlasmoidItem {
                                 }
 
                                 Kirigami.Separator {
-                                    visible: root.costModelRows(tokenCostSection.tokenCost).length > 0
+                                    visible: costDrillDownSection.modelRows.length > 0
                                     Layout.fillWidth: true
                                 }
 
                                 ColumnLayout {
-                                    visible: root.costModelRows(tokenCostSection.tokenCost).length > 0
+                                    visible: costDrillDownSection.modelRows.length > 0
                                     Layout.fillWidth: true
                                     spacing: Kirigami.Units.smallSpacing / 2
 
@@ -4154,7 +4159,7 @@ PlasmoidItem {
                                     }
 
                                     Repeater {
-                                        model: root.costModelRows(tokenCostSection.tokenCost)
+                                        model: costDrillDownSection.modelRows
 
                                         delegate: RowLayout {
                                             Layout.fillWidth: true
@@ -4177,12 +4182,12 @@ PlasmoidItem {
                                 }
 
                                 Kirigami.Separator {
-                                    visible: root.costDailyRows(tokenCostSection.tokenCost).length > 0
+                                    visible: costDrillDownSection.dailyRows.length > 0
                                     Layout.fillWidth: true
                                 }
 
                                 ColumnLayout {
-                                    visible: root.costDailyRows(tokenCostSection.tokenCost).length > 0
+                                    visible: costDrillDownSection.dailyRows.length > 0
                                     Layout.fillWidth: true
                                     spacing: Kirigami.Units.smallSpacing / 2
 
@@ -4194,7 +4199,7 @@ PlasmoidItem {
                                     }
 
                                     Repeater {
-                                        model: root.costDailyRows(tokenCostSection.tokenCost)
+                                        model: costDrillDownSection.dailyRows
 
                                         delegate: RowLayout {
                                             Layout.fillWidth: true
