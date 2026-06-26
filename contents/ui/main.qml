@@ -1014,9 +1014,17 @@ PlasmoidItem {
         return parts.join(" · ")
     }
 
+    readonly property int usageDashboardRowLimit: 10
+    readonly property int usageDashboardMaxDepth: 4
+
     function usageDashboard(providerID, usage, item) {
         var kpis = []
         var rows = []
+        var dashboardState = {
+            rowLimit: usageDashboardRowLimit,
+            maxDepth: usageDashboardMaxDepth,
+            seen: []
+        }
         var sources = [
             { title: i18n("Codex dashboard"), value: item.openaiDashboard },
             { title: i18n("OpenAI API"), value: usage.openAIAPIUsage },
@@ -1029,7 +1037,10 @@ PlasmoidItem {
         ]
 
         for (var i = 0; i < sources.length; i++) {
-            appendDashboardSource(kpis, rows, sources[i].title, sources[i].value)
+            appendDashboardSource(kpis, rows, sources[i].title, sources[i].value, dashboardState, 0)
+            if (rows.length >= dashboardState.rowLimit && kpis.length >= 4) {
+                break
+            }
         }
 
         if (kpis.length === 0 && rows.length === 0) {
@@ -1037,16 +1048,24 @@ PlasmoidItem {
         }
         return {
             kpis: kpis.slice(0, 4),
-            rows: rows.slice(0, 10)
+            rows: rows.slice(0, usageDashboardRowLimit)
         }
     }
 
-    function appendDashboardSource(kpis, rows, title, source) {
-        if (!source) {
+    function appendDashboardSource(kpis, rows, title, source, state, depth) {
+        if (!isDashboardObject(source)) {
             return
         }
+        if (!state) {
+            state = {
+                rowLimit: usageDashboardRowLimit,
+                maxDepth: usageDashboardMaxDepth,
+                seen: []
+            }
+        }
+        depth = depth || 0
 
-        var sourceRows = usageDashboardRows(source)
+        var sourceRows = usageDashboardRows(source, state, depth)
         if (sourceRows.length === 0) {
             return
         }
@@ -1058,7 +1077,7 @@ PlasmoidItem {
             })
         }
 
-        for (var i = 0; i < sourceRows.length; i++) {
+        for (var i = 0; i < sourceRows.length && rows.length < state.rowLimit; i++) {
             rows.push({
                 label: sourceRows[i].label,
                 value: sourceRows[i].value
@@ -1066,8 +1085,22 @@ PlasmoidItem {
         }
     }
 
+    function isDashboardObject(source) {
+        return source && typeof source === "object" && !Array.isArray(source)
+    }
+
     function usageDashboardRows(source) {
+        var state = arguments.length > 1 ? arguments[1] : {
+            rowLimit: usageDashboardRowLimit,
+            maxDepth: usageDashboardMaxDepth,
+            seen: []
+        }
+        var depth = arguments.length > 2 ? arguments[2] : 0
         var rows = []
+        if (!isDashboardObject(source) || depth > state.maxDepth || state.seen.indexOf(source) !== -1) {
+            return rows
+        }
+        state.seen.push(source)
         appendDashboardMetric(rows, i18n("Code review remaining"), source.codeReviewRemainingPercent, "percent")
         appendDashboardMetric(rows, i18n("Credits remaining"), source.creditsRemaining, "number")
         appendDashboardMetric(rows, i18n("Plan"), source.accountPlan, "text")
@@ -1082,10 +1115,11 @@ PlasmoidItem {
         appendDashboardTopRow(rows, i18n("Usage mix"), source.topUsageTypes)
         appendDashboardLatestDailyRow(rows, source.daily)
         appendDashboardLatestBreakdownRow(rows, source.usageBreakdown || source.dailyBreakdown)
-        if (source.modelUsage) {
-            appendDashboardSource([], rows, i18n("Models"), source.modelUsage)
+        if (rows.length < state.rowLimit && depth < state.maxDepth && isDashboardObject(source.modelUsage)) {
+            appendDashboardSource([], rows, i18n("Models"), source.modelUsage, state, depth + 1)
         }
-        return rows
+        state.seen.pop()
+        return rows.slice(0, state.rowLimit)
     }
 
     function appendDashboardMetric(rows, label, value, kind) {
