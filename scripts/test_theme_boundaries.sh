@@ -38,6 +38,15 @@ patterns = [
     re.compile(r"#[0-9A-Fa-f]{3,8}"),
     re.compile(r'"(?:black|white)"'),
 ]
+required_provider_colors = """
+codex openai azureopenai claude cursor opencode opencodego alibaba
+alibabatokenplan factory gemini antigravity copilot devin zai minimax
+manus kimi kilo kiro vertexai augment jetbrains kimik2 moonshot amp
+t3chat ollama synthetic warp openrouter elevenlabs windsurf zed
+perplexity mimo doubao abacus mistral deepseek codebuff crof venice
+commandcode stepfun bedrock grok groq llmproxy litellm deepgram poe
+chutes
+""".split()
 
 def current_function(text, index):
     function_name = ""
@@ -50,6 +59,32 @@ def allowed_qml(path, text, index):
         path in allowed_files
         and current_function(text, index) in {"providerColor", "contrastTextColor", "withAlpha"}
     )
+
+def function_body(text, name):
+    marker = f"    function {name}("
+    start = text.find(marker)
+    if start == -1:
+        raise ValueError(f"missing function {name}")
+    brace = text.find("{", start)
+    depth = 0
+    for index in range(brace, len(text)):
+        char = text[index]
+        if char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return text[brace + 1:index]
+    raise ValueError(f"unterminated function {name}")
+
+for path in [root / "contents/ui/main.qml", root / "contents/ui/configProviders.qml"]:
+    body = function_body(path.read_text(encoding="utf-8"), "providerColor")
+    cases = set(re.findall(r'case "([^"]+)":', body))
+    missing = [provider for provider in required_provider_colors if provider not in cases]
+    if missing:
+        joined = ", ".join(missing)
+        print(f"missing provider brand color in {path.relative_to(root)}: {joined}", file=sys.stderr)
+        sys.exit(1)
 
 for path in sorted((root / "contents/ui").glob("*.qml")):
     text = path.read_text(encoding="utf-8")

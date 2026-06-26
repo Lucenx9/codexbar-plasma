@@ -2371,99 +2371,110 @@ PlasmoidItem {
 
     function providerColor(value) {
         switch (providerKey(value)) {
-        case "abacus":
-            return Qt.rgba(56 / 255, 189 / 255, 248 / 255, 1)
-        case "alibaba":
-        case "alibabatokenplan":
-            return Qt.rgba(1, 106 / 255, 0, 1)
-        case "amp":
-            return Qt.rgba(220 / 255, 38 / 255, 38 / 255, 1)
         case "codex":
             return Qt.rgba(73 / 255, 163 / 255, 176 / 255, 1)
         case "openai":
-            return Qt.rgba(15 / 255, 130 / 255, 110 / 255, 1)
+            return Qt.rgba(0.06, 0.51, 0.43, 1)
+        case "azureopenai":
+            return Qt.rgba(0, 120 / 255, 212 / 255, 1)
         case "claude":
             return Qt.rgba(204 / 255, 124 / 255, 94 / 255, 1)
+        case "cursor":
+            return Qt.rgba(0, 191 / 255, 165 / 255, 1)
+        case "opencode":
+            return Qt.rgba(59 / 255, 130 / 255, 246 / 255, 1)
+        case "opencodego":
+            return Qt.rgba(59 / 255, 130 / 255, 246 / 255, 1)
+        case "alibaba":
+            return Qt.rgba(1, 106 / 255, 0, 1)
+        case "alibabatokenplan":
+            return Qt.rgba(1, 106 / 255, 0, 1)
+        case "factory":
+            return Qt.rgba(1, 107 / 255, 53 / 255, 1)
         case "gemini":
             return Qt.rgba(171 / 255, 135 / 255, 234 / 255, 1)
         case "antigravity":
             return Qt.rgba(96 / 255, 186 / 255, 126 / 255, 1)
-        case "cursor":
-            return Qt.rgba(0, 191 / 255, 165 / 255, 1)
         case "copilot":
             return Qt.rgba(168 / 255, 85 / 255, 247 / 255, 1)
-        case "bedrock":
-            return Qt.rgba(1, 0.6, 0, 1)
-        case "codebuff":
-            return Qt.rgba(68 / 255, 1, 0, 1)
-        case "commandcode":
-            return Qt.rgba(0, 0, 0, 1)
-        case "crof":
-            return Qt.rgba(46 / 255, 171 / 255, 148 / 255, 1)
-        case "deepgram":
-            return Qt.rgba(100 / 255, 103 / 255, 242 / 255, 1)
-        case "deepseek":
-            return Qt.rgba(82 / 255, 125 / 255, 240 / 255, 1)
         case "devin":
             return Qt.rgba(70 / 255, 180 / 255, 130 / 255, 1)
-        case "doubao":
-            return Qt.rgba(51 / 255, 112 / 255, 1, 1)
-        case "elevenlabs":
-            return Qt.rgba(235 / 255, 235 / 255, 230 / 255, 1)
-        case "factory":
-            return Qt.rgba(1, 107 / 255, 53 / 255, 1)
-        case "grok":
-            return Qt.rgba(16 / 255, 163 / 255, 127 / 255, 1)
-        case "groq":
-            return Qt.rgba(245 / 255, 104 / 255, 68 / 255, 1)
-        case "jetbrains":
-            return Qt.rgba(1, 51 / 255, 153 / 255, 1)
-        case "kilo":
-            return Qt.rgba(242 / 255, 112 / 255, 39 / 255, 1)
-        case "kimi":
         case "minimax":
             return Qt.rgba(254 / 255, 96 / 255, 60 / 255, 1)
-        case "kimik2":
-            return Qt.rgba(76 / 255, 0, 1, 1)
-        case "kiro":
-            return Qt.rgba(1, 153 / 255, 0, 1)
-        case "litellm":
-            return Qt.rgba(76 / 255, 137 / 255, 240 / 255, 1)
-        case "llmproxy":
-            return Qt.rgba(36 / 255, 180 / 255, 126 / 255, 1)
         case "manus":
             return Qt.rgba(52 / 255, 50 / 255, 45 / 255, 1)
-        case "mimo":
-            return Qt.rgba(1, 105 / 255, 0, 1)
-        case "mistral":
-            return Qt.rgba(1, 80 / 255, 15 / 255, 1)
-        case "moonshot":
-            return Qt.rgba(32 / 255, 93 / 255, 235 / 255, 1)
-        case "ollama":
-            return Qt.rgba(136 / 255, 136 / 255, 136 / 255, 1)
-        case "opencode":
-        case "opencodego":
-            return Qt.rgba(59 / 255, 130 / 255, 246 / 255, 1)
-        case "openrouter":
-            return Qt.rgba(100 / 255, 103 / 255, 242 / 255, 1)
-        case "perplexity":
-            return Qt.rgba(32 / 255, 178 / 255, 170 / 255, 1)
-        case "poe":
-            return Qt.rgba(38 / 255, 173 / 255, 97 / 255, 1)
-        case "stepfun":
-            return Qt.rgba(0.13, 0.59, 0.95, 1)
-        case "t3chat":
-            return Qt.rgba(245 / 255, 102 / 255, 71 / 255, 1)
-        case "venice":
-            return Qt.rgba(0.2, 0.6, 1, 1)
+        case "kimi":
+            return Qt.rgba(254 / 255, 96 / 255, 60 / 255, 1)
+        case "kilo":
+            return Qt.rgba(242 / 255, 112 / 255, 39 / 255, 1)
+        case "kiro":
+            return Qt.rgba(1, 153 / 255, 0, 1)
         case "vertexai":
             return Qt.rgba(66 / 255, 133 / 255, 244 / 255, 1)
+        case "augment":
+            return Qt.rgba(99 / 255, 102 / 255, 241 / 255, 1)
+        case "jetbrains":
+            return Qt.rgba(1, 51 / 255, 153 / 255, 1)
+        case "kimik2":
+            return Qt.rgba(76 / 255, 0, 1, 1)
+        case "moonshot":
+            return Qt.rgba(32 / 255, 93 / 255, 235 / 255, 1)
+        case "amp":
+            return Qt.rgba(220 / 255, 38 / 255, 38 / 255, 1)
+        case "t3chat":
+            return Qt.rgba(245 / 255, 102 / 255, 71 / 255, 1)
+        case "ollama":
+            return Qt.rgba(136 / 255, 136 / 255, 136 / 255, 1)
+        case "synthetic":
+            return Qt.rgba(20 / 255, 20 / 255, 20 / 255, 1)
         case "warp":
             return Qt.rgba(147 / 255, 139 / 255, 180 / 255, 1)
+        case "openrouter":
+            return Qt.rgba(100 / 255, 103 / 255, 242 / 255, 1)
+        case "elevenlabs":
+            return Qt.rgba(0.92, 0.92, 0.90, 1)
         case "windsurf":
             return Qt.rgba(52 / 255, 232 / 255, 187 / 255, 1)
         case "zed":
             return Qt.rgba(8 / 255, 78 / 255, 1, 1)
+        case "perplexity":
+            return Qt.rgba(32 / 255, 178 / 255, 170 / 255, 1)
+        case "mimo":
+            return Qt.rgba(1, 105 / 255, 0, 1)
+        case "doubao":
+            return Qt.rgba(51 / 255, 112 / 255, 1, 1)
+        case "abacus":
+            return Qt.rgba(56 / 255, 189 / 255, 248 / 255, 1)
+        case "mistral":
+            return Qt.rgba(1, 80 / 255, 15 / 255, 1)
+        case "deepseek":
+            return Qt.rgba(0.32, 0.49, 0.94, 1)
+        case "codebuff":
+            return Qt.rgba(68 / 255, 1, 0, 1)
+        case "crof":
+            return Qt.rgba(0.18, 0.67, 0.58, 1)
+        case "venice":
+            return Qt.rgba(0.2, 0.6, 1, 1)
+        case "commandcode":
+            return Qt.rgba(0, 0, 0, 1)
+        case "stepfun":
+            return Qt.rgba(0.13, 0.59, 0.95, 1)
+        case "bedrock":
+            return Qt.rgba(1, 0.6, 0, 1)
+        case "grok":
+            return Qt.rgba(16 / 255, 163 / 255, 127 / 255, 1)
+        case "groq":
+            return Qt.rgba(245 / 255, 104 / 255, 68 / 255, 1)
+        case "llmproxy":
+            return Qt.rgba(36 / 255, 180 / 255, 126 / 255, 1)
+        case "litellm":
+            return Qt.rgba(76 / 255, 137 / 255, 240 / 255, 1)
+        case "deepgram":
+            return Qt.rgba(100 / 255, 103 / 255, 242 / 255, 1)
+        case "poe":
+            return Qt.rgba(0.15, 0.68, 0.38, 1)
+        case "chutes":
+            return Qt.rgba(49 / 255, 132 / 255, 1, 1)
         case "zai":
             return Qt.rgba(232 / 255, 90 / 255, 106 / 255, 1)
         default:
