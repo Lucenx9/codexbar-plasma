@@ -692,6 +692,8 @@ PlasmoidItem {
             sessionLine: costLine(i18n("Today"), item.sessionCostUSD, item.sessionTokens, currency),
             monthLine: costLine(windowLabel, item.last30DaysCostUSD, item.last30DaysTokens, currency),
             hintLine: tokenCostHint(providerID),
+            totals: normalizeCostTotals(item.totals, item.last30DaysCostUSD, item.last30DaysTokens, currency),
+            models: normalizeCostModels(item.daily, currency),
             daily: normalizeCostDaily(item.daily, currency)
         }
     }
@@ -706,18 +708,113 @@ PlasmoidItem {
             var item = items[i] || ({})
             var cost = Number(item.totalCost !== undefined ? item.totalCost : item.costUSD)
             var tokens = Number(item.totalTokens !== undefined ? item.totalTokens : item.tokens)
-            if (!isFinite(cost) && !isFinite(tokens)) {
+            var inputTokens = Number(item.inputTokens)
+            var outputTokens = Number(item.outputTokens)
+            var cacheReadTokens = Number(item.cacheReadTokens)
+            var cacheCreationTokens = Number(item.cacheCreationTokens !== undefined ? item.cacheCreationTokens : item.cacheWriteTokens)
+            if (!isFinite(tokens)) {
+                tokens = sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens)
+            }
+            if (!isFinite(cost) && !isFinite(tokens) && !isFinite(inputTokens) && !isFinite(outputTokens)) {
                 continue
             }
             result.push({
                 label: String(item.date || item.day || item.dayKey || ""),
                 cost: isFinite(cost) ? Math.max(0, cost) : 0,
                 tokens: isFinite(tokens) ? Math.max(0, tokens) : 0,
+                inputTokens: isFinite(inputTokens) ? Math.max(0, inputTokens) : 0,
+                outputTokens: isFinite(outputTokens) ? Math.max(0, outputTokens) : 0,
+                cacheReadTokens: isFinite(cacheReadTokens) ? Math.max(0, cacheReadTokens) : 0,
+                cacheCreationTokens: isFinite(cacheCreationTokens) ? Math.max(0, cacheCreationTokens) : 0,
                 currency: currency || "USD"
             })
         }
 
         return result.slice(Math.max(0, result.length - 30))
+    }
+
+    function normalizeCostTotals(totals, fallbackCost, fallbackTokens, currency) {
+        var source = totals || ({})
+        var cost = Number(source.totalCost !== undefined ? source.totalCost : fallbackCost)
+        var tokens = Number(source.totalTokens !== undefined ? source.totalTokens : fallbackTokens)
+        var inputTokens = Number(source.inputTokens)
+        var outputTokens = Number(source.outputTokens)
+        var cacheReadTokens = Number(source.cacheReadTokens)
+        var cacheCreationTokens = Number(source.cacheCreationTokens !== undefined ? source.cacheCreationTokens : source.cacheWriteTokens)
+        if (!isFinite(tokens)) {
+            tokens = sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens)
+        }
+        return {
+            cost: isFinite(cost) ? Math.max(0, cost) : 0,
+            tokens: isFinite(tokens) ? Math.max(0, tokens) : 0,
+            inputTokens: isFinite(inputTokens) ? Math.max(0, inputTokens) : 0,
+            outputTokens: isFinite(outputTokens) ? Math.max(0, outputTokens) : 0,
+            cacheReadTokens: isFinite(cacheReadTokens) ? Math.max(0, cacheReadTokens) : 0,
+            cacheCreationTokens: isFinite(cacheCreationTokens) ? Math.max(0, cacheCreationTokens) : 0,
+            currency: currency || "USD"
+        }
+    }
+
+    function sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens) {
+        var total = 0
+        var values = [inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens]
+        for (var i = 0; i < values.length; i++) {
+            if (isFinite(Number(values[i])) && Number(values[i]) > 0) {
+                total += Number(values[i])
+            }
+        }
+        return total > 0 ? total : Number.NaN
+    }
+
+    function normalizeCostModels(items, currency) {
+        var byName = ({})
+        if (!items || !Array.isArray(items)) {
+            return []
+        }
+
+        for (var i = 0; i < items.length; i++) {
+            var breakdowns = items[i] && Array.isArray(items[i].modelBreakdowns)
+                ? items[i].modelBreakdowns
+                : []
+            for (var j = 0; j < breakdowns.length; j++) {
+                var breakdown = breakdowns[j] || ({})
+                var name = String(breakdown.modelName || breakdown.model || "").trim()
+                if (name.length === 0) {
+                    continue
+                }
+                var cost = Number(breakdown.cost !== undefined ? breakdown.cost : breakdown.totalCost)
+                var tokens = Number(breakdown.totalTokens !== undefined ? breakdown.totalTokens : breakdown.tokens)
+                if (!isFinite(cost) && !isFinite(tokens)) {
+                    continue
+                }
+                if (!byName[name]) {
+                    byName[name] = {
+                        label: name,
+                        cost: 0,
+                        tokens: 0,
+                        currency: currency || "USD"
+                    }
+                }
+                if (isFinite(cost)) {
+                    byName[name].cost += Math.max(0, cost)
+                }
+                if (isFinite(tokens)) {
+                    byName[name].tokens += Math.max(0, tokens)
+                }
+            }
+        }
+
+        var rows = []
+        for (var modelName in byName) {
+            rows.push(byName[modelName])
+        }
+        rows.sort(function(a, b) {
+            if (b.cost !== a.cost) {
+                return b.cost - a.cost
+            }
+            return b.tokens - a.tokens
+        })
+        return rows.slice(0, 6)
     }
 
     function costSparklineMax(points) {
@@ -738,6 +835,88 @@ PlasmoidItem {
         var last = points[points.length - 1]
         var label = last.label && last.label.length > 0 ? last.label : i18n("Latest")
         return i18n("%1: %2", label, amountString(last.cost, last.currency || "USD"))
+    }
+
+    function costBreakdownRows(tokenCost) {
+        if (!tokenCost || !tokenCost.totals) {
+            return []
+        }
+
+        var totals = tokenCost.totals
+        var rows = []
+        appendTokenBreakdownRow(rows, i18n("Total tokens"), totals.tokens)
+        appendTokenBreakdownRow(rows, i18n("Input"), totals.inputTokens)
+        appendTokenBreakdownRow(rows, i18n("Output"), totals.outputTokens)
+        appendTokenBreakdownRow(rows, i18n("Cache read"), totals.cacheReadTokens)
+        appendTokenBreakdownRow(rows, i18n("Cache write"), totals.cacheCreationTokens)
+        return rows
+    }
+
+    function appendTokenBreakdownRow(rows, label, tokens) {
+        var value = Number(tokens)
+        if (!isFinite(value) || value <= 0) {
+            return
+        }
+        rows.push({
+            label: label,
+            value: tokenCountString(value)
+        })
+    }
+
+    function costModelRows(tokenCost) {
+        if (!tokenCost || !tokenCost.models) {
+            return []
+        }
+
+        var rows = []
+        for (var i = 0; i < tokenCost.models.length; i++) {
+            var item = tokenCost.models[i]
+            rows.push({
+                label: item.label,
+                value: costTokenSummary(item.cost, item.tokens, item.currency)
+            })
+        }
+        return rows
+    }
+
+    function costDailyRows(tokenCost) {
+        if (!tokenCost || !tokenCost.daily) {
+            return []
+        }
+
+        var rows = []
+        var first = Math.max(0, tokenCost.daily.length - 7)
+        for (var i = tokenCost.daily.length - 1; i >= first; i--) {
+            var item = tokenCost.daily[i]
+            rows.push({
+                label: item.label && item.label.length > 0 ? item.label : i18n("Latest"),
+                value: costTokenSummary(item.cost, item.tokens, item.currency)
+            })
+        }
+        return rows
+    }
+
+    function costPerMillionLine(tokenCost) {
+        if (!tokenCost || !tokenCost.totals) {
+            return ""
+        }
+        var cost = Number(tokenCost.totals.cost)
+        var tokens = Number(tokenCost.totals.tokens)
+        if (!isFinite(cost) || !isFinite(tokens) || cost <= 0 || tokens <= 0) {
+            return ""
+        }
+        return i18n("Average: %1 / 1M tokens", amountString(cost * 1000000 / tokens, tokenCost.totals.currency || "USD"))
+    }
+
+    function costTokenSummary(cost, tokens, currency) {
+        var parts = []
+        if (isFinite(Number(cost)) && Number(cost) > 0) {
+            parts.push(amountString(Number(cost), currency || "USD"))
+        }
+        if (isFinite(Number(tokens)) && Number(tokens) > 0) {
+            parts.push(i18n("%1 tokens", tokenCountString(Number(tokens))))
+        }
+        return parts.join(" · ")
     }
 
     function applyTokenCosts() {
@@ -3591,6 +3770,141 @@ PlasmoidItem {
                                     opacity: 0.62
                                     horizontalAlignment: Text.AlignRight
                                     elide: Text.ElideRight
+                                }
+                            }
+
+                            ColumnLayout {
+                                id: costDrillDownSection
+
+                                visible: tokenCostSection.tokenCost
+                                    && (root.costBreakdownRows(tokenCostSection.tokenCost).length > 0
+                                        || root.costModelRows(tokenCostSection.tokenCost).length > 0
+                                        || root.costDailyRows(tokenCostSection.tokenCost).length > 0)
+                                Layout.fillWidth: true
+                                spacing: Kirigami.Units.smallSpacing
+
+                                PlasmaComponents.Label {
+                                    text: i18n("Cost drill-down")
+                                    font.weight: Font.DemiBold
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                }
+
+                                PlasmaComponents.Label {
+                                    visible: tokenCostSection.tokenCost && root.costPerMillionLine(tokenCostSection.tokenCost).length > 0
+                                    text: tokenCostSection.tokenCost ? root.costPerMillionLine(tokenCostSection.tokenCost) : ""
+                                    opacity: 0.7
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                }
+
+                                ColumnLayout {
+                                    visible: root.costBreakdownRows(tokenCostSection.tokenCost).length > 0
+                                    Layout.fillWidth: true
+                                    spacing: Kirigami.Units.smallSpacing / 2
+
+                                    Repeater {
+                                        model: root.costBreakdownRows(tokenCostSection.tokenCost)
+
+                                        delegate: RowLayout {
+                                            Layout.fillWidth: true
+                                            spacing: Kirigami.Units.smallSpacing
+
+                                            PlasmaComponents.Label {
+                                                text: modelData.label
+                                                opacity: 0.66
+                                                Layout.fillWidth: true
+                                                elide: Text.ElideRight
+                                            }
+
+                                            PlasmaComponents.Label {
+                                                text: modelData.value
+                                                opacity: 0.78
+                                                horizontalAlignment: Text.AlignRight
+                                                elide: Text.ElideRight
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Kirigami.Separator {
+                                    visible: root.costModelRows(tokenCostSection.tokenCost).length > 0
+                                    Layout.fillWidth: true
+                                }
+
+                                ColumnLayout {
+                                    visible: root.costModelRows(tokenCostSection.tokenCost).length > 0
+                                    Layout.fillWidth: true
+                                    spacing: Kirigami.Units.smallSpacing / 2
+
+                                    PlasmaComponents.Label {
+                                        text: i18n("Models")
+                                        opacity: 0.66
+                                        Layout.fillWidth: true
+                                        elide: Text.ElideRight
+                                    }
+
+                                    Repeater {
+                                        model: root.costModelRows(tokenCostSection.tokenCost)
+
+                                        delegate: RowLayout {
+                                            Layout.fillWidth: true
+                                            spacing: Kirigami.Units.smallSpacing
+
+                                            PlasmaComponents.Label {
+                                                text: modelData.label
+                                                Layout.fillWidth: true
+                                                elide: Text.ElideRight
+                                            }
+
+                                            PlasmaComponents.Label {
+                                                text: modelData.value
+                                                opacity: 0.7
+                                                horizontalAlignment: Text.AlignRight
+                                                elide: Text.ElideRight
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Kirigami.Separator {
+                                    visible: root.costDailyRows(tokenCostSection.tokenCost).length > 0
+                                    Layout.fillWidth: true
+                                }
+
+                                ColumnLayout {
+                                    visible: root.costDailyRows(tokenCostSection.tokenCost).length > 0
+                                    Layout.fillWidth: true
+                                    spacing: Kirigami.Units.smallSpacing / 2
+
+                                    PlasmaComponents.Label {
+                                        text: i18n("Recent days")
+                                        opacity: 0.66
+                                        Layout.fillWidth: true
+                                        elide: Text.ElideRight
+                                    }
+
+                                    Repeater {
+                                        model: root.costDailyRows(tokenCostSection.tokenCost)
+
+                                        delegate: RowLayout {
+                                            Layout.fillWidth: true
+                                            spacing: Kirigami.Units.smallSpacing
+
+                                            PlasmaComponents.Label {
+                                                text: modelData.label
+                                                Layout.fillWidth: true
+                                                elide: Text.ElideRight
+                                            }
+
+                                            PlasmaComponents.Label {
+                                                text: modelData.value
+                                                opacity: 0.7
+                                                horizontalAlignment: Text.AlignRight
+                                                elide: Text.ElideRight
+                                            }
+                                        }
+                                    }
                                 }
                             }
 

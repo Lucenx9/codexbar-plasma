@@ -11,6 +11,8 @@ come from the `codexbar` CLI.
 - Multi-provider Plasma panel indicator.
 - Provider tabs with usage bars, reset windows, credits, local token cost, and
   provider status links.
+- Local cost drill-down with token breakdowns, model summaries, recent daily spend,
+  and average cost per 1M tokens where the CLI exposes those fields.
 - Provider settings page for enable/disable, API key setup, docs, dashboards,
   and login/account links.
 - Optional compact multi-provider panel meters.
