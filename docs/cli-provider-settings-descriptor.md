@@ -4,8 +4,9 @@ This document defines the CLI contract Plasma needs before it can render real
 provider settings or onboarding flows without duplicating macOS Swift logic in
 QML.
 
-The Plasma widget should continue to show only redacted diagnostics and CLI
-command hints until the upstream `codexbar` CLI exposes this contract.
+The Plasma widget consumes this contract when the upstream `codexbar` CLI
+exposes it. If a descriptor is absent or unsupported, Plasma keeps showing the
+redacted diagnostics and CLI command hints fallback.
 
 ## Command
 
@@ -17,6 +18,11 @@ The command returns the normal provider list plus a provider-specific
 descriptor. The descriptor is declarative: it names fields and actions, but the
 CLI remains the only component that knows how to read, validate, write, import,
 or redact provider settings.
+
+Descriptor writes use local CLI commands such as
+`codexbar config set --provider amp --field sourceMode --value api --json-only`.
+Descriptor actions use local CLI commands such as
+`codexbar config action --provider openai --action openDashboard --json-only`.
 
 ## Top-level shape
 
@@ -149,6 +155,11 @@ Useful action categories:
 
 Actions must report structured JSON with `status`, optional `message`, and
 optional refreshed `descriptor`.
+
+URL-opening actions should still be local CLI actions. For example,
+`codexbar config action --provider openai --action openDashboard --json-only`
+can return `{ "status": "ok", "url": "https://..." }`; Plasma opens the URL
+only after the CLI reports it.
 
 ## Redaction and safety
 

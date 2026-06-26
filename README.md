@@ -106,7 +106,11 @@ Providers and accounts:
 - Provider enable/disable controls.
 - Account discovery and selection through `codexbar usage --all-accounts`.
 - Provider docs, dashboards, login/account links, and redacted diagnostics.
-- Provider-specific CLI command hints.
+- Descriptor-backed provider settings for CLI-advertised fields such as source,
+  API key, cookie source/manual cookie, base URL, workspace/project ID, region,
+  and optional usage extras.
+- Provider-specific CLI command hints as a fallback when a descriptor is not
+  available.
 
 Costs and history:
 

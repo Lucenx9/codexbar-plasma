@@ -1,18 +1,20 @@
 # TODO
 
-- Provider-specific editable settings: the Providers page now includes a
-  redacted settings inspector and CLI command hints. Add real editor controls
-  only when the CLI exposes a stable settings descriptor matching
-  `docs/cli-provider-settings-descriptor.md`. The missing controls include
-  source/auth mode pickers, cookie source/manual cookie fields, API key fields,
-  enterprise/base URL fields, region/workspace/project/org/team fields,
-  token-account add/edit/remove, provider metric pickers, and quota thresholds.
-  Do not duplicate the macOS Swift provider settings logic in QML; extend
+- Provider-specific editable settings: the Providers page consumes the stable
+  CLI settings descriptor from `docs/cli-provider-settings-descriptor.md` and
+  renders generic fields/actions without provider-specific QML branches. Current
+  coverage includes source mode, API key, cookie source/manual cookie,
+  enterprise/base URL, workspace/project ID, region, AWS profile/auth mode, and
+  boolean extras when the CLI advertises them. Missing controls include
+  token-account add/edit/remove, provider-specific auth mode nuances,
+  organization/team editors, provider metric pickers, and quota thresholds. Do
+  not duplicate macOS Swift provider settings logic in QML; extend
   `codexbar config` first.
-- Provider onboarding parity: keep login/account/dashboard/docs links, but add
-  safer setup flows for providers that need manual browser cookies, local app
-  files, OAuth/device-flow handoff, or CLI-auth setup when the CLI can describe
-  those actions in JSON.
+- Provider onboarding parity: descriptor-backed dashboard actions are supported,
+  and legacy login/account/dashboard/docs links remain as fallbacks. Add safer
+  setup actions for providers that need browser-cookie import, local app files,
+  OAuth/device-flow handoff, CLI-auth setup, or token-account workflows when the
+  CLI can describe and execute those actions in JSON.
 - Dashboard extras: the widget now surfaces generic KPI/summary rows from CLI
   dashboard payloads. Add richer provider-specific dashboard layouts only when
   the CLI exposes stable presentation fields. Missing examples include Codex

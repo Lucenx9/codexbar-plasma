@@ -21,14 +21,18 @@ if [[ ! -f "$CONTRACT_MD" ]]; then
 fi
 
 require_in_file "$CONTRACT_MD" "codexbar config providers --descriptors --format json --json-only"
+require_in_file "$CONTRACT_MD" "codexbar config set"
+require_in_file "$CONTRACT_MD" "codexbar config action"
 require_in_file "$CONTRACT_MD" "\"schemaVersion\": 1"
 require_in_file "$CONTRACT_MD" "\"fields\""
 require_in_file "$CONTRACT_MD" "\"actions\""
 require_in_file "$CONTRACT_MD" "\"redactedValue\""
 require_in_file "$CONTRACT_MD" "\"writeCommand\""
+require_in_file "$CONTRACT_MD" "\"command\""
 require_in_file "$CONTRACT_MD" "\"kind\": \"secret\""
 require_in_file "$CONTRACT_MD" "\"kind\": \"enum\""
 require_in_file "$CONTRACT_MD" "\"kind\": \"command\""
+require_in_file "$CONTRACT_MD" "After a successful write/action"
 require_in_file "$CONTRACT_MD" "Plasma renderer rules"
 require_in_file "$CONTRACT_MD" "Do not expose raw secrets"
 

@@ -293,6 +293,14 @@ msgid "%1 API key saved"
 msgstr ""
 
 #: contents/ui/configProviders.qml
+msgid "%1 setting saved"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "%1 action completed"
+msgstr ""
+
+#: contents/ui/configProviders.qml
 msgid "codexbar did not return diagnostics."
 msgstr ""
 
@@ -401,6 +409,10 @@ msgid "Provider diagnostics"
 msgstr ""
 
 #: contents/ui/configProviders.qml
+msgid "%1 for %2"
+msgstr ""
+
+#: contents/ui/configProviders.qml
 msgid "Search providers..."
 msgstr ""
 
@@ -439,6 +451,22 @@ msgid ""
 "Provider-specific editing stays in the CodexBar CLI until it exposes a "
 "stable settings descriptor. This panel shows redacted source/auth details "
 "and exact CLI commands."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Provider descriptor fields"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Not configured"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Set..."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Save"
 msgstr ""
 
 #: contents/ui/configProviders.qml

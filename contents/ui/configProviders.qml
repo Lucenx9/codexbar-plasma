@@ -48,7 +48,8 @@ KCM.SimpleKCM {
     property var pending: ({})
     // provider id -> desired enabled value while the CLI command is in flight
     property var pendingDesired: ({})
-    // running command source -> descriptor { kind, provider, desiredEnabled }
+    property var providerFieldPending: ({})
+    // running command source -> descriptor { kind, provider, desiredEnabled, fieldID, actionID }
     property var commands: ({})
     property var providerDiagnostics: ({})
     property var providerDiagnosticErrors: ({})
@@ -61,7 +62,7 @@ KCM.SimpleKCM {
 
     Component.onCompleted: reload()
 
-    function reload() {
+    function reload(preserveMessages) {
         if (commandPath.length === 0) {
             errorText = i18n("Set the codexbar command path in the General page.")
             providers = []
@@ -69,11 +70,14 @@ KCM.SimpleKCM {
         }
         loading = true
         errorText = ""
-        statusText = ""
+        if (preserveMessages !== true) {
+            statusText = ""
+        }
         var command = [
             shellQuote(commandPath),
             "config",
             "providers",
+            "--descriptors",
             "--format",
             "json",
             "--json-only"
@@ -158,6 +162,10 @@ KCM.SimpleKCM {
             handleToggleResult(descriptor, stdoutText, stderrText)
         } else if (descriptor.kind === "setApiKey") {
             handleSetApiKeyResult(descriptor, stdoutText, stderrText)
+        } else if (descriptor.kind === "descriptorField") {
+            handleDescriptorFieldResult(descriptor, stdoutText, stderrText)
+        } else if (descriptor.kind === "descriptorAction") {
+            handleDescriptorActionResult(descriptor, stdoutText, stderrText)
         } else if (descriptor.kind === "diagnose") {
             handleDiagnoseResult(descriptor, stdoutText, stderrText)
         }
@@ -203,7 +211,8 @@ KCM.SimpleKCM {
                     ? String(item.displayName).trim()
                     : providerTitle(item.provider),
                 enabled: item.enabled === true,
-                defaultEnabled: item.defaultEnabled === true
+                defaultEnabled: item.defaultEnabled === true,
+                descriptor: normalizeProviderDescriptor(item.descriptor)
             })
         }
         providers = next
@@ -282,6 +291,69 @@ KCM.SimpleKCM {
         bumpProviderConfigRevision()
         errorText = ""
         statusText = i18n("%1 API key saved", displayNameForProvider(descriptor.provider))
+    }
+
+    function handleDescriptorFieldResult(descriptor, stdoutText, stderrText) {
+        markFieldPending(descriptor.provider, descriptor.fieldID, false)
+        var payload = parseCommandPayload(stdoutText, stderrText)
+        if (payload.cancelled) {
+            return
+        }
+        if (payload.errorMessage.length > 0) {
+            errorText = i18n("%1: %2", displayNameForProvider(descriptor.provider), payload.errorMessage)
+            return
+        }
+
+        if (payload.value && !Array.isArray(payload.value) && payload.value.enabled !== undefined) {
+            updateProviderEnabled(descriptor.provider, payload.value.enabled === true)
+        }
+        bumpProviderConfigRevision()
+        errorText = ""
+        statusText = i18n("%1 setting saved", displayNameForProvider(descriptor.provider))
+        page.reload(true)
+    }
+
+    function handleDescriptorActionResult(descriptor, stdoutText, stderrText) {
+        markFieldPending(descriptor.provider, descriptor.actionID, false)
+        var payload = parseCommandPayload(stdoutText, stderrText)
+        if (payload.cancelled) {
+            return
+        }
+        if (payload.errorMessage.length > 0) {
+            errorText = i18n("%1: %2", displayNameForProvider(descriptor.provider), payload.errorMessage)
+            return
+        }
+
+        if (payload.value && !Array.isArray(payload.value) && payload.value.url) {
+            Qt.openUrlExternally(String(payload.value.url))
+        }
+        errorText = ""
+        statusText = i18n("%1 action completed", displayNameForProvider(descriptor.provider))
+        page.reload(true)
+    }
+
+    function parseCommandPayload(stdoutText, stderrText) {
+        var trimmed = stdoutText.trim()
+        var payload = null
+        if (trimmed.length > 0) {
+            try {
+                payload = JSON.parse(trimmed)
+            } catch (error) {
+                return {
+                    value: null,
+                    cancelled: false,
+                    errorMessage: i18n("Could not parse codexbar response: %1", error.message)
+                }
+            }
+        }
+        if (payload && payload.cancelled === true) {
+            return { value: payload, cancelled: true, errorMessage: "" }
+        }
+        var message = commandError(payload)
+        if (message.length === 0 && stderrText.trim().length > 0) {
+            message = stderrText.trim()
+        }
+        return { value: payload, cancelled: false, errorMessage: message }
     }
 
     function handleDiagnoseResult(descriptor, stdoutText, stderrText) {
@@ -526,7 +598,17 @@ KCM.SimpleKCM {
         }
 
         var rows = []
-        if (supportsApiKeySetup(item.provider)) {
+        var actions = descriptorActionRows(item)
+        for (var i = 0; i < actions.length; i++) {
+            rows.push({
+                title: actions[i].title,
+                icon: descriptorActionIcon(actions[i]),
+                action: "descriptor-action",
+                descriptorAction: actions[i],
+                enabled: !isFieldPending(item.provider, actions[i].id)
+            })
+        }
+        if (supportsApiKeySetup(item.provider) && !descriptorHasField(item, "apiKey")) {
             rows.push({ title: i18n("Set API key..."), icon: "password-show-off", action: "set-api-key", enabled: !isPending(item.provider) })
         }
         var docs = providerDocsUrl(item.provider)
@@ -534,7 +616,7 @@ KCM.SimpleKCM {
             rows.push({ title: i18n("Docs"), icon: "help-contents", action: "docs", url: docs, enabled: true })
         }
         var dashboard = providerDashboardUrl(item.provider)
-        if (dashboard.length > 0) {
+        if (dashboard.length > 0 && !descriptorHasAction(item, "openDashboard")) {
             rows.push({ title: i18n("Dashboard"), icon: "view-statistics", action: "dashboard", url: dashboard, enabled: true })
         }
         var login = providerLoginUrl(item.provider)
@@ -542,6 +624,22 @@ KCM.SimpleKCM {
             rows.push({ title: item.enabled ? i18n("Account") : i18n("Login"), icon: "internet-services", action: "login", url: login, enabled: true })
         }
         return rows
+    }
+
+    function descriptorActionIcon(action) {
+        if (!action) {
+            return "run-build"
+        }
+        if (action.id === "openDashboard") {
+            return "view-statistics"
+        }
+        if (action.id === "openDocs") {
+            return "help-contents"
+        }
+        if (action.id === "openLogin") {
+            return "internet-services"
+        }
+        return "run-build"
     }
 
     function providerSettingsRows(item) {
@@ -572,6 +670,137 @@ KCM.SimpleKCM {
         return rows
     }
 
+    function descriptorFieldRows(item) {
+        return item && item.descriptor && Array.isArray(item.descriptor.fields) ? item.descriptor.fields : []
+    }
+
+    function descriptorActionRows(item) {
+        return item && item.descriptor && Array.isArray(item.descriptor.actions) ? item.descriptor.actions : []
+    }
+
+    function descriptorHasField(item, fieldID) {
+        var fields = descriptorFieldRows(item)
+        for (var i = 0; i < fields.length; i++) {
+            if (fields[i].id === fieldID) {
+                return true
+            }
+        }
+        return false
+    }
+
+    function descriptorHasAction(item, actionID) {
+        var actions = descriptorActionRows(item)
+        for (var i = 0; i < actions.length; i++) {
+            if (actions[i].id === actionID) {
+                return true
+            }
+        }
+        return false
+    }
+
+    function normalizeProviderDescriptor(raw) {
+        if (!raw || Number(raw.schemaVersion) !== 1) {
+            return { schemaVersion: 0, fields: [], actions: [] }
+        }
+        var fields = []
+        var rawFields = Array.isArray(raw.fields) ? raw.fields : []
+        for (var i = 0; i < rawFields.length; i++) {
+            var field = normalizeDescriptorField(rawFields[i])
+            if (field) {
+                fields.push(field)
+            }
+        }
+        var actions = []
+        var rawActions = Array.isArray(raw.actions) ? raw.actions : []
+        for (var j = 0; j < rawActions.length; j++) {
+            var action = normalizeDescriptorAction(rawActions[j])
+            if (action) {
+                actions.push(action)
+            }
+        }
+        return { schemaVersion: 1, fields: fields, actions: actions }
+    }
+
+    function normalizeDescriptorField(raw) {
+        if (!raw || !raw.id || !raw.kind || !isSupportedDescriptorFieldKind(raw.kind)) {
+            return null
+        }
+        var command = normalizeCommandTokens(raw.writeCommand)
+        return {
+            id: String(raw.id),
+            kind: String(raw.kind),
+            title: raw.title ? String(raw.title) : providerTitle(raw.id),
+            description: raw.description ? String(raw.description) : "",
+            value: raw.value === undefined || raw.value === null ? "" : raw.value,
+            redactedValue: raw.redactedValue ? String(raw.redactedValue) : "",
+            required: raw.required === true,
+            options: normalizeDescriptorOptions(raw.options),
+            writeCommand: command
+        }
+    }
+
+    function normalizeDescriptorAction(raw) {
+        if (!raw || !raw.id || !raw.title) {
+            return null
+        }
+        var command = normalizeCommandTokens(raw.command)
+        if (command.length === 0) {
+            return null
+        }
+        return {
+            id: String(raw.id),
+            kind: raw.kind ? String(raw.kind) : "command",
+            title: String(raw.title),
+            description: raw.description ? String(raw.description) : "",
+            command: command
+        }
+    }
+
+    function isSupportedDescriptorFieldKind(kind) {
+        switch (String(kind)) {
+        case "text":
+        case "secret":
+        case "enum":
+        case "boolean":
+        case "number":
+            return true
+        default:
+            return false
+        }
+    }
+
+    function normalizeDescriptorOptions(rawOptions) {
+        var result = []
+        if (!Array.isArray(rawOptions)) {
+            return result
+        }
+        for (var i = 0; i < rawOptions.length; i++) {
+            var option = rawOptions[i]
+            if (!option || option.id === undefined || option.id === null) {
+                continue
+            }
+            result.push({
+                id: String(option.id),
+                title: option.title ? String(option.title) : String(option.id)
+            })
+        }
+        return result
+    }
+
+    function normalizeCommandTokens(tokens) {
+        var result = []
+        if (!Array.isArray(tokens)) {
+            return result
+        }
+        for (var i = 0; i < tokens.length; i++) {
+            var token = String(tokens[i])
+            if (token.length > 0) {
+                result.push(token)
+            }
+        }
+        return result
+    }
+
     function appendSettingsRow(rows, label, value) {
         if (value && String(value).length > 0) {
             rows.push({ label: label, value: String(value) })
@@ -599,6 +828,10 @@ KCM.SimpleKCM {
         if (!row || !selectedProvider) {
             return
         }
+        if (row.action === "descriptor-action") {
+            runDescriptorAction(selectedProvider.provider, row.descriptorAction)
+            return
+        }
         if (row.action === "set-api-key") {
             setApiKey(selectedProvider.provider)
             return
@@ -606,6 +839,125 @@ KCM.SimpleKCM {
         if (row.url && row.url.length > 0) {
             Qt.openUrlExternally(row.url)
         }
+    }
+
+    function writeDescriptorField(providerID, field, value) {
+        if (!field || !field.writeCommand || field.writeCommand.length === 0 || isFieldPending(providerID, field.id)) {
+            return
+        }
+        errorText = ""
+        statusText = ""
+        markFieldPending(providerID, field.id, true)
+        var command = runDescriptorCommand(field.writeCommand, ({ "{value}": value }), field.kind === "secret" ? value : null)
+        runCommand(command, { kind: "descriptorField", provider: providerID, fieldID: field.id })
+    }
+
+    function promptDescriptorSecret(providerID, field) {
+        if (!field || !field.writeCommand || field.writeCommand.length === 0 || isFieldPending(providerID, field.id)) {
+            return
+        }
+        errorText = ""
+        statusText = ""
+        markFieldPending(providerID, field.id, true)
+        var prompt = i18n("%1 for %2", field.title, displayNameForProvider(providerID))
+        var commandLine = commandLineFromTokens(field.writeCommand, ({}))
+        var script = [
+            "if ! command -v kdialog >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"kdialog is required to prompt for secrets.\"}}'; exit 1; fi",
+            "value=$(kdialog --password \"$1\" 2>/dev/null)",
+            "status=$?",
+            "if [ \"$status\" -ne 0 ] || [ -z \"$value\" ]; then printf '%s\\n' '{\"cancelled\":true}'; exit 0; fi",
+            "printf '%s' \"$value\" | " + commandLine
+        ].join("; ")
+        var command = ["sh", "-lc", shellQuote(script), "_", shellQuote(prompt)].join(" ")
+        runCommand(command, { kind: "descriptorField", provider: providerID, fieldID: field.id })
+    }
+
+    function runDescriptorAction(providerID, action) {
+        if (!action || !action.command || action.command.length === 0 || isFieldPending(providerID, action.id)) {
+            return
+        }
+        errorText = ""
+        statusText = ""
+        markFieldPending(providerID, action.id, true)
+        var command = runDescriptorCommand(action.command, ({}), null)
+        runCommand(command, { kind: "descriptorAction", provider: providerID, actionID: action.id })
+    }
+
+    function runDescriptorCommand(commandTokens, replacements, stdinValue) {
+        var commandLine = commandLineFromTokens(commandTokens, replacements)
+        if (stdinValue !== undefined && stdinValue !== null) {
+            var script = "printf '%s' \"$1\" | " + commandLine
+            return ["sh", "-lc", shellQuote(script), "_", shellQuote(stdinValue)].join(" ")
+        }
+        return commandLine
+    }
+
+    function commandLineFromTokens(commandTokens, replacements) {
+        var parts = []
+        for (var i = 0; i < commandTokens.length; i++) {
+            var token = commandTokens[i]
+            if (i === 0 && token === "codexbar" && commandPath.length > 0) {
+                token = commandPath
+            }
+            parts.push(shellQuote(applyCommandTokenReplacements(token, replacements)))
+        }
+        return parts.join(" ")
+    }
+
+    function applyCommandTokenReplacements(token, replacements) {
+        var result = String(token)
+        for (var key in replacements) {
+            if (!hasOwnKey(replacements, key)) {
+                continue
+            }
+            result = result.split(key).join(String(replacements[key]))
+        }
+        return result
+    }
+
+    function fieldOptionIndex(field) {
+        if (!field || !Array.isArray(field.options)) {
+            return -1
+        }
+        var value = String(field.value || "")
+        for (var i = 0; i < field.options.length; i++) {
+            if (field.options[i].id === value) {
+                return i
+            }
+        }
+        return field.options.length > 0 ? 0 : -1
+    }
+
+    function optionIDAt(options, index) {
+        if (!Array.isArray(options) || index < 0 || index >= options.length) {
+            return ""
+        }
+        return options[index].id
+    }
+
+    function isFieldPending(providerID, fieldID) {
+        var key = descriptorPendingKey(providerID, fieldID)
+        return key.length > 0 && hasOwnKey(providerFieldPending, key) && providerFieldPending[key] === true
+    }
+
+    function markFieldPending(providerID, fieldID, value) {
+        var key = descriptorPendingKey(providerID, fieldID)
+        if (key.length === 0) {
+            return
+        }
+        var next = copyObject(providerFieldPending)
+        if (value) {
+            next[key] = true
+        } else {
+            delete next[key]
+        }
+        providerFieldPending = next
+    }
+
+    function descriptorPendingKey(providerID, fieldID) {
+        var provider = providerMapKey(providerID)
+        var field = providerMapKey(fieldID)
+        return provider.length > 0 && field.length > 0 ? provider + "::" + field : ""
     }
 
     function supportsApiKeySetup(providerID) {
@@ -1156,6 +1508,159 @@ KCM.SimpleKCM {
                         : ""
                     visible: text.length > 0
                     showCloseButton: true
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: Kirigami.Units.smallSpacing
+                    visible: page.descriptorFieldRows(page.selectedProvider).length > 0
+
+                    Controls.Label {
+                        text: i18n("Provider descriptor fields")
+                        font.weight: Font.DemiBold
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                    }
+
+                    Repeater {
+                        model: page.descriptorFieldRows(page.selectedProvider)
+
+                        delegate: ColumnLayout {
+                            required property var modelData
+
+                            Layout.fillWidth: true
+                            spacing: Kirigami.Units.smallSpacing
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Kirigami.Units.smallSpacing
+                                visible: modelData.kind === "secret"
+
+                                Controls.Label {
+                                    text: modelData.title
+                                    opacity: 0.66
+                                    Layout.preferredWidth: Kirigami.Units.gridUnit * 7
+                                    elide: Text.ElideRight
+                                }
+
+                                Controls.Label {
+                                    text: modelData.redactedValue.length > 0 ? modelData.redactedValue : i18n("Not configured")
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                }
+
+                                Controls.Button {
+                                    text: i18n("Set...")
+                                    icon.name: "password-show-off"
+                                    enabled: page.selectedProvider
+                                        && !page.isFieldPending(page.selectedProvider.provider, modelData.id)
+                                    onClicked: if (page.selectedProvider) page.promptDescriptorSecret(page.selectedProvider.provider, modelData)
+                                }
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Kirigami.Units.smallSpacing
+                                visible: modelData.kind === "text" || modelData.kind === "number"
+
+                                Controls.Label {
+                                    text: modelData.title
+                                    opacity: 0.66
+                                    Layout.preferredWidth: Kirigami.Units.gridUnit * 7
+                                    elide: Text.ElideRight
+                                }
+
+                                Controls.TextField {
+                                    id: descriptorTextField
+                                    Layout.fillWidth: true
+                                    text: String(modelData.value || "")
+                                    placeholderText: modelData.description
+                                    inputMethodHints: modelData.kind === "number" ? Qt.ImhDigitsOnly : Qt.ImhNone
+                                    enabled: page.selectedProvider
+                                        && !page.isFieldPending(page.selectedProvider.provider, modelData.id)
+                                }
+
+                                Controls.Button {
+                                    text: i18n("Save")
+                                    icon.name: "document-save"
+                                    enabled: page.selectedProvider
+                                        && !page.isFieldPending(page.selectedProvider.provider, modelData.id)
+                                    onClicked: if (page.selectedProvider) page.writeDescriptorField(page.selectedProvider.provider, modelData, descriptorTextField.text)
+                                }
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Kirigami.Units.smallSpacing
+                                visible: modelData.kind === "enum"
+
+                                Controls.Label {
+                                    text: modelData.title
+                                    opacity: 0.66
+                                    Layout.preferredWidth: Kirigami.Units.gridUnit * 7
+                                    elide: Text.ElideRight
+                                }
+
+                                Controls.ComboBox {
+                                    id: descriptorEnumBox
+                                    Layout.fillWidth: true
+                                    model: modelData.options
+                                    textRole: "title"
+                                    valueRole: "id"
+                                    currentIndex: page.fieldOptionIndex(modelData)
+                                    enabled: page.selectedProvider
+                                        && modelData.options.length > 0
+                                        && !page.isFieldPending(page.selectedProvider.provider, modelData.id)
+                                }
+
+                                Controls.Button {
+                                    text: i18n("Save")
+                                    icon.name: "document-save"
+                                    enabled: page.selectedProvider
+                                        && descriptorEnumBox.currentIndex >= 0
+                                        && !page.isFieldPending(page.selectedProvider.provider, modelData.id)
+                                    onClicked: if (page.selectedProvider) page.writeDescriptorField(
+                                        page.selectedProvider.provider,
+                                        modelData,
+                                        page.optionIDAt(modelData.options, descriptorEnumBox.currentIndex))
+                                }
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Kirigami.Units.smallSpacing
+                                visible: modelData.kind === "boolean"
+
+                                Controls.Label {
+                                    text: modelData.title
+                                    opacity: 0.66
+                                    Layout.preferredWidth: Kirigami.Units.gridUnit * 7
+                                    elide: Text.ElideRight
+                                }
+
+                                Controls.CheckBox {
+                                    checked: modelData.value === true || String(modelData.value).toLowerCase() === "true"
+                                    text: modelData.description
+                                    Layout.fillWidth: true
+                                    enabled: page.selectedProvider
+                                        && !page.isFieldPending(page.selectedProvider.provider, modelData.id)
+                                    onClicked: if (page.selectedProvider) page.writeDescriptorField(page.selectedProvider.provider, modelData, checked ? "true" : "false")
+                                }
+                            }
+
+                            Controls.Label {
+                                Layout.fillWidth: true
+                                text: modelData.description
+                                opacity: 0.55
+                                font: Kirigami.Theme.smallFont
+                                wrapMode: Text.WordWrap
+                                visible: modelData.description.length > 0
+                                    && modelData.kind !== "boolean"
+                                    && modelData.kind !== "text"
+                                    && modelData.kind !== "number"
+                            }
+                        }
+                    }
                 }
 
                 Repeater {
