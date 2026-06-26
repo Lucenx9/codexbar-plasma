@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 UPDATER="${ROOT_DIR}/scripts/update-widget.sh"
 MAKEFILE="${ROOT_DIR}/Makefile"
+MAIN_QML="${ROOT_DIR}/contents/ui/main.qml"
 
 require_in_file() {
   local file="$1"
@@ -43,6 +44,9 @@ require_in_file "$UPDATER" "jq -r"
 require_in_file "$UPDATER" "curl --fail --location --show-error --silent"
 require_in_file "$UPDATER" "version_gt()"
 require_in_file "$UPDATER" "emit_status"
+require_in_file "$UPDATER" "schedule_plasmashell_restart()"
+require_in_file "$UPDATER" 'local unit_name="codexbar-plasma-restart-$$"'
+require_in_file "$UPDATER" 'systemd-run --user --collect --unit="$unit_name" --on-active=2s'
 reject_in_file "$UPDATER" "| sh"
 reject_in_file "$UPDATER" "| bash"
 reject_in_file "$UPDATER" "eval "
@@ -50,5 +54,8 @@ require_in_file "$MAKEFILE" "scripts/update-widget.sh --install"
 require_in_file "$MAKEFILE" "docs/codexbar-plasma-overview.png"
 require_in_file "$MAKEFILE" "docs/codexbar-plasma-codex.png"
 reject_in_file "$MAKEFILE" "cmake -E tar cf dist/codexbar-plasma.plasmoid --format=zip metadata.json contents docs scripts/update-widget.sh"
+require_in_file "$MAIN_QML" "return shellQuote(updateScriptPath()) + (installMode ? \" --install\" : \" --check\")"
+require_in_file "$MAIN_QML" "setWidgetUpdateState(i18n(\"Checking for widget updates...\"), \"\", false)"
+reject_in_file "$MAIN_QML" "return \"sh \" + shellQuote(updateScriptPath())"
 
 echo "Widget updater checks passed."

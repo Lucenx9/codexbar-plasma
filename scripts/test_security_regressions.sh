@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MAIN_QML="${ROOT_DIR}/contents/ui/main.qml"
+PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
 WORKFLOW="${ROOT_DIR}/.github/workflows/ci.yml"
 MAKEFILE="${ROOT_DIR}/Makefile"
 
@@ -71,6 +72,10 @@ require_in_file "$MAIN_QML" "if (name.length === 0 || isUnsafeObjectKey(name))"
 require_in_file "$MAIN_QML" "if (!hasOwnKey(byName, name))"
 require_in_file "$MAIN_QML" "if (!hasOwnKey(byName, modelName))"
 require_in_file "$MAIN_QML" "if (!hasOwnKey(item, key) || isUnsafeObjectKey(key))"
+require_in_file "$PROVIDERS_QML" "function providerMapKey(providerID)"
+require_in_file "$PROVIDERS_QML" "return isUnsafeObjectKey(key) ? \"\" : key"
+require_in_file "$PROVIDERS_QML" "if (!hasOwnKey(item, key) || isUnsafeObjectKey(key))"
+require_in_file "$PROVIDERS_QML" "Object.prototype.hasOwnProperty.call(item, key)"
 
 require_in_file "$MAIN_QML" "function safeStatusUrl(providerID, url)"
 require_in_file "$MAIN_QML" "function httpsUrlHost(url)"

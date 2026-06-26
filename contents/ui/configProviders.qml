@@ -349,22 +349,31 @@ KCM.SimpleKCM {
     }
 
     function providerDiagnosticFor(providerID) {
-        return providerDiagnostics[providerKey(providerID)] || null
+        var key = providerMapKey(providerID)
+        return key.length > 0 && hasOwnKey(providerDiagnostics, key) ? providerDiagnostics[key] : null
     }
 
     function setProviderDiagnostic(providerID, diagnostic) {
+        var key = providerMapKey(providerID)
+        if (key.length === 0) {
+            return
+        }
         var next = copyObject(providerDiagnostics)
-        next[providerKey(providerID)] = diagnostic
+        next[key] = diagnostic
         providerDiagnostics = next
     }
 
     function providerDiagnosticErrorFor(providerID) {
-        return providerDiagnosticErrors[providerKey(providerID)] || ""
+        var key = providerMapKey(providerID)
+        return key.length > 0 && hasOwnKey(providerDiagnosticErrors, key) ? providerDiagnosticErrors[key] : ""
     }
 
     function setProviderDiagnosticError(providerID, message) {
+        var key = providerMapKey(providerID)
+        if (key.length === 0) {
+            return
+        }
         var next = copyObject(providerDiagnosticErrors)
-        var key = providerKey(providerID)
         if (message && message.length > 0) {
             next[key] = message
         } else {
@@ -374,12 +383,16 @@ KCM.SimpleKCM {
     }
 
     function providerDiagnosticLoadingFor(providerID) {
-        return providerDiagnosticLoading[providerKey(providerID)] === true
+        var key = providerMapKey(providerID)
+        return key.length > 0 && hasOwnKey(providerDiagnosticLoading, key) && providerDiagnosticLoading[key] === true
     }
 
     function setProviderDiagnosticLoading(providerID, value) {
+        var key = providerMapKey(providerID)
+        if (key.length === 0) {
+            return
+        }
         var next = copyObject(providerDiagnosticLoading)
-        var key = providerKey(providerID)
         if (value) {
             next[key] = true
         } else {
@@ -417,25 +430,31 @@ KCM.SimpleKCM {
     }
 
     function isPending(providerID) {
-        return pending[providerID] === true
+        var key = providerMapKey(providerID)
+        return key.length > 0 && hasOwnKey(pending, key) && pending[key] === true
     }
 
     function visualEnabled(providerID, fallback) {
-        if (pendingDesired[providerID] !== undefined) {
-            return pendingDesired[providerID] === true
+        var key = providerMapKey(providerID)
+        if (key.length > 0 && hasOwnKey(pendingDesired, key)) {
+            return pendingDesired[key] === true
         }
         return fallback === true
     }
 
     function markPending(providerID, value, desiredEnabled) {
+        var key = providerMapKey(providerID)
+        if (key.length === 0) {
+            return
+        }
         var next = copyObject(pending)
         var desired = copyObject(pendingDesired)
         if (value) {
-            next[providerID] = true
-            desired[providerID] = desiredEnabled === true
+            next[key] = true
+            desired[key] = desiredEnabled === true
         } else {
-            delete next[providerID]
-            delete desired[providerID]
+            delete next[key]
+            delete desired[key]
         }
         pending = next
         pendingDesired = desired
@@ -470,9 +489,26 @@ KCM.SimpleKCM {
     function copyObject(item) {
         var copy = ({})
         for (var key in item) {
+            if (!hasOwnKey(item, key) || isUnsafeObjectKey(key)) {
+                continue
+            }
             copy[key] = item[key]
         }
         return copy
+    }
+
+    function hasOwnKey(item, key) {
+        return item ? Object.prototype.hasOwnProperty.call(item, key) : false
+    }
+
+    function isUnsafeObjectKey(key) {
+        var value = String(key || "")
+        return value === "__proto__" || value === "prototype" || value === "constructor"
+    }
+
+    function providerMapKey(providerID) {
+        var key = providerKey(providerID)
+        return isUnsafeObjectKey(key) ? "" : key
     }
 
     function displayNameForProvider(providerID) {

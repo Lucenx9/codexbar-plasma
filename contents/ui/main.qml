@@ -2055,7 +2055,7 @@ PlasmoidItem {
     }
 
     function buildUpdateCommand(installMode) {
-        return "sh " + shellQuote(updateScriptPath()) + (installMode ? " --install" : " --check")
+        return shellQuote(updateScriptPath()) + (installMode ? " --install" : " --check")
     }
 
     function updateCheckDue() {
@@ -2074,14 +2074,17 @@ PlasmoidItem {
         if (!updateCheckDue() || connectedUpdateCommandSource.length > 0) {
             return
         }
-        setWidgetUpdateState(i18n("Checking for widget updates..."), "")
+        setWidgetUpdateState(i18n("Checking for widget updates..."), "", false)
         connectedUpdateCommandSource = commandWithRunNonce(buildUpdateCommand(autoUpdateEnabled))
         updateSource.connectSource(connectedUpdateCommandSource)
     }
 
-    function setWidgetUpdateState(statusText, errorText) {
+    function setWidgetUpdateState(statusText, errorText, persistState) {
         updateStatusText = String(statusText || "")
         updateErrorText = String(errorText || "")
+        if (persistState === false) {
+            return
+        }
         Plasmoid.configuration.widgetUpdateLastStatus = updateStatusText
         Plasmoid.configuration.widgetUpdateLastError = updateErrorText
     }
