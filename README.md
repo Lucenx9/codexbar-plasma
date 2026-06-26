@@ -1,83 +1,55 @@
 # CodexBar Plasma
 
 KDE Plasma 6 widget for [CodexBar](https://github.com/steipete/CodexBar).
+It shows AI provider usage, reset windows, costs, status, and account data in
+the Plasma panel.
 
-This repository is intentionally small: it contains only the Plasma applet. All
-provider logic, authentication, configuration, quota parsing, and JSON output
-come from the `codexbar` CLI.
+This repository contains only the Plasma applet. Provider logic,
+authentication, configuration, quota parsing, and JSON output come from the
+`codexbar` CLI.
 
 ![CodexBar Plasma overview](docs/codexbar-plasma-overview.png)
 
 ![Codex provider detail](docs/codexbar-plasma-codex.png)
 
-## Features
+## Install
 
-- Multi-provider Plasma panel indicator.
-- Provider tabs with usage bars, reset windows, credits, local token cost, and
-  provider status links.
-- Local cost drill-down with token breakdowns, model summaries, recent daily spend,
-  cost history bars, and average cost per 1M tokens where the CLI exposes those fields.
-- Provider settings page for enable/disable, API key setup, docs, dashboards,
-  login/account links, redacted provider diagnostics, and provider-specific CLI
-  command hints.
-- Split settings pages for general refresh/notification controls, display,
-  advanced provider overrides, about links, and redacted CLI diagnostics.
-- Optional compact multi-provider panel meters.
-- Display mode controls: Percent, Pace, Percent and pace, Reset time.
-- Refresh presets: Manual, 1 min, 2 min, 5 min, 15 min, or custom seconds.
-- Auto-select highest-usage provider for the compact panel and provider detail
-  focus.
-- Provider status incident badge in the panel and provider detail view.
-- Optional quota warning markers on usage bars.
-- Optional Plasma notifications for provider status incidents and 80/95% quota
-  crossings.
-- Optional Plasma notifications when a heavily used limit resets back to empty.
-- Account discovery and selection through `codexbar usage --all-accounts`.
+1. Install the `codexbar` CLI.
+
+   On Arch-compatible systems:
+
+   ```sh
+   yay -S codexbar-cli
+   ```
+
+   You can also install the CLI from the main CodexBar release tarballs or from
+   a local Swift build.
+
+2. Download `codexbar-plasma.plasmoid` from the
+   [latest release](https://github.com/Lucenx9/codexbar-plasma/releases/latest).
+
+3. Install the widget:
+
+   ```sh
+   kpackagetool6 -t Plasma/Applet -i codexbar-plasma.plasmoid
+   ```
+
+4. Add **CodexBar** to a Plasma panel.
+
+To upgrade an existing install:
+
+```sh
+kpackagetool6 -t Plasma/Applet -u codexbar-plasma.plasmoid
+systemctl --user restart plasma-plasmashell.service
+```
 
 ## Requirements
 
 - KDE Plasma 6
 - `kpackagetool6`
 - `org.kde.plasma.plasma5support`
-- `notify-send` for optional Plasma notifications
 - `codexbar` CLI on `PATH`, or an absolute CLI path configured in the widget
-
-On Arch-compatible systems:
-
-```sh
-yay -S codexbar-cli
-```
-
-You can also install the CLI from the main CodexBar release tarballs or from a
-local Swift build.
-
-## Install
-
-From the repository root:
-
-```sh
-kpackagetool6 -t Plasma/Applet -i .
-```
-
-Then add **CodexBar** to a Plasma panel.
-
-## Upgrade
-
-```sh
-kpackagetool6 -t Plasma/Applet -u .
-systemctl --user restart plasma-plasmashell.service
-```
-
-## CLI Check
-
-Before debugging the widget, verify the data source directly:
-
-```sh
-codexbar usage --format json --json-only
-codexbar usage --format json --json-only --provider codex --source oauth
-codexbar usage --provider codex --all-accounts --format json --json-only
-codexbar cost --format json --json-only
-```
+- `notify-send` for optional Plasma notifications
 
 If Plasma does not inherit your shell `PATH`, set an absolute command path in
 the widget settings. On Arch/CachyOS with the AUR package this is usually:
@@ -86,36 +58,144 @@ the widget settings. On Arch/CachyOS with the AUR package this is usually:
 /usr/bin/codexbar
 ```
 
-## Test
+## CLI Check
+
+Before debugging the widget, verify the data source directly. If these commands
+do not work, the Plasma widget cannot show the corresponding data.
 
 ```sh
-scripts/test_feature_parity.sh
-scripts/test_refresh_nonce.sh
-scripts/test_provider_icons.sh
-scripts/test_security_regressions.sh
-scripts/test_qml_hardening.sh
-/usr/lib/qt6/bin/qmllint --unqualified disable -I /usr/lib/qt6/qml contents/ui/main.qml contents/ui/configGeneral.qml contents/ui/configProviders.qml contents/ui/configDisplay.qml contents/ui/configAdvanced.qml contents/ui/configAbout.qml contents/ui/configDebug.qml
-xmllint --noout contents/config/main.xml
-jq . metadata.json >/dev/null
-kpackagetool6 --appstream-metainfo . | xmllint --noout -
+codexbar usage --format json --json-only
+codexbar usage --format json --json-only --provider codex --source oauth
+codexbar usage --provider codex --all-accounts --format json --json-only
+codexbar cost --format json --json-only
 ```
 
-`make check` runs `qmllint` with `--unqualified disable` because Plasma injects
-helpers such as `i18n()` as context properties that otherwise create noisy
-false-positive warnings.
+## Features
 
-## Structure
+Panel and popup:
+
+- Compact panel indicator for one provider or multiple providers.
+- Provider tabs with usage bars, reset windows, account identity, status, and
+  credits.
+- Display modes for percent used, pace, percent plus pace, and reset time.
+- Auto-select highest-usage provider for the compact panel and provider detail
+  focus.
+
+Providers and accounts:
+
+- Provider enable/disable controls.
+- Account discovery and selection through `codexbar usage --all-accounts`.
+- Provider docs, dashboards, login/account links, and redacted diagnostics.
+- Provider-specific CLI command hints.
+
+Costs and history:
+
+- Local cost drill-down when the CLI exposes cost data.
+- Token breakdowns, model summaries, recent daily spend, cost history bars, and
+  average cost per 1M tokens.
+
+Status and notifications:
+
+- Provider status incident badge in the panel and provider detail view.
+- Optional quota warning markers on usage bars.
+- Optional Plasma notifications for provider status incidents, 80/95% quota
+  crossings, and when a heavily used limit resets back to empty.
+
+Settings:
+
+- Split settings pages for general refresh/notification controls, display,
+  advanced provider overrides, about links, and redacted CLI diagnostics.
+- Refresh presets: Manual, 1 min, 2 min, 5 min, 15 min, or custom seconds.
+
+## Troubleshooting
+
+If the widget stays on **Loading**:
+
+```sh
+codexbar usage --format json --json-only
+```
+
+If that works in a terminal but not in Plasma, set the widget command path to
+the absolute CLI path, for example `/usr/bin/codexbar`.
+
+If providers or accounts are missing:
+
+```sh
+codexbar usage --provider codex --all-accounts --format json --json-only
+```
+
+Then check the **Providers** settings page and make sure the provider is
+enabled.
+
+If costs are missing:
+
+```sh
+codexbar cost --format json --json-only
+```
+
+Cost sections are shown only when the CLI returns cost data for the selected
+provider.
+
+If notifications do not appear:
+
+```sh
+notify-send "CodexBar" "Notification test"
+```
+
+Then confirm notifications are enabled in the widget settings.
+
+For Plasma/QML errors:
+
+```sh
+journalctl --user -u plasma-plasmashell.service --since "10 minutes ago" --no-pager | rg -i "codexbar|app.codexbar|qml|error"
+```
+
+## Development
+
+Install from a local checkout:
+
+```sh
+git clone https://github.com/Lucenx9/codexbar-plasma.git
+cd codexbar-plasma
+kpackagetool6 -t Plasma/Applet -i .
+```
+
+Upgrade a local checkout:
+
+```sh
+kpackagetool6 -t Plasma/Applet -u .
+systemctl --user restart plasma-plasmashell.service
+```
+
+Run checks:
+
+```sh
+make check
+```
+
+Package locally:
+
+```sh
+make package
+```
+
+`make check` runs the static shell checks, XML/JSON checks, and `qmllint` with
+`--unqualified disable` because Plasma injects helpers such as `i18n()` as
+context properties that otherwise create noisy false-positive warnings.
+
+Project structure:
 
 ```text
 metadata.json
 contents/config/
 contents/icons/
 contents/ui/
+docs/
 scripts/
 ```
 
-Provider support stays upstream in CodexBar. When the Plasma frontend needs
-new data, add it to the CLI JSON contract first instead of scraping or editing
+Provider support stays upstream in CodexBar. When the Plasma frontend needs new
+data, add it to the CLI JSON contract first instead of scraping or editing
 CodexBar config files directly from QML.
 
 ## Attribution
