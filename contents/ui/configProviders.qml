@@ -112,12 +112,12 @@ KCM.SimpleKCM {
         var prompt = i18n("API key for %1", displayNameForProvider(providerID))
         var script = [
             "if ! command -v kdialog >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"kdialog is required to prompt for API keys.\"}}'; exit 1; fi",
-            "key=$(kdialog --password " + shellQuote(prompt) + " 2>/dev/null)",
+            "key=$(kdialog --password \"$1\" 2>/dev/null)",
             "status=$?",
             "if [ \"$status\" -ne 0 ] || [ -z \"$key\" ]; then printf '%s\\n' '{\"cancelled\":true}'; exit 0; fi",
-            "printf '%s' \"$key\" | " + shellQuote(commandPath) + " config set-api-key --provider " + shellQuote(providerID) + " --stdin --format json --json-only"
+            "printf '%s' \"$key\" | \"$2\" config set-api-key --provider \"$3\" --stdin --format json --json-only"
         ].join("; ")
-        var command = ["sh", "-lc", shellQuote(script)].join(" ")
+        var command = ["sh", "-lc", shellQuote(script), "_", shellQuote(prompt), shellQuote(commandPath), shellQuote(providerID)].join(" ")
         runCommand(command, { kind: "setApiKey", provider: providerID })
     }
 

@@ -3960,9 +3960,12 @@ PlasmoidItem {
                             Canvas {
                                 id: costSparkline
 
-                                property var points: tokenCostSection.tokenCost ? tokenCostSection.tokenCost.daily : []
+                                readonly property var tokenCost: tokenCostSection.tokenCost
+                                readonly property var providerData: root.selectedProviderData
+
+                                property var points: tokenCost ? tokenCost.daily : []
                                 readonly property real maxValue: root.costSparklineMax(points)
-                                readonly property color accent: root.providerColor(root.selectedProviderData ? root.selectedProviderData.provider : "")
+                                readonly property color accent: root.providerColor(providerData ? providerData.provider : "")
 
                                 visible: points.length > 1 && maxValue > 0
                                 Layout.fillWidth: true
@@ -4062,7 +4065,7 @@ PlasmoidItem {
                                 }
 
                                 Repeater {
-                                    model: root.costHistoryRows(tokenCostSection.tokenCost)
+                                    model: costHistoryChartSection.rows
 
                                     delegate: RowLayout {
                                         Layout.fillWidth: true
@@ -4109,10 +4112,14 @@ PlasmoidItem {
                             ColumnLayout {
                                 id: costDrillDownSection
 
+                                readonly property var breakdownRows: root.costBreakdownRows(tokenCostSection.tokenCost)
+                                readonly property var modelRows: root.costModelRows(tokenCostSection.tokenCost)
+                                readonly property var dailyRows: root.costDailyRows(tokenCostSection.tokenCost)
+
                                 visible: tokenCostSection.tokenCost
-                                    && (root.costBreakdownRows(tokenCostSection.tokenCost).length > 0
-                                        || root.costModelRows(tokenCostSection.tokenCost).length > 0
-                                        || root.costDailyRows(tokenCostSection.tokenCost).length > 0)
+                                    && (costDrillDownSection.breakdownRows.length > 0
+                                        || costDrillDownSection.modelRows.length > 0
+                                        || costDrillDownSection.dailyRows.length > 0)
                                 Layout.fillWidth: true
                                 spacing: Kirigami.Units.smallSpacing
 
@@ -4132,12 +4139,12 @@ PlasmoidItem {
                                 }
 
                                 ColumnLayout {
-                                    visible: root.costBreakdownRows(tokenCostSection.tokenCost).length > 0
+                                    visible: costDrillDownSection.breakdownRows.length > 0
                                     Layout.fillWidth: true
                                     spacing: Kirigami.Units.smallSpacing / 2
 
                                     Repeater {
-                                        model: root.costBreakdownRows(tokenCostSection.tokenCost)
+                                        model: costDrillDownSection.breakdownRows
 
                                         delegate: RowLayout {
                                             Layout.fillWidth: true
@@ -4161,12 +4168,12 @@ PlasmoidItem {
                                 }
 
                                 Kirigami.Separator {
-                                    visible: root.costModelRows(tokenCostSection.tokenCost).length > 0
+                                    visible: costDrillDownSection.modelRows.length > 0
                                     Layout.fillWidth: true
                                 }
 
                                 ColumnLayout {
-                                    visible: root.costModelRows(tokenCostSection.tokenCost).length > 0
+                                    visible: costDrillDownSection.modelRows.length > 0
                                     Layout.fillWidth: true
                                     spacing: Kirigami.Units.smallSpacing / 2
 
@@ -4178,7 +4185,7 @@ PlasmoidItem {
                                     }
 
                                     Repeater {
-                                        model: root.costModelRows(tokenCostSection.tokenCost)
+                                        model: costDrillDownSection.modelRows
 
                                         delegate: RowLayout {
                                             Layout.fillWidth: true
@@ -4201,12 +4208,12 @@ PlasmoidItem {
                                 }
 
                                 Kirigami.Separator {
-                                    visible: root.costDailyRows(tokenCostSection.tokenCost).length > 0
+                                    visible: costDrillDownSection.dailyRows.length > 0
                                     Layout.fillWidth: true
                                 }
 
                                 ColumnLayout {
-                                    visible: root.costDailyRows(tokenCostSection.tokenCost).length > 0
+                                    visible: costDrillDownSection.dailyRows.length > 0
                                     Layout.fillWidth: true
                                     spacing: Kirigami.Units.smallSpacing / 2
 
@@ -4218,7 +4225,7 @@ PlasmoidItem {
                                     }
 
                                     Repeater {
-                                        model: root.costDailyRows(tokenCostSection.tokenCost)
+                                        model: costDrillDownSection.dailyRows
 
                                         delegate: RowLayout {
                                             Layout.fillWidth: true
