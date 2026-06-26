@@ -110,7 +110,7 @@ Status and notifications:
 Settings:
 
 - Split settings pages for general refresh/notification controls, display,
-  advanced provider overrides, about links, and redacted CLI diagnostics.
+  advanced provider overrides, and redacted CLI diagnostics.
 - Refresh presets: Manual, 1 min, 2 min, 5 min, 15 min, or custom seconds.
 
 ## Troubleshooting

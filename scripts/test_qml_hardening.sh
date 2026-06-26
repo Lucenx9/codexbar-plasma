@@ -12,7 +12,6 @@ QML_FILES=(
   contents/ui/configProviders.qml
   contents/ui/configDisplay.qml
   contents/ui/configAdvanced.qml
-  contents/ui/configAbout.qml
   contents/ui/configDebug.qml
 )
 

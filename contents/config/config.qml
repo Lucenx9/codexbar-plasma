@@ -23,11 +23,6 @@ ConfigModel {
         source: "configAdvanced.qml"
     }
     ConfigCategory {
-        name: i18n("About")
-        icon: "help-about"
-        source: "configAbout.qml"
-    }
-    ConfigCategory {
         name: i18n("Debug")
         icon: "tools-report-bug"
         source: "configDebug.qml"
