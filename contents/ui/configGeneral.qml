@@ -201,7 +201,7 @@ KCM.SimpleKCM {
         Kirigami.InlineMessage {
             Layout.fillWidth: true
             type: Kirigami.MessageType.Error
-            text: cfg_widgetUpdateLastError
+            text: String(cfg_widgetUpdateLastError || "").slice(0, 500)
             visible: updateChecksEnabledCheck.checked && cfg_widgetUpdateLastError.length > 0
         }
     }

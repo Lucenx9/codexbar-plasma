@@ -38,13 +38,13 @@ PlasmoidItem {
     property bool autoUpdateEnabled: Plasmoid.configuration.autoUpdateEnabled === true
     property int autoUpdateIntervalHours: isFinite(Number(Plasmoid.configuration.autoUpdateIntervalHours)) ? Math.max(1, Math.min(168, Number(Plasmoid.configuration.autoUpdateIntervalHours))) : 24
     property string autoUpdateLastCheck: Plasmoid.configuration.autoUpdateLastCheck || ""
-    property string menuBarDisplayMode: Plasmoid.configuration.menuBarDisplayMode || "percent"
+    property string menuBarDisplayMode: safeMenuBarDisplayMode(Plasmoid.configuration.menuBarDisplayMode)
     property bool resetTimesShowAbsolute: Plasmoid.configuration.resetTimesShowAbsolute === true
     property bool showProviderChangelogs: Plasmoid.configuration.showProviderChangelogs === true
     property bool autoSelectProvider: Plasmoid.configuration.autoSelectProvider === true
     property string overviewProviderIDsRaw: Plasmoid.configuration.overviewProviderIDs || ""
     readonly property int maxOverviewProviders: 3
-    property int providerConfigRevision: Plasmoid.configuration.providerConfigRevision || 0
+    property int providerConfigRevision: boundedConfigRevision(Plasmoid.configuration.providerConfigRevision)
     property var providers: []
     property var providerDisplayNames: ({})
     property string errorText: ""
@@ -77,8 +77,8 @@ PlasmoidItem {
     property var notificationMemo: ({})
     property bool notificationsPrimed: false
     property string connectedUpdateCommandSource: ""
-    property string updateStatusText: Plasmoid.configuration.widgetUpdateLastStatus || ""
-    property string updateErrorText: Plasmoid.configuration.widgetUpdateLastError || ""
+    property string updateStatusText: boundedWidgetUpdateText(Plasmoid.configuration.widgetUpdateLastStatus)
+    property string updateErrorText: boundedWidgetUpdateText(Plasmoid.configuration.widgetUpdateLastError)
     property string lastNotifiedUpdateVersion: ""
     readonly property bool overviewAvailable: provider.length === 0 && providers.length > 1 && overviewProviders().length > 0
     readonly property bool overviewSelected: overviewAvailable && selectedProviderIndex < 0
@@ -273,6 +273,30 @@ PlasmoidItem {
 
     function shellQuote(value) {
         return "'" + String(value).replace(/'/g, "'\\''") + "'"
+    }
+
+    function safeMenuBarDisplayMode(value) {
+        var mode = String(value || "percent")
+        if (mode === "percent" || mode === "pace" || mode === "both" || mode === "resetTime") {
+            return mode
+        }
+        return "percent"
+    }
+
+    function boundedConfigRevision(value) {
+        var revision = Number(value)
+        if (!isFinite(revision)) {
+            return 0
+        }
+        return Math.max(0, Math.min(1000000, Math.floor(revision)))
+    }
+
+    function boundedWidgetUpdateText(value) {
+        var text = String(value || "")
+            .replace(/[\u0000-\u001f\u007f]/g, " ")
+            .replace(/\s+/g, " ")
+            .trim()
+        return text.length > 500 ? text.slice(0, 500) : text
     }
 
     function hasOwnKey(item, key) {
@@ -2122,8 +2146,8 @@ PlasmoidItem {
     }
 
     function setWidgetUpdateState(statusText, errorText, persistState) {
-        updateStatusText = String(statusText || "")
-        updateErrorText = String(errorText || "")
+        updateStatusText = boundedWidgetUpdateText(statusText)
+        updateErrorText = boundedWidgetUpdateText(errorText)
         if (persistState === false) {
             return
         }
