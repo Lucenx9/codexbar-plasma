@@ -73,16 +73,22 @@ KCM.SimpleKCM {
         if (preserveMessages !== true) {
             statusText = ""
         }
+        runProviderListCommand(true)
+    }
+
+    function runProviderListCommand(includeDescriptors) {
         var command = [
             shellQuote(commandPath),
             "config",
-            "providers",
-            "--descriptors",
-            "--format",
-            "json",
-            "--json-only"
-        ].join(" ")
-        runCommand(command, { kind: "list" })
+            "providers"
+        ]
+        if (includeDescriptors) {
+            command.push("--descriptors")
+        }
+        command.push("--format")
+        command.push("json")
+        command.push("--json-only")
+        runCommand(command.join(" "), { kind: "list", includeDescriptors: includeDescriptors === true })
     }
 
     function setEnabled(providerID, desiredEnabled) {
@@ -157,7 +163,7 @@ KCM.SimpleKCM {
         commands = withoutCommand
 
         if (descriptor.kind === "list") {
-            handleListResult(stdoutText, stderrText)
+            handleListResult(descriptor, stdoutText, stderrText)
         } else if (descriptor.kind === "toggle") {
             handleToggleResult(descriptor, stdoutText, stderrText)
         } else if (descriptor.kind === "setApiKey") {
@@ -171,7 +177,11 @@ KCM.SimpleKCM {
         }
     }
 
-    function handleListResult(stdoutText, stderrText) {
+    function handleListResult(descriptor, stdoutText, stderrText) {
+        if (descriptor.includeDescriptors === true && shouldRetryProviderListWithoutDescriptors(stdoutText, stderrText)) {
+            runProviderListCommand(false)
+            return
+        }
         loading = false
         var trimmed = stdoutText.trim()
         if (trimmed.length === 0) {
@@ -220,6 +230,18 @@ KCM.SimpleKCM {
             selectedProviderID = firstSelectableProvider(next)
         }
         errorText = ""
+    }
+
+    function shouldRetryProviderListWithoutDescriptors(stdoutText, stderrText) {
+        var text = (stdoutText + "\n" + stderrText).toLowerCase()
+        if (text.indexOf("descriptor") === -1) {
+            return false
+        }
+        return text.indexOf("unknown") !== -1
+            || text.indexOf("unrecognized") !== -1
+            || text.indexOf("unexpected") !== -1
+            || text.indexOf("unsupported") !== -1
+            || text.indexOf("invalid option") !== -1
     }
 
     function handleToggleResult(descriptor, stdoutText, stderrText) {
