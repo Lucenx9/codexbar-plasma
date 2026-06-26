@@ -7,6 +7,7 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
 
+import "utils.js" as Utils
 PlasmoidItem {
     id: root
 
@@ -1827,7 +1828,7 @@ PlasmoidItem {
         var identity = usage.identity || ({})
         var method = identity.loginMethod || usage.loginMethod || ""
         if (providerKey(providerID) === "codex" && method.length > 0) {
-            return capitalize(method)
+            return Utils.capitalize(method)
         }
         return ""
     }
@@ -2441,13 +2442,6 @@ PlasmoidItem {
         return item && (item.credits !== null || item.resetCredits || item.providerCost || item.tokenCost) ? true : false
     }
 
-    function capitalize(value) {
-        var text = String(value || "")
-        if (text.length === 0) {
-            return ""
-        }
-        return text.charAt(0).toUpperCase() + text.slice(1)
-    }
 
     function localizedPeriod(value) {
         var text = String(value || "").trim()
