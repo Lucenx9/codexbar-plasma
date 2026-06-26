@@ -1,10 +1,15 @@
 .PHONY: check install restart package
 
+# Override on distros where Qt6 ships QML modules elsewhere (e.g. Debian/Ubuntu
+# multiarch: make check QML_IMPORT_DIR=/usr/lib/x86_64-linux-gnu/qt6/qml).
+QMLLINT ?= /usr/lib/qt6/bin/qmllint
+QML_IMPORT_DIR ?= /usr/lib/qt6/qml
+
 check:
 	scripts/test_feature_parity.sh
 	scripts/test_refresh_nonce.sh
 	scripts/test_provider_icons.sh
-	/usr/lib/qt6/bin/qmllint -I /usr/lib/qt6/qml contents/ui/main.qml contents/ui/configGeneral.qml contents/ui/configProviders.qml
+	$(QMLLINT) -I $(QML_IMPORT_DIR) contents/ui/main.qml contents/ui/configGeneral.qml contents/ui/configProviders.qml
 	xmllint --noout contents/config/main.xml
 	jq . metadata.json >/dev/null
 	kpackagetool6 --appstream-metainfo . | xmllint --noout -

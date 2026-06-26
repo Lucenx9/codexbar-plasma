@@ -31,13 +31,25 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends \
-            make cmake git ca-certificates jq libxml2-utils qt6-declarative-dev-tools
+            make cmake git ca-certificates jq libxml2-utils \
+            qt6-declarative-dev-tools qt6-base-dev-tools
 
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: make check
-        run: make check
+        run: |
+          # The Makefile defaults to the Arch QML module path; on this
+          # Debian/Ubuntu-based neon image the modules live under the multiarch
+          # dir, so discover it and override QML_IMPORT_DIR for qmllint.
+          qmldir="$(qtpaths6 --query QT_INSTALL_QML 2>/dev/null || true)"
+          if [ ! -d "$qmldir" ]; then
+            qmldir="/usr/lib/x86_64-linux-gnu/qt6/qml"
+          fi
+          echo "Using QML import dir: $qmldir"
+          ls -d "$qmldir/org/kde/kirigami" "$qmldir/org/kde/plasma" 2>/dev/null \
+            || echo "WARNING: KDE QML modules not found under $qmldir"
+          make check QML_IMPORT_DIR="$qmldir"
 
       - name: make package
         run: make package
