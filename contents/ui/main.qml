@@ -6,6 +6,7 @@ import org.kde.plasma.components as PlasmaComponents
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
+import "Logic.js" as Logic
 
 PlasmoidItem {
     id: root
@@ -834,12 +835,7 @@ PlasmoidItem {
     }
 
     function costSparklineSummary(points) {
-        if (!points || points.length === 0) {
-            return ""
-        }
-        var last = points[points.length - 1]
-        var label = last.label && last.label.length > 0 ? last.label : i18n("Latest")
-        return i18n("%1: %2", label, amountString(last.cost, last.currency || "USD"))
+        return Logic.costSparklineSummary(points, i18n, amountString)
     }
 
     function costBreakdownRows(tokenCost) {
