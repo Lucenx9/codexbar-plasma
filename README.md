@@ -47,6 +47,18 @@ kpackagetool6 -t Plasma/Applet -u codexbar-plasma.plasmoid
 systemctl --user restart plasma-plasmashell.service
 ```
 
+To update from a local checkout or GitHub Release asset helper:
+
+```sh
+make update
+```
+
+The widget can also check GitHub Releases for newer `.plasmoid` packages.
+**Check for widget updates** and update-available notifications are enabled by
+default; **Install widget updates automatically** is opt-in. If the widget is
+published through KDE Store in the future, prefer Plasma Discover/KNewStuff for
+that install channel.
+
 ## Requirements
 
 - KDE Plasma 6
@@ -112,6 +124,8 @@ Settings:
 - Split settings pages for general refresh/notification controls, display,
   advanced provider overrides, and redacted CLI diagnostics.
 - Refresh presets: Manual, 1 min, 2 min, 5 min, 15 min, or custom seconds.
+- Check for widget updates, notify when an update is available, and opt in to
+  silent automatic widget installation.
 
 ## Troubleshooting
 

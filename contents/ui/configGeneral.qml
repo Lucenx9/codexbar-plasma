@@ -25,6 +25,16 @@ KCM.SimpleKCM {
     property bool cfg_notifyQuotaWarningsDefault
     property alias cfg_notifyLimitResets: notifyLimitResetsCheck.checked
     property bool cfg_notifyLimitResetsDefault
+    property alias cfg_updateChecksEnabled: updateChecksEnabledCheck.checked
+    property bool cfg_updateChecksEnabledDefault
+    property alias cfg_updateNotificationsEnabled: updateNotificationsEnabledCheck.checked
+    property bool cfg_updateNotificationsEnabledDefault
+    property alias cfg_autoUpdateEnabled: autoUpdateEnabledCheck.checked
+    property bool cfg_autoUpdateEnabledDefault
+    property alias cfg_autoUpdateIntervalHours: autoUpdateIntervalHoursSpin.value
+    property int cfg_autoUpdateIntervalHoursDefault
+    property string cfg_autoUpdateLastCheck
+    property string cfg_autoUpdateLastCheckDefault
     property int cfg_providerConfigRevision
     property int cfg_providerConfigRevisionDefault
 
@@ -134,6 +144,48 @@ KCM.SimpleKCM {
             id: notifyLimitResetsCheck
             text: i18n("Notify limit resets")
             enabled: enableNotificationsCheck.checked
+        }
+
+        Controls.CheckBox {
+            id: updateChecksEnabledCheck
+            text: i18n("Check for widget updates")
+        }
+
+        Controls.CheckBox {
+            id: updateNotificationsEnabledCheck
+            text: i18n("Notify when a widget update is available")
+            enabled: updateChecksEnabledCheck.checked && enableNotificationsCheck.checked
+        }
+
+        Controls.CheckBox {
+            id: autoUpdateEnabledCheck
+            text: i18n("Install widget updates automatically")
+            enabled: updateChecksEnabledCheck.checked
+        }
+
+        Controls.SpinBox {
+            id: autoUpdateIntervalHoursSpin
+            Kirigami.FormData.label: i18n("Update check interval:")
+            from: 1
+            to: 168
+            editable: true
+            enabled: updateChecksEnabledCheck.checked
+            textFromValue: function(value, locale) {
+                return i18np("%1 hour", "%1 hours", value)
+            }
+            valueFromText: function(text, locale) {
+                var match = text.match(/\d+/)
+                return match ? parseInt(match[0], 10) : 24
+            }
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 10
+        }
+
+        Controls.Label {
+            text: cfg_autoUpdateLastCheck.length > 0
+                ? i18n("Last update check: %1", cfg_autoUpdateLastCheck)
+                : i18n("Last update check: never")
+            visible: updateChecksEnabledCheck.checked
+            opacity: 0.7
         }
     }
 }

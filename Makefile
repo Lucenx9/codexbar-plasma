@@ -1,4 +1,4 @@
-.PHONY: check install restart package
+.PHONY: check install restart package update
 
 # Override on distros where Qt6 ships QML modules elsewhere (e.g. Debian/Ubuntu
 # multiarch: make check QML_IMPORT_DIR=/usr/lib/x86_64-linux-gnu/qt6/qml).
@@ -14,6 +14,8 @@ check:
 	scripts/test_refresh_nonce.sh
 	scripts/test_provider_icons.sh
 	scripts/test_security_regressions.sh
+	scripts/test_update_widget.sh
+	scripts/test_theme_boundaries.sh
 	scripts/test_qml_hardening.sh
 	$(QMLLINT) $(QMLLINT_FLAGS) -I $(QML_IMPORT_DIR) contents/ui/main.qml contents/ui/configGeneral.qml contents/ui/configProviders.qml contents/ui/configDisplay.qml contents/ui/configAdvanced.qml contents/ui/configDebug.qml
 	xmllint --noout contents/config/main.xml
@@ -30,6 +32,9 @@ install:
 restart:
 	systemctl --user restart plasma-plasmashell.service
 
+update:
+	scripts/update-widget.sh --install
+
 package:
 	mkdir -p dist
-	cmake -E tar cf dist/codexbar-plasma.plasmoid --format=zip metadata.json contents docs LICENSE NOTICE.md README.md
+	cmake -E tar cf dist/codexbar-plasma.plasmoid --format=zip metadata.json contents docs scripts/update-widget.sh LICENSE NOTICE.md README.md

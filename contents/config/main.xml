@@ -61,6 +61,28 @@
       <label>Notify when a heavily used limit resets back to empty.</label>
       <default>true</default>
     </entry>
+    <entry name="updateChecksEnabled" type="Bool">
+      <label>Check for widget updates.</label>
+      <default>true</default>
+    </entry>
+    <entry name="updateNotificationsEnabled" type="Bool">
+      <label>Notify when widget updates are available.</label>
+      <default>true</default>
+    </entry>
+    <entry name="autoUpdateEnabled" type="Bool">
+      <label>Install widget updates automatically.</label>
+      <default>false</default>
+    </entry>
+    <entry name="autoUpdateIntervalHours" type="Int">
+      <label>Widget update check interval in hours.</label>
+      <default>24</default>
+      <min>1</min>
+      <max>168</max>
+    </entry>
+    <entry name="autoUpdateLastCheck" type="String">
+      <label>Last widget update check timestamp.</label>
+      <default></default>
+    </entry>
     <entry name="menuBarDisplayMode" type="String">
       <label>Menu bar text display mode.</label>
       <default>percent</default>

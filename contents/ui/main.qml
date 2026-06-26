@@ -33,6 +33,11 @@ PlasmoidItem {
     property bool notifyStatusIncidents: Plasmoid.configuration.notifyStatusIncidents !== false
     property bool notifyQuotaWarnings: Plasmoid.configuration.notifyQuotaWarnings !== false
     property bool notifyLimitResets: Plasmoid.configuration.notifyLimitResets !== false
+    property bool updateChecksEnabled: Plasmoid.configuration.updateChecksEnabled !== false
+    property bool updateNotificationsEnabled: Plasmoid.configuration.updateNotificationsEnabled !== false
+    property bool autoUpdateEnabled: Plasmoid.configuration.autoUpdateEnabled === true
+    property int autoUpdateIntervalHours: isFinite(Number(Plasmoid.configuration.autoUpdateIntervalHours)) ? Math.max(1, Math.min(168, Number(Plasmoid.configuration.autoUpdateIntervalHours))) : 24
+    property string autoUpdateLastCheck: Plasmoid.configuration.autoUpdateLastCheck || ""
     property string menuBarDisplayMode: Plasmoid.configuration.menuBarDisplayMode || "percent"
     property bool resetTimesShowAbsolute: Plasmoid.configuration.resetTimesShowAbsolute === true
     property bool showProviderChangelogs: Plasmoid.configuration.showProviderChangelogs === true
@@ -69,6 +74,10 @@ PlasmoidItem {
     property var pendingAccountCommands: ({})
     property var notificationMemo: ({})
     property bool notificationsPrimed: false
+    property string connectedUpdateCommandSource: ""
+    property string updateStatusText: ""
+    property string updateErrorText: ""
+    property string lastNotifiedUpdateVersion: ""
     readonly property bool overviewAvailable: provider.length === 0 && providers.length > 1
     readonly property bool overviewSelected: overviewAvailable && selectedProviderIndex < 0
     readonly property var selectedProviderData: providers.length > 0 && selectedProviderIndex >= 0
@@ -85,6 +94,8 @@ PlasmoidItem {
     onNotifyStatusIncidentsChanged: resetNotificationMemo()
     onNotifyQuotaWarningsChanged: resetNotificationMemo()
     onNotifyLimitResetsChanged: resetNotificationMemo()
+    onUpdateChecksEnabledChanged: if (updateChecksEnabled) Qt.callLater(checkForWidgetUpdate)
+    onAutoUpdateEnabledChanged: if (updateChecksEnabled) Qt.callLater(checkForWidgetUpdate)
     onProvidersChanged: {
         if (providers.length === 0) {
             selectedProviderIndex = 0
@@ -101,6 +112,9 @@ PlasmoidItem {
             providerConfigWatcher.connectSource(providerConfigWatchCommand)
         }
         refreshNow()
+        if (updateChecksEnabled) {
+            Qt.callLater(checkForWidgetUpdate)
+        }
     }
 
     function buildCommand() {
@@ -1744,7 +1758,6 @@ PlasmoidItem {
         case "major":
             return Kirigami.Theme.negativeTextColor
         case "minor":
-            return Qt.rgba(245 / 255, 158 / 255, 11 / 255, 1)
         case "maintenance":
             return Kirigami.Theme.neutralTextColor
         case "unknown":
@@ -2031,6 +2044,122 @@ PlasmoidItem {
         var command = "if command -v notify-send >/dev/null 2>&1; then notify-send --app-name=CodexBar --icon=view-statistics --urgency="
             + shellQuote(cleanUrgency) + " -- " + shellQuote(cleanTitle) + " " + shellQuote(cleanBody) + "; fi"
         notificationSource.connectSource(command)
+    }
+
+    function updateScriptPath() {
+        var url = Qt.resolvedUrl("../../scripts/update-widget.sh").toString()
+        if (url.indexOf("file://") === 0) {
+            return decodeURIComponent(url.substring(7))
+        }
+        return decodeURIComponent(url)
+    }
+
+    function buildUpdateCommand(installMode) {
+        return "sh " + shellQuote(updateScriptPath()) + (installMode ? " --install" : " --check")
+    }
+
+    function updateCheckDue() {
+        if (!updateChecksEnabled) {
+            return false
+        }
+        var lastCheckMs = Date.parse(autoUpdateLastCheck)
+        if (!isFinite(lastCheckMs)) {
+            return true
+        }
+        var intervalMs = autoUpdateIntervalHours * 60 * 60 * 1000
+        return Date.now() - lastCheckMs >= intervalMs
+    }
+
+    function checkForWidgetUpdate() {
+        if (!updateCheckDue() || connectedUpdateCommandSource.length > 0) {
+            return
+        }
+        updateErrorText = ""
+        connectedUpdateCommandSource = commandWithRunNonce(buildUpdateCommand(autoUpdateEnabled))
+        updateSource.connectSource(connectedUpdateCommandSource)
+    }
+
+    function handleUpdateData(sourceName, stdoutText, stderrText) {
+        if (sourceName !== connectedUpdateCommandSource) {
+            return
+        }
+        updateSource.disconnectSource(sourceName)
+        connectedUpdateCommandSource = ""
+
+        var checkedAt = new Date().toISOString()
+        Plasmoid.configuration.autoUpdateLastCheck = checkedAt
+
+        var trimmed = stdoutText.trim()
+        if (trimmed.length === 0) {
+            updateErrorText = stderrText.trim().length > 0 ? stderrText.trim() : i18n("Widget update check returned no data.")
+            return
+        }
+
+        var payload
+        try {
+            payload = JSON.parse(trimmed)
+        } catch (error) {
+            updateErrorText = i18n("Could not parse widget update JSON: %1", error.message)
+            return
+        }
+
+        processUpdateCheck(payload)
+    }
+
+    function processUpdateCheck(payload) {
+        var status = String(payload && payload.status ? payload.status : "")
+        var message = String(payload && payload.message ? payload.message : "")
+        var version = String(payload && payload.remoteVersion ? payload.remoteVersion : "")
+        var url = String(payload && payload.assetUrl ? payload.assetUrl : "")
+
+        if (status === "error") {
+            updateErrorText = message.length > 0 ? message : i18n("Widget update check failed.")
+            return
+        }
+
+        updateErrorText = ""
+        if (status === "available") {
+            updateStatusText = version.length > 0
+                ? i18n("Widget update %1 is available.", version)
+                : i18n("A widget update is available.")
+            if (!autoUpdateEnabled) {
+                notifyAvailableUpdate(version, url)
+            }
+            return
+        }
+        if (status === "installed") {
+            updateStatusText = version.length > 0
+                ? i18n("Widget update %1 installed.", version)
+                : i18n("Widget update installed.")
+            return
+        }
+        if (status === "current") {
+            updateStatusText = i18n("Widget is up to date.")
+            return
+        }
+        if (status === "skipped") {
+            updateStatusText = message.length > 0 ? message : i18n("Widget update skipped.")
+            return
+        }
+
+        updateErrorText = i18n("Unknown widget update status: %1", status)
+    }
+
+    function notifyAvailableUpdate(version, url) {
+        if (!enableNotifications || !updateNotificationsEnabled) {
+            return
+        }
+        var cleanVersion = String(version || "").trim()
+        var memoKey = cleanVersion.length > 0 ? cleanVersion : url
+        if (memoKey.length === 0 || memoKey === lastNotifiedUpdateVersion) {
+            return
+        }
+        lastNotifiedUpdateVersion = memoKey
+        var title = i18n("CodexBar widget update available")
+        var body = cleanVersion.length > 0
+            ? i18n("Version %1 is available.", cleanVersion)
+            : i18n("A new widget version is available.")
+        sendPlasmaNotification(title, body, "normal")
     }
 
     function planText(providerID, usage, item) {
@@ -3159,6 +3288,28 @@ PlasmoidItem {
             }
             var stdoutText = data && data["stdout"] ? data["stdout"] : ""
             root.handleProviderConfigWatch(stdoutText)
+        }
+    }
+
+    Timer {
+        id: updateCheckTimer
+
+        interval: root.autoUpdateIntervalHours * 60 * 60 * 1000
+        repeat: true
+        running: root.updateChecksEnabled
+        triggeredOnStart: false
+        onTriggered: root.checkForWidgetUpdate()
+    }
+
+    Plasma5Support.DataSource {
+        id: updateSource
+
+        engine: "executable"
+
+        onNewData: function(sourceName, data) {
+            var stdoutText = data && data["stdout"] ? data["stdout"] : ""
+            var stderrText = data && data["stderr"] ? data["stderr"] : ""
+            root.handleUpdateData(sourceName, stdoutText, stderrText)
         }
     }
 
