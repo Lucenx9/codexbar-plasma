@@ -1222,7 +1222,7 @@ PlasmoidItem {
         if (!items || !Array.isArray(items) || items.length === 0) {
             return
         }
-        var item = items[0] || ({})
+        var item = items[items.length - 1] || ({})
         var label = item.day || item.date || item.label || i18n("Latest dashboard day")
         appendDashboardPeriodRow(rows, label, {
             costUSD: item.costUSD,
