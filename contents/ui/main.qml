@@ -720,11 +720,11 @@ PlasmoidItem {
             hintLine: tokenCostHint(providerID),
             totals: normalizeCostTotals(item.totals, item.last30DaysCostUSD, item.last30DaysTokens, currency),
             models: normalizeCostModels(item.daily, currency),
-            daily: normalizeCostDaily(item.daily, currency)
+            daily: normalizeCostDaily(item.daily, currency, costHistoryDays)
         }
     }
 
-    function normalizeCostDaily(items, currency) {
+    function normalizeCostDaily(items, currency, days) {
         var result = []
         if (!items || !Array.isArray(items)) {
             return result
@@ -756,7 +756,8 @@ PlasmoidItem {
             })
         }
 
-        return result.slice(Math.max(0, result.length - 30))
+        var historyDays = isFinite(Number(days)) ? Math.max(1, Math.min(365, Number(days))) : 30
+        return result.slice(Math.max(0, result.length - historyDays))
     }
 
     function normalizeCostTotals(totals, fallbackCost, fallbackTokens, currency) {
