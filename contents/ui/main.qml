@@ -6,6 +6,7 @@ import org.kde.plasma.components as PlasmaComponents
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
+import "TokenUtils.js" as TokenUtils
 
 PlasmoidItem {
     id: root
@@ -715,7 +716,7 @@ PlasmoidItem {
             var cacheReadTokens = Number(item.cacheReadTokens)
             var cacheCreationTokens = Number(item.cacheCreationTokens !== undefined ? item.cacheCreationTokens : item.cacheWriteTokens)
             if (!isFinite(tokens)) {
-                tokens = sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens)
+                tokens = TokenUtils.sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens)
             }
             if (!isFinite(cost) && !isFinite(tokens) && !isFinite(inputTokens) && !isFinite(outputTokens)) {
                 continue
@@ -744,7 +745,7 @@ PlasmoidItem {
         var cacheReadTokens = Number(source.cacheReadTokens)
         var cacheCreationTokens = Number(source.cacheCreationTokens !== undefined ? source.cacheCreationTokens : source.cacheWriteTokens)
         if (!isFinite(tokens)) {
-            tokens = sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens)
+            tokens = TokenUtils.sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens)
         }
         return {
             cost: isFinite(cost) ? Math.max(0, cost) : 0,
@@ -755,17 +756,6 @@ PlasmoidItem {
             cacheCreationTokens: isFinite(cacheCreationTokens) ? Math.max(0, cacheCreationTokens) : 0,
             currency: currency || "USD"
         }
-    }
-
-    function sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens) {
-        var total = 0
-        var values = [inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens]
-        for (var i = 0; i < values.length; i++) {
-            if (isFinite(Number(values[i])) && Number(values[i]) > 0) {
-                total += Number(values[i])
-            }
-        }
-        return total > 0 ? total : Number.NaN
     }
 
     function normalizeCostModels(items, currency) {
