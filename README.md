@@ -24,6 +24,7 @@ come from the `codexbar` CLI.
 - Optional quota warning markers on usage bars.
 - Optional Plasma notifications for provider status incidents and 80/95% quota
   crossings.
+- Optional Plasma notifications when a heavily used limit resets back to empty.
 - Account discovery and selection through `codexbar usage --all-accounts`.
 
 ## Requirements

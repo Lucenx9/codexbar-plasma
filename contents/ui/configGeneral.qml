@@ -27,6 +27,8 @@ KCM.SimpleKCM {
     property bool cfg_notifyStatusIncidentsDefault
     property alias cfg_notifyQuotaWarnings: notifyQuotaWarningsCheck.checked
     property bool cfg_notifyQuotaWarningsDefault
+    property alias cfg_notifyLimitResets: notifyLimitResetsCheck.checked
+    property bool cfg_notifyLimitResetsDefault
     property string cfg_menuBarDisplayMode: "percent"
     property string cfg_menuBarDisplayModeDefault
     property alias cfg_resetTimesShowAbsolute: resetTimesShowAbsoluteCheck.checked
@@ -179,6 +181,12 @@ KCM.SimpleKCM {
         Controls.CheckBox {
             id: notifyQuotaWarningsCheck
             text: i18n("Notify quota warnings")
+            enabled: enableNotificationsCheck.checked
+        }
+
+        Controls.CheckBox {
+            id: notifyLimitResetsCheck
+            text: i18n("Notify limit resets")
             enabled: enableNotificationsCheck.checked
         }
 

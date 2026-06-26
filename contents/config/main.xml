@@ -47,6 +47,10 @@
       <label>Notify when usage crosses quota warning thresholds.</label>
       <default>true</default>
     </entry>
+    <entry name="notifyLimitResets" type="Bool">
+      <label>Notify when a heavily used limit resets back to empty.</label>
+      <default>true</default>
+    </entry>
     <entry name="menuBarDisplayMode" type="String">
       <label>Menu bar text display mode.</label>
       <default>percent</default>

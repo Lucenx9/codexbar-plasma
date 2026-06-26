@@ -30,6 +30,7 @@ PlasmoidItem {
     property bool enableNotifications: Plasmoid.configuration.enableNotifications !== false
     property bool notifyStatusIncidents: Plasmoid.configuration.notifyStatusIncidents !== false
     property bool notifyQuotaWarnings: Plasmoid.configuration.notifyQuotaWarnings !== false
+    property bool notifyLimitResets: Plasmoid.configuration.notifyLimitResets !== false
     property string menuBarDisplayMode: Plasmoid.configuration.menuBarDisplayMode || "percent"
     property bool resetTimesShowAbsolute: Plasmoid.configuration.resetTimesShowAbsolute === true
     property bool showProviderChangelogs: Plasmoid.configuration.showProviderChangelogs === true
@@ -79,6 +80,7 @@ PlasmoidItem {
     onEnableNotificationsChanged: resetNotificationMemo()
     onNotifyStatusIncidentsChanged: resetNotificationMemo()
     onNotifyQuotaWarningsChanged: resetNotificationMemo()
+    onNotifyLimitResetsChanged: resetNotificationMemo()
     onProvidersChanged: {
         if (providers.length === 0) {
             selectedProviderIndex = 0
@@ -1534,6 +1536,18 @@ PlasmoidItem {
                     }
                 }
             }
+            if (notifyLimitResets) {
+                // Arm rows that already sit at warning-level usage so a later
+                // reset fires, but never fire on this first observation.
+                var resetRows = item.rows || []
+                for (var k = 0; k < resetRows.length; k++) {
+                    var resetRow = resetRows[k]
+                    if (resetRow && resetRow.hasPercent
+                        && Number(resetRow.usedPercent) >= limitResetArmThreshold) {
+                        nextMemo[limitResetNotificationKey(item.provider, resetRow, k)] = "1"
+                    }
+                }
+            }
         }
         notificationMemo = nextMemo
         notificationsPrimed = true
@@ -1560,6 +1574,9 @@ PlasmoidItem {
             }
             if (notifyQuotaWarnings) {
                 processQuotaNotifications(item, nextMemo)
+            }
+            if (notifyLimitResets) {
+                processLimitResetNotifications(item, nextMemo)
             }
         }
         notificationMemo = nextMemo
@@ -1607,6 +1624,43 @@ PlasmoidItem {
                 delete nextMemo[key]
             }
         }
+    }
+
+    // Usage at or above this percent arms a row for reset detection; once armed,
+    // dropping to or below the floor fires a single "limit reset" notification.
+    // Mirrors the macOS weekly-limit reset detector, scoped to limits the user
+    // was actually near so routine short-window resets stay quiet.
+    readonly property int limitResetArmThreshold: 80
+    readonly property int limitResetFloor: 5
+
+    function processLimitResetNotifications(item, nextMemo) {
+        var rows = item.rows || []
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i]
+            if (!row || !row.hasPercent) {
+                continue
+            }
+            var used = Number(row.usedPercent)
+            if (!isFinite(used)) {
+                continue
+            }
+            var key = limitResetNotificationKey(item.provider, row, i)
+            var wasArmed = notificationMemo[key] === "1"
+            if (wasArmed && used <= limitResetFloor) {
+                sendPlasmaNotification(
+                    i18n("%1 limit reset", item.title),
+                    i18n("%1 is back to %2% used", row.label, Math.round(used)),
+                    "low")
+            } else if (used >= limitResetArmThreshold || (wasArmed && used > limitResetFloor)) {
+                nextMemo[key] = "1"
+            }
+        }
+    }
+
+    function limitResetNotificationKey(providerID, row, index) {
+        var lane = row && row.lane ? row.lane : ""
+        var label = row && row.label ? row.label : ""
+        return "reset:" + providerID + ":" + lane + ":" + label + ":" + index
     }
 
     function notificationStatusValue(item) {
