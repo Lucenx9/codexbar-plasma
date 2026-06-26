@@ -368,12 +368,7 @@ PlasmoidItem {
         }
 
         var items = Array.isArray(payload) ? payload : [payload]
-        var nextProviders = []
-        for (var i = 0; i < items.length; i++) {
-            if (items[i]) {
-                nextProviders.push(normalizeProvider(items[i]))
-            }
-        }
+        var nextProviders = items.filter(function(item) { return item; }).map(function(item) { return normalizeProvider(item); })
 
         providers = nextProviders
         errorText = nextProviders.length === 0 ? stderrText.trim() : ""
@@ -506,14 +501,13 @@ PlasmoidItem {
             try {
                 payload = JSON.parse(trimmed)
                 var items = Array.isArray(payload) ? payload : [payload]
-                for (var i = 0; i < items.length; i++) {
-                    if (items[i]) {
-                        if (!items[i].provider) {
-                            items[i].provider = providerID
-                        }
-                        normalizedItems.push(normalizeProvider(items[i]))
+                var mappedItems = items.filter(function(item) { return item; }).map(function(item) {
+                    if (!item.provider) {
+                        item.provider = providerID
                     }
-                }
+                    return normalizeProvider(item)
+                })
+                normalizedItems.push.apply(normalizedItems, mappedItems)
             } catch (error) {
                 normalizedItems.push(normalizeProvider(providerErrorPayload(
                     providerID,
@@ -611,23 +605,19 @@ PlasmoidItem {
         }
 
         var items = Array.isArray(payload) ? payload : [payload]
-        var options = []
         var message = ""
-        for (var i = 0; i < items.length; i++) {
-            var item = items[i]
-            if (!item) {
-                continue
-            }
+        var options = items.filter(function(item) { return item; }).map(function(item) {
             if (!item.provider) {
                 item.provider = providerID
             }
-            var normalized = normalizeProvider(item)
+            return normalizeProvider(item)
+        }).filter(function(normalized) {
             if (normalized.error.length > 0 && accountLabel(normalized).length === 0) {
                 message = normalized.error
-                continue
+                return false
             }
-            options.push(normalized)
-        }
+            return true
+        })
 
         setAccountOptions(providerID, dedupeAccountOptions(options))
         setAccountError(providerID, options.length === 0 ? message : "")
@@ -668,12 +658,11 @@ PlasmoidItem {
 
         var items = Array.isArray(payload) ? payload : [payload]
         var nextCosts = ({})
-        for (var i = 0; i < items.length; i++) {
-            var cost = normalizeTokenCost(items[i])
-            if (cost && cost.provider.length > 0) {
-                nextCosts[cost.provider] = cost
-            }
-        }
+        items.map(normalizeTokenCost).filter(function(cost) {
+            return cost && cost.provider.length > 0
+        }).forEach(function(cost) {
+            nextCosts[cost.provider] = cost
+        })
 
         tokenCosts = nextCosts
         costErrorText = ""
