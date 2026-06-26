@@ -997,6 +997,205 @@ PlasmoidItem {
         return parts.join(" · ")
     }
 
+    function usageDashboard(providerID, usage, item) {
+        var kpis = []
+        var rows = []
+        var sources = [
+            { title: i18n("Codex dashboard"), value: item.openaiDashboard },
+            { title: i18n("OpenAI API"), value: usage.openAIAPIUsage },
+            { title: i18n("OpenRouter"), value: usage.openRouterUsage },
+            { title: i18n("Claude Admin"), value: usage.claudeAdminAPIUsage },
+            { title: i18n("Poe"), value: usage.poeUsage },
+            { title: i18n("DeepSeek"), value: usage.deepseekUsage },
+            { title: i18n("MiniMax"), value: usage.minimaxUsage },
+            { title: i18n("Z.ai"), value: usage.zaiUsage }
+        ]
+
+        for (var i = 0; i < sources.length; i++) {
+            appendDashboardSource(kpis, rows, sources[i].title, sources[i].value)
+        }
+
+        if (kpis.length === 0 && rows.length === 0) {
+            return null
+        }
+        return {
+            kpis: kpis.slice(0, 4),
+            rows: rows.slice(0, 10)
+        }
+    }
+
+    function appendDashboardSource(kpis, rows, title, source) {
+        if (!source) {
+            return
+        }
+
+        var sourceRows = usageDashboardRows(source)
+        if (sourceRows.length === 0) {
+            return
+        }
+
+        if (kpis.length < 4) {
+            kpis.push({
+                label: title,
+                value: sourceRows[0].value
+            })
+        }
+
+        for (var i = 0; i < sourceRows.length; i++) {
+            rows.push({
+                label: sourceRows[i].label,
+                value: sourceRows[i].value
+            })
+        }
+    }
+
+    function usageDashboardRows(source) {
+        var rows = []
+        appendDashboardMetric(rows, i18n("Code review remaining"), source.codeReviewRemainingPercent, "percent")
+        appendDashboardMetric(rows, i18n("Credits remaining"), source.creditsRemaining, "number")
+        appendDashboardMetric(rows, i18n("Plan"), source.accountPlan, "text")
+        appendDashboardMetric(rows, i18n("Signed in"), source.signedInEmail, "text")
+
+        appendDashboardPeriodRow(rows, i18n("Today"), source.currentDay || source.today)
+        appendDashboardPeriodRow(rows, i18n("7d"), source.last7Days)
+        appendDashboardPeriodRow(rows, source.historyWindowLabel || i18n("30d"), source.last30Days)
+        appendDashboardPeriodRow(rows, i18n("This month"), source.currentMonth || source.month || source.billingSummary)
+
+        appendDashboardTopRow(rows, i18n("Top model"), source.topModels)
+        appendDashboardTopRow(rows, i18n("Usage mix"), source.topUsageTypes)
+        appendDashboardLatestDailyRow(rows, source.daily)
+        appendDashboardLatestBreakdownRow(rows, source.usageBreakdown || source.dailyBreakdown)
+        if (source.modelUsage) {
+            appendDashboardSource([], rows, i18n("Models"), source.modelUsage)
+        }
+        return rows
+    }
+
+    function appendDashboardMetric(rows, label, value, kind) {
+        var text = dashboardValueText(value, kind)
+        if (text.length === 0) {
+            return
+        }
+        rows.push({
+            label: label,
+            value: text
+        })
+    }
+
+    function appendDashboardPeriodRow(rows, label, source) {
+        if (!source) {
+            return
+        }
+        var parts = []
+        var currency = source.currency || source.currencyCode || "USD"
+        var cost = source.costUSD !== undefined ? source.costUSD : (source.cost !== undefined ? source.cost : source.totalCost)
+        var tokens = source.totalTokens !== undefined ? source.totalTokens : source.tokens
+        var requests = source.requests !== undefined ? source.requests : source.requestCount
+        var points = source.points !== undefined ? source.points : source.totalPoints
+
+        if (isFinite(Number(cost))) {
+            parts.push(amountString(Number(cost), currency))
+        }
+        if (isFinite(Number(tokens)) && Number(tokens) > 0) {
+            parts.push(i18n("%1 tokens", tokenCountString(Number(tokens))))
+        }
+        if (isFinite(Number(requests)) && Number(requests) > 0) {
+            parts.push(i18n("%1 requests", tokenCountString(Number(requests))))
+        }
+        if (isFinite(Number(points)) && Number(points) > 0) {
+            parts.push(i18n("%1 points", tokenCountString(Number(points))))
+        }
+        if (parts.length === 0) {
+            appendDashboardMetric(rows, label, source.value || source.total || source.used, "number")
+            return
+        }
+        rows.push({
+            label: label,
+            value: parts.join(" · ")
+        })
+    }
+
+    function appendDashboardTopRow(rows, label, items) {
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            return
+        }
+        var item = items[0] || ({})
+        var name = String(item.name || item.model || item.label || item.type || "").trim()
+        if (name.length === 0) {
+            return
+        }
+        var suffix = dashboardTopSuffix(item)
+        rows.push({
+            label: label,
+            value: suffix.length > 0 ? i18n("%1 (%2)", name, suffix) : name
+        })
+    }
+
+    function appendDashboardLatestDailyRow(rows, items) {
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            return
+        }
+        var item = items[items.length - 1] || ({})
+        appendDashboardPeriodRow(rows, item.label || item.day || item.date || i18n("Latest"), item)
+    }
+
+    function appendDashboardLatestBreakdownRow(rows, items) {
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            return
+        }
+        var item = items[0] || ({})
+        var label = item.day || item.date || item.label || i18n("Latest dashboard day")
+        appendDashboardPeriodRow(rows, label, {
+            costUSD: item.costUSD,
+            totalTokens: item.totalTokens,
+            requests: item.requests,
+            points: item.points,
+            value: item.totalCreditsUsed
+        })
+    }
+
+    function dashboardValueText(value, kind) {
+        if (value === null || value === undefined) {
+            return ""
+        }
+        if (kind === "text") {
+            return String(value).trim()
+        }
+        if (kind === "percent") {
+            var percent = Number(value)
+            return isFinite(percent) ? i18n("%1%", Math.round(percent)) : ""
+        }
+        if (kind === "tokens") {
+            var tokens = Number(value)
+            return isFinite(tokens) ? i18n("%1 tokens", tokenCountString(tokens)) : ""
+        }
+        if (kind === "currency") {
+            var cost = Number(value)
+            return isFinite(cost) ? amountString(cost, "USD") : ""
+        }
+        var number = Number(value)
+        if (!isFinite(number)) {
+            return String(value).trim()
+        }
+        return tokenCountString(number)
+    }
+
+    function dashboardTopSuffix(item) {
+        if (isFinite(Number(item.costUSD))) {
+            return amountString(Number(item.costUSD), "USD")
+        }
+        if (isFinite(Number(item.points))) {
+            return i18n("%1 points", tokenCountString(Number(item.points)))
+        }
+        if (isFinite(Number(item.totalTokens))) {
+            return i18n("%1 tokens", tokenCountString(Number(item.totalTokens)))
+        }
+        if (isFinite(Number(item.requests))) {
+            return i18n("%1 requests", tokenCountString(Number(item.requests)))
+        }
+        return ""
+    }
+
     function compactCostTokenSummary(cost, tokens, currency) {
         var parts = []
         if (isFinite(Number(cost)) && Number(cost) > 0) {
@@ -1178,6 +1377,7 @@ PlasmoidItem {
             loginMethod: identity.loginMethod || usage.loginMethod || "",
             rows: rows,
             primaryRow: primaryRow,
+            usageDashboard: usageDashboard(providerID, usage, item),
             providerCost: providerCostSection(providerID, usage.providerCost),
             resetCredits: resetCreditsSection(providerID, usage.codexResetCredits),
             tokenCost: tokenCosts[providerID] || null,
@@ -2462,7 +2662,7 @@ PlasmoidItem {
     }
 
     function hasAdditionalSections(item) {
-        return item && (item.credits !== null || item.resetCredits || item.providerCost || item.tokenCost) ? true : false
+        return item && (item.credits !== null || item.resetCredits || item.usageDashboard || item.providerCost || item.tokenCost) ? true : false
     }
 
     function capitalize(value) {
@@ -3923,6 +4123,90 @@ PlasmoidItem {
                                 opacity: 0.66
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
+                            }
+                        }
+
+                        ColumnLayout {
+                            id: usageDashboardSection
+
+                            readonly property var dashboard: root.selectedProviderData ? root.selectedProviderData.usageDashboard : null
+                            readonly property var kpis: dashboard ? dashboard.kpis : []
+                            readonly property var rows: dashboard ? dashboard.rows : []
+
+                            visible: kpis.length > 0 || rows.length > 0
+                            Layout.fillWidth: true
+                            spacing: Kirigami.Units.smallSpacing / 1.5
+
+                            Kirigami.Separator {
+                                Layout.fillWidth: true
+                            }
+
+                            PlasmaComponents.Label {
+                                text: i18n("Usage dashboard")
+                                font.weight: Font.DemiBold
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                            }
+
+                            GridLayout {
+                                visible: usageDashboardSection.kpis.length > 0
+                                Layout.fillWidth: true
+                                columns: 2
+                                columnSpacing: Kirigami.Units.smallSpacing
+                                rowSpacing: Kirigami.Units.smallSpacing / 2
+
+                                Repeater {
+                                    model: usageDashboardSection.kpis
+
+                                    delegate: ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 0
+
+                                        PlasmaComponents.Label {
+                                            text: modelData.label
+                                            opacity: 0.62
+                                            font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+                                            Layout.fillWidth: true
+                                            elide: Text.ElideRight
+                                        }
+
+                                        PlasmaComponents.Label {
+                                            text: modelData.value
+                                            font.weight: Font.DemiBold
+                                            Layout.fillWidth: true
+                                            elide: Text.ElideRight
+                                        }
+                                    }
+                                }
+                            }
+
+                            ColumnLayout {
+                                visible: usageDashboardSection.rows.length > 0
+                                Layout.fillWidth: true
+                                spacing: Kirigami.Units.smallSpacing / 2
+
+                                Repeater {
+                                    model: usageDashboardSection.rows
+
+                                    delegate: RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: Kirigami.Units.smallSpacing
+
+                                        PlasmaComponents.Label {
+                                            text: modelData.label
+                                            opacity: 0.66
+                                            Layout.fillWidth: true
+                                            elide: Text.ElideRight
+                                        }
+
+                                        PlasmaComponents.Label {
+                                            text: modelData.value
+                                            opacity: 0.78
+                                            horizontalAlignment: Text.AlignRight
+                                            elide: Text.ElideRight
+                                        }
+                                    }
+                                }
                             }
                         }
 
