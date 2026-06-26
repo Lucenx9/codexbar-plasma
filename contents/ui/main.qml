@@ -3906,8 +3906,9 @@ PlasmoidItem {
                             id: tokenCostSection
 
                             readonly property var tokenCost: root.selectedProviderData ? root.selectedProviderData.tokenCost : null
+                            readonly property var tokenDaily: tokenCost ? tokenCost.daily : null
 
-                            visible: tokenCostSection.tokenCost ? true : false
+                            visible: tokenCost ? true : false
                             Layout.fillWidth: true
                             spacing: Kirigami.Units.smallSpacing / 1.5
 
@@ -3922,13 +3923,13 @@ PlasmoidItem {
                             }
 
                             PlasmaComponents.Label {
-                                text: tokenCostSection.tokenCost ? tokenCostSection.tokenCost.sessionLine : ""
+                                text: tokenCost ? tokenCost.sessionLine : ""
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                             }
 
                             PlasmaComponents.Label {
-                                text: tokenCostSection.tokenCost ? tokenCostSection.tokenCost.monthLine : ""
+                                text: tokenCost ? tokenCost.monthLine : ""
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                             }
@@ -3936,7 +3937,7 @@ PlasmoidItem {
                             Canvas {
                                 id: costSparkline
 
-                                property var points: tokenCostSection.tokenCost ? tokenCostSection.tokenCost.daily : []
+                                property var points: tokenDaily || []
                                 readonly property real maxValue: root.costSparklineMax(points)
                                 readonly property color accent: root.providerColor(root.selectedProviderData ? root.selectedProviderData.provider : "")
 
@@ -3974,23 +3975,19 @@ PlasmoidItem {
                             }
 
                             RowLayout {
-                                visible: tokenCostSection.tokenCost
-                                    && tokenCostSection.tokenCost.daily
-                                    && tokenCostSection.tokenCost.daily.length > 1
+                                visible: tokenDaily && tokenDaily.length > 1
                                 Layout.fillWidth: true
                                 spacing: Kirigami.Units.smallSpacing
 
                                 PlasmaComponents.Label {
-                                    text: tokenCostSection.tokenCost ? root.costSparklineSummary(tokenCostSection.tokenCost.daily) : ""
+                                    text: root.costSparklineSummary(tokenDaily)
                                     opacity: 0.62
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
                                 }
 
                                 PlasmaComponents.Label {
-                                    text: tokenCostSection.tokenCost
-                                        ? i18np("%1 day", "%1 days", tokenCostSection.tokenCost.daily.length)
-                                        : ""
+                                    text: tokenDaily ? i18np("%1 day", "%1 days", tokenDaily.length) : ""
                                     opacity: 0.62
                                     horizontalAlignment: Text.AlignRight
                                     elide: Text.ElideRight
@@ -4000,9 +3997,9 @@ PlasmoidItem {
                             ColumnLayout {
                                 id: costHistoryChartSection
 
-                                readonly property var rows: root.costHistoryRows(tokenCostSection.tokenCost)
-                                readonly property string peakLine: tokenCostSection.tokenCost ? root.costPeakLine(tokenCostSection.tokenCost.daily) : ""
-                                readonly property string averageLine: tokenCostSection.tokenCost ? root.costAverageDailyLine(tokenCostSection.tokenCost.daily) : ""
+                                readonly property var rows: root.costHistoryRows(tokenCost)
+                                readonly property string peakLine: root.costPeakLine(tokenDaily || [])
+                                readonly property string averageLine: root.costAverageDailyLine(tokenDaily || [])
                                 readonly property color accent: root.providerColor(root.selectedProviderData ? root.selectedProviderData.provider : "")
 
                                 visible: rows.length > 1
@@ -4038,7 +4035,7 @@ PlasmoidItem {
                                 }
 
                                 Repeater {
-                                    model: root.costHistoryRows(tokenCostSection.tokenCost)
+                                    model: costHistoryChartSection.rows
 
                                     delegate: RowLayout {
                                         Layout.fillWidth: true
@@ -4085,10 +4082,13 @@ PlasmoidItem {
                             ColumnLayout {
                                 id: costDrillDownSection
 
-                                visible: tokenCostSection.tokenCost
-                                    && (root.costBreakdownRows(tokenCostSection.tokenCost).length > 0
-                                        || root.costModelRows(tokenCostSection.tokenCost).length > 0
-                                        || root.costDailyRows(tokenCostSection.tokenCost).length > 0)
+                                readonly property var breakdownRows: root.costBreakdownRows(tokenCost)
+                                readonly property var modelRows: root.costModelRows(tokenCost)
+                                readonly property var dailyRows: root.costDailyRows(tokenCost)
+
+                                visible: breakdownRows.length > 0
+                                    || modelRows.length > 0
+                                    || dailyRows.length > 0
                                 Layout.fillWidth: true
                                 spacing: Kirigami.Units.smallSpacing
 
@@ -4100,20 +4100,20 @@ PlasmoidItem {
                                 }
 
                                 PlasmaComponents.Label {
-                                    visible: tokenCostSection.tokenCost && root.costPerMillionLine(tokenCostSection.tokenCost).length > 0
-                                    text: tokenCostSection.tokenCost ? root.costPerMillionLine(tokenCostSection.tokenCost) : ""
+                                    visible: tokenCost && root.costPerMillionLine(tokenCost).length > 0
+                                    text: tokenCost ? root.costPerMillionLine(tokenCost) : ""
                                     opacity: 0.7
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
                                 }
 
                                 ColumnLayout {
-                                    visible: root.costBreakdownRows(tokenCostSection.tokenCost).length > 0
+                                    visible: costDrillDownSection.breakdownRows.length > 0
                                     Layout.fillWidth: true
                                     spacing: Kirigami.Units.smallSpacing / 2
 
                                     Repeater {
-                                        model: root.costBreakdownRows(tokenCostSection.tokenCost)
+                                        model: costDrillDownSection.breakdownRows
 
                                         delegate: RowLayout {
                                             Layout.fillWidth: true
@@ -4137,12 +4137,12 @@ PlasmoidItem {
                                 }
 
                                 Kirigami.Separator {
-                                    visible: root.costModelRows(tokenCostSection.tokenCost).length > 0
+                                    visible: costDrillDownSection.modelRows.length > 0
                                     Layout.fillWidth: true
                                 }
 
                                 ColumnLayout {
-                                    visible: root.costModelRows(tokenCostSection.tokenCost).length > 0
+                                    visible: costDrillDownSection.modelRows.length > 0
                                     Layout.fillWidth: true
                                     spacing: Kirigami.Units.smallSpacing / 2
 
@@ -4154,7 +4154,7 @@ PlasmoidItem {
                                     }
 
                                     Repeater {
-                                        model: root.costModelRows(tokenCostSection.tokenCost)
+                                        model: costDrillDownSection.modelRows
 
                                         delegate: RowLayout {
                                             Layout.fillWidth: true
@@ -4177,12 +4177,12 @@ PlasmoidItem {
                                 }
 
                                 Kirigami.Separator {
-                                    visible: root.costDailyRows(tokenCostSection.tokenCost).length > 0
+                                    visible: costDrillDownSection.dailyRows.length > 0
                                     Layout.fillWidth: true
                                 }
 
                                 ColumnLayout {
-                                    visible: root.costDailyRows(tokenCostSection.tokenCost).length > 0
+                                    visible: costDrillDownSection.dailyRows.length > 0
                                     Layout.fillWidth: true
                                     spacing: Kirigami.Units.smallSpacing / 2
 
@@ -4194,7 +4194,7 @@ PlasmoidItem {
                                     }
 
                                     Repeater {
-                                        model: root.costDailyRows(tokenCostSection.tokenCost)
+                                        model: costDrillDownSection.dailyRows
 
                                         delegate: RowLayout {
                                             Layout.fillWidth: true
@@ -4218,8 +4218,8 @@ PlasmoidItem {
                             }
 
                             PlasmaComponents.Label {
-                                visible: tokenCostSection.tokenCost && tokenCostSection.tokenCost.hintLine.length > 0 ? true : false
-                                text: tokenCostSection.tokenCost ? tokenCostSection.tokenCost.hintLine : ""
+                                visible: tokenCost && tokenCost.hintLine.length > 0 ? true : false
+                                text: tokenCost ? tokenCost.hintLine : ""
                                 opacity: 0.62
                                 Layout.fillWidth: true
                                 wrapMode: Text.WordWrap
