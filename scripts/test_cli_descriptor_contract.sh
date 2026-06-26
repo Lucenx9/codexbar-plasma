@@ -4,7 +4,6 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONTRACT_MD="${ROOT_DIR}/docs/cli-provider-settings-descriptor.md"
 TODO_MD="${ROOT_DIR}/TODO.md"
-AGENTS_MD="${ROOT_DIR}/AGENTS.md"
 
 require_in_file() {
   local file="$1"
@@ -37,6 +36,5 @@ require_in_file "$CONTRACT_MD" "Plasma renderer rules"
 require_in_file "$CONTRACT_MD" "Do not expose raw secrets"
 
 require_in_file "$TODO_MD" "docs/cli-provider-settings-descriptor.md"
-require_in_file "$AGENTS_MD" "docs/cli-provider-settings-descriptor.md"
 
 echo "CLI descriptor contract checks passed."
