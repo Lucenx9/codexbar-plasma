@@ -75,8 +75,8 @@ PlasmoidItem {
     property var notificationMemo: ({})
     property bool notificationsPrimed: false
     property string connectedUpdateCommandSource: ""
-    property string updateStatusText: ""
-    property string updateErrorText: ""
+    property string updateStatusText: Plasmoid.configuration.widgetUpdateLastStatus || ""
+    property string updateErrorText: Plasmoid.configuration.widgetUpdateLastError || ""
     property string lastNotifiedUpdateVersion: ""
     readonly property bool overviewAvailable: provider.length === 0 && providers.length > 1
     readonly property bool overviewSelected: overviewAvailable && selectedProviderIndex < 0
@@ -2074,9 +2074,16 @@ PlasmoidItem {
         if (!updateCheckDue() || connectedUpdateCommandSource.length > 0) {
             return
         }
-        updateErrorText = ""
+        setWidgetUpdateState(i18n("Checking for widget updates..."), "")
         connectedUpdateCommandSource = commandWithRunNonce(buildUpdateCommand(autoUpdateEnabled))
         updateSource.connectSource(connectedUpdateCommandSource)
+    }
+
+    function setWidgetUpdateState(statusText, errorText) {
+        updateStatusText = String(statusText || "")
+        updateErrorText = String(errorText || "")
+        Plasmoid.configuration.widgetUpdateLastStatus = updateStatusText
+        Plasmoid.configuration.widgetUpdateLastError = updateErrorText
     }
 
     function handleUpdateData(sourceName, stdoutText, stderrText) {
@@ -2091,7 +2098,9 @@ PlasmoidItem {
 
         var trimmed = stdoutText.trim()
         if (trimmed.length === 0) {
-            updateErrorText = stderrText.trim().length > 0 ? stderrText.trim() : i18n("Widget update check returned no data.")
+            setWidgetUpdateState(
+                i18n("Widget update check failed."),
+                stderrText.trim().length > 0 ? stderrText.trim() : i18n("Widget update check returned no data."))
             return
         }
 
@@ -2099,7 +2108,9 @@ PlasmoidItem {
         try {
             payload = JSON.parse(trimmed)
         } catch (error) {
-            updateErrorText = i18n("Could not parse widget update JSON: %1", error.message)
+            setWidgetUpdateState(
+                i18n("Widget update check failed."),
+                i18n("Could not parse widget update JSON: %1", error.message))
             return
         }
 
@@ -2113,36 +2124,40 @@ PlasmoidItem {
         var url = String(payload && payload.assetUrl ? payload.assetUrl : "")
 
         if (status === "error") {
-            updateErrorText = message.length > 0 ? message : i18n("Widget update check failed.")
+            setWidgetUpdateState(
+                i18n("Widget update check failed."),
+                message.length > 0 ? message : i18n("Widget update check failed."))
             return
         }
 
-        updateErrorText = ""
         if (status === "available") {
-            updateStatusText = version.length > 0
+            var availableStatus = version.length > 0
                 ? i18n("Widget update %1 is available.", version)
                 : i18n("A widget update is available.")
+            setWidgetUpdateState(availableStatus, "")
             if (!autoUpdateEnabled) {
                 notifyAvailableUpdate(version, url)
             }
             return
         }
         if (status === "installed") {
-            updateStatusText = version.length > 0
+            setWidgetUpdateState(version.length > 0
                 ? i18n("Widget update %1 installed.", version)
-                : i18n("Widget update installed.")
+                : i18n("Widget update installed."), "")
             return
         }
         if (status === "current") {
-            updateStatusText = i18n("Widget is up to date.")
+            setWidgetUpdateState(i18n("Widget is up to date."), "")
             return
         }
         if (status === "skipped") {
-            updateStatusText = message.length > 0 ? message : i18n("Widget update skipped.")
+            setWidgetUpdateState(message.length > 0 ? message : i18n("Widget update skipped."), "")
             return
         }
 
-        updateErrorText = i18n("Unknown widget update status: %1", status)
+        setWidgetUpdateState(
+            i18n("Widget update check failed."),
+            i18n("Unknown widget update status: %1", status))
     }
 
     function notifyAvailableUpdate(version, url) {

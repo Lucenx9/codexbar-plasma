@@ -83,6 +83,14 @@
       <label>Last widget update check timestamp.</label>
       <default></default>
     </entry>
+    <entry name="widgetUpdateLastStatus" type="String">
+      <label>Last widget update status.</label>
+      <default></default>
+    </entry>
+    <entry name="widgetUpdateLastError" type="String">
+      <label>Last widget update error.</label>
+      <default></default>
+    </entry>
     <entry name="menuBarDisplayMode" type="String">
       <label>Menu bar text display mode.</label>
       <default>percent</default>

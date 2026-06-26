@@ -37,4 +37,4 @@ update:
 
 package:
 	mkdir -p dist
-	cmake -E tar cf dist/codexbar-plasma.plasmoid --format=zip metadata.json contents docs scripts/update-widget.sh LICENSE NOTICE.md README.md
+	cmake -E tar cf dist/codexbar-plasma.plasmoid --format=zip metadata.json contents docs/codexbar-plasma-overview.png docs/codexbar-plasma-codex.png scripts/update-widget.sh LICENSE NOTICE.md README.md

@@ -35,6 +35,10 @@ KCM.SimpleKCM {
     property int cfg_autoUpdateIntervalHoursDefault
     property string cfg_autoUpdateLastCheck
     property string cfg_autoUpdateLastCheckDefault
+    property string cfg_widgetUpdateLastStatus
+    property string cfg_widgetUpdateLastStatusDefault
+    property string cfg_widgetUpdateLastError
+    property string cfg_widgetUpdateLastErrorDefault
     property int cfg_providerConfigRevision
     property int cfg_providerConfigRevisionDefault
 
@@ -186,6 +190,19 @@ KCM.SimpleKCM {
                 : i18n("Last update check: never")
             visible: updateChecksEnabledCheck.checked
             opacity: 0.7
+        }
+
+        Controls.Label {
+            text: i18n("Last update status: %1", cfg_widgetUpdateLastStatus)
+            visible: updateChecksEnabledCheck.checked && cfg_widgetUpdateLastStatus.length > 0
+            opacity: 0.7
+        }
+
+        Kirigami.InlineMessage {
+            Layout.fillWidth: true
+            type: Kirigami.MessageType.Error
+            text: cfg_widgetUpdateLastError
+            visible: updateChecksEnabledCheck.checked && cfg_widgetUpdateLastError.length > 0
         }
     }
 }

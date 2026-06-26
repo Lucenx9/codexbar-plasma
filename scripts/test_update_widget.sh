@@ -47,5 +47,8 @@ reject_in_file "$UPDATER" "| sh"
 reject_in_file "$UPDATER" "| bash"
 reject_in_file "$UPDATER" "eval "
 require_in_file "$MAKEFILE" "scripts/update-widget.sh --install"
+require_in_file "$MAKEFILE" "docs/codexbar-plasma-overview.png"
+require_in_file "$MAKEFILE" "docs/codexbar-plasma-codex.png"
+reject_in_file "$MAKEFILE" "cmake -E tar cf dist/codexbar-plasma.plasmoid --format=zip metadata.json contents docs scripts/update-widget.sh"
 
 echo "Widget updater checks passed."
