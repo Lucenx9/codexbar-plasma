@@ -12,6 +12,8 @@ macOS app, Swift sources, or upstream CodexBar tree.
 ## Goals
 
 - Let users enable automatic widget updates from settings.
+- Let users get a quiet notification when a widget update is available, even
+  when automatic installation is disabled.
 - Keep updates quiet after explicit opt-in.
 - Avoid executing remote scripts or arbitrary release content.
 - Preserve provider brand colors exactly as provider identity data.
@@ -28,18 +30,25 @@ macOS app, Swift sources, or upstream CodexBar tree.
 
 ## Updater Approach
 
-Use a small local helper script plus opt-in widget settings.
+Use a small local helper script plus separate settings for update checks and
+automatic installation.
 
 - Add `scripts/update-widget.sh`.
 - Add `make update` as a local/manual entry point.
 - Add persistent settings in `contents/config/main.xml`:
+  - `updateChecksEnabled`, default `true`.
+  - `updateNotificationsEnabled`, default `true`.
   - `autoUpdateEnabled`, default `false`.
   - `autoUpdateIntervalHours`, default `24`, bounded to a conservative range.
   - `autoUpdateLastCheck`, stored as a timestamp string or epoch value.
 - Add General settings controls:
-  - checkbox: `Update widget automatically`.
-  - interval control enabled only when auto-update is enabled.
-- Runtime QML schedules checks only when `autoUpdateEnabled` is true.
+  - checkbox: `Check for widget updates`.
+  - checkbox: `Notify when a widget update is available`, enabled only when
+    update checks are enabled.
+  - checkbox: `Install widget updates automatically`, enabled only when update
+    checks are enabled.
+  - interval control enabled only when update checks are enabled.
+- Runtime QML schedules checks when `updateChecksEnabled` is true.
 
 The helper script owns all update mechanics:
 
@@ -47,13 +56,17 @@ The helper script owns all update mechanics:
 2. Fetch GitHub release metadata for `Lucenx9/codexbar-plasma`.
 3. Pick the latest stable semver tag newer than the local version.
 4. Download only the `codexbar-plasma.plasmoid` release asset.
-5. Install with `kpackagetool6 -t Plasma/Applet -u`.
-6. Restart `plasma-plasmashell.service` only after a successful install.
+5. In check-only mode, report the available version and asset URL without
+   installing anything.
+6. In install mode, install with `kpackagetool6 -t Plasma/Applet -u`.
+7. Restart `plasma-plasmashell.service` only after a successful install.
 
 The widget calls the helper via the existing executable DataSource pattern. A
 successful no-op, successful install, and failed check all return structured
-plain text or JSON that QML can reduce to a quiet status string for the Debug
-page. No noisy notification is required for routine updates.
+JSON that QML can reduce to a quiet status string for settings/debug surfaces.
+When check-only mode finds a newer release and notifications are enabled, QML
+sends one Plasma notification per version. If automatic installation is enabled,
+the widget installs silently instead of only notifying.
 
 ## Updater Security Rules
 
@@ -105,6 +118,8 @@ theme violations; do not normalize or alter provider identity colors.
   fails, it exits non-zero with a concise error.
 - QML records the failure as update status for Debug or General settings, but
   does not spam notifications.
+- QML memoizes the last notified version so an available update does not notify
+  repeatedly on every refresh cycle.
 - Existing usage refresh behavior must keep working even if update checks fail.
 - If required tools are missing (`curl`, `jq`, `kpackagetool6`,
   `systemctl`), the helper reports the missing tool clearly.
@@ -119,8 +134,12 @@ to assert:
 - The update script downloads only `codexbar-plasma.plasmoid`.
 - The update script does not execute downloaded files.
 - New config keys exist in `contents/config/main.xml`.
-- General settings expose the auto-update toggle and interval control.
-- Runtime QML checks `autoUpdateEnabled` before invoking the updater.
+- General settings expose update-check, notification, auto-install, and interval
+  controls.
+- Runtime QML checks `updateChecksEnabled` before invoking the updater.
+- Runtime QML can notify for an available update even when `autoUpdateEnabled`
+  is false.
+- Runtime QML only installs when `autoUpdateEnabled` is true.
 - Generic UI hardcoded colors are not introduced outside documented allowed
   areas.
 
@@ -140,6 +159,7 @@ can exercise version parsing and release selection without installing a release.
 ## Open Decisions Resolved
 
 - Automatic updates are opt-in, not enabled by default.
+- Update checks and available-update notifications are enabled by default.
 - After opt-in, updates are quiet unless there is an error visible in settings.
 - Provider identity colors remain hardcoded.
 - Theme work is limited to generic UI colors that should follow Plasma.
