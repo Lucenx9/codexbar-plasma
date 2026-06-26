@@ -28,6 +28,30 @@ macOS app, Swift sources, or upstream CodexBar tree.
 - Runtime editing of provider color identity.
 - Replacing Plasma's package manager or distribution package updates.
 
+## Upstream Guidance
+
+KDE documentation points to two relevant distribution paths:
+
+- Plasma is modular and third-party widgets live under the user's
+  `~/.local/share/plasma/` tree, while system widgets live under `/usr/share`.
+- Plasma's native "Get New ..." path for third-party widgets is KNewStuff/GHNS
+  and KDE Store, surfaced to users through Discover and Plasma UI.
+- Manual local installs and upgrades use KPackage tooling; the developer guide
+  documents `kpackagetool -u` as the update operation for an already installed
+  plasmoid.
+
+This repo currently ships GitHub Release assets, not KDE Store metadata. The
+implementation should therefore treat GitHub Releases as a conservative repo
+managed update source, not as a replacement for Discover/KNewStuff. If the
+widget is later published on KDE Store, the preferred user-facing path can
+become Discover/KNewStuff and the GitHub helper can remain a manual fallback.
+
+GitHub release API guidance:
+
+- Use the releases API for release metadata.
+- Use release assets and their `browser_download_url` for public binary assets.
+- Drafts and prereleases should not be installed by the widget updater.
+
 ## Updater Approach
 
 Use a small local helper script plus separate settings for update checks and
@@ -72,6 +96,8 @@ the widget installs silently instead of only notifying.
 
 - Do not execute content downloaded from GitHub.
 - Do not pipe network data into a shell.
+- Do not replace Discover/KNewStuff when the widget is installed from KDE Store
+  in the future; prefer the native channel for KDE Store installs.
 - Use `curl --fail --location --show-error --silent` or an equivalent explicit
   download command.
 - Use `mktemp -d` and clean temporary files on exit.
@@ -155,6 +181,25 @@ journalctl --user -u plasma-plasmashell.service --since '2 minutes ago' --no-pag
 
 For updater behavior, use a dry-run or check-only mode in the helper so tests
 can exercise version parsing and release selection without installing a release.
+
+## References
+
+- KDE Plasma widget setup:
+  https://develop.kde.org/docs/plasma/widget/setup/
+- KDE Plasma widget testing:
+  https://develop.kde.org/docs/plasma/widget/testing/
+- KDE Plasma themes and plugins:
+  https://develop.kde.org/docs/plasma/
+- KDE Developer Guide install/update notes:
+  https://community.kde.org/Plasma/DeveloperGuide
+- KDE Kiosk GHNS note:
+  https://develop.kde.org/docs/administration/kiosk/keys/#ghns
+- KDE Discover overview:
+  https://apps.kde.org/discover/
+- GitHub Releases API:
+  https://docs.github.com/rest/releases/releases
+- GitHub Release Assets API:
+  https://docs.github.com/rest/releases/assets
 
 ## Open Decisions Resolved
 
