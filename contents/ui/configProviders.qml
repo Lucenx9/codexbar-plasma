@@ -5,6 +5,7 @@ import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
+import "utils.js" as Utils
 
 KCM.SimpleKCM {
     id: page
@@ -349,22 +350,22 @@ KCM.SimpleKCM {
     }
 
     function providerDiagnosticFor(providerID) {
-        return providerDiagnostics[providerKey(providerID)] || null
+        return providerDiagnostics[Utils.providerKey(providerID)] || null
     }
 
     function setProviderDiagnostic(providerID, diagnostic) {
         var next = copyObject(providerDiagnostics)
-        next[providerKey(providerID)] = diagnostic
+        next[Utils.providerKey(providerID)] = diagnostic
         providerDiagnostics = next
     }
 
     function providerDiagnosticErrorFor(providerID) {
-        return providerDiagnosticErrors[providerKey(providerID)] || ""
+        return providerDiagnosticErrors[Utils.providerKey(providerID)] || ""
     }
 
     function setProviderDiagnosticError(providerID, message) {
         var next = copyObject(providerDiagnosticErrors)
-        var key = providerKey(providerID)
+        var key = Utils.providerKey(providerID)
         if (message && message.length > 0) {
             next[key] = message
         } else {
@@ -374,12 +375,12 @@ KCM.SimpleKCM {
     }
 
     function providerDiagnosticLoadingFor(providerID) {
-        return providerDiagnosticLoading[providerKey(providerID)] === true
+        return providerDiagnosticLoading[Utils.providerKey(providerID)] === true
     }
 
     function setProviderDiagnosticLoading(providerID, value) {
         var next = copyObject(providerDiagnosticLoading)
-        var key = providerKey(providerID)
+        var key = Utils.providerKey(providerID)
         if (value) {
             next[key] = true
         } else {
@@ -573,7 +574,7 @@ KCM.SimpleKCM {
     }
 
     function supportsApiKeySetup(providerID) {
-        switch (providerKey(providerID)) {
+        switch (Utils.providerKey(providerID)) {
         case "abacus":
         case "alibaba":
         case "alibabatokenplan":
@@ -618,7 +619,7 @@ KCM.SimpleKCM {
     }
 
     function providerDocsUrl(providerID) {
-        var key = providerKey(providerID)
+        var key = Utils.providerKey(providerID)
         var docs = {
             abacus: "abacus.md",
             alibaba: "alibaba-coding-plan.md",
@@ -669,7 +670,7 @@ KCM.SimpleKCM {
     }
 
     function providerDashboardUrl(providerID) {
-        switch (providerKey(providerID)) {
+        switch (Utils.providerKey(providerID)) {
         case "codex":
         case "openai":
             return "https://platform.openai.com/usage"
@@ -706,7 +707,7 @@ KCM.SimpleKCM {
     }
 
     function providerLoginUrl(providerID) {
-        switch (providerKey(providerID)) {
+        switch (Utils.providerKey(providerID)) {
         case "codex":
         case "openai":
             return "https://chatgpt.com"
@@ -747,25 +748,8 @@ KCM.SimpleKCM {
 
     // --- Provider visual identity (kept in sync with main.qml) ---
 
-    function providerKey(value) {
-        var key = String(value || "codex").toLowerCase()
-        var aliases = {
-            "abacusai": "abacus",
-            "agy": "antigravity",
-            "alibaba-coding-plan": "alibaba",
-            "alibaba-token-plan": "alibabatokenplan",
-            "aws-bedrock": "bedrock",
-            "droid": "factory",
-            "gemini-cli": "gemini",
-            "groqcloud": "groq",
-            "kimi-k2": "kimik2",
-            "vertex": "vertexai"
-        }
-        return aliases[key] || key
-    }
-
     function providerIconSource(value) {
-        var key = providerKey(value)
+        var key = Utils.providerKey(value)
         var aliases = {
             "aws-bedrock": "bedrock",
             "gemini": "gemini-white.png",
@@ -777,7 +761,7 @@ KCM.SimpleKCM {
     }
 
     function providerColor(value) {
-        switch (providerKey(value)) {
+        switch (Utils.providerKey(value)) {
         case "abacus":
             return Qt.rgba(56 / 255, 189 / 255, 248 / 255, 1)
         case "alibaba":
@@ -826,7 +810,7 @@ KCM.SimpleKCM {
     }
 
     function providerTitle(value) {
-        var key = providerKey(value)
+        var key = Utils.providerKey(value)
         var words = String(key).replace(/[_-]/g, " ").split(" ")
         for (var i = 0; i < words.length; i++) {
             if (words[i].length > 0) {

@@ -6,6 +6,7 @@ import org.kde.plasma.components as PlasmaComponents
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
+import "utils.js" as Utils
 
 PlasmoidItem {
     id: root
@@ -151,7 +152,7 @@ PlasmoidItem {
         ]
 
         var effectiveSource = source
-        if (source.length === 0 && providerKey(providerID) === "codex") {
+        if (source.length === 0 && Utils.providerKey(providerID) === "codex") {
             effectiveSource = "cli"
         }
 
@@ -202,7 +203,7 @@ PlasmoidItem {
         ]
 
         var effectiveSource = source
-        if (codexCliFallback && source.length === 0 && providerKey(providerID) === "codex") {
+        if (codexCliFallback && source.length === 0 && Utils.providerKey(providerID) === "codex") {
             effectiveSource = "cli"
         }
 
@@ -392,7 +393,7 @@ PlasmoidItem {
             connectedCommandSource = ""
         }
         if (provider.length > 0) {
-            startProviderFallbackForProviders([providerKey(provider)])
+            startProviderFallbackForProviders([Utils.providerKey(provider)])
             return
         }
 
@@ -431,7 +432,7 @@ PlasmoidItem {
         var items = Array.isArray(payload) ? payload : []
         for (var i = 0; i < items.length; i++) {
             if (items[i] && items[i].provider) {
-                var providerID = providerKey(items[i].provider)
+                var providerID = Utils.providerKey(items[i].provider)
                 if (items[i].displayName && String(items[i].displayName).trim().length > 0) {
                     displayNames[providerID] = String(items[i].displayName).trim()
                 }
@@ -459,7 +460,7 @@ PlasmoidItem {
         var commands = ({})
         var commandList = []
         for (var i = 0; i < providerIDs.length; i++) {
-            var providerID = providerKey(providerIDs[i])
+            var providerID = Utils.providerKey(providerIDs[i])
             var baseCommand = buildProviderUsageCommand(providerID, true)
             if (seenCommands[baseCommand]) {
                 continue
@@ -563,7 +564,7 @@ PlasmoidItem {
     }
 
     function loadAccounts(providerID) {
-        var normalizedProviderID = providerKey(providerID)
+        var normalizedProviderID = Utils.providerKey(providerID)
         if (accountLoadingForProvider(normalizedProviderID)) {
             return
         }
@@ -685,7 +686,7 @@ PlasmoidItem {
             return null
         }
 
-        var providerID = providerKey(item.provider)
+        var providerID = Utils.providerKey(item.provider)
         var currency = item.currencyCode || "USD"
         var windowLabel = item.historyLabel || (item.historyDays === 1 ? i18n("Today") : i18n("Last 30 days"))
         return {
@@ -1013,34 +1014,34 @@ PlasmoidItem {
     }
 
     function selectedAccountForProvider(providerID) {
-        var key = providerKey(providerID)
+        var key = Utils.providerKey(providerID)
         var selected = selectedAccounts[key]
         return selected ? String(selected) : ""
     }
 
     function accountOptionsForProvider(providerID) {
-        var key = providerKey(providerID)
+        var key = Utils.providerKey(providerID)
         return accountOptions[key] || []
     }
 
     function accountErrorForProvider(providerID) {
-        var key = providerKey(providerID)
+        var key = Utils.providerKey(providerID)
         return accountErrors[key] ? String(accountErrors[key]) : ""
     }
 
     function accountLoadingForProvider(providerID) {
-        return accountLoading[providerKey(providerID)] === true
+        return accountLoading[Utils.providerKey(providerID)] === true
     }
 
     function setAccountOptions(providerID, options) {
         var next = copyObject(accountOptions)
-        next[providerKey(providerID)] = options || []
+        next[Utils.providerKey(providerID)] = options || []
         accountOptions = next
     }
 
     function setAccountError(providerID, message) {
         var next = copyObject(accountErrors)
-        var key = providerKey(providerID)
+        var key = Utils.providerKey(providerID)
         if (message && String(message).trim().length > 0) {
             next[key] = String(message).trim()
         } else {
@@ -1051,7 +1052,7 @@ PlasmoidItem {
 
     function setAccountLoading(providerID, value) {
         var next = copyObject(accountLoading)
-        var key = providerKey(providerID)
+        var key = Utils.providerKey(providerID)
         if (value) {
             next[key] = true
         } else {
@@ -1103,7 +1104,7 @@ PlasmoidItem {
     }
 
     function selectAccount(providerID, accountLabel) {
-        var key = providerKey(providerID)
+        var key = Utils.providerKey(providerID)
         var label = String(accountLabel || "")
         var next = copyObject(selectedAccounts)
         if (label.length > 0) {
@@ -1124,7 +1125,7 @@ PlasmoidItem {
     }
 
     function replaceProviderSnapshot(providerID, snapshot) {
-        var key = providerKey(providerID)
+        var key = Utils.providerKey(providerID)
         var nextProviders = []
         for (var i = 0; i < providers.length; i++) {
             nextProviders.push(providers[i].provider === key ? snapshot : providers[i])
@@ -1136,7 +1137,7 @@ PlasmoidItem {
         var usage = item.usage || ({})
         var pace = item.pace || ({})
         var rows = []
-        var providerID = providerKey(item.provider || "unknown")
+        var providerID = Utils.providerKey(item.provider || "unknown")
 
         var primaryRow = addWindow(rows, rateWindowLabel(providerID, "primary"), usage.primary, pace.primary, true, "primary")
         addWindow(rows, rateWindowLabel(providerID, "secondary"), usage.secondary, pace.secondary, true, "secondary")
@@ -1205,7 +1206,7 @@ PlasmoidItem {
     }
 
     function rateLimitsUnavailable(providerID, usage, item) {
-        var key = providerKey(providerID)
+        var key = Utils.providerKey(providerID)
         if (key !== "antigravity" && key !== "doubao" && key !== "codex") {
             return false
         }
@@ -1249,7 +1250,7 @@ PlasmoidItem {
     }
 
     function rateWindowLabel(providerID, lane) {
-        var key = providerKey(providerID)
+        var key = Utils.providerKey(providerID)
         if (lane === "primary") {
             switch (key) {
             case "alibaba":
@@ -1364,7 +1365,7 @@ PlasmoidItem {
     }
 
     function providerCostSection(providerID, cost) {
-        var key = providerKey(providerID)
+        var key = Utils.providerKey(providerID)
         if (key === "manus" || key === "synthetic") {
             return null
         }
@@ -1442,7 +1443,7 @@ PlasmoidItem {
     }
 
     function resetCreditsSection(providerID, resetCredits) {
-        if (providerKey(providerID) !== "codex" || !resetCredits) {
+        if (Utils.providerKey(providerID) !== "codex" || !resetCredits) {
             return null
         }
 
@@ -1826,31 +1827,14 @@ PlasmoidItem {
     function planText(providerID, usage, item) {
         var identity = usage.identity || ({})
         var method = identity.loginMethod || usage.loginMethod || ""
-        if (providerKey(providerID) === "codex" && method.length > 0) {
+        if (Utils.providerKey(providerID) === "codex" && method.length > 0) {
             return capitalize(method)
         }
         return ""
     }
 
-    function providerKey(value) {
-        var key = String(value || "codex").toLowerCase()
-        var aliases = {
-            "abacusai": "abacus",
-            "agy": "antigravity",
-            "alibaba-coding-plan": "alibaba",
-            "alibaba-token-plan": "alibabatokenplan",
-            "aws-bedrock": "bedrock",
-            "droid": "factory",
-            "gemini-cli": "gemini",
-            "groqcloud": "groq",
-            "kimi-k2": "kimik2",
-            "vertex": "vertexai"
-        }
-        return aliases[key] || key
-    }
-
     function providerCliArgument(value) {
-        switch (providerKey(value)) {
+        switch (Utils.providerKey(value)) {
         case "abacus":
             return "abacusai"
         case "alibaba":
@@ -1864,12 +1848,12 @@ PlasmoidItem {
         case "groq":
             return "groqcloud"
         default:
-            return providerKey(value)
+            return Utils.providerKey(value)
         }
     }
 
     function providerTitle(value, displayName) {
-        var key = providerKey(value)
+        var key = Utils.providerKey(value)
         var preferred = String(displayName || "").trim()
         if (preferred.length > 0) {
             return preferred
@@ -1944,7 +1928,7 @@ PlasmoidItem {
     }
 
     function providerIconSource(value) {
-        var key = providerKey(value)
+        var key = Utils.providerKey(value)
         var aliases = {
             "aws-bedrock": "bedrock",
             "gemini": "gemini-white.png",
@@ -1960,7 +1944,7 @@ PlasmoidItem {
     }
 
     function providerColor(value) {
-        switch (providerKey(value)) {
+        switch (Utils.providerKey(value)) {
         case "abacus":
             return Qt.rgba(56 / 255, 189 / 255, 248 / 255, 1)
         case "alibaba":
@@ -2062,7 +2046,7 @@ PlasmoidItem {
     }
 
     function providerDashboardUrl(providerID) {
-        switch (providerKey(providerID)) {
+        switch (Utils.providerKey(providerID)) {
         case "abacus":
             return "https://apps.abacus.ai/chatllm/admin/compute-points-usage"
         case "alibaba":
@@ -2158,7 +2142,7 @@ PlasmoidItem {
     }
 
     function providerDocsUrl(providerID) {
-        var key = providerKey(providerID)
+        var key = Utils.providerKey(providerID)
         var docs = {
             abacus: "abacus.md",
             alibaba: "alibaba-coding-plan.md",
@@ -2209,7 +2193,7 @@ PlasmoidItem {
     }
 
     function providerLoginUrl(providerID) {
-        switch (providerKey(providerID)) {
+        switch (Utils.providerKey(providerID)) {
         case "codex":
         case "openai":
             return "https://chatgpt.com"
@@ -2240,7 +2224,7 @@ PlasmoidItem {
     }
 
     function providerStatusUrl(providerID) {
-        switch (providerKey(providerID)) {
+        switch (Utils.providerKey(providerID)) {
         case "alibaba":
         case "alibabatokenplan":
             return "https://status.aliyun.com"
@@ -2304,7 +2288,7 @@ PlasmoidItem {
     }
 
     function providerChangelogUrl(providerID) {
-        switch (providerKey(providerID)) {
+        switch (Utils.providerKey(providerID)) {
         case "codex":
             return "https://github.com/openai/codex/releases"
         case "claude":
@@ -2359,7 +2343,7 @@ PlasmoidItem {
     function providerAccountAction(item) {
         var title = item.account && item.account.length > 0 ? i18n("Switch Account...") : i18n("Add Account...")
         var loginUrl = providerLoginUrl(item.provider)
-        switch (providerKey(item.provider)) {
+        switch (Utils.providerKey(item.provider)) {
         case "devin":
             return { title: i18n("Open Devin..."), icon: "internet-services", action: "account-url", url: "https://app.devin.ai/settings/usage", enabled: true }
         case "factory":
@@ -2512,7 +2496,7 @@ PlasmoidItem {
     }
 
     function tokenCostHint(providerID) {
-        switch (providerKey(providerID)) {
+        switch (Utils.providerKey(providerID)) {
         case "codex":
             return i18n("Estimated from local Codex logs for the selected account.")
         case "claude":
@@ -2551,7 +2535,7 @@ PlasmoidItem {
             return null
         }
 
-        var key = providerKey(item.provider)
+        var key = Utils.providerKey(item.provider)
         var primary = usageRowForLane(item, "primary")
         var secondary = usageRowForLane(item, "secondary")
         if (key === "factory") {
