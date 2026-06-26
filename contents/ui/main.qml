@@ -6,6 +6,7 @@ import org.kde.plasma.components as PlasmaComponents
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
+import "ProviderUtils.js" as ProviderUtils
 
 PlasmoidItem {
     id: root
@@ -1833,20 +1834,7 @@ PlasmoidItem {
     }
 
     function providerKey(value) {
-        var key = String(value || "codex").toLowerCase()
-        var aliases = {
-            "abacusai": "abacus",
-            "agy": "antigravity",
-            "alibaba-coding-plan": "alibaba",
-            "alibaba-token-plan": "alibabatokenplan",
-            "aws-bedrock": "bedrock",
-            "droid": "factory",
-            "gemini-cli": "gemini",
-            "groqcloud": "groq",
-            "kimi-k2": "kimik2",
-            "vertex": "vertexai"
-        }
-        return aliases[key] || key
+        return ProviderUtils.providerKey(value)
     }
 
     function providerCliArgument(value) {
@@ -1944,15 +1932,7 @@ PlasmoidItem {
     }
 
     function providerIconSource(value) {
-        var key = providerKey(value)
-        var aliases = {
-            "aws-bedrock": "bedrock",
-            "gemini": "gemini-white.png",
-            "kimi-k2": "kimik2"
-        }
-        key = aliases[key] || key
-        var fileName = key.indexOf(".") === -1 ? key + ".svg" : key
-        return Qt.resolvedUrl("../icons/providers/" + fileName)
+        return Qt.resolvedUrl(ProviderUtils.providerIconSource(value))
     }
 
     function providerIconIsMask(value) {

@@ -5,6 +5,7 @@ import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
+import "ProviderUtils.js" as ProviderUtils
 
 KCM.SimpleKCM {
     id: page
@@ -748,32 +749,11 @@ KCM.SimpleKCM {
     // --- Provider visual identity (kept in sync with main.qml) ---
 
     function providerKey(value) {
-        var key = String(value || "codex").toLowerCase()
-        var aliases = {
-            "abacusai": "abacus",
-            "agy": "antigravity",
-            "alibaba-coding-plan": "alibaba",
-            "alibaba-token-plan": "alibabatokenplan",
-            "aws-bedrock": "bedrock",
-            "droid": "factory",
-            "gemini-cli": "gemini",
-            "groqcloud": "groq",
-            "kimi-k2": "kimik2",
-            "vertex": "vertexai"
-        }
-        return aliases[key] || key
+        return ProviderUtils.providerKey(value)
     }
 
     function providerIconSource(value) {
-        var key = providerKey(value)
-        var aliases = {
-            "aws-bedrock": "bedrock",
-            "gemini": "gemini-white.png",
-            "kimi-k2": "kimik2"
-        }
-        key = aliases[key] || key
-        var fileName = key.indexOf(".") === -1 ? key + ".svg" : key
-        return Qt.resolvedUrl("../icons/providers/" + fileName)
+        return Qt.resolvedUrl(ProviderUtils.providerIconSource(value))
     }
 
     function providerColor(value) {
