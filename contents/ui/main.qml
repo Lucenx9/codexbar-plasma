@@ -57,6 +57,8 @@ PlasmoidItem {
     property string providerConfigWatchCommand: buildProviderConfigWatchCommand()
     property string providerConfigStamp: ""
     property int commandRunSerial: 0
+    property var activeUsageCommands: ({})
+    property var retiredUsageCommands: ({})
     property var pendingProviderCommands: ({})
     property var fallbackProviderOrder: []
     property var fallbackProviderResults: ({})
@@ -316,8 +318,50 @@ PlasmoidItem {
         return "CODEXBAR_PLASMA_RUN=" + commandRunSerial + " " + command
     }
 
+    function connectUsageCommand(sourceName) {
+        if (sourceName.length === 0) {
+            return
+        }
+
+        var commands = copyObject(activeUsageCommands)
+        commands[sourceName] = true
+        activeUsageCommands = commands
+        usageSource.connectSource(sourceName)
+    }
+
+    function finishUsageCommandSource(sourceName) {
+        if (sourceName.length === 0) {
+            return
+        }
+
+        usageSource.disconnectSource(sourceName)
+
+        var activeCommands = copyObject(activeUsageCommands)
+        delete activeCommands[sourceName]
+        activeUsageCommands = activeCommands
+
+        var retiredCommands = copyObject(retiredUsageCommands)
+        delete retiredCommands[sourceName]
+        retiredUsageCommands = retiredCommands
+    }
+
+    function retireUsageCommandSource(sourceName) {
+        if (sourceName.length === 0) {
+            return
+        }
+
+        if (!activeUsageCommands[sourceName]) {
+            usageSource.disconnectSource(sourceName)
+            return
+        }
+
+        var retiredCommands = copyObject(retiredUsageCommands)
+        retiredCommands[sourceName] = true
+        retiredUsageCommands = retiredCommands
+    }
+
     function refreshNow() {
-        disconnectUsageCommands()
+        retireUsageCommands()
 
         if (commandSource.length === 0) {
             errorText = i18n("Set the codexbar command path in widget settings.")
@@ -333,24 +377,24 @@ PlasmoidItem {
             return
         }
         connectedCommandSource = commandWithRunNonce(commandSource)
-        usageSource.connectSource(connectedCommandSource)
+        connectUsageCommand(connectedCommandSource)
         refreshCost()
     }
 
-    function disconnectUsageCommands() {
+    function retireUsageCommands() {
         if (connectedCommandSource.length > 0) {
-            usageSource.disconnectSource(connectedCommandSource)
+            retireUsageCommandSource(connectedCommandSource)
             connectedCommandSource = ""
         }
         if (connectedProviderConfigCommandSource.length > 0) {
-            usageSource.disconnectSource(connectedProviderConfigCommandSource)
+            retireUsageCommandSource(connectedProviderConfigCommandSource)
             connectedProviderConfigCommandSource = ""
         }
         for (var command in pendingProviderCommands) {
-            usageSource.disconnectSource(command)
+            retireUsageCommandSource(command)
         }
         for (var accountCommand in pendingAccountCommands) {
-            usageSource.disconnectSource(accountCommand)
+            retireUsageCommandSource(accountCommand)
         }
         pendingProviderCommands = ({})
         pendingAccountCommands = ({})
@@ -379,7 +423,7 @@ PlasmoidItem {
 
     function refreshCost() {
         if (connectedCostCommandSource.length > 0) {
-            usageSource.disconnectSource(connectedCostCommandSource)
+            retireUsageCommandSource(connectedCostCommandSource)
             connectedCostCommandSource = ""
         }
 
@@ -392,7 +436,7 @@ PlasmoidItem {
 
         costErrorText = ""
         connectedCostCommandSource = commandWithRunNonce(costCommandSource)
-        usageSource.connectSource(connectedCostCommandSource)
+        connectUsageCommand(connectedCostCommandSource)
     }
 
     function parseOutput(stdoutText, stderrText) {
@@ -439,7 +483,7 @@ PlasmoidItem {
     function startProviderFallback() {
         providerFallbackActive = true
         if (connectedCommandSource.length > 0) {
-            usageSource.disconnectSource(connectedCommandSource)
+            retireUsageCommandSource(connectedCommandSource)
             connectedCommandSource = ""
         }
         if (provider.length > 0) {
@@ -455,7 +499,7 @@ PlasmoidItem {
         }
 
         connectedProviderConfigCommandSource = commandWithRunNonce(providerConfigCommandSource)
-        usageSource.connectSource(connectedProviderConfigCommandSource)
+        connectUsageCommand(connectedProviderConfigCommandSource)
     }
 
     function parseProviderConfigOutput(stdoutText, stderrText) {
@@ -498,7 +542,7 @@ PlasmoidItem {
 
     function startProviderFallbackForProviders(providerIDs) {
         for (var existingCommand in pendingProviderCommands) {
-            usageSource.disconnectSource(existingCommand)
+            retireUsageCommandSource(existingCommand)
         }
         pendingProviderCommands = ({})
         fallbackProviderOrder = []
@@ -525,7 +569,7 @@ PlasmoidItem {
 
         pendingProviderCommands = commands
         for (var j = 0; j < commandList.length; j++) {
-            usageSource.connectSource(commandList[j])
+            connectUsageCommand(commandList[j])
         }
         if (pendingProviderCount === 0) {
             providers = []
@@ -539,6 +583,11 @@ PlasmoidItem {
         if (providerID.length === 0) {
             return
         }
+        var commands = copyObject(pendingProviderCommands)
+        delete commands[sourceName]
+        pendingProviderCommands = commands
+        finishUsageCommandSource(sourceName)
+
         if (fallbackProviderSeen[providerID]) {
             return
         }
@@ -597,7 +646,7 @@ PlasmoidItem {
         lastUpdatedText = i18n("Updated %1", Qt.formatDateTime(new Date(), "hh:mm"))
         loading = false
         fallbackProviderSeen = ({})
-        pendingProviderCount = fallbackProviderOrder.length
+        pendingProviderCount = 0
         applyTokenCosts()
     }
 
@@ -631,7 +680,7 @@ PlasmoidItem {
         var commands = copyObject(pendingAccountCommands)
         commands[connectedCommand] = normalizedProviderID
         pendingAccountCommands = commands
-        usageSource.connectSource(connectedCommand)
+        connectUsageCommand(connectedCommand)
     }
 
     function parseProviderAccountsOutput(sourceName, stdoutText, stderrText) {
@@ -643,9 +692,7 @@ PlasmoidItem {
         var commands = copyObject(pendingAccountCommands)
         delete commands[sourceName]
         pendingAccountCommands = commands
-        // The accounts fetch is a one-shot, but usageSource polls on an interval,
-        // so it must be disconnected here or it keeps re-spawning the CLI forever.
-        usageSource.disconnectSource(sourceName)
+        finishUsageCommandSource(sourceName)
         setAccountLoading(providerID, false)
 
         var trimmed = stdoutText.trim()
@@ -3417,18 +3464,27 @@ PlasmoidItem {
         id: usageSource
 
         engine: "executable"
-        interval: root.refreshIntervalSec > 0 ? root.refreshIntervalSec * 1000 : 0
+        interval: 0
 
         onNewData: function(sourceName, data) {
             var stdoutText = data && data["stdout"] ? data["stdout"] : ""
             var stderrText = data && data["stderr"] ? data["stderr"] : ""
 
+            if (root.retiredUsageCommands[sourceName]) {
+                root.finishUsageCommandSource(sourceName)
+                return
+            }
+
             if (sourceName === root.connectedCostCommandSource) {
+                root.connectedCostCommandSource = ""
+                root.finishUsageCommandSource(sourceName)
                 root.parseCostOutput(stdoutText, stderrText)
                 return
             }
 
             if (sourceName === root.connectedProviderConfigCommandSource) {
+                root.connectedProviderConfigCommandSource = ""
+                root.finishUsageCommandSource(sourceName)
                 root.parseProviderConfigOutput(stdoutText, stderrText)
                 return
             }
@@ -3444,9 +3500,26 @@ PlasmoidItem {
             }
 
             if (sourceName === root.connectedCommandSource) {
+                root.connectedCommandSource = ""
+                root.finishUsageCommandSource(sourceName)
                 root.parseOutput(stdoutText, stderrText)
+                return
+            }
+
+            if (root.activeUsageCommands[sourceName]) {
+                root.finishUsageCommandSource(sourceName)
             }
         }
+    }
+
+    Timer {
+        id: usageRefreshTimer
+
+        interval: Math.max(1, root.refreshIntervalSec) * 1000
+        repeat: true
+        running: root.refreshIntervalSec > 0
+        triggeredOnStart: false
+        onTriggered: root.refreshNow()
     }
 
     Plasma5Support.DataSource {
