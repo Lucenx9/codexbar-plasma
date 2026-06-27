@@ -118,6 +118,17 @@ for function_name in ("providerDashboardUrl", "providerLoginUrl"):
 toggle_body = function_body(providers_text, "handleToggleResult")
 if "stderrText.trim()" not in toggle_body or "exitCode" not in toggle_body:
     raise AssertionError("handleToggleResult must treat stderr/exit-code failures as errors")
+
+# Overview selection is stored with the raw CLI provider IDs (e.g. groqcloud,
+# alibaba-coding-plan) but matched at runtime against providerKey-normalized
+# IDs (groq, alibaba). configuredOverviewProviderIDs must normalize on read so
+# the custom selection is not silently ignored for aliased providers.
+overview_body = function_body(main_text, "configuredOverviewProviderIDs")
+if "providerKey(" not in overview_body:
+    raise AssertionError(
+        "configuredOverviewProviderIDs must normalize IDs via providerKey so "
+        "aliased providers match runtime keys"
+    )
 PY
 
 echo "UI regression checks passed."

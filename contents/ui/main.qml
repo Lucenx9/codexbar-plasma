@@ -3154,8 +3154,15 @@ PlasmoidItem {
         var result = []
         var seen = ({})
         for (var i = 0; i < parts.length; i++) {
-            var id = String(parts[i] || "").trim()
-            if (id.length === 0 || seen[id]) {
+            var trimmed = String(parts[i] || "").trim()
+            if (trimmed.length === 0) {
+                continue
+            }
+            // The settings page stores raw CLI provider IDs (e.g. groqcloud,
+            // alibaba-coding-plan); normalize them to match the providerKey
+            // form used for eligible[k].provider at runtime.
+            var id = providerKey(trimmed)
+            if (seen[id]) {
                 continue
             }
             seen[id] = true
