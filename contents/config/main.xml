@@ -91,6 +91,10 @@
       <label>Last widget update error.</label>
       <default></default>
     </entry>
+    <entry name="lastNotifiedUpdateVersion" type="String">
+      <label>Last widget version the user was notified about.</label>
+      <default></default>
+    </entry>
     <entry name="menuBarDisplayMode" type="String">
       <label>Menu bar text display mode.</label>
       <default>percent</default>

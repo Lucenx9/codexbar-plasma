@@ -58,6 +58,10 @@ require_in_file "$MAIN_QML" "return shellQuote(updateScriptPath()) + (installMod
 require_in_file "$MAIN_QML" "setWidgetUpdateState(i18n(\"Checking for widget updates...\"), \"\", false)"
 require_in_file "$MAIN_QML" "notifyInstalledUpdate(version)"
 require_in_file "$MAIN_QML" "Restart Plasma to apply the new widget version."
+# The notified version must persist so the same update is not re-announced on
+# every plasmashell restart.
+require_in_file "$MAIN_QML" "Plasmoid.configuration.lastNotifiedUpdateVersion = memoKey"
+require_in_file "${ROOT_DIR}/contents/config/main.xml" "name=\"lastNotifiedUpdateVersion\""
 reject_in_file "$MAIN_QML" "return \"sh \" + shellQuote(updateScriptPath())"
 
 echo "Widget updater checks passed."

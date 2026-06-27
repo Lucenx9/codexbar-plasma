@@ -81,7 +81,7 @@ PlasmoidItem {
     property string connectedUpdateCommandSource: ""
     property string updateStatusText: boundedWidgetUpdateText(Plasmoid.configuration.widgetUpdateLastStatus)
     property string updateErrorText: boundedWidgetUpdateText(Plasmoid.configuration.widgetUpdateLastError)
-    property string lastNotifiedUpdateVersion: ""
+    property string lastNotifiedUpdateVersion: Plasmoid.configuration.lastNotifiedUpdateVersion || ""
     readonly property bool overviewAvailable: provider.length === 0 && providers.length > 1 && overviewProviders().length > 0
     readonly property bool overviewSelected: overviewAvailable && selectedProviderIndex < 0
     readonly property var selectedProviderData: providers.length > 0 && selectedProviderIndex >= 0
@@ -2290,6 +2290,7 @@ PlasmoidItem {
             return
         }
         lastNotifiedUpdateVersion = memoKey
+        Plasmoid.configuration.lastNotifiedUpdateVersion = memoKey
         var title = i18n("CodexBar widget update available")
         var body = cleanVersion.length > 0
             ? i18n("Version %1 is available.", cleanVersion)
