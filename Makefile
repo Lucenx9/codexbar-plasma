@@ -1,5 +1,7 @@
 .PHONY: check install restart package translations update
 
+PACKAGE_FILES := metadata.json contents docs/codexbar-plasma-overview.png docs/codexbar-plasma-codex.png scripts/update-widget.sh LICENSE NOTICE.md README.md
+
 # Override on distros where Qt6 ships QML modules elsewhere (e.g. Debian/Ubuntu
 # multiarch: make check QML_IMPORT_DIR=/usr/lib/x86_64-linux-gnu/qt6/qml).
 QMLLINT ?= /usr/lib/qt6/bin/qmllint
@@ -44,4 +46,14 @@ translations:
 
 package:
 	mkdir -p dist
-	cmake -E tar cf dist/codexbar-plasma.plasmoid --format=zip metadata.json contents docs/codexbar-plasma-overview.png docs/codexbar-plasma-codex.png scripts/update-widget.sh LICENSE NOTICE.md README.md
+	rm -f dist/codexbar-plasma.plasmoid
+	@if command -v cmake >/dev/null 2>&1; then \
+		cmake -E tar cf dist/codexbar-plasma.plasmoid --format=zip $(PACKAGE_FILES); \
+	elif command -v zip >/dev/null 2>&1; then \
+		zip -qr dist/codexbar-plasma.plasmoid $(PACKAGE_FILES); \
+	elif command -v python3 >/dev/null 2>&1; then \
+		python3 -m zipfile -c dist/codexbar-plasma.plasmoid $(PACKAGE_FILES); \
+	else \
+		echo "missing required command: cmake, zip, or python3" >&2; \
+		exit 127; \
+	fi
