@@ -297,6 +297,10 @@ msgid "%1 setting saved"
 msgstr ""
 
 #: contents/ui/configProviders.qml
+msgid "%1 returned an unsupported URL."
+msgstr ""
+
+#: contents/ui/configProviders.qml
 msgid "%1 action completed"
 msgstr ""
 
@@ -406,6 +410,10 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "Provider diagnostics"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "%1 returned an unsupported descriptor command."
 msgstr ""
 
 #: contents/ui/configProviders.qml

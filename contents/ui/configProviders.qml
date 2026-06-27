@@ -374,7 +374,13 @@ KCM.SimpleKCM {
         }
 
         if (payload.value && !Array.isArray(payload.value) && payload.value.url) {
-            Qt.openUrlExternally(String(payload.value.url))
+            var url = String(payload.value.url).trim()
+            if (isSafeDescriptorUrl(url)) {
+                Qt.openUrlExternally(url)
+            } else {
+                errorText = i18n("%1 returned an unsupported URL.", displayNameForProvider(descriptor.provider))
+                return
+            }
         }
         errorText = ""
         statusText = i18n("%1 action completed", displayNameForProvider(descriptor.provider))
@@ -775,6 +781,9 @@ KCM.SimpleKCM {
             return null
         }
         var command = normalizeCommandTokens(raw.writeCommand)
+        if (command.length === 0 || !isAllowedDescriptorCommand(command, "field")) {
+            return null
+        }
         return {
             id: String(raw.id),
             kind: String(raw.kind),
@@ -793,7 +802,7 @@ KCM.SimpleKCM {
             return null
         }
         var command = normalizeCommandTokens(raw.command)
-        if (command.length === 0) {
+        if (command.length === 0 || !isAllowedDescriptorCommand(command, "action")) {
             return null
         }
         return {
@@ -850,6 +859,24 @@ KCM.SimpleKCM {
         return result
     }
 
+    function isAllowedDescriptorCommand(commandTokens, purpose) {
+        if (!Array.isArray(commandTokens) || commandTokens.length < 3) {
+            return false
+        }
+        if (String(commandTokens[0]) !== "codexbar" || String(commandTokens[1]) !== "config") {
+            return false
+        }
+
+        var subcommand = String(commandTokens[2])
+        if (purpose === "field") {
+            return subcommand === "set" || subcommand === "set-api-key"
+        }
+        if (purpose === "action") {
+            return subcommand === "action"
+        }
+        return false
+    }
+
     function appendSettingsRow(rows, label, value) {
         if (value && String(value).length > 0) {
             rows.push({ label: label, value: String(value) })
@@ -894,6 +921,10 @@ KCM.SimpleKCM {
         if (!field || !field.writeCommand || field.writeCommand.length === 0 || isFieldPending(providerID, field.id)) {
             return
         }
+        if (!isAllowedDescriptorCommand(field.writeCommand, "field")) {
+            errorText = i18n("%1 returned an unsupported descriptor command.", displayNameForProvider(providerID))
+            return
+        }
         errorText = ""
         statusText = ""
         markFieldPending(providerID, field.id, true)
@@ -903,6 +934,10 @@ KCM.SimpleKCM {
 
     function promptDescriptorSecret(providerID, field) {
         if (!field || !field.writeCommand || field.writeCommand.length === 0 || isFieldPending(providerID, field.id)) {
+            return
+        }
+        if (!isAllowedDescriptorCommand(field.writeCommand, "field")) {
+            errorText = i18n("%1 returned an unsupported descriptor command.", displayNameForProvider(providerID))
             return
         }
         errorText = ""
@@ -923,6 +958,10 @@ KCM.SimpleKCM {
 
     function runDescriptorAction(providerID, action) {
         if (!action || !action.command || action.command.length === 0 || isFieldPending(providerID, action.id)) {
+            return
+        }
+        if (!isAllowedDescriptorCommand(action.command, "action")) {
+            errorText = i18n("%1 returned an unsupported descriptor command.", displayNameForProvider(providerID))
             return
         }
         errorText = ""
@@ -951,6 +990,11 @@ KCM.SimpleKCM {
             parts.push(shellQuote(applyCommandTokenReplacements(token, replacements)))
         }
         return parts.join(" ")
+    }
+
+    function isSafeDescriptorUrl(url) {
+        var text = String(url || "").trim().toLowerCase()
+        return text.indexOf("https://") === 0
     }
 
     function applyCommandTokenReplacements(token, replacements) {

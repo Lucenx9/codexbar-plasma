@@ -180,6 +180,10 @@ Rules for Plasma:
 - Render only supported field kinds.
 - Use `writeCommand` and action `command` exactly as arrays of argv-like
   tokens; quote each token when using Plasma's executable data source.
+- Reject descriptor commands unless they start with `codexbar config` and use
+  an allowed local subcommand: `set`/`set-api-key` for fields, `action` for
+  actions.
+- Open descriptor-returned URLs only when they are HTTPS URLs.
 - Keep secret fields write-only except for `redactedValue`.
 - Fall back to current CLI command hints when a descriptor is missing,
   unsupported, or invalid.
