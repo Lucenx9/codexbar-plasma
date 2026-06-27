@@ -2010,7 +2010,9 @@ PlasmoidItem {
         if (value.length > 0) {
             var previousSeverity = previousValue.length > 0 ? previousValue.split("|")[0] : ""
             var worsened = notificationRank(item.statusSeverity) > notificationRank(previousSeverity)
-            if (previousValue.length === 0 || worsened || previousValue !== value) {
+            // Mirror the quota notifications: only a new incident or a worsened
+            // severity should notify, not a mere reworded status message.
+            if (previousValue.length === 0 || worsened) {
                 sendPlasmaNotification(
                     i18n("%1 status issue", item.title),
                     item.status,
@@ -3308,6 +3310,11 @@ PlasmoidItem {
         }
 
         if (autoSelectProvider) {
+            // Don't override an Overview selection the user explicitly chose;
+            // auto-select only drives the initial pick and provider tabs.
+            if (selectionInitialized && overviewSelected) {
+                return
+            }
             selectedProviderIndex = autoSelectedProviderIndex()
             selectionInitialized = true
             return

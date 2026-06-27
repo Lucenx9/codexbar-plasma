@@ -129,6 +129,27 @@ if "providerKey(" not in overview_body:
         "configuredOverviewProviderIDs must normalize IDs via providerKey so "
         "aliased providers match runtime keys"
     )
+
+# Status notifications must mirror quota logic: only fire on a new incident or a
+# worsened severity, never on a mere status-text change (which would spam on
+# every reworded incident message).
+status_body = function_body(main_text, "processStatusNotification")
+if "worsened" not in status_body:
+    raise AssertionError("processStatusNotification must gate on severity worsening")
+if "previousValue !== value" in status_body:
+    raise AssertionError(
+        "processStatusNotification must not re-notify on status-text changes; "
+        "only new incidents or worsened severity should notify"
+    )
+
+# autoSelectProvider must not clobber an explicit Overview selection on every
+# refresh; once the user picks Overview the selection has to survive.
+select_body = function_body(main_text, "updateSelectedProvider")
+if "overviewSelected" not in select_body:
+    raise AssertionError(
+        "updateSelectedProvider must preserve an explicit Overview selection "
+        "when autoSelectProvider is enabled"
+    )
 PY
 
 echo "UI regression checks passed."
