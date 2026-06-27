@@ -48,4 +48,76 @@ require_block_fragment "$GENERAL_QML" "id: lastUpdateStatusLabel" "wrapMode: Tex
 require_in_file "$PROVIDERS_QML" "Provider-specific controls come from the CodexBar CLI descriptor"
 reject_in_file "$PROVIDERS_QML" "Provider-specific editing stays in the CodexBar CLI until it exposes a stable settings descriptor"
 
+python3 - "$ROOT_DIR" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+main_qml = root / "contents/ui/main.qml"
+providers_qml = root / "contents/ui/configProviders.qml"
+
+
+def function_body(text, name):
+    marker = f"function {name}("
+    start = text.find(marker)
+    if start < 0:
+        raise AssertionError(f"missing function {name}")
+    brace = text.find("{", start)
+    depth = 1
+    index = brace + 1
+    while index < len(text) and depth > 0:
+        if text[index] == "{":
+            depth += 1
+        elif text[index] == "}":
+            depth -= 1
+        index += 1
+    if depth != 0:
+        raise AssertionError(f"unterminated function {name}")
+    return text[brace + 1:index - 1]
+
+
+def extract_switch_returns(text, name):
+    body = function_body(text, name)
+    values = {}
+    pending = []
+    for line in body.splitlines():
+        stripped = line.strip()
+        case_match = re.match(r'case "([^"]+)":', stripped)
+        if case_match:
+            pending.append(case_match.group(1))
+            continue
+        return_match = re.match(r'return "([^"]*)"', stripped)
+        if return_match and pending:
+            for provider in pending:
+                values[provider] = return_match.group(1)
+            pending = []
+        elif stripped.startswith("default:"):
+            pending = []
+    return values
+
+
+main_text = main_qml.read_text(encoding="utf-8")
+providers_text = providers_qml.read_text(encoding="utf-8")
+
+for function_name in ("providerDashboardUrl", "providerLoginUrl"):
+    main_values = extract_switch_returns(main_text, function_name)
+    provider_values = extract_switch_returns(providers_text, function_name)
+    if main_values != provider_values:
+        missing = sorted(set(main_values) - set(provider_values))
+        extra = sorted(set(provider_values) - set(main_values))
+        changed = sorted(
+            key for key in set(main_values) & set(provider_values)
+            if main_values[key] != provider_values[key]
+        )
+        raise AssertionError(
+            f"{function_name} drift between main.qml and configProviders.qml; "
+            f"missing={missing}, extra={extra}, changed={changed}"
+        )
+
+toggle_body = function_body(providers_text, "handleToggleResult")
+if "stderrText.trim()" not in toggle_body or "exitCode" not in toggle_body:
+    raise AssertionError("handleToggleResult must treat stderr/exit-code failures as errors")
+PY
+
 echo "UI regression checks passed."

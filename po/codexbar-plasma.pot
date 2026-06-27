@@ -280,6 +280,10 @@ msgstr ""
 msgid "Could not parse codexbar response: %1"
 msgstr ""
 
+#: contents/ui/configProviders.qml
+msgid "codexbar exited with code %1"
+msgstr ""
+
 #: contents/ui/configProviders.qml contents/ui/main.qml
 msgid "%1: %2"
 msgstr ""

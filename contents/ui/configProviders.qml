@@ -153,7 +153,7 @@ KCM.SimpleKCM {
         configSource.connectSource(command)
     }
 
-    function handleData(sourceName, stdoutText, stderrText) {
+    function handleData(sourceName, stdoutText, stderrText, exitCode) {
         var descriptor = commands[sourceName]
         if (!descriptor) {
             return
@@ -165,7 +165,7 @@ KCM.SimpleKCM {
         if (descriptor.kind === "list") {
             handleListResult(descriptor, stdoutText, stderrText)
         } else if (descriptor.kind === "toggle") {
-            handleToggleResult(descriptor, stdoutText, stderrText)
+            handleToggleResult(descriptor, stdoutText, stderrText, exitCode)
         } else if (descriptor.kind === "setApiKey") {
             handleSetApiKeyResult(descriptor, stdoutText, stderrText)
         } else if (descriptor.kind === "descriptorField") {
@@ -271,7 +271,7 @@ KCM.SimpleKCM {
             || text.indexOf("invalid option") !== -1
     }
 
-    function handleToggleResult(descriptor, stdoutText, stderrText) {
+    function handleToggleResult(descriptor, stdoutText, stderrText, exitCode) {
         var trimmed = stdoutText.trim()
         var payload = null
         if (trimmed.length > 0) {
@@ -285,6 +285,15 @@ KCM.SimpleKCM {
         }
 
         var message = commandError(payload)
+        if (message.length === 0 && stderrText.trim().length > 0) {
+            message = stderrText.trim()
+        }
+        if (message.length === 0 && Number(exitCode) !== 0) {
+            message = i18n("codexbar exited with code %1", Number(exitCode))
+        }
+        if (message.length === 0 && !payload) {
+            message = i18n("codexbar did not return provider data.")
+        }
         if (message.length > 0) {
             markPending(descriptor.provider, false)
             errorText = i18n("%1: %2", descriptor.provider, message)
@@ -1163,38 +1172,97 @@ KCM.SimpleKCM {
 
     function providerDashboardUrl(providerID) {
         switch (providerKey(providerID)) {
+        case "abacus":
+            return "https://apps.abacus.ai/chatllm/admin/compute-points-usage"
+        case "alibaba":
+            return "https://modelstudio.console.alibabacloud.com/ap-southeast-1/?tab=coding-plan#/efm/coding_plan"
+        case "alibabatokenplan":
+            return "https://bailian.console.aliyun.com/cn-beijing?tab=plan#/efm/subscription/token-plan"
+        case "amp":
+            return "https://ampcode.com/settings#billing"
+        case "augment":
+            return "https://app.augmentcode.com/account/subscription"
+        case "azureopenai":
+            return "https://ai.azure.com"
+        case "bedrock":
+            return "https://console.aws.amazon.com/bedrock"
+        case "chutes":
+            return "https://chutes.ai"
+        case "codebuff":
+            return "https://www.codebuff.com/usage"
+        case "commandcode":
+            return "https://commandcode.ai/studio"
+        case "crof":
+            return "https://crof.ai/dashboard"
         case "codex":
-        case "openai":
-            return "https://platform.openai.com/usage"
+            return "https://chatgpt.com/codex/settings/usage"
         case "claude":
-            return "https://console.anthropic.com/settings/usage"
+            return "https://claude.ai/settings/usage"
+        case "copilot":
+            return "https://github.com/settings/copilot"
         case "cursor":
             return "https://cursor.com/dashboard?tab=usage"
+        case "deepgram":
+            return "https://console.deepgram.com/project/"
+        case "deepseek":
+            return "https://platform.deepseek.com/usage"
+        case "devin":
+            return "https://app.devin.ai"
+        case "doubao":
+            return "https://console.volcengine.com/ark/region:ark+cn-beijing/openManagement?LLM=%7B%7D&advancedActiveKey=subscribe"
+        case "elevenlabs":
+            return "https://elevenlabs.io/app/developers/usage"
+        case "factory":
+            return "https://app.factory.ai/settings/billing"
+        case "gemini":
+            return "https://gemini.google.com"
+        case "grok":
+            return "https://grok.com/?_s=usage"
+        case "groq":
+            return "https://console.groq.com/dashboard/metrics"
+        case "kilo":
+            return "https://app.kilo.ai/usage"
+        case "kimi":
+            return "https://www.kimi.com/code/console"
+        case "kiro":
+            return "https://app.kiro.dev/account/usage"
+        case "manus":
+            return "https://manus.im"
+        case "mimo":
+            return "https://platform.xiaomimimo.com/#/console/balance"
+        case "mistral":
+            return "https://admin.mistral.ai/organization/usage"
+        case "moonshot":
+            return "https://platform.moonshot.ai/console/account"
+        case "minimax":
+            return "https://platform.minimax.io/user-center/payment/coding-plan?cycle_type=3"
+        case "ollama":
+            return "https://ollama.com/settings"
+        case "openai":
+            return "https://platform.openai.com/usage"
         case "opencode":
         case "opencodego":
             return "https://opencode.ai"
-        case "gemini":
-            return "https://aistudio.google.com/usage"
-        case "factory":
-            return "https://app.factory.ai/settings/billing"
-        case "copilot":
-            return "https://github.com/settings/copilot"
-        case "crof":
-            return "https://crof.ai/dashboard"
-        case "elevenlabs":
-            return "https://elevenlabs.io/app/developers/usage"
         case "openrouter":
-            return "https://openrouter.ai/activity"
-        case "deepgram":
-            return "https://console.deepgram.com/usage"
+            return "https://openrouter.ai/settings/credits"
+        case "perplexity":
+            return "https://www.perplexity.ai/account/usage"
+        case "poe":
+            return "https://poe.com/api/keys"
+        case "stepfun":
+            return "https://platform.stepfun.com/plan-usage"
+        case "t3chat":
+            return "https://t3.chat/settings/customization"
+        case "venice":
+            return "https://venice.ai/settings/api"
+        case "vertexai":
+            return "https://console.cloud.google.com/vertex-ai"
+        case "warp":
+            return "https://docs.warp.dev/reference/cli/api-keys"
+        case "windsurf":
+            return "https://windsurf.com/subscription/usage"
         case "zai":
-            return "https://z.ai/manage-apikey/apikey-list"
-        case "minimax":
-            return "https://platform.minimaxi.com/user-center/basic-information/interface-key"
-        case "mistral":
-            return "https://console.mistral.ai/usage"
-        case "bedrock":
-            return "https://console.aws.amazon.com/costmanagement/home"
+            return "https://z.ai/manage-apikey/coding-plan/personal/my-plan"
         default:
             return ""
         }
@@ -1222,6 +1290,8 @@ KCM.SimpleKCM {
             return "https://app.devin.ai/settings/usage"
         case "manus":
             return "https://manus.im"
+        case "mimo":
+            return "https://platform.xiaomimimo.com/api/v1/genLoginUrl?currentPath=%2F%23%2Fconsole%2Fbalance"
         case "perplexity":
             return "https://www.perplexity.ai"
         default:
@@ -1416,8 +1486,9 @@ KCM.SimpleKCM {
         onNewData: function(sourceName, data) {
             var stdoutText = data && data["stdout"] ? data["stdout"] : ""
             var stderrText = data && data["stderr"] ? data["stderr"] : ""
+            var exitCode = data && data["exit code"] !== undefined ? Number(data["exit code"]) : 0
             disconnectSource(sourceName)
-            page.handleData(sourceName, stdoutText, stderrText)
+            page.handleData(sourceName, stdoutText, stderrText, exitCode)
         }
     }
 
