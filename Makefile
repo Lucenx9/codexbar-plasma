@@ -13,6 +13,7 @@ check:
 	scripts/test_feature_parity.sh
 	scripts/test_refresh_nonce.sh
 	scripts/test_process_lifecycle.sh
+	scripts/test_ui_regressions.sh
 	scripts/test_provider_icons.sh
 	scripts/test_security_regressions.sh
 	scripts/test_update_widget.sh

@@ -456,9 +456,8 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid ""
-"Provider-specific editing stays in the CodexBar CLI until it exposes a "
-"stable settings descriptor. This panel shows redacted source/auth details "
-"and exact CLI commands."
+"Provider-specific controls come from the CodexBar CLI descriptor. This panel "
+"also shows redacted source/auth details and exact CLI commands."
 msgstr ""
 
 #: contents/ui/configProviders.qml

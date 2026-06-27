@@ -185,17 +185,25 @@ KCM.SimpleKCM {
         }
 
         Controls.Label {
+            id: lastUpdateCheckLabel
+
             text: cfg_autoUpdateLastCheck.length > 0
                 ? i18n("Last update check: %1", cfg_autoUpdateLastCheck)
                 : i18n("Last update check: never")
             visible: updateChecksEnabledCheck.checked
             opacity: 0.7
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
         }
 
         Controls.Label {
+            id: lastUpdateStatusLabel
+
             text: i18n("Last update status: %1", cfg_widgetUpdateLastStatus)
             visible: updateChecksEnabledCheck.checked && cfg_widgetUpdateLastStatus.length > 0
             opacity: 0.7
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
         }
 
         Kirigami.InlineMessage {

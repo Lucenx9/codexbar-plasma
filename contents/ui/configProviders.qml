@@ -1587,7 +1587,7 @@ KCM.SimpleKCM {
 
                 Controls.Label {
                     Layout.fillWidth: true
-                    text: i18n("Provider-specific editing stays in the CodexBar CLI until it exposes a stable settings descriptor. This panel shows redacted source/auth details and exact CLI commands.")
+                    text: i18n("Provider-specific controls come from the CodexBar CLI descriptor. This panel also shows redacted source/auth details and exact CLI commands.")
                     opacity: 0.66
                     font: Kirigami.Theme.smallFont
                     wrapMode: Text.WordWrap
