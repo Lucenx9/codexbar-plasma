@@ -3073,7 +3073,7 @@ PlasmoidItem {
             }
             return secondary || usageRowForLane(item, "tertiary") || primary || firstUsageRow(item)
         }
-        if (key === "cursor" && !usageBarsShowUsed && primary && primary.leftPercent <= 0
+        if (key === "cursor" && primary && primary.leftPercent <= 0
                 && item.providerCost && item.providerCost.percentUsed >= 0) {
             var used = clamp(Number(item.providerCost.percentUsed), 0, 100)
             return {

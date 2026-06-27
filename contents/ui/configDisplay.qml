@@ -215,11 +215,20 @@ KCM.SimpleKCM {
         var ordered = []
         for (var j = 0; j < overviewProviders.length; j++) {
             var candidate = overviewProviders[j].provider
-            if (selectedSet[candidate]) {
+            if (selectedSet[candidate] && ordered.indexOf(candidate) === -1) {
                 ordered.push(candidate)
                 if (ordered.length >= maxOverviewProviders) {
                     break
                 }
+            }
+        }
+        // Preserve previously-selected providers that are no longer in the
+        // enabled list, so disabling a provider elsewhere does not silently
+        // drop it from the overview selection on the next toggle.
+        for (var k = 0; k < selected.length && ordered.length < maxOverviewProviders; k++) {
+            var prior = selected[k]
+            if (selectedSet[prior] && ordered.indexOf(prior) === -1) {
+                ordered.push(prior)
             }
         }
         cfg_overviewProviderIDs = overviewProviderIDsText(ordered)
