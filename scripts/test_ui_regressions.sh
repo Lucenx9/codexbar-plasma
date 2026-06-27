@@ -130,17 +130,22 @@ if "providerKey(" not in overview_body:
         "aliased providers match runtime keys"
     )
 
-# Status notifications must mirror quota logic: only fire on a new incident or a
-# worsened severity, never on a mere status-text change (which would spam on
-# every reworded incident message).
+# Status notifications must fire on first sight, worsened severity, and changed
+# same-severity incident values so active incident replacements are not missed.
 status_body = function_body(main_text, "processStatusNotification")
 if "worsened" not in status_body:
     raise AssertionError("processStatusNotification must gate on severity worsening")
-if "previousValue !== value" in status_body:
+if "previousValue !== value" not in status_body:
     raise AssertionError(
-        "processStatusNotification must not re-notify on status-text changes; "
-        "only new incidents or worsened severity should notify"
+        "processStatusNotification must notify when a same-severity status "
+        "incident value changes"
     )
+
+status_value_body = function_body(main_text, "notificationStatusValue")
+if "statusIncidentKey" not in status_value_body:
+    raise AssertionError("notificationStatusValue must prefer stable incident keys when present")
+if 'item.status' not in status_value_body:
+    raise AssertionError("notificationStatusValue must fall back to status text when no incident key exists")
 
 # autoSelectProvider must not clobber an explicit Overview selection on every
 # refresh; once the user picks Overview the selection has to survive.

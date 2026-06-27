@@ -1516,6 +1516,7 @@ PlasmoidItem {
                 : null,
             status: status ? statusText(status) : "",
             statusSeverity: severity,
+            statusIncidentKey: statusIncidentKey(status),
             hasIncident: severity.length > 0,
             error: error && error.message ? error.message : "",
             placeholder: placeholder,
@@ -2010,9 +2011,9 @@ PlasmoidItem {
         if (value.length > 0) {
             var previousSeverity = previousValue.length > 0 ? previousValue.split("|")[0] : ""
             var worsened = notificationRank(item.statusSeverity) > notificationRank(previousSeverity)
-            // Mirror the quota notifications: only a new incident or a worsened
-            // severity should notify, not a mere reworded status message.
-            if (previousValue.length === 0 || worsened) {
+            // Notify for a new incident, worsened severity, or a changed
+            // same-severity status value so incident replacements are not missed.
+            if (previousValue.length === 0 || worsened || previousValue !== value) {
                 sendPlasmaNotification(
                     i18n("%1 status issue", item.title),
                     item.status,
@@ -2091,7 +2092,31 @@ PlasmoidItem {
         if (!item || !item.hasIncident || !item.statusSeverity || !item.status) {
             return ""
         }
-        return item.statusSeverity + "|" + item.status
+        var incidentKey = item.statusIncidentKey ? String(item.statusIncidentKey) : item.status
+        return item.statusSeverity + "|" + incidentKey
+    }
+
+    function statusIncidentKey(status) {
+        if (!status) {
+            return ""
+        }
+        var keys = [
+            "incidentId",
+            "incident_id",
+            "incidentID",
+            "id"
+        ]
+        for (var i = 0; i < keys.length; i++) {
+            var value = status[keys[i]]
+            if (value !== null && value !== undefined && String(value).length > 0) {
+                return String(value)
+            }
+        }
+        var incident = status.incident || null
+        if (incident && incident.id !== null && incident.id !== undefined && String(incident.id).length > 0) {
+            return String(incident.id)
+        }
+        return ""
     }
 
     function quotaNotificationKey(providerID, row, index) {
