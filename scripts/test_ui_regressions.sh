@@ -55,6 +55,8 @@ from pathlib import Path
 
 root = Path(sys.argv[1])
 main_qml = root / "contents/ui/main.qml"
+general_qml = root / "contents/ui/configGeneral.qml"
+display_qml = root / "contents/ui/configDisplay.qml"
 providers_qml = root / "contents/ui/configProviders.qml"
 
 
@@ -119,7 +121,35 @@ def extract_switch_returns(text, name):
 
 
 main_text = main_qml.read_text(encoding="utf-8")
+general_text = general_qml.read_text(encoding="utf-8")
+display_text = display_qml.read_text(encoding="utf-8")
 providers_text = providers_qml.read_text(encoding="utf-8")
+
+
+def assert_form_sections(text, filename, labels):
+    for label in labels:
+        pattern = re.compile(
+            r"Kirigami\.Separator\s*\{[^}]*"
+            + re.escape(f'Kirigami.FormData.label: i18n("{label}")')
+            + r"[^}]*Kirigami\.FormData\.isSection:\s*true",
+            re.S,
+        )
+        if not pattern.search(text):
+            raise AssertionError(
+                f"{filename} must expose a FormLayout section labelled {label!r}"
+            )
+
+
+assert_form_sections(
+    general_text,
+    "configGeneral.qml",
+    ("Command", "Refresh", "Usage", "Notifications", "Updates"),
+)
+assert_form_sections(
+    display_text,
+    "configDisplay.qml",
+    ("Panel", "Usage details", "Overview"),
+)
 
 if "—" in main_text or "–" in main_text:
     raise AssertionError("main.qml must avoid em dash/en dash placeholders in visible UI text")

@@ -60,11 +60,21 @@ KCM.SimpleKCM {
     }
 
     Kirigami.FormLayout {
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Command")
+            Kirigami.FormData.isSection: true
+        }
+
         Controls.TextField {
             id: commandPathField
             Kirigami.FormData.label: i18n("Command path:")
             Layout.preferredWidth: Kirigami.Units.gridUnit * 18
             placeholderText: "codexbar"
+        }
+
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Refresh")
+            Kirigami.FormData.isSection: true
         }
 
         Controls.ComboBox {
@@ -112,6 +122,11 @@ KCM.SimpleKCM {
             text: i18n("Fetch provider status")
         }
 
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Usage")
+            Kirigami.FormData.isSection: true
+        }
+
         Controls.CheckBox {
             id: costUsageEnabledCheck
             text: i18n("Show local cost usage")
@@ -125,6 +140,11 @@ KCM.SimpleKCM {
             editable: true
             enabled: costUsageEnabledCheck.checked
             Layout.preferredWidth: Kirigami.Units.gridUnit * 8
+        }
+
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Notifications")
+            Kirigami.FormData.isSection: true
         }
 
         Controls.CheckBox {
@@ -148,6 +168,11 @@ KCM.SimpleKCM {
             id: notifyLimitResetsCheck
             text: i18n("Notify limit resets")
             enabled: enableNotificationsCheck.checked
+        }
+
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Updates")
+            Kirigami.FormData.isSection: true
         }
 
         Controls.CheckBox {

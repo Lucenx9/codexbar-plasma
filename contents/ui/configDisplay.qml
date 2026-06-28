@@ -267,6 +267,11 @@ KCM.SimpleKCM {
     }
 
     Kirigami.FormLayout {
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Panel")
+            Kirigami.FormData.isSection: true
+        }
+
         Controls.ComboBox {
             id: displayModeCombo
             Kirigami.FormData.label: i18n("Display mode:")
@@ -281,6 +286,36 @@ KCM.SimpleKCM {
             Layout.preferredWidth: Kirigami.Units.gridUnit * 12
             Component.onCompleted: currentIndex = page.displayModeIndex(page.cfg_menuBarDisplayMode)
             onActivated: page.cfg_menuBarDisplayMode = currentValue
+        }
+
+        Controls.CheckBox {
+            id: showProviderCheck
+            text: i18n("Show provider in panel")
+        }
+
+        Controls.CheckBox {
+            id: showPercentCheck
+            text: i18n("Show percent in panel")
+        }
+
+        Controls.CheckBox {
+            id: showMultiProviderCheck
+            text: i18n("Show multi-provider details in panel")
+        }
+
+        Controls.CheckBox {
+            id: showCreditsCheck
+            text: i18n("Show credits in panel")
+        }
+
+        Controls.CheckBox {
+            id: autoSelectProviderCheck
+            text: i18n("Auto-select highest-usage provider")
+        }
+
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Usage details")
+            Kirigami.FormData.isSection: true
         }
 
         Controls.CheckBox {
@@ -303,24 +338,9 @@ KCM.SimpleKCM {
             text: i18n("Show provider changelog links")
         }
 
-        Controls.CheckBox {
-            id: showProviderCheck
-            text: i18n("Show provider in panel")
-        }
-
-        Controls.CheckBox {
-            id: showPercentCheck
-            text: i18n("Show percent in panel")
-        }
-
-        Controls.CheckBox {
-            id: showMultiProviderCheck
-            text: i18n("Show multi-provider details in panel")
-        }
-
-        Controls.CheckBox {
-            id: autoSelectProviderCheck
-            text: i18n("Auto-select highest-usage provider")
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Overview")
+            Kirigami.FormData.isSection: true
         }
 
         ColumnLayout {
@@ -382,11 +402,6 @@ KCM.SimpleKCM {
                 enabled: page.cfg_overviewProviderIDs.length > 0
                 onClicked: page.resetOverviewProvidersToAutomatic()
             }
-        }
-
-        Controls.CheckBox {
-            id: showCreditsCheck
-            text: i18n("Show credits in panel")
         }
     }
 

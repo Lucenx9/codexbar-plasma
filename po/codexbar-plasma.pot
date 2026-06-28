@@ -95,6 +95,10 @@ msgid "Could not parse codexbar provider JSON: %1"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
+msgid "Panel"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
 msgid "Display mode:"
 msgstr ""
 
@@ -115,6 +119,30 @@ msgid "Reset time"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
+msgid "Show provider in panel"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Show percent in panel"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Show multi-provider details in panel"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Show credits in panel"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Auto-select highest-usage provider"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Usage details"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
 msgid "Show usage as percent used"
 msgstr ""
 
@@ -130,20 +158,8 @@ msgstr ""
 msgid "Show provider changelog links"
 msgstr ""
 
-#: contents/ui/configDisplay.qml
-msgid "Show provider in panel"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Show percent in panel"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Show multi-provider details in panel"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Auto-select highest-usage provider"
+#: contents/ui/configDisplay.qml contents/ui/main.qml
+msgid "Overview"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
@@ -166,12 +182,16 @@ msgstr ""
 msgid "Use first %1 providers automatically"
 msgstr ""
 
-#: contents/ui/configDisplay.qml
-msgid "Show credits in panel"
+#: contents/ui/configGeneral.qml
+msgid "Command"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid "Command path:"
+msgstr ""
+
+#: contents/ui/configGeneral.qml contents/ui/main.qml
+msgid "Refresh"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -214,12 +234,20 @@ msgstr ""
 msgid "Fetch provider status"
 msgstr ""
 
+#: contents/ui/configGeneral.qml contents/ui/main.qml
+msgid "Usage"
+msgstr ""
+
 #: contents/ui/configGeneral.qml
 msgid "Show local cost usage"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid "Cost history days:"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Notifications"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -236,6 +264,10 @@ msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid "Notify limit resets"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Updates"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -502,10 +534,6 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "%1 - on by default"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Refresh"
 msgstr ""
 
 #: contents/ui/main.qml
@@ -858,10 +886,6 @@ msgid "Opus"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Usage"
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "Extra usage"
 msgstr ""
 
@@ -1166,10 +1190,6 @@ msgstr ""
 #: contents/ui/main.qml
 #, javascript-format
 msgid "%1% pace late"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Overview"
 msgstr ""
 
 #: contents/ui/main.qml
