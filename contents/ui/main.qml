@@ -2900,7 +2900,7 @@ PlasmoidItem {
             rows.push({ title: i18n("Docs"), icon: "help-contents", action: "docs", url: docsUrl, enabled: true })
         }
 
-        rows.push({ title: i18n("Refresh"), icon: "view-refresh", action: "refresh", enabled: true })
+        rows.push({ title: i18n("Refresh"), icon: "view-refresh", action: "refresh", enabled: true, separatorBefore: true })
         rows.push({ title: i18n("Settings..."), icon: "configure", action: "settings", enabled: true })
         rows.push({ title: i18n("About CodexBar"), icon: "help-about", action: "about", enabled: true })
         return rows
@@ -4004,12 +4004,12 @@ PlasmoidItem {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     rightPadding: contentRightInset
-                    contentWidth: Math.max(0, availableWidth - contentRightInset)
+                    contentWidth: availableWidth
                     clip: true
                     Controls.ScrollBar.horizontal.policy: Controls.ScrollBar.AlwaysOff
 
                     ColumnLayout {
-                        width: overviewScroll.contentWidth
+                        width: overviewScroll.availableWidth
                         spacing: Kirigami.Units.smallSpacing
 
                         PlasmaComponents.Label {
@@ -4153,6 +4153,8 @@ PlasmoidItem {
                         spacing: Kirigami.Units.smallSpacing / 2
 
                         RowLayout {
+                            id: providerTitleRow
+
                             Layout.fillWidth: true
                             spacing: Kirigami.Units.smallSpacing
 
@@ -4188,18 +4190,9 @@ PlasmoidItem {
                                 }
                             }
 
-                            PlasmaComponents.Label {
-                                visible: root.selectedProviderData
-                                    && root.selectedProviderData.account
-                                    && root.selectedProviderData.account.length > 0
-                                text: root.selectedProviderData ? root.selectedProviderData.account : ""
-                                opacity: 0.62
-                                horizontalAlignment: Text.AlignRight
-                                elide: Text.ElideMiddle
-                                Layout.maximumWidth: Kirigami.Units.gridUnit * 16
-                            }
-
                             PlasmaComponents.ToolButton {
+                                id: providerRefreshButton
+
                                 icon.name: "view-refresh"
                                 enabled: !loading
                                 Accessible.name: i18n("Refresh")
@@ -4208,10 +4201,14 @@ PlasmoidItem {
                         }
 
                         RowLayout {
+                            id: providerMetaRow
+
                             Layout.fillWidth: true
                             spacing: Kirigami.Units.smallSpacing
 
                             PlasmaComponents.Label {
+                                id: providerUpdatedLabel
+
                                 text: lastUpdatedText.length > 0 ? lastUpdatedText : i18n("Updated just now")
                                 opacity: 0.62
                                 Layout.fillWidth: true
@@ -4219,6 +4216,21 @@ PlasmoidItem {
                             }
 
                             PlasmaComponents.Label {
+                                id: providerAccountLabel
+
+                                visible: root.selectedProviderData
+                                    && root.selectedProviderData.account
+                                    && root.selectedProviderData.account.length > 0
+                                text: root.selectedProviderData ? root.selectedProviderData.account : ""
+                                opacity: 0.62
+                                horizontalAlignment: Text.AlignRight
+                                elide: Text.ElideMiddle
+                                Layout.maximumWidth: Math.round(providerHeaderRow.width * 0.52)
+                            }
+
+                            PlasmaComponents.Label {
+                                id: providerPlanLabel
+
                                 visible: root.selectedProviderData
                                     && root.selectedProviderData.planText
                                     && root.selectedProviderData.planText.length > 0
@@ -4226,6 +4238,7 @@ PlasmoidItem {
                                 opacity: 0.66
                                 horizontalAlignment: Text.AlignRight
                                 elide: Text.ElideRight
+                                Layout.maximumWidth: Kirigami.Units.gridUnit * 5
                             }
                         }
                     }
@@ -4332,12 +4345,12 @@ PlasmoidItem {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     rightPadding: contentRightInset
-                    contentWidth: Math.max(0, availableWidth - contentRightInset)
+                    contentWidth: availableWidth
                     clip: true
                     Controls.ScrollBar.horizontal.policy: Controls.ScrollBar.AlwaysOff
 
                     ColumnLayout {
-                        width: providerScroll.contentWidth
+                        width: providerScroll.availableWidth
                         spacing: Kirigami.Units.largeSpacing
 
                         PlasmaComponents.Label {
@@ -4860,6 +4873,7 @@ PlasmoidItem {
                                 readonly property var breakdownRows: root.costBreakdownRows(tokenCostSection.tokenCost)
                                 readonly property var modelRows: root.costModelRows(tokenCostSection.tokenCost)
                                 readonly property var dailyRows: root.costDailyRows(tokenCostSection.tokenCost)
+                                readonly property real metricValueColumnWidth: Kirigami.Units.gridUnit * 9
 
                                 visible: tokenCostSection.tokenCost
                                     && (costDrillDownSection.breakdownRows.length > 0
@@ -4903,9 +4917,13 @@ PlasmoidItem {
                                             }
 
                                             PlasmaComponents.Label {
+                                                id: costBreakdownValueLabel
+
                                                 text: modelData.value
                                                 opacity: 0.78
                                                 horizontalAlignment: Text.AlignRight
+                                                Layout.preferredWidth: costDrillDownSection.metricValueColumnWidth
+                                                Layout.maximumWidth: costDrillDownSection.metricValueColumnWidth
                                                 elide: Text.ElideRight
                                             }
                                         }
@@ -4943,9 +4961,13 @@ PlasmoidItem {
                                             }
 
                                             PlasmaComponents.Label {
+                                                id: costModelValueLabel
+
                                                 text: modelData.value
                                                 opacity: 0.7
                                                 horizontalAlignment: Text.AlignRight
+                                                Layout.preferredWidth: costDrillDownSection.metricValueColumnWidth
+                                                Layout.maximumWidth: costDrillDownSection.metricValueColumnWidth
                                                 elide: Text.ElideRight
                                             }
                                         }
@@ -4983,9 +5005,13 @@ PlasmoidItem {
                                             }
 
                                             PlasmaComponents.Label {
+                                                id: costDailyValueLabel
+
                                                 text: modelData.value
                                                 opacity: 0.7
                                                 horizontalAlignment: Text.AlignRight
+                                                Layout.preferredWidth: costDrillDownSection.metricValueColumnWidth
+                                                Layout.maximumWidth: costDrillDownSection.metricValueColumnWidth
                                                 elide: Text.ElideRight
                                             }
                                         }
@@ -5012,14 +5038,30 @@ PlasmoidItem {
                             }
 
                             Repeater {
+                                id: providerActionRows
+
                                 model: root.selectedProviderData ? root.actionRows(root.selectedProviderData) : []
 
-                                delegate: Controls.ItemDelegate {
+                                delegate: ColumnLayout {
                                     Layout.fillWidth: true
-                                    text: modelData.title
-                                    icon.name: modelData.icon
-                                    enabled: modelData.enabled
-                                    onClicked: root.performAction(modelData)
+                                    spacing: 0
+
+                                    Kirigami.Separator {
+                                        id: providerActionGroupSeparator
+
+                                        visible: modelData.separatorBefore === true
+                                        Layout.fillWidth: true
+                                        Layout.topMargin: Kirigami.Units.smallSpacing / 2
+                                        Layout.bottomMargin: Kirigami.Units.smallSpacing / 2
+                                    }
+
+                                    Controls.ItemDelegate {
+                                        Layout.fillWidth: true
+                                        text: modelData.title
+                                        icon.name: modelData.icon
+                                        enabled: modelData.enabled
+                                        onClicked: root.performAction(modelData)
+                                    }
                                 }
                             }
                         }

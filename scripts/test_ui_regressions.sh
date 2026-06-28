@@ -167,16 +167,56 @@ for scroll_id in ("overviewScroll", "providerScroll"):
         raise AssertionError(f"{scroll_id} must define a reusable right content inset")
     if "rightPadding: contentRightInset" not in scroll_body:
         raise AssertionError(f"{scroll_id} must reserve padding on the right edge")
-    if "contentWidth: Math.max(0, availableWidth - contentRightInset)" not in scroll_body:
-        raise AssertionError(f"{scroll_id} must keep content out from under the right inset")
-    if f"width: {scroll_id}.contentWidth" not in scroll_body:
-        raise AssertionError(f"{scroll_id} content column must follow the inset content width")
+    if "contentWidth: availableWidth" not in scroll_body:
+        raise AssertionError(f"{scroll_id} content width must follow Qt ScrollView availableWidth")
+    if f"width: {scroll_id}.availableWidth" not in scroll_body:
+        raise AssertionError(f"{scroll_id} content column must follow the padded available width")
 
 provider_scroll_body = id_block(main_text, "providerScroll")
 if "rightPadding: contentRightInset" not in provider_scroll_body:
     raise AssertionError(
         "providerScroll must keep provider details away from the right popup edge"
     )
+
+provider_header_body = id_block(main_text, "providerHeaderRow")
+for header_fragment in (
+    "id: providerTitleRow",
+    "id: providerMetaRow",
+    "id: providerAccountLabel",
+    "id: providerPlanLabel",
+):
+    if header_fragment not in provider_header_body:
+        raise AssertionError(f"providerHeaderRow must expose {header_fragment} for stable header layout")
+
+provider_account_label_body = id_block(main_text, "providerAccountLabel")
+if "Layout.maximumWidth: Math.round(providerHeaderRow.width * 0.52)" not in provider_account_label_body:
+    raise AssertionError("providerAccountLabel must cap long account text before the refresh edge")
+
+provider_plan_label_body = id_block(main_text, "providerPlanLabel")
+if "Layout.maximumWidth: Kirigami.Units.gridUnit * 5" not in provider_plan_label_body:
+    raise AssertionError("providerPlanLabel must keep plan text from crowding provider metadata")
+
+cost_drill_down_body = id_block(main_text, "costDrillDownSection")
+if "readonly property real metricValueColumnWidth: Kirigami.Units.gridUnit * 9" not in cost_drill_down_body:
+    raise AssertionError("costDrillDownSection must define a stable value column width")
+for value_label in ("costBreakdownValueLabel", "costModelValueLabel", "costDailyValueLabel"):
+    value_label_body = id_block(main_text, value_label)
+    if "Layout.preferredWidth: costDrillDownSection.metricValueColumnWidth" not in value_label_body:
+        raise AssertionError(f"{value_label} must use the shared metric value column width")
+    if "Layout.maximumWidth: costDrillDownSection.metricValueColumnWidth" not in value_label_body:
+        raise AssertionError(f"{value_label} must cap the shared metric value column width")
+
+action_rows_body = function_body(main_text, "actionRows")
+if 'action: "refresh", enabled: true, separatorBefore: true' not in action_rows_body:
+    raise AssertionError("actionRows must separate provider actions from widget-level actions")
+
+provider_action_rows_body = id_block(main_text, "providerActionRows")
+for action_fragment in (
+    "id: providerActionGroupSeparator",
+    "visible: modelData.separatorBefore === true",
+):
+    if action_fragment not in provider_action_rows_body:
+        raise AssertionError(f"providerActionRows must expose {action_fragment} for grouped menu actions")
 
 # Status notifications must fire on first sight, worsened severity, and changed
 # same-severity stable incident keys so active incident replacements are not
