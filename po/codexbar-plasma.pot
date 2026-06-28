@@ -998,6 +998,10 @@ msgid "%1 is back to %2% used"
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "Widget updater script is missing from the installed package."
+msgstr ""
+
+#: contents/ui/main.qml
 msgid "Checking for widget updates..."
 msgstr ""
 

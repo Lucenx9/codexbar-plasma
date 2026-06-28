@@ -163,8 +163,8 @@ for header_id in ("overviewHeaderRow", "providerHeaderRow"):
 
 for scroll_id in ("overviewScroll", "providerScroll"):
     scroll_body = id_block(main_text, scroll_id)
-    if "readonly property real contentRightInset: Kirigami.Units.smallSpacing" not in scroll_body:
-        raise AssertionError(f"{scroll_id} must define a reusable right content inset")
+    if "readonly property real contentRightInset: Kirigami.Units.gridUnit" not in scroll_body:
+        raise AssertionError(f"{scroll_id} must reserve a full scrollbar gutter on the right edge")
     if "rightPadding: contentRightInset" not in scroll_body:
         raise AssertionError(f"{scroll_id} must reserve padding on the right edge")
     if "contentWidth: availableWidth" not in scroll_body:
@@ -189,8 +189,10 @@ for header_fragment in (
         raise AssertionError(f"providerHeaderRow must expose {header_fragment} for stable header layout")
 
 provider_account_label_body = id_block(main_text, "providerAccountLabel")
-if "Layout.maximumWidth: Math.round(providerHeaderRow.width * 0.52)" not in provider_account_label_body:
+if "Layout.maximumWidth: Kirigami.Units.gridUnit * 16" not in provider_account_label_body:
     raise AssertionError("providerAccountLabel must cap long account text before the refresh edge")
+if "providerHeaderRow.width" in provider_account_label_body or "providerMetaRow.width" in provider_account_label_body:
+    raise AssertionError("providerAccountLabel must not bind its width to the header layout width")
 
 provider_plan_label_body = id_block(main_text, "providerPlanLabel")
 if "Layout.maximumWidth: Kirigami.Units.gridUnit * 5" not in provider_plan_label_body:

@@ -2207,7 +2207,18 @@ PlasmoidItem {
     }
 
     function buildUpdateCommand(installMode) {
-        return shellQuote(updateScriptPath()) + (installMode ? " --install" : " --check")
+        var scriptPath = updateScriptPath()
+        var mode = installMode ? " --install" : " --check"
+        return "if [ -x " + shellQuote(scriptPath) + " ]; then "
+            + shellQuote(scriptPath) + mode
+            + "; else printf '%s\\n' " + shellQuote(missingUpdateScriptJson()) + "; fi"
+    }
+
+    function missingUpdateScriptJson() {
+        return JSON.stringify({
+            status: "error",
+            message: i18n("Widget updater script is missing from the installed package.")
+        })
     }
 
     function updateCheckDue() {
@@ -3999,7 +4010,7 @@ PlasmoidItem {
                 Controls.ScrollView {
                     id: overviewScroll
 
-                    readonly property real contentRightInset: Kirigami.Units.smallSpacing
+                    readonly property real contentRightInset: Kirigami.Units.gridUnit
 
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -4225,7 +4236,7 @@ PlasmoidItem {
                                 opacity: 0.62
                                 horizontalAlignment: Text.AlignRight
                                 elide: Text.ElideMiddle
-                                Layout.maximumWidth: Math.round(providerHeaderRow.width * 0.52)
+                                Layout.maximumWidth: Kirigami.Units.gridUnit * 16
                             }
 
                             PlasmaComponents.Label {
@@ -4340,7 +4351,7 @@ PlasmoidItem {
                 Controls.ScrollView {
                     id: providerScroll
 
-                    readonly property real contentRightInset: Kirigami.Units.smallSpacing
+                    readonly property real contentRightInset: Kirigami.Units.gridUnit
 
                     Layout.fillWidth: true
                     Layout.fillHeight: true
