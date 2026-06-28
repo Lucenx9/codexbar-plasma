@@ -1808,7 +1808,16 @@ KCM.SimpleKCM {
                                     Layout.fillWidth: true
                                     enabled: page.selectedProvider
                                         && !page.isFieldPending(page.selectedProvider.provider, modelData.id)
-                                    onClicked: if (page.selectedProvider) page.writeDescriptorField(page.selectedProvider.provider, modelData, checked ? "true" : "false")
+                                    onClicked: {
+                                        if (page.selectedProvider) {
+                                            page.writeDescriptorField(page.selectedProvider.provider, modelData, checked ? "true" : "false")
+                                        }
+                                        // Restore the binding the click severed so the box reflects the
+                                        // saved value (and reverts on a failed write).
+                                        checked = Qt.binding(function() {
+                                            return modelData.value === true || String(modelData.value).toLowerCase() === "true"
+                                        })
+                                    }
                                 }
                             }
 
@@ -1956,7 +1965,14 @@ KCM.SimpleKCM {
                     Controls.Switch {
                         checked: page.visualEnabled(providerRow.modelData.provider, providerRow.modelData.enabled)
                         enabled: !page.isPending(providerRow.modelData.provider)
-                        onClicked: page.setEnabled(providerRow.modelData.provider, !providerRow.modelData.enabled)
+                        onClicked: {
+                            page.setEnabled(providerRow.modelData.provider, !providerRow.modelData.enabled)
+                            // Clicking severs the declarative binding on `checked`; restore it so the
+                            // switch reverts when a toggle fails or its pending state clears.
+                            checked = Qt.binding(function() {
+                                return page.visualEnabled(providerRow.modelData.provider, providerRow.modelData.enabled)
+                            })
+                        }
                     }
                 }
             }

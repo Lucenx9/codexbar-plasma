@@ -368,7 +368,12 @@ KCM.SimpleKCM {
                     text: modelData.displayName
                     checked: selected
                     enabled: selected || page.selectedOverviewProviderCount() < page.maxOverviewProviders
-                    onClicked: page.toggleOverviewProvider(modelData.provider, checked)
+                    onClicked: {
+                        page.toggleOverviewProvider(modelData.provider, checked)
+                        // Clicking severs the binding on `checked`; restore it so the box reflects the
+                        // actual selection (e.g. when a click is rejected by the max-providers cap).
+                        checked = Qt.binding(function() { return selected })
+                    }
                 }
             }
 
