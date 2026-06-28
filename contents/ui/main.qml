@@ -2014,7 +2014,11 @@ PlasmoidItem {
             // Notify for a new incident, worsened severity, or a changed
             // same-severity stable incident key so replacements are not missed
             // without treating provider-controlled status text as notification identity.
-            var incidentChanged = item.statusIncidentKey && previousValue !== value
+            var previousIncidentKey = notificationStatusIncidentKey(previousValue)
+            var currentIncidentKey = notificationStatusIncidentKey(value)
+            var incidentChanged = previousIncidentKey.length > 0
+                && currentIncidentKey.length > 0
+                && previousIncidentKey !== currentIncidentKey
             if (previousValue.length === 0 || worsened || incidentChanged) {
                 sendPlasmaNotification(
                     i18n("%1 status issue", item.title),
@@ -2096,6 +2100,12 @@ PlasmoidItem {
         }
         var incidentKey = item.statusIncidentKey ? String(item.statusIncidentKey) : ""
         return item.statusSeverity + "|" + incidentKey
+    }
+
+    function notificationStatusIncidentKey(value) {
+        var text = String(value || "")
+        var separator = text.indexOf("|")
+        return separator >= 0 ? text.slice(separator + 1) : ""
     }
 
     function statusIncidentKey(status) {

@@ -136,10 +136,20 @@ if "providerKey(" not in overview_body:
 status_body = function_body(main_text, "processStatusNotification")
 if "worsened" not in status_body:
     raise AssertionError("processStatusNotification must gate on severity worsening")
-if "incidentChanged" not in status_body or "item.statusIncidentKey" not in status_body:
+if (
+    "incidentChanged" not in status_body
+    or "previousIncidentKey" not in status_body
+    or "currentIncidentKey" not in status_body
+    or "previousIncidentKey !== currentIncidentKey" not in status_body
+):
     raise AssertionError(
         "processStatusNotification must only notify for same-severity changes "
         "when a stable status incident key is present"
+    )
+if "previousValue !== value" in status_body:
+    raise AssertionError(
+        "processStatusNotification must compare incident keys instead of full "
+        "severity-bearing memo values"
     )
 
 status_value_body = function_body(main_text, "notificationStatusValue")
