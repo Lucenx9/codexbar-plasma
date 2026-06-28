@@ -2012,8 +2012,14 @@ PlasmoidItem {
             var previousSeverity = previousValue.length > 0 ? previousValue.split("|")[0] : ""
             var worsened = notificationRank(item.statusSeverity) > notificationRank(previousSeverity)
             // Notify for a new incident, worsened severity, or a changed
-            // same-severity status value so incident replacements are not missed.
-            if (previousValue.length === 0 || worsened || previousValue !== value) {
+            // same-severity stable incident key so replacements are not missed
+            // without treating provider-controlled status text as notification identity.
+            var previousIncidentKey = notificationStatusIncidentKey(previousValue)
+            var currentIncidentKey = notificationStatusIncidentKey(value)
+            var incidentChanged = previousIncidentKey.length > 0
+                && currentIncidentKey.length > 0
+                && previousIncidentKey !== currentIncidentKey
+            if (previousValue.length === 0 || worsened || incidentChanged) {
                 sendPlasmaNotification(
                     i18n("%1 status issue", item.title),
                     item.status,
@@ -2092,8 +2098,14 @@ PlasmoidItem {
         if (!item || !item.hasIncident || !item.statusSeverity || !item.status) {
             return ""
         }
-        var incidentKey = item.statusIncidentKey ? String(item.statusIncidentKey) : item.status
+        var incidentKey = item.statusIncidentKey ? String(item.statusIncidentKey) : ""
         return item.statusSeverity + "|" + incidentKey
+    }
+
+    function notificationStatusIncidentKey(value) {
+        var text = String(value || "")
+        var separator = text.indexOf("|")
+        return separator >= 0 ? text.slice(separator + 1) : ""
     }
 
     function statusIncidentKey(status) {

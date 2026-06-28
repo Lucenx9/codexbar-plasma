@@ -131,21 +131,34 @@ if "providerKey(" not in overview_body:
     )
 
 # Status notifications must fire on first sight, worsened severity, and changed
-# same-severity incident values so active incident replacements are not missed.
+# same-severity stable incident keys so active incident replacements are not
+# missed without letting free-form status text changes spam notifications.
 status_body = function_body(main_text, "processStatusNotification")
 if "worsened" not in status_body:
     raise AssertionError("processStatusNotification must gate on severity worsening")
-if "previousValue !== value" not in status_body:
+if (
+    "incidentChanged" not in status_body
+    or "previousIncidentKey" not in status_body
+    or "currentIncidentKey" not in status_body
+    or "previousIncidentKey !== currentIncidentKey" not in status_body
+):
     raise AssertionError(
-        "processStatusNotification must notify when a same-severity status "
-        "incident value changes"
+        "processStatusNotification must only notify for same-severity changes "
+        "when a stable status incident key is present"
+    )
+if "previousValue !== value" in status_body:
+    raise AssertionError(
+        "processStatusNotification must compare incident keys instead of full "
+        "severity-bearing memo values"
     )
 
 status_value_body = function_body(main_text, "notificationStatusValue")
 if "statusIncidentKey" not in status_value_body:
     raise AssertionError("notificationStatusValue must prefer stable incident keys when present")
-if 'item.status' not in status_value_body:
-    raise AssertionError("notificationStatusValue must fall back to status text when no incident key exists")
+if 'item.statusSeverity + "|" + incidentKey' not in status_value_body:
+    raise AssertionError("notificationStatusValue must include severity and stable incident key")
+if ': item.status' in status_value_body:
+    raise AssertionError("notificationStatusValue must not fall back to provider-controlled status text")
 
 # autoSelectProvider must not clobber an explicit Overview selection on every
 # refresh; once the user picks Overview the selection has to survive.
