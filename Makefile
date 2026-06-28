@@ -47,6 +47,11 @@ translations:
 package:
 	mkdir -p dist
 	rm -f dist/codexbar-plasma.plasmoid
+	@if find $(PACKAGE_FILES) -type l -print -quit | grep -q .; then \
+		echo "refusing to package symlinks from PACKAGE_FILES" >&2; \
+		find $(PACKAGE_FILES) -type l -print >&2; \
+		exit 1; \
+	fi
 	@if command -v cmake >/dev/null 2>&1; then \
 		cmake -E tar cf dist/codexbar-plasma.plasmoid --format=zip $(PACKAGE_FILES); \
 	elif command -v zip >/dev/null 2>&1; then \
