@@ -77,6 +77,27 @@ def function_body(text, name):
     return text[brace + 1:index - 1]
 
 
+def id_block(text, object_id):
+    marker = f"id: {object_id}"
+    marker_index = text.find(marker)
+    if marker_index < 0:
+        raise AssertionError(f"missing id {object_id}")
+    brace = text.rfind("{", 0, marker_index)
+    if brace < 0:
+        raise AssertionError(f"missing object body for id {object_id}")
+    depth = 1
+    index = brace + 1
+    while index < len(text) and depth > 0:
+        if text[index] == "{":
+            depth += 1
+        elif text[index] == "}":
+            depth -= 1
+        index += 1
+    if depth != 0:
+        raise AssertionError(f"unterminated object body for id {object_id}")
+    return text[brace + 1:index - 1]
+
+
 def extract_switch_returns(text, name):
     body = function_body(text, name)
     values = {}
@@ -99,6 +120,9 @@ def extract_switch_returns(text, name):
 
 main_text = main_qml.read_text(encoding="utf-8")
 providers_text = providers_qml.read_text(encoding="utf-8")
+
+if "—" in main_text or "–" in main_text:
+    raise AssertionError("main.qml must avoid em dash/en dash placeholders in visible UI text")
 
 for function_name in ("providerDashboardUrl", "providerLoginUrl"):
     main_values = extract_switch_returns(main_text, function_name)
@@ -128,6 +152,30 @@ if "providerKey(" not in overview_body:
     raise AssertionError(
         "configuredOverviewProviderIDs must normalize IDs via providerKey so "
         "aliased providers match runtime keys"
+    )
+
+for header_id in ("overviewHeaderRow", "providerHeaderRow"):
+    header_body = id_block(main_text, header_id)
+    if "Layout.rightMargin: Kirigami.Units.smallSpacing" not in header_body:
+        raise AssertionError(
+            f"{header_id} must align header actions with the inset scroll content"
+        )
+
+for scroll_id in ("overviewScroll", "providerScroll"):
+    scroll_body = id_block(main_text, scroll_id)
+    if "readonly property real contentRightInset: Kirigami.Units.smallSpacing" not in scroll_body:
+        raise AssertionError(f"{scroll_id} must define a reusable right content inset")
+    if "rightPadding: contentRightInset" not in scroll_body:
+        raise AssertionError(f"{scroll_id} must reserve padding on the right edge")
+    if "contentWidth: Math.max(0, availableWidth - contentRightInset)" not in scroll_body:
+        raise AssertionError(f"{scroll_id} must keep content out from under the right inset")
+    if f"width: {scroll_id}.contentWidth" not in scroll_body:
+        raise AssertionError(f"{scroll_id} content column must follow the inset content width")
+
+provider_scroll_body = id_block(main_text, "providerScroll")
+if "rightPadding: contentRightInset" not in provider_scroll_body:
+    raise AssertionError(
+        "providerScroll must keep provider details away from the right popup edge"
     )
 
 # Status notifications must fire on first sight, worsened severity, and changed

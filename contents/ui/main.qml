@@ -3027,7 +3027,7 @@ PlasmoidItem {
     }
 
     function costLine(label, cost, tokens, currency) {
-        var costValue = isFinite(Number(cost)) ? amountString(Number(cost), currency) : "—"
+        var costValue = isFinite(Number(cost)) ? amountString(Number(cost), currency) : "-"
         if (isFinite(Number(tokens))) {
             return i18n("%1: %2 - %3 tokens", label, costValue, tokenCountString(Number(tokens)))
         }
@@ -3037,7 +3037,7 @@ PlasmoidItem {
     function tokenCountString(tokens) {
         var value = Number(tokens)
         if (!isFinite(value)) {
-            return "—"
+            return "-"
         }
         var absValue = Math.abs(value)
         var sign = value < 0 ? "-" : ""
@@ -3961,7 +3961,10 @@ PlasmoidItem {
                 spacing: Kirigami.Units.largeSpacing
 
                 RowLayout {
+                    id: overviewHeaderRow
+
                     Layout.fillWidth: true
+                    Layout.rightMargin: Kirigami.Units.smallSpacing
                     spacing: Kirigami.Units.smallSpacing
 
                     ColumnLayout {
@@ -3996,14 +3999,17 @@ PlasmoidItem {
                 Controls.ScrollView {
                     id: overviewScroll
 
+                    readonly property real contentRightInset: Kirigami.Units.smallSpacing
+
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    contentWidth: availableWidth
+                    rightPadding: contentRightInset
+                    contentWidth: Math.max(0, availableWidth - contentRightInset)
                     clip: true
                     Controls.ScrollBar.horizontal.policy: Controls.ScrollBar.AlwaysOff
 
                     ColumnLayout {
-                        width: overviewScroll.availableWidth
+                        width: overviewScroll.contentWidth
                         spacing: Kirigami.Units.smallSpacing
 
                         PlasmaComponents.Label {
@@ -4136,7 +4142,10 @@ PlasmoidItem {
                 spacing: Kirigami.Units.largeSpacing
 
                 RowLayout {
+                    id: providerHeaderRow
+
                     Layout.fillWidth: true
+                    Layout.rightMargin: Kirigami.Units.smallSpacing
                     spacing: Kirigami.Units.smallSpacing
 
                     ColumnLayout {
@@ -4318,14 +4327,17 @@ PlasmoidItem {
                 Controls.ScrollView {
                     id: providerScroll
 
+                    readonly property real contentRightInset: Kirigami.Units.smallSpacing
+
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    contentWidth: availableWidth
+                    rightPadding: contentRightInset
+                    contentWidth: Math.max(0, availableWidth - contentRightInset)
                     clip: true
                     Controls.ScrollBar.horizontal.policy: Controls.ScrollBar.AlwaysOff
 
                     ColumnLayout {
-                        width: providerScroll.availableWidth
+                        width: providerScroll.contentWidth
                         spacing: Kirigami.Units.largeSpacing
 
                         PlasmaComponents.Label {
