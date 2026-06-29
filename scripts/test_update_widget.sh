@@ -60,6 +60,7 @@ require_in_file "$MAIN_QML" "function missingUpdateScriptJson()"
 require_in_file "$MAIN_QML" "Widget updater script is missing from the installed package."
 require_in_file "$MAIN_QML" "if [ -x \" + shellQuote(scriptPath) + \" ]; then \""
 require_in_file "$MAIN_QML" "printf '%s\\\\n' \" + shellQuote(missingUpdateScriptJson())"
+require_in_file "$MAIN_QML" "return \"sh -c \" + shellQuote(updateCommand)"
 require_in_file "$MAIN_QML" "setWidgetUpdateState(i18n(\"Checking for widget updates...\"), \"\", false)"
 require_in_file "$MAIN_QML" "notifyInstalledUpdate(version)"
 require_in_file "$MAIN_QML" "Restart Plasma to apply the new widget version."
@@ -69,5 +70,14 @@ require_in_file "$MAIN_QML" "Plasmoid.configuration.lastNotifiedUpdateVersion = 
 require_in_file "${ROOT_DIR}/contents/config/main.xml" "name=\"lastNotifiedUpdateVersion\""
 reject_in_file "$MAIN_QML" "return \"sh \" + shellQuote(updateScriptPath())"
 reject_in_file "$MAIN_QML" "return shellQuote(updateScriptPath()) + (installMode ? \" --install\" : \" --check\")"
+
+update_script_sample="${ROOT_DIR}/scripts/update-widget.sh"
+missing_json_sample='{"status":"error","message":"Widget updater script is missing from the installed package."}'
+compound_sample="if [ -x '${update_script_sample}' ]; then '${update_script_sample}' --check; else printf '%s\n' '${missing_json_sample}'; fi"
+nonce_wrapped_sample="CODEXBAR_PLASMA_RUN=1 sh -c $(printf '%q' "${compound_sample}")"
+if ! /bin/sh -n -c "${nonce_wrapped_sample}"; then
+  echo "nonce-wrapped updater command must be valid /bin/sh syntax" >&2
+  exit 1
+fi
 
 echo "Widget updater checks passed."
