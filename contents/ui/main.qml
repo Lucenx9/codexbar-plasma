@@ -2209,9 +2209,10 @@ PlasmoidItem {
     function buildUpdateCommand(installMode) {
         var scriptPath = updateScriptPath()
         var mode = installMode ? " --install" : " --check"
-        return "if [ -x " + shellQuote(scriptPath) + " ]; then "
+        var updateCommand = "if [ -x " + shellQuote(scriptPath) + " ]; then "
             + shellQuote(scriptPath) + mode
             + "; else printf '%s\\n' " + shellQuote(missingUpdateScriptJson()) + "; fi"
+        return "sh -c " + shellQuote(updateCommand)
     }
 
     function missingUpdateScriptJson() {
