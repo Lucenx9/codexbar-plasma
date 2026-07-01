@@ -85,7 +85,7 @@ Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 4
                 radius: height / 2
-                color: overviewRow.applet.withAlpha(Kirigami.Theme.textColor, 0.14)
+                color: overviewRow.applet.withAlpha(Kirigami.Theme.textColor, 0.2)
                 clip: true
 
                 Rectangle {

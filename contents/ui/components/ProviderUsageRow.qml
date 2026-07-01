@@ -32,7 +32,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.preferredHeight: 6
         radius: height / 2
-        color: usageRow.applet.withAlpha(Kirigami.Theme.textColor, 0.14)
+        color: usageRow.applet.withAlpha(Kirigami.Theme.textColor, 0.2)
         clip: true
 
         Rectangle {

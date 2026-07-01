@@ -4020,7 +4020,7 @@ PlasmoidItem {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 6
                                 radius: height / 2
-                                color: root.withAlpha(Kirigami.Theme.textColor, 0.14)
+                                color: root.withAlpha(Kirigami.Theme.textColor, 0.2)
                                 clip: true
 
                                 Rectangle {
@@ -4097,7 +4097,7 @@ PlasmoidItem {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 6
                                 radius: height / 2
-                                color: root.withAlpha(Kirigami.Theme.textColor, 0.14)
+                                color: root.withAlpha(Kirigami.Theme.textColor, 0.2)
                                 clip: true
 
                                 Rectangle {
@@ -4286,11 +4286,13 @@ PlasmoidItem {
                                     ctx.fillStyle = root.canvasColor(Kirigami.Theme.textColor, 0.22)
                                     ctx.fillRect(0, baseline, width, 1)
 
-                                    ctx.fillStyle = root.canvasColor(costSparkline.accent, 0.9)
+                                    var peakFill = root.canvasColor(costSparkline.accent, 1)
+                                    var normalFill = root.canvasColor(costSparkline.accent, 0.55)
                                     for (var i = 0; i < points.length; i++) {
                                         var value = Math.max(0, Number(points[i].cost) || 0)
                                         var barHeight = Math.max(1, (height - 3) * value / maxValue)
                                         var x = i * (barWidth + gap)
+                                        ctx.fillStyle = value === maxValue ? peakFill : normalFill
                                         ctx.fillRect(x, baseline - barHeight, barWidth, barHeight)
                                     }
                                 }
