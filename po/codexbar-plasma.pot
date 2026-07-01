@@ -28,6 +28,37 @@ msgstr ""
 msgid "Debug"
 msgstr ""
 
+#: contents/ui/components/CompactRepresentation.qml
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "%1: %2"
+msgstr ""
+
+#: contents/ui/components/OverviewProviderRow.qml
+#: contents/ui/components/ProviderUsageRow.qml
+msgid "%1% %2"
+msgstr ""
+
+#: contents/ui/components/ProviderAccountsPanel.qml
+msgid "Accounts"
+msgstr ""
+
+#: contents/ui/components/ProviderAccountsPanel.qml
+msgid "Reload accounts"
+msgstr ""
+
+#: contents/ui/components/ProviderConfigRow.qml
+msgid "%1 - on by default"
+msgstr ""
+
+#: contents/ui/components/ProviderHeader.qml contents/ui/configGeneral.qml
+#: contents/ui/main.qml
+msgid "Refresh"
+msgstr ""
+
+#: contents/ui/components/ProviderHeader.qml
+msgid "Updated just now"
+msgstr ""
+
 #: contents/ui/configAdvanced.qml
 msgid "Advanced provider override"
 msgstr ""
@@ -190,10 +221,6 @@ msgstr ""
 msgid "Command path:"
 msgstr ""
 
-#: contents/ui/configGeneral.qml contents/ui/main.qml
-msgid "Refresh"
-msgstr ""
-
 #: contents/ui/configGeneral.qml
 msgid "Refresh preset:"
 msgstr ""
@@ -314,10 +341,6 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "codexbar exited with code %1"
-msgstr ""
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "%1: %2"
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -530,10 +553,6 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "No provider matches \"%1\"."
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "%1 - on by default"
 msgstr ""
 
 #: contents/ui/main.qml
@@ -1210,22 +1229,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "No overview data available."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1% %2"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Updated just now"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Accounts"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Reload accounts"
 msgstr ""
 
 #: contents/ui/main.qml

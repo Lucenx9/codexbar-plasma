@@ -10,6 +10,19 @@ QML_IMPORT_DIR ?= /usr/lib/qt6/qml
 # the type/import-resolution categories that would otherwise cascade into
 # failures; locally (modules present) they are no-ops, so the check stays full.
 QMLLINT_FLAGS ?= --unqualified disable
+QML_FILES := \
+	contents/ui/main.qml \
+	contents/ui/configGeneral.qml \
+	contents/ui/configProviders.qml \
+	contents/ui/configDisplay.qml \
+	contents/ui/configAdvanced.qml \
+	contents/ui/configDebug.qml \
+	contents/ui/components/CompactRepresentation.qml \
+	contents/ui/components/OverviewProviderRow.qml \
+	contents/ui/components/ProviderAccountsPanel.qml \
+	contents/ui/components/ProviderConfigRow.qml \
+	contents/ui/components/ProviderHeader.qml \
+	contents/ui/components/ProviderUsageRow.qml
 
 check:
 	scripts/test_feature_parity.sh
@@ -23,7 +36,7 @@ check:
 	scripts/test_i18n_catalog.sh
 	scripts/test_cli_descriptor_contract.sh
 	scripts/test_qml_hardening.sh
-	$(QMLLINT) $(QMLLINT_FLAGS) -I $(QML_IMPORT_DIR) contents/ui/main.qml contents/ui/configGeneral.qml contents/ui/configProviders.qml contents/ui/configDisplay.qml contents/ui/configAdvanced.qml contents/ui/configDebug.qml
+	$(QMLLINT) $(QMLLINT_FLAGS) -I $(QML_IMPORT_DIR) $(QML_FILES)
 	xmllint --noout contents/config/main.xml
 	jq . metadata.json >/dev/null
 	@if command -v kpackagetool6 >/dev/null 2>&1; then \

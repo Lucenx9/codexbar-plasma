@@ -5,6 +5,7 @@ import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
+import "components" as Components
 
 KCM.SimpleKCM {
     id: page
@@ -1912,69 +1913,8 @@ KCM.SimpleKCM {
         Repeater {
             model: page.visibleProviders
 
-            delegate: Controls.ItemDelegate {
-                id: providerRow
-
-                required property var modelData
-
-                Layout.fillWidth: true
-                hoverEnabled: true
-                down: false
-                highlighted: providerRow.modelData.provider === page.selectedProviderID
-                onClicked: page.selectedProviderID = providerRow.modelData.provider
-
-                contentItem: RowLayout {
-                    spacing: Kirigami.Units.gridUnit
-
-                    Kirigami.Icon {
-                        source: page.providerIconSource(providerRow.modelData.provider)
-                        isMask: true
-                        color: page.providerColor(providerRow.modelData.provider)
-                        Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
-                        Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 0
-
-                        Controls.Label {
-                            text: providerRow.modelData.displayName
-                            elide: Text.ElideRight
-                            Layout.fillWidth: true
-                        }
-
-                        Controls.Label {
-                            text: providerRow.modelData.defaultEnabled
-                                ? i18n("%1 - on by default", providerRow.modelData.provider)
-                                : providerRow.modelData.provider
-                            elide: Text.ElideRight
-                            opacity: 0.6
-                            font: Kirigami.Theme.smallFont
-                            Layout.fillWidth: true
-                        }
-                    }
-
-                    Controls.BusyIndicator {
-                        running: page.isPending(providerRow.modelData.provider)
-                        visible: running
-                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                    }
-
-                    Controls.Switch {
-                        checked: page.visualEnabled(providerRow.modelData.provider, providerRow.modelData.enabled)
-                        enabled: !page.isPending(providerRow.modelData.provider)
-                        onClicked: {
-                            page.setEnabled(providerRow.modelData.provider, !providerRow.modelData.enabled)
-                            // Clicking severs the declarative binding on `checked`; restore it so the
-                            // switch reverts when a toggle fails or its pending state clears.
-                            checked = Qt.binding(function() {
-                                return page.visualEnabled(providerRow.modelData.provider, providerRow.modelData.enabled)
-                            })
-                        }
-                    }
-                }
+            delegate: Components.ProviderConfigRow {
+                configPage: page
             }
         }
     }

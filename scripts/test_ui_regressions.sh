@@ -58,6 +58,7 @@ main_qml = root / "contents/ui/main.qml"
 general_qml = root / "contents/ui/configGeneral.qml"
 display_qml = root / "contents/ui/configDisplay.qml"
 providers_qml = root / "contents/ui/configProviders.qml"
+provider_header_qml = root / "contents/ui/components/ProviderHeader.qml"
 
 
 def function_body(text, name):
@@ -124,6 +125,7 @@ main_text = main_qml.read_text(encoding="utf-8")
 general_text = general_qml.read_text(encoding="utf-8")
 display_text = display_qml.read_text(encoding="utf-8")
 providers_text = providers_qml.read_text(encoding="utf-8")
+provider_header_text = provider_header_qml.read_text(encoding="utf-8")
 
 
 def assert_form_sections(text, filename, labels):
@@ -184,8 +186,12 @@ if "providerKey(" not in overview_body:
         "aliased providers match runtime keys"
     )
 
-for header_id in ("overviewHeaderRow", "providerHeaderRow"):
-    header_body = id_block(main_text, header_id)
+header_sources = {
+    "overviewHeaderRow": main_text,
+    "providerHeaderRow": provider_header_text,
+}
+for header_id, source_text in header_sources.items():
+    header_body = id_block(source_text, header_id)
     if "Layout.rightMargin: Kirigami.Units.smallSpacing" not in header_body:
         raise AssertionError(
             f"{header_id} must align header actions with the inset scroll content"
@@ -208,7 +214,7 @@ if "rightPadding: contentRightInset" not in provider_scroll_body:
         "providerScroll must keep provider details away from the right popup edge"
     )
 
-provider_header_body = id_block(main_text, "providerHeaderRow")
+provider_header_body = id_block(provider_header_text, "providerHeaderRow")
 for header_fragment in (
     "id: providerTitleRow",
     "id: providerMetaRow",
@@ -218,13 +224,13 @@ for header_fragment in (
     if header_fragment not in provider_header_body:
         raise AssertionError(f"providerHeaderRow must expose {header_fragment} for stable header layout")
 
-provider_account_label_body = id_block(main_text, "providerAccountLabel")
+provider_account_label_body = id_block(provider_header_text, "providerAccountLabel")
 if "Layout.maximumWidth: Kirigami.Units.gridUnit * 16" not in provider_account_label_body:
     raise AssertionError("providerAccountLabel must cap long account text before the refresh edge")
 if "providerHeaderRow.width" in provider_account_label_body or "providerMetaRow.width" in provider_account_label_body:
     raise AssertionError("providerAccountLabel must not bind its width to the header layout width")
 
-provider_plan_label_body = id_block(main_text, "providerPlanLabel")
+provider_plan_label_body = id_block(provider_header_text, "providerPlanLabel")
 if "Layout.maximumWidth: Kirigami.Units.gridUnit * 5" not in provider_plan_label_body:
     raise AssertionError("providerPlanLabel must keep plan text from crowding provider metadata")
 
