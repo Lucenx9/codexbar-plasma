@@ -59,6 +59,7 @@ general_qml = root / "contents/ui/configGeneral.qml"
 display_qml = root / "contents/ui/configDisplay.qml"
 providers_qml = root / "contents/ui/configProviders.qml"
 provider_header_qml = root / "contents/ui/components/ProviderHeader.qml"
+provider_config_row_qml = root / "contents/ui/components/ProviderConfigRow.qml"
 
 
 def function_body(text, name):
@@ -126,6 +127,7 @@ general_text = general_qml.read_text(encoding="utf-8")
 display_text = display_qml.read_text(encoding="utf-8")
 providers_text = providers_qml.read_text(encoding="utf-8")
 provider_header_text = provider_header_qml.read_text(encoding="utf-8")
+provider_config_row_text = provider_config_row_qml.read_text(encoding="utf-8")
 
 
 def assert_form_sections(text, filename, labels):
@@ -255,6 +257,18 @@ for action_fragment in (
 ):
     if action_fragment not in provider_action_rows_body:
         raise AssertionError(f"providerActionRows must expose {action_fragment} for grouped menu actions")
+
+for selected_row_fragment in (
+    "readonly property color selectedForeground",
+    "readonly property color selectedSecondaryForeground",
+    "color: providerRow.highlighted ? providerRow.selectedForeground",
+    "color: providerRow.highlighted ? providerRow.selectedSecondaryForeground",
+):
+    if selected_row_fragment not in provider_config_row_text:
+        raise AssertionError(
+            "ProviderConfigRow selected state must set explicit contrast-aware "
+            f"text colors; missing {selected_row_fragment!r}"
+        )
 
 # Status notifications must fire on first sight, worsened severity, and changed
 # same-severity stable incident keys so active incident replacements are not

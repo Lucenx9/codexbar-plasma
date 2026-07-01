@@ -15,6 +15,17 @@ Controls.ItemDelegate {
     down: false
     highlighted: providerData.provider === configPage.selectedProviderID
     onClicked: configPage.selectedProviderID = providerData.provider
+    readonly property color selectedForeground: contrastTextColor(Kirigami.Theme.highlightColor)
+    readonly property color selectedSecondaryForeground: withAlpha(selectedForeground, 0.72)
+
+    function withAlpha(color, alpha) {
+        return Qt.rgba(color.r, color.g, color.b, alpha)
+    }
+
+    function contrastTextColor(color) {
+        var luminance = (0.2126 * color.r) + (0.7152 * color.g) + (0.0722 * color.b)
+        return luminance > 0.62 ? Qt.rgba(0.08, 0.08, 0.1, 1) : Qt.rgba(1, 1, 1, 1)
+    }
 
     contentItem: RowLayout {
         spacing: Kirigami.Units.gridUnit
@@ -22,7 +33,7 @@ Controls.ItemDelegate {
         Kirigami.Icon {
             source: providerRow.configPage.providerIconSource(providerRow.providerData.provider)
             isMask: true
-            color: providerRow.configPage.providerColor(providerRow.providerData.provider)
+            color: providerRow.highlighted ? providerRow.selectedForeground : providerRow.configPage.providerColor(providerRow.providerData.provider)
             Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
             Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
         }
@@ -34,6 +45,7 @@ Controls.ItemDelegate {
             Controls.Label {
                 text: providerRow.providerData.displayName
                 elide: Text.ElideRight
+                color: providerRow.highlighted ? providerRow.selectedForeground : Kirigami.Theme.textColor
                 Layout.fillWidth: true
             }
 
@@ -42,7 +54,7 @@ Controls.ItemDelegate {
                     ? i18n("%1 - on by default", providerRow.providerData.provider)
                     : providerRow.providerData.provider
                 elide: Text.ElideRight
-                opacity: 0.6
+                color: providerRow.highlighted ? providerRow.selectedSecondaryForeground : providerRow.withAlpha(Kirigami.Theme.textColor, 0.6)
                 font: Kirigami.Theme.smallFont
                 Layout.fillWidth: true
             }
