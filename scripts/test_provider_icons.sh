@@ -14,7 +14,7 @@ require_icon() {
   fi
 }
 
-for provider in chutes litellm poe zed; do
+for provider in chutes litellm poe sakana zed; do
   require_icon "$provider"
 done
 

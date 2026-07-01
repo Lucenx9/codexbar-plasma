@@ -2459,6 +2459,7 @@ PlasmoidItem {
             "opencodego": "OpenCode Go",
             "openrouter": "OpenRouter",
             "perplexity": "Perplexity",
+            "sakana": "Sakana AI",
             "synthetic": "Synthetic",
             "t3chat": "T3 Chat",
             "venice": "Venice",
@@ -2567,6 +2568,8 @@ PlasmoidItem {
             return Qt.rgba(8 / 255, 78 / 255, 1, 1)
         case "perplexity":
             return Qt.rgba(32 / 255, 178 / 255, 170 / 255, 1)
+        case "sakana":
+            return Qt.rgba(0.16, 0.46, 0.86, 1)
         case "mimo":
             return Qt.rgba(1, 105 / 255, 0, 1)
         case "doubao":
@@ -2689,6 +2692,8 @@ PlasmoidItem {
             return "https://www.perplexity.ai/account/usage"
         case "poe":
             return "https://poe.com/api/keys"
+        case "sakana":
+            return "https://console.sakana.ai/billing"
         case "stepfun":
             return "https://platform.stepfun.com/plan-usage"
         case "t3chat":
@@ -2755,6 +2760,7 @@ PlasmoidItem {
             openrouter: "openrouter.md",
             perplexity: "providers.md#perplexity",
             poe: "poe.md",
+            sakana: "sakana.md",
             stepfun: "stepfun.md",
             synthetic: "providers.md#synthetic",
             t3chat: "providers.md#t3-chat",

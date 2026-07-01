@@ -45,7 +45,7 @@ manus kimi kilo kiro vertexai augment jetbrains kimik2 moonshot amp
 t3chat ollama synthetic warp openrouter elevenlabs windsurf zed
 perplexity mimo doubao abacus mistral deepseek codebuff crof venice
 commandcode stepfun bedrock grok groq llmproxy litellm deepgram poe
-chutes
+chutes sakana
 """.split()
 
 def current_function(text, index):

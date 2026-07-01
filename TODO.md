@@ -30,7 +30,7 @@
 - Notification refinements: consider reset-imminent notifications if they stay
   quiet and configurable. Keep status, quota, reset, and update notifications
   tied to clear state transitions and user-visible settings.
-- Provider drift checks: upstream CodexBar currently has 53 provider IDs, and
+- Provider drift checks: upstream CodexBar currently has 54 provider IDs, and
   the Plasma icon set covers them. When upstream adds providers, sync provider
   keys, CLI aliases, titles, colors, docs/dashboard/login URLs, icon assets, and
   `scripts/test_provider_icons.sh`.
