@@ -740,10 +740,16 @@ PlasmoidItem {
         }
 
         var dedupedOptions = dedupeAccountOptions(options)
+        var accountError = ""
+        if (dedupedOptions.length === 0) {
+            if (message.length > 0) {
+                accountError = message
+            } else if (items.length > 0) {
+                accountError = i18n("codexbar did not return account data.")
+            }
+        }
         setAccountOptions(providerID, dedupedOptions)
-        setAccountError(providerID, dedupedOptions.length === 0
-            ? (message.length > 0 ? message : i18n("codexbar did not return account data."))
-            : "")
+        setAccountError(providerID, accountError)
     }
 
     function dedupeAccountOptions(items) {

@@ -249,8 +249,14 @@ if "pace.expectedUsedPercent !== null" not in add_window_body or "pace.expectedU
 accounts_body = function_body(main_text, "parseProviderAccountsOutput")
 if "var dedupedOptions = dedupeAccountOptions(options)" not in accounts_body:
     raise AssertionError("parseProviderAccountsOutput must decide errors after account option dedupe")
-if "dedupedOptions.length === 0" not in accounts_body:
-    raise AssertionError("parseProviderAccountsOutput must show an error when dedupe removes every account option")
+if "var accountError = \"\"" not in accounts_body:
+    raise AssertionError("parseProviderAccountsOutput must build account errors separately from account options")
+if "dedupedOptions.length === 0" not in accounts_body or "else if (items.length > 0)" not in accounts_body:
+    raise AssertionError("parseProviderAccountsOutput must not treat a valid empty account list as an error")
+if "setAccountError(providerID, accountError)" not in accounts_body:
+    raise AssertionError("parseProviderAccountsOutput must set the post-dedupe account error")
+if "message.length > 0 ? message : i18n(\"codexbar did not return account data.\")" in accounts_body:
+    raise AssertionError("parseProviderAccountsOutput must not fabricate an account error for JSON []")
 
 header_sources = {
     "overviewHeaderRow": main_text,
