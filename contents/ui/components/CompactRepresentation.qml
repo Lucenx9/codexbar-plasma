@@ -29,6 +29,7 @@ Item {
 
     MouseArea {
         anchors.fill: parent
+        cursorShape: Qt.PointingHandCursor
         onClicked: compactRoot.applet.expanded = !compactRoot.applet.expanded
     }
 
@@ -40,6 +41,8 @@ Item {
         spacing: Kirigami.Units.smallSpacing
 
         Kirigami.Icon {
+            id: compactIdentityIcon
+
             readonly property string compactProvider: compactRoot.applet.selectedCompactProvider() ? compactRoot.applet.selectedCompactProvider().provider : "codex"
 
             visible: compactRoot.showPrimaryIdentity
@@ -48,6 +51,16 @@ Item {
             color: compactRoot.applet.loading ? Kirigami.Theme.textColor : compactRoot.applet.providerColor(compactProvider)
             Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
             Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
+
+            RotationAnimator {
+                target: compactIdentityIcon
+                running: compactRoot.applet.loading
+                from: 0
+                to: 360
+                duration: 1250
+                loops: Animation.Infinite
+                onStopped: compactIdentityIcon.rotation = 0
+            }
         }
 
         Rectangle {
@@ -124,6 +137,13 @@ Item {
                             height: parent.height
                             radius: parent.radius
                             color: compactMeter.accent
+
+                            Behavior on width {
+                                NumberAnimation {
+                                    duration: Kirigami.Units.longDuration
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
                         }
                     }
                 }

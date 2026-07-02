@@ -42,6 +42,13 @@ ColumnLayout {
             height: parent.height
             radius: parent.radius
             color: usageRow.accent
+
+            Behavior on width {
+                NumberAnimation {
+                    duration: Kirigami.Units.longDuration
+                    easing.type: Easing.OutCubic
+                }
+            }
         }
 
         Rectangle {

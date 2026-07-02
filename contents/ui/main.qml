@@ -3310,24 +3310,6 @@ PlasmoidItem {
         return -1
     }
 
-    function overviewPercent() {
-        var items = overviewProviders()
-        if (!items || items.length === 0) {
-            return -1
-        }
-
-        var total = 0
-        var count = 0
-        for (var i = 0; i < items.length; i++) {
-            var percent = switcherPercent(items[i])
-            if (percent >= 0) {
-                total += percent
-                count++
-            }
-        }
-        return count > 0 ? total / count : -1
-    }
-
     function overviewDetailText(item) {
         if (!item) {
             return ""
@@ -3724,127 +3706,59 @@ PlasmoidItem {
             anchors.margins: Kirigami.Units.largeSpacing
             spacing: Kirigami.Units.largeSpacing
 
-            Flickable {
-                id: providerTabsFlickable
+            Item {
+                id: providerTabsBar
 
                 visible: providers.length > 0
-                clip: true
-                boundsBehavior: Flickable.StopAtBounds
-                contentWidth: providerTabs.implicitWidth
-                contentHeight: height
-                interactive: contentWidth > width
                 Layout.fillWidth: true
                 Layout.preferredHeight: Kirigami.Units.gridUnit * 3.1
 
-                RowLayout {
-                    id: providerTabs
+                Flickable {
+                    id: providerTabsFlickable
 
-                    height: providerTabsFlickable.height
-                    spacing: 1
+                    anchors.fill: parent
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
+                    contentWidth: providerTabs.implicitWidth
+                    contentHeight: height
+                    interactive: contentWidth > width
 
-                    Rectangle {
-                        id: overviewTab
+                    RowLayout {
+                        id: providerTabs
 
-                        readonly property bool selected: root.overviewSelected
-                        readonly property real meter: root.overviewPercent()
-                        readonly property color accent: Kirigami.Theme.highlightColor
-                        readonly property color foreground: selected ? Kirigami.Theme.highlightedTextColor : root.withAlpha(Kirigami.Theme.textColor, 0.72)
+                        height: providerTabsFlickable.height
+                        spacing: Kirigami.Units.smallSpacing / 2
 
-                        visible: root.overviewAvailable
-                        Layout.preferredWidth: Kirigami.Units.gridUnit * 5.7
-                        Layout.preferredHeight: providerTabsFlickable.height
-                        radius: Kirigami.Units.smallSpacing
-                        color: selected
-                            ? root.withAlpha(accent, 0.9)
-                            : (overviewTabMouse.containsMouse ? root.withAlpha(Kirigami.Theme.textColor, 0.06) : "transparent")
-                        border.width: selected ? 0 : 1
-                        border.color: root.withAlpha(Kirigami.Theme.textColor, 0.14)
+                        Rectangle {
+                            id: overviewTab
 
-                        MouseArea {
-                            id: overviewTabMouse
-
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            onClicked: root.selectedProviderIndex = -1
-                        }
-
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: Kirigami.Units.smallSpacing
-                            spacing: 2
-
-                            Kirigami.Icon {
-                                source: "view-grid-symbolic"
-                                isMask: true
-                                color: overviewTab.foreground
-                                Layout.alignment: Qt.AlignHCenter
-                                Layout.preferredWidth: 16
-                                Layout.preferredHeight: 16
-                            }
-
-                            PlasmaComponents.Label {
-                                text: i18n("Overview")
-                                horizontalAlignment: Text.AlignHCenter
-                                font.weight: overviewTab.selected ? Font.DemiBold : Font.Normal
-                                font.pixelSize: 11
-                                color: overviewTab.foreground
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
-                            }
-
-                            Rectangle {
-                                visible: false
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: 3
-                                radius: height / 2
-                                color: overviewTab.selected
-                                    ? root.withAlpha(overviewTab.foreground, 0.28)
-                                    : root.withAlpha(overviewTab.accent, 0.28)
-                                clip: true
-
-                                Rectangle {
-                                    visible: overviewTab.meter >= 0
-                                    width: overviewTab.meter <= 0
-                                        ? 0
-                                        : Math.max(parent.height, parent.width * Math.max(0, Math.min(100, overviewTab.meter)) / 100)
-                                    height: parent.height
-                                    radius: parent.radius
-                                    color: overviewTab.selected ? overviewTab.foreground : overviewTab.accent
-                                }
-                            }
-                        }
-                    }
-
-                    Repeater {
-                        model: providers
-
-                        delegate: Rectangle {
-                            id: providerTab
-
-                            readonly property bool selected: index === root.selectedProviderIndex
-                            readonly property real meter: root.switcherPercent(modelData)
-                            readonly property color accent: root.providerColor(modelData.provider)
-                            readonly property color selectedAccent: Kirigami.Theme.highlightColor
+                            readonly property bool selected: root.overviewSelected
+                            readonly property color accent: Kirigami.Theme.highlightColor
                             readonly property color foreground: selected ? Kirigami.Theme.highlightedTextColor : root.withAlpha(Kirigami.Theme.textColor, 0.72)
 
-                            Layout.preferredWidth: Math.min(
-                                Kirigami.Units.gridUnit * 6.2,
-                                Math.max(Kirigami.Units.gridUnit * 3.1, providerTabLabel.implicitWidth + Kirigami.Units.gridUnit))
+                            visible: root.overviewAvailable
+                            Layout.preferredWidth: Kirigami.Units.gridUnit * 5.7
                             Layout.preferredHeight: providerTabsFlickable.height
                             radius: Kirigami.Units.smallSpacing
                             color: selected
-                                ? root.withAlpha(selectedAccent, 0.9)
-                                : (providerTabMouse.containsMouse ? root.withAlpha(Kirigami.Theme.textColor, 0.06) : "transparent")
+                                ? root.withAlpha(accent, 0.9)
+                                : (overviewTabMouse.containsMouse ? root.withAlpha(Kirigami.Theme.textColor, 0.06) : "transparent")
                             border.width: selected ? 0 : 1
                             border.color: root.withAlpha(Kirigami.Theme.textColor, 0.14)
-                            opacity: modelData.error.length > 0 ? 0.62 : 1
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Kirigami.Units.shortDuration
+                                }
+                            }
 
                             MouseArea {
-                                id: providerTabMouse
+                                id: overviewTabMouse
 
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                onClicked: root.selectedProviderIndex = index
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.selectedProviderIndex = -1
                             }
 
                             ColumnLayout {
@@ -3853,45 +3767,166 @@ PlasmoidItem {
                                 spacing: 2
 
                                 Kirigami.Icon {
-                                    source: root.providerIconSource(modelData.provider)
-                                    isMask: root.providerIconIsMask(modelData.provider)
-                                    color: providerTab.foreground
+                                    source: "view-grid-symbolic"
+                                    isMask: true
+                                    color: overviewTab.foreground
                                     Layout.alignment: Qt.AlignHCenter
                                     Layout.preferredWidth: 16
                                     Layout.preferredHeight: 16
                                 }
 
                                 PlasmaComponents.Label {
-                                    id: providerTabLabel
-
-                                    text: modelData.title
+                                    text: i18n("Overview")
                                     horizontalAlignment: Text.AlignHCenter
-                                    font.weight: providerTab.selected ? Font.DemiBold : Font.Normal
+                                    font.weight: overviewTab.selected ? Font.DemiBold : Font.Normal
                                     font.pixelSize: 11
-                                    color: providerTab.foreground
+                                    color: overviewTab.foreground
                                     elide: Text.ElideRight
                                     Layout.fillWidth: true
                                 }
+                            }
+                        }
 
-                                Rectangle {
-                                    Layout.fillWidth: true
-                                    Layout.preferredHeight: 2
-                                    radius: height / 2
-                                    opacity: providerTab.selected ? 0 : 1
-                                    color: root.withAlpha(Kirigami.Theme.textColor, 0.16)
-                                    clip: true
+                        Repeater {
+                            model: providers
+
+                            delegate: Rectangle {
+                                id: providerTab
+
+                                readonly property bool selected: index === root.selectedProviderIndex
+                                readonly property real meter: root.switcherPercent(modelData)
+                                readonly property color accent: root.providerColor(modelData.provider)
+                                readonly property color selectedAccent: Kirigami.Theme.highlightColor
+                                readonly property color foreground: selected ? Kirigami.Theme.highlightedTextColor : root.withAlpha(Kirigami.Theme.textColor, 0.72)
+
+                                Layout.preferredWidth: Math.min(
+                                    Kirigami.Units.gridUnit * 6.2,
+                                    Math.max(Kirigami.Units.gridUnit * 3.1, providerTabLabel.implicitWidth + Kirigami.Units.gridUnit))
+                                Layout.preferredHeight: providerTabsFlickable.height
+                                radius: Kirigami.Units.smallSpacing
+                                color: selected
+                                    ? root.withAlpha(selectedAccent, 0.9)
+                                    : (providerTabMouse.containsMouse ? root.withAlpha(Kirigami.Theme.textColor, 0.06) : "transparent")
+                                border.width: selected ? 0 : 1
+                                border.color: root.withAlpha(Kirigami.Theme.textColor, 0.14)
+                                opacity: modelData.error.length > 0 ? 0.62 : 1
+
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: Kirigami.Units.shortDuration
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: providerTabMouse
+
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.selectedProviderIndex = index
+                                }
+
+                                ColumnLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: Kirigami.Units.smallSpacing
+                                    spacing: 2
+
+                                    Kirigami.Icon {
+                                        source: root.providerIconSource(modelData.provider)
+                                        isMask: root.providerIconIsMask(modelData.provider)
+                                        color: providerTab.foreground
+                                        Layout.alignment: Qt.AlignHCenter
+                                        Layout.preferredWidth: 16
+                                        Layout.preferredHeight: 16
+                                    }
+
+                                    PlasmaComponents.Label {
+                                        id: providerTabLabel
+
+                                        text: modelData.title
+                                        horizontalAlignment: Text.AlignHCenter
+                                        font.weight: providerTab.selected ? Font.DemiBold : Font.Normal
+                                        font.pixelSize: 11
+                                        color: providerTab.foreground
+                                        elide: Text.ElideRight
+                                        Layout.fillWidth: true
+                                    }
 
                                     Rectangle {
-                                        visible: !providerTab.selected && providerTab.meter >= 0
-                                        width: providerTab.meter <= 0
-                                            ? 0
-                                            : Math.max(parent.height, parent.width * Math.max(0, Math.min(100, providerTab.meter)) / 100)
-                                        height: parent.height
-                                        radius: parent.radius
-                                        color: providerTab.accent
+                                        Layout.fillWidth: true
+                                        Layout.preferredHeight: 2
+                                        radius: height / 2
+                                        color: providerTab.selected
+                                            ? root.withAlpha(providerTab.foreground, 0.28)
+                                            : root.withAlpha(Kirigami.Theme.textColor, 0.16)
+                                        clip: true
+
+                                        Rectangle {
+                                            visible: providerTab.meter >= 0
+                                            width: providerTab.meter <= 0
+                                                ? 0
+                                                : Math.max(parent.height, parent.width * Math.max(0, Math.min(100, providerTab.meter)) / 100)
+                                            height: parent.height
+                                            radius: parent.radius
+                                            color: providerTab.selected ? providerTab.foreground : providerTab.accent
+
+                                            Behavior on width {
+                                                NumberAnimation {
+                                                    duration: Kirigami.Units.longDuration
+                                                    easing.type: Easing.OutCubic
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    id: providerTabsLeftFade
+
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: Kirigami.Units.gridUnit
+                    visible: opacity > 0
+                    opacity: providerTabsFlickable.interactive && providerTabsFlickable.contentX > 0 ? 1 : 0
+                    gradient: Gradient {
+                        orientation: Gradient.Horizontal
+
+                        GradientStop { position: 0; color: Kirigami.Theme.backgroundColor }
+                        GradientStop { position: 1; color: root.withAlpha(Kirigami.Theme.backgroundColor, 0) }
+                    }
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: Kirigami.Units.shortDuration
+                        }
+                    }
+                }
+
+                Rectangle {
+                    id: providerTabsRightFade
+
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: Kirigami.Units.gridUnit
+                    visible: opacity > 0
+                    opacity: providerTabsFlickable.interactive
+                        && providerTabsFlickable.contentX < providerTabsFlickable.contentWidth - providerTabsFlickable.width - 1 ? 1 : 0
+                    gradient: Gradient {
+                        orientation: Gradient.Horizontal
+
+                        GradientStop { position: 0; color: root.withAlpha(Kirigami.Theme.backgroundColor, 0) }
+                        GradientStop { position: 1; color: Kirigami.Theme.backgroundColor }
+                    }
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: Kirigami.Units.shortDuration
                         }
                     }
                 }
@@ -4098,6 +4133,13 @@ PlasmoidItem {
                                     height: parent.height
                                     radius: parent.radius
                                     color: root.providerColor(root.selectedProviderData ? root.selectedProviderData.provider : "")
+
+                                    Behavior on width {
+                                        NumberAnimation {
+                                            duration: Kirigami.Units.longDuration
+                                            easing.type: Easing.OutCubic
+                                        }
+                                    }
                                 }
                             }
 
@@ -4175,6 +4217,13 @@ PlasmoidItem {
                                     height: parent.height
                                     radius: parent.radius
                                     color: providerCostSection.accent
+
+                                    Behavior on width {
+                                        NumberAnimation {
+                                            duration: Kirigami.Units.longDuration
+                                            easing.type: Easing.OutCubic
+                                        }
+                                    }
                                 }
                             }
 
@@ -4471,6 +4520,13 @@ PlasmoidItem {
                                                 color: modelData.isPeak
                                                     ? root.withAlpha(costHistoryChartSection.accent, 1)
                                                     : root.withAlpha(costHistoryChartSection.accent, 0.72)
+
+                                                Behavior on width {
+                                                    NumberAnimation {
+                                                        duration: Kirigami.Units.longDuration
+                                                        easing.type: Easing.OutCubic
+                                                    }
+                                                }
                                             }
                                         }
 

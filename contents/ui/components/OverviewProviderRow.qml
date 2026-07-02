@@ -28,6 +28,12 @@ Rectangle {
     border.width: 1
     border.color: applet.withAlpha(accent, 0.22)
 
+    Behavior on color {
+        ColorAnimation {
+            duration: Kirigami.Units.shortDuration
+        }
+    }
+
     RowLayout {
         anchors.fill: parent
         anchors.margins: Kirigami.Units.smallSpacing
@@ -95,6 +101,13 @@ Rectangle {
                     height: parent.height
                     radius: parent.radius
                     color: overviewRow.accent
+
+                    Behavior on width {
+                        NumberAnimation {
+                            duration: Kirigami.Units.longDuration
+                            easing.type: Easing.OutCubic
+                        }
+                    }
                 }
             }
 
@@ -113,6 +126,7 @@ Rectangle {
 
         anchors.fill: parent
         hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
         onClicked: overviewRow.selected(overviewRow.providerData)
     }
 }
