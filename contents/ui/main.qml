@@ -723,6 +723,7 @@ PlasmoidItem {
         var items = Array.isArray(payload) ? payload : [payload]
         var options = []
         var message = ""
+        var sawMissingTokenAccountsError = false
         for (var i = 0; i < items.length; i++) {
             var item = items[i]
             if (!item) {
@@ -733,7 +734,11 @@ PlasmoidItem {
             }
             var normalized = normalizeProvider(item)
             if (normalized.error.length > 0 && accountLabel(normalized).length === 0) {
-                message = normalized.error
+                if (isMissingTokenAccountsError(normalized.error)) {
+                    sawMissingTokenAccountsError = true
+                } else {
+                    message = normalized.error
+                }
                 continue
             }
             options.push(normalized)
@@ -744,12 +749,19 @@ PlasmoidItem {
         if (dedupedOptions.length === 0) {
             if (message.length > 0) {
                 accountError = message
-            } else if (items.length > 0) {
+            } else if (items.length > 0 && !sawMissingTokenAccountsError) {
                 accountError = i18n("codexbar did not return account data.")
             }
         }
         setAccountOptions(providerID, dedupedOptions)
         setAccountError(providerID, accountError)
+    }
+
+    function isMissingTokenAccountsError(errorMessage) {
+        // codexbar --all-accounts reports "No token accounts configured for
+        // <provider>." even when the provider works through OAuth/CLI auth
+        // without named token accounts; that is an empty list, not a failure.
+        return errorMessage.toLowerCase().indexOf("no token accounts configured") !== -1
     }
 
     function dedupeAccountOptions(items) {

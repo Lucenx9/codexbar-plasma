@@ -251,8 +251,15 @@ if "var dedupedOptions = dedupeAccountOptions(options)" not in accounts_body:
     raise AssertionError("parseProviderAccountsOutput must decide errors after account option dedupe")
 if "var accountError = \"\"" not in accounts_body:
     raise AssertionError("parseProviderAccountsOutput must build account errors separately from account options")
-if "dedupedOptions.length === 0" not in accounts_body or "else if (items.length > 0)" not in accounts_body:
+if "dedupedOptions.length === 0" not in accounts_body or "else if (items.length > 0 && !sawMissingTokenAccountsError)" not in accounts_body:
     raise AssertionError("parseProviderAccountsOutput must not treat a valid empty account list as an error")
+if "isMissingTokenAccountsError(normalized.error)" not in accounts_body:
+    raise AssertionError(
+        "parseProviderAccountsOutput must treat 'No token accounts configured' as an "
+        "empty account list, not a red error, so OAuth/CLI-auth providers stay clean"
+    )
+if "function isMissingTokenAccountsError(errorMessage)" not in main_text:
+    raise AssertionError("main.qml must define isMissingTokenAccountsError")
 if "setAccountError(providerID, accountError)" not in accounts_body:
     raise AssertionError("parseProviderAccountsOutput must set the post-dedupe account error")
 if "message.length > 0 ? message : i18n(\"codexbar did not return account data.\")" in accounts_body:
