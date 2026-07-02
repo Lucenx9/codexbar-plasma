@@ -188,6 +188,40 @@ if "providerKey(" not in overview_body:
         "aliased providers match runtime keys"
     )
 
+provider_config_body = function_body(main_text, "parseProviderConfigOutput")
+if "Array.isArray(payload) ? payload : [payload]" not in provider_config_body:
+    raise AssertionError(
+        "parseProviderConfigOutput must accept a single provider object as well "
+        "as the normal provider-list array"
+    )
+
+retire_body = function_body(main_text, "retireUsageCommands")
+for stale_account_fragment in (
+    "for (var accountCommand in pendingAccountCommands)",
+    "pendingAccountCommands = ({})",
+    "accountLoading = ({})",
+):
+    if stale_account_fragment in retire_body:
+        raise AssertionError(
+            "retireUsageCommands must not drop in-flight account loads during "
+            f"refresh; found {stale_account_fragment!r}"
+        )
+
+display_load_body = function_body(display_text, "loadOverviewProviders")
+if "disconnectOverviewProviderCommands()" not in display_load_body:
+    raise AssertionError(
+        "loadOverviewProviders must invalidate older overview provider commands "
+        "before connecting a replacement"
+    )
+if "function disconnectOverviewProviderCommands()" not in display_text:
+    raise AssertionError("configDisplay.qml must define disconnectOverviewProviderCommands")
+
+provider_index_body = function_body(main_text, "providerIndex")
+if "return -1" not in provider_index_body or "return 0" in provider_index_body:
+    raise AssertionError("providerIndex must return -1 instead of falling back to provider 0")
+if "var nextProviderIndex = root.providerIndex(providerData)" not in main_text or "if (nextProviderIndex >= 0)" not in main_text:
+    raise AssertionError("Overview provider selection must ignore missing providers instead of selecting index 0")
+
 header_sources = {
     "overviewHeaderRow": main_text,
     "providerHeaderRow": provider_header_text,

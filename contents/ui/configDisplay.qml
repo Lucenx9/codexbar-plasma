@@ -62,6 +62,7 @@ KCM.SimpleKCM {
     }
 
     function loadOverviewProviders() {
+        disconnectOverviewProviderCommands()
         if (commandPath.length === 0) {
             overviewProviders = []
             overviewProvidersError = i18n("Set the codexbar command path in the General page.")
@@ -83,6 +84,13 @@ KCM.SimpleKCM {
         next[command] = true
         overviewProviderCommands = next
         overviewProviderSource.connectSource(command)
+    }
+
+    function disconnectOverviewProviderCommands() {
+        for (var command in overviewProviderCommands) {
+            overviewProviderSource.disconnectSource(command)
+        }
+        overviewProviderCommands = ({})
     }
 
     function handleOverviewProviderData(sourceName, stdoutText, stderrText) {

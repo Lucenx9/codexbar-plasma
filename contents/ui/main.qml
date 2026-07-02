@@ -394,12 +394,9 @@ PlasmoidItem {
         for (var command in pendingProviderCommands) {
             retireUsageCommandSource(command)
         }
-        for (var accountCommand in pendingAccountCommands) {
-            retireUsageCommandSource(accountCommand)
-        }
+        // Account loads are user-triggered; keep them alive across usage refreshes
+        // so their replies can still populate the account picker.
         pendingProviderCommands = ({})
-        pendingAccountCommands = ({})
-        accountLoading = ({})
         fallbackProviderOrder = []
         fallbackProviderResults = ({})
         fallbackProviderSeen = ({})
@@ -524,7 +521,7 @@ PlasmoidItem {
 
         var providerIDs = []
         var displayNames = ({})
-        var items = Array.isArray(payload) ? payload : []
+        var items = Array.isArray(payload) ? payload : [payload]
         for (var i = 0; i < items.length; i++) {
             if (items[i] && items[i].provider) {
                 var providerID = providerKey(items[i].provider)
@@ -3235,14 +3232,14 @@ PlasmoidItem {
 
     function providerIndex(item) {
         if (!item || !providers) {
-            return 0
+            return -1
         }
         for (var i = 0; i < providers.length; i++) {
             if (providers[i] && providers[i].provider === item.provider) {
                 return i
             }
         }
-        return 0
+        return -1
     }
 
     function overviewPercent() {
@@ -3923,7 +3920,10 @@ PlasmoidItem {
                             delegate: Components.OverviewProviderRow {
                                 applet: root
                                 onSelected: function(providerData) {
-                                    root.selectedProviderIndex = root.providerIndex(providerData)
+                                    var nextProviderIndex = root.providerIndex(providerData)
+                                    if (nextProviderIndex >= 0) {
+                                        root.selectedProviderIndex = nextProviderIndex
+                                    }
                                 }
                             }
                         }
