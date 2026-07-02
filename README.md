@@ -47,7 +47,7 @@ kpackagetool6 -t Plasma/Applet -u codexbar-plasma.plasmoid
 systemctl --user restart plasma-plasmashell.service
 ```
 
-To update from a local checkout or GitHub Release asset helper:
+To update using the bundled release helper:
 
 ```sh
 make update
@@ -96,8 +96,9 @@ Panel and popup:
 - Display modes for percent used, pace, percent plus pace, and reset time.
 - Auto-select highest-usage provider for the compact panel and provider detail
   focus.
+- Overview tab with per-provider usage summary and quick switching.
 - Overview providers can be limited to a chosen set of up to 3 providers, or
-  left on the automatic first-provider selection.
+  left automatic (the first 3 eligible providers).
 - Usage dashboard summaries for provider payloads that expose API spend,
   request, token, model, or dashboard fields through the CLI.
 
@@ -173,7 +174,7 @@ Then confirm notifications are enabled in the widget settings.
 For Plasma/QML errors:
 
 ```sh
-journalctl --user -u plasma-plasmashell.service --since "10 minutes ago" --no-pager | rg -i "codexbar|app.codexbar|qml|error"
+journalctl --user -u plasma-plasmashell.service --since "10 minutes ago" --no-pager | grep -iE "codexbar|app.codexbar|qml|error"
 ```
 
 ## Development
