@@ -592,11 +592,15 @@ msgid "Could not parse codexbar account JSON: %1"
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "codexbar cost did not return JSON."
+msgstr ""
+
+#: contents/ui/main.qml
 msgid "Could not parse codexbar cost JSON: %1"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Last 30 days"
+msgid "Cost"
 msgstr ""
 
 #: contents/ui/main.qml
@@ -604,8 +608,14 @@ msgid "Today"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Cost"
+msgid "Last 30 days"
 msgstr ""
+
+#: contents/ui/main.qml
+msgid "Last %1 day"
+msgid_plural "Last %1 days"
+msgstr[0] ""
+msgstr[1] ""
 
 #: contents/ui/main.qml
 msgid "Latest"
@@ -1237,6 +1247,10 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Usage dashboard"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Cost unavailable: %1"
 msgstr ""
 
 #: contents/ui/main.qml

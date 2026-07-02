@@ -222,6 +222,36 @@ if "return -1" not in provider_index_body or "return 0" in provider_index_body:
 if "var nextProviderIndex = root.providerIndex(providerData)" not in main_text or "if (nextProviderIndex >= 0)" not in main_text:
     raise AssertionError("Overview provider selection must ignore missing providers instead of selecting index 0")
 
+bounded_revision_body = function_body(main_text, "boundedConfigRevision")
+if "2147480000" not in bounded_revision_body or "1000000" in bounded_revision_body:
+    raise AssertionError("boundedConfigRevision must use the same cap as bumpProviderConfigRevision")
+
+parse_cost_body = function_body(main_text, "parseCostOutput")
+if "codexbar cost did not return JSON." not in parse_cost_body:
+    raise AssertionError("parseCostOutput must keep a visible fallback error when cost returns no JSON")
+
+token_cost_section_body = id_block(main_text, "tokenCostSection")
+if "root.costErrorText" not in token_cost_section_body:
+    raise AssertionError("tokenCostSection must surface costErrorText instead of dropping cost errors")
+if "Cost unavailable: %1" not in token_cost_section_body:
+    raise AssertionError("tokenCostSection must label visible cost errors")
+
+normalize_token_cost_body = function_body(main_text, "normalizeTokenCost")
+if "costHistoryWindowLabel(item)" not in normalize_token_cost_body:
+    raise AssertionError("normalizeTokenCost must use the configured cost history window label fallback")
+if "function costHistoryWindowLabel(item)" not in main_text:
+    raise AssertionError("main.qml must define costHistoryWindowLabel")
+
+add_window_body = function_body(main_text, "addWindow")
+if "pace.expectedUsedPercent !== null" not in add_window_body or "pace.expectedUsedPercent !== undefined" not in add_window_body:
+    raise AssertionError("addWindow must not treat null pace.expectedUsedPercent as 0")
+
+accounts_body = function_body(main_text, "parseProviderAccountsOutput")
+if "var dedupedOptions = dedupeAccountOptions(options)" not in accounts_body:
+    raise AssertionError("parseProviderAccountsOutput must decide errors after account option dedupe")
+if "dedupedOptions.length === 0" not in accounts_body:
+    raise AssertionError("parseProviderAccountsOutput must show an error when dedupe removes every account option")
+
 header_sources = {
     "overviewHeaderRow": main_text,
     "providerHeaderRow": provider_header_text,

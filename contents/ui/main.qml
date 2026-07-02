@@ -291,7 +291,7 @@ PlasmoidItem {
         if (!isFinite(revision)) {
             return 0
         }
-        return Math.max(0, Math.min(1000000, Math.floor(revision)))
+        return Math.max(0, Math.min(2147480000, Math.floor(revision)))
     }
 
     function boundedWidgetUpdateText(value) {
@@ -309,6 +309,11 @@ PlasmoidItem {
     function isUnsafeObjectKey(key) {
         var value = String(key || "")
         return value === "__proto__" || value === "prototype" || value === "constructor"
+    }
+
+    function providerMapKey(providerID) {
+        var key = providerKey(providerID)
+        return isUnsafeObjectKey(key) ? "" : key
     }
 
     function commandWithRunNonce(command) {
@@ -524,7 +529,10 @@ PlasmoidItem {
         var items = Array.isArray(payload) ? payload : [payload]
         for (var i = 0; i < items.length; i++) {
             if (items[i] && items[i].provider) {
-                var providerID = providerKey(items[i].provider)
+                var providerID = providerMapKey(items[i].provider)
+                if (providerID.length === 0) {
+                    continue
+                }
                 if (items[i].displayName && String(items[i].displayName).trim().length > 0) {
                     displayNames[providerID] = String(items[i].displayName).trim()
                 }
@@ -552,7 +560,10 @@ PlasmoidItem {
         var commands = ({})
         var commandList = []
         for (var i = 0; i < providerIDs.length; i++) {
-            var providerID = providerKey(providerIDs[i])
+            var providerID = providerMapKey(providerIDs[i])
+            if (providerID.length === 0) {
+                continue
+            }
             var baseCommand = buildProviderUsageCommand(providerID, true)
             if (seenCommands[baseCommand]) {
                 continue
@@ -728,8 +739,11 @@ PlasmoidItem {
             options.push(normalized)
         }
 
-        setAccountOptions(providerID, dedupeAccountOptions(options))
-        setAccountError(providerID, options.length === 0 ? message : "")
+        var dedupedOptions = dedupeAccountOptions(options)
+        setAccountOptions(providerID, dedupedOptions)
+        setAccountError(providerID, dedupedOptions.length === 0
+            ? (message.length > 0 ? message : i18n("codexbar did not return account data."))
+            : "")
     }
 
     function dedupeAccountOptions(items) {
@@ -750,7 +764,7 @@ PlasmoidItem {
         var trimmed = stdoutText.trim()
         if (trimmed.length === 0) {
             tokenCosts = ({})
-            costErrorText = stderrText.trim()
+            costErrorText = stderrText.trim().length > 0 ? stderrText.trim() : i18n("codexbar cost did not return JSON.")
             applyTokenCosts()
             return
         }
@@ -769,8 +783,9 @@ PlasmoidItem {
         var nextCosts = ({})
         for (var i = 0; i < items.length; i++) {
             var cost = normalizeTokenCost(items[i])
-            if (cost && cost.provider.length > 0) {
-                nextCosts[cost.provider] = cost
+            var providerID = cost ? providerMapKey(cost.provider) : ""
+            if (cost && providerID.length > 0) {
+                nextCosts[providerID] = cost
             }
         }
 
@@ -784,9 +799,12 @@ PlasmoidItem {
             return null
         }
 
-        var providerID = providerKey(item.provider)
+        var providerID = providerMapKey(item.provider)
+        if (providerID.length === 0) {
+            return null
+        }
         var currency = item.currencyCode || "USD"
-        var windowLabel = item.historyLabel || (item.historyDays === 1 ? i18n("Today") : i18n("Last 30 days"))
+        var windowLabel = item.historyLabel || costHistoryWindowLabel(item)
         return {
             provider: providerID,
             title: i18n("Cost"),
@@ -797,6 +815,17 @@ PlasmoidItem {
             models: normalizeCostModels(item.daily, currency),
             daily: normalizeCostDaily(item.daily, currency, costHistoryDays)
         }
+    }
+
+    function costHistoryWindowLabel(item) {
+        var rawDays = item && item.historyDays !== undefined && item.historyDays !== null
+            ? Number(item.historyDays)
+            : Number(costHistoryDays)
+        if (!isFinite(rawDays) || rawDays <= 0) {
+            return i18n("Last 30 days")
+        }
+        var days = Math.max(1, Math.floor(rawDays))
+        return days === 1 ? i18n("Today") : i18np("Last %1 day", "Last %1 days", days)
     }
 
     function normalizeCostDaily(items, currency, days) {
@@ -1339,41 +1368,59 @@ PlasmoidItem {
         var nextProviders = []
         for (var i = 0; i < providers.length; i++) {
             var item = copyObject(providers[i])
-            item.tokenCost = tokenCosts[item.provider] || null
+            var key = providerMapKey(item.provider)
+            item.tokenCost = key.length > 0 ? tokenCosts[key] || null : null
             nextProviders.push(item)
         }
         providers = nextProviders
     }
 
     function selectedAccountForProvider(providerID) {
-        var key = providerKey(providerID)
+        var key = providerMapKey(providerID)
+        if (key.length === 0) {
+            return ""
+        }
         var selected = selectedAccounts[key]
         return selected ? String(selected) : ""
     }
 
     function accountOptionsForProvider(providerID) {
-        var key = providerKey(providerID)
+        var key = providerMapKey(providerID)
+        if (key.length === 0) {
+            return []
+        }
         return accountOptions[key] || []
     }
 
     function accountErrorForProvider(providerID) {
-        var key = providerKey(providerID)
+        var key = providerMapKey(providerID)
+        if (key.length === 0) {
+            return ""
+        }
         return accountErrors[key] ? String(accountErrors[key]) : ""
     }
 
     function accountLoadingForProvider(providerID) {
-        return accountLoading[providerKey(providerID)] === true
+        var key = providerMapKey(providerID)
+        return key.length > 0 && accountLoading[key] === true
     }
 
     function setAccountOptions(providerID, options) {
+        var key = providerMapKey(providerID)
+        if (key.length === 0) {
+            return
+        }
         var next = copyObject(accountOptions)
-        next[providerKey(providerID)] = options || []
+        next[key] = options || []
         accountOptions = next
     }
 
     function setAccountError(providerID, message) {
         var next = copyObject(accountErrors)
-        var key = providerKey(providerID)
+        var key = providerMapKey(providerID)
+        if (key.length === 0) {
+            return
+        }
         if (message && String(message).trim().length > 0) {
             next[key] = String(message).trim()
         } else {
@@ -1384,7 +1431,10 @@ PlasmoidItem {
 
     function setAccountLoading(providerID, value) {
         var next = copyObject(accountLoading)
-        var key = providerKey(providerID)
+        var key = providerMapKey(providerID)
+        if (key.length === 0) {
+            return
+        }
         if (value) {
             next[key] = true
         } else {
@@ -1436,7 +1486,10 @@ PlasmoidItem {
     }
 
     function selectAccount(providerID, accountLabel) {
-        var key = providerKey(providerID)
+        var key = providerMapKey(providerID)
+        if (key.length === 0) {
+            return
+        }
         var label = String(accountLabel || "")
         var next = copyObject(selectedAccounts)
         if (label.length > 0) {
@@ -1457,7 +1510,10 @@ PlasmoidItem {
     }
 
     function replaceProviderSnapshot(providerID, snapshot) {
-        var key = providerKey(providerID)
+        var key = providerMapKey(providerID)
+        if (key.length === 0) {
+            return
+        }
         var nextProviders = []
         for (var i = 0; i < providers.length; i++) {
             nextProviders.push(providers[i].provider === key ? snapshot : providers[i])
@@ -1469,7 +1525,10 @@ PlasmoidItem {
         var usage = item.usage || ({})
         var pace = item.pace || ({})
         var rows = []
-        var providerID = providerKey(item.provider || "unknown")
+        var providerID = providerMapKey(item.provider || "unknown")
+        if (providerID.length === 0) {
+            providerID = "unknown"
+        }
 
         var primaryRow = addWindow(rows, rateWindowLabel(providerID, "primary"), usage.primary, pace.primary, true, "primary")
         addWindow(rows, rateWindowLabel(providerID, "secondary"), usage.secondary, pace.secondary, true, "secondary")
@@ -1565,7 +1624,10 @@ PlasmoidItem {
         var known = usageKnown !== false
         var used = Number(window.usedPercent)
         var hasPercent = known && isFinite(used)
-        var paceValue = pace && isFinite(Number(pace.expectedUsedPercent))
+        var paceValue = pace
+            && pace.expectedUsedPercent !== null
+            && pace.expectedUsedPercent !== undefined
+            && isFinite(Number(pace.expectedUsedPercent))
             ? clamp(Number(pace.expectedUsedPercent), 0, 100)
             : -1
         var row = {
@@ -4226,8 +4288,9 @@ PlasmoidItem {
                             id: tokenCostSection
 
                             readonly property var tokenCost: root.selectedProviderData ? root.selectedProviderData.tokenCost : null
+                            readonly property string costErrorText: root.costErrorText
 
-                            visible: tokenCostSection.tokenCost ? true : false
+                            visible: tokenCostSection.tokenCost ? true : tokenCostSection.costErrorText.length > 0
                             Layout.fillWidth: true
                             spacing: Kirigami.Units.smallSpacing / 1.5
 
@@ -4242,12 +4305,22 @@ PlasmoidItem {
                             }
 
                             PlasmaComponents.Label {
+                                visible: !tokenCostSection.tokenCost && tokenCostSection.costErrorText.length > 0
+                                text: i18n("Cost unavailable: %1", tokenCostSection.costErrorText)
+                                color: Kirigami.Theme.negativeTextColor
+                                Layout.fillWidth: true
+                                wrapMode: Text.WordWrap
+                            }
+
+                            PlasmaComponents.Label {
+                                visible: tokenCostSection.tokenCost ? true : false
                                 text: tokenCostSection.tokenCost ? tokenCostSection.tokenCost.sessionLine : ""
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                             }
 
                             PlasmaComponents.Label {
+                                visible: tokenCostSection.tokenCost ? true : false
                                 text: tokenCostSection.tokenCost ? tokenCostSection.tokenCost.monthLine : ""
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
