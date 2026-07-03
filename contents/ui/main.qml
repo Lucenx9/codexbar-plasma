@@ -761,7 +761,7 @@ PlasmoidItem {
         // codexbar --all-accounts reports "No token accounts configured for
         // <provider>." even when the provider works through OAuth/CLI auth
         // without named token accounts; that is an empty list, not a failure.
-        return errorMessage.toLowerCase().indexOf("no token accounts configured") !== -1
+        return String(errorMessage || "").toLowerCase().indexOf("no token accounts configured") !== -1
     }
 
     function dedupeAccountOptions(items) {

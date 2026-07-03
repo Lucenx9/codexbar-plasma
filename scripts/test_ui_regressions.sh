@@ -260,6 +260,12 @@ if "isMissingTokenAccountsError(normalized.error)" not in accounts_body:
     )
 if "function isMissingTokenAccountsError(errorMessage)" not in main_text:
     raise AssertionError("main.qml must define isMissingTokenAccountsError")
+missing_accounts_body = function_body(main_text, "isMissingTokenAccountsError")
+if 'String(errorMessage || "")' not in missing_accounts_body:
+    raise AssertionError(
+        "isMissingTokenAccountsError must coerce CLI error messages before "
+        "calling string helpers so malformed JSON cannot abort account parsing"
+    )
 if "setAccountError(providerID, accountError)" not in accounts_body:
     raise AssertionError("parseProviderAccountsOutput must set the post-dedupe account error")
 if "message.length > 0 ? message : i18n(\"codexbar did not return account data.\")" in accounts_body:
