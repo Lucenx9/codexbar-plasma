@@ -2455,6 +2455,8 @@ PlasmoidItem {
             "alibaba-coding-plan": "alibaba",
             "alibaba-token-plan": "alibabatokenplan",
             "aws-bedrock": "bedrock",
+            "claw-router": "clawrouter",
+            "cm": "crossmodel",
             "droid": "factory",
             "gemini-cli": "gemini",
             "groqcloud": "groq",
@@ -2503,12 +2505,14 @@ PlasmoidItem {
             "antigravity": "Antigravity",
             "augment": "Augment",
             "chutes": "Chutes",
+            "clawrouter": i18n("ClawRouter"),
             "claude": "Claude",
             "codebuff": "Codebuff",
             "commandcode": "Command Code",
             "codex": "Codex",
             "copilot": "Copilot",
             "crof": "Crof",
+            "crossmodel": i18n("CrossModel"),
             "cursor": "Cursor",
             "deepgram": "Deepgram",
             "deepseek": "DeepSeek",
@@ -2536,6 +2540,7 @@ PlasmoidItem {
             "opencodego": "OpenCode Go",
             "openrouter": "OpenRouter",
             "perplexity": "Perplexity",
+            "qoder": i18n("Qoder"),
             "sakana": "Sakana AI",
             "synthetic": "Synthetic",
             "t3chat": "T3 Chat",
@@ -2645,6 +2650,8 @@ PlasmoidItem {
             return Qt.rgba(8 / 255, 78 / 255, 1, 1)
         case "perplexity":
             return Qt.rgba(32 / 255, 178 / 255, 170 / 255, 1)
+        case "qoder":
+            return Qt.rgba(16 / 255, 185 / 255, 129 / 255, 1)
         case "sakana":
             return Qt.rgba(0.16, 0.46, 0.86, 1)
         case "mimo":
@@ -2661,10 +2668,14 @@ PlasmoidItem {
             return Qt.rgba(68 / 255, 1, 0, 1)
         case "crof":
             return Qt.rgba(0.18, 0.67, 0.58, 1)
+        case "crossmodel":
+            return Qt.rgba(124 / 255, 58 / 255, 237 / 255, 1)
         case "venice":
             return Qt.rgba(0.2, 0.6, 1, 1)
         case "commandcode":
             return Qt.rgba(0, 0, 0, 1)
+        case "clawrouter":
+            return Qt.rgba(89 / 255, 110 / 255, 246 / 255, 1)
         case "stepfun":
             return Qt.rgba(0.13, 0.59, 0.95, 1)
         case "bedrock":
@@ -2710,10 +2721,14 @@ PlasmoidItem {
             return "https://chutes.ai"
         case "codebuff":
             return "https://www.codebuff.com/usage"
+        case "clawrouter":
+            return "https://clawrouter.openclaw.ai/dashboard/access"
         case "commandcode":
             return "https://commandcode.ai/studio"
         case "crof":
             return "https://crof.ai/dashboard"
+        case "crossmodel":
+            return "https://crossmodel.ai/console/usage"
         case "codex":
             return "https://chatgpt.com/codex/settings/usage"
         case "claude":
@@ -2769,6 +2784,8 @@ PlasmoidItem {
             return "https://www.perplexity.ai/account/usage"
         case "poe":
             return "https://poe.com/api/keys"
+        case "qoder":
+            return "https://qoder.com/account/usage"
         case "sakana":
             return "https://console.sakana.ai/billing"
         case "stepfun":
@@ -2802,12 +2819,14 @@ PlasmoidItem {
             azureopenai: "providers.md#azure-openai",
             bedrock: "bedrock.md",
             chutes: "chutes.md",
+            clawrouter: "clawrouter.md",
             claude: "claude.md",
             codebuff: "codebuff.md",
             commandcode: "command-code.md",
             codex: "codex.md",
             copilot: "copilot.md",
             crof: "crof.md",
+            crossmodel: "crossmodel.md",
             cursor: "cursor.md",
             deepgram: "deepgram.md",
             deepseek: "deepseek.md",
@@ -2837,6 +2856,7 @@ PlasmoidItem {
             openrouter: "openrouter.md",
             perplexity: "providers.md#perplexity",
             poe: "poe.md",
+            qoder: "qoder.md",
             sakana: "sakana.md",
             stepfun: "stepfun.md",
             synthetic: "providers.md#synthetic",

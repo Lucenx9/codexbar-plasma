@@ -173,6 +173,13 @@ for function_name in ("providerDashboardUrl", "providerLoginUrl"):
             f"missing={missing}, extra={extra}, changed={changed}"
         )
 
+api_key_setup_body = function_body(providers_text, "supportsApiKeySetup")
+for provider in ("crossmodel", "clawrouter"):
+    if f'case "{provider}":' not in api_key_setup_body:
+        raise AssertionError(
+            f"supportsApiKeySetup must include released API-key provider {provider}"
+        )
+
 toggle_body = function_body(providers_text, "handleToggleResult")
 if "stderrText.trim()" not in toggle_body or "exitCode" not in toggle_body:
     raise AssertionError("handleToggleResult must treat stderr/exit-code failures as errors")
