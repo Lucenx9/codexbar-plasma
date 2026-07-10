@@ -184,6 +184,26 @@ toggle_body = function_body(providers_text, "handleToggleResult")
 if "stderrText.trim()" not in toggle_body or "exitCode" not in toggle_body:
     raise AssertionError("handleToggleResult must treat stderr/exit-code failures as errors")
 
+handle_data_body = function_body(providers_text, "handleData")
+for handler_call in (
+    "handleSetApiKeyResult(descriptor, stdoutText, stderrText, exitCode)",
+    "handleDescriptorFieldResult(descriptor, stdoutText, stderrText, exitCode)",
+    "handleDescriptorActionResult(descriptor, stdoutText, stderrText, exitCode)",
+):
+    if handler_call not in handle_data_body:
+        raise AssertionError(
+            "Provider mutation handlers must receive the executable exit code; "
+            f"missing {handler_call!r}"
+        )
+
+set_api_key_body = function_body(providers_text, "handleSetApiKeyResult")
+if "Number(exitCode) !== 0" not in set_api_key_body:
+    raise AssertionError("handleSetApiKeyResult must reject non-zero CLI exits")
+
+parse_command_payload_body = function_body(providers_text, "parseCommandPayload")
+if "Number(exitCode) !== 0" not in parse_command_payload_body:
+    raise AssertionError("parseCommandPayload must reject non-zero descriptor command exits")
+
 # Overview selection is stored with the raw CLI provider IDs (e.g. groqcloud,
 # alibaba-coding-plan) but matched at runtime against providerKey-normalized
 # IDs (groq, alibaba). configuredOverviewProviderIDs must normalize on read so
@@ -236,6 +256,16 @@ if "2147480000" not in bounded_revision_body or "1000000" in bounded_revision_bo
 parse_cost_body = function_body(main_text, "parseCostOutput")
 if "codexbar cost did not return JSON." not in parse_cost_body:
     raise AssertionError("parseCostOutput must keep a visible fallback error when cost returns no JSON")
+for cost_error_fragment in (
+    'var costMessage = ""',
+    "item.error && item.error.message",
+    'costErrorText = costCount === 0 ? costMessage : ""',
+):
+    if cost_error_fragment not in parse_cost_body:
+        raise AssertionError(
+            "parseCostOutput must surface CLI JSON errors when no cost rows are valid; "
+            f"missing {cost_error_fragment!r}"
+        )
 
 token_cost_section_body = id_block(main_text, "tokenCostSection")
 if "root.costErrorText" not in token_cost_section_body:

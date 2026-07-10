@@ -799,16 +799,23 @@ PlasmoidItem {
 
         var items = Array.isArray(payload) ? payload : [payload]
         var nextCosts = ({})
+        var costMessage = ""
+        var costCount = 0
         for (var i = 0; i < items.length; i++) {
-            var cost = normalizeTokenCost(items[i])
+            var item = items[i]
+            if (costMessage.length === 0 && item && item.error && item.error.message) {
+                costMessage = String(item.error.message).trim()
+            }
+            var cost = normalizeTokenCost(item)
             var providerID = cost ? providerMapKey(cost.provider) : ""
             if (cost && providerID.length > 0) {
                 nextCosts[providerID] = cost
+                costCount++
             }
         }
 
         tokenCosts = nextCosts
-        costErrorText = ""
+        costErrorText = costCount === 0 ? costMessage : ""
         applyTokenCosts()
     }
 

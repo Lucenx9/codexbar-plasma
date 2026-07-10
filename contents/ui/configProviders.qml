@@ -168,11 +168,11 @@ KCM.SimpleKCM {
         } else if (descriptor.kind === "toggle") {
             handleToggleResult(descriptor, stdoutText, stderrText, exitCode)
         } else if (descriptor.kind === "setApiKey") {
-            handleSetApiKeyResult(descriptor, stdoutText, stderrText)
+            handleSetApiKeyResult(descriptor, stdoutText, stderrText, exitCode)
         } else if (descriptor.kind === "descriptorField") {
-            handleDescriptorFieldResult(descriptor, stdoutText, stderrText)
+            handleDescriptorFieldResult(descriptor, stdoutText, stderrText, exitCode)
         } else if (descriptor.kind === "descriptorAction") {
-            handleDescriptorActionResult(descriptor, stdoutText, stderrText)
+            handleDescriptorActionResult(descriptor, stdoutText, stderrText, exitCode)
         } else if (descriptor.kind === "diagnose") {
             handleDiagnoseResult(descriptor, stdoutText, stderrText)
         }
@@ -313,7 +313,7 @@ KCM.SimpleKCM {
         statusText = i18n("%1 saved", displayNameForProvider(descriptor.provider))
     }
 
-    function handleSetApiKeyResult(descriptor, stdoutText, stderrText) {
+    function handleSetApiKeyResult(descriptor, stdoutText, stderrText, exitCode) {
         markPending(descriptor.provider, false)
 
         var trimmed = stdoutText.trim()
@@ -327,18 +327,20 @@ KCM.SimpleKCM {
             }
         }
 
-        if (payload && payload.cancelled === true) {
-            statusText = ""
-            errorText = ""
-            return
-        }
-
         var message = commandError(payload)
         if (message.length === 0 && stderrText.trim().length > 0) {
             message = stderrText.trim()
         }
+        if (message.length === 0 && Number(exitCode) !== 0) {
+            message = i18n("codexbar exited with code %1", Number(exitCode))
+        }
         if (message.length > 0) {
             errorText = i18n("%1: %2", descriptor.provider, message)
+            return
+        }
+        if (payload && payload.cancelled === true) {
+            statusText = ""
+            errorText = ""
             return
         }
 
@@ -352,9 +354,9 @@ KCM.SimpleKCM {
         statusText = i18n("%1 API key saved", displayNameForProvider(descriptor.provider))
     }
 
-    function handleDescriptorFieldResult(descriptor, stdoutText, stderrText) {
+    function handleDescriptorFieldResult(descriptor, stdoutText, stderrText, exitCode) {
         markFieldPending(descriptor.provider, descriptor.fieldID, false)
-        var payload = parseCommandPayload(stdoutText, stderrText)
+        var payload = parseCommandPayload(stdoutText, stderrText, exitCode)
         if (payload.cancelled) {
             return
         }
@@ -372,9 +374,9 @@ KCM.SimpleKCM {
         page.reload(true)
     }
 
-    function handleDescriptorActionResult(descriptor, stdoutText, stderrText) {
+    function handleDescriptorActionResult(descriptor, stdoutText, stderrText, exitCode) {
         markFieldPending(descriptor.provider, descriptor.actionID, false)
-        var payload = parseCommandPayload(stdoutText, stderrText)
+        var payload = parseCommandPayload(stdoutText, stderrText, exitCode)
         if (payload.cancelled) {
             return
         }
@@ -397,7 +399,7 @@ KCM.SimpleKCM {
         page.reload(true)
     }
 
-    function parseCommandPayload(stdoutText, stderrText) {
+    function parseCommandPayload(stdoutText, stderrText, exitCode) {
         var trimmed = stdoutText.trim()
         var payload = null
         if (trimmed.length > 0) {
@@ -411,12 +413,15 @@ KCM.SimpleKCM {
                 }
             }
         }
-        if (payload && payload.cancelled === true) {
-            return { value: payload, cancelled: true, errorMessage: "" }
-        }
         var message = commandError(payload)
         if (message.length === 0 && stderrText.trim().length > 0) {
             message = stderrText.trim()
+        }
+        if (message.length === 0 && Number(exitCode) !== 0) {
+            message = i18n("codexbar exited with code %1", Number(exitCode))
+        }
+        if (message.length === 0 && payload && payload.cancelled === true) {
+            return { value: payload, cancelled: true, errorMessage: "" }
         }
         return { value: payload, cancelled: false, errorMessage: message }
     }
