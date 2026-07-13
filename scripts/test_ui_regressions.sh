@@ -173,6 +173,17 @@ for function_name in ("providerDashboardUrl", "providerLoginUrl"):
             f"missing={missing}, extra={extra}, changed={changed}"
         )
 
+for source_text, label in ((main_text, "main.qml"), (providers_text, "configProviders.qml")):
+    docs_body = function_body(source_text, "providerDocsUrl")
+    color_body = function_body(source_text, "providerColor")
+    title_body = function_body(source_text, "providerTitle")
+    if 'wayfinder: "wayfinder.md"' not in docs_body:
+        raise AssertionError(f"{label} must expose the Wayfinder documentation link")
+    if 'case "wayfinder":' not in color_body:
+        raise AssertionError(f"{label} must expose the Wayfinder brand color")
+    if '"wayfinder": i18n("Wayfinder")' not in title_body:
+        raise AssertionError(f"{label} must expose the Wayfinder display name")
+
 api_key_setup_body = function_body(providers_text, "supportsApiKeySetup")
 for provider in ("crossmodel", "clawrouter"):
     if f'case "{provider}":' not in api_key_setup_body:
@@ -221,6 +232,21 @@ if "Array.isArray(payload) ? payload : [payload]" not in provider_config_body:
         "parseProviderConfigOutput must accept a single provider object as well "
         "as the normal provider-list array"
     )
+
+config_watch_body = function_body(main_text, "buildProviderConfigWatchCommand")
+for config_path_fragment in (
+    "CODEXBAR_CONFIG",
+    "XDG_CONFIG_HOME",
+    "$HOME/.config/codexbar/config.json",
+    "$HOME/.codexbar/config.json",
+):
+    if config_path_fragment not in config_watch_body:
+        raise AssertionError(
+            "buildProviderConfigWatchCommand must mirror the CLI config path resolver; "
+            f"missing {config_path_fragment!r}"
+        )
+if config_watch_body.index("CODEXBAR_CONFIG") > config_watch_body.index("XDG_CONFIG_HOME"):
+    raise AssertionError("CODEXBAR_CONFIG must take precedence over XDG_CONFIG_HOME")
 
 retire_body = function_body(main_text, "retireUsageCommands")
 for stale_account_fragment in (
@@ -307,6 +333,17 @@ if "setAccountError(providerID, accountError)" not in accounts_body:
     raise AssertionError("parseProviderAccountsOutput must set the post-dedupe account error")
 if "message.length > 0 ? message : i18n(\"codexbar did not return account data.\")" in accounts_body:
     raise AssertionError("parseProviderAccountsOutput must not fabricate an account error for JSON []")
+
+dedupe_accounts_body = function_body(main_text, "dedupeAccountOptions")
+if 'var key = "account:" + label' not in dedupe_accounts_body:
+    raise AssertionError("dedupeAccountOptions must namespace labels before object-map lookup")
+if "hasOwnKey(seen, key)" not in dedupe_accounts_body:
+    raise AssertionError(
+        "dedupeAccountOptions must use an own-property check so labels such as "
+        "constructor and toString remain selectable"
+    )
+if "seen[label]" in dedupe_accounts_body:
+    raise AssertionError("dedupeAccountOptions must not look up raw labels on Object.prototype")
 
 header_sources = {
     "overviewHeaderRow": main_text,

@@ -14,7 +14,7 @@ require_icon() {
   fi
 }
 
-# Released CodexBar v0.41.0 provider registry. The live CLI probe below adds an
+# Released CodexBar v0.42.1 provider registry. The live CLI probe below adds an
 # early warning when a newer installed release introduces another provider.
 released_providers=(
   codex
@@ -74,6 +74,7 @@ released_providers=(
   chutes
   crossmodel
   clawrouter
+  wayfinder
 )
 
 for provider in "${released_providers[@]}"; do

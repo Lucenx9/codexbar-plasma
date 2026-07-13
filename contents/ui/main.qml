@@ -207,11 +207,20 @@ PlasmoidItem {
     }
 
     function buildProviderConfigWatchCommand() {
-        return [
-            "sh",
-            "-lc",
-            shellQuote("config=\"${XDG_CONFIG_HOME:-$HOME/.config}/codexbar/config.json\"; if [ -r \"$config\" ]; then cksum \"$config\"; else printf missing; fi")
+        var script = [
+            "config=${CODEXBAR_CONFIG:-};",
+            "case \"$config\" in '~/'*) config=\"$HOME/${config#\\~/}\";; esac;",
+            "if [ -z \"$config\" ]; then",
+            "xdg=${XDG_CONFIG_HOME:-};",
+            "case \"$xdg\" in '~/'*) xdg=\"$HOME/${xdg#\\~/}\";; esac;",
+            "case \"$xdg\" in",
+            "/*) config=\"$xdg/codexbar/config.json\";;",
+            "*) config=\"$HOME/.config/codexbar/config.json\"; if [ ! -e \"$config\" ] && [ -e \"$HOME/.codexbar/config.json\" ]; then config=\"$HOME/.codexbar/config.json\"; fi;;",
+            "esac;",
+            "fi;",
+            "if [ -r \"$config\" ]; then cksum \"$config\"; else printf missing; fi"
         ].join(" ")
+        return ["sh", "-lc", shellQuote(script)].join(" ")
     }
 
     function buildProviderUsageCommand(providerID, codexCliFallback) {
@@ -769,10 +778,11 @@ PlasmoidItem {
         var result = []
         for (var i = 0; i < items.length; i++) {
             var label = accountLabel(items[i])
-            if (label.length === 0 || seen[label]) {
+            var key = "account:" + label
+            if (label.length === 0 || hasOwnKey(seen, key)) {
                 continue
             }
-            seen[label] = true
+            seen[key] = true
             result.push(items[i])
         }
         return result
@@ -2549,6 +2559,7 @@ PlasmoidItem {
             "perplexity": "Perplexity",
             "qoder": i18n("Qoder"),
             "sakana": "Sakana AI",
+            "wayfinder": i18n("Wayfinder"),
             "synthetic": "Synthetic",
             "t3chat": "T3 Chat",
             "venice": "Venice",
@@ -2688,6 +2699,7 @@ PlasmoidItem {
         case "bedrock":
             return Qt.rgba(1, 0.6, 0, 1)
         case "grok":
+        case "wayfinder":
             return Qt.rgba(16 / 255, 163 / 255, 127 / 255, 1)
         case "groq":
             return Qt.rgba(245 / 255, 104 / 255, 68 / 255, 1)
@@ -2871,6 +2883,7 @@ PlasmoidItem {
             venice: "venice.md",
             vertexai: "vertexai.md",
             warp: "warp.md",
+            wayfinder: "wayfinder.md",
             windsurf: "windsurf.md",
             zai: "zai.md",
             zed: "zed.md"

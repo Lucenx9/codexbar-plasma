@@ -1172,6 +1172,7 @@ KCM.SimpleKCM {
             venice: "venice.md",
             vertexai: "vertexai.md",
             warp: "warp.md",
+            wayfinder: "wayfinder.md",
             windsurf: "windsurf.md",
             zai: "zai.md",
             zed: "zed.md"
@@ -1466,6 +1467,7 @@ KCM.SimpleKCM {
         case "bedrock":
             return Qt.rgba(1, 0.6, 0, 1)
         case "grok":
+        case "wayfinder":
             return Qt.rgba(16 / 255, 163 / 255, 127 / 255, 1)
         case "groq":
             return Qt.rgba(245 / 255, 104 / 255, 68 / 255, 1)
@@ -1489,7 +1491,8 @@ KCM.SimpleKCM {
         var names = {
             "clawrouter": i18n("ClawRouter"),
             "crossmodel": i18n("CrossModel"),
-            "qoder": i18n("Qoder")
+            "qoder": i18n("Qoder"),
+            "wayfinder": i18n("Wayfinder")
         }
         if (names[key]) {
             return names[key]

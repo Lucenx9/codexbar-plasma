@@ -491,6 +491,10 @@ msgstr ""
 msgid "Qoder"
 msgstr ""
 
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Wayfinder"
+msgstr ""
+
 #: contents/ui/configProviders.qml
 msgid "Search providers..."
 msgstr ""
