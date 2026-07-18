@@ -59,7 +59,6 @@ PlasmoidItem {
     property string providerConfigStamp: ""
     property int commandRunSerial: 0
     property var activeUsageCommands: ({})
-    property var retiredUsageCommands: ({})
     property var pendingProviderCommands: ({})
     property var fallbackProviderOrder: []
     property var fallbackProviderResults: ({})
@@ -77,9 +76,12 @@ PlasmoidItem {
     property var accountErrors: ({})
     property var accountLoading: ({})
     property var pendingAccountCommands: ({})
+    readonly property int accountCommandTimeoutMs: 60000
     property var notificationMemo: ({})
     property bool notificationsPrimed: false
     property string connectedUpdateCommandSource: ""
+    readonly property int widgetUpdateCheckTimeoutMs: 60000
+    readonly property int widgetAutoUpdateTimeoutMs: 300000
     property string updateStatusText: boundedWidgetUpdateText(Plasmoid.configuration.widgetUpdateLastStatus)
     property string updateErrorText: boundedWidgetUpdateText(Plasmoid.configuration.widgetUpdateLastError)
     property string lastNotifiedUpdateVersion: Plasmoid.configuration.lastNotifiedUpdateVersion || ""
@@ -354,59 +356,40 @@ PlasmoidItem {
         var activeCommands = copyObject(activeUsageCommands)
         delete activeCommands[sourceName]
         activeUsageCommands = activeCommands
-
-        var retiredCommands = copyObject(retiredUsageCommands)
-        delete retiredCommands[sourceName]
-        retiredUsageCommands = retiredCommands
-    }
-
-    function retireUsageCommandSource(sourceName) {
-        if (sourceName.length === 0) {
-            return
-        }
-
-        if (!activeUsageCommands[sourceName]) {
-            usageSource.disconnectSource(sourceName)
-            return
-        }
-
-        var retiredCommands = copyObject(retiredUsageCommands)
-        retiredCommands[sourceName] = true
-        retiredUsageCommands = retiredCommands
     }
 
     function refreshNow() {
         retireUsageCommands()
+        refreshCost()
+        providerFallbackActive = false
 
         if (commandSource.length === 0) {
+            loading = false
             errorText = i18n("Set the codexbar command path in widget settings.")
             return
         }
 
         loading = true
         errorText = ""
-        providerFallbackActive = false
         if (canUseProviderFallback()) {
             startProviderFallback()
-            refreshCost()
             return
         }
         connectedCommandSource = commandWithRunNonce(commandSource)
         connectUsageCommand(connectedCommandSource)
-        refreshCost()
     }
 
     function retireUsageCommands() {
         if (connectedCommandSource.length > 0) {
-            retireUsageCommandSource(connectedCommandSource)
+            finishUsageCommandSource(connectedCommandSource)
             connectedCommandSource = ""
         }
         if (connectedProviderConfigCommandSource.length > 0) {
-            retireUsageCommandSource(connectedProviderConfigCommandSource)
+            finishUsageCommandSource(connectedProviderConfigCommandSource)
             connectedProviderConfigCommandSource = ""
         }
         for (var command in pendingProviderCommands) {
-            retireUsageCommandSource(command)
+            finishUsageCommandSource(command)
         }
         // Account loads are user-triggered; keep them alive across usage refreshes
         // so their replies can still populate the account picker.
@@ -435,7 +418,7 @@ PlasmoidItem {
 
     function refreshCost() {
         if (connectedCostCommandSource.length > 0) {
-            retireUsageCommandSource(connectedCostCommandSource)
+            finishUsageCommandSource(connectedCostCommandSource)
             connectedCostCommandSource = ""
         }
 
@@ -495,7 +478,7 @@ PlasmoidItem {
     function startProviderFallback() {
         providerFallbackActive = true
         if (connectedCommandSource.length > 0) {
-            retireUsageCommandSource(connectedCommandSource)
+            finishUsageCommandSource(connectedCommandSource)
             connectedCommandSource = ""
         }
         if (provider.length > 0) {
@@ -557,7 +540,7 @@ PlasmoidItem {
 
     function startProviderFallbackForProviders(providerIDs) {
         for (var existingCommand in pendingProviderCommands) {
-            retireUsageCommandSource(existingCommand)
+            finishUsageCommandSource(existingCommand)
         }
         pendingProviderCommands = ({})
         fallbackProviderOrder = []
@@ -696,13 +679,56 @@ PlasmoidItem {
         setAccountLoading(normalizedProviderID, true)
         var connectedCommand = commandWithRunNonce(command)
         var commands = copyObject(pendingAccountCommands)
-        commands[connectedCommand] = normalizedProviderID
+        commands[connectedCommand] = {
+            providerID: normalizedProviderID,
+            deadlineMs: Date.now() + accountCommandTimeoutMs
+        }
         pendingAccountCommands = commands
         connectUsageCommand(connectedCommand)
     }
 
+    function hasPendingAccountCommands() {
+        for (var sourceName in pendingAccountCommands) {
+            if (hasOwnKey(pendingAccountCommands, sourceName)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    function expirePendingAccountCommands(nowMs) {
+        var commands = copyObject(pendingAccountCommands)
+        var expired = []
+        for (var pendingSourceName in commands) {
+            if (!hasOwnKey(commands, pendingSourceName)) {
+                continue
+            }
+            var descriptor = commands[pendingSourceName]
+            var deadline = Number(descriptor.deadlineMs)
+            if (!isFinite(deadline) || nowMs < deadline) {
+                continue
+            }
+            expired.push({ sourceName: pendingSourceName, providerID: descriptor.providerID })
+            delete commands[pendingSourceName]
+        }
+        if (expired.length === 0) {
+            return
+        }
+
+        pendingAccountCommands = commands
+        for (var i = 0; i < expired.length; i++) {
+            var item = expired[i]
+            var sourceName = item.sourceName
+            var providerID = item.providerID
+            finishUsageCommandSource(sourceName)
+            setAccountLoading(providerID, false)
+            setAccountError(providerID, i18n("Loading accounts timed out. Try again."))
+        }
+    }
+
     function parseProviderAccountsOutput(sourceName, stdoutText, stderrText) {
-        var providerID = pendingAccountCommands[sourceName] || ""
+        var descriptor = pendingAccountCommands[sourceName] || null
+        var providerID = descriptor ? descriptor.providerID : ""
         if (providerID.length === 0) {
             return
         }
@@ -1395,6 +1421,11 @@ PlasmoidItem {
         return parts.join(" · ")
     }
 
+    function providerTokenCost(providerID) {
+        var key = providerMapKey(providerID)
+        return key.length > 0 ? tokenCosts[key] || null : null
+    }
+
     function applyTokenCosts() {
         if (!providers || providers.length === 0) {
             return
@@ -1403,8 +1434,7 @@ PlasmoidItem {
         var nextProviders = []
         for (var i = 0; i < providers.length; i++) {
             var item = copyObject(providers[i])
-            var key = providerMapKey(item.provider)
-            item.tokenCost = key.length > 0 ? tokenCosts[key] || null : null
+            item.tokenCost = providerTokenCost(item.provider)
             nextProviders.push(item)
         }
         providers = nextProviders
@@ -1549,9 +1579,11 @@ PlasmoidItem {
         if (key.length === 0) {
             return
         }
+        var replacement = copyObject(snapshot)
+        replacement.tokenCost = providerTokenCost(key)
         var nextProviders = []
         for (var i = 0; i < providers.length; i++) {
-            nextProviders.push(providers[i].provider === key ? snapshot : providers[i])
+            nextProviders.push(providers[i].provider === key ? replacement : providers[i])
         }
         providers = nextProviders
     }
@@ -1598,7 +1630,7 @@ PlasmoidItem {
             usageDashboard: usageDashboard(providerID, usage, item),
             providerCost: providerCostSection(providerID, usage.providerCost),
             resetCredits: resetCreditsSection(providerID, usage.codexResetCredits),
-            tokenCost: tokenCosts[providerID] || null,
+            tokenCost: providerTokenCost(providerID),
             planText: planText(providerID, usage, item),
             dashboardUrl: providerDashboardUrl(providerID),
             statusUrl: safeStatusUrl(providerID, status && status.url ? status.url : ""),
@@ -2031,6 +2063,32 @@ PlasmoidItem {
         Qt.callLater(processNotifications)
     }
 
+    function notificationScopeKey(item) {
+        if (!item) {
+            return JSON.stringify(["", ""])
+        }
+        var providerID = providerMapKey(item.provider)
+        var selectedAccount = selectedAccountForProvider(providerID)
+        var currentAccount = selectedAccount.length > 0 ? selectedAccount : accountLabel(item)
+        return JSON.stringify([providerID, currentAccount])
+    }
+
+    function statusNotificationKey(item) {
+        return "status:" + notificationScopeKey(item)
+    }
+
+    function clearNotificationScopeMemo(nextMemo, item) {
+        var scope = notificationScopeKey(item)
+        var statusKey = statusNotificationKey(item)
+        var quotaPrefix = "quota:" + scope + ":"
+        var resetPrefix = "reset:" + scope + ":"
+        for (var key in nextMemo) {
+            if (key === statusKey || key.indexOf(quotaPrefix) === 0 || key.indexOf(resetPrefix) === 0) {
+                delete nextMemo[key]
+            }
+        }
+    }
+
     function primeNotifications() {
         var nextMemo = ({})
         for (var i = 0; i < providers.length; i++) {
@@ -2041,7 +2099,7 @@ PlasmoidItem {
             if (notifyStatusIncidents) {
                 var statusValue = notificationStatusValue(item)
                 if (statusValue.length > 0) {
-                    nextMemo["status:" + item.provider] = statusValue
+                    nextMemo[statusNotificationKey(item)] = statusValue
                 }
             }
             if (notifyQuotaWarnings) {
@@ -2049,7 +2107,7 @@ PlasmoidItem {
                 for (var j = 0; j < rows.length; j++) {
                     var level = quotaNotificationLevel(rows[j])
                     if (level.length > 0) {
-                        nextMemo[quotaNotificationKey(item.provider, rows[j], j)] = level
+                        nextMemo[quotaNotificationKey(item, rows[j], j)] = level
                     }
                 }
             }
@@ -2061,7 +2119,7 @@ PlasmoidItem {
                     var resetRow = resetRows[k]
                     if (resetRow && resetRow.hasPercent
                         && Number(resetRow.usedPercent) >= limitResetArmThreshold) {
-                        nextMemo[limitResetNotificationKey(item.provider, resetRow, k)] = "1"
+                        nextMemo[limitResetNotificationKey(item, resetRow, k)] = "1"
                     }
                 }
             }
@@ -2079,13 +2137,14 @@ PlasmoidItem {
             return
         }
 
-        var nextMemo = ({})
+        var nextMemo = copyObject(notificationMemo)
         for (var i = 0; i < providers.length; i++) {
             var item = providers[i]
             if (!item) {
                 continue
             }
 
+            clearNotificationScopeMemo(nextMemo, item)
             if (notifyStatusIncidents) {
                 processStatusNotification(item, nextMemo)
             }
@@ -2100,7 +2159,7 @@ PlasmoidItem {
     }
 
     function processStatusNotification(item, nextMemo) {
-        var key = "status:" + item.provider
+        var key = statusNotificationKey(item)
         var value = notificationStatusValue(item)
         var previousValue = String(notificationMemo[key] || "")
         if (value.length > 0) {
@@ -2130,7 +2189,7 @@ PlasmoidItem {
         var rows = item.rows || []
         for (var i = 0; i < rows.length; i++) {
             var row = rows[i]
-            var key = quotaNotificationKey(item.provider, row, i)
+            var key = quotaNotificationKey(item, row, i)
             var level = quotaNotificationLevel(row)
             var previousLevel = String(notificationMemo[key] || "")
             if (level.length > 0 && notificationRank(level) > notificationRank(previousLevel)) {
@@ -2170,7 +2229,7 @@ PlasmoidItem {
             if (!isFinite(used)) {
                 continue
             }
-            var key = limitResetNotificationKey(item.provider, row, i)
+            var key = limitResetNotificationKey(item, row, i)
             var wasArmed = notificationMemo[key] === "1"
             if (wasArmed && used <= limitResetFloor) {
                 sendPlasmaNotification(
@@ -2183,10 +2242,10 @@ PlasmoidItem {
         }
     }
 
-    function limitResetNotificationKey(providerID, row, index) {
+    function limitResetNotificationKey(item, row, index) {
         var lane = row && row.lane ? row.lane : ""
         var label = row && row.label ? row.label : ""
-        return "reset:" + providerID + ":" + lane + ":" + label + ":" + index
+        return "reset:" + notificationScopeKey(item) + ":" + lane + ":" + label + ":" + index
     }
 
     function notificationStatusValue(item) {
@@ -2226,10 +2285,10 @@ PlasmoidItem {
         return ""
     }
 
-    function quotaNotificationKey(providerID, row, index) {
+    function quotaNotificationKey(item, row, index) {
         var lane = row && row.lane ? row.lane : ""
         var label = row && row.label ? row.label : ""
-        return "quota:" + providerID + ":" + lane + ":" + label + ":" + index
+        return "quota:" + notificationScopeKey(item) + ":" + lane + ":" + label + ":" + index
     }
 
     function quotaNotificationLevel(row) {
@@ -2336,6 +2395,28 @@ PlasmoidItem {
         setWidgetUpdateState(i18n("Checking for widget updates..."), "", false)
         connectedUpdateCommandSource = commandWithRunNonce(buildUpdateCommand(autoUpdateEnabled))
         updateSource.connectSource(connectedUpdateCommandSource)
+        updateCommandTimeoutTimer.interval = autoUpdateEnabled
+            ? widgetAutoUpdateTimeoutMs
+            : widgetUpdateCheckTimeoutMs
+        updateCommandTimeoutTimer.restart()
+    }
+
+    function finishUpdateCommand(sourceName) {
+        updateCommandTimeoutTimer.stop()
+        updateSource.disconnectSource(sourceName)
+        connectedUpdateCommandSource = ""
+        Plasmoid.configuration.autoUpdateLastCheck = new Date().toISOString()
+    }
+
+    function handleUpdateCommandTimeout() {
+        if (connectedUpdateCommandSource.length === 0) {
+            return
+        }
+        var sourceName = connectedUpdateCommandSource
+        finishUpdateCommand(sourceName)
+        setWidgetUpdateState(
+            i18n("Widget update check failed."),
+            i18n("Widget update check timed out."))
     }
 
     function setWidgetUpdateState(statusText, errorText, persistState) {
@@ -2352,11 +2433,7 @@ PlasmoidItem {
         if (sourceName !== connectedUpdateCommandSource) {
             return
         }
-        updateSource.disconnectSource(sourceName)
-        connectedUpdateCommandSource = ""
-
-        var checkedAt = new Date().toISOString()
-        Plasmoid.configuration.autoUpdateLastCheck = checkedAt
+        finishUpdateCommand(sourceName)
 
         var trimmed = stdoutText.trim()
         if (trimmed.length === 0) {
@@ -3640,11 +3717,6 @@ PlasmoidItem {
             var stdoutText = data && data["stdout"] ? data["stdout"] : ""
             var stderrText = data && data["stderr"] ? data["stderr"] : ""
 
-            if (root.retiredUsageCommands[sourceName]) {
-                root.finishUsageCommandSource(sourceName)
-                return
-            }
-
             if (sourceName === root.connectedCostCommandSource) {
                 root.connectedCostCommandSource = ""
                 root.finishUsageCommandSource(sourceName)
@@ -3692,6 +3764,16 @@ PlasmoidItem {
         onTriggered: root.refreshNow()
     }
 
+    Timer {
+        id: accountCommandTimeoutTimer
+
+        interval: 1000
+        repeat: true
+        running: root.hasPendingAccountCommands()
+        triggeredOnStart: false
+        onTriggered: root.expirePendingAccountCommands(Date.now())
+    }
+
     Plasma5Support.DataSource {
         id: providerConfigWatcher
 
@@ -3715,6 +3797,13 @@ PlasmoidItem {
         running: root.updateChecksEnabled
         triggeredOnStart: false
         onTriggered: root.checkForWidgetUpdate()
+    }
+
+    Timer {
+        id: updateCommandTimeoutTimer
+
+        repeat: false
+        onTriggered: root.handleUpdateCommandTimeout()
     }
 
     Plasma5Support.DataSource {

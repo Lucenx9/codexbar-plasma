@@ -52,6 +52,8 @@ KCM.SimpleKCM {
     property var providerFieldPending: ({})
     // running command source -> descriptor { kind, provider, desiredEnabled, fieldID, actionID }
     property var commands: ({})
+    property int commandRunSerial: 0
+    readonly property int configCommandTimeoutMs: 60000
     property var providerDiagnostics: ({})
     property var providerDiagnosticErrors: ({})
     property var providerDiagnosticLoading: ({})
@@ -69,6 +71,7 @@ KCM.SimpleKCM {
             providers = []
             return
         }
+        disconnectCommandsByKind("list")
         loading = true
         errorText = ""
         if (preserveMessages !== true) {
@@ -89,7 +92,11 @@ KCM.SimpleKCM {
         command.push("--format")
         command.push("json")
         command.push("--json-only")
-        runCommand(command.join(" "), { kind: "list", includeDescriptors: includeDescriptors === true })
+        runCommand(command.join(" "), {
+            kind: "list",
+            includeDescriptors: includeDescriptors === true,
+            timeoutMs: configCommandTimeoutMs
+        })
     }
 
     function setEnabled(providerID, desiredEnabled) {
@@ -109,7 +116,12 @@ KCM.SimpleKCM {
             "json",
             "--json-only"
         ].join(" ")
-        runCommand(command, { kind: "toggle", provider: providerID, desiredEnabled: desiredEnabled })
+        runCommand(command, {
+            kind: "toggle",
+            provider: providerID,
+            desiredEnabled: desiredEnabled,
+            timeoutMs: configCommandTimeoutMs
+        })
     }
 
     function setApiKey(providerID) {
@@ -144,14 +156,99 @@ KCM.SimpleKCM {
             shellQuote(providerID),
             "--format json --redact"
         ].join(" ")
-        runCommand(command, { kind: "diagnose", provider: providerID })
+        runCommand(command, {
+            kind: "diagnose",
+            provider: providerID,
+            timeoutMs: configCommandTimeoutMs
+        })
+    }
+
+    function commandWithRunNonce(command) {
+        if (command.length === 0) {
+            return ""
+        }
+        commandRunSerial += 1
+        return "CODEXBAR_PLASMA_RUN=" + commandRunSerial + " " + command
+    }
+
+    function disconnectCommandsByKind(kind) {
+        var remaining = copyObject(commands)
+        for (var sourceName in commands) {
+            if (!hasOwnKey(commands, sourceName)) {
+                continue
+            }
+            var descriptor = commands[sourceName]
+            if (descriptor && descriptor.kind === kind) {
+                configSource.disconnectSource(sourceName)
+                delete remaining[sourceName]
+            }
+        }
+        commands = remaining
     }
 
     function runCommand(command, descriptor) {
+        var sourceName = commandWithRunNonce(command)
+        var nextDescriptor = copyObject(descriptor)
+        var timeoutMs = Number(nextDescriptor.timeoutMs)
+        if (isFinite(timeoutMs) && timeoutMs > 0) {
+            nextDescriptor.deadlineMs = Date.now() + timeoutMs
+        }
         var existing = copyObject(commands)
-        existing[command] = descriptor
+        existing[sourceName] = nextDescriptor
         commands = existing
-        configSource.connectSource(command)
+        configSource.connectSource(sourceName)
+    }
+
+    function hasTimedConfigCommands() {
+        for (var sourceName in commands) {
+            if (hasOwnKey(commands, sourceName) && isFinite(Number(commands[sourceName].deadlineMs))) {
+                return true
+            }
+        }
+        return false
+    }
+
+    function expireConfigCommands(nowMs) {
+        var remaining = copyObject(commands)
+        var expired = []
+        for (var sourceName in commands) {
+            if (!hasOwnKey(commands, sourceName)) {
+                continue
+            }
+            var descriptor = commands[sourceName]
+            var deadline = Number(descriptor.deadlineMs)
+            if (!isFinite(deadline) || nowMs < deadline) {
+                continue
+            }
+            configSource.disconnectSource(sourceName)
+            delete remaining[sourceName]
+            expired.push(descriptor)
+        }
+        if (expired.length === 0) {
+            return
+        }
+        commands = remaining
+        for (var i = 0; i < expired.length; i++) {
+            var descriptor = expired[i]
+            handleConfigCommandTimeout(descriptor)
+        }
+    }
+
+    function handleConfigCommandTimeout(descriptor) {
+        if (descriptor.kind === "list") {
+            loading = false
+            errorText = i18n("Loading providers timed out. Try again.")
+        } else if (descriptor.kind === "diagnose") {
+            setProviderDiagnosticLoading(descriptor.provider, false)
+            setProviderDiagnosticError(descriptor.provider, i18n("Loading provider diagnostics timed out. Try again."))
+        } else if (descriptor.kind === "toggle") {
+            markPending(descriptor.provider, false)
+            errorText = i18n("%1 command timed out. Try again.", displayNameForProvider(descriptor.provider))
+        } else if (descriptor.kind === "descriptorField" || descriptor.kind === "descriptorAction") {
+            var fieldID = descriptor.kind === "descriptorField" ? descriptor.fieldID : descriptor.actionID
+            markFieldPending(descriptor.provider, fieldID, false)
+            errorText = i18n("%1 command timed out. Try again.", displayNameForProvider(descriptor.provider))
+        }
     }
 
     function handleData(sourceName, stdoutText, stderrText, exitCode) {
@@ -944,7 +1041,12 @@ KCM.SimpleKCM {
         statusText = ""
         markFieldPending(providerID, field.id, true)
         var command = runDescriptorCommand(field.writeCommand, ({ "{value}": value }), field.kind === "secret" ? value : null)
-        runCommand(command, { kind: "descriptorField", provider: providerID, fieldID: field.id })
+        runCommand(command, {
+            kind: "descriptorField",
+            provider: providerID,
+            fieldID: field.id,
+            timeoutMs: configCommandTimeoutMs
+        })
     }
 
     function promptDescriptorSecret(providerID, field) {
@@ -983,7 +1085,12 @@ KCM.SimpleKCM {
         statusText = ""
         markFieldPending(providerID, action.id, true)
         var command = runDescriptorCommand(action.command, ({}), null)
-        runCommand(command, { kind: "descriptorAction", provider: providerID, actionID: action.id })
+        runCommand(command, {
+            kind: "descriptorAction",
+            provider: providerID,
+            actionID: action.id,
+            timeoutMs: configCommandTimeoutMs
+        })
     }
 
     function runDescriptorCommand(commandTokens, replacements, stdinValue) {
@@ -1023,11 +1130,15 @@ KCM.SimpleKCM {
         return result
     }
 
+    function descriptorValueText(value) {
+        return value === undefined || value === null ? "" : String(value)
+    }
+
     function fieldOptionIndex(field) {
         if (!field || !Array.isArray(field.options)) {
             return -1
         }
-        var value = String(field.value || "")
+        var value = descriptorValueText(field.value)
         for (var i = 0; i < field.options.length; i++) {
             if (field.options[i].id === value) {
                 return i
@@ -1518,6 +1629,16 @@ KCM.SimpleKCM {
         return keys
     }
 
+    Timer {
+        id: configCommandTimeoutTimer
+
+        interval: 1000
+        repeat: true
+        running: page.hasTimedConfigCommands()
+        triggeredOnStart: false
+        onTriggered: page.expireConfigCommands(Date.now())
+    }
+
     Plasma5Support.DataSource {
         id: configSource
 
@@ -1778,7 +1899,7 @@ KCM.SimpleKCM {
                                 Controls.TextField {
                                     id: descriptorTextField
                                     Layout.fillWidth: true
-                                    text: String(modelData.value || "")
+                                    text: page.descriptorValueText(modelData.value)
                                     placeholderText: modelData.description
                                     inputMethodHints: modelData.kind === "number" ? Qt.ImhDigitsOnly : Qt.ImhNone
                                     enabled: page.selectedProvider

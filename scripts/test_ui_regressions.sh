@@ -58,6 +58,7 @@ main_qml = root / "contents/ui/main.qml"
 general_qml = root / "contents/ui/configGeneral.qml"
 display_qml = root / "contents/ui/configDisplay.qml"
 providers_qml = root / "contents/ui/configProviders.qml"
+provider_accounts_panel_qml = root / "contents/ui/components/ProviderAccountsPanel.qml"
 provider_header_qml = root / "contents/ui/components/ProviderHeader.qml"
 provider_config_row_qml = root / "contents/ui/components/ProviderConfigRow.qml"
 
@@ -126,6 +127,7 @@ main_text = main_qml.read_text(encoding="utf-8")
 general_text = general_qml.read_text(encoding="utf-8")
 display_text = display_qml.read_text(encoding="utf-8")
 providers_text = providers_qml.read_text(encoding="utf-8")
+provider_accounts_panel_text = provider_accounts_panel_qml.read_text(encoding="utf-8")
 provider_header_text = provider_header_qml.read_text(encoding="utf-8")
 provider_config_row_text = provider_config_row_qml.read_text(encoding="utf-8")
 
@@ -154,6 +156,27 @@ assert_form_sections(
     "configDisplay.qml",
     ("Panel", "Usage details", "Overview"),
 )
+
+for runtime_cfg in (
+    "cfg_autoUpdateLastCheck",
+    "cfg_widgetUpdateLastStatus",
+    "cfg_widgetUpdateLastError",
+    "cfg_providerConfigRevision",
+):
+    if runtime_cfg in general_text:
+        raise AssertionError(
+            f"configGeneral.qml must not save runtime-owned {runtime_cfg} on Apply"
+        )
+for live_config_fragment in (
+    "Plasmoid.configuration.autoUpdateLastCheck",
+    "Plasmoid.configuration.widgetUpdateLastStatus",
+    "Plasmoid.configuration.widgetUpdateLastError",
+):
+    if live_config_fragment not in general_text:
+        raise AssertionError(
+            "configGeneral.qml must read update status directly from runtime config; "
+            f"missing {live_config_fragment!r}"
+        )
 
 if "—" in main_text or "–" in main_text:
     raise AssertionError("main.qml must avoid em dash/en dash placeholders in visible UI text")
@@ -309,6 +332,40 @@ add_window_body = function_body(main_text, "addWindow")
 if "pace.expectedUsedPercent !== null" not in add_window_body or "pace.expectedUsedPercent !== undefined" not in add_window_body:
     raise AssertionError("addWindow must not treat null pace.expectedUsedPercent as 0")
 
+refresh_body = function_body(main_text, "refreshNow")
+if "refreshCost()" not in refresh_body:
+    raise AssertionError("refreshNow must retire or refresh cost work before every return")
+empty_command_index = refresh_body.find("if (commandSource.length === 0)")
+loading_false_index = refresh_body.find("loading = false", empty_command_index)
+empty_return_index = refresh_body.find("return", empty_command_index)
+if empty_command_index < 0 or loading_false_index < 0 or loading_false_index > empty_return_index:
+    raise AssertionError("refreshNow must clear loading before returning for an empty command")
+
+provider_token_cost_body = function_body(main_text, "providerTokenCost")
+if "tokenCosts[key]" not in provider_token_cost_body:
+    raise AssertionError("providerTokenCost must read the current token-cost map")
+replace_snapshot_body = function_body(main_text, "replaceProviderSnapshot")
+for snapshot_fragment in ("copyObject(snapshot)", "providerTokenCost(key)", "replacement"):
+    if snapshot_fragment not in replace_snapshot_body:
+        raise AssertionError(
+            "replaceProviderSnapshot must preserve current token-cost state; "
+            f"missing {snapshot_fragment!r}"
+        )
+
+if "checked = Qt.binding(function()" not in provider_accounts_panel_text:
+    raise AssertionError("account buttons must restore their checked binding after clicks")
+if "accountIsSelected(modelData, accountsPanel.providerData)" not in provider_accounts_panel_text:
+    raise AssertionError("restored account bindings must follow the selected account state")
+
+if 'String(modelData.value || "")' in providers_text:
+    raise AssertionError("descriptor text fields must preserve numeric zero")
+descriptor_value_body = function_body(providers_text, "descriptorValueText")
+if "value === undefined || value === null" not in descriptor_value_body:
+    raise AssertionError("descriptorValueText must only blank nullish values")
+field_option_body = function_body(providers_text, "fieldOptionIndex")
+if "descriptorValueText(field.value)" not in field_option_body:
+    raise AssertionError("fieldOptionIndex must preserve numeric zero via descriptorValueText")
+
 accounts_body = function_body(main_text, "parseProviderAccountsOutput")
 if "var dedupedOptions = dedupeAccountOptions(options)" not in accounts_body:
     raise AssertionError("parseProviderAccountsOutput must decide errors after account option dedupe")
@@ -426,6 +483,28 @@ for selected_row_fragment in (
             "ProviderConfigRow selected state must set explicit contrast-aware "
             f"text colors; missing {selected_row_fragment!r}"
         )
+
+notification_scope_body = function_body(main_text, "notificationScopeKey")
+for scope_fragment in ("providerMapKey(item.provider)", "selectedAccountForProvider", "accountLabel(item)", "JSON.stringify"):
+    if scope_fragment not in notification_scope_body:
+        raise AssertionError(
+            "notificationScopeKey must include stable provider/account identity; "
+            f"missing {scope_fragment!r}"
+        )
+for key_function in ("statusNotificationKey", "quotaNotificationKey", "limitResetNotificationKey"):
+    key_body = function_body(main_text, key_function)
+    if "notificationScopeKey(item)" not in key_body:
+        raise AssertionError(f"{key_function} must scope memo state by account")
+process_notifications_body = function_body(main_text, "processNotifications")
+for memo_fragment in ("copyObject(notificationMemo)", "clearNotificationScopeMemo(nextMemo, item)"):
+    if memo_fragment not in process_notifications_body:
+        raise AssertionError(
+            "processNotifications must preserve other accounts and rebuild the current scope; "
+            f"missing {memo_fragment!r}"
+        )
+clear_scope_body = function_body(main_text, "clearNotificationScopeMemo")
+if "notificationScopeKey(item)" not in clear_scope_body or "delete nextMemo[key]" not in clear_scope_body:
+    raise AssertionError("clearNotificationScopeMemo must remove stale keys for the current account")
 
 # Status notifications must fire on first sight, worsened severity, and changed
 # same-severity stable incident keys so active incident replacements are not

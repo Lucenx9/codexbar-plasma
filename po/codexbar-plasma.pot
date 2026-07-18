@@ -336,6 +336,18 @@ msgid "API key for %1"
 msgstr ""
 
 #: contents/ui/configProviders.qml
+msgid "Loading providers timed out. Try again."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Loading provider diagnostics timed out. Try again."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "%1 command timed out. Try again."
+msgstr ""
+
+#: contents/ui/configProviders.qml
 msgid "Could not parse codexbar response: %1"
 msgstr ""
 
@@ -597,6 +609,10 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "No enabled CodexBar providers."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Loading accounts timed out. Try again."
 msgstr ""
 
 #: contents/ui/main.qml
@@ -1076,6 +1092,10 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Widget update check failed."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Widget update check timed out."
 msgstr ""
 
 #: contents/ui/main.qml
