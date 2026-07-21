@@ -12,7 +12,7 @@
     "Id": "app.codexbar.plasma",
     "License": "MIT",
     "Name": "CodexBar",
-    "Version": "0.2.11",
+    "Version": "0.2.12",
     "Website": "https://github.com/Lucenx9/codexbar-plasma"
   },
   "X-Plasma-API-Minimum-Version": "6.0"
