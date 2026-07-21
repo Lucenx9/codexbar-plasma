@@ -5,6 +5,11 @@ REPO_OWNER="Lucenx9"
 REPO_NAME="codexbar-plasma"
 ASSET_NAME="codexbar-plasma.plasmoid"
 API_VERSION="2026-03-10"
+CURL_CONNECT_TIMEOUT_SECONDS=10
+CURL_METADATA_MAX_TIME_SECONDS=30
+CURL_ASSET_MAX_TIME_SECONDS=300
+KPACKAGE_INSTALL_MAX_TIME_SECONDS=120
+KPACKAGE_INSTALL_KILL_AFTER_SECONDS=10
 MODE="check"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -108,6 +113,7 @@ if [[ -z "$RELEASE_JSON" ]]; then
 fi
 if [[ "$MODE" == "install" ]]; then
   require_command kpackagetool6
+  require_command timeout
 fi
 
 if [[ ! -f "$METADATA_PATH" ]]; then
@@ -124,6 +130,8 @@ if [[ -z "$RELEASE_JSON" ]]; then
   RELEASE_JSON="${TMP_DIR}/release.json"
   release_url="https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest"
   curl --fail --location --show-error --silent \
+    --connect-timeout "$CURL_CONNECT_TIMEOUT_SECONDS" \
+    --max-time "$CURL_METADATA_MAX_TIME_SECONDS" \
     -H "Accept: application/vnd.github+json" \
     -H "X-GitHub-Api-Version: ${API_VERSION}" \
     "$release_url" > "$RELEASE_JSON" || fail "failed to fetch release metadata from GitHub"
@@ -171,7 +179,12 @@ if [[ -z "$TMP_DIR" ]]; then
   TMP_DIR="$(mktemp -d)"
 fi
 package_path="${TMP_DIR}/${ASSET_NAME}"
-curl --fail --location --show-error --silent "$asset_url" --output "$package_path" || fail "failed to download release asset"
-kpackagetool6 -t Plasma/Applet -u "$package_path" || fail "failed to install widget package"
+curl --fail --location --show-error --silent \
+  --connect-timeout "$CURL_CONNECT_TIMEOUT_SECONDS" \
+  --max-time "$CURL_ASSET_MAX_TIME_SECONDS" \
+  "$asset_url" --output "$package_path" || fail "failed to download release asset"
+timeout --kill-after="${KPACKAGE_INSTALL_KILL_AFTER_SECONDS}s" \
+  "${KPACKAGE_INSTALL_MAX_TIME_SECONDS}s" \
+  kpackagetool6 -t Plasma/Applet -u "$package_path" || fail "failed to install widget package"
 
 emit_status "installed" "widget update installed; restart Plasma to apply the update" "$local_version" "$remote_version" "$asset_url"

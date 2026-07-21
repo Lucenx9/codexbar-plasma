@@ -58,6 +58,7 @@ main_qml = root / "contents/ui/main.qml"
 general_qml = root / "contents/ui/configGeneral.qml"
 display_qml = root / "contents/ui/configDisplay.qml"
 providers_qml = root / "contents/ui/configProviders.qml"
+provider_accounts_panel_qml = root / "contents/ui/components/ProviderAccountsPanel.qml"
 provider_header_qml = root / "contents/ui/components/ProviderHeader.qml"
 provider_config_row_qml = root / "contents/ui/components/ProviderConfigRow.qml"
 
@@ -126,6 +127,7 @@ main_text = main_qml.read_text(encoding="utf-8")
 general_text = general_qml.read_text(encoding="utf-8")
 display_text = display_qml.read_text(encoding="utf-8")
 providers_text = providers_qml.read_text(encoding="utf-8")
+provider_accounts_panel_text = provider_accounts_panel_qml.read_text(encoding="utf-8")
 provider_header_text = provider_header_qml.read_text(encoding="utf-8")
 provider_config_row_text = provider_config_row_qml.read_text(encoding="utf-8")
 
@@ -154,6 +156,27 @@ assert_form_sections(
     "configDisplay.qml",
     ("Panel", "Usage details", "Overview"),
 )
+
+for runtime_cfg in (
+    "cfg_autoUpdateLastCheck",
+    "cfg_widgetUpdateLastStatus",
+    "cfg_widgetUpdateLastError",
+    "cfg_providerConfigRevision",
+):
+    if runtime_cfg in general_text:
+        raise AssertionError(
+            f"configGeneral.qml must not save runtime-owned {runtime_cfg} on Apply"
+        )
+for live_config_fragment in (
+    "Plasmoid.configuration.autoUpdateLastCheck",
+    "Plasmoid.configuration.widgetUpdateLastStatus",
+    "Plasmoid.configuration.widgetUpdateLastError",
+):
+    if live_config_fragment not in general_text:
+        raise AssertionError(
+            "configGeneral.qml must read update status directly from runtime config; "
+            f"missing {live_config_fragment!r}"
+        )
 
 if "—" in main_text or "–" in main_text:
     raise AssertionError("main.qml must avoid em dash/en dash placeholders in visible UI text")
@@ -309,6 +332,62 @@ add_window_body = function_body(main_text, "addWindow")
 if "pace.expectedUsedPercent !== null" not in add_window_body or "pace.expectedUsedPercent !== undefined" not in add_window_body:
     raise AssertionError("addWindow must not treat null pace.expectedUsedPercent as 0")
 
+refresh_body = function_body(main_text, "refreshNow")
+if "refreshCost()" not in refresh_body:
+    raise AssertionError("refreshNow must retire or refresh cost work before every return")
+fallback_body = function_body(main_text, "canUseProviderFallback")
+if not re.fullmatch(
+    r"\s*return\s+source\.length\s*===\s*0\s*\|\|\s*hasSelectedAccountOverrides\(\)\s*",
+    fallback_body,
+    re.S,
+):
+    raise AssertionError("account overrides must force provider-scoped refreshes even with a source override")
+selected_overrides_body = function_body(main_text, "hasSelectedAccountOverrides")
+for selected_fragment in ("selectedAccounts", "hasOwnKey(selectedAccounts, providerID)", "String(selectedAccounts[providerID] || \"\").length > 0"):
+    if selected_fragment not in selected_overrides_body:
+        raise AssertionError(
+            "hasSelectedAccountOverrides must detect configured provider accounts; "
+            f"missing {selected_fragment!r}"
+        )
+if not re.search(
+    r"if\s*\(hasOwnKey\(selectedAccounts,\s*providerID\).*?String\(selectedAccounts\[providerID\]\s*\|\|\s*\"\"\)\.length\s*>\s*0\)\s*\{\s*return\s+true\s*\}",
+    selected_overrides_body,
+    re.S,
+):
+    raise AssertionError("a populated selected-account override must return true")
+if not re.search(r"return\s+false\s*$", selected_overrides_body):
+    raise AssertionError("hasSelectedAccountOverrides must return false when no override exists")
+empty_command_index = refresh_body.find("if (commandSource.length === 0)")
+loading_false_index = refresh_body.find("loading = false", empty_command_index)
+empty_return_index = refresh_body.find("return", empty_command_index)
+if empty_command_index < 0 or loading_false_index < 0 or loading_false_index > empty_return_index:
+    raise AssertionError("refreshNow must clear loading before returning for an empty command")
+
+provider_token_cost_body = function_body(main_text, "providerTokenCost")
+if "tokenCosts[key]" not in provider_token_cost_body:
+    raise AssertionError("providerTokenCost must read the current token-cost map")
+replace_snapshot_body = function_body(main_text, "replaceProviderSnapshot")
+for snapshot_fragment in ("copyObject(snapshot)", "providerTokenCost(key)", "replacement"):
+    if snapshot_fragment not in replace_snapshot_body:
+        raise AssertionError(
+            "replaceProviderSnapshot must preserve current token-cost state; "
+            f"missing {snapshot_fragment!r}"
+        )
+
+if "checked = Qt.binding(function()" not in provider_accounts_panel_text:
+    raise AssertionError("account buttons must restore their checked binding after clicks")
+if "accountIsSelected(modelData, accountsPanel.providerData)" not in provider_accounts_panel_text:
+    raise AssertionError("restored account bindings must follow the selected account state")
+
+if 'String(modelData.value || "")' in providers_text:
+    raise AssertionError("descriptor text fields must preserve numeric zero")
+descriptor_value_body = function_body(providers_text, "descriptorValueText")
+if "value === undefined || value === null" not in descriptor_value_body:
+    raise AssertionError("descriptorValueText must only blank nullish values")
+field_option_body = function_body(providers_text, "fieldOptionIndex")
+if "descriptorValueText(field.value)" not in field_option_body:
+    raise AssertionError("fieldOptionIndex must preserve numeric zero via descriptorValueText")
+
 accounts_body = function_body(main_text, "parseProviderAccountsOutput")
 if "var dedupedOptions = dedupeAccountOptions(options)" not in accounts_body:
     raise AssertionError("parseProviderAccountsOutput must decide errors after account option dedupe")
@@ -426,6 +505,161 @@ for selected_row_fragment in (
             "ProviderConfigRow selected state must set explicit contrast-aware "
             f"text colors; missing {selected_row_fragment!r}"
         )
+
+notification_scope_body = function_body(main_text, "notificationScopeKey")
+for scope_fragment in ("providerMapKey(item.provider)", "selectedAccountForProvider", "accountLabel(item)", "JSON.stringify"):
+    if scope_fragment not in notification_scope_body:
+        raise AssertionError(
+            "notificationScopeKey must include stable provider/account identity; "
+            f"missing {scope_fragment!r}"
+        )
+pending_getter_body = function_body(main_text, "notificationProviderRefreshPending")
+if not re.fullmatch(
+    r"\s*var\s+key\s*=\s*providerMapKey\(providerID\)\s*"
+    r"return\s+key\.length\s*>\s*0\s*&&\s*notificationRefreshPending\[key\]\s*===\s*true\s*",
+    pending_getter_body,
+    re.S,
+):
+    raise AssertionError("notificationProviderRefreshPending must read the provider pending map")
+pending_setter_body = function_body(main_text, "setNotificationProviderRefreshPending")
+for setter_fragment in (
+    "var nextPending = copyObject(notificationRefreshPending)",
+    "nextPending[key] = true",
+    "delete nextPending[key]",
+    "notificationRefreshPending = nextPending",
+):
+    if setter_fragment not in pending_setter_body:
+        raise AssertionError(
+            "setNotificationProviderRefreshPending must update the copied pending map; "
+            f"missing {setter_fragment!r}"
+        )
+if not re.search(
+    r"if\s*\(pending\)\s*\{\s*nextPending\[key\]\s*=\s*true\s*\}\s*else\s*\{\s*delete\s+nextPending\[key\]\s*\}",
+    pending_setter_body,
+    re.S,
+):
+    raise AssertionError("setNotificationProviderRefreshPending must set or clear the provider entry")
+
+status_key_body = function_body(main_text, "statusNotificationKey")
+if not re.fullmatch(
+    r'\s*return\s+"status:"\s*\+\s*providerMapKey\(item\.provider\)\s*',
+    status_key_body,
+    re.S,
+):
+    raise AssertionError("statusNotificationKey must remain exclusively provider-scoped across account switches")
+for key_function in ("quotaNotificationKey", "limitResetNotificationKey"):
+    key_body = function_body(main_text, key_function)
+    if "notificationScopeKey(item)" not in key_body:
+        raise AssertionError(f"{key_function} must scope memo state by account")
+primed_key_body = function_body(main_text, "notificationScopePrimedKey")
+if "notificationScopeKey(item)" not in primed_key_body:
+    raise AssertionError("notificationScopePrimedKey must identify each provider/account observation")
+prime_account_body = function_body(main_text, "primeAccountNotificationScope")
+for prime_fragment in (
+    "notificationScopePrimedKey(item)",
+    "quotaNotificationKey(item, rows[j], j)",
+    "limitResetNotificationKey(item, resetRow, k)",
+):
+    if prime_fragment not in prime_account_body:
+        raise AssertionError(
+            "primeAccountNotificationScope must seed account state without notifying; "
+            f"missing {prime_fragment!r}"
+        )
+for forbidden_prime_call in (
+    "sendPlasmaNotification",
+    "processStatusNotification",
+    "processQuotaNotifications",
+    "processLimitResetNotifications",
+):
+    if forbidden_prime_call in prime_account_body:
+        raise AssertionError(
+            "primeAccountNotificationScope must seed state without notification processing; "
+            f"found {forbidden_prime_call!r}"
+        )
+prime_notifications_body = function_body(main_text, "primeNotifications")
+if "notificationProviderRefreshPending(item.provider)" not in prime_notifications_body:
+    raise AssertionError("primeNotifications must not seed memo state from a cached account snapshot")
+process_notifications_body = function_body(main_text, "processNotifications")
+for memo_fragment in (
+    "copyObject(notificationMemo)",
+    "notificationProviderRefreshPending(item.provider)",
+    "notificationMemo[notificationScopePrimedKey(item)] !== \"1\"",
+    "primeAccountNotificationScope(item, nextMemo)",
+    "clearNotificationScopeMemo(nextMemo, item)",
+):
+    if memo_fragment not in process_notifications_body:
+        raise AssertionError(
+            "processNotifications must preserve, suppress, or silently prime account state; "
+            f"missing {memo_fragment!r}"
+        )
+pending_guard_index = process_notifications_body.find("notificationProviderRefreshPending(item.provider)")
+status_process_index = process_notifications_body.find("processStatusNotification(item, nextMemo)")
+prime_guard_index = process_notifications_body.find("notificationMemo[notificationScopePrimedKey(item)] !== \"1\"")
+quota_process_index = process_notifications_body.find("processQuotaNotifications(item, nextMemo)")
+reset_process_index = process_notifications_body.find("processLimitResetNotifications(item, nextMemo)")
+if pending_guard_index > status_process_index:
+    raise AssertionError("cached account snapshots must be suppressed before any status or quota notification")
+if not re.search(
+    r"if\s*\(notificationProviderRefreshPending\(item\.provider\)\)\s*\{\s*continue\s*\}",
+    process_notifications_body,
+    re.S,
+):
+    raise AssertionError("cached account notification suppression must exit the provider loop")
+if prime_guard_index > quota_process_index or prime_guard_index > reset_process_index:
+    raise AssertionError("new account scopes must be primed before quota or reset notification processing")
+if not re.search(
+    r'if\s*\(notificationMemo\[notificationScopePrimedKey\(item\)\]\s*!==\s*"1"\)\s*\{'
+    r"\s*primeAccountNotificationScope\(item,\s*nextMemo\)\s*continue\s*\}",
+    process_notifications_body,
+    re.S,
+):
+    raise AssertionError("first account observation must prime state and exit before notification processing")
+status_process_body = function_body(main_text, "processStatusNotification")
+if "var key = statusNotificationKey(item)" not in status_process_body:
+    raise AssertionError("processStatusNotification must consume the provider-scoped status key helper")
+clear_scope_body = function_body(main_text, "clearNotificationScopeMemo")
+if "notificationScopeKey(item)" not in clear_scope_body or "delete nextMemo[key]" not in clear_scope_body:
+    raise AssertionError("clearNotificationScopeMemo must remove stale quota/reset keys for the current account")
+if "statusNotificationKey(item)" in clear_scope_body:
+    raise AssertionError("clearing an account scope must not erase provider-scoped status state")
+
+select_account_body = function_body(main_text, "selectAccount")
+pending_index = select_account_body.find("setNotificationProviderRefreshPending(key, true)")
+snapshot_index = select_account_body.find("replaceProviderSnapshot(key, options[i])")
+refresh_index = select_account_body.find("Qt.callLater(refreshNow)", snapshot_index)
+return_index = select_account_body.find("return", snapshot_index)
+if pending_index < 0 or snapshot_index < 0 or pending_index > snapshot_index:
+    raise AssertionError("selectAccount must suppress cached snapshots until fresh usage data arrives")
+if refresh_index < 0 or return_index < 0 or refresh_index > return_index:
+    raise AssertionError("selectAccount must schedule a fresh usage request before returning a cached snapshot")
+for fresh_function in ("parseOutput", "finishProviderFallback"):
+    fresh_body = function_body(main_text, fresh_function)
+    fresh_index = fresh_body.find("markNotificationProvidersFresh(nextProviders)")
+    providers_index = fresh_body.find("providers = nextProviders")
+    if fresh_index < 0 or providers_index < 0 or fresh_index > providers_index:
+        raise AssertionError(f"{fresh_function} must mark fresh provider data before publishing it")
+mark_fresh_body = function_body(main_text, "markNotificationProvidersFresh")
+error_guard = "if (!item || (item.error && String(item.error).length > 0))"
+selected_guard = "selectedAccount.length > 0 && accountLabel(item) !== selectedAccount"
+delete_pending_index = mark_fresh_body.find("delete nextPending[providerID]")
+if error_guard not in mark_fresh_body or mark_fresh_body.find(error_guard) > delete_pending_index:
+    raise AssertionError("markNotificationProvidersFresh must retain suppression for failed refreshes")
+if not re.search(
+    r"if\s*\(!item\s*\|\|\s*\(item\.error\s*&&\s*String\(item\.error\)\.length\s*>\s*0\)\)\s*\{\s*continue\s*\}",
+    mark_fresh_body,
+    re.S,
+):
+    raise AssertionError("failed refreshes must continue without clearing notification suppression")
+if "var selectedAccount = selectedAccountForProvider(providerID)" not in mark_fresh_body:
+    raise AssertionError("markNotificationProvidersFresh must correlate fresh data with the selected account")
+if selected_guard not in mark_fresh_body or mark_fresh_body.find(selected_guard) > delete_pending_index:
+    raise AssertionError("stale responses for a previous account must not clear notification suppression")
+if not re.search(
+    r"if\s*\(selectedAccount\.length\s*>\s*0\s*&&\s*accountLabel\(item\)\s*!==\s*selectedAccount\)\s*\{\s*continue\s*\}",
+    mark_fresh_body,
+    re.S,
+):
+    raise AssertionError("previous-account responses must continue without clearing notification suppression")
 
 # Status notifications must fire on first sight, worsened severity, and changed
 # same-severity stable incident keys so active incident replacements are not

@@ -3,6 +3,7 @@ import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
+import org.kde.plasma.plasmoid
 
 KCM.SimpleKCM {
     id: page
@@ -33,14 +34,9 @@ KCM.SimpleKCM {
     property bool cfg_autoUpdateEnabledDefault
     property alias cfg_autoUpdateIntervalHours: autoUpdateIntervalHoursSpin.value
     property int cfg_autoUpdateIntervalHoursDefault
-    property string cfg_autoUpdateLastCheck
-    property string cfg_autoUpdateLastCheckDefault
-    property string cfg_widgetUpdateLastStatus
-    property string cfg_widgetUpdateLastStatusDefault
-    property string cfg_widgetUpdateLastError
-    property string cfg_widgetUpdateLastErrorDefault
-    property int cfg_providerConfigRevision
-    property int cfg_providerConfigRevisionDefault
+    readonly property string autoUpdateLastCheck: Plasmoid.configuration.autoUpdateLastCheck || ""
+    readonly property string widgetUpdateLastStatus: Plasmoid.configuration.widgetUpdateLastStatus || ""
+    readonly property string widgetUpdateLastError: Plasmoid.configuration.widgetUpdateLastError || ""
 
     function refreshPresetIndex(value) {
         var numeric = Number(value)
@@ -212,8 +208,8 @@ KCM.SimpleKCM {
         Controls.Label {
             id: lastUpdateCheckLabel
 
-            text: cfg_autoUpdateLastCheck.length > 0
-                ? i18n("Last update check: %1", cfg_autoUpdateLastCheck)
+            text: autoUpdateLastCheck.length > 0
+                ? i18n("Last update check: %1", autoUpdateLastCheck)
                 : i18n("Last update check: never")
             visible: updateChecksEnabledCheck.checked
             opacity: 0.7
@@ -224,8 +220,8 @@ KCM.SimpleKCM {
         Controls.Label {
             id: lastUpdateStatusLabel
 
-            text: i18n("Last update status: %1", cfg_widgetUpdateLastStatus)
-            visible: updateChecksEnabledCheck.checked && cfg_widgetUpdateLastStatus.length > 0
+            text: i18n("Last update status: %1", widgetUpdateLastStatus)
+            visible: updateChecksEnabledCheck.checked && widgetUpdateLastStatus.length > 0
             opacity: 0.7
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
@@ -234,8 +230,8 @@ KCM.SimpleKCM {
         Kirigami.InlineMessage {
             Layout.fillWidth: true
             type: Kirigami.MessageType.Error
-            text: String(cfg_widgetUpdateLastError || "").slice(0, 500)
-            visible: updateChecksEnabledCheck.checked && cfg_widgetUpdateLastError.length > 0
+            text: widgetUpdateLastError.slice(0, 500)
+            visible: updateChecksEnabledCheck.checked && widgetUpdateLastError.length > 0
         }
     }
 }

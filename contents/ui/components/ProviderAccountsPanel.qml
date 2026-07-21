@@ -62,12 +62,16 @@ ColumnLayout {
             delegate: Controls.Button {
                 readonly property string label: accountsPanel.applet.accountLabel(modelData)
                 readonly property string subtitle: accountsPanel.applet.accountSubtitle(modelData)
+                readonly property bool accountSelected: accountsPanel.applet.accountIsSelected(modelData, accountsPanel.providerData)
 
                 checkable: true
-                checked: accountsPanel.applet.accountIsSelected(modelData, accountsPanel.providerData)
+                checked: accountSelected
                 text: subtitle.length > 0 ? label + " · " + subtitle : label
                 icon.name: "user-identity"
-                onClicked: accountsPanel.applet.selectAccount(modelData.provider, label)
+                onClicked: {
+                    accountsPanel.applet.selectAccount(modelData.provider, label)
+                    checked = Qt.binding(function() { return accountSelected })
+                }
             }
         }
     }
