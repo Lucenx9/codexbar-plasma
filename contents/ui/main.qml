@@ -78,10 +78,11 @@ PlasmoidItem {
     property var pendingAccountCommands: ({})
     readonly property int accountCommandTimeoutMs: 60000
     property var notificationMemo: ({})
+    property var notificationRefreshPending: ({})
     property bool notificationsPrimed: false
     property string connectedUpdateCommandSource: ""
     readonly property int widgetUpdateCheckTimeoutMs: 60000
-    readonly property int widgetAutoUpdateTimeoutMs: 300000
+    readonly property int widgetAutoUpdateTimeoutMs: 600000
     property string updateStatusText: boundedWidgetUpdateText(Plasmoid.configuration.widgetUpdateLastStatus)
     property string updateErrorText: boundedWidgetUpdateText(Plasmoid.configuration.widgetUpdateLastError)
     property string lastNotifiedUpdateVersion: Plasmoid.configuration.lastNotifiedUpdateVersion || ""
@@ -465,14 +466,25 @@ PlasmoidItem {
             }
         }
 
+        markNotificationProvidersFresh(nextProviders)
         providers = nextProviders
         errorText = nextProviders.length === 0 ? stderrText.trim() : ""
         lastUpdatedText = i18n("Updated %1", Qt.formatDateTime(new Date(), "hh:mm"))
         loading = false
     }
 
+    function hasSelectedAccountOverrides() {
+        for (var providerID in selectedAccounts) {
+            if (hasOwnKey(selectedAccounts, providerID)
+                && String(selectedAccounts[providerID] || "").length > 0) {
+                return true
+            }
+        }
+        return false
+    }
+
     function canUseProviderFallback() {
-        return source.length === 0
+        return source.length === 0 || hasSelectedAccountOverrides()
     }
 
     function startProviderFallback() {
@@ -642,6 +654,7 @@ PlasmoidItem {
             }
         }
 
+        markNotificationProvidersFresh(nextProviders)
         providers = nextProviders
         errorText = nextProviders.length === 0 ? i18n("codexbar did not return JSON.") : ""
         lastUpdatedText = i18n("Updated %1", Qt.formatDateTime(new Date(), "hh:mm"))
@@ -1563,11 +1576,13 @@ PlasmoidItem {
             delete next[key]
         }
         selectedAccounts = next
+        setNotificationProviderRefreshPending(key, true)
 
         var options = accountOptionsForProvider(key)
         for (var i = 0; i < options.length; i++) {
             if (root.accountLabel(options[i]) === label) {
                 replaceProviderSnapshot(key, options[i])
+                Qt.callLater(refreshNow)
                 return
             }
         }
@@ -2063,6 +2078,45 @@ PlasmoidItem {
         Qt.callLater(processNotifications)
     }
 
+    function notificationProviderRefreshPending(providerID) {
+        var key = providerMapKey(providerID)
+        return key.length > 0 && notificationRefreshPending[key] === true
+    }
+
+    function setNotificationProviderRefreshPending(providerID, pending) {
+        var key = providerMapKey(providerID)
+        if (key.length === 0) {
+            return
+        }
+        var nextPending = copyObject(notificationRefreshPending)
+        if (pending) {
+            nextPending[key] = true
+        } else {
+            delete nextPending[key]
+        }
+        notificationRefreshPending = nextPending
+    }
+
+    function markNotificationProvidersFresh(items) {
+        var nextPending = copyObject(notificationRefreshPending)
+        for (var i = 0; i < items.length; i++) {
+            var item = items[i]
+            if (!item || (item.error && String(item.error).length > 0)) {
+                continue
+            }
+            var providerID = providerMapKey(item.provider)
+            if (providerID.length === 0) {
+                continue
+            }
+            var selectedAccount = selectedAccountForProvider(providerID)
+            if (selectedAccount.length > 0 && accountLabel(item) !== selectedAccount) {
+                continue
+            }
+            delete nextPending[providerID]
+        }
+        notificationRefreshPending = nextPending
+    }
+
     function notificationScopeKey(item) {
         if (!item) {
             return JSON.stringify(["", ""])
@@ -2074,17 +2128,45 @@ PlasmoidItem {
     }
 
     function statusNotificationKey(item) {
-        return "status:" + notificationScopeKey(item)
+        return "status:" + providerMapKey(item.provider)
+    }
+
+    function notificationScopePrimedKey(item) {
+        return "scope:" + notificationScopeKey(item)
     }
 
     function clearNotificationScopeMemo(nextMemo, item) {
         var scope = notificationScopeKey(item)
-        var statusKey = statusNotificationKey(item)
         var quotaPrefix = "quota:" + scope + ":"
         var resetPrefix = "reset:" + scope + ":"
         for (var key in nextMemo) {
-            if (key === statusKey || key.indexOf(quotaPrefix) === 0 || key.indexOf(resetPrefix) === 0) {
+            if (key.indexOf(quotaPrefix) === 0 || key.indexOf(resetPrefix) === 0) {
                 delete nextMemo[key]
+            }
+        }
+    }
+
+    function primeAccountNotificationScope(item, nextMemo) {
+        nextMemo[notificationScopePrimedKey(item)] = "1"
+        if (notifyQuotaWarnings) {
+            var rows = item.rows || []
+            for (var j = 0; j < rows.length; j++) {
+                var level = quotaNotificationLevel(rows[j])
+                if (level.length > 0) {
+                    nextMemo[quotaNotificationKey(item, rows[j], j)] = level
+                }
+            }
+        }
+        if (notifyLimitResets) {
+            // Arm rows that already sit at warning-level usage so a later
+            // reset fires, but never fire on this first observation.
+            var resetRows = item.rows || []
+            for (var k = 0; k < resetRows.length; k++) {
+                var resetRow = resetRows[k]
+                if (resetRow && resetRow.hasPercent
+                    && Number(resetRow.usedPercent) >= limitResetArmThreshold) {
+                    nextMemo[limitResetNotificationKey(item, resetRow, k)] = "1"
+                }
             }
         }
     }
@@ -2093,7 +2175,7 @@ PlasmoidItem {
         var nextMemo = ({})
         for (var i = 0; i < providers.length; i++) {
             var item = providers[i]
-            if (!item) {
+            if (!item || notificationProviderRefreshPending(item.provider)) {
                 continue
             }
             if (notifyStatusIncidents) {
@@ -2102,27 +2184,7 @@ PlasmoidItem {
                     nextMemo[statusNotificationKey(item)] = statusValue
                 }
             }
-            if (notifyQuotaWarnings) {
-                var rows = item.rows || []
-                for (var j = 0; j < rows.length; j++) {
-                    var level = quotaNotificationLevel(rows[j])
-                    if (level.length > 0) {
-                        nextMemo[quotaNotificationKey(item, rows[j], j)] = level
-                    }
-                }
-            }
-            if (notifyLimitResets) {
-                // Arm rows that already sit at warning-level usage so a later
-                // reset fires, but never fire on this first observation.
-                var resetRows = item.rows || []
-                for (var k = 0; k < resetRows.length; k++) {
-                    var resetRow = resetRows[k]
-                    if (resetRow && resetRow.hasPercent
-                        && Number(resetRow.usedPercent) >= limitResetArmThreshold) {
-                        nextMemo[limitResetNotificationKey(item, resetRow, k)] = "1"
-                    }
-                }
-            }
+            primeAccountNotificationScope(item, nextMemo)
         }
         notificationMemo = nextMemo
         notificationsPrimed = true
@@ -2144,9 +2206,16 @@ PlasmoidItem {
                 continue
             }
 
-            clearNotificationScopeMemo(nextMemo, item)
+            if (notificationProviderRefreshPending(item.provider)) {
+                continue
+            }
             if (notifyStatusIncidents) {
                 processStatusNotification(item, nextMemo)
+            }
+            clearNotificationScopeMemo(nextMemo, item)
+            if (notificationMemo[notificationScopePrimedKey(item)] !== "1") {
+                primeAccountNotificationScope(item, nextMemo)
+                continue
             }
             if (notifyQuotaWarnings) {
                 processQuotaNotifications(item, nextMemo)
@@ -2415,8 +2484,8 @@ PlasmoidItem {
         var sourceName = connectedUpdateCommandSource
         finishUpdateCommand(sourceName)
         setWidgetUpdateState(
-            i18n("Widget update check failed."),
-            i18n("Widget update check timed out."))
+            i18n("Widget update failed."),
+            i18n("Widget update operation timed out."))
     }
 
     function setWidgetUpdateState(statusText, errorText, persistState) {

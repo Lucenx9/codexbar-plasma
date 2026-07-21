@@ -1091,11 +1091,15 @@ msgid "Checking for widget updates..."
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Widget update check failed."
+msgid "Widget update failed."
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Widget update check timed out."
+msgid "Widget update operation timed out."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Widget update check failed."
 msgstr ""
 
 #: contents/ui/main.qml
