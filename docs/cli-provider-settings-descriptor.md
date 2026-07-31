@@ -81,8 +81,9 @@ Supported field kinds:
 - `"kind": "enum"`: one of a stable option list.
 - `"kind": "boolean"`: checkbox/toggle.
 - `"kind": "number"`: bounded numeric setting.
-- `"kind": "command"`: read-only row that invokes an action instead of editing
-  a value.
+
+Command-like behavior belongs in the descriptor's `actions` array, not in
+`fields`; every field is editable and must provide an allowed `writeCommand`.
 
 Enum fields include `options`:
 

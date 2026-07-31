@@ -7,6 +7,7 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
 import "components" as Components
+import "UpdateLogic.js" as UpdateLogic
 
 PlasmoidItem {
     id: root
@@ -57,8 +58,10 @@ PlasmoidItem {
     property string connectedProviderConfigCommandSource: ""
     property string providerConfigWatchCommand: buildProviderConfigWatchCommand()
     property string providerConfigStamp: ""
+    readonly property int providerConfigWatchIntervalMs: 60000
     property int commandRunSerial: 0
     property var activeUsageCommands: ({})
+    readonly property int usageCommandTimeoutMs: 120000
     property var pendingProviderCommands: ({})
     property var fallbackProviderOrder: []
     property var fallbackProviderResults: ({})
@@ -103,8 +106,16 @@ PlasmoidItem {
     onNotifyStatusIncidentsChanged: resetNotificationMemo()
     onNotifyQuotaWarningsChanged: resetNotificationMemo()
     onNotifyLimitResetsChanged: resetNotificationMemo()
-    onUpdateChecksEnabledChanged: if (updateChecksEnabled) Qt.callLater(checkForWidgetUpdate)
-    onAutoUpdateEnabledChanged: if (updateChecksEnabled) Qt.callLater(checkForWidgetUpdate)
+    onUpdateChecksEnabledChanged: {
+        if (updateChecksEnabled) {
+            Qt.callLater(function() { root.checkForWidgetUpdate(true) })
+        }
+    }
+    onAutoUpdateEnabledChanged: {
+        if (updateChecksEnabled && autoUpdateEnabled) {
+            Qt.callLater(function() { root.checkForWidgetUpdate(true) })
+        }
+    }
     onProvidersChanged: {
         if (providers.length === 0) {
             selectedProviderIndex = 0
@@ -336,15 +347,27 @@ PlasmoidItem {
         return "CODEXBAR_PLASMA_RUN=" + commandRunSerial + " " + command
     }
 
-    function connectUsageCommand(sourceName) {
+    function connectUsageCommand(sourceName, descriptor) {
         if (sourceName.length === 0) {
             return
         }
 
         var commands = copyObject(activeUsageCommands)
-        commands[sourceName] = true
+        commands[sourceName] = descriptor || {
+            kind: "",
+            providerID: "",
+            deadlineMs: 0
+        }
         activeUsageCommands = commands
         usageSource.connectSource(sourceName)
+    }
+
+    function buildUsageCommandDescriptor(kind, providerID) {
+        return {
+            kind: String(kind || ""),
+            providerID: String(providerID || ""),
+            deadlineMs: Date.now() + usageCommandTimeoutMs
+        }
     }
 
     function finishUsageCommandSource(sourceName) {
@@ -377,7 +400,9 @@ PlasmoidItem {
             return
         }
         connectedCommandSource = commandWithRunNonce(commandSource)
-        connectUsageCommand(connectedCommandSource)
+        connectUsageCommand(
+            connectedCommandSource,
+            buildUsageCommandDescriptor("usage", ""))
     }
 
     function retireUsageCommands() {
@@ -432,7 +457,9 @@ PlasmoidItem {
 
         costErrorText = ""
         connectedCostCommandSource = commandWithRunNonce(costCommandSource)
-        connectUsageCommand(connectedCostCommandSource)
+        connectUsageCommand(
+            connectedCostCommandSource,
+            buildUsageCommandDescriptor("cost", ""))
     }
 
     function parseOutput(stdoutText, stderrText) {
@@ -506,7 +533,9 @@ PlasmoidItem {
         }
 
         connectedProviderConfigCommandSource = commandWithRunNonce(providerConfigCommandSource)
-        connectUsageCommand(connectedProviderConfigCommandSource)
+        connectUsageCommand(
+            connectedProviderConfigCommandSource,
+            buildUsageCommandDescriptor("providerConfig", ""))
     }
 
     function parseProviderConfigOutput(stdoutText, stderrText) {
@@ -582,7 +611,10 @@ PlasmoidItem {
 
         pendingProviderCommands = commands
         for (var j = 0; j < commandList.length; j++) {
-            connectUsageCommand(commandList[j])
+            var sourceName = commandList[j]
+            connectUsageCommand(
+                sourceName,
+                buildUsageCommandDescriptor("providerFallback", commands[sourceName]))
         }
         if (pendingProviderCount === 0) {
             providers = []
@@ -697,7 +729,90 @@ PlasmoidItem {
             deadlineMs: Date.now() + accountCommandTimeoutMs
         }
         pendingAccountCommands = commands
-        connectUsageCommand(connectedCommand)
+        connectUsageCommand(connectedCommand, {
+            kind: "account",
+            providerID: normalizedProviderID,
+            deadlineMs: 0
+        })
+    }
+
+    function hasPendingUsageCommandTimeouts() {
+        for (var sourceName in activeUsageCommands) {
+            if (!hasOwnKey(activeUsageCommands, sourceName)) {
+                continue
+            }
+            var descriptor = activeUsageCommands[sourceName]
+            if (descriptor && Number(descriptor.deadlineMs) > 0) {
+                return true
+            }
+        }
+        return false
+    }
+
+    function expireUsageCommands(nowMs) {
+        var commands = copyObject(activeUsageCommands)
+        var expired = []
+        for (var sourceName in commands) {
+            if (!hasOwnKey(commands, sourceName)) {
+                continue
+            }
+            var descriptor = commands[sourceName]
+            var deadline = descriptor ? Number(descriptor.deadlineMs) : 0
+            if (!isFinite(deadline) || deadline <= 0 || nowMs < deadline) {
+                continue
+            }
+            expired.push({ sourceName: sourceName, descriptor: descriptor })
+        }
+        for (var i = 0; i < expired.length; i++) {
+            handleUsageCommandTimeout(expired[i].sourceName, expired[i].descriptor)
+        }
+    }
+
+    function handleUsageCommandTimeout(sourceName, descriptor) {
+        if (!descriptor || !activeUsageCommands[sourceName]) {
+            return
+        }
+
+        if (descriptor.kind === "usage" && sourceName === connectedCommandSource) {
+            connectedCommandSource = ""
+            finishUsageCommandSource(sourceName)
+            if (canUseProviderFallback()) {
+                startProviderFallback()
+                return
+            }
+            providers = []
+            loading = false
+            errorText = i18n("Loading usage timed out. Try again.")
+            return
+        }
+
+        if (descriptor.kind === "cost" && sourceName === connectedCostCommandSource) {
+            connectedCostCommandSource = ""
+            finishUsageCommandSource(sourceName)
+            costErrorText = i18n("Loading cost data timed out. Try again.")
+            applyTokenCosts()
+            return
+        }
+
+        if (descriptor.kind === "providerConfig"
+                && sourceName === connectedProviderConfigCommandSource) {
+            connectedProviderConfigCommandSource = ""
+            finishUsageCommandSource(sourceName)
+            providers = []
+            loading = false
+            errorText = i18n("Loading provider configuration timed out. Try again.")
+            return
+        }
+
+        if (descriptor.kind === "providerFallback" && pendingProviderCommands[sourceName]) {
+            parseProviderFallbackOutput(
+                sourceName,
+                "",
+                i18n("Loading usage timed out. Try again."))
+            return
+        }
+
+        finishUsageCommandSource(sourceName)
     }
 
     function hasPendingAccountCommands() {
@@ -2445,20 +2560,17 @@ PlasmoidItem {
         })
     }
 
-    function updateCheckDue() {
-        if (!updateChecksEnabled) {
-            return false
-        }
-        var lastCheckMs = Date.parse(autoUpdateLastCheck)
-        if (!isFinite(lastCheckMs)) {
-            return true
-        }
-        var intervalMs = autoUpdateIntervalHours * 60 * 60 * 1000
-        return Date.now() - lastCheckMs >= intervalMs
+    function updateCheckDue(forceCheck) {
+        return UpdateLogic.updateCheckDue(
+            updateChecksEnabled,
+            autoUpdateLastCheck,
+            autoUpdateIntervalHours,
+            Date.now(),
+            forceCheck === true)
     }
 
-    function checkForWidgetUpdate() {
-        if (!updateCheckDue() || connectedUpdateCommandSource.length > 0) {
+    function checkForWidgetUpdate(forceCheck) {
+        if (!updateCheckDue(forceCheck) || connectedUpdateCommandSource.length > 0) {
             return
         }
         setWidgetUpdateState(i18n("Checking for widget updates..."), "", false)
@@ -3834,6 +3946,16 @@ PlasmoidItem {
     }
 
     Timer {
+        id: usageCommandTimeoutTimer
+
+        interval: 1000
+        repeat: true
+        running: root.hasPendingUsageCommandTimeouts()
+        triggeredOnStart: false
+        onTriggered: root.expireUsageCommands(Date.now())
+    }
+
+    Timer {
         id: accountCommandTimeoutTimer
 
         interval: 1000
@@ -3847,7 +3969,7 @@ PlasmoidItem {
         id: providerConfigWatcher
 
         engine: "executable"
-        interval: 2000
+        interval: root.providerConfigWatchIntervalMs
 
         onNewData: function(sourceName, data) {
             if (sourceName !== root.providerConfigWatchCommand) {

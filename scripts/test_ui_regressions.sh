@@ -237,6 +237,8 @@ if "Number(exitCode) !== 0" not in set_api_key_body:
 parse_command_payload_body = function_body(providers_text, "parseCommandPayload")
 if "Number(exitCode) !== 0" not in parse_command_payload_body:
     raise AssertionError("parseCommandPayload must reject non-zero descriptor command exits")
+if "trimmed.length === 0" not in parse_command_payload_body or "codexbar did not return command data." not in parse_command_payload_body:
+    raise AssertionError("parseCommandPayload must reject an empty successful descriptor response")
 
 # Overview selection is stored with the raw CLI provider IDs (e.g. groqcloud,
 # alibaba-coding-plan) but matched at runtime against providerKey-normalized

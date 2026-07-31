@@ -4,9 +4,11 @@ set -euo pipefail
 REPO_OWNER="Lucenx9"
 REPO_NAME="codexbar-plasma"
 ASSET_NAME="codexbar-plasma.plasmoid"
+CHECKSUM_NAME="${ASSET_NAME}.sha256"
 API_VERSION="2026-03-10"
 CURL_CONNECT_TIMEOUT_SECONDS=10
 CURL_METADATA_MAX_TIME_SECONDS=30
+CURL_CHECKSUM_MAX_TIME_SECONDS=30
 CURL_ASSET_MAX_TIME_SECONDS=300
 KPACKAGE_INSTALL_MAX_TIME_SECONDS=120
 KPACKAGE_INSTALL_KILL_AFTER_SECONDS=10
@@ -108,11 +110,15 @@ fi
 
 require_command sort
 require_command head
+require_command grep
+require_command wc
 if [[ -z "$RELEASE_JSON" ]]; then
   require_command curl
 fi
 if [[ "$MODE" == "install" ]]; then
+  require_command curl
   require_command kpackagetool6
+  require_command sha256sum
   require_command timeout
 fi
 
@@ -134,6 +140,7 @@ if [[ -z "$RELEASE_JSON" ]]; then
     --max-time "$CURL_METADATA_MAX_TIME_SECONDS" \
     -H "Accept: application/vnd.github+json" \
     -H "X-GitHub-Api-Version: ${API_VERSION}" \
+    -H "User-Agent: CodexBar-Plasma-Updater" \
     "$release_url" > "$RELEASE_JSON" || fail "failed to fetch release metadata from GitHub"
 fi
 
@@ -145,6 +152,7 @@ remote_version="$(jq -r '.tag_name // empty' "$RELEASE_JSON")"
 is_draft="$(jq -r '.draft // false' "$RELEASE_JSON")"
 is_prerelease="$(jq -r '.prerelease // false' "$RELEASE_JSON")"
 asset_url="$(jq -r --arg name "$ASSET_NAME" '.assets[]? | select(.name == $name) | .browser_download_url' "$RELEASE_JSON" | head -n1)"
+checksum_url="$(jq -r --arg name "$CHECKSUM_NAME" '.assets[]? | select(.name == $name) | .browser_download_url' "$RELEASE_JSON" | head -n1)"
 
 if [[ -z "$remote_version" || "$remote_version" == "null" ]]; then
   fail "release metadata does not contain tag_name"
@@ -169,20 +177,42 @@ expected_prefix="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download
 if [[ "$asset_url" != "$expected_prefix"* ]]; then
   fail "release asset URL is outside the expected GitHub release path"
 fi
+if [[ -n "$checksum_url" && "$checksum_url" != "null" && "$checksum_url" != "$expected_prefix"* ]]; then
+  fail "release checksum URL is outside the expected GitHub release path"
+fi
 
 if [[ "$MODE" == "check" ]]; then
   emit_status "available" "widget update is available" "$local_version" "$remote_version" "$asset_url"
   exit 0
 fi
 
+if [[ -z "$checksum_url" || "$checksum_url" == "null" ]]; then
+  fail "release checksum ${CHECKSUM_NAME} not found"
+fi
+
 if [[ -z "$TMP_DIR" ]]; then
   TMP_DIR="$(mktemp -d)"
 fi
 package_path="${TMP_DIR}/${ASSET_NAME}"
+checksum_path="${TMP_DIR}/${CHECKSUM_NAME}"
+curl --fail --location --show-error --silent \
+  --connect-timeout "$CURL_CONNECT_TIMEOUT_SECONDS" \
+  --max-time "$CURL_CHECKSUM_MAX_TIME_SECONDS" \
+  -H "User-Agent: CodexBar-Plasma-Updater" \
+  "$checksum_url" --output "$checksum_path" || fail "failed to download release checksum"
 curl --fail --location --show-error --silent \
   --connect-timeout "$CURL_CONNECT_TIMEOUT_SECONDS" \
   --max-time "$CURL_ASSET_MAX_TIME_SECONDS" \
+  -H "User-Agent: CodexBar-Plasma-Updater" \
   "$asset_url" --output "$package_path" || fail "failed to download release asset"
+if [[ "$(wc -l < "$checksum_path")" -ne 1 ]] \
+  || ! grep -Eq '^[[:xdigit:]]{64}[[:space:]][ *]codexbar-plasma\.plasmoid$' "$checksum_path"; then
+  fail "release checksum has an invalid format"
+fi
+(
+  cd "$TMP_DIR"
+  sha256sum --check --strict --status "$CHECKSUM_NAME"
+) || fail "release checksum verification failed"
 timeout --kill-after="${KPACKAGE_INSTALL_KILL_AFTER_SECONDS}s" \
   "${KPACKAGE_INSTALL_MAX_TIME_SECONDS}s" \
   kpackagetool6 -t Plasma/Applet -u "$package_path" || fail "failed to install widget package"

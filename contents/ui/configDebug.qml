@@ -16,6 +16,8 @@ KCM.SimpleKCM {
     property string diagnosticOutput: ""
     property string diagnosticError: ""
     property string activeCommand: ""
+    property int commandRunSerial: 0
+    readonly property int diagnosticCommandTimeoutMs: 60000
 
     function shellQuote(value) {
         return "'" + String(value).replace(/'/g, "'\\''") + "'"
@@ -41,22 +43,47 @@ KCM.SimpleKCM {
             return
         }
         if (activeCommand.length > 0) {
-            diagnosticSource.disconnectSource(activeCommand)
+            finishDiagnosticCommand(activeCommand)
         }
         diagnosticRunning = true
         diagnosticOutput = ""
         diagnosticError = ""
-        activeCommand = command
-        diagnosticSource.connectSource(command)
+        activeCommand = commandWithRunNonce(command)
+        diagnosticSource.connectSource(activeCommand)
+        diagnosticCommandTimeoutTimer.restart()
+    }
+
+    function commandWithRunNonce(command) {
+        if (command.length === 0) {
+            return ""
+        }
+        commandRunSerial += 1
+        return "CODEXBAR_PLASMA_RUN=" + commandRunSerial + " " + command
+    }
+
+    function finishDiagnosticCommand(sourceName) {
+        diagnosticCommandTimeoutTimer.stop()
+        diagnosticSource.disconnectSource(sourceName)
+        if (sourceName === activeCommand) {
+            activeCommand = ""
+        }
+        diagnosticRunning = false
+    }
+
+    function handleDiagnosticTimeout() {
+        if (activeCommand.length === 0) {
+            return
+        }
+        finishDiagnosticCommand(activeCommand)
+        diagnosticOutput = ""
+        diagnosticError = i18n("Diagnostic command timed out. Try again.")
     }
 
     function handleDiagnosticData(sourceName, data) {
         if (sourceName !== activeCommand) {
             return
         }
-        diagnosticSource.disconnectSource(sourceName)
-        activeCommand = ""
-        diagnosticRunning = false
+        finishDiagnosticCommand(sourceName)
 
         var stdoutText = data && data["stdout"] ? data["stdout"].trim() : ""
         var stderrText = data && data["stderr"] ? data["stderr"].trim() : ""
@@ -74,6 +101,14 @@ KCM.SimpleKCM {
         onNewData: function(sourceName, data) {
             page.handleDiagnosticData(sourceName, data)
         }
+    }
+
+    Timer {
+        id: diagnosticCommandTimeoutTimer
+
+        interval: page.diagnosticCommandTimeoutMs
+        repeat: false
+        onTriggered: page.handleDiagnosticTimeout()
     }
 
     ColumnLayout {

@@ -14,6 +14,15 @@ require_in_file() {
   fi
 }
 
+reject_in_file() {
+  local file="$1"
+  local needle="$2"
+  if grep -Fq -- "$needle" "$file"; then
+    echo "unexpected CLI descriptor contract fragment in ${file#"$ROOT_DIR"/}: $needle" >&2
+    exit 1
+  fi
+}
+
 if [[ ! -f "$CONTRACT_MD" ]]; then
   echo "docs/cli-provider-settings-descriptor.md must document the provider settings descriptor contract" >&2
   exit 1
@@ -31,6 +40,7 @@ require_in_file "$CONTRACT_MD" "\"command\""
 require_in_file "$CONTRACT_MD" "\"kind\": \"secret\""
 require_in_file "$CONTRACT_MD" "\"kind\": \"enum\""
 require_in_file "$CONTRACT_MD" "\"kind\": \"command\""
+reject_in_file "$CONTRACT_MD" "- \`\"kind\": \"command\"\`: read-only row"
 require_in_file "$CONTRACT_MD" "After a successful write/action"
 require_in_file "$CONTRACT_MD" "Plasma renderer rules"
 require_in_file "$CONTRACT_MD" "Do not expose raw secrets"

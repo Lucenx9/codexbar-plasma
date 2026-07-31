@@ -79,11 +79,13 @@ The helper script owns all update mechanics:
 1. Read the installed/local version from `metadata.json`.
 2. Fetch GitHub release metadata for `Lucenx9/codexbar-plasma`.
 3. Pick the latest stable semver tag newer than the local version.
-4. Download only the `codexbar-plasma.plasmoid` release asset.
+4. Select the `codexbar-plasma.plasmoid` asset and its matching
+   `codexbar-plasma.plasmoid.sha256` checksum.
 5. In check-only mode, report the available version and asset URL without
    installing anything.
-6. In install mode, install with `kpackagetool6 -t Plasma/Applet -u`.
-7. Restart `plasma-plasmashell.service` only after a successful install.
+6. In install mode, verify the SHA-256 checksum before installing with
+   `kpackagetool6 -t Plasma/Applet -u`.
+7. Tell the user to restart Plasma after a successful install.
 
 The widget calls the helper via the existing executable DataSource pattern. A
 successful no-op, successful install, and failed check all return structured
@@ -102,14 +104,15 @@ the widget installs silently instead of only notifying.
   download command.
 - Use `mktemp -d` and clean temporary files on exit.
 - Install only an asset named `codexbar-plasma.plasmoid`.
+- Require and verify the release's matching `.sha256` asset before installation.
 - Ignore prereleases and drafts.
 - Compare semver tags before installing.
 - Quote every shell variable used in paths or commands.
 - Keep the update URL and release asset expectations visible in the script.
 
-The first implementation may rely on HTTPS and GitHub Releases. Signature
-verification can be added later if releases start publishing checksums or
-signatures.
+The implementation relies on HTTPS, GitHub Releases, and a SHA-256 checksum
+published by the same release workflow. An independently signed checksum can
+replace this trust model if release signing is introduced.
 
 ## Theme Handling Approach
 
@@ -147,8 +150,8 @@ theme violations; do not normalize or alter provider identity colors.
 - QML memoizes the last notified version so an available update does not notify
   repeatedly on every refresh cycle.
 - Existing usage refresh behavior must keep working even if update checks fail.
-- If required tools are missing (`curl`, `jq`, `kpackagetool6`,
-  `systemctl`), the helper reports the missing tool clearly.
+- If required tools are missing (`curl`, `jq`, `sha256sum`, `timeout`, or
+  `kpackagetool6`), the helper reports the missing tool clearly.
 
 ## Tests and Verification
 
@@ -157,7 +160,9 @@ to assert:
 
 - `scripts/update-widget.sh` exists and is referenced by `Makefile`.
 - The update script uses `kpackagetool6 -t Plasma/Applet -u`.
-- The update script downloads only `codexbar-plasma.plasmoid`.
+- The update script downloads only `codexbar-plasma.plasmoid` and its matching
+  `.sha256` checksum.
+- A tampered asset is rejected before `kpackagetool6` runs.
 - The update script does not execute downloaded files.
 - New config keys exist in `contents/config/main.xml`.
 - General settings expose update-check, notification, auto-install, and interval

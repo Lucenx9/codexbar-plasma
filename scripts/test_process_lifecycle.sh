@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 QML="${ROOT_DIR}/contents/ui/main.qml"
 PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
+DISPLAY_QML="${ROOT_DIR}/contents/ui/configDisplay.qml"
+DEBUG_QML="${ROOT_DIR}/contents/ui/configDebug.qml"
 
 require_in_file() {
   local file="$1"
@@ -23,9 +25,14 @@ reject_in_file() {
   fi
 }
 
-require_in_file "$QML" "function connectUsageCommand(sourceName)"
+require_in_file "$QML" "readonly property int usageCommandTimeoutMs: 120000"
+require_in_file "$QML" "function connectUsageCommand(sourceName, descriptor)"
 require_in_file "$QML" "function finishUsageCommandSource(sourceName)"
 require_in_file "$QML" "function retireUsageCommands()"
+require_in_file "$QML" "function expireUsageCommands(nowMs)"
+require_in_file "$QML" "function handleUsageCommandTimeout(sourceName, descriptor)"
+require_in_file "$QML" "id: usageCommandTimeoutTimer"
+require_in_file "$QML" "root.expireUsageCommands(Date.now())"
 require_in_file "$QML" "id: usageRefreshTimer"
 require_in_file "$QML" "running: root.refreshIntervalSec > 0"
 require_in_file "$QML" "onTriggered: root.refreshNow()"
@@ -36,10 +43,24 @@ require_in_file "$QML" "pendingProviderCount = 0"
 require_in_file "$QML" "readonly property int accountCommandTimeoutMs: 60000"
 require_in_file "$QML" "id: accountCommandTimeoutTimer"
 require_in_file "$QML" "root.expirePendingAccountCommands(Date.now())"
+require_in_file "$QML" "readonly property int providerConfigWatchIntervalMs: 60000"
+require_in_file "$QML" "interval: root.providerConfigWatchIntervalMs"
 
 require_in_file "$PROVIDERS_QML" "readonly property int configCommandTimeoutMs: 60000"
 require_in_file "$PROVIDERS_QML" "id: configCommandTimeoutTimer"
 require_in_file "$PROVIDERS_QML" "page.expireConfigCommands(Date.now())"
+
+require_in_file "$DISPLAY_QML" "readonly property int overviewProviderCommandTimeoutMs: 60000"
+require_in_file "$DISPLAY_QML" "function commandWithRunNonce(command)"
+require_in_file "$DISPLAY_QML" "function expireOverviewProviderCommands(nowMs)"
+require_in_file "$DISPLAY_QML" "id: overviewProviderCommandTimeoutTimer"
+require_in_file "$DISPLAY_QML" "page.expireOverviewProviderCommands(Date.now())"
+
+require_in_file "$DEBUG_QML" "readonly property int diagnosticCommandTimeoutMs: 60000"
+require_in_file "$DEBUG_QML" "function commandWithRunNonce(command)"
+require_in_file "$DEBUG_QML" "function handleDiagnosticTimeout()"
+require_in_file "$DEBUG_QML" "id: diagnosticCommandTimeoutTimer"
+require_in_file "$DEBUG_QML" "page.handleDiagnosticTimeout()"
 
 reject_in_file "$QML" "retiredUsageCommands"
 reject_in_file "$QML" "pendingAccountCommandStartedAt"
@@ -47,12 +68,14 @@ reject_in_file "$QML" "function retireUsageCommandSource(sourceName)"
 reject_in_file "$QML" "interval: root.refreshIntervalSec > 0 ? root.refreshIntervalSec * 1000 : 0"
 reject_in_file "$QML" "pendingProviderCount = fallbackProviderOrder.length"
 
-python3 - "$QML" "$PROVIDERS_QML" <<'PY'
+python3 - "$QML" "$PROVIDERS_QML" "$DISPLAY_QML" "$DEBUG_QML" <<'PY'
 import sys
 from pathlib import Path
 
 main_text = Path(sys.argv[1]).read_text(encoding="utf-8")
 providers_text = Path(sys.argv[2]).read_text(encoding="utf-8")
+display_text = Path(sys.argv[3]).read_text(encoding="utf-8")
+debug_text = Path(sys.argv[4]).read_text(encoding="utf-8")
 
 
 def function_body(text, name):
@@ -96,6 +119,25 @@ for fragment in (
     if fragment not in expire_accounts_body:
         raise AssertionError(f"account timeout cleanup is incomplete: {fragment}")
 
+expire_usage_body = function_body(main_text, "expireUsageCommands")
+for fragment in ("descriptor.deadlineMs", "handleUsageCommandTimeout("):
+    if fragment not in expire_usage_body:
+        raise AssertionError(f"usage timeout scan is incomplete: {fragment}")
+
+usage_timeout_body = function_body(main_text, "handleUsageCommandTimeout")
+for fragment in (
+    'descriptor.kind === "usage"',
+    'descriptor.kind === "cost"',
+    'descriptor.kind === "providerConfig"',
+    'descriptor.kind === "providerFallback"',
+    "finishUsageCommandSource(sourceName)",
+    "Loading usage timed out. Try again.",
+    "Loading cost data timed out. Try again.",
+    "Loading provider configuration timed out. Try again.",
+):
+    if fragment not in usage_timeout_body:
+        raise AssertionError(f"usage timeout cleanup is incomplete: {fragment}")
+
 run_command_body = function_body(providers_text, "runCommand")
 for fragment in ("nextDescriptor.timeoutMs", "nextDescriptor.deadlineMs"):
     if fragment not in run_command_body:
@@ -128,6 +170,29 @@ for fragment in (
 ):
     if fragment not in timeout_body:
         raise AssertionError(f"config timeout handler is incomplete: {fragment}")
+
+load_overview_body = function_body(display_text, "loadOverviewProviders")
+for fragment in ("commandWithRunNonce(command)", "deadlineMs: Date.now() + overviewProviderCommandTimeoutMs"):
+    if fragment not in load_overview_body:
+        raise AssertionError(f"overview provider loads need nonce and deadline: {fragment}")
+
+expire_overview_body = function_body(display_text, "expireOverviewProviderCommands")
+for fragment in (
+    "overviewProviderSource.disconnectSource(sourceName)",
+    "Loading providers timed out. Try again.",
+):
+    if fragment not in expire_overview_body:
+        raise AssertionError(f"overview provider timeout cleanup is incomplete: {fragment}")
+
+run_debug_body = function_body(debug_text, "runCommand")
+for fragment in ("commandWithRunNonce(command)", "diagnosticCommandTimeoutTimer.restart()"):
+    if fragment not in run_debug_body:
+        raise AssertionError(f"debug commands need nonce and timeout: {fragment}")
+
+debug_timeout_body = function_body(debug_text, "handleDiagnosticTimeout")
+for fragment in ("finishDiagnosticCommand(activeCommand)", "Diagnostic command timed out. Try again."):
+    if fragment not in debug_timeout_body:
+        raise AssertionError(f"debug timeout cleanup is incomplete: {fragment}")
 PY
 
 echo "KDE plasmoid process lifecycle checks passed."

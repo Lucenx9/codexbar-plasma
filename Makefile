@@ -17,6 +17,7 @@ QML_FILES := \
 	contents/ui/configDisplay.qml \
 	contents/ui/configAdvanced.qml \
 	contents/ui/configDebug.qml \
+	contents/ui/UpdateLogic.js \
 	contents/ui/components/CompactRepresentation.qml \
 	contents/ui/components/OverviewProviderRow.qml \
 	contents/ui/components/ProviderAccountsPanel.qml \
@@ -35,6 +36,7 @@ check:
 	scripts/test_theme_boundaries.sh
 	scripts/test_i18n_catalog.sh
 	scripts/test_cli_descriptor_contract.sh
+	scripts/test_qml_logic.sh
 	scripts/test_qml_hardening.sh
 	$(QMLLINT) $(QMLLINT_FLAGS) -I $(QML_IMPORT_DIR) $(QML_FILES)
 	xmllint --noout contents/config/main.xml
@@ -45,8 +47,8 @@ check:
 		echo "kpackagetool6 not found; skipping appstream metainfo check"; \
 	fi
 
-install:
-	kpackagetool6 -t Plasma/Applet -u . || kpackagetool6 -t Plasma/Applet -i .
+install: package
+	kpackagetool6 -t Plasma/Applet -u dist/codexbar-plasma.plasmoid || kpackagetool6 -t Plasma/Applet -i dist/codexbar-plasma.plasmoid
 
 restart:
 	systemctl --user restart plasma-plasmashell.service
@@ -59,7 +61,7 @@ translations:
 
 package:
 	mkdir -p dist
-	rm -f dist/codexbar-plasma.plasmoid
+	rm -f dist/codexbar-plasma.plasmoid dist/codexbar-plasma.plasmoid.sha256
 	@if find $(PACKAGE_FILES) -type l -print -quit | grep -q .; then \
 		echo "refusing to package symlinks from PACKAGE_FILES" >&2; \
 		find $(PACKAGE_FILES) -type l -print >&2; \
@@ -75,3 +77,8 @@ package:
 		echo "missing required command: cmake, zip, or python3" >&2; \
 		exit 127; \
 	fi
+	@command -v sha256sum >/dev/null 2>&1 || { \
+		echo "missing required command: sha256sum" >&2; \
+		exit 127; \
+	}
+	cd dist && sha256sum codexbar-plasma.plasmoid > codexbar-plasma.plasmoid.sha256

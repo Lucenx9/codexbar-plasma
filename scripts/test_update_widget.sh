@@ -5,6 +5,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 UPDATER="${ROOT_DIR}/scripts/update-widget.sh"
 MAKEFILE="${ROOT_DIR}/Makefile"
 MAIN_QML="${ROOT_DIR}/contents/ui/main.qml"
+INSTALL_SCRIPT="${ROOT_DIR}/install.sh"
+WORKFLOW="${ROOT_DIR}/.github/workflows/ci.yml"
 
 require_in_file() {
   local file="$1"
@@ -32,8 +34,10 @@ fi
 require_in_file "$UPDATER" "REPO_OWNER=\"Lucenx9\""
 require_in_file "$UPDATER" "REPO_NAME=\"codexbar-plasma\""
 require_in_file "$UPDATER" "ASSET_NAME=\"codexbar-plasma.plasmoid\""
+require_in_file "$UPDATER" "CHECKSUM_NAME=\"\${ASSET_NAME}.sha256\""
 require_in_file "$UPDATER" "CURL_CONNECT_TIMEOUT_SECONDS=10"
 require_in_file "$UPDATER" "CURL_METADATA_MAX_TIME_SECONDS=30"
+require_in_file "$UPDATER" "CURL_CHECKSUM_MAX_TIME_SECONDS=30"
 require_in_file "$UPDATER" "CURL_ASSET_MAX_TIME_SECONDS=300"
 require_in_file "$UPDATER" "--connect-timeout \"\$CURL_CONNECT_TIMEOUT_SECONDS\""
 require_in_file "$UPDATER" "--max-time \"\$CURL_METADATA_MAX_TIME_SECONDS\""
@@ -56,11 +60,12 @@ def integer_constant(text, name):
 
 
 metadata_seconds = integer_constant(updater_text, "CURL_METADATA_MAX_TIME_SECONDS")
+checksum_seconds = integer_constant(updater_text, "CURL_CHECKSUM_MAX_TIME_SECONDS")
 asset_seconds = integer_constant(updater_text, "CURL_ASSET_MAX_TIME_SECONDS")
 install_seconds = integer_constant(updater_text, "KPACKAGE_INSTALL_MAX_TIME_SECONDS")
 kill_after_seconds = integer_constant(updater_text, "KPACKAGE_INSTALL_KILL_AFTER_SECONDS")
 outer_seconds = integer_constant(main_qml_text, "widgetAutoUpdateTimeoutMs") / 1000
-minimum_seconds = metadata_seconds + asset_seconds + install_seconds + kill_after_seconds
+minimum_seconds = metadata_seconds + checksum_seconds + asset_seconds + install_seconds + kill_after_seconds
 required_outer_seconds = minimum_seconds + 30
 if outer_seconds < required_outer_seconds:
     raise AssertionError(
@@ -84,6 +89,9 @@ if not install_timer:
 PY
 require_in_file "$UPDATER" "https://api.github.com/repos/\${REPO_OWNER}/\${REPO_NAME}/releases/latest"
 require_in_file "$UPDATER" "browser_download_url"
+require_in_file "$UPDATER" "checksum_url="
+require_in_file "$UPDATER" "sha256sum --check --strict"
+require_in_file "$UPDATER" "release checksum"
 require_in_file "$UPDATER" "kpackagetool6 -t Plasma/Applet -u"
 require_in_file "$UPDATER" "--check"
 require_in_file "$UPDATER" "--install"
@@ -104,6 +112,7 @@ require_in_file "$MAKEFILE" "scripts/update-widget.sh --install"
 require_in_file "$MAKEFILE" "docs/codexbar-plasma-overview.png"
 require_in_file "$MAKEFILE" "docs/codexbar-plasma-codex.png"
 require_in_file "$MAKEFILE" "python3 -m zipfile -c dist/codexbar-plasma.plasmoid"
+require_in_file "$MAKEFILE" "sha256sum codexbar-plasma.plasmoid > codexbar-plasma.plasmoid.sha256"
 require_in_file "$MAKEFILE" "missing required command: cmake, zip, or python3"
 reject_in_file "$MAKEFILE" "cmake -E tar cf dist/codexbar-plasma.plasmoid --format=zip metadata.json contents docs scripts/update-widget.sh"
 require_in_file "$MAIN_QML" "function missingUpdateScriptJson()"
@@ -126,6 +135,13 @@ require_in_file "$MAIN_QML" "Plasmoid.configuration.lastNotifiedUpdateVersion = 
 require_in_file "${ROOT_DIR}/contents/config/main.xml" "name=\"lastNotifiedUpdateVersion\""
 reject_in_file "$MAIN_QML" "return \"sh \" + shellQuote(updateScriptPath())"
 reject_in_file "$MAIN_QML" "return shellQuote(updateScriptPath()) + (installMode ? \" --install\" : \" --check\")"
+require_in_file "$MAIN_QML" "function checkForWidgetUpdate(forceCheck)"
+require_in_file "$MAIN_QML" "updateCheckDue(forceCheck)"
+require_in_file "$MAIN_QML" "checkForWidgetUpdate(true)"
+require_in_file "$INSTALL_SCRIPT" "make -C \"\$ROOT_DIR\" package"
+require_in_file "$INSTALL_SCRIPT" "\${ROOT_DIR}/dist/codexbar-plasma.plasmoid"
+reject_in_file "$INSTALL_SCRIPT" "kpackagetool6 -t Plasma/Applet -u \"\$ROOT_DIR\""
+require_in_file "$WORKFLOW" "dist/codexbar-plasma.plasmoid.sha256"
 
 update_script_sample="${ROOT_DIR}/scripts/update-widget.sh"
 missing_json_sample='{"status":"error","message":"Widget updater script is missing from the installed package."}'
@@ -133,6 +149,99 @@ compound_sample="if [ -x '${update_script_sample}' ]; then '${update_script_samp
 nonce_wrapped_sample="CODEXBAR_PLASMA_RUN=1 sh -c $(printf '%q' "${compound_sample}")"
 if ! /bin/sh -n -c "${nonce_wrapped_sample}"; then
   echo "nonce-wrapped updater command must be valid /bin/sh syntax" >&2
+  exit 1
+fi
+
+fixture_dir="$(mktemp -d)"
+trap 'rm -rf "$fixture_dir"' EXIT
+mkdir -p "$fixture_dir/fakebin"
+printf '%s\n' '{"KPlugin":{"Version":"0.1.0"}}' > "$fixture_dir/metadata.json"
+printf '%s\n' 'trusted package bytes' > "$fixture_dir/codexbar-plasma.plasmoid"
+(
+  cd "$fixture_dir"
+  sha256sum codexbar-plasma.plasmoid > codexbar-plasma.plasmoid.sha256
+)
+jq -n \
+  --arg package_url "https://github.com/Lucenx9/codexbar-plasma/releases/download/v9.9.9/codexbar-plasma.plasmoid" \
+  --arg checksum_url "https://github.com/Lucenx9/codexbar-plasma/releases/download/v9.9.9/codexbar-plasma.plasmoid.sha256" \
+  '{
+    tag_name: "v9.9.9",
+    draft: false,
+    prerelease: false,
+    assets: [
+      {name: "codexbar-plasma.plasmoid", browser_download_url: $package_url},
+      {name: "codexbar-plasma.plasmoid.sha256", browser_download_url: $checksum_url}
+    ]
+  }' > "$fixture_dir/release.json"
+
+cat > "$fixture_dir/fakebin/curl" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+output=""
+url=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+  --output)
+    output="$2"
+    shift 2
+    ;;
+  http://*|https://*)
+    url="$1"
+    shift
+    ;;
+  *)
+    shift
+    ;;
+  esac
+done
+case "$url" in
+*.sha256) cp "$TEST_UPDATE_FIXTURE/codexbar-plasma.plasmoid.sha256" "$output" ;;
+*.plasmoid) cp "$TEST_UPDATE_FIXTURE/codexbar-plasma.plasmoid" "$output" ;;
+*) exit 2 ;;
+esac
+SH
+
+cat > "$fixture_dir/fakebin/timeout" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+shift 2
+exec "$@"
+SH
+
+cat > "$fixture_dir/fakebin/kpackagetool6" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$*" > "$TEST_UPDATE_INSTALL_MARKER"
+SH
+chmod +x "$fixture_dir/fakebin/curl" "$fixture_dir/fakebin/timeout" "$fixture_dir/fakebin/kpackagetool6"
+
+good_output="$(
+  PATH="$fixture_dir/fakebin:$PATH" \
+  TEST_UPDATE_FIXTURE="$fixture_dir" \
+  TEST_UPDATE_INSTALL_MARKER="$fixture_dir/install.marker" \
+    "$UPDATER" --install --metadata "$fixture_dir/metadata.json" --release-json "$fixture_dir/release.json"
+)"
+if [[ "$(jq -r '.status' <<<"$good_output")" != "installed" || ! -f "$fixture_dir/install.marker" ]]; then
+  echo "a release with a valid checksum must be installed" >&2
+  exit 1
+fi
+
+rm -f "$fixture_dir/install.marker"
+printf '%s\n' 'tampered package bytes' > "$fixture_dir/codexbar-plasma.plasmoid"
+if PATH="$fixture_dir/fakebin:$PATH" \
+  TEST_UPDATE_FIXTURE="$fixture_dir" \
+  TEST_UPDATE_INSTALL_MARKER="$fixture_dir/install.marker" \
+    "$UPDATER" --install --metadata "$fixture_dir/metadata.json" --release-json "$fixture_dir/release.json" \
+    > "$fixture_dir/tampered-output.json"; then
+  echo "a release asset with a mismatched checksum must be rejected" >&2
+  exit 1
+fi
+if [[ -f "$fixture_dir/install.marker" ]]; then
+  echo "checksum verification must happen before kpackagetool6" >&2
+  exit 1
+fi
+if [[ "$(jq -r '.status' "$fixture_dir/tampered-output.json")" != "error" ]]; then
+  echo "checksum mismatch must emit structured error JSON" >&2
   exit 1
 fi
 

@@ -53,6 +53,9 @@ To update using the bundled release helper:
 make update
 ```
 
+The helper verifies the release's published SHA-256 checksum before invoking
+`kpackagetool6`. A missing or mismatched checksum aborts the installation.
+
 The widget can also check GitHub Releases for newer `.plasmoid` packages.
 **Check for widget updates** and update-available notifications are enabled by
 default; **Install widget updates automatically** is opt-in. If the widget is
@@ -66,6 +69,7 @@ that install channel.
 - `org.kde.plasma.plasma5support`
 - `codexbar` CLI on `PATH`, or an absolute CLI path configured in the widget
 - `notify-send` for optional Plasma notifications
+- `curl`, `jq`, `sha256sum`, and GNU `timeout` for the bundled release updater
 
 If Plasma does not inherit your shell `PATH`, set an absolute command path in
 the widget settings. On Arch/CachyOS with the AUR package this is usually:
@@ -184,15 +188,19 @@ Install from a local checkout:
 ```sh
 git clone https://github.com/Lucenx9/codexbar-plasma.git
 cd codexbar-plasma
-kpackagetool6 -t Plasma/Applet -i .
+make install
+systemctl --user restart plasma-plasmashell.service
 ```
 
 Upgrade a local checkout:
 
 ```sh
-kpackagetool6 -t Plasma/Applet -u .
-systemctl --user restart plasma-plasmashell.service
+./install.sh
 ```
+
+Both paths build and install the curated `.plasmoid` archive; repository-only
+files such as tests and agent instructions are not copied into the installed
+applet.
 
 Run checks:
 

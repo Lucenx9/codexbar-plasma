@@ -43,6 +43,7 @@ QML_SOURCES=(
   contents/ui/configDisplay.qml
   contents/ui/configGeneral.qml
   contents/ui/configProviders.qml
+  contents/ui/UpdateLogic.js
   contents/ui/components/CompactRepresentation.qml
   contents/ui/components/OverviewProviderRow.qml
   contents/ui/components/ProviderAccountsPanel.qml

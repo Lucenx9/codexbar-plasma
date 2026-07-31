@@ -91,6 +91,10 @@ msgid "Set the codexbar command path in the General page."
 msgstr ""
 
 #: contents/ui/configDebug.qml
+msgid "Diagnostic command timed out. Try again."
+msgstr ""
+
+#: contents/ui/configDebug.qml
 msgid "No diagnostic output."
 msgstr ""
 
@@ -115,6 +119,10 @@ msgstr ""
 
 #: contents/ui/configDebug.qml
 msgid "Diagnostic output appears here."
+msgstr ""
+
+#: contents/ui/configDisplay.qml contents/ui/configProviders.qml
+msgid "Loading providers timed out. Try again."
 msgstr ""
 
 #: contents/ui/configDisplay.qml contents/ui/configProviders.qml
@@ -336,10 +344,6 @@ msgid "API key for %1"
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "Loading providers timed out. Try again."
-msgstr ""
-
-#: contents/ui/configProviders.qml
 msgid "Loading provider diagnostics timed out. Try again."
 msgstr ""
 
@@ -373,6 +377,10 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "%1 action completed"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "codexbar did not return command data."
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -609,6 +617,18 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "No enabled CodexBar providers."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Loading usage timed out. Try again."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Loading cost data timed out. Try again."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Loading provider configuration timed out. Try again."
 msgstr ""
 
 #: contents/ui/main.qml

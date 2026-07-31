@@ -23,7 +23,8 @@ jobs:
   check:
     runs-on: ubuntu-latest
     container:
-      image: kdeneon/plasma:user
+      # kdeneon/plasma:user resolved on 2026-07-31.
+      image: kdeneon/plasma@sha256:3f049a46418324da85a4f2b1d2f36e1b897ede71b1b02954a0b216900fdc8fcc
       # neon `:user` images default to a non-root user; force root so apt works.
       options: --user 0
     permissions:
@@ -36,7 +37,7 @@ jobs:
             make cmake git ca-certificates gettext jq libxml2-utils qt6-declarative-dev-tools
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
 
@@ -56,7 +57,8 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     container:
-      image: kdeneon/plasma:user
+      # kdeneon/plasma:user resolved on 2026-07-31.
+      image: kdeneon/plasma@sha256:3f049a46418324da85a4f2b1d2f36e1b897ede71b1b02954a0b216900fdc8fcc
       # neon `:user` images default to a non-root user; force root so apt works.
       options: --user 0
     permissions:
@@ -69,7 +71,7 @@ jobs:
             make cmake git ca-certificates gettext jq libxml2-utils qt6-declarative-dev-tools
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
 
@@ -88,5 +90,7 @@ jobs:
       - name: Publish release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
-          files: dist/codexbar-plasma.plasmoid
+          files: |
+            dist/codexbar-plasma.plasmoid
+            dist/codexbar-plasma.plasmoid.sha256
           generate_release_notes: true

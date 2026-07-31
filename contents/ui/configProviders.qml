@@ -517,6 +517,9 @@ KCM.SimpleKCM {
         if (message.length === 0 && Number(exitCode) !== 0) {
             message = i18n("codexbar exited with code %1", Number(exitCode))
         }
+        if (message.length === 0 && trimmed.length === 0) {
+            message = i18n("codexbar did not return command data.")
+        }
         if (message.length === 0 && payload && payload.cancelled === true) {
             return { value: payload, cancelled: true, errorMessage: "" }
         }

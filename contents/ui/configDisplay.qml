@@ -40,6 +40,8 @@ KCM.SimpleKCM {
     property bool overviewProvidersLoading: false
     property string overviewProvidersError: ""
     property var overviewProviderCommands: ({})
+    property int commandRunSerial: 0
+    readonly property int overviewProviderCommandTimeoutMs: 60000
 
     Component.onCompleted: loadOverviewProviders()
 
@@ -80,10 +82,21 @@ KCM.SimpleKCM {
             "json",
             "--json-only"
         ].join(" ")
+        var sourceName = commandWithRunNonce(command)
         var next = copyObject(overviewProviderCommands)
-        next[command] = true
+        next[sourceName] = {
+            deadlineMs: Date.now() + overviewProviderCommandTimeoutMs
+        }
         overviewProviderCommands = next
-        overviewProviderSource.connectSource(command)
+        overviewProviderSource.connectSource(sourceName)
+    }
+
+    function commandWithRunNonce(command) {
+        if (command.length === 0) {
+            return ""
+        }
+        commandRunSerial += 1
+        return "CODEXBAR_PLASMA_RUN=" + commandRunSerial + " " + command
     }
 
     function disconnectOverviewProviderCommands() {
@@ -91,6 +104,41 @@ KCM.SimpleKCM {
             overviewProviderSource.disconnectSource(command)
         }
         overviewProviderCommands = ({})
+    }
+
+    function hasPendingOverviewProviderCommands() {
+        for (var sourceName in overviewProviderCommands) {
+            if (Object.prototype.hasOwnProperty.call(overviewProviderCommands, sourceName)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    function expireOverviewProviderCommands(nowMs) {
+        var commands = copyObject(overviewProviderCommands)
+        var expiredCount = 0
+        for (var sourceName in commands) {
+            if (!Object.prototype.hasOwnProperty.call(commands, sourceName)) {
+                continue
+            }
+            var descriptor = commands[sourceName]
+            var deadline = descriptor ? Number(descriptor.deadlineMs) : 0
+            if (!isFinite(deadline) || deadline <= 0 || nowMs < deadline) {
+                continue
+            }
+            overviewProviderSource.disconnectSource(sourceName)
+            delete commands[sourceName]
+            expiredCount++
+        }
+        if (expiredCount === 0) {
+            return
+        }
+
+        overviewProviderCommands = commands
+        overviewProviders = []
+        overviewProvidersLoading = false
+        overviewProvidersError = i18n("Loading providers timed out. Try again.")
     }
 
     function handleOverviewProviderData(sourceName, stdoutText, stderrText) {
@@ -425,5 +473,15 @@ KCM.SimpleKCM {
             disconnectSource(sourceName)
             page.handleOverviewProviderData(sourceName, stdoutText, stderrText)
         }
+    }
+
+    Timer {
+        id: overviewProviderCommandTimeoutTimer
+
+        interval: 1000
+        repeat: true
+        running: page.hasPendingOverviewProviderCommands()
+        triggeredOnStart: false
+        onTriggered: page.expireOverviewProviderCommands(Date.now())
     }
 }
