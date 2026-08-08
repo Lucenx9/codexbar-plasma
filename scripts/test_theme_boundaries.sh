@@ -39,13 +39,14 @@ patterns = [
     re.compile(r'"(?:black|white)"'),
 ]
 required_provider_colors = """
-codex openai azureopenai claude cursor opencode opencodego alibaba
-alibabatokenplan factory gemini antigravity copilot devin zai minimax
+codex openai azureopenai claude clinepass cursor opencode opencodego alibaba
+alibabatokenplan qwencloud factory gemini antigravity copilot devin zai minimax
 manus kimi kilo kiro vertexai augment jetbrains kimik2 moonshot amp
 t3chat ollama synthetic warp openrouter elevenlabs windsurf zed
 perplexity mimo doubao abacus mistral deepseek codebuff crof venice
 commandcode stepfun bedrock grok groq llmproxy litellm deepgram poe
-chutes sakana
+chutes sakana deepinfra neuralwatt longcat sub2api zenmux aiand zoommate
+xai notion
 """.split()
 
 def current_function(text, index):

@@ -11,6 +11,8 @@ PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
 COMPACT_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/CompactRepresentation.qml"
 PROVIDER_HEADER_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/ProviderHeader.qml"
 USAGE_ROW_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/ProviderUsageRow.qml"
+PROVIDER_DETAIL_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/ProviderDetailSection.qml"
+USAGE_DETAILS_JS="${ROOT_DIR}/contents/ui/UsageDetails.js"
 README_MD="${ROOT_DIR}/README.md"
 TODO_MD="${ROOT_DIR}/TODO.md"
 CONFIG_XML="${ROOT_DIR}/contents/config/main.xml"
@@ -80,6 +82,7 @@ require_in_file "$PROVIDERS_QML" "--format json --redact"
 require_in_file "$PROVIDERS_QML" "--stdin --format json --json-only"
 require_in_file "$PROVIDERS_QML" "function providerDocsUrl(providerID)"
 require_in_file "$PROVIDERS_QML" "function providerLoginUrl(providerID)"
+require_in_file "$PROVIDERS_QML" "function providerCliArgument(value)"
 require_in_file "$PROVIDERS_QML" "function supportsApiKeySetup(providerID)"
 require_in_file "$PROVIDERS_QML" "action: \"set-api-key\""
 require_in_file "$PROVIDERS_QML" "Provider settings"
@@ -119,6 +122,115 @@ require_in_file "$PROVIDERS_QML" "return \"https://crof.ai/dashboard\""
 require_in_file "$PROVIDERS_QML" "case \"sakana\":"
 require_in_file "$PROVIDERS_QML" "return \"https://console.sakana.ai/billing\""
 
+official_alias_mappings=(
+  '"11labs": "elevenlabs"'
+  '"abacus-ai": "abacus"'
+  '"ai&": "aiand"'
+  '"ai-and": "aiand"'
+  '"alibaba-token": "alibabatokenplan"'
+  '"aoai": "azureopenai"'
+  '"azure-openai": "azureopenai"'
+  '"bailian": "alibaba"'
+  '"bailian-token-plan": "alibabatokenplan"'
+  '"chutes.ai": "chutes"'
+  '"command-code": "commandcode"'
+  '"deep-infra": "deepinfra"'
+  '"deep-seek": "deepseek"'
+  '"groq-api": "groq"'
+  '"openai-api": "openai"'
+  '"qwen-cloud": "qwencloud"'
+  '"step-fun": "stepfun"'
+  '"sub-2-api": "sub2api"'
+  '"synthetic.new": "synthetic"'
+  '"t3-chat": "t3chat"'
+  '"warp-terminal": "warp"'
+  '"wayfinder-router": "wayfinder"'
+  '"xiaomi-mimo": "mimo"'
+  '"z.ai": "zai"'
+  '"zen-mux": "zenmux"'
+)
+
+for qml_file in "$MAIN_QML" "$PROVIDERS_QML"; do
+  require_in_file "$qml_file" 'aiand: "aiand.md"'
+  require_in_file "$qml_file" 'deepinfra: "deepinfra.md"'
+  require_in_file "$qml_file" 'neuralwatt: "neuralwatt.md"'
+  require_in_file "$qml_file" 'notion: "notion.md"'
+  require_in_file "$qml_file" 'qwencloud: "qwen-cloud.md"'
+  require_in_file "$qml_file" 'sub2api: "sub2api.md"'
+  require_in_file "$qml_file" 'xai: "xai.md"'
+  require_in_file "$qml_file" 'zenmux: "zenmux.md"'
+  require_in_file "$qml_file" 'zoommate: "zoommate.md"'
+  for alias_mapping in "${official_alias_mappings[@]}"; do
+    require_in_file "$qml_file" "$alias_mapping"
+  done
+  require_in_file "$qml_file" '"notion-ai": "notion"'
+  require_in_file "$qml_file" '"elevenlabs": i18n("ElevenLabs")'
+  require_in_file "$qml_file" '"kimi": i18n("Kimi Code")'
+  require_in_file "$qml_file" '"minimax": i18n("MiniMax")'
+  require_in_file "$qml_file" '"moonshot": i18n("Moonshot / Kimi Open Platform")'
+  require_in_file "$qml_file" '"stepfun": i18n("StepFun")'
+  require_in_file "$qml_file" '"zai": i18n("z.ai / GLM")'
+  require_in_file "$qml_file" 'return Qt.rgba(160 / 255, 77 / 255, 253 / 255, 1)'
+  require_in_file "$qml_file" 'return Qt.rgba(93 / 255, 92 / 255, 222 / 255, 1)'
+  require_in_file "$qml_file" 'return "https://console.aiand.com"'
+  require_in_file "$qml_file" 'return "https://app.cline.bot/dashboard/subscription?personal=true"'
+  require_in_file "$qml_file" 'return "https://deepinfra.com/dash"'
+  require_in_file "$qml_file" 'return "https://app.notion.com/"'
+  require_in_file "$qml_file" 'return "https://console.x.ai"'
+  require_in_file "$qml_file" 'return "https://ampcode.com/settings/usage"'
+  require_in_file "$qml_file" 'return "https://console.anthropic.com/settings/billing"'
+  require_in_file "$qml_file" 'return "https://console.groq.com/dashboard/usage"'
+  require_in_file "$qml_file" 'return "https://opencode.ai/auth"'
+  require_in_file "$qml_file" 'return "http://127.0.0.1:8088/router"'
+  reject_in_file "$qml_file" 'return "https://ampcode.com/settings#billing"'
+  reject_in_file "$qml_file" 'return "https://claude.ai/settings/usage"'
+  reject_in_file "$qml_file" 'return "https://console.groq.com/dashboard/metrics"'
+  reject_in_file "$qml_file" 'return "https://opencode.ai"'
+done
+
+require_in_file "$MAIN_QML" 'return "https://status.augmentcode.com"'
+require_in_file "$MAIN_QML" 'return "https://status.mistral.ai"'
+
+python3 - "$PROVIDERS_QML" <<'PY'
+import pathlib
+import re
+import sys
+
+text = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+start = text.index("    function supportsApiKeySetup(providerID)")
+end = text.index("    function providerDocsUrl(providerID)", start)
+body = text[start:end]
+descriptor_owned = {"aiand", "clinepass", "deepinfra", "neuralwatt", "sub2api", "xai", "zenmux"}
+hardcoded = sorted(descriptor_owned.intersection(re.findall(r'case "([^"]+)":', body)))
+if hardcoded:
+    print("descriptor-owned API key capability hardcoded in QML: " + ", ".join(hardcoded), file=sys.stderr)
+    sys.exit(1)
+
+for function_name in ("setEnabled", "setApiKey", "loadProviderSettings", "providerCliCommandText"):
+    marker = f"    function {function_name}("
+    start = text.index(marker)
+    end = text.find("\n    function ", start + len(marker))
+    body = text[start:end if end >= 0 else len(text)]
+    if "var cliProviderID = providerCliArgument(providerID)" not in body:
+        print(f"{function_name} does not convert the provider ID to its CLI argument", file=sys.stderr)
+        sys.exit(1)
+
+cli_start = text.index("    function providerCliArgument(value)")
+cli_end = text.index("\n    function ", cli_start + 1)
+cli_body = text[cli_start:cli_end]
+for provider_id, cli_name in {
+    "abacus": "abacusai",
+    "alibaba": "alibaba-coding-plan",
+    "alibabatokenplan": "alibaba-token-plan",
+    "azureopenai": "azure-openai",
+    "groq": "groqcloud",
+    "qwencloud": "qwen-cloud",
+}.items():
+    if f'case "{provider_id}":' not in cli_body or f'return "{cli_name}"' not in cli_body:
+        print(f"missing CLI argument mapping for {provider_id}", file=sys.stderr)
+        sys.exit(1)
+PY
+
 require_in_file "$MAIN_QML" "daily: normalizeCostDaily(item.daily, currency, costHistoryDays)"
 require_in_file "$MAIN_QML" "totals: normalizeCostTotals(item.totals, item.last30DaysCostUSD, item.last30DaysTokens, currency)"
 require_in_file "$MAIN_QML" "models: normalizeCostModels(item.daily, currency)"
@@ -135,6 +247,14 @@ require_in_file "$MAIN_QML" "function costAverageDailyLine(points)"
 require_in_file "$MAIN_QML" "function costPerMillionLine(tokenCost)"
 require_in_file "$MAIN_QML" "function compactCostTokenSummary(cost, tokens, currency)"
 require_in_file "$MAIN_QML" "function usageDashboard(providerID, usage, item)"
+require_in_file "$MAIN_QML" 'import "UsageDetails.js" as UsageDetails'
+require_in_file "$MAIN_QML" "var providerDetails = UsageDetails.normalizeSections(usage.details)"
+require_in_file "$MAIN_QML" "providerDetails: providerDetails"
+require_in_file "$MAIN_QML" "var providerUsageDashboard = providerDetails.length > 0 ? null : usageDashboard(providerID, usage, item)"
+require_in_file "$MAIN_QML" "var hasSupplementalUsage = providerDetails.length > 0 || providerUsageDashboard !== null"
+require_in_file "$MAIN_QML" "providerPlaceholder(providerID, rows, usage, item, error, hasSupplementalUsage)"
+require_in_file "$MAIN_QML" "usageDashboard: providerUsageDashboard"
+require_in_file "$MAIN_QML" "hasSupplementalUsage === true"
 require_in_file "$MAIN_QML" "function usageDashboardRows(source)"
 require_in_file "$MAIN_QML" "function appendDashboardMetric(rows, label, value, kind)"
 require_in_file "$MAIN_QML" "openaiDashboard"
@@ -149,6 +269,26 @@ require_in_file "$MAIN_QML" "id: usageDashboardSection"
 require_in_file "$MAIN_QML" "text: i18n(\"Usage dashboard\")"
 require_in_file "$MAIN_QML" "model: usageDashboardSection.kpis"
 require_in_file "$MAIN_QML" "model: usageDashboardSection.rows"
+require_in_file "$MAIN_QML" "Components.ProviderDetailSection"
+require_in_file "$PROVIDER_DETAIL_COMPONENT_QML" "required property var modelData"
+require_in_file "$PROVIDER_DETAIL_COMPONENT_QML" "modelData.secondaryValue"
+require_in_file "$PROVIDER_DETAIL_COMPONENT_QML" "modelData.chart.kind === \"line\""
+require_in_file "$PROVIDER_DETAIL_COMPONENT_QML" "Canvas {"
+require_in_file "$PROVIDER_DETAIL_COMPONENT_QML" "visible: detailSection.chartData !== null"
+require_in_file "$PROVIDER_DETAIL_COMPONENT_QML" "if (points.length === 0)"
+require_in_file "$PROVIDER_DETAIL_COMPONENT_QML" "detailChart.visible && detailSection.chartPoints.length > 0"
+reject_in_file "$PROVIDER_DETAIL_COMPONENT_QML" "&& detailSection.maximumChartValue > 0"
+require_in_file "$USAGE_DETAILS_JS" "maximumSectionsPerSnapshot = 8"
+require_in_file "$USAGE_DETAILS_JS" "maximumRowsPerSection = 24"
+require_in_file "$USAGE_DETAILS_JS" "maximumPointsPerChart = 120"
+require_in_file "$USAGE_DETAILS_JS" "maximumStringCodeUnitsForSafety = maximumStringLength * 32"
+require_in_file "$USAGE_DETAILS_JS" "QML JavaScript has no grapheme segmenter"
+require_in_file "$USAGE_DETAILS_JS" "Math.min(rawSections.length, maximumSectionsPerSnapshot)"
+require_in_file "$USAGE_DETAILS_JS" "Math.min(rawRows.length, maximumRowsPerSection)"
+require_in_file "$USAGE_DETAILS_JS" "Math.min(rawPoints.length, maximumPointsPerChart)"
+reject_in_file "$USAGE_DETAILS_JS" "sections.length < maximumSectionsPerSnapshot"
+reject_in_file "$USAGE_DETAILS_JS" "rows.length < maximumRowsPerSection"
+reject_in_file "$USAGE_DETAILS_JS" "points.length < maximumPointsPerChart"
 require_in_file "$MAIN_QML" "Canvas {"
 require_in_file "$MAIN_QML" "id: costSparkline"
 require_in_file "$MAIN_QML" "id: costHistoryChartSection"
@@ -351,6 +491,7 @@ reject_in_file "$TODO_MD" "Release automation:"
 require_in_file "$TODO_MD" "Provider-specific editable settings"
 require_in_file "$TODO_MD" "Interactive history charts"
 require_in_file "$TODO_MD" "Dashboard extras"
+require_in_file "$TODO_MD" '`usage.details` rows and bounded bar/line charts'
 require_in_file "$TODO_MD" "Translations"
 
 require_in_file "$README_MD" "yay -S codexbar-cli"
@@ -358,7 +499,9 @@ require_in_file "$README_MD" "kpackagetool6 -t Plasma/Applet -i codexbar-plasma.
 require_in_file "$README_MD" "kpackagetool6 -t Plasma/Applet -u codexbar-plasma.plasmoid"
 require_in_file "$README_MD" "make install"
 reject_in_file "$README_MD" "kpackagetool6 -t Plasma/Applet -u ."
-require_in_file "$TODO_MD" "CodexBar v0.42.1 has 58 released provider IDs"
+require_in_file "$TODO_MD" "all 67 provider IDs"
+require_in_file "$README_MD" '`usage.details` contract'
+require_in_file "$README_MD" "all 67 providers"
 require_in_file "$README_MD" "systemctl --user restart plasma-plasmashell.service"
 require_in_file "$README_MD" "codexbar usage --provider codex --all-accounts --format json --json-only"
 

@@ -106,12 +106,13 @@ KCM.SimpleKCM {
         errorText = ""
         statusText = ""
         markPending(providerID, true, desiredEnabled)
+        var cliProviderID = providerCliArgument(providerID)
         var command = [
             shellQuote(commandPath),
             "config",
             desiredEnabled ? "enable" : "disable",
             "--provider",
-            shellQuote(providerID),
+            shellQuote(cliProviderID),
             "--format",
             "json",
             "--json-only"
@@ -131,6 +132,7 @@ KCM.SimpleKCM {
         errorText = ""
         statusText = ""
         markPending(providerID, true, true)
+        var cliProviderID = providerCliArgument(providerID)
 
         var prompt = i18n("API key for %1", displayNameForProvider(providerID))
         var script = [
@@ -140,7 +142,7 @@ KCM.SimpleKCM {
             "if [ \"$status\" -ne 0 ] || [ -z \"$key\" ]; then printf '%s\\n' '{\"cancelled\":true}'; exit 0; fi",
             "printf '%s' \"$key\" | \"$2\" config set-api-key --provider \"$3\" --stdin --format json --json-only"
         ].join("; ")
-        var command = ["sh", "-lc", shellQuote(script), "_", shellQuote(prompt), shellQuote(commandPath), shellQuote(providerID)].join(" ")
+        var command = ["sh", "-lc", shellQuote(script), "_", shellQuote(prompt), shellQuote(commandPath), shellQuote(cliProviderID)].join(" ")
         runCommand(command, { kind: "setApiKey", provider: providerID })
     }
 
@@ -150,10 +152,11 @@ KCM.SimpleKCM {
         }
         setProviderDiagnosticLoading(providerID, true)
         setProviderDiagnosticError(providerID, "")
+        var cliProviderID = providerCliArgument(providerID)
         var command = [
             shellQuote(commandPath),
             "diagnose --provider",
-            shellQuote(providerID),
+            shellQuote(cliProviderID),
             "--format json --redact"
         ].join(" ")
         runCommand(command, {
@@ -1004,13 +1007,14 @@ KCM.SimpleKCM {
         }
 
         var providerID = item.provider
+        var cliProviderID = providerCliArgument(providerID)
         var lines = [
-            shellQuote(commandPath) + " usage --provider " + shellQuote(providerID) + " --format json --json-only",
-            shellQuote(commandPath) + " diagnose --provider " + shellQuote(providerID) + " --format json --redact",
-            shellQuote(commandPath) + " config " + (item.enabled ? "disable" : "enable") + " --provider " + shellQuote(providerID) + " --format json --json-only"
+            shellQuote(commandPath) + " usage --provider " + shellQuote(cliProviderID) + " --format json --json-only",
+            shellQuote(commandPath) + " diagnose --provider " + shellQuote(cliProviderID) + " --format json --redact",
+            shellQuote(commandPath) + " config " + (item.enabled ? "disable" : "enable") + " --provider " + shellQuote(cliProviderID) + " --format json --json-only"
         ]
         if (supportsApiKeySetup(providerID)) {
-            lines.push("printf '%s' \"$API_KEY\" | " + shellQuote(commandPath) + " config set-api-key --provider " + shellQuote(providerID) + " --stdin --format json --json-only")
+            lines.push("printf '%s' \"$API_KEY\" | " + shellQuote(commandPath) + " config set-api-key --provider " + shellQuote(cliProviderID) + " --stdin --format json --json-only")
         }
         return lines.join("\n")
     }
@@ -1233,6 +1237,7 @@ KCM.SimpleKCM {
         var key = providerKey(providerID)
         var docs = {
             abacus: "abacus.md",
+            aiand: "aiand.md",
             alibaba: "alibaba-coding-plan.md",
             alibabatokenplan: "alibaba-token-plan.md",
             amp: "amp.md",
@@ -1251,6 +1256,7 @@ KCM.SimpleKCM {
             crossmodel: "crossmodel.md",
             cursor: "cursor.md",
             deepgram: "deepgram.md",
+            deepinfra: "deepinfra.md",
             deepseek: "deepseek.md",
             devin: "devin.md",
             doubao: "doubao.md",
@@ -1271,6 +1277,8 @@ KCM.SimpleKCM {
             mistral: "providers.md#mistral",
             minimax: "minimax.md",
             moonshot: "moonshot.md",
+            neuralwatt: "neuralwatt.md",
+            notion: "notion.md",
             ollama: "ollama.md",
             opencode: "opencode.md",
             opencodego: "opencode.md",
@@ -1279,15 +1287,20 @@ KCM.SimpleKCM {
             perplexity: "providers.md#perplexity",
             poe: "poe.md",
             qoder: "qoder.md",
+            qwencloud: "qwen-cloud.md",
             sakana: "sakana.md",
             stepfun: "stepfun.md",
             synthetic: "providers.md#synthetic",
+            sub2api: "sub2api.md",
             t3chat: "providers.md#t3-chat",
             venice: "venice.md",
             vertexai: "vertexai.md",
             warp: "warp.md",
             wayfinder: "wayfinder.md",
             windsurf: "windsurf.md",
+            xai: "xai.md",
+            zenmux: "zenmux.md",
+            zoommate: "zoommate.md",
             zai: "zai.md",
             zed: "zed.md"
         }
@@ -1305,8 +1318,10 @@ KCM.SimpleKCM {
             return "https://modelstudio.console.alibabacloud.com/ap-southeast-1/?tab=coding-plan#/efm/coding_plan"
         case "alibabatokenplan":
             return "https://bailian.console.aliyun.com/cn-beijing?tab=plan#/efm/subscription/token-plan"
+        case "aiand":
+            return "https://console.aiand.com"
         case "amp":
-            return "https://ampcode.com/settings#billing"
+            return "https://ampcode.com/settings/usage"
         case "augment":
             return "https://app.augmentcode.com/account/subscription"
         case "azureopenai":
@@ -1315,6 +1330,8 @@ KCM.SimpleKCM {
             return "https://console.aws.amazon.com/bedrock"
         case "chutes":
             return "https://chutes.ai"
+        case "clinepass":
+            return "https://app.cline.bot/dashboard/subscription?personal=true"
         case "codebuff":
             return "https://www.codebuff.com/usage"
         case "clawrouter":
@@ -1328,13 +1345,15 @@ KCM.SimpleKCM {
         case "codex":
             return "https://chatgpt.com/codex/settings/usage"
         case "claude":
-            return "https://claude.ai/settings/usage"
+            return "https://console.anthropic.com/settings/billing"
         case "copilot":
             return "https://github.com/settings/copilot"
         case "cursor":
             return "https://cursor.com/dashboard?tab=usage"
         case "deepgram":
             return "https://console.deepgram.com/project/"
+        case "deepinfra":
+            return "https://deepinfra.com/dash"
         case "deepseek":
             return "https://platform.deepseek.com/usage"
         case "devin":
@@ -1350,13 +1369,15 @@ KCM.SimpleKCM {
         case "grok":
             return "https://grok.com/?_s=usage"
         case "groq":
-            return "https://console.groq.com/dashboard/metrics"
+            return "https://console.groq.com/dashboard/usage"
         case "kilo":
             return "https://app.kilo.ai/usage"
         case "kimi":
             return "https://www.kimi.com/code/console"
         case "kiro":
             return "https://app.kiro.dev/account/usage"
+        case "longcat":
+            return "https://longcat.chat/platform/"
         case "manus":
             return "https://manus.im"
         case "mimo":
@@ -1365,15 +1386,19 @@ KCM.SimpleKCM {
             return "https://admin.mistral.ai/organization/usage"
         case "moonshot":
             return "https://platform.moonshot.ai/console/account"
+        case "neuralwatt":
+            return "https://portal.neuralwatt.com/dashboard"
         case "minimax":
             return "https://platform.minimax.io/user-center/payment/coding-plan?cycle_type=3"
         case "ollama":
             return "https://ollama.com/settings"
+        case "notion":
+            return "https://app.notion.com/"
         case "openai":
             return "https://platform.openai.com/usage"
         case "opencode":
         case "opencodego":
-            return "https://opencode.ai"
+            return "https://opencode.ai/auth"
         case "openrouter":
             return "https://openrouter.ai/settings/credits"
         case "perplexity":
@@ -1382,6 +1407,8 @@ KCM.SimpleKCM {
             return "https://poe.com/api/keys"
         case "qoder":
             return "https://qoder.com/account/usage"
+        case "qwencloud":
+            return "https://home.qwencloud.com/billing/subscription/token-plan-individual"
         case "sakana":
             return "https://console.sakana.ai/billing"
         case "stepfun":
@@ -1394,8 +1421,16 @@ KCM.SimpleKCM {
             return "https://console.cloud.google.com/vertex-ai"
         case "warp":
             return "https://docs.warp.dev/reference/cli/api-keys"
+        case "wayfinder":
+            return "http://127.0.0.1:8088/router"
         case "windsurf":
             return "https://windsurf.com/subscription/usage"
+        case "xai":
+            return "https://console.x.ai"
+        case "zenmux":
+            return "https://zenmux.ai/platform/management"
+        case "zoommate":
+            return "https://zoommate.zoom.us/#/?settings=credit-usage"
         case "zai":
             return "https://z.ai/manage-apikey/coding-plan/personal/my-plan"
         default:
@@ -1450,20 +1485,95 @@ KCM.SimpleKCM {
     function providerKey(value) {
         var key = String(value || "codex").toLowerCase()
         var aliases = {
+            "11labs": "elevenlabs",
+            "abacus-ai": "abacus",
             "abacusai": "abacus",
             "agy": "antigravity",
+            "ai&": "aiand",
+            "ai-and": "aiand",
             "alibaba-coding-plan": "alibaba",
+            "alibaba-token": "alibabatokenplan",
             "alibaba-token-plan": "alibabatokenplan",
+            "aoai": "azureopenai",
+            "ark": "doubao",
             "aws-bedrock": "bedrock",
+            "azure-openai": "azureopenai",
+            "bailian": "alibaba",
+            "bailian-token-plan": "alibabatokenplan",
+            "bytedance": "doubao",
+            "chutes.ai": "chutes",
             "claw-router": "clawrouter",
             "cm": "crossmodel",
+            "command-code": "commandcode",
+            "crofai": "crof",
+            "deep-infra": "deepinfra",
+            "deep-seek": "deepseek",
+            "dg": "deepgram",
+            "di": "deepinfra",
             "droid": "factory",
+            "ds": "deepseek",
+            "eleven": "elevenlabs",
             "gemini-cli": "gemini",
+            "groq-api": "groq",
             "groqcloud": "groq",
+            "kilo-ai": "kilo",
+            "kimi-ai": "kimi",
             "kimi-k2": "kimik2",
-            "vertex": "vertexai"
+            "kiro-cli": "kiro",
+            "lc": "longcat",
+            "litellm-proxy": "litellm",
+            "llm-api-key-proxy": "llmproxy",
+            "llm-proxy": "llmproxy",
+            "long-cat": "longcat",
+            "manicode": "codebuff",
+            "mini-max": "minimax",
+            "mistral-ai": "mistral",
+            "neural": "neuralwatt",
+            "notion-ai": "notion",
+            "notionai": "notion",
+            "nw": "neuralwatt",
+            "openai-api": "openai",
+            "or": "openrouter",
+            "qwen": "qwencloud",
+            "qwen-cloud": "qwencloud",
+            "qwen-token-plan": "qwencloud",
+            "sakana-ai": "sakana",
+            "sf": "stepfun",
+            "step-fun": "stepfun",
+            "sub-2-api": "sub2api",
+            "synthetic.new": "synthetic",
+            "t3": "t3chat",
+            "t3-chat": "t3chat",
+            "ven": "venice",
+            "zen-mux": "zenmux",
+            "vertex": "vertexai",
+            "volcengine": "doubao",
+            "warp-ai": "warp",
+            "warp-terminal": "warp",
+            "wayfinder-router": "wayfinder",
+            "xiaomi-mimo": "mimo",
+            "z.ai": "zai"
         }
         return aliases[key] || key
+    }
+
+    function providerCliArgument(value) {
+        switch (providerKey(value)) {
+        case "abacus":
+            return "abacusai"
+        case "alibaba":
+            return "alibaba-coding-plan"
+        case "alibabatokenplan":
+            return "alibaba-token-plan"
+        case "azureopenai":
+            return "azure-openai"
+        case "groq":
+            return "groqcloud"
+        case "qwencloud":
+            return "qwen-cloud"
+        default:
+            return providerKey(value)
+        }
     }
 
     function providerIconSource(value) {
@@ -1480,6 +1590,8 @@ KCM.SimpleKCM {
 
     function providerColor(value) {
         switch (providerKey(value)) {
+        case "aiand":
+            return Qt.rgba(226 / 255, 92 / 255, 43 / 255, 1)
         case "codex":
             return Qt.rgba(73 / 255, 163 / 255, 176 / 255, 1)
         case "openai":
@@ -1488,6 +1600,8 @@ KCM.SimpleKCM {
             return Qt.rgba(0, 120 / 255, 212 / 255, 1)
         case "claude":
             return Qt.rgba(204 / 255, 124 / 255, 94 / 255, 1)
+        case "clinepass":
+            return Qt.rgba(0.38, 0.64, 0.98, 1)
         case "cursor":
             return Qt.rgba(0, 191 / 255, 165 / 255, 1)
         case "opencode":
@@ -1573,7 +1687,7 @@ KCM.SimpleKCM {
         case "venice":
             return Qt.rgba(0.2, 0.6, 1, 1)
         case "commandcode":
-            return Qt.rgba(0, 0, 0, 1)
+            return Qt.rgba(160 / 255, 77 / 255, 253 / 255, 1)
         case "clawrouter":
             return Qt.rgba(89 / 255, 110 / 255, 246 / 255, 1)
         case "stepfun":
@@ -1591,10 +1705,28 @@ KCM.SimpleKCM {
             return Qt.rgba(76 / 255, 137 / 255, 240 / 255, 1)
         case "deepgram":
             return Qt.rgba(100 / 255, 103 / 255, 242 / 255, 1)
+        case "deepinfra":
+            return Qt.rgba(42 / 255, 50 / 255, 117 / 255, 1)
         case "poe":
-            return Qt.rgba(0.15, 0.68, 0.38, 1)
+            return Qt.rgba(93 / 255, 92 / 255, 222 / 255, 1)
         case "chutes":
             return Qt.rgba(49 / 255, 132 / 255, 1, 1)
+        case "longcat":
+            return Qt.rgba(1, 209 / 255, 0, 1)
+        case "neuralwatt":
+            return Qt.rgba(0.22, 0.85, 0.55, 1)
+        case "notion":
+            return Qt.rgba(51 / 255, 126 / 255, 169 / 255, 1)
+        case "qwencloud":
+            return Qt.rgba(97 / 255, 92 / 255, 237 / 255, 1)
+        case "sub2api":
+            return Qt.rgba(45 / 255, 198 / 255, 216 / 255, 1)
+        case "xai":
+            return Qt.rgba(142 / 255, 142 / 255, 147 / 255, 1)
+        case "zenmux":
+            return Qt.rgba(108 / 255, 92 / 255, 231 / 255, 1)
+        case "zoommate":
+            return Qt.rgba(11 / 255, 92 / 255, 1, 1)
         default:
             return Kirigami.Theme.highlightColor
         }
@@ -1603,10 +1735,75 @@ KCM.SimpleKCM {
     function providerTitle(value) {
         var key = providerKey(value)
         var names = {
+            "abacus": i18n("Abacus AI"),
+            "aiand": i18n("ai&"),
+            "alibaba": i18n("Alibaba"),
+            "alibabatokenplan": i18n("Alibaba Token Plan"),
+            "amp": i18n("Amp"),
+            "antigravity": i18n("Antigravity"),
+            "augment": i18n("Augment"),
+            "azureopenai": i18n("Azure OpenAI"),
+            "bedrock": i18n("AWS Bedrock"),
+            "chutes": i18n("Chutes"),
+            "claude": i18n("Claude"),
             "clawrouter": i18n("ClawRouter"),
+            "clinepass": i18n("ClinePass"),
+            "codebuff": i18n("Codebuff"),
+            "codex": i18n("Codex"),
+            "commandcode": i18n("Command Code"),
+            "copilot": i18n("Copilot"),
+            "crof": i18n("Crof"),
             "crossmodel": i18n("CrossModel"),
+            "cursor": i18n("Cursor"),
+            "deepgram": i18n("Deepgram"),
+            "deepinfra": i18n("DeepInfra"),
+            "deepseek": i18n("DeepSeek"),
+            "devin": i18n("Devin"),
+            "doubao": i18n("Doubao"),
+            "elevenlabs": i18n("ElevenLabs"),
+            "factory": i18n("Droid"),
+            "gemini": i18n("Gemini"),
+            "grok": i18n("Grok"),
+            "groq": i18n("Groq"),
+            "jetbrains": i18n("JetBrains AI"),
+            "kilo": i18n("Kilo"),
+            "kimi": i18n("Kimi Code"),
+            "kimik2": i18n("Kimi K2 (unofficial)"),
+            "kiro": i18n("Kiro"),
+            "litellm": i18n("LiteLLM"),
+            "llmproxy": i18n("LLM Proxy"),
+            "longcat": i18n("LongCat"),
+            "manus": i18n("Manus"),
+            "mimo": i18n("Xiaomi MiMo"),
+            "minimax": i18n("MiniMax"),
+            "mistral": i18n("Mistral"),
+            "moonshot": i18n("Moonshot / Kimi Open Platform"),
+            "neuralwatt": i18n("Neuralwatt"),
+            "notion": i18n("Notion AI"),
+            "ollama": i18n("Ollama"),
+            "openai": i18n("OpenAI"),
+            "opencode": i18n("OpenCode"),
+            "opencodego": i18n("OpenCode Go"),
+            "openrouter": i18n("OpenRouter"),
+            "perplexity": i18n("Perplexity"),
+            "poe": i18n("Poe"),
             "qoder": i18n("Qoder"),
-            "wayfinder": i18n("Wayfinder")
+            "qwencloud": i18n("Qwen Cloud"),
+            "sakana": i18n("Sakana AI"),
+            "stepfun": i18n("StepFun"),
+            "sub2api": i18n("sub2api"),
+            "synthetic": i18n("Synthetic"),
+            "t3chat": i18n("T3 Chat"),
+            "venice": i18n("Venice"),
+            "vertexai": i18n("Vertex AI"),
+            "warp": i18n("Warp"),
+            "wayfinder": i18n("Wayfinder"),
+            "windsurf": i18n("Windsurf"),
+            "xai": i18n("xAI"),
+            "zai": i18n("z.ai / GLM"),
+            "zed": i18n("Zed"),
+            "zenmux": i18n("ZenMux"),
+            "zoommate": i18n("ZoomMate")
         }
         if (names[key]) {
             return names[key]

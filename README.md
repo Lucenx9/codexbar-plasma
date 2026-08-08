@@ -90,6 +90,10 @@ codexbar usage --provider codex --all-accounts --format json --json-only
 codexbar cost --format json --json-only
 ```
 
+The widget keeps compatibility fallbacks for older CLI payloads. With CodexBar
+0.48.1 and later it also consumes the generic `usage.details` contract for
+provider-defined detail rows and bounded bar/line charts.
+
 ## Features
 
 Panel and popup:
@@ -105,6 +109,8 @@ Panel and popup:
   left automatic (the first 3 eligible providers).
 - Usage dashboard summaries for provider payloads that expose API spend,
   request, token, model, or dashboard fields through the CLI.
+- Declarative provider detail sections from the CLI `usage.details` contract,
+  including labeled rows, secondary values, and compact bar/line charts.
 
 Providers and accounts:
 
@@ -116,6 +122,9 @@ Providers and accounts:
   and optional usage extras.
 - Provider-specific CLI command hints as a fallback when a descriptor is not
   available.
+- Fallback names, colors, links, aliases, and icons for all 67 providers in the
+  official CodexBar 0.48.1 registry; fork-only provider assets remain available
+  for compatibility.
 
 Costs and history:
 

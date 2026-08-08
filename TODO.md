@@ -15,11 +15,12 @@
   setup actions for providers that need browser-cookie import, local app files,
   OAuth/device-flow handoff, CLI-auth setup, or token-account workflows when the
   CLI can describe and execute those actions in JSON.
-- Dashboard extras: the widget now surfaces generic KPI/summary rows from CLI
-  dashboard payloads. Add richer provider-specific dashboard layouts only when
-  the CLI exposes stable presentation fields. Missing examples include Codex
-  web dashboard extras, provider billing summaries, usage breakdowns, credits
-  history, and provider-specific model/request/token sections.
+- Dashboard extras: the widget now surfaces the generic CodexBar 0.48.1
+  `usage.details` rows and bounded bar/line charts, with legacy KPI/summary
+  payloads retained as a compatibility fallback. Add richer sections only when
+  the CLI extends that stable presentation contract. Missing examples include
+  billing summaries, usage breakdowns, credits history, and richer
+  provider-specific model/request/token sections.
 - Interactive history charts: add hover/selection and credits/plan utilization
   history when the CLI exposes stable history payloads. Consider compact
   burn-down/history views as Plasma equivalents to the macOS WidgetKit widgets,
@@ -30,9 +31,10 @@
 - Notification refinements: consider reset-imminent notifications if they stay
   quiet and configurable. Keep status, quota, reset, and update notifications
   tied to clear state transitions and user-visible settings.
-- Provider drift checks: CodexBar v0.42.1 has 58 released provider IDs, and the
-  Plasma icon set covers them. When upstream releases providers, sync provider
-  keys, CLI aliases, titles, colors, docs/dashboard/login URLs, icon assets, and
+- Provider drift checks: the Plasma fallback catalog covers all 67 provider IDs
+  released in CodexBar v0.48.1, while retaining fork-only compatibility assets.
+  When upstream releases providers, sync provider keys, CLI aliases, titles,
+  colors, docs/dashboard/login URLs, icon assets, and
   `scripts/test_provider_icons.sh`.
 - Plasma release channel: the GitHub Release updater is in place. If the widget
   is published through KDE Store, prefer KDE Store/KNewStuff/Discover for that

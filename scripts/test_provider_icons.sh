@@ -14,18 +14,20 @@ require_icon() {
   fi
 }
 
-# Released CodexBar v0.42.1 provider registry. The live CLI probe below adds an
-# early warning when a newer installed release introduces another provider.
+# Released official CodexBar v0.48.1 provider registry. The live CLI probe below
+# adds an early warning when a newer installed release introduces another provider.
 released_providers=(
   codex
   openai
   azureopenai
   claude
+  clinepass
   cursor
   opencode
   opencodego
   alibaba
   alibabatokenplan
+  qwencloud
   factory
   gemini
   antigravity
@@ -40,7 +42,6 @@ released_providers=(
   vertexai
   augment
   jetbrains
-  kimik2
   moonshot
   amp
   t3chat
@@ -58,6 +59,7 @@ released_providers=(
   abacus
   mistral
   deepseek
+  deepinfra
   codebuff
   crof
   venice
@@ -72,9 +74,16 @@ released_providers=(
   deepgram
   poe
   chutes
-  crossmodel
+  neuralwatt
   clawrouter
+  longcat
+  sub2api
   wayfinder
+  zenmux
+  aiand
+  zoommate
+  xai
+  notion
 )
 
 for provider in "${released_providers[@]}"; do

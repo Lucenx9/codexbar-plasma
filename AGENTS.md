@@ -1,15 +1,92 @@
 # Agent Instructions
 
-This repository is the standalone KDE Plasma widget for CodexBar.
+This repository is exclusively the standalone KDE Plasma widget for CodexBar.
+
+In this repository, **plugin**, **widget**, **plasmoid**, and **applet** all mean
+the KDE Plasma frontend. The official macOS CodexBar product is a separate app
+and is never the implementation target of work in this repo.
 
 ## Project Boundaries
 
+- Work only on the Plasma applet in this repository unless the user explicitly
+  requests a separate upstream CLI change. A request for macOS parity authorizes
+  comparison and Plasma implementation only; it does not authorize editing the
+  macOS app, the upstream CLI, or a sibling/fork workspace.
+- Treat the official macOS app as a read-only product, behavior, terminology,
+  and UX reference. Recreate only useful Plasma-native equivalents backed by an
+  official CLI contract; do not translate Swift/AppKit/WidgetKit code into QML.
 - Keep this repo small. It should contain only the Plasma applet, packaging helpers, tests, and docs.
 - Do not copy the macOS app, Swift sources, Xcode projects, or full upstream CodexBar tree into this repo.
 - Provider logic, authentication, config parsing, quota fetching, and JSON contracts belong in the upstream `codexbar` CLI.
-- If a local upstream/fork workspace exists, use it only for comparison,
-  syncing provider maps, or proposing CLI contract changes.
+- If a local upstream/fork workspace exists, keep it read-only unless the user
+  explicitly asks for an upstream change in the current task. Use it only for
+  comparison, syncing provider maps, or drafting CLI contract proposals.
 - If the Plasma frontend needs new provider data, prefer extending the CLI JSON contract upstream. Do not hand-edit CodexBar config JSON from QML except through supported CLI commands.
+- If the official Linux CLI does not expose the required data or action, record
+  the gap as an upstream contract requirement and stop at the frontend boundary.
+  Do not fill the gap with provider scraping, authentication, or config parsing
+  in QML.
+
+## Sources of Truth and Parity
+
+Use this order when sources disagree:
+
+1. The current Plasma implementation, config schema, tests, and documented
+   repository decisions define what this repo currently supports.
+2. The released official `codexbar` Linux CLI and its documented JSON contracts
+   define what the frontend may consume.
+3. The official macOS app defines product inspiration and parity candidates,
+   not frontend architecture or data contracts.
+4. Local forks and experimental branches are comparison material only unless
+   the user explicitly selects them as a target.
+
+- Pin comparisons to an exact CLI/app version, tag, or commit. Do not mix an
+  installed CLI, upstream `main`, and a local fork and report the result as one
+  coherent release.
+- Classify every macOS parity gap as one of: **Plasma-native and implementable
+  now**, **blocked on an official CLI contract**, or **macOS-only/non-goal**.
+- Confirm a field or action exists in official Linux CLI output before designing
+  UI around it. Swift view models, screenshots, and filenames are not contracts.
+- Prefer generic CLI-described fields, actions, detail rows, and charts over
+  provider-specific QML branches. Unknown providers and unknown optional fields
+  should degrade gracefully rather than break the whole popup.
+- Keep static provider metadata as fallback presentation data only. When the CLI
+  exposes canonical metadata, consume it and retain cheap drift tests for any
+  remaining fallback map.
+
+## Working Method
+
+- Before editing, identify the requested Plasma surface, its owning QML file,
+  the config entry if any, the CLI payload involved, and the nearest regression
+  check. If the requested behavior belongs upstream, report that boundary before
+  writing frontend code.
+- Make the smallest coherent change that satisfies the request. Avoid unrelated
+  refactors, formatting churn, generated artifacts, and changes in sibling repos.
+- Preserve user changes in a dirty worktree. Review `git diff` and `git status`
+  before handing off, and call out unrelated pre-existing changes rather than
+  incorporating them silently.
+- Add tests at the cheapest useful layer: normalization/contract assertions for
+  data changes, static QML assertions for durable UI rules, and runtime checks
+  only when static checks cannot establish the behavior.
+- Run the narrowest relevant check while iterating, then the repository-required
+  checks before completion. Never claim packaging or runtime verification unless
+  it was actually performed; state clearly what was not available.
+- When a parity decision changes, update `TODO.md` and the mirror below in the
+  same change so future agents do not revive a rejected port or obsolete gap.
+
+## CLI and Data Safety
+
+- Treat CLI stdout, stderr, descriptors, cached payloads, labels, URLs, and
+  provider-controlled status text as untrusted input. Validate shapes, types,
+  bounds, command allowlists, and URL schemes before use.
+- Never log, display, persist, or pass through raw API keys, cookies, bearer
+  tokens, auth headers, or unredacted diagnostics. Secret entry must use supported
+  CLI stdin flows and redacted result contracts.
+- Keep command nonce, timeout, disconnect, retry, and stale-result handling close
+  to each external process lifecycle. A late process result must not overwrite a
+  newer refresh or account selection.
+- Preserve partial healthy data when one provider or optional enrichment fails;
+  surface the scoped error without clearing unrelated provider snapshots.
 
 ## Layout
 
@@ -74,10 +151,11 @@ Keep this in sync with `TODO.md` when feature parity decisions change:
   but browser-cookie import, local-file, OAuth/device-flow, CLI-auth setup, and
   token-account workflows need JSON-described CLI actions before QML grows real
   controls.
-- Generic dashboard KPI/summary rows are surfaced from current CLI payloads.
-  Richer provider-specific dashboard layouts, billing summaries, usage
-  breakdowns, credits history, and model/request/token sections should wait for
-  stable CLI presentation fields.
+- Generic CodexBar 0.48.1 `usage.details` rows and bounded bar/line charts are
+  surfaced, with legacy dashboard KPI/summary payloads retained as a
+  compatibility fallback. Richer provider-specific layouts, billing summaries,
+  usage breakdowns, credits history, and model/request/token sections should
+  wait for stable CLI presentation fields.
 - Interactive history charts can build on the current cost history bars, but
   hover/selection, credits history, and plan utilization history should wait
   for stable history payloads and avoid heavy delegate work. Compact
@@ -87,8 +165,10 @@ Keep this in sync with `TODO.md` when feature parity decisions change:
   work.
 - Notification refinements should stay quiet, configurable, and tied to clear
   state transitions.
-- Provider drift checks should sync provider keys, CLI aliases, titles, colors,
-  docs/dashboard/login URLs, icon assets, and `scripts/test_provider_icons.sh`.
+- The fallback catalog covers the 67 provider IDs released in CodexBar v0.48.1
+  and retains fork-only compatibility assets. Future drift syncs should cover
+  provider keys, CLI aliases, titles, colors, docs/dashboard/login URLs, icon
+  assets, and `scripts/test_provider_icons.sh`.
 - The GitHub Release updater is current. If a KDE Store channel is added,
   prefer KDE Store/KNewStuff/Discover for that channel.
 - Do not port macOS-only surfaces directly, including WidgetKit, Sparkle, and

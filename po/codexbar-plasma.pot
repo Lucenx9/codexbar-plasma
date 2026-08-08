@@ -500,7 +500,75 @@ msgid "%1 for %2"
 msgstr ""
 
 #: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Abacus AI"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "ai&"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Alibaba"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Alibaba Token Plan"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Amp"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Antigravity"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Augment"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Azure OpenAI"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "AWS Bedrock"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Chutes"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Claude"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
 msgid "ClawRouter"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "ClinePass"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Codebuff"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Codex"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Command Code"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Copilot"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Crof"
 msgstr ""
 
 #: contents/ui/configProviders.qml contents/ui/main.qml
@@ -508,11 +576,203 @@ msgid "CrossModel"
 msgstr ""
 
 #: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Cursor"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Deepgram"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "DeepInfra"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "DeepSeek"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Devin"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Doubao"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "ElevenLabs"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Droid"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Gemini"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Grok"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Groq"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "JetBrains AI"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Kilo"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Kimi Code"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Kimi K2 (unofficial)"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Kiro"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "LiteLLM"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "LLM Proxy"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "LongCat"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Manus"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Xiaomi MiMo"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "MiniMax"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Mistral"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Moonshot / Kimi Open Platform"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Neuralwatt"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Notion AI"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Ollama"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "OpenAI"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "OpenCode"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "OpenCode Go"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "OpenRouter"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Perplexity"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Poe"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
 msgid "Qoder"
 msgstr ""
 
 #: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Qwen Cloud"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Sakana AI"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "StepFun"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "sub2api"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Synthetic"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "T3 Chat"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Venice"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Vertex AI"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Warp"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
 msgid "Wayfinder"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Windsurf"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "xAI"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "z.ai / GLM"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Zed"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "ZenMux"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "ZoomMate"
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -718,23 +978,7 @@ msgid "OpenAI API"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "OpenRouter"
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "Claude Admin"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Poe"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "DeepSeek"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "MiniMax"
 msgstr ""
 
 #: contents/ui/main.qml
