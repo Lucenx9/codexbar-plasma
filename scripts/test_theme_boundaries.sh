@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MAIN_QML="${ROOT_DIR}/contents/ui/main.qml"
 PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
+THEME_CONTRAST_JS="${ROOT_DIR}/contents/ui/ThemeContrast.js"
 
 require_in_file() {
   local file="$1"
@@ -15,11 +16,15 @@ require_in_file() {
 }
 
 require_in_file "$MAIN_QML" "function providerColor(value)"
+require_in_file "$MAIN_QML" "function providerReadableColor(value, background)"
 require_in_file "$PROVIDERS_QML" "function providerColor(value)"
+require_in_file "$PROVIDERS_QML" "function providerReadableColor(value, background)"
+require_in_file "$MAIN_QML" 'import "ThemeContrast.js" as ThemeContrast'
+require_in_file "$PROVIDERS_QML" 'import "ThemeContrast.js" as ThemeContrast'
+require_in_file "$THEME_CONTRAST_JS" "var minimumNonTextContrastRatio = 3"
 require_in_file "$MAIN_QML" "function contrastTextColor(color)"
 require_in_file "$MAIN_QML" "Kirigami.Theme.textColor"
 require_in_file "$MAIN_QML" "Kirigami.Theme.highlightColor"
-require_in_file "$MAIN_QML" "Kirigami.Theme.highlightedTextColor"
 require_in_file "$MAIN_QML" "Kirigami.Theme.negativeTextColor"
 require_in_file "$MAIN_QML" "Kirigami.Theme.neutralTextColor"
 

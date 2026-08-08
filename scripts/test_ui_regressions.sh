@@ -58,9 +58,14 @@ main_qml = root / "contents/ui/main.qml"
 general_qml = root / "contents/ui/configGeneral.qml"
 display_qml = root / "contents/ui/configDisplay.qml"
 providers_qml = root / "contents/ui/configProviders.qml"
+theme_contrast_js = root / "contents/ui/ThemeContrast.js"
 provider_accounts_panel_qml = root / "contents/ui/components/ProviderAccountsPanel.qml"
 provider_header_qml = root / "contents/ui/components/ProviderHeader.qml"
 provider_config_row_qml = root / "contents/ui/components/ProviderConfigRow.qml"
+provider_usage_row_qml = root / "contents/ui/components/ProviderUsageRow.qml"
+overview_provider_row_qml = root / "contents/ui/components/OverviewProviderRow.qml"
+provider_detail_section_qml = root / "contents/ui/components/ProviderDetailSection.qml"
+compact_representation_qml = root / "contents/ui/components/CompactRepresentation.qml"
 
 
 def function_body(text, name):
@@ -127,9 +132,14 @@ main_text = main_qml.read_text(encoding="utf-8")
 general_text = general_qml.read_text(encoding="utf-8")
 display_text = display_qml.read_text(encoding="utf-8")
 providers_text = providers_qml.read_text(encoding="utf-8")
+theme_contrast_text = theme_contrast_js.read_text(encoding="utf-8")
 provider_accounts_panel_text = provider_accounts_panel_qml.read_text(encoding="utf-8")
 provider_header_text = provider_header_qml.read_text(encoding="utf-8")
 provider_config_row_text = provider_config_row_qml.read_text(encoding="utf-8")
+provider_usage_row_text = provider_usage_row_qml.read_text(encoding="utf-8")
+overview_provider_row_text = overview_provider_row_qml.read_text(encoding="utf-8")
+provider_detail_section_text = provider_detail_section_qml.read_text(encoding="utf-8")
+compact_representation_text = compact_representation_qml.read_text(encoding="utf-8")
 
 
 def assert_form_sections(text, filename, labels):
@@ -454,8 +464,24 @@ if "rightPadding: contentRightInset" not in provider_scroll_body:
         "providerScroll must keep provider details away from the right popup edge"
     )
 
+if "readonly property real roundedSurfaceRadius: Kirigami.Units.cornerRadius" not in main_text:
+    raise AssertionError("main.qml must derive its polished radius from Kirigami theme units")
+popup_surface_body = id_block(main_text, "popupInnerSurface")
+for popup_surface_fragment in (
+    "radius: root.roundedSurfaceRadius",
+    "Kirigami.Theme.alternateBackgroundColor",
+    "border.color: root.withAlpha(Kirigami.Theme.textColor, 0.09)",
+):
+    if popup_surface_fragment not in popup_surface_body:
+        raise AssertionError(
+            "popupInnerSurface must provide a restrained rounded inner frame; "
+            f"missing {popup_surface_fragment!r}"
+        )
+
 provider_header_body = id_block(provider_header_text, "providerHeaderRow")
 for header_fragment in (
+    "id: providerIdentitySurface",
+    "id: providerHeaderIcon",
     "id: providerTitleRow",
     "id: providerMetaRow",
     "id: providerAccountLabel",
@@ -463,6 +489,185 @@ for header_fragment in (
 ):
     if header_fragment not in provider_header_body:
         raise AssertionError(f"providerHeaderRow must expose {header_fragment} for stable header layout")
+
+if "providerIconSource(providerHeaderRow.providerData.provider)" not in provider_header_body:
+    raise AssertionError("providerHeaderRow must reinforce provider identity with the canonical icon")
+if "providerReadableColor(" not in provider_header_body:
+    raise AssertionError("providerHeaderRow must keep provider identity visible on the active theme")
+if "radius: providerHeaderRow.applet.roundedSurfaceRadius" not in provider_header_body:
+    raise AssertionError("providerHeaderRow must share the rounded surface scale")
+
+for function_name in (
+    "linearColorChannel",
+    "relativeLuminance",
+    "contrastRatio",
+    "interpolateColor",
+    "maximumContrastColor",
+    "readableAccentColor",
+):
+    if f"function {function_name}(" not in theme_contrast_text:
+        raise AssertionError(f"ThemeContrast.js must define contrast helper {function_name}")
+
+for function_name in ("readableAccentColor", "providerReadableColor"):
+    if f"function {function_name}(" not in main_text:
+        raise AssertionError(f"main.qml must expose theme contrast wrapper {function_name}")
+
+rounded_bar_body = function_body(main_text, "paintRoundedTopBar")
+for rounded_bar_fragment in (
+    "Math.min(radius, safeWidth / 2, safeHeight)",
+    "context.quadraticCurveTo(",
+    "context.fill()",
+):
+    if rounded_bar_fragment not in rounded_bar_body:
+        raise AssertionError(
+            "paintRoundedTopBar must preserve restrained top rounding for Canvas bars; "
+            f"missing {rounded_bar_fragment!r}"
+        )
+
+readable_accent_body = function_body(main_text, "readableAccentColor")
+for contrast_fragment in (
+    "ThemeContrast.readableAccentColor(",
+    "accent",
+    "surface",
+    "Kirigami.Theme.textColor",
+):
+    if contrast_fragment not in readable_accent_body:
+        raise AssertionError(
+            "readableAccentColor must preserve provider hue while enforcing "
+            f"non-text contrast; missing {contrast_fragment!r}"
+        )
+
+shared_readable_accent_body = function_body(theme_contrast_text, "readableAccentColor")
+for contrast_fragment in (
+    "contrastRatio(accent, background) >= minimumNonTextContrastRatio",
+    "interpolateColor(accent, themeTextColor, step / 10)",
+    "contrastRatio(candidate, background) >= minimumNonTextContrastRatio",
+    "maximumContrastColor(background)",
+):
+    if contrast_fragment not in shared_readable_accent_body:
+        raise AssertionError(
+            "ThemeContrast.readableAccentColor must preserve hue while enforcing "
+            f"non-text contrast; missing {contrast_fragment!r}"
+        )
+
+provider_readable_body = function_body(main_text, "providerReadableColor")
+if "readableAccentColor(" not in provider_readable_body or "providerColor(value)" not in provider_readable_body:
+    raise AssertionError("providerReadableColor must derive a safe color from canonical provider metadata")
+
+config_provider_readable_body = function_body(providers_text, "providerReadableColor")
+for contrast_fragment in (
+    "ThemeContrast.readableAccentColor(",
+    "providerColor(value)",
+    "Kirigami.Theme.textColor",
+):
+    if contrast_fragment not in config_provider_readable_body:
+        raise AssertionError(
+            "configProviders.qml must share the provider contrast contract; "
+            f"missing {contrast_fragment!r}"
+        )
+if "providerReadableColor(" not in provider_config_row_text:
+    raise AssertionError("ProviderConfigRow must keep unselected provider icons theme-readable")
+
+for source_name, source_text in (
+    ("ProviderUsageRow.qml", provider_usage_row_text),
+    ("ProviderDetailSection.qml", provider_detail_section_text),
+    ("CompactRepresentation.qml", compact_representation_text),
+    ("OverviewProviderRow.qml", overview_provider_row_text),
+):
+    if "providerReadableColor(" not in source_text:
+        raise AssertionError(f"{source_name} must use a theme-readable provider accent")
+
+provider_tabs_body = id_block(main_text, "providerTabsBar")
+for tabs_fragment in (
+    "Layout.preferredHeight: Kirigami.Units.gridUnit * 2.35",
+    "id: providerTabsSurface",
+    "radius: root.roundedSurfaceRadius",
+    "border.color: root.withAlpha(Kirigami.Theme.textColor, 0.06)",
+    "anchors.margins: Kirigami.Units.smallSpacing / 2",
+    "root.withAlpha(brandAccent, 0.12)",
+    "anchors.bottomMargin: 2",
+    "providerReadableColor(",
+    "activeFocusOnTab: true",
+    "Accessible.role: Accessible.PageTab",
+    "Accessible.onPressAction:",
+    "Keys.onPressed:",
+    "scale:",
+):
+    if tabs_fragment not in provider_tabs_body:
+        raise AssertionError(
+            "providerTabsBar must preserve the compact, accent-led tab hierarchy; "
+            f"missing {tabs_fragment!r}"
+        )
+if "Kirigami.Theme.highlightedTextColor" in provider_tabs_body:
+    raise AssertionError("provider tabs must not depend on a heavy solid-highlight selected state")
+
+usage_percent_body = id_block(provider_usage_row_text, "usagePercentLabel")
+if "font.weight: Font.DemiBold" not in usage_percent_body:
+    raise AssertionError("usagePercentLabel must remain a prominent scan target")
+if provider_usage_row_text.index("id: usagePercentLabel") > provider_usage_row_text.index("id: usageBar"):
+    raise AssertionError("usage percentage must appear in the metric header before its bar")
+usage_bar_body = id_block(provider_usage_row_text, "usageBar")
+if "applet.withAlpha(Kirigami.Theme.textColor, 0.1)" not in usage_bar_body:
+    raise AssertionError("usageBar must keep its pill track visually restrained")
+for usage_metadata_id in ("usagePaceLabel", "usageResetLabel"):
+    usage_metadata_body = id_block(provider_usage_row_text, usage_metadata_id)
+    if "font: Kirigami.Theme.smallFont" not in usage_metadata_body:
+        raise AssertionError(f"{usage_metadata_id} must retain the compact metadata type scale")
+
+if "detailSection.applet.paintRoundedTopBar(" not in provider_detail_section_text:
+    raise AssertionError("provider detail bar charts must use rounded top corners")
+cost_sparkline_body = id_block(main_text, "costSparkline")
+if "root.paintRoundedTopBar(" not in cost_sparkline_body:
+    raise AssertionError("the cost sparkline must use rounded top corners")
+
+overview_row_body = id_block(overview_provider_row_text, "overviewRow")
+if "applet.withAlpha(Kirigami.Theme.textColor, 0.035)" not in overview_row_body:
+    raise AssertionError("overview rows must keep a quiet neutral resting surface")
+overview_row_surface_bindings = overview_row_body.split("RowLayout {", 1)[0]
+if "border.width" in overview_row_surface_bindings:
+    raise AssertionError("overview rows must not regress to a stack of outlined cards")
+for polished_overview_fragment in (
+    "radius: applet.roundedSurfaceRadius",
+    "id: overviewProviderIdentitySurface",
+    "radius: overviewRow.applet.roundedSurfaceRadius",
+    "applet.withAlpha(overviewRow.accent, 0.1)",
+):
+    if polished_overview_fragment not in overview_row_body:
+        raise AssertionError(
+            "overview rows must retain the rounded provider identity treatment; "
+            f"missing {polished_overview_fragment!r}"
+        )
+for interaction_fragment in (
+    "activeFocusOnTab: true",
+    "Accessible.role: Accessible.Button",
+    "Accessible.onPressAction:",
+    "Keys.onPressed:",
+    "overviewRowMouse.pressed",
+    "scale:",
+):
+    if interaction_fragment not in overview_row_body:
+        raise AssertionError(
+            "overview rows must preserve keyboard, assistive, and pressed feedback; "
+            f"missing {interaction_fragment!r}"
+        )
+
+for message_id, message_type in (
+    ("globalErrorMessage", "Kirigami.MessageType.Error"),
+    ("providerErrorMessage", "Kirigami.MessageType.Error"),
+    ("providerStatusMessage", "Kirigami.MessageType.Information"),
+):
+    message_body = id_block(main_text, message_id)
+    if f"type: {message_type}" not in message_body:
+        raise AssertionError(f"{message_id} must use the native semantic message style")
+
+for placeholder_id in (
+    "emptyProvidersMessage",
+    "overviewPlaceholderMessage",
+    "providerPlaceholderMessage",
+):
+    placeholder_body = id_block(main_text, placeholder_id)
+    if "Kirigami.PlaceholderMessage.Type.Informational" not in placeholder_body:
+        raise AssertionError(f"{placeholder_id} must use the native informational empty state")
 
 provider_account_label_body = id_block(provider_header_text, "providerAccountLabel")
 if "Layout.maximumWidth: Kirigami.Units.gridUnit * 16" not in provider_account_label_body:
@@ -499,8 +704,8 @@ for action_fragment in (
 for selected_row_fragment in (
     "readonly property color selectedForeground",
     "readonly property color selectedSecondaryForeground",
-    "color: providerRow.highlighted ? providerRow.selectedForeground",
-    "color: providerRow.highlighted ? providerRow.selectedSecondaryForeground",
+    "? providerRow.selectedForeground",
+    "? providerRow.selectedSecondaryForeground",
 ):
     if selected_row_fragment not in provider_config_row_text:
         raise AssertionError(

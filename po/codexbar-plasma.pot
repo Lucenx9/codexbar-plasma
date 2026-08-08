@@ -50,13 +50,13 @@ msgstr ""
 msgid "%1 - on by default"
 msgstr ""
 
+#: contents/ui/components/ProviderHeader.qml
+msgid "Updated just now"
+msgstr ""
+
 #: contents/ui/components/ProviderHeader.qml contents/ui/configGeneral.qml
 #: contents/ui/main.qml
 msgid "Refresh"
-msgstr ""
-
-#: contents/ui/components/ProviderHeader.qml
-msgid "Updated just now"
 msgstr ""
 
 #: contents/ui/configAdvanced.qml

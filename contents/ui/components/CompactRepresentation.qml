@@ -48,7 +48,9 @@ Item {
             visible: compactRoot.showPrimaryIdentity
             source: compactRoot.applet.loading ? "view-refresh" : compactRoot.applet.providerIconSource(compactProvider)
             isMask: !compactRoot.applet.loading && compactRoot.applet.providerIconIsMask(compactProvider)
-            color: compactRoot.applet.loading ? Kirigami.Theme.textColor : compactRoot.applet.providerColor(compactProvider)
+            color: compactRoot.applet.loading
+                ? Kirigami.Theme.textColor
+                : compactRoot.applet.providerReadableColor(compactProvider, Kirigami.Theme.backgroundColor)
             Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
             Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
 
@@ -103,7 +105,9 @@ Item {
                 id: compactMeter
 
                 readonly property real meter: compactRoot.applet.switcherPercent(modelData)
-                readonly property color accent: compactRoot.applet.providerColor(modelData.provider)
+                readonly property color accent: compactRoot.applet.providerReadableColor(
+                    modelData.provider,
+                    Kirigami.Theme.backgroundColor)
 
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 1.15
                 Layout.preferredHeight: compactRow.height

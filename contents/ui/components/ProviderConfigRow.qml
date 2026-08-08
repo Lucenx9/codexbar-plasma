@@ -33,7 +33,11 @@ Controls.ItemDelegate {
         Kirigami.Icon {
             source: providerRow.configPage.providerIconSource(providerRow.providerData.provider)
             isMask: true
-            color: providerRow.highlighted ? providerRow.selectedForeground : providerRow.configPage.providerColor(providerRow.providerData.provider)
+            color: providerRow.highlighted
+                ? providerRow.selectedForeground
+                : providerRow.configPage.providerReadableColor(
+                    providerRow.providerData.provider,
+                    Kirigami.Theme.backgroundColor)
             Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
             Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
         }

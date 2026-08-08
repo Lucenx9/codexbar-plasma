@@ -8,10 +8,40 @@ RowLayout {
 
     required property var applet
     required property var providerData
+    readonly property color brandAccent: applet.providerColor(providerData ? providerData.provider : "")
+    readonly property color accent: applet.providerReadableColor(
+        providerData ? providerData.provider : "",
+        Kirigami.Theme.backgroundColor)
 
     Layout.fillWidth: true
     Layout.rightMargin: Kirigami.Units.smallSpacing
-    spacing: Kirigami.Units.smallSpacing
+    spacing: Kirigami.Units.largeSpacing
+
+    Rectangle {
+        id: providerIdentitySurface
+
+        Layout.preferredWidth: Kirigami.Units.iconSizes.medium + Kirigami.Units.smallSpacing * 2
+        Layout.preferredHeight: Layout.preferredWidth
+        radius: providerHeaderRow.applet.roundedSurfaceRadius
+        color: providerHeaderRow.applet.withAlpha(providerHeaderRow.brandAccent, 0.12)
+        border.width: 1
+        border.color: providerHeaderRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
+
+        Kirigami.Icon {
+            id: providerHeaderIcon
+
+            anchors.centerIn: parent
+            source: providerHeaderRow.providerData
+                ? providerHeaderRow.applet.providerIconSource(providerHeaderRow.providerData.provider)
+                : "view-statistics-symbolic"
+            isMask: providerHeaderRow.providerData
+                ? providerHeaderRow.applet.providerIconIsMask(providerHeaderRow.providerData.provider)
+                : true
+            color: providerHeaderRow.accent
+            width: Kirigami.Units.iconSizes.medium
+            height: Kirigami.Units.iconSizes.medium
+        }
+    }
 
     ColumnLayout {
         Layout.fillWidth: true
@@ -55,14 +85,6 @@ RowLayout {
                 }
             }
 
-            PlasmaComponents.ToolButton {
-                id: providerRefreshButton
-
-                icon.name: "view-refresh"
-                enabled: !providerHeaderRow.applet.loading
-                Accessible.name: i18n("Refresh")
-                onClicked: providerHeaderRow.applet.refreshNow()
-            }
         }
 
         RowLayout {
@@ -108,5 +130,15 @@ RowLayout {
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 5
             }
         }
+    }
+
+    PlasmaComponents.ToolButton {
+        id: providerRefreshButton
+
+        Layout.alignment: Qt.AlignTop
+        icon.name: "view-refresh"
+        enabled: !providerHeaderRow.applet.loading
+        Accessible.name: i18n("Refresh")
+        onClicked: providerHeaderRow.applet.refreshNow()
     }
 }

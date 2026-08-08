@@ -13,7 +13,9 @@ ColumnLayout {
     readonly property var sectionData: modelData
     readonly property var chartData: sectionData.chart || null
     readonly property var chartPoints: chartData ? chartData.points : []
-    readonly property color accent: applet.providerColor(providerData ? providerData.provider : "")
+    readonly property color accent: applet.providerReadableColor(
+        providerData ? providerData.provider : "",
+        Kirigami.Theme.backgroundColor)
     readonly property real maximumChartValue: chartMaximum(chartPoints)
 
     Layout.fillWidth: true
@@ -180,7 +182,13 @@ ColumnLayout {
             for (var barIndex = 0; barIndex < points.length; barIndex++) {
                 var fraction = detailSection.chartFraction(points[barIndex].value)
                 var barHeight = fraction > 0 ? Math.max(1, (height - 3) * fraction) : 1
-                context.fillRect(barIndex * (barWidth + gap), baseline - barHeight, barWidth, barHeight)
+                detailSection.applet.paintRoundedTopBar(
+                    context,
+                    barIndex * (barWidth + gap),
+                    baseline,
+                    barWidth,
+                    barHeight,
+                    Kirigami.Units.smallSpacing / 2)
             }
         }
     }

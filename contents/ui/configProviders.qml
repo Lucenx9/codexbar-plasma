@@ -6,6 +6,7 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
 import "components" as Components
+import "ThemeContrast.js" as ThemeContrast
 
 KCM.SimpleKCM {
     id: page
@@ -1732,6 +1733,13 @@ KCM.SimpleKCM {
         }
     }
 
+    function providerReadableColor(value, background) {
+        return ThemeContrast.readableAccentColor(
+            providerColor(value),
+            background || Kirigami.Theme.backgroundColor,
+            Kirigami.Theme.textColor)
+    }
+
     function providerTitle(value) {
         var key = providerKey(value)
         var names = {
@@ -1935,7 +1943,11 @@ KCM.SimpleKCM {
                 Kirigami.Icon {
                     source: page.selectedProvider ? page.providerIconSource(page.selectedProvider.provider) : ""
                     isMask: true
-                    color: page.selectedProvider ? page.providerColor(page.selectedProvider.provider) : Kirigami.Theme.textColor
+                    color: page.selectedProvider
+                        ? page.providerReadableColor(
+                            page.selectedProvider.provider,
+                            Kirigami.Theme.backgroundColor)
+                        : Kirigami.Theme.textColor
                     Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
                     Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
                 }

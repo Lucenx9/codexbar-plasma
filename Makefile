@@ -17,6 +17,7 @@ QML_FILES := \
 	contents/ui/configDisplay.qml \
 	contents/ui/configAdvanced.qml \
 	contents/ui/configDebug.qml \
+	contents/ui/ThemeContrast.js \
 	contents/ui/UsageDetails.js \
 	contents/ui/UpdateLogic.js \
 	contents/ui/components/CompactRepresentation.qml \

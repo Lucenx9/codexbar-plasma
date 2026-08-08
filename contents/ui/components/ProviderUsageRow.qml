@@ -11,18 +11,35 @@ ColumnLayout {
     required property var modelData
     readonly property var rowData: modelData
 
-    readonly property color accent: applet.providerColor(providerData ? providerData.provider : "")
+    readonly property color accent: applet.providerReadableColor(
+        providerData ? providerData.provider : "",
+        Kirigami.Theme.backgroundColor)
     readonly property real shownPercent: applet.displayPercent(rowData)
     readonly property real markerPercent: applet.paceMarkerPercent(rowData)
 
     Layout.fillWidth: true
     spacing: Kirigami.Units.smallSpacing / 1.5
 
-    PlasmaComponents.Label {
-        text: usageRow.rowData.label
-        font.weight: Font.DemiBold
+    RowLayout {
         Layout.fillWidth: true
-        elide: Text.ElideRight
+        spacing: Kirigami.Units.smallSpacing
+
+        PlasmaComponents.Label {
+            text: usageRow.rowData.label
+            font.weight: Font.DemiBold
+            Layout.fillWidth: true
+            elide: Text.ElideRight
+        }
+
+        PlasmaComponents.Label {
+            id: usagePercentLabel
+
+            visible: usageRow.rowData.hasPercent
+            text: i18n("%1% %2", Math.round(usageRow.shownPercent), usageRow.applet.percentSuffix())
+            font.weight: Font.DemiBold
+            horizontalAlignment: Text.AlignRight
+            elide: Text.ElideRight
+        }
     }
 
     Rectangle {
@@ -30,9 +47,9 @@ ColumnLayout {
 
         visible: usageRow.rowData.hasPercent
         Layout.fillWidth: true
-        Layout.preferredHeight: 6
+        Layout.preferredHeight: 7
         radius: height / 2
-        color: usageRow.applet.withAlpha(Kirigami.Theme.textColor, 0.2)
+        color: usageRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
         clip: true
 
         Rectangle {
@@ -84,32 +101,32 @@ ColumnLayout {
     }
 
     RowLayout {
-        visible: usageRow.rowData.hasPercent || usageRow.applet.resetLabel(usageRow.rowData.reset).length > 0
+        visible: usageRow.rowData.pace.length > 0
+            || usageRow.applet.resetLabel(usageRow.rowData.reset).length > 0
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
 
         PlasmaComponents.Label {
-            visible: usageRow.rowData.hasPercent
-            text: i18n("%1% %2", Math.round(usageRow.shownPercent), usageRow.applet.percentSuffix())
+            id: usagePaceLabel
+
+            visible: usageRow.rowData.pace.length > 0
+            text: usageRow.rowData.pace
+            font: Kirigami.Theme.smallFont
+            opacity: 0.62
             Layout.fillWidth: true
-            elide: Text.ElideRight
+            wrapMode: Text.WordWrap
         }
 
         PlasmaComponents.Label {
+            id: usageResetLabel
+
             visible: usageRow.applet.resetLabel(usageRow.rowData.reset).length > 0
             text: usageRow.applet.resetLabel(usageRow.rowData.reset)
+            font: Kirigami.Theme.smallFont
             opacity: 0.66
             horizontalAlignment: Text.AlignRight
             elide: Text.ElideRight
             Layout.maximumWidth: Kirigami.Units.gridUnit * 14
         }
-    }
-
-    PlasmaComponents.Label {
-        visible: usageRow.rowData.pace.length > 0
-        text: usageRow.rowData.pace
-        opacity: 0.66
-        Layout.fillWidth: true
-        wrapMode: Text.WordWrap
     }
 }
