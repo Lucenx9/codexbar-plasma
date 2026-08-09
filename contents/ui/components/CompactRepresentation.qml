@@ -69,6 +69,29 @@ Item {
                 loops: Animation.Infinite
                 onStopped: compactIdentityIcon.rotation = 0
             }
+
+            // The inline badge below needs horizontal room the vertical strip does
+            // not have, so overlay the incident marker on the identity icon instead
+            // of dropping the only at-a-glance status signal. Hidden while the icon
+            // spins so the marker does not orbit the refresh indicator.
+            Rectangle {
+                id: compactVerticalStatusBadge
+
+                visible: compactRoot.verticalPanel
+                    && !compactRoot.applet.loading
+                    && compactRoot.incidentProvider !== null
+                    && compactRoot.incidentProvider.hasIncident
+                anchors.top: parent.top
+                anchors.right: parent.right
+                width: Math.round(Kirigami.Units.iconSizes.smallMedium / 3)
+                height: width
+                radius: width / 2
+                color: compactRoot.incidentProvider
+                    ? compactRoot.applet.statusBadgeColor(compactRoot.incidentProvider.statusSeverity)
+                    : "transparent"
+                border.width: 1
+                border.color: Kirigami.Theme.backgroundColor
+            }
         }
 
         Rectangle {

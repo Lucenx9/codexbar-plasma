@@ -1526,11 +1526,11 @@ msgid "%1: %2% %3"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Refreshing usage..."
+msgid "%1 - %2"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "%1 - %2"
+msgid "Refreshing usage..."
 msgstr ""
 
 #: contents/ui/main.qml

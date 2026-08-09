@@ -4062,11 +4062,21 @@ PlasmoidItem {
             if (!item) {
                 continue
             }
+            // Vertical panels collapse to a bare icon, so the tooltip is the only
+            // incident surface there; never drop status just because usage exists.
+            var incident = item.hasIncident && item.status.length > 0 ? item.status : ""
             var percent = switcherPercent(item)
+            var line = ""
             if (percent >= 0) {
-                lines.push(i18n("%1: %2% %3", item.title, Math.round(percent), percentSuffix()))
-            } else if (item.hasIncident && item.status.length > 0) {
-                lines.push(i18n("%1: %2", item.title, item.status))
+                line = i18n("%1: %2% %3", item.title, Math.round(percent), percentSuffix())
+                if (incident.length > 0) {
+                    line = i18n("%1 - %2", line, incident)
+                }
+            } else if (incident.length > 0) {
+                line = i18n("%1: %2", item.title, incident)
+            }
+            if (line.length > 0) {
+                lines.push(line)
             }
         }
         if (loading) {

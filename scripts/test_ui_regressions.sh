@@ -652,6 +652,18 @@ for vertical_fragment in (
             f"missing {vertical_fragment!r}"
         )
 
+vertical_status_badge_body = id_block(compact_representation_text, "compactVerticalStatusBadge")
+for vertical_badge_fragment in (
+    "visible: compactRoot.verticalPanel",
+    "compactRoot.incidentProvider.hasIncident",
+    "statusBadgeColor(compactRoot.incidentProvider.statusSeverity)",
+):
+    if vertical_badge_fragment not in vertical_status_badge_body:
+        raise AssertionError(
+            "collapsing to an icon must keep an at-a-glance incident marker; "
+            f"missing {vertical_badge_fragment!r}"
+        )
+
 for tooltip_fragment in (
     "toolTipMainText: Plasmoid.title",
     "toolTipSubText: panelToolTipText()",
@@ -1195,6 +1207,10 @@ for bounded_provider_fragment in (
 tooltip_body = function_body(main_text, "panelToolTipText")
 if "boundedDisplayText(errorText" not in tooltip_body:
     raise AssertionError("the panel tooltip must bound global CLI error text")
+if 'i18n("%1 - %2", line, incident)' not in tooltip_body:
+    raise AssertionError(
+        "the panel tooltip must report incidents even when the provider also reports usage"
+    )
 if "function boundedDisplayText(value, maximumLength)" not in main_text:
     raise AssertionError("main.qml must expose a shared display-text bound")
 
