@@ -1568,9 +1568,5 @@ msgid "Cost history"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Cost drill-down"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Recent days"
+msgid "Cost details"
 msgstr ""

@@ -1223,23 +1223,6 @@ PlasmoidItem {
         return rows
     }
 
-    function costDailyRows(tokenCost) {
-        if (!tokenCost || !tokenCost.daily) {
-            return []
-        }
-
-        var rows = []
-        var first = Math.max(0, tokenCost.daily.length - 7)
-        for (var i = tokenCost.daily.length - 1; i >= first; i--) {
-            var item = tokenCost.daily[i]
-            rows.push({
-                label: item.label && item.label.length > 0 ? item.label : i18n("Latest"),
-                value: costTokenSummary(item.cost, item.tokens, item.currency)
-            })
-        }
-        return rows
-    }
-
     function costHistoryRows(tokenCost) {
         if (!tokenCost || !tokenCost.daily || tokenCost.daily.length === 0) {
             return []
@@ -1247,7 +1230,7 @@ PlasmoidItem {
 
         var rows = []
         var maxCost = costSparklineMax(tokenCost.daily)
-        var first = Math.max(0, tokenCost.daily.length - 14)
+        var first = Math.max(0, tokenCost.daily.length - 7)
         for (var i = tokenCost.daily.length - 1; i >= first; i--) {
             var item = tokenCost.daily[i]
             var cost = Math.max(0, Number(item.cost) || 0)
@@ -4270,7 +4253,9 @@ PlasmoidItem {
                         Rectangle {
                             id: overviewTab
 
+                            property bool focusAcquiredByPointer: false
                             readonly property bool selected: root.overviewSelected
+                            readonly property bool keyboardFocusVisible: activeFocus && !focusAcquiredByPointer
                             readonly property color brandAccent: Kirigami.Theme.highlightColor
                             readonly property color accent: root.readableAccentColor(
                                 brandAccent,
@@ -4290,19 +4275,23 @@ PlasmoidItem {
                             Layout.preferredHeight: providerTabsFlickable.height
                             radius: root.roundedSurfaceRadius
                             color: overviewTabMouse.pressed
-                                ? root.withAlpha(Kirigami.Theme.focusColor, 0.16)
-                                : (selected
-                                ? root.withAlpha(brandAccent, 0.12)
-                                : (activeFocus
                                 ? root.withAlpha(Kirigami.Theme.focusColor, 0.1)
-                                : (overviewTabMouse.containsMouse ? root.withAlpha(Kirigami.Theme.textColor, 0.06) : "transparent")
+                                : (selected
+                                ? root.withAlpha(Kirigami.Theme.textColor, 0.045)
+                                : (keyboardFocusVisible
+                                ? root.withAlpha(Kirigami.Theme.focusColor, 0.06)
+                                : (overviewTabMouse.containsMouse ? root.withAlpha(Kirigami.Theme.textColor, 0.05) : "transparent")
                                 ))
-                            border.width: 1
-                            border.color: activeFocus
-                                ? Kirigami.Theme.focusColor
-                                : (selected ? root.withAlpha(accent, 0.32) : "transparent")
+                            border.width: keyboardFocusVisible ? 1 : 0
+                            border.color: Kirigami.Theme.focusColor
                             scale: overviewTabMouse.pressed ? 0.985 : 1
                             activeFocusOnTab: true
+
+                            onActiveFocusChanged: {
+                                if (!activeFocus) {
+                                    focusAcquiredByPointer = false
+                                }
+                            }
 
                             Accessible.role: Accessible.PageTab
                             Accessible.name: i18n("Overview")
@@ -4311,6 +4300,7 @@ PlasmoidItem {
                             Accessible.onPressAction: overviewTab.activate()
 
                             Keys.onPressed: function(event) {
+                                overviewTab.focusAcquiredByPointer = false
                                 switch (event.key) {
                                 case Qt.Key_Space:
                                 case Qt.Key_Enter:
@@ -4341,7 +4331,10 @@ PlasmoidItem {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onPressed: overviewTab.forceActiveFocus(Qt.MouseFocusReason)
+                                onPressed: {
+                                    overviewTab.focusAcquiredByPointer = true
+                                    overviewTab.forceActiveFocus(Qt.MouseFocusReason)
+                                }
                                 onClicked: overviewTab.activate()
                             }
 
@@ -4389,9 +4382,10 @@ PlasmoidItem {
                             delegate: Rectangle {
                                 id: providerTab
 
+                                property bool focusAcquiredByPointer: false
                                 readonly property bool selected: index === root.selectedProviderIndex
+                                readonly property bool keyboardFocusVisible: activeFocus && !focusAcquiredByPointer
                                 readonly property real meter: root.switcherPercent(modelData)
-                                readonly property color brandAccent: root.providerColor(modelData.provider)
                                 readonly property color accent: root.providerReadableColor(
                                     modelData.provider,
                                     Kirigami.Theme.backgroundColor)
@@ -4410,20 +4404,24 @@ PlasmoidItem {
                                 Layout.preferredHeight: providerTabsFlickable.height
                                 radius: root.roundedSurfaceRadius
                                 color: providerTabMouse.pressed
-                                    ? root.withAlpha(Kirigami.Theme.focusColor, 0.16)
-                                    : (selected
-                                    ? root.withAlpha(brandAccent, 0.12)
-                                    : (activeFocus
                                     ? root.withAlpha(Kirigami.Theme.focusColor, 0.1)
-                                    : (providerTabMouse.containsMouse ? root.withAlpha(Kirigami.Theme.textColor, 0.06) : "transparent")
+                                    : (selected
+                                    ? root.withAlpha(Kirigami.Theme.textColor, 0.045)
+                                    : (keyboardFocusVisible
+                                    ? root.withAlpha(Kirigami.Theme.focusColor, 0.06)
+                                    : (providerTabMouse.containsMouse ? root.withAlpha(Kirigami.Theme.textColor, 0.05) : "transparent")
                                     ))
-                                border.width: 1
-                                border.color: activeFocus
-                                    ? Kirigami.Theme.focusColor
-                                    : (selected ? root.withAlpha(accent, 0.32) : "transparent")
+                                border.width: keyboardFocusVisible ? 1 : 0
+                                border.color: Kirigami.Theme.focusColor
                                 opacity: modelData.error.length > 0 ? 0.62 : 1
                                 scale: providerTabMouse.pressed ? 0.985 : 1
                                 activeFocusOnTab: true
+
+                                onActiveFocusChanged: {
+                                    if (!activeFocus) {
+                                        focusAcquiredByPointer = false
+                                    }
+                                }
 
                                 Accessible.role: Accessible.PageTab
                                 Accessible.name: modelData.title
@@ -4432,6 +4430,7 @@ PlasmoidItem {
                                 Accessible.onPressAction: providerTab.activate()
 
                                 Keys.onPressed: function(event) {
+                                    providerTab.focusAcquiredByPointer = false
                                     switch (event.key) {
                                     case Qt.Key_Space:
                                     case Qt.Key_Enter:
@@ -4462,7 +4461,10 @@ PlasmoidItem {
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
-                                    onPressed: providerTab.forceActiveFocus(Qt.MouseFocusReason)
+                                    onPressed: {
+                                        providerTab.focusAcquiredByPointer = true
+                                        providerTab.forceActiveFocus(Qt.MouseFocusReason)
+                                    }
                                     onClicked: providerTab.activate()
                                 }
 
@@ -4666,20 +4668,19 @@ PlasmoidItem {
                     }
                 }
 
-                Controls.ScrollView {
+                PlasmaComponents.ScrollView {
                     id: overviewScroll
-
-                    readonly property real contentRightInset: Kirigami.Units.gridUnit
 
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    rightPadding: contentRightInset
                     contentWidth: availableWidth
                     clip: true
-                    Controls.ScrollBar.horizontal.policy: Controls.ScrollBar.AlwaysOff
+                    PlasmaComponents.ScrollBar.horizontal.policy: PlasmaComponents.ScrollBar.AlwaysOff
 
                     ColumnLayout {
-                        width: overviewScroll.availableWidth
+                        width: Math.max(
+                            0,
+                            overviewScroll.availableWidth - Kirigami.Units.smallSpacing)
                         spacing: Kirigami.Units.smallSpacing
 
                         Kirigami.PlaceholderMessage {
@@ -4748,20 +4749,19 @@ PlasmoidItem {
                     Layout.fillWidth: true
                 }
 
-                Controls.ScrollView {
+                PlasmaComponents.ScrollView {
                     id: providerScroll
-
-                    readonly property real contentRightInset: Kirigami.Units.gridUnit
 
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    rightPadding: contentRightInset
                     contentWidth: availableWidth
                     clip: true
-                    Controls.ScrollBar.horizontal.policy: Controls.ScrollBar.AlwaysOff
+                    PlasmaComponents.ScrollBar.horizontal.policy: PlasmaComponents.ScrollBar.AlwaysOff
 
                     ColumnLayout {
-                        width: providerScroll.availableWidth
+                        width: Math.max(
+                            0,
+                            providerScroll.availableWidth - Kirigami.Units.smallSpacing)
                         spacing: Kirigami.Units.largeSpacing
 
                         Kirigami.PlaceholderMessage {
@@ -5074,15 +5074,22 @@ PlasmoidItem {
                             }
 
                             PlasmaComponents.Label {
+                                id: costSessionSummaryLabel
+
                                 visible: tokenCostSection.tokenCost ? true : false
                                 text: tokenCostSection.tokenCost ? tokenCostSection.tokenCost.sessionLine : ""
+                                font.weight: Font.DemiBold
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                             }
 
                             PlasmaComponents.Label {
+                                id: costMonthSummaryLabel
+
                                 visible: tokenCostSection.tokenCost ? true : false
                                 text: tokenCostSection.tokenCost ? tokenCostSection.tokenCost.monthLine : ""
+                                font: Kirigami.Theme.smallFont
+                                opacity: 0.66
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                             }
@@ -5099,7 +5106,8 @@ PlasmoidItem {
 
                                 visible: points.length > 1 && maxValue > 0
                                 Layout.fillWidth: true
-                                Layout.preferredHeight: Kirigami.Units.gridUnit * 4
+                                Layout.preferredHeight: Kirigami.Units.gridUnit * 3.25
+                                Layout.topMargin: Kirigami.Units.smallSpacing / 2
 
                                 onPointsChanged: requestPaint()
                                 onMaxValueChanged: requestPaint()
@@ -5117,11 +5125,11 @@ PlasmoidItem {
                                     var barWidth = Math.max(2, (width - gap * (points.length - 1)) / points.length)
                                     var baseline = height - 1
 
-                                    ctx.fillStyle = root.canvasColor(Kirigami.Theme.textColor, 0.22)
+                                    ctx.fillStyle = root.canvasColor(Kirigami.Theme.textColor, 0.14)
                                     ctx.fillRect(0, baseline, width, 1)
 
-                                    var peakFill = root.canvasColor(costSparkline.accent, 1)
-                                    var normalFill = root.canvasColor(costSparkline.accent, 0.55)
+                                    var peakFill = root.canvasColor(costSparkline.accent, 0.9)
+                                    var normalFill = root.canvasColor(costSparkline.accent, 0.48)
                                     for (var i = 0; i < points.length; i++) {
                                         var value = Math.max(0, Number(points[i].cost) || 0)
                                         var barHeight = Math.max(1, (height - 3) * value / maxValue)
@@ -5146,16 +5154,22 @@ PlasmoidItem {
                                 spacing: Kirigami.Units.smallSpacing
 
                                 PlasmaComponents.Label {
+                                    id: costSparklineSummaryLabel
+
                                     text: tokenCostSection.tokenCost ? root.costSparklineSummary(tokenCostSection.tokenCost.daily) : ""
+                                    font: Kirigami.Theme.smallFont
                                     opacity: 0.62
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
                                 }
 
                                 PlasmaComponents.Label {
+                                    id: costSparklineRangeLabel
+
                                     text: tokenCostSection.tokenCost
                                         ? i18np("%1 day", "%1 days", tokenCostSection.tokenCost.daily.length)
                                         : ""
+                                    font: Kirigami.Theme.smallFont
                                     opacity: 0.62
                                     horizontalAlignment: Text.AlignRight
                                     elide: Text.ElideRight
@@ -5174,43 +5188,52 @@ PlasmoidItem {
                                 Layout.fillWidth: true
                                 spacing: Kirigami.Units.smallSpacing / 2
 
-                                PlasmaComponents.Label {
-                                    text: i18n("Cost history")
-                                    font.weight: Font.DemiBold
-                                    Layout.fillWidth: true
-                                    elide: Text.ElideRight
-                                }
-
                                 RowLayout {
-                                    visible: costHistoryChartSection.peakLine.length > 0
-                                        || costHistoryChartSection.averageLine.length > 0
+                                    id: costHistoryHeaderRow
+
                                     Layout.fillWidth: true
                                     spacing: Kirigami.Units.smallSpacing
 
                                     PlasmaComponents.Label {
-                                        text: costHistoryChartSection.peakLine
-                                        opacity: 0.66
+                                        text: i18n("Cost history")
+                                        font.weight: Font.DemiBold
                                         Layout.fillWidth: true
                                         elide: Text.ElideRight
                                     }
 
                                     PlasmaComponents.Label {
+                                        visible: costHistoryChartSection.averageLine.length > 0
                                         text: costHistoryChartSection.averageLine
-                                        opacity: 0.66
+                                        font: Kirigami.Theme.smallFont
+                                        opacity: 0.58
                                         horizontalAlignment: Text.AlignRight
                                         elide: Text.ElideRight
                                     }
+                                }
+
+                                PlasmaComponents.Label {
+                                    visible: costHistoryChartSection.peakLine.length > 0
+                                    text: costHistoryChartSection.peakLine
+                                    font: Kirigami.Theme.smallFont
+                                    opacity: 0.62
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
                                 }
 
                                 Repeater {
                                     model: costHistoryChartSection.rows
 
                                     delegate: RowLayout {
+                                        id: costHistoryMetricRow
+
                                         Layout.fillWidth: true
                                         spacing: Kirigami.Units.smallSpacing
 
                                         PlasmaComponents.Label {
+                                            id: costHistoryDateLabel
+
                                             text: modelData.label
+                                            font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                                             opacity: 0.66
                                             Layout.preferredWidth: Kirigami.Units.gridUnit * 5
                                             elide: Text.ElideRight
@@ -5220,9 +5243,9 @@ PlasmoidItem {
                                             id: costHistoryBarTrack
 
                                             Layout.fillWidth: true
-                                            Layout.preferredHeight: 6
+                                            Layout.preferredHeight: 4
                                             radius: height / 2
-                                            color: root.withAlpha(Kirigami.Theme.textColor, 0.12)
+                                            color: root.withAlpha(Kirigami.Theme.textColor, 0.08)
                                             clip: true
 
                                             Rectangle {
@@ -5243,7 +5266,10 @@ PlasmoidItem {
                                         }
 
                                         PlasmaComponents.Label {
+                                            id: costHistoryValueLabel
+
                                             text: modelData.value
+                                            font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                                             opacity: modelData.isPeak ? 0.9 : 0.7
                                             font.weight: modelData.isPeak ? Font.DemiBold : Font.Normal
                                             horizontalAlignment: Text.AlignRight
@@ -5259,18 +5285,16 @@ PlasmoidItem {
 
                                 readonly property var breakdownRows: root.costBreakdownRows(tokenCostSection.tokenCost)
                                 readonly property var modelRows: root.costModelRows(tokenCostSection.tokenCost)
-                                readonly property var dailyRows: root.costDailyRows(tokenCostSection.tokenCost)
                                 readonly property real metricValueColumnWidth: Kirigami.Units.gridUnit * 9
 
                                 visible: tokenCostSection.tokenCost
                                     && (costDrillDownSection.breakdownRows.length > 0
-                                        || costDrillDownSection.modelRows.length > 0
-                                        || costDrillDownSection.dailyRows.length > 0)
+                                        || costDrillDownSection.modelRows.length > 0)
                                 Layout.fillWidth: true
                                 spacing: Kirigami.Units.smallSpacing
 
                                 PlasmaComponents.Label {
-                                    text: i18n("Cost drill-down")
+                                    text: i18n("Cost details")
                                     font.weight: Font.DemiBold
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
@@ -5279,6 +5303,7 @@ PlasmoidItem {
                                 PlasmaComponents.Label {
                                     visible: tokenCostSection.tokenCost && root.costPerMillionLine(tokenCostSection.tokenCost).length > 0
                                     text: tokenCostSection.tokenCost ? root.costPerMillionLine(tokenCostSection.tokenCost) : ""
+                                    font: Kirigami.Theme.smallFont
                                     opacity: 0.7
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
@@ -5298,6 +5323,7 @@ PlasmoidItem {
 
                                             PlasmaComponents.Label {
                                                 text: modelData.label
+                                                font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                                                 opacity: 0.66
                                                 Layout.fillWidth: true
                                                 elide: Text.ElideRight
@@ -5307,7 +5333,9 @@ PlasmoidItem {
                                                 id: costBreakdownValueLabel
 
                                                 text: modelData.value
+                                                font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                                                 opacity: 0.78
+                                                font.weight: Font.Medium
                                                 horizontalAlignment: Text.AlignRight
                                                 Layout.preferredWidth: costDrillDownSection.metricValueColumnWidth
                                                 Layout.maximumWidth: costDrillDownSection.metricValueColumnWidth
@@ -5320,6 +5348,7 @@ PlasmoidItem {
                                 Kirigami.Separator {
                                     visible: costDrillDownSection.modelRows.length > 0
                                     Layout.fillWidth: true
+                                    opacity: 0.55
                                 }
 
                                 ColumnLayout {
@@ -5328,8 +5357,12 @@ PlasmoidItem {
                                     spacing: Kirigami.Units.smallSpacing / 2
 
                                     PlasmaComponents.Label {
+                                        id: costModelsHeading
+
                                         text: i18n("Models")
-                                        opacity: 0.66
+                                        font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+                                        font.weight: Font.DemiBold
+                                        opacity: 0.72
                                         Layout.fillWidth: true
                                         elide: Text.ElideRight
                                     }
@@ -5343,6 +5376,7 @@ PlasmoidItem {
 
                                             PlasmaComponents.Label {
                                                 text: modelData.label
+                                                font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                                                 Layout.fillWidth: true
                                                 elide: Text.ElideRight
                                             }
@@ -5351,7 +5385,9 @@ PlasmoidItem {
                                                 id: costModelValueLabel
 
                                                 text: modelData.value
+                                                font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                                                 opacity: 0.7
+                                                font.weight: Font.Medium
                                                 horizontalAlignment: Text.AlignRight
                                                 Layout.preferredWidth: costDrillDownSection.metricValueColumnWidth
                                                 Layout.maximumWidth: costDrillDownSection.metricValueColumnWidth
@@ -5361,49 +5397,6 @@ PlasmoidItem {
                                     }
                                 }
 
-                                Kirigami.Separator {
-                                    visible: costDrillDownSection.dailyRows.length > 0
-                                    Layout.fillWidth: true
-                                }
-
-                                ColumnLayout {
-                                    visible: costDrillDownSection.dailyRows.length > 0
-                                    Layout.fillWidth: true
-                                    spacing: Kirigami.Units.smallSpacing / 2
-
-                                    PlasmaComponents.Label {
-                                        text: i18n("Recent days")
-                                        opacity: 0.66
-                                        Layout.fillWidth: true
-                                        elide: Text.ElideRight
-                                    }
-
-                                    Repeater {
-                                        model: costDrillDownSection.dailyRows
-
-                                        delegate: RowLayout {
-                                            Layout.fillWidth: true
-                                            spacing: Kirigami.Units.smallSpacing
-
-                                            PlasmaComponents.Label {
-                                                text: modelData.label
-                                                Layout.fillWidth: true
-                                                elide: Text.ElideRight
-                                            }
-
-                                            PlasmaComponents.Label {
-                                                id: costDailyValueLabel
-
-                                                text: modelData.value
-                                                opacity: 0.7
-                                                horizontalAlignment: Text.AlignRight
-                                                Layout.preferredWidth: costDrillDownSection.metricValueColumnWidth
-                                                Layout.maximumWidth: costDrillDownSection.metricValueColumnWidth
-                                                elide: Text.ElideRight
-                                            }
-                                        }
-                                    }
-                                }
                             }
 
                             PlasmaComponents.Label {

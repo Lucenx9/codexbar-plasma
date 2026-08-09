@@ -449,20 +449,23 @@ for header_id, source_text in header_sources.items():
 
 for scroll_id in ("overviewScroll", "providerScroll"):
     scroll_body = id_block(main_text, scroll_id)
-    if "readonly property real contentRightInset: Kirigami.Units.gridUnit" not in scroll_body:
-        raise AssertionError(f"{scroll_id} must reserve a full scrollbar gutter on the right edge")
-    if "rightPadding: contentRightInset" not in scroll_body:
-        raise AssertionError(f"{scroll_id} must reserve padding on the right edge")
     if "contentWidth: availableWidth" not in scroll_body:
-        raise AssertionError(f"{scroll_id} content width must follow Qt ScrollView availableWidth")
-    if f"width: {scroll_id}.availableWidth" not in scroll_body:
-        raise AssertionError(f"{scroll_id} content column must follow the padded available width")
+        raise AssertionError(f"{scroll_id} content width must follow Plasma ScrollView availableWidth")
+    if f"{scroll_id}.availableWidth - Kirigami.Units.smallSpacing" not in scroll_body:
+        raise AssertionError(f"{scroll_id} must retain one quiet content inset before its scrollbar")
+    for stale_scroll_gutter in (
+        "readonly property real contentRightInset:",
+        "rightPadding: contentRightInset",
+    ):
+        if stale_scroll_gutter in scroll_body:
+            raise AssertionError(
+                f"{scroll_id} must not restore the doubled desktop scrollbar gutter"
+            )
 
-provider_scroll_body = id_block(main_text, "providerScroll")
-if "rightPadding: contentRightInset" not in provider_scroll_body:
-    raise AssertionError(
-        "providerScroll must keep provider details away from the right popup edge"
-    )
+if main_text.count("PlasmaComponents.ScrollView {") < 2:
+    raise AssertionError("popup content must use Plasma-native scroll views")
+if "Controls.ScrollView {" in main_text:
+    raise AssertionError("popup content must not restore desktop-framed scroll views")
 
 if "readonly property real roundedSurfaceRadius: Kirigami.Units.cornerRadius" not in main_text:
     raise AssertionError("main.qml must derive its polished radius from Kirigami theme units")
@@ -584,7 +587,7 @@ for tabs_fragment in (
     "radius: root.roundedSurfaceRadius",
     "border.color: root.withAlpha(Kirigami.Theme.textColor, 0.06)",
     "anchors.margins: Kirigami.Units.smallSpacing / 2",
-    "root.withAlpha(brandAccent, 0.12)",
+    "root.withAlpha(Kirigami.Theme.textColor, 0.045)",
     "anchors.bottomMargin: 2",
     "providerReadableColor(",
     "activeFocusOnTab: true",
@@ -600,6 +603,31 @@ for tabs_fragment in (
         )
 if "Kirigami.Theme.highlightedTextColor" in provider_tabs_body:
     raise AssertionError("provider tabs must not depend on a heavy solid-highlight selected state")
+for stale_selected_overlay in (
+    "root.withAlpha(brandAccent, 0.12)",
+    "selected ? root.withAlpha(accent, 0.32)",
+):
+    if stale_selected_overlay in provider_tabs_body:
+        raise AssertionError(
+            "provider tabs must not restore a persistent accent capsule; "
+            f"found {stale_selected_overlay!r}"
+        )
+for tab_id in ("overviewTab", "providerTab"):
+    tab_body = id_block(main_text, tab_id)
+    for focus_fragment in (
+        "property bool focusAcquiredByPointer: false",
+        "readonly property bool keyboardFocusVisible: activeFocus && !focusAcquiredByPointer",
+        "border.width: keyboardFocusVisible ? 1 : 0",
+        "onActiveFocusChanged:",
+        "focusAcquiredByPointer = false",
+        f"{tab_id}.focusAcquiredByPointer = true",
+        f"{tab_id}.focusAcquiredByPointer = false",
+    ):
+        if focus_fragment not in tab_body:
+            raise AssertionError(
+                f"{tab_id} must preserve pointer-neutral selection and keyboard focus; "
+                f"missing {focus_fragment!r}"
+            )
 
 usage_percent_body = id_block(provider_usage_row_text, "usagePercentLabel")
 if "font.weight: Font.DemiBold" not in usage_percent_body:
@@ -619,6 +647,52 @@ if "detailSection.applet.paintRoundedTopBar(" not in provider_detail_section_tex
 cost_sparkline_body = id_block(main_text, "costSparkline")
 if "root.paintRoundedTopBar(" not in cost_sparkline_body:
     raise AssertionError("the cost sparkline must use rounded top corners")
+for sparkline_fragment in (
+    "Layout.preferredHeight: Kirigami.Units.gridUnit * 3.25",
+    "root.canvasColor(Kirigami.Theme.textColor, 0.14)",
+    "root.canvasColor(costSparkline.accent, 0.48)",
+):
+    if sparkline_fragment not in cost_sparkline_body:
+        raise AssertionError(
+            "costSparkline must retain its compact, low-noise chart treatment; "
+            f"missing {sparkline_fragment!r}"
+        )
+
+for summary_id, summary_fragment in (
+    ("costSessionSummaryLabel", "font.weight: Font.DemiBold"),
+    ("costMonthSummaryLabel", "font: Kirigami.Theme.smallFont"),
+    ("costSparklineSummaryLabel", "font: Kirigami.Theme.smallFont"),
+    ("costSparklineRangeLabel", "font: Kirigami.Theme.smallFont"),
+):
+    summary_body = id_block(main_text, summary_id)
+    if summary_fragment not in summary_body:
+        raise AssertionError(f"{summary_id} must preserve the intended cost hierarchy")
+
+cost_history_header_body = id_block(main_text, "costHistoryHeaderRow")
+if "costHistoryChartSection.averageLine" not in cost_history_header_body:
+    raise AssertionError("cost history must keep the average aligned with its heading")
+cost_history_row_body = id_block(main_text, "costHistoryMetricRow")
+for history_row_fragment in (
+    "id: costHistoryDateLabel",
+    "id: costHistoryBarTrack",
+    "Layout.preferredHeight: 4",
+    "root.withAlpha(Kirigami.Theme.textColor, 0.08)",
+    "id: costHistoryValueLabel",
+    "font.pixelSize: Kirigami.Theme.smallFont.pixelSize",
+):
+    if history_row_fragment not in cost_history_row_body:
+        raise AssertionError(
+            "cost history rows must stay compact and scannable; "
+            f"missing {history_row_fragment!r}"
+        )
+
+cost_history_rows_body = function_body(main_text, "costHistoryRows")
+if "tokenCost.daily.length - 7" not in cost_history_rows_body:
+    raise AssertionError("cost history must show only the latest seven detailed rows")
+if "tokenCost.daily.length - 14" in cost_history_rows_body:
+    raise AssertionError("cost history must not dominate the popup with fourteen detailed rows")
+if "function costDailyRows(tokenCost)" in main_text:
+    raise AssertionError("cost details must not repeat the daily history below the chart")
 
 overview_row_body = id_block(overview_provider_row_text, "overviewRow")
 if "applet.withAlpha(Kirigami.Theme.textColor, 0.035)" not in overview_row_body:
@@ -682,12 +756,26 @@ if "Layout.maximumWidth: Kirigami.Units.gridUnit * 5" not in provider_plan_label
 cost_drill_down_body = id_block(main_text, "costDrillDownSection")
 if "readonly property real metricValueColumnWidth: Kirigami.Units.gridUnit * 9" not in cost_drill_down_body:
     raise AssertionError("costDrillDownSection must define a stable value column width")
-for value_label in ("costBreakdownValueLabel", "costModelValueLabel", "costDailyValueLabel"):
+if 'text: i18n("Cost details")' not in cost_drill_down_body:
+    raise AssertionError("costDrillDownSection must use a plain, user-facing title")
+for value_label in ("costBreakdownValueLabel", "costModelValueLabel"):
     value_label_body = id_block(main_text, value_label)
     if "Layout.preferredWidth: costDrillDownSection.metricValueColumnWidth" not in value_label_body:
         raise AssertionError(f"{value_label} must use the shared metric value column width")
     if "Layout.maximumWidth: costDrillDownSection.metricValueColumnWidth" not in value_label_body:
         raise AssertionError(f"{value_label} must cap the shared metric value column width")
+    if "font.pixelSize: Kirigami.Theme.smallFont.pixelSize" not in value_label_body:
+        raise AssertionError(f"{value_label} must use the compact numeric type scale")
+
+cost_models_heading_body = id_block(main_text, "costModelsHeading")
+for heading_fragment in (
+    "font.pixelSize: Kirigami.Theme.smallFont.pixelSize",
+    "font.weight: Font.DemiBold",
+):
+    if heading_fragment not in cost_models_heading_body:
+        raise AssertionError("Models must remain distinct without adding another card")
+if "costRecentDaysHeading" in cost_drill_down_body or 'i18n("Recent days")' in cost_drill_down_body:
+    raise AssertionError("cost details must not duplicate the daily history after the models")
 
 action_rows_body = function_body(main_text, "actionRows")
 if 'action: "refresh", enabled: true, separatorBefore: true' not in action_rows_body:
