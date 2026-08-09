@@ -12,7 +12,7 @@ msgstr ""
 msgid "General"
 msgstr ""
 
-#: contents/config/config.qml
+#: contents/config/config.qml contents/ui/configProviders.qml
 msgid "Providers"
 msgstr ""
 
@@ -788,12 +788,6 @@ msgid "Reload provider list"
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "%1 provider enabled"
-msgid_plural "%1 providers enabled"
-msgstr[0] ""
-msgstr[1] ""
-
-#: contents/ui/configProviders.qml
 msgid "%1 - disabled"
 msgstr ""
 
@@ -834,6 +828,12 @@ msgstr ""
 #: contents/ui/configProviders.qml
 msgid "CLI commands"
 msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "%1 provider enabled"
+msgid_plural "%1 providers enabled"
+msgstr[0] ""
+msgstr[1] ""
 
 #: contents/ui/configProviders.qml
 msgid "No providers reported"

@@ -1917,14 +1917,6 @@ KCM.SimpleKCM {
         width: parent.width
         spacing: Kirigami.Units.smallSpacing
 
-        Controls.Label {
-            Layout.fillWidth: true
-            Layout.margins: Kirigami.Units.smallSpacing
-            text: i18np("%1 provider enabled", "%1 providers enabled", page.enabledCount)
-            opacity: 0.7
-            visible: page.providers.length > 0
-        }
-
         ColumnLayout {
             Layout.fillWidth: true
             Layout.leftMargin: Kirigami.Units.smallSpacing
@@ -2232,16 +2224,23 @@ KCM.SimpleKCM {
                     }
                 }
 
-                Controls.Label {
+                Controls.ToolButton {
+                    id: providerCliCommandsToggle
+
                     text: i18n("CLI commands")
-                    font.weight: Font.DemiBold
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
+                    icon.name: checked ? "arrow-down" : "arrow-right"
+                    display: Controls.AbstractButton.TextBesideIcon
+                    checkable: true
+                    checked: false
+                    Layout.alignment: Qt.AlignLeft
                 }
 
                 Controls.ScrollView {
+                    id: providerCliCommandsView
+
                     Layout.fillWidth: true
                     Layout.preferredHeight: Kirigami.Units.gridUnit * 5
+                    visible: providerCliCommandsToggle.checked
 
                     Controls.TextArea {
                         readOnly: true
@@ -2262,6 +2261,40 @@ KCM.SimpleKCM {
             Controls.BusyIndicator {
                 anchors.centerIn: parent
                 running: parent.visible
+            }
+        }
+
+        Kirigami.Separator {
+            id: providerListSeparator
+
+            Layout.fillWidth: true
+            Layout.leftMargin: Kirigami.Units.smallSpacing
+            Layout.rightMargin: Kirigami.Units.smallSpacing
+            Layout.topMargin: Kirigami.Units.smallSpacing
+            visible: page.providers.length > 0
+        }
+
+        RowLayout {
+            id: providerListHeading
+
+            Layout.fillWidth: true
+            Layout.leftMargin: Kirigami.Units.smallSpacing
+            Layout.rightMargin: Kirigami.Units.smallSpacing
+            spacing: Kirigami.Units.smallSpacing
+            visible: page.providers.length > 0
+
+            Controls.Label {
+                text: i18n("Providers")
+                font.weight: Font.DemiBold
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+            }
+
+            Controls.Label {
+                text: i18np("%1 provider enabled", "%1 providers enabled", page.enabledCount)
+                font: Kirigami.Theme.smallFont
+                opacity: 0.66
+                elide: Text.ElideRight
             }
         }
 

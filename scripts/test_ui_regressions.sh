@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GENERAL_QML="${ROOT_DIR}/contents/ui/configGeneral.qml"
 PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
+ADVANCED_QML="${ROOT_DIR}/contents/ui/configAdvanced.qml"
 
 require_in_file() {
   local file="$1"
@@ -47,6 +48,7 @@ require_block_fragment "$GENERAL_QML" "id: lastUpdateStatusLabel" "wrapMode: Tex
 
 require_in_file "$PROVIDERS_QML" "Provider-specific controls come from the CodexBar CLI descriptor"
 reject_in_file "$PROVIDERS_QML" "Provider-specific editing stays in the CodexBar CLI until it exposes a stable settings descriptor"
+require_in_file "$ADVANCED_QML" "id: advancedOverrideExplanation"
 
 python3 - "$ROOT_DIR" <<'PY'
 import re
@@ -58,6 +60,7 @@ main_qml = root / "contents/ui/main.qml"
 general_qml = root / "contents/ui/configGeneral.qml"
 display_qml = root / "contents/ui/configDisplay.qml"
 providers_qml = root / "contents/ui/configProviders.qml"
+advanced_qml = root / "contents/ui/configAdvanced.qml"
 theme_contrast_js = root / "contents/ui/ThemeContrast.js"
 provider_accounts_panel_qml = root / "contents/ui/components/ProviderAccountsPanel.qml"
 provider_header_qml = root / "contents/ui/components/ProviderHeader.qml"
@@ -132,6 +135,7 @@ main_text = main_qml.read_text(encoding="utf-8")
 general_text = general_qml.read_text(encoding="utf-8")
 display_text = display_qml.read_text(encoding="utf-8")
 providers_text = providers_qml.read_text(encoding="utf-8")
+advanced_text = advanced_qml.read_text(encoding="utf-8")
 theme_contrast_text = theme_contrast_js.read_text(encoding="utf-8")
 provider_accounts_panel_text = provider_accounts_panel_qml.read_text(encoding="utf-8")
 provider_header_text = provider_header_qml.read_text(encoding="utf-8")
@@ -828,6 +832,67 @@ for selected_row_fragment in (
             "ProviderConfigRow selected state must set explicit contrast-aware "
             f"text colors; missing {selected_row_fragment!r}"
         )
+
+advanced_override_body = id_block(advanced_text, "advancedOverrideExplanation")
+for explanation_fragment in (
+    "Layout.fillWidth: true",
+    "Layout.preferredWidth: Kirigami.Units.gridUnit * 18",
+    "wrapMode: Text.WordWrap",
+    "font: Kirigami.Theme.smallFont",
+):
+    if explanation_fragment not in advanced_override_body:
+        raise AssertionError(
+            "Advanced override guidance must remain a readable full-width form row; "
+            f"missing {explanation_fragment!r}"
+        )
+if "Kirigami.FormData.label:" in advanced_override_body:
+    raise AssertionError("Advanced override guidance must not masquerade as a field label")
+if 'Kirigami.FormData.label: i18n("Advanced provider override")' not in advanced_text:
+    raise AssertionError("Advanced settings must retain the provider override section title")
+if "Kirigami.FormData.isSection: true" not in advanced_text:
+    raise AssertionError("Advanced provider override must use the shared Kirigami section hierarchy")
+
+provider_cli_toggle_body = id_block(providers_text, "providerCliCommandsToggle")
+for toggle_fragment in (
+    "checkable: true",
+    'text: i18n("CLI commands")',
+    'icon.name: checked ? "arrow-down" : "arrow-right"',
+):
+    if toggle_fragment not in provider_cli_toggle_body:
+        raise AssertionError(
+            "Provider CLI commands must remain available behind a compact native disclosure; "
+            f"missing {toggle_fragment!r}"
+        )
+
+provider_cli_view_body = id_block(providers_text, "providerCliCommandsView")
+if "visible: providerCliCommandsToggle.checked" not in provider_cli_view_body:
+    raise AssertionError("Provider CLI command output must follow the disclosure state")
+
+provider_list_heading_body = id_block(providers_text, "providerListHeading")
+for heading_fragment in (
+    'text: i18n("Providers")',
+    'i18np("%1 provider enabled", "%1 providers enabled", page.enabledCount)',
+    "font.weight: Font.DemiBold",
+):
+    if heading_fragment not in provider_list_heading_body:
+        raise AssertionError(
+            "The provider list must retain a distinct, compact heading; "
+            f"missing {heading_fragment!r}"
+        )
+
+provider_list_separator_body = id_block(providers_text, "providerListSeparator")
+if "Layout.fillWidth: true" not in provider_list_separator_body:
+    raise AssertionError("The provider list boundary must span the available width")
+
+ordered_provider_fragments = (
+    "id: providerCliCommandsView",
+    "id: providerListSeparator",
+    "id: providerListHeading",
+    "delegate: Components.ProviderConfigRow",
+)
+ordered_provider_indexes = [providers_text.index(fragment) for fragment in ordered_provider_fragments]
+if ordered_provider_indexes != sorted(ordered_provider_indexes):
+    raise AssertionError("Provider details, list boundary, heading, and rows must keep their visual order")
 
 notification_scope_body = function_body(main_text, "notificationScopeKey")
 for scope_fragment in ("providerMapKey(item.provider)", "selectedAccountForProvider", "accountLabel(item)", "JSON.stringify"):

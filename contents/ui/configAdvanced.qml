@@ -13,8 +13,15 @@ KCM.SimpleKCM {
     property string cfg_sourceDefault
 
     Kirigami.FormLayout {
-        Controls.Label {
+        Kirigami.Separator {
             Kirigami.FormData.label: i18n("Advanced provider override")
+            Kirigami.FormData.isSection: true
+        }
+
+        Controls.Label {
+            id: advancedOverrideExplanation
+
+            Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 18
             Layout.maximumWidth: Kirigami.Units.gridUnit * 18
             text: i18n("These options pin the widget to one provider or one source. Leave them blank to follow the providers enabled on the Providers page.")
