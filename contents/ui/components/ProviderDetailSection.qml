@@ -143,7 +143,7 @@ ColumnLayout {
 
             var points = detailSection.chartPoints
             var baseline = height - 1
-            context.fillStyle = detailSection.applet.canvasColor(Kirigami.Theme.textColor, 0.18)
+            context.fillStyle = detailSection.applet.canvasColor(Kirigami.Theme.textColor, 0.12)
             context.fillRect(0, baseline, width, 1)
             if (points.length === 0) {
                 return
@@ -176,12 +176,15 @@ ColumnLayout {
                 return
             }
 
-            var gap = Math.max(1, Math.floor(width / 180))
+            var gap = Math.max(
+                2,
+                Math.min(4, Math.floor(width / Math.max(1, points.length * 5))))
             var barWidth = Math.max(1, (width - gap * Math.max(0, points.length - 1)) / points.length)
-            context.fillStyle = detailSection.applet.canvasColor(detailSection.accent, 0.72)
+            context.fillStyle = detailSection.applet.buildChartBarGradient(
+                context, detailSection.accent, baseline, 0.78, 0.36)
             for (var barIndex = 0; barIndex < points.length; barIndex++) {
                 var fraction = detailSection.chartFraction(points[barIndex].value)
-                var barHeight = fraction > 0 ? Math.max(1, (height - 3) * fraction) : 1
+                var barHeight = fraction > 0 ? Math.max(2, (height - 3) * fraction) : 1
                 detailSection.applet.paintRoundedTopBar(
                     context,
                     barIndex * (barWidth + gap),

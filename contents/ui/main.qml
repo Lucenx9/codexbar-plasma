@@ -1172,6 +1172,13 @@ PlasmoidItem {
         context.fill()
     }
 
+    function buildChartBarGradient(context, accent, baseline, topOpacity, bottomOpacity) {
+        var gradient = context.createLinearGradient(0, 0, 0, Math.max(1, baseline))
+        gradient.addColorStop(0, canvasColor(accent, topOpacity))
+        gradient.addColorStop(1, canvasColor(accent, bottomOpacity))
+        return gradient
+    }
+
     function costSparklineSummary(points) {
         if (!points || points.length === 0) {
             return ""
@@ -5121,18 +5128,22 @@ PlasmoidItem {
                                         return
                                     }
 
-                                    var gap = Math.max(1, Math.floor(width / 180))
+                                    var gap = Math.max(
+                                        2,
+                                        Math.min(4, Math.floor(width / Math.max(1, points.length * 5))))
                                     var barWidth = Math.max(2, (width - gap * (points.length - 1)) / points.length)
                                     var baseline = height - 1
 
-                                    ctx.fillStyle = root.canvasColor(Kirigami.Theme.textColor, 0.14)
+                                    ctx.fillStyle = root.canvasColor(Kirigami.Theme.textColor, 0.1)
                                     ctx.fillRect(0, baseline, width, 1)
 
-                                    var peakFill = root.canvasColor(costSparkline.accent, 0.9)
-                                    var normalFill = root.canvasColor(costSparkline.accent, 0.48)
+                                    var peakFill = root.buildChartBarGradient(
+                                        ctx, costSparkline.accent, baseline, 0.96, 0.58)
+                                    var normalFill = root.buildChartBarGradient(
+                                        ctx, costSparkline.accent, baseline, 0.7, 0.3)
                                     for (var i = 0; i < points.length; i++) {
                                         var value = Math.max(0, Number(points[i].cost) || 0)
-                                        var barHeight = Math.max(1, (height - 3) * value / maxValue)
+                                        var barHeight = Math.max(2, (height - 3) * value / maxValue)
                                         var x = i * (barWidth + gap)
                                         ctx.fillStyle = value === maxValue ? peakFill : normalFill
                                         root.paintRoundedTopBar(
@@ -5243,18 +5254,34 @@ PlasmoidItem {
                                             id: costHistoryBarTrack
 
                                             Layout.fillWidth: true
-                                            Layout.preferredHeight: 4
+                                            Layout.preferredHeight: 5
                                             radius: height / 2
-                                            color: root.withAlpha(Kirigami.Theme.textColor, 0.08)
+                                            color: root.withAlpha(Kirigami.Theme.textColor, 0.055)
                                             clip: true
+                                            antialiasing: true
 
                                             Rectangle {
                                                 width: parent.width * Math.max(0, Math.min(100, modelData.percent)) / 100
                                                 height: parent.height
                                                 radius: parent.radius
-                                                color: modelData.isPeak
-                                                    ? root.withAlpha(costHistoryChartSection.accent, 1)
-                                                    : root.withAlpha(costHistoryChartSection.accent, 0.72)
+                                                antialiasing: true
+                                                gradient: Gradient {
+                                                    orientation: Gradient.Horizontal
+
+                                                    GradientStop {
+                                                        position: 0
+                                                        color: root.withAlpha(
+                                                            costHistoryChartSection.accent,
+                                                            modelData.isPeak ? 0.72 : 0.46)
+                                                    }
+
+                                                    GradientStop {
+                                                        position: 1
+                                                        color: root.withAlpha(
+                                                            costHistoryChartSection.accent,
+                                                            modelData.isPeak ? 1 : 0.8)
+                                                    }
+                                                }
 
                                                 Behavior on width {
                                                     NumberAnimation {

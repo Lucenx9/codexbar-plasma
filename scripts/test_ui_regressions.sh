@@ -644,13 +644,38 @@ for usage_metadata_id in ("usagePaceLabel", "usageResetLabel"):
 
 if "detailSection.applet.paintRoundedTopBar(" not in provider_detail_section_text:
     raise AssertionError("provider detail bar charts must use rounded top corners")
+for detail_chart_fragment in (
+    "detailSection.applet.buildChartBarGradient(",
+    "Math.min(4, Math.floor(width / Math.max(1, points.length * 5)))",
+    "Math.max(2, (height - 3) * fraction)",
+):
+    if detail_chart_fragment not in provider_detail_section_text:
+        raise AssertionError(
+            "provider detail bar charts must retain the polished cost-chart language; "
+            f"missing {detail_chart_fragment!r}"
+        )
+
+chart_gradient_body = function_body(main_text, "buildChartBarGradient")
+for gradient_fragment in (
+    "context.createLinearGradient",
+    "gradient.addColorStop(0",
+    "gradient.addColorStop(1",
+):
+    if gradient_fragment not in chart_gradient_body:
+        raise AssertionError(
+            "vertical bar charts must use the shared restrained gradient; "
+            f"missing {gradient_fragment!r}"
+        )
+
 cost_sparkline_body = id_block(main_text, "costSparkline")
 if "root.paintRoundedTopBar(" not in cost_sparkline_body:
     raise AssertionError("the cost sparkline must use rounded top corners")
 for sparkline_fragment in (
     "Layout.preferredHeight: Kirigami.Units.gridUnit * 3.25",
-    "root.canvasColor(Kirigami.Theme.textColor, 0.14)",
-    "root.canvasColor(costSparkline.accent, 0.48)",
+    "root.canvasColor(Kirigami.Theme.textColor, 0.1)",
+    "Math.min(4, Math.floor(width / Math.max(1, points.length * 5)))",
+    "root.buildChartBarGradient(",
+    "Math.max(2, (height - 3) * value / maxValue)",
 ):
     if sparkline_fragment not in cost_sparkline_body:
         raise AssertionError(
@@ -675,8 +700,11 @@ cost_history_row_body = id_block(main_text, "costHistoryMetricRow")
 for history_row_fragment in (
     "id: costHistoryDateLabel",
     "id: costHistoryBarTrack",
-    "Layout.preferredHeight: 4",
-    "root.withAlpha(Kirigami.Theme.textColor, 0.08)",
+    "Layout.preferredHeight: 5",
+    "root.withAlpha(Kirigami.Theme.textColor, 0.055)",
+    "gradient: Gradient",
+    "orientation: Gradient.Horizontal",
+    "antialiasing: true",
     "id: costHistoryValueLabel",
     "font.pixelSize: Kirigami.Theme.smallFont.pixelSize",
 ):
