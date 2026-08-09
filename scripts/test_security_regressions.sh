@@ -103,6 +103,19 @@ require_in_file "$PROVIDERS_QML" "function isSafeDescriptorUrl(url)"
 require_in_file "$PROVIDERS_QML" "text.indexOf(\"https://\") === 0"
 require_in_file "$PROVIDERS_QML" "var url = String(payload.value.url)"
 require_in_file "$PROVIDERS_QML" "if (isSafeDescriptorUrl(url))"
+for qml_file in "$MAIN_QML" "$PROVIDERS_QML"; do
+  require_in_file "$qml_file" '!/^[a-z0-9][a-z0-9._-]*$/.test(key) || key.indexOf("..") !== -1'
+  require_in_file "$qml_file" 'return "view-statistics"'
+done
+require_in_file "$PROVIDERS_QML" "function descriptorPendingFieldKey(fieldID)"
+require_in_file "$PROVIDERS_QML" "return JSON.stringify(value)"
+require_in_file "$PROVIDERS_QML" "var field = descriptorPendingFieldKey(fieldID)"
+reject_text "configProviders.qml" "$(cat "$PROVIDERS_QML")" "var field = providerMapKey(fieldID)"
+
+reject_text "main.qml" "$(cat "$MAIN_QML")" '"sh", "-lc"'
+reject_text "configProviders.qml" "$(cat "$PROVIDERS_QML")" '"sh", "-lc"'
+require_in_file "$MAIN_QML" '["sh", "-c", shellQuote(script)]'
+require_in_file "$PROVIDERS_QML" '["sh", "-c", shellQuote(script), "_", shellQuote(prompt)'
 
 require_in_file "$MAIN_QML" "function safeStatusUrl(providerID, url)"
 require_in_file "$MAIN_QML" "function httpsUrlHost(url)"

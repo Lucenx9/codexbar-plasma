@@ -29,6 +29,12 @@ require_in_file "$QML" "connectedCostCommandSource = commandWithRunNonce(costCom
 require_in_file "$QML" "connectedProviderConfigCommandSource = commandWithRunNonce(providerConfigCommandSource)"
 require_in_file "$QML" "var baseCommand = buildProviderUsageCommand(providerID, true)"
 require_in_file "$QML" "var command = commandWithRunNonce(baseCommand)"
+require_in_file "$QML" 'notificationSource.connectSource(commandWithRunNonce(":; " + command))'
+reject_in_file "$QML" "notificationSource.connectSource(command)"
+
+sh -n <<'SH'
+CODEXBAR_PLASMA_RUN=1 :; if command -v notify-send >/dev/null 2>&1; then notify-send -- "CodexBar" "Test"; fi
+SH
 
 require_in_file "$PROVIDERS_QML" "property int commandRunSerial: 0"
 require_in_file "$PROVIDERS_QML" "function commandWithRunNonce(command)"

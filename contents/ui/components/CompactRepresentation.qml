@@ -9,14 +9,19 @@ Item {
 
     required property var applet
 
+    readonly property bool verticalPanel: applet.verticalFormFactor
     readonly property bool hasProviderMeters: applet.compactProviders().length > 0
     readonly property var incidentProvider: applet.primaryIncidentProvider()
     readonly property string primaryText: applet.compactText()
-    readonly property bool showPrimaryIdentity: !hasProviderMeters || primaryText.length > 0
-    readonly property int desiredWidth: Math.min(
-        Kirigami.Units.gridUnit * 8.5,
-        Math.max(Kirigami.Units.gridUnit * 4.8,
-            compactRow.implicitWidth + Kirigami.Units.smallSpacing * 2))
+    readonly property bool showPrimaryIdentity: verticalPanel || !hasProviderMeters || primaryText.length > 0
+    readonly property int compactExtent: Kirigami.Units.iconSizes.smallMedium
+        + Kirigami.Units.smallSpacing * 2
+    readonly property int desiredWidth: verticalPanel
+        ? compactExtent
+        : Math.min(
+            Kirigami.Units.gridUnit * 8.5,
+            Math.max(Kirigami.Units.gridUnit * 4.8,
+                compactRow.implicitWidth + Kirigami.Units.smallSpacing * 2))
 
     Layout.minimumWidth: desiredWidth
     Layout.preferredWidth: desiredWidth
@@ -53,6 +58,7 @@ Item {
                 : compactRoot.applet.providerReadableColor(compactProvider, Kirigami.Theme.backgroundColor)
             Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
             Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
+            Layout.alignment: Qt.AlignCenter
 
             RotationAnimator {
                 target: compactIdentityIcon
@@ -63,12 +69,36 @@ Item {
                 loops: Animation.Infinite
                 onStopped: compactIdentityIcon.rotation = 0
             }
+
+            // The inline badge below needs horizontal room the vertical strip does
+            // not have, so overlay the incident marker on the identity icon instead
+            // of dropping the only at-a-glance status signal. Hidden while the icon
+            // spins so the marker does not orbit the refresh indicator.
+            Rectangle {
+                id: compactVerticalStatusBadge
+
+                visible: compactRoot.verticalPanel
+                    && !compactRoot.applet.loading
+                    && compactRoot.incidentProvider !== null
+                    && compactRoot.incidentProvider.hasIncident
+                anchors.top: parent.top
+                anchors.right: parent.right
+                width: Math.round(Kirigami.Units.iconSizes.smallMedium / 3)
+                height: width
+                radius: width / 2
+                color: compactRoot.incidentProvider
+                    ? compactRoot.applet.statusBadgeColor(compactRoot.incidentProvider.statusSeverity)
+                    : "transparent"
+                border.width: 1
+                border.color: Kirigami.Theme.backgroundColor
+            }
         }
 
         Rectangle {
             id: compactStatusBadge
 
-            visible: compactRoot.incidentProvider !== null
+            visible: !compactRoot.verticalPanel
+                && compactRoot.incidentProvider !== null
                 && compactRoot.incidentProvider.hasIncident
             Layout.preferredWidth: Kirigami.Units.smallSpacing * 1.5
             Layout.preferredHeight: Kirigami.Units.smallSpacing * 1.5
@@ -87,11 +117,12 @@ Item {
 
                 anchors.fill: parent
                 hoverEnabled: true
+                acceptedButtons: Qt.NoButton
             }
         }
 
         PlasmaComponents.Label {
-            visible: compactRoot.primaryText.length > 0
+            visible: !compactRoot.verticalPanel && compactRoot.primaryText.length > 0
             text: compactRoot.primaryText
             elide: Text.ElideRight
             font.bold: true
@@ -99,7 +130,7 @@ Item {
         }
 
         Repeater {
-            model: compactRoot.applet.compactProviders()
+            model: compactRoot.verticalPanel ? [] : compactRoot.applet.compactProviders()
 
             delegate: Item {
                 id: compactMeter
