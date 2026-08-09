@@ -16,7 +16,7 @@ Rectangle {
     readonly property var usageRow: applet.switcherMetricRow(providerData)
     readonly property bool hasUsage: usageRow && usageRow.hasPercent
     readonly property real shownPercent: hasUsage ? applet.displayPercent(usageRow) : -1
-    readonly property string resetText: usageRow ? applet.resetLabel(usageRow.reset) : ""
+    readonly property string resetText: usageRow ? applet.resetLabel(applet.usageResetText(usageRow)) : ""
     readonly property string detail: applet.overviewDetailText(providerData)
 
     signal selected(var providerData)

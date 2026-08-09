@@ -16,6 +16,8 @@ ColumnLayout {
         Kirigami.Theme.backgroundColor)
     readonly property real shownPercent: applet.displayPercent(rowData)
     readonly property real markerPercent: applet.paceMarkerPercent(rowData)
+    readonly property string resetText: usageRow.applet.resetLabel(
+        usageRow.applet.usageResetText(usageRow.rowData))
 
     Layout.fillWidth: true
     spacing: Kirigami.Units.smallSpacing / 1.5
@@ -102,7 +104,7 @@ ColumnLayout {
 
     RowLayout {
         visible: usageRow.rowData.pace.length > 0
-            || usageRow.applet.resetLabel(usageRow.rowData.reset).length > 0
+            || usageRow.resetText.length > 0
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
 
@@ -120,8 +122,8 @@ ColumnLayout {
         PlasmaComponents.Label {
             id: usageResetLabel
 
-            visible: usageRow.applet.resetLabel(usageRow.rowData.reset).length > 0
-            text: usageRow.applet.resetLabel(usageRow.rowData.reset)
+            visible: usageRow.resetText.length > 0
+            text: usageRow.resetText
             font: Kirigami.Theme.smallFont
             opacity: 0.66
             horizontalAlignment: Text.AlignRight

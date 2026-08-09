@@ -406,7 +406,7 @@ KCM.SimpleKCM {
 
             Controls.Label {
                 Layout.fillWidth: true
-                text: i18n("Choose up to %1 providers", page.maxOverviewProviders)
+                text: i18np("Choose up to %1 provider", "Choose up to %1 providers", page.maxOverviewProviders)
                 opacity: 0.7
                 wrapMode: Text.WordWrap
             }

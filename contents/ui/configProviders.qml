@@ -143,7 +143,7 @@ KCM.SimpleKCM {
             "if [ \"$status\" -ne 0 ] || [ -z \"$key\" ]; then printf '%s\\n' '{\"cancelled\":true}'; exit 0; fi",
             "printf '%s' \"$key\" | \"$2\" config set-api-key --provider \"$3\" --stdin --format json --json-only"
         ].join("; ")
-        var command = ["sh", "-lc", shellQuote(script), "_", shellQuote(prompt), shellQuote(commandPath), shellQuote(cliProviderID)].join(" ")
+        var command = ["sh", "-c", shellQuote(script), "_", shellQuote(prompt), shellQuote(commandPath), shellQuote(cliProviderID)].join(" ")
         runCommand(command, { kind: "setApiKey", provider: providerID })
     }
 
@@ -1077,7 +1077,7 @@ KCM.SimpleKCM {
             "if [ \"$status\" -ne 0 ] || [ -z \"$value\" ]; then printf '%s\\n' '{\"cancelled\":true}'; exit 0; fi",
             "printf '%s' \"$value\" | " + commandLine
         ].join("; ")
-        var command = ["sh", "-lc", shellQuote(script), "_", shellQuote(prompt)].join(" ")
+        var command = ["sh", "-c", shellQuote(script), "_", shellQuote(prompt)].join(" ")
         runCommand(command, { kind: "descriptorField", provider: providerID, fieldID: field.id })
     }
 
@@ -1105,7 +1105,7 @@ KCM.SimpleKCM {
         var commandLine = commandLineFromTokens(commandTokens, replacements)
         if (stdinValue !== undefined && stdinValue !== null) {
             var script = "printf '%s' \"$1\" | " + commandLine
-            return ["sh", "-lc", shellQuote(script), "_", shellQuote(stdinValue)].join(" ")
+            return ["sh", "-c", shellQuote(script), "_", shellQuote(stdinValue)].join(" ")
         }
         return commandLine
     }
@@ -1183,8 +1183,16 @@ KCM.SimpleKCM {
 
     function descriptorPendingKey(providerID, fieldID) {
         var provider = providerMapKey(providerID)
-        var field = providerMapKey(fieldID)
+        var field = descriptorPendingFieldKey(fieldID)
         return provider.length > 0 && field.length > 0 ? provider + "::" + field : ""
+    }
+
+    function descriptorPendingFieldKey(fieldID) {
+        var value = String(fieldID || "").trim()
+        if (value.length === 0 || value.length > 128) {
+            return ""
+        }
+        return JSON.stringify(value)
     }
 
     function supportsApiKeySetup(providerID) {
@@ -1579,6 +1587,9 @@ KCM.SimpleKCM {
 
     function providerIconSource(value) {
         var key = providerKey(value)
+        if (!/^[a-z0-9][a-z0-9._-]*$/.test(key) || key.indexOf("..") !== -1) {
+            return "view-statistics"
+        }
         var aliases = {
             "aws-bedrock": "bedrock",
             "gemini": "gemini-white.png",

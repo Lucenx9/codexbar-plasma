@@ -3,13 +3,60 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ICON_DIR="${ROOT_DIR}/contents/icons/providers"
+MAIN_QML="${ROOT_DIR}/contents/ui/main.qml"
 
 missing=0
+declare -A provider_key_aliases=()
+declare -A provider_icon_aliases=()
+
+while IFS=$'\t' read -r alias_kind alias_key alias_value; do
+  if [[ "$alias_kind" == "provider" ]]; then
+    provider_key_aliases["$alias_key"]="$alias_value"
+  else
+    provider_icon_aliases["$alias_key"]="$alias_value"
+  fi
+done < <(python3 - "$MAIN_QML" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+text = Path(sys.argv[1]).read_text(encoding="utf-8")
+
+def function_body(name):
+    start = text.index(f"function {name}(")
+    brace = text.index("{", start)
+    depth = 1
+    index = brace + 1
+    while depth:
+        if text[index] == "{":
+            depth += 1
+        elif text[index] == "}":
+            depth -= 1
+        index += 1
+    return text[brace + 1:index - 1]
+
+for kind, function_name in (("provider", "providerKey"), ("icon", "providerIconSource")):
+    body = function_body(function_name)
+    aliases = re.search(r"var aliases = \{(.*?)\n\s*\}", body, re.S)
+    if not aliases:
+        raise SystemExit(f"missing aliases map in {function_name}")
+    for key, value in re.findall(r'"([^"]+)":\s*"([^"]+)"', aliases.group(1)):
+        print(f"{kind}\t{key}\t{value}")
+PY
+)
 
 require_icon() {
   local provider="$1"
-  if [[ ! -f "${ICON_DIR}/${provider}.svg" && ! -f "${ICON_DIR}/${provider}.png" ]]; then
-    echo "missing provider icon: ${provider}" >&2
+  local provider_key="${provider_key_aliases[$provider]:-$provider}"
+  local icon_key="${provider_icon_aliases[$provider_key]:-$provider_key}"
+  local icon_name
+  if [[ "$icon_key" == *.* ]]; then
+    icon_name="$icon_key"
+  else
+    icon_name="${icon_key}.svg"
+  fi
+  if [[ ! -f "${ICON_DIR}/${icon_name}" ]]; then
+    echo "missing runtime provider icon: ${provider} -> ${icon_name}" >&2
     missing=1
   fi
 }

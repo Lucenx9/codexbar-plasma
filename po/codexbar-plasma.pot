@@ -206,8 +206,10 @@ msgid "Overview providers:"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
-msgid "Choose up to %1 providers"
-msgstr ""
+msgid "Choose up to %1 provider"
+msgid_plural "Choose up to %1 providers"
+msgstr[0] ""
+msgstr[1] ""
 
 #: contents/ui/configDisplay.qml
 msgid "Loading providers..."
@@ -1249,7 +1251,9 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "%1 available"
-msgstr ""
+msgid_plural "%1 available"
+msgstr[0] ""
+msgstr[1] ""
 
 #: contents/ui/main.qml
 msgid "now"
@@ -1503,12 +1507,26 @@ msgid "Resets %1"
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "%1 provider"
+msgid_plural "%1 providers"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/main.qml
 msgid "Loading"
 msgstr ""
 
 #: contents/ui/main.qml
 #, javascript-format
 msgid "%1cr"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1: %2% %3"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Refreshing usage..."
 msgstr ""
 
 #: contents/ui/main.qml
@@ -1531,14 +1549,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "No provider data."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 - %2 providers"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 providers"
 msgstr ""
 
 #: contents/ui/main.qml

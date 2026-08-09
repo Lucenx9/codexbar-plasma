@@ -16,6 +16,9 @@ PlasmoidItem {
 
     Plasmoid.icon: "view-statistics"
     Plasmoid.title: "CodexBar"
+    toolTipMainText: Plasmoid.title
+    toolTipSubText: panelToolTipText()
+    toolTipTextFormat: Text.PlainText
     Plasmoid.contextualActions: [
         PlasmaCore.Action {
             text: i18n("Refresh")
@@ -74,7 +77,7 @@ PlasmoidItem {
     property string connectedCostCommandSource: ""
     property var tokenCosts: ({})
     property string costErrorText: ""
-    property int selectedProviderIndex: 0
+    property string selectedProviderID: ""
     property bool selectionInitialized: false
     property var selectedAccounts: ({})
     property var accountOptions: ({})
@@ -91,8 +94,11 @@ PlasmoidItem {
     property string updateStatusText: boundedWidgetUpdateText(Plasmoid.configuration.widgetUpdateLastStatus)
     property string updateErrorText: boundedWidgetUpdateText(Plasmoid.configuration.widgetUpdateLastError)
     property string lastNotifiedUpdateVersion: Plasmoid.configuration.lastNotifiedUpdateVersion || ""
-    readonly property bool overviewAvailable: provider.length === 0 && providers.length > 1 && overviewProviders().length > 0
-    readonly property bool overviewSelected: overviewAvailable && selectedProviderIndex < 0
+    readonly property bool verticalFormFactor: Plasmoid.formFactor === PlasmaCore.Types.Vertical
+    readonly property var overviewProviderItems: overviewProviders()
+    readonly property bool overviewAvailable: provider.length === 0 && providers.length > 1 && overviewProviderItems.length > 0
+    readonly property int selectedProviderIndex: providerIndexForID(selectedProviderID)
+    readonly property bool overviewSelected: overviewAvailable && selectionInitialized && selectedProviderID.length === 0
     readonly property var selectedProviderData: providers.length > 0 && selectedProviderIndex >= 0
         ? providers[Math.min(selectedProviderIndex, providers.length - 1)]
         : null
@@ -103,7 +109,6 @@ PlasmoidItem {
     onCostUsageEnabledChanged: Qt.callLater(refreshCost)
     onCostHistoryDaysChanged: Qt.callLater(refreshCost)
     onProviderConfigRevisionChanged: Qt.callLater(refreshNow)
-    onResetTimesShowAbsoluteChanged: Qt.callLater(refreshNow)
     onAutoSelectProviderChanged: updateSelectedProvider()
     onOverviewProviderIDsRawChanged: updateSelectedProvider()
     onEnableNotificationsChanged: resetNotificationMemo()
@@ -122,7 +127,7 @@ PlasmoidItem {
     }
     onProvidersChanged: {
         if (providers.length === 0) {
-            selectedProviderIndex = 0
+            selectedProviderID = ""
             selectionInitialized = false
             resetNotificationMemo()
             return
@@ -238,7 +243,7 @@ PlasmoidItem {
             "fi;",
             "if [ -r \"$config\" ]; then cksum \"$config\"; else printf missing; fi"
         ].join(" ")
-        return ["sh", "-lc", shellQuote(script)].join(" ")
+        return ["sh", "-c", shellQuote(script)].join(" ")
     }
 
     function buildProviderUsageCommand(providerID, codexCliFallback) {
@@ -321,12 +326,21 @@ PlasmoidItem {
         return Math.max(0, Math.min(2147480000, Math.floor(revision)))
     }
 
-    function boundedWidgetUpdateText(value) {
+    function boundedDisplayText(value, maximumLength) {
+        var limit = Number(maximumLength)
+        if (!isFinite(limit) || limit <= 0) {
+            limit = 500
+        }
+        limit = Math.min(2000, Math.floor(limit))
         var text = String(value || "")
             .replace(/[\u0000-\u001f\u007f]/g, " ")
             .replace(/\s+/g, " ")
             .trim()
-        return text.length > 500 ? text.slice(0, 500) : text
+        return text.length > limit ? text.slice(0, limit) : text
+    }
+
+    function boundedWidgetUpdateText(value) {
+        return boundedDisplayText(value, 500)
     }
 
     function hasOwnKey(item, key) {
@@ -1235,11 +1249,12 @@ PlasmoidItem {
             return []
         }
 
-        var rows = []
-        var maxCost = costSparklineMax(tokenCost.daily)
         var first = Math.max(0, tokenCost.daily.length - 7)
-        for (var i = tokenCost.daily.length - 1; i >= first; i--) {
-            var item = tokenCost.daily[i]
+        var visibleDaily = tokenCost.daily.slice(first)
+        var rows = []
+        var maxCost = costSparklineMax(visibleDaily)
+        for (var i = visibleDaily.length - 1; i >= 0; i--) {
+            var item = visibleDaily[i]
             var cost = Math.max(0, Number(item.cost) || 0)
             var value = compactCostTokenSummary(cost, item.tokens, item.currency)
             rows.push({
@@ -1391,13 +1406,13 @@ PlasmoidItem {
         return source && typeof source === "object" && !Array.isArray(source)
     }
 
-    function usageDashboardRows(source) {
-        var state = arguments.length > 1 ? arguments[1] : {
+    function usageDashboardRows(source, state, depth) {
+        state = state || {
             rowLimit: usageDashboardRowLimit,
             maxDepth: usageDashboardMaxDepth,
             seen: []
         }
-        var depth = arguments.length > 2 ? arguments[2] : 0
+        depth = depth || 0
         var rows = []
         if (!isDashboardObject(source) || depth > state.maxDepth || state.seen.indexOf(source) !== -1) {
             return rows
@@ -1763,7 +1778,7 @@ PlasmoidItem {
 
         return {
             provider: providerID,
-            title: providerTitle(providerID, displayName),
+            title: boundedDisplayText(providerTitle(providerID, displayName), 120),
             source: item.source || "",
             version: item.version || "",
             account: item.account || identity.accountEmail || usage.accountEmail || "",
@@ -1783,11 +1798,11 @@ PlasmoidItem {
             credits: credits && credits.remaining !== null && credits.remaining !== undefined && isFinite(Number(credits.remaining))
                 ? Number(credits.remaining)
                 : null,
-            status: status ? statusText(status) : "",
+            status: boundedDisplayText(status ? statusText(status) : "", 500),
             statusSeverity: severity,
             statusIncidentKey: statusIncidentKey(status),
             hasIncident: severity.length > 0,
-            error: error && error.message ? error.message : "",
+            error: boundedDisplayText(error && error.message ? error.message : "", 500),
             placeholder: placeholder,
             updatedAt: usage.updatedAt || (credits ? credits.updatedAt : "")
         }
@@ -1850,7 +1865,11 @@ PlasmoidItem {
             leftPercent: hasPercent ? clamp(100 - used, 0, 100) : 0,
             pacePercent: paceValue,
             paceOnTop: !pace || pace.willLastToReset !== false,
-            reset: resetText(window, resetTimesShowAbsolute),
+            resetsAt: boundedDisplayText(
+                window.resetsAt === undefined || window.resetsAt === null ? "" : window.resetsAt,
+                128),
+            resetDescription: boundedDisplayText(window.resetDescription || "", 500),
+            reset: boundedDisplayText(resetText(window, false), 500),
             pace: pace && pace.summary ? pace.summary : ""
         }
         rows.push(row)
@@ -2062,7 +2081,7 @@ PlasmoidItem {
 
         return {
             title: i18n("Reset credits"),
-            line: i18n("%1 available", Math.round(count))
+            line: i18np("%1 available", "%1 available", Math.round(count))
         }
     }
 
@@ -2100,6 +2119,19 @@ PlasmoidItem {
         var days = Math.floor(hours / 24)
         var restHours = hours % 24
         return restHours > 0 ? i18n("%1d %2h", days, restHours) : i18np("%1d", "%1d", days)
+    }
+
+    function usageResetText(row) {
+        if (!row) {
+            return ""
+        }
+        if (row.resetsAt || row.resetDescription) {
+            return resetText({
+                resetsAt: row.resetsAt || "",
+                resetDescription: row.resetDescription || ""
+            }, resetTimesShowAbsolute)
+        }
+        return String(row.reset || "")
     }
 
     function statusText(status) {
@@ -2166,6 +2198,19 @@ PlasmoidItem {
             return i18n("Unknown")
         default:
             return ""
+        }
+    }
+
+    function statusMessageType(severity) {
+        switch (String(severity || "")) {
+        case "critical":
+        case "major":
+            return Kirigami.MessageType.Error
+        case "minor":
+        case "maintenance":
+            return Kirigami.MessageType.Warning
+        default:
+            return Kirigami.MessageType.Information
         }
     }
 
@@ -2393,7 +2438,7 @@ PlasmoidItem {
             var previousLevel = String(notificationMemo[key] || "")
             if (level.length > 0 && notificationRank(level) > notificationRank(previousLevel)) {
                 var body = i18n("%1 is %2% used", row.label, Math.round(row.usedPercent))
-                var resetLine = resetLabel(row.reset)
+                var resetLine = resetLabel(usageResetText(row))
                 if (resetLine.length > 0) {
                     body += ". " + resetLine
                 }
@@ -2548,7 +2593,8 @@ PlasmoidItem {
         }
         var command = "if command -v notify-send >/dev/null 2>&1; then notify-send --app-name=CodexBar --icon=view-statistics --urgency="
             + shellQuote(cleanUrgency) + " -- " + shellQuote(cleanTitle) + " " + shellQuote(cleanBody) + "; fi"
-        notificationSource.connectSource(command)
+        // A shell assignment cannot directly prefix the reserved word `if`.
+        notificationSource.connectSource(commandWithRunNonce(":; " + command))
     }
 
     function updateScriptPath() {
@@ -2822,8 +2868,6 @@ PlasmoidItem {
             return "alibaba-token-plan"
         case "azureopenai":
             return "azure-openai"
-        case "bedrock":
-            return "bedrock"
         case "groq":
             return "groqcloud"
         case "qwencloud":
@@ -2927,6 +2971,9 @@ PlasmoidItem {
 
     function providerIconSource(value) {
         var key = providerKey(value)
+        if (!/^[a-z0-9][a-z0-9._-]*$/.test(key) || key.indexOf("..") !== -1) {
+            return "view-statistics"
+        }
         var aliases = {
             "aws-bedrock": "bedrock",
             "gemini": "gemini-white.png",
@@ -3775,11 +3822,16 @@ PlasmoidItem {
     }
 
     function providerIndex(item) {
-        if (!item || !providers) {
+        return item ? providerIndexForID(item.provider) : -1
+    }
+
+    function providerIndexForID(providerID) {
+        var id = String(providerID || "")
+        if (id.length === 0 || !providers) {
             return -1
         }
         for (var i = 0; i < providers.length; i++) {
-            if (providers[i] && providers[i].provider === item.provider) {
+            if (providers[i] && providers[i].provider === id) {
                 return i
             }
         }
@@ -3866,7 +3918,15 @@ PlasmoidItem {
         if (/^\d{1,2}:\d{2}(\s*\([^)]+\))?$/.test(text)) {
             return true
         }
+        if (/^\S+\s+\d{1,2}:\d{2}(\s*\([^)]+\))?$/.test(text)) {
+            return true
+        }
         return /^\d+\s*(min|m|h|hr|hour|hours|d|day|days)(\s+\d+\s*(min|m|h|hr|hour|hours|d|day|days))*$/i.test(text)
+    }
+
+    function providerCountText(count) {
+        var total = Math.max(0, Math.round(Number(count) || 0))
+        return i18np("%1 provider", "%1 providers", total)
     }
 
     function clamp(value, minimum, maximum) {
@@ -3895,21 +3955,19 @@ PlasmoidItem {
             if (selectionInitialized && overviewSelected) {
                 return
             }
-            selectedProviderIndex = autoSelectedProviderIndex()
+            selectedProviderID = providers[autoSelectedProviderIndex()].provider
             selectionInitialized = true
             return
         }
 
         if (!selectionInitialized) {
-            selectedProviderIndex = overviewAvailable ? -1 : 0
+            selectedProviderID = overviewAvailable ? "" : providers[0].provider
             selectionInitialized = true
             return
         }
-        if (!overviewAvailable && selectedProviderIndex < 0) {
-            selectedProviderIndex = 0
-        }
-        if (selectedProviderIndex >= providers.length) {
-            selectedProviderIndex = Math.max(0, providers.length - 1)
+        if (selectedProviderIndex < 0
+                && (!overviewAvailable || selectedProviderID.length > 0)) {
+            selectedProviderID = providers[0].provider
         }
     }
 
@@ -3997,6 +4055,29 @@ PlasmoidItem {
         return parts.join(" ")
     }
 
+    function panelToolTipText() {
+        var lines = []
+        for (var i = 0; i < providers.length && lines.length < 6; i++) {
+            var item = providers[i]
+            if (!item) {
+                continue
+            }
+            var percent = switcherPercent(item)
+            if (percent >= 0) {
+                lines.push(i18n("%1: %2% %3", item.title, Math.round(percent), percentSuffix()))
+            } else if (item.hasIncident && item.status.length > 0) {
+                lines.push(i18n("%1: %2", item.title, item.status))
+            }
+        }
+        if (loading) {
+            lines.push(i18n("Refreshing usage..."))
+        }
+        if (lines.length === 0 && errorText.length > 0) {
+            return boundedDisplayText(errorText, 500)
+        }
+        return lines.join("\n")
+    }
+
     function menuBarDisplayText(item) {
         if (!item) {
             return ""
@@ -4041,10 +4122,11 @@ PlasmoidItem {
 
     function primaryResetText(item) {
         var row = switcherMetricRow(item)
-        if (!row || !row.reset || row.reset.length === 0) {
+        var reset = usageResetText(row)
+        if (reset.length === 0) {
             return ""
         }
-        return resetLabel(row.reset)
+        return resetLabel(reset)
     }
 
     function formatNumber(value) {
@@ -4272,7 +4354,8 @@ PlasmoidItem {
                                 : root.withAlpha(Kirigami.Theme.textColor, 0.72)
 
                             function activate() {
-                                root.selectedProviderIndex = -1
+                                root.selectedProviderID = ""
+                                root.selectionInitialized = true
                             }
 
                             visible: root.overviewAvailable
@@ -4401,7 +4484,8 @@ PlasmoidItem {
                                     : root.withAlpha(Kirigami.Theme.textColor, 0.72)
 
                                 function activate() {
-                                    root.selectedProviderIndex = index
+                                    root.selectedProviderID = modelData.provider
+                                    root.selectionInitialized = true
                                 }
 
                                 Layout.preferredWidth: Math.min(
@@ -4658,9 +4742,11 @@ PlasmoidItem {
                         }
 
                         PlasmaComponents.Label {
+                            readonly property int providerCount: root.overviewProviderItems.length
+
                             text: lastUpdatedText.length > 0
-                                ? i18n("%1 - %2 providers", lastUpdatedText, root.overviewProviders().length)
-                                : i18n("%1 providers", root.overviewProviders().length)
+                                ? i18n("%1 - %2", lastUpdatedText, root.providerCountText(providerCount))
+                                : root.providerCountText(providerCount)
                             opacity: 0.62
                             Layout.fillWidth: true
                             elide: Text.ElideRight
@@ -4693,7 +4779,7 @@ PlasmoidItem {
                         Kirigami.PlaceholderMessage {
                             id: overviewPlaceholderMessage
 
-                            visible: root.overviewProviders().length === 0
+                            visible: root.overviewProviderItems.length === 0
                             text: i18n("No overview data available.")
                             icon.name: "view-grid-symbolic"
                             type: Kirigami.PlaceholderMessage.Type.Informational
@@ -4702,14 +4788,15 @@ PlasmoidItem {
                         }
 
                         Repeater {
-                            model: root.overviewProviders()
+                            model: root.overviewProviderItems
 
                             delegate: Components.OverviewProviderRow {
                                 applet: root
                                 onSelected: function(providerData) {
                                     var nextProviderIndex = root.providerIndex(providerData)
                                     if (nextProviderIndex >= 0) {
-                                        root.selectedProviderIndex = nextProviderIndex
+                                        root.selectedProviderID = providerData.provider
+                                        root.selectionInitialized = true
                                     }
                                 }
                             }
@@ -4738,10 +4825,13 @@ PlasmoidItem {
                     id: providerStatusMessage
 
                     visible: root.selectedProviderData
+                        && root.selectedProviderData.hasIncident
                         && root.selectedProviderData.status
                         && root.selectedProviderData.status.length > 0
                     text: root.selectedProviderData ? root.selectedProviderData.status : ""
-                    type: Kirigami.MessageType.Information
+                    type: root.selectedProviderData
+                        ? root.statusMessageType(root.selectedProviderData.statusSeverity)
+                        : Kirigami.MessageType.Information
                     Layout.fillWidth: true
                 }
 
@@ -5057,8 +5147,12 @@ PlasmoidItem {
 
                             readonly property var tokenCost: root.selectedProviderData ? root.selectedProviderData.tokenCost : null
                             readonly property string costErrorText: root.costErrorText
+                            readonly property bool supportsLocalCost: root.selectedProviderData
+                                && root.tokenCostHint(root.selectedProviderData.provider).length > 0
 
-                            visible: tokenCostSection.tokenCost ? true : tokenCostSection.costErrorText.length > 0
+                            visible: tokenCostSection.tokenCost
+                                ? true
+                                : tokenCostSection.supportsLocalCost && tokenCostSection.costErrorText.length > 0
                             Layout.fillWidth: true
                             spacing: Kirigami.Units.smallSpacing / 1.5
 
@@ -5120,6 +5214,7 @@ PlasmoidItem {
                                 onMaxValueChanged: requestPaint()
                                 onWidthChanged: requestPaint()
                                 onHeightChanged: requestPaint()
+                                onVisibleChanged: if (visible) requestPaint()
 
                                 onPaint: {
                                     var ctx = getContext("2d")

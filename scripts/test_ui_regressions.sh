@@ -121,7 +121,7 @@ def extract_switch_returns(text, name):
         if case_match:
             pending.append(case_match.group(1))
             continue
-        return_match = re.match(r'return "([^"]*)"', stripped)
+        return_match = re.match(r"return\s+(.+?);?$", stripped)
         if return_match and pending:
             for provider in pending:
                 values[provider] = return_match.group(1)
@@ -129,6 +129,24 @@ def extract_switch_returns(text, name):
         elif stripped.startswith("default:"):
             pending = []
     return values
+
+
+def extract_object_entries(text, function_name, variable_name):
+    body = function_body(text, function_name)
+    marker = f"var {variable_name} = {{"
+    start = body.find(marker)
+    if start < 0:
+        raise AssertionError(f"missing {variable_name} catalog in {function_name}")
+    entries = {}
+    for line in body[start + len(marker):].splitlines():
+        stripped = line.strip()
+        if stripped == "}":
+            break
+        match = re.match(r'(?:"([^"]+)"|([A-Za-z0-9_]+)):\s*(.+?)(?:,)?$', stripped)
+        if match:
+            key = match.group(1) or match.group(2)
+            entries[key] = match.group(3).removesuffix(",")
+    return entries
 
 
 main_text = main_qml.read_text(encoding="utf-8")
@@ -195,9 +213,34 @@ for live_config_fragment in (
 if "—" in main_text or "–" in main_text:
     raise AssertionError("main.qml must avoid em dash/en dash placeholders in visible UI text")
 
-for function_name in ("providerDashboardUrl", "providerLoginUrl"):
+for function_name in (
+    "providerCliArgument",
+    "providerColor",
+    "providerDashboardUrl",
+    "providerLoginUrl",
+):
     main_values = extract_switch_returns(main_text, function_name)
     provider_values = extract_switch_returns(providers_text, function_name)
+    if main_values != provider_values:
+        missing = sorted(set(main_values) - set(provider_values))
+        extra = sorted(set(provider_values) - set(main_values))
+        changed = sorted(
+            key for key in set(main_values) & set(provider_values)
+            if main_values[key] != provider_values[key]
+        )
+        raise AssertionError(
+            f"{function_name} drift between main.qml and configProviders.qml; "
+            f"missing={missing}, extra={extra}, changed={changed}"
+        )
+
+for function_name, variable_name in (
+    ("providerKey", "aliases"),
+    ("providerIconSource", "aliases"),
+    ("providerTitle", "names"),
+    ("providerDocsUrl", "docs"),
+):
+    main_values = extract_object_entries(main_text, function_name, variable_name)
+    provider_values = extract_object_entries(providers_text, function_name, variable_name)
     if main_values != provider_values:
         missing = sorted(set(main_values) - set(provider_values))
         extra = sorted(set(provider_values) - set(main_values))
@@ -308,9 +351,9 @@ if "disconnectOverviewProviderCommands()" not in display_load_body:
 if "function disconnectOverviewProviderCommands()" not in display_text:
     raise AssertionError("configDisplay.qml must define disconnectOverviewProviderCommands")
 
-provider_index_body = function_body(main_text, "providerIndex")
+provider_index_body = function_body(main_text, "providerIndexForID")
 if "return -1" not in provider_index_body or "return 0" in provider_index_body:
-    raise AssertionError("providerIndex must return -1 instead of falling back to provider 0")
+    raise AssertionError("providerIndexForID must return -1 instead of falling back to provider 0")
 if "var nextProviderIndex = root.providerIndex(providerData)" not in main_text or "if (nextProviderIndex >= 0)" not in main_text:
     raise AssertionError("Overview provider selection must ignore missing providers instead of selecting index 0")
 
@@ -337,6 +380,8 @@ if "root.costErrorText" not in token_cost_section_body:
     raise AssertionError("tokenCostSection must surface costErrorText instead of dropping cost errors")
 if "Cost unavailable: %1" not in token_cost_section_body:
     raise AssertionError("tokenCostSection must label visible cost errors")
+if "supportsLocalCost" not in token_cost_section_body:
+    raise AssertionError("tokenCostSection must scope global cost errors to supported providers")
 
 normalize_token_cost_body = function_body(main_text, "normalizeTokenCost")
 if "costHistoryWindowLabel(item)" not in normalize_token_cost_body:
@@ -347,6 +392,15 @@ if "function costHistoryWindowLabel(item)" not in main_text:
 add_window_body = function_body(main_text, "addWindow")
 if "pace.expectedUsedPercent !== null" not in add_window_body or "pace.expectedUsedPercent !== undefined" not in add_window_body:
     raise AssertionError("addWindow must not treat null pace.expectedUsedPercent as 0")
+for reset_source_fragment in (
+    "resetsAt: boundedDisplayText(",
+    "resetDescription: boundedDisplayText(",
+    "reset: boundedDisplayText(",
+):
+    if reset_source_fragment not in add_window_body:
+        raise AssertionError("addWindow must retain raw reset data for render-time formatting")
+if "onResetTimesShowAbsoluteChanged: Qt.callLater(refreshNow)" in main_text:
+    raise AssertionError("changing reset formatting must not fan out new CLI requests")
 
 refresh_body = function_body(main_text, "refreshNow")
 if "refreshCost()" not in refresh_body:
@@ -584,6 +638,30 @@ for source_name, source_text in (
     if "providerReadableColor(" not in source_text:
         raise AssertionError(f"{source_name} must use a theme-readable provider accent")
 
+compact_status_mouse_body = id_block(compact_representation_text, "compactStatusMouse")
+if "acceptedButtons: Qt.NoButton" not in compact_status_mouse_body:
+    raise AssertionError("the compact incident badge must not consume panel clicks")
+for vertical_fragment in (
+    "readonly property bool verticalPanel: applet.verticalFormFactor",
+    "verticalPanel || !hasProviderMeters",
+    "!compactRoot.verticalPanel",
+):
+    if vertical_fragment not in compact_representation_text:
+        raise AssertionError(
+            "CompactRepresentation must collapse to an icon in vertical panels; "
+            f"missing {vertical_fragment!r}"
+        )
+
+for tooltip_fragment in (
+    "toolTipMainText: Plasmoid.title",
+    "toolTipSubText: panelToolTipText()",
+    "toolTipTextFormat: Text.PlainText",
+    "function panelToolTipText()",
+    "Plasmoid.formFactor === PlasmaCore.Types.Vertical",
+):
+    if tooltip_fragment not in main_text:
+        raise AssertionError(f"the panel tooltip/form-factor contract is missing {tooltip_fragment!r}")
+
 provider_tabs_body = id_block(main_text, "providerTabsBar")
 for tabs_fragment in (
     "Layout.preferredHeight: Kirigami.Units.gridUnit * 2.35",
@@ -674,6 +752,8 @@ for gradient_fragment in (
 cost_sparkline_body = id_block(main_text, "costSparkline")
 if "root.paintRoundedTopBar(" not in cost_sparkline_body:
     raise AssertionError("the cost sparkline must use rounded top corners")
+if "onVisibleChanged: if (visible) requestPaint()" not in cost_sparkline_body:
+    raise AssertionError("costSparkline must repaint after becoming visible again")
 for sparkline_fragment in (
     "Layout.preferredHeight: Kirigami.Units.gridUnit * 3.25",
     "root.canvasColor(Kirigami.Theme.textColor, 0.1)",
@@ -721,6 +801,8 @@ for history_row_fragment in (
 cost_history_rows_body = function_body(main_text, "costHistoryRows")
 if "tokenCost.daily.length - 7" not in cost_history_rows_body:
     raise AssertionError("cost history must show only the latest seven detailed rows")
+if "costSparklineMax(visibleDaily)" not in cost_history_rows_body:
+    raise AssertionError("cost history bars must scale against the seven visible days")
 if "tokenCost.daily.length - 14" in cost_history_rows_body:
     raise AssertionError("cost history must not dominate the popup with fourteen detailed rows")
 if "function costDailyRows(tokenCost)" in main_text:
@@ -760,11 +842,20 @@ for interaction_fragment in (
 for message_id, message_type in (
     ("globalErrorMessage", "Kirigami.MessageType.Error"),
     ("providerErrorMessage", "Kirigami.MessageType.Error"),
-    ("providerStatusMessage", "Kirigami.MessageType.Information"),
 ):
     message_body = id_block(main_text, message_id)
     if f"type: {message_type}" not in message_body:
         raise AssertionError(f"{message_id} must use the native semantic message style")
+
+provider_status_body = id_block(main_text, "providerStatusMessage")
+if "root.selectedProviderData.hasIncident" not in provider_status_body:
+    raise AssertionError("healthy provider status must not occupy a permanent inline banner")
+if "root.statusMessageType(root.selectedProviderData.statusSeverity)" not in provider_status_body:
+    raise AssertionError("incident banners must reflect the provider status severity")
+status_message_type_body = function_body(main_text, "statusMessageType")
+for semantic_type in ("Kirigami.MessageType.Error", "Kirigami.MessageType.Warning"):
+    if semantic_type not in status_message_type_body:
+        raise AssertionError(f"statusMessageType must expose {semantic_type}")
 
 for placeholder_id in (
     "emptyProvidersMessage",
@@ -1087,6 +1178,52 @@ if "overviewSelected" not in select_body:
         "updateSelectedProvider must preserve an explicit Overview selection "
         "when autoSelectProvider is enabled"
     )
+if "selectedProviderID" not in select_body:
+    raise AssertionError("updateSelectedProvider must preserve selection by provider id")
+if "function providerIndexForID(providerID)" not in main_text:
+    raise AssertionError("the selected provider index must be derived from its provider id")
+
+normalize_provider_body = function_body(main_text, "normalizeProvider")
+for bounded_provider_fragment in (
+    "title: boundedDisplayText(",
+    "status: boundedDisplayText(",
+    "error: boundedDisplayText(",
+):
+    if bounded_provider_fragment not in normalize_provider_body:
+        raise AssertionError("new provider display surfaces must use bounded normalized text")
+
+tooltip_body = function_body(main_text, "panelToolTipText")
+if "boundedDisplayText(errorText" not in tooltip_body:
+    raise AssertionError("the panel tooltip must bound global CLI error text")
+if "function boundedDisplayText(value, maximumLength)" not in main_text:
+    raise AssertionError("main.qml must expose a shared display-text bound")
+
+if "applet.usageResetText(usageRow)" not in overview_provider_row_text:
+    raise AssertionError("Overview reset labels must use render-time formatting")
+
+dashboard_rows_body = function_body(main_text, "usageDashboardRows")
+if "arguments[" in dashboard_rows_body:
+    raise AssertionError("usageDashboardRows must declare its state and depth contract")
+if "function usageDashboardRows(source, state, depth)" not in main_text:
+    raise AssertionError("usageDashboardRows must expose named state and depth parameters")
+
+reset_time_body = function_body(main_text, "resetLabelLooksLikeTime")
+if r"\S+\s+\d{1,2}:\d{2}" not in reset_time_body:
+    raise AssertionError("absolute weekday reset labels must be recognized as times")
+
+reset_credits_body = function_body(main_text, "resetCreditsSection")
+if 'i18np("%1 available", "%1 available"' not in reset_credits_body:
+    raise AssertionError("reset credit counts must use plural-aware translations")
+if "function providerCountText(count)" not in main_text:
+    raise AssertionError("overview provider counts must use a plural-aware helper")
+provider_count_body = function_body(main_text, "providerCountText")
+if 'i18np("%1 provider", "%1 providers", total)' not in provider_count_body:
+    raise AssertionError("providerCountText must select the correct singular form")
+
+if "readonly property var overviewProviderItems: overviewProviders()" not in main_text:
+    raise AssertionError("overview provider rows must be cached in a QML property binding")
+if "root.overviewProviders()" in main_text:
+    raise AssertionError("overview UI bindings must reuse overviewProviderItems")
 PY
 
 echo "UI regression checks passed."
