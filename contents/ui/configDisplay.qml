@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasma5support as Plasma5Support
+import "SafeText.js" as SafeText
 
 KCM.SimpleKCM {
     id: page
@@ -46,6 +47,10 @@ KCM.SimpleKCM {
     Component.onCompleted: loadOverviewProviders()
 
     onCfg_commandPathChanged: Qt.callLater(loadOverviewProviders)
+
+    function boundedCliMessage(value) {
+        return SafeText.cliMessage(value, SafeText.maximumCliMessageLength)
+    }
 
     function displayModeIndex(value) {
         for (var i = 0; i < displayModeCombo.model.length; i++) {
@@ -155,7 +160,7 @@ KCM.SimpleKCM {
         if (trimmed.length === 0) {
             overviewProviders = []
             overviewProvidersError = stderrText.trim().length > 0
-                ? stderrText.trim()
+                ? boundedCliMessage(stderrText)
                 : i18n("codexbar did not return provider data.")
             return
         }
@@ -200,7 +205,7 @@ KCM.SimpleKCM {
         }
         var probe = Array.isArray(payload) ? (payload.length > 0 ? payload[0] : null) : payload
         if (probe && probe.error && probe.error.message) {
-            return String(probe.error.message)
+            return boundedCliMessage(probe.error.message)
         }
         return ""
     }

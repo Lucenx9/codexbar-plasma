@@ -211,6 +211,7 @@ SH
 cat > "$fixture_dir/fakebin/kpackagetool6" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
+printf '%s\n' 'Successfully upgraded package.'
 printf '%s\n' "$*" > "$TEST_UPDATE_INSTALL_MARKER"
 SH
 chmod +x "$fixture_dir/fakebin/curl" "$fixture_dir/fakebin/timeout" "$fixture_dir/fakebin/kpackagetool6"
@@ -221,7 +222,8 @@ good_output="$(
   TEST_UPDATE_INSTALL_MARKER="$fixture_dir/install.marker" \
     "$UPDATER" --install --metadata "$fixture_dir/metadata.json" --release-json "$fixture_dir/release.json"
 )"
-if [[ "$(jq -r '.status' <<<"$good_output")" != "installed" || ! -f "$fixture_dir/install.marker" ]]; then
+if ! jq -e '.status == "installed"' >/dev/null <<<"$good_output" \
+  || [[ ! -f "$fixture_dir/install.marker" ]]; then
   echo "a release with a valid checksum must be installed" >&2
   exit 1
 fi

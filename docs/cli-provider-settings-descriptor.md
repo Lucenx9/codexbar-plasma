@@ -155,7 +155,10 @@ Useful action categories:
 - open docs/dashboard/login URL
 
 Actions must report structured JSON with `status`, optional `message`, and
-optional refreshed `descriptor`.
+optional refreshed `descriptor`. `status` is `ok` after a completed action,
+`error` after a failed action, or `cancelled` when the user abandons an
+interactive flow. A failed action may still exit with code zero, so consumers
+must inspect the structured status before reporting success.
 
 URL-opening actions should still be local CLI actions. For example,
 `codexbar config action --provider openai --action openDashboard --json-only`
@@ -188,6 +191,10 @@ Rules for Plasma:
 - Keep secret fields write-only except for `redactedValue`.
 - Fall back to current CLI command hints when a descriptor is missing,
   unsupported, or invalid.
+- Bound rendering work even for malformed descriptors. Plasma inspects at most
+  32 fields and 32 actions per provider, 64 options per field, and 64 command
+  tokens of at most 2048 characters each. Text field values are also capped at
+  2048 characters before binding them to a control.
 
 ## Plasma renderer rules
 

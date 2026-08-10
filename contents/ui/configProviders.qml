@@ -6,6 +6,7 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
 import "components" as Components
+import "SafeText.js" as SafeText
 import "ThemeContrast.js" as ThemeContrast
 
 KCM.SimpleKCM {
@@ -55,6 +56,12 @@ KCM.SimpleKCM {
     property var commands: ({})
     property int commandRunSerial: 0
     readonly property int configCommandTimeoutMs: 60000
+    readonly property int maximumDescriptorFields: 32
+    readonly property int maximumDescriptorActions: 32
+    readonly property int maximumDescriptorOptions: 64
+    readonly property int maximumDescriptorCommandTokens: 64
+    readonly property int maximumDescriptorTokenLength: 2048
+    readonly property int maximumDiagnosticListItems: 64
     property var providerDiagnostics: ({})
     property var providerDiagnosticErrors: ({})
     property var providerDiagnosticLoading: ({})
@@ -65,20 +72,26 @@ KCM.SimpleKCM {
     readonly property var selectedProvider: providerByID(selectedProviderID)
 
     Component.onCompleted: reload()
+    onCfg_commandPathChanged: Qt.callLater(reload)
 
     function reload(preserveMessages) {
+        disconnectCommandsByKind("list")
         if (commandPath.length === 0) {
             errorText = i18n("Set the codexbar command path in the General page.")
             providers = []
+            loading = false
             return
         }
-        disconnectCommandsByKind("list")
         loading = true
         errorText = ""
         if (preserveMessages !== true) {
             statusText = ""
         }
         runProviderListCommand(true)
+    }
+
+    function boundedCliMessage(value) {
+        return SafeText.cliMessage(value, SafeText.maximumCliMessageLength)
     }
 
     function runProviderListCommand(includeDescriptors) {
@@ -289,7 +302,7 @@ KCM.SimpleKCM {
         if (trimmed.length === 0) {
             providers = []
             errorText = stderrText.trim().length > 0
-                ? stderrText.trim()
+                ? boundedCliMessage(stderrText)
                 : i18n("codexbar did not return provider data.")
             return
         }
@@ -339,7 +352,7 @@ KCM.SimpleKCM {
     }
 
     function descriptorListUnsupportedMessage(stdoutText, stderrText) {
-        var stderrMessage = String(stderrText || "").trim()
+        var stderrMessage = boundedCliMessage(stderrText)
         if (isDescriptorUnsupportedMessage(stderrMessage)) {
             return stderrMessage
         }
@@ -388,7 +401,7 @@ KCM.SimpleKCM {
 
         var message = commandError(payload)
         if (message.length === 0 && stderrText.trim().length > 0) {
-            message = stderrText.trim()
+            message = boundedCliMessage(stderrText)
         }
         if (message.length === 0 && Number(exitCode) !== 0) {
             message = i18n("codexbar exited with code %1", Number(exitCode))
@@ -430,7 +443,7 @@ KCM.SimpleKCM {
 
         var message = commandError(payload)
         if (message.length === 0 && stderrText.trim().length > 0) {
-            message = stderrText.trim()
+            message = boundedCliMessage(stderrText)
         }
         if (message.length === 0 && Number(exitCode) !== 0) {
             message = i18n("codexbar exited with code %1", Number(exitCode))
@@ -495,6 +508,7 @@ KCM.SimpleKCM {
                 return
             }
         }
+        bumpProviderConfigRevision()
         errorText = ""
         statusText = i18n("%1 action completed", displayNameForProvider(descriptor.provider))
         page.reload(true)
@@ -516,7 +530,7 @@ KCM.SimpleKCM {
         }
         var message = commandError(payload)
         if (message.length === 0 && stderrText.trim().length > 0) {
-            message = stderrText.trim()
+            message = boundedCliMessage(stderrText)
         }
         if (message.length === 0 && Number(exitCode) !== 0) {
             message = i18n("codexbar exited with code %1", Number(exitCode))
@@ -524,7 +538,17 @@ KCM.SimpleKCM {
         if (message.length === 0 && trimmed.length === 0) {
             message = i18n("codexbar did not return command data.")
         }
-        if (message.length === 0 && payload && payload.cancelled === true) {
+        var status = payload && !Array.isArray(payload)
+            ? String(payload.status || "").trim().toLowerCase()
+            : ""
+        if (message.length === 0
+                && (status === "error" || status === "failed" || status === "failure")) {
+            message = payload.message
+                ? boundedCliMessage(payload.message)
+                : i18n("codexbar command failed.")
+        }
+        if (message.length === 0 && payload
+                && (payload.cancelled === true || status === "cancelled" || status === "canceled")) {
             return { value: payload, cancelled: true, errorMessage: "" }
         }
         return { value: payload, cancelled: false, errorMessage: message }
@@ -537,7 +561,7 @@ KCM.SimpleKCM {
         if (trimmed.length === 0) {
             setProviderDiagnosticError(
                 descriptor.provider,
-                stderrText.trim().length > 0 ? stderrText.trim() : i18n("codexbar did not return diagnostics."))
+                stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("codexbar did not return diagnostics."))
             return
         }
 
@@ -565,7 +589,7 @@ KCM.SimpleKCM {
         }
         var probe = Array.isArray(payload) ? (payload.length > 0 ? payload[0] : null) : payload
         if (probe && probe.error && probe.error.message) {
-            return String(probe.error.message)
+            return boundedCliMessage(probe.error.message)
         }
         return ""
     }
@@ -620,8 +644,9 @@ KCM.SimpleKCM {
             return
         }
         var next = copyObject(providerDiagnosticErrors)
-        if (message && message.length > 0) {
-            next[key] = message
+        var cleanMessage = boundedCliMessage(message)
+        if (cleanMessage.length > 0) {
+            next[key] = cleanMessage
         } else {
             delete next[key]
         }
@@ -652,15 +677,30 @@ KCM.SimpleKCM {
         var settings = item && item.settings ? item.settings : ({})
         var auth = item && item.auth ? item.auth : ({})
         return {
-            provider: item && item.provider ? String(item.provider) : "",
-            displayName: item && item.displayName ? String(item.displayName) : "",
-            source: item && item.source ? String(item.source) : "",
-            sourceMode: item && item.sourceMode ? String(item.sourceMode) : "",
+            provider: item && item.provider ? SafeText.boundedDisplayText(item.provider, 128) : "",
+            displayName: item && item.displayName ? SafeText.boundedDisplayText(item.displayName, 120) : "",
+            source: item && item.source ? SafeText.boundedDisplayText(item.source, 120) : "",
+            sourceMode: item && item.sourceMode ? SafeText.boundedDisplayText(item.sourceMode, 120) : "",
             authConfigured: auth.configured === true,
-            authModes: Array.isArray(auth.modes) ? auth.modes.join(", ") : "",
-            settingsKeys: objectKeys(settings).join(", "),
+            authModes: boundedDiagnosticList(auth.modes),
+            settingsKeys: boundedDiagnosticList(objectKeys(settings)),
             fetchAttempts: item && Array.isArray(item.fetchAttempts) ? item.fetchAttempts.length : 0
         }
+    }
+
+    function boundedDiagnosticList(items) {
+        if (!Array.isArray(items)) {
+            return ""
+        }
+        var result = []
+        var limit = Math.min(items.length, maximumDiagnosticListItems)
+        for (var i = 0; i < limit; i++) {
+            var value = SafeText.boundedDisplayText(items[i], 120)
+            if (value.length > 0) {
+                result.push(value)
+            }
+        }
+        return SafeText.boundedDisplayText(result.join(", "), 500)
     }
 
     function updateProviderEnabled(providerID, enabled) {
@@ -878,7 +918,8 @@ KCM.SimpleKCM {
         }
         var fields = []
         var rawFields = Array.isArray(raw.fields) ? raw.fields : []
-        for (var i = 0; i < rawFields.length; i++) {
+        var fieldLimit = Math.min(rawFields.length, maximumDescriptorFields)
+        for (var i = 0; i < fieldLimit; i++) {
             var field = normalizeDescriptorField(rawFields[i])
             if (field) {
                 fields.push(field)
@@ -886,7 +927,8 @@ KCM.SimpleKCM {
         }
         var actions = []
         var rawActions = Array.isArray(raw.actions) ? raw.actions : []
-        for (var j = 0; j < rawActions.length; j++) {
+        var actionLimit = Math.min(rawActions.length, maximumDescriptorActions)
+        for (var j = 0; j < actionLimit; j++) {
             var action = normalizeDescriptorAction(rawActions[j])
             if (action) {
                 actions.push(action)
@@ -899,17 +941,30 @@ KCM.SimpleKCM {
         if (!raw || !raw.id || !raw.kind || !isSupportedDescriptorFieldKind(raw.kind)) {
             return null
         }
+        var fieldID = SafeText.boundedDisplayText(raw.id, 128)
+        if (fieldID.length === 0) {
+            return null
+        }
         var command = normalizeCommandTokens(raw.writeCommand)
         if (command.length === 0 || !isAllowedDescriptorCommand(command, "field")) {
             return null
         }
+        var value = raw.value
+        if (value !== undefined && value !== null
+                && typeof value !== "string"
+                && typeof value !== "number"
+                && typeof value !== "boolean") {
+            value = ""
+        } else if (typeof value === "string") {
+            value = value.slice(0, maximumDescriptorTokenLength)
+        }
         return {
-            id: String(raw.id),
+            id: fieldID,
             kind: String(raw.kind),
-            title: raw.title ? String(raw.title) : providerTitle(raw.id),
-            description: raw.description ? String(raw.description) : "",
-            value: raw.value === undefined || raw.value === null ? "" : raw.value,
-            redactedValue: raw.redactedValue ? String(raw.redactedValue) : "",
+            title: raw.title ? SafeText.boundedDisplayText(raw.title, 120) : providerTitle(fieldID),
+            description: raw.description ? SafeText.boundedDisplayText(raw.description, 500) : "",
+            value: value === undefined || value === null ? "" : value,
+            redactedValue: raw.redactedValue ? boundedCliMessage(raw.redactedValue) : "",
             required: raw.required === true,
             options: normalizeDescriptorOptions(raw.options),
             writeCommand: command
@@ -920,15 +975,20 @@ KCM.SimpleKCM {
         if (!raw || !raw.id || !raw.title) {
             return null
         }
+        var actionID = SafeText.boundedDisplayText(raw.id, 128)
+        var actionTitle = SafeText.boundedDisplayText(raw.title, 120)
+        if (actionID.length === 0 || actionTitle.length === 0) {
+            return null
+        }
         var command = normalizeCommandTokens(raw.command)
         if (command.length === 0 || !isAllowedDescriptorCommand(command, "action")) {
             return null
         }
         return {
-            id: String(raw.id),
+            id: actionID,
             kind: raw.kind ? String(raw.kind) : "command",
-            title: String(raw.title),
-            description: raw.description ? String(raw.description) : "",
+            title: actionTitle,
+            description: raw.description ? SafeText.boundedDisplayText(raw.description, 500) : "",
             command: command
         }
     }
@@ -951,14 +1011,19 @@ KCM.SimpleKCM {
         if (!Array.isArray(rawOptions)) {
             return result
         }
-        for (var i = 0; i < rawOptions.length; i++) {
+        var optionLimit = Math.min(rawOptions.length, maximumDescriptorOptions)
+        for (var i = 0; i < optionLimit; i++) {
             var option = rawOptions[i]
             if (!option || option.id === undefined || option.id === null) {
                 continue
             }
+            var optionID = SafeText.boundedDisplayText(option.id, 128)
+            if (optionID.length === 0) {
+                continue
+            }
             result.push({
-                id: String(option.id),
-                title: option.title ? String(option.title) : String(option.id)
+                id: optionID,
+                title: option.title ? SafeText.boundedDisplayText(option.title, 120) : optionID
             })
         }
         return result
@@ -969,11 +1034,18 @@ KCM.SimpleKCM {
         if (!Array.isArray(tokens)) {
             return result
         }
+        if (tokens.length > maximumDescriptorCommandTokens) {
+            return result
+        }
         for (var i = 0; i < tokens.length; i++) {
-            var token = String(tokens[i])
-            if (token.length > 0) {
-                result.push(token)
+            if (typeof tokens[i] !== "string") {
+                return []
             }
+            var token = tokens[i]
+            if (token.length === 0 || token.length > maximumDescriptorTokenLength) {
+                return []
+            }
+            result.push(token)
         }
         return result
     }
@@ -1859,7 +1931,13 @@ KCM.SimpleKCM {
             return keys
         }
         for (var key in item) {
+            if (!hasOwnKey(item, key)) {
+                continue
+            }
             keys.push(key)
+            if (keys.length >= maximumDiagnosticListItems) {
+                break
+            }
         }
         keys.sort()
         return keys

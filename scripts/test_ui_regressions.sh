@@ -367,7 +367,7 @@ if "codexbar cost did not return JSON." not in parse_cost_body:
 for cost_error_fragment in (
     'var costMessage = ""',
     "item.error && item.error.message",
-    'costErrorText = costCount === 0 ? costMessage : ""',
+    "costErrorText = costMessage",
 ):
     if cost_error_fragment not in parse_cost_body:
         raise AssertionError(
@@ -448,6 +448,14 @@ if "checked = Qt.binding(function()" not in provider_accounts_panel_text:
     raise AssertionError("account buttons must restore their checked binding after clicks")
 if "accountIsSelected(modelData, accountsPanel.providerData)" not in provider_accounts_panel_text:
     raise AssertionError("restored account bindings must follow the selected account state")
+
+parse_accounts_body = function_body(main_text, "parseProviderAccountsOutput")
+if "setAccountOptions(providerID, [])" in parse_accounts_body:
+    raise AssertionError("transient account errors must preserve the last healthy account options")
+
+parse_cost_body = function_body(main_text, "parseCostOutput")
+if "tokenCosts = ({})" in parse_cost_body:
+    raise AssertionError("transient cost errors must preserve the last healthy cost snapshot")
 
 if 'String(modelData.value || "")' in providers_text:
     raise AssertionError("descriptor text fields must preserve numeric zero")
@@ -1199,10 +1207,34 @@ normalize_provider_body = function_body(main_text, "normalizeProvider")
 for bounded_provider_fragment in (
     "title: boundedDisplayText(",
     "status: boundedDisplayText(",
-    "error: boundedDisplayText(",
+    "error: boundedCliMessage(",
 ):
     if bounded_provider_fragment not in normalize_provider_body:
         raise AssertionError("new provider display surfaces must use bounded normalized text")
+for extra_window_fragment in (
+    "Array.isArray(usage.extraRateWindows)",
+    "Math.min(extras.length, maximumExtraRateWindows)",
+):
+    if extra_window_fragment not in normalize_provider_body:
+        raise AssertionError(
+            "extra rate windows must reject pseudo-arrays and cap delegate work; "
+            f"missing {extra_window_fragment!r}"
+        )
+
+if "onCfg_commandPathChanged: Qt.callLater(reload)" not in providers_text:
+    raise AssertionError("the Providers page must reload when the configured CLI path changes")
+
+descriptor_action_result_body = function_body(providers_text, "handleDescriptorActionResult")
+if "bumpProviderConfigRevision()" not in descriptor_action_result_body:
+    raise AssertionError("successful descriptor actions must invalidate the main applet snapshot")
+
+parse_command_payload_body = function_body(providers_text, "parseCommandPayload")
+for action_status_fragment in ('status === "error"', "payload.message"):
+    if action_status_fragment not in parse_command_payload_body:
+        raise AssertionError(
+            "descriptor command payloads must honor structured error status/message; "
+            f"missing {action_status_fragment!r}"
+        )
 
 tooltip_body = function_body(main_text, "panelToolTipText")
 if "boundedDisplayText(errorText" not in tooltip_body:

@@ -75,6 +75,19 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Verify release tag matches metadata
+        shell: bash
+        run: |
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "release tag must use vX.Y.Z: $GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+          metadata_version="$(jq -r '.KPlugin.Version // empty' metadata.json)"
+          if [[ -z "$metadata_version" || "v${metadata_version}" != "$GITHUB_REF_NAME" ]]; then
+            echo "release tag $GITHUB_REF_NAME does not match metadata version $metadata_version" >&2
+            exit 1
+          fi
+
       - name: make check
         # This image ships qmllint but not the Plasma/Kirigami QML modules, so
         # downgrade the type/import-resolution categories qmllint can't satisfy

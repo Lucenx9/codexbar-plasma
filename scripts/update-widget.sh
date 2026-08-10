@@ -215,6 +215,6 @@ fi
 ) || fail "release checksum verification failed"
 timeout --kill-after="${KPACKAGE_INSTALL_KILL_AFTER_SECONDS}s" \
   "${KPACKAGE_INSTALL_MAX_TIME_SECONDS}s" \
-  kpackagetool6 -t Plasma/Applet -u "$package_path" || fail "failed to install widget package"
+  kpackagetool6 -t Plasma/Applet -u "$package_path" >&2 || fail "failed to install widget package"
 
 emit_status "installed" "widget update installed; restart Plasma to apply the update" "$local_version" "$remote_version" "$asset_url"

@@ -35,7 +35,7 @@ require_in_file "$QML" "id: usageCommandTimeoutTimer"
 require_in_file "$QML" "root.expireUsageCommands(Date.now())"
 require_in_file "$QML" "id: usageRefreshTimer"
 require_in_file "$QML" "running: root.refreshIntervalSec > 0"
-require_in_file "$QML" "onTriggered: root.refreshNow()"
+require_in_file "$QML" "if (!root.hasPendingUsageCommandTimeouts())"
 require_in_file "$QML" "interval: 0"
 require_in_file "$QML" "root.finishUsageCommandSource(sourceName)"
 require_in_file "$QML" "delete commands[sourceName]"
@@ -102,13 +102,35 @@ if "finishUsageCommandSource(" not in retire_body:
     raise AssertionError("retiring active usage sources must disconnect them immediately")
 
 load_accounts_body = function_body(main_text, "loadAccounts")
-for fragment in ("providerID: normalizedProviderID", "deadlineMs: Date.now() + accountCommandTimeoutMs"):
+for fragment in (
+    "providerID: normalizedProviderID",
+    "commandSignature: command",
+    "deadlineMs: Date.now() + accountCommandTimeoutMs",
+):
     if fragment not in load_accounts_body:
         raise AssertionError(f"loadAccounts must store one timeout descriptor: {fragment}")
 
 parse_accounts_body = function_body(main_text, "parseProviderAccountsOutput")
-if "descriptor.providerID" not in parse_accounts_body or "delete commands[sourceName]" not in parse_accounts_body:
-    raise AssertionError("normal account completion must consume its pending descriptor")
+for fragment in (
+    "descriptor.providerID",
+    "delete commands[sourceName]",
+    "accountCommandIsCurrent(descriptor)",
+):
+    if fragment not in parse_accounts_body:
+        raise AssertionError(f"normal account completion must reject stale context: {fragment}")
+
+retire_stale_accounts_body = function_body(main_text, "retireStaleAccountCommands")
+for fragment in (
+    "accountCommandIsCurrent(descriptor)",
+    "finishUsageCommandSource(sourceName)",
+    "setAccountLoading(staleProviderID, false)",
+):
+    if fragment not in retire_stale_accounts_body:
+        raise AssertionError(f"stale account cleanup is incomplete: {fragment}")
+
+refresh_body = function_body(main_text, "refreshNow")
+if "retireStaleAccountCommands()" not in refresh_body:
+    raise AssertionError("refreshNow must retire account commands from an obsolete CLI context")
 
 expire_accounts_body = function_body(main_text, "expirePendingAccountCommands")
 for fragment in (
@@ -137,6 +159,16 @@ for fragment in (
 ):
     if fragment not in usage_timeout_body:
         raise AssertionError(f"usage timeout cleanup is incomplete: {fragment}")
+
+refresh_timer_start = main_text.index("id: usageRefreshTimer")
+refresh_timer_end = main_text.index("\n    Timer {", refresh_timer_start + 1)
+refresh_timer_body = main_text[refresh_timer_start:refresh_timer_end]
+for fragment in ("root.hasPendingUsageCommandTimeouts()", "root.refreshNow()"):
+    if fragment not in refresh_timer_body:
+        raise AssertionError(
+            "periodic refreshes must not starve active command deadlines; "
+            f"missing {fragment}"
+        )
 
 run_command_body = function_body(providers_text, "runCommand")
 for fragment in ("nextDescriptor.timeoutMs", "nextDescriptor.deadlineMs"):

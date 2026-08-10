@@ -43,6 +43,7 @@ QML_SOURCES=(
   contents/ui/configDisplay.qml
   contents/ui/configGeneral.qml
   contents/ui/configProviders.qml
+  contents/ui/SafeText.js
   contents/ui/ThemeContrast.js
   contents/ui/UsageDetails.js
   contents/ui/UpdateLogic.js
@@ -102,4 +103,10 @@ if [[ "$MODE" == "check" ]]; then
   exit 0
 fi
 
-generate_catalog "$OUTPUT_PATH"
+output_dir="$(dirname "$OUTPUT_PATH")"
+mkdir -p "$output_dir"
+tmp="$(mktemp "${OUTPUT_PATH}.tmp.XXXXXX")"
+trap 'rm -f "$tmp"' EXIT
+generate_catalog "$tmp"
+mv -f "$tmp" "$OUTPUT_PATH"
+trap - EXIT

@@ -7,6 +7,7 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
 import "components" as Components
+import "SafeText.js" as SafeText
 import "ThemeContrast.js" as ThemeContrast
 import "UsageDetails.js" as UsageDetails
 import "UpdateLogic.js" as UpdateLogic
@@ -67,6 +68,7 @@ PlasmoidItem {
     property int commandRunSerial: 0
     property var activeUsageCommands: ({})
     readonly property int usageCommandTimeoutMs: 120000
+    readonly property int maximumExtraRateWindows: 24
     property var pendingProviderCommands: ({})
     property var fallbackProviderOrder: []
     property var fallbackProviderResults: ({})
@@ -332,15 +334,15 @@ PlasmoidItem {
             limit = 500
         }
         limit = Math.min(2000, Math.floor(limit))
-        var text = String(value || "")
-            .replace(/[\u0000-\u001f\u007f]/g, " ")
-            .replace(/\s+/g, " ")
-            .trim()
-        return text.length > limit ? text.slice(0, limit) : text
+        return SafeText.boundedDisplayText(value, limit)
     }
 
     function boundedWidgetUpdateText(value) {
         return boundedDisplayText(value, 500)
+    }
+
+    function boundedCliMessage(value) {
+        return SafeText.cliMessage(value, SafeText.maximumCliMessageLength)
     }
 
     function hasOwnKey(item, key) {
@@ -402,6 +404,7 @@ PlasmoidItem {
 
     function refreshNow() {
         retireUsageCommands()
+        retireStaleAccountCommands()
         refreshCost()
         providerFallbackActive = false
 
@@ -488,7 +491,7 @@ PlasmoidItem {
                 return
             }
             providers = []
-            errorText = stderrText.trim().length > 0 ? stderrText.trim() : i18n("codexbar did not return JSON.")
+            errorText = stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("codexbar did not return JSON.")
             loading = false
             return
         }
@@ -513,7 +516,7 @@ PlasmoidItem {
 
         markNotificationProvidersFresh(nextProviders)
         providers = nextProviders
-        errorText = nextProviders.length === 0 ? stderrText.trim() : ""
+        errorText = nextProviders.length === 0 ? boundedCliMessage(stderrText) : ""
         lastUpdatedText = i18n("Updated %1", Qt.formatDateTime(new Date(), "hh:mm"))
         loading = false
     }
@@ -560,7 +563,7 @@ PlasmoidItem {
         var trimmed = stdoutText.trim()
         if (trimmed.length === 0) {
             providers = []
-            errorText = stderrText.trim().length > 0 ? stderrText.trim() : i18n("Could not load CodexBar provider configuration.")
+            errorText = stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("Could not load CodexBar provider configuration.")
             loading = false
             return
         }
@@ -663,7 +666,7 @@ PlasmoidItem {
         if (trimmed.length === 0) {
             normalizedItems.push(normalizeProvider(providerErrorPayload(
                 providerID,
-                stderrText.trim().length > 0 ? stderrText.trim() : i18n("codexbar did not return JSON."))))
+                stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("codexbar did not return JSON."))))
         } else {
             var payload
             try {
@@ -744,6 +747,7 @@ PlasmoidItem {
         var commands = copyObject(pendingAccountCommands)
         commands[connectedCommand] = {
             providerID: normalizedProviderID,
+            commandSignature: command,
             deadlineMs: Date.now() + accountCommandTimeoutMs
         }
         pendingAccountCommands = commands
@@ -752,6 +756,37 @@ PlasmoidItem {
             providerID: normalizedProviderID,
             deadlineMs: 0
         })
+    }
+
+    function accountCommandIsCurrent(descriptor) {
+        return descriptor
+            && descriptor.commandSignature === buildProviderAccountsCommand(descriptor.providerID)
+    }
+
+    function retireStaleAccountCommands() {
+        var commands = copyObject(pendingAccountCommands)
+        var staleProviders = ({})
+        for (var sourceName in commands) {
+            if (!hasOwnKey(commands, sourceName)) {
+                continue
+            }
+            var descriptor = commands[sourceName]
+            if (accountCommandIsCurrent(descriptor)) {
+                continue
+            }
+            var providerID = descriptor ? providerMapKey(descriptor.providerID) : ""
+            finishUsageCommandSource(sourceName)
+            delete commands[sourceName]
+            if (providerID.length > 0) {
+                staleProviders[providerID] = true
+            }
+        }
+        pendingAccountCommands = commands
+        for (var staleProviderID in staleProviders) {
+            if (hasOwnKey(staleProviders, staleProviderID)) {
+                setAccountLoading(staleProviderID, false)
+            }
+        }
     }
 
     function hasPendingUsageCommandTimeouts() {
@@ -884,11 +919,13 @@ PlasmoidItem {
         pendingAccountCommands = commands
         finishUsageCommandSource(sourceName)
         setAccountLoading(providerID, false)
+        if (!accountCommandIsCurrent(descriptor)) {
+            return
+        }
 
         var trimmed = stdoutText.trim()
         if (trimmed.length === 0) {
-            setAccountOptions(providerID, [])
-            setAccountError(providerID, stderrText.trim().length > 0 ? stderrText.trim() : i18n("codexbar did not return account data."))
+            setAccountError(providerID, stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("codexbar did not return account data."))
             return
         }
 
@@ -896,7 +933,6 @@ PlasmoidItem {
         try {
             payload = JSON.parse(trimmed)
         } catch (error) {
-            setAccountOptions(providerID, [])
             setAccountError(providerID, i18n("Could not parse codexbar account JSON: %1", error.message))
             return
         }
@@ -963,8 +999,7 @@ PlasmoidItem {
     function parseCostOutput(stdoutText, stderrText) {
         var trimmed = stdoutText.trim()
         if (trimmed.length === 0) {
-            tokenCosts = ({})
-            costErrorText = stderrText.trim().length > 0 ? stderrText.trim() : i18n("codexbar cost did not return JSON.")
+            costErrorText = stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("codexbar cost did not return JSON.")
             applyTokenCosts()
             return
         }
@@ -973,7 +1008,6 @@ PlasmoidItem {
         try {
             payload = JSON.parse(trimmed)
         } catch (error) {
-            tokenCosts = ({})
             costErrorText = i18n("Could not parse codexbar cost JSON: %1", error.message)
             applyTokenCosts()
             return
@@ -982,22 +1016,31 @@ PlasmoidItem {
         var items = Array.isArray(payload) ? payload : [payload]
         var nextCosts = ({})
         var costMessage = ""
-        var costCount = 0
         for (var i = 0; i < items.length; i++) {
             var item = items[i]
             if (costMessage.length === 0 && item && item.error && item.error.message) {
-                costMessage = String(item.error.message).trim()
+                costMessage = boundedCliMessage(item.error.message)
             }
             var cost = normalizeTokenCost(item)
             var providerID = cost ? providerMapKey(cost.provider) : ""
             if (cost && providerID.length > 0) {
                 nextCosts[providerID] = cost
-                costCount++
             }
         }
 
-        tokenCosts = nextCosts
-        costErrorText = costCount === 0 ? costMessage : ""
+        if (costMessage.length > 0) {
+            var mergedCosts = copyObject(tokenCosts)
+            for (var providerKeyName in nextCosts) {
+                if (hasOwnKey(nextCosts, providerKeyName)) {
+                    mergedCosts[providerKeyName] = nextCosts[providerKeyName]
+                }
+            }
+            tokenCosts = mergedCosts
+            costErrorText = costMessage
+        } else {
+            tokenCosts = nextCosts
+            costErrorText = ""
+        }
         applyTokenCosts()
     }
 
@@ -1640,8 +1683,9 @@ PlasmoidItem {
         if (key.length === 0) {
             return
         }
-        if (message && String(message).trim().length > 0) {
-            next[key] = String(message).trim()
+        var cleanMessage = boundedCliMessage(message)
+        if (cleanMessage.length > 0) {
+            next[key] = cleanMessage
         } else {
             delete next[key]
         }
@@ -1757,8 +1801,9 @@ PlasmoidItem {
         addWindow(rows, rateWindowLabel(providerID, "secondary"), usage.secondary, pace.secondary, true, "secondary")
         addWindow(rows, rateWindowLabel(providerID, "tertiary"), usage.tertiary, null, true, "tertiary")
 
-        var extras = usage.extraRateWindows || []
-        for (var i = 0; i < extras.length; i++) {
+        var extras = Array.isArray(usage.extraRateWindows) ? usage.extraRateWindows : []
+        var extraLimit = Math.min(extras.length, maximumExtraRateWindows)
+        for (var i = 0; i < extraLimit; i++) {
             var extra = extras[i]
             if (extra && extra.window) {
                 addWindow(rows, extra.title || extra.id || i18n("Extra"), extra.window, null, extra.usageKnown !== false, "extra")
@@ -1802,7 +1847,7 @@ PlasmoidItem {
             statusSeverity: severity,
             statusIncidentKey: statusIncidentKey(status),
             hasIncident: severity.length > 0,
-            error: boundedDisplayText(error && error.message ? error.message : "", 500),
+            error: boundedCliMessage(error && error.message ? error.message : ""),
             placeholder: placeholder,
             updatedAt: usage.updatedAt || (credits ? credits.updatedAt : "")
         }
@@ -2681,7 +2726,7 @@ PlasmoidItem {
         if (trimmed.length === 0) {
             setWidgetUpdateState(
                 i18n("Widget update check failed."),
-                stderrText.trim().length > 0 ? stderrText.trim() : i18n("Widget update check returned no data."))
+                stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("Widget update check returned no data."))
             return
         }
 
@@ -2700,7 +2745,7 @@ PlasmoidItem {
 
     function processUpdateCheck(payload) {
         var status = String(payload && payload.status ? payload.status : "")
-        var message = String(payload && payload.message ? payload.message : "")
+        var message = boundedCliMessage(payload && payload.message ? payload.message : "")
         var version = String(payload && payload.remoteVersion ? payload.remoteVersion : "")
         var url = String(payload && payload.assetUrl ? payload.assetUrl : "")
 
@@ -4218,7 +4263,11 @@ PlasmoidItem {
         repeat: true
         running: root.refreshIntervalSec > 0
         triggeredOnStart: false
-        onTriggered: root.refreshNow()
+        onTriggered: {
+            if (!root.hasPendingUsageCommandTimeouts()) {
+                root.refreshNow()
+            }
+        }
     }
 
     Timer {
