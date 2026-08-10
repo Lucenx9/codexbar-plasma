@@ -118,6 +118,11 @@ Enum fields include `options`:
 The CLI must validate `{value}`. Plasma must not infer valid enum values from
 provider names or config files.
 
+Field, action, and option IDs are machine identifiers. They must match
+`[A-Za-z0-9][A-Za-z0-9._-]*` and be no longer than 128 characters. Consumers
+reject invalid IDs instead of trimming, truncating, or otherwise rewriting
+them.
+
 ## Actions
 
 Actions are provider setup flows the CLI knows how to perform.
@@ -193,8 +198,8 @@ Rules for Plasma:
   unsupported, or invalid.
 - Bound rendering work even for malformed descriptors. Plasma inspects at most
   32 fields and 32 actions per provider, 64 options per field, and 64 command
-  tokens of at most 2048 characters each. Text field values are also capped at
-  2048 characters before binding them to a control.
+  tokens of at most 2048 characters each. Fields with text values longer than
+  2048 characters are ignored instead of binding or rewriting the value.
 
 ## Plasma renderer rules
 

@@ -970,7 +970,9 @@ PlasmoidItem {
                 accountError = i18n("codexbar did not return account data.")
             }
         }
-        setAccountOptions(providerID, dedupedOptions)
+        if (accountError.length === 0) {
+            setAccountOptions(providerID, dedupedOptions)
+        }
         setAccountError(providerID, accountError)
     }
 

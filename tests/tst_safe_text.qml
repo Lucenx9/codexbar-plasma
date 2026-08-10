@@ -21,6 +21,20 @@ TestCase {
         verify(message.indexOf("[redacted]") !== -1)
     }
 
+    function test_redactsQuotedAndJsonCredentialShapes() {
+        var message = SafeText.cliDiagnostic(
+            "Authorization: \"Bearer header.payload.signature\"\n"
+                + "Cookie: \"session=abc\"\n"
+                + '{"apiKey":"sk-secretvalue","accessToken":"secret-token"}',
+            500)
+
+        verify(message.indexOf("header.payload.signature") === -1)
+        verify(message.indexOf("session=abc") === -1)
+        verify(message.indexOf("sk-secretvalue") === -1)
+        verify(message.indexOf("secret-token") === -1)
+        compare(message.match(/\[redacted\]/g).length, 4)
+    }
+
     function test_preservesDiagnosticLinesWhileBoundingAndRedacting() {
         var diagnostic = SafeText.cliDiagnostic("line one\nBearer secret-token\nline three", 32)
 

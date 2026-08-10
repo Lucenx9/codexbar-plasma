@@ -72,7 +72,16 @@ KCM.SimpleKCM {
     readonly property var selectedProvider: providerByID(selectedProviderID)
 
     Component.onCompleted: reload()
-    onCfg_commandPathChanged: Qt.callLater(reload)
+    onCfg_commandPathChanged: handleCommandPathChanged()
+
+    function handleCommandPathChanged() {
+        retireAllConfigCommands()
+        providers = []
+        providerDiagnostics = ({})
+        providerDiagnosticErrors = ({})
+        selectedProviderID = ""
+        Qt.callLater(reload)
+    }
 
     function reload(preserveMessages) {
         disconnectCommandsByKind("list")
@@ -203,9 +212,24 @@ KCM.SimpleKCM {
         commands = remaining
     }
 
+    function retireAllConfigCommands() {
+        for (var sourceName in commands) {
+            if (hasOwnKey(commands, sourceName)) {
+                configSource.disconnectSource(sourceName)
+            }
+        }
+        commands = ({})
+        pending = ({})
+        pendingDesired = ({})
+        providerFieldPending = ({})
+        providerDiagnosticLoading = ({})
+        loading = false
+    }
+
     function runCommand(command, descriptor) {
         var sourceName = commandWithRunNonce(command)
         var nextDescriptor = copyObject(descriptor)
+        nextDescriptor.commandPathSignature = commandPath
         var timeoutMs = Number(nextDescriptor.timeoutMs)
         if (isFinite(timeoutMs) && timeoutMs > 0) {
             nextDescriptor.deadlineMs = Date.now() + timeoutMs
@@ -276,6 +300,9 @@ KCM.SimpleKCM {
         var withoutCommand = copyObject(commands)
         delete withoutCommand[sourceName]
         commands = withoutCommand
+        if (descriptor.commandPathSignature !== commandPath) {
+            return
+        }
 
         if (descriptor.kind === "list") {
             handleListResult(descriptor, stdoutText, stderrText)
@@ -677,10 +704,10 @@ KCM.SimpleKCM {
         var settings = item && item.settings ? item.settings : ({})
         var auth = item && item.auth ? item.auth : ({})
         return {
-            provider: item && item.provider ? SafeText.boundedDisplayText(item.provider, 128) : "",
-            displayName: item && item.displayName ? SafeText.boundedDisplayText(item.displayName, 120) : "",
-            source: item && item.source ? SafeText.boundedDisplayText(item.source, 120) : "",
-            sourceMode: item && item.sourceMode ? SafeText.boundedDisplayText(item.sourceMode, 120) : "",
+            provider: item && item.provider ? SafeText.cliMessage(item.provider, 128) : "",
+            displayName: item && item.displayName ? SafeText.cliMessage(item.displayName, 120) : "",
+            source: item && item.source ? SafeText.cliMessage(item.source, 120) : "",
+            sourceMode: item && item.sourceMode ? SafeText.cliMessage(item.sourceMode, 120) : "",
             authConfigured: auth.configured === true,
             authModes: boundedDiagnosticList(auth.modes),
             settingsKeys: boundedDiagnosticList(objectKeys(settings)),
@@ -695,7 +722,7 @@ KCM.SimpleKCM {
         var result = []
         var limit = Math.min(items.length, maximumDiagnosticListItems)
         for (var i = 0; i < limit; i++) {
-            var value = SafeText.boundedDisplayText(items[i], 120)
+            var value = SafeText.cliMessage(items[i], 120)
             if (value.length > 0) {
                 result.push(value)
             }
@@ -941,7 +968,7 @@ KCM.SimpleKCM {
         if (!raw || !raw.id || !raw.kind || !isSupportedDescriptorFieldKind(raw.kind)) {
             return null
         }
-        var fieldID = SafeText.boundedDisplayText(raw.id, 128)
+        var fieldID = descriptorIdentifier(raw.id)
         if (fieldID.length === 0) {
             return null
         }
@@ -955,8 +982,8 @@ KCM.SimpleKCM {
                 && typeof value !== "number"
                 && typeof value !== "boolean") {
             value = ""
-        } else if (typeof value === "string") {
-            value = value.slice(0, maximumDescriptorTokenLength)
+        } else if (typeof value === "string" && value.length > maximumDescriptorTokenLength) {
+            return null
         }
         return {
             id: fieldID,
@@ -975,7 +1002,7 @@ KCM.SimpleKCM {
         if (!raw || !raw.id || !raw.title) {
             return null
         }
-        var actionID = SafeText.boundedDisplayText(raw.id, 128)
+        var actionID = descriptorIdentifier(raw.id)
         var actionTitle = SafeText.boundedDisplayText(raw.title, 120)
         if (actionID.length === 0 || actionTitle.length === 0) {
             return null
@@ -1006,6 +1033,13 @@ KCM.SimpleKCM {
         }
     }
 
+    function descriptorIdentifier(value) {
+        if (typeof value !== "string" || value.length === 0 || value.length > 128) {
+            return ""
+        }
+        return /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(value) ? value : ""
+    }
+
     function normalizeDescriptorOptions(rawOptions) {
         var result = []
         if (!Array.isArray(rawOptions)) {
@@ -1017,7 +1051,7 @@ KCM.SimpleKCM {
             if (!option || option.id === undefined || option.id === null) {
                 continue
             }
-            var optionID = SafeText.boundedDisplayText(option.id, 128)
+            var optionID = descriptorIdentifier(option.id)
             if (optionID.length === 0) {
                 continue
             }

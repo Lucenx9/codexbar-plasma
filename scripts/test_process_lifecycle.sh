@@ -49,6 +49,7 @@ require_in_file "$QML" "interval: root.providerConfigWatchIntervalMs"
 require_in_file "$PROVIDERS_QML" "readonly property int configCommandTimeoutMs: 60000"
 require_in_file "$PROVIDERS_QML" "id: configCommandTimeoutTimer"
 require_in_file "$PROVIDERS_QML" "page.expireConfigCommands(Date.now())"
+require_in_file "$PROVIDERS_QML" "onCfg_commandPathChanged: handleCommandPathChanged()"
 
 require_in_file "$DISPLAY_QML" "readonly property int overviewProviderCommandTimeoutMs: 60000"
 require_in_file "$DISPLAY_QML" "function commandWithRunNonce(command)"
@@ -171,9 +172,29 @@ for fragment in ("root.hasPendingUsageCommandTimeouts()", "root.refreshNow()"):
         )
 
 run_command_body = function_body(providers_text, "runCommand")
-for fragment in ("nextDescriptor.timeoutMs", "nextDescriptor.deadlineMs"):
+for fragment in ("nextDescriptor.timeoutMs", "nextDescriptor.deadlineMs", "nextDescriptor.commandPathSignature = commandPath"):
     if fragment not in run_command_body:
         raise AssertionError(f"runCommand must honor explicit command timeouts: {fragment}")
+
+path_change_body = function_body(providers_text, "handleCommandPathChanged")
+for fragment in ("retireAllConfigCommands()", "providers = []", "Qt.callLater(reload)"):
+    if fragment not in path_change_body:
+        raise AssertionError(f"changing the CLI path must retire stale page state: {fragment}")
+
+retire_config_body = function_body(providers_text, "retireAllConfigCommands")
+for fragment in (
+    "configSource.disconnectSource(sourceName)",
+    "commands = ({})",
+    "pending = ({})",
+    "providerFieldPending = ({})",
+    "providerDiagnosticLoading = ({})",
+):
+    if fragment not in retire_config_body:
+        raise AssertionError(f"config command retirement is incomplete: {fragment}")
+
+handle_config_data_body = function_body(providers_text, "handleData")
+if "descriptor.commandPathSignature !== commandPath" not in handle_config_data_body:
+    raise AssertionError("config command results must reject a stale CLI path")
 
 for function_name in ("runProviderListCommand", "setEnabled", "loadProviderSettings", "writeDescriptorField", "runDescriptorAction"):
     body = function_body(providers_text, function_name)

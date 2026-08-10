@@ -452,6 +452,10 @@ if "accountIsSelected(modelData, accountsPanel.providerData)" not in provider_ac
 parse_accounts_body = function_body(main_text, "parseProviderAccountsOutput")
 if "setAccountOptions(providerID, [])" in parse_accounts_body:
     raise AssertionError("transient account errors must preserve the last healthy account options")
+replace_options_index = parse_accounts_body.find("setAccountOptions(providerID, dedupedOptions)")
+no_error_guard_index = parse_accounts_body.rfind("if (accountError.length === 0)", 0, replace_options_index)
+if replace_options_index < 0 or no_error_guard_index < 0:
+    raise AssertionError("structured account errors must not replace the last healthy options")
 
 parse_cost_body = function_body(main_text, "parseCostOutput")
 if "tokenCosts = ({})" in parse_cost_body:
@@ -1221,7 +1225,7 @@ for extra_window_fragment in (
             f"missing {extra_window_fragment!r}"
         )
 
-if "onCfg_commandPathChanged: Qt.callLater(reload)" not in providers_text:
+if "onCfg_commandPathChanged: handleCommandPathChanged()" not in providers_text:
     raise AssertionError("the Providers page must reload when the configured CLI path changes")
 
 descriptor_action_result_body = function_body(providers_text, "handleDescriptorActionResult")
