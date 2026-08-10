@@ -49,7 +49,7 @@ ColumnLayout {
 
         visible: usageRow.rowData.hasPercent
         Layout.fillWidth: true
-        Layout.preferredHeight: 7
+        Layout.preferredHeight: usageRow.applet.meterTrackHeight
         radius: height / 2
         color: usageRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
         clip: true
@@ -114,7 +114,7 @@ ColumnLayout {
             visible: usageRow.rowData.pace.length > 0
             text: usageRow.rowData.pace
             font: Kirigami.Theme.smallFont
-            opacity: 0.62
+            opacity: usageRow.applet.secondaryTextOpacity
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
         }
@@ -125,7 +125,7 @@ ColumnLayout {
             visible: usageRow.resetText.length > 0
             text: usageRow.resetText
             font: Kirigami.Theme.smallFont
-            opacity: 0.66
+            opacity: usageRow.applet.secondaryTextOpacity
             horizontalAlignment: Text.AlignRight
             elide: Text.ElideRight
             Layout.maximumWidth: Kirigami.Units.gridUnit * 14

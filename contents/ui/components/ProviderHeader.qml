@@ -80,7 +80,7 @@ RowLayout {
                         ? providerHeaderRow.applet.statusBadgeText(providerHeaderRow.providerData.statusSeverity)
                         : ""
                     color: providerHeaderRow.applet.contrastTextColor(providerStatusBadge.color)
-                    font.pixelSize: 10
+                    font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                     font.weight: Font.DemiBold
                 }
             }
@@ -99,7 +99,7 @@ RowLayout {
                 text: providerHeaderRow.applet.lastUpdatedText.length > 0
                     ? providerHeaderRow.applet.lastUpdatedText
                     : i18n("Updated just now")
-                opacity: 0.62
+                opacity: providerHeaderRow.applet.secondaryTextOpacity
                 Layout.fillWidth: true
                 elide: Text.ElideRight
             }
@@ -111,7 +111,7 @@ RowLayout {
                     && providerHeaderRow.providerData.account
                     && providerHeaderRow.providerData.account.length > 0
                 text: providerHeaderRow.providerData ? providerHeaderRow.providerData.account : ""
-                opacity: 0.62
+                opacity: providerHeaderRow.applet.secondaryTextOpacity
                 horizontalAlignment: Text.AlignRight
                 elide: Text.ElideMiddle
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 16
@@ -124,7 +124,7 @@ RowLayout {
                     && providerHeaderRow.providerData.planText
                     && providerHeaderRow.providerData.planText.length > 0
                 text: providerHeaderRow.providerData ? providerHeaderRow.providerData.planText : ""
-                opacity: 0.66
+                opacity: providerHeaderRow.applet.secondaryTextOpacity
                 horizontalAlignment: Text.AlignRight
                 elide: Text.ElideRight
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 5

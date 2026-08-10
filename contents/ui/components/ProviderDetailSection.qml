@@ -59,7 +59,7 @@ ColumnLayout {
 
             PlasmaComponents.Label {
                 text: modelData.label
-                opacity: 0.66
+                opacity: detailSection.applet.secondaryTextOpacity
                 Layout.fillWidth: true
                 elide: Text.ElideRight
             }
@@ -69,7 +69,7 @@ ColumnLayout {
 
                 PlasmaComponents.Label {
                     text: modelData.value
-                    opacity: 0.84
+                    opacity: detailSection.applet.valueTextOpacity
                     font.weight: Font.Medium
                     horizontalAlignment: Text.AlignRight
                     Layout.alignment: Qt.AlignRight
@@ -79,7 +79,7 @@ ColumnLayout {
                 PlasmaComponents.Label {
                     visible: modelData.secondaryValue.length > 0
                     text: modelData.secondaryValue
-                    opacity: 0.58
+                    opacity: detailSection.applet.secondaryTextOpacity
                     font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                     horizontalAlignment: Text.AlignRight
                     Layout.alignment: Qt.AlignRight
@@ -97,7 +97,7 @@ ColumnLayout {
 
         PlasmaComponents.Label {
             text: detailSection.chartData ? detailSection.chartData.title : ""
-            opacity: 0.7
+            opacity: detailSection.applet.secondaryTextOpacity
             font.weight: Font.DemiBold
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             Layout.fillWidth: true
@@ -107,7 +107,7 @@ ColumnLayout {
         PlasmaComponents.Label {
             visible: detailSection.chartData && detailSection.chartData.unit.length > 0
             text: detailSection.chartData ? detailSection.chartData.unit : ""
-            opacity: 0.6
+            opacity: detailSection.applet.secondaryTextOpacity
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             horizontalAlignment: Text.AlignRight
             elide: Text.ElideRight
@@ -203,7 +203,7 @@ ColumnLayout {
 
         PlasmaComponents.Label {
             text: detailSection.chartPoints.length > 0 ? detailSection.chartPoints[0].label : ""
-            opacity: 0.52
+            opacity: detailSection.applet.secondaryTextOpacity
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             Layout.fillWidth: true
             elide: Text.ElideRight
@@ -213,7 +213,7 @@ ColumnLayout {
             text: detailSection.chartPoints.length > 1
                 ? detailSection.chartPoints[detailSection.chartPoints.length - 1].label
                 : ""
-            opacity: 0.52
+            opacity: detailSection.applet.secondaryTextOpacity
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             horizontalAlignment: Text.AlignRight
             Layout.fillWidth: true
