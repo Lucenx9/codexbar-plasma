@@ -122,8 +122,8 @@ Providers and accounts:
   and optional usage extras.
 - Provider-specific CLI command hints as a fallback when a descriptor is not
   available.
-- Fallback names, colors, links, aliases, and icons for all 67 providers in the
-  official CodexBar 0.48.1 registry; fork-only provider assets remain available
+- Fallback names, colors, links, aliases, and icons for all 69 providers in the
+  official CodexBar 0.49.1 registry; fork-only provider assets remain available
   for compatibility.
 
 Costs and history:

@@ -2801,6 +2801,8 @@ PlasmoidItem {
             "azure-openai": "azureopenai",
             "bailian": "alibaba",
             "bailian-token-plan": "alibabatokenplan",
+            "bob": "ibmbob",
+            "bobshell": "ibmbob",
             "bytedance": "doubao",
             "chutes.ai": "chutes",
             "claw-router": "clawrouter",
@@ -2814,9 +2816,11 @@ PlasmoidItem {
             "droid": "factory",
             "ds": "deepseek",
             "eleven": "elevenlabs",
+            "fw": "fireworks",
             "gemini-cli": "gemini",
             "groq-api": "groq",
             "groqcloud": "groq",
+            "ibm-bob": "ibmbob",
             "kilo-ai": "kilo",
             "kimi-ai": "kimi",
             "kimi-k2": "kimik2",
@@ -2912,9 +2916,11 @@ PlasmoidItem {
             "doubao": i18n("Doubao"),
             "elevenlabs": i18n("ElevenLabs"),
             "factory": i18n("Droid"),
+            "fireworks": i18n("Fireworks"),
             "gemini": i18n("Gemini"),
             "grok": i18n("Grok"),
             "groq": i18n("Groq"),
+            "ibmbob": i18n("IBM Bob"),
             "jetbrains": i18n("JetBrains AI"),
             "kilo": i18n("Kilo"),
             "kimi": i18n("Kimi Code"),
@@ -3014,6 +3020,8 @@ PlasmoidItem {
             return Qt.rgba(1, 106 / 255, 0, 1)
         case "factory":
             return Qt.rgba(1, 107 / 255, 53 / 255, 1)
+        case "fireworks":
+            return Qt.rgba(242 / 255, 91 / 255, 28 / 255, 1)
         case "gemini":
             return Qt.rgba(171 / 255, 135 / 255, 234 / 255, 1)
         case "antigravity":
@@ -3097,6 +3105,8 @@ PlasmoidItem {
             return Qt.rgba(16 / 255, 163 / 255, 127 / 255, 1)
         case "groq":
             return Qt.rgba(245 / 255, 104 / 255, 68 / 255, 1)
+        case "ibmbob":
+            return Qt.rgba(14 / 255, 97 / 255, 250 / 255, 1)
         case "llmproxy":
             return Qt.rgba(36 / 255, 180 / 255, 126 / 255, 1)
         case "litellm":
@@ -3186,12 +3196,16 @@ PlasmoidItem {
             return "https://elevenlabs.io/app/developers/usage"
         case "factory":
             return "https://app.factory.ai/settings/billing"
+        case "fireworks":
+            return "https://app.fireworks.ai"
         case "gemini":
             return "https://gemini.google.com"
         case "grok":
             return "https://grok.com/?_s=usage"
         case "groq":
             return "https://console.groq.com/dashboard/usage"
+        case "ibmbob":
+            return "https://bob.ibm.com"
         case "kilo":
             return "https://app.kilo.ai/usage"
         case "kimi":
@@ -3289,9 +3303,11 @@ PlasmoidItem {
             doubao: "doubao.md",
             elevenlabs: "elevenlabs.md",
             factory: "factory.md",
+            fireworks: "fireworks.md",
             gemini: "gemini.md",
             grok: "grok.md",
             groq: "groqcloud.md",
+            ibmbob: "ibm-bob.md",
             jetbrains: "jetbrains.md",
             kilo: "kilo.md",
             kimi: "kimi.md",
@@ -3406,6 +3422,8 @@ PlasmoidItem {
             return "https://status.x.ai"
         case "groq":
             return "https://status.groq.com"
+        case "ibmbob":
+            return "https://status.bob.ibm.com"
         case "mistral":
             return "https://status.mistral.ai"
         case "openrouter":

@@ -15,6 +15,7 @@ PROVIDER_DETAIL_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/ProviderDetail
 USAGE_DETAILS_JS="${ROOT_DIR}/contents/ui/UsageDetails.js"
 README_MD="${ROOT_DIR}/README.md"
 TODO_MD="${ROOT_DIR}/TODO.md"
+AGENTS_MD="${ROOT_DIR}/AGENTS.md"
 CONFIG_XML="${ROOT_DIR}/contents/config/main.xml"
 CONFIG_QML="${ROOT_DIR}/contents/config/config.qml"
 MAKEFILE="${ROOT_DIR}/Makefile"
@@ -136,7 +137,11 @@ official_alias_mappings=(
   '"command-code": "commandcode"'
   '"deep-infra": "deepinfra"'
   '"deep-seek": "deepseek"'
+  '"fw": "fireworks"'
   '"groq-api": "groq"'
+  '"ibm-bob": "ibmbob"'
+  '"bob": "ibmbob"'
+  '"bobshell": "ibmbob"'
   '"openai-api": "openai"'
   '"qwen-cloud": "qwencloud"'
   '"step-fun": "stepfun"'
@@ -153,6 +158,8 @@ official_alias_mappings=(
 for qml_file in "$MAIN_QML" "$PROVIDERS_QML"; do
   require_in_file "$qml_file" 'aiand: "aiand.md"'
   require_in_file "$qml_file" 'deepinfra: "deepinfra.md"'
+  require_in_file "$qml_file" 'fireworks: "fireworks.md"'
+  require_in_file "$qml_file" 'ibmbob: "ibm-bob.md"'
   require_in_file "$qml_file" 'neuralwatt: "neuralwatt.md"'
   require_in_file "$qml_file" 'notion: "notion.md"'
   require_in_file "$qml_file" 'qwencloud: "qwen-cloud.md"'
@@ -165,16 +172,22 @@ for qml_file in "$MAIN_QML" "$PROVIDERS_QML"; do
   done
   require_in_file "$qml_file" '"notion-ai": "notion"'
   require_in_file "$qml_file" '"elevenlabs": i18n("ElevenLabs")'
+  require_in_file "$qml_file" '"fireworks": i18n("Fireworks")'
+  require_in_file "$qml_file" '"ibmbob": i18n("IBM Bob")'
   require_in_file "$qml_file" '"kimi": i18n("Kimi Code")'
   require_in_file "$qml_file" '"minimax": i18n("MiniMax")'
   require_in_file "$qml_file" '"moonshot": i18n("Moonshot / Kimi Open Platform")'
   require_in_file "$qml_file" '"stepfun": i18n("StepFun")'
   require_in_file "$qml_file" '"zai": i18n("z.ai / GLM")'
   require_in_file "$qml_file" 'return Qt.rgba(160 / 255, 77 / 255, 253 / 255, 1)'
+  require_in_file "$qml_file" 'return Qt.rgba(242 / 255, 91 / 255, 28 / 255, 1)'
+  require_in_file "$qml_file" 'return Qt.rgba(14 / 255, 97 / 255, 250 / 255, 1)'
   require_in_file "$qml_file" 'return Qt.rgba(93 / 255, 92 / 255, 222 / 255, 1)'
   require_in_file "$qml_file" 'return "https://console.aiand.com"'
   require_in_file "$qml_file" 'return "https://app.cline.bot/dashboard/subscription?personal=true"'
   require_in_file "$qml_file" 'return "https://deepinfra.com/dash"'
+  require_in_file "$qml_file" 'return "https://app.fireworks.ai"'
+  require_in_file "$qml_file" 'return "https://bob.ibm.com"'
   require_in_file "$qml_file" 'return "https://app.notion.com/"'
   require_in_file "$qml_file" 'return "https://console.x.ai"'
   require_in_file "$qml_file" 'return "https://ampcode.com/settings/usage"'
@@ -189,6 +202,7 @@ for qml_file in "$MAIN_QML" "$PROVIDERS_QML"; do
 done
 
 require_in_file "$MAIN_QML" 'return "https://status.augmentcode.com"'
+require_in_file "$MAIN_QML" 'return "https://status.bob.ibm.com"'
 require_in_file "$MAIN_QML" 'return "https://status.mistral.ai"'
 
 python3 - "$PROVIDERS_QML" <<'PY'
@@ -204,6 +218,13 @@ descriptor_owned = {"aiand", "clinepass", "deepinfra", "neuralwatt", "sub2api", 
 hardcoded = sorted(descriptor_owned.intersection(re.findall(r'case "([^"]+)":', body)))
 if hardcoded:
     print("descriptor-owned API key capability hardcoded in QML: " + ", ".join(hardcoded), file=sys.stderr)
+    sys.exit(1)
+
+if 'case "ibmbob":' not in body:
+    print("IBM Bob must offer the official generic set-api-key setup path", file=sys.stderr)
+    sys.exit(1)
+if 'case "fireworks":' in body:
+    print("Fireworks setup must stay hidden until the CLI can also set accountSlug", file=sys.stderr)
     sys.exit(1)
 
 for function_name in ("setEnabled", "setApiKey", "loadProviderSettings", "providerCliCommandText"):
@@ -503,9 +524,10 @@ require_in_file "$README_MD" "kpackagetool6 -t Plasma/Applet -i codexbar-plasma.
 require_in_file "$README_MD" "kpackagetool6 -t Plasma/Applet -u codexbar-plasma.plasmoid"
 require_in_file "$README_MD" "make install"
 reject_in_file "$README_MD" "kpackagetool6 -t Plasma/Applet -u ."
-require_in_file "$TODO_MD" "all 67 provider IDs"
+require_in_file "$TODO_MD" "all 69 provider IDs"
 require_in_file "$README_MD" '`usage.details` contract'
-require_in_file "$README_MD" "all 67 providers"
+require_in_file "$README_MD" "all 69 providers"
+require_in_file "$AGENTS_MD" "69 provider IDs released in CodexBar v0.49.1"
 require_in_file "$README_MD" "systemctl --user restart plasma-plasmashell.service"
 require_in_file "$README_MD" "codexbar usage --provider codex --all-accounts --format json --json-only"
 
