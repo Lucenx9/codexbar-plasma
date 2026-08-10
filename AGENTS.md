@@ -146,6 +146,8 @@ Keep this in sync with `TODO.md` when feature parity decisions change:
   URL, workspace/project ID, region, AWS profile/auth mode, and boolean extras.
   Missing controls include token-account add/edit/remove, provider-specific
   auth mode nuances, organization/team, metric, and quota threshold editors.
+  IBM Bob can use the existing single-key command, but its token-account editing
+  and the required Fireworks account slug still need generic CLI field/actions.
 - Provider onboarding improvements should stay CLI-backed: dashboard actions
   can come from the descriptor and login/account links are fine as fallbacks,
   but browser-cookie import, local-file, OAuth/device-flow, CLI-auth setup, and
@@ -165,7 +167,7 @@ Keep this in sync with `TODO.md` when feature parity decisions change:
   work.
 - Notification refinements should stay quiet, configurable, and tied to clear
   state transitions.
-- The fallback catalog covers the 67 provider IDs released in CodexBar v0.48.1
+- The fallback catalog covers the 69 provider IDs released in CodexBar v0.49.1
   and retains fork-only compatibility assets. Future drift syncs should cover
   provider keys, CLI aliases, titles, colors, docs/dashboard/login URLs, icon
   assets, and `scripts/test_provider_icons.sh`.

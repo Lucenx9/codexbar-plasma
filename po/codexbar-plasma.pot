@@ -610,6 +610,10 @@ msgid "Droid"
 msgstr ""
 
 #: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "Fireworks"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
 msgid "Gemini"
 msgstr ""
 
@@ -619,6 +623,10 @@ msgstr ""
 
 #: contents/ui/configProviders.qml contents/ui/main.qml
 msgid "Groq"
+msgstr ""
+
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "IBM Bob"
 msgstr ""
 
 #: contents/ui/configProviders.qml contents/ui/main.qml

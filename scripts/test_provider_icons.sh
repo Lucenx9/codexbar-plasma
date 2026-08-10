@@ -61,7 +61,7 @@ require_icon() {
   fi
 }
 
-# Released official CodexBar v0.48.1 provider registry. The live CLI probe below
+# Released official CodexBar v0.49.1 provider registry. The live CLI probe below
 # adds an early warning when a newer installed release introduces another provider.
 released_providers=(
   codex
@@ -76,6 +76,7 @@ released_providers=(
   alibabatokenplan
   qwencloud
   factory
+  fireworks
   gemini
   antigravity
   copilot
@@ -131,6 +132,7 @@ released_providers=(
   zoommate
   xai
   notion
+  ibmbob
 )
 
 for provider in "${released_providers[@]}"; do

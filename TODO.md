@@ -9,7 +9,9 @@
   token-account add/edit/remove, provider-specific auth mode nuances,
   organization/team editors, provider metric pickers, and quota thresholds. Do
   not duplicate macOS Swift provider settings logic in QML; extend
-  `codexbar config` first.
+  `codexbar config` first. IBM Bob can use the existing single-key command, but
+  its token-account editing and the required Fireworks account slug still need
+  generic CLI field/actions.
 - Provider onboarding parity: descriptor-backed dashboard actions are supported,
   and legacy login/account/dashboard/docs links remain as fallbacks. Add safer
   setup actions for providers that need browser-cookie import, local app files,
@@ -31,8 +33,8 @@
 - Notification refinements: consider reset-imminent notifications if they stay
   quiet and configurable. Keep status, quota, reset, and update notifications
   tied to clear state transitions and user-visible settings.
-- Provider drift checks: the Plasma fallback catalog covers all 67 provider IDs
-  released in CodexBar v0.48.1, while retaining fork-only compatibility assets.
+- Provider drift checks: the Plasma fallback catalog covers all 69 provider IDs
+  released in CodexBar v0.49.1, while retaining fork-only compatibility assets.
   When upstream releases providers, sync provider keys, CLI aliases, titles,
   colors, docs/dashboard/login URLs, icon assets, and
   `scripts/test_provider_icons.sh`.
