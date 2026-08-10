@@ -121,7 +121,7 @@ Rectangle {
             PlasmaComponents.Label {
                 visible: overviewRow.detail.length > 0
                 text: overviewRow.detail
-                opacity: 0.62
+                opacity: overviewRow.applet.secondaryTextOpacity
                 Layout.fillWidth: true
                 elide: Text.ElideMiddle
             }
@@ -154,7 +154,7 @@ Rectangle {
             PlasmaComponents.Label {
                 visible: overviewRow.resetText.length > 0
                 text: overviewRow.resetText
-                opacity: 0.56
+                opacity: overviewRow.applet.secondaryTextOpacity
                 Layout.fillWidth: true
                 elide: Text.ElideRight
             }

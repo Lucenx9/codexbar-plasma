@@ -62,6 +62,9 @@ KCM.SimpleKCM {
     readonly property int maximumDescriptorCommandTokens: 64
     readonly property int maximumDescriptorTokenLength: 2048
     readonly property int maximumDiagnosticListItems: 64
+    // Mirrors the popup de-emphasis step in main.qml. 0.7 is the lowest value
+    // where Kirigami.Theme.textColor still clears WCAG AA 4.5:1 on Breeze Light.
+    readonly property real secondaryTextOpacity: 0.7
     property var providerDiagnostics: ({})
     property var providerDiagnosticErrors: ({})
     property var providerDiagnosticLoading: ({})
@@ -2099,7 +2102,7 @@ KCM.SimpleKCM {
                         text: page.selectedProvider
                             ? (page.selectedProvider.enabled ? i18n("%1 - enabled", page.selectedProvider.provider) : i18n("%1 - disabled", page.selectedProvider.provider))
                             : ""
-                        opacity: 0.62
+                        opacity: page.secondaryTextOpacity
                         font: Kirigami.Theme.smallFont
                         Layout.fillWidth: true
                         elide: Text.ElideRight
@@ -2165,7 +2168,7 @@ KCM.SimpleKCM {
                 Controls.Label {
                     Layout.fillWidth: true
                     text: i18n("Provider-specific controls come from the CodexBar CLI descriptor. This panel also shows redacted source/auth details and exact CLI commands.")
-                    opacity: 0.66
+                    opacity: page.secondaryTextOpacity
                     font: Kirigami.Theme.smallFont
                     wrapMode: Text.WordWrap
                 }
@@ -2208,7 +2211,7 @@ KCM.SimpleKCM {
 
                                 Controls.Label {
                                     text: modelData.title
-                                    opacity: 0.66
+                                    opacity: page.secondaryTextOpacity
                                     Layout.preferredWidth: Kirigami.Units.gridUnit * 7
                                     elide: Text.ElideRight
                                 }
@@ -2235,7 +2238,7 @@ KCM.SimpleKCM {
 
                                 Controls.Label {
                                     text: modelData.title
-                                    opacity: 0.66
+                                    opacity: page.secondaryTextOpacity
                                     Layout.preferredWidth: Kirigami.Units.gridUnit * 7
                                     elide: Text.ElideRight
                                 }
@@ -2266,7 +2269,7 @@ KCM.SimpleKCM {
 
                                 Controls.Label {
                                     text: modelData.title
-                                    opacity: 0.66
+                                    opacity: page.secondaryTextOpacity
                                     Layout.preferredWidth: Kirigami.Units.gridUnit * 7
                                     elide: Text.ElideRight
                                 }
@@ -2303,7 +2306,7 @@ KCM.SimpleKCM {
 
                                 Controls.Label {
                                     text: modelData.title
-                                    opacity: 0.66
+                                    opacity: page.secondaryTextOpacity
                                     Layout.preferredWidth: Kirigami.Units.gridUnit * 7
                                     elide: Text.ElideRight
                                 }
@@ -2330,7 +2333,7 @@ KCM.SimpleKCM {
                             Controls.Label {
                                 Layout.fillWidth: true
                                 text: modelData.description
-                                opacity: 0.55
+                                opacity: page.secondaryTextOpacity
                                 font: Kirigami.Theme.smallFont
                                 wrapMode: Text.WordWrap
                                 visible: modelData.description.length > 0
@@ -2351,7 +2354,7 @@ KCM.SimpleKCM {
 
                         Controls.Label {
                             text: modelData.label
-                            opacity: 0.66
+                            opacity: page.secondaryTextOpacity
                             Layout.preferredWidth: Kirigami.Units.gridUnit * 7
                             elide: Text.ElideRight
                         }
@@ -2433,7 +2436,7 @@ KCM.SimpleKCM {
             Controls.Label {
                 text: i18np("%1 provider enabled", "%1 providers enabled", page.enabledCount)
                 font: Kirigami.Theme.smallFont
-                opacity: 0.66
+                opacity: page.secondaryTextOpacity
                 elide: Text.ElideRight
             }
         }

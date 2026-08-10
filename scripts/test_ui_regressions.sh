@@ -1276,6 +1276,61 @@ if "readonly property var overviewProviderItems: overviewProviders()" not in mai
     raise AssertionError("overview provider rows must be cached in a QML property binding")
 if "root.overviewProviders()" in main_text:
     raise AssertionError("overview UI bindings must reuse overviewProviderItems")
+
+# Text de-emphasis had drifted into eleven ad-hoc opacity literals, several
+# below the WCAG AA 4.5:1 floor for Kirigami.Theme.textColor on Breeze Light.
+# Keep the scale in one place so a new section cannot reintroduce a dimmer step.
+for token_definition in (
+    "readonly property real secondaryTextOpacity: 0.7",
+    "readonly property real valueTextOpacity: 0.85",
+    "readonly property real meterTrackHeight: Math.round(Kirigami.Units.gridUnit * 0.4)",
+):
+    if token_definition not in main_text:
+        raise AssertionError(
+            f"main.qml must define the shared presentation scale: {token_definition!r}"
+        )
+if "readonly property real secondaryTextOpacity: 0.7" not in providers_text:
+    raise AssertionError(
+        "configProviders.qml must mirror main.qml's secondaryTextOpacity step"
+    )
+
+
+def enclosing_element(source_lines, index):
+    for cursor in range(index, -1, -1):
+        opener = re.match(r"\s*([A-Z][A-Za-z.]*)\s*\{", source_lines[cursor])
+        if opener:
+            return opener.group(1)
+    return ""
+
+
+for surface in (
+    main_qml,
+    providers_qml,
+    provider_header_qml,
+    provider_usage_row_qml,
+    provider_detail_section_qml,
+    overview_provider_row_qml,
+):
+    surface_lines = surface.read_text(encoding="utf-8").splitlines()
+    for line_number, line in enumerate(surface_lines):
+        if not re.match(r"\s*opacity:\s", line):
+            continue
+        element = enclosing_element(surface_lines, line_number)
+        if "Label" not in element and "Heading" not in element:
+            continue
+        if re.search(r"\b0\.\d+", line):
+            raise AssertionError(
+                f"{surface.name}:{line_number + 1} sets text opacity from a literal; "
+                "use secondaryTextOpacity or valueTextOpacity so the de-emphasis "
+                "scale stays consistent and above WCAG AA contrast"
+            )
+
+hardcoded_font = re.search(r"font\.pixelSize:\s*\d", main_text + providers_text)
+if hardcoded_font:
+    raise AssertionError(
+        "popup and provider-config text must size from Kirigami.Theme fonts, "
+        f"not device pixels: {hardcoded_font.group(0)!r}"
+    )
 PY
 
 echo "UI regression checks passed."

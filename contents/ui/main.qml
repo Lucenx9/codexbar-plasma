@@ -106,6 +106,17 @@ PlasmoidItem {
         : null
     readonly property real roundedSurfaceRadius: Kirigami.Units.cornerRadius
         + Kirigami.Units.smallSpacing
+    // Two-step de-emphasis scale for popup text. A supporting label uses the
+    // secondary step and the value it annotates uses the stronger step, so a
+    // label/value pair keeps its hierarchy without inventing a new opacity per
+    // section. 0.7 is the lowest step where Kirigami.Theme.textColor still
+    // clears WCAG AA 4.5:1 against the Breeze Light popup background.
+    readonly property real secondaryTextOpacity: 0.7
+    readonly property real valueTextOpacity: 0.85
+    // Shared track height for the credits, cost, and usage meters that stack in
+    // one provider detail view. Derived from gridUnit so it follows the user
+    // font size instead of pinning a device pixel count.
+    readonly property real meterTrackHeight: Math.round(Kirigami.Units.gridUnit * 0.4)
 
     onCommandSourceChanged: Qt.callLater(refreshNow)
     onCostUsageEnabledChanged: Qt.callLater(refreshCost)
@@ -4517,8 +4528,8 @@ PlasmoidItem {
                                     source: "view-grid-symbolic"
                                     isMask: true
                                     color: overviewTab.selected ? overviewTab.accent : overviewTab.foreground
-                                    Layout.preferredWidth: 16
-                                    Layout.preferredHeight: 16
+                                    Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                                    Layout.preferredHeight: Kirigami.Units.iconSizes.small
                                 }
 
                                 PlasmaComponents.Label {
@@ -4648,8 +4659,8 @@ PlasmoidItem {
                                         source: root.providerIconSource(modelData.provider)
                                         isMask: root.providerIconIsMask(modelData.provider)
                                         color: providerTab.accent
-                                        Layout.preferredWidth: 16
-                                        Layout.preferredHeight: 16
+                                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
                                     }
 
                                     PlasmaComponents.Label {
@@ -4777,7 +4788,7 @@ PlasmoidItem {
 
                 PlasmaComponents.Label {
                     text: i18n("Loading usage...")
-                    opacity: 0.72
+                    opacity: root.secondaryTextOpacity
                 }
 
                 Item {
@@ -4826,7 +4837,7 @@ PlasmoidItem {
                             text: lastUpdatedText.length > 0
                                 ? i18n("%1 - %2", lastUpdatedText, root.providerCountText(providerCount))
                                 : root.providerCountText(providerCount)
-                            opacity: 0.62
+                            opacity: root.secondaryTextOpacity
                             Layout.fillWidth: true
                             elide: Text.ElideRight
                         }
@@ -4978,7 +4989,7 @@ PlasmoidItem {
 
                             Rectangle {
                                 Layout.fillWidth: true
-                                Layout.preferredHeight: 6
+                                Layout.preferredHeight: root.meterTrackHeight
                                 radius: height / 2
                                 color: root.withAlpha(Kirigami.Theme.textColor, 0.1)
                                 clip: true
@@ -5033,7 +5044,7 @@ PlasmoidItem {
 
                             PlasmaComponents.Label {
                                 text: resetCreditsSection.resetCredits ? resetCreditsSection.resetCredits.line : ""
-                                opacity: 0.7
+                                opacity: root.secondaryTextOpacity
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                             }
@@ -5062,7 +5073,7 @@ PlasmoidItem {
                             Rectangle {
                                 visible: providerCostSection.providerCost && providerCostSection.providerCost.percentUsed >= 0 ? true : false
                                 Layout.fillWidth: true
-                                Layout.preferredHeight: 6
+                                Layout.preferredHeight: root.meterTrackHeight
                                 radius: height / 2
                                 color: root.withAlpha(Kirigami.Theme.textColor, 0.1)
                                 clip: true
@@ -5097,7 +5108,7 @@ PlasmoidItem {
                                 PlasmaComponents.Label {
                                     visible: providerCostSection.providerCost && providerCostSection.providerCost.percentLine.length > 0 ? true : false
                                     text: providerCostSection.providerCost ? providerCostSection.providerCost.percentLine : ""
-                                    opacity: 0.66
+                                    opacity: root.secondaryTextOpacity
                                     horizontalAlignment: Text.AlignRight
                                     elide: Text.ElideRight
                                 }
@@ -5106,7 +5117,7 @@ PlasmoidItem {
                             PlasmaComponents.Label {
                                 visible: providerCostSection.providerCost && providerCostSection.providerCost.personalSpendLine.length > 0 ? true : false
                                 text: providerCostSection.providerCost ? providerCostSection.providerCost.personalSpendLine : ""
-                                opacity: 0.66
+                                opacity: root.secondaryTextOpacity
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                             }
@@ -5175,7 +5186,7 @@ PlasmoidItem {
 
                                         PlasmaComponents.Label {
                                             text: modelData.label
-                                            opacity: 0.62
+                                            opacity: root.secondaryTextOpacity
                                             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                                             Layout.fillWidth: true
                                             elide: Text.ElideRight
@@ -5205,14 +5216,14 @@ PlasmoidItem {
 
                                         PlasmaComponents.Label {
                                             text: modelData.label
-                                            opacity: 0.66
+                                            opacity: root.secondaryTextOpacity
                                             Layout.fillWidth: true
                                             elide: Text.ElideRight
                                         }
 
                                         PlasmaComponents.Label {
                                             text: modelData.value
-                                            opacity: 0.78
+                                            opacity: root.valueTextOpacity
                                             horizontalAlignment: Text.AlignRight
                                             elide: Text.ElideRight
                                         }
@@ -5269,7 +5280,7 @@ PlasmoidItem {
                                 visible: tokenCostSection.tokenCost ? true : false
                                 text: tokenCostSection.tokenCost ? tokenCostSection.tokenCost.monthLine : ""
                                 font: Kirigami.Theme.smallFont
-                                opacity: 0.66
+                                opacity: root.secondaryTextOpacity
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                             }
@@ -5343,7 +5354,7 @@ PlasmoidItem {
 
                                     text: tokenCostSection.tokenCost ? root.costSparklineSummary(tokenCostSection.tokenCost.daily) : ""
                                     font: Kirigami.Theme.smallFont
-                                    opacity: 0.62
+                                    opacity: root.secondaryTextOpacity
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
                                 }
@@ -5355,7 +5366,7 @@ PlasmoidItem {
                                         ? i18np("%1 day", "%1 days", tokenCostSection.tokenCost.daily.length)
                                         : ""
                                     font: Kirigami.Theme.smallFont
-                                    opacity: 0.62
+                                    opacity: root.secondaryTextOpacity
                                     horizontalAlignment: Text.AlignRight
                                     elide: Text.ElideRight
                                 }
@@ -5390,7 +5401,7 @@ PlasmoidItem {
                                         visible: costHistoryChartSection.averageLine.length > 0
                                         text: costHistoryChartSection.averageLine
                                         font: Kirigami.Theme.smallFont
-                                        opacity: 0.58
+                                        opacity: root.secondaryTextOpacity
                                         horizontalAlignment: Text.AlignRight
                                         elide: Text.ElideRight
                                     }
@@ -5400,7 +5411,7 @@ PlasmoidItem {
                                     visible: costHistoryChartSection.peakLine.length > 0
                                     text: costHistoryChartSection.peakLine
                                     font: Kirigami.Theme.smallFont
-                                    opacity: 0.62
+                                    opacity: root.secondaryTextOpacity
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
                                 }
@@ -5419,7 +5430,7 @@ PlasmoidItem {
 
                                             text: modelData.label
                                             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
-                                            opacity: 0.66
+                                            opacity: root.secondaryTextOpacity
                                             Layout.preferredWidth: Kirigami.Units.gridUnit * 5
                                             elide: Text.ElideRight
                                         }
@@ -5471,7 +5482,7 @@ PlasmoidItem {
 
                                             text: modelData.value
                                             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
-                                            opacity: modelData.isPeak ? 0.9 : 0.7
+                                            opacity: modelData.isPeak ? root.valueTextOpacity : root.secondaryTextOpacity
                                             font.weight: modelData.isPeak ? Font.DemiBold : Font.Normal
                                             horizontalAlignment: Text.AlignRight
                                             Layout.preferredWidth: Kirigami.Units.gridUnit * 8
@@ -5505,7 +5516,7 @@ PlasmoidItem {
                                     visible: tokenCostSection.tokenCost && root.costPerMillionLine(tokenCostSection.tokenCost).length > 0
                                     text: tokenCostSection.tokenCost ? root.costPerMillionLine(tokenCostSection.tokenCost) : ""
                                     font: Kirigami.Theme.smallFont
-                                    opacity: 0.7
+                                    opacity: root.secondaryTextOpacity
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
                                 }
@@ -5525,7 +5536,7 @@ PlasmoidItem {
                                             PlasmaComponents.Label {
                                                 text: modelData.label
                                                 font.pixelSize: Kirigami.Theme.smallFont.pixelSize
-                                                opacity: 0.66
+                                                opacity: root.secondaryTextOpacity
                                                 Layout.fillWidth: true
                                                 elide: Text.ElideRight
                                             }
@@ -5535,7 +5546,7 @@ PlasmoidItem {
 
                                                 text: modelData.value
                                                 font.pixelSize: Kirigami.Theme.smallFont.pixelSize
-                                                opacity: 0.78
+                                                opacity: root.valueTextOpacity
                                                 font.weight: Font.Medium
                                                 horizontalAlignment: Text.AlignRight
                                                 Layout.preferredWidth: costDrillDownSection.metricValueColumnWidth
@@ -5563,7 +5574,7 @@ PlasmoidItem {
                                         text: i18n("Models")
                                         font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                                         font.weight: Font.DemiBold
-                                        opacity: 0.72
+                                        opacity: root.secondaryTextOpacity
                                         Layout.fillWidth: true
                                         elide: Text.ElideRight
                                     }
@@ -5578,6 +5589,7 @@ PlasmoidItem {
                                             PlasmaComponents.Label {
                                                 text: modelData.label
                                                 font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+                                                opacity: root.secondaryTextOpacity
                                                 Layout.fillWidth: true
                                                 elide: Text.ElideRight
                                             }
@@ -5587,7 +5599,7 @@ PlasmoidItem {
 
                                                 text: modelData.value
                                                 font.pixelSize: Kirigami.Theme.smallFont.pixelSize
-                                                opacity: 0.7
+                                                opacity: root.valueTextOpacity
                                                 font.weight: Font.Medium
                                                 horizontalAlignment: Text.AlignRight
                                                 Layout.preferredWidth: costDrillDownSection.metricValueColumnWidth
@@ -5603,7 +5615,7 @@ PlasmoidItem {
                             PlasmaComponents.Label {
                                 visible: tokenCostSection.tokenCost && tokenCostSection.tokenCost.hintLine.length > 0 ? true : false
                                 text: tokenCostSection.tokenCost ? tokenCostSection.tokenCost.hintLine : ""
-                                opacity: 0.62
+                                opacity: root.secondaryTextOpacity
                                 Layout.fillWidth: true
                                 wrapMode: Text.WordWrap
                             }
