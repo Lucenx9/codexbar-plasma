@@ -15,7 +15,7 @@ function redactCredentials(value, inspectionLimit) {
     var text = typeof value === "string" ? value : String(value || "")
     text = text.slice(0, safeLimit(inspectionLimit, maximumCliMessageLength) * 8)
     return text
-        .replace(/((?:proxy-)?authorization["']?\s*[:=]\s*)(?:"[^"]*"|'[^']*'|(?:bearer\s+)?[^\s,;]+)/gi, "$1[redacted]")
+        .replace(/((?:proxy-)?authorization["']?\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\r\n]*)/gi, "$1[redacted]")
         .replace(/\bbearer\s+(?:"[^"]*"|'[^']*'|[^\s,;]+)/gi, "Bearer [redacted]")
         .replace(/((?:set-cookie|cookie)["']?\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\r\n]*)/gi, "$1[redacted]")
         .replace(/((?:api[-_ ]?key|access[-_ ]?token|refresh[-_ ]?token|id[-_ ]?token|token)["']?\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\s,;]+)/gi, "$1[redacted]")

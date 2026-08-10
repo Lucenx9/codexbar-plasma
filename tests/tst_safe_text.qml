@@ -35,6 +35,18 @@ TestCase {
         compare(message.match(/\[redacted\]/g).length, 4)
     }
 
+    function test_redactsCompleteUnquotedAuthorizationValues() {
+        var message = SafeText.cliDiagnostic(
+            "Authorization: Basic dXNlcjpwYXNzd29yZA==\n"
+                + "Proxy-Authorization: Digest username=user, response=secret-response",
+            500)
+
+        verify(message.indexOf("dXNlcjpwYXNzd29yZA==") === -1)
+        verify(message.indexOf("username=user") === -1)
+        verify(message.indexOf("secret-response") === -1)
+        compare(message.match(/\[redacted\]/g).length, 2)
+    }
+
     function test_preservesDiagnosticLinesWhileBoundingAndRedacting() {
         var diagnostic = SafeText.cliDiagnostic("line one\nBearer secret-token\nline three", 32)
 
