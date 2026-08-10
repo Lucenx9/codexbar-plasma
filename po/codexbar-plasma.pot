@@ -386,6 +386,10 @@ msgid "codexbar did not return command data."
 msgstr ""
 
 #: contents/ui/configProviders.qml
+msgid "codexbar command failed."
+msgstr ""
+
+#: contents/ui/configProviders.qml
 msgid "codexbar did not return diagnostics."
 msgstr ""
 

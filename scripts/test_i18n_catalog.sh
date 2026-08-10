@@ -33,4 +33,24 @@ require_in_file "$POT_FILE" "msgid \"Widget update check failed.\""
 require_in_file "$POT_FILE" "msgid \"%1 hour\""
 require_in_file "$POT_FILE" "msgid_plural \"%1 hours\""
 
+fixture_dir="$(mktemp -d)"
+trap 'rm -rf "$fixture_dir"' EXIT
+mkdir -p "$fixture_dir/fakebin"
+printf '%s\n' 'existing catalog' > "$fixture_dir/catalog.pot"
+cat > "$fixture_dir/fakebin/xgettext" <<'SH'
+#!/usr/bin/env bash
+printf '%s\n' 'partial catalog'
+exit 1
+SH
+chmod +x "$fixture_dir/fakebin/xgettext"
+if PATH="$fixture_dir/fakebin:$PATH" \
+  "$UPDATE_SCRIPT" --output "$fixture_dir/catalog.pot" >/dev/null 2>&1; then
+  echo "translation update must fail when xgettext fails" >&2
+  exit 1
+fi
+if [[ "$(cat "$fixture_dir/catalog.pot")" != "existing catalog" ]]; then
+  echo "a failed translation update must preserve the existing catalog" >&2
+  exit 1
+fi
+
 echo "i18n catalog checks passed."

@@ -4,6 +4,9 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MAIN_QML="${ROOT_DIR}/contents/ui/main.qml"
 PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
+DISPLAY_QML="${ROOT_DIR}/contents/ui/configDisplay.qml"
+DEBUG_QML="${ROOT_DIR}/contents/ui/configDebug.qml"
+SAFE_TEXT_JS="${ROOT_DIR}/contents/ui/SafeText.js"
 WORKFLOW="${ROOT_DIR}/.github/workflows/ci.yml"
 MAKEFILE="${ROOT_DIR}/Makefile"
 UPDATER="${ROOT_DIR}/scripts/update-widget.sh"
@@ -64,6 +67,11 @@ reject_text "check job" "$CHECK_JOB" "contents: write"
 require_text "release job" "$RELEASE_JOB" "if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')"
 require_text "release job" "$RELEASE_JOB" "contents: write"
 require_text "release job" "$RELEASE_JOB" "persist-credentials: false"
+require_text "release job" "$RELEASE_JOB" "Verify release tag matches metadata"
+require_text "release job" "$RELEASE_JOB" "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+require_text "release job" "$RELEASE_JOB" "jq -r '.KPlugin.Version // empty' metadata.json"
+# shellcheck disable=SC2016 # Match the literal shell expression in the workflow.
+require_text "release job" "$RELEASE_JOB" '"v${metadata_version}" != "$GITHUB_REF_NAME"'
 require_in_file "$WORKFLOW" "image: kdeneon/plasma@sha256:"
 require_in_file "$WORKFLOW" "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683"
 reject_text "workflow" "$(cat "$WORKFLOW")" "actions/checkout@v4"
@@ -71,6 +79,16 @@ reject_text "workflow" "$(cat "$WORKFLOW")" "image: kdeneon/plasma:user"
 require_in_file "$WORKFLOW" "dist/codexbar-plasma.plasmoid.sha256"
 require_in_file "$MAKEFILE" "sha256sum codexbar-plasma.plasmoid > codexbar-plasma.plasmoid.sha256"
 require_in_file "$UPDATER" "sha256sum --check --strict"
+
+for qml_file in "$MAIN_QML" "$PROVIDERS_QML" "$DISPLAY_QML" "$DEBUG_QML"; do
+  require_in_file "$qml_file" 'import "SafeText.js" as SafeText'
+done
+require_in_file "$MAIN_QML" "SafeText.cliMessage"
+require_in_file "$PROVIDERS_QML" "SafeText.cliMessage"
+require_in_file "$DISPLAY_QML" "SafeText.cliMessage"
+require_in_file "$DEBUG_QML" "SafeText.cliDiagnostic"
+require_in_file "$SAFE_TEXT_JS" "function redactCredentials(value, inspectionLimit)"
+require_in_file "$SAFE_TEXT_JS" "maximumDiagnosticLength = 65536"
 
 require_in_file "$MAIN_QML" "function hasOwnKey(item, key)"
 require_in_file "$MAIN_QML" "Object.prototype.hasOwnProperty.call(item, key)"

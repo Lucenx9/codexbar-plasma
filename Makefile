@@ -11,12 +11,14 @@ QML_IMPORT_DIR ?= /usr/lib/qt6/qml
 # failures; locally (modules present) they are no-ops, so the check stays full.
 QMLLINT_FLAGS ?= --unqualified disable
 QML_FILES := \
+	contents/config/config.qml \
 	contents/ui/main.qml \
 	contents/ui/configGeneral.qml \
 	contents/ui/configProviders.qml \
 	contents/ui/configDisplay.qml \
 	contents/ui/configAdvanced.qml \
 	contents/ui/configDebug.qml \
+	contents/ui/SafeText.js \
 	contents/ui/ThemeContrast.js \
 	contents/ui/UsageDetails.js \
 	contents/ui/UpdateLogic.js \

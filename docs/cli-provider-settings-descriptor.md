@@ -118,6 +118,11 @@ Enum fields include `options`:
 The CLI must validate `{value}`. Plasma must not infer valid enum values from
 provider names or config files.
 
+Field, action, and option IDs are machine identifiers. They must match
+`[A-Za-z0-9][A-Za-z0-9._-]*` and be no longer than 128 characters. Consumers
+reject invalid IDs instead of trimming, truncating, or otherwise rewriting
+them.
+
 ## Actions
 
 Actions are provider setup flows the CLI knows how to perform.
@@ -155,7 +160,10 @@ Useful action categories:
 - open docs/dashboard/login URL
 
 Actions must report structured JSON with `status`, optional `message`, and
-optional refreshed `descriptor`.
+optional refreshed `descriptor`. `status` is `ok` after a completed action,
+`error` after a failed action, or `cancelled` when the user abandons an
+interactive flow. A failed action may still exit with code zero, so consumers
+must inspect the structured status before reporting success.
 
 URL-opening actions should still be local CLI actions. For example,
 `codexbar config action --provider openai --action openDashboard --json-only`
@@ -188,6 +196,10 @@ Rules for Plasma:
 - Keep secret fields write-only except for `redactedValue`.
 - Fall back to current CLI command hints when a descriptor is missing,
   unsupported, or invalid.
+- Bound rendering work even for malformed descriptors. Plasma inspects at most
+  32 fields and 32 actions per provider, 64 options per field, and 64 command
+  tokens of at most 2048 characters each. Fields with text values longer than
+  2048 characters are ignored instead of binding or rewriting the value.
 
 ## Plasma renderer rules
 

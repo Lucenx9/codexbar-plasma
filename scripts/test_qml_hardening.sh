@@ -7,12 +7,14 @@ QML_IMPORT_DIR="${QML_IMPORT_DIR:-/usr/lib/qt6/qml}"
 QMLLINT_FLAGS="${QMLLINT_FLAGS:---unqualified disable}"
 
 QML_FILES=(
+  contents/config/config.qml
   contents/ui/main.qml
   contents/ui/configGeneral.qml
   contents/ui/configProviders.qml
   contents/ui/configDisplay.qml
   contents/ui/configAdvanced.qml
   contents/ui/configDebug.qml
+  contents/ui/SafeText.js
   contents/ui/ThemeContrast.js
   contents/ui/UsageDetails.js
   contents/ui/UpdateLogic.js
@@ -24,6 +26,17 @@ QML_FILES=(
   contents/ui/components/ProviderDetailSection.qml
   contents/ui/components/ProviderUsageRow.qml
 )
+
+while IFS= read -r qml_source; do
+  if [[ " ${QML_FILES[*]} " != *" ${qml_source} "* ]]; then
+    echo "QML source is missing from scripts/test_qml_hardening.sh: ${qml_source}" >&2
+    exit 1
+  fi
+  if ! grep -Fq -- "$qml_source" "${ROOT_DIR}/Makefile"; then
+    echo "QML source is missing from Makefile QML_FILES: ${qml_source}" >&2
+    exit 1
+  fi
+done < <(cd "$ROOT_DIR" && find contents -type f \( -name '*.qml' -o -name '*.js' \) -print | sort)
 
 set +e
 output="$(

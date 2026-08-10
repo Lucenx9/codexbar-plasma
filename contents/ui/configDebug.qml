@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasma5support as Plasma5Support
+import "SafeText.js" as SafeText
 
 KCM.SimpleKCM {
     id: page
@@ -85,11 +86,13 @@ KCM.SimpleKCM {
         }
         finishDiagnosticCommand(sourceName)
 
-        var stdoutText = data && data["stdout"] ? data["stdout"].trim() : ""
-        var stderrText = data && data["stderr"] ? data["stderr"].trim() : ""
+        var stdoutText = data && data["stdout"] ? data["stdout"] : ""
+        var stderrText = data && data["stderr"] ? data["stderr"] : ""
         var exitCode = data && data["exit code"] !== undefined ? Number(data["exit code"]) : 0
-        diagnosticOutput = stdoutText.length > 0 ? stdoutText : i18n("No diagnostic output.")
-        diagnosticError = exitCode !== 0 && stderrText.length > 0 ? stderrText : ""
+        var safeOutput = SafeText.cliDiagnostic(stdoutText, SafeText.maximumDiagnosticLength)
+        var safeError = SafeText.cliMessage(stderrText, SafeText.maximumCliMessageLength)
+        diagnosticOutput = safeOutput.length > 0 ? safeOutput : i18n("No diagnostic output.")
+        diagnosticError = exitCode !== 0 ? safeError : ""
     }
 
     Plasma5Support.DataSource {
