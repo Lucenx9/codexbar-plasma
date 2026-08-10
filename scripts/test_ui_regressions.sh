@@ -1293,6 +1293,27 @@ if "readonly property real secondaryTextOpacity: 0.7" not in providers_text:
     raise AssertionError(
         "configProviders.qml must mirror main.qml's secondaryTextOpacity step"
     )
+if main_text.count("Layout.preferredHeight: root.meterTrackHeight") != 2:
+    raise AssertionError(
+        "the credits and provider-cost meters must both consume meterTrackHeight"
+    )
+if provider_usage_row_text.count(
+    "Layout.preferredHeight: usageRow.applet.meterTrackHeight"
+) != 1:
+    raise AssertionError("the provider-usage meter must consume meterTrackHeight")
+
+
+popup_and_provider_surfaces = (
+    (main_qml, main_text),
+    (providers_qml, providers_text),
+    (provider_accounts_panel_qml, provider_accounts_panel_text),
+    (provider_header_qml, provider_header_text),
+    (provider_config_row_qml, provider_config_row_text),
+    (provider_usage_row_qml, provider_usage_row_text),
+    (provider_detail_section_qml, provider_detail_section_text),
+    (overview_provider_row_qml, overview_provider_row_text),
+    (compact_representation_qml, compact_representation_text),
+)
 
 
 def enclosing_element(source_lines, index):
@@ -1303,15 +1324,8 @@ def enclosing_element(source_lines, index):
     return ""
 
 
-for surface in (
-    main_qml,
-    providers_qml,
-    provider_header_qml,
-    provider_usage_row_qml,
-    provider_detail_section_qml,
-    overview_provider_row_qml,
-):
-    surface_lines = surface.read_text(encoding="utf-8").splitlines()
+for surface, surface_text in popup_and_provider_surfaces:
+    surface_lines = surface_text.splitlines()
     for line_number, line in enumerate(surface_lines):
         if not re.match(r"\s*opacity:\s", line):
             continue
@@ -1325,12 +1339,13 @@ for surface in (
                 "scale stays consistent and above WCAG AA contrast"
             )
 
-hardcoded_font = re.search(r"font\.pixelSize:\s*\d", main_text + providers_text)
-if hardcoded_font:
-    raise AssertionError(
-        "popup and provider-config text must size from Kirigami.Theme fonts, "
-        f"not device pixels: {hardcoded_font.group(0)!r}"
-    )
+for surface, surface_text in popup_and_provider_surfaces:
+    hardcoded_font = re.search(r"font\.pixelSize:\s*\d+(?:\.\d+)?", surface_text)
+    if hardcoded_font:
+        raise AssertionError(
+            "popup and provider-config text must size from Kirigami.Theme fonts, "
+            f"not device pixels: {surface.name}: {hardcoded_font.group(0)!r}"
+        )
 PY
 
 echo "UI regression checks passed."
