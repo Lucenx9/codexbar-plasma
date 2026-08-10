@@ -62,6 +62,9 @@ require_in_file "$PROVIDERS_QML" "function descriptorIdentifier(value)"
 require_in_file "$PROVIDERS_QML" 'return /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(value) ? value : ""'
 reject_in_file "$PROVIDERS_QML" "SafeText.boundedDisplayText(raw.id, 128)"
 reject_in_file "$PROVIDERS_QML" "SafeText.boundedDisplayText(option.id, 128)"
+require_in_file "$PROVIDERS_QML" "title: raw.title ? SafeText.cliMessage(raw.title, 120)"
+require_in_file "$PROVIDERS_QML" "description: raw.description ? SafeText.cliMessage(raw.description, 500)"
+require_in_file "$PROVIDERS_QML" "title: option.title ? SafeText.cliMessage(option.title, 120)"
 
 require_in_file "$TODO_MD" "docs/cli-provider-settings-descriptor.md"
 

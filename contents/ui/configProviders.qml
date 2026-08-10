@@ -988,8 +988,8 @@ KCM.SimpleKCM {
         return {
             id: fieldID,
             kind: String(raw.kind),
-            title: raw.title ? SafeText.boundedDisplayText(raw.title, 120) : providerTitle(fieldID),
-            description: raw.description ? SafeText.boundedDisplayText(raw.description, 500) : "",
+            title: raw.title ? SafeText.cliMessage(raw.title, 120) : providerTitle(fieldID),
+            description: raw.description ? SafeText.cliMessage(raw.description, 500) : "",
             value: value === undefined || value === null ? "" : value,
             redactedValue: raw.redactedValue ? boundedCliMessage(raw.redactedValue) : "",
             required: raw.required === true,
@@ -1003,7 +1003,7 @@ KCM.SimpleKCM {
             return null
         }
         var actionID = descriptorIdentifier(raw.id)
-        var actionTitle = SafeText.boundedDisplayText(raw.title, 120)
+        var actionTitle = SafeText.cliMessage(raw.title, 120)
         if (actionID.length === 0 || actionTitle.length === 0) {
             return null
         }
@@ -1015,7 +1015,7 @@ KCM.SimpleKCM {
             id: actionID,
             kind: raw.kind ? String(raw.kind) : "command",
             title: actionTitle,
-            description: raw.description ? SafeText.boundedDisplayText(raw.description, 500) : "",
+            description: raw.description ? SafeText.cliMessage(raw.description, 500) : "",
             command: command
         }
     }
@@ -1057,7 +1057,7 @@ KCM.SimpleKCM {
             }
             result.push({
                 id: optionID,
-                title: option.title ? SafeText.boundedDisplayText(option.title, 120) : optionID
+                title: option.title ? SafeText.cliMessage(option.title, 120) : optionID
             })
         }
         return result
