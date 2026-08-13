@@ -18,6 +18,12 @@ ColumnLayout {
     readonly property real markerPercent: applet.paceMarkerPercent(rowData)
     readonly property string resetText: usageRow.applet.resetLabel(
         usageRow.applet.usageResetText(usageRow.rowData))
+    // Every marker drawn on the meter shares one geometry so pace and quota
+    // thresholds read as the same kind of annotation. The inset matters: a
+    // marker that spans the track edge to edge looks like a gap in the accent
+    // fill rather than a tick placed on top of it.
+    readonly property real meterMarkerInset: Math.max(1, Math.round(applet.meterTrackHeight / 7))
+    readonly property real meterMarkerWidth: Math.max(2, Math.round(applet.meterTrackHeight / 3.5))
 
     Layout.fillWidth: true
     spacing: Kirigami.Units.smallSpacing / 1.5
@@ -73,9 +79,9 @@ ColumnLayout {
         Rectangle {
             visible: usageRow.markerPercent > 0 && usageRow.markerPercent < 100
             x: Math.max(0, Math.min(parent.width - width, parent.width * usageRow.markerPercent / 100 - width / 2))
-            y: 1
-            width: 2
-            height: parent.height - 2
+            y: usageRow.meterMarkerInset
+            width: usageRow.meterMarkerWidth
+            height: parent.height - usageRow.meterMarkerInset * 2
             radius: width / 2
             color: usageRow.rowData.paceOnTop
                 ? usageRow.applet.withAlpha(Kirigami.Theme.positiveTextColor, 0.9)
@@ -92,9 +98,9 @@ ColumnLayout {
 
                 visible: warningPercent > 0 && warningPercent < 100
                 x: Math.max(0, Math.min(usageBar.width - width, usageBar.width * warningPercent / 100 - width / 2))
-                y: 0
-                width: 1
-                height: usageBar.height
+                y: usageRow.meterMarkerInset
+                width: usageRow.meterMarkerWidth
+                height: usageBar.height - usageRow.meterMarkerInset * 2
                 radius: width / 2
                 color: usageRow.applet.statusBadgeColor(modelData.severity)
                 opacity: 0.72

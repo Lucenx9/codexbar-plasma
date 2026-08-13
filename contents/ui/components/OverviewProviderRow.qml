@@ -79,7 +79,7 @@ Rectangle {
             Layout.preferredWidth: Kirigami.Units.iconSizes.medium
                 + Kirigami.Units.smallSpacing * 2
             Layout.preferredHeight: Layout.preferredWidth
-            radius: overviewRow.applet.roundedSurfaceRadius
+            radius: overviewRow.applet.nestedSurfaceRadius
             color: overviewRow.applet.withAlpha(overviewRow.accent, 0.1)
             border.width: 1
             border.color: overviewRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
@@ -96,7 +96,7 @@ Rectangle {
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 2
+            spacing: Kirigami.Units.smallSpacing / 2
 
             RowLayout {
                 Layout.fillWidth: true
@@ -129,7 +129,7 @@ Rectangle {
             Rectangle {
                 visible: overviewRow.hasUsage
                 Layout.fillWidth: true
-                Layout.preferredHeight: 5
+                Layout.preferredHeight: overviewRow.applet.compactMeterTrackHeight
                 radius: height / 2
                 color: overviewRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
                 clip: true

@@ -539,6 +539,30 @@ if "Controls.ScrollView {" in main_text:
 
 if "readonly property real roundedSurfaceRadius: Kirigami.Units.cornerRadius" not in main_text:
     raise AssertionError("main.qml must derive its polished radius from Kirigami theme units")
+if "readonly property real nestedSurfaceRadius: Kirigami.Units.cornerRadius" not in main_text:
+    raise AssertionError(
+        "main.qml must expose a concentric radius for surfaces nested inside a "
+        "roundedSurfaceRadius container"
+    )
+if "readonly property real compactMeterTrackHeight: Math.round(Kirigami.Units.gridUnit" not in main_text:
+    raise AssertionError(
+        "list-row meters must derive their thinner track from gridUnit instead of "
+        "pinning a device pixel count"
+    )
+
+# Section headings sit above metric rows that are already DemiBold. A Normal
+# weight heading therefore reads as less important than its own content, so the
+# structural labels stay Primary and the size scale carries the ranking.
+heading_chunks = main_text.split("Kirigami.Heading {")[1:]
+if len(heading_chunks) < 5:
+    raise AssertionError("main.qml must keep its popup section headings")
+for heading_chunk in heading_chunks:
+    if "type: Kirigami.Heading.Type.Primary" not in heading_chunk[:300]:
+        heading_head = heading_chunk.strip().splitlines()[0].strip()
+        raise AssertionError(
+            "popup section headings must outrank the DemiBold metric labels they "
+            f"introduce; heading starting {heading_head!r} is not Primary"
+        )
 popup_surface_body = id_block(main_text, "popupInnerSurface")
 for popup_surface_fragment in (
     "radius: root.roundedSurfaceRadius",
@@ -567,8 +591,13 @@ if "providerIconSource(providerHeaderRow.providerData.provider)" not in provider
     raise AssertionError("providerHeaderRow must reinforce provider identity with the canonical icon")
 if "providerReadableColor(" not in provider_header_body:
     raise AssertionError("providerHeaderRow must keep provider identity visible on the active theme")
-if "radius: providerHeaderRow.applet.roundedSurfaceRadius" not in provider_header_body:
-    raise AssertionError("providerHeaderRow must share the rounded surface scale")
+if "radius: providerHeaderRow.applet.nestedSurfaceRadius" not in provider_header_body:
+    raise AssertionError("providerHeaderRow must share the nested rounded surface scale")
+if "type: Kirigami.Heading.Type.Primary" not in provider_header_body:
+    raise AssertionError(
+        "the provider title must stay the heaviest label in the detail view so "
+        "the section headings below it never outrank it"
+    )
 
 for function_name in (
     "linearColorChannel",
@@ -743,6 +772,35 @@ if provider_usage_row_text.index("id: usagePercentLabel") > provider_usage_row_t
 usage_bar_body = id_block(provider_usage_row_text, "usageBar")
 if "applet.withAlpha(Kirigami.Theme.textColor, 0.1)" not in usage_bar_body:
     raise AssertionError("usageBar must keep its pill track visually restrained")
+# A marker that spans the track edge to edge reads as a gap in the accent fill
+# rather than a threshold, so pace and quota markers share one inset geometry.
+for marker_geometry_fragment in (
+    "readonly property real meterMarkerInset:",
+    "readonly property real meterMarkerWidth:",
+):
+    if marker_geometry_fragment not in provider_usage_row_text:
+        raise AssertionError(
+            "ProviderUsageRow must define one shared meter marker geometry; "
+            f"missing {marker_geometry_fragment!r}"
+        )
+if usage_bar_body.count("y: usageRow.meterMarkerInset") != 2:
+    raise AssertionError("both the pace marker and the quota markers must be inset in the track")
+if usage_bar_body.count("width: usageRow.meterMarkerWidth") != 2:
+    raise AssertionError("both the pace marker and the quota markers must share one marker width")
+for full_height_marker in ("height: usageBar.height\n", "y: 0\n"):
+    if full_height_marker in usage_bar_body:
+        raise AssertionError(
+            "quota markers must not span the meter track edge to edge again"
+        )
+
+credits_meter_index = main_text.find('text: i18n("Credits")')
+if credits_meter_index < 0:
+    raise AssertionError("main.qml must keep the Credits section")
+if "visible: root.selectedProviderData && root.selectedProviderData.credits > 0" not in main_text[credits_meter_index:credits_meter_index + 900]:
+    raise AssertionError(
+        "a depleted credits balance must not draw an empty meter track that reads "
+        "as a meter which has not loaded yet"
+    )
 for usage_metadata_id in ("usagePaceLabel", "usageResetLabel"):
     usage_metadata_body = id_block(provider_usage_row_text, usage_metadata_id)
     if "font: Kirigami.Theme.smallFont" not in usage_metadata_body:
@@ -808,7 +866,7 @@ cost_history_row_body = id_block(main_text, "costHistoryMetricRow")
 for history_row_fragment in (
     "id: costHistoryDateLabel",
     "id: costHistoryBarTrack",
-    "Layout.preferredHeight: 5",
+    "Layout.preferredHeight: root.compactMeterTrackHeight",
     "root.withAlpha(Kirigami.Theme.textColor, 0.055)",
     "gradient: Gradient",
     "orientation: Gradient.Horizontal",
@@ -841,7 +899,7 @@ if "border.width" in overview_row_surface_bindings:
 for polished_overview_fragment in (
     "radius: applet.roundedSurfaceRadius",
     "id: overviewProviderIdentitySurface",
-    "radius: overviewRow.applet.roundedSurfaceRadius",
+    "radius: overviewRow.applet.nestedSurfaceRadius",
     "applet.withAlpha(overviewRow.accent, 0.1)",
 ):
     if polished_overview_fragment not in overview_row_body:

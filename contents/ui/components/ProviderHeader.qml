@@ -22,7 +22,7 @@ RowLayout {
 
         Layout.preferredWidth: Kirigami.Units.iconSizes.medium + Kirigami.Units.smallSpacing * 2
         Layout.preferredHeight: Layout.preferredWidth
-        radius: providerHeaderRow.applet.roundedSurfaceRadius
+        radius: providerHeaderRow.applet.nestedSurfaceRadius
         color: providerHeaderRow.applet.withAlpha(providerHeaderRow.brandAccent, 0.12)
         border.width: 1
         border.color: providerHeaderRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
@@ -56,6 +56,7 @@ RowLayout {
             Kirigami.Heading {
                 text: providerHeaderRow.providerData ? providerHeaderRow.providerData.title : ""
                 level: 2
+                type: Kirigami.Heading.Type.Primary
                 Layout.fillWidth: true
                 elide: Text.ElideRight
             }
