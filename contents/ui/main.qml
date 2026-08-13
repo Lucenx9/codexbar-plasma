@@ -106,6 +106,11 @@ PlasmoidItem {
         : null
     readonly property real roundedSurfaceRadius: Kirigami.Units.cornerRadius
         + Kirigami.Units.smallSpacing
+    // Radius for a small surface drawn inside a roundedSurfaceRadius container.
+    // Concentric rounding wants the inner radius reduced by the inset between
+    // the two edges, and popup surfaces inset their content by smallSpacing, so
+    // this is roundedSurfaceRadius minus that inset by construction.
+    readonly property real nestedSurfaceRadius: Kirigami.Units.cornerRadius
     // Two-step de-emphasis scale for popup text. A supporting label uses the
     // secondary step and the value it annotates uses the stronger step, so a
     // label/value pair keeps its hierarchy without inventing a new opacity per
@@ -117,6 +122,10 @@ PlasmoidItem {
     // one provider detail view. Derived from gridUnit so it follows the user
     // font size instead of pinning a device pixel count.
     readonly property real meterTrackHeight: Math.round(Kirigami.Units.gridUnit * 0.4)
+    // Thinner track for meters that sit inside a scannable list row (overview
+    // rows, cost history rows) instead of leading a detail section. Keeping the
+    // two scales apart is what makes the primary meters read as primary.
+    readonly property real compactMeterTrackHeight: Math.round(Kirigami.Units.gridUnit * 0.28)
 
     onCommandSourceChanged: Qt.callLater(refreshNow)
     onCostUsageEnabledChanged: Qt.callLater(refreshCost)
@@ -4827,6 +4836,7 @@ PlasmoidItem {
                         Kirigami.Heading {
                             text: i18n("Overview")
                             level: 2
+                            type: Kirigami.Heading.Type.Primary
                             Layout.fillWidth: true
                             elide: Text.ElideRight
                         }
@@ -4984,10 +4994,16 @@ PlasmoidItem {
                             Kirigami.Heading {
                                 text: i18n("Credits")
                                 level: 4
+                                type: Kirigami.Heading.Type.Primary
                                 Layout.fillWidth: true
                             }
 
                             Rectangle {
+                                // A depleted balance draws an empty track that is
+                                // indistinguishable from a meter that has not loaded
+                                // yet, so let the remaining-credits line carry the
+                                // zero case on its own.
+                                visible: root.selectedProviderData && root.selectedProviderData.credits > 0
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: root.meterTrackHeight
                                 radius: height / 2
@@ -5039,6 +5055,7 @@ PlasmoidItem {
                             Kirigami.Heading {
                                 text: resetCreditsSection.resetCredits ? resetCreditsSection.resetCredits.title : ""
                                 level: 4
+                                type: Kirigami.Heading.Type.Primary
                                 Layout.fillWidth: true
                             }
 
@@ -5067,6 +5084,7 @@ PlasmoidItem {
                             Kirigami.Heading {
                                 text: providerCostSection.providerCost ? providerCostSection.providerCost.title : ""
                                 level: 4
+                                type: Kirigami.Heading.Type.Primary
                                 Layout.fillWidth: true
                             }
 
@@ -5253,6 +5271,7 @@ PlasmoidItem {
                             Kirigami.Heading {
                                 text: i18n("Cost")
                                 level: 4
+                                type: Kirigami.Heading.Type.Primary
                                 Layout.fillWidth: true
                             }
 
@@ -5439,7 +5458,7 @@ PlasmoidItem {
                                             id: costHistoryBarTrack
 
                                             Layout.fillWidth: true
-                                            Layout.preferredHeight: 5
+                                            Layout.preferredHeight: root.compactMeterTrackHeight
                                             radius: height / 2
                                             color: root.withAlpha(Kirigami.Theme.textColor, 0.055)
                                             clip: true
