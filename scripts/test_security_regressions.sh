@@ -7,6 +7,7 @@ PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
 DISPLAY_QML="${ROOT_DIR}/contents/ui/configDisplay.qml"
 DEBUG_QML="${ROOT_DIR}/contents/ui/configDebug.qml"
 SAFE_TEXT_JS="${ROOT_DIR}/contents/ui/SafeText.js"
+PROVIDER_IDENTITY_JS="${ROOT_DIR}/contents/ui/ProviderIdentity.js"
 WORKFLOW="${ROOT_DIR}/.github/workflows/ci.yml"
 MAKEFILE="${ROOT_DIR}/Makefile"
 UPDATER="${ROOT_DIR}/scripts/update-widget.sh"
@@ -89,25 +90,39 @@ require_in_file "$DISPLAY_QML" "SafeText.cliMessage"
 require_in_file "$DEBUG_QML" "SafeText.cliDiagnostic"
 require_in_file "$SAFE_TEXT_JS" "function redactCredentials(value, inspectionLimit)"
 require_in_file "$SAFE_TEXT_JS" "maximumDiagnosticLength = 65536"
+require_in_file "$SAFE_TEXT_JS" "maximumCliJsonLength = 4 * 1024 * 1024"
+require_in_file "$SAFE_TEXT_JS" "function boundedInspectionText(value, inspectionLimit)"
+require_in_file "$SAFE_TEXT_JS" 'chunk.search(/[^\s\u0000-\u001f\u007f]/)'
+require_in_file "$SAFE_TEXT_JS" "function cliJsonText(value)"
 
 require_in_file "$MAIN_QML" "function hasOwnKey(item, key)"
 require_in_file "$MAIN_QML" "Object.prototype.hasOwnProperty.call(item, key)"
 require_in_file "$MAIN_QML" "function isUnsafeObjectKey(key)"
 require_in_file "$MAIN_QML" "value === \"__proto__\" || value === \"prototype\" || value === \"constructor\""
 require_in_file "$MAIN_QML" "function providerMapKey(providerID)"
-require_in_file "$MAIN_QML" "return isUnsafeObjectKey(key) ? \"\" : key"
+require_in_file "$MAIN_QML" 'import "ProviderIdentity.js" as ProviderIdentity'
+require_in_file "$MAIN_QML" "return ProviderIdentity.providerMapKey(key)"
+require_in_file "$PROVIDER_IDENTITY_JS" "Object.prototype.hasOwnProperty.call(item, key)"
+require_in_file "$PROVIDER_IDENTITY_JS" "Object.prototype.hasOwnProperty.call(Object.prototype, key)"
 require_in_file "$MAIN_QML" "if (name.length === 0 || isUnsafeObjectKey(name))"
 require_in_file "$MAIN_QML" "if (!hasOwnKey(byName, name))"
 require_in_file "$MAIN_QML" "if (!hasOwnKey(byName, modelName))"
 require_in_file "$MAIN_QML" "if (!hasOwnKey(item, key) || isUnsafeObjectKey(key))"
-require_in_file "$MAIN_QML" "var providerID = providerMapKey(items[i].provider)"
+require_in_file "$MAIN_QML" "var providerID = normalizedProviderID(items[i].provider)"
 require_in_file "$MAIN_QML" "var providerID = providerMapKey(item.provider)"
 require_in_file "$MAIN_QML" "var providerID = providerMapKey(item.provider || \"unknown\")"
 require_in_file "$MAIN_QML" "var key = providerMapKey(providerID)"
 require_in_file "$PROVIDERS_QML" "function providerMapKey(providerID)"
-require_in_file "$PROVIDERS_QML" "return isUnsafeObjectKey(key) ? \"\" : key"
+require_in_file "$PROVIDERS_QML" "return ProviderIdentity.providerMapKey(key)"
 require_in_file "$PROVIDERS_QML" "if (!hasOwnKey(item, key) || isUnsafeObjectKey(key))"
 require_in_file "$PROVIDERS_QML" "Object.prototype.hasOwnProperty.call(item, key)"
+require_in_file "$MAIN_QML" "maximumConcurrentProviderFallbackCommands: 8"
+require_in_file "$MAIN_QML" "nextProviders.length < maximumProviderSnapshots"
+require_in_file "$MAIN_QML" "value: boundedDisplayText(parts.join(\" · \"), 500)"
+require_in_file "$MAIN_QML" "key = ProviderIdentity.providerKey(key, aliases)"
+require_in_file "$PROVIDERS_QML" "key = ProviderIdentity.providerKey(key, aliases)"
+require_in_file "$MAIN_QML" "var key = ProviderIdentity.providerMapKey(providerKey(value))"
+require_in_file "$PROVIDERS_QML" "var key = ProviderIdentity.providerMapKey(providerKey(value))"
 require_in_file "$PROVIDERS_QML" "function isAllowedDescriptorCommand(commandTokens, purpose)"
 require_in_file "$PROVIDERS_QML" "String(commandTokens[0]) !== \"codexbar\""
 require_in_file "$PROVIDERS_QML" "String(commandTokens[1]) !== \"config\""
@@ -124,6 +139,15 @@ require_in_file "$PROVIDERS_QML" "if (isSafeDescriptorUrl(url))"
 for qml_file in "$MAIN_QML" "$PROVIDERS_QML"; do
   require_in_file "$qml_file" '!/^[a-z0-9][a-z0-9._-]*$/.test(key) || key.indexOf("..") !== -1'
   require_in_file "$qml_file" 'return "view-statistics"'
+done
+for qml_file in \
+  "$MAIN_QML" \
+  "$PROVIDERS_QML" \
+  "$ROOT_DIR/contents/ui/components/CompactRepresentation.qml" \
+  "$ROOT_DIR/contents/ui/components/OverviewProviderRow.qml" \
+  "$ROOT_DIR/contents/ui/components/ProviderConfigRow.qml" \
+  "$ROOT_DIR/contents/ui/components/ProviderHeader.qml"; do
+  require_in_file "$qml_file" 'fallback: "view-statistics"'
 done
 require_in_file "$PROVIDERS_QML" "function descriptorPendingFieldKey(fieldID)"
 require_in_file "$PROVIDERS_QML" "return JSON.stringify(value)"

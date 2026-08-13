@@ -70,7 +70,8 @@ that install channel.
 - `org.kde.plasma.plasma5support`
 - `codexbar` CLI on `PATH`, or an absolute CLI path configured in the widget
 - `notify-send` for optional Plasma notifications
-- `curl`, `jq`, `sha256sum`, and GNU `timeout` for the bundled release updater
+- `curl`, `jq`, `sha256sum`, and GNU `timeout` for the bundled release updater;
+  GNU `timeout` also bounds CLI writes after a secret prompt
 
 If Plasma does not inherit your shell `PATH`, set an absolute command path in
 the widget settings. On Arch/CachyOS with the AUR package this is usually:

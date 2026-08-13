@@ -19,3 +19,27 @@ function updateCheckDue(updateChecksEnabled, lastCheck, intervalHours, nowMs, fo
     }
     return Number(nowMs) - lastCheckMs >= hours * 60 * 60 * 1000
 }
+
+function nextUpdateCheckDelay(updateChecksEnabled, lastCheck, intervalHours, nowMs, minimumDelayMs) {
+    if (!updateChecksEnabled) {
+        return 0
+    }
+
+    var minimum = Number(minimumDelayMs)
+    if (!isFinite(minimum) || minimum <= 0) {
+        minimum = 1000
+    }
+    var hours = Number(intervalHours)
+    if (!isFinite(hours) || hours <= 0) {
+        return minimum
+    }
+
+    var intervalMs = hours * 60 * 60 * 1000
+    var lastCheckMs = Date.parse(String(lastCheck || ""))
+    if (!isFinite(lastCheckMs)) {
+        return minimum
+    }
+
+    var remainingMs = lastCheckMs + intervalMs - Number(nowMs)
+    return Math.max(minimum, Math.min(intervalMs, remainingMs))
+}

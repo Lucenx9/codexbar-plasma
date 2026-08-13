@@ -7,6 +7,7 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
 import "components" as Components
+import "ProviderIdentity.js" as ProviderIdentity
 import "SafeText.js" as SafeText
 import "ThemeContrast.js" as ThemeContrast
 import "UsageDetails.js" as UsageDetails
@@ -69,7 +70,16 @@ PlasmoidItem {
     property var activeUsageCommands: ({})
     readonly property int usageCommandTimeoutMs: 120000
     readonly property int maximumExtraRateWindows: 24
+    readonly property int maximumProviderSnapshots: 256
+    readonly property int maximumAccountSnapshots: 128
+    readonly property int maximumCostSnapshots: 256
+    readonly property int maximumCostHistoryPoints: 365
+    readonly property int maximumCostHistoryScanItems: 2048
+    readonly property int maximumModelBreakdownsPerDay: 128
+    readonly property int maximumConcurrentProviderFallbackCommands: 8
     property var pendingProviderCommands: ({})
+    property var fallbackProviderQueue: []
+    property int activeProviderFallbackCount: 0
     property var fallbackProviderOrder: []
     property var fallbackProviderResults: ({})
     property var fallbackProviderSeen: ({})
@@ -93,6 +103,7 @@ PlasmoidItem {
     property string connectedUpdateCommandSource: ""
     readonly property int widgetUpdateCheckTimeoutMs: 60000
     readonly property int widgetAutoUpdateTimeoutMs: 600000
+    readonly property int widgetUpdateMinimumTimerDelayMs: 60000
     property string updateStatusText: boundedWidgetUpdateText(Plasmoid.configuration.widgetUpdateLastStatus)
     property string updateErrorText: boundedWidgetUpdateText(Plasmoid.configuration.widgetUpdateLastError)
     property string lastNotifiedUpdateVersion: Plasmoid.configuration.lastNotifiedUpdateVersion || ""
@@ -140,8 +151,11 @@ PlasmoidItem {
     onUpdateChecksEnabledChanged: {
         if (updateChecksEnabled) {
             Qt.callLater(function() { root.checkForWidgetUpdate(true) })
+        } else {
+            updateCheckTimer.stop()
         }
     }
+    onAutoUpdateIntervalHoursChanged: scheduleNextUpdateCheck()
     onAutoUpdateEnabledChanged: {
         if (updateChecksEnabled && autoUpdateEnabled) {
             Qt.callLater(function() { root.checkForWidgetUpdate(true) })
@@ -164,6 +178,7 @@ PlasmoidItem {
         }
         refreshNow()
         if (updateChecksEnabled) {
+            scheduleNextUpdateCheck()
             Qt.callLater(checkForWidgetUpdate)
         }
     }
@@ -365,6 +380,21 @@ PlasmoidItem {
         return SafeText.cliMessage(value, SafeText.maximumCliMessageLength)
     }
 
+    function isCliRecord(value) {
+        return value !== null && typeof value === "object" && !Array.isArray(value)
+    }
+
+    function normalizedProviderID(value) {
+        if (typeof value !== "string") {
+            return ""
+        }
+        var trimmed = value.trim()
+        if (trimmed.length === 0 || trimmed.length > ProviderIdentity.maximumProviderIDLength) {
+            return ""
+        }
+        return providerMapKey(trimmed)
+    }
+
     function hasOwnKey(item, key) {
         return item ? Object.prototype.hasOwnProperty.call(item, key) : false
     }
@@ -376,7 +406,7 @@ PlasmoidItem {
 
     function providerMapKey(providerID) {
         var key = providerKey(providerID)
-        return isUnsafeObjectKey(key) ? "" : key
+        return ProviderIdentity.providerMapKey(key)
     }
 
     function commandWithRunNonce(command) {
@@ -461,6 +491,8 @@ PlasmoidItem {
         // Account loads are user-triggered; keep them alive across usage refreshes
         // so their replies can still populate the account picker.
         pendingProviderCommands = ({})
+        fallbackProviderQueue = []
+        activeProviderFallbackCount = 0
         fallbackProviderOrder = []
         fallbackProviderResults = ({})
         fallbackProviderSeen = ({})
@@ -528,10 +560,12 @@ PlasmoidItem {
 
         var items = Array.isArray(payload) ? payload : [payload]
         var nextProviders = []
-        for (var i = 0; i < items.length; i++) {
-            if (items[i]) {
-                nextProviders.push(normalizeProvider(items[i]))
+        var itemLimit = Math.min(items.length, maximumProviderSnapshots)
+        for (var i = 0; i < itemLimit; i++) {
+            if (!isCliRecord(items[i]) || normalizedProviderID(items[i].provider).length === 0) {
+                continue
             }
+            nextProviders.push(normalizeProvider(items[i]))
         }
 
         markNotificationProvidersFresh(nextProviders)
@@ -601,16 +635,20 @@ PlasmoidItem {
         var providerIDs = []
         var displayNames = ({})
         var items = Array.isArray(payload) ? payload : [payload]
-        for (var i = 0; i < items.length; i++) {
-            if (items[i] && items[i].provider) {
-                var providerID = providerMapKey(items[i].provider)
+        var itemLimit = Math.min(items.length, maximumProviderSnapshots)
+        var seenProviderIDs = ({})
+        for (var i = 0; i < itemLimit; i++) {
+            if (isCliRecord(items[i]) && items[i].provider) {
+                var providerID = normalizedProviderID(items[i].provider)
                 if (providerID.length === 0) {
                     continue
                 }
-                if (items[i].displayName && String(items[i].displayName).trim().length > 0) {
-                    displayNames[providerID] = String(items[i].displayName).trim()
+                var displayName = boundedDisplayText(items[i].displayName, 120)
+                if (displayName.length > 0) {
+                    displayNames[providerID] = displayName
                 }
-                if (items[i].enabled === true) {
+                if (items[i].enabled === true && !hasOwnKey(seenProviderIDs, providerID)) {
+                    seenProviderIDs[providerID] = true
                     providerIDs.push(providerID)
                 }
             }
@@ -625,6 +663,8 @@ PlasmoidItem {
             finishUsageCommandSource(existingCommand)
         }
         pendingProviderCommands = ({})
+        fallbackProviderQueue = []
+        activeProviderFallbackCount = 0
         fallbackProviderOrder = []
         fallbackProviderResults = ({})
         fallbackProviderSeen = ({})
@@ -633,8 +673,9 @@ PlasmoidItem {
         var seenCommands = ({})
         var commands = ({})
         var commandList = []
-        for (var i = 0; i < providerIDs.length; i++) {
-            var providerID = providerMapKey(providerIDs[i])
+        var providerLimit = Math.min(providerIDs.length, maximumProviderSnapshots)
+        for (var i = 0; i < providerLimit; i++) {
+            var providerID = normalizedProviderID(String(providerIDs[i] || ""))
             if (providerID.length === 0) {
                 continue
             }
@@ -651,17 +692,30 @@ PlasmoidItem {
         }
 
         pendingProviderCommands = commands
-        for (var j = 0; j < commandList.length; j++) {
-            var sourceName = commandList[j]
-            connectUsageCommand(
-                sourceName,
-                buildUsageCommandDescriptor("providerFallback", commands[sourceName]))
-        }
+        fallbackProviderQueue = commandList
+        pumpProviderFallbackCommands()
         if (pendingProviderCount === 0) {
             providers = []
             errorText = i18n("No enabled CodexBar providers.")
             loading = false
         }
+    }
+
+    function pumpProviderFallbackCommands() {
+        var queue = fallbackProviderQueue.slice()
+        while (activeProviderFallbackCount < maximumConcurrentProviderFallbackCommands
+                && queue.length > 0) {
+            var sourceName = queue.shift()
+            var providerID = pendingProviderCommands[sourceName] || ""
+            if (providerID.length === 0) {
+                continue
+            }
+            activeProviderFallbackCount++
+            connectUsageCommand(
+                sourceName,
+                buildUsageCommandDescriptor("providerFallback", providerID))
+        }
+        fallbackProviderQueue = queue
     }
 
     function parseProviderFallbackOutput(sourceName, stdoutText, stderrText) {
@@ -674,7 +728,8 @@ PlasmoidItem {
         pendingProviderCommands = commands
         finishUsageCommandSource(sourceName)
 
-        if (fallbackProviderSeen[providerID]) {
+        if (hasOwnKey(fallbackProviderSeen, providerID)) {
+            completeProviderFallbackCommand()
             return
         }
         var seen = copyObject(fallbackProviderSeen)
@@ -692,13 +747,16 @@ PlasmoidItem {
             try {
                 payload = JSON.parse(trimmed)
                 var items = Array.isArray(payload) ? payload : [payload]
-                for (var i = 0; i < items.length; i++) {
-                    if (items[i]) {
-                        if (!items[i].provider) {
-                            items[i].provider = providerID
-                        }
-                        normalizedItems.push(normalizeProvider(items[i]))
+                var itemLimit = Math.min(items.length, maximumAccountSnapshots)
+                for (var i = 0; i < itemLimit; i++) {
+                    if (!isCliRecord(items[i])) {
+                        continue
                     }
+                    var providerItem = copyObject(items[i])
+                    // A provider-scoped command may only update the requested
+                    // provider, even if a malformed CLI payload claims another id.
+                    providerItem.provider = providerID
+                    normalizedItems.push(normalizeProvider(providerItem))
                 }
             } catch (error) {
                 normalizedItems.push(normalizeProvider(providerErrorPayload(
@@ -710,7 +768,13 @@ PlasmoidItem {
         var results = copyObject(fallbackProviderResults)
         results[providerID] = normalizedItems
         fallbackProviderResults = results
+        completeProviderFallbackCommand()
+    }
+
+    function completeProviderFallbackCommand() {
+        activeProviderFallbackCount = Math.max(0, activeProviderFallbackCount - 1)
         pendingProviderCount = Math.max(0, pendingProviderCount - 1)
+        pumpProviderFallbackCommands()
 
         if (pendingProviderCount === 0) {
             finishProviderFallback()
@@ -719,10 +783,14 @@ PlasmoidItem {
 
     function finishProviderFallback() {
         var nextProviders = []
-        for (var i = 0; i < fallbackProviderOrder.length; i++) {
+        // This global delegate budget deliberately wins over completeness if a
+        // future provider-scoped CLI response starts returning many accounts.
+        for (var i = 0; i < fallbackProviderOrder.length
+                && nextProviders.length < maximumProviderSnapshots; i++) {
             var providerID = fallbackProviderOrder[i]
             var items = fallbackProviderResults[providerID] || []
-            for (var j = 0; j < items.length; j++) {
+            for (var j = 0; j < items.length
+                    && nextProviders.length < maximumProviderSnapshots; j++) {
                 nextProviders.push(items[j])
             }
         }
@@ -732,6 +800,9 @@ PlasmoidItem {
         errorText = nextProviders.length === 0 ? i18n("codexbar did not return JSON.") : ""
         lastUpdatedText = i18n("Updated %1", Qt.formatDateTime(new Date(), "hh:mm"))
         loading = false
+        pendingProviderCommands = ({})
+        fallbackProviderQueue = []
+        activeProviderFallbackCount = 0
         fallbackProviderSeen = ({})
         pendingProviderCount = 0
         applyTokenCosts()
@@ -961,15 +1032,15 @@ PlasmoidItem {
         var options = []
         var message = ""
         var sawMissingTokenAccountsError = false
-        for (var i = 0; i < items.length; i++) {
+        var itemLimit = Math.min(items.length, maximumAccountSnapshots)
+        for (var i = 0; i < itemLimit; i++) {
             var item = items[i]
-            if (!item) {
+            if (!isCliRecord(item)) {
                 continue
             }
-            if (!item.provider) {
-                item.provider = providerID
-            }
-            var normalized = normalizeProvider(item)
+            var accountItem = copyObject(item)
+            accountItem.provider = providerID
+            var normalized = normalizeProvider(accountItem)
             if (normalized.error.length > 0 && accountLabel(normalized).length === 0) {
                 if (isMissingTokenAccountsError(normalized.error)) {
                     sawMissingTokenAccountsError = true
@@ -1038,8 +1109,12 @@ PlasmoidItem {
         var items = Array.isArray(payload) ? payload : [payload]
         var nextCosts = ({})
         var costMessage = ""
-        for (var i = 0; i < items.length; i++) {
+        var itemLimit = Math.min(items.length, maximumCostSnapshots)
+        for (var i = 0; i < itemLimit; i++) {
             var item = items[i]
+            if (!isCliRecord(item)) {
+                continue
+            }
             if (costMessage.length === 0 && item && item.error && item.error.message) {
                 costMessage = boundedCliMessage(item.error.message)
             }
@@ -1075,8 +1150,8 @@ PlasmoidItem {
         if (providerID.length === 0) {
             return null
         }
-        var currency = item.currencyCode || "USD"
-        var windowLabel = item.historyLabel || costHistoryWindowLabel(item)
+        var currency = boundedDisplayText(item.currencyCode || "USD", 12)
+        var windowLabel = boundedDisplayText(item.historyLabel || costHistoryWindowLabel(item), 120)
         return {
             provider: providerID,
             title: i18n("Cost"),
@@ -1084,7 +1159,7 @@ PlasmoidItem {
             monthLine: costLine(windowLabel, item.last30DaysCostUSD, item.last30DaysTokens, currency),
             hintLine: tokenCostHint(providerID),
             totals: normalizeCostTotals(item.totals, item.last30DaysCostUSD, item.last30DaysTokens, currency),
-            models: normalizeCostModels(item.daily, currency),
+            models: normalizeCostModels(item.daily, currency, costHistoryDays),
             daily: normalizeCostDaily(item.daily, currency, costHistoryDays)
         }
     }
@@ -1106,8 +1181,16 @@ PlasmoidItem {
             return result
         }
 
-        for (var i = 0; i < items.length; i++) {
-            var item = items[i] || ({})
+        var historyDays = isFinite(Number(days)) ? Math.max(1, Math.min(maximumCostHistoryPoints, Number(days))) : 30
+        var inspectedItems = 0
+        for (var i = items.length - 1; i >= 0
+                && result.length < historyDays
+                && inspectedItems < maximumCostHistoryScanItems; i--) {
+            inspectedItems++
+            var item = isCliRecord(items[i]) ? items[i] : null
+            if (!item) {
+                continue
+            }
             var cost = Number(item.totalCost !== undefined ? item.totalCost : item.costUSD)
             var tokens = Number(item.totalTokens !== undefined ? item.totalTokens : item.tokens)
             var inputTokens = Number(item.inputTokens)
@@ -1120,20 +1203,18 @@ PlasmoidItem {
             if (!isFinite(cost) && !isFinite(tokens) && !isFinite(inputTokens) && !isFinite(outputTokens)) {
                 continue
             }
-            result.push({
-                label: String(item.date || item.day || item.dayKey || ""),
+            result.unshift({
+                label: boundedDisplayText(item.date || item.day || item.dayKey || "", 120),
                 cost: isFinite(cost) ? Math.max(0, cost) : 0,
                 tokens: isFinite(tokens) ? Math.max(0, tokens) : 0,
                 inputTokens: isFinite(inputTokens) ? Math.max(0, inputTokens) : 0,
                 outputTokens: isFinite(outputTokens) ? Math.max(0, outputTokens) : 0,
                 cacheReadTokens: isFinite(cacheReadTokens) ? Math.max(0, cacheReadTokens) : 0,
                 cacheCreationTokens: isFinite(cacheCreationTokens) ? Math.max(0, cacheCreationTokens) : 0,
-                currency: currency || "USD"
+                currency: boundedDisplayText(currency || "USD", 12)
             })
         }
-
-        var historyDays = isFinite(Number(days)) ? Math.max(1, Math.min(365, Number(days))) : 30
-        return result.slice(Math.max(0, result.length - historyDays))
+        return result
     }
 
     function normalizeCostTotals(totals, fallbackCost, fallbackTokens, currency) {
@@ -1154,7 +1235,7 @@ PlasmoidItem {
             outputTokens: isFinite(outputTokens) ? Math.max(0, outputTokens) : 0,
             cacheReadTokens: isFinite(cacheReadTokens) ? Math.max(0, cacheReadTokens) : 0,
             cacheCreationTokens: isFinite(cacheCreationTokens) ? Math.max(0, cacheCreationTokens) : 0,
-            currency: currency || "USD"
+            currency: boundedDisplayText(currency || "USD", 12)
         }
     }
 
@@ -1169,19 +1250,22 @@ PlasmoidItem {
         return total > 0 ? total : Number.NaN
     }
 
-    function normalizeCostModels(items, currency) {
+    function normalizeCostModels(items, currency, days) {
         var byName = ({})
         if (!items || !Array.isArray(items)) {
             return []
         }
 
-        for (var i = 0; i < items.length; i++) {
+        var historyDays = isFinite(Number(days)) ? Math.max(1, Math.min(maximumCostHistoryPoints, Number(days))) : 30
+        var firstItem = Math.max(0, items.length - historyDays)
+        for (var i = firstItem; i < items.length; i++) {
             var breakdowns = items[i] && Array.isArray(items[i].modelBreakdowns)
                 ? items[i].modelBreakdowns
                 : []
-            for (var j = 0; j < breakdowns.length; j++) {
+            var breakdownLimit = Math.min(breakdowns.length, maximumModelBreakdownsPerDay)
+            for (var j = 0; j < breakdownLimit; j++) {
                 var breakdown = breakdowns[j] || ({})
-                var name = String(breakdown.modelName || breakdown.model || "").trim()
+                var name = boundedDisplayText(breakdown.modelName || breakdown.model || "", 120)
                 if (name.length === 0 || isUnsafeObjectKey(name)) {
                     continue
                 }
@@ -1195,7 +1279,7 @@ PlasmoidItem {
                         label: name,
                         cost: 0,
                         tokens: 0,
-                        currency: currency || "USD"
+                        currency: boundedDisplayText(currency || "USD", 12)
                     }
                 }
                 if (isFinite(cost)) {
@@ -1510,17 +1594,17 @@ PlasmoidItem {
             return
         }
         rows.push({
-            label: label,
+            label: boundedDisplayText(label, 120),
             value: text
         })
     }
 
     function appendDashboardPeriodRow(rows, label, source) {
-        if (!source) {
+        if (!isCliRecord(source)) {
             return
         }
         var parts = []
-        var currency = source.currency || source.currencyCode || "USD"
+        var currency = boundedDisplayText(source.currency || source.currencyCode || "USD", 12)
         var cost = source.costUSD !== undefined ? source.costUSD : (source.cost !== undefined ? source.cost : source.totalCost)
         var tokens = source.totalTokens !== undefined ? source.totalTokens : source.tokens
         var requests = source.requests !== undefined ? source.requests : source.requestCount
@@ -1543,8 +1627,8 @@ PlasmoidItem {
             return
         }
         rows.push({
-            label: label,
-            value: parts.join(" · ")
+            label: boundedDisplayText(label, 120),
+            value: boundedDisplayText(parts.join(" · "), 500)
         })
     }
 
@@ -1553,14 +1637,14 @@ PlasmoidItem {
             return
         }
         var item = items[0] || ({})
-        var name = String(item.name || item.model || item.label || item.type || "").trim()
+        var name = boundedDisplayText(item.name || item.model || item.label || item.type || "", 120)
         if (name.length === 0) {
             return
         }
         var suffix = dashboardTopSuffix(item)
         rows.push({
-            label: label,
-            value: suffix.length > 0 ? i18n("%1 (%2)", name, suffix) : name
+            label: boundedDisplayText(label, 120),
+            value: boundedDisplayText(suffix.length > 0 ? i18n("%1 (%2)", name, suffix) : name, 500)
         })
     }
 
@@ -1592,7 +1676,7 @@ PlasmoidItem {
             return ""
         }
         if (kind === "text") {
-            return String(value).trim()
+            return boundedDisplayText(value, 120)
         }
         if (kind === "percent") {
             var percent = Number(value)
@@ -1608,7 +1692,7 @@ PlasmoidItem {
         }
         var number = Number(value)
         if (!isFinite(number)) {
-            return String(value).trim()
+            return boundedDisplayText(value, 120)
         }
         return tokenCountString(number)
     }
@@ -1811,8 +1895,8 @@ PlasmoidItem {
     }
 
     function normalizeProvider(item) {
-        var usage = item.usage || ({})
-        var pace = item.pace || ({})
+        var usage = isCliRecord(item.usage) ? item.usage : ({})
+        var pace = isCliRecord(item.pace) ? item.pace : ({})
         var rows = []
         var providerID = providerMapKey(item.provider || "unknown")
         if (providerID.length === 0) {
@@ -1827,16 +1911,16 @@ PlasmoidItem {
         var extraLimit = Math.min(extras.length, maximumExtraRateWindows)
         for (var i = 0; i < extraLimit; i++) {
             var extra = extras[i]
-            if (extra && extra.window) {
-                addWindow(rows, extra.title || extra.id || i18n("Extra"), extra.window, null, extra.usageKnown !== false, "extra")
+            if (isCliRecord(extra) && isCliRecord(extra.window)) {
+                addWindow(rows, boundedDisplayText(extra.title || extra.id || i18n("Extra"), 120), extra.window, null, extra.usageKnown !== false, "extra")
             }
         }
 
-        var identity = usage.identity || ({})
-        var error = item.error || null
-        var status = item.status || null
+        var identity = isCliRecord(usage.identity) ? usage.identity : ({})
+        var error = isCliRecord(item.error) ? item.error : null
+        var status = isCliRecord(item.status) ? item.status : null
         var severity = statusSeverity(status)
-        var credits = item.credits || null
+        var credits = isCliRecord(item.credits) ? item.credits : null
         var displayName = item.displayName || item.title || providerDisplayNames[providerID] || ""
         var providerDetails = UsageDetails.normalizeSections(usage.details)
         var providerUsageDashboard = providerDetails.length > 0 ? null : usageDashboard(providerID, usage, item)
@@ -1846,11 +1930,11 @@ PlasmoidItem {
         return {
             provider: providerID,
             title: boundedDisplayText(providerTitle(providerID, displayName), 120),
-            source: item.source || "",
-            version: item.version || "",
-            account: item.account || identity.accountEmail || usage.accountEmail || "",
-            organization: identity.accountOrganization || usage.accountOrganization || "",
-            loginMethod: identity.loginMethod || usage.loginMethod || "",
+            source: boundedDisplayText(item.source || "", 120),
+            version: boundedDisplayText(item.version || "", 120),
+            account: boundedDisplayText(item.account || identity.accountEmail || usage.accountEmail || "", 256),
+            organization: boundedDisplayText(identity.accountOrganization || usage.accountOrganization || "", 256),
+            loginMethod: boundedDisplayText(identity.loginMethod || usage.loginMethod || "", 120),
             rows: rows,
             primaryRow: primaryRow,
             providerDetails: providerDetails,
@@ -1858,7 +1942,7 @@ PlasmoidItem {
             providerCost: providerCostSection(providerID, usage.providerCost),
             resetCredits: resetCreditsSection(providerID, usage.codexResetCredits),
             tokenCost: providerTokenCost(providerID),
-            planText: planText(providerID, usage, item),
+            planText: boundedDisplayText(planText(providerID, usage, item), 120),
             dashboardUrl: providerDashboardUrl(providerID),
             statusUrl: safeStatusUrl(providerID, status && status.url ? status.url : ""),
             changelogUrl: providerChangelogUrl(providerID),
@@ -1867,11 +1951,11 @@ PlasmoidItem {
                 : null,
             status: boundedDisplayText(status ? statusText(status) : "", 500),
             statusSeverity: severity,
-            statusIncidentKey: statusIncidentKey(status),
+            statusIncidentKey: boundedDisplayText(statusIncidentKey(status), 128),
             hasIncident: severity.length > 0,
             error: boundedCliMessage(error && error.message ? error.message : ""),
             placeholder: placeholder,
-            updatedAt: usage.updatedAt || (credits ? credits.updatedAt : "")
+            updatedAt: boundedDisplayText(usage.updatedAt || (credits ? credits.updatedAt : ""), 128)
         }
     }
 
@@ -1911,7 +1995,7 @@ PlasmoidItem {
     }
 
     function addWindow(rows, label, window, pace, usageKnown, lane) {
-        if (!window) {
+        if (!isCliRecord(window)) {
             return null
         }
 
@@ -1926,7 +2010,7 @@ PlasmoidItem {
             : -1
         var row = {
             lane: lane || "",
-            label: label,
+            label: boundedDisplayText(label, 120),
             hasPercent: hasPercent,
             usedPercent: hasPercent ? clamp(used, 0, 100) : 0,
             leftPercent: hasPercent ? clamp(100 - used, 0, 100) : 0,
@@ -1937,7 +2021,7 @@ PlasmoidItem {
                 128),
             resetDescription: boundedDisplayText(window.resetDescription || "", 500),
             reset: boundedDisplayText(resetText(window, false), 500),
-            pace: pace && pace.summary ? pace.summary : ""
+            pace: boundedDisplayText(pace && pace.summary ? pace.summary : "", 500)
         }
         rows.push(row)
         return row
@@ -2064,14 +2148,14 @@ PlasmoidItem {
             return null
         }
 
-        if (!cost) {
+        if (!isCliRecord(cost)) {
             return null
         }
 
         var used = Number(cost.used)
         var limit = Number(cost.limit)
-        var currency = cost.currencyCode || "USD"
-        var period = cost.period || i18n("This month")
+        var currency = boundedDisplayText(cost.currencyCode || "USD", 12)
+        var period = boundedDisplayText(cost.period || i18n("This month"), 120)
         var hasUsed = isFinite(used)
         var hasLimit = isFinite(limit) && limit > 0
         if (!hasUsed) {
@@ -2698,9 +2782,14 @@ PlasmoidItem {
     }
 
     function checkForWidgetUpdate(forceCheck) {
-        if (!updateCheckDue(forceCheck) || connectedUpdateCommandSource.length > 0) {
+        if (connectedUpdateCommandSource.length > 0) {
             return
         }
+        if (!updateCheckDue(forceCheck)) {
+            scheduleNextUpdateCheck()
+            return
+        }
+        updateCheckTimer.stop()
         setWidgetUpdateState(i18n("Checking for widget updates..."), "", false)
         connectedUpdateCommandSource = commandWithRunNonce(buildUpdateCommand(autoUpdateEnabled))
         updateSource.connectSource(connectedUpdateCommandSource)
@@ -2710,11 +2799,28 @@ PlasmoidItem {
         updateCommandTimeoutTimer.restart()
     }
 
+    function scheduleNextUpdateCheck(lastCheckOverride) {
+        updateCheckTimer.stop()
+        if (!updateChecksEnabled || connectedUpdateCommandSource.length > 0) {
+            return
+        }
+        var lastCheck = lastCheckOverride === undefined ? autoUpdateLastCheck : lastCheckOverride
+        updateCheckTimer.interval = UpdateLogic.nextUpdateCheckDelay(
+            updateChecksEnabled,
+            lastCheck,
+            autoUpdateIntervalHours,
+            Date.now(),
+            widgetUpdateMinimumTimerDelayMs)
+        updateCheckTimer.restart()
+    }
+
     function finishUpdateCommand(sourceName) {
         updateCommandTimeoutTimer.stop()
         updateSource.disconnectSource(sourceName)
         connectedUpdateCommandSource = ""
-        Plasmoid.configuration.autoUpdateLastCheck = new Date().toISOString()
+        var completedAt = new Date().toISOString()
+        Plasmoid.configuration.autoUpdateLastCheck = completedAt
+        scheduleNextUpdateCheck(completedAt)
     }
 
     function handleUpdateCommandTimeout() {
@@ -2851,7 +2957,6 @@ PlasmoidItem {
     }
 
     function providerKey(value) {
-        var key = String(value || "codex").toLowerCase()
         var aliases = {
             "11labs": "elevenlabs",
             "abacus-ai": "abacus",
@@ -2926,7 +3031,7 @@ PlasmoidItem {
             "xiaomi-mimo": "mimo",
             "z.ai": "zai"
         }
-        return aliases[key] || key
+        return ProviderIdentity.providerKey(value, aliases)
     }
 
     function providerCliArgument(value) {
@@ -3029,7 +3134,7 @@ PlasmoidItem {
             "zoommate": i18n("ZoomMate")
         }
 
-        if (names[key]) {
+        if (hasOwnKey(names, key)) {
             return names[key]
         }
 
@@ -3043,7 +3148,7 @@ PlasmoidItem {
     }
 
     function providerIconSource(value) {
-        var key = providerKey(value)
+        var key = ProviderIdentity.providerMapKey(providerKey(value))
         if (!/^[a-z0-9][a-z0-9._-]*$/.test(key) || key.indexOf("..") !== -1) {
             return "view-statistics"
         }
@@ -3052,7 +3157,7 @@ PlasmoidItem {
             "gemini": "gemini-white.png",
             "kimi-k2": "kimik2"
         }
-        key = aliases[key] || key
+        key = ProviderIdentity.providerKey(key, aliases)
         var fileName = key.indexOf(".") === -1 ? key + ".svg" : key
         return Qt.resolvedUrl("../icons/providers/" + fileName)
     }
@@ -3414,7 +3519,7 @@ PlasmoidItem {
             zai: "zai.md",
             zed: "zed.md"
         }
-        if (!docs[key]) {
+        if (!hasOwnKey(docs, key)) {
             return ""
         }
         return "https://github.com/steipete/CodexBar/blob/main/docs/" + docs[key]
@@ -3867,7 +3972,7 @@ PlasmoidItem {
 
         var result = []
         for (var k = 0; k < eligible.length; k++) {
-            if (selected[String(eligible[k].provider)]) {
+            if (hasOwnKey(selected, String(eligible[k].provider))) {
                 result.push(eligible[k])
                 if (result.length >= maxOverviewProviders) {
                     break
@@ -3893,8 +3998,8 @@ PlasmoidItem {
             // The settings page stores raw CLI provider IDs (e.g. groqcloud,
             // alibaba-coding-plan); normalize them to match the providerKey
             // form used for eligible[k].provider at runtime.
-            var id = providerKey(trimmed)
-            if (seen[id]) {
+            var id = normalizedProviderID(trimmed)
+            if (id.length === 0 || hasOwnKey(seen, id)) {
                 continue
             }
             seen[id] = true
@@ -4238,8 +4343,13 @@ PlasmoidItem {
         interval: 0
 
         onNewData: function(sourceName, data) {
-            var stdoutText = data && data["stdout"] ? data["stdout"] : ""
+            var rawStdoutText = data && data["stdout"] ? data["stdout"] : ""
+            var stdoutText = SafeText.cliJsonText(rawStdoutText)
             var stderrText = data && data["stderr"] ? data["stderr"] : ""
+            if (stdoutText === null) {
+                stdoutText = ""
+                stderrText = i18n("codexbar response exceeded the supported size.")
+            }
 
             if (sourceName === root.connectedCostCommandSource) {
                 root.connectedCostCommandSource = ""
@@ -4330,9 +4440,8 @@ PlasmoidItem {
     Timer {
         id: updateCheckTimer
 
-        interval: root.autoUpdateIntervalHours * 60 * 60 * 1000
-        repeat: true
-        running: root.updateChecksEnabled
+        repeat: false
+        running: false
         triggeredOnStart: false
         onTriggered: root.checkForWidgetUpdate()
     }
@@ -4350,8 +4459,13 @@ PlasmoidItem {
         engine: "executable"
 
         onNewData: function(sourceName, data) {
-            var stdoutText = data && data["stdout"] ? data["stdout"] : ""
+            var rawStdoutText = data && data["stdout"] ? data["stdout"] : ""
+            var stdoutText = SafeText.cliJsonText(rawStdoutText)
             var stderrText = data && data["stderr"] ? data["stderr"] : ""
+            if (stdoutText === null) {
+                stdoutText = ""
+                stderrText = i18n("Widget updater response exceeded the supported size.")
+            }
             root.handleUpdateData(sourceName, stdoutText, stderrText)
         }
     }
@@ -4666,6 +4780,7 @@ PlasmoidItem {
 
                                     Kirigami.Icon {
                                         source: root.providerIconSource(modelData.provider)
+                                        fallback: "view-statistics"
                                         isMask: root.providerIconIsMask(modelData.provider)
                                         color: providerTab.accent
                                         Layout.preferredWidth: Kirigami.Units.iconSizes.small

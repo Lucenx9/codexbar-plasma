@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasma5support as Plasma5Support
+import "ProviderIdentity.js" as ProviderIdentity
 import "SafeText.js" as SafeText
 
 KCM.SimpleKCM {
@@ -35,6 +36,7 @@ KCM.SimpleKCM {
     property bool cfg_showCreditsInPanelDefault
 
     readonly property int maxOverviewProviders: 3
+    readonly property int maximumProviderItems: 256
     readonly property string overviewNoneValue: "__none__"
     readonly property string commandPath: (cfg_commandPath || "codexbar").trim()
     property var overviewProviders: []
@@ -50,6 +52,21 @@ KCM.SimpleKCM {
 
     function boundedCliMessage(value) {
         return SafeText.cliMessage(value, SafeText.maximumCliMessageLength)
+    }
+
+    function boundedProviderID(value) {
+        if (typeof value !== "string") {
+            return ""
+        }
+        var providerID = value.trim()
+        if (providerID.length === 0 || providerID.length > ProviderIdentity.maximumProviderIDLength) {
+            return ""
+        }
+        return ProviderIdentity.providerMapKey(providerID.toLowerCase()).length > 0 ? providerID : ""
+    }
+
+    function providerSelectionKey(providerID) {
+        return JSON.stringify(String(providerID || ""))
     }
 
     function displayModeIndex(value) {
@@ -183,16 +200,20 @@ KCM.SimpleKCM {
 
         var items = Array.isArray(payload) ? payload : [payload]
         var nextProviders = []
-        for (var i = 0; i < items.length; i++) {
+        var itemLimit = Math.min(items.length, maximumProviderItems)
+        for (var i = 0; i < itemLimit; i++) {
             var item = items[i]
-            if (!item || !item.provider || item.enabled !== true) {
+            if (!item || typeof item !== "object" || Array.isArray(item) || item.enabled !== true) {
                 continue
             }
+            var providerID = boundedProviderID(item.provider)
+            if (providerID.length === 0) {
+                continue
+            }
+            var displayName = SafeText.boundedDisplayText(item.displayName, 120)
             nextProviders.push({
-                provider: String(item.provider),
-                displayName: item.displayName && String(item.displayName).trim().length > 0
-                    ? String(item.displayName).trim()
-                    : providerTitle(item.provider)
+                provider: providerID,
+                displayName: displayName.length > 0 ? displayName : providerTitle(providerID)
             })
         }
         overviewProviders = nextProviders
@@ -237,10 +258,11 @@ KCM.SimpleKCM {
         var seen = ({})
         for (var i = 0; i < parts.length; i++) {
             var providerID = String(parts[i] || "").trim()
-            if (providerID.length === 0 || seen[providerID]) {
+            var selectionKey = providerSelectionKey(providerID)
+            if (providerID.length === 0 || Object.prototype.hasOwnProperty.call(seen, selectionKey)) {
                 continue
             }
-            seen[providerID] = true
+            seen[selectionKey] = true
             result.push(providerID)
             if (result.length >= maxOverviewProviders) {
                 break
@@ -261,22 +283,23 @@ KCM.SimpleKCM {
         var selected = resolvedOverviewProviderIDs()
         var selectedSet = ({})
         for (var i = 0; i < selected.length; i++) {
-            selectedSet[selected[i]] = true
+            selectedSet[providerSelectionKey(selected[i])] = true
         }
 
+        var providerKey = providerSelectionKey(providerID)
         if (checked) {
-            if (!selectedSet[providerID] && selected.length >= maxOverviewProviders) {
+            if (!selectedSet[providerKey] && selected.length >= maxOverviewProviders) {
                 return
             }
-            selectedSet[providerID] = true
+            selectedSet[providerKey] = true
         } else {
-            delete selectedSet[providerID]
+            delete selectedSet[providerKey]
         }
 
         var ordered = []
         for (var j = 0; j < overviewProviders.length; j++) {
             var candidate = overviewProviders[j].provider
-            if (selectedSet[candidate] && ordered.indexOf(candidate) === -1) {
+            if (selectedSet[providerSelectionKey(candidate)] && ordered.indexOf(candidate) === -1) {
                 ordered.push(candidate)
                 if (ordered.length >= maxOverviewProviders) {
                     break
@@ -288,7 +311,7 @@ KCM.SimpleKCM {
         // drop it from the overview selection on the next toggle.
         for (var k = 0; k < selected.length && ordered.length < maxOverviewProviders; k++) {
             var prior = selected[k]
-            if (selectedSet[prior] && ordered.indexOf(prior) === -1) {
+            if (selectedSet[providerSelectionKey(prior)] && ordered.indexOf(prior) === -1) {
                 ordered.push(prior)
             }
         }
@@ -306,7 +329,8 @@ KCM.SimpleKCM {
     function copyObject(item) {
         var copy = ({})
         for (var key in item) {
-            if (Object.prototype.hasOwnProperty.call(item, key)) {
+            if (Object.prototype.hasOwnProperty.call(item, key)
+                    && key !== "__proto__" && key !== "prototype" && key !== "constructor") {
                 copy[key] = item[key]
             }
         }
@@ -473,8 +497,13 @@ KCM.SimpleKCM {
         interval: 0
 
         onNewData: function(sourceName, data) {
-            var stdoutText = data && data["stdout"] ? data["stdout"] : ""
+            var rawStdoutText = data && data["stdout"] ? data["stdout"] : ""
+            var stdoutText = SafeText.cliJsonText(rawStdoutText)
             var stderrText = data && data["stderr"] ? data["stderr"] : ""
+            if (stdoutText === null) {
+                stdoutText = ""
+                stderrText = i18n("codexbar response exceeded the supported size.")
+            }
             disconnectSource(sourceName)
             page.handleOverviewProviderData(sourceName, stdoutText, stderrText)
         }

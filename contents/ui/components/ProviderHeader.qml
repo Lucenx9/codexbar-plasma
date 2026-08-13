@@ -34,6 +34,7 @@ RowLayout {
             source: providerHeaderRow.providerData
                 ? providerHeaderRow.applet.providerIconSource(providerHeaderRow.providerData.provider)
                 : "view-statistics-symbolic"
+            fallback: "view-statistics"
             isMask: providerHeaderRow.providerData
                 ? providerHeaderRow.applet.providerIconIsMask(providerHeaderRow.providerData.provider)
                 : true

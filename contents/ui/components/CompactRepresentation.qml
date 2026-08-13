@@ -52,6 +52,7 @@ Item {
 
             visible: compactRoot.showPrimaryIdentity
             source: compactRoot.applet.loading ? "view-refresh" : compactRoot.applet.providerIconSource(compactProvider)
+            fallback: "view-statistics"
             isMask: !compactRoot.applet.loading && compactRoot.applet.providerIconIsMask(compactProvider)
             color: compactRoot.applet.loading
                 ? Kirigami.Theme.textColor
@@ -150,6 +151,7 @@ Item {
 
                     Kirigami.Icon {
                         source: compactRoot.applet.providerIconSource(modelData.provider)
+                        fallback: "view-statistics"
                         isMask: compactRoot.applet.providerIconIsMask(modelData.provider)
                         color: compactMeter.accent
                         Layout.alignment: Qt.AlignHCenter

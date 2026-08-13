@@ -223,6 +223,11 @@ msgstr ""
 msgid "Use first %1 providers automatically"
 msgstr ""
 
+#: contents/ui/configDisplay.qml contents/ui/configProviders.qml
+#: contents/ui/main.qml
+msgid "codexbar response exceeded the supported size."
+msgstr ""
+
 #: contents/ui/configGeneral.qml
 msgid "Command"
 msgstr ""
@@ -355,6 +360,10 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "Could not parse codexbar response: %1"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "codexbar command timed out. Try again."
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -1553,6 +1562,10 @@ msgstr ""
 #: contents/ui/main.qml
 #, javascript-format
 msgid "%1% pace late"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Widget updater response exceeded the supported size."
 msgstr ""
 
 #: contents/ui/main.qml

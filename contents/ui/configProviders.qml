@@ -6,6 +6,7 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
 import "components" as Components
+import "ProviderIdentity.js" as ProviderIdentity
 import "SafeText.js" as SafeText
 import "ThemeContrast.js" as ThemeContrast
 
@@ -56,12 +57,15 @@ KCM.SimpleKCM {
     property var commands: ({})
     property int commandRunSerial: 0
     readonly property int configCommandTimeoutMs: 60000
+    readonly property int configSecretCommandTimeoutSeconds: 60
+    readonly property int configSecretCommandKillAfterSeconds: 5
     readonly property int maximumDescriptorFields: 32
     readonly property int maximumDescriptorActions: 32
     readonly property int maximumDescriptorOptions: 64
     readonly property int maximumDescriptorCommandTokens: 64
     readonly property int maximumDescriptorTokenLength: 2048
     readonly property int maximumDiagnosticListItems: 64
+    readonly property int maximumProviderItems: 256
     // Mirrors the popup de-emphasis step in main.qml. 0.7 is the lowest value
     // where Kirigami.Theme.textColor still clears WCAG AA 4.5:1 on Breeze Light.
     readonly property real secondaryTextOpacity: 0.7
@@ -104,6 +108,21 @@ KCM.SimpleKCM {
 
     function boundedCliMessage(value) {
         return SafeText.cliMessage(value, SafeText.maximumCliMessageLength)
+    }
+
+    function isCliRecord(value) {
+        return value !== null && typeof value === "object" && !Array.isArray(value)
+    }
+
+    function boundedProviderID(value) {
+        if (typeof value !== "string") {
+            return ""
+        }
+        var providerID = value.trim()
+        if (providerID.length === 0 || providerID.length > ProviderIdentity.maximumProviderIDLength) {
+            return ""
+        }
+        return providerMapKey(providerID).length > 0 ? providerID : ""
     }
 
     function runProviderListCommand(includeDescriptors) {
@@ -163,12 +182,18 @@ KCM.SimpleKCM {
         var prompt = i18n("API key for %1", displayNameForProvider(providerID))
         var script = [
             "if ! command -v kdialog >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"kdialog is required to prompt for API keys.\"}}'; exit 1; fi",
+            "if ! command -v timeout >/dev/null 2>&1 || ! timeout --kill-after=1s 1s true >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"GNU timeout is required to save API keys safely.\"}}'; exit 1; fi",
             "key=$(kdialog --password \"$1\" 2>/dev/null)",
             "status=$?",
             "if [ \"$status\" -ne 0 ] || [ -z \"$key\" ]; then printf '%s\\n' '{\"cancelled\":true}'; exit 0; fi",
-            "printf '%s' \"$key\" | \"$2\" config set-api-key --provider \"$3\" --stdin --format json --json-only"
+            "printf '%s' \"$key\" | timeout --kill-after=\"${5}s\" \"${4}s\" \"$2\" config set-api-key --provider \"$3\" --stdin --format json --json-only"
         ].join("; ")
-        var command = ["sh", "-c", shellQuote(script), "_", shellQuote(prompt), shellQuote(commandPath), shellQuote(cliProviderID)].join(" ")
+        var command = [
+            "sh", "-c", shellQuote(script), "_", shellQuote(prompt),
+            shellQuote(commandPath), shellQuote(cliProviderID),
+            shellQuote(configSecretCommandTimeoutSeconds),
+            shellQuote(configSecretCommandKillAfterSeconds)
+        ].join(" ")
         runCommand(command, { kind: "setApiKey", provider: providerID })
     }
 
@@ -355,16 +380,20 @@ KCM.SimpleKCM {
 
         var items = Array.isArray(payload) ? payload : [payload]
         var next = []
-        for (var i = 0; i < items.length; i++) {
+        var itemLimit = Math.min(items.length, maximumProviderItems)
+        for (var i = 0; i < itemLimit; i++) {
             var item = items[i]
-            if (!item || !item.provider) {
+            if (!isCliRecord(item)) {
                 continue
             }
+            var providerID = boundedProviderID(item.provider)
+            if (providerID.length === 0) {
+                continue
+            }
+            var displayName = SafeText.boundedDisplayText(item.displayName, 120)
             next.push({
-                provider: String(item.provider),
-                displayName: item.displayName && String(item.displayName).trim().length > 0
-                    ? String(item.displayName).trim()
-                    : providerTitle(item.provider),
+                provider: providerID,
+                displayName: displayName.length > 0 ? displayName : providerTitle(providerID),
                 enabled: item.enabled === true,
                 defaultEnabled: item.defaultEnabled === true,
                 descriptor: normalizeProviderDescriptor(item.descriptor)
@@ -434,7 +463,9 @@ KCM.SimpleKCM {
             message = boundedCliMessage(stderrText)
         }
         if (message.length === 0 && Number(exitCode) !== 0) {
-            message = i18n("codexbar exited with code %1", Number(exitCode))
+            message = Number(exitCode) === 124 || Number(exitCode) === 137
+                ? i18n("codexbar command timed out. Try again.")
+                : i18n("codexbar exited with code %1", Number(exitCode))
         }
         if (message.length === 0 && !payload) {
             message = i18n("codexbar did not return provider data.")
@@ -476,7 +507,9 @@ KCM.SimpleKCM {
             message = boundedCliMessage(stderrText)
         }
         if (message.length === 0 && Number(exitCode) !== 0) {
-            message = i18n("codexbar exited with code %1", Number(exitCode))
+            message = Number(exitCode) === 124 || Number(exitCode) === 137
+                ? i18n("codexbar command timed out. Try again.")
+                : i18n("codexbar exited with code %1", Number(exitCode))
         }
         if (message.length > 0) {
             errorText = i18n("%1: %2", descriptor.provider, message)
@@ -563,7 +596,9 @@ KCM.SimpleKCM {
             message = boundedCliMessage(stderrText)
         }
         if (message.length === 0 && Number(exitCode) !== 0) {
-            message = i18n("codexbar exited with code %1", Number(exitCode))
+            message = Number(exitCode) === 124 || Number(exitCode) === 137
+                ? i18n("codexbar command timed out. Try again.")
+                : i18n("codexbar exited with code %1", Number(exitCode))
         }
         if (message.length === 0 && trimmed.length === 0) {
             message = i18n("codexbar did not return command data.")
@@ -703,9 +738,10 @@ KCM.SimpleKCM {
     }
 
     function normalizeProviderDiagnostic(payload) {
-        var item = Array.isArray(payload) ? (payload.length > 0 ? payload[0] : ({})) : payload
-        var settings = item && item.settings ? item.settings : ({})
-        var auth = item && item.auth ? item.auth : ({})
+        var candidate = Array.isArray(payload) ? (payload.length > 0 ? payload[0] : ({})) : payload
+        var item = isCliRecord(candidate) ? candidate : ({})
+        var settings = isCliRecord(item.settings) ? item.settings : ({})
+        var auth = isCliRecord(item.auth) ? item.auth : ({})
         return {
             provider: item && item.provider ? SafeText.cliMessage(item.provider, 128) : "",
             displayName: item && item.displayName ? SafeText.cliMessage(item.displayName, 120) : "",
@@ -824,7 +860,7 @@ KCM.SimpleKCM {
 
     function providerMapKey(providerID) {
         var key = providerKey(providerID)
-        return isUnsafeObjectKey(key) ? "" : key
+        return ProviderIdentity.providerMapKey(key)
     }
 
     function displayNameForProvider(providerID) {
@@ -1179,12 +1215,17 @@ KCM.SimpleKCM {
         markFieldPending(providerID, field.id, true)
         var prompt = i18n("%1 for %2", field.title, displayNameForProvider(providerID))
         var commandLine = commandLineFromTokens(field.writeCommand, ({}))
+        var boundedCommandLine = "timeout --kill-after="
+            + shellQuote(configSecretCommandKillAfterSeconds + "s") + " "
+            + shellQuote(configSecretCommandTimeoutSeconds + "s") + " "
+            + commandLine
         var script = [
             "if ! command -v kdialog >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"kdialog is required to prompt for secrets.\"}}'; exit 1; fi",
+            "if ! command -v timeout >/dev/null 2>&1 || ! timeout --kill-after=1s 1s true >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"GNU timeout is required to save secrets safely.\"}}'; exit 1; fi",
             "value=$(kdialog --password \"$1\" 2>/dev/null)",
             "status=$?",
             "if [ \"$status\" -ne 0 ] || [ -z \"$value\" ]; then printf '%s\\n' '{\"cancelled\":true}'; exit 0; fi",
-            "printf '%s' \"$value\" | " + commandLine
+            "printf '%s' \"$value\" | " + boundedCommandLine
         ].join("; ")
         var command = ["sh", "-c", shellQuote(script), "_", shellQuote(prompt)].join(" ")
         runCommand(command, { kind: "descriptorField", provider: providerID, fieldID: field.id })
@@ -1425,7 +1466,7 @@ KCM.SimpleKCM {
             zai: "zai.md",
             zed: "zed.md"
         }
-        if (!docs[key]) {
+        if (!hasOwnKey(docs, key)) {
             return ""
         }
         return "https://github.com/steipete/CodexBar/blob/main/docs/" + docs[key]
@@ -1608,7 +1649,6 @@ KCM.SimpleKCM {
     // --- Provider visual identity (kept in sync with main.qml) ---
 
     function providerKey(value) {
-        var key = String(value || "codex").toLowerCase()
         var aliases = {
             "11labs": "elevenlabs",
             "abacus-ai": "abacus",
@@ -1683,7 +1723,7 @@ KCM.SimpleKCM {
             "xiaomi-mimo": "mimo",
             "z.ai": "zai"
         }
-        return aliases[key] || key
+        return ProviderIdentity.providerKey(value, aliases)
     }
 
     function providerCliArgument(value) {
@@ -1706,7 +1746,7 @@ KCM.SimpleKCM {
     }
 
     function providerIconSource(value) {
-        var key = providerKey(value)
+        var key = ProviderIdentity.providerMapKey(providerKey(value))
         if (!/^[a-z0-9][a-z0-9._-]*$/.test(key) || key.indexOf("..") !== -1) {
             return "view-statistics"
         }
@@ -1715,7 +1755,7 @@ KCM.SimpleKCM {
             "gemini": "gemini-white.png",
             "kimi-k2": "kimik2"
         }
-        key = aliases[key] || key
+        key = ProviderIdentity.providerKey(key, aliases)
         var fileName = key.indexOf(".") === -1 ? key + ".svg" : key
         return Qt.resolvedUrl("../icons/providers/" + fileName)
     }
@@ -1950,7 +1990,7 @@ KCM.SimpleKCM {
             "zenmux": i18n("ZenMux"),
             "zoommate": i18n("ZoomMate")
         }
-        if (names[key]) {
+        if (hasOwnKey(names, key)) {
             return names[key]
         }
         var words = String(key).replace(/[_-]/g, " ").split(" ")
@@ -1997,9 +2037,15 @@ KCM.SimpleKCM {
         interval: 0
 
         onNewData: function(sourceName, data) {
-            var stdoutText = data && data["stdout"] ? data["stdout"] : ""
+            var rawStdoutText = data && data["stdout"] ? data["stdout"] : ""
+            var stdoutText = SafeText.cliJsonText(rawStdoutText)
             var stderrText = data && data["stderr"] ? data["stderr"] : ""
             var exitCode = data && data["exit code"] !== undefined ? Number(data["exit code"]) : 0
+            if (stdoutText === null) {
+                stdoutText = ""
+                stderrText = i18n("codexbar response exceeded the supported size.")
+                exitCode = 1
+            }
             disconnectSource(sourceName)
             page.handleData(sourceName, stdoutText, stderrText, exitCode)
         }
@@ -2077,6 +2123,7 @@ KCM.SimpleKCM {
 
                 Kirigami.Icon {
                     source: page.selectedProvider ? page.providerIconSource(page.selectedProvider.provider) : ""
+                    fallback: "view-statistics"
                     isMask: true
                     color: page.selectedProvider
                         ? page.providerReadableColor(
