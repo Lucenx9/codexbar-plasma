@@ -727,9 +727,9 @@ PlasmoidItem {
         delete commands[sourceName]
         pendingProviderCommands = commands
         finishUsageCommandSource(sourceName)
-        activeProviderFallbackCount = Math.max(0, activeProviderFallbackCount - 1)
 
-        if (fallbackProviderSeen[providerID]) {
+        if (hasOwnKey(fallbackProviderSeen, providerID)) {
+            completeProviderFallbackCommand()
             return
         }
         var seen = copyObject(fallbackProviderSeen)
@@ -768,6 +768,11 @@ PlasmoidItem {
         var results = copyObject(fallbackProviderResults)
         results[providerID] = normalizedItems
         fallbackProviderResults = results
+        completeProviderFallbackCommand()
+    }
+
+    function completeProviderFallbackCommand() {
+        activeProviderFallbackCount = Math.max(0, activeProviderFallbackCount - 1)
         pendingProviderCount = Math.max(0, pendingProviderCount - 1)
         pumpProviderFallbackCommands()
 
@@ -778,6 +783,8 @@ PlasmoidItem {
 
     function finishProviderFallback() {
         var nextProviders = []
+        // This global delegate budget deliberately wins over completeness if a
+        // future provider-scoped CLI response starts returning many accounts.
         for (var i = 0; i < fallbackProviderOrder.length
                 && nextProviders.length < maximumProviderSnapshots; i++) {
             var providerID = fallbackProviderOrder[i]
@@ -1152,7 +1159,7 @@ PlasmoidItem {
             monthLine: costLine(windowLabel, item.last30DaysCostUSD, item.last30DaysTokens, currency),
             hintLine: tokenCostHint(providerID),
             totals: normalizeCostTotals(item.totals, item.last30DaysCostUSD, item.last30DaysTokens, currency),
-            models: normalizeCostModels(item.daily, currency),
+            models: normalizeCostModels(item.daily, currency, costHistoryDays),
             daily: normalizeCostDaily(item.daily, currency, costHistoryDays)
         }
     }
@@ -1243,13 +1250,14 @@ PlasmoidItem {
         return total > 0 ? total : Number.NaN
     }
 
-    function normalizeCostModels(items, currency) {
+    function normalizeCostModels(items, currency, days) {
         var byName = ({})
         if (!items || !Array.isArray(items)) {
             return []
         }
 
-        var firstItem = Math.max(0, items.length - maximumCostHistoryPoints)
+        var historyDays = isFinite(Number(days)) ? Math.max(1, Math.min(maximumCostHistoryPoints, Number(days))) : 30
+        var firstItem = Math.max(0, items.length - historyDays)
         for (var i = firstItem; i < items.length; i++) {
             var breakdowns = items[i] && Array.isArray(items[i].modelBreakdowns)
                 ? items[i].modelBreakdowns
@@ -1987,14 +1995,11 @@ PlasmoidItem {
     }
 
     function addWindow(rows, label, window, pace, usageKnown, lane) {
-        if (!window) {
+        if (!isCliRecord(window)) {
             return null
         }
 
         var known = usageKnown !== false
-        if (!isCliRecord(window)) {
-            return null
-        }
         var used = Number(window.usedPercent)
         var hasPercent = known && isFinite(used)
         var paceValue = pace
@@ -2794,14 +2799,15 @@ PlasmoidItem {
         updateCommandTimeoutTimer.restart()
     }
 
-    function scheduleNextUpdateCheck() {
+    function scheduleNextUpdateCheck(lastCheckOverride) {
         updateCheckTimer.stop()
         if (!updateChecksEnabled || connectedUpdateCommandSource.length > 0) {
             return
         }
+        var lastCheck = lastCheckOverride === undefined ? autoUpdateLastCheck : lastCheckOverride
         updateCheckTimer.interval = UpdateLogic.nextUpdateCheckDelay(
             updateChecksEnabled,
-            autoUpdateLastCheck,
+            lastCheck,
             autoUpdateIntervalHours,
             Date.now(),
             widgetUpdateMinimumTimerDelayMs)
@@ -2812,8 +2818,9 @@ PlasmoidItem {
         updateCommandTimeoutTimer.stop()
         updateSource.disconnectSource(sourceName)
         connectedUpdateCommandSource = ""
-        Plasmoid.configuration.autoUpdateLastCheck = new Date().toISOString()
-        scheduleNextUpdateCheck()
+        var completedAt = new Date().toISOString()
+        Plasmoid.configuration.autoUpdateLastCheck = completedAt
+        scheduleNextUpdateCheck(completedAt)
     }
 
     function handleUpdateCommandTimeout() {

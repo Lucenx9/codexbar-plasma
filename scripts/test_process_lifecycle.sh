@@ -163,6 +163,20 @@ for fragment in (
     if fragment not in usage_timeout_body:
         raise AssertionError(f"usage timeout cleanup is incomplete: {fragment}")
 
+fallback_result_body = function_body(main_text, "parseProviderFallbackOutput")
+if fallback_result_body.count("completeProviderFallbackCommand()") != 2:
+    raise AssertionError("every accepted fallback result path must complete its queue accounting")
+
+complete_fallback_body = function_body(main_text, "completeProviderFallbackCommand")
+for fragment in (
+    "activeProviderFallbackCount = Math.max(0, activeProviderFallbackCount - 1)",
+    "pendingProviderCount = Math.max(0, pendingProviderCount - 1)",
+    "pumpProviderFallbackCommands()",
+    "finishProviderFallback()",
+):
+    if fragment not in complete_fallback_body:
+        raise AssertionError(f"fallback completion must preserve liveness: {fragment}")
+
 refresh_timer_start = main_text.index("id: usageRefreshTimer")
 refresh_timer_end = main_text.index("\n    Timer {", refresh_timer_start + 1)
 refresh_timer_body = main_text[refresh_timer_start:refresh_timer_end]
@@ -206,7 +220,7 @@ for function_name in ("setApiKey", "promptDescriptorSecret"):
     body = function_body(providers_text, function_name)
     if "timeoutMs" in body:
         raise AssertionError(f"interactive {function_name} commands must not expire while prompting")
-    for fragment in ("command -v timeout", "timeout --kill-after", "configSecretCommandTimeoutSeconds", "configSecretCommandKillAfterSeconds"):
+    for fragment in ("command -v timeout", "timeout --kill-after=1s 1s true", "timeout --kill-after", "configSecretCommandTimeoutSeconds", "configSecretCommandKillAfterSeconds"):
         if fragment not in body:
             raise AssertionError(
                 f"interactive {function_name} must bound the post-prompt CLI phase: {fragment}"
@@ -288,8 +302,9 @@ for fragment in ("scheduleNextUpdateCheck()", "updateCheckTimer.stop()"):
         raise AssertionError(f"update checks must avoid overlap and rearm when not due: {fragment}")
 
 finish_update_body = function_body(main_text, "finishUpdateCommand")
-if "scheduleNextUpdateCheck()" not in finish_update_body:
-    raise AssertionError("every completed update command must rearm the one-shot timer")
+for fragment in ("var completedAt = new Date().toISOString()", "scheduleNextUpdateCheck(completedAt)"):
+    if fragment not in finish_update_body:
+        raise AssertionError(f"every completed update command must rearm from its exact completion time: {fragment}")
 
 timer_start = main_text.index("id: updateCheckTimer")
 timer_end = main_text.index("\n    Timer {", timer_start + 1)

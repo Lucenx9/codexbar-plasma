@@ -10,6 +10,11 @@ TestCase {
         compare(SafeText.cliMessage("x".repeat(40), 12), "x".repeat(12))
     }
 
+    function test_skipsBoundedLeadingPaddingBeforeMessage() {
+        compare(SafeText.boundedDisplayText(" ".repeat(5000) + "quota exceeded", 500), "quota exceeded")
+        compare(SafeText.cliMessage(" ".repeat(5000) + "quota exceeded", 500), "quota exceeded")
+    }
+
     function test_redactsCommonCredentialShapes() {
         var message = SafeText.cliMessage(
             "Authorization: Bearer header.payload.signature api_key=sk-secretvalue Cookie: session=abc; theme=dark",

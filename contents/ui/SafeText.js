@@ -12,9 +12,25 @@ function safeLimit(maximumLength, fallback) {
     return Math.max(1, Math.min(maximumDiagnosticLength, Math.floor(limit)))
 }
 
-function redactCredentials(value, inspectionLimit) {
+function boundedInspectionText(value, inspectionLimit) {
     var text = typeof value === "string" ? value : String(value || "")
-    text = text.slice(0, safeLimit(inspectionLimit, maximumCliMessageLength) * 8)
+    var windowLength = safeLimit(inspectionLimit, maximumCliMessageLength)
+    var scanLimit = Math.min(text.length, maximumDiagnosticLength)
+    var chunkLength = Math.max(256, windowLength)
+    for (var offset = 0; offset < scanLimit; offset += chunkLength) {
+        var chunk = text.slice(offset, Math.min(scanLimit, offset + chunkLength))
+        var firstVisible = chunk.search(/[^\s\u0000-\u001f\u007f]/)
+        if (firstVisible !== -1) {
+            var start = offset + firstVisible
+            return text.slice(start, start + windowLength)
+        }
+    }
+    return ""
+}
+
+function redactCredentials(value, inspectionLimit) {
+    var limit = safeLimit(inspectionLimit, maximumCliMessageLength)
+    var text = boundedInspectionText(value, Math.min(maximumDiagnosticLength, limit * 8))
     return text
         .replace(/((?:proxy-)?authorization["']?\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\r\n]*)/gi, "$1[redacted]")
         .replace(/\bbearer\s+(?:"[^"]*"|'[^']*'|[^\s,;]+)/gi, "Bearer [redacted]")
@@ -26,7 +42,7 @@ function redactCredentials(value, inspectionLimit) {
 function boundedDisplayText(value, maximumLength) {
     var limit = safeLimit(maximumLength, maximumCliMessageLength)
     var inspectionLimit = Math.min(maximumDiagnosticLength, limit * 8)
-    var text = String(value || "").slice(0, inspectionLimit)
+    var text = boundedInspectionText(value, inspectionLimit)
         .replace(/[\u0000-\u001f\u007f]/g, " ")
         .replace(/\s+/g, " ")
         .trim()

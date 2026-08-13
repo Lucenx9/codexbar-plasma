@@ -182,7 +182,7 @@ KCM.SimpleKCM {
         var prompt = i18n("API key for %1", displayNameForProvider(providerID))
         var script = [
             "if ! command -v kdialog >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"kdialog is required to prompt for API keys.\"}}'; exit 1; fi",
-            "if ! command -v timeout >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"GNU timeout is required to save API keys safely.\"}}'; exit 1; fi",
+            "if ! command -v timeout >/dev/null 2>&1 || ! timeout --kill-after=1s 1s true >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"GNU timeout is required to save API keys safely.\"}}'; exit 1; fi",
             "key=$(kdialog --password \"$1\" 2>/dev/null)",
             "status=$?",
             "if [ \"$status\" -ne 0 ] || [ -z \"$key\" ]; then printf '%s\\n' '{\"cancelled\":true}'; exit 0; fi",
@@ -1221,7 +1221,7 @@ KCM.SimpleKCM {
             + commandLine
         var script = [
             "if ! command -v kdialog >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"kdialog is required to prompt for secrets.\"}}'; exit 1; fi",
-            "if ! command -v timeout >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"GNU timeout is required to save secrets safely.\"}}'; exit 1; fi",
+            "if ! command -v timeout >/dev/null 2>&1 || ! timeout --kill-after=1s 1s true >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"GNU timeout is required to save secrets safely.\"}}'; exit 1; fi",
             "value=$(kdialog --password \"$1\" 2>/dev/null)",
             "status=$?",
             "if [ \"$status\" -ne 0 ] || [ -z \"$value\" ]; then printf '%s\\n' '{\"cancelled\":true}'; exit 0; fi",
