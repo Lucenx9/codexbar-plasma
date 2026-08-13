@@ -27,7 +27,7 @@ require_in_file "$QML" "function commandWithRunNonce(command)"
 require_in_file "$QML" "connectedCommandSource = commandWithRunNonce(commandSource)"
 require_in_file "$QML" "connectedCostCommandSource = commandWithRunNonce(costCommandSource)"
 require_in_file "$QML" "connectedProviderConfigCommandSource = commandWithRunNonce(providerConfigCommandSource)"
-require_in_file "$QML" "var baseCommand = buildProviderUsageCommand(providerID, true)"
+require_in_file "$QML" "var baseCommand = buildProviderUsageCommand(providerID)"
 require_in_file "$QML" "var command = commandWithRunNonce(baseCommand)"
 require_in_file "$QML" 'notificationSource.connectSource(commandWithRunNonce(":; " + command))'
 reject_in_file "$QML" "notificationSource.connectSource(command)"

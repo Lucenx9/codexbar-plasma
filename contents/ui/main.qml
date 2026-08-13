@@ -234,14 +234,9 @@ PlasmoidItem {
             "--json-only"
         ]
 
-        var effectiveSource = source
-        if (source.length === 0 && providerKey(providerID) === "codex") {
-            effectiveSource = "cli"
-        }
-
-        if (effectiveSource.length > 0) {
+        if (source.length > 0) {
             parts.push("--source")
-            parts.push(shellQuote(effectiveSource))
+            parts.push(shellQuote(source))
         }
 
         if (includeStatus) {
@@ -283,7 +278,7 @@ PlasmoidItem {
         return ["sh", "-c", shellQuote(script)].join(" ")
     }
 
-    function buildProviderUsageCommand(providerID, codexCliFallback) {
+    function buildProviderUsageCommand(providerID) {
         var parts = [
             shellQuote(commandPath),
             "usage",
@@ -294,14 +289,9 @@ PlasmoidItem {
             "--json-only"
         ]
 
-        var effectiveSource = source
-        if (codexCliFallback && source.length === 0 && providerKey(providerID) === "codex") {
-            effectiveSource = "cli"
-        }
-
-        if (effectiveSource.length > 0) {
+        if (source.length > 0) {
             parts.push("--source")
-            parts.push(shellQuote(effectiveSource))
+            parts.push(shellQuote(source))
         }
 
         var selectedAccount = selectedAccountForProvider(providerID)
@@ -679,7 +669,7 @@ PlasmoidItem {
             if (providerID.length === 0) {
                 continue
             }
-            var baseCommand = buildProviderUsageCommand(providerID, true)
+            var baseCommand = buildProviderUsageCommand(providerID)
             if (seenCommands[baseCommand]) {
                 continue
             }
