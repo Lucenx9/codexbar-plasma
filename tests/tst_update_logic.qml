@@ -29,4 +29,24 @@ TestCase {
         var stale = new Date(nowMs - 13 * 60 * 60 * 1000).toISOString()
         compare(UpdateLogic.updateCheckDue(true, stale, 12, nowMs, false), true)
     }
+
+    function test_nextDelayUsesRemainingInterval() {
+        var recent = new Date(nowMs - 11 * 60 * 60 * 1000).toISOString()
+        compare(UpdateLogic.nextUpdateCheckDelay(true, recent, 12, nowMs, 60000), 60 * 60 * 1000)
+    }
+
+    function test_nextDelayRunsSoonWhenAlreadyDueOrMissing() {
+        var stale = new Date(nowMs - 13 * 60 * 60 * 1000).toISOString()
+        compare(UpdateLogic.nextUpdateCheckDelay(true, stale, 12, nowMs, 60000), 60000)
+        compare(UpdateLogic.nextUpdateCheckDelay(true, "", 12, nowMs, 60000), 60000)
+    }
+
+    function test_nextDelayDoesNotExceedConfiguredIntervalAfterClockSkew() {
+        var future = new Date(nowMs + 24 * 60 * 60 * 1000).toISOString()
+        compare(UpdateLogic.nextUpdateCheckDelay(true, future, 12, nowMs, 60000), 12 * 60 * 60 * 1000)
+    }
+
+    function test_nextDelayIsZeroWhenChecksAreDisabled() {
+        compare(UpdateLogic.nextUpdateCheckDelay(false, "", 12, nowMs, 60000), 0)
+    }
 }

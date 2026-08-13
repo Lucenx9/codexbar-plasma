@@ -299,12 +299,12 @@ if "trimmed.length === 0" not in parse_command_payload_body or "codexbar did not
 
 # Overview selection is stored with the raw CLI provider IDs (e.g. groqcloud,
 # alibaba-coding-plan) but matched at runtime against providerKey-normalized
-# IDs (groq, alibaba). configuredOverviewProviderIDs must normalize on read so
+# IDs (groq, alibaba). configuredOverviewProviderIDs must validate and normalize on read so
 # the custom selection is not silently ignored for aliased providers.
 overview_body = function_body(main_text, "configuredOverviewProviderIDs")
-if "providerKey(" not in overview_body:
+if "normalizedProviderID(" not in overview_body:
     raise AssertionError(
-        "configuredOverviewProviderIDs must normalize IDs via providerKey so "
+        "configuredOverviewProviderIDs must normalize and validate provider IDs so "
         "aliased providers match runtime keys"
     )
 

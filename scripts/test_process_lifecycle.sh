@@ -47,6 +47,8 @@ require_in_file "$QML" "readonly property int providerConfigWatchIntervalMs: 600
 require_in_file "$QML" "interval: root.providerConfigWatchIntervalMs"
 
 require_in_file "$PROVIDERS_QML" "readonly property int configCommandTimeoutMs: 60000"
+require_in_file "$PROVIDERS_QML" "readonly property int configSecretCommandTimeoutSeconds: 60"
+require_in_file "$PROVIDERS_QML" "readonly property int configSecretCommandKillAfterSeconds: 5"
 require_in_file "$PROVIDERS_QML" "id: configCommandTimeoutTimer"
 require_in_file "$PROVIDERS_QML" "page.expireConfigCommands(Date.now())"
 require_in_file "$PROVIDERS_QML" "onCfg_commandPathChanged: handleCommandPathChanged()"
@@ -204,6 +206,29 @@ for function_name in ("setApiKey", "promptDescriptorSecret"):
     body = function_body(providers_text, function_name)
     if "timeoutMs" in body:
         raise AssertionError(f"interactive {function_name} commands must not expire while prompting")
+    for fragment in ("command -v timeout", "timeout --kill-after", "configSecretCommandTimeoutSeconds", "configSecretCommandKillAfterSeconds"):
+        if fragment not in body:
+            raise AssertionError(
+                f"interactive {function_name} must bound the post-prompt CLI phase: {fragment}"
+            )
+
+set_api_key_body = function_body(providers_text, "setApiKey")
+if 'printf \'%s\' \\"$key\\" | timeout --kill-after=' not in set_api_key_body:
+    raise AssertionError("setApiKey must pipe the secret to a bounded CLI process")
+
+prompt_secret_body = function_body(providers_text, "promptDescriptorSecret")
+if 'printf \'%s\' \\"$value\\" | " + boundedCommandLine' not in prompt_secret_body:
+    raise AssertionError("descriptor secrets must stay on stdin and use the bounded CLI command")
+
+set_api_key_result_body = function_body(providers_text, "handleSetApiKeyResult")
+for fragment in ("markPending(descriptor.provider, false)", "Number(exitCode) === 124", "Number(exitCode) === 137"):
+    if fragment not in set_api_key_result_body:
+        raise AssertionError(f"set-api-key timeout cleanup is incomplete: {fragment}")
+
+parse_payload_body = function_body(providers_text, "parseCommandPayload")
+for fragment in ("Number(exitCode) === 124", "Number(exitCode) === 137", "codexbar command timed out. Try again."):
+    if fragment not in parse_payload_body:
+        raise AssertionError(f"descriptor secret timeout reporting is incomplete: {fragment}")
 
 expire_config_body = function_body(providers_text, "expireConfigCommands")
 for fragment in ("disconnectSource(sourceName)", "handleConfigCommandTimeout(descriptor)"):
@@ -246,6 +271,34 @@ debug_timeout_body = function_body(debug_text, "handleDiagnosticTimeout")
 for fragment in ("finishDiagnosticCommand(activeCommand)", "Diagnostic command timed out. Try again."):
     if fragment not in debug_timeout_body:
         raise AssertionError(f"debug timeout cleanup is incomplete: {fragment}")
+
+schedule_update_body = function_body(main_text, "scheduleNextUpdateCheck")
+for fragment in (
+    "updateCheckTimer.stop()",
+    "connectedUpdateCommandSource.length > 0",
+    "UpdateLogic.nextUpdateCheckDelay(",
+    "updateCheckTimer.restart()",
+):
+    if fragment not in schedule_update_body:
+        raise AssertionError(f"update scheduling lifecycle is incomplete: {fragment}")
+
+check_update_body = function_body(main_text, "checkForWidgetUpdate")
+for fragment in ("scheduleNextUpdateCheck()", "updateCheckTimer.stop()"):
+    if fragment not in check_update_body:
+        raise AssertionError(f"update checks must avoid overlap and rearm when not due: {fragment}")
+
+finish_update_body = function_body(main_text, "finishUpdateCommand")
+if "scheduleNextUpdateCheck()" not in finish_update_body:
+    raise AssertionError("every completed update command must rearm the one-shot timer")
+
+timer_start = main_text.index("id: updateCheckTimer")
+timer_end = main_text.index("\n    Timer {", timer_start + 1)
+timer_body = main_text[timer_start:timer_end]
+for fragment in ("repeat: false", "running: false", "root.checkForWidgetUpdate()"):
+    if fragment not in timer_body:
+        raise AssertionError(f"update timer must remain single-shot: {fragment}")
+if "onAutoUpdateIntervalHoursChanged: scheduleNextUpdateCheck()" not in main_text:
+    raise AssertionError("changing the update interval must rearm the scheduler")
 PY
 
 echo "KDE plasmoid process lifecycle checks passed."

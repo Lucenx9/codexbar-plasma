@@ -87,6 +87,7 @@ Rectangle {
             Kirigami.Icon {
                 anchors.centerIn: parent
                 source: overviewRow.applet.providerIconSource(overviewRow.providerData.provider)
+                fallback: "view-statistics"
                 isMask: overviewRow.applet.providerIconIsMask(overviewRow.providerData.provider)
                 color: overviewRow.accent
                 width: Kirigami.Units.iconSizes.medium

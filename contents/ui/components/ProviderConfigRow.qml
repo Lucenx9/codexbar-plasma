@@ -32,6 +32,7 @@ Controls.ItemDelegate {
 
         Kirigami.Icon {
             source: providerRow.configPage.providerIconSource(providerRow.providerData.provider)
+            fallback: "view-statistics"
             isMask: true
             color: providerRow.highlighted
                 ? providerRow.selectedForeground

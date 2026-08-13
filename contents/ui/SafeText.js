@@ -2,6 +2,7 @@
 
 var maximumCliMessageLength = 500
 var maximumDiagnosticLength = 65536
+var maximumCliJsonLength = 4 * 1024 * 1024
 
 function safeLimit(maximumLength, fallback) {
     var limit = Number(maximumLength)
@@ -24,11 +25,17 @@ function redactCredentials(value, inspectionLimit) {
 
 function boundedDisplayText(value, maximumLength) {
     var limit = safeLimit(maximumLength, maximumCliMessageLength)
-    var text = String(value || "")
+    var inspectionLimit = Math.min(maximumDiagnosticLength, limit * 8)
+    var text = String(value || "").slice(0, inspectionLimit)
         .replace(/[\u0000-\u001f\u007f]/g, " ")
         .replace(/\s+/g, " ")
         .trim()
     return text.length > limit ? text.slice(0, limit) : text
+}
+
+function cliJsonText(value) {
+    var text = typeof value === "string" ? value : String(value || "")
+    return text.length <= maximumCliJsonLength ? text : null
 }
 
 function cliMessage(value, maximumLength) {

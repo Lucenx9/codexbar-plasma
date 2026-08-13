@@ -54,4 +54,9 @@ TestCase {
         verify(diagnostic.indexOf("secret-token") === -1)
         verify(diagnostic.length <= 32)
     }
+
+    function test_rejectsOversizedCliJsonBeforeParsing() {
+        compare(SafeText.cliJsonText("{}"), "{}")
+        compare(SafeText.cliJsonText("x".repeat(SafeText.maximumCliJsonLength + 1)), null)
+    }
 }
