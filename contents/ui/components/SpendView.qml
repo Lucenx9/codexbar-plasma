@@ -154,6 +154,9 @@ ColumnLayout {
                     Kirigami.Theme.highlightColor,
                     Kirigami.Theme.backgroundColor)
                 kind: "bar"
+                // This chart plots the whole selected range, up to 90 bars, and
+                // is the primary view here: it outranks the heatmap below it.
+                plotHeight: Kirigami.Units.gridUnit * 6
                 accessibleTitle: i18n("Daily cost history")
             }
 
@@ -181,7 +184,9 @@ ColumnLayout {
 
                         readonly property real cellSpacing: Math.max(1, Math.round(Kirigami.Units.smallSpacing / 2))
                         readonly property real minimumCellSize: Kirigami.Units.gridUnit * 0.6
-                        readonly property real maximumCellSize: Kirigami.Units.gridUnit * 1.6
+                        // Kept below the chart's weight: this is the secondary
+                        // read, a weekday pattern, not the magnitude over time.
+                        readonly property real maximumCellSize: Kirigami.Units.gridUnit * 1.15
                         readonly property int fittingColumns: Math.max(1, Math.floor(
                             (width + cellSpacing) / (minimumCellSize + cellSpacing)))
                         readonly property int columnCount: Math.max(1, Math.min(

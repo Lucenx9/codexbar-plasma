@@ -12,6 +12,9 @@ ColumnLayout {
     property string kind: "bar"
     property string accessibleTitle: ""
     property string valueSuffix: ""
+    // Owners that plot a long range can raise this; the default keeps the
+    // inline provider detail charts at their existing size.
+    property real plotHeight: Kirigami.Units.gridUnit * 3
     property int selectedIndex: -1
     property int hoveredIndex: -1
     readonly property int activeIndex: hoveredIndex >= 0 ? hoveredIndex : selectedIndex
@@ -102,7 +105,7 @@ ColumnLayout {
         id: plot
 
         Layout.fillWidth: true
-        Layout.preferredHeight: Kirigami.Units.gridUnit * 3
+        Layout.preferredHeight: chart.plotHeight
         activeFocusOnTab: true
 
         Accessible.role: Accessible.Graphic
