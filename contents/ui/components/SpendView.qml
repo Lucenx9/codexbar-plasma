@@ -90,7 +90,7 @@ ColumnLayout {
 
         PlasmaComponents.ToolButton {
             icon.name: "view-refresh"
-            enabled: !view.applet.loading
+            enabled: !view.applet.costLoading
             Accessible.name: i18n("Refresh cost data")
             onClicked: view.applet.refreshCost()
         }
@@ -104,11 +104,32 @@ ColumnLayout {
     }
 
     Kirigami.PlaceholderMessage {
-        visible: view.providerCosts.length === 0 && view.applet.costErrorText.length === 0
+        visible: !view.applet.costLoading
+            && view.providerCosts.length === 0
+            && view.applet.costErrorText.length === 0
         text: i18n("No local cost data available.")
         explanation: i18n("Cost history appears for providers supported by the codexbar cost command.")
         icon.name: "view-statistics-symbolic"
         type: Kirigami.PlaceholderMessage.Type.Informational
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+    }
+
+    Item {
+        visible: view.applet.costLoading && view.providerCosts.length === 0
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+
+        Controls.BusyIndicator {
+            anchors.centerIn: parent
+            running: parent.visible
+        }
+    }
+
+    Item {
+        visible: !view.applet.costLoading
+            && view.providerCosts.length === 0
+            && view.applet.costErrorText.length > 0
         Layout.fillWidth: true
         Layout.fillHeight: true
     }

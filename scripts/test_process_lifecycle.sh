@@ -177,6 +177,23 @@ for fragment in (
     if fragment not in usage_timeout_body:
         raise AssertionError(f"usage timeout cleanup is incomplete: {fragment}")
 
+cost_descriptor_body = function_body(main_text, "buildCostCommandDescriptor")
+for fragment in ('buildUsageCommandDescriptor("cost", "")', "descriptor.costHistoryDays = costHistoryDays"):
+    if fragment not in cost_descriptor_body:
+        raise AssertionError(
+            "cost command descriptors must retain the requested history range: "
+            f"{fragment}"
+        )
+for fragment in (
+    "var costDescriptor = root.activeUsageCommands[sourceName]",
+    "root.parseCostOutput(stdoutText, stderrText, requestedHistoryDays)",
+):
+    if fragment not in main_text:
+        raise AssertionError(
+            "cost completion must pass its captured request range to normalization: "
+            f"{fragment}"
+        )
+
 fallback_result_body = function_body(main_text, "parseProviderFallbackOutput")
 if fallback_result_body.count("completeProviderFallbackCommand()") != 2:
     raise AssertionError("every accepted fallback result path must complete its queue accounting")

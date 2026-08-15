@@ -255,9 +255,9 @@ for provider_id, cli_name in {
         sys.exit(1)
 PY
 
-require_in_file "$MAIN_QML" "daily: normalizeCostDaily(item.daily, currency, costHistoryDays)"
+require_in_file "$MAIN_QML" "daily: normalizeCostDaily(item.daily, currency, historyDays)"
 require_in_file "$MAIN_QML" "totals: normalizeCostTotals(item.totals, item.last30DaysCostUSD, item.last30DaysTokens, currency)"
-require_in_file "$MAIN_QML" "models: normalizeCostModels(item.daily, currency, costHistoryDays)"
+require_in_file "$MAIN_QML" "models: normalizeCostModels(item.daily, currency, historyDays)"
 require_in_file "$MAIN_QML" "function normalizeCostDaily(items, currency, days)"
 require_in_file "$MAIN_QML" "result.length < historyDays"
 require_in_file "$MAIN_QML" "inspectedItems < maximumCostHistoryScanItems"

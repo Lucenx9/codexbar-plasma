@@ -98,6 +98,7 @@ PlasmoidItem {
     property bool providerFallbackActive: false
     property string costCommandSource: buildCostCommand()
     property string connectedCostCommandSource: ""
+    readonly property bool costLoading: connectedCostCommandSource.length > 0
     property var tokenCosts: ({})
     property string costErrorText: ""
     property string sessionsCommandSource: buildSessionsCommand()
@@ -139,6 +140,7 @@ PlasmoidItem {
     readonly property bool overviewSelected: overviewAvailable && globalViewSelected && selectedGlobalView === "overview"
     readonly property bool spendSelected: spendAvailable && globalViewSelected && selectedGlobalView === "spend"
     readonly property bool sessionsSelected: sessionsAvailable && globalViewSelected && selectedGlobalView === "sessions"
+    readonly property bool providerUsageFeedbackVisible: !spendSelected && !sessionsSelected
     readonly property var selectedProviderData: providers.length > 0 && selectedProviderIndex >= 0
         ? providers[Math.min(selectedProviderIndex, providers.length - 1)]
         : null
@@ -481,6 +483,12 @@ PlasmoidItem {
         }
     }
 
+    function buildCostCommandDescriptor() {
+        var descriptor = buildUsageCommandDescriptor("cost", "")
+        descriptor.costHistoryDays = costHistoryDays
+        return descriptor
+    }
+
     function finishUsageCommandSource(sourceName) {
         if (sourceName.length === 0) {
             return
@@ -581,7 +589,7 @@ PlasmoidItem {
         connectedCostCommandSource = commandWithRunNonce(costCommandSource)
         connectUsageCommand(
             connectedCostCommandSource,
-            buildUsageCommandDescriptor("cost", ""))
+            buildCostCommandDescriptor())
     }
 
     function refreshSessions() {
@@ -1167,7 +1175,7 @@ PlasmoidItem {
         return result
     }
 
-    function parseCostOutput(stdoutText, stderrText) {
+    function parseCostOutput(stdoutText, stderrText, requestedHistoryDays) {
         var trimmed = stdoutText.trim()
         if (trimmed.length === 0) {
             costErrorText = stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("codexbar cost did not return JSON.")
@@ -1196,7 +1204,7 @@ PlasmoidItem {
             if (costMessage.length === 0 && item && item.error && item.error.message) {
                 costMessage = boundedCliMessage(item.error.message)
             }
-            var cost = normalizeTokenCost(item)
+            var cost = normalizeTokenCost(item, requestedHistoryDays)
             var providerID = cost ? providerMapKey(cost.provider) : ""
             if (cost && providerID.length > 0) {
                 nextCosts[providerID] = cost
@@ -1347,7 +1355,7 @@ PlasmoidItem {
         return i18np("%1 day ago", "%1 days ago", days)
     }
 
-    function normalizeTokenCost(item) {
+    function normalizeTokenCost(item, requestedHistoryDays) {
         if (!item || !item.provider) {
             return null
         }
@@ -1357,23 +1365,34 @@ PlasmoidItem {
             return null
         }
         var currency = boundedDisplayText(item.currencyCode || "USD", 12)
-        var windowLabel = boundedDisplayText(item.historyLabel || costHistoryWindowLabel(item), 120)
+        var emittedHistoryDays = Number(item.historyDays)
+        var fallbackHistoryDays = Number(requestedHistoryDays)
+        var historyDays = isFinite(emittedHistoryDays) && emittedHistoryDays > 0
+            ? Math.max(1, Math.min(maximumCostHistoryPoints, Math.floor(emittedHistoryDays)))
+            : (isFinite(fallbackHistoryDays) && fallbackHistoryDays > 0
+            ? Math.max(1, Math.min(maximumCostHistoryPoints, Math.floor(fallbackHistoryDays)))
+            : 30)
+        var windowLabel = boundedDisplayText(item.historyLabel || costHistoryWindowLabel(item, historyDays), 120)
         return {
             provider: providerID,
+            historyDays: historyDays,
             title: i18n("Cost"),
             sessionLine: costLine(i18n("Today"), item.sessionCostUSD, item.sessionTokens, currency),
             monthLine: costLine(windowLabel, item.last30DaysCostUSD, item.last30DaysTokens, currency),
             hintLine: tokenCostHint(providerID),
             totals: normalizeCostTotals(item.totals, item.last30DaysCostUSD, item.last30DaysTokens, currency),
-            models: normalizeCostModels(item.daily, currency, costHistoryDays),
-            daily: normalizeCostDaily(item.daily, currency, costHistoryDays)
+            models: normalizeCostModels(item.daily, currency, historyDays),
+            daily: normalizeCostDaily(item.daily, currency, historyDays)
         }
     }
 
-    function costHistoryWindowLabel(item) {
+    function costHistoryWindowLabel(item, requestedHistoryDays) {
         var rawDays = item && item.historyDays !== undefined && item.historyDays !== null
             ? Number(item.historyDays)
-            : Number(costHistoryDays)
+            : NaN
+        if (!isFinite(rawDays) || rawDays <= 0) {
+            rawDays = Number(requestedHistoryDays)
+        }
         if (!isFinite(rawDays) || rawDays <= 0) {
             return i18n("Last 30 days")
         }
@@ -1593,15 +1612,28 @@ PlasmoidItem {
     function spendProviderCosts() {
         var result = []
         for (var providerID in tokenCosts) {
-            if (!hasOwnKey(tokenCosts, providerID) || !tokenCosts[providerID]) {
+            if (!hasOwnKey(tokenCosts, providerID)) {
                 continue
             }
-            result.push(tokenCosts[providerID])
+            var tokenCost = tokenCosts[providerID]
+            if (!costSnapshotMatchesSelectedRange(tokenCost)) {
+                continue
+            }
+            result.push(tokenCost)
         }
         result.sort(function(a, b) {
             return providerTitle(a.provider).localeCompare(providerTitle(b.provider))
         })
         return result
+    }
+
+    function costSnapshotMatchesSelectedRange(tokenCost) {
+        if (!tokenCost) {
+            return false
+        }
+        var snapshotDays = Number(tokenCost.historyDays)
+        return isFinite(snapshotDays)
+            && Math.floor(snapshotDays) === Math.floor(Number(costHistoryDays))
     }
 
     function spendDailyPoints() {
@@ -4758,9 +4790,13 @@ PlasmoidItem {
             }
 
             if (sourceName === root.connectedCostCommandSource) {
+                var costDescriptor = root.activeUsageCommands[sourceName]
+                var requestedHistoryDays = costDescriptor
+                    ? costDescriptor.costHistoryDays
+                    : root.costHistoryDays
                 root.connectedCostCommandSource = ""
                 root.finishUsageCommandSource(sourceName)
-                root.parseCostOutput(stdoutText, stderrText)
+                root.parseCostOutput(stdoutText, stderrText, requestedHistoryDays)
                 return
             }
 
@@ -5329,14 +5365,19 @@ PlasmoidItem {
             Kirigami.InlineMessage {
                 id: globalErrorMessage
 
-                visible: errorText.length > 0
+                visible: root.providerUsageFeedbackVisible && errorText.length > 0
                 text: errorText
                 type: Kirigami.MessageType.Error
                 Layout.fillWidth: true
             }
 
             RowLayout {
-                visible: providers.length === 0 && errorText.length === 0 && loading
+                id: providerUsageLoadingRow
+
+                visible: root.providerUsageFeedbackVisible
+                    && providers.length === 0
+                    && errorText.length === 0
+                    && loading
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 spacing: Kirigami.Units.smallSpacing

@@ -438,6 +438,8 @@ for cost_error_fragment in (
             "parseCostOutput must surface CLI JSON errors when no cost rows are valid; "
             f"missing {cost_error_fragment!r}"
         )
+if "normalizeTokenCost(item, requestedHistoryDays)" not in parse_cost_body:
+    raise AssertionError("cost snapshots must retain the range of the request that produced them")
 
 token_cost_section_body = id_block(main_text, "tokenCostSection")
 if "root.costErrorText" not in token_cost_section_body:
@@ -448,10 +450,33 @@ if "supportsLocalCost" not in token_cost_section_body:
     raise AssertionError("tokenCostSection must scope global cost errors to supported providers")
 
 normalize_token_cost_body = function_body(main_text, "normalizeTokenCost")
-if "costHistoryWindowLabel(item)" not in normalize_token_cost_body:
-    raise AssertionError("normalizeTokenCost must use the configured cost history window label fallback")
-if "function costHistoryWindowLabel(item)" not in main_text:
+for ranged_cost_fragment in (
+    "costHistoryWindowLabel(item, historyDays)",
+    "historyDays: historyDays",
+    "normalizeCostModels(item.daily, currency, historyDays)",
+    "normalizeCostDaily(item.daily, currency, historyDays)",
+):
+    if ranged_cost_fragment not in normalize_token_cost_body:
+        raise AssertionError(
+            "normalizeTokenCost must retain and apply its bounded history range; "
+            f"missing {ranged_cost_fragment!r}"
+        )
+if "function costHistoryWindowLabel(item, requestedHistoryDays)" not in main_text:
     raise AssertionError("main.qml must define costHistoryWindowLabel")
+cost_history_label_body = function_body(main_text, "costHistoryWindowLabel")
+if "rawDays = Number(requestedHistoryDays)" not in cost_history_label_body:
+    raise AssertionError("invalid emitted cost ranges must fall back to the captured request range")
+
+spend_provider_costs_body = function_body(main_text, "spendProviderCosts")
+if "costSnapshotMatchesSelectedRange(tokenCost)" not in spend_provider_costs_body:
+    raise AssertionError("global spend aggregates must exclude snapshots from another selected range")
+cost_range_match_body = function_body(main_text, "costSnapshotMatchesSelectedRange")
+for range_match_fragment in ("Number(tokenCost.historyDays)", "Number(costHistoryDays)"):
+    if range_match_fragment not in cost_range_match_body:
+        raise AssertionError(
+            "cost snapshot range matching must compare normalized snapshot and selected ranges; "
+            f"missing {range_match_fragment!r}"
+        )
 
 add_window_body = function_body(main_text, "addWindow")
 if "pace.expectedUsedPercent !== null" not in add_window_body or "pace.expectedUsedPercent !== undefined" not in add_window_body:
@@ -978,6 +1003,17 @@ for message_id, message_type in (
     if f"type: {message_type}" not in message_body:
         raise AssertionError(f"{message_id} must use the native semantic message style")
 
+global_error_body = id_block(main_text, "globalErrorMessage")
+provider_usage_loading_body = id_block(main_text, "providerUsageLoadingRow")
+for scoped_feedback_body, feedback_name in (
+    (global_error_body, "globalErrorMessage"),
+    (provider_usage_loading_body, "providerUsageLoadingRow"),
+):
+    if "root.providerUsageFeedbackVisible" not in scoped_feedback_body:
+        raise AssertionError(
+            f"{feedback_name} must stay hidden on the independent Spend and Sessions tabs"
+        )
+
 provider_status_body = id_block(main_text, "providerStatusMessage")
 if "root.selectedProviderData.hasIncident" not in provider_status_body:
     raise AssertionError("healthy provider status must not occupy a permanent inline banner")
@@ -1445,6 +1481,18 @@ if "elementLoader.implicitWidth" in compact_representation_text:
     raise AssertionError("compact panel text measurement must not feed back through its Loader width")
 if "rangeCombo.valueAt(index)" not in spend_view_text:
     raise AssertionError("the cost range selector must use the activated option instead of stale currentValue")
+for cost_loading_fragment in (
+    "enabled: !view.applet.costLoading",
+    "visible: view.applet.costLoading && view.providerCosts.length === 0",
+    "visible: !view.applet.costLoading",
+):
+    if cost_loading_fragment not in spend_view_text:
+        raise AssertionError(
+            "SpendView must distinguish a range refresh from an empty result; "
+            f"missing {cost_loading_fragment!r}"
+        )
+if "readonly property bool costLoading: connectedCostCommandSource.length > 0" not in main_text:
+    raise AssertionError("cost loading state must follow the active cost command lifecycle")
 if "required property int index" not in display_text:
     raise AssertionError("the panel element editor delegate must explicitly receive its model index")
 for localized_pair_source, localized_pair_text in (
