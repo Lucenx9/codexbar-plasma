@@ -1543,6 +1543,15 @@ for heatmap_range_fragment in (
             "the activity heatmap must follow the selected cost range and size cells "
             f"from the available width; missing {heatmap_range_fragment!r}"
         )
+if "modelData.monthLine" in spend_view_text:
+    raise AssertionError(
+        "the Usage & Spend provider rows must not repeat the window label that the "
+        "range selector already states; use the windowValueLine figures"
+    )
+if "windowValueLine: costValueLine(" not in main_text:
+    raise AssertionError(
+        "normalized token costs must expose a window-free value line for range-scoped surfaces"
+    )
 if "view.dailyPoints.length - 42" in spend_view_text:
     raise AssertionError(
         "the activity heatmap must not pin itself to a fixed 42-day window while the "

@@ -274,7 +274,9 @@ ColumnLayout {
                         }
 
                         PlasmaComponents.Label {
-                            text: modelData.monthLine
+                            // The range selector above states the window once,
+                            // so each row carries only its own figures.
+                            text: modelData.windowValueLine
                             opacity: view.applet.valueTextOpacity
                             horizontalAlignment: Text.AlignRight
                             elide: Text.ElideRight
