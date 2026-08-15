@@ -1325,6 +1325,19 @@ if "arguments[" in dashboard_rows_body:
 if "function usageDashboardRows(source, state, depth)" not in main_text:
     raise AssertionError("usageDashboardRows must expose named state and depth parameters")
 
+# The 80/95 steps used to be literals in these two functions, so the notification
+# level and the markers drawn on the bar could drift apart and neither could be
+# configured. Both now delegate to one bounded library.
+if "QuotaThresholds.level(" not in function_body(main_text, "quotaNotificationLevel"):
+    raise AssertionError("quotaNotificationLevel must delegate to QuotaThresholds.level")
+if "QuotaThresholds.markers(" not in function_body(main_text, "quotaWarningMarkers"):
+    raise AssertionError("quotaWarningMarkers must delegate to QuotaThresholds.markers")
+for retired_literal in ("usageBarsShowUsed ? 80 : 20", "usageBarsShowUsed ? 95 : 5", "used >= 95", "used >= 80"):
+    if retired_literal in main_text:
+        raise AssertionError(
+            f"quota thresholds must stay configurable; found hardcoded {retired_literal!r}"
+        )
+
 reset_time_body = function_body(main_text, "resetLabelLooksLikeTime")
 if r"\S+\s+\d{1,2}:\d{2}" not in reset_time_body:
     raise AssertionError("absolute weekday reset labels must be recognized as times")

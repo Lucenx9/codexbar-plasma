@@ -342,6 +342,18 @@ require_in_file "$MAIN_QML" "Plasmoid.configuration.menuBarDisplayMode"
 reject_in_file "$MAIN_QML" "onResetTimesShowAbsoluteChanged: Qt.callLater(refreshNow)"
 require_in_file "$USAGE_ROW_COMPONENT_QML" "usageRow.applet.usageResetText(usageRow.rowData)"
 require_in_file "$MAIN_QML" "property bool showQuotaWarningMarkers"
+# Quota thresholds are user-configurable and shared by the notifications and the
+# markers drawn on the usage bars, so they must come from one bounded source.
+require_in_file "$CONFIG_XML" 'name="quotaWarningPercent"'
+require_in_file "$CONFIG_XML" 'name="quotaCriticalPercent"'
+require_in_file "$MAIN_QML" 'import "QuotaThresholds.js" as QuotaThresholds'
+require_in_file "$MAIN_QML" "readonly property int quotaWarningPercent: QuotaThresholds.warningPercent("
+require_in_file "$MAIN_QML" "readonly property int quotaCriticalPercent: QuotaThresholds.criticalPercent("
+require_in_file "$MAIN_QML" "onQuotaWarningPercentChanged: resetNotificationMemo()"
+require_in_file "$MAIN_QML" "onQuotaCriticalPercentChanged: resetNotificationMemo()"
+require_in_file "$GENERAL_QML" "cfg_quotaWarningPercent"
+require_in_file "$GENERAL_QML" "cfg_quotaCriticalPercent"
+require_in_file "$GENERAL_QML" "from: quotaWarningPercentSpin.value"
 require_in_file "$MAIN_QML" "function statusSeverity(status)"
 require_in_file "$MAIN_QML" "function statusBadgeColor(severity)"
 require_in_file "$MAIN_QML" "function primaryIncidentProvider()"

@@ -26,6 +26,10 @@ KCM.SimpleKCM {
     property bool cfg_notifyQuotaWarningsDefault
     property alias cfg_notifyLimitResets: notifyLimitResetsCheck.checked
     property bool cfg_notifyLimitResetsDefault
+    property alias cfg_quotaWarningPercent: quotaWarningPercentSpin.value
+    property int cfg_quotaWarningPercentDefault
+    property alias cfg_quotaCriticalPercent: quotaCriticalPercentSpin.value
+    property int cfg_quotaCriticalPercentDefault
     property alias cfg_updateChecksEnabled: updateChecksEnabledCheck.checked
     property bool cfg_updateChecksEnabledDefault
     property alias cfg_updateNotificationsEnabled: updateNotificationsEnabledCheck.checked
@@ -175,6 +179,48 @@ KCM.SimpleKCM {
             id: notifyLimitResetsCheck
             text: i18n("Notify limit resets")
             enabled: enableNotificationsCheck.checked
+        }
+
+        Controls.SpinBox {
+            id: quotaWarningPercentSpin
+            Kirigami.FormData.label: i18n("Quota warning at:")
+            from: 1
+            to: 99
+            editable: true
+            textFromValue: function(value, locale) {
+                return i18n("%1% used", value)
+            }
+            valueFromText: function(text, locale) {
+                var match = text.match(/\d+/)
+                return match ? parseInt(match[0], 10) : 80
+            }
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 10
+        }
+
+        Controls.SpinBox {
+            id: quotaCriticalPercentSpin
+            Kirigami.FormData.label: i18n("Quota critical at:")
+            // Keeping the floor on the warning value makes the "critical is never
+            // below warning" rule visible here instead of only correcting it at
+            // runtime, where the widget would silently ignore the entered number.
+            from: quotaWarningPercentSpin.value
+            to: 100
+            editable: true
+            textFromValue: function(value, locale) {
+                return i18n("%1% used", value)
+            }
+            valueFromText: function(text, locale) {
+                var match = text.match(/\d+/)
+                return match ? parseInt(match[0], 10) : 95
+            }
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 10
+        }
+
+        Controls.Label {
+            text: i18n("Thresholds also position the markers drawn on the usage bars.")
+            opacity: 0.7
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
         }
 
         Kirigami.Separator {

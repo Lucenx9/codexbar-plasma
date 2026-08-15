@@ -313,6 +313,23 @@ msgid "Notify limit resets"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
+msgid "Quota warning at:"
+msgstr ""
+
+#: contents/ui/configGeneral.qml contents/ui/main.qml
+#, javascript-format
+msgid "%1% used"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Quota critical at:"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Thresholds also position the markers drawn on the usage bars."
+msgstr ""
+
+#: contents/ui/configGeneral.qml
 msgid "Updates"
 msgstr ""
 
@@ -1255,11 +1272,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "%1: %2 / %3"
-msgstr ""
-
-#: contents/ui/main.qml
-#, javascript-format
-msgid "%1% used"
 msgstr ""
 
 #: contents/ui/main.qml

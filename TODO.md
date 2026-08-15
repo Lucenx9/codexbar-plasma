@@ -30,10 +30,12 @@ upstream v0.49.6 and probed against the installed CLI 0.49.6.
   the CLI extends that stable presentation contract. Missing examples include
   billing summaries, usage breakdowns, credits history, and richer
   provider-specific model/request/token sections.
-- Configurable quota warning thresholds: `quotaNotificationLevel()` and
-  `quotaWarningMarkers()` in `main.qml` hardcode 80/95, while macOS exposes them
-  in a dedicated Notifications pane. No CLI contract is involved, so this is the
-  smallest real parity gap fully under Plasma control.
+- Quota warning thresholds are configurable through `quotaWarningPercent` and
+  `quotaCriticalPercent`, bounded by `contents/ui/QuotaThresholds.js`, and drive
+  both the notification level and the usage-bar markers. Per-provider thresholds
+  stay blocked on the CLI descriptor. Do not reintroduce literal percentages at
+  a call site; `limitResetArmThreshold` is a separate reset-detection knob and
+  is deliberately not tied to the warning step.
 - Local Agent Sessions list: `codexbar sessions --json-v2` is stable and
   verified on 0.49.6 but is never consumed by the widget. Bound `projectName`,
   `host` and `transcriptPath` as untrusted display text, and do not open or

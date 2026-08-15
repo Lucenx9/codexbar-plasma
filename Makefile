@@ -19,6 +19,7 @@ QML_FILES := \
 	contents/ui/configAdvanced.qml \
 	contents/ui/configDebug.qml \
 	contents/ui/ProviderIdentity.js \
+	contents/ui/QuotaThresholds.js \
 	contents/ui/SafeText.js \
 	contents/ui/ThemeContrast.js \
 	contents/ui/UsageDetails.js \

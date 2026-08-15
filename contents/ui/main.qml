@@ -8,6 +8,7 @@ import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
 import "components" as Components
 import "ProviderIdentity.js" as ProviderIdentity
+import "QuotaThresholds.js" as QuotaThresholds
 import "SafeText.js" as SafeText
 import "ThemeContrast.js" as ThemeContrast
 import "UsageDetails.js" as UsageDetails
@@ -38,6 +39,13 @@ PlasmoidItem {
     property int costHistoryDays: isFinite(Number(Plasmoid.configuration.costHistoryDays)) ? Math.max(1, Math.min(365, Number(Plasmoid.configuration.costHistoryDays))) : 30
     property bool usageBarsShowUsed: Plasmoid.configuration.usageBarsShowUsed === true
     property bool showQuotaWarningMarkers: Plasmoid.configuration.showQuotaWarningMarkers !== false
+    readonly property int quotaWarningPercent: QuotaThresholds.warningPercent(
+        Plasmoid.configuration.quotaWarningPercent)
+    // Derived from the warning step so a critical threshold configured below it
+    // can never make the "major" level unreachable.
+    readonly property int quotaCriticalPercent: QuotaThresholds.criticalPercent(
+        quotaWarningPercent,
+        Plasmoid.configuration.quotaCriticalPercent)
     property bool enableNotifications: Plasmoid.configuration.enableNotifications !== false
     property bool notifyStatusIncidents: Plasmoid.configuration.notifyStatusIncidents !== false
     property bool notifyQuotaWarnings: Plasmoid.configuration.notifyQuotaWarnings !== false
@@ -147,6 +155,12 @@ PlasmoidItem {
     onEnableNotificationsChanged: resetNotificationMemo()
     onNotifyStatusIncidentsChanged: resetNotificationMemo()
     onNotifyQuotaWarningsChanged: resetNotificationMemo()
+    // The memo stores the level each row was last observed at. Keeping it across
+    // a threshold change would suppress a warning the new lower threshold should
+    // raise, and leave a row armed at a level the new higher threshold no longer
+    // reaches.
+    onQuotaWarningPercentChanged: resetNotificationMemo()
+    onQuotaCriticalPercentChanged: resetNotificationMemo()
     onNotifyLimitResetsChanged: resetNotificationMemo()
     onUpdateChecksEnabledChanged: {
         if (updateChecksEnabled) {
@@ -2396,12 +2410,10 @@ PlasmoidItem {
         if (!showQuotaWarningMarkers || !row || !row.hasPercent) {
             return []
         }
-        var warning = usageBarsShowUsed ? 80 : 20
-        var critical = usageBarsShowUsed ? 95 : 5
-        return [
-            { percent: warning, severity: "minor" },
-            { percent: critical, severity: "major" }
-        ]
+        return QuotaThresholds.markers(
+            quotaWarningPercent,
+            quotaCriticalPercent,
+            usageBarsShowUsed)
     }
 
     function resetNotificationMemo() {
@@ -2696,17 +2708,10 @@ PlasmoidItem {
         if (!row || !row.hasPercent) {
             return ""
         }
-        var used = Number(row.usedPercent)
-        if (!isFinite(used)) {
-            return ""
-        }
-        if (used >= 95) {
-            return "major"
-        }
-        if (used >= 80) {
-            return "minor"
-        }
-        return ""
+        return QuotaThresholds.level(
+            row.usedPercent,
+            quotaWarningPercent,
+            quotaCriticalPercent)
     }
 
     function notificationRank(severity) {

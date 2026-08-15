@@ -54,14 +54,49 @@ Use this order when sources disagree:
   exposes canonical metadata, consume it and retain cheap drift tests for any
   remaining fallback map.
 
-## Working Method
+## Working Style
+
+- Finish the full requested scope. Progress notes and plans do not substitute
+  for implementation. If one part is genuinely blocked, complete every
+  independent part and state the exact blocker in one sentence.
+- Distinguish questions from change requests. Answer requests to evaluate,
+  explain, or diagnose without modifying files. Verbs such as `fix`,
+  `implement`, `change`, `add`, `remove`, and `refactor` authorize the smallest
+  complete in-scope change.
+- Act by default when a step is reversible, low-cost, and clearly in scope. Use
+  available tools to inspect files, search code, read documentation, reproduce
+  bugs, compare implementations, make scoped edits, and run tests before asking
+  the user for missing details. Fix safe, in-scope problems instead of returning
+  them as user to-dos.
+- Ask first when an action reaches an external audience, is destructive or hard
+  to undo, can create meaningful cost, or when plausible interpretations would
+  produce materially different results.
+- Prefer the smallest complete solution. Avoid unrelated cleanup, abstractions,
+  features, dependencies, formatting churn, and architecture changes. Never
+  reduce the requested scope silently.
+- Understand the surrounding implementation and existing conventions before
+  changing established behavior. Preserve compatibility, tests, safeguards,
+  error handling, and unexpected behavior unless evidence or the request shows
+  that they must change.
+- Parallelize independent work only when it saves meaningful time. Use subagents
+  only for substantial independent tasks, keep their files and logical areas
+  disjoint, and continue useful main-thread work while they run.
+- Apply the normal verification for the change: focused tests, linting, type
+  checks, builds, reproduction, and diff inspection as appropriate. Avoid
+  redundant passes. Never claim a check passed when it failed or was not run;
+  state the specific reason when verification is unavailable.
+- Communicate in direct technical English with short sentences and paragraphs.
+  During longer tasks, report only useful new progress. Keep the final response
+  short: what changed, whether it worked, and what the user must do next. Say
+  explicitly when no action is needed. When a choice remains, present at most
+  two good options, explain the practical difference, and recommend one.
+
+## Repository Workflow
 
 - Before editing, identify the requested Plasma surface, its owning QML file,
   the config entry if any, the CLI payload involved, and the nearest regression
   check. If the requested behavior belongs upstream, report that boundary before
   writing frontend code.
-- Make the smallest coherent change that satisfies the request. Avoid unrelated
-  refactors, formatting churn, generated artifacts, and changes in sibling repos.
 - Preserve user changes in a dirty worktree. Review `git diff` and `git status`
   before handing off, and call out unrelated pre-existing changes rather than
   incorporating them silently.
@@ -69,8 +104,8 @@ Use this order when sources disagree:
   data changes, static QML assertions for durable UI rules, and runtime checks
   only when static checks cannot establish the behavior.
 - Run the narrowest relevant check while iterating, then the repository-required
-  checks before completion. Never claim packaging or runtime verification unless
-  it was actually performed; state clearly what was not available.
+  checks before completion. Packaging and runtime checks count only when they
+  were actually performed.
 - When a parity decision changes, update `TODO.md` and the mirror below in the
   same change so future agents do not revive a rejected port or obsolete gap.
 
@@ -165,8 +200,11 @@ v0.49.6, probed against the installed CLI 0.49.6).
   compatibility fallback. Richer provider-specific layouts, billing summaries,
   usage breakdowns, credits history, and model/request/token sections should
   wait for stable CLI presentation fields.
-- Quota warning thresholds are hardcoded at 80/95 in `main.qml`; macOS makes
-  them configurable. No CLI contract blocks a Plasma equivalent.
+- Quota warning thresholds are user-configurable and bounded by
+  `contents/ui/QuotaThresholds.js`; the notification level and the usage-bar
+  markers both read them, so neither may hardcode a percentage. Changing a
+  threshold must reset the notification memo. Per-provider thresholds stay
+  blocked on the CLI descriptor.
 - `codexbar sessions --json-v2` is stable and unconsumed. A local Agent Sessions
   list is implementable now; remote/SSH host focus is macOS-only. Treat
   `projectName`, `host`, and `transcriptPath` as untrusted display text and do

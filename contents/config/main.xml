@@ -45,6 +45,18 @@
       <label>Show quota warning markers on usage bars.</label>
       <default>true</default>
     </entry>
+    <entry name="quotaWarningPercent" type="Int">
+      <label>Used percent that raises a quota warning.</label>
+      <default>80</default>
+      <min>1</min>
+      <max>99</max>
+    </entry>
+    <entry name="quotaCriticalPercent" type="Int">
+      <label>Used percent that raises a critical quota warning.</label>
+      <default>95</default>
+      <min>1</min>
+      <max>100</max>
+    </entry>
     <entry name="enableNotifications" type="Bool">
       <label>Enable Plasma notifications.</label>
       <default>true</default>
