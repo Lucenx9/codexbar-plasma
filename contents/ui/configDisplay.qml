@@ -408,6 +408,7 @@ KCM.SimpleKCM {
 
                 delegate: RowLayout {
                     required property var modelData
+                    required property int index
 
                     Layout.fillWidth: true
                     spacing: Kirigami.Units.smallSpacing

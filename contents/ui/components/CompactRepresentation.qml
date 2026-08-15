@@ -16,10 +16,11 @@ Item {
     readonly property bool showPrimaryIdentity: verticalPanel || !hasProviderMeters || primaryText.length > 0
     readonly property int compactExtent: Kirigami.Units.iconSizes.smallMedium
         + Kirigami.Units.smallSpacing * 2
+    readonly property int maximumCompactWidth: Kirigami.Units.gridUnit * 18
     readonly property int desiredWidth: verticalPanel
         ? compactExtent
         : Math.min(
-            Kirigami.Units.gridUnit * 8.5,
+            maximumCompactWidth,
             Math.max(Kirigami.Units.gridUnit * 4.8,
                 compactRow.implicitWidth + Kirigami.Units.smallSpacing * 2))
 

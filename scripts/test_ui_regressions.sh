@@ -1388,14 +1388,17 @@ if "visible: chart.activeIndex" in interactive_chart_text:
 if (
     "id: compactTextMeasurer" not in compact_representation_text
     or "Math.ceil(compactTextMeasurer.implicitWidth)" not in compact_representation_text
+    or "maximumCompactWidth: Kirigami.Units.gridUnit * 18" not in compact_representation_text
 ):
     raise AssertionError(
-        "compact panel text width must round an independent content measurement up to a whole pixel"
+        "compact panel text must use a bounded wide cap and round independent measurement up"
     )
 if "elementLoader.implicitWidth" in compact_representation_text:
     raise AssertionError("compact panel text measurement must not feed back through its Loader width")
 if "rangeCombo.valueAt(index)" not in spend_view_text:
     raise AssertionError("the cost range selector must use the activated option instead of stale currentValue")
+if "required property int index" not in display_text:
+    raise AssertionError("the panel element editor delegate must explicitly receive its model index")
 for localized_pair_source, localized_pair_text in (
     ("InteractiveChart.qml", interactive_chart_text),
     ("SpendView.qml", spend_view_text),
