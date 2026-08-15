@@ -168,7 +168,7 @@ ColumnLayout {
                                 0.1 + fraction * 0.8)
 
                             Controls.ToolTip.visible: heatmapMouse.containsMouse
-                            Controls.ToolTip.text: modelData.label + ": " + modelData.displayValue
+                            Controls.ToolTip.text: i18n("%1: %2", modelData.label, modelData.displayValue)
 
                             MouseArea {
                                 id: heatmapMouse

@@ -30,7 +30,9 @@ msgid "Debug"
 msgstr ""
 
 #: contents/ui/components/CompactRepresentation.qml
-#: contents/ui/configProviders.qml contents/ui/main.qml
+#: contents/ui/components/InteractiveChart.qml
+#: contents/ui/components/SpendView.qml contents/ui/configProviders.qml
+#: contents/ui/main.qml
 msgid "%1: %2"
 msgstr ""
 

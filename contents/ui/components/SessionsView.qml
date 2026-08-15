@@ -8,10 +8,36 @@ ColumnLayout {
     id: view
 
     required property var applet
+    property string copiedValueKey: ""
 
     Layout.fillWidth: true
     Layout.fillHeight: true
     spacing: Kirigami.Units.largeSpacing
+
+    function copySessionValue(text, valueKey) {
+        if (text.length === 0) {
+            return
+        }
+        clipboardBuffer.text = text
+        clipboardBuffer.selectAll()
+        clipboardBuffer.copy()
+        clipboardBuffer.deselect()
+        copiedValueKey = valueKey
+        copiedTimer.restart()
+    }
+
+    Controls.TextField {
+        id: clipboardBuffer
+
+        visible: false
+    }
+
+    Timer {
+        id: copiedTimer
+
+        interval: 1200
+        onTriggered: view.copiedValueKey = ""
+    }
 
     RowLayout {
         Layout.fillWidth: true
@@ -92,9 +118,12 @@ ColumnLayout {
                 delegate: Rectangle {
                     id: sessionCard
 
+                    required property int index
                     required property var modelData
 
                     readonly property bool activeSession: modelData.state === "active"
+                    readonly property string titleCopyKey: "title:" + index
+                    readonly property string detailsCopyKey: "details:" + index
                     readonly property color accent: view.applet.providerReadableColor(
                         modelData.provider,
                         Kirigami.Theme.backgroundColor)
@@ -137,6 +166,10 @@ ColumnLayout {
                                 text: view.applet.sessionTitle(modelData)
                                 fontWeight: Font.DemiBold
                                 copyAccessibleName: i18n("Copy session name")
+                                copied: view.copiedValueKey === sessionCard.titleCopyKey
+                                onCopyRequested: function(text) {
+                                    view.copySessionValue(text, sessionCard.titleCopyKey)
+                                }
                             }
 
                             PlasmaComponents.Label {
@@ -153,6 +186,10 @@ ColumnLayout {
                                 textOpacity: view.applet.secondaryTextOpacity
                                 pixelSize: Kirigami.Theme.smallFont.pixelSize
                                 copyAccessibleName: i18n("Copy session details")
+                                copied: view.copiedValueKey === sessionCard.detailsCopyKey
+                                onCopyRequested: function(text) {
+                                    view.copySessionValue(text, sessionCard.detailsCopyKey)
+                                }
                             }
                         }
 

@@ -15,6 +15,7 @@ ColumnLayout {
     property int selectedIndex: -1
     property int hoveredIndex: -1
     readonly property int activeIndex: hoveredIndex >= 0 ? hoveredIndex : selectedIndex
+    readonly property bool hasActivePoint: activeIndex >= 0 && activeIndex < points.length
     readonly property real maximumValue: chartMaximum(points)
 
     Layout.fillWidth: true
@@ -77,12 +78,11 @@ ColumnLayout {
     }
 
     RowLayout {
-        visible: chart.activeIndex >= 0 && chart.activeIndex < chart.points.length
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
 
         PlasmaComponents.Label {
-            text: chart.activeIndex >= 0 ? chart.pointLabel(chart.points[chart.activeIndex]) : ""
+            text: chart.hasActivePoint ? chart.pointLabel(chart.points[chart.activeIndex]) : ""
             opacity: chart.applet.secondaryTextOpacity
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             Layout.fillWidth: true
@@ -90,7 +90,7 @@ ColumnLayout {
         }
 
         PlasmaComponents.Label {
-            text: chart.activeIndex >= 0 ? chart.pointDisplayValue(chart.points[chart.activeIndex]) : ""
+            text: chart.hasActivePoint ? chart.pointDisplayValue(chart.points[chart.activeIndex]) : ""
             font.weight: Font.DemiBold
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             horizontalAlignment: Text.AlignRight
@@ -107,8 +107,9 @@ ColumnLayout {
 
         Accessible.role: Accessible.Graphic
         Accessible.name: chart.accessibleTitle
-        Accessible.description: chart.activeIndex >= 0 && chart.activeIndex < chart.points.length
-            ? chart.pointLabel(chart.points[chart.activeIndex]) + ": " + chart.pointDisplayValue(chart.points[chart.activeIndex])
+        Accessible.description: chart.hasActivePoint
+            ? i18n("%1: %2", chart.pointLabel(chart.points[chart.activeIndex]),
+                chart.pointDisplayValue(chart.points[chart.activeIndex]))
             : i18n("Use the arrow keys to inspect chart points")
 
         onWidthChanged: requestPaint()
@@ -120,6 +121,9 @@ ColumnLayout {
             function onPointsChanged() {
                 if (chart.selectedIndex >= chart.points.length) {
                     chart.selectedIndex = chart.points.length - 1
+                }
+                if (chart.hoveredIndex >= chart.points.length) {
+                    chart.hoveredIndex = chart.points.length - 1
                 }
                 plot.requestPaint()
             }

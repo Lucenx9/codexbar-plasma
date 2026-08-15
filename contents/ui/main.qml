@@ -1248,7 +1248,7 @@ PlasmoidItem {
                 nextSessions.push(normalized)
             }
         }
-        nextSessions.sort(function(a, b) { return b.lastActivityMs - a.lastActivityMs })
+        nextSessions.sort(function(a, b) { return b.activityMs - a.activityMs })
         sessions = nextSessions
         sessionsErrorText = ""
         sessionsLastUpdatedText = i18n("Updated %1", Qt.formatDateTime(new Date(), "hh:mm"))
@@ -1265,10 +1265,15 @@ PlasmoidItem {
         var host = boundedDisplayText(item.host, 160)
         var state = boundedDisplayText(item.state, 40).toLowerCase()
         var sourceName = boundedDisplayText(item.source, 80)
-        var lastActivityAt = boundedDisplayText(item.lastActivityAt, 128)
-        var lastActivityMs = Date.parse(lastActivityAt)
-        if (!isFinite(lastActivityMs)) {
-            lastActivityMs = 0
+        var activityAt = boundedDisplayText(item.lastActivityAt, 128)
+        var activityMs = Date.parse(activityAt)
+        if (!isFinite(activityMs)) {
+            activityAt = boundedDisplayText(item.startedAt, 128)
+            activityMs = Date.parse(activityAt)
+        }
+        if (!isFinite(activityMs)) {
+            activityAt = ""
+            activityMs = 0
         }
         if (providerID.length === 0 && projectName.length === 0 && sessionName.length === 0) {
             return null
@@ -1281,8 +1286,8 @@ PlasmoidItem {
             host: host,
             state: state,
             source: sourceName,
-            lastActivityAt: lastActivityAt,
-            lastActivityMs: lastActivityMs
+            activityAt: activityAt,
+            activityMs: activityMs
         }
     }
 
@@ -1313,10 +1318,10 @@ PlasmoidItem {
     }
 
     function sessionActivityText(item) {
-        if (!item || !isFinite(Number(item.lastActivityMs)) || Number(item.lastActivityMs) <= 0) {
+        if (!item || !isFinite(Number(item.activityMs)) || Number(item.activityMs) <= 0) {
             return ""
         }
-        var elapsedSeconds = Math.max(0, Math.floor((Date.now() - Number(item.lastActivityMs)) / 1000))
+        var elapsedSeconds = Math.max(0, Math.floor((Date.now() - Number(item.activityMs)) / 1000))
         if (elapsedSeconds < 60) {
             return i18n("Just now")
         }

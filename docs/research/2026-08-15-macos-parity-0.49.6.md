@@ -73,9 +73,13 @@ $ codexbar sessions --json-v2
   "transcriptPath":"/home/..."}]
 ```
 
-The local Sessions tab retains only provider, project/session name, host,
-source, state, and last activity. It deliberately drops `cwd`, `transcriptPath`,
-IDs, and PIDs. Remote/SSH host focus stays macOS-only.
+The stable `AgentSession` schema makes `sessionName`, `startedAt`, and
+`lastActivityAt` optional, so individual records can omit any of them. The
+local Sessions tab retains only provider, project/session name, host, source,
+state, and one activity timestamp. It follows the CLI table fallback of
+`lastActivityAt ?? startedAt` for the timestamp and ordering. It deliberately
+drops `cwd`, `transcriptPath`, IDs, and PIDs. Remote/SSH host focus stays
+macOS-only.
 
 ## macOS frontend surfaces Plasma does not have
 

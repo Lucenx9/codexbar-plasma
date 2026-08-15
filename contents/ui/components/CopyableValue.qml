@@ -12,6 +12,9 @@ RowLayout {
     property int fontWeight: Font.Normal
     property real textOpacity: 1
     property int pixelSize: 0
+    property bool copied: false
+
+    signal copyRequested(string text)
 
     Layout.fillWidth: true
     spacing: Kirigami.Units.smallSpacing / 2
@@ -25,28 +28,11 @@ RowLayout {
         elide: Text.ElideRight
     }
 
-    Controls.TextField {
-        id: clipboardBuffer
-
-        visible: false
-        text: valueRow.text
-    }
-
     PlasmaComponents.ToolButton {
         icon.name: "edit-copy"
         Accessible.name: valueRow.copyAccessibleName
-        Controls.ToolTip.visible: hovered || copiedTimer.running
-        Controls.ToolTip.text: copiedTimer.running ? i18n("Copied") : valueRow.copyAccessibleName
-        onClicked: {
-            clipboardBuffer.selectAll()
-            clipboardBuffer.copy()
-            clipboardBuffer.deselect()
-            copiedTimer.restart()
-        }
-
-        Timer {
-            id: copiedTimer
-            interval: 1200
-        }
+        Controls.ToolTip.visible: hovered || valueRow.copied
+        Controls.ToolTip.text: valueRow.copied ? i18n("Copied") : valueRow.copyAccessibleName
+        onClicked: valueRow.copyRequested(valueRow.text)
     }
 }

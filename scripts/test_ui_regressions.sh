@@ -79,6 +79,7 @@ provider_detail_section_qml = root / "contents/ui/components/ProviderDetailSecti
 compact_representation_qml = root / "contents/ui/components/CompactRepresentation.qml"
 interactive_chart_qml = root / "contents/ui/components/InteractiveChart.qml"
 sessions_view_qml = root / "contents/ui/components/SessionsView.qml"
+copyable_value_qml = root / "contents/ui/components/CopyableValue.qml"
 spend_view_qml = root / "contents/ui/components/SpendView.qml"
 
 
@@ -175,6 +176,7 @@ provider_detail_section_text = provider_detail_section_qml.read_text(encoding="u
 compact_representation_text = compact_representation_qml.read_text(encoding="utf-8")
 interactive_chart_text = interactive_chart_qml.read_text(encoding="utf-8")
 sessions_view_text = sessions_view_qml.read_text(encoding="utf-8")
+copyable_value_text = copyable_value_qml.read_text(encoding="utf-8")
 spend_view_text = spend_view_qml.read_text(encoding="utf-8")
 
 
@@ -1292,6 +1294,40 @@ for forbidden_session_value in ("transcriptPath", "cwd"):
             f"found {forbidden_session_value!r}"
         )
 
+normalize_session_body = function_body(main_text, "normalizeSession")
+for activity_fallback_fragment in (
+    "item.lastActivityAt",
+    "item.startedAt",
+    "activityAt: activityAt",
+    "activityMs: activityMs",
+):
+    if activity_fallback_fragment not in normalize_session_body:
+        raise AssertionError(
+            "session activity must prefer lastActivityAt and safely fall back to startedAt; "
+            f"missing {activity_fallback_fragment!r}"
+        )
+if "lastActivityMs" in main_text:
+    raise AssertionError("session ordering must use the normalized activity fallback")
+
+for shared_copy_fragment in (
+    "function copySessionValue(text, valueKey)",
+    "id: clipboardBuffer",
+    "id: copiedTimer",
+):
+    if shared_copy_fragment not in sessions_view_text:
+        raise AssertionError(
+            "SessionsView must own one shared clipboard lifecycle; "
+            f"missing {shared_copy_fragment!r}"
+        )
+if sessions_view_text.count("Controls.TextField {") != 1 or sessions_view_text.count("Timer {") != 1:
+    raise AssertionError("SessionsView must instantiate exactly one clipboard field and timer")
+for per_delegate_copy_fragment in ("Controls.TextField {", "Timer {"):
+    if per_delegate_copy_fragment in copyable_value_text:
+        raise AssertionError(
+            "CopyableValue delegates must not allocate clipboard controls or timers; "
+            f"found {per_delegate_copy_fragment!r}"
+        )
+
 for chart_interaction_fragment in (
     "activeFocusOnTab: true",
     "Keys.onPressed:",
@@ -1302,6 +1338,30 @@ for chart_interaction_fragment in (
         raise AssertionError(
             "InteractiveChart must support pointer and keyboard inspection; "
             f"missing {chart_interaction_fragment!r}"
+        )
+for stable_chart_fragment in (
+    "readonly property bool hasActivePoint",
+    "if (chart.hoveredIndex >= chart.points.length)",
+):
+    if stable_chart_fragment not in interactive_chart_text:
+        raise AssertionError(
+            "InteractiveChart must keep hover geometry stable and clamp stale state; "
+            f"missing {stable_chart_fragment!r}"
+        )
+if "visible: chart.activeIndex" in interactive_chart_text:
+    raise AssertionError("InteractiveChart must reserve readout space while pointer state changes")
+if (
+    "Math.max(Kirigami.Units.gridUnit * 2," not in compact_representation_text
+    or "elementLoader.implicitWidth" not in compact_representation_text
+):
+    raise AssertionError("compact panel text width must derive from the loaded label content")
+for localized_pair_source, localized_pair_text in (
+    ("InteractiveChart.qml", interactive_chart_text),
+    ("SpendView.qml", spend_view_text),
+):
+    if '+ ": " +' in localized_pair_text:
+        raise AssertionError(
+            f"{localized_pair_source} must localize label/value separators with placeholders"
         )
 if "InteractiveChart" not in spend_view_text or "Activity heatmap" not in spend_view_text:
     raise AssertionError("SpendView must expose the interactive chart and bounded activity heatmap")

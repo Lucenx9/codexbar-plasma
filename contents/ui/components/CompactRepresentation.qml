@@ -80,7 +80,8 @@ Item {
                     : (modelData === "meters"
                     ? compactRoot.applet.compactProviders().length * Kirigami.Units.gridUnit * 1.15
                         + Math.max(0, compactRoot.applet.compactProviders().length - 1) * Kirigami.Units.smallSpacing
-                    : Kirigami.Units.gridUnit * 2)))
+                    : Math.max(Kirigami.Units.gridUnit * 2,
+                        elementLoader.implicitWidth))))
                 Layout.preferredHeight: compactRow.height
                 Layout.alignment: Qt.AlignVCenter
             }
