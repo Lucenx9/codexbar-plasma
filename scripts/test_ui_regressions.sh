@@ -69,6 +69,7 @@ general_qml = root / "contents/ui/configGeneral.qml"
 display_qml = root / "contents/ui/configDisplay.qml"
 providers_qml = root / "contents/ui/configProviders.qml"
 advanced_qml = root / "contents/ui/configAdvanced.qml"
+config_xml = root / "contents/config/main.xml"
 theme_contrast_js = root / "contents/ui/ThemeContrast.js"
 provider_accounts_panel_qml = root / "contents/ui/components/ProviderAccountsPanel.qml"
 provider_header_qml = root / "contents/ui/components/ProviderHeader.qml"
@@ -166,6 +167,7 @@ general_text = general_qml.read_text(encoding="utf-8")
 display_text = display_qml.read_text(encoding="utf-8")
 providers_text = providers_qml.read_text(encoding="utf-8")
 advanced_text = advanced_qml.read_text(encoding="utf-8")
+config_text = config_xml.read_text(encoding="utf-8")
 theme_contrast_text = theme_contrast_js.read_text(encoding="utf-8")
 provider_accounts_panel_text = provider_accounts_panel_qml.read_text(encoding="utf-8")
 provider_header_text = provider_header_qml.read_text(encoding="utf-8")
@@ -178,6 +180,52 @@ interactive_chart_text = interactive_chart_qml.read_text(encoding="utf-8")
 sessions_view_text = sessions_view_qml.read_text(encoding="utf-8")
 copyable_value_text = copyable_value_qml.read_text(encoding="utf-8")
 spend_view_text = spend_view_qml.read_text(encoding="utf-8")
+
+internal_config_keys = {
+    "autoUpdateLastCheck",
+    "widgetUpdateLastStatus",
+    "widgetUpdateLastError",
+    "lastNotifiedUpdateVersion",
+    "providerConfigRevision",
+}
+all_config_keys = set(re.findall(r'<entry name="([^"]+)"', config_text))
+resettable_config_keys = all_config_keys - internal_config_keys
+restore_defaults_body = function_body(general_text, "restoreUserDefaults")
+defaults_check_body = function_body(general_text, "userSettingsAreDefault")
+for config_key in sorted(resettable_config_keys):
+    property_pattern = re.compile(
+        rf"\bproperty\s+(?:alias|string|int|bool)\s+cfg_{re.escape(config_key)}(?::|\s|$)"
+    )
+    default_property_pattern = re.compile(
+        rf"\bproperty\s+(?:string|int|bool)\s+cfg_{re.escape(config_key)}Default(?:\s|$)"
+    )
+    if not property_pattern.search(general_text) or not default_property_pattern.search(general_text):
+        raise AssertionError(
+            f"global defaults must declare the value and default for {config_key} on General"
+        )
+    expected_assignment = f"cfg_{config_key} = cfg_{config_key}Default"
+    if expected_assignment not in restore_defaults_body:
+        raise AssertionError(f"global defaults must restore {config_key}")
+    expected_pair = f"[cfg_{config_key}, cfg_{config_key}Default]"
+    if expected_pair not in defaults_check_body:
+        raise AssertionError(f"global defaults button state must account for {config_key}")
+for internal_key in sorted(internal_config_keys):
+    if f"cfg_{internal_key}" in restore_defaults_body:
+        raise AssertionError(f"global defaults must preserve internal state {internal_key}")
+
+restore_defaults_button = id_block(general_text, "restoreAllDefaultsButton")
+for restore_button_fragment in (
+    'text: i18n("Restore all defaults")',
+    "enabled: !page.userSettingsAreDefault()",
+    "onClicked: page.restoreUserDefaults()",
+):
+    if restore_button_fragment not in restore_defaults_button:
+        raise AssertionError(
+            "the global defaults action must remain explicit and cancelable; "
+            f"missing {restore_button_fragment!r}"
+        )
+if "defaultsActionRequested = false" not in function_body(general_text, "saveConfig"):
+    raise AssertionError("saving global defaults must clear the pending confirmation message")
 
 
 def assert_form_sections(text, filename, labels):

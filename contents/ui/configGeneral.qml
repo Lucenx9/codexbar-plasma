@@ -40,6 +40,42 @@ KCM.SimpleKCM {
     property bool cfg_autoUpdateEnabledDefault
     property alias cfg_autoUpdateIntervalHours: autoUpdateIntervalHoursSpin.value
     property int cfg_autoUpdateIntervalHoursDefault
+
+    // Plasma saves the cfg_* properties declared by the current page. Keep the
+    // user-facing Display and Advanced values here as well so one global reset
+    // remains pending until Apply/OK instead of writing configuration directly.
+    property string cfg_provider
+    property string cfg_providerDefault
+    property string cfg_source
+    property string cfg_sourceDefault
+    property bool cfg_usageBarsShowUsed
+    property bool cfg_usageBarsShowUsedDefault
+    property bool cfg_showQuotaWarningMarkers
+    property bool cfg_showQuotaWarningMarkersDefault
+    property string cfg_menuBarDisplayMode
+    property string cfg_menuBarDisplayModeDefault
+    property bool cfg_resetTimesShowAbsolute
+    property bool cfg_resetTimesShowAbsoluteDefault
+    property bool cfg_showProviderChangelogs
+    property bool cfg_showProviderChangelogsDefault
+    property bool cfg_showProviderInPanel
+    property bool cfg_showProviderInPanelDefault
+    property bool cfg_showPercentInPanel
+    property bool cfg_showPercentInPanelDefault
+    property bool cfg_showMultiProviderInPanel
+    property bool cfg_showMultiProviderInPanelDefault
+    property string cfg_panelElementOrder
+    property string cfg_panelElementOrderDefault
+    property bool cfg_autoSelectProvider
+    property bool cfg_autoSelectProviderDefault
+    property string cfg_overviewProviderIDs
+    property string cfg_overviewProviderIDsDefault
+    property bool cfg_showCreditsInPanel
+    property bool cfg_showCreditsInPanelDefault
+
+    property bool defaultsActionRequested: false
+    readonly property bool defaultValuesPrepared: defaultsActionRequested
+        && userSettingsAreDefault()
     readonly property string autoUpdateLastCheck: Plasmoid.configuration.autoUpdateLastCheck || ""
     readonly property string widgetUpdateLastStatus: Plasmoid.configuration.widgetUpdateLastStatus || ""
     readonly property string widgetUpdateLastError: Plasmoid.configuration.widgetUpdateLastError || ""
@@ -59,6 +95,89 @@ KCM.SimpleKCM {
         if (refreshPresetCombo.currentIndex !== nextIndex) {
             refreshPresetCombo.currentIndex = nextIndex
         }
+    }
+
+    function settingsMatch(value, defaultValue) {
+        return String(value) === String(defaultValue)
+    }
+
+    function userSettingsAreDefault() {
+        var pairs = [
+            [cfg_commandPath, cfg_commandPathDefault],
+            [cfg_provider, cfg_providerDefault],
+            [cfg_source, cfg_sourceDefault],
+            [cfg_refreshInterval, cfg_refreshIntervalDefault],
+            [cfg_includeStatus, cfg_includeStatusDefault],
+            [cfg_costUsageEnabled, cfg_costUsageEnabledDefault],
+            [cfg_costHistoryDays, cfg_costHistoryDaysDefault],
+            [cfg_usageBarsShowUsed, cfg_usageBarsShowUsedDefault],
+            [cfg_showQuotaWarningMarkers, cfg_showQuotaWarningMarkersDefault],
+            [cfg_quotaWarningPercent, cfg_quotaWarningPercentDefault],
+            [cfg_quotaCriticalPercent, cfg_quotaCriticalPercentDefault],
+            [cfg_enableNotifications, cfg_enableNotificationsDefault],
+            [cfg_notifyStatusIncidents, cfg_notifyStatusIncidentsDefault],
+            [cfg_notifyQuotaWarnings, cfg_notifyQuotaWarningsDefault],
+            [cfg_notifyPredictivePaceWarnings, cfg_notifyPredictivePaceWarningsDefault],
+            [cfg_notifyLimitResets, cfg_notifyLimitResetsDefault],
+            [cfg_updateChecksEnabled, cfg_updateChecksEnabledDefault],
+            [cfg_updateNotificationsEnabled, cfg_updateNotificationsEnabledDefault],
+            [cfg_autoUpdateEnabled, cfg_autoUpdateEnabledDefault],
+            [cfg_autoUpdateIntervalHours, cfg_autoUpdateIntervalHoursDefault],
+            [cfg_menuBarDisplayMode, cfg_menuBarDisplayModeDefault],
+            [cfg_resetTimesShowAbsolute, cfg_resetTimesShowAbsoluteDefault],
+            [cfg_showProviderChangelogs, cfg_showProviderChangelogsDefault],
+            [cfg_showProviderInPanel, cfg_showProviderInPanelDefault],
+            [cfg_showPercentInPanel, cfg_showPercentInPanelDefault],
+            [cfg_showMultiProviderInPanel, cfg_showMultiProviderInPanelDefault],
+            [cfg_panelElementOrder, cfg_panelElementOrderDefault],
+            [cfg_autoSelectProvider, cfg_autoSelectProviderDefault],
+            [cfg_overviewProviderIDs, cfg_overviewProviderIDsDefault],
+            [cfg_showCreditsInPanel, cfg_showCreditsInPanelDefault]
+        ]
+        for (var i = 0; i < pairs.length; i++) {
+            if (!settingsMatch(pairs[i][0], pairs[i][1])) {
+                return false
+            }
+        }
+        return true
+    }
+
+    function restoreUserDefaults() {
+        cfg_commandPath = cfg_commandPathDefault
+        cfg_provider = cfg_providerDefault
+        cfg_source = cfg_sourceDefault
+        cfg_refreshInterval = cfg_refreshIntervalDefault
+        cfg_includeStatus = cfg_includeStatusDefault
+        cfg_costUsageEnabled = cfg_costUsageEnabledDefault
+        cfg_costHistoryDays = cfg_costHistoryDaysDefault
+        cfg_usageBarsShowUsed = cfg_usageBarsShowUsedDefault
+        cfg_showQuotaWarningMarkers = cfg_showQuotaWarningMarkersDefault
+        cfg_quotaWarningPercent = cfg_quotaWarningPercentDefault
+        cfg_quotaCriticalPercent = cfg_quotaCriticalPercentDefault
+        cfg_enableNotifications = cfg_enableNotificationsDefault
+        cfg_notifyStatusIncidents = cfg_notifyStatusIncidentsDefault
+        cfg_notifyQuotaWarnings = cfg_notifyQuotaWarningsDefault
+        cfg_notifyPredictivePaceWarnings = cfg_notifyPredictivePaceWarningsDefault
+        cfg_notifyLimitResets = cfg_notifyLimitResetsDefault
+        cfg_updateChecksEnabled = cfg_updateChecksEnabledDefault
+        cfg_updateNotificationsEnabled = cfg_updateNotificationsEnabledDefault
+        cfg_autoUpdateEnabled = cfg_autoUpdateEnabledDefault
+        cfg_autoUpdateIntervalHours = cfg_autoUpdateIntervalHoursDefault
+        cfg_menuBarDisplayMode = cfg_menuBarDisplayModeDefault
+        cfg_resetTimesShowAbsolute = cfg_resetTimesShowAbsoluteDefault
+        cfg_showProviderChangelogs = cfg_showProviderChangelogsDefault
+        cfg_showProviderInPanel = cfg_showProviderInPanelDefault
+        cfg_showPercentInPanel = cfg_showPercentInPanelDefault
+        cfg_showMultiProviderInPanel = cfg_showMultiProviderInPanelDefault
+        cfg_panelElementOrder = cfg_panelElementOrderDefault
+        cfg_autoSelectProvider = cfg_autoSelectProviderDefault
+        cfg_overviewProviderIDs = cfg_overviewProviderIDsDefault
+        cfg_showCreditsInPanel = cfg_showCreditsInPanelDefault
+        defaultsActionRequested = true
+    }
+
+    function saveConfig() {
+        defaultsActionRequested = false
     }
 
     Kirigami.FormLayout {
@@ -299,6 +418,34 @@ KCM.SimpleKCM {
             type: Kirigami.MessageType.Error
             text: widgetUpdateLastError.slice(0, 500)
             visible: updateChecksEnabledCheck.checked && widgetUpdateLastError.length > 0
+        }
+
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Defaults")
+            Kirigami.FormData.isSection: true
+        }
+
+        Controls.Label {
+            text: i18n("Restore every user-facing setting from General, Display, and Advanced. Provider accounts and CodexBar CLI configuration are not changed.")
+            opacity: 0.7
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+        }
+
+        Controls.Button {
+            id: restoreAllDefaultsButton
+
+            text: i18n("Restore all defaults")
+            icon.name: "edit-undo"
+            enabled: !page.userSettingsAreDefault()
+            onClicked: page.restoreUserDefaults()
+        }
+
+        Kirigami.InlineMessage {
+            Layout.fillWidth: true
+            type: Kirigami.MessageType.Information
+            visible: page.defaultValuesPrepared
+            text: i18n("Default values are ready. Select Apply or OK to save them, or Cancel to keep the current settings.")
         }
     }
 }

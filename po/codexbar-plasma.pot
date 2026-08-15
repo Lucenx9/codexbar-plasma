@@ -511,6 +511,26 @@ msgstr ""
 msgid "Last update status: %1"
 msgstr ""
 
+#: contents/ui/configGeneral.qml
+msgid "Defaults"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"Restore every user-facing setting from General, Display, and Advanced. "
+"Provider accounts and CodexBar CLI configuration are not changed."
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Restore all defaults"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"Default values are ready. Select Apply or OK to save them, or Cancel to keep "
+"the current settings."
+msgstr ""
+
 #: contents/ui/configProviders.qml
 msgid "API key for %1"
 msgstr ""

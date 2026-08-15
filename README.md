@@ -149,6 +149,8 @@ Settings:
 
 - Split settings pages for general refresh/notification controls, display,
   advanced provider overrides, and redacted CLI diagnostics.
+- A global, cancelable **Restore all defaults** action for user-facing widget
+  settings; provider accounts and CodexBar CLI configuration are left intact.
 - Refresh presets: Manual, 1 min, 2 min, 5 min, 15 min, or custom seconds.
 - Configurable order for the provider identity, service status, usage text, and
   provider meters shown in the panel.
