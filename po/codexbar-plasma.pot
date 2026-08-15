@@ -12,7 +12,8 @@ msgstr ""
 msgid "General"
 msgstr ""
 
-#: contents/config/config.qml contents/ui/configProviders.qml
+#: contents/config/config.qml contents/ui/components/SpendView.qml
+#: contents/ui/configProviders.qml
 msgid "Providers"
 msgstr ""
 
@@ -33,6 +34,18 @@ msgstr ""
 msgid "%1: %2"
 msgstr ""
 
+#: contents/ui/components/CopyableValue.qml
+msgid "Copy value"
+msgstr ""
+
+#: contents/ui/components/CopyableValue.qml
+msgid "Copied"
+msgstr ""
+
+#: contents/ui/components/InteractiveChart.qml
+msgid "Use the arrow keys to inspect chart points"
+msgstr ""
+
 #: contents/ui/components/OverviewProviderRow.qml
 #: contents/ui/components/ProviderUsageRow.qml
 msgid "%1% %2"
@@ -50,6 +63,10 @@ msgstr ""
 msgid "%1 - on by default"
 msgstr ""
 
+#: contents/ui/components/ProviderDetailSection.qml
+msgid "Usage chart"
+msgstr ""
+
 #: contents/ui/components/ProviderHeader.qml
 msgid "Updated just now"
 msgstr ""
@@ -57,6 +74,95 @@ msgstr ""
 #: contents/ui/components/ProviderHeader.qml contents/ui/configGeneral.qml
 #: contents/ui/main.qml
 msgid "Refresh"
+msgstr ""
+
+#: contents/ui/components/SessionsView.qml contents/ui/main.qml
+msgid "Sessions"
+msgstr ""
+
+#: contents/ui/components/SessionsView.qml contents/ui/main.qml
+msgid "%1 - %2"
+msgstr ""
+
+#: contents/ui/components/SessionsView.qml
+msgid "%1 local session"
+msgid_plural "%1 local sessions"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/components/SessionsView.qml
+msgid "Refresh sessions"
+msgstr ""
+
+#: contents/ui/components/SessionsView.qml
+msgid "No local agent sessions found."
+msgstr ""
+
+#: contents/ui/components/SessionsView.qml
+msgid "Sessions appear after a supported local CLI starts recording them."
+msgstr ""
+
+#: contents/ui/components/SessionsView.qml
+msgid "Copy session name"
+msgstr ""
+
+#: contents/ui/components/SessionsView.qml
+msgid "Copy session details"
+msgstr ""
+
+#: contents/ui/components/SessionsView.qml contents/ui/main.qml
+msgid "Unknown"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "7 days"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "30 days"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "90 days"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml contents/ui/main.qml
+msgid "%1 day"
+msgid_plural "%1 days"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/components/SpendView.qml contents/ui/main.qml
+msgid "Usage & Spend"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "Cost history range"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "Refresh cost data"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "Some cost data is unavailable: %1"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "No local cost data available."
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid ""
+"Cost history appears for providers supported by the codexbar cost command."
+msgstr ""
+
+#: contents/ui/components/SpendView.qml contents/ui/main.qml
+msgid "Daily cost history"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "Activity heatmap"
 msgstr ""
 
 #: contents/ui/configAdvanced.qml
@@ -121,6 +227,22 @@ msgstr ""
 msgid "Diagnostic output appears here."
 msgstr ""
 
+#: contents/ui/configDisplay.qml
+msgid "Provider identity"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Service status"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Usage text"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Provider meters"
+msgstr ""
+
 #: contents/ui/configDisplay.qml contents/ui/configProviders.qml
 msgid "Loading providers timed out. Try again."
 msgstr ""
@@ -155,6 +277,18 @@ msgstr ""
 
 #: contents/ui/configDisplay.qml
 msgid "Reset time"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Element order:"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Move %1 up"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Move %1 down"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
@@ -309,6 +443,14 @@ msgid "Notify quota warnings"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
+msgid "Notify predicted quota exhaustion"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Uses the pace forecast reported by codexbar."
+msgstr ""
+
+#: contents/ui/configGeneral.qml
 msgid "Notify limit resets"
 msgstr ""
 
@@ -349,7 +491,7 @@ msgstr ""
 msgid "Update check interval:"
 msgstr ""
 
-#: contents/ui/configGeneral.qml
+#: contents/ui/configGeneral.qml contents/ui/main.qml
 msgid "%1 hour"
 msgid_plural "%1 hours"
 msgstr[0] ""
@@ -932,6 +1074,10 @@ msgid "Loading cost data timed out. Try again."
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "Loading sessions timed out. Try again."
+msgstr ""
+
+#: contents/ui/main.qml
 msgid "Loading provider configuration timed out. Try again."
 msgstr ""
 
@@ -956,6 +1102,40 @@ msgid "Could not parse codexbar cost JSON: %1"
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "codexbar sessions did not return JSON."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Could not parse codexbar sessions JSON: %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Untitled session"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Just now"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 minute ago"
+msgid_plural "%1 minutes ago"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/main.qml
+msgid "%1 hour ago"
+msgid_plural "%1 hours ago"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/main.qml
+msgid "%1 day ago"
+msgid_plural "%1 days ago"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/main.qml
 msgid "Cost"
 msgstr ""
 
@@ -975,6 +1155,10 @@ msgstr[1] ""
 
 #: contents/ui/main.qml
 msgid "Latest"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 total - %2 tokens"
 msgstr ""
 
 #: contents/ui/main.qml
@@ -1360,10 +1544,6 @@ msgid "Maint."
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Unknown"
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "%1 status issue"
 msgstr ""
 
@@ -1377,6 +1557,20 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "%1 quota warning"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 minute"
+msgid_plural "%1 minutes"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/main.qml
+msgid "%1 pace warning"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 may run out in %2"
 msgstr ""
 
 #: contents/ui/main.qml
@@ -1563,10 +1757,6 @@ msgid "%1: %2% %3"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "%1 - %2"
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "Refreshing usage..."
 msgstr ""
 
@@ -1607,12 +1797,6 @@ msgstr ""
 #: contents/ui/main.qml
 msgid "Cost unavailable: %1"
 msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 day"
-msgid_plural "%1 days"
-msgstr[0] ""
-msgstr[1] ""
 
 #: contents/ui/main.qml
 msgid "Cost history"

@@ -77,6 +77,9 @@ provider_usage_row_qml = root / "contents/ui/components/ProviderUsageRow.qml"
 overview_provider_row_qml = root / "contents/ui/components/OverviewProviderRow.qml"
 provider_detail_section_qml = root / "contents/ui/components/ProviderDetailSection.qml"
 compact_representation_qml = root / "contents/ui/components/CompactRepresentation.qml"
+interactive_chart_qml = root / "contents/ui/components/InteractiveChart.qml"
+sessions_view_qml = root / "contents/ui/components/SessionsView.qml"
+spend_view_qml = root / "contents/ui/components/SpendView.qml"
 
 
 def function_body(text, name):
@@ -170,6 +173,9 @@ provider_usage_row_text = provider_usage_row_qml.read_text(encoding="utf-8")
 overview_provider_row_text = overview_provider_row_qml.read_text(encoding="utf-8")
 provider_detail_section_text = provider_detail_section_qml.read_text(encoding="utf-8")
 compact_representation_text = compact_representation_qml.read_text(encoding="utf-8")
+interactive_chart_text = interactive_chart_qml.read_text(encoding="utf-8")
+sessions_view_text = sessions_view_qml.read_text(encoding="utf-8")
+spend_view_text = spend_view_qml.read_text(encoding="utf-8")
 
 
 def assert_form_sections(text, filename, labels):
@@ -814,14 +820,14 @@ for usage_metadata_id in ("usagePaceLabel", "usageResetLabel"):
     if "font: Kirigami.Theme.smallFont" not in usage_metadata_body:
         raise AssertionError(f"{usage_metadata_id} must retain the compact metadata type scale")
 
-if "detailSection.applet.paintRoundedTopBar(" not in provider_detail_section_text:
+if "chart.applet.paintRoundedTopBar(" not in interactive_chart_text:
     raise AssertionError("provider detail bar charts must use rounded top corners")
 for detail_chart_fragment in (
-    "detailSection.applet.buildChartBarGradient(",
-    "detailSection.applet.chartBarGeometry(width, points.length)",
+    "chart.applet.buildChartBarGradient(",
+    "chart.applet.chartBarGeometry(width, chart.points.length)",
     "Math.max(2, (height - 3) * fraction)",
 ):
-    if detail_chart_fragment not in provider_detail_section_text:
+    if detail_chart_fragment not in interactive_chart_text:
         raise AssertionError(
             "provider detail bar charts must retain the polished cost-chart language; "
             f"missing {detail_chart_fragment!r}"
@@ -839,23 +845,8 @@ for gradient_fragment in (
             f"missing {gradient_fragment!r}"
         )
 
-cost_sparkline_body = id_block(main_text, "costSparkline")
-if "root.paintRoundedTopBar(" not in cost_sparkline_body:
-    raise AssertionError("the cost sparkline must use rounded top corners")
-if "onVisibleChanged: if (visible) requestPaint()" not in cost_sparkline_body:
-    raise AssertionError("costSparkline must repaint after becoming visible again")
-for sparkline_fragment in (
-    "Layout.preferredHeight: Kirigami.Units.gridUnit * 3.25",
-    "root.canvasColor(Kirigami.Theme.textColor, 0.1)",
-    "root.chartBarGeometry(width, points.length)",
-    "root.buildChartBarGradient(",
-    "Math.max(2, (height - 3) * value / maxValue)",
-):
-    if sparkline_fragment not in cost_sparkline_body:
-        raise AssertionError(
-            "costSparkline must retain its compact, low-noise chart treatment; "
-            f"missing {sparkline_fragment!r}"
-        )
+if "Components.InteractiveChart" not in main_text or "root.costChartPoints(" not in main_text:
+    raise AssertionError("the provider cost sparkline must use the interactive shared chart")
 
 for summary_id, summary_fragment in (
     ("costSessionSummaryLabel", "font.weight: Font.DemiBold"),
@@ -1138,6 +1129,7 @@ for forbidden_prime_call in (
     "sendPlasmaNotification",
     "processStatusNotification",
     "processQuotaNotifications",
+    "processPaceNotifications",
     "processLimitResetNotifications",
 ):
     if forbidden_prime_call in prime_account_body:
@@ -1166,6 +1158,7 @@ status_process_index = process_notifications_body.find("processStatusNotificatio
 prime_guard_index = process_notifications_body.find("notificationMemo[notificationScopePrimedKey(item)] !== \"1\"")
 quota_process_index = process_notifications_body.find("processQuotaNotifications(item, nextMemo)")
 reset_process_index = process_notifications_body.find("processLimitResetNotifications(item, nextMemo)")
+pace_process_index = process_notifications_body.find("processPaceNotifications(item, nextMemo)")
 if pending_guard_index > status_process_index:
     raise AssertionError("cached account snapshots must be suppressed before any status or quota notification")
 if not re.search(
@@ -1174,7 +1167,9 @@ if not re.search(
     re.S,
 ):
     raise AssertionError("cached account notification suppression must exit the provider loop")
-if prime_guard_index > quota_process_index or prime_guard_index > reset_process_index:
+if (prime_guard_index > quota_process_index
+        or prime_guard_index > pace_process_index
+        or prime_guard_index > reset_process_index):
     raise AssertionError("new account scopes must be primed before quota or reset notification processing")
 if not re.search(
     r'if\s*\(notificationMemo\[notificationScopePrimedKey\(item\)\]\s*!==\s*"1"\)\s*\{'
@@ -1260,18 +1255,56 @@ if 'item.statusSeverity + "|" + incidentKey' not in status_value_body:
 if ': item.status' in status_value_body:
     raise AssertionError("notificationStatusValue must not fall back to provider-controlled status text")
 
-# autoSelectProvider must not clobber an explicit Overview selection on every
-# refresh; once the user picks Overview the selection has to survive.
+# autoSelectProvider must not clobber an explicit global-tab selection on every
+# refresh; once the user picks Overview, Spend, or Sessions it has to survive.
 select_body = function_body(main_text, "updateSelectedProvider")
-if "overviewSelected" not in select_body:
+if "globalViewSelected" not in select_body:
     raise AssertionError(
-        "updateSelectedProvider must preserve an explicit Overview selection "
+        "updateSelectedProvider must preserve an explicit global-tab selection "
         "when autoSelectProvider is enabled"
     )
 if "selectedProviderID" not in select_body:
     raise AssertionError("updateSelectedProvider must preserve selection by provider id")
 if "function providerIndexForID(providerID)" not in main_text:
     raise AssertionError("the selected provider index must be derived from its provider id")
+
+for global_view_fragment in (
+    'root.selectGlobalView("spend")',
+    'root.selectGlobalView("sessions")',
+    "Components.SpendView",
+    "Components.SessionsView",
+):
+    if global_view_fragment not in main_text:
+        raise AssertionError(f"global popup navigation is missing {global_view_fragment!r}")
+
+for session_contract_fragment in (
+    '"sessions", "--json-v2"',
+    "connectedSessionsCommandSource",
+    "maximumSessions: 128",
+    "function normalizeSession(item)",
+):
+    if session_contract_fragment not in main_text:
+        raise AssertionError(f"sessions lifecycle is missing {session_contract_fragment!r}")
+for forbidden_session_value in ("transcriptPath", "cwd"):
+    if forbidden_session_value in sessions_view_text:
+        raise AssertionError(
+            "SessionsView must never render or follow local session paths; "
+            f"found {forbidden_session_value!r}"
+        )
+
+for chart_interaction_fragment in (
+    "activeFocusOnTab: true",
+    "Keys.onPressed:",
+    "onPositionChanged:",
+    "selectedIndex",
+):
+    if chart_interaction_fragment not in interactive_chart_text:
+        raise AssertionError(
+            "InteractiveChart must support pointer and keyboard inspection; "
+            f"missing {chart_interaction_fragment!r}"
+        )
+if "InteractiveChart" not in spend_view_text or "Activity heatmap" not in spend_view_text:
+    raise AssertionError("SpendView must expose the interactive chart and bounded activity heatmap")
 
 normalize_provider_body = function_body(main_text, "normalizeProvider")
 for bounded_provider_fragment in (
@@ -1366,7 +1399,7 @@ for fragment in ("var step = Math.max(0, Number(width) || 0) / points", "Math.ma
         )
 for label, source_text in (
     ("main.qml", main_text),
-    ("ProviderDetailSection.qml", provider_detail_section_text),
+    ("InteractiveChart.qml", interactive_chart_text),
 ):
     if "chartBarGeometry(" not in source_text:
         raise AssertionError(f"{label} bar charts must use the shared geometry helper")

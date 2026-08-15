@@ -87,6 +87,7 @@ codexbar usage --format json --json-only
 codexbar usage --format json --json-only --provider codex --source oauth
 codexbar usage --provider codex --all-accounts --format json --json-only
 codexbar cost --format json --json-only
+codexbar sessions --json-v2
 ```
 
 The widget keeps compatibility fallbacks for older CLI payloads. With CodexBar
@@ -104,12 +105,17 @@ Panel and popup:
 - Auto-select highest-usage provider for the compact panel and provider detail
   focus.
 - Overview tab with per-provider usage summary and quick switching.
+- Global **Usage & Spend** tab with a 7/30/90-day range selector, interactive
+  daily chart, activity heatmap, and provider totals.
+- Local **Sessions** tab backed by `sessions --json-v2`; transcript paths and
+  working directories are never rendered or opened.
 - Overview providers can be limited to a chosen set of up to 3 providers, or
   left automatic (the first 3 eligible providers).
 - Usage dashboard summaries for provider payloads that expose API spend,
   request, token, model, or dashboard fields through the CLI.
 - Declarative provider detail sections from the CLI `usage.details` contract,
-  including labeled rows, secondary values, and compact bar/line charts.
+  including labeled rows, secondary values, and keyboard/pointer-inspectable
+  bar/line charts.
 
 Providers and accounts:
 
@@ -135,14 +141,17 @@ Status and notifications:
 
 - Provider status incident badge in the panel and provider detail view.
 - Optional quota warning markers on usage bars.
-- Optional Plasma notifications for provider status incidents, 80/95% quota
-  crossings, and when a heavily used limit resets back to empty.
+- Optional Plasma notifications for provider status incidents, configurable
+  quota crossings, predicted quota exhaustion from CLI pace data, and when a
+  heavily used limit resets back to empty.
 
 Settings:
 
 - Split settings pages for general refresh/notification controls, display,
   advanced provider overrides, and redacted CLI diagnostics.
 - Refresh presets: Manual, 1 min, 2 min, 5 min, 15 min, or custom seconds.
+- Configurable order for the provider identity, service status, usage text, and
+  provider meters shown in the panel.
 - Check for widget updates, notify when an update is available, and opt in to
   silent automatic widget installation.
 

@@ -16,29 +16,9 @@ ColumnLayout {
     readonly property color accent: applet.providerReadableColor(
         providerData ? providerData.provider : "",
         Kirigami.Theme.backgroundColor)
-    readonly property real maximumChartValue: chartMaximum(chartPoints)
 
     Layout.fillWidth: true
     spacing: Kirigami.Units.smallSpacing / 2
-
-    function chartMaximum(points) {
-        var maximum = 0
-        for (var i = 0; i < points.length; i++) {
-            var value = Number(points[i].value)
-            if (isFinite(value) && value > maximum) {
-                maximum = value
-            }
-        }
-        return maximum
-    }
-
-    function chartFraction(value) {
-        var numericValue = Number(value)
-        if (!isFinite(numericValue) || numericValue <= 0 || maximumChartValue <= 0) {
-            return 0
-        }
-        return Math.min(1, numericValue / maximumChartValue)
-    }
 
     PlasmaComponents.Label {
         visible: detailSection.sectionData.title.length > 0
@@ -114,107 +94,15 @@ ColumnLayout {
         }
     }
 
-    Canvas {
-        id: detailChart
-
+    InteractiveChart {
         visible: detailSection.chartData !== null
-        Layout.fillWidth: true
-        Layout.preferredHeight: Kirigami.Units.gridUnit * 3
-
-        onWidthChanged: requestPaint()
-        onHeightChanged: requestPaint()
-        onVisibleChanged: if (visible) requestPaint()
-
-        Connections {
-            target: detailSection
-            function onChartPointsChanged() { detailChart.requestPaint() }
-            function onMaximumChartValueChanged() { detailChart.requestPaint() }
-            function onAccentChanged() { detailChart.requestPaint() }
-        }
-
-        onPaint: {
-            var context = getContext("2d")
-            context.clearRect(0, 0, width, height)
-            if (!detailSection.chartData
-                    || width <= 0
-                    || height <= 0) {
-                return
-            }
-
-            var points = detailSection.chartPoints
-            var baseline = height - 1
-            context.fillStyle = detailSection.applet.canvasColor(Kirigami.Theme.textColor, 0.12)
-            context.fillRect(0, baseline, width, 1)
-            if (points.length === 0) {
-                return
-            }
-
-            if (modelData.chart.kind === "line") {
-                context.strokeStyle = detailSection.applet.canvasColor(detailSection.accent, 0.9)
-                context.fillStyle = detailSection.applet.canvasColor(detailSection.accent, 1)
-                context.lineWidth = 2
-                context.lineCap = "round"
-                context.lineJoin = "round"
-                context.beginPath()
-                for (var lineIndex = 0; lineIndex < points.length; lineIndex++) {
-                    var lineX = points.length === 1 ? width / 2 : width * lineIndex / (points.length - 1)
-                    var lineY = baseline - (height - 3) * detailSection.chartFraction(points[lineIndex].value)
-                    if (lineIndex === 0) {
-                        context.moveTo(lineX, lineY)
-                    } else {
-                        context.lineTo(lineX, lineY)
-                    }
-                }
-                context.stroke()
-                for (var dotIndex = 0; dotIndex < points.length; dotIndex++) {
-                    var dotX = points.length === 1 ? width / 2 : width * dotIndex / (points.length - 1)
-                    var dotY = baseline - (height - 3) * detailSection.chartFraction(points[dotIndex].value)
-                    context.beginPath()
-                    context.arc(dotX, dotY, 1.5, 0, Math.PI * 2)
-                    context.fill()
-                }
-                return
-            }
-
-            var geometry = detailSection.applet.chartBarGeometry(width, points.length)
-            context.fillStyle = detailSection.applet.buildChartBarGradient(
-                context, detailSection.accent, baseline, 0.78, 0.36)
-            for (var barIndex = 0; barIndex < points.length; barIndex++) {
-                var fraction = detailSection.chartFraction(points[barIndex].value)
-                var barHeight = fraction > 0 ? Math.max(2, (height - 3) * fraction) : 1
-                detailSection.applet.paintRoundedTopBar(
-                    context,
-                    barIndex * geometry.step,
-                    baseline,
-                    geometry.barWidth,
-                    barHeight,
-                    Kirigami.Units.smallSpacing / 2)
-            }
-        }
-    }
-
-    RowLayout {
-        visible: detailChart.visible && detailSection.chartPoints.length > 0
-        Layout.fillWidth: true
-        spacing: Kirigami.Units.smallSpacing
-
-        PlasmaComponents.Label {
-            text: detailSection.chartPoints.length > 0 ? detailSection.chartPoints[0].label : ""
-            opacity: detailSection.applet.secondaryTextOpacity
-            font.pixelSize: Kirigami.Theme.smallFont.pixelSize
-            Layout.fillWidth: true
-            elide: Text.ElideRight
-        }
-
-        PlasmaComponents.Label {
-            text: detailSection.chartPoints.length > 1
-                ? detailSection.chartPoints[detailSection.chartPoints.length - 1].label
-                : ""
-            opacity: detailSection.applet.secondaryTextOpacity
-            font.pixelSize: Kirigami.Theme.smallFont.pixelSize
-            horizontalAlignment: Text.AlignRight
-            Layout.fillWidth: true
-            elide: Text.ElideRight
-        }
+        applet: detailSection.applet
+        points: detailSection.chartPoints
+        accent: detailSection.accent
+        kind: detailSection.chartData ? detailSection.chartData.kind : "bar"
+        valueSuffix: detailSection.chartData ? detailSection.chartData.unit : ""
+        accessibleTitle: detailSection.chartData && detailSection.chartData.title.length > 0
+            ? detailSection.chartData.title
+            : i18n("Usage chart")
     }
 }

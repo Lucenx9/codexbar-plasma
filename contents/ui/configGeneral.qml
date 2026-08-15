@@ -24,6 +24,8 @@ KCM.SimpleKCM {
     property bool cfg_notifyStatusIncidentsDefault
     property alias cfg_notifyQuotaWarnings: notifyQuotaWarningsCheck.checked
     property bool cfg_notifyQuotaWarningsDefault
+    property alias cfg_notifyPredictivePaceWarnings: notifyPredictivePaceWarningsCheck.checked
+    property bool cfg_notifyPredictivePaceWarningsDefault
     property alias cfg_notifyLimitResets: notifyLimitResetsCheck.checked
     property bool cfg_notifyLimitResetsDefault
     property alias cfg_quotaWarningPercent: quotaWarningPercentSpin.value
@@ -173,6 +175,14 @@ KCM.SimpleKCM {
             id: notifyQuotaWarningsCheck
             text: i18n("Notify quota warnings")
             enabled: enableNotificationsCheck.checked
+        }
+
+        Controls.CheckBox {
+            id: notifyPredictivePaceWarningsCheck
+            text: i18n("Notify predicted quota exhaustion")
+            enabled: enableNotificationsCheck.checked
+            Controls.ToolTip.text: i18n("Uses the pace forecast reported by codexbar.")
+            Controls.ToolTip.visible: hovered
         }
 
         Controls.CheckBox {
