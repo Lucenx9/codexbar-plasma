@@ -61,11 +61,22 @@ KCM.SimpleKCM {
             Kirigami.FormData.isSection: true
         }
 
-        Controls.TextField {
-            id: commandPathField
+        RowLayout {
             Kirigami.FormData.label: i18n("Command path:")
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 18
-            placeholderText: "codexbar"
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+
+            Controls.TextField {
+                id: commandPathField
+                Layout.fillWidth: true
+                placeholderText: "codexbar"
+            }
+
+            Controls.Button {
+                id: usePathCommandButton
+                text: i18n("Use PATH")
+                enabled: page.cfg_commandPath.trim() !== (page.cfg_commandPathDefault || "codexbar")
+                onClicked: page.cfg_commandPath = page.cfg_commandPathDefault || "codexbar"
+            }
         }
 
         Kirigami.Separator {

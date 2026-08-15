@@ -19,16 +19,10 @@ provider accent colors stay stable for recognition.
 
 ## Install
 
-1. Install the `codexbar` CLI.
-
-   On Arch-compatible systems:
-
-   ```sh
-   yay -S codexbar-cli
-   ```
-
-   You can also install the CLI from the main CodexBar release tarballs or from
-   a local Swift build.
+1. Install the `codexbar` CLI from the
+   [official CodexBar release tarballs](https://github.com/steipete/CodexBar/releases/latest)
+   or another installation method documented by the upstream project. Third-party
+   packages such as AUR can lag behind upstream releases.
 
 2. Download `codexbar-plasma.plasmoid` from the
    [latest release](https://github.com/Lucenx9/codexbar-plasma/releases/latest).
@@ -73,12 +67,15 @@ that install channel.
 - `curl`, `jq`, `sha256sum`, and GNU `timeout` for the bundled release updater;
   GNU `timeout` also bounds CLI writes after a secret prompt
 
-If Plasma does not inherit your shell `PATH`, set an absolute command path in
-the widget settings. On Arch/CachyOS with the AUR package this is usually:
+Leave **Command path** set to `codexbar` to resolve the CLI through Plasma's
+`PATH`. If the CLI works in a terminal but the widget cannot find it, locate the
+binary with:
 
-```text
-/usr/bin/codexbar
+```sh
+command -v codexbar
 ```
+
+Then paste the returned absolute path into the widget setting.
 
 ## CLI Check
 
@@ -157,8 +154,9 @@ If the widget stays on **Loading**:
 codexbar usage --format json --json-only
 ```
 
-If that works in a terminal but not in Plasma, set the widget command path to
-the absolute CLI path, for example `/usr/bin/codexbar`.
+If that works in a terminal but not in Plasma, run `command -v codexbar` and
+paste the returned absolute path into the widget setting. Use **Use PATH** to
+return to the portable `codexbar` default after changing installation method.
 
 If providers or accounts are missing:
 

@@ -521,7 +521,7 @@ require_in_file "$TODO_MD" "Dashboard extras"
 require_in_file "$TODO_MD" '`usage.details` rows and bounded bar/line charts'
 require_in_file "$TODO_MD" "Translations"
 
-require_in_file "$README_MD" "yay -S codexbar-cli"
+require_in_file "$README_MD" "official CodexBar release tarballs"
 require_in_file "$README_MD" "kpackagetool6 -t Plasma/Applet -i codexbar-plasma.plasmoid"
 require_in_file "$README_MD" "kpackagetool6 -t Plasma/Applet -u codexbar-plasma.plasmoid"
 require_in_file "$README_MD" "make install"

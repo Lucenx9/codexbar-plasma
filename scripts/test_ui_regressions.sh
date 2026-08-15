@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GENERAL_QML="${ROOT_DIR}/contents/ui/configGeneral.qml"
 PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
 ADVANCED_QML="${ROOT_DIR}/contents/ui/configAdvanced.qml"
+README_MD="${ROOT_DIR}/README.md"
 
 require_in_file() {
   local file="$1"
@@ -45,6 +46,13 @@ require_block_fragment "$GENERAL_QML" "id: lastUpdateCheckLabel" "Layout.fillWid
 require_block_fragment "$GENERAL_QML" "id: lastUpdateCheckLabel" "wrapMode: Text.WordWrap"
 require_block_fragment "$GENERAL_QML" "id: lastUpdateStatusLabel" "Layout.fillWidth: true"
 require_block_fragment "$GENERAL_QML" "id: lastUpdateStatusLabel" "wrapMode: Text.WordWrap"
+require_block_fragment "$GENERAL_QML" "id: usePathCommandButton" 'text: i18n("Use PATH")'
+require_block_fragment "$GENERAL_QML" "id: usePathCommandButton" 'enabled: page.cfg_commandPath.trim() !== (page.cfg_commandPathDefault || "codexbar")'
+require_block_fragment "$GENERAL_QML" "id: usePathCommandButton" 'page.cfg_commandPath = page.cfg_commandPathDefault || "codexbar"'
+
+require_in_file "$README_MD" "command -v codexbar"
+reject_in_file "$README_MD" "yay -S codexbar-cli"
+reject_in_file "$README_MD" 'for example `/usr/bin/codexbar`'
 
 require_in_file "$PROVIDERS_QML" "Provider-specific controls come from the CodexBar CLI descriptor"
 reject_in_file "$PROVIDERS_QML" "Provider-specific editing stays in the CodexBar CLI until it exposes a stable settings descriptor"
