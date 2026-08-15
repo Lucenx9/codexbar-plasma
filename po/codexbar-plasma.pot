@@ -237,6 +237,10 @@ msgid "Command path:"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
+msgid "Use PATH"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
 msgid "Refresh preset:"
 msgstr ""
 

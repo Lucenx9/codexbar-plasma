@@ -289,7 +289,9 @@ codexbar cost --format json --json-only
 codexbar config providers --format json --json-only
 ```
 
-On the owner machine, the AUR package normally installs the CLI at `/usr/bin/codexbar`.
+Do not assume an installation-specific CLI path. Keep the widget default at
+`codexbar` and use `command -v codexbar` when an absolute path is needed; AUR,
+Homebrew, and release-tarball installs may resolve to different locations.
 
 ## Release Flow
 
