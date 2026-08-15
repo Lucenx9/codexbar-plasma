@@ -61,10 +61,10 @@ Two consequences worth recording precisely, because the previous report and
 In practice, Plasma provider configuration today is: enable/disable,
 `set-api-key`, and docs/dashboard/login links.
 
-## Unconsumed stable contract: Agent Sessions
+## Consumed stable contract: Agent Sessions
 
-This is the one substantial gap that is **not** blocked. `codexbar sessions
---json-v2` works on 0.49.6 and returns bounded records:
+`codexbar sessions --json-v2` works on 0.49.6 and returns records that the
+frontend now bounds and normalizes:
 
 ```
 $ codexbar sessions --json-v2
@@ -73,10 +73,13 @@ $ codexbar sessions --json-v2
   "transcriptPath":"/home/..."}]
 ```
 
-A local session list is implementable now. Remote/SSH host focus stays
-macOS-only. Note that `transcriptPath` and `projectName` are local paths and
-project names: treat them as untrusted display text and bound them like every
-other CLI string.
+The stable `AgentSession` schema makes `sessionName`, `startedAt`, and
+`lastActivityAt` optional, so individual records can omit any of them. The
+local Sessions tab retains only provider, project/session name, host, source,
+state, and one activity timestamp. It follows the CLI table fallback of
+`lastActivityAt ?? startedAt` for the timestamp and ordering. It deliberately
+drops `cwd`, `transcriptPath`, IDs, and PIDs. Remote/SSH host focus stays
+macOS-only.
 
 ## macOS frontend surfaces Plasma does not have
 
@@ -86,18 +89,17 @@ The authoritative settings pane list is `SettingsPane` in
 `advanced`, `hooks`, `plugins`, `about`, `debug`, `provider:<id>`. Plasma has
 five pages: General, Providers, Display, Advanced, Debug.
 
-### Plasma-native and implementable now
+### Plasma-native items
 
 | Gap | Official evidence | Plasma consequence |
 | --- | --- | --- |
-| Configurable quota thresholds | `QuotaWarningSettingsViews.swift`, plus a dedicated `notifications` pane | `quotaNotificationLevel()` and `quotaWarningMarkers()` in `main.qml` hardcode 80/95. No CLI contract is involved; this is the smallest real gap fully in our control. |
-| Local Agent Sessions list | `AgentSessionsStore.swift` plus the `sessions --json-v2` probe above | New popup section or page. Bound every string; do not follow `transcriptPath`. |
-| Chart hover/selection | `ChartBarHoverSelection.swift` | The cost sparkline and detail charts already render on `Canvas` with no pointer interaction. Keep delegate work light. |
-| Panel composition | `MenuBarLayout.swift`, `MenuBarLayoutEditor.swift`, `MenuBarLayoutRenderer.swift`, `StatusComponentsMenuView.swift` | macOS has draggable, saved menu-bar chip layouts. Plasma has `menuBarDisplayMode` plus four booleans. Even a configurable element order would close most of the distance. |
-| Spend dashboard | `SpendDashboardModel.swift`, `SpendActivityHeatmap.swift`, `PreferencesSpendDashboardPane.swift` | Cost data already flows through `normalizeTokenCost`. A dedicated page with a range selector and activity heatmap is derivable from `cost --days`. |
-| Session-equivalent forecast | `SessionEquivalentForecast.swift` | Derivable from existing rate windows and pace. |
-| Predictive pace warnings | `PredictivePaceWarnings.swift`, `HistoricalUsagePace.swift` | Needs client-side learned history; weigh against the "no heavy delegate work" rule before starting. |
-| Click-to-copy values | `ClickToCopyOverlay.swift` | Small and self-contained. |
+| Configurable quota thresholds | `QuotaWarningSettingsViews.swift`, plus a dedicated `notifications` pane | Implemented through bounded shared thresholds that drive both notifications and usage-bar markers. |
+| Local Agent Sessions list | `AgentSessionsStore.swift` plus the `sessions --json-v2` probe above | Implemented as a bounded global tab; path/ID fields are discarded. |
+| Chart hover/selection | `ChartBarHoverSelection.swift` | Implemented for cost and generic detail charts with pointer and keyboard inspection. |
+| Panel composition | `MenuBarLayout.swift`, `MenuBarLayoutEditor.swift`, `MenuBarLayoutRenderer.swift`, `StatusComponentsMenuView.swift` | Implemented as a persisted, sanitized element order while retaining the existing visibility controls. |
+| Spend dashboard | `SpendDashboardModel.swift`, `SpendActivityHeatmap.swift`, `PreferencesSpendDashboardPane.swift` | Implemented from `cost --days` with 7/30/90-day ranges, an interactive chart, and bounded heatmap. |
+| Predictive pace warnings | `PredictivePaceWarnings.swift`, `HistoricalUsagePace.swift` | Implemented as an opt-in transition warning from the CLI's current `pace.willLastToReset` and `pace.etaSeconds` fields; no local history is fabricated. |
+| Click-to-copy values | `ClickToCopyOverlay.swift` | Implemented for bounded session names/details. |
 | Menu-bar pace reserve token | 0.49.6 shows the weekly reserve after 1% of the window has elapsed | Panel-only presentation; `pace` data is already consumed. |
 | Ollama `auto`/`web` on Linux | 0.49.6: "allow the `auto` and `web` usage sources on Linux when a non-empty manual Cookie header is configured, while keeping automatic browser-cookie imports gated to supported platforms" (#2919) | A CLI-side unblock the widget should simply inherit. Worth a runtime check that the source override reaches it. |
 
@@ -113,6 +115,7 @@ five pages: General, Providers, Display, Advanced, Debug.
 | Plugin management | `plugins list` is text-only, approvals are interactive, and settings/secrets have no JSON action descriptor. |
 | Hooks | `hooksEnabled` / `hookRules` in `PreferencesHooksPane.swift`; no CLI contract owns them. |
 | Credits history, plan-utilization history, usage breakdown, storage breakdown | `CreditsHistoryChartMenuView.swift`, `PlanUtilizationHistoryChartMenuView.swift`, `UsageBreakdownChartMenuView.swift`, `StorageBreakdownMenuView.swift`. No stable history payloads in the CLI. |
+| Session-equivalent forecast | `SessionEquivalentForecast.swift` requires plan-utilization history and multiple samples. A single current rate-window snapshot is not enough. |
 | CLI-auth login handoff | `CodexLoginRunner`, `ClaudeLoginRunner`, `CursorLoginRunner`, `GeminiLoginRunner`, `TerminalApp.swift`. Plasma only opens a URL. Needs a JSON-described action; token and cookie stores must stay in the CLI. |
 
 ### macOS-only or non-goals

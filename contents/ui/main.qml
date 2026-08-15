@@ -7,6 +7,7 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
 import "components" as Components
+import "PanelElements.js" as PanelElements
 import "ProviderIdentity.js" as ProviderIdentity
 import "QuotaThresholds.js" as QuotaThresholds
 import "SafeText.js" as SafeText
@@ -49,6 +50,7 @@ PlasmoidItem {
     property bool enableNotifications: Plasmoid.configuration.enableNotifications !== false
     property bool notifyStatusIncidents: Plasmoid.configuration.notifyStatusIncidents !== false
     property bool notifyQuotaWarnings: Plasmoid.configuration.notifyQuotaWarnings !== false
+    property bool notifyPredictivePaceWarnings: Plasmoid.configuration.notifyPredictivePaceWarnings === true
     property bool notifyLimitResets: Plasmoid.configuration.notifyLimitResets !== false
     property bool updateChecksEnabled: Plasmoid.configuration.updateChecksEnabled !== false
     property bool updateNotificationsEnabled: Plasmoid.configuration.updateNotificationsEnabled !== false
@@ -56,6 +58,7 @@ PlasmoidItem {
     property int autoUpdateIntervalHours: isFinite(Number(Plasmoid.configuration.autoUpdateIntervalHours)) ? Math.max(1, Math.min(168, Number(Plasmoid.configuration.autoUpdateIntervalHours))) : 24
     property string autoUpdateLastCheck: Plasmoid.configuration.autoUpdateLastCheck || ""
     property string menuBarDisplayMode: safeMenuBarDisplayMode(Plasmoid.configuration.menuBarDisplayMode)
+    property string panelElementOrderRaw: Plasmoid.configuration.panelElementOrder || ""
     property bool resetTimesShowAbsolute: Plasmoid.configuration.resetTimesShowAbsolute === true
     property bool showProviderChangelogs: Plasmoid.configuration.showProviderChangelogs === true
     property bool autoSelectProvider: Plasmoid.configuration.autoSelectProvider === true
@@ -95,9 +98,20 @@ PlasmoidItem {
     property bool providerFallbackActive: false
     property string costCommandSource: buildCostCommand()
     property string connectedCostCommandSource: ""
+    readonly property bool costLoading: connectedCostCommandSource.length > 0
     property var tokenCosts: ({})
     property string costErrorText: ""
+    property string sessionsCommandSource: buildSessionsCommand()
+    property string connectedSessionsCommandSource: ""
+    property var sessions: []
+    property string sessionsErrorText: ""
+    property string sessionsLastUpdatedText: ""
+    property bool sessionsLoading: false
+    property bool sessionsInitialized: false
+    readonly property int maximumSessions: 128
+    readonly property int sessionsCommandTimeoutMs: 60000
     property string selectedProviderID: ""
+    property string selectedGlobalView: "overview"
     property bool selectionInitialized: false
     property var selectedAccounts: ({})
     property var accountOptions: ({})
@@ -117,9 +131,16 @@ PlasmoidItem {
     property string lastNotifiedUpdateVersion: Plasmoid.configuration.lastNotifiedUpdateVersion || ""
     readonly property bool verticalFormFactor: Plasmoid.formFactor === PlasmaCore.Types.Vertical
     readonly property var overviewProviderItems: overviewProviders()
-    readonly property bool overviewAvailable: provider.length === 0 && providers.length > 1 && overviewProviderItems.length > 0
+    readonly property bool globalNavigationAvailable: provider.length === 0
+    readonly property bool overviewAvailable: globalNavigationAvailable && providers.length > 1 && overviewProviderItems.length > 0
+    readonly property bool spendAvailable: globalNavigationAvailable && costUsageEnabled
+    readonly property bool sessionsAvailable: globalNavigationAvailable
     readonly property int selectedProviderIndex: providerIndexForID(selectedProviderID)
-    readonly property bool overviewSelected: overviewAvailable && selectionInitialized && selectedProviderID.length === 0
+    readonly property bool globalViewSelected: selectionInitialized && selectedProviderID.length === 0
+    readonly property bool overviewSelected: overviewAvailable && globalViewSelected && selectedGlobalView === "overview"
+    readonly property bool spendSelected: spendAvailable && globalViewSelected && selectedGlobalView === "spend"
+    readonly property bool sessionsSelected: sessionsAvailable && globalViewSelected && selectedGlobalView === "sessions"
+    readonly property bool providerUsageFeedbackVisible: !spendSelected && !sessionsSelected
     readonly property var selectedProviderData: providers.length > 0 && selectedProviderIndex >= 0
         ? providers[Math.min(selectedProviderIndex, providers.length - 1)]
         : null
@@ -155,6 +176,7 @@ PlasmoidItem {
     onEnableNotificationsChanged: resetNotificationMemo()
     onNotifyStatusIncidentsChanged: resetNotificationMemo()
     onNotifyQuotaWarningsChanged: resetNotificationMemo()
+    onNotifyPredictivePaceWarningsChanged: resetNotificationMemo()
     // The memo stores the level each row was last observed at. Keeping it across
     // a threshold change would suppress a warning the new lower threshold should
     // raise, and leave a row armed at a level the new higher threshold no longer
@@ -178,7 +200,9 @@ PlasmoidItem {
     onProvidersChanged: {
         if (providers.length === 0) {
             selectedProviderID = ""
-            selectionInitialized = false
+            if (!globalNavigationAvailable) {
+                selectionInitialized = false
+            }
             resetNotificationMemo()
             return
         }
@@ -347,6 +371,13 @@ PlasmoidItem {
         return parts.join(" ")
     }
 
+    function buildSessionsCommand() {
+        if (commandPath.length === 0) {
+            return ""
+        }
+        return [shellQuote(commandPath), "sessions", "--json-v2"].join(" ")
+    }
+
     function shellQuote(value) {
         return "'" + String(value).replace(/'/g, "'\\''") + "'"
     }
@@ -357,6 +388,10 @@ PlasmoidItem {
             return mode
         }
         return "percent"
+    }
+
+    function panelElementOrder() {
+        return PanelElements.normalizedOrder(panelElementOrderRaw)
     }
 
     function boundedConfigRevision(value) {
@@ -436,12 +471,22 @@ PlasmoidItem {
         usageSource.connectSource(sourceName)
     }
 
-    function buildUsageCommandDescriptor(kind, providerID) {
+    function buildUsageCommandDescriptor(kind, providerID, timeoutMs) {
+        var boundedTimeout = Number(timeoutMs)
+        if (!isFinite(boundedTimeout) || boundedTimeout <= 0) {
+            boundedTimeout = usageCommandTimeoutMs
+        }
         return {
             kind: String(kind || ""),
             providerID: String(providerID || ""),
-            deadlineMs: Date.now() + usageCommandTimeoutMs
+            deadlineMs: Date.now() + boundedTimeout
         }
+    }
+
+    function buildCostCommandDescriptor() {
+        var descriptor = buildUsageCommandDescriptor("cost", "")
+        descriptor.costHistoryDays = costHistoryDays
+        return descriptor
     }
 
     function finishUsageCommandSource(sourceName) {
@@ -460,6 +505,9 @@ PlasmoidItem {
         retireUsageCommands()
         retireStaleAccountCommands()
         refreshCost()
+        if (sessionsInitialized) {
+            refreshSessions()
+        }
         providerFallbackActive = false
 
         if (commandSource.length === 0) {
@@ -488,6 +536,11 @@ PlasmoidItem {
         if (connectedProviderConfigCommandSource.length > 0) {
             finishUsageCommandSource(connectedProviderConfigCommandSource)
             connectedProviderConfigCommandSource = ""
+        }
+        if (connectedSessionsCommandSource.length > 0) {
+            finishUsageCommandSource(connectedSessionsCommandSource)
+            connectedSessionsCommandSource = ""
+            sessionsLoading = false
         }
         for (var command in pendingProviderCommands) {
             finishUsageCommandSource(command)
@@ -536,7 +589,28 @@ PlasmoidItem {
         connectedCostCommandSource = commandWithRunNonce(costCommandSource)
         connectUsageCommand(
             connectedCostCommandSource,
-            buildUsageCommandDescriptor("cost", ""))
+            buildCostCommandDescriptor())
+    }
+
+    function refreshSessions() {
+        if (connectedSessionsCommandSource.length > 0) {
+            finishUsageCommandSource(connectedSessionsCommandSource)
+            connectedSessionsCommandSource = ""
+        }
+
+        sessionsInitialized = true
+        if (sessionsCommandSource.length === 0) {
+            sessionsLoading = false
+            sessionsErrorText = i18n("Set the codexbar command path in widget settings.")
+            return
+        }
+
+        sessionsLoading = true
+        sessionsErrorText = ""
+        connectedSessionsCommandSource = commandWithRunNonce(sessionsCommandSource)
+        connectUsageCommand(
+            connectedSessionsCommandSource,
+            buildUsageCommandDescriptor("sessions", "", sessionsCommandTimeoutMs))
     }
 
     function parseOutput(stdoutText, stderrText) {
@@ -942,6 +1016,14 @@ PlasmoidItem {
             return
         }
 
+        if (descriptor.kind === "sessions" && sourceName === connectedSessionsCommandSource) {
+            connectedSessionsCommandSource = ""
+            finishUsageCommandSource(sourceName)
+            sessionsLoading = false
+            sessionsErrorText = i18n("Loading sessions timed out. Try again.")
+            return
+        }
+
         if (descriptor.kind === "providerConfig"
                 && sourceName === connectedProviderConfigCommandSource) {
             connectedProviderConfigCommandSource = ""
@@ -1093,7 +1175,7 @@ PlasmoidItem {
         return result
     }
 
-    function parseCostOutput(stdoutText, stderrText) {
+    function parseCostOutput(stdoutText, stderrText, requestedHistoryDays) {
         var trimmed = stdoutText.trim()
         if (trimmed.length === 0) {
             costErrorText = stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("codexbar cost did not return JSON.")
@@ -1122,7 +1204,7 @@ PlasmoidItem {
             if (costMessage.length === 0 && item && item.error && item.error.message) {
                 costMessage = boundedCliMessage(item.error.message)
             }
-            var cost = normalizeTokenCost(item)
+            var cost = normalizeTokenCost(item, requestedHistoryDays)
             var providerID = cost ? providerMapKey(cost.provider) : ""
             if (cost && providerID.length > 0) {
                 nextCosts[providerID] = cost
@@ -1145,7 +1227,135 @@ PlasmoidItem {
         applyTokenCosts()
     }
 
-    function normalizeTokenCost(item) {
+    function parseSessionsOutput(stdoutText, stderrText) {
+        sessionsLoading = false
+        var trimmed = stdoutText.trim()
+        if (trimmed.length === 0) {
+            sessionsErrorText = stderrText.trim().length > 0
+                ? boundedCliMessage(stderrText)
+                : i18n("codexbar sessions did not return JSON.")
+            return
+        }
+
+        var payload
+        try {
+            payload = JSON.parse(trimmed)
+        } catch (error) {
+            sessionsErrorText = i18n("Could not parse codexbar sessions JSON: %1", error.message)
+            return
+        }
+
+        var items
+        if (Array.isArray(payload)) {
+            items = payload
+        } else if (isCliRecord(payload) && Array.isArray(payload.sessions)) {
+            items = payload.sessions
+        } else {
+            sessionsErrorText = i18n("codexbar sessions returned an unsupported JSON payload.")
+            return
+        }
+        var nextSessions = []
+        var itemLimit = Math.min(items.length, maximumSessions)
+        for (var i = 0; i < itemLimit; i++) {
+            var normalized = normalizeSession(items[i])
+            if (normalized) {
+                nextSessions.push(normalized)
+            }
+        }
+        nextSessions.sort(function(a, b) { return b.activityMs - a.activityMs })
+        sessions = nextSessions
+        sessionsErrorText = ""
+        sessionsLastUpdatedText = i18n("Updated %1", Qt.formatDateTime(new Date(), "hh:mm"))
+    }
+
+    function normalizeSession(item) {
+        if (!isCliRecord(item)) {
+            return null
+        }
+
+        var providerID = normalizedProviderID(item.provider)
+        var projectName = boundedDisplayText(item.projectName, 160)
+        var sessionName = boundedDisplayText(item.sessionName, 240)
+        var host = boundedDisplayText(item.host, 160)
+        var state = boundedDisplayText(item.state, 40).toLowerCase()
+        var sourceName = boundedDisplayText(item.source, 80)
+        var activityAt = boundedDisplayText(item.lastActivityAt, 128)
+        var activityMs = Date.parse(activityAt)
+        if (!isFinite(activityMs)) {
+            activityAt = boundedDisplayText(item.startedAt, 128)
+            activityMs = Date.parse(activityAt)
+        }
+        if (!isFinite(activityMs)) {
+            activityAt = ""
+            activityMs = 0
+        }
+        if (providerID.length === 0 && projectName.length === 0 && sessionName.length === 0) {
+            return null
+        }
+
+        return {
+            provider: providerID,
+            projectName: projectName,
+            sessionName: sessionName,
+            host: host,
+            state: state,
+            source: sourceName,
+            activityAt: activityAt,
+            activityMs: activityMs
+        }
+    }
+
+    function sessionTitle(item) {
+        if (!item) {
+            return i18n("Untitled session")
+        }
+        return item.projectName.length > 0
+            ? item.projectName
+            : (item.sessionName.length > 0 ? item.sessionName : i18n("Untitled session"))
+    }
+
+    function sessionSubtitle(item) {
+        if (!item) {
+            return ""
+        }
+        var details = []
+        if (item.provider.length > 0) {
+            details.push(providerTitle(item.provider))
+        }
+        if (item.host.length > 0) {
+            details.push(item.host)
+        }
+        if (item.source.length > 0) {
+            details.push(item.source)
+        }
+        return details.join(" - ")
+    }
+
+    function sessionActivityText(item, nowMs) {
+        if (!item || !isFinite(Number(item.activityMs)) || Number(item.activityMs) <= 0) {
+            return ""
+        }
+        var currentTimeMs = Number(nowMs)
+        if (!isFinite(currentTimeMs) || currentTimeMs <= 0) {
+            currentTimeMs = Date.now()
+        }
+        var elapsedSeconds = Math.max(0, Math.floor((currentTimeMs - Number(item.activityMs)) / 1000))
+        if (elapsedSeconds < 60) {
+            return i18n("Just now")
+        }
+        var minutes = Math.floor(elapsedSeconds / 60)
+        if (minutes < 60) {
+            return i18np("%1 minute ago", "%1 minutes ago", minutes)
+        }
+        var hours = Math.floor(minutes / 60)
+        if (hours < 24) {
+            return i18np("%1 hour ago", "%1 hours ago", hours)
+        }
+        var days = Math.floor(hours / 24)
+        return i18np("%1 day ago", "%1 days ago", days)
+    }
+
+    function normalizeTokenCost(item, requestedHistoryDays) {
         if (!item || !item.provider) {
             return null
         }
@@ -1155,23 +1365,34 @@ PlasmoidItem {
             return null
         }
         var currency = boundedDisplayText(item.currencyCode || "USD", 12)
-        var windowLabel = boundedDisplayText(item.historyLabel || costHistoryWindowLabel(item), 120)
+        var emittedHistoryDays = Number(item.historyDays)
+        var fallbackHistoryDays = Number(requestedHistoryDays)
+        var historyDays = isFinite(emittedHistoryDays) && emittedHistoryDays > 0
+            ? Math.max(1, Math.min(maximumCostHistoryPoints, Math.floor(emittedHistoryDays)))
+            : (isFinite(fallbackHistoryDays) && fallbackHistoryDays > 0
+            ? Math.max(1, Math.min(maximumCostHistoryPoints, Math.floor(fallbackHistoryDays)))
+            : 30)
+        var windowLabel = boundedDisplayText(item.historyLabel || costHistoryWindowLabel(item, historyDays), 120)
         return {
             provider: providerID,
+            historyDays: historyDays,
             title: i18n("Cost"),
             sessionLine: costLine(i18n("Today"), item.sessionCostUSD, item.sessionTokens, currency),
             monthLine: costLine(windowLabel, item.last30DaysCostUSD, item.last30DaysTokens, currency),
             hintLine: tokenCostHint(providerID),
             totals: normalizeCostTotals(item.totals, item.last30DaysCostUSD, item.last30DaysTokens, currency),
-            models: normalizeCostModels(item.daily, currency, costHistoryDays),
-            daily: normalizeCostDaily(item.daily, currency, costHistoryDays)
+            models: normalizeCostModels(item.daily, currency, historyDays),
+            daily: normalizeCostDaily(item.daily, currency, historyDays)
         }
     }
 
-    function costHistoryWindowLabel(item) {
+    function costHistoryWindowLabel(item, requestedHistoryDays) {
         var rawDays = item && item.historyDays !== undefined && item.historyDays !== null
             ? Number(item.historyDays)
-            : Number(costHistoryDays)
+            : NaN
+        if (!isFinite(rawDays) || rawDays <= 0) {
+            rawDays = Number(requestedHistoryDays)
+        }
         if (!isFinite(rawDays) || rawDays <= 0) {
             return i18n("Last 30 days")
         }
@@ -1369,6 +1590,126 @@ PlasmoidItem {
         var last = points[points.length - 1]
         var label = last.label && last.label.length > 0 ? last.label : i18n("Latest")
         return i18n("%1: %2", label, amountString(last.cost, last.currency || "USD"))
+    }
+
+    function costChartPoints(points) {
+        var result = []
+        if (!points) {
+            return result
+        }
+        for (var i = 0; i < points.length; i++) {
+            var point = points[i]
+            var value = Math.max(0, Number(point.cost) || 0)
+            result.push({
+                label: boundedDisplayText(point.label, 120),
+                value: value,
+                displayValue: amountString(value, point.currency || "USD")
+            })
+        }
+        return result
+    }
+
+    function spendProviderCosts() {
+        var result = []
+        for (var providerID in tokenCosts) {
+            if (!hasOwnKey(tokenCosts, providerID)) {
+                continue
+            }
+            var tokenCost = tokenCosts[providerID]
+            if (!costSnapshotMatchesSelectedRange(tokenCost)) {
+                continue
+            }
+            result.push(tokenCost)
+        }
+        result.sort(function(a, b) {
+            return providerTitle(a.provider).localeCompare(providerTitle(b.provider))
+        })
+        return result
+    }
+
+    function costSnapshotMatchesSelectedRange(tokenCost) {
+        if (!tokenCost) {
+            return false
+        }
+        var snapshotDays = Number(tokenCost.historyDays)
+        return isFinite(snapshotDays)
+            && Math.floor(snapshotDays) === Math.floor(Number(costHistoryDays))
+    }
+
+    function spendDailyPoints() {
+        var costs = spendProviderCosts()
+        var byDate = ({})
+        var currency = spendCurrency(costs)
+        for (var i = 0; i < costs.length; i++) {
+            var daily = costs[i].daily || []
+            for (var j = 0; j < daily.length; j++) {
+                var point = daily[j]
+                var label = boundedDisplayText(point.label, 120)
+                var pointCurrency = boundedDisplayText(point.currency || "USD", 12)
+                if (label.length === 0
+                        || isUnsafeObjectKey(label)
+                        || pointCurrency !== currency) {
+                    continue
+                }
+                if (!hasOwnKey(byDate, label)) {
+                    byDate[label] = { label: label, value: 0, currency: currency }
+                }
+                byDate[label].value += Math.max(0, Number(point.cost) || 0)
+            }
+        }
+
+        var result = []
+        for (var day in byDate) {
+            if (!hasOwnKey(byDate, day)) {
+                continue
+            }
+            var item = byDate[day]
+            item.displayValue = amountString(item.value, item.currency)
+            result.push(item)
+        }
+        result.sort(function(a, b) { return a.label.localeCompare(b.label) })
+        return result.slice(Math.max(0, result.length - maximumCostHistoryPoints))
+    }
+
+    function spendCurrency(costs) {
+        var items = costs || spendProviderCosts()
+        for (var i = 0; i < items.length; i++) {
+            var totals = items[i].totals || ({})
+            var currency = boundedDisplayText(totals.currency || "", 12)
+            if (currency.length > 0) {
+                return currency
+            }
+            var daily = items[i].daily || []
+            if (daily.length > 0) {
+                return boundedDisplayText(daily[0].currency || "USD", 12)
+            }
+        }
+        return "USD"
+    }
+
+    function spendTotalLine() {
+        var costs = spendProviderCosts()
+        var totalCost = 0
+        var totalTokens = 0
+        var currency = spendCurrency(costs)
+        for (var i = 0; i < costs.length; i++) {
+            var totals = costs[i].totals || ({})
+            var itemCurrency = boundedDisplayText(totals.currency || currency, 12)
+            if (itemCurrency !== currency) {
+                continue
+            }
+            totalCost += Math.max(0, Number(totals.cost) || 0)
+            totalTokens += Math.max(0, Number(totals.tokens) || 0)
+        }
+        if (costs.length === 0) {
+            return ""
+        }
+        return i18n("%1 total - %2 tokens", amountString(totalCost, currency), tokenCountString(totalTokens))
+    }
+
+    function setCostHistoryDays(days) {
+        var nextDays = Math.max(1, Math.min(maximumCostHistoryPoints, Math.floor(Number(days) || 30)))
+        Plasmoid.configuration.costHistoryDays = nextDays
     }
 
     function costBreakdownRows(tokenCost) {
@@ -2036,6 +2377,9 @@ PlasmoidItem {
             leftPercent: hasPercent ? clamp(100 - used, 0, 100) : 0,
             pacePercent: paceValue,
             paceOnTop: !pace || pace.willLastToReset !== false,
+            paceEtaSeconds: pace && isFinite(Number(pace.etaSeconds))
+                ? Math.max(0, Math.min(31536000, Number(pace.etaSeconds)))
+                : 0,
             resetsAt: boundedDisplayText(
                 window.resetsAt === undefined || window.resetsAt === null ? "" : window.resetsAt,
                 128),
@@ -2483,8 +2827,11 @@ PlasmoidItem {
         var scope = notificationScopeKey(item)
         var quotaPrefix = "quota:" + scope + ":"
         var resetPrefix = "reset:" + scope + ":"
+        var pacePrefix = "pace:" + scope + ":"
         for (var key in nextMemo) {
-            if (key.indexOf(quotaPrefix) === 0 || key.indexOf(resetPrefix) === 0) {
+            if (key.indexOf(quotaPrefix) === 0
+                    || key.indexOf(resetPrefix) === 0
+                    || key.indexOf(pacePrefix) === 0) {
                 delete nextMemo[key]
             }
         }
@@ -2510,6 +2857,14 @@ PlasmoidItem {
                 if (resetRow && resetRow.hasPercent
                     && Number(resetRow.usedPercent) >= limitResetArmThreshold) {
                     nextMemo[limitResetNotificationKey(item, resetRow, k)] = "1"
+                }
+            }
+        }
+        if (notifyPredictivePaceWarnings) {
+            var paceRows = item.rows || []
+            for (var m = 0; m < paceRows.length; m++) {
+                if (paceWarningActive(paceRows[m])) {
+                    nextMemo[paceNotificationKey(item, paceRows[m], m)] = "1"
                 }
             }
         }
@@ -2563,6 +2918,9 @@ PlasmoidItem {
             }
             if (notifyQuotaWarnings) {
                 processQuotaNotifications(item, nextMemo)
+            }
+            if (notifyPredictivePaceWarnings) {
+                processPaceNotifications(item, nextMemo)
             }
             if (notifyLimitResets) {
                 processLimitResetNotifications(item, nextMemo)
@@ -2618,6 +2976,48 @@ PlasmoidItem {
             }
             if (level.length > 0) {
                 nextMemo[key] = level
+            } else {
+                delete nextMemo[key]
+            }
+        }
+    }
+
+    function paceWarningActive(row) {
+        return row && row.paceOnTop === false && Number(row.paceEtaSeconds) > 0
+    }
+
+    function paceNotificationKey(item, row, index) {
+        var lane = row && row.lane ? row.lane : ""
+        var reset = row && row.resetsAt ? row.resetsAt : ""
+        return "pace:" + notificationScopeKey(item) + ":" + lane + ":" + reset + ":" + index
+    }
+
+    function paceEtaText(seconds) {
+        var minutes = Math.max(1, Math.round(Number(seconds) / 60))
+        if (minutes < 60) {
+            return i18np("%1 minute", "%1 minutes", minutes)
+        }
+        var hours = Math.max(1, Math.round(minutes / 60))
+        if (hours < 48) {
+            return i18np("%1 hour", "%1 hours", hours)
+        }
+        var days = Math.max(1, Math.round(hours / 24))
+        return i18np("%1 day", "%1 days", days)
+    }
+
+    function processPaceNotifications(item, nextMemo) {
+        var rows = item.rows || []
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i]
+            var key = paceNotificationKey(item, row, i)
+            if (paceWarningActive(row)) {
+                if (notificationMemo[key] !== "1") {
+                    sendPlasmaNotification(
+                        i18n("%1 pace warning", item.title),
+                        i18n("%1 may run out in %2", row.label, paceEtaText(row.paceEtaSeconds)),
+                        "normal")
+                }
+                nextMemo[key] = "1"
             } else {
                 delete nextMemo[key]
             }
@@ -4149,15 +4549,34 @@ PlasmoidItem {
         return primaryProvider()
     }
 
+    function selectGlobalView(viewID) {
+        var candidate = String(viewID || "")
+        if ((candidate === "overview" && !overviewAvailable)
+                || (candidate === "spend" && !spendAvailable)
+                || (candidate === "sessions" && !sessionsAvailable)) {
+            return
+        }
+        if (candidate !== "overview" && candidate !== "spend" && candidate !== "sessions") {
+            return
+        }
+
+        selectedGlobalView = candidate
+        selectedProviderID = ""
+        selectionInitialized = true
+        if (candidate === "sessions" && !sessionsInitialized) {
+            refreshSessions()
+        }
+    }
+
     function updateSelectedProvider() {
         if (!providers || providers.length === 0) {
             return
         }
 
         if (autoSelectProvider) {
-            // Don't override an Overview selection the user explicitly chose;
+            // Don't override a global tab the user explicitly chose;
             // auto-select only drives the initial pick and provider tabs.
-            if (selectionInitialized && overviewSelected) {
+            if (selectionInitialized && globalViewSelected) {
                 return
             }
             selectedProviderID = providers[autoSelectedProviderIndex()].provider
@@ -4167,11 +4586,15 @@ PlasmoidItem {
 
         if (!selectionInitialized) {
             selectedProviderID = overviewAvailable ? "" : providers[0].provider
+            selectedGlobalView = "overview"
             selectionInitialized = true
             return
         }
         if (selectedProviderIndex < 0
-                && (!overviewAvailable || selectedProviderID.length > 0)) {
+                && (!globalViewSelected
+                    || (selectedGlobalView === "overview" && !overviewAvailable)
+                    || (selectedGlobalView === "spend" && !spendAvailable)
+                    || (selectedGlobalView === "sessions" && !sessionsAvailable))) {
             selectedProviderID = providers[0].provider
         }
     }
@@ -4367,9 +4790,20 @@ PlasmoidItem {
             }
 
             if (sourceName === root.connectedCostCommandSource) {
+                var costDescriptor = root.activeUsageCommands[sourceName]
+                var requestedHistoryDays = costDescriptor
+                    ? costDescriptor.costHistoryDays
+                    : root.costHistoryDays
                 root.connectedCostCommandSource = ""
                 root.finishUsageCommandSource(sourceName)
-                root.parseCostOutput(stdoutText, stderrText)
+                root.parseCostOutput(stdoutText, stderrText, requestedHistoryDays)
+                return
+            }
+
+            if (sourceName === root.connectedSessionsCommandSource) {
+                root.connectedSessionsCommandSource = ""
+                root.finishUsageCommandSource(sourceName)
+                root.parseSessionsOutput(stdoutText, stderrText)
                 return
             }
 
@@ -4536,7 +4970,7 @@ PlasmoidItem {
             Item {
                 id: providerTabsBar
 
-                visible: providers.length > 0
+                visible: providers.length > 0 || spendAvailable || sessionsAvailable
                 Layout.fillWidth: true
                 Layout.preferredHeight: Kirigami.Units.gridUnit * 2.35
 
@@ -4582,8 +5016,7 @@ PlasmoidItem {
                                 : root.withAlpha(Kirigami.Theme.textColor, 0.72)
 
                             function activate() {
-                                root.selectedProviderID = ""
-                                root.selectionInitialized = true
+                                root.selectGlobalView("overview")
                             }
 
                             visible: root.overviewAvailable
@@ -4692,6 +5125,35 @@ PlasmoidItem {
                                 radius: height / 2
                                 color: overviewTab.selected ? overviewTab.accent : "transparent"
                             }
+                        }
+
+                        Components.GlobalTab {
+                            visible: root.spendAvailable
+                            applet: root
+                            title: i18n("Usage & Spend")
+                            iconName: "office-chart-bar"
+                            tabHeight: providerTabsFlickable.height
+                            selected: root.spendSelected
+                            onActivated: root.selectGlobalView("spend")
+                        }
+
+                        Components.GlobalTab {
+                            visible: root.sessionsAvailable
+                            applet: root
+                            title: i18n("Sessions")
+                            iconName: "system-run-symbolic"
+                            tabHeight: providerTabsFlickable.height
+                            selected: root.sessionsSelected
+                            onActivated: root.selectGlobalView("sessions")
+                        }
+
+                        Rectangle {
+                            visible: providers.length > 0
+                                && (root.overviewAvailable || root.spendAvailable || root.sessionsAvailable)
+                            Layout.preferredHeight: providerTabsFlickable.height - Kirigami.Units.smallSpacing * 2
+                            Layout.preferredWidth: 1
+                            Layout.alignment: Qt.AlignVCenter
+                            color: root.withAlpha(Kirigami.Theme.textColor, 0.12)
                         }
 
                         Repeater {
@@ -4903,14 +5365,19 @@ PlasmoidItem {
             Kirigami.InlineMessage {
                 id: globalErrorMessage
 
-                visible: errorText.length > 0
+                visible: root.providerUsageFeedbackVisible && errorText.length > 0
                 text: errorText
                 type: Kirigami.MessageType.Error
                 Layout.fillWidth: true
             }
 
             RowLayout {
-                visible: providers.length === 0 && errorText.length === 0 && loading
+                id: providerUsageLoadingRow
+
+                visible: root.providerUsageFeedbackVisible
+                    && providers.length === 0
+                    && errorText.length === 0
+                    && loading
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 spacing: Kirigami.Units.smallSpacing
@@ -4938,12 +5405,25 @@ PlasmoidItem {
             Kirigami.PlaceholderMessage {
                 id: emptyProvidersMessage
 
-                visible: providers.length === 0 && errorText.length === 0 && !loading
+                visible: providers.length === 0
+                    && !root.globalViewSelected
+                    && errorText.length === 0
+                    && !loading
                 text: i18n("No provider data.")
                 icon.name: "view-statistics-symbolic"
                 type: Kirigami.PlaceholderMessage.Type.Informational
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+            }
+
+            Components.SpendView {
+                visible: root.spendSelected
+                applet: root
+            }
+
+            Components.SessionsView {
+                visible: root.sessionsSelected
+                applet: root
             }
 
             ColumnLayout {
@@ -5434,57 +5914,17 @@ PlasmoidItem {
                                 elide: Text.ElideRight
                             }
 
-                            Canvas {
-                                id: costSparkline
-
+                            Components.InteractiveChart {
                                 readonly property var tokenCost: tokenCostSection.tokenCost
                                 readonly property var providerData: root.selectedProviderData
 
-                                property var points: tokenCost ? tokenCost.daily : []
-                                readonly property real maxValue: root.costSparklineMax(points)
-                                readonly property color accent: root.providerReadableColor(providerData ? providerData.provider : "")
-
-                                visible: points.length > 1 && maxValue > 0
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: Kirigami.Units.gridUnit * 3.25
+                                visible: tokenCost && tokenCost.daily.length > 1
+                                applet: root
+                                points: root.costChartPoints(tokenCost ? tokenCost.daily : [])
+                                accent: root.providerReadableColor(providerData ? providerData.provider : "")
+                                kind: "bar"
+                                accessibleTitle: i18n("Daily cost history")
                                 Layout.topMargin: Kirigami.Units.smallSpacing / 2
-
-                                onPointsChanged: requestPaint()
-                                onMaxValueChanged: requestPaint()
-                                onWidthChanged: requestPaint()
-                                onHeightChanged: requestPaint()
-                                onVisibleChanged: if (visible) requestPaint()
-
-                                onPaint: {
-                                    var ctx = getContext("2d")
-                                    ctx.clearRect(0, 0, width, height)
-                                    if (!points || points.length < 2 || maxValue <= 0 || width <= 0 || height <= 0) {
-                                        return
-                                    }
-
-                                    var geometry = root.chartBarGeometry(width, points.length)
-                                    var baseline = height - 1
-
-                                    ctx.fillStyle = root.canvasColor(Kirigami.Theme.textColor, 0.1)
-                                    ctx.fillRect(0, baseline, width, 1)
-
-                                    var peakFill = root.buildChartBarGradient(
-                                        ctx, costSparkline.accent, baseline, 0.96, 0.58)
-                                    var normalFill = root.buildChartBarGradient(
-                                        ctx, costSparkline.accent, baseline, 0.7, 0.3)
-                                    for (var i = 0; i < points.length; i++) {
-                                        var value = Math.max(0, Number(points[i].cost) || 0)
-                                        var barHeight = Math.max(2, (height - 3) * value / maxValue)
-                                        ctx.fillStyle = value === maxValue ? peakFill : normalFill
-                                        root.paintRoundedTopBar(
-                                            ctx,
-                                            i * geometry.step,
-                                            baseline,
-                                            geometry.barWidth,
-                                            barHeight,
-                                            Kirigami.Units.smallSpacing / 2)
-                                    }
-                                }
                             }
 
                             RowLayout {

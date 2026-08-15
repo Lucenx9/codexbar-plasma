@@ -41,6 +41,8 @@ require_in_file "$QML" "root.finishUsageCommandSource(sourceName)"
 require_in_file "$QML" "delete commands[sourceName]"
 require_in_file "$QML" "pendingProviderCount = 0"
 require_in_file "$QML" "readonly property int accountCommandTimeoutMs: 60000"
+require_in_file "$QML" "readonly property int sessionsCommandTimeoutMs: 60000"
+require_in_file "$QML" "function refreshSessions()"
 require_in_file "$QML" "id: accountCommandTimeoutTimer"
 require_in_file "$QML" "root.expirePendingAccountCommands(Date.now())"
 require_in_file "$QML" "readonly property int providerConfigWatchIntervalMs: 60000"
@@ -104,6 +106,8 @@ def function_body(text, name):
 retire_body = function_body(main_text, "retireUsageCommands")
 if "finishUsageCommandSource(" not in retire_body:
     raise AssertionError("retiring active usage sources must disconnect them immediately")
+if "connectedSessionsCommandSource" not in retire_body or "sessionsLoading = false" not in retire_body:
+    raise AssertionError("retiring active usage sources must also retire the sessions command")
 
 load_accounts_body = function_body(main_text, "loadAccounts")
 for fragment in (
@@ -161,15 +165,34 @@ usage_timeout_body = function_body(main_text, "handleUsageCommandTimeout")
 for fragment in (
     'descriptor.kind === "usage"',
     'descriptor.kind === "cost"',
+    'descriptor.kind === "sessions"',
     'descriptor.kind === "providerConfig"',
     'descriptor.kind === "providerFallback"',
     "finishUsageCommandSource(sourceName)",
     "Loading usage timed out. Try again.",
     "Loading cost data timed out. Try again.",
+    "Loading sessions timed out. Try again.",
     "Loading provider configuration timed out. Try again.",
 ):
     if fragment not in usage_timeout_body:
         raise AssertionError(f"usage timeout cleanup is incomplete: {fragment}")
+
+cost_descriptor_body = function_body(main_text, "buildCostCommandDescriptor")
+for fragment in ('buildUsageCommandDescriptor("cost", "")', "descriptor.costHistoryDays = costHistoryDays"):
+    if fragment not in cost_descriptor_body:
+        raise AssertionError(
+            "cost command descriptors must retain the requested history range: "
+            f"{fragment}"
+        )
+for fragment in (
+    "var costDescriptor = root.activeUsageCommands[sourceName]",
+    "root.parseCostOutput(stdoutText, stderrText, requestedHistoryDays)",
+):
+    if fragment not in main_text:
+        raise AssertionError(
+            "cost completion must pass its captured request range to normalization: "
+            f"{fragment}"
+        )
 
 fallback_result_body = function_body(main_text, "parseProviderFallbackOutput")
 if fallback_result_body.count("completeProviderFallbackCommand()") != 2:

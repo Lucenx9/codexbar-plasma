@@ -19,18 +19,24 @@ QML_FILES := \
 	contents/ui/configAdvanced.qml \
 	contents/ui/configDebug.qml \
 	contents/ui/ProviderIdentity.js \
+	contents/ui/PanelElements.js \
 	contents/ui/QuotaThresholds.js \
 	contents/ui/SafeText.js \
 	contents/ui/ThemeContrast.js \
 	contents/ui/UsageDetails.js \
 	contents/ui/UpdateLogic.js \
 	contents/ui/components/CompactRepresentation.qml \
+	contents/ui/components/CopyableValue.qml \
+	contents/ui/components/GlobalTab.qml \
+	contents/ui/components/InteractiveChart.qml \
 	contents/ui/components/OverviewProviderRow.qml \
 	contents/ui/components/ProviderAccountsPanel.qml \
 	contents/ui/components/ProviderConfigRow.qml \
 	contents/ui/components/ProviderHeader.qml \
 	contents/ui/components/ProviderDetailSection.qml \
-	contents/ui/components/ProviderUsageRow.qml
+	contents/ui/components/ProviderUsageRow.qml \
+	contents/ui/components/SessionsView.qml \
+	contents/ui/components/SpendView.qml
 
 check:
 	scripts/test_feature_parity.sh

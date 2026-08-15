@@ -36,24 +36,25 @@ upstream v0.49.6 and probed against the installed CLI 0.49.6.
   stay blocked on the CLI descriptor. Do not reintroduce literal percentages at
   a call site; `limitResetArmThreshold` is a separate reset-detection knob and
   is deliberately not tied to the warning step.
-- Local Agent Sessions list: `codexbar sessions --json-v2` is stable and
-  verified on 0.49.6 but is never consumed by the widget. Bound `projectName`,
-  `host` and `transcriptPath` as untrusted display text, and do not open or
-  follow transcript paths. Remote/SSH host focus stays macOS-only.
-- Interactive history charts: hover/selection is implementable now on the cost
-  sparkline and detail charts that already render; credits and plan-utilization
-  history still need stable CLI history payloads. Consider compact
-  burn-down/history views as Plasma equivalents to the macOS WidgetKit widgets,
-  but avoid heavy delegate work in QML.
-- Panel element composition: macOS has a draggable, saveable menu-bar chip
-  layout; Plasma has `menuBarDisplayMode` plus four booleans. A configurable
-  element order would close most of that gap with no CLI change.
+- Local Agent Sessions are consumed through `codexbar sessions --json-v2` in a
+  bounded, refreshable global tab. Only safe display fields are normalized;
+  `cwd`, `transcriptPath`, IDs, and PIDs are neither retained nor rendered.
+  Remote/SSH host focus stays macOS-only.
+- Existing detail and cost charts now support hover, click selection, and
+  keyboard inspection. The global Usage & Spend tab adds 7/30/90-day cost
+  ranges and a bounded activity heatmap. Credits history, plan-utilization
+  history, and session-equivalent forecasts still need stable CLI history
+  payloads; do not infer history from one snapshot.
+- Panel element composition now has a persisted, sanitized order for identity,
+  status, usage text, and provider meters. Visibility remains controlled by the
+  existing Plasma-native display settings.
 - Translations: gettext template extraction is in place. Add real `.po`
   catalogs, compiled catalog packaging, and translator contribution docs when
   localization work starts.
-- Notification refinements: consider reset-imminent notifications if they stay
-  quiet and configurable. Keep status, quota, reset, and update notifications
-  tied to clear state transitions and user-visible settings.
+- Predictive pace warnings are opt-in and consume the CLI `pace` forecast; they
+  silently prime the current state and notify only on a new projected
+  exhaustion. Consider reset-imminent notifications only if they remain quiet,
+  configurable, and tied to clear state transitions.
 - Provider drift checks: the Plasma fallback catalog covers all 69 provider IDs
   released in CodexBar v0.49.1, while retaining fork-only compatibility assets.
   When upstream releases providers, sync provider keys, CLI aliases, titles,

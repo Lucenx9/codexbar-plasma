@@ -16,10 +16,11 @@ Item {
     readonly property bool showPrimaryIdentity: verticalPanel || !hasProviderMeters || primaryText.length > 0
     readonly property int compactExtent: Kirigami.Units.iconSizes.smallMedium
         + Kirigami.Units.smallSpacing * 2
+    readonly property int maximumCompactWidth: Kirigami.Units.gridUnit * 18
     readonly property int desiredWidth: verticalPanel
         ? compactExtent
         : Math.min(
-            Kirigami.Units.gridUnit * 8.5,
+            maximumCompactWidth,
             Math.max(Kirigami.Units.gridUnit * 4.8,
                 compactRow.implicitWidth + Kirigami.Units.smallSpacing * 2))
 
@@ -38,6 +39,16 @@ Item {
         onClicked: compactRoot.applet.expanded = !compactRoot.applet.expanded
     }
 
+    // Measure outside the Loader so its layout-assigned width cannot feed back
+    // into the label's preferred width and collapse the compact representation.
+    PlasmaComponents.Label {
+        id: compactTextMeasurer
+
+        visible: false
+        text: compactRoot.primaryText
+        font.bold: true
+    }
+
     RowLayout {
         id: compactRow
 
@@ -45,55 +56,106 @@ Item {
         anchors.margins: Kirigami.Units.smallSpacing
         spacing: Kirigami.Units.smallSpacing
 
-        Kirigami.Icon {
-            id: compactIdentityIcon
+        Repeater {
+            model: compactRoot.applet.panelElementOrder()
 
-            readonly property string compactProvider: compactRoot.applet.selectedCompactProvider() ? compactRoot.applet.selectedCompactProvider().provider : "codex"
+            delegate: Loader {
+                id: elementLoader
 
-            visible: compactRoot.showPrimaryIdentity
-            source: compactRoot.applet.loading ? "view-refresh" : compactRoot.applet.providerIconSource(compactProvider)
-            fallback: "view-statistics"
-            isMask: !compactRoot.applet.loading && compactRoot.applet.providerIconIsMask(compactProvider)
-            color: compactRoot.applet.loading
-                ? Kirigami.Theme.textColor
-                : compactRoot.applet.providerReadableColor(compactProvider, Kirigami.Theme.backgroundColor)
-            Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
-            Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
-            Layout.alignment: Qt.AlignCenter
+                required property var modelData
 
-            RotationAnimator {
-                target: compactIdentityIcon
-                running: compactRoot.applet.loading
-                from: 0
-                to: 360
-                duration: 1250
-                loops: Animation.Infinite
-                onStopped: compactIdentityIcon.rotation = 0
-            }
+                readonly property bool isTextElement: modelData === "text"
+                readonly property bool elementVisible: modelData === "identity"
+                    ? compactRoot.showPrimaryIdentity
+                    : (modelData === "status"
+                    ? (!compactRoot.verticalPanel
+                        && compactRoot.incidentProvider !== null
+                        && compactRoot.incidentProvider.hasIncident)
+                    : (modelData === "text"
+                    ? (!compactRoot.verticalPanel && compactRoot.primaryText.length > 0)
+                    : (!compactRoot.verticalPanel && compactRoot.applet.compactProviders().length > 0)))
 
-            // The inline badge below needs horizontal room the vertical strip does
-            // not have, so overlay the incident marker on the identity icon instead
-            // of dropping the only at-a-glance status signal. Hidden while the icon
-            // spins so the marker does not orbit the refresh indicator.
-            Rectangle {
-                id: compactVerticalStatusBadge
-
-                visible: compactRoot.verticalPanel
-                    && !compactRoot.applet.loading
-                    && compactRoot.incidentProvider !== null
-                    && compactRoot.incidentProvider.hasIncident
-                anchors.top: parent.top
-                anchors.right: parent.right
-                width: Math.round(Kirigami.Units.iconSizes.smallMedium / 3)
-                height: width
-                radius: width / 2
-                color: compactRoot.incidentProvider
-                    ? compactRoot.applet.statusBadgeColor(compactRoot.incidentProvider.statusSeverity)
-                    : "transparent"
-                border.width: 1
-                border.color: Kirigami.Theme.backgroundColor
+                sourceComponent: modelData === "identity"
+                    ? identityElement
+                    : (modelData === "status"
+                    ? statusElement
+                    : (modelData === "text" ? textElement : metersElement))
+                visible: elementVisible
+                Layout.fillWidth: isTextElement && elementVisible
+                Layout.preferredWidth: !elementVisible
+                    ? 0
+                    : (modelData === "identity"
+                    ? Kirigami.Units.iconSizes.smallMedium
+                    : (modelData === "status"
+                    ? Kirigami.Units.smallSpacing * 1.5
+                    : (modelData === "meters"
+                    ? compactRoot.applet.compactProviders().length * Kirigami.Units.gridUnit * 1.15
+                        + Math.max(0, compactRoot.applet.compactProviders().length - 1) * Kirigami.Units.smallSpacing
+                    : Math.max(Kirigami.Units.gridUnit * 2,
+                        Math.ceil(compactTextMeasurer.implicitWidth)))))
+                Layout.preferredHeight: compactRow.height
+                Layout.alignment: Qt.AlignVCenter
             }
         }
+    }
+
+    Component {
+        id: identityElement
+
+        Item {
+            readonly property string compactProvider: compactRoot.applet.selectedCompactProvider()
+                ? compactRoot.applet.selectedCompactProvider().provider
+                : "codex"
+
+            visible: compactRoot.showPrimaryIdentity
+            implicitWidth: Kirigami.Units.iconSizes.smallMedium
+            implicitHeight: Kirigami.Units.iconSizes.smallMedium
+
+            Kirigami.Icon {
+                id: compactIdentityIcon
+
+                anchors.fill: parent
+                source: compactRoot.applet.loading ? "view-refresh" : compactRoot.applet.providerIconSource(parent.compactProvider)
+                fallback: "view-statistics"
+                isMask: !compactRoot.applet.loading && compactRoot.applet.providerIconIsMask(parent.compactProvider)
+                color: compactRoot.applet.loading
+                    ? Kirigami.Theme.textColor
+                    : compactRoot.applet.providerReadableColor(parent.compactProvider, Kirigami.Theme.backgroundColor)
+
+                RotationAnimator {
+                    target: compactIdentityIcon
+                    running: compactRoot.applet.loading
+                    from: 0
+                    to: 360
+                    duration: 1250
+                    loops: Animation.Infinite
+                    onStopped: compactIdentityIcon.rotation = 0
+                }
+
+                Rectangle {
+                    id: compactVerticalStatusBadge
+
+                    visible: compactRoot.verticalPanel
+                        && !compactRoot.applet.loading
+                        && compactRoot.incidentProvider !== null
+                        && compactRoot.incidentProvider.hasIncident
+                    anchors.top: parent.top
+                    anchors.right: parent.right
+                    width: Math.round(Kirigami.Units.iconSizes.smallMedium / 3)
+                    height: width
+                    radius: width / 2
+                    color: compactRoot.incidentProvider
+                        ? compactRoot.applet.statusBadgeColor(compactRoot.incidentProvider.statusSeverity)
+                        : "transparent"
+                    border.width: 1
+                    border.color: Kirigami.Theme.backgroundColor
+                }
+            }
+        }
+    }
+
+    Component {
+        id: statusElement
 
         Rectangle {
             id: compactStatusBadge
@@ -101,8 +163,8 @@ Item {
             visible: !compactRoot.verticalPanel
                 && compactRoot.incidentProvider !== null
                 && compactRoot.incidentProvider.hasIncident
-            Layout.preferredWidth: Kirigami.Units.smallSpacing * 1.5
-            Layout.preferredHeight: Kirigami.Units.smallSpacing * 1.5
+            implicitWidth: Kirigami.Units.smallSpacing * 1.5
+            implicitHeight: implicitWidth
             radius: width / 2
             color: compactRoot.incidentProvider
                 ? compactRoot.applet.statusBadgeColor(compactRoot.incidentProvider.statusSeverity)
@@ -121,64 +183,77 @@ Item {
                 acceptedButtons: Qt.NoButton
             }
         }
+    }
+
+    Component {
+        id: textElement
 
         PlasmaComponents.Label {
             visible: !compactRoot.verticalPanel && compactRoot.primaryText.length > 0
             text: compactRoot.primaryText
             elide: Text.ElideRight
             font.bold: true
-            Layout.fillWidth: true
         }
+    }
 
-        Repeater {
-            model: compactRoot.verticalPanel ? [] : compactRoot.applet.compactProviders()
+    Component {
+        id: metersElement
 
-            delegate: Item {
-                id: compactMeter
+        RowLayout {
+            visible: !compactRoot.verticalPanel && compactRoot.applet.compactProviders().length > 0
+            spacing: Kirigami.Units.smallSpacing
 
-                readonly property real meter: compactRoot.applet.switcherPercent(modelData)
-                readonly property color accent: compactRoot.applet.providerReadableColor(
-                    modelData.provider,
-                    Kirigami.Theme.backgroundColor)
+            Repeater {
+                model: compactRoot.applet.compactProviders()
 
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 1.15
-                Layout.preferredHeight: compactRow.height
+                delegate: Item {
+                    id: compactMeter
 
-                ColumnLayout {
-                    anchors.centerIn: parent
-                    width: parent.width
-                    spacing: 0
+                    required property var modelData
+                    readonly property real meter: compactRoot.applet.switcherPercent(modelData)
+                    readonly property color accent: compactRoot.applet.providerReadableColor(
+                        modelData.provider,
+                        Kirigami.Theme.backgroundColor)
 
-                    Kirigami.Icon {
-                        source: compactRoot.applet.providerIconSource(modelData.provider)
-                        fallback: "view-statistics"
-                        isMask: compactRoot.applet.providerIconIsMask(modelData.provider)
-                        color: compactMeter.accent
-                        Layout.alignment: Qt.AlignHCenter
-                        Layout.preferredWidth: 9
-                        Layout.preferredHeight: 9
-                    }
+                    Layout.preferredWidth: Kirigami.Units.gridUnit * 1.15
+                    Layout.preferredHeight: compactRow.height
 
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 3
-                        radius: height / 2
-                        color: compactRoot.applet.withAlpha(compactMeter.accent, 0.28)
-                        clip: true
+                    ColumnLayout {
+                        anchors.centerIn: parent
+                        width: parent.width
+                        spacing: 0
+
+                        Kirigami.Icon {
+                            source: compactRoot.applet.providerIconSource(compactMeter.modelData.provider)
+                            fallback: "view-statistics"
+                            isMask: compactRoot.applet.providerIconIsMask(compactMeter.modelData.provider)
+                            color: compactMeter.accent
+                            Layout.alignment: Qt.AlignHCenter
+                            Layout.preferredWidth: 9
+                            Layout.preferredHeight: 9
+                        }
 
                         Rectangle {
-                            visible: compactMeter.meter >= 0
-                            width: compactMeter.meter <= 0
-                                ? 0
-                                : Math.max(parent.height, parent.width * Math.max(0, Math.min(100, compactMeter.meter)) / 100)
-                            height: parent.height
-                            radius: parent.radius
-                            color: compactMeter.accent
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 3
+                            radius: height / 2
+                            color: compactRoot.applet.withAlpha(compactMeter.accent, 0.28)
+                            clip: true
 
-                            Behavior on width {
-                                NumberAnimation {
-                                    duration: Kirigami.Units.longDuration
-                                    easing.type: Easing.OutCubic
+                            Rectangle {
+                                visible: compactMeter.meter >= 0
+                                width: compactMeter.meter <= 0
+                                    ? 0
+                                    : Math.max(parent.height, parent.width * Math.max(0, Math.min(100, compactMeter.meter)) / 100)
+                                height: parent.height
+                                radius: parent.radius
+                                color: compactMeter.accent
+
+                                Behavior on width {
+                                    NumberAnimation {
+                                        duration: Kirigami.Units.longDuration
+                                        easing.type: Easing.OutCubic
+                                    }
                                 }
                             }
                         }

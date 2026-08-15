@@ -69,6 +69,10 @@
       <label>Notify when usage crosses quota warning thresholds.</label>
       <default>true</default>
     </entry>
+    <entry name="notifyPredictivePaceWarnings" type="Bool">
+      <label>Notify when CLI pace data predicts quota exhaustion before reset.</label>
+      <default>false</default>
+    </entry>
     <entry name="notifyLimitResets" type="Bool">
       <label>Notify when a heavily used limit resets back to empty.</label>
       <default>true</default>
@@ -130,6 +134,10 @@
     <entry name="showMultiProviderInPanel" type="Bool">
       <label>Show multi-provider details in the panel.</label>
       <default>false</default>
+    </entry>
+    <entry name="panelElementOrder" type="String">
+      <label>Ordered panel element identifiers.</label>
+      <default>identity,status,text,meters</default>
     </entry>
     <entry name="autoSelectProvider" type="Bool">
       <label>Auto-select the highest-usage provider.</label>

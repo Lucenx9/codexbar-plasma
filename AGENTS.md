@@ -205,23 +205,21 @@ v0.49.6, probed against the installed CLI 0.49.6).
   markers both read them, so neither may hardcode a percentage. Changing a
   threshold must reset the notification memo. Per-provider thresholds stay
   blocked on the CLI descriptor.
-- `codexbar sessions --json-v2` is stable and unconsumed. A local Agent Sessions
-  list is implementable now; remote/SSH host focus is macOS-only. Treat
-  `projectName`, `host`, and `transcriptPath` as untrusted display text and do
-  not open or follow transcript paths.
-- Interactive history charts can build on the current cost history bars.
-  Hover/selection is implementable now on the charts that already render;
-  credits history and plan utilization history should wait for stable history
-  payloads. Avoid heavy delegate work. Compact burn-down/history views may be
-  useful Plasma equivalents to macOS widgets.
-- Panel element composition lags macOS, which has a draggable, saveable
-  menu-bar chip layout against our `menuBarDisplayMode` plus four booleans. A
-  configurable element order needs no CLI change.
+- `codexbar sessions --json-v2` feeds a bounded local Sessions tab. Normalize
+  only safe display fields; never retain, render, open, or follow `cwd`,
+  `transcriptPath`, IDs, or PIDs. Remote/SSH host focus is macOS-only.
+- Existing detail and cost charts support pointer and keyboard inspection; the
+  Usage & Spend tab adds bounded range and heatmap views. Credits history, plan
+  utilization history, and session-equivalent forecasts must wait for stable
+  CLI history payloads.
+- Panel element composition has a persisted, sanitized order for identity,
+  status, usage text, and meters. Keep existing visibility settings working.
 - Gettext template extraction exists. Real `.po` catalogs, compiled catalog
   packaging, and translator contribution docs should come with localization
   work.
-- Notification refinements should stay quiet, configurable, and tied to clear
-  state transitions.
+- Predictive pace warnings are opt-in, CLI-backed, silently primed, and tied to
+  a new projected-exhaustion transition. Other notification refinements should
+  stay quiet, configurable, and tied to clear state transitions.
 - The fallback catalog covers the 69 provider IDs released in CodexBar v0.49.1
   and retains fork-only compatibility assets. Re-verified against the installed
   0.49.6 CLI, which reports the same 69 and adds none. Future drift syncs should

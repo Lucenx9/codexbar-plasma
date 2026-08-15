@@ -5,6 +5,7 @@ import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasma5support as Plasma5Support
 import "ProviderIdentity.js" as ProviderIdentity
+import "PanelElements.js" as PanelElements
 import "SafeText.js" as SafeText
 
 KCM.SimpleKCM {
@@ -28,6 +29,8 @@ KCM.SimpleKCM {
     property bool cfg_showPercentInPanelDefault
     property alias cfg_showMultiProviderInPanel: showMultiProviderCheck.checked
     property bool cfg_showMultiProviderInPanelDefault
+    property string cfg_panelElementOrder: "identity,status,text,meters"
+    property string cfg_panelElementOrderDefault
     property alias cfg_autoSelectProvider: autoSelectProviderCheck.checked
     property bool cfg_autoSelectProviderDefault
     property string cfg_overviewProviderIDs: ""
@@ -76,6 +79,28 @@ KCM.SimpleKCM {
             }
         }
         return 0
+    }
+
+    function panelElementTitle(elementID) {
+        switch (elementID) {
+        case "identity":
+            return i18n("Provider identity")
+        case "status":
+            return i18n("Service status")
+        case "text":
+            return i18n("Usage text")
+        case "meters":
+            return i18n("Provider meters")
+        default:
+            return ""
+        }
+    }
+
+    function movePanelElement(index, delta) {
+        cfg_panelElementOrder = PanelElements.movedOrder(
+            cfg_panelElementOrder,
+            index,
+            delta).join(",")
     }
 
     onCfg_menuBarDisplayModeChanged: {
@@ -371,6 +396,51 @@ KCM.SimpleKCM {
             Layout.preferredWidth: Kirigami.Units.gridUnit * 12
             Component.onCompleted: currentIndex = page.displayModeIndex(page.cfg_menuBarDisplayMode)
             onActivated: page.cfg_menuBarDisplayMode = currentValue
+        }
+
+        ColumnLayout {
+            Kirigami.FormData.label: i18n("Element order:")
+            Layout.fillWidth: true
+            spacing: Kirigami.Units.smallSpacing / 2
+
+            Repeater {
+                model: PanelElements.normalizedOrder(page.cfg_panelElementOrder)
+
+                delegate: RowLayout {
+                    required property var modelData
+                    required property int index
+
+                    Layout.fillWidth: true
+                    spacing: Kirigami.Units.smallSpacing
+
+                    Kirigami.Icon {
+                        source: "handle-sort"
+                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                        opacity: 0.55
+                    }
+
+                    Controls.Label {
+                        text: page.panelElementTitle(modelData)
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                    }
+
+                    Controls.ToolButton {
+                        icon.name: "go-up"
+                        enabled: index > 0
+                        Accessible.name: i18n("Move %1 up", page.panelElementTitle(modelData))
+                        onClicked: page.movePanelElement(index, -1)
+                    }
+
+                    Controls.ToolButton {
+                        icon.name: "go-down"
+                        enabled: index < PanelElements.defaultOrder.length - 1
+                        Accessible.name: i18n("Move %1 down", page.panelElementTitle(modelData))
+                        onClicked: page.movePanelElement(index, 1)
+                    }
+                }
+            }
         }
 
         Controls.CheckBox {
