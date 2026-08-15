@@ -19,7 +19,7 @@ require_in_file() {
 reject_in_file() {
   local file="$1"
   local needle="$2"
-  if grep -Fq "$needle" "$file"; then
+  if grep -Fq -- "$needle" "$file"; then
     echo "unexpected lifecycle fragment in ${file#"$ROOT_DIR"/}: $needle" >&2
     exit 1
   fi
@@ -70,6 +70,7 @@ reject_in_file "$QML" "pendingAccountCommandStartedAt"
 reject_in_file "$QML" "function retireUsageCommandSource(sourceName)"
 reject_in_file "$QML" "interval: root.refreshIntervalSec > 0 ? root.refreshIntervalSec * 1000 : 0"
 reject_in_file "$QML" "pendingProviderCount = fallbackProviderOrder.length"
+reject_in_file "$QML" "--source cli"
 
 python3 - "$QML" "$PROVIDERS_QML" "$DISPLAY_QML" "$DEBUG_QML" <<'PY'
 import sys
@@ -134,6 +135,13 @@ for fragment in (
 refresh_body = function_body(main_text, "refreshNow")
 if "retireStaleAccountCommands()" not in refresh_body:
     raise AssertionError("refreshNow must retire account commands from an obsolete CLI context")
+
+for function_name in ("buildProviderAccountsCommand", "buildProviderUsageCommand"):
+    body = function_body(main_text, function_name)
+    if 'if (source.length > 0)' not in body:
+        raise AssertionError(f"{function_name} must preserve the automatic CLI source by default")
+    if 'effectiveSource' in body or '"cli"' in body:
+        raise AssertionError(f"{function_name} must not force Codex to the CLI source")
 
 expire_accounts_body = function_body(main_text, "expirePendingAccountCommands")
 for fragment in (
