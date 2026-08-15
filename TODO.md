@@ -1,11 +1,18 @@
 # TODO
 
-- Provider-specific editable settings: the Providers page consumes the stable
-  CLI settings descriptor from `docs/cli-provider-settings-descriptor.md` and
-  renders generic fields/actions without provider-specific QML branches. Current
-  coverage includes source mode, API key, cookie source/manual cookie,
-  enterprise/base URL, workspace/project ID, region, AWS profile/auth mode, and
-  boolean extras when the CLI advertises them. Missing controls include
+Parity baseline: `docs/research/2026-08-15-macos-parity-0.49.6.md`, pinned to
+upstream v0.49.6 and probed against the installed CLI 0.49.6.
+
+- Provider-specific editable settings: the Providers page renders generic
+  fields/actions from `docs/cli-provider-settings-descriptor.md` without
+  provider-specific QML branches. Declared coverage includes source mode, API
+  key, cookie source/manual cookie, enterprise/base URL, workspace/project ID,
+  region, AWS profile/auth mode, and boolean extras. That descriptor is still a
+  *proposal*: on CLI 0.49.6 `config providers --descriptors` returns
+  `Unknown option --descriptors` and the plain payload carries no `descriptor`
+  key, so the whole path is dormant and the page degrades to enable/disable,
+  `set-api-key` and docs/dashboard/login links. Keep that fallback working.
+  Missing controls once the CLI ships the contract include
   token-account add/edit/remove, provider-specific auth mode nuances,
   organization/team editors, provider metric pickers, and quota thresholds. Do
   not duplicate macOS Swift provider settings logic in QML; extend
@@ -23,10 +30,22 @@
   the CLI extends that stable presentation contract. Missing examples include
   billing summaries, usage breakdowns, credits history, and richer
   provider-specific model/request/token sections.
-- Interactive history charts: add hover/selection and credits/plan utilization
-  history when the CLI exposes stable history payloads. Consider compact
+- Configurable quota warning thresholds: `quotaNotificationLevel()` and
+  `quotaWarningMarkers()` in `main.qml` hardcode 80/95, while macOS exposes them
+  in a dedicated Notifications pane. No CLI contract is involved, so this is the
+  smallest real parity gap fully under Plasma control.
+- Local Agent Sessions list: `codexbar sessions --json-v2` is stable and
+  verified on 0.49.6 but is never consumed by the widget. Bound `projectName`,
+  `host` and `transcriptPath` as untrusted display text, and do not open or
+  follow transcript paths. Remote/SSH host focus stays macOS-only.
+- Interactive history charts: hover/selection is implementable now on the cost
+  sparkline and detail charts that already render; credits and plan-utilization
+  history still need stable CLI history payloads. Consider compact
   burn-down/history views as Plasma equivalents to the macOS WidgetKit widgets,
   but avoid heavy delegate work in QML.
+- Panel element composition: macOS has a draggable, saveable menu-bar chip
+  layout; Plasma has `menuBarDisplayMode` plus four booleans. A configurable
+  element order would close most of that gap with no CLI change.
 - Translations: gettext template extraction is in place. Add real `.po`
   catalogs, compiled catalog packaging, and translator contribution docs when
   localization work starts.

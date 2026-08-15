@@ -137,13 +137,20 @@ Use this order when sources disagree:
 
 ## Current TODO Mirror
 
-Keep this in sync with `TODO.md` when feature parity decisions change:
+Keep this in sync with `TODO.md` when feature parity decisions change. Current
+parity baseline: `docs/research/2026-08-15-macos-parity-0.49.6.md` (upstream
+v0.49.6, probed against the installed CLI 0.49.6).
 
 - Provider-specific editing should come from a stable CLI descriptor, not
-  duplicated provider-specific config logic in QML. The Providers page consumes
+  duplicated provider-specific config logic in QML. The Providers page renders
   descriptor fields/actions from `docs/cli-provider-settings-descriptor.md` for
   generic source mode, API key, cookie source/manual cookie, enterprise/base
   URL, workspace/project ID, region, AWS profile/auth mode, and boolean extras.
+  That descriptor is a proposal, not shipped: on CLI 0.49.6
+  `config providers --descriptors` fails with `Unknown option --descriptors` and
+  the plain payload has no `descriptor` key, so the path is dormant and the page
+  falls back to enable/disable, `set-api-key` and links. Keep that fallback
+  working; do not add provider-specific QML to work around the gap.
   Missing controls include token-account add/edit/remove, provider-specific
   auth mode nuances, organization/team, metric, and quota threshold editors.
   IBM Bob can use the existing single-key command, but its token-account editing
@@ -158,19 +165,30 @@ Keep this in sync with `TODO.md` when feature parity decisions change:
   compatibility fallback. Richer provider-specific layouts, billing summaries,
   usage breakdowns, credits history, and model/request/token sections should
   wait for stable CLI presentation fields.
-- Interactive history charts can build on the current cost history bars, but
-  hover/selection, credits history, and plan utilization history should wait
-  for stable history payloads and avoid heavy delegate work. Compact
-  burn-down/history views may be useful Plasma equivalents to macOS widgets.
+- Quota warning thresholds are hardcoded at 80/95 in `main.qml`; macOS makes
+  them configurable. No CLI contract blocks a Plasma equivalent.
+- `codexbar sessions --json-v2` is stable and unconsumed. A local Agent Sessions
+  list is implementable now; remote/SSH host focus is macOS-only. Treat
+  `projectName`, `host`, and `transcriptPath` as untrusted display text and do
+  not open or follow transcript paths.
+- Interactive history charts can build on the current cost history bars.
+  Hover/selection is implementable now on the charts that already render;
+  credits history and plan utilization history should wait for stable history
+  payloads. Avoid heavy delegate work. Compact burn-down/history views may be
+  useful Plasma equivalents to macOS widgets.
+- Panel element composition lags macOS, which has a draggable, saveable
+  menu-bar chip layout against our `menuBarDisplayMode` plus four booleans. A
+  configurable element order needs no CLI change.
 - Gettext template extraction exists. Real `.po` catalogs, compiled catalog
   packaging, and translator contribution docs should come with localization
   work.
 - Notification refinements should stay quiet, configurable, and tied to clear
   state transitions.
 - The fallback catalog covers the 69 provider IDs released in CodexBar v0.49.1
-  and retains fork-only compatibility assets. Future drift syncs should cover
-  provider keys, CLI aliases, titles, colors, docs/dashboard/login URLs, icon
-  assets, and `scripts/test_provider_icons.sh`.
+  and retains fork-only compatibility assets. Re-verified against the installed
+  0.49.6 CLI, which reports the same 69 and adds none. Future drift syncs should
+  cover provider keys, CLI aliases, titles, colors, docs/dashboard/login URLs,
+  icon assets, and `scripts/test_provider_icons.sh`.
 - The GitHub Release updater is current. If a KDE Store channel is added,
   prefer KDE Store/KNewStuff/Discover for that channel.
 - Do not port macOS-only surfaces directly, including WidgetKit, Sparkle, and
