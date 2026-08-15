@@ -83,7 +83,9 @@ ColumnLayout {
             model: view.rangeOptions(view.applet.costHistoryDays)
             currentIndex: view.rangeIndex(model, view.applet.costHistoryDays)
             Accessible.name: i18n("Cost history range")
-            onActivated: view.applet.setCostHistoryDays(currentValue)
+            onActivated: function(index) {
+                view.applet.setCostHistoryDays(rangeCombo.valueAt(index))
+            }
         }
 
         PlasmaComponents.ToolButton {

@@ -9,6 +9,7 @@ ColumnLayout {
 
     required property var applet
     property string copiedValueKey: ""
+    property double sessionClockMs: Date.now()
 
     Layout.fillWidth: true
     Layout.fillHeight: true
@@ -37,6 +38,15 @@ ColumnLayout {
 
         interval: 1200
         onTriggered: view.copiedValueKey = ""
+    }
+
+    Timer {
+        id: sessionAgeTimer
+
+        interval: 30000
+        repeat: true
+        running: view.visible && view.applet.sessions.length > 0
+        onTriggered: view.sessionClockMs = Date.now()
     }
 
     RowLayout {
@@ -210,7 +220,7 @@ ColumnLayout {
                             }
 
                             PlasmaComponents.Label {
-                                text: view.applet.sessionActivityText(modelData)
+                                text: view.applet.sessionActivityText(modelData, view.sessionClockMs)
                                 opacity: view.applet.secondaryTextOpacity
                                 font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                                 horizontalAlignment: Text.AlignRight

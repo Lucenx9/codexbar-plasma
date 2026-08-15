@@ -38,6 +38,16 @@ Item {
         onClicked: compactRoot.applet.expanded = !compactRoot.applet.expanded
     }
 
+    // Measure outside the Loader so its layout-assigned width cannot feed back
+    // into the label's preferred width and collapse the compact representation.
+    PlasmaComponents.Label {
+        id: compactTextMeasurer
+
+        visible: false
+        text: compactRoot.primaryText
+        font.bold: true
+    }
+
     RowLayout {
         id: compactRow
 
@@ -81,7 +91,7 @@ Item {
                     ? compactRoot.applet.compactProviders().length * Kirigami.Units.gridUnit * 1.15
                         + Math.max(0, compactRoot.applet.compactProviders().length - 1) * Kirigami.Units.smallSpacing
                     : Math.max(Kirigami.Units.gridUnit * 2,
-                        elementLoader.implicitWidth))))
+                        Math.ceil(compactTextMeasurer.implicitWidth)))))
                 Layout.preferredHeight: compactRow.height
                 Layout.alignment: Qt.AlignVCenter
             }

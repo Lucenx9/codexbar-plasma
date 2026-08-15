@@ -1319,13 +1319,48 @@ for shared_copy_fragment in (
             "SessionsView must own one shared clipboard lifecycle; "
             f"missing {shared_copy_fragment!r}"
         )
-if sessions_view_text.count("Controls.TextField {") != 1 or sessions_view_text.count("Timer {") != 1:
-    raise AssertionError("SessionsView must instantiate exactly one clipboard field and timer")
+if sessions_view_text.count("Controls.TextField {") != 1 or sessions_view_text.count("Timer {") != 2:
+    raise AssertionError("SessionsView must instantiate exactly one clipboard field and two shared timers")
 for per_delegate_copy_fragment in ("Controls.TextField {", "Timer {"):
     if per_delegate_copy_fragment in copyable_value_text:
         raise AssertionError(
             "CopyableValue delegates must not allocate clipboard controls or timers; "
             f"found {per_delegate_copy_fragment!r}"
+        )
+
+parse_sessions_body = function_body(main_text, "parseSessionsOutput")
+for rejected_shape_fragment in (
+    "Array.isArray(payload)",
+    "Array.isArray(payload.sessions)",
+    "codexbar sessions returned an unsupported JSON payload.",
+):
+    if rejected_shape_fragment not in parse_sessions_body:
+        raise AssertionError(
+            "unexpected session payload shapes must preserve the previous snapshot and surface an error; "
+            f"missing {rejected_shape_fragment!r}"
+        )
+if "? payload" in parse_sessions_body or ": []" in parse_sessions_body:
+    raise AssertionError("unexpected session payload shapes must not become an empty successful snapshot")
+
+session_activity_body = function_body(main_text, "sessionActivityText")
+for live_age_fragment in (
+    "Number(nowMs)",
+    "currentTimeMs - Number(item.activityMs)",
+):
+    if live_age_fragment not in session_activity_body:
+        raise AssertionError(
+            "relative session ages must depend on a periodically updated clock; "
+            f"missing {live_age_fragment!r}"
+        )
+for session_clock_fragment in (
+    "property double sessionClockMs: Date.now()",
+    "id: sessionAgeTimer",
+    "sessionActivityText(modelData, view.sessionClockMs)",
+):
+    if session_clock_fragment not in sessions_view_text:
+        raise AssertionError(
+            "SessionsView must refresh relative ages even when CLI refresh is manual; "
+            f"missing {session_clock_fragment!r}"
         )
 
 for chart_interaction_fragment in (
@@ -1351,10 +1386,16 @@ for stable_chart_fragment in (
 if "visible: chart.activeIndex" in interactive_chart_text:
     raise AssertionError("InteractiveChart must reserve readout space while pointer state changes")
 if (
-    "Math.max(Kirigami.Units.gridUnit * 2," not in compact_representation_text
-    or "elementLoader.implicitWidth" not in compact_representation_text
+    "id: compactTextMeasurer" not in compact_representation_text
+    or "Math.ceil(compactTextMeasurer.implicitWidth)" not in compact_representation_text
 ):
-    raise AssertionError("compact panel text width must derive from the loaded label content")
+    raise AssertionError(
+        "compact panel text width must round an independent content measurement up to a whole pixel"
+    )
+if "elementLoader.implicitWidth" in compact_representation_text:
+    raise AssertionError("compact panel text measurement must not feed back through its Loader width")
+if "rangeCombo.valueAt(index)" not in spend_view_text:
+    raise AssertionError("the cost range selector must use the activated option instead of stale currentValue")
 for localized_pair_source, localized_pair_text in (
     ("InteractiveChart.qml", interactive_chart_text),
     ("SpendView.qml", spend_view_text),

@@ -1237,9 +1237,15 @@ PlasmoidItem {
             return
         }
 
-        var items = Array.isArray(payload)
-            ? payload
-            : (isCliRecord(payload) && Array.isArray(payload.sessions) ? payload.sessions : [])
+        var items
+        if (Array.isArray(payload)) {
+            items = payload
+        } else if (isCliRecord(payload) && Array.isArray(payload.sessions)) {
+            items = payload.sessions
+        } else {
+            sessionsErrorText = i18n("codexbar sessions returned an unsupported JSON payload.")
+            return
+        }
         var nextSessions = []
         var itemLimit = Math.min(items.length, maximumSessions)
         for (var i = 0; i < itemLimit; i++) {
@@ -1317,11 +1323,15 @@ PlasmoidItem {
         return details.join(" - ")
     }
 
-    function sessionActivityText(item) {
+    function sessionActivityText(item, nowMs) {
         if (!item || !isFinite(Number(item.activityMs)) || Number(item.activityMs) <= 0) {
             return ""
         }
-        var elapsedSeconds = Math.max(0, Math.floor((Date.now() - Number(item.activityMs)) / 1000))
+        var currentTimeMs = Number(nowMs)
+        if (!isFinite(currentTimeMs) || currentTimeMs <= 0) {
+            currentTimeMs = Date.now()
+        }
+        var elapsedSeconds = Math.max(0, Math.floor((currentTimeMs - Number(item.activityMs)) / 1000))
         if (elapsedSeconds < 60) {
             return i18n("Just now")
         }

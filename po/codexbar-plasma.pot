@@ -1112,6 +1112,10 @@ msgid "Could not parse codexbar sessions JSON: %1"
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "codexbar sessions returned an unsupported JSON payload."
+msgstr ""
+
+#: contents/ui/main.qml
 msgid "Untitled session"
 msgstr ""
 
