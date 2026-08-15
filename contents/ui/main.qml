@@ -1379,6 +1379,7 @@ PlasmoidItem {
             title: i18n("Cost"),
             sessionLine: costLine(i18n("Today"), item.sessionCostUSD, item.sessionTokens, currency),
             monthLine: costLine(windowLabel, item.last30DaysCostUSD, item.last30DaysTokens, currency),
+            windowValueLine: costValueLine(item.last30DaysCostUSD, item.last30DaysTokens, currency),
             hintLine: tokenCostHint(providerID),
             totals: normalizeCostTotals(item.totals, item.last30DaysCostUSD, item.last30DaysTokens, currency),
             models: normalizeCostModels(item.daily, currency, historyDays),
@@ -4222,17 +4223,48 @@ PlasmoidItem {
         }
     }
 
+    // Four- and five-figure totals are unreadable as a bare digit run, and
+    // Number.toLocaleString with 'f' localizes the decimal mark without adding
+    // group separators, so the grouping is applied here.
+    function groupedDecimalString(value, digits) {
+        var numeric = Number(value)
+        if (!isFinite(numeric)) {
+            return "-"
+        }
+        var locale = Qt.locale()
+        var parts = Math.abs(numeric).toFixed(digits).split(".")
+        var whole = parts[0]
+        var grouped = ""
+        for (var i = 0; i < whole.length; i++) {
+            if (i > 0 && (whole.length - i) % 3 === 0) {
+                grouped += locale.groupSeparator
+            }
+            grouped += whole.charAt(i)
+        }
+        return parts.length > 1 ? grouped + locale.decimalPoint + parts[1] : grouped
+    }
+
     function amountString(value, currency) {
         if (currency === "Quota") {
             return Math.round(value).toString()
         }
         var numeric = Number(value)
         var negative = numeric < 0
-        var amount = Math.abs(numeric).toFixed(2)
+        var amount = groupedDecimalString(Math.abs(numeric), 2)
         if (currency === "USD") {
             return negative ? "-$" + amount : "$" + amount
         }
         return (negative ? "-" : "") + currency + " " + amount
+    }
+
+    // Same figures as costLine without the window label, for surfaces that
+    // already state the range once (the Usage & Spend range selector).
+    function costValueLine(cost, tokens, currency) {
+        var costValue = isFinite(Number(cost)) ? amountString(Number(cost), currency) : "-"
+        if (isFinite(Number(tokens))) {
+            return i18n("%1 - %2 tokens", costValue, tokenCountString(Number(tokens)))
+        }
+        return costValue
     }
 
     function costLine(label, cost, tokens, currency) {
@@ -5371,7 +5403,10 @@ PlasmoidItem {
                 Layout.fillWidth: true
             }
 
-            RowLayout {
+            // A plain Item absorbs the leftover popup height; a RowLayout here
+            // inherits its children's maximum height, so the layout engine would
+            // spread the slack across every row and push the tab bar downwards.
+            Item {
                 id: providerUsageLoadingRow
 
                 visible: root.providerUsageFeedbackVisible
@@ -5380,25 +5415,24 @@ PlasmoidItem {
                     && loading
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                spacing: Kirigami.Units.smallSpacing
 
-                Item {
-                    Layout.fillWidth: true
-                }
+                RowLayout {
+                    anchors.centerIn: parent
+                    width: Math.min(implicitWidth, parent.width)
+                    spacing: Kirigami.Units.smallSpacing
 
-                Controls.BusyIndicator {
-                    running: parent.visible
-                    Layout.preferredWidth: Kirigami.Units.iconSizes.medium
-                    Layout.preferredHeight: Kirigami.Units.iconSizes.medium
-                }
+                    Controls.BusyIndicator {
+                        running: providerUsageLoadingRow.visible
+                        Layout.preferredWidth: Kirigami.Units.iconSizes.medium
+                        Layout.preferredHeight: Kirigami.Units.iconSizes.medium
+                    }
 
-                PlasmaComponents.Label {
-                    text: i18n("Loading usage...")
-                    opacity: root.secondaryTextOpacity
-                }
-
-                Item {
-                    Layout.fillWidth: true
+                    PlasmaComponents.Label {
+                        text: i18n("Loading usage...")
+                        opacity: root.secondaryTextOpacity
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                    }
                 }
             }
 

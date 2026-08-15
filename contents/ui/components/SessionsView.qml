@@ -92,10 +92,17 @@ ColumnLayout {
         Layout.fillWidth: true
     }
 
-    Controls.BusyIndicator {
+    // Mirrors SpendView: one filler item owns the leftover height so the
+    // heading stays pinned to the top while sessions are still loading.
+    Item {
         visible: view.applet.sessionsLoading && view.applet.sessions.length === 0
-        running: visible
-        Layout.alignment: Qt.AlignHCenter
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+
+        Controls.BusyIndicator {
+            anchors.centerIn: parent
+            running: parent.visible
+        }
     }
 
     Kirigami.PlaceholderMessage {
@@ -143,13 +150,17 @@ ColumnLayout {
                     radius: view.applet.nestedSurfaceRadius
                     color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.035)
                     border.width: 1
-                    border.color: activeSession
-                        ? view.applet.withAlpha(accent, 0.45)
-                        : view.applet.withAlpha(Kirigami.Theme.textColor, 0.07)
+                    // The state label already carries the accent, so the card
+                    // keeps a neutral hairline: one carrier per signal.
+                    border.color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.07)
 
                     Accessible.role: Accessible.ListItem
                     Accessible.name: view.applet.sessionTitle(modelData)
                     Accessible.description: view.applet.sessionSubtitle(modelData)
+
+                    HoverHandler {
+                        id: sessionCardHover
+                    }
 
                     RowLayout {
                         id: sessionRow
@@ -173,9 +184,12 @@ ColumnLayout {
                             spacing: 0
 
                             CopyableValue {
+                                id: sessionTitleValue
+
                                 text: view.applet.sessionTitle(modelData)
                                 fontWeight: Font.DemiBold
                                 copyAccessibleName: i18n("Copy session name")
+                                copyRevealed: sessionCardHover.hovered
                                 copied: view.copiedValueKey === sessionCard.titleCopyKey
                                 onCopyRequested: function(text) {
                                     view.copySessionValue(text, sessionCard.titleCopyKey)
@@ -196,6 +210,7 @@ ColumnLayout {
                                 textOpacity: view.applet.secondaryTextOpacity
                                 pixelSize: Kirigami.Theme.smallFont.pixelSize
                                 copyAccessibleName: i18n("Copy session details")
+                                copyRevealed: sessionCardHover.hovered
                                 copied: view.copiedValueKey === sessionCard.detailsCopyKey
                                 onCopyRequested: function(text) {
                                     view.copySessionValue(text, sessionCard.detailsCopyKey)
@@ -216,6 +231,10 @@ ColumnLayout {
                                     : Kirigami.Theme.textColor
                                 font.weight: Font.DemiBold
                                 horizontalAlignment: Text.AlignRight
+                                // Share the title row's height so the state sits
+                                // on the title's line instead of above it.
+                                verticalAlignment: Text.AlignVCenter
+                                Layout.preferredHeight: sessionTitleValue.actionSize
                                 Layout.alignment: Qt.AlignRight
                             }
 
