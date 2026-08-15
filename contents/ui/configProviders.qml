@@ -1193,7 +1193,14 @@ KCM.SimpleKCM {
         errorText = ""
         statusText = ""
         markFieldPending(providerID, field.id, true)
-        var command = runDescriptorCommand(field.writeCommand, ({ "{value}": value }), field.kind === "secret" ? value : null)
+        // A secret must reach the CLI on stdin only. Substituting it into
+        // `{value}` as well would publish it in the child process argv, where
+        // any local process can read it from /proc.
+        var isSecretField = field.kind === "secret"
+        var command = runDescriptorCommand(
+            field.writeCommand,
+            isSecretField ? ({}) : ({ "{value}": value }),
+            isSecretField ? value : null)
         runCommand(command, {
             kind: "descriptorField",
             provider: providerID,
@@ -1750,10 +1757,11 @@ KCM.SimpleKCM {
         if (!/^[a-z0-9][a-z0-9._-]*$/.test(key) || key.indexOf("..") !== -1) {
             return "view-statistics"
         }
+        // Keyed by the resolved providerKey, so CLI aliases such as
+        // "aws-bedrock" or "kimi-k2" are already normalized before this lookup.
+        // Only providers whose icon asset name differs from their key belong here.
         var aliases = {
-            "aws-bedrock": "bedrock",
-            "gemini": "gemini-white.png",
-            "kimi-k2": "kimik2"
+            "gemini": "gemini-white.png"
         }
         key = ProviderIdentity.providerKey(key, aliases)
         var fileName = key.indexOf(".") === -1 ? key + ".svg" : key

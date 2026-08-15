@@ -176,10 +176,7 @@ ColumnLayout {
                 return
             }
 
-            var gap = Math.max(
-                2,
-                Math.min(4, Math.floor(width / Math.max(1, points.length * 5))))
-            var barWidth = Math.max(1, (width - gap * Math.max(0, points.length - 1)) / points.length)
+            var geometry = detailSection.applet.chartBarGeometry(width, points.length)
             context.fillStyle = detailSection.applet.buildChartBarGradient(
                 context, detailSection.accent, baseline, 0.78, 0.36)
             for (var barIndex = 0; barIndex < points.length; barIndex++) {
@@ -187,9 +184,9 @@ ColumnLayout {
                 var barHeight = fraction > 0 ? Math.max(2, (height - 3) * fraction) : 1
                 detailSection.applet.paintRoundedTopBar(
                     context,
-                    barIndex * (barWidth + gap),
+                    barIndex * geometry.step,
                     baseline,
-                    barWidth,
+                    geometry.barWidth,
                     barHeight,
                     Kirigami.Units.smallSpacing / 2)
             }
