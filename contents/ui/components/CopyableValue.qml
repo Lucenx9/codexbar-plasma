@@ -13,6 +13,9 @@ RowLayout {
     property real textOpacity: 1
     property int pixelSize: 0
     property bool copied: false
+    // Owners reveal the action on row hover; keyboard focus and the copied
+    // confirmation still force it visible so it stays reachable without a mouse.
+    property bool copyRevealed: true
 
     signal copyRequested(string text)
 
@@ -29,10 +32,19 @@ RowLayout {
     }
 
     PlasmaComponents.ToolButton {
+        id: copyButton
+
         icon.name: "edit-copy"
+        opacity: valueRow.copyRevealed || valueRow.copied || hovered || activeFocus ? 1 : 0
         Accessible.name: valueRow.copyAccessibleName
         Controls.ToolTip.visible: hovered || valueRow.copied
         Controls.ToolTip.text: valueRow.copied ? i18n("Copied") : valueRow.copyAccessibleName
         onClicked: valueRow.copyRequested(valueRow.text)
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Kirigami.Units.shortDuration
+            }
+        }
     }
 }

@@ -1014,6 +1014,24 @@ for scoped_feedback_body, feedback_name in (
             f"{feedback_name} must stay hidden on the independent Spend and Sessions tabs"
         )
 
+# A RowLayout inherits its children's maximum height, so it cannot absorb the
+# leftover popup height: the layout engine then spreads the slack across every
+# row and drops the tab bar into the middle of an otherwise empty popup.
+if not re.search(r"Item \{\s*\n\s*id: providerUsageLoadingRow", main_text):
+    raise AssertionError(
+        "providerUsageLoadingRow must be a plain Item so it absorbs the leftover "
+        "popup height and keeps the tab bar pinned to the top while usage loads"
+    )
+for filler_owner_source, filler_owner_text in (
+    ("SessionsView.qml", sessions_view_text),
+    ("SpendView.qml", spend_view_text),
+):
+    if "Controls.BusyIndicator {\n            anchors.centerIn: parent" not in filler_owner_text:
+        raise AssertionError(
+            f"{filler_owner_source} must center its busy indicator inside a filler item "
+            "so the heading stays pinned to the top while loading"
+        )
+
 provider_status_body = id_block(main_text, "providerStatusMessage")
 if "root.selectedProviderData.hasIncident" not in provider_status_body:
     raise AssertionError("healthy provider status must not occupy a permanent inline banner")
@@ -1411,6 +1429,16 @@ for per_delegate_copy_fragment in ("Controls.TextField {", "Timer {"):
             "CopyableValue delegates must not allocate clipboard controls or timers; "
             f"found {per_delegate_copy_fragment!r}"
         )
+if "valueRow.copyRevealed || valueRow.copied || hovered || activeFocus" not in copyable_value_text:
+    raise AssertionError(
+        "the copy action must stay reachable by keyboard and while confirming a copy, "
+        "not only while the owning row is hovered"
+    )
+if sessions_view_text.count("copyRevealed: sessionCardHover.hovered") != 2:
+    raise AssertionError(
+        "both session copy actions must be revealed by the shared card hover handler "
+        "instead of crowding every card permanently"
+    )
 
 parse_sessions_body = function_body(main_text, "parseSessionsOutput")
 for rejected_shape_fragment in (
@@ -1505,6 +1533,21 @@ for localized_pair_source, localized_pair_text in (
         )
 if "InteractiveChart" not in spend_view_text or "Activity heatmap" not in spend_view_text:
     raise AssertionError("SpendView must expose the interactive chart and bounded activity heatmap")
+for heatmap_range_fragment in (
+    "Math.ceil(view.dailyPoints.length / rows)",
+    "readonly property int fittingColumns",
+    "readonly property real cellSize",
+):
+    if heatmap_range_fragment not in spend_view_text:
+        raise AssertionError(
+            "the activity heatmap must follow the selected cost range and size cells "
+            f"from the available width; missing {heatmap_range_fragment!r}"
+        )
+if "view.dailyPoints.length - 42" in spend_view_text:
+    raise AssertionError(
+        "the activity heatmap must not pin itself to a fixed 42-day window while the "
+        "range selector offers 7/30/90 days"
+    )
 
 normalize_provider_body = function_body(main_text, "normalizeProvider")
 for bounded_provider_fragment in (

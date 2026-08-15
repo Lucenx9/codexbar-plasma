@@ -5371,7 +5371,10 @@ PlasmoidItem {
                 Layout.fillWidth: true
             }
 
-            RowLayout {
+            // A plain Item absorbs the leftover popup height; a RowLayout here
+            // inherits its children's maximum height, so the layout engine would
+            // spread the slack across every row and push the tab bar downwards.
+            Item {
                 id: providerUsageLoadingRow
 
                 visible: root.providerUsageFeedbackVisible
@@ -5380,25 +5383,24 @@ PlasmoidItem {
                     && loading
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                spacing: Kirigami.Units.smallSpacing
 
-                Item {
-                    Layout.fillWidth: true
-                }
+                RowLayout {
+                    anchors.centerIn: parent
+                    width: Math.min(implicitWidth, parent.width)
+                    spacing: Kirigami.Units.smallSpacing
 
-                Controls.BusyIndicator {
-                    running: parent.visible
-                    Layout.preferredWidth: Kirigami.Units.iconSizes.medium
-                    Layout.preferredHeight: Kirigami.Units.iconSizes.medium
-                }
+                    Controls.BusyIndicator {
+                        running: providerUsageLoadingRow.visible
+                        Layout.preferredWidth: Kirigami.Units.iconSizes.medium
+                        Layout.preferredHeight: Kirigami.Units.iconSizes.medium
+                    }
 
-                PlasmaComponents.Label {
-                    text: i18n("Loading usage...")
-                    opacity: root.secondaryTextOpacity
-                }
-
-                Item {
-                    Layout.fillWidth: true
+                    PlasmaComponents.Label {
+                        text: i18n("Loading usage...")
+                        opacity: root.secondaryTextOpacity
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                    }
                 }
             }
 

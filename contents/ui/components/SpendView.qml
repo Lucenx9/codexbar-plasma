@@ -168,37 +168,63 @@ ColumnLayout {
                     Layout.fillWidth: true
                 }
 
-                GridLayout {
-                    columns: 14
-                    columnSpacing: Kirigami.Units.smallSpacing / 2
-                    rowSpacing: Kirigami.Units.smallSpacing / 2
+                // The grid follows the selected range instead of a fixed
+                // 42-day window, and derives the cell size from the available
+                // width so the cells stay large enough to hover.
+                Item {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: heatmapGrid.implicitHeight
+                    clip: true
 
-                    Repeater {
-                        model: view.dailyPoints.slice(Math.max(0, view.dailyPoints.length - 42))
+                    Grid {
+                        id: heatmapGrid
 
-                        delegate: Rectangle {
-                            required property var modelData
+                        readonly property real cellSpacing: Math.max(1, Math.round(Kirigami.Units.smallSpacing / 2))
+                        readonly property real minimumCellSize: Kirigami.Units.gridUnit * 0.6
+                        readonly property real maximumCellSize: Kirigami.Units.gridUnit * 1.6
+                        readonly property int fittingColumns: Math.max(1, Math.floor(
+                            (width + cellSpacing) / (minimumCellSize + cellSpacing)))
+                        readonly property int columnCount: Math.max(1, Math.min(
+                            fittingColumns, Math.ceil(view.dailyPoints.length / rows)))
+                        readonly property real cellSize: Math.max(minimumCellSize, Math.min(
+                            maximumCellSize,
+                            (width - cellSpacing * (columnCount - 1)) / columnCount))
+                        readonly property var cells: view.dailyPoints.slice(
+                            Math.max(0, view.dailyPoints.length - columnCount * rows))
 
-                            readonly property real fraction: view.heatmapMaximum > 0
-                                ? Math.max(0, Math.min(1, Number(modelData.value) / view.heatmapMaximum))
-                                : 0
+                        width: parent.width
+                        rows: 7
+                        flow: Grid.TopToBottom
+                        columnSpacing: cellSpacing
+                        rowSpacing: cellSpacing
 
-                            Layout.preferredWidth: Kirigami.Units.smallSpacing * 1.6
-                            Layout.preferredHeight: Layout.preferredWidth
-                            radius: Kirigami.Units.cornerRadius / 2
-                            color: view.applet.withAlpha(
-                                Kirigami.Theme.highlightColor,
-                                0.1 + fraction * 0.8)
+                        Repeater {
+                            model: heatmapGrid.cells
 
-                            Controls.ToolTip.visible: heatmapMouse.containsMouse
-                            Controls.ToolTip.text: i18n("%1: %2", modelData.label, modelData.displayValue)
+                            delegate: Rectangle {
+                                required property var modelData
 
-                            MouseArea {
-                                id: heatmapMouse
+                                readonly property real fraction: view.heatmapMaximum > 0
+                                    ? Math.max(0, Math.min(1, Number(modelData.value) / view.heatmapMaximum))
+                                    : 0
 
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                acceptedButtons: Qt.NoButton
+                                width: heatmapGrid.cellSize
+                                height: heatmapGrid.cellSize
+                                radius: Kirigami.Units.cornerRadius / 2
+                                color: view.applet.withAlpha(
+                                    Kirigami.Theme.highlightColor,
+                                    0.1 + fraction * 0.8)
+
+                                Controls.ToolTip.visible: heatmapMouse.containsMouse
+                                Controls.ToolTip.text: i18n("%1: %2", modelData.label, modelData.displayValue)
+
+                                MouseArea {
+                                    id: heatmapMouse
+
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    acceptedButtons: Qt.NoButton
+                                }
                             }
                         }
                     }

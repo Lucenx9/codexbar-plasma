@@ -92,10 +92,17 @@ ColumnLayout {
         Layout.fillWidth: true
     }
 
-    Controls.BusyIndicator {
+    // Mirrors SpendView: one filler item owns the leftover height so the
+    // heading stays pinned to the top while sessions are still loading.
+    Item {
         visible: view.applet.sessionsLoading && view.applet.sessions.length === 0
-        running: visible
-        Layout.alignment: Qt.AlignHCenter
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+
+        Controls.BusyIndicator {
+            anchors.centerIn: parent
+            running: parent.visible
+        }
     }
 
     Kirigami.PlaceholderMessage {
@@ -151,6 +158,10 @@ ColumnLayout {
                     Accessible.name: view.applet.sessionTitle(modelData)
                     Accessible.description: view.applet.sessionSubtitle(modelData)
 
+                    HoverHandler {
+                        id: sessionCardHover
+                    }
+
                     RowLayout {
                         id: sessionRow
 
@@ -176,6 +187,7 @@ ColumnLayout {
                                 text: view.applet.sessionTitle(modelData)
                                 fontWeight: Font.DemiBold
                                 copyAccessibleName: i18n("Copy session name")
+                                copyRevealed: sessionCardHover.hovered
                                 copied: view.copiedValueKey === sessionCard.titleCopyKey
                                 onCopyRequested: function(text) {
                                     view.copySessionValue(text, sessionCard.titleCopyKey)
@@ -196,6 +208,7 @@ ColumnLayout {
                                 textOpacity: view.applet.secondaryTextOpacity
                                 pixelSize: Kirigami.Theme.smallFont.pixelSize
                                 copyAccessibleName: i18n("Copy session details")
+                                copyRevealed: sessionCardHover.hovered
                                 copied: view.copiedValueKey === sessionCard.detailsCopyKey
                                 onCopyRequested: function(text) {
                                     view.copySessionValue(text, sessionCard.detailsCopyKey)
