@@ -54,7 +54,7 @@ KCM.SimpleKCM {
     onCfg_commandPathChanged: Qt.callLater(loadOverviewProviders)
 
     function boundedCliMessage(value) {
-        return SafeText.cliMessage(value, SafeText.maximumCliMessageLength)
+        return SafeText.cliMessage(SafeText.stripLoaderDiagnostics(value), SafeText.maximumCliMessageLength)
     }
 
     function boundedProviderID(value) {

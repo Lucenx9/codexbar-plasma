@@ -90,7 +90,7 @@ KCM.SimpleKCM {
         var stderrText = data && data["stderr"] ? data["stderr"] : ""
         var exitCode = data && data["exit code"] !== undefined ? Number(data["exit code"]) : 0
         var safeOutput = SafeText.cliDiagnostic(stdoutText, SafeText.maximumDiagnosticLength)
-        var safeError = SafeText.cliMessage(stderrText, SafeText.maximumCliMessageLength)
+        var safeError = SafeText.cliMessage(SafeText.stripLoaderDiagnostics(stderrText), SafeText.maximumCliMessageLength)
         diagnosticOutput = safeOutput.length > 0 ? safeOutput : i18n("No diagnostic output.")
         diagnosticError = exitCode !== 0 ? safeError : ""
     }
