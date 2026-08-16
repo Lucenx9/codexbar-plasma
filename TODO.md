@@ -30,6 +30,11 @@ upstream v0.50.0 and probed against the installed CLI 0.50.0.
   the CLI extends that stable presentation contract. Missing examples include
   billing summaries, usage breakdowns, credits history, and richer
   provider-specific model/request/token sections.
+- Credits allowance: `usage.credits` reports `remaining`, `updatedAt`, and
+  `events` only. With no allowance or plan total, the Credits section prints the
+  balance without a meter; the meter it replaced scaled against a hardcoded 1000
+  credits and so filled for reasons the payload never described. Restore a meter
+  only when the CLI reports the matching allowance.
 - Cost history plots either cost or tokens through `costHistoryMetric`; the
   selector drives the range chart, the heatmap, and the per-provider bars from
   one `cost` payload, so it must never add a CLI call. `historyCoverageIsEstablished`

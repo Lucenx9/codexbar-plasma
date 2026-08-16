@@ -199,7 +199,9 @@ v0.50.0, probed against the installed CLI 0.50.0).
   surfaced, with legacy dashboard KPI/summary payloads retained as a
   compatibility fallback. Richer provider-specific layouts, billing summaries,
   usage breakdowns, credits history, and model/request/token sections should
-  wait for stable CLI presentation fields.
+  wait for stable CLI presentation fields. `usage.credits` carries no allowance,
+  so the Credits section prints the balance without a meter; do not reintroduce
+  a meter with a hardcoded denominator.
 - Quota warning thresholds are user-configurable and bounded by
   `contents/ui/QuotaThresholds.js`; the notification level and the usage-bar
   markers both read them, so neither may hardcode a percentage. Changing a

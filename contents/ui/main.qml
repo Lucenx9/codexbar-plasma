@@ -4866,11 +4866,18 @@ PlasmoidItem {
         return resetLabel(reset)
     }
 
+    // Credit balances are plain counts, so they share the popup's grouped,
+    // locale-aware figure formatting instead of printing a bare digit run with
+    // a hardcoded decimal mark. A whole balance keeps no fractional part, so a
+    // depleted account reads as "0" rather than "0.0".
     function formatNumber(value) {
-        if (Math.abs(value) >= 100) {
-            return Math.round(value).toString()
+        var numeric = Number(value)
+        if (!isFinite(numeric)) {
+            return "-"
         }
-        return Number(value).toFixed(1)
+        var magnitude = Math.abs(numeric)
+        var digits = magnitude >= 100 || magnitude === Math.round(magnitude) ? 0 : 1
+        return (numeric < 0 ? "-" : "") + groupedDecimalString(magnitude, digits)
     }
 
     Plasma5Support.DataSource {
@@ -5898,35 +5905,11 @@ PlasmoidItem {
                                 Layout.fillWidth: true
                             }
 
-                            Rectangle {
-                                // A depleted balance draws an empty track that is
-                                // indistinguishable from a meter that has not loaded
-                                // yet, so let the remaining-credits line carry the
-                                // zero case on its own.
-                                visible: root.selectedProviderData && root.selectedProviderData.credits > 0
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: root.meterTrackHeight
-                                radius: height / 2
-                                color: root.withAlpha(Kirigami.Theme.textColor, 0.1)
-                                clip: true
-
-                                Rectangle {
-                                    width: root.selectedProviderData && root.selectedProviderData.credits > 0
-                                        ? Math.max(parent.height, parent.width * Math.min(root.selectedProviderData.credits, 1000) / 1000)
-                                        : 0
-                                    height: parent.height
-                                    radius: parent.radius
-                                    color: root.providerReadableColor(root.selectedProviderData ? root.selectedProviderData.provider : "")
-
-                                    Behavior on width {
-                                        NumberAnimation {
-                                            duration: Kirigami.Units.longDuration
-                                            easing.type: Easing.OutCubic
-                                        }
-                                    }
-                                }
-                            }
-
+                            // `usage.credits` reports only `remaining`, so a meter
+                            // here has to invent its own denominator and then
+                            // fills or empties for reasons the balance never
+                            // describes. The figure stands alone until the CLI
+                            // reports the matching allowance.
                             RowLayout {
                                 Layout.fillWidth: true
                                 spacing: Kirigami.Units.smallSpacing
