@@ -16,6 +16,14 @@ Item {
     readonly property bool showPrimaryIdentity: verticalPanel || !hasProviderMeters || primaryText.length > 0
     readonly property int compactExtent: Kirigami.Units.iconSizes.smallMedium
         + Kirigami.Units.smallSpacing * 2
+    // Panel meters scale with the panel thickness instead of using fixed pixel
+    // sizes, which rendered them nearly unreadable on normal panels.
+    readonly property int meterContentHeight: Math.max(0, height - Kirigami.Units.smallSpacing * 2)
+    readonly property int meterSpacing: Math.max(1, Math.round(Kirigami.Units.smallSpacing / 2))
+    readonly property int meterBarHeight: Math.max(3, Math.round(meterContentHeight * 0.2))
+    readonly property int meterIconSize: Math.max(9, meterContentHeight - meterBarHeight - meterSpacing)
+    readonly property int meterWidth: Math.max(Kirigami.Units.gridUnit * 1.6,
+        meterIconSize + Kirigami.Units.smallSpacing)
     readonly property int maximumCompactWidth: Kirigami.Units.gridUnit * 18
     readonly property int desiredWidth: verticalPanel
         ? compactExtent
@@ -89,7 +97,7 @@ Item {
                     : (modelData === "status"
                     ? Kirigami.Units.smallSpacing * 1.5
                     : (modelData === "meters"
-                    ? compactRoot.applet.compactProviders().length * Kirigami.Units.gridUnit * 1.15
+                    ? compactRoot.applet.compactProviders().length * compactRoot.meterWidth
                         + Math.max(0, compactRoot.applet.compactProviders().length - 1) * Kirigami.Units.smallSpacing
                     : Math.max(Kirigami.Units.gridUnit * 2,
                         Math.ceil(compactTextMeasurer.implicitWidth)))))
@@ -215,13 +223,13 @@ Item {
                         modelData.provider,
                         Kirigami.Theme.backgroundColor)
 
-                    Layout.preferredWidth: Kirigami.Units.gridUnit * 1.15
+                    Layout.preferredWidth: compactRoot.meterWidth
                     Layout.preferredHeight: compactRow.height
 
                     ColumnLayout {
                         anchors.centerIn: parent
                         width: parent.width
-                        spacing: 0
+                        spacing: compactRoot.meterSpacing
 
                         Kirigami.Icon {
                             source: compactRoot.applet.providerIconSource(compactMeter.modelData.provider)
@@ -229,13 +237,13 @@ Item {
                             isMask: compactRoot.applet.providerIconIsMask(compactMeter.modelData.provider)
                             color: compactMeter.accent
                             Layout.alignment: Qt.AlignHCenter
-                            Layout.preferredWidth: 9
-                            Layout.preferredHeight: 9
+                            Layout.preferredWidth: compactRoot.meterIconSize
+                            Layout.preferredHeight: compactRoot.meterIconSize
                         }
 
                         Rectangle {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 3
+                            Layout.preferredHeight: compactRoot.meterBarHeight
                             radius: height / 2
                             color: compactRoot.applet.withAlpha(compactMeter.accent, 0.28)
                             clip: true
