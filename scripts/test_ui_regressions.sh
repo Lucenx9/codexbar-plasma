@@ -1078,8 +1078,8 @@ for placeholder_id in (
     "providerPlaceholderMessage",
 ):
     placeholder_body = id_block(main_text, placeholder_id)
-    if "Kirigami.PlaceholderMessage.Type.Informational" not in placeholder_body:
-        raise AssertionError(f"{placeholder_id} must use the native informational empty state")
+    if "type:" in placeholder_body:
+        raise AssertionError(f"{placeholder_id} must not assign an unsupported PlaceholderMessage type")
 
 provider_account_label_body = id_block(provider_header_text, "providerAccountLabel")
 if "Layout.maximumWidth: Kirigami.Units.gridUnit * 16" not in provider_account_label_body:

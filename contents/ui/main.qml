@@ -5445,7 +5445,6 @@ PlasmoidItem {
                     && !loading
                 text: i18n("No provider data.")
                 icon.name: "view-statistics-symbolic"
-                type: Kirigami.PlaceholderMessage.Type.Informational
                 Layout.fillWidth: true
                 Layout.fillHeight: true
             }
@@ -5526,7 +5525,6 @@ PlasmoidItem {
                             visible: root.overviewProviderItems.length === 0
                             text: i18n("No overview data available.")
                             icon.name: "view-grid-symbolic"
-                            type: Kirigami.PlaceholderMessage.Type.Informational
                             Layout.fillWidth: true
                             Layout.preferredHeight: Kirigami.Units.gridUnit * 8
                         }
@@ -5611,7 +5609,6 @@ PlasmoidItem {
                             visible: root.providerPlaceholderText(root.selectedProviderData).length > 0
                             text: root.providerPlaceholderText(root.selectedProviderData)
                             icon.name: "view-statistics-symbolic"
-                            type: Kirigami.PlaceholderMessage.Type.Informational
                             Layout.fillWidth: true
                             Layout.preferredHeight: Kirigami.Units.gridUnit * 8
                         }
