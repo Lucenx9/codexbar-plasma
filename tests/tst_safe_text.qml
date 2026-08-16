@@ -60,6 +60,34 @@ TestCase {
         verify(diagnostic.length <= 32)
     }
 
+    function test_dropsNonFatalLoaderWarningsFromCliErrors() {
+        var stderrText = "/usr/bin/codexbar: /lib64/libcurl.so.4: no version information available (required by /usr/bin/codexbar)\n"
+            + "Error: Not logged in to Gemini."
+
+        compare(SafeText.cliMessage(SafeText.stripLoaderDiagnostics(stderrText), 500),
+            "Error: Not logged in to Gemini.")
+    }
+
+    function test_dropsLoaderWarningsWhenThePathContainsSpaces() {
+        var stderrText = "/home/my user/bin/codexbar: /lib64/libcurl.so.4: no version information available (required by /home/my user/bin/codexbar)\n"
+            + "Error: quota exceeded."
+
+        compare(SafeText.cliMessage(SafeText.stripLoaderDiagnostics(stderrText), 500), "Error: quota exceeded.")
+    }
+
+    function test_keepsLoaderWarningWhenStderrCarriesNothingElse() {
+        var stderrText = "/usr/bin/codexbar: /lib64/libcurl.so.4: no version information available (required by /usr/bin/codexbar)"
+
+        verify(SafeText.stripLoaderDiagnostics(stderrText).indexOf("no version information available") !== -1)
+    }
+
+    function test_preservesFatalLoaderErrorsAndOrdinaryMessages() {
+        var fatal = "codexbar: error while loading shared libraries: libcurl.so.4: cannot open shared object file"
+
+        compare(SafeText.stripLoaderDiagnostics(fatal), fatal)
+        compare(SafeText.stripLoaderDiagnostics("quota exceeded"), "quota exceeded")
+    }
+
     function test_rejectsOversizedCliJsonBeforeParsing() {
         compare(SafeText.cliJsonText("{}"), "{}")
         compare(SafeText.cliJsonText("x".repeat(SafeText.maximumCliJsonLength + 1)), null)

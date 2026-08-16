@@ -416,7 +416,7 @@ PlasmoidItem {
     }
 
     function boundedCliMessage(value) {
-        return SafeText.cliMessage(value, SafeText.maximumCliMessageLength)
+        return SafeText.cliMessage(SafeText.stripLoaderDiagnostics(value), SafeText.maximumCliMessageLength)
     }
 
     function isCliRecord(value) {

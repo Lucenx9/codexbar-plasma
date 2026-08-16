@@ -49,6 +49,36 @@ function boundedDisplayText(value, maximumLength) {
     return text.length > limit ? text.slice(0, limit) : text
 }
 
+// Dynamic-loader warnings reach stderr before the CLI produces any output, so
+// they lead the bounded stderr excerpt shown as a failure reason. The common
+// case is glibc's "no version information available", emitted when the upstream
+// glibc build (linked against Debian's versioned libcurl) runs on a distro that
+// ships libcurl without symbol versioning. They are non-fatal and say nothing
+// about why a command failed, so drop them and let the real message surface.
+var loaderDiagnosticMarker = "no version information available"
+var loaderDiagnosticPattern = /^.*:\s*no version information available\s*\(required by .*\)$/
+
+function stripLoaderDiagnostics(value, maximumLength) {
+    var limit = safeLimit(maximumLength, maximumCliMessageLength)
+    var text = boundedInspectionText(value, Math.min(maximumDiagnosticLength, limit * 8))
+    if (text.indexOf(loaderDiagnosticMarker) === -1) {
+        return text
+    }
+
+    var lines = text.split("\n")
+    var kept = []
+    for (var index = 0; index < lines.length; index++) {
+        if (!loaderDiagnosticPattern.test(lines[index].replace(/\r$/, "").trim())) {
+            kept.push(lines[index])
+        }
+    }
+
+    // Keep the original text when loader noise was all stderr carried, so a
+    // failure never surfaces as an empty message.
+    var stripped = kept.join("\n")
+    return stripped.trim().length > 0 ? stripped : text
+}
+
 function cliJsonText(value) {
     var text = typeof value === "string" ? value : String(value || "")
     return text.length <= maximumCliJsonLength ? text : null
