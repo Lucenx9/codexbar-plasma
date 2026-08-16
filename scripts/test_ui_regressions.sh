@@ -782,6 +782,23 @@ for vertical_fragment in (
             f"missing {vertical_fragment!r}"
         )
 
+compact_meter_body = id_block(compact_representation_text, "compactMeter")
+for meter_fragment in (
+    "Layout.preferredWidth: compactRoot.meterWidth",
+    "Layout.preferredWidth: compactRoot.meterIconSize",
+    "Layout.preferredHeight: compactRoot.meterIconSize",
+    "Layout.preferredHeight: compactRoot.meterBarHeight",
+):
+    if meter_fragment not in compact_meter_body:
+        raise AssertionError(
+            "panel provider meters must scale with the panel instead of using "
+            f"fixed pixel sizes; missing {meter_fragment!r}"
+        )
+if "readonly property int meterContentHeight: Math.max(0, height" not in compact_representation_text:
+    raise AssertionError("panel meter geometry must derive from the compact representation height")
+if "compactRoot.applet.compactProviders().length * compactRoot.meterWidth" not in compact_representation_text:
+    raise AssertionError("the meters element must reserve panel width from the shared meter width")
+
 vertical_status_badge_body = id_block(compact_representation_text, "compactVerticalStatusBadge")
 for vertical_badge_fragment in (
     "visible: compactRoot.verticalPanel",
