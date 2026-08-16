@@ -422,6 +422,10 @@ require_in_file "$MAIN_QML" 'root.costHistoryShowsTokens'
 # Token counts carry no currency, so the money-only filter must not drop
 # providers from the token aggregation.
 require_in_file "$MAIN_QML" "(!costHistoryShowsTokens && pointCurrency !== currency)"
+# The peak and average annotations must name the same day the bars highlight.
+require_in_file "$MAIN_QML" "costHistoryShowsTokens ? points[i].tokens : points[i].cost) || 0"
+require_in_file "$MAIN_QML" "if (!peak || peak.magnitude <= 0) {"
+reject_in_file "$MAIN_QML" 'i18n("Average/day: %1", amountString('
 require_in_file "$MAIN_QML" "function spendHistoryStillBuilding()"
 require_in_file "$MAIN_QML" "historyCoverageEstablished: item.historyCoverageIsEstablished !== false"
 require_in_file "$SPEND_COMPONENT_QML" "function metricOptions()"

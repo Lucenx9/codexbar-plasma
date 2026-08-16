@@ -1824,21 +1824,26 @@ PlasmoidItem {
             return ""
         }
 
+        // The bars highlight the peak of the selected metric, so this label has
+        // to name the same day, not the most expensive one.
         var peak = null
         for (var i = 0; i < points.length; i++) {
-            var cost = Number(points[i].cost) || 0
-            if (!peak || cost > peak.cost) {
+            var magnitude = Number(
+                costHistoryShowsTokens ? points[i].tokens : points[i].cost) || 0
+            if (!peak || magnitude > peak.magnitude) {
                 peak = {
                     label: points[i].label && points[i].label.length > 0 ? points[i].label : i18n("Latest"),
-                    cost: cost,
+                    magnitude: magnitude,
                     currency: points[i].currency || "USD"
                 }
             }
         }
-        if (!peak || peak.cost <= 0) {
+        if (!peak || peak.magnitude <= 0) {
             return ""
         }
-        return i18n("Peak: %1 - %2", peak.label, amountString(peak.cost, peak.currency))
+        return i18n("Peak: %1 - %2", peak.label, costHistoryShowsTokens
+            ? tokenCountString(peak.magnitude)
+            : amountString(peak.magnitude, peak.currency))
     }
 
     function costAverageDailyLine(points) {
@@ -1849,7 +1854,8 @@ PlasmoidItem {
         var total = 0
         var currency = "USD"
         for (var i = 0; i < points.length; i++) {
-            total += Math.max(0, Number(points[i].cost) || 0)
+            total += Math.max(0, Number(
+                costHistoryShowsTokens ? points[i].tokens : points[i].cost) || 0)
             if (points[i].currency) {
                 currency = points[i].currency
             }
@@ -1857,7 +1863,10 @@ PlasmoidItem {
         if (total <= 0) {
             return ""
         }
-        return i18n("Average/day: %1", amountString(total / points.length, currency))
+        var average = total / points.length
+        return i18n("Average/day: %1", costHistoryShowsTokens
+            ? tokenCountString(average)
+            : amountString(average, currency))
     }
 
     function costPerMillionLine(tokenCost) {
