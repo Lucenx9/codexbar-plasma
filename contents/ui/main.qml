@@ -1604,7 +1604,10 @@ PlasmoidItem {
         }
         var last = points[points.length - 1]
         var label = last.label && last.label.length > 0 ? last.label : i18n("Latest")
-        return i18n("%1: %2", label, amountString(last.cost, last.currency || "USD"))
+        var value = costHistoryShowsTokens
+            ? tokenCountString(last.tokens)
+            : amountString(last.cost, last.currency || "USD")
+        return i18n("%1: %2", label, value)
     }
 
     function costChartPoints(points) {

@@ -419,6 +419,10 @@ require_in_file "$MAIN_QML" "costHistoryShowsTokens ? points[i].tokens : points[
 # on cost while the rows beneath it switch to tokens.
 require_in_file "$MAIN_QML" "costHistoryShowsTokens ? point.tokens : point.cost"
 require_in_file "$MAIN_QML" 'root.costHistoryShowsTokens'
+# The chart's "Latest" summary annotates the same series the bars plot, so it
+# must follow the metric instead of always printing the cost amount.
+require_in_file "$MAIN_QML" "tokenCountString(last.tokens)"
+reject_in_file "$MAIN_QML" 'i18n("%1: %2", label, amountString(last.cost'
 # Token counts carry no currency, so the money-only filter must not drop
 # providers from the token aggregation.
 require_in_file "$MAIN_QML" "(!costHistoryShowsTokens && pointCurrency !== currency)"
