@@ -11,6 +11,8 @@ PROVIDER_IDENTITY_JS="${ROOT_DIR}/contents/ui/ProviderIdentity.js"
 WORKFLOW="${ROOT_DIR}/.github/workflows/ci.yml"
 MAKEFILE="${ROOT_DIR}/Makefile"
 UPDATER="${ROOT_DIR}/scripts/update-widget.sh"
+PROVIDER_DETAIL_SECTION_QML="${ROOT_DIR}/contents/ui/components/ProviderDetailSection.qml"
+INTERACTIVE_CHART_QML="${ROOT_DIR}/contents/ui/components/InteractiveChart.qml"
 
 require_in_file() {
   local file="$1"
@@ -173,6 +175,15 @@ require_in_file "$MAIN_QML" "Qt.openUrlExternally(safeStatusUrl(item.provider, i
 
 require_in_file "$MAIN_QML" "notify-send --app-name=CodexBar --icon=view-statistics --urgency="
 require_in_file "$MAIN_QML" "+ \" -- \" + shellQuote(cleanTitle)"
+
+for qml_file in "$PROVIDER_DETAIL_SECTION_QML" "$INTERACTIVE_CHART_QML"; do
+  label_count="$(rg -c -F 'PlasmaComponents.Label {' "$qml_file")"
+  plain_text_count="$(rg -c -F 'textFormat: Text.PlainText' "$qml_file")"
+  if [[ "$plain_text_count" -ne "$label_count" ]]; then
+    echo "every CLI/provider-controlled label must force plain text in ${qml_file#"$ROOT_DIR"/}" >&2
+    exit 1
+  fi
+done
 
 require_in_file "$MAKEFILE" "scripts/test_security_regressions.sh"
 

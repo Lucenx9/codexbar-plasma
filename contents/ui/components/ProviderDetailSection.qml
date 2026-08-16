@@ -23,6 +23,7 @@ ColumnLayout {
     PlasmaComponents.Label {
         visible: detailSection.sectionData.title.length > 0
         text: detailSection.sectionData.title
+        textFormat: Text.PlainText
         font.weight: Font.DemiBold
         Layout.fillWidth: true
         elide: Text.ElideRight
@@ -39,6 +40,7 @@ ColumnLayout {
 
             PlasmaComponents.Label {
                 text: modelData.label
+                textFormat: Text.PlainText
                 opacity: detailSection.applet.secondaryTextOpacity
                 Layout.fillWidth: true
                 elide: Text.ElideRight
@@ -49,6 +51,7 @@ ColumnLayout {
 
                 PlasmaComponents.Label {
                     text: modelData.value
+                    textFormat: Text.PlainText
                     opacity: detailSection.applet.valueTextOpacity
                     font.weight: Font.Medium
                     horizontalAlignment: Text.AlignRight
@@ -59,6 +62,7 @@ ColumnLayout {
                 PlasmaComponents.Label {
                     visible: modelData.secondaryValue.length > 0
                     text: modelData.secondaryValue
+                    textFormat: Text.PlainText
                     opacity: detailSection.applet.secondaryTextOpacity
                     font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                     horizontalAlignment: Text.AlignRight
@@ -77,6 +81,7 @@ ColumnLayout {
 
         PlasmaComponents.Label {
             text: detailSection.chartData ? detailSection.chartData.title : ""
+            textFormat: Text.PlainText
             opacity: detailSection.applet.secondaryTextOpacity
             font.weight: Font.DemiBold
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
@@ -87,6 +92,7 @@ ColumnLayout {
         PlasmaComponents.Label {
             visible: detailSection.chartData && detailSection.chartData.unit.length > 0
             text: detailSection.chartData ? detailSection.chartData.unit : ""
+            textFormat: Text.PlainText
             opacity: detailSection.applet.secondaryTextOpacity
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             horizontalAlignment: Text.AlignRight
