@@ -88,6 +88,17 @@ TestCase {
         compare(SafeText.stripLoaderDiagnostics("quota exceeded"), "quota exceeded")
     }
 
+    function test_redactsCredentialCrossingDiagnosticBoundary() {
+        var padding = "x".repeat(SafeText.maximumDiagnosticLength - 6)
+        var diagnostic = SafeText.cliDiagnostic(
+            padding + ":sk-1234567890-secret",
+            SafeText.maximumDiagnosticLength)
+
+        verify(diagnostic.indexOf("sk-123") === -1)
+        verify(diagnostic.indexOf(":[reda") !== -1)
+        verify(diagnostic.length <= SafeText.maximumDiagnosticLength)
+    }
+
     function test_rejectsOversizedCliJsonBeforeParsing() {
         compare(SafeText.cliJsonText("{}"), "{}")
         compare(SafeText.cliJsonText("x".repeat(SafeText.maximumCliJsonLength + 1)), null)
