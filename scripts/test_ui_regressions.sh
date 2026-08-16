@@ -969,13 +969,31 @@ for full_height_marker in ("height: usageBar.height\n", "y: 0\n"):
             "quota markers must not span the meter track edge to edge again"
         )
 
-credits_meter_index = main_text.find('text: i18n("Credits")')
-if credits_meter_index < 0:
+credits_section_index = main_text.find('text: i18n("Credits")')
+if credits_section_index < 0:
     raise AssertionError("main.qml must keep the Credits section")
-if "visible: root.selectedProviderData && root.selectedProviderData.credits > 0" not in main_text[credits_meter_index:credits_meter_index + 900]:
+credits_section_text = main_text[credits_section_index:credits_section_index + 900]
+if "Remaining: %1" not in credits_section_text:
+    raise AssertionError("the Credits section must keep the remaining-balance line")
+if re.search(r"credits\s*(?:,|/)\s*\d", credits_section_text):
     raise AssertionError(
-        "a depleted credits balance must not draw an empty meter track that reads "
-        "as a meter which has not loaded yet"
+        "the credits balance must not be plotted against an invented denominator; "
+        "`usage.credits` reports only `remaining`, so a meter here fills for "
+        "reasons the payload never describes. Add a meter back only once the CLI "
+        "reports the matching allowance"
+    )
+
+format_number_body = function_body(main_text, "formatNumber")
+if "groupedDecimalString(" not in format_number_body:
+    raise AssertionError(
+        "formatNumber must route through groupedDecimalString so credit balances "
+        "carry group separators and the locale decimal mark like every other "
+        "figure in the popup"
+    )
+if "toFixed(" in format_number_body:
+    raise AssertionError(
+        "formatNumber must not format digits itself again; toFixed hardcodes the "
+        "decimal mark and prints a whole balance as '0.0'"
     )
 for usage_metadata_id in ("usagePaceLabel", "usageResetLabel"):
     usage_metadata_body = id_block(provider_usage_row_text, usage_metadata_id)
@@ -1779,9 +1797,11 @@ if "readonly property real secondaryTextOpacity: 0.7" not in providers_text:
     raise AssertionError(
         "configProviders.qml must mirror main.qml's secondaryTextOpacity step"
     )
-if main_text.count("Layout.preferredHeight: root.meterTrackHeight") != 2:
+if main_text.count("Layout.preferredHeight: root.meterTrackHeight") != 1:
     raise AssertionError(
-        "the credits and provider-cost meters must both consume meterTrackHeight"
+        "the provider-cost meter must consume meterTrackHeight, and it is the "
+        "only meter left in main.qml now that the credits balance has no "
+        "allowance to plot against"
     )
 if provider_usage_row_text.count(
     "Layout.preferredHeight: usageRow.applet.meterTrackHeight"
