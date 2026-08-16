@@ -206,6 +206,10 @@ Item {
             text: compactRoot.primaryText
             elide: Text.ElideRight
             font.bold: true
+            // The loader stretches this label to the full row height, so the
+            // default top alignment would sit the text above the centred
+            // provider icon beside it.
+            verticalAlignment: Text.AlignVCenter
         }
     }
 
