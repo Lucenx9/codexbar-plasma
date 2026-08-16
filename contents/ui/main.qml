@@ -38,6 +38,10 @@ PlasmoidItem {
     property bool includeStatus: Plasmoid.configuration.includeStatus
     property bool costUsageEnabled: Plasmoid.configuration.costUsageEnabled !== false
     property int costHistoryDays: isFinite(Number(Plasmoid.configuration.costHistoryDays)) ? Math.max(1, Math.min(365, Number(Plasmoid.configuration.costHistoryDays))) : 30
+    // The cost payload already carries per-day tokens next to per-day cost, so
+    // switching the plotted metric never needs a second CLI call.
+    property string costHistoryMetric: safeCostHistoryMetric(Plasmoid.configuration.costHistoryMetric)
+    readonly property bool costHistoryShowsTokens: costHistoryMetric === "tokens"
     property bool usageBarsShowUsed: Plasmoid.configuration.usageBarsShowUsed === true
     property bool showQuotaWarningMarkers: Plasmoid.configuration.showQuotaWarningMarkers !== false
     readonly property int quotaWarningPercent: QuotaThresholds.warningPercent(
@@ -384,10 +388,15 @@ PlasmoidItem {
 
     function safeMenuBarDisplayMode(value) {
         var mode = String(value || "percent")
-        if (mode === "percent" || mode === "pace" || mode === "both" || mode === "resetTime") {
+        if (mode === "percent" || mode === "pace" || mode === "both"
+                || mode === "resetTime" || mode === "runOut") {
             return mode
         }
         return "percent"
+    }
+
+    function safeCostHistoryMetric(value) {
+        return String(value || "cost") === "tokens" ? "tokens" : "cost"
     }
 
     function panelElementOrder() {
@@ -1376,6 +1385,8 @@ PlasmoidItem {
         return {
             provider: providerID,
             historyDays: historyDays,
+            // Older payloads omit the flag; absent means "do not warn".
+            historyCoverageEstablished: item.historyCoverageIsEstablished !== false,
             title: i18n("Cost"),
             sessionLine: costLine(i18n("Today"), item.sessionCostUSD, item.sessionTokens, currency),
             monthLine: costLine(windowLabel, item.last30DaysCostUSD, item.last30DaysTokens, currency),
@@ -1533,15 +1544,18 @@ PlasmoidItem {
         return rows.slice(0, 6)
     }
 
+    // Returns the peak of the currently plotted metric, so the bars keep their
+    // scale when the Usage & Spend tab switches between cost and tokens.
     function costSparklineMax(points) {
-        var maxCost = 0
+        var maximum = 0
         if (!points) {
-            return maxCost
+            return maximum
         }
         for (var i = 0; i < points.length; i++) {
-            maxCost = Math.max(maxCost, Number(points[i].cost) || 0)
+            maximum = Math.max(maximum, Number(
+                costHistoryShowsTokens ? points[i].tokens : points[i].cost) || 0)
         }
-        return maxCost
+        return maximum
     }
 
     function paintRoundedTopBar(context, x, baseline, width, height, radius) {
@@ -1655,7 +1669,8 @@ PlasmoidItem {
                 if (!hasOwnKey(byDate, label)) {
                     byDate[label] = { label: label, value: 0, currency: currency }
                 }
-                byDate[label].value += Math.max(0, Number(point.cost) || 0)
+                byDate[label].value += Math.max(0, Number(
+                    costHistoryShowsTokens ? point.tokens : point.cost) || 0)
             }
         }
 
@@ -1665,7 +1680,9 @@ PlasmoidItem {
                 continue
             }
             var item = byDate[day]
-            item.displayValue = amountString(item.value, item.currency)
+            item.displayValue = costHistoryShowsTokens
+                ? tokenCountString(item.value)
+                : amountString(item.value, item.currency)
             result.push(item)
         }
         result.sort(function(a, b) { return a.label.localeCompare(b.label) })
@@ -1711,6 +1728,23 @@ PlasmoidItem {
     function setCostHistoryDays(days) {
         var nextDays = Math.max(1, Math.min(maximumCostHistoryPoints, Math.floor(Number(days) || 30)))
         Plasmoid.configuration.costHistoryDays = nextDays
+    }
+
+    function setCostHistoryMetric(metric) {
+        Plasmoid.configuration.costHistoryMetric = safeCostHistoryMetric(metric)
+    }
+
+    // The CLI reports whether its local log scan already covers the requested
+    // window; until it does, the earliest bars are short for a scan reason
+    // rather than a spend reason.
+    function spendHistoryStillBuilding() {
+        var costs = spendProviderCosts()
+        for (var i = 0; i < costs.length; i++) {
+            if (costs[i].historyCoverageEstablished === false) {
+                return true
+            }
+        }
+        return false
     }
 
     function costBreakdownRows(tokenCost) {
@@ -1763,16 +1797,17 @@ PlasmoidItem {
         var first = Math.max(0, tokenCost.daily.length - 7)
         var visibleDaily = tokenCost.daily.slice(first)
         var rows = []
-        var maxCost = costSparklineMax(visibleDaily)
+        var maximum = costSparklineMax(visibleDaily)
         for (var i = visibleDaily.length - 1; i >= 0; i--) {
             var item = visibleDaily[i]
-            var cost = Math.max(0, Number(item.cost) || 0)
-            var value = compactCostTokenSummary(cost, item.tokens, item.currency)
+            var magnitude = Math.max(0, Number(
+                costHistoryShowsTokens ? item.tokens : item.cost) || 0)
+            var value = compactCostTokenSummary(item.cost, item.tokens, item.currency)
             rows.push({
                 label: item.label && item.label.length > 0 ? item.label : i18n("Latest"),
                 value: value.length > 0 ? value : amountString(0, item.currency || "USD"),
-                percent: maxCost > 0 ? Math.max(3, cost * 100 / maxCost) : 0,
-                isPeak: maxCost > 0 && cost === maxCost
+                percent: maximum > 0 ? Math.max(3, magnitude * 100 / maximum) : 0,
+                isPeak: maximum > 0 && magnitude === maximum
             })
         }
         return rows
@@ -4768,6 +4803,9 @@ PlasmoidItem {
         if (mode === "resetTime") {
             return primaryResetText(item)
         }
+        if (mode === "runOut") {
+            return primaryRunOutText(item)
+        }
         return primaryPercentText(item)
     }
 
@@ -4788,6 +4826,17 @@ PlasmoidItem {
         return row.paceOnTop
             ? i18n("%1% pace", Math.round(shownPace))
             : i18n("%1% pace late", Math.round(shownPace))
+    }
+
+    // Duration-only forecast token. It stays empty unless the CLI actually
+    // predicts exhaustion before the reset, so the panel never shows a
+    // countdown the pace data does not support.
+    function primaryRunOutText(item) {
+        var row = switcherMetricRow(item)
+        if (!paceWarningActive(row)) {
+            return ""
+        }
+        return paceEtaText(row.paceEtaSeconds)
     }
 
     function primaryResetText(item) {

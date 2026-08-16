@@ -173,15 +173,15 @@ Use this order when sources disagree:
 ## Current TODO Mirror
 
 Keep this in sync with `TODO.md` when feature parity decisions change. Current
-parity baseline: `docs/research/2026-08-15-macos-parity-0.49.6.md` (upstream
-v0.49.6, probed against the installed CLI 0.49.6).
+parity baseline: `docs/research/2026-08-16-macos-parity-0.50.0.md` (upstream
+v0.50.0, probed against the installed CLI 0.50.0).
 
 - Provider-specific editing should come from a stable CLI descriptor, not
   duplicated provider-specific config logic in QML. The Providers page renders
   descriptor fields/actions from `docs/cli-provider-settings-descriptor.md` for
   generic source mode, API key, cookie source/manual cookie, enterprise/base
   URL, workspace/project ID, region, AWS profile/auth mode, and boolean extras.
-  That descriptor is a proposal, not shipped: on CLI 0.49.6
+  That descriptor is a proposal, not shipped: on CLI 0.50.0
   `config providers --descriptors` fails with `Unknown option --descriptors` and
   the plain payload has no `descriptor` key, so the path is dormant and the page
   falls back to enable/disable, `set-api-key` and links. Keep that fallback
@@ -212,8 +212,14 @@ v0.49.6, probed against the installed CLI 0.49.6).
   Usage & Spend tab adds bounded range and heatmap views. Credits history, plan
   utilization history, and session-equivalent forecasts must wait for stable
   CLI history payloads.
+- `costHistoryMetric` switches every cost chart between cost and tokens from the
+  same `cost` payload; never add a CLI call for the metric, and keep the bar
+  scale reading the selected metric. `historyCoverageIsEstablished` drives the
+  "still collecting" note, and a missing flag counts as established.
 - Panel element composition has a persisted, sanitized order for identity,
   status, usage text, and meters. Keep existing visibility settings working.
+  The `runOut` display mode stays tied to `paceWarningActive`, so it prints a
+  duration only when the CLI predicts exhaustion before the reset.
 - Gettext template extraction exists. Real `.po` catalogs, compiled catalog
   packaging, and translator contribution docs should come with localization
   work.
@@ -222,7 +228,7 @@ v0.49.6, probed against the installed CLI 0.49.6).
   stay quiet, configurable, and tied to clear state transitions.
 - The fallback catalog covers the 69 provider IDs released in CodexBar v0.49.1
   and retains fork-only compatibility assets. Re-verified against the installed
-  0.49.6 CLI, which reports the same 69 and adds none. Future drift syncs should
+  0.50.0 CLI, which reports the same 69 and adds none. Future drift syncs should
   cover provider keys, CLI aliases, titles, colors, docs/dashboard/login URLs,
   icon assets, and `scripts/test_provider_icons.sh`.
 - The GitHub Release updater is current. If a KDE Store channel is added,

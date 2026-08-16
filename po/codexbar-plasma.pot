@@ -135,7 +135,19 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: contents/ui/components/SpendView.qml contents/ui/main.qml
+msgid "Cost"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml contents/ui/main.qml
+msgid "Tokens"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml contents/ui/main.qml
 msgid "Usage & Spend"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "Cost history metric"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
@@ -151,12 +163,21 @@ msgid "Some cost data is unavailable: %1"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
+msgid ""
+"Local history is still being collected, so early days may be incomplete."
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
 msgid "No local cost data available."
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
 msgid ""
 "Cost history appears for providers supported by the codexbar cost command."
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "Daily token history"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml contents/ui/main.qml
@@ -279,6 +300,10 @@ msgstr ""
 
 #: contents/ui/configDisplay.qml
 msgid "Reset time"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Run-out forecast"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
@@ -1162,10 +1187,6 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: contents/ui/main.qml
-msgid "Cost"
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "Today"
 msgstr ""
 
@@ -1418,10 +1439,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "On-demand"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Tokens"
 msgstr ""
 
 #: contents/ui/main.qml

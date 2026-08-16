@@ -54,6 +54,10 @@ KCM.SimpleKCM {
     property bool cfg_showQuotaWarningMarkersDefault
     property string cfg_menuBarDisplayMode
     property string cfg_menuBarDisplayModeDefault
+    // Chosen from the Usage & Spend tab, reset from here like the other
+    // popup-owned values.
+    property string cfg_costHistoryMetric
+    property string cfg_costHistoryMetricDefault
     property bool cfg_resetTimesShowAbsolute
     property bool cfg_resetTimesShowAbsoluteDefault
     property bool cfg_showProviderChangelogs
@@ -110,6 +114,7 @@ KCM.SimpleKCM {
             [cfg_includeStatus, cfg_includeStatusDefault],
             [cfg_costUsageEnabled, cfg_costUsageEnabledDefault],
             [cfg_costHistoryDays, cfg_costHistoryDaysDefault],
+            [cfg_costHistoryMetric, cfg_costHistoryMetricDefault],
             [cfg_usageBarsShowUsed, cfg_usageBarsShowUsedDefault],
             [cfg_showQuotaWarningMarkers, cfg_showQuotaWarningMarkersDefault],
             [cfg_quotaWarningPercent, cfg_quotaWarningPercentDefault],
@@ -150,6 +155,7 @@ KCM.SimpleKCM {
         cfg_includeStatus = cfg_includeStatusDefault
         cfg_costUsageEnabled = cfg_costUsageEnabledDefault
         cfg_costHistoryDays = cfg_costHistoryDaysDefault
+        cfg_costHistoryMetric = cfg_costHistoryMetricDefault
         cfg_usageBarsShowUsed = cfg_usageBarsShowUsedDefault
         cfg_showQuotaWarningMarkers = cfg_showQuotaWarningMarkersDefault
         cfg_quotaWarningPercent = cfg_quotaWarningPercentDefault

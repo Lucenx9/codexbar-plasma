@@ -391,7 +391,8 @@ KCM.SimpleKCM {
                 { text: i18n("Percent"), value: "percent" },
                 { text: i18n("Pace"), value: "pace" },
                 { text: i18n("Percent and pace"), value: "both" },
-                { text: i18n("Reset time"), value: "resetTime" }
+                { text: i18n("Reset time"), value: "resetTime" },
+                { text: i18n("Run-out forecast"), value: "runOut" }
             ]
             Layout.preferredWidth: Kirigami.Units.gridUnit * 12
             Component.onCompleted: currentIndex = page.displayModeIndex(page.cfg_menuBarDisplayMode)
