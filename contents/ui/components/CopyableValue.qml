@@ -28,6 +28,7 @@ RowLayout {
 
     PlasmaComponents.Label {
         text: valueRow.text
+        textFormat: Text.PlainText
         font.weight: valueRow.fontWeight
         font.pixelSize: valueRow.pixelSize > 0 ? valueRow.pixelSize : Kirigami.Theme.defaultFont.pixelSize
         opacity: valueRow.textOpacity

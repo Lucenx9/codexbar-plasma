@@ -200,6 +200,7 @@ ColumnLayout {
                                 visible: modelData.sessionName.length > 0
                                     && modelData.sessionName !== view.applet.sessionTitle(modelData)
                                 text: modelData.sessionName
+                                textFormat: Text.PlainText
                                 opacity: view.applet.valueTextOpacity
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
@@ -226,6 +227,7 @@ ColumnLayout {
                                 text: modelData.state.length > 0
                                     ? view.applet.capitalize(modelData.state)
                                     : i18n("Unknown")
+                                textFormat: Text.PlainText
                                 color: sessionCard.activeSession
                                     ? sessionCard.accent
                                     : Kirigami.Theme.textColor
@@ -240,6 +242,7 @@ ColumnLayout {
 
                             PlasmaComponents.Label {
                                 text: view.applet.sessionActivityText(modelData, view.sessionClockMs)
+                                textFormat: Text.PlainText
                                 opacity: view.applet.secondaryTextOpacity
                                 font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                                 horizontalAlignment: Text.AlignRight

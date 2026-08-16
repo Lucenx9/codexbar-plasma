@@ -1464,6 +1464,10 @@ if "valueRow.copyRevealed || valueRow.copied || hovered || activeFocus" not in c
         "the copy action must stay reachable by keyboard and while confirming a copy, "
         "not only while the owning row is hovered"
     )
+if "textFormat: Text.PlainText" not in copyable_value_text:
+    raise AssertionError("CopyableValue must render untrusted CLI values as plain text")
+if sessions_view_text.count("textFormat: Text.PlainText") < 3:
+    raise AssertionError("all direct session labels must render CLI-derived text as plain text")
 if sessions_view_text.count("copyRevealed: sessionCardHover.hovered") != 2:
     raise AssertionError(
         "both session copy actions must be revealed by the shared card hover handler "
