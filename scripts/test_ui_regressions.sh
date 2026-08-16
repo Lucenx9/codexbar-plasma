@@ -874,8 +874,24 @@ if main_text.count("providerTabsFlickable.focusAdjacentTab(") != 4:
     raise AssertionError("both the overview tab and the provider tabs must move focus with arrow keys")
 if "providerTabsFlickable.ensureVisible(overviewTab)" not in main_text:
     raise AssertionError("focusing the overview tab must pull it back into view")
-if main_text.count("providerTabsFlickable.ensureVisible(providerTab)") != 2:
-    raise AssertionError("both focusing and selecting a provider tab must pull it back into view")
+if "providerTabsFlickable.ensureVisible(providerTab)" not in main_text:
+    raise AssertionError("focusing a provider tab must pull it back into view")
+if "function claimSelectedTab(item, isSelected)" not in provider_tabs_flickable_body:
+    raise AssertionError("the tab strip must track which tab is selected in one place")
+# Every tab kind must report selection, or the strip keeps revealing a stale tab
+# after the user switches between a provider and a global view.
+if main_text.count("providerTabsFlickable.claimSelectedTab(") != 2:
+    raise AssertionError("the overview tab and the provider tabs must both report selection")
+for claim_fragment in (
+    "onSelectedChanged: overviewTab.claimSelectedTab()",
+    "onSelectedChanged: providerTab.claimSelectedTab()",
+):
+    if claim_fragment not in main_text:
+        raise AssertionError(f"selection tracking is missing {claim_fragment!r}")
+if "tab.tabStrip.claimSelectedTab(tab, tab.selected)" not in global_tab_text:
+    raise AssertionError("global tabs must report selection to the strip")
+if "onSelectedChanged: tab.claimSelectedTab()" not in global_tab_text:
+    raise AssertionError("global tabs must report selection changes to the strip")
 if "tab.tabStrip.focusAdjacentTab(tab" not in global_tab_text:
     raise AssertionError("global tabs must take part in arrow-key tab navigation")
 if "tab.tabStrip.ensureVisible(tab)" not in global_tab_text:

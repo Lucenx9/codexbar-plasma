@@ -5063,6 +5063,20 @@ PlasmoidItem {
                         }
                     }
 
+                    // Every tab kind reports through here: tracking only provider
+                    // tabs would leave a stale one selected once a global view is
+                    // picked, and a later resize would scroll it back into view.
+                    function claimSelectedTab(item, isSelected) {
+                        if (!isSelected) {
+                            if (selectedTab === item) {
+                                selectedTab = null
+                            }
+                            return
+                        }
+                        selectedTab = item
+                        ensureVisible(item)
+                    }
+
                     function revealSelectedTab() {
                         ensureVisible(selectedTab)
                     }
@@ -5141,6 +5155,10 @@ PlasmoidItem {
                                 root.selectGlobalView("overview")
                             }
 
+                            function claimSelectedTab() {
+                                providerTabsFlickable.claimSelectedTab(overviewTab, selected)
+                            }
+
                             visible: root.overviewAvailable
                             Layout.preferredWidth: Math.max(
                                 Kirigami.Units.gridUnit * 5.2,
@@ -5167,6 +5185,9 @@ PlasmoidItem {
                                     focusAcquiredByPointer = false
                                 }
                             }
+
+                            onSelectedChanged: overviewTab.claimSelectedTab()
+                            Component.onCompleted: overviewTab.claimSelectedTab()
 
                             Accessible.role: Accessible.PageTab
                             Accessible.name: i18n("Overview")
@@ -5313,11 +5334,7 @@ PlasmoidItem {
                                 // An auto-selected provider can sit past the right
                                 // edge; keep the active tab reachable and visible.
                                 function claimSelectedTab() {
-                                    if (!selected) {
-                                        return
-                                    }
-                                    providerTabsFlickable.selectedTab = providerTab
-                                    providerTabsFlickable.ensureVisible(providerTab)
+                                    providerTabsFlickable.claimSelectedTab(providerTab, selected)
                                 }
 
                                 Layout.preferredWidth: Math.min(

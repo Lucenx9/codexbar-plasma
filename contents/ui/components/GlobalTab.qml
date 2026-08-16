@@ -42,6 +42,15 @@ Rectangle {
     scale: tabMouse.pressed ? 0.985 : 1
     activeFocusOnTab: true
 
+    function claimSelectedTab() {
+        if (tab.tabStrip) {
+            tab.tabStrip.claimSelectedTab(tab, tab.selected)
+        }
+    }
+
+    onSelectedChanged: tab.claimSelectedTab()
+    Component.onCompleted: tab.claimSelectedTab()
+
     onActiveFocusChanged: {
         if (activeFocus) {
             if (tab.tabStrip) {
