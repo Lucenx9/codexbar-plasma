@@ -5019,6 +5019,66 @@ PlasmoidItem {
                 Flickable {
                     id: providerTabsFlickable
 
+                    // The selected provider tab, so geometry changes can bring it
+                    // back into view without every delegate registering itself.
+                    property Item selectedTab: null
+                    readonly property real tabPageStep: Math.max(Kirigami.Units.gridUnit * 4, width * 0.6)
+                    readonly property real tabWheelStep: Kirigami.Units.gridUnit * 5
+
+                    function scrollTo(position) {
+                        var bounded = Math.max(0, Math.min(contentWidth - width, position))
+                        providerTabsScroll.stop()
+                        providerTabsScroll.to = bounded
+                        providerTabsScroll.start()
+                    }
+
+                    function scrollBy(delta) {
+                        scrollTo(contentX + delta)
+                    }
+
+                    // Tabs come from three different delegates, so walk the parent
+                    // chain instead of keeping a registry of them in sync.
+                    function containsTab(item) {
+                        var node = item
+                        while (node) {
+                            if (node === providerTabs) {
+                                return true
+                            }
+                            node = node.parent
+                        }
+                        return false
+                    }
+
+                    function ensureVisible(item) {
+                        if (!interactive || !item || item.width <= 0 || !containsTab(item)) {
+                            return
+                        }
+                        var margin = Kirigami.Units.gridUnit
+                        var left = item.mapToItem(providerTabs, 0, 0).x
+                        var right = left + item.width
+                        if (left - margin < contentX) {
+                            scrollTo(left - margin)
+                        } else if (right + margin > contentX + width) {
+                            scrollTo(right + margin - width)
+                        }
+                    }
+
+                    function revealSelectedTab() {
+                        ensureVisible(selectedTab)
+                    }
+
+                    function focusAdjacentTab(item, forward) {
+                        if (!item) {
+                            return false
+                        }
+                        var candidate = item.nextItemInFocusChain(forward)
+                        if (!candidate || !containsTab(candidate)) {
+                            return false
+                        }
+                        candidate.forceActiveFocus(forward ? Qt.TabFocusReason : Qt.BacktabFocusReason)
+                        return true
+                    }
+
                     anchors.fill: parent
                     anchors.margins: Kirigami.Units.smallSpacing / 2
                     clip: true
@@ -5026,6 +5086,36 @@ PlasmoidItem {
                     contentWidth: providerTabs.implicitWidth
                     contentHeight: height
                     interactive: contentWidth > width
+
+                    onWidthChanged: Qt.callLater(providerTabsFlickable.revealSelectedTab)
+                    onContentWidthChanged: Qt.callLater(providerTabsFlickable.revealSelectedTab)
+
+                    NumberAnimation {
+                        id: providerTabsScroll
+
+                        target: providerTabsFlickable
+                        property: "contentX"
+                        duration: Kirigami.Units.longDuration
+                        easing.type: Easing.OutCubic
+                    }
+
+                    // Touchpads flick this strip horizontally, but a plain mouse
+                    // only sends a vertical wheel, which a horizontal-only
+                    // Flickable ignores; without this the overflowing tabs can
+                    // only be reached by dragging the strip.
+                    WheelHandler {
+                        enabled: providerTabsFlickable.interactive
+                        acceptedDevices: PointerDevice.Mouse
+
+                        onWheel: function(event) {
+                            var delta = event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x
+                            if (delta === 0) {
+                                return
+                            }
+                            providerTabsFlickable.scrollBy(
+                                -delta / 120 * providerTabsFlickable.tabWheelStep)
+                        }
+                    }
 
                     RowLayout {
                         id: providerTabs
@@ -5071,7 +5161,9 @@ PlasmoidItem {
                             activeFocusOnTab: true
 
                             onActiveFocusChanged: {
-                                if (!activeFocus) {
+                                if (activeFocus) {
+                                    providerTabsFlickable.ensureVisible(overviewTab)
+                                } else {
                                     focusAcquiredByPointer = false
                                 }
                             }
@@ -5091,6 +5183,12 @@ PlasmoidItem {
                                 case Qt.Key_Select:
                                     overviewTab.activate()
                                     event.accepted = true
+                                    break
+                                case Qt.Key_Left:
+                                    event.accepted = providerTabsFlickable.focusAdjacentTab(overviewTab, false)
+                                    break
+                                case Qt.Key_Right:
+                                    event.accepted = providerTabsFlickable.focusAdjacentTab(overviewTab, true)
                                     break
                                 }
                             }
@@ -5163,6 +5261,7 @@ PlasmoidItem {
                             visible: root.spendAvailable
                             applet: root
                             title: i18n("Usage & Spend")
+                            tabStrip: providerTabsFlickable
                             iconName: "office-chart-bar"
                             tabHeight: providerTabsFlickable.height
                             selected: root.spendSelected
@@ -5173,6 +5272,7 @@ PlasmoidItem {
                             visible: root.sessionsAvailable
                             applet: root
                             title: i18n("Sessions")
+                            tabStrip: providerTabsFlickable
                             iconName: "system-run-symbolic"
                             tabHeight: providerTabsFlickable.height
                             selected: root.sessionsSelected
@@ -5210,6 +5310,16 @@ PlasmoidItem {
                                     root.selectionInitialized = true
                                 }
 
+                                // An auto-selected provider can sit past the right
+                                // edge; keep the active tab reachable and visible.
+                                function claimSelectedTab() {
+                                    if (!selected) {
+                                        return
+                                    }
+                                    providerTabsFlickable.selectedTab = providerTab
+                                    providerTabsFlickable.ensureVisible(providerTab)
+                                }
+
                                 Layout.preferredWidth: Math.min(
                                     Kirigami.Units.gridUnit * 7,
                                     Math.max(Kirigami.Units.gridUnit * 4.2,
@@ -5231,10 +5341,15 @@ PlasmoidItem {
                                 activeFocusOnTab: true
 
                                 onActiveFocusChanged: {
-                                    if (!activeFocus) {
+                                    if (activeFocus) {
+                                        providerTabsFlickable.ensureVisible(providerTab)
+                                    } else {
                                         focusAcquiredByPointer = false
                                     }
                                 }
+
+                                onSelectedChanged: providerTab.claimSelectedTab()
+                                Component.onCompleted: providerTab.claimSelectedTab()
 
                                 Accessible.role: Accessible.PageTab
                                 Accessible.name: modelData.title
@@ -5251,6 +5366,12 @@ PlasmoidItem {
                                     case Qt.Key_Select:
                                         providerTab.activate()
                                         event.accepted = true
+                                        break
+                                    case Qt.Key_Left:
+                                        event.accepted = providerTabsFlickable.focusAdjacentTab(providerTab, false)
+                                        break
+                                    case Qt.Key_Right:
+                                        event.accepted = providerTabsFlickable.focusAdjacentTab(providerTab, true)
                                         break
                                     }
                                 }
@@ -5341,13 +5462,16 @@ PlasmoidItem {
                     }
                 }
 
+                // The fades double as buttons: scrolling the strip otherwise
+                // depends on gestures a plain mouse cannot produce, and nothing
+                // on screen says the tabs continue past the edge.
                 Rectangle {
                     id: providerTabsLeftFade
 
                     anchors.left: parent.left
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
-                    width: Kirigami.Units.gridUnit
+                    width: Kirigami.Units.gridUnit * 1.5
                     visible: opacity > 0
                     opacity: providerTabsFlickable.interactive && providerTabsFlickable.contentX > 0 ? 1 : 0
                     gradient: Gradient {
@@ -5355,6 +5479,30 @@ PlasmoidItem {
 
                         GradientStop { position: 0; color: Kirigami.Theme.backgroundColor }
                         GradientStop { position: 1; color: root.withAlpha(Kirigami.Theme.backgroundColor, 0) }
+                    }
+
+                    Accessible.role: Accessible.Button
+                    Accessible.name: i18n("Show previous tabs")
+                    Accessible.onPressAction: providerTabsFlickable.scrollBy(-providerTabsFlickable.tabPageStep)
+
+                    Kirigami.Icon {
+                        anchors.centerIn: parent
+                        width: Kirigami.Units.iconSizes.small
+                        height: width
+                        source: "go-previous-symbolic"
+                        isMask: true
+                        color: providerTabsLeftFadeMouse.containsMouse
+                            ? root.readableAccentColor(Kirigami.Theme.highlightColor, Kirigami.Theme.backgroundColor)
+                            : root.withAlpha(Kirigami.Theme.textColor, 0.72)
+                    }
+
+                    MouseArea {
+                        id: providerTabsLeftFadeMouse
+
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: providerTabsFlickable.scrollBy(-providerTabsFlickable.tabPageStep)
                     }
 
                     Behavior on opacity {
@@ -5370,7 +5518,7 @@ PlasmoidItem {
                     anchors.right: parent.right
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
-                    width: Kirigami.Units.gridUnit
+                    width: Kirigami.Units.gridUnit * 1.5
                     visible: opacity > 0
                     opacity: providerTabsFlickable.interactive
                         && providerTabsFlickable.contentX < providerTabsFlickable.contentWidth - providerTabsFlickable.width - 1 ? 1 : 0
@@ -5379,6 +5527,30 @@ PlasmoidItem {
 
                         GradientStop { position: 0; color: root.withAlpha(Kirigami.Theme.backgroundColor, 0) }
                         GradientStop { position: 1; color: Kirigami.Theme.backgroundColor }
+                    }
+
+                    Accessible.role: Accessible.Button
+                    Accessible.name: i18n("Show more tabs")
+                    Accessible.onPressAction: providerTabsFlickable.scrollBy(providerTabsFlickable.tabPageStep)
+
+                    Kirigami.Icon {
+                        anchors.centerIn: parent
+                        width: Kirigami.Units.iconSizes.small
+                        height: width
+                        source: "go-next-symbolic"
+                        isMask: true
+                        color: providerTabsRightFadeMouse.containsMouse
+                            ? root.readableAccentColor(Kirigami.Theme.highlightColor, Kirigami.Theme.backgroundColor)
+                            : root.withAlpha(Kirigami.Theme.textColor, 0.72)
+                    }
+
+                    MouseArea {
+                        id: providerTabsRightFadeMouse
+
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: providerTabsFlickable.scrollBy(providerTabsFlickable.tabPageStep)
                     }
 
                     Behavior on opacity {

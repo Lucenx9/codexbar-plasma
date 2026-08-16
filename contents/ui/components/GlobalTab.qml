@@ -12,6 +12,9 @@ Rectangle {
     required property real tabHeight
     property bool selected: false
     property bool focusAcquiredByPointer: false
+    // Scrolling tab strip hosting this tab, so keyboard focus can pull an
+    // overflowing tab back into view. Null when the host cannot overflow.
+    property var tabStrip: null
     readonly property bool keyboardFocusVisible: activeFocus && !focusAcquiredByPointer
     readonly property color accent: applet.readableAccentColor(
         Kirigami.Theme.highlightColor,
@@ -40,7 +43,11 @@ Rectangle {
     activeFocusOnTab: true
 
     onActiveFocusChanged: {
-        if (!activeFocus) {
+        if (activeFocus) {
+            if (tab.tabStrip) {
+                tab.tabStrip.ensureVisible(tab)
+            }
+        } else {
             focusAcquiredByPointer = false
         }
     }
@@ -60,6 +67,12 @@ Rectangle {
         case Qt.Key_Select:
             tab.activated()
             event.accepted = true
+            break
+        case Qt.Key_Left:
+            event.accepted = tab.tabStrip ? tab.tabStrip.focusAdjacentTab(tab, false) : false
+            break
+        case Qt.Key_Right:
+            event.accepted = tab.tabStrip ? tab.tabStrip.focusAdjacentTab(tab, true) : false
             break
         }
     }

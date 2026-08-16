@@ -1805,6 +1805,14 @@ msgid "Widget updater response exceeded the supported size."
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "Show previous tabs"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Show more tabs"
+msgstr ""
+
+#: contents/ui/main.qml
 msgid "Loading usage..."
 msgstr ""
 

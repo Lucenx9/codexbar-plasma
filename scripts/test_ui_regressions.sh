@@ -78,6 +78,7 @@ provider_usage_row_qml = root / "contents/ui/components/ProviderUsageRow.qml"
 overview_provider_row_qml = root / "contents/ui/components/OverviewProviderRow.qml"
 provider_detail_section_qml = root / "contents/ui/components/ProviderDetailSection.qml"
 compact_representation_qml = root / "contents/ui/components/CompactRepresentation.qml"
+global_tab_qml = root / "contents/ui/components/GlobalTab.qml"
 interactive_chart_qml = root / "contents/ui/components/InteractiveChart.qml"
 sessions_view_qml = root / "contents/ui/components/SessionsView.qml"
 copyable_value_qml = root / "contents/ui/components/CopyableValue.qml"
@@ -176,6 +177,7 @@ provider_usage_row_text = provider_usage_row_qml.read_text(encoding="utf-8")
 overview_provider_row_text = overview_provider_row_qml.read_text(encoding="utf-8")
 provider_detail_section_text = provider_detail_section_qml.read_text(encoding="utf-8")
 compact_representation_text = compact_representation_qml.read_text(encoding="utf-8")
+global_tab_text = global_tab_qml.read_text(encoding="utf-8")
 interactive_chart_text = interactive_chart_qml.read_text(encoding="utf-8")
 sessions_view_text = sessions_view_qml.read_text(encoding="utf-8")
 copyable_value_text = copyable_value_qml.read_text(encoding="utf-8")
@@ -855,6 +857,45 @@ for tabs_fragment in (
             "providerTabsBar must preserve the compact, accent-led tab hierarchy; "
             f"missing {tabs_fragment!r}"
         )
+provider_tabs_flickable_body = id_block(main_text, "providerTabsFlickable")
+for scroll_fragment in (
+    "WheelHandler {",
+    "acceptedDevices: PointerDevice.Mouse",
+    "function ensureVisible(item)",
+    "function focusAdjacentTab(item, forward)",
+    "function scrollBy(delta)",
+):
+    if scroll_fragment not in provider_tabs_flickable_body:
+        raise AssertionError(
+            "the tab strip must stay reachable without touch gestures; "
+            f"missing {scroll_fragment!r}"
+        )
+if main_text.count("providerTabsFlickable.focusAdjacentTab(") != 4:
+    raise AssertionError("both the overview tab and the provider tabs must move focus with arrow keys")
+if "providerTabsFlickable.ensureVisible(overviewTab)" not in main_text:
+    raise AssertionError("focusing the overview tab must pull it back into view")
+if main_text.count("providerTabsFlickable.ensureVisible(providerTab)") != 2:
+    raise AssertionError("both focusing and selecting a provider tab must pull it back into view")
+if "tab.tabStrip.focusAdjacentTab(tab" not in global_tab_text:
+    raise AssertionError("global tabs must take part in arrow-key tab navigation")
+if "tab.tabStrip.ensureVisible(tab)" not in global_tab_text:
+    raise AssertionError("a focused global tab must be scrolled into view")
+
+for fade_id, fade_direction in (
+    ("providerTabsLeftFade", "-providerTabsFlickable.tabPageStep"),
+    ("providerTabsRightFade", "providerTabsFlickable.tabPageStep"),
+):
+    fade_body = id_block(main_text, fade_id)
+    for fade_fragment in (
+        "Accessible.role: Accessible.Button",
+        "cursorShape: Qt.PointingHandCursor",
+        f"onClicked: providerTabsFlickable.scrollBy({fade_direction})",
+    ):
+        if fade_fragment not in fade_body:
+            raise AssertionError(
+                f"{fade_id} must be a clickable scroll affordance; missing {fade_fragment!r}"
+            )
+
 if "Kirigami.Theme.highlightedTextColor" in provider_tabs_body:
     raise AssertionError("provider tabs must not depend on a heavy solid-highlight selected state")
 for stale_selected_overlay in (
