@@ -1,14 +1,14 @@
 # TODO
 
-Parity baseline: `docs/research/2026-08-15-macos-parity-0.49.6.md`, pinned to
-upstream v0.49.6 and probed against the installed CLI 0.49.6.
+Parity baseline: `docs/research/2026-08-16-macos-parity-0.50.0.md`, pinned to
+upstream v0.50.0 and probed against the installed CLI 0.50.0.
 
 - Provider-specific editable settings: the Providers page renders generic
   fields/actions from `docs/cli-provider-settings-descriptor.md` without
   provider-specific QML branches. Declared coverage includes source mode, API
   key, cookie source/manual cookie, enterprise/base URL, workspace/project ID,
   region, AWS profile/auth mode, and boolean extras. That descriptor is still a
-  *proposal*: on CLI 0.49.6 `config providers --descriptors` returns
+  *proposal*: on CLI 0.50.0 `config providers --descriptors` returns
   `Unknown option --descriptors` and the plain payload carries no `descriptor`
   key, so the whole path is dormant and the page degrades to enable/disable,
   `set-api-key` and docs/dashboard/login links. Keep that fallback working.
@@ -30,6 +30,10 @@ upstream v0.49.6 and probed against the installed CLI 0.49.6.
   the CLI extends that stable presentation contract. Missing examples include
   billing summaries, usage breakdowns, credits history, and richer
   provider-specific model/request/token sections.
+- Cost history plots either cost or tokens through `costHistoryMetric`; the
+  selector drives the range chart, the heatmap, and the per-provider bars from
+  one `cost` payload, so it must never add a CLI call. `historyCoverageIsEstablished`
+  drives the "still collecting" note; a missing flag means established.
 - Quota warning thresholds are configurable through `quotaWarningPercent` and
   `quotaCriticalPercent`, bounded by `contents/ui/QuotaThresholds.js`, and drive
   both the notification level and the usage-bar markers. Per-provider thresholds
@@ -47,7 +51,10 @@ upstream v0.49.6 and probed against the installed CLI 0.49.6.
   payloads; do not infer history from one snapshot.
 - Panel element composition now has a persisted, sanitized order for identity,
   status, usage text, and provider meters. Visibility remains controlled by the
-  existing Plasma-native display settings.
+  existing Plasma-native display settings. The `runOut` display mode shows the
+  predicted duration only while the CLI pace forecast reports exhaustion before
+  the reset; keep it tied to `paceWarningActive` instead of the percent used.
+  The macOS weekly reserve token is the remaining panel-presentation gap.
 - Translations: gettext template extraction is in place. Add real `.po`
   catalogs, compiled catalog packaging, and translator contribution docs when
   localization work starts.
@@ -56,7 +63,8 @@ upstream v0.49.6 and probed against the installed CLI 0.49.6.
   exhaustion. Consider reset-imminent notifications only if they remain quiet,
   configurable, and tied to clear state transitions.
 - Provider drift checks: the Plasma fallback catalog covers all 69 provider IDs
-  released in CodexBar v0.49.1, while retaining fork-only compatibility assets.
+  released in CodexBar v0.49.1 and re-verified on 0.50.0, while retaining
+  fork-only compatibility assets.
   When upstream releases providers, sync provider keys, CLI aliases, titles,
   colors, docs/dashboard/login URLs, icon assets, and
   `scripts/test_provider_icons.sh`.

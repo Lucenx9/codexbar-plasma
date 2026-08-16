@@ -37,6 +37,10 @@
       <min>1</min>
       <max>365</max>
     </entry>
+    <entry name="costHistoryMetric" type="String">
+      <label>Cost history chart metric: cost or tokens.</label>
+      <default>cost</default>
+    </entry>
     <entry name="usageBarsShowUsed" type="Bool">
       <label>Show usage bars as percent used instead of percent left.</label>
       <default>false</default>

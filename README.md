@@ -101,12 +101,14 @@ Panel and popup:
 - Compact panel indicator for one provider or multiple providers.
 - Provider tabs with usage bars, reset windows, account identity, status, and
   credits.
-- Display modes for percent used, pace, percent plus pace, and reset time.
+- Display modes for percent used, pace, percent plus pace, reset time, and a
+  run-out forecast that shows the predicted duration only while the CLI expects
+  the quota to run out before its reset.
 - Auto-select highest-usage provider for the compact panel and provider detail
   focus.
 - Overview tab with per-provider usage summary and quick switching.
-- Global **Usage & Spend** tab with a 7/30/90-day range selector, interactive
-  daily chart, activity heatmap, and provider totals.
+- Global **Usage & Spend** tab with a Cost/Tokens selector, a 7/30/90-day range
+  selector, interactive daily chart, activity heatmap, and provider totals.
 - Local **Sessions** tab backed by `sessions --json-v2`; transcript paths and
   working directories are never rendered or opened.
 - Overview providers can be limited to a chosen set of up to 3 providers, or

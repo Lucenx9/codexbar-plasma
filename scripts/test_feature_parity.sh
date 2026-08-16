@@ -337,6 +337,12 @@ require_in_file "$MAIN_QML" "function menuBarDisplayText(item)"
 require_in_file "$MAIN_QML" "function safeMenuBarDisplayMode(value)"
 require_in_file "$MAIN_QML" "function primaryPaceText(item)"
 require_in_file "$MAIN_QML" "function primaryResetText(item)"
+# The run-out token reports a duration only when the CLI predicts exhaustion,
+# so it must stay tied to the pace forecast instead of the percent used.
+require_in_file "$MAIN_QML" "function primaryRunOutText(item)"
+require_in_file "$MAIN_QML" 'mode === "runOut"'
+require_in_file "$MAIN_QML" "if (!paceWarningActive(row)) {"
+require_in_file "$DISPLAY_QML" 'value: "runOut"'
 require_in_file "$MAIN_QML" "function resetText(window, absolute)"
 require_in_file "$MAIN_QML" "function usageResetText(row)"
 require_in_file "$MAIN_QML" "function resetLabelLooksLikeTime(value)"
@@ -402,6 +408,29 @@ require_in_file "$MAIN_QML" "notify-send --app-name=CodexBar"
 require_in_file "$MAIN_QML" 'notificationSource.connectSource(commandWithRunNonce(":; " + command))'
 require_in_file "$MAIN_QML" "property bool costUsageEnabled"
 require_in_file "$MAIN_QML" "property int costHistoryDays"
+# Cost and tokens both come from one cost payload: switching the plotted metric
+# must never add a CLI call, and the bars must rescale with the choice.
+require_in_file "$MAIN_QML" "property string costHistoryMetric"
+require_in_file "$MAIN_QML" "function safeCostHistoryMetric(value)"
+require_in_file "$MAIN_QML" "function setCostHistoryMetric(metric)"
+require_in_file "$MAIN_QML" "costHistoryShowsTokens ? point.tokens : point.cost"
+require_in_file "$MAIN_QML" "costHistoryShowsTokens ? points[i].tokens : points[i].cost"
+# Every cost chart follows one metric: the provider detail chart must not stay
+# on cost while the rows beneath it switch to tokens.
+require_in_file "$MAIN_QML" "costHistoryShowsTokens ? point.tokens : point.cost"
+require_in_file "$MAIN_QML" 'root.costHistoryShowsTokens'
+# Token counts carry no currency, so the money-only filter must not drop
+# providers from the token aggregation.
+require_in_file "$MAIN_QML" "(!costHistoryShowsTokens && pointCurrency !== currency)"
+# The peak and average annotations must name the same day the bars highlight.
+require_in_file "$MAIN_QML" "costHistoryShowsTokens ? points[i].tokens : points[i].cost) || 0"
+require_in_file "$MAIN_QML" "if (!peak || peak.magnitude <= 0) {"
+reject_in_file "$MAIN_QML" 'i18n("Average/day: %1", amountString('
+require_in_file "$MAIN_QML" "function spendHistoryStillBuilding()"
+require_in_file "$MAIN_QML" "historyCoverageEstablished: item.historyCoverageIsEstablished !== false"
+require_in_file "$SPEND_COMPONENT_QML" "function metricOptions()"
+require_in_file "$SPEND_COMPONENT_QML" "view.applet.setCostHistoryMetric(metricCombo.valueAt(index))"
+require_in_file "$SPEND_COMPONENT_QML" "view.applet.spendHistoryStillBuilding()"
 require_in_file "$MAIN_QML" "if (!costUsageEnabled) {"
 require_in_file "$MAIN_QML" "--days"
 require_in_file "$MAIN_QML" "Math.max(1, Math.min(365, Number(Plasmoid.configuration.costHistoryDays)"

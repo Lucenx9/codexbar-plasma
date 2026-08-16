@@ -50,6 +50,22 @@ ColumnLayout {
         return 0
     }
 
+    function metricOptions() {
+        return [
+            { text: i18n("Cost"), value: "cost" },
+            { text: i18n("Tokens"), value: "tokens" }
+        ]
+    }
+
+    function metricIndex(options, metric) {
+        for (var i = 0; i < options.length; i++) {
+            if (String(options[i].value) === String(metric)) {
+                return i
+            }
+        }
+        return 0
+    }
+
     RowLayout {
         Layout.fillWidth: true
         Layout.rightMargin: Kirigami.Units.smallSpacing
@@ -72,6 +88,19 @@ ColumnLayout {
                 opacity: view.applet.secondaryTextOpacity
                 Layout.fillWidth: true
                 elide: Text.ElideRight
+            }
+        }
+
+        Controls.ComboBox {
+            id: metricCombo
+
+            textRole: "text"
+            valueRole: "value"
+            model: view.metricOptions()
+            currentIndex: view.metricIndex(model, view.applet.costHistoryMetric)
+            Accessible.name: i18n("Cost history metric")
+            onActivated: function(index) {
+                view.applet.setCostHistoryMetric(metricCombo.valueAt(index))
             }
         }
 
@@ -100,6 +129,15 @@ ColumnLayout {
         visible: view.applet.costErrorText.length > 0
         text: i18n("Some cost data is unavailable: %1", view.applet.costErrorText)
         type: Kirigami.MessageType.Warning
+        Layout.fillWidth: true
+    }
+
+    Kirigami.InlineMessage {
+        // Distinguishes "you spent little" from "the local scan has not reached
+        // that far back yet", which otherwise look identical on the chart.
+        visible: view.providerCosts.length > 0 && view.applet.spendHistoryStillBuilding()
+        text: i18n("Local history is still being collected, so early days may be incomplete.")
+        type: Kirigami.MessageType.Information
         Layout.fillWidth: true
     }
 
@@ -157,7 +195,9 @@ ColumnLayout {
                 // This chart plots the whole selected range, up to 90 bars, and
                 // is the primary view here: it outranks the heatmap below it.
                 plotHeight: Kirigami.Units.gridUnit * 6
-                accessibleTitle: i18n("Daily cost history")
+                accessibleTitle: view.applet.costHistoryShowsTokens
+                    ? i18n("Daily token history")
+                    : i18n("Daily cost history")
             }
 
             ColumnLayout {
