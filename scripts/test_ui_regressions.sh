@@ -1007,13 +1007,15 @@ for meter_surface, meter_surface_text in (
             "reads exactly like an idle one"
         )
 
-for refresh_surface, refresh_surface_text in (
-    (main_qml, main_text),
-    (provider_header_qml, provider_header_text),
+overview_header_body = id_block(main_text, "overviewHeaderRow")
+provider_header_body = id_block(provider_header_text, "providerHeaderRow")
+for header_id, header_body in (
+    ("overviewHeaderRow", overview_header_body),
+    ("providerHeaderRow", provider_header_body),
 ):
-    if "Controls.BusyIndicator" not in refresh_surface_text:
+    if "Controls.BusyIndicator" not in header_body or "running: visible" not in header_body:
         raise AssertionError(
-            f"{refresh_surface.name} must show a busy indicator while a refresh "
+            f"{header_id} must show a running busy indicator while a refresh "
             "runs over data that is already on screen; a greyed button is not "
             "feedback"
         )
