@@ -1614,11 +1614,14 @@ PlasmoidItem {
         }
         for (var i = 0; i < points.length; i++) {
             var point = points[i]
-            var value = Math.max(0, Number(point.cost) || 0)
+            var value = Math.max(0, Number(
+                costHistoryShowsTokens ? point.tokens : point.cost) || 0)
             result.push({
                 label: boundedDisplayText(point.label, 120),
                 value: value,
-                displayValue: amountString(value, point.currency || "USD")
+                displayValue: costHistoryShowsTokens
+                    ? tokenCountString(value)
+                    : amountString(value, point.currency || "USD")
             })
         }
         return result
@@ -1661,9 +1664,12 @@ PlasmoidItem {
                 var point = daily[j]
                 var label = boundedDisplayText(point.label, 120)
                 var pointCurrency = boundedDisplayText(point.currency || "USD", 12)
+                // Mixed currencies cannot be summed as money, but token counts
+                // are currency-free: filtering them would silently drop whole
+                // providers from the chart.
                 if (label.length === 0
                         || isUnsafeObjectKey(label)
-                        || pointCurrency !== currency) {
+                        || (!costHistoryShowsTokens && pointCurrency !== currency)) {
                     continue
                 }
                 if (!hasOwnKey(byDate, label)) {
@@ -6195,7 +6201,9 @@ PlasmoidItem {
                                 points: root.costChartPoints(tokenCost ? tokenCost.daily : [])
                                 accent: root.providerReadableColor(providerData ? providerData.provider : "")
                                 kind: "bar"
-                                accessibleTitle: i18n("Daily cost history")
+                                accessibleTitle: root.costHistoryShowsTokens
+                                    ? i18n("Daily token history")
+                                    : i18n("Daily cost history")
                                 Layout.topMargin: Kirigami.Units.smallSpacing / 2
                             }
 

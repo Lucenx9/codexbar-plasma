@@ -415,6 +415,13 @@ require_in_file "$MAIN_QML" "function safeCostHistoryMetric(value)"
 require_in_file "$MAIN_QML" "function setCostHistoryMetric(metric)"
 require_in_file "$MAIN_QML" "costHistoryShowsTokens ? point.tokens : point.cost"
 require_in_file "$MAIN_QML" "costHistoryShowsTokens ? points[i].tokens : points[i].cost"
+# Every cost chart follows one metric: the provider detail chart must not stay
+# on cost while the rows beneath it switch to tokens.
+require_in_file "$MAIN_QML" "costHistoryShowsTokens ? point.tokens : point.cost"
+require_in_file "$MAIN_QML" 'root.costHistoryShowsTokens'
+# Token counts carry no currency, so the money-only filter must not drop
+# providers from the token aggregation.
+require_in_file "$MAIN_QML" "(!costHistoryShowsTokens && pointCurrency !== currency)"
 require_in_file "$MAIN_QML" "function spendHistoryStillBuilding()"
 require_in_file "$MAIN_QML" "historyCoverageEstablished: item.historyCoverageIsEstablished !== false"
 require_in_file "$SPEND_COMPONENT_QML" "function metricOptions()"

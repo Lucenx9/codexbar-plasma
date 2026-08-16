@@ -176,7 +176,7 @@ msgid ""
 "Cost history appears for providers supported by the codexbar cost command."
 msgstr ""
 
-#: contents/ui/components/SpendView.qml
+#: contents/ui/components/SpendView.qml contents/ui/main.qml
 msgid "Daily token history"
 msgstr ""
 
