@@ -177,8 +177,8 @@ require_in_file "$MAIN_QML" "notify-send --app-name=CodexBar --icon=view-statist
 require_in_file "$MAIN_QML" "+ \" -- \" + shellQuote(cleanTitle)"
 
 for qml_file in "$PROVIDER_DETAIL_SECTION_QML" "$INTERACTIVE_CHART_QML"; do
-  label_count="$(rg -c -F 'PlasmaComponents.Label {' "$qml_file")"
-  plain_text_count="$(rg -c -F 'textFormat: Text.PlainText' "$qml_file")"
+  label_count="$(grep -c -F 'PlasmaComponents.Label {' "$qml_file" || true)"
+  plain_text_count="$(grep -c -F 'textFormat: Text.PlainText' "$qml_file" || true)"
   if [[ "$plain_text_count" -ne "$label_count" ]]; then
     echo "every CLI/provider-controlled label must force plain text in ${qml_file#"$ROOT_DIR"/}" >&2
     exit 1
