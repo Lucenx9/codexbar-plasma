@@ -782,6 +782,19 @@ for vertical_fragment in (
             f"missing {vertical_fragment!r}"
         )
 
+compact_row_body = id_block(compact_representation_text, "compactRow")
+for centering_fragment in (
+    "anchors.centerIn: parent",
+    "implicitWidth))",
+):
+    if centering_fragment not in compact_row_body:
+        raise AssertionError(
+            "the compact row must stay centred when the panel reserves more width "
+            f"than the content needs; missing {centering_fragment!r}"
+        )
+if "anchors.fill: parent" in compact_row_body:
+    raise AssertionError("the compact row must not stretch its content to the reserved panel width again")
+
 compact_meter_body = id_block(compact_representation_text, "compactMeter")
 for meter_fragment in (
     "Layout.preferredWidth: compactRoot.meterWidth",

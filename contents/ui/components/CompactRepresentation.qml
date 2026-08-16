@@ -60,8 +60,13 @@ Item {
     RowLayout {
         id: compactRow
 
-        anchors.fill: parent
-        anchors.margins: Kirigami.Units.smallSpacing
+        // The applet keeps a minimum panel width, so a short content set (meters
+        // without panel text) leaves spare room. Centre the row instead of
+        // letting all of it pile up on the right of the content.
+        anchors.centerIn: parent
+        width: Math.max(0, Math.min(compactRoot.width - Kirigami.Units.smallSpacing * 2,
+            implicitWidth))
+        height: Math.max(0, compactRoot.height - Kirigami.Units.smallSpacing * 2)
         spacing: Kirigami.Units.smallSpacing
 
         Repeater {
