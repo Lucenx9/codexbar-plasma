@@ -93,8 +93,9 @@ require_in_file "$DEBUG_QML" "SafeText.cliDiagnostic"
 require_in_file "$SAFE_TEXT_JS" "function redactCredentials(value, inspectionLimit)"
 require_in_file "$SAFE_TEXT_JS" "maximumDiagnosticLength = 65536"
 require_in_file "$SAFE_TEXT_JS" "maximumCliJsonLength = 4 * 1024 * 1024"
-require_in_file "$SAFE_TEXT_JS" "function boundedInspectionText(value, inspectionLimit)"
+require_in_file "$SAFE_TEXT_JS" "function boundedInspectionText(value, inspectionLimit, lookaheadLength)"
 require_in_file "$SAFE_TEXT_JS" 'chunk.search(/[^\s\u0000-\u001f\u007f]/)'
+require_in_file "$SAFE_TEXT_JS" "credentialRedactionLookaheadLength"
 require_in_file "$SAFE_TEXT_JS" "function cliJsonText(value)"
 
 require_in_file "$MAIN_QML" "function hasOwnKey(item, key)"

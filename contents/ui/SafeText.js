@@ -3,6 +3,7 @@
 var maximumCliMessageLength = 500
 var maximumDiagnosticLength = 65536
 var maximumCliJsonLength = 4 * 1024 * 1024
+var credentialRedactionLookaheadLength = 64
 
 function safeLimit(maximumLength, fallback) {
     var limit = Number(maximumLength)
@@ -12,9 +13,10 @@ function safeLimit(maximumLength, fallback) {
     return Math.max(1, Math.min(maximumDiagnosticLength, Math.floor(limit)))
 }
 
-function boundedInspectionText(value, inspectionLimit) {
+function boundedInspectionText(value, inspectionLimit, lookaheadLength) {
     var text = typeof value === "string" ? value : String(value || "")
     var windowLength = safeLimit(inspectionLimit, maximumCliMessageLength)
+    var lookahead = Math.max(0, Math.min(credentialRedactionLookaheadLength, Number(lookaheadLength) || 0))
     var scanLimit = Math.min(text.length, maximumDiagnosticLength)
     var chunkLength = Math.max(256, windowLength)
     for (var offset = 0; offset < scanLimit; offset += chunkLength) {
@@ -22,7 +24,7 @@ function boundedInspectionText(value, inspectionLimit) {
         var firstVisible = chunk.search(/[^\s\u0000-\u001f\u007f]/)
         if (firstVisible !== -1) {
             var start = offset + firstVisible
-            return text.slice(start, start + windowLength)
+            return text.slice(start, start + windowLength + lookahead)
         }
     }
     return ""
@@ -30,7 +32,10 @@ function boundedInspectionText(value, inspectionLimit) {
 
 function redactCredentials(value, inspectionLimit) {
     var limit = safeLimit(inspectionLimit, maximumCliMessageLength)
-    var text = boundedInspectionText(value, Math.min(maximumDiagnosticLength, limit * 8))
+    var text = boundedInspectionText(
+        value,
+        Math.min(maximumDiagnosticLength, limit * 8),
+        credentialRedactionLookaheadLength)
     return text
         .replace(/((?:proxy-)?authorization["']?\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\r\n]*)/gi, "$1[redacted]")
         .replace(/\bbearer\s+(?:"[^"]*"|'[^']*'|[^\s,;]+)/gi, "Bearer [redacted]")
