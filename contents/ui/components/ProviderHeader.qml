@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
@@ -134,12 +135,25 @@ RowLayout {
         }
     }
 
+    // A refresh over data that is already on screen used to leave nothing here
+    // but a greyed button, so the only sign of work was the panel icon spinning
+    // behind the popup.
+    Controls.BusyIndicator {
+        id: providerRefreshIndicator
+
+        visible: providerHeaderRow.applet.loading
+        running: visible
+        Layout.alignment: Qt.AlignTop
+        Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
+        Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
+    }
+
     PlasmaComponents.ToolButton {
         id: providerRefreshButton
 
+        visible: !providerHeaderRow.applet.loading
         Layout.alignment: Qt.AlignTop
         icon.name: "view-refresh"
-        enabled: !providerHeaderRow.applet.loading
         Accessible.name: i18n("Refresh")
         onClicked: providerHeaderRow.applet.refreshNow()
     }

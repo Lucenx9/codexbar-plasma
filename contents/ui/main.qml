@@ -2814,6 +2814,23 @@ PlasmoidItem {
             usageBarsShowUsed)
     }
 
+    // The thresholds used to surface only as two ticks on the provider detail
+    // meter, so an almost exhausted window looked exactly like an idle one on
+    // the panel and in the overview. Every meter fill reads its colour from
+    // this one level; the provider accent stays in charge below the warning
+    // step, and the same setting that hides the markers hides the colour.
+    function quotaSeverity(row) {
+        if (!showQuotaWarningMarkers || !row || !row.hasPercent) {
+            return ""
+        }
+        return QuotaThresholds.level(row.usedPercent, quotaWarningPercent, quotaCriticalPercent)
+    }
+
+    function quotaMeterColor(row, accent) {
+        var severity = quotaSeverity(row)
+        return severity.length > 0 ? statusBadgeColor(severity) : accent
+    }
+
     function resetNotificationMemo() {
         notificationMemo = ({})
         notificationsPrimed = false
@@ -5042,10 +5059,20 @@ PlasmoidItem {
     fullRepresentation: Item {
         id: fullRoot
 
+        // A fixed popup height left the Overview half empty whenever few
+        // providers were configured. The content drives the height instead,
+        // clamped so a long provider list still scrolls rather than growing
+        // without bound, and so a nearly empty popup keeps a usable shape.
+        readonly property int maximumPopupHeight: Kirigami.Units.gridUnit * 38
+        readonly property int minimumPopupHeight: Kirigami.Units.gridUnit * 20
+        readonly property int popupContentHeight: Math.ceil(popupContent.implicitHeight)
+            + Kirigami.Units.largeSpacing * 2
+
         implicitWidth: Kirigami.Units.gridUnit * 34
-        implicitHeight: Kirigami.Units.gridUnit * 38
+        implicitHeight: Math.max(minimumPopupHeight,
+            Math.min(maximumPopupHeight, popupContentHeight))
         Layout.minimumWidth: Kirigami.Units.gridUnit * 30
-        Layout.minimumHeight: Kirigami.Units.gridUnit * 28
+        Layout.minimumHeight: Math.min(Kirigami.Units.gridUnit * 28, implicitHeight)
         Layout.preferredWidth: implicitWidth
         Layout.preferredHeight: implicitHeight
 
@@ -5069,6 +5096,8 @@ PlasmoidItem {
         }
 
         ColumnLayout {
+            id: popupContent
+
             anchors.fill: parent
             anchors.margins: Kirigami.Units.largeSpacing
             spacing: Kirigami.Units.largeSpacing
@@ -5760,9 +5789,19 @@ PlasmoidItem {
                         }
                     }
 
+                    // A refresh over data that is already on screen used to show
+                    // nothing here but a greyed button, so the only sign of work
+                    // was the spinning panel icon behind the popup.
+                    Controls.BusyIndicator {
+                        visible: root.loading
+                        running: visible
+                        Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
+                        Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
+                    }
+
                     PlasmaComponents.ToolButton {
+                        visible: !root.loading
                         icon.name: "view-refresh"
-                        enabled: !loading
                         Accessible.name: i18n("Refresh")
                         onClicked: root.refreshNow()
                     }

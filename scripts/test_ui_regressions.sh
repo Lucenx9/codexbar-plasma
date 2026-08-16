@@ -983,6 +983,56 @@ if re.search(r"credits\s*(?:,|/)\s*\d", credits_section_text):
         "reports the matching allowance"
     )
 
+quota_meter_color_body = function_body(main_text, "quotaMeterColor")
+if "statusBadgeColor(" not in quota_meter_color_body:
+    raise AssertionError(
+        "quotaMeterColor must reuse statusBadgeColor so the quota level and the "
+        "provider status badge stay one colour vocabulary"
+    )
+quota_severity_body = function_body(main_text, "quotaSeverity")
+if "showQuotaWarningMarkers" not in quota_severity_body:
+    raise AssertionError(
+        "the setting that hides the quota markers must also hide the quota "
+        "meter colour, so one switch owns the whole warning presentation"
+    )
+for meter_surface, meter_surface_text in (
+    (overview_provider_row_qml, overview_provider_row_text),
+    (provider_usage_row_qml, provider_usage_row_text),
+    (compact_representation_qml, compact_representation_text),
+):
+    if "quotaMeterColor(" not in meter_surface_text:
+        raise AssertionError(
+            f"{meter_surface.name} must colour its meter fill through "
+            "quotaMeterColor; a meter that stays provider-coloured at 99% used "
+            "reads exactly like an idle one"
+        )
+
+for refresh_surface, refresh_surface_text in (
+    (main_qml, main_text),
+    (provider_header_qml, provider_header_text),
+):
+    if "Controls.BusyIndicator" not in refresh_surface_text:
+        raise AssertionError(
+            f"{refresh_surface.name} must show a busy indicator while a refresh "
+            "runs over data that is already on screen; a greyed button is not "
+            "feedback"
+        )
+
+full_representation_index = main_text.find("fullRepresentation: Item {")
+if full_representation_index < 0:
+    raise AssertionError("main.qml must keep the fullRepresentation root")
+full_representation_head = main_text[full_representation_index:full_representation_index + 900]
+if "popupContent.implicitHeight" not in full_representation_head:
+    raise AssertionError(
+        "the popup height must follow its content; a fixed height leaves the "
+        "Overview half empty whenever few providers are configured"
+    )
+if re.search(r"implicitHeight:\s*Kirigami\.Units\.gridUnit\s*\*\s*\d", full_representation_head):
+    raise AssertionError(
+        "the popup must not pin implicitHeight to a constant again; the "
+        "constants belong in the clamp around the content height"
+    )
+
 format_number_body = function_body(main_text, "formatNumber")
 if "groupedDecimalString(" not in format_number_body:
     raise AssertionError(

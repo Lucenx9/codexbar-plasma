@@ -66,7 +66,13 @@ ColumnLayout {
                 : Math.max(parent.height, parent.width * usageRow.shownPercent / 100)
             height: parent.height
             radius: parent.radius
-            color: usageRow.accent
+            color: usageRow.applet.quotaMeterColor(usageRow.rowData, usageRow.accent)
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: Kirigami.Units.longDuration
+                }
+            }
 
             Behavior on width {
                 NumberAnimation {
