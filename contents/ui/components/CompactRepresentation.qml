@@ -231,6 +231,12 @@ Item {
                     readonly property color accent: compactRoot.applet.providerReadableColor(
                         modelData.provider,
                         Kirigami.Theme.backgroundColor)
+                    // The panel is the surface a user reads without opening
+                    // anything, so it carries the same quota level as the popup
+                    // meters instead of staying provider-coloured at 99% used.
+                    readonly property color meterColor: compactRoot.applet.quotaMeterColor(
+                        compactRoot.applet.switcherMetricRow(modelData),
+                        accent)
 
                     Layout.preferredWidth: compactRoot.meterWidth
                     Layout.preferredHeight: compactRow.height
@@ -254,7 +260,7 @@ Item {
                             Layout.fillWidth: true
                             Layout.preferredHeight: compactRoot.meterBarHeight
                             radius: height / 2
-                            color: compactRoot.applet.withAlpha(compactMeter.accent, 0.28)
+                            color: compactRoot.applet.withAlpha(compactMeter.meterColor, 0.28)
                             clip: true
 
                             Rectangle {
@@ -264,7 +270,13 @@ Item {
                                     : Math.max(parent.height, parent.width * Math.max(0, Math.min(100, compactMeter.meter)) / 100)
                                 height: parent.height
                                 radius: parent.radius
-                                color: compactMeter.accent
+                                color: compactMeter.meterColor
+
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: Kirigami.Units.longDuration
+                                    }
+                                }
 
                                 Behavior on width {
                                     NumberAnimation {

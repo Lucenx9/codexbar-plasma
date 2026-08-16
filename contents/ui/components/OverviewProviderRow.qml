@@ -141,7 +141,14 @@ Rectangle {
                         : Math.max(parent.height, parent.width * overviewRow.shownPercent / 100)
                     height: parent.height
                     radius: parent.radius
-                    color: overviewRow.accent
+                    color: overviewRow.applet.quotaMeterColor(
+                        overviewRow.usageRow, overviewRow.accent)
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Kirigami.Units.longDuration
+                        }
+                    }
 
                     Behavior on width {
                         NumberAnimation {
