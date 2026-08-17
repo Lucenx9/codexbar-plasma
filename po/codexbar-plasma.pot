@@ -721,6 +721,10 @@ msgid "%1 returned an unsupported descriptor command."
 msgstr ""
 
 #: contents/ui/configProviders.qml
+msgid "%1 secrets must be set through the secure prompt."
+msgstr ""
+
+#: contents/ui/configProviders.qml
 msgid "%1 for %2"
 msgstr ""
 

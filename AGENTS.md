@@ -117,6 +117,11 @@ Use this order when sources disagree:
 - Never log, display, persist, or pass through raw API keys, cookies, bearer
   tokens, auth headers, or unredacted diagnostics. Secret entry must use supported
   CLI stdin flows and redacted result contracts.
+- A secret must never appear anywhere in a command line, including as a shell
+  positional argument piped to stdin: `/proc/<pid>/cmdline` is world-readable
+  while the child runs. Only `promptDescriptorSecret` may carry a secret, because
+  it reads the value inside the script. Generic field writers must reject
+  `kind === "secret"` instead of growing a stdin channel.
 - Keep command nonce, timeout, disconnect, retry, and stale-result handling close
   to each external process lifecycle. A late process result must not overwrite a
   newer refresh or account selection.
@@ -205,8 +210,11 @@ v0.50.0, probed against the installed CLI 0.50.0).
 - Quota warning thresholds are user-configurable and bounded by
   `contents/ui/QuotaThresholds.js`; the notification level and the usage-bar
   markers both read them, so neither may hardcode a percentage. Changing a
-  threshold must reset the notification memo. Per-provider thresholds stay
-  blocked on the CLI descriptor.
+  threshold must reset the threshold-derived notification memo, but must keep
+  the provider status baseline: a settings change is not a status transition,
+  and dropping the baseline either re-announces an ongoing incident or swallows
+  one that starts while the provider is still refreshing. Per-provider
+  thresholds stay blocked on the CLI descriptor.
 - `codexbar sessions --json-v2` feeds a bounded local Sessions tab. Normalize
   only safe display fields; never retain, render, open, or follow `cwd`,
   `transcriptPath`, IDs, or PIDs. Remote/SSH host focus is macOS-only.
