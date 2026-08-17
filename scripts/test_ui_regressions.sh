@@ -1972,6 +1972,16 @@ for qml_path in sorted(root.glob("contents/**/*.qml")):
     for match in re.finditer(r"delegate:\s*([A-Za-z0-9_.]+)\s*\{", qml_content):
         element_type = match.group(1)
         if element_type.startswith("Components."):
+            component_name = element_type.split(".", 1)[1]
+            component_path = root / "contents/ui/components" / f"{component_name}.qml"
+            if not component_path.exists():
+                raise AssertionError(f"missing external component delegate file: {component_path}")
+            component_content = component_path.read_text(encoding="utf-8")
+            if "required property var modelData" not in component_content:
+                raise AssertionError(
+                    f"{component_path.name} must declare "
+                    "'required property var modelData' for Qt 6 QML scoping safety"
+                )
             continue
         start_index = match.end() - 1
         brace_depth = 1
