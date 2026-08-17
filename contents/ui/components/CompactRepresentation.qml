@@ -182,6 +182,8 @@ Item {
             color: compactRoot.incidentProvider
                 ? compactRoot.applet.statusBadgeColor(compactRoot.incidentProvider.statusSeverity)
                 : "transparent"
+            border.width: 1
+            border.color: Kirigami.Theme.backgroundColor
 
             Controls.ToolTip.visible: compactStatusMouse.containsMouse
             Controls.ToolTip.text: compactRoot.incidentProvider

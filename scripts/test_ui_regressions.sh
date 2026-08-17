@@ -1780,6 +1780,10 @@ if "view.dailyPoints.length - 42" in spend_view_text:
         "the activity heatmap must not pin itself to a fixed 42-day window while the "
         "range selector offers 7/30/90 days"
     )
+if 'valueRow.copied ? "checkmark" : "edit-copy"' not in copyable_value_text:
+    raise AssertionError("CopyableValue must provide immediate checkmark icon feedback when copied")
+if "heatmapMouse.containsMouse ? 1 : 0" not in spend_view_text:
+    raise AssertionError("SpendView activity heatmap cells must display hover highlight feedback")
 
 normalize_provider_body = function_body(main_text, "normalizeProvider")
 for bounded_provider_fragment in (

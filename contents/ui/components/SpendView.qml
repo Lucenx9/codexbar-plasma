@@ -259,6 +259,8 @@ ColumnLayout {
                                 color: view.applet.withAlpha(
                                     Kirigami.Theme.highlightColor,
                                     0.1 + fraction * 0.8)
+                                border.width: heatmapMouse.containsMouse ? 1 : 0
+                                border.color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.4)
 
                                 Controls.ToolTip.visible: heatmapMouse.containsMouse
                                 Controls.ToolTip.text: i18n("%1: %2", modelData.label, modelData.displayValue)
