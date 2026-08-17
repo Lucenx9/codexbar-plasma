@@ -3,7 +3,6 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ICON_DIR="${ROOT_DIR}/contents/icons/providers"
-MAIN_QML="${ROOT_DIR}/contents/ui/main.qml"
 
 missing=0
 declare -A provider_key_aliases=()
@@ -15,12 +14,17 @@ while IFS=$'\t' read -r alias_kind alias_key alias_value; do
   else
     provider_icon_aliases["$alias_key"]="$alias_value"
   fi
-done < <(python3 - "$MAIN_QML" <<'PY'
+done < <(python3 - "$ROOT_DIR" <<'PY'
 import re
 import sys
 from pathlib import Path
 
-text = Path(sys.argv[1]).read_text(encoding="utf-8")
+root = Path(sys.argv[1])
+sys.path.insert(0, str(root / "scripts/lib"))
+from qml_surfaces import Surface
+
+# The provider alias maps stay findable once they move out of main.qml.
+text = Surface("applet", root).text
 
 def function_body(name):
     start = text.index(f"function {name}(")

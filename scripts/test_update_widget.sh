@@ -2,9 +2,9 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+. "${ROOT_DIR}/scripts/lib/qml_surfaces.sh"
 UPDATER="${ROOT_DIR}/scripts/update-widget.sh"
 MAKEFILE="${ROOT_DIR}/Makefile"
-MAIN_QML="${ROOT_DIR}/contents/ui/main.qml"
 INSTALL_SCRIPT="${ROOT_DIR}/install.sh"
 WORKFLOW="${ROOT_DIR}/.github/workflows/ci.yml"
 
@@ -43,13 +43,19 @@ require_in_file "$UPDATER" "--connect-timeout \"\$CURL_CONNECT_TIMEOUT_SECONDS\"
 require_in_file "$UPDATER" "--max-time \"\$CURL_METADATA_MAX_TIME_SECONDS\""
 require_in_file "$UPDATER" "--max-time \"\$CURL_ASSET_MAX_TIME_SECONDS\""
 
-python3 - "$UPDATER" "$MAIN_QML" <<'PY'
+python3 - "$UPDATER" "$ROOT_DIR" <<'PY'
 import re
 import sys
 from pathlib import Path
 
 updater_text = Path(sys.argv[1]).read_text()
-main_qml_text = Path(sys.argv[2]).read_text()
+root = Path(sys.argv[2])
+sys.path.insert(0, str(root / "scripts/lib"))
+from qml_surfaces import Surface
+
+# Read the whole plasmoid surface: the update timer and its constants stay
+# correct wherever they live once the controller is extracted from main.qml.
+main_qml_text = Surface("applet", root).text
 
 
 def integer_constant(text, name):
@@ -115,29 +121,29 @@ require_in_file "$MAKEFILE" "python3 -m zipfile -c dist/codexbar-plasma.plasmoid
 require_in_file "$MAKEFILE" "sha256sum codexbar-plasma.plasmoid > codexbar-plasma.plasmoid.sha256"
 require_in_file "$MAKEFILE" "missing required command: cmake, zip, or python3"
 reject_in_file "$MAKEFILE" "cmake -E tar cf dist/codexbar-plasma.plasmoid --format=zip metadata.json contents docs scripts/update-widget.sh"
-require_in_file "$MAIN_QML" "function missingUpdateScriptJson()"
-require_in_file "$MAIN_QML" "Widget updater script is missing from the installed package."
-require_in_file "$MAIN_QML" "if [ -x \" + shellQuote(scriptPath) + \" ]; then \""
-require_in_file "$MAIN_QML" "printf '%s\\\\n' \" + shellQuote(missingUpdateScriptJson())"
-require_in_file "$MAIN_QML" "return \"sh -c \" + shellQuote(updateCommand)"
-require_in_file "$MAIN_QML" "setWidgetUpdateState(i18n(\"Checking for widget updates...\"), \"\", false)"
-require_in_file "$MAIN_QML" "notifyInstalledUpdate(version)"
-require_in_file "$MAIN_QML" "Restart Plasma to apply the new widget version."
-require_in_file "$MAIN_QML" "function handleUpdateCommandTimeout()"
-require_in_file "$MAIN_QML" "id: updateCommandTimeoutTimer"
-require_in_file "$MAIN_QML" "updateCommandTimeoutTimer.restart()"
-require_in_file "$MAIN_QML" "updateCommandTimeoutTimer.stop()"
-require_in_file "$MAIN_QML" "Widget update operation timed out."
-reject_in_file "$MAIN_QML" "Widget update check timed out."
+require_in_surface applet "function missingUpdateScriptJson()"
+require_in_surface applet "Widget updater script is missing from the installed package."
+require_in_surface applet "if [ -x \" + shellQuote(scriptPath) + \" ]; then \""
+require_in_surface applet "printf '%s\\\\n' \" + shellQuote(missingUpdateScriptJson())"
+require_in_surface applet "return \"sh -c \" + shellQuote(updateCommand)"
+require_in_surface applet "setWidgetUpdateState(i18n(\"Checking for widget updates...\"), \"\", false)"
+require_in_surface applet "notifyInstalledUpdate(version)"
+require_in_surface applet "Restart Plasma to apply the new widget version."
+require_in_surface applet "function handleUpdateCommandTimeout()"
+require_in_surface applet "id: updateCommandTimeoutTimer"
+require_in_surface applet "updateCommandTimeoutTimer.restart()"
+require_in_surface applet "updateCommandTimeoutTimer.stop()"
+require_in_surface applet "Widget update operation timed out."
+reject_in_surface applet "Widget update check timed out."
 # The notified version must persist so the same update is not re-announced on
 # every plasmashell restart.
-require_in_file "$MAIN_QML" "Plasmoid.configuration.lastNotifiedUpdateVersion = memoKey"
+require_in_surface applet "Plasmoid.configuration.lastNotifiedUpdateVersion = memoKey"
 require_in_file "${ROOT_DIR}/contents/config/main.xml" "name=\"lastNotifiedUpdateVersion\""
-reject_in_file "$MAIN_QML" "return \"sh \" + shellQuote(updateScriptPath())"
-reject_in_file "$MAIN_QML" "return shellQuote(updateScriptPath()) + (installMode ? \" --install\" : \" --check\")"
-require_in_file "$MAIN_QML" "function checkForWidgetUpdate(forceCheck)"
-require_in_file "$MAIN_QML" "updateCheckDue(forceCheck)"
-require_in_file "$MAIN_QML" "checkForWidgetUpdate(true)"
+reject_in_surface applet "return \"sh \" + shellQuote(updateScriptPath())"
+reject_in_surface applet "return shellQuote(updateScriptPath()) + (installMode ? \" --install\" : \" --check\")"
+require_in_surface applet "function checkForWidgetUpdate(forceCheck)"
+require_in_surface applet "updateCheckDue(forceCheck)"
+require_in_surface applet "checkForWidgetUpdate(true)"
 require_in_file "$INSTALL_SCRIPT" "make -C \"\$ROOT_DIR\" package"
 require_in_file "$INSTALL_SCRIPT" "\${ROOT_DIR}/dist/codexbar-plasma.plasmoid"
 reject_in_file "$INSTALL_SCRIPT" "kpackagetool6 -t Plasma/Applet -u \"\$ROOT_DIR\""

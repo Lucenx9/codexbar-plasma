@@ -2,6 +2,11 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+. "${ROOT_DIR}/scripts/lib/qml_surfaces.sh"
+# Rules that must hold once per surface use require_in_surface. The loops below
+# keep explicit file lists on purpose: "every one of these files must carry the
+# safe icon fallback" is a per-file contract, and a surface-wide check would be
+# satisfied by any single file having it.
 MAIN_QML="${ROOT_DIR}/contents/ui/main.qml"
 PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
 DISPLAY_QML="${ROOT_DIR}/contents/ui/configDisplay.qml"
@@ -86,8 +91,8 @@ require_in_file "$UPDATER" "sha256sum --check --strict"
 for qml_file in "$MAIN_QML" "$PROVIDERS_QML" "$DISPLAY_QML" "$DEBUG_QML"; do
   require_in_file "$qml_file" 'import "SafeText.js" as SafeText'
 done
-require_in_file "$MAIN_QML" "SafeText.cliMessage"
-require_in_file "$PROVIDERS_QML" "SafeText.cliMessage"
+require_in_surface applet "SafeText.cliMessage"
+require_in_surface providers "SafeText.cliMessage"
 require_in_file "$DISPLAY_QML" "SafeText.cliMessage"
 require_in_file "$DEBUG_QML" "SafeText.cliDiagnostic"
 require_in_file "$SAFE_TEXT_JS" "function redactCredentials(value, inspectionLimit)"
@@ -98,56 +103,56 @@ require_in_file "$SAFE_TEXT_JS" 'chunk.search(/[^\s\u0000-\u001f\u007f]/)'
 require_in_file "$SAFE_TEXT_JS" "credentialRedactionLookaheadLength"
 require_in_file "$SAFE_TEXT_JS" "function cliJsonText(value)"
 
-require_in_file "$MAIN_QML" "function hasOwnKey(item, key)"
-require_in_file "$MAIN_QML" "Object.prototype.hasOwnProperty.call(item, key)"
-require_in_file "$MAIN_QML" "function isUnsafeObjectKey(key)"
-require_in_file "$MAIN_QML" "value === \"__proto__\" || value === \"prototype\" || value === \"constructor\""
-require_in_file "$MAIN_QML" "function providerMapKey(providerID)"
-require_in_file "$MAIN_QML" 'import "ProviderIdentity.js" as ProviderIdentity'
-require_in_file "$MAIN_QML" "return ProviderIdentity.providerMapKey(key)"
+require_in_surface applet "function hasOwnKey(item, key)"
+require_in_surface applet "Object.prototype.hasOwnProperty.call(item, key)"
+require_in_surface applet "function isUnsafeObjectKey(key)"
+require_in_surface applet "value === \"__proto__\" || value === \"prototype\" || value === \"constructor\""
+require_in_surface applet "function providerMapKey(providerID)"
+require_in_surface applet 'import "ProviderIdentity.js" as ProviderIdentity'
+require_in_surface applet "return ProviderIdentity.providerMapKey(key)"
 require_in_file "$PROVIDER_IDENTITY_JS" "Object.prototype.hasOwnProperty.call(item, key)"
 require_in_file "$PROVIDER_IDENTITY_JS" "Object.prototype.hasOwnProperty.call(Object.prototype, key)"
-require_in_file "$MAIN_QML" "if (name.length === 0 || isUnsafeObjectKey(name))"
-require_in_file "$MAIN_QML" "if (!hasOwnKey(byName, name))"
-require_in_file "$MAIN_QML" "if (!hasOwnKey(byName, modelName))"
-require_in_file "$MAIN_QML" "if (!hasOwnKey(item, key) || isUnsafeObjectKey(key))"
-require_in_file "$MAIN_QML" "var providerID = normalizedProviderID(items[i].provider)"
-require_in_file "$MAIN_QML" "var providerID = providerMapKey(item.provider)"
-require_in_file "$MAIN_QML" "var providerID = providerMapKey(item.provider || \"unknown\")"
-require_in_file "$MAIN_QML" "var key = providerMapKey(providerID)"
-require_in_file "$PROVIDERS_QML" "function providerMapKey(providerID)"
-require_in_file "$PROVIDERS_QML" "return ProviderIdentity.providerMapKey(key)"
-require_in_file "$PROVIDERS_QML" "if (!hasOwnKey(item, key) || isUnsafeObjectKey(key))"
-require_in_file "$PROVIDERS_QML" "Object.prototype.hasOwnProperty.call(item, key)"
-require_in_file "$MAIN_QML" "maximumConcurrentProviderFallbackCommands: 8"
-require_in_file "$MAIN_QML" "nextProviders.length < maximumProviderSnapshots"
-require_in_file "$MAIN_QML" "value: boundedDisplayText(parts.join(\" · \"), 500)"
-require_in_file "$MAIN_QML" "key = ProviderIdentity.providerKey(key, aliases)"
-require_in_file "$PROVIDERS_QML" "key = ProviderIdentity.providerKey(key, aliases)"
-require_in_file "$MAIN_QML" "var key = ProviderIdentity.providerMapKey(providerKey(value))"
-require_in_file "$PROVIDERS_QML" "var key = ProviderIdentity.providerMapKey(providerKey(value))"
-require_in_file "$PROVIDERS_QML" "function isAllowedDescriptorCommand(commandTokens, purpose)"
-require_in_file "$PROVIDERS_QML" "String(commandTokens[0]) !== \"codexbar\""
-require_in_file "$PROVIDERS_QML" "String(commandTokens[1]) !== \"config\""
-require_in_file "$PROVIDERS_QML" "subcommand === \"set\" || subcommand === \"set-api-key\""
-require_in_file "$PROVIDERS_QML" "subcommand === \"action\""
-require_in_file "$PROVIDERS_QML" "command.length === 0 || !isAllowedDescriptorCommand(command, \"field\")"
-require_in_file "$PROVIDERS_QML" "command.length === 0 || !isAllowedDescriptorCommand(command, \"action\")"
-require_in_file "$PROVIDERS_QML" "if (!isAllowedDescriptorCommand(field.writeCommand, \"field\"))"
-require_in_file "$PROVIDERS_QML" "if (!isAllowedDescriptorCommand(action.command, \"action\"))"
+require_in_surface applet "if (name.length === 0 || isUnsafeObjectKey(name))"
+require_in_surface applet "if (!hasOwnKey(byName, name))"
+require_in_surface applet "if (!hasOwnKey(byName, modelName))"
+require_in_surface applet "if (!hasOwnKey(item, key) || isUnsafeObjectKey(key))"
+require_in_surface applet "var providerID = normalizedProviderID(items[i].provider)"
+require_in_surface applet "var providerID = providerMapKey(item.provider)"
+require_in_surface applet "var providerID = providerMapKey(item.provider || \"unknown\")"
+require_in_surface applet "var key = providerMapKey(providerID)"
+require_in_surface providers "function providerMapKey(providerID)"
+require_in_surface providers "return ProviderIdentity.providerMapKey(key)"
+require_in_surface providers "if (!hasOwnKey(item, key) || isUnsafeObjectKey(key))"
+require_in_surface providers "Object.prototype.hasOwnProperty.call(item, key)"
+require_in_surface applet "maximumConcurrentProviderFallbackCommands: 8"
+require_in_surface applet "nextProviders.length < maximumProviderSnapshots"
+require_in_surface applet "value: boundedDisplayText(parts.join(\" · \"), 500)"
+require_in_surface applet "key = ProviderIdentity.providerKey(key, aliases)"
+require_in_surface providers "key = ProviderIdentity.providerKey(key, aliases)"
+require_in_surface applet "var key = ProviderIdentity.providerMapKey(providerKey(value))"
+require_in_surface providers "var key = ProviderIdentity.providerMapKey(providerKey(value))"
+require_in_surface providers "function isAllowedDescriptorCommand(commandTokens, purpose)"
+require_in_surface providers "String(commandTokens[0]) !== \"codexbar\""
+require_in_surface providers "String(commandTokens[1]) !== \"config\""
+require_in_surface providers "subcommand === \"set\" || subcommand === \"set-api-key\""
+require_in_surface providers "subcommand === \"action\""
+require_in_surface providers "command.length === 0 || !isAllowedDescriptorCommand(command, \"field\")"
+require_in_surface providers "command.length === 0 || !isAllowedDescriptorCommand(command, \"action\")"
+require_in_surface providers "if (!isAllowedDescriptorCommand(field.writeCommand, \"field\"))"
+require_in_surface providers "if (!isAllowedDescriptorCommand(action.command, \"action\"))"
 # A descriptor secret must never reach a command line at all. /proc/<pid>/cmdline
 # is world-readable, so routing the value through `sh -c script _ "$secret"`
 # leaks it exactly like an expanded `{value}` placeholder would. Only
 # promptDescriptorSecret may carry a secret, and it reads the value inside the
 # script instead of receiving it as an argument.
 require_in_file "$PROVIDERS_QML" 'if (field.kind === "secret") {'
-require_in_file "$PROVIDERS_QML" "function runDescriptorCommand(commandTokens, replacements) {"
+require_in_surface providers "function runDescriptorCommand(commandTokens, replacements) {"
 reject_text "configProviders.qml" "$(cat "$PROVIDERS_QML")" 'shellQuote(stdinValue)'
 reject_text "configProviders.qml" "$(cat "$PROVIDERS_QML")" '({ "{value}": value }), field.kind === "secret" ? value : null)'
-require_in_file "$PROVIDERS_QML" "function isSafeDescriptorUrl(url)"
-require_in_file "$PROVIDERS_QML" "text.indexOf(\"https://\") === 0"
-require_in_file "$PROVIDERS_QML" "var url = String(payload.value.url)"
-require_in_file "$PROVIDERS_QML" "if (isSafeDescriptorUrl(url))"
+require_in_surface providers "function isSafeDescriptorUrl(url)"
+require_in_surface providers "text.indexOf(\"https://\") === 0"
+require_in_surface providers "var url = String(payload.value.url)"
+require_in_surface providers "if (isSafeDescriptorUrl(url))"
 for qml_file in "$MAIN_QML" "$PROVIDERS_QML"; do
   require_in_file "$qml_file" '!/^[a-z0-9][a-z0-9._-]*$/.test(key) || key.indexOf("..") !== -1'
   require_in_file "$qml_file" 'return "view-statistics"'
@@ -161,23 +166,23 @@ for qml_file in \
   "$ROOT_DIR/contents/ui/components/ProviderHeader.qml"; do
   require_in_file "$qml_file" 'fallback: "view-statistics"'
 done
-require_in_file "$PROVIDERS_QML" "function descriptorPendingFieldKey(fieldID)"
-require_in_file "$PROVIDERS_QML" "return JSON.stringify(value)"
-require_in_file "$PROVIDERS_QML" "var field = descriptorPendingFieldKey(fieldID)"
+require_in_surface providers "function descriptorPendingFieldKey(fieldID)"
+require_in_surface providers "return JSON.stringify(value)"
+require_in_surface providers "var field = descriptorPendingFieldKey(fieldID)"
 reject_text "configProviders.qml" "$(cat "$PROVIDERS_QML")" "var field = providerMapKey(fieldID)"
 
 reject_text "main.qml" "$(cat "$MAIN_QML")" '"sh", "-lc"'
 reject_text "configProviders.qml" "$(cat "$PROVIDERS_QML")" '"sh", "-lc"'
-require_in_file "$MAIN_QML" '["sh", "-c", shellQuote(script)]'
+require_in_surface applet '["sh", "-c", shellQuote(script)]'
 require_in_file "$PROVIDERS_QML" '["sh", "-c", shellQuote(script), "_", shellQuote(prompt)'
 
-require_in_file "$MAIN_QML" "function safeStatusUrl(providerID, url)"
-require_in_file "$MAIN_QML" "function httpsUrlHost(url)"
-require_in_file "$MAIN_QML" "statusUrl: safeStatusUrl(providerID, status && status.url ? status.url : \"\")"
-require_in_file "$MAIN_QML" "Qt.openUrlExternally(safeStatusUrl(item.provider, item.statusUrl))"
+require_in_surface applet "function safeStatusUrl(providerID, url)"
+require_in_surface applet "function httpsUrlHost(url)"
+require_in_surface applet "statusUrl: safeStatusUrl(providerID, status && status.url ? status.url : \"\")"
+require_in_surface applet "Qt.openUrlExternally(safeStatusUrl(item.provider, item.statusUrl))"
 
-require_in_file "$MAIN_QML" "notify-send --app-name=CodexBar --icon=view-statistics --urgency="
-require_in_file "$MAIN_QML" "+ \" -- \" + shellQuote(cleanTitle)"
+require_in_surface applet "notify-send --app-name=CodexBar --icon=view-statistics --urgency="
+require_in_surface applet "+ \" -- \" + shellQuote(cleanTitle)"
 
 for qml_file in "$PROVIDER_DETAIL_SECTION_QML" "$INTERACTIVE_CHART_QML"; do
   label_count="$(grep -c -F 'PlasmaComponents.Label {' "$qml_file" || true)"

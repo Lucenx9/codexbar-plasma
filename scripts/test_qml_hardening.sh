@@ -6,43 +6,20 @@ QMLLINT="${QMLLINT:-/usr/lib/qt6/bin/qmllint}"
 QML_IMPORT_DIR="${QML_IMPORT_DIR:-/usr/lib/qt6/qml}"
 QMLLINT_FLAGS="${QMLLINT_FLAGS:---unqualified disable}"
 
-QML_FILES=(
-  contents/config/config.qml
-  contents/ui/main.qml
-  contents/ui/configGeneral.qml
-  contents/ui/configProviders.qml
-  contents/ui/configDisplay.qml
-  contents/ui/configAdvanced.qml
-  contents/ui/configDebug.qml
-  contents/ui/ProviderIdentity.js
-  contents/ui/NotificationMemo.js
-  contents/ui/PanelElements.js
-  contents/ui/QuotaThresholds.js
-  contents/ui/SafeText.js
-  contents/ui/ThemeContrast.js
-  contents/ui/UsageDetails.js
-  contents/ui/UpdateLogic.js
-  contents/ui/components/CompactRepresentation.qml
-  contents/ui/components/CopyableValue.qml
-  contents/ui/components/GlobalTab.qml
-  contents/ui/components/InteractiveChart.qml
-  contents/ui/components/OverviewProviderRow.qml
-  contents/ui/components/ProviderAccountsPanel.qml
-  contents/ui/components/ProviderConfigRow.qml
-  contents/ui/components/ProviderHeader.qml
-  contents/ui/components/ProviderDetailSection.qml
-  contents/ui/components/ProviderUsageRow.qml
-  contents/ui/components/SessionsView.qml
-  contents/ui/components/SpendView.qml
-)
+# The `all` surface in scripts/lib/qml_surfaces.py is the one list of QML/JS
+# sources; the Makefile and scripts/update_translations.sh read it too, so a new
+# or moved file cannot fall out of one list while staying in another.
+mapfile -t QML_FILES < <(cd "$ROOT_DIR" && python3 scripts/lib/qml_surfaces.py files all)
+if [[ "${#QML_FILES[@]}" -eq 0 ]]; then
+  echo "scripts/lib/qml_surfaces.py produced no files for surface 'all'" >&2
+  exit 1
+fi
 
+# The manifest globs by directory, so an unglobbed directory is the real drift
+# risk: assert every QML/JS source on disk is actually covered.
 while IFS= read -r qml_source; do
-  if [[ " ${QML_FILES[*]} " != *" ${qml_source} "* ]]; then
-    echo "QML source is missing from scripts/test_qml_hardening.sh: ${qml_source}" >&2
-    exit 1
-  fi
-  if ! grep -Fq -- "$qml_source" "${ROOT_DIR}/Makefile"; then
-    echo "QML source is missing from Makefile QML_FILES: ${qml_source}" >&2
+  if [[ " ${QML_FILES[*]} " != *" ${ROOT_DIR}/${qml_source} "* ]]; then
+    echo "QML source is not covered by any glob in scripts/lib/qml_surfaces.py: ${qml_source}" >&2
     exit 1
   fi
 done < <(cd "$ROOT_DIR" && find contents -type f \( -name '*.qml' -o -name '*.js' \) -print | sort)

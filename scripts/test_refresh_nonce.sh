@@ -2,51 +2,36 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-QML="${ROOT_DIR}/contents/ui/main.qml"
-PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
+. "${ROOT_DIR}/scripts/lib/qml_surfaces.sh"
 
-require_in_file() {
-  local file="$1"
-  local needle="$2"
-  if ! grep -Fq "$needle" "$file"; then
-    echo "missing expected QML fragment in ${file#"$ROOT_DIR"/}: $needle" >&2
-    exit 1
-  fi
-}
+# Every external process must carry a per-run nonce so a late result cannot be
+# mistaken for a fresh one. That rule follows the command, not the file it lives
+# in, so assert it across the whole surface.
 
-reject_in_file() {
-  local file="$1"
-  local needle="$2"
-  if grep -Fq "$needle" "$file"; then
-    echo "unexpected QML fragment in ${file#"$ROOT_DIR"/}: $needle" >&2
-    exit 1
-  fi
-}
-
-require_in_file "$QML" "function commandWithRunNonce(command)"
-require_in_file "$QML" "connectedCommandSource = commandWithRunNonce(commandSource)"
-require_in_file "$QML" "connectedCostCommandSource = commandWithRunNonce(costCommandSource)"
-require_in_file "$QML" "connectedProviderConfigCommandSource = commandWithRunNonce(providerConfigCommandSource)"
-require_in_file "$QML" "var baseCommand = buildProviderUsageCommand(providerID)"
-require_in_file "$QML" "var command = commandWithRunNonce(baseCommand)"
-require_in_file "$QML" 'notificationSource.connectSource(commandWithRunNonce(":; " + command))'
-reject_in_file "$QML" "notificationSource.connectSource(command)"
+require_in_surface applet "function commandWithRunNonce(command)"
+require_in_surface applet "connectedCommandSource = commandWithRunNonce(commandSource)"
+require_in_surface applet "connectedCostCommandSource = commandWithRunNonce(costCommandSource)"
+require_in_surface applet "connectedProviderConfigCommandSource = commandWithRunNonce(providerConfigCommandSource)"
+require_in_surface applet "var baseCommand = buildProviderUsageCommand(providerID)"
+require_in_surface applet "var command = commandWithRunNonce(baseCommand)"
+require_in_surface applet 'notificationSource.connectSource(commandWithRunNonce(":; " + command))'
+reject_in_surface applet "notificationSource.connectSource(command)"
 
 sh -n <<'SH'
 CODEXBAR_PLASMA_RUN=1 :; if command -v notify-send >/dev/null 2>&1; then notify-send -- "CodexBar" "Test"; fi
 SH
 
-require_in_file "$PROVIDERS_QML" "property int commandRunSerial: 0"
-require_in_file "$PROVIDERS_QML" "function commandWithRunNonce(command)"
-require_in_file "$PROVIDERS_QML" "function disconnectCommandsByKind(kind)"
-require_in_file "$PROVIDERS_QML" "disconnectCommandsByKind(\"list\")"
-require_in_file "$PROVIDERS_QML" "var sourceName = commandWithRunNonce(command)"
-require_in_file "$PROVIDERS_QML" "existing[sourceName] = nextDescriptor"
-require_in_file "$PROVIDERS_QML" "configSource.connectSource(sourceName)"
-reject_in_file "$PROVIDERS_QML" "existing[command] = descriptor"
-reject_in_file "$PROVIDERS_QML" "configSource.connectSource(command)"
+require_in_surface providers "property int commandRunSerial: 0"
+require_in_surface providers "function commandWithRunNonce(command)"
+require_in_surface providers "function disconnectCommandsByKind(kind)"
+require_in_surface providers "disconnectCommandsByKind(\"list\")"
+require_in_surface providers "var sourceName = commandWithRunNonce(command)"
+require_in_surface providers "existing[sourceName] = nextDescriptor"
+require_in_surface providers "configSource.connectSource(sourceName)"
+reject_in_surface providers "existing[command] = descriptor"
+reject_in_surface providers "configSource.connectSource(command)"
 
-reject_in_file "$QML" "console.log(\"CodexBar"
-reject_in_file "$PROVIDERS_QML" "console.log(\"CodexBar"
+reject_in_surface applet "console.log(\"CodexBar"
+reject_in_surface providers "console.log(\"CodexBar"
 
 echo "KDE plasmoid refresh nonce checks passed."

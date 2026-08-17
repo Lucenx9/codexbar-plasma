@@ -2,8 +2,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+. "${ROOT_DIR}/scripts/lib/qml_surfaces.sh"
 GENERAL_QML="${ROOT_DIR}/contents/ui/configGeneral.qml"
-PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
 ADVANCED_QML="${ROOT_DIR}/contents/ui/configAdvanced.qml"
 README_MD="${ROOT_DIR}/README.md"
 
@@ -54,8 +54,8 @@ require_in_file "$README_MD" "command -v codexbar"
 reject_in_file "$README_MD" "yay -S codexbar-cli"
 reject_in_file "$README_MD" 'for example `/usr/bin/codexbar`'
 
-require_in_file "$PROVIDERS_QML" "Provider-specific controls come from the CodexBar CLI descriptor"
-reject_in_file "$PROVIDERS_QML" "Provider-specific editing stays in the CodexBar CLI until it exposes a stable settings descriptor"
+require_in_surface providers "Provider-specific controls come from the CodexBar CLI descriptor"
+reject_in_surface providers "Provider-specific editing stays in the CodexBar CLI until it exposes a stable settings descriptor"
 require_in_file "$ADVANCED_QML" "id: advancedOverrideExplanation"
 
 python3 - "$ROOT_DIR" <<'PY'
@@ -163,7 +163,14 @@ def extract_object_entries(text, function_name, variable_name):
     return entries
 
 
-main_text = main_qml.read_text(encoding="utf-8")
+sys.path.insert(0, str(root / "scripts/lib"))
+from qml_surfaces import Surface
+
+# The popup UI rules below belong to the plasmoid surface, not to main.qml
+# specifically, so read the surface as one text. Extracting the popup into a
+# component keeps these assertions meaningful instead of silently unhooking them.
+applet = Surface("applet", root)
+main_text = applet.text
 general_text = general_qml.read_text(encoding="utf-8")
 display_text = display_qml.read_text(encoding="utf-8")
 providers_text = providers_qml.read_text(encoding="utf-8")
@@ -1952,17 +1959,12 @@ if provider_usage_row_text.count(
     raise AssertionError("the provider-usage meter must consume meterTrackHeight")
 
 
-popup_and_provider_surfaces = (
-    (main_qml, main_text),
-    (providers_qml, providers_text),
-    (provider_accounts_panel_qml, provider_accounts_panel_text),
-    (provider_header_qml, provider_header_text),
-    (provider_config_row_qml, provider_config_row_text),
-    (provider_usage_row_qml, provider_usage_row_text),
-    (provider_detail_section_qml, provider_detail_section_text),
-    (overview_provider_row_qml, overview_provider_row_text),
-    (compact_representation_qml, compact_representation_text),
-)
+# Derived from the manifest rather than listed by hand, so a newly extracted
+# component is covered the moment it exists instead of when someone remembers to
+# add it here. JS helpers are excluded: these rules are about QML elements.
+popup_and_provider_surfaces = tuple(
+    (path, applet.texts[path]) for path in applet.files if path.suffix == ".qml"
+) + ((providers_qml, providers_text),)
 
 
 def enclosing_element(source_lines, index):

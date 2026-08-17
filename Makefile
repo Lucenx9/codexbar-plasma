@@ -10,36 +10,13 @@ QML_IMPORT_DIR ?= /usr/lib/qt6/qml
 # the type/import-resolution categories that would otherwise cascade into
 # failures; locally (modules present) they are no-ops, so the check stays full.
 QMLLINT_FLAGS ?= --unqualified disable
-QML_FILES := \
-	contents/config/config.qml \
-	contents/ui/main.qml \
-	contents/ui/configGeneral.qml \
-	contents/ui/configProviders.qml \
-	contents/ui/configDisplay.qml \
-	contents/ui/configAdvanced.qml \
-	contents/ui/configDebug.qml \
-	contents/ui/ProviderIdentity.js \
-	contents/ui/NotificationMemo.js \
-	contents/ui/PanelElements.js \
-	contents/ui/QuotaThresholds.js \
-	contents/ui/SafeText.js \
-	contents/ui/ThemeContrast.js \
-	contents/ui/UsageDetails.js \
-	contents/ui/UpdateLogic.js \
-	contents/ui/components/CompactRepresentation.qml \
-	contents/ui/components/CopyableValue.qml \
-	contents/ui/components/GlobalTab.qml \
-	contents/ui/components/InteractiveChart.qml \
-	contents/ui/components/OverviewProviderRow.qml \
-	contents/ui/components/ProviderAccountsPanel.qml \
-	contents/ui/components/ProviderConfigRow.qml \
-	contents/ui/components/ProviderHeader.qml \
-	contents/ui/components/ProviderDetailSection.qml \
-	contents/ui/components/ProviderUsageRow.qml \
-	contents/ui/components/SessionsView.qml \
-	contents/ui/components/SpendView.qml
+# Read from the one source list in scripts/lib/qml_surfaces.py so adding or
+# moving a QML file does not need an edit here, in the hardening check, and in
+# the gettext extraction. `check` fails loudly if that lookup produced nothing.
+QML_FILES := $(shell python3 scripts/lib/qml_surfaces.py files all)
 
 check:
+	@test -n "$(QML_FILES)" || { echo "QML_FILES is empty: scripts/lib/qml_surfaces.py failed" >&2; exit 1; }
 	scripts/test_feature_parity.sh
 	scripts/test_refresh_nonce.sh
 	scripts/test_process_lifecycle.sh
