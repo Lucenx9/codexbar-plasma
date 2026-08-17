@@ -2,31 +2,21 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-MAIN_QML="${ROOT_DIR}/contents/ui/main.qml"
-PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
+. "${ROOT_DIR}/scripts/lib/qml_surfaces.sh"
 THEME_CONTRAST_JS="${ROOT_DIR}/contents/ui/ThemeContrast.js"
 
-require_in_file() {
-  local file="$1"
-  local needle="$2"
-  if ! grep -Fq -- "$needle" "$file"; then
-    echo "missing expected theme fragment in ${file#"$ROOT_DIR"/}: $needle" >&2
-    exit 1
-  fi
-}
-
-require_in_file "$MAIN_QML" "function providerColor(value)"
-require_in_file "$MAIN_QML" "function providerReadableColor(value, background)"
-require_in_file "$PROVIDERS_QML" "function providerColor(value)"
-require_in_file "$PROVIDERS_QML" "function providerReadableColor(value, background)"
-require_in_file "$MAIN_QML" 'import "ThemeContrast.js" as ThemeContrast'
-require_in_file "$PROVIDERS_QML" 'import "ThemeContrast.js" as ThemeContrast'
+require_in_surface applet "function providerColor(value)"
+require_in_surface applet "function providerReadableColor(value, background)"
+require_in_surface providers "function providerColor(value)"
+require_in_surface providers "function providerReadableColor(value, background)"
+require_in_surface applet 'import "ThemeContrast.js" as ThemeContrast'
+require_in_surface providers 'import "ThemeContrast.js" as ThemeContrast'
 require_in_file "$THEME_CONTRAST_JS" "var minimumNonTextContrastRatio = 3"
-require_in_file "$MAIN_QML" "function contrastTextColor(color)"
-require_in_file "$MAIN_QML" "Kirigami.Theme.textColor"
-require_in_file "$MAIN_QML" "Kirigami.Theme.highlightColor"
-require_in_file "$MAIN_QML" "Kirigami.Theme.negativeTextColor"
-require_in_file "$MAIN_QML" "Kirigami.Theme.neutralTextColor"
+require_definition_where_used applet contrastTextColor
+require_in_surface applet "Kirigami.Theme.textColor"
+require_in_surface applet "Kirigami.Theme.highlightColor"
+require_in_surface applet "Kirigami.Theme.negativeTextColor"
+require_in_surface applet "Kirigami.Theme.neutralTextColor"
 
 python3 - "$ROOT_DIR" <<'PY'
 import pathlib
@@ -34,10 +24,14 @@ import re
 import sys
 
 root = pathlib.Path(sys.argv[1])
-allowed_files = {
-    root / "contents/ui/main.qml",
-    root / "contents/ui/configProviders.qml",
-}
+sys.path.insert(0, str(root / "scripts/lib"))
+from qml_surfaces import Surface, surface_files
+
+# Raw colors are allowed only inside theme-derivation helpers, and only in the
+# runtime and provider-config surfaces. Deriving that from the manifest means a
+# component that takes over part of the popup gets checked rather than silently
+# exempted, which is what the old `contents/ui/*.qml` glob did.
+allowed_files = set(surface_files("applet", root)) | set(surface_files("providers", root))
 patterns = [
     re.compile(r"Qt\.rgba\("),
     re.compile(r"#[0-9A-Fa-f]{3,8}"),
@@ -83,16 +77,16 @@ def function_body(text, name):
                 return text[brace + 1:index]
     raise ValueError(f"unterminated function {name}")
 
-for path in [root / "contents/ui/main.qml", root / "contents/ui/configProviders.qml"]:
-    body = function_body(path.read_text(encoding="utf-8"), "providerColor")
+for surface_name in ("applet", "providers"):
+    body = Surface(surface_name, root).function_body("providerColor")
     cases = set(re.findall(r'case "([^"]+)":', body))
     missing = [provider for provider in required_provider_colors if provider not in cases]
     if missing:
         joined = ", ".join(missing)
-        print(f"missing provider brand color in {path.relative_to(root)}: {joined}", file=sys.stderr)
+        print(f"missing provider brand color in surface {surface_name}: {joined}", file=sys.stderr)
         sys.exit(1)
 
-for path in sorted((root / "contents/ui").glob("*.qml")):
+for path in sorted(path for path in surface_files("all", root) if path.suffix == ".qml"):
     text = path.read_text(encoding="utf-8")
     for pattern in patterns:
         for match in pattern.finditer(text):

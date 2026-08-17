@@ -138,6 +138,7 @@ Use this order when sources disagree:
 - `contents/config/main.xml`: persisted Plasma configuration schema.
 - `contents/icons/`: applet and provider icons.
 - `scripts/`: static regression checks.
+- `scripts/lib/`: shared helpers for those checks, including the QML surface manifest.
 
 ## Agent-Readable Code Rules
 
@@ -295,10 +296,29 @@ Agent instruction references:
   `required property var modelData` inside the component. Do not rely on the
   parent assigning `modelData` through an alias property; `qmllint` may miss the
   runtime scoping error.
-- When adding or moving QML files, update every local QML source list:
-  `Makefile` `QML_FILES`, `scripts/test_qml_hardening.sh`,
-  `scripts/update_translations.sh`, and any static assertion in `scripts/`
-  that was tied to the old file.
+- `scripts/lib/qml_surfaces.py` is the single source list of QML/JS files, grouped
+  into *surfaces* (`applet`, `providers`, one per config page, and `all`). The
+  `Makefile`, `scripts/test_qml_hardening.sh`, and `scripts/update_translations.sh`
+  all read it, so adding a file inside an existing glob needs no list edit. Add a
+  glob only when a new directory appears; `test_qml_hardening.sh` fails if any
+  QML/JS source on disk is not covered.
+- Write static assertions with `require_in_surface` / `reject_in_surface` (bash)
+  or `Surface.require` / `Surface.function_body` / `Surface.id_block` (python)
+  when the rule belongs to the plasmoid runtime or a config page as a whole. Then
+  moving code out of `main.qml` cannot break the check, so the safety net is not
+  being edited in the same commit as the change it guards. Keep the `*_in_file`
+  helpers only for genuine per-file contracts, such as "every one of these
+  component delegates must declare a safe icon fallback".
+- Assert a shared helper with `require_definition_where_used` (bash) or
+  `Surface.require_definition_where_used` (python), never a plain
+  `require_in_surface "function foo("`. QML and JS files share no function scope,
+  so several files legitimately declare their own copy of `hasOwnKey`; a
+  surface-wide search is satisfied by any one of them, and deleting the copy that
+  live callers depend on would pass. This requires the declaration in every file
+  that calls the helper unqualified — and in the surface root when components
+  reach it through `applet.foo(...)` — while still following the code if the
+  helper and its callers move together. Its optional third argument pins a
+  fragment every copy's body must keep, such as the prototype-pollution guard.
 - All user-facing text must go through `i18n` or `i18np`.
 - Test with `make check` first. Use `plasmawindowed` or `plasmoidviewer` for
   quick widget checks when available; after extracting delegates/components,

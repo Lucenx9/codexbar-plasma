@@ -4,3 +4,7 @@
 build/
 dist/
 .cache/
+# scripts/lib/qml_surfaces.py is imported by the static checks, so Python writes
+# bytecode next to it.
+__pycache__/
+*.pyc
