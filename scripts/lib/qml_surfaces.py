@@ -30,6 +30,7 @@ Usage from a python heredoc:
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -130,6 +131,71 @@ class Surface:
         if hits:
             raise AssertionError(f"{reason}: unexpected in {', '.join(hits)}: {fragment}")
 
+    def require_definition_where_used(
+        self, name: str, body_fragment: str | None = None
+    ) -> None:
+        """Every file that calls helper `name` must also declare it.
+
+        QML and JS files share no function scope, so `function hasOwnKey(...)` is
+        a per-file contract, not a surface-wide one: a plain `require` is
+        satisfied by any sibling that happens to declare the same helper, so
+        deleting the copy that live callers depend on would go unnoticed.
+
+        A file needs the declaration when it calls the helper unqualified.
+        Components reach the applet root through their `applet` property
+        (`applet.contrastTextColor(...)`), so such a call obliges the surface
+        root instead. Calls qualified by a JS import namespace resolve to that
+        module and oblige nobody here.
+
+        `body_fragment` is required inside every declaration found, which is how
+        a guard such as `Object.prototype.hasOwnProperty.call` stays enforced on
+        each copy rather than on whichever one a search happens to reach first.
+        """
+        declaration = re.compile(rf"function\s+{re.escape(name)}\s*\(")
+        unqualified_call = re.compile(rf"(?<![\w.$]){re.escape(name)}\s*\(")
+        applet_call = re.compile(rf"\bapplet\.{re.escape(name)}\s*\(")
+
+        owed: dict[str, str] = {}
+        declared: list[Path] = []
+        for path, text in self.texts.items():
+            if declaration.search(text) is not None:
+                declared.append(path)
+                continue
+            # Declarations are stripped first so `function foo(` never reads as a call.
+            if unqualified_call.search(declaration.sub("", text)):
+                owed[self.rel(path)] = "calls it unqualified"
+
+        surface_root = self.files[0]
+        reached_through_applet = [
+            self.rel(path) for path, text in self.texts.items() if applet_call.search(text)
+        ]
+        if reached_through_applet and declaration.search(self.texts[surface_root]) is None:
+            owed[self.rel(surface_root)] = (
+                f"is the surface root reached by applet.{name}(...) in "
+                f"{', '.join(sorted(reached_through_applet))}"
+            )
+
+        if owed:
+            declares_in = ", ".join(self.rel(path) for path in declared) or "(nowhere)"
+            detail = "; ".join(f"{path} {why}" for path, why in sorted(owed.items()))
+            raise AssertionError(
+                f"{name} must be declared where it is used: {detail}. "
+                f"Surface {self.name} declares it in {declares_in}"
+            )
+        if not declared:
+            raise AssertionError(
+                f"surface {self.name} declares no {name}, so nothing enforces it"
+            )
+        if body_fragment is None:
+            return
+        for path in declared:
+            text = self.texts[path]
+            start = declaration.search(text).start()
+            if body_fragment not in self._match_braces(text, text.index("{", start)):
+                raise AssertionError(
+                    f"{self.rel(path)}: {name} must keep its guard: {body_fragment}"
+                )
+
     def _locate(self, marker: str) -> tuple[Path, str, int]:
         hits = [
             (path, text, text.find(marker))
@@ -194,15 +260,34 @@ class Surface:
         return self._match_braces(text, index)
 
 
+USAGE = (
+    "usage: qml_surfaces.py files <surface>\n"
+    "       qml_surfaces.py surfaces\n"
+    "       qml_surfaces.py definition <surface> <function> [body-fragment]"
+)
+
+
 def main(argv: list[str]) -> int:
-    if len(argv) < 2 or argv[1] not in {"files", "surfaces"}:
-        print("usage: qml_surfaces.py files <surface> | qml_surfaces.py surfaces", file=sys.stderr)
+    if len(argv) < 2 or argv[1] not in {"files", "surfaces", "definition"}:
+        print(USAGE, file=sys.stderr)
         return 2
     if argv[1] == "surfaces":
         print("\n".join(sorted(SURFACES)))
         return 0
+    if argv[1] == "definition":
+        if len(argv) not in {4, 5}:
+            print(USAGE, file=sys.stderr)
+            return 2
+        try:
+            Surface(argv[2]).require_definition_where_used(
+                argv[3], argv[4] if len(argv) == 5 else None
+            )
+        except AssertionError as error:
+            print(error, file=sys.stderr)
+            return 1
+        return 0
     if len(argv) != 3:
-        print("usage: qml_surfaces.py files <surface>", file=sys.stderr)
+        print(USAGE, file=sys.stderr)
         return 2
     for path in surface_files(argv[2]):
         print(path)

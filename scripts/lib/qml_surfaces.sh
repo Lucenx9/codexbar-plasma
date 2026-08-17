@@ -55,6 +55,23 @@ reject_in_surface() {
   fi
 }
 
+# Helper declarations are a per-file contract: QML and JS files share no function
+# scope, so `require_in_surface "function hasOwnKey("` is satisfied by any sibling
+# that happens to declare it, and deleting the copy live callers depend on passes.
+# This asserts the declaration exists in every file that calls the helper, so the
+# rule still follows the code without losing its teeth. An optional third argument
+# is a fragment every declaration's body must keep.
+require_definition_where_used() {
+  local surface="$1"
+  local function_name="$2"
+  local body_fragment="${3:-}"
+  if [[ -n "$body_fragment" ]]; then
+    python3 "$QML_SURFACES_PY" definition "$surface" "$function_name" "$body_fragment" || exit 1
+  else
+    python3 "$QML_SURFACES_PY" definition "$surface" "$function_name" || exit 1
+  fi
+}
+
 require_in_file() {
   local file="$1"
   local needle="$2"

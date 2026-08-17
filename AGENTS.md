@@ -309,6 +309,16 @@ Agent instruction references:
   being edited in the same commit as the change it guards. Keep the `*_in_file`
   helpers only for genuine per-file contracts, such as "every one of these
   component delegates must declare a safe icon fallback".
+- Assert a shared helper with `require_definition_where_used` (bash) or
+  `Surface.require_definition_where_used` (python), never a plain
+  `require_in_surface "function foo("`. QML and JS files share no function scope,
+  so several files legitimately declare their own copy of `hasOwnKey`; a
+  surface-wide search is satisfied by any one of them, and deleting the copy that
+  live callers depend on would pass. This requires the declaration in every file
+  that calls the helper unqualified — and in the surface root when components
+  reach it through `applet.foo(...)` — while still following the code if the
+  helper and its callers move together. Its optional third argument pins a
+  fragment every copy's body must keep, such as the prototype-pollution guard.
 - All user-facing text must go through `i18n` or `i18np`.
 - Test with `make check` first. Use `plasmawindowed` or `plasmoidviewer` for
   quick widget checks when available; after extracting delegates/components,

@@ -1857,8 +1857,10 @@ if 'i18n("%1 - %2", line, incident)' not in tooltip_body:
     raise AssertionError(
         "the panel tooltip must report incidents even when the provider also reports usage"
     )
-if "function boundedDisplayText(value, maximumLength)" not in main_text:
-    raise AssertionError("main.qml must expose a shared display-text bound")
+# Every file that calls this unqualified must declare it: QML and JS share no
+# function scope, so a surface-wide search would be satisfied by SafeText.js while
+# the applet root's callers were left with an undefined function.
+applet.require_definition_where_used("boundedDisplayText")
 
 if "applet.usageResetText(usageRow)" not in overview_provider_row_text:
     raise AssertionError("Overview reset labels must use render-time formatting")

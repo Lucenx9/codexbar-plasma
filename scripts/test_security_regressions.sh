@@ -103,8 +103,7 @@ require_in_file "$SAFE_TEXT_JS" 'chunk.search(/[^\s\u0000-\u001f\u007f]/)'
 require_in_file "$SAFE_TEXT_JS" "credentialRedactionLookaheadLength"
 require_in_file "$SAFE_TEXT_JS" "function cliJsonText(value)"
 
-require_in_surface applet "function hasOwnKey(item, key)"
-require_in_surface applet "Object.prototype.hasOwnProperty.call(item, key)"
+require_definition_where_used applet hasOwnKey "Object.prototype.hasOwnProperty.call(item, key)"
 require_in_surface applet "function isUnsafeObjectKey(key)"
 require_in_surface applet "value === \"__proto__\" || value === \"prototype\" || value === \"constructor\""
 require_in_surface applet "function providerMapKey(providerID)"

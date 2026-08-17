@@ -12,7 +12,7 @@ require_in_surface providers "function providerReadableColor(value, background)"
 require_in_surface applet 'import "ThemeContrast.js" as ThemeContrast'
 require_in_surface providers 'import "ThemeContrast.js" as ThemeContrast'
 require_in_file "$THEME_CONTRAST_JS" "var minimumNonTextContrastRatio = 3"
-require_in_surface applet "function contrastTextColor(color)"
+require_definition_where_used applet contrastTextColor
 require_in_surface applet "Kirigami.Theme.textColor"
 require_in_surface applet "Kirigami.Theme.highlightColor"
 require_in_surface applet "Kirigami.Theme.negativeTextColor"
