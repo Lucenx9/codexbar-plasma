@@ -2831,10 +2831,26 @@ PlasmoidItem {
         return severity.length > 0 ? statusBadgeColor(severity) : accent
     }
 
+    // Quota, pace, and reset memo state is threshold-derived and has to be
+    // rebuilt whenever a setting changes. Provider status is not: a settings
+    // change is not a status transition, so the status baseline survives the
+    // reset. Dropping it would either re-announce an ongoing incident or, once
+    // the first observation is silently primed, swallow an incident that starts
+    // while the provider is still refreshing.
     function resetNotificationMemo() {
-        notificationMemo = ({})
+        var nextMemo = ({})
+        for (var key in notificationMemo) {
+            if (hasOwnKey(notificationMemo, key) && isStatusNotificationMemoKey(key)) {
+                nextMemo[key] = notificationMemo[key]
+            }
+        }
+        notificationMemo = nextMemo
         notificationsPrimed = false
         Qt.callLater(processNotifications)
+    }
+
+    function isStatusNotificationMemoKey(key) {
+        return key.indexOf("status:") === 0 || key.indexOf("statusPrimed:") === 0
     }
 
     function notificationProviderRefreshPending(providerID) {
@@ -2897,6 +2913,18 @@ PlasmoidItem {
         return "statusPrimed:" + providerMapKey(item.provider)
     }
 
+    function carryStatusNotificationMemo(item, nextMemo) {
+        var primedKey = statusNotificationPrimedKey(item)
+        if (notificationMemo[primedKey] !== "1") {
+            return
+        }
+        nextMemo[primedKey] = "1"
+        var previousValue = String(notificationMemo[statusNotificationKey(item)] || "")
+        if (previousValue.length > 0) {
+            nextMemo[statusNotificationKey(item)] = previousValue
+        }
+    }
+
     function notificationScopePrimedKey(item) {
         return "scope:" + notificationScopeKey(item)
     }
@@ -2952,7 +2980,15 @@ PlasmoidItem {
         var nextMemo = ({})
         for (var i = 0; i < providers.length; i++) {
             var item = providers[i]
-            if (!item || notificationProviderRefreshPending(item.provider)) {
+            if (!item) {
+                continue
+            }
+            if (notificationProviderRefreshPending(item.provider)) {
+                // The cached snapshot cannot become a baseline, but an existing
+                // baseline must not be lost either: without it a status change
+                // during the pending interval would prime silently instead of
+                // notifying.
+                carryStatusNotificationMemo(item, nextMemo)
                 continue
             }
             if (notifyStatusIncidents) {

@@ -210,8 +210,11 @@ v0.50.0, probed against the installed CLI 0.50.0).
 - Quota warning thresholds are user-configurable and bounded by
   `contents/ui/QuotaThresholds.js`; the notification level and the usage-bar
   markers both read them, so neither may hardcode a percentage. Changing a
-  threshold must reset the notification memo. Per-provider thresholds stay
-  blocked on the CLI descriptor.
+  threshold must reset the threshold-derived notification memo, but must keep
+  the provider status baseline: a settings change is not a status transition,
+  and dropping the baseline either re-announces an ongoing incident or swallows
+  one that starts while the provider is still refreshing. Per-provider
+  thresholds stay blocked on the CLI descriptor.
 - `codexbar sessions --json-v2` feeds a bounded local Sessions tab. Normalize
   only safe display fields; never retain, render, open, or follow `cwd`,
   `transcriptPath`, IDs, or PIDs. Remote/SSH host focus is macOS-only.
