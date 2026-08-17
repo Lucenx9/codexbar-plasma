@@ -44,6 +44,101 @@ msgstr ""
 msgid "Copied"
 msgstr ""
 
+#: contents/ui/components/FullRepresentation.qml contents/ui/configDisplay.qml
+msgid "Overview"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/SpendView.qml
+msgid "Usage & Spend"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/SessionsView.qml
+msgid "Sessions"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+msgid "Show previous tabs"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+msgid "Show more tabs"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+msgid "Loading usage..."
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+msgid "No provider data."
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/SessionsView.qml contents/ui/main.qml
+msgid "%1 - %2"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/ProviderHeader.qml contents/ui/configGeneral.qml
+#: contents/ui/main.qml
+msgid "Refresh"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+msgid "No overview data available."
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml contents/ui/main.qml
+msgid "Credits"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+msgid "Remaining: %1"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+msgid "Usage dashboard"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/SpendView.qml contents/ui/main.qml
+msgid "Cost"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+msgid "Cost unavailable: %1"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/SpendView.qml
+msgid "Daily token history"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/SpendView.qml
+msgid "Daily cost history"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/SpendView.qml contents/ui/main.qml
+msgid "%1 day"
+msgid_plural "%1 days"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/components/FullRepresentation.qml
+msgid "Cost history"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+msgid "Cost details"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml contents/ui/main.qml
+msgid "Models"
+msgstr ""
+
 #: contents/ui/components/InteractiveChart.qml
 msgid "Use the arrow keys to inspect chart points"
 msgstr ""
@@ -71,19 +166,6 @@ msgstr ""
 
 #: contents/ui/components/ProviderHeader.qml
 msgid "Updated just now"
-msgstr ""
-
-#: contents/ui/components/ProviderHeader.qml contents/ui/configGeneral.qml
-#: contents/ui/main.qml
-msgid "Refresh"
-msgstr ""
-
-#: contents/ui/components/SessionsView.qml contents/ui/main.qml
-msgid "Sessions"
-msgstr ""
-
-#: contents/ui/components/SessionsView.qml contents/ui/main.qml
-msgid "%1 - %2"
 msgstr ""
 
 #: contents/ui/components/SessionsView.qml
@@ -129,21 +211,7 @@ msgid "90 days"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml contents/ui/main.qml
-msgid "%1 day"
-msgid_plural "%1 days"
-msgstr[0] ""
-msgstr[1] ""
-
-#: contents/ui/components/SpendView.qml contents/ui/main.qml
-msgid "Cost"
-msgstr ""
-
-#: contents/ui/components/SpendView.qml contents/ui/main.qml
 msgid "Tokens"
-msgstr ""
-
-#: contents/ui/components/SpendView.qml contents/ui/main.qml
-msgid "Usage & Spend"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
@@ -174,14 +242,6 @@ msgstr ""
 #: contents/ui/components/SpendView.qml
 msgid ""
 "Cost history appears for providers supported by the codexbar cost command."
-msgstr ""
-
-#: contents/ui/components/SpendView.qml contents/ui/main.qml
-msgid "Daily token history"
-msgstr ""
-
-#: contents/ui/components/SpendView.qml contents/ui/main.qml
-msgid "Daily cost history"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
@@ -356,10 +416,6 @@ msgstr ""
 
 #: contents/ui/configDisplay.qml
 msgid "Show provider changelog links"
-msgstr ""
-
-#: contents/ui/configDisplay.qml contents/ui/main.qml
-msgid "Overview"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
@@ -1301,10 +1357,6 @@ msgid "Usage mix"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Models"
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "%1 requests"
 msgstr ""
 
@@ -1379,10 +1431,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Pro"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Credits"
 msgstr ""
 
 #: contents/ui/main.qml
@@ -1823,44 +1871,4 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Widget updater response exceeded the supported size."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Show previous tabs"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Show more tabs"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Loading usage..."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "No provider data."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "No overview data available."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Remaining: %1"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Usage dashboard"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Cost unavailable: %1"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Cost history"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Cost details"
 msgstr ""

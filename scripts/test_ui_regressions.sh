@@ -427,7 +427,7 @@ if "function disconnectOverviewProviderCommands()" not in display_text:
 provider_index_body = function_body(main_text, "providerIndexForID")
 if "return -1" not in provider_index_body or "return 0" in provider_index_body:
     raise AssertionError("providerIndexForID must return -1 instead of falling back to provider 0")
-if "var nextProviderIndex = root.providerIndex(providerData)" not in main_text or "if (nextProviderIndex >= 0)" not in main_text:
+if "var nextProviderIndex = applet.providerIndex(providerData)" not in main_text or "if (nextProviderIndex >= 0)" not in main_text:
     raise AssertionError("Overview provider selection must ignore missing providers instead of selecting index 0")
 
 bounded_revision_body = function_body(main_text, "boundedConfigRevision")
@@ -451,7 +451,7 @@ if "normalizeTokenCost(item, requestedHistoryDays)" not in parse_cost_body:
     raise AssertionError("cost snapshots must retain the range of the request that produced them")
 
 token_cost_section_body = id_block(main_text, "tokenCostSection")
-if "root.costErrorText" not in token_cost_section_body:
+if "applet.costErrorText" not in token_cost_section_body:
     raise AssertionError("tokenCostSection must surface costErrorText instead of dropping cost errors")
 if "Cost unavailable: %1" not in token_cost_section_body:
     raise AssertionError("tokenCostSection must label visible cost errors")
@@ -663,9 +663,9 @@ for heading_chunk in heading_chunks:
         )
 popup_surface_body = id_block(main_text, "popupInnerSurface")
 for popup_surface_fragment in (
-    "radius: root.roundedSurfaceRadius",
+    "radius: applet.roundedSurfaceRadius",
     "Kirigami.Theme.alternateBackgroundColor",
-    "border.color: root.withAlpha(Kirigami.Theme.textColor, 0.09)",
+    "border.color: applet.withAlpha(Kirigami.Theme.textColor, 0.09)",
 ):
     if popup_surface_fragment not in popup_surface_body:
         raise AssertionError(
@@ -863,10 +863,10 @@ provider_tabs_body = id_block(main_text, "providerTabsBar")
 for tabs_fragment in (
     "Layout.preferredHeight: Kirigami.Units.gridUnit * 2.35",
     "id: providerTabsSurface",
-    "radius: root.roundedSurfaceRadius",
-    "border.color: root.withAlpha(Kirigami.Theme.textColor, 0.06)",
+    "radius: applet.roundedSurfaceRadius",
+    "border.color: applet.withAlpha(Kirigami.Theme.textColor, 0.06)",
     "anchors.margins: Kirigami.Units.smallSpacing / 2",
-    "root.withAlpha(Kirigami.Theme.textColor, 0.045)",
+    "applet.withAlpha(Kirigami.Theme.textColor, 0.045)",
     "anchors.bottomMargin: 2",
     "providerReadableColor(",
     "activeFocusOnTab: true",
@@ -938,8 +938,8 @@ for fade_id, fade_direction in (
 if "Kirigami.Theme.highlightedTextColor" in provider_tabs_body:
     raise AssertionError("provider tabs must not depend on a heavy solid-highlight selected state")
 for stale_selected_overlay in (
-    "root.withAlpha(brandAccent, 0.12)",
-    "selected ? root.withAlpha(accent, 0.32)",
+    "applet.withAlpha(brandAccent, 0.12)",
+    "selected ? applet.withAlpha(accent, 0.32)",
 ):
     if stale_selected_overlay in provider_tabs_body:
         raise AssertionError(
@@ -1052,10 +1052,9 @@ for header_id, header_body in (
             "feedback"
         )
 
-full_representation_index = main_text.find("fullRepresentation: Item {")
-if full_representation_index < 0:
-    raise AssertionError("main.qml must keep the fullRepresentation root")
-full_representation_head = main_text[full_representation_index:full_representation_index + 900]
+if "fullRepresentation:" not in main_text:
+    raise AssertionError("the applet must keep a fullRepresentation root")
+full_representation_head = id_block(main_text, "fullRoot")[:900]
 if "popupContent.implicitHeight" not in full_representation_head:
     raise AssertionError(
         "the popup height must follow its content; a fixed height leaves the "
@@ -1109,7 +1108,7 @@ for gradient_fragment in (
             f"missing {gradient_fragment!r}"
         )
 
-if "Components.InteractiveChart" not in main_text or "root.costChartPoints(" not in main_text:
+if "Components.InteractiveChart" not in main_text or "applet.costChartPoints(" not in main_text:
     raise AssertionError("the provider cost sparkline must use the interactive shared chart")
 
 for summary_id, summary_fragment in (
@@ -1129,8 +1128,8 @@ cost_history_row_body = id_block(main_text, "costHistoryMetricRow")
 for history_row_fragment in (
     "id: costHistoryDateLabel",
     "id: costHistoryBarTrack",
-    "Layout.preferredHeight: root.compactMeterTrackHeight",
-    "root.withAlpha(Kirigami.Theme.textColor, 0.055)",
+    "Layout.preferredHeight: applet.compactMeterTrackHeight",
+    "applet.withAlpha(Kirigami.Theme.textColor, 0.055)",
     "gradient: Gradient",
     "orientation: Gradient.Horizontal",
     "antialiasing: true",
@@ -1198,7 +1197,7 @@ for scoped_feedback_body, feedback_name in (
     (global_error_body, "globalErrorMessage"),
     (provider_usage_loading_body, "providerUsageLoadingRow"),
 ):
-    if "root.providerUsageFeedbackVisible" not in scoped_feedback_body:
+    if "applet.providerUsageFeedbackVisible" not in scoped_feedback_body:
         raise AssertionError(
             f"{feedback_name} must stay hidden on the independent Spend and Sessions tabs"
         )
@@ -1222,9 +1221,9 @@ for filler_owner_source, filler_owner_text in (
         )
 
 provider_status_body = id_block(main_text, "providerStatusMessage")
-if "root.selectedProviderData.hasIncident" not in provider_status_body:
+if "applet.selectedProviderData.hasIncident" not in provider_status_body:
     raise AssertionError("healthy provider status must not occupy a permanent inline banner")
-if "root.statusMessageType(root.selectedProviderData.statusSeverity)" not in provider_status_body:
+if "applet.statusMessageType(applet.selectedProviderData.statusSeverity)" not in provider_status_body:
     raise AssertionError("incident banners must reflect the provider status severity")
 status_message_type_body = function_body(main_text, "statusMessageType")
 for semantic_type in ("Kirigami.MessageType.Error", "Kirigami.MessageType.Warning"):
@@ -1624,8 +1623,8 @@ if "function providerIndexForID(providerID)" not in main_text:
     raise AssertionError("the selected provider index must be derived from its provider id")
 
 for global_view_fragment in (
-    'root.selectGlobalView("spend")',
-    'root.selectGlobalView("sessions")',
+    'applet.selectGlobalView("spend")',
+    'applet.selectGlobalView("sessions")',
     "Components.SpendView",
     "Components.SessionsView",
 ):
@@ -1930,7 +1929,7 @@ if 'i18np("%1 provider", "%1 providers", total)' not in provider_count_body:
 
 if "readonly property var overviewProviderItems: overviewProviders()" not in main_text:
     raise AssertionError("overview provider rows must be cached in a QML property binding")
-if "root.overviewProviders()" in main_text:
+if ".overviewProviders()" in main_text:
     raise AssertionError("overview UI bindings must reuse overviewProviderItems")
 
 # Text de-emphasis had drifted into eleven ad-hoc opacity literals, several
@@ -1949,10 +1948,10 @@ if "readonly property real secondaryTextOpacity: 0.7" not in providers_text:
     raise AssertionError(
         "configProviders.qml must mirror main.qml's secondaryTextOpacity step"
     )
-if main_text.count("Layout.preferredHeight: root.meterTrackHeight") != 1:
+if main_text.count("Layout.preferredHeight: applet.meterTrackHeight") != 1:
     raise AssertionError(
         "the provider-cost meter must consume meterTrackHeight, and it is the "
-        "only meter left in main.qml now that the credits balance has no "
+        "only meter left in the popup now that the credits balance has no "
         "allowance to plot against"
     )
 if provider_usage_row_text.count(
