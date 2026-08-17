@@ -2893,10 +2893,6 @@ PlasmoidItem {
         return JSON.stringify([providerID, currentAccount])
     }
 
-    function statusNotificationKey(item) {
-        return NotificationMemo.statusMemoKey(providerMapKey(item.provider))
-    }
-
     function carryStatusNotificationMemo(item, nextMemo) {
         NotificationMemo.carryStatusMemo(notificationMemo, providerMapKey(item.provider), nextMemo)
     }
@@ -3149,7 +3145,6 @@ PlasmoidItem {
         var incidentKey = item.statusIncidentKey ? String(item.statusIncidentKey) : ""
         return NotificationMemo.statusMemoValue(item.statusSeverity, incidentKey)
     }
-
 
     function statusIncidentKey(status) {
         if (!status) {

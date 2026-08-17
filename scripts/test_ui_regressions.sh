@@ -1361,13 +1361,11 @@ if not re.search(
 ):
     raise AssertionError("setNotificationProviderRefreshPending must set or clear the provider entry")
 
-status_key_body = function_body(main_text, "statusNotificationKey")
-if not re.fullmatch(
-    r"\s*return\s+NotificationMemo\.statusMemoKey\(providerMapKey\(item\.provider\)\)\s*",
-    status_key_body,
-    re.S,
-):
-    raise AssertionError("statusNotificationKey must remain exclusively provider-scoped across account switches")
+status_memo_key_body = function_body(
+    (root / "contents/ui/NotificationMemo.js").read_text(encoding="utf-8"), "statusMemoKey"
+)
+if "providerID" not in status_memo_key_body or "account" in status_memo_key_body:
+    raise AssertionError("statusMemoKey must remain exclusively provider-scoped across account switches")
 for key_function in ("quotaNotificationKey", "limitResetNotificationKey"):
     key_body = function_body(main_text, key_function)
     if "notificationScopeKey(item)" not in key_body:
@@ -1505,7 +1503,7 @@ if unprimed_index < 0 or worsened_index < 0 or unprimed_index > worsened_index:
 clear_scope_body = function_body(main_text, "clearNotificationScopeMemo")
 if "notificationScopeKey(item)" not in clear_scope_body or "delete nextMemo[key]" not in clear_scope_body:
     raise AssertionError("clearNotificationScopeMemo must remove stale quota/reset keys for the current account")
-if "statusNotificationKey(item)" in clear_scope_body:
+if "statusMemoKey(" in clear_scope_body:
     raise AssertionError("clearing an account scope must not erase provider-scoped status state")
 
 select_account_body = function_body(main_text, "selectAccount")
