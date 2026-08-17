@@ -2890,6 +2890,13 @@ PlasmoidItem {
         return "status:" + providerMapKey(item.provider)
     }
 
+    // primeNotifications skips providers with a pending refresh, so a missing
+    // status entry alone cannot tell a primed incident-free provider from one
+    // that never received a baseline. This marker keeps the two apart.
+    function statusNotificationPrimedKey(item) {
+        return "statusPrimed:" + providerMapKey(item.provider)
+    }
+
     function notificationScopePrimedKey(item) {
         return "scope:" + notificationScopeKey(item)
     }
@@ -2953,6 +2960,7 @@ PlasmoidItem {
                 if (statusValue.length > 0) {
                     nextMemo[statusNotificationKey(item)] = statusValue
                 }
+                nextMemo[statusNotificationPrimedKey(item)] = "1"
             }
             primeAccountNotificationScope(item, nextMemo)
         }
@@ -3002,8 +3010,22 @@ PlasmoidItem {
 
     function processStatusNotification(item, nextMemo) {
         var key = statusNotificationKey(item)
+        var primedKey = statusNotificationPrimedKey(item)
         var value = notificationStatusValue(item)
         var previousValue = String(notificationMemo[key] || "")
+        // A provider that primeNotifications skipped because its refresh was
+        // pending arrives here with an empty memo. Record its first clean status
+        // silently, otherwise an incident that predates the memo reset would be
+        // announced as new.
+        if (notificationMemo[primedKey] !== "1") {
+            nextMemo[primedKey] = "1"
+            if (value.length > 0) {
+                nextMemo[key] = value
+            } else {
+                delete nextMemo[key]
+            }
+            return
+        }
         if (value.length > 0) {
             var previousSeverity = previousValue.length > 0 ? previousValue.split("|")[0] : ""
             var worsened = notificationRank(item.statusSeverity) > notificationRank(previousSeverity)

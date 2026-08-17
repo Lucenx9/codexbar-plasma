@@ -1190,17 +1190,20 @@ KCM.SimpleKCM {
             errorText = i18n("%1 returned an unsupported descriptor command.", displayNameForProvider(providerID))
             return
         }
+        // Every value written here ends up inside a shell command line, and
+        // /proc/<pid>/cmdline stays world-readable while the child runs. Piping
+        // the value through `sh -c script _ "$secret"` does not fix that: the
+        // secret still lands in the shell argv. Secrets must go through
+        // promptDescriptorSecret, which reads the value inside the script and
+        // never puts it in a command line at all.
+        if (field.kind === "secret") {
+            errorText = i18n("%1 secrets must be set through the secure prompt.", displayNameForProvider(providerID))
+            return
+        }
         errorText = ""
         statusText = ""
         markFieldPending(providerID, field.id, true)
-        // A secret must reach the CLI on stdin only. Substituting it into
-        // `{value}` as well would publish it in the child process argv, where
-        // any local process can read it from /proc.
-        var isSecretField = field.kind === "secret"
-        var command = runDescriptorCommand(
-            field.writeCommand,
-            isSecretField ? ({}) : ({ "{value}": value }),
-            isSecretField ? value : null)
+        var command = runDescriptorCommand(field.writeCommand, ({ "{value}": value }))
         runCommand(command, {
             kind: "descriptorField",
             provider: providerID,
@@ -1249,7 +1252,7 @@ KCM.SimpleKCM {
         errorText = ""
         statusText = ""
         markFieldPending(providerID, action.id, true)
-        var command = runDescriptorCommand(action.command, ({}), null)
+        var command = runDescriptorCommand(action.command, ({}))
         runCommand(command, {
             kind: "descriptorAction",
             provider: providerID,
@@ -1258,13 +1261,11 @@ KCM.SimpleKCM {
         })
     }
 
-    function runDescriptorCommand(commandTokens, replacements, stdinValue) {
-        var commandLine = commandLineFromTokens(commandTokens, replacements)
-        if (stdinValue !== undefined && stdinValue !== null) {
-            var script = "printf '%s' \"$1\" | " + commandLine
-            return ["sh", "-c", shellQuote(script), "_", shellQuote(stdinValue)].join(" ")
-        }
-        return commandLine
+    // Deliberately has no stdin channel: any caller-supplied value would have to
+    // travel through argv to reach it. promptDescriptorSecret owns the only
+    // secret-carrying script.
+    function runDescriptorCommand(commandTokens, replacements) {
+        return commandLineFromTokens(commandTokens, replacements)
     }
 
     function commandLineFromTokens(commandTokens, replacements) {

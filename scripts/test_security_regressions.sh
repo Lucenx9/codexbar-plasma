@@ -135,12 +135,14 @@ require_in_file "$PROVIDERS_QML" "command.length === 0 || !isAllowedDescriptorCo
 require_in_file "$PROVIDERS_QML" "command.length === 0 || !isAllowedDescriptorCommand(command, \"action\")"
 require_in_file "$PROVIDERS_QML" "if (!isAllowedDescriptorCommand(field.writeCommand, \"field\"))"
 require_in_file "$PROVIDERS_QML" "if (!isAllowedDescriptorCommand(action.command, \"action\"))"
-# A descriptor secret must only travel on the child process stdin. Expanding it
-# into the `{value}` placeholder as well would also publish it in the process
-# argv, where any local process can read it from /proc.
-require_in_file "$PROVIDERS_QML" 'var isSecretField = field.kind === "secret"'
-require_in_file "$PROVIDERS_QML" 'isSecretField ? ({}) : ({ "{value}": value }),'
-require_in_file "$PROVIDERS_QML" 'isSecretField ? value : null)'
+# A descriptor secret must never reach a command line at all. /proc/<pid>/cmdline
+# is world-readable, so routing the value through `sh -c script _ "$secret"`
+# leaks it exactly like an expanded `{value}` placeholder would. Only
+# promptDescriptorSecret may carry a secret, and it reads the value inside the
+# script instead of receiving it as an argument.
+require_in_file "$PROVIDERS_QML" 'if (field.kind === "secret") {'
+require_in_file "$PROVIDERS_QML" "function runDescriptorCommand(commandTokens, replacements) {"
+reject_text "configProviders.qml" "$(cat "$PROVIDERS_QML")" 'shellQuote(stdinValue)'
 reject_text "configProviders.qml" "$(cat "$PROVIDERS_QML")" '({ "{value}": value }), field.kind === "secret" ? value : null)'
 require_in_file "$PROVIDERS_QML" "function isSafeDescriptorUrl(url)"
 require_in_file "$PROVIDERS_QML" "text.indexOf(\"https://\") === 0"

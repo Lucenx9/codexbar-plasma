@@ -117,6 +117,11 @@ Use this order when sources disagree:
 - Never log, display, persist, or pass through raw API keys, cookies, bearer
   tokens, auth headers, or unredacted diagnostics. Secret entry must use supported
   CLI stdin flows and redacted result contracts.
+- A secret must never appear anywhere in a command line, including as a shell
+  positional argument piped to stdin: `/proc/<pid>/cmdline` is world-readable
+  while the child runs. Only `promptDescriptorSecret` may carry a secret, because
+  it reads the value inside the script. Generic field writers must reject
+  `kind === "secret"` instead of growing a stdin channel.
 - Keep command nonce, timeout, disconnect, retry, and stale-result handling close
   to each external process lifecycle. A late process result must not overwrite a
   newer refresh or account selection.

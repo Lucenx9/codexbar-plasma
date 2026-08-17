@@ -1442,6 +1442,21 @@ if not re.search(
 status_process_body = function_body(main_text, "processStatusNotification")
 if "var key = statusNotificationKey(item)" not in status_process_body:
     raise AssertionError("processStatusNotification must consume the provider-scoped status key helper")
+if "statusNotificationPrimedKey(item)" not in prime_notifications_body:
+    raise AssertionError("primeNotifications must record which providers received a status baseline")
+for primed_fragment in (
+    "var primedKey = statusNotificationPrimedKey(item)",
+    "notificationMemo[primedKey] !== \"1\"",
+):
+    if primed_fragment not in status_process_body:
+        raise AssertionError(
+            "processStatusNotification must silently baseline a provider that primeNotifications skipped; "
+            f"missing {primed_fragment!r}"
+        )
+primed_status_index = status_process_body.find("notificationMemo[primedKey] !== \"1\"")
+status_notify_index = status_process_body.find("sendPlasmaNotification")
+if primed_status_index < 0 or status_notify_index < 0 or primed_status_index > status_notify_index:
+    raise AssertionError("a first status baseline must be recorded before any status notification is sent")
 clear_scope_body = function_body(main_text, "clearNotificationScopeMemo")
 if "notificationScopeKey(item)" not in clear_scope_body or "delete nextMemo[key]" not in clear_scope_body:
     raise AssertionError("clearNotificationScopeMemo must remove stale quota/reset keys for the current account")
