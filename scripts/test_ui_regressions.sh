@@ -1363,7 +1363,7 @@ if not re.search(
 
 status_key_body = function_body(main_text, "statusNotificationKey")
 if not re.fullmatch(
-    r'\s*return\s+"status:"\s*\+\s*providerMapKey\(item\.provider\)\s*',
+    r"\s*return\s+NotificationMemo\.statusMemoKey\(providerMapKey\(item\.provider\)\)\s*",
     status_key_body,
     re.S,
 ):
@@ -1439,37 +1439,69 @@ if not re.search(
     re.S,
 ):
     raise AssertionError("first account observation must prime state and exit before notification processing")
+# The notify decision itself lives in NotificationMemo.js and is covered
+# behaviourally by tests/tst_notification_memo.qml. What still needs pinning here
+# is that main.qml keeps delegating to it instead of growing a second copy.
 status_process_body = function_body(main_text, "processStatusNotification")
-if "var key = statusNotificationKey(item)" not in status_process_body:
-    raise AssertionError("processStatusNotification must consume the provider-scoped status key helper")
-if "statusNotificationPrimedKey(item)" not in prime_notifications_body:
-    raise AssertionError("primeNotifications must record which providers received a status baseline")
+for delegation_fragment in (
+    "NotificationMemo.statusDecision(",
+    "NotificationMemo.applyStatusDecision(nextMemo, providerID, decision)",
+    "if (decision.notify) {",
+):
+    if delegation_fragment not in status_process_body:
+        raise AssertionError(
+            "processStatusNotification must delegate the notify decision to NotificationMemo; "
+            f"missing {delegation_fragment!r}"
+        )
+if "sendPlasmaNotification" not in status_process_body:
+    raise AssertionError("processStatusNotification must keep the notification side effect in main.qml")
+apply_index = status_process_body.find("NotificationMemo.applyStatusDecision")
+notify_index = status_process_body.find("sendPlasmaNotification")
+if apply_index < 0 or notify_index < 0 or apply_index > notify_index:
+    raise AssertionError("the status baseline must be recorded before any status notification is sent")
 if "carryStatusNotificationMemo(item, nextMemo)" not in prime_notifications_body:
     raise AssertionError(
         "primeNotifications must carry an existing status baseline across a provider it skips, "
         "otherwise a status change during the pending refresh primes silently instead of notifying"
     )
+if "NotificationMemo.applyStatusDecision(" not in prime_notifications_body:
+    raise AssertionError("primeNotifications must record a status baseline through NotificationMemo")
 reset_memo_body = function_body(main_text, "resetNotificationMemo")
-if "isStatusNotificationMemoKey(key)" not in reset_memo_body:
+if "NotificationMemo.preservedMemoAfterReset(notificationMemo)" not in reset_memo_body:
     raise AssertionError(
         "resetNotificationMemo must preserve provider status baselines; a threshold or toggle "
         "change is not a status transition"
     )
 if re.search(r"notificationMemo\s*=\s*\(\{\}\)", reset_memo_body):
     raise AssertionError("resetNotificationMemo must not clear the whole memo, including status state")
-for primed_fragment in (
-    "var primedKey = statusNotificationPrimedKey(item)",
-    "notificationMemo[primedKey] !== \"1\"",
+
+# NotificationMemo.js owns the rules the popup depends on; keep them there rather
+# than letting a copy drift back into main.qml.
+notification_memo_js = (root / "contents/ui/NotificationMemo.js").read_text(encoding="utf-8")
+for memo_function in (
+    "function statusMemoKey(providerID)",
+    "function statusPrimedMemoKey(providerID)",
+    "function isStatusMemoKey(key)",
+    "function preservedMemoAfterReset(memo)",
+    "function carryStatusMemo(memo, providerID, nextMemo)",
+    "function statusDecision(memo, providerID, value, severity)",
+    "function applyStatusDecision(nextMemo, providerID, decision)",
+    "function severityRank(severity)",
 ):
-    if primed_fragment not in status_process_body:
-        raise AssertionError(
-            "processStatusNotification must silently baseline a provider that primeNotifications skipped; "
-            f"missing {primed_fragment!r}"
-        )
-primed_status_index = status_process_body.find("notificationMemo[primedKey] !== \"1\"")
-status_notify_index = status_process_body.find("sendPlasmaNotification")
-if primed_status_index < 0 or status_notify_index < 0 or primed_status_index > status_notify_index:
-    raise AssertionError("a first status baseline must be recorded before any status notification is sent")
+    if memo_function not in notification_memo_js:
+        raise AssertionError(f"NotificationMemo.js must keep {memo_function!r}")
+if "sendPlasmaNotification" in notification_memo_js or "i18n(" in notification_memo_js:
+    raise AssertionError("NotificationMemo.js must stay free of side effects and user-facing text")
+status_decision_body = function_body(notification_memo_js, "statusDecision")
+if 'statusPrimedMemoKey(providerID)] !== "1"' not in status_decision_body:
+    raise AssertionError(
+        "statusDecision must silently baseline a provider that was never primed, so an incident "
+        "predating the memo cannot be announced as new"
+    )
+unprimed_index = status_decision_body.find('statusPrimedMemoKey(providerID)] !== "1"')
+worsened_index = status_decision_body.find("worsened")
+if unprimed_index < 0 or worsened_index < 0 or unprimed_index > worsened_index:
+    raise AssertionError("statusDecision must settle the unprimed case before comparing severities")
 clear_scope_body = function_body(main_text, "clearNotificationScopeMemo")
 if "notificationScopeKey(item)" not in clear_scope_body or "delete nextMemo[key]" not in clear_scope_body:
     raise AssertionError("clearNotificationScopeMemo must remove stale quota/reset keys for the current account")
@@ -1517,9 +1549,9 @@ if not re.search(
 # Status notifications must fire on first sight, worsened severity, and changed
 # same-severity stable incident keys so active incident replacements are not
 # missed without letting free-form status text changes spam notifications.
-status_body = function_body(main_text, "processStatusNotification")
+status_body = function_body(notification_memo_js, "statusDecision")
 if "worsened" not in status_body:
-    raise AssertionError("processStatusNotification must gate on severity worsening")
+    raise AssertionError("statusDecision must gate on severity worsening")
 if (
     "incidentChanged" not in status_body
     or "previousIncidentKey" not in status_body
@@ -1527,20 +1559,24 @@ if (
     or "previousIncidentKey !== currentIncidentKey" not in status_body
 ):
     raise AssertionError(
-        "processStatusNotification must only notify for same-severity changes "
+        "statusDecision must only notify for same-severity changes "
         "when a stable status incident key is present"
     )
-if "previousValue !== value" in status_body:
+if "previousValue !== text" in status_body:
     raise AssertionError(
-        "processStatusNotification must compare incident keys instead of full "
+        "statusDecision must compare incident keys instead of full "
         "severity-bearing memo values"
     )
 
 status_value_body = function_body(main_text, "notificationStatusValue")
 if "statusIncidentKey" not in status_value_body:
     raise AssertionError("notificationStatusValue must prefer stable incident keys when present")
-if 'item.statusSeverity + "|" + incidentKey' not in status_value_body:
+if "NotificationMemo.statusMemoValue(item.statusSeverity, incidentKey)" not in status_value_body:
     raise AssertionError("notificationStatusValue must include severity and stable incident key")
+if 'String(severity || "") + "|" + String(incidentKey || "")' not in function_body(
+    notification_memo_js, "statusMemoValue"
+):
+    raise AssertionError("statusMemoValue must encode severity and incident key, and nothing else")
 if ': item.status' in status_value_body:
     raise AssertionError("notificationStatusValue must not fall back to provider-controlled status text")
 

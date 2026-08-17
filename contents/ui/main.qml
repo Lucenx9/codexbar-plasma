@@ -7,6 +7,7 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
 import "components" as Components
+import "NotificationMemo.js" as NotificationMemo
 import "PanelElements.js" as PanelElements
 import "ProviderIdentity.js" as ProviderIdentity
 import "QuotaThresholds.js" as QuotaThresholds
@@ -2838,19 +2839,9 @@ PlasmoidItem {
     // the first observation is silently primed, swallow an incident that starts
     // while the provider is still refreshing.
     function resetNotificationMemo() {
-        var nextMemo = ({})
-        for (var key in notificationMemo) {
-            if (hasOwnKey(notificationMemo, key) && isStatusNotificationMemoKey(key)) {
-                nextMemo[key] = notificationMemo[key]
-            }
-        }
-        notificationMemo = nextMemo
+        notificationMemo = NotificationMemo.preservedMemoAfterReset(notificationMemo)
         notificationsPrimed = false
         Qt.callLater(processNotifications)
-    }
-
-    function isStatusNotificationMemoKey(key) {
-        return key.indexOf("status:") === 0 || key.indexOf("statusPrimed:") === 0
     }
 
     function notificationProviderRefreshPending(providerID) {
@@ -2903,26 +2894,11 @@ PlasmoidItem {
     }
 
     function statusNotificationKey(item) {
-        return "status:" + providerMapKey(item.provider)
-    }
-
-    // primeNotifications skips providers with a pending refresh, so a missing
-    // status entry alone cannot tell a primed incident-free provider from one
-    // that never received a baseline. This marker keeps the two apart.
-    function statusNotificationPrimedKey(item) {
-        return "statusPrimed:" + providerMapKey(item.provider)
+        return NotificationMemo.statusMemoKey(providerMapKey(item.provider))
     }
 
     function carryStatusNotificationMemo(item, nextMemo) {
-        var primedKey = statusNotificationPrimedKey(item)
-        if (notificationMemo[primedKey] !== "1") {
-            return
-        }
-        nextMemo[primedKey] = "1"
-        var previousValue = String(notificationMemo[statusNotificationKey(item)] || "")
-        if (previousValue.length > 0) {
-            nextMemo[statusNotificationKey(item)] = previousValue
-        }
+        NotificationMemo.carryStatusMemo(notificationMemo, providerMapKey(item.provider), nextMemo)
     }
 
     function notificationScopePrimedKey(item) {
@@ -2992,11 +2968,10 @@ PlasmoidItem {
                 continue
             }
             if (notifyStatusIncidents) {
-                var statusValue = notificationStatusValue(item)
-                if (statusValue.length > 0) {
-                    nextMemo[statusNotificationKey(item)] = statusValue
-                }
-                nextMemo[statusNotificationPrimedKey(item)] = "1"
+                NotificationMemo.applyStatusDecision(
+                    nextMemo,
+                    providerMapKey(item.provider),
+                    ({ notify: false, value: notificationStatusValue(item) }))
             }
             primeAccountNotificationScope(item, nextMemo)
         }
@@ -3044,44 +3019,21 @@ PlasmoidItem {
         notificationMemo = nextMemo
     }
 
+    // The notify/stay-quiet decision lives in NotificationMemo.statusDecision so
+    // it can be tested directly; this keeps only the side effect.
     function processStatusNotification(item, nextMemo) {
-        var key = statusNotificationKey(item)
-        var primedKey = statusNotificationPrimedKey(item)
-        var value = notificationStatusValue(item)
-        var previousValue = String(notificationMemo[key] || "")
-        // A provider that primeNotifications skipped because its refresh was
-        // pending arrives here with an empty memo. Record its first clean status
-        // silently, otherwise an incident that predates the memo reset would be
-        // announced as new.
-        if (notificationMemo[primedKey] !== "1") {
-            nextMemo[primedKey] = "1"
-            if (value.length > 0) {
-                nextMemo[key] = value
-            } else {
-                delete nextMemo[key]
-            }
-            return
-        }
-        if (value.length > 0) {
-            var previousSeverity = previousValue.length > 0 ? previousValue.split("|")[0] : ""
-            var worsened = notificationRank(item.statusSeverity) > notificationRank(previousSeverity)
-            // Notify for a new incident, worsened severity, or a changed
-            // same-severity stable incident key so replacements are not missed
-            // without treating provider-controlled status text as notification identity.
-            var previousIncidentKey = notificationStatusIncidentKey(previousValue)
-            var currentIncidentKey = notificationStatusIncidentKey(value)
-            var incidentChanged = previousIncidentKey.length > 0
-                && currentIncidentKey.length > 0
-                && previousIncidentKey !== currentIncidentKey
-            if (previousValue.length === 0 || worsened || incidentChanged) {
-                sendPlasmaNotification(
-                    i18n("%1 status issue", item.title),
-                    item.status,
-                    notificationUrgency(item.statusSeverity))
-            }
-            nextMemo[key] = value
-        } else {
-            delete nextMemo[key]
+        var providerID = providerMapKey(item.provider)
+        var decision = NotificationMemo.statusDecision(
+            notificationMemo,
+            providerID,
+            notificationStatusValue(item),
+            item.statusSeverity)
+        NotificationMemo.applyStatusDecision(nextMemo, providerID, decision)
+        if (decision.notify) {
+            sendPlasmaNotification(
+                i18n("%1 status issue", item.title),
+                item.status,
+                notificationUrgency(item.statusSeverity))
         }
     }
 
@@ -3195,14 +3147,9 @@ PlasmoidItem {
             return ""
         }
         var incidentKey = item.statusIncidentKey ? String(item.statusIncidentKey) : ""
-        return item.statusSeverity + "|" + incidentKey
+        return NotificationMemo.statusMemoValue(item.statusSeverity, incidentKey)
     }
 
-    function notificationStatusIncidentKey(value) {
-        var text = String(value || "")
-        var separator = text.indexOf("|")
-        return separator >= 0 ? text.slice(separator + 1) : ""
-    }
 
     function statusIncidentKey(status) {
         if (!status) {
@@ -3244,20 +3191,7 @@ PlasmoidItem {
     }
 
     function notificationRank(severity) {
-        switch (String(severity || "")) {
-        case "critical":
-            return 5
-        case "major":
-            return 4
-        case "minor":
-            return 3
-        case "maintenance":
-            return 2
-        case "unknown":
-            return 1
-        default:
-            return 0
-        }
+        return NotificationMemo.severityRank(severity)
     }
 
     function notificationUrgency(severity) {

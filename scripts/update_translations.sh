@@ -44,6 +44,7 @@ QML_SOURCES=(
   contents/ui/configGeneral.qml
   contents/ui/configProviders.qml
   contents/ui/ProviderIdentity.js
+  contents/ui/NotificationMemo.js
   contents/ui/PanelElements.js
   contents/ui/QuotaThresholds.js
   contents/ui/SafeText.js

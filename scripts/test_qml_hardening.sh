@@ -15,6 +15,7 @@ QML_FILES=(
   contents/ui/configAdvanced.qml
   contents/ui/configDebug.qml
   contents/ui/ProviderIdentity.js
+  contents/ui/NotificationMemo.js
   contents/ui/PanelElements.js
   contents/ui/QuotaThresholds.js
   contents/ui/SafeText.js
