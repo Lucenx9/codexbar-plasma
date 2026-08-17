@@ -44,7 +44,12 @@ upstream v0.50.0 and probed against the installed CLI 0.50.0.
   both the notification level and the usage-bar markers. Per-provider thresholds
   stay blocked on the CLI descriptor. Do not reintroduce literal percentages at
   a call site; `limitResetArmThreshold` is a separate reset-detection knob and
-  is deliberately not tied to the warning step.
+  is deliberately not tied to the warning step. Changing a threshold resets the
+  threshold-derived notification memo but keeps the provider status baseline: a
+  settings change is not a status transition. That decision lives in
+  `contents/ui/NotificationMemo.js` and is covered by
+  `tests/tst_notification_memo.qml`; keep it there rather than reinlining it in
+  `main.qml`.
 - Local Agent Sessions are consumed through `codexbar sessions --json-v2` in a
   bounded, refreshable global tab. Only safe display fields are normalized;
   `cwd`, `transcriptPath`, IDs, and PIDs are neither retained nor rendered.
