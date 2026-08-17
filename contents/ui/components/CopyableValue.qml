@@ -39,7 +39,7 @@ RowLayout {
     PlasmaComponents.ToolButton {
         id: copyButton
 
-        icon.name: "edit-copy"
+        icon.name: valueRow.copied ? "checkmark" : "edit-copy"
         icon.width: Kirigami.Units.iconSizes.small
         icon.height: Kirigami.Units.iconSizes.small
         opacity: valueRow.copyRevealed || valueRow.copied || hovered || activeFocus ? 1 : 0

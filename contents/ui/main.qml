@@ -5544,7 +5544,9 @@ PlasmoidItem {
                                     anchors.bottomMargin: 2
                                     height: 2
                                     radius: height / 2
-                                    color: root.withAlpha(Kirigami.Theme.textColor, 0.12)
+                                    color: providerTab.meter >= 0
+                                        ? root.withAlpha(Kirigami.Theme.textColor, 0.12)
+                                        : (providerTab.selected ? providerTab.accent : "transparent")
                                     clip: true
 
                                     Rectangle {
