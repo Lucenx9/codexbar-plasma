@@ -819,11 +819,27 @@ for vertical_badge_fragment in (
     "visible: compactRoot.verticalPanel",
     "compactRoot.incidentProvider.hasIncident",
     "statusBadgeColor(compactRoot.incidentProvider.statusSeverity)",
+    "border.width: 1",
+    "border.color: Kirigami.Theme.backgroundColor",
 ):
     if vertical_badge_fragment not in vertical_status_badge_body:
         raise AssertionError(
             "collapsing to an icon must keep an at-a-glance incident marker; "
             f"missing {vertical_badge_fragment!r}"
+        )
+
+horizontal_status_badge_body = id_block(compact_representation_text, "compactStatusBadge")
+for horizontal_badge_fragment in (
+    "visible: !compactRoot.verticalPanel",
+    "compactRoot.incidentProvider.hasIncident",
+    "statusBadgeColor(compactRoot.incidentProvider.statusSeverity)",
+    "border.width: 1",
+    "border.color: Kirigami.Theme.backgroundColor",
+):
+    if horizontal_badge_fragment not in horizontal_status_badge_body:
+        raise AssertionError(
+            "horizontal status badge must keep a contrast contour against the panel; "
+            f"missing {horizontal_badge_fragment!r}"
         )
 
 for tooltip_fragment in (
@@ -939,6 +955,15 @@ for tab_id in ("overviewTab", "providerTab"):
                 f"{tab_id} must preserve pointer-neutral selection and keyboard focus; "
                 f"missing {focus_fragment!r}"
             )
+
+provider_tab_body = id_block(main_text, "providerTab")
+if (
+    "color: providerTab.meter >= 0" not in provider_tab_body
+    or "providerTab.selected ? providerTab.accent : \"transparent\"" not in provider_tab_body
+):
+    raise AssertionError(
+        "providerTab must show the accent underline when selected for unmetered providers"
+    )
 
 usage_percent_body = id_block(provider_usage_row_text, "usagePercentLabel")
 if "font.weight: Font.DemiBold" not in usage_percent_body:
