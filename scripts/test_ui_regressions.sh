@@ -1534,12 +1534,35 @@ if "statusMemoKey(" in clear_scope_body:
 select_account_body = function_body(main_text, "selectAccount")
 pending_index = select_account_body.find("setNotificationProviderRefreshPending(key, true)")
 snapshot_index = select_account_body.find("replaceProviderSnapshot(key, options[i])")
-refresh_index = select_account_body.find("Qt.callLater(refreshNow)", snapshot_index)
+refresh_index = select_account_body.find("scheduleRefresh()", snapshot_index)
 return_index = select_account_body.find("return", snapshot_index)
 if pending_index < 0 or snapshot_index < 0 or pending_index > snapshot_index:
     raise AssertionError("selectAccount must suppress cached snapshots until fresh usage data arrives")
 if refresh_index < 0 or return_index < 0 or refresh_index > return_index:
     raise AssertionError("selectAccount must schedule a fresh usage request before returning a cached snapshot")
+if "refreshNow()" in select_account_body:
+    raise AssertionError(
+        "selectAccount must schedule through scheduleRefresh so the commandSource "
+        "re-evaluation cannot spawn a second CLI run"
+    )
+
+# Account selection re-evaluates commandSource, so the commandSource handler and
+# selectAccount fire in the same turn; scheduleRefresh coalesces them into one
+# refreshNow. Keep the coalescing rule pinned here so a future direct refreshNow
+# reintroduces the double CLI spawn.
+schedule_refresh_body = function_body(main_text, "scheduleRefresh")
+for schedule_fragment in ("refreshScheduled", "Qt.callLater", "root.refreshNow()"):
+    if schedule_fragment not in schedule_refresh_body:
+        raise AssertionError(f"scheduleRefresh must coalesce same-turn refresh triggers: {schedule_fragment}")
+for handler_fragment in (
+    "onCommandSourceChanged: scheduleRefresh()",
+    "onProviderConfigRevisionChanged: scheduleRefresh()",
+):
+    if handler_fragment not in main_text:
+        raise AssertionError(
+            "config-driven refreshes must schedule through the coalescing path "
+            f"so account selection spawns the CLI exactly once: {handler_fragment}"
+        )
 for fresh_function in ("parseOutput", "finishProviderFallback"):
     fresh_body = function_body(main_text, fresh_function)
     fresh_index = fresh_body.find("markNotificationProvidersFresh(nextProviders)")

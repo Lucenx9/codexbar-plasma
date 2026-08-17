@@ -127,6 +127,10 @@ PlasmoidItem {
     property var notificationMemo: ({})
     property var notificationRefreshPending: ({})
     property bool notificationsPrimed: false
+    // Same-turn refresh triggers are coalesced through scheduleRefresh() so one
+    // logical change (an account selection re-evaluates commandSource, which
+    // also schedules a refresh) never spawns the CLI twice.
+    property bool refreshScheduled: false
     property string connectedUpdateCommandSource: ""
     readonly property int widgetUpdateCheckTimeoutMs: 60000
     readonly property int widgetAutoUpdateTimeoutMs: 600000
@@ -172,10 +176,10 @@ PlasmoidItem {
     // two scales apart is what makes the primary meters read as primary.
     readonly property real compactMeterTrackHeight: Math.round(Kirigami.Units.gridUnit * 0.28)
 
-    onCommandSourceChanged: Qt.callLater(refreshNow)
+    onCommandSourceChanged: scheduleRefresh()
     onCostUsageEnabledChanged: Qt.callLater(refreshCost)
     onCostHistoryDaysChanged: Qt.callLater(refreshCost)
-    onProviderConfigRevisionChanged: Qt.callLater(refreshNow)
+    onProviderConfigRevisionChanged: scheduleRefresh()
     onAutoSelectProviderChanged: updateSelectedProvider()
     onOverviewProviderIDsRawChanged: updateSelectedProvider()
     onEnableNotificationsChanged: resetNotificationMemo()
@@ -511,6 +515,20 @@ PlasmoidItem {
         activeUsageCommands = activeCommands
     }
 
+    // Coalesces deferred refresh triggers (config/commandSource changes and
+    // account selection both re-evaluate commandSource) into one refreshNow per
+    // event-loop turn, so a single user action spawns the CLI exactly once.
+    function scheduleRefresh() {
+        if (refreshScheduled) {
+            return
+        }
+        refreshScheduled = true
+        Qt.callLater(function() {
+            refreshScheduled = false
+            root.refreshNow()
+        })
+    }
+
     function refreshNow() {
         retireUsageCommands()
         retireStaleAccountCommands()
@@ -579,7 +597,7 @@ PlasmoidItem {
             return
         }
         providerConfigStamp = stamp
-        Qt.callLater(refreshNow)
+        scheduleRefresh()
     }
 
     function refreshCost() {
@@ -2289,11 +2307,11 @@ PlasmoidItem {
         for (var i = 0; i < options.length; i++) {
             if (root.accountLabel(options[i]) === label) {
                 replaceProviderSnapshot(key, options[i])
-                Qt.callLater(refreshNow)
+                scheduleRefresh()
                 return
             }
         }
-        Qt.callLater(refreshNow)
+        scheduleRefresh()
     }
 
     function replaceProviderSnapshot(providerID, snapshot) {
