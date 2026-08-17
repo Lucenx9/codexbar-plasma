@@ -60,6 +60,7 @@ ColumnLayout {
                 : []
 
             delegate: Controls.Button {
+                required property var modelData
                 readonly property string label: accountsPanel.applet.accountLabel(modelData)
                 readonly property string subtitle: accountsPanel.applet.accountSubtitle(modelData)
                 readonly property bool accountSelected: accountsPanel.applet.accountIsSelected(modelData, accountsPanel.providerData)

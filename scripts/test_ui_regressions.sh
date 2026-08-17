@@ -1966,6 +1966,28 @@ for surface, surface_text in popup_and_provider_surfaces:
             "popup and provider-config text must size from Kirigami.Theme fonts, "
             f"not device pixels: {surface.name}: {hardcoded_font.group(0)!r}"
         )
+
+for qml_path in sorted(root.glob("contents/**/*.qml")):
+    qml_content = qml_path.read_text(encoding="utf-8")
+    for match in re.finditer(r"delegate:\s*([A-Za-z0-9_.]+)\s*\{", qml_content):
+        element_type = match.group(1)
+        if element_type.startswith("Components."):
+            continue
+        start_index = match.end() - 1
+        brace_depth = 1
+        cursor = start_index + 1
+        while cursor < len(qml_content) and brace_depth > 0:
+            if qml_content[cursor] == "{":
+                brace_depth += 1
+            elif qml_content[cursor] == "}":
+                brace_depth -= 1
+            cursor += 1
+        delegate_body = qml_content[start_index + 1:cursor - 1]
+        if "required property var modelData" not in delegate_body:
+            raise AssertionError(
+                f"{qml_path.name} delegate {element_type} must declare "
+                "'required property var modelData' for Qt 6 QML scoping safety"
+            )
 PY
 
 echo "UI regression checks passed."

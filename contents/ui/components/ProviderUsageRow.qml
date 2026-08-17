@@ -100,6 +100,7 @@ ColumnLayout {
             model: usageRow.applet.quotaWarningMarkers(usageRow.rowData)
 
             delegate: Rectangle {
+                required property var modelData
                 readonly property real warningPercent: Number(modelData.percent) || 0
 
                 visible: warningPercent > 0 && warningPercent < 100

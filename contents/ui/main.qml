@@ -5405,6 +5405,8 @@ PlasmoidItem {
                             delegate: Rectangle {
                                 id: providerTab
 
+                                required property int index
+                                required property var modelData
                                 property bool focusAcquiredByPointer: false
                                 readonly property bool selected: index === root.selectedProviderIndex
                                 readonly property bool keyboardFocusVisible: activeFocus && !focusAcquiredByPointer
@@ -6108,6 +6110,8 @@ PlasmoidItem {
                                     model: usageDashboardSection.kpis
 
                                     delegate: ColumnLayout {
+                                        required property var modelData
+
                                         Layout.fillWidth: true
                                         spacing: 0
 
@@ -6138,6 +6142,8 @@ PlasmoidItem {
                                     model: usageDashboardSection.rows
 
                                     delegate: RowLayout {
+                                        required property var modelData
+
                                         Layout.fillWidth: true
                                         spacing: Kirigami.Units.smallSpacing
 
@@ -6308,6 +6314,8 @@ PlasmoidItem {
                                     delegate: RowLayout {
                                         id: costHistoryMetricRow
 
+                                        required property var modelData
+
                                         Layout.fillWidth: true
                                         spacing: Kirigami.Units.smallSpacing
 
@@ -6416,6 +6424,8 @@ PlasmoidItem {
                                         model: costDrillDownSection.breakdownRows
 
                                         delegate: RowLayout {
+                                            required property var modelData
+
                                             Layout.fillWidth: true
                                             spacing: Kirigami.Units.smallSpacing
 
@@ -6469,6 +6479,8 @@ PlasmoidItem {
                                         model: costDrillDownSection.modelRows
 
                                         delegate: RowLayout {
+                                            required property var modelData
+
                                             Layout.fillWidth: true
                                             spacing: Kirigami.Units.smallSpacing
 
@@ -6522,6 +6534,8 @@ PlasmoidItem {
                                 model: root.selectedProviderData ? root.actionRows(root.selectedProviderData) : []
 
                                 delegate: ColumnLayout {
+                                    required property var modelData
+
                                     Layout.fillWidth: true
                                     spacing: 0
 

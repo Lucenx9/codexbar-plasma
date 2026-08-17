@@ -2405,6 +2405,8 @@ KCM.SimpleKCM {
                     model: page.providerSettingsRows(page.selectedProvider)
 
                     delegate: RowLayout {
+                        required property var modelData
+
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing
 
