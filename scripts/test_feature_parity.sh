@@ -422,7 +422,7 @@ require_in_surface applet "costHistoryShowsTokens ? points[i].tokens : points[i]
 # Every cost chart follows one metric: the provider detail chart must not stay
 # on cost while the rows beneath it switch to tokens.
 require_in_surface applet "costHistoryShowsTokens ? point.tokens : point.cost"
-require_in_surface applet 'root.costHistoryShowsTokens'
+require_in_surface applet 'applet.costHistoryShowsTokens'
 # The chart's "Latest" summary annotates the same series the bars plot, so it
 # must follow the metric instead of always printing the cost amount.
 require_in_surface applet "tokenCountString(last.tokens)"

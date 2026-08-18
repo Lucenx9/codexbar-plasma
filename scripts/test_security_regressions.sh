@@ -16,6 +16,7 @@ PROVIDER_IDENTITY_JS="${ROOT_DIR}/contents/ui/ProviderIdentity.js"
 WORKFLOW="${ROOT_DIR}/.github/workflows/ci.yml"
 MAKEFILE="${ROOT_DIR}/Makefile"
 UPDATER="${ROOT_DIR}/scripts/update-widget.sh"
+FULL_REPRESENTATION_QML="${ROOT_DIR}/contents/ui/components/FullRepresentation.qml"
 PROVIDER_DETAIL_SECTION_QML="${ROOT_DIR}/contents/ui/components/ProviderDetailSection.qml"
 INTERACTIVE_CHART_QML="${ROOT_DIR}/contents/ui/components/InteractiveChart.qml"
 
@@ -157,7 +158,7 @@ for qml_file in "$MAIN_QML" "$PROVIDERS_QML"; do
   require_in_file "$qml_file" 'return "view-statistics"'
 done
 for qml_file in \
-  "$MAIN_QML" \
+  "$FULL_REPRESENTATION_QML" \
   "$PROVIDERS_QML" \
   "$ROOT_DIR/contents/ui/components/CompactRepresentation.qml" \
   "$ROOT_DIR/contents/ui/components/OverviewProviderRow.qml" \

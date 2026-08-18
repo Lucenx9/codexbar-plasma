@@ -131,7 +131,12 @@ Use this order when sources disagree:
 ## Layout
 
 - `metadata.json`: Plasma applet metadata.
-- `contents/ui/main.qml`: panel, popup, provider details, status badges, bars, account selection.
+- `contents/ui/main.qml`: the applet root. Owns CLI commands, process/nonce
+  lifecycle, parsing, normalization, provider identity, selection and
+  notification state, and the presentation helpers the popup binds to.
+- `contents/ui/components/CompactRepresentation.qml`: the panel representation.
+- `contents/ui/components/FullRepresentation.qml`: the popup - tab switcher,
+  overview, provider details, status badges, bars, credits, cost sections.
 - `contents/ui/components/`: presentation-only QML components used by the panel, popup, and config pages.
 - `contents/ui/configGeneral.qml`: general widget settings.
 - `contents/ui/configProviders.qml`: provider enablement and provider actions.
