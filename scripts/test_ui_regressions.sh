@@ -125,26 +125,6 @@ def id_block(text, object_id):
     return text[brace + 1:index - 1]
 
 
-def extract_switch_returns(text, name):
-    body = function_body(text, name)
-    values = {}
-    pending = []
-    for line in body.splitlines():
-        stripped = line.strip()
-        case_match = re.match(r'case "([^"]+)":', stripped)
-        if case_match:
-            pending.append(case_match.group(1))
-            continue
-        return_match = re.match(r"return\s+(.+?);?$", stripped)
-        if return_match and pending:
-            for provider in pending:
-                values[provider] = return_match.group(1)
-            pending = []
-        elif stripped.startswith("default:"):
-            pending = []
-    return values
-
-
 def extract_object_entries(text, function_name, variable_name):
     body = function_body(text, function_name)
     marker = f"var {variable_name} = {{"
@@ -286,55 +266,57 @@ for live_config_fragment in (
 if "—" in main_text or "–" in main_text:
     raise AssertionError("main.qml must avoid em dash/en dash placeholders in visible UI text")
 
-for function_name in (
-    "providerCliArgument",
-    "providerColor",
-    "providerDashboardUrl",
-    "providerLoginUrl",
-):
-    main_values = extract_switch_returns(main_text, function_name)
-    provider_values = extract_switch_returns(providers_text, function_name)
-    if main_values != provider_values:
-        missing = sorted(set(main_values) - set(provider_values))
-        extra = sorted(set(provider_values) - set(main_values))
-        changed = sorted(
-            key for key in set(main_values) & set(provider_values)
-            if main_values[key] != provider_values[key]
-        )
-        raise AssertionError(
-            f"{function_name} drift between main.qml and configProviders.qml; "
-            f"missing={missing}, extra={extra}, changed={changed}"
-        )
-
-for function_name, variable_name in (
-    ("providerKey", "aliases"),
-    ("providerIconSource", "aliases"),
-    ("providerTitle", "names"),
-    ("providerDocsUrl", "docs"),
-):
-    main_values = extract_object_entries(main_text, function_name, variable_name)
-    provider_values = extract_object_entries(providers_text, function_name, variable_name)
-    if main_values != provider_values:
-        missing = sorted(set(main_values) - set(provider_values))
-        extra = sorted(set(provider_values) - set(main_values))
-        changed = sorted(
-            key for key in set(main_values) & set(provider_values)
-            if main_values[key] != provider_values[key]
-        )
-        raise AssertionError(
-            f"{function_name} drift between main.qml and configProviders.qml; "
-            f"missing={missing}, extra={extra}, changed={changed}"
-        )
-
+# Provider identity used to be two copies, and this file carried a drift check
+# that compared them entry by entry. The tables now live once in
+# ProviderIdentity.js, so what is worth asserting is that neither surface has
+# grown a private copy again: both must read the shared module.
 for source_text, label in ((main_text, "main.qml"), (providers_text, "configProviders.qml")):
-    docs_body = function_body(source_text, "providerDocsUrl")
-    color_body = function_body(source_text, "providerColor")
-    title_body = function_body(source_text, "providerTitle")
-    if 'wayfinder: "wayfinder.md"' not in docs_body:
-        raise AssertionError(f"{label} must expose the Wayfinder documentation link")
-    if 'case "wayfinder":' not in color_body:
-        raise AssertionError(f"{label} must expose the Wayfinder brand color")
-    if '"wayfinder": i18n("Wayfinder")' not in title_body:
+    for function_name, shared_call in (
+        ("providerKey", "ProviderIdentity.resolveProviderKey(value)"),
+        ("providerCliArgument", "ProviderIdentity.providerCliArgument(value)"),
+        ("providerColor", "ProviderIdentity.providerBrandColorChannels(value)"),
+        ("providerIconSource", "ProviderIdentity.providerIconFileName(value)"),
+        ("providerDashboardUrl", "ProviderIdentity.providerDashboardUrl(providerID)"),
+        ("providerDocsUrl", "ProviderIdentity.providerDocsUrl(providerID)"),
+        ("providerLoginUrl", "ProviderIdentity.providerLoginUrl(providerID)"),
+    ):
+        body = function_body(source_text, function_name)
+        if shared_call not in body:
+            raise AssertionError(
+                f"{label}: {function_name} must read provider identity from "
+                f"ProviderIdentity.js instead of a local table"
+            )
+        if 'case "' in body or "var aliases = {" in body:
+            raise AssertionError(
+                f"{label}: {function_name} has grown a local provider table again"
+            )
+
+# The display names cannot move: i18n needs literal strings in a file gettext
+# scans, so this one table stays duplicated and still needs a drift check.
+main_titles = extract_object_entries(main_text, "providerTitle", "names")
+provider_titles = extract_object_entries(providers_text, "providerTitle", "names")
+if main_titles != provider_titles:
+    missing = sorted(set(main_titles) - set(provider_titles))
+    extra = sorted(set(provider_titles) - set(main_titles))
+    changed = sorted(
+        key for key in set(main_titles) & set(provider_titles)
+        if main_titles[key] != provider_titles[key]
+    )
+    raise AssertionError(
+        "providerTitle drift between main.qml and configProviders.qml; "
+        f"missing={missing}, extra={extra}, changed={changed}"
+    )
+
+# Wayfinder was added late and is the canary for a half-finished provider.
+identity_text = (root / "contents/ui/ProviderIdentity.js").read_text(encoding="utf-8")
+for identity_fragment, requirement in (
+    ('"wayfinder": "wayfinder.md"', "documentation link"),
+    ('"wayfinder": [', "brand color"),
+):
+    if identity_fragment not in identity_text:
+        raise AssertionError(f"ProviderIdentity.js must expose the Wayfinder {requirement}")
+for source_text, label in ((main_text, "main.qml"), (providers_text, "configProviders.qml")):
+    if '"wayfinder": i18n("Wayfinder")' not in function_body(source_text, "providerTitle"):
         raise AssertionError(f"{label} must expose the Wayfinder display name")
 
 api_key_setup_body = function_body(providers_text, "supportsApiKeySetup")

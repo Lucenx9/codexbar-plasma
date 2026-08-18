@@ -127,10 +127,13 @@ require_in_surface providers "Object.prototype.hasOwnProperty.call(item, key)"
 require_in_surface applet "maximumConcurrentProviderFallbackCommands: 8"
 require_in_surface applet "nextProviders.length < maximumProviderSnapshots"
 require_in_surface applet "value: boundedDisplayText(parts.join(\" · \"), 500)"
-require_in_surface applet "key = ProviderIdentity.providerKey(key, aliases)"
-require_in_surface providers "key = ProviderIdentity.providerKey(key, aliases)"
-require_in_surface applet "var key = ProviderIdentity.providerMapKey(providerKey(value))"
-require_in_surface providers "var key = ProviderIdentity.providerMapKey(providerKey(value))"
+# The icon file name is built from a provider-controlled key, so that key is
+# bounded and pattern-checked before it can name a path. Both surfaces reach that
+# validation through providerIconFileName, so it is asserted once where it lives.
+require_in_file "$PROVIDER_IDENTITY_JS" "var key = providerMapKey(resolveProviderKey(value))"
+require_in_file "$PROVIDER_IDENTITY_JS" 'if (!/^[a-z0-9][a-z0-9._-]*$/.test(key) || key.indexOf("..") !== -1) {'
+require_in_surface applet "var fileName = ProviderIdentity.providerIconFileName(value)"
+require_in_surface providers "var fileName = ProviderIdentity.providerIconFileName(value)"
 require_in_surface providers "function isAllowedDescriptorCommand(commandTokens, purpose)"
 require_in_surface providers "String(commandTokens[0]) !== \"codexbar\""
 require_in_surface providers "String(commandTokens[1]) !== \"config\""
@@ -153,8 +156,11 @@ require_in_surface providers "function isSafeDescriptorUrl(url)"
 require_in_surface providers "text.indexOf(\"https://\") === 0"
 require_in_surface providers "var url = String(payload.value.url)"
 require_in_surface providers "if (isSafeDescriptorUrl(url))"
+# The key validation itself is asserted once above, against ProviderIdentity.js.
+# What each surface still owns is the refusal: an unusable key must fall back to
+# a generic icon rather than reaching Qt.resolvedUrl.
 for qml_file in "$MAIN_QML" "$PROVIDERS_QML"; do
-  require_in_file "$qml_file" '!/^[a-z0-9][a-z0-9._-]*$/.test(key) || key.indexOf("..") !== -1'
+  require_in_file "$qml_file" 'if (fileName.length === 0) {'
   require_in_file "$qml_file" 'return "view-statistics"'
 done
 for qml_file in \

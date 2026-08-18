@@ -77,13 +77,34 @@ def function_body(text, name):
                 return text[brace + 1:index]
     raise ValueError(f"unterminated function {name}")
 
+# Brand colors live once, as channel triples in ProviderIdentity.js, because the
+# popup and the config page must not drift apart on what a provider looks like.
+identity_text = (root / "contents/ui/ProviderIdentity.js").read_text(encoding="utf-8")
+channels = re.search(r"var providerBrandChannels = \{(.*?)\n\}", identity_text, re.S)
+if not channels:
+    print("missing providerBrandChannels table in ProviderIdentity.js", file=sys.stderr)
+    sys.exit(1)
+branded = set(re.findall(r'"([^"]+)":\s*\[', channels.group(1)))
+missing = [provider for provider in required_provider_colors if provider not in branded]
+if missing:
+    joined = ", ".join(missing)
+    print(f"missing provider brand color in ProviderIdentity.js: {joined}", file=sys.stderr)
+    sys.exit(1)
+
+# Both surfaces must read that one table instead of growing a local palette.
 for surface_name in ("applet", "providers"):
     body = Surface(surface_name, root).function_body("providerColor")
-    cases = set(re.findall(r'case "([^"]+)":', body))
-    missing = [provider for provider in required_provider_colors if provider not in cases]
-    if missing:
-        joined = ", ".join(missing)
-        print(f"missing provider brand color in surface {surface_name}: {joined}", file=sys.stderr)
+    if "ProviderIdentity.providerBrandColorChannels(value)" not in body:
+        print(
+            f"providerColor in surface {surface_name} must read the shared brand table",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    if "Kirigami.Theme.highlightColor" not in body:
+        print(
+            f"providerColor in surface {surface_name} must fall back to the theme highlight",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
 for path in sorted(path for path in surface_files("all", root) if path.suffix == ".qml"):
