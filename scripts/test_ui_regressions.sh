@@ -363,7 +363,7 @@ if "normalizedProviderID(" not in overview_body:
         "aliased providers match runtime keys"
     )
 
-provider_config_body = function_body(main_text, "parseProviderConfigOutput")
+provider_config_body = function_body(main_text, "normalizeProviderConfigEntries")
 if "Array.isArray(payload) ? payload : [payload]" not in provider_config_body:
     raise AssertionError(
         "parseProviderConfigOutput must accept a single provider object as well "
@@ -469,9 +469,21 @@ for range_match_fragment in ("Number(tokenCost.historyDays)", "Number(costHistor
             f"missing {range_match_fragment!r}"
         )
 
+rate_window_body = function_body(main_text, "rateWindowMetrics")
+if "pace.expectedUsedPercent !== null" not in rate_window_body or "pace.expectedUsedPercent !== undefined" not in rate_window_body:
+    raise AssertionError("rateWindowMetrics must not treat null pace.expectedUsedPercent as 0")
+for clamped_percent_fragment in (
+    "clamp(used, 0, 100)",
+    "clamp(100 - used, 0, 100)",
+    "clamp(Number(pace.expectedUsedPercent), 0, 100)",
+):
+    if clamped_percent_fragment not in rate_window_body:
+        raise AssertionError(
+            "CLI percentages must be clamped before they reach a meter; "
+            f"missing {clamped_percent_fragment!r}"
+        )
+
 add_window_body = function_body(main_text, "addWindow")
-if "pace.expectedUsedPercent !== null" not in add_window_body or "pace.expectedUsedPercent !== undefined" not in add_window_body:
-    raise AssertionError("addWindow must not treat null pace.expectedUsedPercent as 0")
 for reset_source_fragment in (
     "resetsAt: boundedDisplayText(",
     "resetDescription: boundedDisplayText(",
@@ -551,7 +563,7 @@ if "descriptorValueText(field.value)" not in field_option_body:
     raise AssertionError("fieldOptionIndex must preserve numeric zero via descriptorValueText")
 
 accounts_body = function_body(main_text, "parseProviderAccountsOutput")
-if "var dedupedOptions = dedupeAccountOptions(options)" not in accounts_body:
+if "var dedupedOptions = Normalizer.dedupeAccountOptions(options)" not in accounts_body:
     raise AssertionError("parseProviderAccountsOutput must decide errors after account option dedupe")
 if "var accountError = \"\"" not in accounts_body:
     raise AssertionError("parseProviderAccountsOutput must build account errors separately from account options")
@@ -1616,7 +1628,7 @@ for global_view_fragment in (
 for session_contract_fragment in (
     '"sessions", "--json-v2"',
     "connectedSessionsCommandSource",
-    "maximumSessions: 128",
+    "maximumSessions = 128",
     "function normalizeSession(item)",
 ):
     if session_contract_fragment not in main_text:
@@ -1676,10 +1688,27 @@ if sessions_view_text.count("copyRevealed: sessionCardHover.hovered") != 2:
         "instead of crowding every card permanently"
     )
 
-parse_sessions_body = function_body(main_text, "parseSessionsOutput")
+# The shape check lives in the normalizer and the error text in the applet, so
+# the rule is asserted on both halves: an unrecognized payload must return the
+# "unsupported" sentinel rather than an empty list, and the caller must turn that
+# sentinel into a visible error instead of an empty successful snapshot.
+normalize_sessions_body = function_body(main_text, "normalizeSessions")
 for rejected_shape_fragment in (
     "Array.isArray(payload)",
     "Array.isArray(payload.sessions)",
+    "return null",
+):
+    if rejected_shape_fragment not in normalize_sessions_body:
+        raise AssertionError(
+            "unexpected session payload shapes must be rejected, not emptied; "
+            f"missing {rejected_shape_fragment!r}"
+        )
+if ": []" in normalize_sessions_body:
+    raise AssertionError("unexpected session payload shapes must not become an empty successful snapshot")
+
+parse_sessions_body = function_body(main_text, "parseSessionsOutput")
+for rejected_shape_fragment in (
+    "nextSessions === null",
     "codexbar sessions returned an unsupported JSON payload.",
 ):
     if rejected_shape_fragment not in parse_sessions_body:
@@ -1687,8 +1716,8 @@ for rejected_shape_fragment in (
             "unexpected session payload shapes must preserve the previous snapshot and surface an error; "
             f"missing {rejected_shape_fragment!r}"
         )
-if "? payload" in parse_sessions_body or ": []" in parse_sessions_body:
-    raise AssertionError("unexpected session payload shapes must not become an empty successful snapshot")
+if "sessions = []" in parse_sessions_body:
+    raise AssertionError("an unsupported sessions payload must not clear the visible sessions")
 
 session_activity_body = function_body(main_text, "sessionActivityText")
 for live_age_fragment in (

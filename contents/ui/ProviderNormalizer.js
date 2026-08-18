@@ -1,0 +1,483 @@
+.pragma library
+.import "ProviderIdentity.js" as ProviderIdentity
+.import "SafeText.js" as SafeText
+
+// Pure normalization of untrusted `codexbar` CLI payloads.
+//
+// `main.qml` owns the two halves that used to share the `parse*` prefix: the
+// process lifecycle, the root properties, the error text, and the loading flag
+// stay there, while the raw-JSON-to-validated-structure half lives here. The
+// split is mechanical: nothing in this file may touch `root`, a QML property,
+// `Qt`, `Kirigami`, or `i18n`.
+//
+// The `i18n` exclusion is not a style rule. This file is in the gettext
+// extraction glob, so a user-facing string here would be extracted untranslated.
+// That is why the label of a rate window, the reset description, and the cost
+// section titles stay in `main.qml` and only the numbers, the bounds, and the
+// shape checks moved: `rateWindowMetrics` returns clamped percentages and the
+// caller supplies the words.
+//
+// Every bound below is a delegate/allocation budget applied to attacker- or
+// bug-influenced array lengths, so a malformed payload truncates instead of
+// hanging the popup. They are asserted by `scripts/test_security_regressions.sh`
+// and exercised by `tests/tst_provider_normalizer.qml`.
+
+var maximumProviderSnapshots = 256
+var maximumAccountSnapshots = 128
+var maximumCostSnapshots = 256
+var maximumExtraRateWindows = 24
+var maximumSessions = 128
+var maximumCostHistoryPoints = 365
+var maximumCostHistoryScanItems = 2048
+var maximumModelBreakdownsPerDay = 128
+
+// Longest CLI-controlled pace ETA we will keep, in seconds.
+var maximumPaceEtaSeconds = 31536000
+
+function hasOwnKey(item, key) {
+    return item ? Object.prototype.hasOwnProperty.call(item, key) : false
+}
+
+function isUnsafeObjectKey(key) {
+    var value = String(key || "")
+    return value === "__proto__" || value === "prototype" || value === "constructor"
+}
+
+// A CLI record is a plain object. Arrays and null are rejected because every
+// caller indexes named fields on the result.
+function isCliRecord(value) {
+    return value !== null && typeof value === "object" && !Array.isArray(value)
+}
+
+function copyObject(item) {
+    var copy = ({})
+    for (var key in item) {
+        if (!hasOwnKey(item, key) || isUnsafeObjectKey(key)) {
+            continue
+        }
+        copy[key] = item[key]
+    }
+    return copy
+}
+
+function clamp(value, minimum, maximum) {
+    return Math.max(minimum, Math.min(maximum, value))
+}
+
+function boundedDisplayText(value, maximumLength) {
+    var limit = Number(maximumLength)
+    if (!isFinite(limit) || limit <= 0) {
+        limit = 500
+    }
+    limit = Math.min(2000, Math.floor(limit))
+    return SafeText.boundedDisplayText(value, limit)
+}
+
+// The canonical map key for a provider: CLI aliases resolved, then screened for
+// keys that would reach Object.prototype or smuggle control characters.
+function providerSnapshotKey(providerID) {
+    return ProviderIdentity.providerMapKey(ProviderIdentity.resolveProviderKey(providerID))
+}
+
+// "" for anything that cannot name a provider, so callers skip the entry rather
+// than inventing an id from a non-string or an oversized payload field.
+function normalizedProviderID(value) {
+    if (typeof value !== "string") {
+        return ""
+    }
+    var trimmed = value.trim()
+    if (trimmed.length === 0 || trimmed.length > ProviderIdentity.maximumProviderIDLength) {
+        return ""
+    }
+    return providerSnapshotKey(trimmed)
+}
+
+// The CLI emits either a list of snapshots or a single object; both shapes are
+// accepted, then truncated to `limit` and reduced to plain records.
+function payloadRecords(payload, limit) {
+    var items = Array.isArray(payload) ? payload : [payload]
+    var bounded = Number(limit)
+    if (!isFinite(bounded) || bounded <= 0) {
+        bounded = maximumProviderSnapshots
+    }
+    var records = []
+    var itemLimit = Math.min(items.length, Math.floor(bounded))
+    for (var i = 0; i < itemLimit; i++) {
+        if (isCliRecord(items[i])) {
+            records.push(items[i])
+        }
+    }
+    return records
+}
+
+// `config providers` output reduced to the enabled provider ids plus every
+// display name it carried. A disabled provider still contributes its name,
+// because the popup labels providers it learns about from a later usage payload.
+function normalizeProviderConfigEntries(payload) {
+    var providerIDs = []
+    var displayNames = ({})
+    var seenProviderIDs = ({})
+    var items = Array.isArray(payload) ? payload : [payload]
+    var itemLimit = Math.min(items.length, maximumProviderSnapshots)
+    for (var i = 0; i < itemLimit; i++) {
+        if (isCliRecord(items[i]) && items[i].provider) {
+            var providerID = normalizedProviderID(items[i].provider)
+            if (providerID.length === 0) {
+                continue
+            }
+            var displayName = boundedDisplayText(items[i].displayName, 120)
+            if (displayName.length > 0) {
+                displayNames[providerID] = displayName
+            }
+            if (items[i].enabled === true && !hasOwnKey(seenProviderIDs, providerID)) {
+                seenProviderIDs[providerID] = true
+                providerIDs.push(providerID)
+            }
+        }
+    }
+    return {
+        providerIDs: providerIDs,
+        displayNames: displayNames
+    }
+}
+
+// The numeric half of one usage row. `null` when the payload carries no window
+// record at all, which is how the caller distinguishes "no such window" from
+// "window present but percentage unknown" (`hasPercent === false`).
+//
+// A provider that reports 137% used, or a negative percentage, must not paint
+// outside its meter, so both the used and the pace percentages are clamped.
+// `pacePercent` is -1 rather than 0 when the CLI omits it: an omitted pace is
+// not a pace of zero, and a marker drawn at 0 would claim the provider is
+// comfortably ahead of schedule.
+function rateWindowMetrics(window, pace, usageKnown) {
+    if (!isCliRecord(window)) {
+        return null
+    }
+
+    var known = usageKnown !== false
+    var used = Number(window.usedPercent)
+    var hasPercent = known && isFinite(used)
+    var paceValue = pace
+        && pace.expectedUsedPercent !== null
+        && pace.expectedUsedPercent !== undefined
+        && isFinite(Number(pace.expectedUsedPercent))
+        ? clamp(Number(pace.expectedUsedPercent), 0, 100)
+        : -1
+    return {
+        hasPercent: hasPercent,
+        usedPercent: hasPercent ? clamp(used, 0, 100) : 0,
+        leftPercent: hasPercent ? clamp(100 - used, 0, 100) : 0,
+        pacePercent: paceValue,
+        paceOnTop: !pace || pace.willLastToReset !== false,
+        paceEtaSeconds: pace && isFinite(Number(pace.etaSeconds))
+            ? Math.max(0, Math.min(maximumPaceEtaSeconds, Number(pace.etaSeconds)))
+            : 0
+    }
+}
+
+function statusSeverity(status) {
+    if (!status) {
+        return ""
+    }
+    var indicator = String(status.indicator || "").toLowerCase()
+    switch (indicator) {
+    case "minor":
+    case "maintenance":
+    case "major":
+    case "critical":
+    case "unknown":
+        return indicator
+    default:
+        return ""
+    }
+}
+
+function statusIncidentKey(status) {
+    if (!status) {
+        return ""
+    }
+    var keys = [
+        "incidentId",
+        "incident_id",
+        "incidentID",
+        "id"
+    ]
+    for (var i = 0; i < keys.length; i++) {
+        var value = status[keys[i]]
+        if (value !== null && value !== undefined && String(value).length > 0) {
+            return String(value)
+        }
+    }
+    var incident = status.incident || null
+    if (incident && incident.id !== null && incident.id !== undefined && String(incident.id).length > 0) {
+        return String(incident.id)
+    }
+    return ""
+}
+
+function httpsUrlHost(url) {
+    var match = String(url || "").trim().match(/^https:\/\/([^\/?#]+)/i)
+    return match ? match[1].toLowerCase() : ""
+}
+
+// A provider-supplied status URL is honored only when it stays on the host of
+// the URL we already ship for that provider, so a compromised payload cannot
+// point the status action anywhere else. The fallback is passed in rather than
+// looked up here, which keeps the host comparison testable on its own.
+function safeStatusUrl(fallbackStatusUrl, url) {
+    var fallback = String(fallbackStatusUrl || "")
+    var fallbackHost = httpsUrlHost(fallback)
+    var candidate = String(url || "").trim()
+    var candidateHost = httpsUrlHost(candidate)
+    if (fallbackHost.length === 0) {
+        return ""
+    }
+    if (candidateHost.length === 0) {
+        return fallback
+    }
+    return candidateHost === fallbackHost ? candidate : fallback
+}
+
+function accountLabel(item) {
+    if (!item) {
+        return ""
+    }
+    if (item.account && item.account.length > 0) {
+        return item.account
+    }
+    if (item.organization && item.organization.length > 0) {
+        return item.organization
+    }
+    if (item.loginMethod && item.loginMethod.length > 0) {
+        return item.loginMethod
+    }
+    return ""
+}
+
+function dedupeAccountOptions(items) {
+    var seen = ({})
+    var result = []
+    for (var i = 0; i < items.length; i++) {
+        var label = accountLabel(items[i])
+        var key = "account:" + label
+        if (label.length === 0 || hasOwnKey(seen, key)) {
+            continue
+        }
+        seen[key] = true
+        result.push(items[i])
+    }
+    return result
+}
+
+function isMissingTokenAccountsError(errorMessage) {
+    // codexbar --all-accounts reports "No token accounts configured for
+    // <provider>." even when the provider works through OAuth/CLI auth
+    // without named token accounts; that is an empty list, not a failure.
+    return String(errorMessage || "").toLowerCase().indexOf("no token accounts configured") !== -1
+}
+
+function normalizeSession(item) {
+    if (!isCliRecord(item)) {
+        return null
+    }
+
+    var providerID = normalizedProviderID(item.provider)
+    var projectName = boundedDisplayText(item.projectName, 160)
+    var sessionName = boundedDisplayText(item.sessionName, 240)
+    var host = boundedDisplayText(item.host, 160)
+    var state = boundedDisplayText(item.state, 40).toLowerCase()
+    var sourceName = boundedDisplayText(item.source, 80)
+    var activityAt = boundedDisplayText(item.lastActivityAt, 128)
+    var activityMs = Date.parse(activityAt)
+    if (!isFinite(activityMs)) {
+        activityAt = boundedDisplayText(item.startedAt, 128)
+        activityMs = Date.parse(activityAt)
+    }
+    if (!isFinite(activityMs)) {
+        activityAt = ""
+        activityMs = 0
+    }
+    if (providerID.length === 0 && projectName.length === 0 && sessionName.length === 0) {
+        return null
+    }
+
+    return {
+        provider: providerID,
+        projectName: projectName,
+        sessionName: sessionName,
+        host: host,
+        state: state,
+        source: sourceName,
+        activityAt: activityAt,
+        activityMs: activityMs
+    }
+}
+
+// `null` for a payload shape we do not recognize, which the caller reports as an
+// error. An unrecognized shape must not read as an empty successful snapshot,
+// because that would silently drop the sessions the user was already looking at.
+function normalizeSessions(payload) {
+    var items
+    if (Array.isArray(payload)) {
+        items = payload
+    } else if (isCliRecord(payload) && Array.isArray(payload.sessions)) {
+        items = payload.sessions
+    } else {
+        return null
+    }
+
+    // The bound applies before the sort, so the kept slice is the first
+    // `maximumSessions` entries in payload order, then ordered newest first.
+    // (Pinned by test_sortsSessionsByRecentActivityAndTruncatesAtTheBound.)
+    var nextSessions = []
+    var itemLimit = Math.min(items.length, maximumSessions)
+    for (var i = 0; i < itemLimit; i++) {
+        var normalized = normalizeSession(items[i])
+        if (normalized) {
+            nextSessions.push(normalized)
+        }
+    }
+    nextSessions.sort(function(a, b) { return b.activityMs - a.activityMs })
+    return nextSessions
+}
+
+// NaN when no part is usable, so the caller can tell "no token data at all" from
+// a genuine zero and fall back to the emitted total instead.
+function sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens) {
+    var total = 0
+    var values = [inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens]
+    for (var i = 0; i < values.length; i++) {
+        if (isFinite(Number(values[i])) && Number(values[i]) > 0) {
+            total += Number(values[i])
+        }
+    }
+    return total > 0 ? total : Number.NaN
+}
+
+function boundedHistoryDays(days) {
+    return isFinite(Number(days))
+        ? Math.max(1, Math.min(maximumCostHistoryPoints, Number(days)))
+        : 30
+}
+
+function normalizeCostDaily(items, currency, days) {
+    var result = []
+    if (!items || !Array.isArray(items)) {
+        return result
+    }
+
+    var historyDays = boundedHistoryDays(days)
+    var inspectedItems = 0
+    for (var i = items.length - 1; i >= 0
+            && result.length < historyDays
+            && inspectedItems < maximumCostHistoryScanItems; i--) {
+        inspectedItems++
+        var item = isCliRecord(items[i]) ? items[i] : null
+        if (!item) {
+            continue
+        }
+        var cost = Number(item.totalCost !== undefined ? item.totalCost : item.costUSD)
+        var tokens = Number(item.totalTokens !== undefined ? item.totalTokens : item.tokens)
+        var inputTokens = Number(item.inputTokens)
+        var outputTokens = Number(item.outputTokens)
+        var cacheReadTokens = Number(item.cacheReadTokens)
+        var cacheCreationTokens = Number(item.cacheCreationTokens !== undefined ? item.cacheCreationTokens : item.cacheWriteTokens)
+        if (!isFinite(tokens)) {
+            tokens = sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens)
+        }
+        if (!isFinite(cost) && !isFinite(tokens) && !isFinite(inputTokens) && !isFinite(outputTokens)) {
+            continue
+        }
+        result.unshift({
+            label: boundedDisplayText(item.date || item.day || item.dayKey || "", 120),
+            cost: isFinite(cost) ? Math.max(0, cost) : 0,
+            tokens: isFinite(tokens) ? Math.max(0, tokens) : 0,
+            inputTokens: isFinite(inputTokens) ? Math.max(0, inputTokens) : 0,
+            outputTokens: isFinite(outputTokens) ? Math.max(0, outputTokens) : 0,
+            cacheReadTokens: isFinite(cacheReadTokens) ? Math.max(0, cacheReadTokens) : 0,
+            cacheCreationTokens: isFinite(cacheCreationTokens) ? Math.max(0, cacheCreationTokens) : 0,
+            currency: boundedDisplayText(currency || "USD", 12)
+        })
+    }
+    return result
+}
+
+function normalizeCostTotals(totals, fallbackCost, fallbackTokens, currency) {
+    var source = totals || ({})
+    var cost = Number(source.totalCost !== undefined ? source.totalCost : fallbackCost)
+    var tokens = Number(source.totalTokens !== undefined ? source.totalTokens : fallbackTokens)
+    var inputTokens = Number(source.inputTokens)
+    var outputTokens = Number(source.outputTokens)
+    var cacheReadTokens = Number(source.cacheReadTokens)
+    var cacheCreationTokens = Number(source.cacheCreationTokens !== undefined ? source.cacheCreationTokens : source.cacheWriteTokens)
+    if (!isFinite(tokens)) {
+        tokens = sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens)
+    }
+    return {
+        cost: isFinite(cost) ? Math.max(0, cost) : 0,
+        tokens: isFinite(tokens) ? Math.max(0, tokens) : 0,
+        inputTokens: isFinite(inputTokens) ? Math.max(0, inputTokens) : 0,
+        outputTokens: isFinite(outputTokens) ? Math.max(0, outputTokens) : 0,
+        cacheReadTokens: isFinite(cacheReadTokens) ? Math.max(0, cacheReadTokens) : 0,
+        cacheCreationTokens: isFinite(cacheCreationTokens) ? Math.max(0, cacheCreationTokens) : 0,
+        currency: boundedDisplayText(currency || "USD", 12)
+    }
+}
+
+function normalizeCostModels(items, currency, days) {
+    var byName = ({})
+    if (!items || !Array.isArray(items)) {
+        return []
+    }
+
+    var historyDays = boundedHistoryDays(days)
+    var firstItem = Math.max(0, items.length - historyDays)
+    for (var i = firstItem; i < items.length; i++) {
+        var breakdowns = items[i] && Array.isArray(items[i].modelBreakdowns)
+            ? items[i].modelBreakdowns
+            : []
+        var breakdownLimit = Math.min(breakdowns.length, maximumModelBreakdownsPerDay)
+        for (var j = 0; j < breakdownLimit; j++) {
+            var breakdown = breakdowns[j] || ({})
+            var name = boundedDisplayText(breakdown.modelName || breakdown.model || "", 120)
+            if (name.length === 0 || isUnsafeObjectKey(name)) {
+                continue
+            }
+            var cost = Number(breakdown.cost !== undefined ? breakdown.cost : breakdown.totalCost)
+            var tokens = Number(breakdown.totalTokens !== undefined ? breakdown.totalTokens : breakdown.tokens)
+            if (!isFinite(cost) && !isFinite(tokens)) {
+                continue
+            }
+            if (!hasOwnKey(byName, name)) {
+                byName[name] = {
+                    label: name,
+                    cost: 0,
+                    tokens: 0,
+                    currency: boundedDisplayText(currency || "USD", 12)
+                }
+            }
+            if (isFinite(cost)) {
+                byName[name].cost += Math.max(0, cost)
+            }
+            if (isFinite(tokens)) {
+                byName[name].tokens += Math.max(0, tokens)
+            }
+        }
+    }
+
+    var rows = []
+    for (var modelName in byName) {
+        if (!hasOwnKey(byName, modelName)) {
+            continue
+        }
+        rows.push(byName[modelName])
+    }
+    rows.sort(function(a, b) {
+        if (b.cost !== a.cost) {
+            return b.cost - a.cost
+        }
+        return b.tokens - a.tokens
+    })
+    return rows.slice(0, 6)
+}

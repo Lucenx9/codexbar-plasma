@@ -7,6 +7,7 @@ import "components" as Components
 import "NotificationMemo.js" as NotificationMemo
 import "PanelElements.js" as PanelElements
 import "ProviderIdentity.js" as ProviderIdentity
+import "ProviderNormalizer.js" as Normalizer
 import "QuotaThresholds.js" as QuotaThresholds
 import "SafeText.js" as SafeText
 import "ThemeContrast.js" as ThemeContrast
@@ -82,13 +83,13 @@ PlasmoidItem {
     property int commandRunSerial: 0
     property var activeUsageCommands: ({})
     readonly property int usageCommandTimeoutMs: 120000
-    readonly property int maximumExtraRateWindows: 24
-    readonly property int maximumProviderSnapshots: 256
-    readonly property int maximumAccountSnapshots: 128
-    readonly property int maximumCostSnapshots: 256
-    readonly property int maximumCostHistoryPoints: 365
-    readonly property int maximumCostHistoryScanItems: 2048
-    readonly property int maximumModelBreakdownsPerDay: 128
+    readonly property int maximumExtraRateWindows: Normalizer.maximumExtraRateWindows
+    readonly property int maximumProviderSnapshots: Normalizer.maximumProviderSnapshots
+    readonly property int maximumAccountSnapshots: Normalizer.maximumAccountSnapshots
+    readonly property int maximumCostSnapshots: Normalizer.maximumCostSnapshots
+    readonly property int maximumCostHistoryPoints: Normalizer.maximumCostHistoryPoints
+    readonly property int maximumCostHistoryScanItems: Normalizer.maximumCostHistoryScanItems
+    readonly property int maximumModelBreakdownsPerDay: Normalizer.maximumModelBreakdownsPerDay
     readonly property int maximumConcurrentProviderFallbackCommands: 8
     property var pendingProviderCommands: ({})
     property var fallbackProviderQueue: []
@@ -110,7 +111,7 @@ PlasmoidItem {
     property string sessionsLastUpdatedText: ""
     property bool sessionsLoading: false
     property bool sessionsInitialized: false
-    readonly property int maximumSessions: 128
+    readonly property int maximumSessions: Normalizer.maximumSessions
     readonly property int sessionsCommandTimeoutMs: 60000
     property string selectedProviderID: ""
     property string selectedGlobalView: "overview"
@@ -427,18 +428,11 @@ PlasmoidItem {
     }
 
     function isCliRecord(value) {
-        return value !== null && typeof value === "object" && !Array.isArray(value)
+        return Normalizer.isCliRecord(value)
     }
 
     function normalizedProviderID(value) {
-        if (typeof value !== "string") {
-            return ""
-        }
-        var trimmed = value.trim()
-        if (trimmed.length === 0 || trimmed.length > ProviderIdentity.maximumProviderIDLength) {
-            return ""
-        }
-        return providerMapKey(trimmed)
+        return Normalizer.normalizedProviderID(value)
     }
 
     function hasOwnKey(item, key) {
@@ -451,8 +445,7 @@ PlasmoidItem {
     }
 
     function providerMapKey(providerID) {
-        var key = providerKey(providerID)
-        return ProviderIdentity.providerMapKey(key)
+        return Normalizer.providerSnapshotKey(providerID)
     }
 
     function commandWithRunNonce(command) {
@@ -717,30 +710,9 @@ PlasmoidItem {
             return
         }
 
-        var providerIDs = []
-        var displayNames = ({})
-        var items = Array.isArray(payload) ? payload : [payload]
-        var itemLimit = Math.min(items.length, maximumProviderSnapshots)
-        var seenProviderIDs = ({})
-        for (var i = 0; i < itemLimit; i++) {
-            if (isCliRecord(items[i]) && items[i].provider) {
-                var providerID = normalizedProviderID(items[i].provider)
-                if (providerID.length === 0) {
-                    continue
-                }
-                var displayName = boundedDisplayText(items[i].displayName, 120)
-                if (displayName.length > 0) {
-                    displayNames[providerID] = displayName
-                }
-                if (items[i].enabled === true && !hasOwnKey(seenProviderIDs, providerID)) {
-                    seenProviderIDs[providerID] = true
-                    providerIDs.push(providerID)
-                }
-            }
-        }
-
-        providerDisplayNames = displayNames
-        startProviderFallbackForProviders(providerIDs)
+        var entries = Normalizer.normalizeProviderConfigEntries(payload)
+        providerDisplayNames = entries.displayNames
+        startProviderFallbackForProviders(entries.providerIDs)
     }
 
     function startProviderFallbackForProviders(providerIDs) {
@@ -1135,7 +1107,7 @@ PlasmoidItem {
             accountItem.provider = providerID
             var normalized = normalizeProvider(accountItem)
             if (normalized.error.length > 0 && accountLabel(normalized).length === 0) {
-                if (isMissingTokenAccountsError(normalized.error)) {
+                if (Normalizer.isMissingTokenAccountsError(normalized.error)) {
                     sawMissingTokenAccountsError = true
                 } else {
                     message = normalized.error
@@ -1145,7 +1117,7 @@ PlasmoidItem {
             options.push(normalized)
         }
 
-        var dedupedOptions = dedupeAccountOptions(options)
+        var dedupedOptions = Normalizer.dedupeAccountOptions(options)
         var accountError = ""
         if (dedupedOptions.length === 0) {
             if (message.length > 0) {
@@ -1158,28 +1130,6 @@ PlasmoidItem {
             setAccountOptions(providerID, dedupedOptions)
         }
         setAccountError(providerID, accountError)
-    }
-
-    function isMissingTokenAccountsError(errorMessage) {
-        // codexbar --all-accounts reports "No token accounts configured for
-        // <provider>." even when the provider works through OAuth/CLI auth
-        // without named token accounts; that is an empty list, not a failure.
-        return String(errorMessage || "").toLowerCase().indexOf("no token accounts configured") !== -1
-    }
-
-    function dedupeAccountOptions(items) {
-        var seen = ({})
-        var result = []
-        for (var i = 0; i < items.length; i++) {
-            var label = accountLabel(items[i])
-            var key = "account:" + label
-            if (label.length === 0 || hasOwnKey(seen, key)) {
-                continue
-            }
-            seen[key] = true
-            result.push(items[i])
-        }
-        return result
     }
 
     function parseCostOutput(stdoutText, stderrText, requestedHistoryDays) {
@@ -1252,64 +1202,16 @@ PlasmoidItem {
             return
         }
 
-        var items
-        if (Array.isArray(payload)) {
-            items = payload
-        } else if (isCliRecord(payload) && Array.isArray(payload.sessions)) {
-            items = payload.sessions
-        } else {
+        // null means the payload shape is unsupported. It must not read as an
+        // empty successful snapshot, which would wipe the visible sessions.
+        var nextSessions = Normalizer.normalizeSessions(payload)
+        if (nextSessions === null) {
             sessionsErrorText = i18n("codexbar sessions returned an unsupported JSON payload.")
             return
         }
-        var nextSessions = []
-        var itemLimit = Math.min(items.length, maximumSessions)
-        for (var i = 0; i < itemLimit; i++) {
-            var normalized = normalizeSession(items[i])
-            if (normalized) {
-                nextSessions.push(normalized)
-            }
-        }
-        nextSessions.sort(function(a, b) { return b.activityMs - a.activityMs })
         sessions = nextSessions
         sessionsErrorText = ""
         sessionsLastUpdatedText = i18n("Updated %1", Qt.formatDateTime(new Date(), "hh:mm"))
-    }
-
-    function normalizeSession(item) {
-        if (!isCliRecord(item)) {
-            return null
-        }
-
-        var providerID = normalizedProviderID(item.provider)
-        var projectName = boundedDisplayText(item.projectName, 160)
-        var sessionName = boundedDisplayText(item.sessionName, 240)
-        var host = boundedDisplayText(item.host, 160)
-        var state = boundedDisplayText(item.state, 40).toLowerCase()
-        var sourceName = boundedDisplayText(item.source, 80)
-        var activityAt = boundedDisplayText(item.lastActivityAt, 128)
-        var activityMs = Date.parse(activityAt)
-        if (!isFinite(activityMs)) {
-            activityAt = boundedDisplayText(item.startedAt, 128)
-            activityMs = Date.parse(activityAt)
-        }
-        if (!isFinite(activityMs)) {
-            activityAt = ""
-            activityMs = 0
-        }
-        if (providerID.length === 0 && projectName.length === 0 && sessionName.length === 0) {
-            return null
-        }
-
-        return {
-            provider: providerID,
-            projectName: projectName,
-            sessionName: sessionName,
-            host: host,
-            state: state,
-            source: sourceName,
-            activityAt: activityAt,
-            activityMs: activityMs
-        }
     }
 
     function sessionTitle(item) {
@@ -1390,9 +1292,9 @@ PlasmoidItem {
             monthLine: costLine(windowLabel, item.last30DaysCostUSD, item.last30DaysTokens, currency),
             windowValueLine: costValueLine(item.last30DaysCostUSD, item.last30DaysTokens, currency),
             hintLine: tokenCostHint(providerID),
-            totals: normalizeCostTotals(item.totals, item.last30DaysCostUSD, item.last30DaysTokens, currency),
-            models: normalizeCostModels(item.daily, currency, historyDays),
-            daily: normalizeCostDaily(item.daily, currency, historyDays)
+            totals: Normalizer.normalizeCostTotals(item.totals, item.last30DaysCostUSD, item.last30DaysTokens, currency),
+            models: Normalizer.normalizeCostModels(item.daily, currency, historyDays),
+            daily: Normalizer.normalizeCostDaily(item.daily, currency, historyDays)
         }
     }
 
@@ -1408,138 +1310,6 @@ PlasmoidItem {
         }
         var days = Math.max(1, Math.floor(rawDays))
         return days === 1 ? i18n("Today") : i18np("Last %1 day", "Last %1 days", days)
-    }
-
-    function normalizeCostDaily(items, currency, days) {
-        var result = []
-        if (!items || !Array.isArray(items)) {
-            return result
-        }
-
-        var historyDays = isFinite(Number(days)) ? Math.max(1, Math.min(maximumCostHistoryPoints, Number(days))) : 30
-        var inspectedItems = 0
-        for (var i = items.length - 1; i >= 0
-                && result.length < historyDays
-                && inspectedItems < maximumCostHistoryScanItems; i--) {
-            inspectedItems++
-            var item = isCliRecord(items[i]) ? items[i] : null
-            if (!item) {
-                continue
-            }
-            var cost = Number(item.totalCost !== undefined ? item.totalCost : item.costUSD)
-            var tokens = Number(item.totalTokens !== undefined ? item.totalTokens : item.tokens)
-            var inputTokens = Number(item.inputTokens)
-            var outputTokens = Number(item.outputTokens)
-            var cacheReadTokens = Number(item.cacheReadTokens)
-            var cacheCreationTokens = Number(item.cacheCreationTokens !== undefined ? item.cacheCreationTokens : item.cacheWriteTokens)
-            if (!isFinite(tokens)) {
-                tokens = sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens)
-            }
-            if (!isFinite(cost) && !isFinite(tokens) && !isFinite(inputTokens) && !isFinite(outputTokens)) {
-                continue
-            }
-            result.unshift({
-                label: boundedDisplayText(item.date || item.day || item.dayKey || "", 120),
-                cost: isFinite(cost) ? Math.max(0, cost) : 0,
-                tokens: isFinite(tokens) ? Math.max(0, tokens) : 0,
-                inputTokens: isFinite(inputTokens) ? Math.max(0, inputTokens) : 0,
-                outputTokens: isFinite(outputTokens) ? Math.max(0, outputTokens) : 0,
-                cacheReadTokens: isFinite(cacheReadTokens) ? Math.max(0, cacheReadTokens) : 0,
-                cacheCreationTokens: isFinite(cacheCreationTokens) ? Math.max(0, cacheCreationTokens) : 0,
-                currency: boundedDisplayText(currency || "USD", 12)
-            })
-        }
-        return result
-    }
-
-    function normalizeCostTotals(totals, fallbackCost, fallbackTokens, currency) {
-        var source = totals || ({})
-        var cost = Number(source.totalCost !== undefined ? source.totalCost : fallbackCost)
-        var tokens = Number(source.totalTokens !== undefined ? source.totalTokens : fallbackTokens)
-        var inputTokens = Number(source.inputTokens)
-        var outputTokens = Number(source.outputTokens)
-        var cacheReadTokens = Number(source.cacheReadTokens)
-        var cacheCreationTokens = Number(source.cacheCreationTokens !== undefined ? source.cacheCreationTokens : source.cacheWriteTokens)
-        if (!isFinite(tokens)) {
-            tokens = sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens)
-        }
-        return {
-            cost: isFinite(cost) ? Math.max(0, cost) : 0,
-            tokens: isFinite(tokens) ? Math.max(0, tokens) : 0,
-            inputTokens: isFinite(inputTokens) ? Math.max(0, inputTokens) : 0,
-            outputTokens: isFinite(outputTokens) ? Math.max(0, outputTokens) : 0,
-            cacheReadTokens: isFinite(cacheReadTokens) ? Math.max(0, cacheReadTokens) : 0,
-            cacheCreationTokens: isFinite(cacheCreationTokens) ? Math.max(0, cacheCreationTokens) : 0,
-            currency: boundedDisplayText(currency || "USD", 12)
-        }
-    }
-
-    function sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens) {
-        var total = 0
-        var values = [inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens]
-        for (var i = 0; i < values.length; i++) {
-            if (isFinite(Number(values[i])) && Number(values[i]) > 0) {
-                total += Number(values[i])
-            }
-        }
-        return total > 0 ? total : Number.NaN
-    }
-
-    function normalizeCostModels(items, currency, days) {
-        var byName = ({})
-        if (!items || !Array.isArray(items)) {
-            return []
-        }
-
-        var historyDays = isFinite(Number(days)) ? Math.max(1, Math.min(maximumCostHistoryPoints, Number(days))) : 30
-        var firstItem = Math.max(0, items.length - historyDays)
-        for (var i = firstItem; i < items.length; i++) {
-            var breakdowns = items[i] && Array.isArray(items[i].modelBreakdowns)
-                ? items[i].modelBreakdowns
-                : []
-            var breakdownLimit = Math.min(breakdowns.length, maximumModelBreakdownsPerDay)
-            for (var j = 0; j < breakdownLimit; j++) {
-                var breakdown = breakdowns[j] || ({})
-                var name = boundedDisplayText(breakdown.modelName || breakdown.model || "", 120)
-                if (name.length === 0 || isUnsafeObjectKey(name)) {
-                    continue
-                }
-                var cost = Number(breakdown.cost !== undefined ? breakdown.cost : breakdown.totalCost)
-                var tokens = Number(breakdown.totalTokens !== undefined ? breakdown.totalTokens : breakdown.tokens)
-                if (!isFinite(cost) && !isFinite(tokens)) {
-                    continue
-                }
-                if (!hasOwnKey(byName, name)) {
-                    byName[name] = {
-                        label: name,
-                        cost: 0,
-                        tokens: 0,
-                        currency: boundedDisplayText(currency || "USD", 12)
-                    }
-                }
-                if (isFinite(cost)) {
-                    byName[name].cost += Math.max(0, cost)
-                }
-                if (isFinite(tokens)) {
-                    byName[name].tokens += Math.max(0, tokens)
-                }
-            }
-        }
-
-        var rows = []
-        for (var modelName in byName) {
-            if (!hasOwnKey(byName, modelName)) {
-                continue
-            }
-            rows.push(byName[modelName])
-        }
-        rows.sort(function(a, b) {
-            if (b.cost !== a.cost) {
-                return b.cost - a.cost
-            }
-            return b.tokens - a.tokens
-        })
-        return rows.slice(0, 6)
     }
 
     // Returns the peak of the currently plotted metric, so the bars keep their
@@ -2226,19 +1996,7 @@ PlasmoidItem {
     }
 
     function accountLabel(item) {
-        if (!item) {
-            return ""
-        }
-        if (item.account && item.account.length > 0) {
-            return item.account
-        }
-        if (item.organization && item.organization.length > 0) {
-            return item.organization
-        }
-        if (item.loginMethod && item.loginMethod.length > 0) {
-            return item.loginMethod
-        }
-        return ""
+        return Normalizer.accountLabel(item)
     }
 
     function accountSubtitle(item) {
@@ -2332,7 +2090,7 @@ PlasmoidItem {
         var identity = isCliRecord(usage.identity) ? usage.identity : ({})
         var error = isCliRecord(item.error) ? item.error : null
         var status = isCliRecord(item.status) ? item.status : null
-        var severity = statusSeverity(status)
+        var severity = Normalizer.statusSeverity(status)
         var credits = isCliRecord(item.credits) ? item.credits : null
         var displayName = item.displayName || item.title || providerDisplayNames[providerID] || ""
         var providerDetails = UsageDetails.normalizeSections(usage.details)
@@ -2364,7 +2122,7 @@ PlasmoidItem {
                 : null,
             status: boundedDisplayText(status ? statusText(status) : "", 500),
             statusSeverity: severity,
-            statusIncidentKey: boundedDisplayText(statusIncidentKey(status), 128),
+            statusIncidentKey: boundedDisplayText(Normalizer.statusIncidentKey(status), 128),
             hasIncident: severity.length > 0,
             error: boundedCliMessage(error && error.message ? error.message : ""),
             placeholder: placeholder,
@@ -2407,31 +2165,24 @@ PlasmoidItem {
         return !usage.primary && !usage.secondary && !usage.tertiary
     }
 
+    // The clamped percentages come from the normalizer; the words stay here,
+    // because every text field below is either translated or formatted against
+    // the current theme/locale, which a `.pragma library` may not reach.
     function addWindow(rows, label, window, pace, usageKnown, lane) {
-        if (!isCliRecord(window)) {
+        var metrics = Normalizer.rateWindowMetrics(window, pace, usageKnown)
+        if (metrics === null) {
             return null
         }
 
-        var known = usageKnown !== false
-        var used = Number(window.usedPercent)
-        var hasPercent = known && isFinite(used)
-        var paceValue = pace
-            && pace.expectedUsedPercent !== null
-            && pace.expectedUsedPercent !== undefined
-            && isFinite(Number(pace.expectedUsedPercent))
-            ? clamp(Number(pace.expectedUsedPercent), 0, 100)
-            : -1
         var row = {
             lane: lane || "",
             label: boundedDisplayText(label, 120),
-            hasPercent: hasPercent,
-            usedPercent: hasPercent ? clamp(used, 0, 100) : 0,
-            leftPercent: hasPercent ? clamp(100 - used, 0, 100) : 0,
-            pacePercent: paceValue,
-            paceOnTop: !pace || pace.willLastToReset !== false,
-            paceEtaSeconds: pace && isFinite(Number(pace.etaSeconds))
-                ? Math.max(0, Math.min(31536000, Number(pace.etaSeconds)))
-                : 0,
+            hasPercent: metrics.hasPercent,
+            usedPercent: metrics.usedPercent,
+            leftPercent: metrics.leftPercent,
+            pacePercent: metrics.pacePercent,
+            paceOnTop: metrics.paceOnTop,
+            paceEtaSeconds: metrics.paceEtaSeconds,
             resetsAt: boundedDisplayText(
                 window.resetsAt === undefined || window.resetsAt === null ? "" : window.resetsAt,
                 128),
@@ -2717,23 +2468,6 @@ PlasmoidItem {
         }
         var text = labels[indicator] || indicator
         return description.length > 0 ? text + ": " + description : text
-    }
-
-    function statusSeverity(status) {
-        if (!status) {
-            return ""
-        }
-        var indicator = String(status.indicator || "").toLowerCase()
-        switch (indicator) {
-        case "minor":
-        case "maintenance":
-        case "major":
-        case "critical":
-        case "unknown":
-            return indicator
-        default:
-            return ""
-        }
     }
 
     function statusBadgeColor(severity) {
@@ -3143,29 +2877,6 @@ PlasmoidItem {
         return NotificationMemo.statusMemoValue(item.statusSeverity, incidentKey)
     }
 
-    function statusIncidentKey(status) {
-        if (!status) {
-            return ""
-        }
-        var keys = [
-            "incidentId",
-            "incident_id",
-            "incidentID",
-            "id"
-        ]
-        for (var i = 0; i < keys.length; i++) {
-            var value = status[keys[i]]
-            if (value !== null && value !== undefined && String(value).length > 0) {
-                return String(value)
-            }
-        }
-        var incident = status.incident || null
-        if (incident && incident.id !== null && incident.id !== undefined && String(incident.id).length > 0) {
-            return String(incident.id)
-        }
-        return ""
-    }
-
     function quotaNotificationKey(item, row, index) {
         var lane = row && row.lane ? row.lane : ""
         var label = row && row.label ? row.label : ""
@@ -3560,23 +3271,8 @@ PlasmoidItem {
         return ProviderIdentity.providerStatusUrl(providerID)
     }
 
-    function httpsUrlHost(url) {
-        var match = String(url || "").trim().match(/^https:\/\/([^\/?#]+)/i)
-        return match ? match[1].toLowerCase() : ""
-    }
-
     function safeStatusUrl(providerID, url) {
-        var fallback = providerStatusUrl(providerID)
-        var fallbackHost = httpsUrlHost(fallback)
-        var candidate = String(url || "").trim()
-        var candidateHost = httpsUrlHost(candidate)
-        if (fallbackHost.length === 0) {
-            return ""
-        }
-        if (candidateHost.length === 0) {
-            return fallback
-        }
-        return candidateHost === fallbackHost ? candidate : fallback
+        return Normalizer.safeStatusUrl(providerStatusUrl(providerID), url)
     }
 
     function providerChangelogUrl(providerID) {
@@ -3713,14 +3409,7 @@ PlasmoidItem {
     }
 
     function copyObject(item) {
-        var copy = ({})
-        for (var key in item) {
-            if (!hasOwnKey(item, key) || isUnsafeObjectKey(key)) {
-                continue
-            }
-            copy[key] = item[key]
-        }
-        return copy
+        return Normalizer.copyObject(item)
     }
 
     function hasText(value) {
@@ -4097,7 +3786,7 @@ PlasmoidItem {
     }
 
     function clamp(value, minimum, maximum) {
-        return Math.max(minimum, Math.min(maximum, value))
+        return Normalizer.clamp(value, minimum, maximum)
     }
 
     function primaryProvider() {

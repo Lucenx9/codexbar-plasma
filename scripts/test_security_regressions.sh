@@ -109,7 +109,9 @@ require_in_surface applet "function isUnsafeObjectKey(key)"
 require_in_surface applet "value === \"__proto__\" || value === \"prototype\" || value === \"constructor\""
 require_in_surface applet "function providerMapKey(providerID)"
 require_in_surface applet 'import "ProviderIdentity.js" as ProviderIdentity'
-require_in_surface applet "return ProviderIdentity.providerMapKey(key)"
+# The applet reaches the shared screen through the normalizer, which resolves CLI
+# aliases first so an alias cannot smuggle in a key the screen would have caught.
+require_in_surface applet "return ProviderIdentity.providerMapKey(ProviderIdentity.resolveProviderKey(providerID))"
 require_in_file "$PROVIDER_IDENTITY_JS" "Object.prototype.hasOwnProperty.call(item, key)"
 require_in_file "$PROVIDER_IDENTITY_JS" "Object.prototype.hasOwnProperty.call(Object.prototype, key)"
 require_in_surface applet "if (name.length === 0 || isUnsafeObjectKey(name))"
