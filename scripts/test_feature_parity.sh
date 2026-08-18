@@ -325,9 +325,9 @@ for provider_id, cli_name in {
         sys.exit(1)
 PY
 
-require_in_surface applet "daily: normalizeCostDaily(item.daily, currency, historyDays)"
-require_in_surface applet "totals: normalizeCostTotals(item.totals, item.last30DaysCostUSD, item.last30DaysTokens, currency)"
-require_in_surface applet "models: normalizeCostModels(item.daily, currency, historyDays)"
+require_in_surface applet "daily: Normalizer.normalizeCostDaily(item.daily, currency, historyDays)"
+require_in_surface applet "totals: Normalizer.normalizeCostTotals(item.totals, item.last30DaysCostUSD, item.last30DaysTokens, currency)"
+require_in_surface applet "models: Normalizer.normalizeCostModels(item.daily, currency, historyDays)"
 require_in_surface applet "function normalizeCostDaily(items, currency, days)"
 require_in_surface applet "result.length < historyDays"
 require_in_surface applet "inspectedItems < maximumCostHistoryScanItems"
