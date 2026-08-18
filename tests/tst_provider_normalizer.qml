@@ -184,12 +184,9 @@ TestCase {
             { provider: "claude", displayName: "Claude", enabled: true }
         ])
         compare(entries.providerIDs.length, 2)
-        // KNOWN GAP, pinned deliberately: a structured displayName is coerced to
-        // "[object Object]" rather than dropped. Shipped behavior today, and this
-        // extraction is behavior-preserving, so the test records it instead of
-        // changing it. What matters here is that one malformed entry does not
-        // take the other providers down with it.
-        compare(entries.displayNames["codex"], "[object Object]")
+        // A structured displayName is dropped, not stringified, and the other
+        // providers survive the malformed entry.
+        compare(entries.displayNames["codex"], undefined)
         compare(entries.displayNames["claude"], "Claude")
     }
 
@@ -481,10 +478,9 @@ TestCase {
         ], "USD", 30)
 
         compare(rows.length, 2)
-        // Same KNOWN GAP as the provider display name: a structured date becomes
-        // an "[object Object]" chart label instead of an empty one. Pinned, not
-        // fixed, because this extraction may not change behavior.
-        compare(rows[0].label, "[object Object]")
+        // A structured date leaves the chart label empty rather than printing
+        // "[object Object]" on the axis; the day's numbers are still usable.
+        compare(rows[0].label, "")
         compare(rows[0].cost, 3)
         compare(rows[1].label, "2026-08-03")
         compare(rows[1].cost, 4)
@@ -625,19 +621,38 @@ TestCase {
         compare(Normalizer.boundedDisplayText("   ", 120), "")
     }
 
-    // KNOWN GAP, pinned deliberately. `SafeText.boundedDisplayText` coerces any
-    // non-nullish value, so a structured CLI field reaches the popup as
-    // "[object Object]" or as a comma-joined array instead of being dropped.
-    // Every caller here inherits that, which is why the provider display name and
-    // the cost chart label tests above expect the coerced text. Changing it is a
-    // behavior change and belongs in its own commit with its own review; this
-    // test exists so that commit has to update an assertion on purpose.
-    function test_boundedDisplayTextStillCoercesStructuredPayloads() {
-        compare(Normalizer.boundedDisplayText({ nested: "object" }, 120), "[object Object]")
-        compare(Normalizer.boundedDisplayText({}, 120), "[object Object]")
-        compare(Normalizer.boundedDisplayText([1, 2, 3], 120), "1,2,3")
+    // Structured values are dropped; scalars still coerce, because a numeric or
+    // boolean CLI field is a value the popup can legitimately print.
+    function test_boundedDisplayTextDropsStructuredPayloadsButKeepsScalars() {
+        compare(Normalizer.boundedDisplayText({ nested: "object" }, 120), "")
+        compare(Normalizer.boundedDisplayText({}, 120), "")
+        compare(Normalizer.boundedDisplayText([1, 2, 3], 120), "")
+        compare(Normalizer.boundedDisplayText([], 120), "")
         compare(Normalizer.boundedDisplayText(7, 120), "7")
         compare(Normalizer.boundedDisplayText(true, 120), "true")
+    }
+
+    // SEPARATE KNOWN GAP, pinned deliberately: `String(value || "")` inside
+    // SafeText.boundedInspectionText swallows numeric zero and `false`. That
+    // helper also feeds credential redaction and the diagnostic paths, so
+    // changing it is its own commit with its own security review, not a rider on
+    // the structured-value fix. configProviders.qml already works around this
+    // class of bug with its own descriptorValueText.
+    function test_boundedDisplayTextStillSwallowsFalsyScalars() {
+        compare(Normalizer.boundedDisplayText(0, 120), "")
+        compare(Normalizer.boundedDisplayText(false, 120), "")
+    }
+
+    function test_structuredSessionFieldsDegradeWithoutDroppingTheSession() {
+        var session = Normalizer.normalizeSession({
+            provider: "codex",
+            projectName: "codexbar-plasma",
+            host: { nested: "object" },
+            sessionName: ["a", "b"]
+        })
+        compare(session.projectName, "codexbar-plasma")
+        compare(session.host, "")
+        compare(session.sessionName, "")
     }
 
     function test_boundedDisplayTextPreservesUnicodeWithoutSplittingGraphemes() {

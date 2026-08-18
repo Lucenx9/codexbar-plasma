@@ -62,7 +62,19 @@ function redactCredentialText(text) {
         .replace(/\bsk-[A-Za-z0-9_-]{8,}\b/gi, "[redacted]")
 }
 
+// A structured value in a display field is a payload bug, not text. Coercing it
+// puts "[object Object]", or a comma-joined array, into the popup as if the CLI
+// had really labelled something that way. Display text drops it so the caller's
+// own fallback shows instead. Diagnostics deliberately keep coercing: there,
+// seeing the malformed shape beats seeing nothing.
+function isStructuredValue(value) {
+    return value !== null && typeof value === "object"
+}
+
 function boundedDisplayText(value, maximumLength) {
+    if (isStructuredValue(value)) {
+        return ""
+    }
     var limit = safeLimit(maximumLength, maximumCliMessageLength)
     var inspectionLimit = Math.min(maximumDiagnosticLength, limit * 8)
     var text = boundedInspectionText(value, inspectionLimit)
