@@ -10,13 +10,7 @@ QML_IMPORT_DIR ?= /usr/lib/qt6/qml
 # the type/import-resolution categories that would otherwise cascade into
 # failures; locally (modules present) they are no-ops, so the check stays full.
 QMLLINT_FLAGS ?= --unqualified disable
-# Read from the one source list in scripts/lib/qml_surfaces.py so adding or
-# moving a QML file does not need an edit here, in the hardening check, and in
-# the gettext extraction. `check` fails loudly if that lookup produced nothing.
-QML_FILES := $(shell python3 scripts/lib/qml_surfaces.py files all)
-
 check:
-	@test -n "$(QML_FILES)" || { echo "QML_FILES is empty: scripts/lib/qml_surfaces.py failed" >&2; exit 1; }
 	scripts/test_feature_parity.sh
 	scripts/test_refresh_nonce.sh
 	scripts/test_process_lifecycle.sh
@@ -29,7 +23,6 @@ check:
 	scripts/test_cli_descriptor_contract.sh
 	scripts/test_qml_logic.sh
 	scripts/test_qml_hardening.sh
-	$(QMLLINT) $(QMLLINT_FLAGS) -I $(QML_IMPORT_DIR) $(QML_FILES)
 	xmllint --noout contents/config/main.xml
 	jq . metadata.json >/dev/null
 	@if command -v kpackagetool6 >/dev/null 2>&1; then \

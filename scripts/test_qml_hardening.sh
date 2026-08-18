@@ -7,8 +7,10 @@ QML_IMPORT_DIR="${QML_IMPORT_DIR:-/usr/lib/qt6/qml}"
 QMLLINT_FLAGS="${QMLLINT_FLAGS:---unqualified disable}"
 
 # The `all` surface in scripts/lib/qml_surfaces.py is the one list of QML/JS
-# sources; the Makefile and scripts/update_translations.sh read it too, so a new
-# or moved file cannot fall out of one list while staying in another.
+# sources; this check and scripts/update_translations.sh read it, so a new or
+# moved file cannot fall out of one list while staying in another. Keep the
+# paths in this Bash array: expanding a generated path list in a Make recipe
+# would let shell metacharacters in a source or checkout name become commands.
 mapfile -t QML_FILES < <(cd "$ROOT_DIR" && python3 scripts/lib/qml_surfaces.py files all)
 if [[ "${#QML_FILES[@]}" -eq 0 ]]; then
   echo "scripts/lib/qml_surfaces.py produced no files for surface 'all'" >&2
