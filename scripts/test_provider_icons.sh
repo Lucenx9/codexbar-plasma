@@ -20,31 +20,16 @@ import sys
 from pathlib import Path
 
 root = Path(sys.argv[1])
-sys.path.insert(0, str(root / "scripts/lib"))
-from qml_surfaces import Surface
 
-# The provider alias maps stay findable once they move out of main.qml.
-text = Surface("applet", root).text
+# Both the popup and the config page resolve icons through the one alias table in
+# ProviderIdentity.js, so this check reads that module rather than a QML body.
+text = (root / "contents/ui/ProviderIdentity.js").read_text(encoding="utf-8")
 
-def function_body(name):
-    start = text.index(f"function {name}(")
-    brace = text.index("{", start)
-    depth = 1
-    index = brace + 1
-    while depth:
-        if text[index] == "{":
-            depth += 1
-        elif text[index] == "}":
-            depth -= 1
-        index += 1
-    return text[brace + 1:index - 1]
-
-for kind, function_name in (("provider", "providerKey"), ("icon", "providerIconSource")):
-    body = function_body(function_name)
-    aliases = re.search(r"var aliases = \{(.*?)\n\s*\}", body, re.S)
-    if not aliases:
-        raise SystemExit(f"missing aliases map in {function_name}")
-    for key, value in re.findall(r'"([^"]+)":\s*"([^"]+)"', aliases.group(1)):
+for kind, table_name in (("provider", "providerAliases"), ("icon", "providerIconFiles")):
+    table = re.search(r"var " + table_name + r" = \{(.*?)\n\}", text, re.S)
+    if not table:
+        raise SystemExit(f"missing {table_name} table in ProviderIdentity.js")
+    for key, value in re.findall(r'"([^"]+)":\s*"([^"]+)"', table.group(1)):
         print(f"{kind}\t{key}\t{value}")
 PY
 )

@@ -12,6 +12,7 @@ DISPLAY_QML="${ROOT_DIR}/contents/ui/configDisplay.qml"
 ADVANCED_QML="${ROOT_DIR}/contents/ui/configAdvanced.qml"
 DEBUG_QML="${ROOT_DIR}/contents/ui/configDebug.qml"
 PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
+PROVIDER_IDENTITY_JS="${ROOT_DIR}/contents/ui/ProviderIdentity.js"
 COMPACT_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/CompactRepresentation.qml"
 PROVIDER_HEADER_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/ProviderHeader.qml"
 USAGE_ROW_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/ProviderUsageRow.qml"
@@ -96,121 +97,179 @@ require_in_file "$PROVIDERS_QML" "action: \"set-api-key\""
 require_in_file "$PROVIDERS_QML" "Provider settings"
 require_in_file "$PROVIDERS_QML" "Load redacted settings"
 require_in_file "$PROVIDERS_QML" "CLI commands"
-require_in_file "$PROVIDERS_QML" "openai: \"openai.md\""
-require_in_file "$PROVIDERS_QML" "openrouter: \"openrouter.md\""
-require_in_file "$PROVIDERS_QML" "azureopenai: \"providers.md#azure-openai\""
-require_in_file "$PROVIDERS_QML" "copilot: \"copilot.md\""
-require_in_file "$PROVIDERS_QML" "mistral: \"providers.md#mistral\""
-require_in_file "$PROVIDERS_QML" "perplexity: \"providers.md#perplexity\""
-require_in_file "$PROVIDERS_QML" "poe: \"poe.md\""
-require_in_file "$PROVIDERS_QML" "sakana: \"sakana.md\""
-require_in_file "$PROVIDERS_QML" "stepfun: \"stepfun.md\""
-require_in_file "$PROVIDERS_QML" "synthetic: \"providers.md#synthetic\""
-require_in_file "$PROVIDERS_QML" "t3chat: \"providers.md#t3-chat\""
-require_in_file "$PROVIDERS_QML" "venice: \"venice.md\""
-require_in_file "$PROVIDERS_QML" "zed: \"zed.md\""
-require_in_file "$PROVIDERS_QML" "qoder: \"qoder.md\""
-require_in_file "$PROVIDERS_QML" "crossmodel: \"crossmodel.md\""
-require_in_file "$PROVIDERS_QML" "clawrouter: \"clawrouter.md\""
-require_in_file "$PROVIDERS_QML" "wayfinder: \"wayfinder.md\""
-require_in_file "$PROVIDERS_QML" "\"cm\": \"crossmodel\""
-require_in_file "$PROVIDERS_QML" "\"claw-router\": \"clawrouter\""
-require_in_file "$PROVIDERS_QML" "\"qoder\": i18n(\"Qoder\")"
-require_in_file "$PROVIDERS_QML" "\"crossmodel\": i18n(\"CrossModel\")"
-require_in_file "$PROVIDERS_QML" "\"clawrouter\": i18n(\"ClawRouter\")"
-require_in_file "$PROVIDERS_QML" "\"wayfinder\": i18n(\"Wayfinder\")"
-require_in_file "$PROVIDERS_QML" "return Qt.rgba(16 / 255, 185 / 255, 129 / 255, 1)"
-require_in_file "$PROVIDERS_QML" "return Qt.rgba(124 / 255, 58 / 255, 237 / 255, 1)"
-require_in_file "$PROVIDERS_QML" "return Qt.rgba(89 / 255, 110 / 255, 246 / 255, 1)"
-require_in_file "$PROVIDERS_QML" "return \"https://qoder.com/account/usage\""
-require_in_file "$PROVIDERS_QML" "return \"https://crossmodel.ai/console/usage\""
-require_in_file "$PROVIDERS_QML" "return \"https://clawrouter.openclaw.ai/dashboard/access\""
-require_in_file "$PROVIDERS_QML" "case \"crof\":"
-require_in_file "$PROVIDERS_QML" "return \"https://crof.ai/dashboard\""
-require_in_file "$PROVIDERS_QML" "case \"sakana\":"
-require_in_file "$PROVIDERS_QML" "return \"https://console.sakana.ai/billing\""
+require_in_file "$PROVIDER_IDENTITY_JS" "\"openai\": \"openai.md\""
+require_in_file "$PROVIDER_IDENTITY_JS" "\"openrouter\": \"openrouter.md\""
+# Provider identity is one table set in ProviderIdentity.js, so the parity facts
+# below are asserted once against that module rather than once per surface. The
+# display names are the exception: `i18n` needs literal strings in a file gettext
+# scans, so those stay in each QML surface and are checked in both.
+python3 - "$PROVIDER_IDENTITY_JS" <<'PY'
+import pathlib
+import re
+import sys
 
-official_alias_mappings=(
-  '"11labs": "elevenlabs"'
-  '"abacus-ai": "abacus"'
-  '"ai&": "aiand"'
-  '"ai-and": "aiand"'
-  '"alibaba-token": "alibabatokenplan"'
-  '"aoai": "azureopenai"'
-  '"azure-openai": "azureopenai"'
-  '"bailian": "alibaba"'
-  '"bailian-token-plan": "alibabatokenplan"'
-  '"chutes.ai": "chutes"'
-  '"command-code": "commandcode"'
-  '"deep-infra": "deepinfra"'
-  '"deep-seek": "deepseek"'
-  '"fw": "fireworks"'
-  '"groq-api": "groq"'
-  '"ibm-bob": "ibmbob"'
-  '"bob": "ibmbob"'
-  '"bobshell": "ibmbob"'
-  '"openai-api": "openai"'
-  '"qwen-cloud": "qwencloud"'
-  '"step-fun": "stepfun"'
-  '"sub-2-api": "sub2api"'
-  '"synthetic.new": "synthetic"'
-  '"t3-chat": "t3chat"'
-  '"warp-terminal": "warp"'
-  '"wayfinder-router": "wayfinder"'
-  '"xiaomi-mimo": "mimo"'
-  '"z.ai": "zai"'
-  '"zen-mux": "zenmux"'
-)
+text = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+failures = []
+
+def table(name):
+    match = re.search(r"var " + name + r" = \{(.*?)\n\}", text, re.S)
+    if not match:
+        failures.append(f"missing {name} table in ProviderIdentity.js")
+        return {}
+    body = match.group(1)
+    entries = dict(re.findall(r'"([^"]+)":\s*"([^"]*)"', body))
+    entries.update(
+        (key, value.strip())
+        for key, value in re.findall(r'"([^"]+)":\s*(\[[^\]]*\])', body)
+    )
+    return entries
+
+def require(name, entries, expected):
+    for key, value in expected.items():
+        if entries.get(key) != value:
+            failures.append(f"{name}: expected {key} -> {value!r}, found {entries.get(key)!r}")
+
+def reject(name, entries, unwanted):
+    for key, value in unwanted.items():
+        if entries.get(key) == value:
+            failures.append(f"{name}: {key} still points at the stale value {value!r}")
+
+require("providerDocsPaths", table("providerDocsPaths"), {
+    "aiand": "aiand.md",
+    "azureopenai": "providers.md#azure-openai",
+    "clawrouter": "clawrouter.md",
+    "copilot": "copilot.md",
+    "crossmodel": "crossmodel.md",
+    "deepinfra": "deepinfra.md",
+    "fireworks": "fireworks.md",
+    "ibmbob": "ibm-bob.md",
+    "mistral": "providers.md#mistral",
+    "neuralwatt": "neuralwatt.md",
+    "notion": "notion.md",
+    "openai": "openai.md",
+    "openrouter": "openrouter.md",
+    "perplexity": "providers.md#perplexity",
+    "poe": "poe.md",
+    "qoder": "qoder.md",
+    "qwencloud": "qwen-cloud.md",
+    "sakana": "sakana.md",
+    "stepfun": "stepfun.md",
+    "sub2api": "sub2api.md",
+    "synthetic": "providers.md#synthetic",
+    "t3chat": "providers.md#t3-chat",
+    "venice": "venice.md",
+    "wayfinder": "wayfinder.md",
+    "xai": "xai.md",
+    "zed": "zed.md",
+    "zenmux": "zenmux.md",
+    "zoommate": "zoommate.md",
+})
+
+# Official CLI spellings and historical aliases the widget must keep accepting.
+require("providerAliases", table("providerAliases"), {
+    "11labs": "elevenlabs",
+    "abacus-ai": "abacus",
+    "ai&": "aiand",
+    "ai-and": "aiand",
+    "alibaba-token": "alibabatokenplan",
+    "aoai": "azureopenai",
+    "azure-openai": "azureopenai",
+    "bailian": "alibaba",
+    "bailian-token-plan": "alibabatokenplan",
+    "bob": "ibmbob",
+    "bobshell": "ibmbob",
+    "chutes.ai": "chutes",
+    "claw-router": "clawrouter",
+    "cm": "crossmodel",
+    "command-code": "commandcode",
+    "deep-infra": "deepinfra",
+    "deep-seek": "deepseek",
+    "fw": "fireworks",
+    "groq-api": "groq",
+    "ibm-bob": "ibmbob",
+    "notion-ai": "notion",
+    "openai-api": "openai",
+    "qwen-cloud": "qwencloud",
+    "step-fun": "stepfun",
+    "sub-2-api": "sub2api",
+    "synthetic.new": "synthetic",
+    "t3-chat": "t3chat",
+    "warp-terminal": "warp",
+    "wayfinder-router": "wayfinder",
+    "xiaomi-mimo": "mimo",
+    "z.ai": "zai",
+    "zen-mux": "zenmux",
+})
+
+require("providerBrandChannels", table("providerBrandChannels"), {
+    "aiand": "[226 / 255, 92 / 255, 43 / 255]",
+    "clawrouter": "[89 / 255, 110 / 255, 246 / 255]",
+    "crossmodel": "[124 / 255, 58 / 255, 237 / 255]",
+    "commandcode": "[160 / 255, 77 / 255, 253 / 255]",
+    "fireworks": "[242 / 255, 91 / 255, 28 / 255]",
+    "ibmbob": "[14 / 255, 97 / 255, 250 / 255]",
+    "poe": "[93 / 255, 92 / 255, 222 / 255]",
+    "qoder": "[16 / 255, 185 / 255, 129 / 255]",
+})
+
+dashboards = table("providerDashboardUrls")
+require("providerDashboardUrls", dashboards, {
+    "aiand": "https://console.aiand.com",
+    "amp": "https://ampcode.com/settings/usage",
+    "clawrouter": "https://clawrouter.openclaw.ai/dashboard/access",
+    "claude": "https://console.anthropic.com/settings/billing",
+    "clinepass": "https://app.cline.bot/dashboard/subscription?personal=true",
+    "crof": "https://crof.ai/dashboard",
+    "crossmodel": "https://crossmodel.ai/console/usage",
+    "deepinfra": "https://deepinfra.com/dash",
+    "fireworks": "https://app.fireworks.ai",
+    "groq": "https://console.groq.com/dashboard/usage",
+    "ibmbob": "https://bob.ibm.com",
+    "wayfinder": "http://127.0.0.1:8088/router",
+    "notion": "https://app.notion.com/",
+    "qoder": "https://qoder.com/account/usage",
+    "sakana": "https://console.sakana.ai/billing",
+    "xai": "https://console.x.ai",
+})
+# Dashboards that moved upstream; landing on the old page looks like working UI.
+reject("providerDashboardUrls", dashboards, {
+    "amp": "https://ampcode.com/settings#billing",
+    "claude": "https://claude.ai/settings/usage",
+    "groq": "https://console.groq.com/dashboard/metrics",
+})
+
+require("providerLoginUrls", table("providerLoginUrls"), {
+    "opencode": "https://opencode.ai/auth",
+    "opencodego": "https://opencode.ai/auth",
+})
+reject("providerLoginUrls", table("providerLoginUrls"), {"opencode": "https://opencode.ai"})
+
+require("providerStatusUrls", table("providerStatusUrls"), {
+    "augment": "https://status.augmentcode.com",
+    "ibmbob": "https://status.bob.ibm.com",
+    "mistral": "https://status.mistral.ai",
+})
+
+if failures:
+    for failure in failures:
+        print(failure, file=sys.stderr)
+    sys.exit(1)
+PY
 
 for qml_file in "$MAIN_QML" "$PROVIDERS_QML"; do
-  require_in_file "$qml_file" 'aiand: "aiand.md"'
-  require_in_file "$qml_file" 'deepinfra: "deepinfra.md"'
-  require_in_file "$qml_file" 'fireworks: "fireworks.md"'
-  require_in_file "$qml_file" 'ibmbob: "ibm-bob.md"'
-  require_in_file "$qml_file" 'neuralwatt: "neuralwatt.md"'
-  require_in_file "$qml_file" 'notion: "notion.md"'
-  require_in_file "$qml_file" 'qwencloud: "qwen-cloud.md"'
-  require_in_file "$qml_file" 'sub2api: "sub2api.md"'
-  require_in_file "$qml_file" 'xai: "xai.md"'
-  require_in_file "$qml_file" 'zenmux: "zenmux.md"'
-  require_in_file "$qml_file" 'zoommate: "zoommate.md"'
-  for alias_mapping in "${official_alias_mappings[@]}"; do
-    require_in_file "$qml_file" "$alias_mapping"
-  done
-  require_in_file "$qml_file" '"notion-ai": "notion"'
+  require_in_file "$qml_file" '"clawrouter": i18n("ClawRouter")'
+  require_in_file "$qml_file" '"crossmodel": i18n("CrossModel")'
   require_in_file "$qml_file" '"elevenlabs": i18n("ElevenLabs")'
   require_in_file "$qml_file" '"fireworks": i18n("Fireworks")'
   require_in_file "$qml_file" '"ibmbob": i18n("IBM Bob")'
   require_in_file "$qml_file" '"kimi": i18n("Kimi Code")'
   require_in_file "$qml_file" '"minimax": i18n("MiniMax")'
   require_in_file "$qml_file" '"moonshot": i18n("Moonshot / Kimi Open Platform")'
+  require_in_file "$qml_file" '"qoder": i18n("Qoder")'
   require_in_file "$qml_file" '"stepfun": i18n("StepFun")'
+  require_in_file "$qml_file" '"wayfinder": i18n("Wayfinder")'
   require_in_file "$qml_file" '"zai": i18n("z.ai / GLM")'
-  require_in_file "$qml_file" 'return Qt.rgba(160 / 255, 77 / 255, 253 / 255, 1)'
-  require_in_file "$qml_file" 'return Qt.rgba(242 / 255, 91 / 255, 28 / 255, 1)'
-  require_in_file "$qml_file" 'return Qt.rgba(14 / 255, 97 / 255, 250 / 255, 1)'
-  require_in_file "$qml_file" 'return Qt.rgba(93 / 255, 92 / 255, 222 / 255, 1)'
-  require_in_file "$qml_file" 'return "https://console.aiand.com"'
-  require_in_file "$qml_file" 'return "https://app.cline.bot/dashboard/subscription?personal=true"'
-  require_in_file "$qml_file" 'return "https://deepinfra.com/dash"'
-  require_in_file "$qml_file" 'return "https://app.fireworks.ai"'
-  require_in_file "$qml_file" 'return "https://bob.ibm.com"'
-  require_in_file "$qml_file" 'return "https://app.notion.com/"'
-  require_in_file "$qml_file" 'return "https://console.x.ai"'
-  require_in_file "$qml_file" 'return "https://ampcode.com/settings/usage"'
-  require_in_file "$qml_file" 'return "https://console.anthropic.com/settings/billing"'
-  require_in_file "$qml_file" 'return "https://console.groq.com/dashboard/usage"'
-  require_in_file "$qml_file" 'return "https://opencode.ai/auth"'
-  require_in_file "$qml_file" 'return "http://127.0.0.1:8088/router"'
-  reject_in_file "$qml_file" 'return "https://ampcode.com/settings#billing"'
-  reject_in_file "$qml_file" 'return "https://claude.ai/settings/usage"'
-  reject_in_file "$qml_file" 'return "https://console.groq.com/dashboard/metrics"'
-  reject_in_file "$qml_file" 'return "https://opencode.ai"'
 done
-
-require_in_surface applet 'return "https://status.augmentcode.com"'
-require_in_surface applet 'return "https://status.bob.ibm.com"'
-require_in_surface applet 'return "https://status.mistral.ai"'
 
 python3 - "$PROVIDERS_QML" <<'PY'
 import pathlib
@@ -243,9 +302,16 @@ for function_name in ("setEnabled", "setApiKey", "loadProviderSettings", "provid
         print(f"{function_name} does not convert the provider ID to its CLI argument", file=sys.stderr)
         sys.exit(1)
 
-cli_start = text.index("    function providerCliArgument(value)")
-cli_end = text.index("\n    function ", cli_start + 1)
-cli_body = text[cli_start:cli_end]
+# The provider ID the CLI accepts is not always the canonical key, and both the
+# popup and this page must send the same one, so the overrides live once in
+# ProviderIdentity.js.
+identity = pathlib.Path(sys.argv[1]).parent / "ProviderIdentity.js"
+cli_body = identity.read_text(encoding="utf-8")
+cli_table = re.search(r"var providerCliArguments = \{(.*?)\n\}", cli_body, re.S)
+if not cli_table:
+    print("missing providerCliArguments table in ProviderIdentity.js", file=sys.stderr)
+    sys.exit(1)
+cli_arguments = dict(re.findall(r'"([^"]+)":\s*"([^"]+)"', cli_table.group(1)))
 for provider_id, cli_name in {
     "abacus": "abacusai",
     "alibaba": "alibaba-coding-plan",
@@ -254,7 +320,7 @@ for provider_id, cli_name in {
     "groq": "groqcloud",
     "qwencloud": "qwen-cloud",
 }.items():
-    if f'case "{provider_id}":' not in cli_body or f'return "{cli_name}"' not in cli_body:
+    if cli_arguments.get(provider_id) != cli_name:
         print(f"missing CLI argument mapping for {provider_id}", file=sys.stderr)
         sys.exit(1)
 PY
@@ -442,37 +508,6 @@ require_in_file "$SPEND_COMPONENT_QML" "view.applet.spendHistoryStillBuilding()"
 require_in_surface applet "if (!costUsageEnabled) {"
 require_in_surface applet "--days"
 require_in_surface applet "Math.max(1, Math.min(365, Number(Plasmoid.configuration.costHistoryDays)"
-require_in_surface applet "openai: \"openai.md\""
-require_in_surface applet "openrouter: \"openrouter.md\""
-require_in_surface applet "azureopenai: \"providers.md#azure-openai\""
-require_in_surface applet "copilot: \"copilot.md\""
-require_in_surface applet "mistral: \"providers.md#mistral\""
-require_in_surface applet "perplexity: \"providers.md#perplexity\""
-require_in_surface applet "poe: \"poe.md\""
-require_in_surface applet "sakana: \"sakana.md\""
-require_in_surface applet "stepfun: \"stepfun.md\""
-require_in_surface applet "synthetic: \"providers.md#synthetic\""
-require_in_surface applet "t3chat: \"providers.md#t3-chat\""
-require_in_surface applet "venice: \"venice.md\""
-require_in_surface applet "zed: \"zed.md\""
-require_in_surface applet "qoder: \"qoder.md\""
-require_in_surface applet "crossmodel: \"crossmodel.md\""
-require_in_surface applet "clawrouter: \"clawrouter.md\""
-require_in_surface applet "\"cm\": \"crossmodel\""
-require_in_surface applet "\"claw-router\": \"clawrouter\""
-require_in_surface applet "\"qoder\": i18n(\"Qoder\")"
-require_in_surface applet "\"crossmodel\": i18n(\"CrossModel\")"
-require_in_surface applet "\"clawrouter\": i18n(\"ClawRouter\")"
-require_in_surface applet "return Qt.rgba(16 / 255, 185 / 255, 129 / 255, 1)"
-require_in_surface applet "return Qt.rgba(124 / 255, 58 / 255, 237 / 255, 1)"
-require_in_surface applet "return Qt.rgba(89 / 255, 110 / 255, 246 / 255, 1)"
-require_in_surface applet "return \"https://qoder.com/account/usage\""
-require_in_surface applet "return \"https://crossmodel.ai/console/usage\""
-require_in_surface applet "return \"https://clawrouter.openclaw.ai/dashboard/access\""
-require_in_surface applet "case \"crof\":"
-require_in_surface applet "return \"https://crof.ai/dashboard\""
-require_in_surface applet "case \"sakana\":"
-require_in_surface applet "return \"https://console.sakana.ai/billing\""
 
 require_in_file "$GENERAL_QML" "Fetch provider status"
 require_in_file "$GENERAL_QML" "Show local cost usage"
