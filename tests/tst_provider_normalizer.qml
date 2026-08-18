@@ -130,11 +130,11 @@ TestCase {
     }
 
     function test_rejectsOversizedProviderIDs() {
-        var long = ""
+        var oversized = ""
         for (var i = 0; i < 200; i++) {
-            long += "a"
+            oversized += "a"
         }
-        compare(Normalizer.normalizedProviderID(long), "")
+        compare(Normalizer.normalizedProviderID(oversized), "")
     }
 
     // --- provider config ----------------------------------------------------
@@ -652,14 +652,14 @@ TestCase {
     }
 
     function test_boundedDisplayTextFallsBackToASaneLimit() {
-        var long = ""
+        var oversized = ""
         for (var i = 0; i < 900; i++) {
-            long += "a"
+            oversized += "a"
         }
-        compare(Normalizer.boundedDisplayText(long, 0).length, 500)
-        compare(Normalizer.boundedDisplayText(long, NaN).length, 500)
-        compare(Normalizer.boundedDisplayText(long, -1).length, 500)
-        compare(Normalizer.boundedDisplayText(long, 120).length, 120)
+        compare(Normalizer.boundedDisplayText(oversized, 0).length, 500)
+        compare(Normalizer.boundedDisplayText(oversized, NaN).length, 500)
+        compare(Normalizer.boundedDisplayText(oversized, -1).length, 500)
+        compare(Normalizer.boundedDisplayText(oversized, 120).length, 120)
     }
 
     // --- clamp --------------------------------------------------------------

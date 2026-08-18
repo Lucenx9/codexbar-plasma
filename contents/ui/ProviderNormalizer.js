@@ -327,6 +327,9 @@ function normalizeSessions(payload) {
         return null
     }
 
+    // The bound applies before the sort, so the kept slice is the first
+    // `maximumSessions` entries in payload order, then ordered newest first.
+    // (Pinned by test_sortsSessionsByRecentActivityAndTruncatesAtTheBound.)
     var nextSessions = []
     var itemLimit = Math.min(items.length, maximumSessions)
     for (var i = 0; i < itemLimit; i++) {
