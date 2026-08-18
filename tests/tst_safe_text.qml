@@ -99,6 +99,18 @@ TestCase {
         verify(diagnostic.length <= SafeText.maximumDiagnosticLength)
     }
 
+    function test_doesNotExposeDiagnosticLookaheadAfterRedactionShrinksText() {
+        var authorization = "Authorization: Bearer " + "a".repeat(200) + "\n"
+        var padding = "x".repeat(SafeText.maximumDiagnosticLength - authorization.length)
+        var diagnostic = SafeText.cliDiagnostic(
+            authorization + padding + "password=POST_BOUNDARY_SECRET",
+            SafeText.maximumDiagnosticLength)
+
+        verify(diagnostic.indexOf("POST_BOUNDARY_SECRET") === -1)
+        verify(diagnostic.indexOf("password=") === -1)
+        verify(diagnostic.length <= SafeText.maximumDiagnosticLength)
+    }
+
     function test_rejectsOversizedCliJsonBeforeParsing() {
         compare(SafeText.cliJsonText("{}"), "{}")
         compare(SafeText.cliJsonText("x".repeat(SafeText.maximumCliJsonLength + 1)), null)

@@ -32,10 +32,28 @@ function boundedInspectionText(value, inspectionLimit, lookaheadLength) {
 
 function redactCredentials(value, inspectionLimit) {
     var limit = safeLimit(inspectionLimit, maximumCliMessageLength)
-    var text = boundedInspectionText(
-        value,
-        Math.min(maximumDiagnosticLength, limit * 8),
-        credentialRedactionLookaheadLength)
+    var inspectionLength = Math.min(maximumDiagnosticLength, limit * 8)
+    var text = boundedInspectionText(value, inspectionLength)
+    var lookaheadText = boundedInspectionText(value, inspectionLength, credentialRedactionLookaheadLength)
+    var redactedText = redactCredentialText(text)
+    var redactedLookaheadText = redactCredentialText(lookaheadText)
+
+    // Lookahead may decide that a credential starts inside the visible window,
+    // but bytes beyond that window must never become displayable after a
+    // replacement shortens earlier text.
+    if (redactedLookaheadText.indexOf(redactedText) !== 0) {
+        var sharedLength = 0
+        while (sharedLength < redactedText.length
+                && sharedLength < redactedLookaheadText.length
+                && redactedText.charAt(sharedLength) === redactedLookaheadText.charAt(sharedLength)) {
+            sharedLength++
+        }
+        return redactedText.slice(0, sharedLength) + "[redacted]"
+    }
+    return redactedText
+}
+
+function redactCredentialText(text) {
     return text
         .replace(/((?:proxy-)?authorization["']?\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\r\n]*)/gi, "$1[redacted]")
         .replace(/\bbearer\s+(?:"[^"]*"|'[^']*'|[^\s,;]+)/gi, "Bearer [redacted]")
