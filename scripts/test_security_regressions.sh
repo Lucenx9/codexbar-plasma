@@ -203,5 +203,8 @@ for qml_file in "$PROVIDER_DETAIL_SECTION_QML" "$INTERACTIVE_CHART_QML"; do
 done
 
 require_in_file "$MAKEFILE" "scripts/test_security_regressions.sh"
+require_in_file "$MAKEFILE" "scripts/test_qml_hardening.sh"
+reject_text "Makefile" "$(cat "$MAKEFILE")" 'QML_FILES := $(shell'
+reject_text "Makefile" "$(cat "$MAKEFILE")" '$(QML_FILES)'
 
 echo "Security regression checks passed."
