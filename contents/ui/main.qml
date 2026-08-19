@@ -6,6 +6,7 @@ import org.kde.plasma.plasmoid
 import "components" as Components
 import "NotificationMemo.js" as NotificationMemo
 import "PanelElements.js" as PanelElements
+import "CommandLedger.js" as CommandLedger
 import "CostPresentation.js" as CostPresentation
 import "ProviderIdentity.js" as ProviderIdentity
 import "ProviderNormalizer.js" as Normalizer
@@ -78,9 +79,7 @@ PlasmoidItem {
     property string lastUpdatedText: ""
     property bool loading: false
     property string commandSource: buildCommand()
-    property string connectedCommandSource: ""
     property string providerConfigCommandSource: buildProviderConfigCommand()
-    property string connectedProviderConfigCommandSource: ""
     property string providerConfigWatchCommand: buildProviderConfigWatchCommand()
     property string providerConfigStamp: ""
     readonly property int providerConfigWatchIntervalMs: 60000
@@ -104,12 +103,10 @@ PlasmoidItem {
     property int pendingProviderCount: 0
     property bool providerFallbackActive: false
     property string costCommandSource: buildCostCommand()
-    property string connectedCostCommandSource: ""
-    readonly property bool costLoading: connectedCostCommandSource.length > 0
+    readonly property bool costLoading: CommandLedger.hasKind(activeUsageCommands, "cost")
     property var tokenCosts: ({})
     property string costErrorText: ""
     property string sessionsCommandSource: buildSessionsCommand()
-    property string connectedSessionsCommandSource: ""
     property var sessions: []
     property string sessionsErrorText: ""
     property string sessionsLastUpdatedText: ""
@@ -457,7 +454,7 @@ PlasmoidItem {
             return ""
         }
         commandRunSerial += 1
-        return "CODEXBAR_PLASMA_RUN=" + commandRunSerial + " " + command
+        return CommandLedger.withRunNonce(command, commandRunSerial)
     }
 
     function connectUsageCommand(sourceName, descriptor) {
@@ -465,26 +462,13 @@ PlasmoidItem {
             return
         }
 
-        var commands = copyObject(activeUsageCommands)
-        commands[sourceName] = descriptor || {
-            kind: "",
-            providerID: "",
-            deadlineMs: 0
-        }
-        activeUsageCommands = commands
+        activeUsageCommands = CommandLedger.opened(activeUsageCommands, sourceName, descriptor)
         usageSource.connectSource(sourceName)
     }
 
     function buildUsageCommandDescriptor(kind, providerID, timeoutMs) {
-        var boundedTimeout = Number(timeoutMs)
-        if (!isFinite(boundedTimeout) || boundedTimeout <= 0) {
-            boundedTimeout = usageCommandTimeoutMs
-        }
-        return {
-            kind: String(kind || ""),
-            providerID: String(providerID || ""),
-            deadlineMs: Date.now() + boundedTimeout
-        }
+        return CommandLedger.descriptor(
+            kind, providerID, Date.now(), timeoutMs, usageCommandTimeoutMs)
     }
 
     function buildCostCommandDescriptor() {
@@ -499,10 +483,17 @@ PlasmoidItem {
         }
 
         usageSource.disconnectSource(sourceName)
+        activeUsageCommands = CommandLedger.closed(activeUsageCommands, sourceName)
+    }
 
-        var activeCommands = copyObject(activeUsageCommands)
-        delete activeCommands[sourceName]
-        activeUsageCommands = activeCommands
+    // Retiring by kind is what makes a late reply harmless: the source name
+    // leaves the ledger, so routing no longer recognises it.
+    function retireUsageCommandKind(kind) {
+        var sourceNames = CommandLedger.sourcesOfKind(activeUsageCommands, kind)
+        for (var i = 0; i < sourceNames.length; i++) {
+            finishUsageCommandSource(sourceNames[i])
+        }
+        return sourceNames.length
     }
 
     function refreshNow() {
@@ -526,24 +517,15 @@ PlasmoidItem {
             startProviderFallback()
             return
         }
-        connectedCommandSource = commandWithRunNonce(commandSource)
         connectUsageCommand(
-            connectedCommandSource,
+            commandWithRunNonce(commandSource),
             buildUsageCommandDescriptor("usage", ""))
     }
 
     function retireUsageCommands() {
-        if (connectedCommandSource.length > 0) {
-            finishUsageCommandSource(connectedCommandSource)
-            connectedCommandSource = ""
-        }
-        if (connectedProviderConfigCommandSource.length > 0) {
-            finishUsageCommandSource(connectedProviderConfigCommandSource)
-            connectedProviderConfigCommandSource = ""
-        }
-        if (connectedSessionsCommandSource.length > 0) {
-            finishUsageCommandSource(connectedSessionsCommandSource)
-            connectedSessionsCommandSource = ""
+        retireUsageCommandKind("usage")
+        retireUsageCommandKind("providerConfig")
+        if (retireUsageCommandKind("sessions") > 0) {
             sessionsLoading = false
         }
         for (var command in pendingProviderCommands) {
@@ -577,10 +559,7 @@ PlasmoidItem {
     }
 
     function refreshCost() {
-        if (connectedCostCommandSource.length > 0) {
-            finishUsageCommandSource(connectedCostCommandSource)
-            connectedCostCommandSource = ""
-        }
+        retireUsageCommandKind("cost")
 
         if (costCommandSource.length === 0) {
             tokenCosts = ({})
@@ -590,17 +569,13 @@ PlasmoidItem {
         }
 
         costErrorText = ""
-        connectedCostCommandSource = commandWithRunNonce(costCommandSource)
         connectUsageCommand(
-            connectedCostCommandSource,
+            commandWithRunNonce(costCommandSource),
             buildCostCommandDescriptor())
     }
 
     function refreshSessions() {
-        if (connectedSessionsCommandSource.length > 0) {
-            finishUsageCommandSource(connectedSessionsCommandSource)
-            connectedSessionsCommandSource = ""
-        }
+        retireUsageCommandKind("sessions")
 
         sessionsInitialized = true
         if (sessionsCommandSource.length === 0) {
@@ -611,9 +586,8 @@ PlasmoidItem {
 
         sessionsLoading = true
         sessionsErrorText = ""
-        connectedSessionsCommandSource = commandWithRunNonce(sessionsCommandSource)
         connectUsageCommand(
-            connectedSessionsCommandSource,
+            commandWithRunNonce(sessionsCommandSource),
             buildUsageCommandDescriptor("sessions", "", sessionsCommandTimeoutMs))
     }
 
@@ -673,10 +647,7 @@ PlasmoidItem {
 
     function startProviderFallback() {
         providerFallbackActive = true
-        if (connectedCommandSource.length > 0) {
-            finishUsageCommandSource(connectedCommandSource)
-            connectedCommandSource = ""
-        }
+        retireUsageCommandKind("usage")
         if (provider.length > 0) {
             startProviderFallbackForProviders([providerKey(provider)])
             return
@@ -689,9 +660,8 @@ PlasmoidItem {
             return
         }
 
-        connectedProviderConfigCommandSource = commandWithRunNonce(providerConfigCommandSource)
         connectUsageCommand(
-            connectedProviderConfigCommandSource,
+            commandWithRunNonce(providerConfigCommandSource),
             buildUsageCommandDescriptor("providerConfig", ""))
     }
 
@@ -942,44 +912,25 @@ PlasmoidItem {
     }
 
     function hasPendingUsageCommandTimeouts() {
-        for (var sourceName in activeUsageCommands) {
-            if (!hasOwnKey(activeUsageCommands, sourceName)) {
-                continue
-            }
-            var descriptor = activeUsageCommands[sourceName]
-            if (descriptor && Number(descriptor.deadlineMs) > 0) {
-                return true
-            }
-        }
-        return false
+        return CommandLedger.hasDeadlines(activeUsageCommands)
     }
 
     function expireUsageCommands(nowMs) {
-        var commands = copyObject(activeUsageCommands)
-        var expired = []
-        for (var sourceName in commands) {
-            if (!hasOwnKey(commands, sourceName)) {
-                continue
-            }
-            var descriptor = commands[sourceName]
-            var deadline = descriptor ? Number(descriptor.deadlineMs) : 0
-            if (!isFinite(deadline) || deadline <= 0 || nowMs < deadline) {
-                continue
-            }
-            expired.push({ sourceName: sourceName, descriptor: descriptor })
-        }
+        var expired = CommandLedger.expired(activeUsageCommands, nowMs)
         for (var i = 0; i < expired.length; i++) {
             handleUsageCommandTimeout(expired[i].sourceName, expired[i].descriptor)
         }
     }
 
+    // The ledger entry already proves the command is the live one for its kind,
+    // so the kind alone decides how the timeout is reported.
     function handleUsageCommandTimeout(sourceName, descriptor) {
-        if (!descriptor || !activeUsageCommands[sourceName]) {
+        if (!descriptor || !CommandLedger.find(activeUsageCommands, sourceName)) {
             return
         }
 
-        if (descriptor.kind === "usage" && sourceName === connectedCommandSource) {
-            connectedCommandSource = ""
+        switch (descriptor.kind) {
+        case "usage":
             finishUsageCommandSource(sourceName)
             if (canUseProviderFallback()) {
                 startProviderFallback()
@@ -989,43 +940,31 @@ PlasmoidItem {
             loading = false
             errorText = i18n("Loading usage timed out. Try again.")
             return
-        }
-
-        if (descriptor.kind === "cost" && sourceName === connectedCostCommandSource) {
-            connectedCostCommandSource = ""
+        case "cost":
             finishUsageCommandSource(sourceName)
             costErrorText = i18n("Loading cost data timed out. Try again.")
             applyTokenCosts()
             return
-        }
-
-        if (descriptor.kind === "sessions" && sourceName === connectedSessionsCommandSource) {
-            connectedSessionsCommandSource = ""
+        case "sessions":
             finishUsageCommandSource(sourceName)
             sessionsLoading = false
             sessionsErrorText = i18n("Loading sessions timed out. Try again.")
             return
-        }
-
-        if (descriptor.kind === "providerConfig"
-                && sourceName === connectedProviderConfigCommandSource) {
-            connectedProviderConfigCommandSource = ""
+        case "providerConfig":
             finishUsageCommandSource(sourceName)
             providers = []
             loading = false
             errorText = i18n("Loading provider configuration timed out. Try again.")
             return
-        }
-
-        if (descriptor.kind === "providerFallback" && pendingProviderCommands[sourceName]) {
+        case "providerFallback":
             parseProviderFallbackOutput(
                 sourceName,
                 "",
                 i18n("Loading usage timed out. Try again."))
             return
+        default:
+            finishUsageCommandSource(sourceName)
         }
-
-        finishUsageCommandSource(sourceName)
     }
 
     function hasPendingAccountCommands() {
@@ -3804,49 +3743,41 @@ PlasmoidItem {
                 stderrText = i18n("codexbar response exceeded the supported size.")
             }
 
-            if (sourceName === root.connectedCostCommandSource) {
-                var costDescriptor = root.activeUsageCommands[sourceName]
-                var requestedHistoryDays = costDescriptor
-                    ? costDescriptor.costHistoryDays
+            // A reply the ledger no longer holds is a late result from a
+            // retired run. Dropping it is what keeps it from overwriting the
+            // refresh that replaced it.
+            var descriptor = CommandLedger.find(root.activeUsageCommands, sourceName)
+            if (!descriptor) {
+                return
+            }
+
+            switch (descriptor.kind) {
+            case "cost":
+                var requestedHistoryDays = descriptor.costHistoryDays !== undefined
+                    ? descriptor.costHistoryDays
                     : root.costHistoryDays
-                root.connectedCostCommandSource = ""
                 root.finishUsageCommandSource(sourceName)
                 root.parseCostOutput(stdoutText, stderrText, requestedHistoryDays)
                 return
-            }
-
-            if (sourceName === root.connectedSessionsCommandSource) {
-                root.connectedSessionsCommandSource = ""
+            case "sessions":
                 root.finishUsageCommandSource(sourceName)
                 root.parseSessionsOutput(stdoutText, stderrText)
                 return
-            }
-
-            if (sourceName === root.connectedProviderConfigCommandSource) {
-                root.connectedProviderConfigCommandSource = ""
+            case "providerConfig":
                 root.finishUsageCommandSource(sourceName)
                 root.parseProviderConfigOutput(stdoutText, stderrText)
                 return
-            }
-
-            if (root.pendingAccountCommands[sourceName]) {
+            case "account":
                 root.parseProviderAccountsOutput(sourceName, stdoutText, stderrText)
                 return
-            }
-
-            if (root.pendingProviderCommands[sourceName]) {
+            case "providerFallback":
                 root.parseProviderFallbackOutput(sourceName, stdoutText, stderrText)
                 return
-            }
-
-            if (sourceName === root.connectedCommandSource) {
-                root.connectedCommandSource = ""
+            case "usage":
                 root.finishUsageCommandSource(sourceName)
                 root.parseOutput(stdoutText, stderrText)
                 return
-            }
-
-            if (root.activeUsageCommands[sourceName]) {
+            default:
                 root.finishUsageCommandSource(sourceName)
             }
         }

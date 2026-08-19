@@ -9,9 +9,20 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # in, so assert it across the whole surface.
 
 require_in_surface applet "function commandWithRunNonce(command)"
-require_in_surface applet "connectedCommandSource = commandWithRunNonce(commandSource)"
-require_in_surface applet "connectedCostCommandSource = commandWithRunNonce(costCommandSource)"
-require_in_surface applet "connectedProviderConfigCommandSource = commandWithRunNonce(providerConfigCommandSource)"
+require_in_surface applet "function withRunNonce(command, serial)"
+require_in_surface applet "commandWithRunNonce(commandSource)"
+require_in_surface applet "commandWithRunNonce(costCommandSource)"
+require_in_surface applet "commandWithRunNonce(sessionsCommandSource)"
+require_in_surface applet "commandWithRunNonce(providerConfigCommandSource)"
+# The nonce alone does not drop a late result; the ledger does, by no longer
+# holding the retired source name. Assert that routing reads the ledger and not
+# a parallel per-kind string that could disagree with it.
+require_in_surface applet "CommandLedger.find(root.activeUsageCommands, sourceName)"
+require_in_surface applet "function kindOf(commands, sourceName)"
+reject_in_surface applet "property string connectedCommandSource"
+reject_in_surface applet "property string connectedCostCommandSource"
+reject_in_surface applet "property string connectedSessionsCommandSource"
+reject_in_surface applet "property string connectedProviderConfigCommandSource"
 require_in_surface applet "var baseCommand = buildProviderUsageCommand(providerID)"
 require_in_surface applet "var command = commandWithRunNonce(baseCommand)"
 require_in_surface applet 'notificationSource.connectSource(commandWithRunNonce(":; " + command))'
