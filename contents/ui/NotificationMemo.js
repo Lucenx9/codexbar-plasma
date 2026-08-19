@@ -10,6 +10,7 @@
 // incident is a property of the provider, not of the signed-in account.
 
 .pragma library
+.import "Guards.js" as Guards
 
 var STATUS_PREFIX = "status:"
 var STATUS_PRIMED_PREFIX = "statusPrimed:"
@@ -28,8 +29,7 @@ function isStatusMemoKey(key) {
 }
 
 function hasOwnKey(item, key) {
-    return item !== null && item !== undefined
-        && Object.prototype.hasOwnProperty.call(item, key)
+    return Guards.hasOwnKey(item, key)
 }
 
 // Encodes the notification identity of an incident. Severity drives escalation

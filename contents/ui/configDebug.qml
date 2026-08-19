@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasma5support as Plasma5Support
+import "Guards.js" as Guards
 import "SafeText.js" as SafeText
 
 KCM.SimpleKCM {
@@ -21,7 +22,7 @@ KCM.SimpleKCM {
     readonly property int diagnosticCommandTimeoutMs: 60000
 
     function shellQuote(value) {
-        return "'" + String(value).replace(/'/g, "'\\''") + "'"
+        return Guards.shellQuote(value)
     }
 
     function runDiagnostic() {

@@ -1,4 +1,5 @@
 .pragma library
+.import "Guards.js" as Guards
 .import "ProviderIdentity.js" as ProviderIdentity
 .import "SafeText.js" as SafeText
 
@@ -35,12 +36,11 @@ var maximumModelBreakdownsPerDay = 128
 var maximumPaceEtaSeconds = 31536000
 
 function hasOwnKey(item, key) {
-    return item ? Object.prototype.hasOwnProperty.call(item, key) : false
+    return Guards.hasOwnKey(item, key)
 }
 
 function isUnsafeObjectKey(key) {
-    var value = String(key || "")
-    return value === "__proto__" || value === "prototype" || value === "constructor"
+    return Guards.isUnsafeObjectKey(key)
 }
 
 // A CLI record is a plain object. Arrays and null are rejected because every
@@ -50,14 +50,7 @@ function isCliRecord(value) {
 }
 
 function copyObject(item) {
-    var copy = ({})
-    for (var key in item) {
-        if (!hasOwnKey(item, key) || isUnsafeObjectKey(key)) {
-            continue
-        }
-        copy[key] = item[key]
-    }
-    return copy
+    return Guards.copyObject(item)
 }
 
 function clamp(value, minimum, maximum) {

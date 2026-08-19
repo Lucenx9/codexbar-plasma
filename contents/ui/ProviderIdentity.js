@@ -1,9 +1,10 @@
 .pragma library
+.import "Guards.js" as Guards
 
 var maximumProviderIDLength = 128
 
 function hasOwnKey(item, key) {
-    return item ? Object.prototype.hasOwnProperty.call(item, key) : false
+    return Guards.hasOwnKey(item, key)
 }
 
 function providerKey(value, aliases) {
