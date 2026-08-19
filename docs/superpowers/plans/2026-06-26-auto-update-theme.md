@@ -1,4 +1,4 @@
-# Auto Update and Theme Handling Implementation Plan
+# Auto update and theme handling implementation plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -10,7 +10,7 @@
 
 ---
 
-### Task 1: Add Failing Static Coverage
+### Task 1: Add failing static coverage
 
 **Files:**
 - Modify: `scripts/test_feature_parity.sh`
@@ -199,7 +199,7 @@ scripts/test_theme_boundaries.sh
 
 Expected: PASS or FAIL only on existing hardcoded generic UI colors; any failure must be inspected before changing theme code.
 
-### Task 2: Implement Local Updater Helper
+### Task 2: Implement local updater helper
 
 **Files:**
 - Create: `scripts/update-widget.sh`
@@ -319,7 +319,7 @@ scripts/test_update_widget.sh
 
 Expected: PASS.
 
-### Task 3: Add Plasma Settings and Runtime Update Flow
+### Task 3: Add Plasma settings and runtime update flow
 
 **Files:**
 - Modify: `contents/config/main.xml`
@@ -457,7 +457,7 @@ scripts/test_feature_parity.sh
 
 Expected: PASS.
 
-### Task 4: Theme Boundary Audit
+### Task 4: Theme boundary audit
 
 **Files:**
 - Modify: `contents/ui/main.qml` only if `scripts/test_theme_boundaries.sh` identifies generic UI hardcoded colors.
@@ -487,7 +487,7 @@ git diff -- contents/ui/main.qml contents/ui/configProviders.qml | rg -n "provid
 
 Expected: no provider identity color map changes unless the diff is only test-related context.
 
-### Task 5: Docs and Final Verification
+### Task 5: Docs and final verification
 
 **Files:**
 - Modify: `README.md`

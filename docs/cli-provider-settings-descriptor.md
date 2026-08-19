@@ -1,4 +1,4 @@
-# CLI Provider Settings Descriptor
+# CLI provider settings descriptor
 
 This document defines the CLI contract Plasma needs before it can render real
 provider settings or onboarding flows without duplicating macOS Swift logic in

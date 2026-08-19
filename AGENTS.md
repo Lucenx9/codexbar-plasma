@@ -1,4 +1,4 @@
-# Agent Instructions
+# Agent instructions
 
 This repository is exclusively the standalone KDE Plasma widget for CodexBar.
 
@@ -6,7 +6,7 @@ In this repository, **plugin**, **widget**, **plasmoid**, and **applet** all mea
 the KDE Plasma frontend. The official macOS CodexBar product is a separate app
 and is never the implementation target of work in this repo.
 
-## Project Boundaries
+## Project boundaries
 
 - Work only on the Plasma applet in this repository unless the user explicitly
   requests a separate upstream CLI change. A request for macOS parity authorizes
@@ -27,7 +27,7 @@ and is never the implementation target of work in this repo.
   Do not fill the gap with provider scraping, authentication, or config parsing
   in QML.
 
-## Sources of Truth and Parity
+## Sources of truth and parity
 
 Use this order when sources disagree:
 
@@ -54,7 +54,7 @@ Use this order when sources disagree:
   exposes canonical metadata, consume it and retain cheap drift tests for any
   remaining fallback map.
 
-## Working Style
+## Working style
 
 - Finish the full requested scope. Progress notes and plans do not substitute
   for implementation. If one part is genuinely blocked, complete every
@@ -91,7 +91,7 @@ Use this order when sources disagree:
   explicitly when no action is needed. When a choice remains, present at most
   two good options, explain the practical difference, and recommend one.
 
-## Repository Workflow
+## Repository workflow
 
 - Before editing, identify the requested Plasma surface, its owning QML file,
   the config entry if any, the CLI payload involved, and the nearest regression
@@ -109,7 +109,7 @@ Use this order when sources disagree:
 - When a parity decision changes, update `TODO.md` and the mirror below in the
   same change so future agents do not revive a rejected port or obsolete gap.
 
-## CLI and Data Safety
+## CLI and data safety
 
 - Treat CLI stdout, stderr, descriptors, cached payloads, labels, URLs, and
   provider-controlled status text as untrusted input. Validate shapes, types,
@@ -145,7 +145,7 @@ Use this order when sources disagree:
 - `scripts/`: static regression checks.
 - `scripts/lib/`: shared helpers for those checks, including the QML surface manifest.
 
-## Agent-Readable Code Rules
+## Agent-readable code rules
 
 - Before changing behavior, read the nearest existing implementation, config
   schema, and static test that cover that behavior. Do not infer contracts from
@@ -181,7 +181,7 @@ Use this order when sources disagree:
   or a real bug, and prefer pointing to canonical local examples over copying a
   full style guide.
 
-## Current TODO Mirror
+## Current TODO mirror
 
 Keep this in sync with `TODO.md` when feature parity decisions change. Current
 parity baseline: `docs/research/2026-08-16-macos-parity-0.50.0.md` (upstream
@@ -269,7 +269,7 @@ Agent instruction references:
 - Cursor agent rules best practices:
   https://cursor.com/blog/agent-best-practices
 
-## Plasma/QML Guidelines
+## Plasma/QML guidelines
 
 - Keep the Plasma 6 root object as `PlasmoidItem`. Use `ContainmentItem`
   only for containment/panel/desktop code.
@@ -320,9 +320,9 @@ Agent instruction references:
   so several files legitimately declare their own copy of `hasOwnKey`; a
   surface-wide search is satisfied by any one of them, and deleting the copy that
   live callers depend on would pass. This requires the declaration in every file
-  that calls the helper unqualified — and in the surface root when components
-  reach it through `applet.foo(...)` — while still following the code if the
-  helper and its callers move together. Its optional third argument pins a
+  that calls the helper unqualified, and in the surface root when components
+  reach it through `applet.foo(...)`. It still follows the code if the helper
+  and its callers move together. Its optional third argument pins a
   fragment every copy's body must keep, such as the prototype-pollution guard.
 - All user-facing text must go through `i18n` or `i18np`.
 - Test with `make check` first. Use `plasmawindowed` or `plasmoidviewer` for
@@ -375,7 +375,7 @@ journalctl --user -u plasma-plasmashell.service --since '2 minutes ago' --no-pag
 
 Ignore unrelated Plasma logs from other widgets unless they mention `app.codexbar`.
 
-## CLI Assumptions
+## CLI assumptions
 
 The widget expects a working `codexbar` binary. Useful probes:
 
@@ -391,7 +391,7 @@ Do not assume an installation-specific CLI path. Keep the widget default at
 `codexbar` and use `command -v codexbar` when an absolute path is needed; AUR,
 Homebrew, and release-tarball installs may resolve to different locations.
 
-## Release Flow
+## Release flow
 
 1. Keep `main` green with `make check`.
 2. Generate the distributable with `make package`.
