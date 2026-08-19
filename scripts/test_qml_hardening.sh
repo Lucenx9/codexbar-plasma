@@ -26,6 +26,22 @@ while IFS= read -r qml_source; do
   fi
 done < <(cd "$ROOT_DIR" && find contents -type f \( -name '*.qml' -o -name '*.js' \) -print | sort)
 
+# The Qt 6.7 QML parser the CI runs on (KDE neon) still treats the ECMAScript
+# future-reserved words as reserved, while newer local Qt builds parse them as
+# ordinary identifiers. A local named `long` compiled here and failed there
+# twice, so reject them by name instead of relying on whichever Qt the developer
+# happens to have. qmllint does not catch this: the file never reaches it.
+reserved_hits="$(
+  cd "$ROOT_DIR" && grep -nE \
+    '\b(var|let|const)[[:space:]]+(abstract|boolean|byte|char|double|enum|export|extends|final|float|goto|implements|import|int|interface|long|native|package|private|protected|public|short|static|super|synchronized|throws|transient|volatile)\b' \
+    "${QML_FILES[@]}" tests/*.qml 2>/dev/null || true
+)"
+if [[ -n "$reserved_hits" ]]; then
+  echo "reserved word used as a local name; the CI Qt parser rejects these:" >&2
+  printf '%s\n' "$reserved_hits" >&2
+  exit 1
+fi
+
 set +e
 output="$(
   cd "$ROOT_DIR"

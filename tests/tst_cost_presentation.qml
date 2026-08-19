@@ -112,8 +112,9 @@ TestCase {
         var points = CostPresentation.chartPoints(fmt, [dailyPoint("Mon", -4, 100)], false)
         compare(points[0].value, 0)
         compare(points[0].displayValue, "$0.00")
-        var long = CostPresentation.chartPoints(fmt, [dailyPoint(new Array(300).join("x"), 1, 1)], false)
-        compare(long[0].label.length, 120)
+        // `long` is a QML reserved word, so the label fixture cannot borrow it.
+        var oversized = CostPresentation.chartPoints(fmt, [dailyPoint(new Array(300).join("x"), 1, 1)], false)
+        compare(oversized[0].label.length, 120)
     }
 
     function test_sparklineSummaryReportsTheNewestPoint() {
