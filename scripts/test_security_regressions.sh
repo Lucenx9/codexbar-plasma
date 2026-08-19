@@ -102,7 +102,7 @@ require_in_file "$SAFE_TEXT_JS" "maximumCliJsonLength = 4 * 1024 * 1024"
 require_in_file "$SAFE_TEXT_JS" "function boundedInspectionText(value, inspectionLimit, lookaheadLength)"
 require_in_file "$SAFE_TEXT_JS" 'chunk.search(/[^\s\u0000-\u001f\u007f]/)'
 require_in_file "$SAFE_TEXT_JS" "credentialRedactionLookaheadLength"
-require_in_file "$SAFE_TEXT_JS" 'redactedLookaheadText.indexOf(redactedText) !== 0'
+require_in_file "$SAFE_TEXT_JS" 'redactedLookaheadText.slice(0, redactedText.length) !== redactedText'
 require_in_file "$SAFE_TEXT_JS" "function cliJsonText(value)"
 
 require_definition_where_used applet hasOwnKey "Object.prototype.hasOwnProperty.call(item, key)"

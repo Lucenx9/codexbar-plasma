@@ -10,6 +10,16 @@ TestCase {
         compare(SafeText.cliMessage("x".repeat(40), 12), "x".repeat(12))
     }
 
+    function test_emptyMessageStaysEmpty() {
+        // QML's V4 engine returns -1 for "".indexOf(""), unlike ECMAScript's 0,
+        // so the lookahead guard in redactCredentials must not use indexOf as a
+        // startsWith test: with empty input that turned every no-error message
+        // into "[redacted]".
+        compare(SafeText.cliMessage("", 500), "")
+        compare(SafeText.cliDiagnostic("", 500), "")
+        compare(SafeText.cliMessage("   \n\t", 500), "")
+    }
+
     function test_skipsBoundedLeadingPaddingBeforeMessage() {
         compare(SafeText.boundedDisplayText(" ".repeat(5000) + "quota exceeded", 500), "quota exceeded")
         compare(SafeText.cliMessage(" ".repeat(5000) + "quota exceeded", 500), "quota exceeded")

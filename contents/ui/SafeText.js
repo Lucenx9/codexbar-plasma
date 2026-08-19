@@ -40,8 +40,11 @@ function redactCredentials(value, inspectionLimit) {
 
     // Lookahead may decide that a credential starts inside the visible window,
     // but bytes beyond that window must never become displayable after a
-    // replacement shortens earlier text.
-    if (redactedLookaheadText.indexOf(redactedText) !== 0) {
+    // replacement shortens earlier text. The startsWith test uses slice instead
+    // of String.indexOf: QML's V4 engine returns -1 for "".indexOf("") where
+    // ECMAScript returns 0, so an indexOf test turned an empty (no-error)
+    // message into "[redacted]".
+    if (redactedLookaheadText.slice(0, redactedText.length) !== redactedText) {
         var sharedLength = 0
         while (sharedLength < redactedText.length
                 && sharedLength < redactedLookaheadText.length
