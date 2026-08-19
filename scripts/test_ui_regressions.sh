@@ -263,8 +263,11 @@ for live_config_fragment in (
             f"missing {live_config_fragment!r}"
         )
 
-if "—" in main_text or "–" in main_text:
-    raise AssertionError("main.qml must avoid em dash/en dash placeholders in visible UI text")
+# The dash rule follows the visible text, not the file it lives in: an em dash
+# in an extracted component reads the same in the popup as one in main.qml, so
+# assert it across the whole surface.
+for dash, dash_name in (("\u2014", "em dash"), ("\u2013", "en dash")):
+    applet.reject(dash, f"visible UI text must avoid {dash_name} placeholders")
 
 # Provider identity used to be two copies, and this file carried a drift check
 # that compared them entry by entry. The tables now live once in

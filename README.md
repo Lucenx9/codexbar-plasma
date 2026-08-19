@@ -77,7 +77,7 @@ command -v codexbar
 
 Then paste the returned absolute path into the widget setting.
 
-## CLI Check
+## CLI check
 
 Before debugging the widget, verify the data source directly. If these commands
 do not work, the Plasma widget cannot show the corresponding data.

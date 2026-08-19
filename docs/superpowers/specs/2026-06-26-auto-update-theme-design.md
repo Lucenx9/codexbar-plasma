@@ -1,4 +1,4 @@
-# Auto Update and Theme Handling Design
+# Auto update and theme handling design
 
 ## Scope
 
@@ -21,14 +21,14 @@ macOS app, Swift sources, or upstream CodexBar tree.
   Plasma/Kirigami theme colors.
 - Add cheap static checks for the updater and theme boundaries.
 
-## Non-Goals
+## Non-goals
 
 - Automatic updates for the `codexbar` CLI.
 - A custom release channel UI or changelog browser.
 - Runtime editing of provider color identity.
 - Replacing Plasma's package manager or distribution package updates.
 
-## Upstream Guidance
+## Upstream guidance
 
 KDE documentation points to two relevant distribution paths:
 
@@ -52,7 +52,7 @@ GitHub release API guidance:
 - Use release assets and their `browser_download_url` for public binary assets.
 - Drafts and prereleases should not be installed by the widget updater.
 
-## Updater Approach
+## Updater approach
 
 Use a small local helper script plus separate settings for update checks and
 automatic installation.
@@ -94,7 +94,7 @@ When check-only mode finds a newer release and notifications are enabled, QML
 sends one Plasma notification per version. If automatic installation is enabled,
 the widget installs silently instead of only notifying.
 
-## Updater Security Rules
+## Updater security rules
 
 - Do not execute content downloaded from GitHub.
 - Do not pipe network data into a shell.
@@ -114,7 +114,7 @@ The implementation relies on HTTPS, GitHub Releases, and a SHA-256 checksum
 published by the same release workflow. An independently signed checksum can
 replace this trust model if release signing is introduced.
 
-## Theme Handling Approach
+## Theme handling approach
 
 Provider colors are identity data and remain hardcoded inside `providerColor()`
 and provider icon assets. The theme audit only covers generic UI colors.
@@ -141,7 +141,7 @@ The implementation should audit current QML for hardcoded black, white, gray,
 or RGB values outside the allowed identity/contrast areas. Fix only generic UI
 theme violations; do not normalize or alter provider identity colors.
 
-## Error Handling
+## Error handling
 
 - If the updater cannot reach GitHub, cannot find a valid asset, or install
   fails, it exits non-zero with a concise error.
@@ -153,7 +153,7 @@ theme violations; do not normalize or alter provider identity colors.
 - If required tools are missing (`curl`, `jq`, `sha256sum`, `timeout`, or
   `kpackagetool6`), the helper reports the missing tool clearly.
 
-## Tests and Verification
+## Tests and verification
 
 Add a focused static regression script, or extend `scripts/test_feature_parity.sh`,
 to assert:
@@ -206,7 +206,7 @@ can exercise version parsing and release selection without installing a release.
 - GitHub Release Assets API:
   https://docs.github.com/rest/releases/assets
 
-## Open Decisions Resolved
+## Open decisions resolved
 
 - Automatic updates are opt-in, not enabled by default.
 - Update checks and available-update notifications are enabled by default.
