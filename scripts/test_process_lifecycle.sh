@@ -79,10 +79,27 @@ def require_all(body, fragments, reason):
 
 
 retire_body = applet.function_body("retireUsageCommands")
-if "finishUsageCommandSource(" not in retire_body:
+if "finishUsageCommandSource(" not in retire_body and "retireUsageCommandKind(" not in retire_body:
     raise AssertionError("retiring active usage sources must disconnect them immediately")
-if "connectedSessionsCommandSource" not in retire_body or "sessionsLoading = false" not in retire_body:
-    raise AssertionError("retiring active usage sources must also retire the sessions command")
+# Retirement is by kind now, not by a per-kind source-name property, but a
+# retired sessions command must still clear the spinner it was driving.
+for retired_kind in ('retireUsageCommandKind("usage")',
+                     'retireUsageCommandKind("providerConfig")',
+                     'retireUsageCommandKind("sessions")'):
+    if retired_kind not in retire_body:
+        raise AssertionError(
+            f"retiring active usage sources must also retire {retired_kind}"
+        )
+if "sessionsLoading = false" not in retire_body:
+    raise AssertionError("retiring the sessions command must clear its loading flag")
+retire_kind_body = applet.function_body("retireUsageCommandKind")
+for retire_kind_fragment in ("CommandLedger.sourcesOfKind(activeUsageCommands, kind)",
+                             "finishUsageCommandSource("):
+    if retire_kind_fragment not in retire_kind_body:
+        raise AssertionError(
+            "retiring by kind must read the ledger and disconnect every match; "
+            f"missing {retire_kind_fragment!r}"
+        )
 
 require_all(
     applet.function_body("loadAccounts"),
@@ -134,20 +151,34 @@ require_all(
     "account timeout cleanup is incomplete",
 )
 
+# The deadline scan moved into CommandLedger.js. Assert that main.qml still
+# hands every overdue command to the timeout handler, and that the scan itself
+# keeps comparing against the recorded deadline.
 require_all(
     applet.function_body("expireUsageCommands"),
-    ("descriptor.deadlineMs", "handleUsageCommandTimeout("),
+    ("CommandLedger.expired(activeUsageCommands, nowMs)", "handleUsageCommandTimeout("),
     "usage timeout scan is incomplete",
+)
+require_all(
+    applet.function_body("expired"),
+    ("Number(entry.deadlineMs)", "nowMs < deadline"),
+    "the ledger deadline scan is incomplete",
+)
+require_all(
+    applet.function_body("hasPendingUsageCommandTimeouts"),
+    ("CommandLedger.hasDeadlines(activeUsageCommands)",),
+    "the timeout timer must read its deadlines from the ledger",
 )
 
 require_all(
     applet.function_body("handleUsageCommandTimeout"),
     (
-        'descriptor.kind === "usage"',
-        'descriptor.kind === "cost"',
-        'descriptor.kind === "sessions"',
-        'descriptor.kind === "providerConfig"',
-        'descriptor.kind === "providerFallback"',
+        "switch (descriptor.kind) {",
+        'case "usage":',
+        'case "cost":',
+        'case "sessions":',
+        'case "providerConfig":',
+        'case "providerFallback":',
         "finishUsageCommandSource(sourceName)",
         "Loading usage timed out. Try again.",
         "Loading cost data timed out. Try again.",
@@ -163,10 +194,28 @@ require_all(
     "cost command descriptors must retain the requested history range",
 )
 for fragment in (
-    "var costDescriptor = root.activeUsageCommands[sourceName]",
+    "var descriptor = CommandLedger.find(root.activeUsageCommands, sourceName)",
+    "descriptor.costHistoryDays !== undefined",
     "root.parseCostOutput(stdoutText, stderrText, requestedHistoryDays)",
 ):
     applet.require(fragment, "cost completion must pass its captured request range to normalization")
+
+# Routing reads the ledger entry, so a reply whose source name has already been
+# retired returns before any parse runs. That is the whole staleness guarantee.
+usage_source_block = applet.id_block("usageSource")
+if "if (!descriptor) {" not in usage_source_block:
+    raise AssertionError("a reply the ledger no longer holds must be dropped before parsing")
+for stale_route_fragment in (
+    "root.connectedCommandSource",
+    "root.connectedCostCommandSource",
+    "root.connectedSessionsCommandSource",
+    "root.connectedProviderConfigCommandSource",
+):
+    if stale_route_fragment in usage_source_block:
+        raise AssertionError(
+            "process replies must route on the ledger entry, not a parallel "
+            f"per-kind source name: {stale_route_fragment}"
+        )
 
 fallback_result_body = applet.function_body("parseProviderFallbackOutput")
 if fallback_result_body.count("completeProviderFallbackCommand()") != 2:

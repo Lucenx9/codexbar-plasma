@@ -1636,7 +1636,7 @@ for global_view_fragment in (
 
 for session_contract_fragment in (
     '"sessions", "--json-v2"',
-    "connectedSessionsCommandSource",
+    'retireUsageCommandKind("sessions")',
     "maximumSessions = 128",
     "function normalizeSession(item)",
 ):
@@ -1793,7 +1793,8 @@ for cost_loading_fragment in (
             "SpendView must distinguish a range refresh from an empty result; "
             f"missing {cost_loading_fragment!r}"
         )
-if "readonly property bool costLoading: connectedCostCommandSource.length > 0" not in main_text:
+if ('readonly property bool costLoading: CommandLedger.hasKind(activeUsageCommands, "cost")'
+        not in main_text):
     raise AssertionError("cost loading state must follow the active cost command lifecycle")
 if "required property int index" not in display_text:
     raise AssertionError("the panel element editor delegate must explicitly receive its model index")
