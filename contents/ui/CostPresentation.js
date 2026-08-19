@@ -1,4 +1,5 @@
 .pragma library
+.import "Guards.js" as Guards
 
 // Cost and spend presentation: number formatting, chart geometry, and the row
 // and summary builders the Usage & Spend tab and the provider cost sections
@@ -27,11 +28,11 @@ function numberFormat(groupSeparator, decimalPoint) {
 }
 
 function hasOwnKey(item, key) {
-    return item ? Object.prototype.hasOwnProperty.call(item, key) : false
+    return Guards.hasOwnKey(item, key)
 }
 
 function isUnsafeObjectKey(key) {
-    return key === "__proto__" || key === "constructor" || key === "prototype"
+    return Guards.isUnsafeObjectKey(key)
 }
 
 function boundedText(value, limit) {

@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasma5support as Plasma5Support
+import "Guards.js" as Guards
 import "ProviderIdentity.js" as ProviderIdentity
 import "PanelElements.js" as PanelElements
 import "SafeText.js" as SafeText
@@ -155,7 +156,7 @@ KCM.SimpleKCM {
 
     function hasPendingOverviewProviderCommands() {
         for (var sourceName in overviewProviderCommands) {
-            if (Object.prototype.hasOwnProperty.call(overviewProviderCommands, sourceName)) {
+            if (Guards.hasOwnKey(overviewProviderCommands, sourceName)) {
                 return true
             }
         }
@@ -166,7 +167,7 @@ KCM.SimpleKCM {
         var commands = copyObject(overviewProviderCommands)
         var expiredCount = 0
         for (var sourceName in commands) {
-            if (!Object.prototype.hasOwnProperty.call(commands, sourceName)) {
+            if (!Guards.hasOwnKey(commands, sourceName)) {
                 continue
             }
             var descriptor = commands[sourceName]
@@ -284,7 +285,7 @@ KCM.SimpleKCM {
         for (var i = 0; i < parts.length; i++) {
             var providerID = String(parts[i] || "").trim()
             var selectionKey = providerSelectionKey(providerID)
-            if (providerID.length === 0 || Object.prototype.hasOwnProperty.call(seen, selectionKey)) {
+            if (providerID.length === 0 || Guards.hasOwnKey(seen, selectionKey)) {
                 continue
             }
             seen[selectionKey] = true
@@ -352,14 +353,7 @@ KCM.SimpleKCM {
     }
 
     function copyObject(item) {
-        var copy = ({})
-        for (var key in item) {
-            if (Object.prototype.hasOwnProperty.call(item, key)
-                    && key !== "__proto__" && key !== "prototype" && key !== "constructor") {
-                copy[key] = item[key]
-            }
-        }
-        return copy
+        return Guards.copyObject(item)
     }
 
     function providerTitle(value) {
@@ -373,7 +367,7 @@ KCM.SimpleKCM {
     }
 
     function shellQuote(value) {
-        return "'" + String(value).replace(/'/g, "'\\''") + "'"
+        return Guards.shellQuote(value)
     }
 
     Kirigami.FormLayout {

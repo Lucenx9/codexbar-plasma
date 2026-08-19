@@ -4,6 +4,7 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
 import "components" as Components
+import "Guards.js" as Guards
 import "NotificationMemo.js" as NotificationMemo
 import "PanelElements.js" as PanelElements
 import "CommandLedger.js" as CommandLedger
@@ -383,7 +384,7 @@ PlasmoidItem {
     }
 
     function shellQuote(value) {
-        return "'" + String(value).replace(/'/g, "'\\''") + "'"
+        return Guards.shellQuote(value)
     }
 
     function safeMenuBarDisplayMode(value) {
@@ -437,12 +438,11 @@ PlasmoidItem {
     }
 
     function hasOwnKey(item, key) {
-        return item ? Object.prototype.hasOwnProperty.call(item, key) : false
+        return Guards.hasOwnKey(item, key)
     }
 
     function isUnsafeObjectKey(key) {
-        var value = String(key || "")
-        return value === "__proto__" || value === "prototype" || value === "constructor"
+        return Guards.isUnsafeObjectKey(key)
     }
 
     function providerMapKey(providerID) {
@@ -3137,7 +3137,7 @@ PlasmoidItem {
     }
 
     function copyObject(item) {
-        return Normalizer.copyObject(item)
+        return Guards.copyObject(item)
     }
 
     function hasText(value) {

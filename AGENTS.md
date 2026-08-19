@@ -317,13 +317,20 @@ Agent instruction references:
 - Assert a shared helper with `require_definition_where_used` (bash) or
   `Surface.require_definition_where_used` (python), never a plain
   `require_in_surface "function foo("`. QML and JS files share no function scope,
-  so several files legitimately declare their own copy of `hasOwnKey`; a
-  surface-wide search is satisfied by any one of them, and deleting the copy that
-  live callers depend on would pass. This requires the declaration in every file
-  that calls the helper unqualified, and in the surface root when components
-  reach it through `applet.foo(...)`. It still follows the code if the helper
-  and its callers move together. Its optional third argument pins a
-  fragment every copy's body must keep, such as the prototype-pollution guard.
+  so every file calling `hasOwnKey` unqualified must declare the name itself; a
+  surface-wide search is satisfied by any one of them, and deleting the
+  declaration that live callers depend on would pass. This requires the
+  declaration in every file that calls the helper unqualified, and in the surface
+  root when components reach it through `applet.foo(...)`. It still follows the
+  code if the helper and its callers move together.
+- The repeated declaration is a name binding, not a licence to repeat the logic.
+  `hasOwnKey`, `isUnsafeObjectKey`, `copyObject`, and `shellQuote` delegate to
+  `contents/ui/Guards.js`, so the prototype-pollution guard and the shell-quoting
+  rule exist once and are covered by `tests/tst_guards.qml` rather than by
+  searching each copy for the right fragment. A `.pragma library` module is
+  reachable from every surface, config pages included, so reach for one before
+  copying a body. `scripts/test_security_regressions.sh` fails if a guard
+  implementation appears outside `Guards.js`.
 - All user-facing text must go through `i18n` or `i18np`.
 - Test with `make check` first. Use `plasmawindowed` or `plasmoidviewer` for
   quick widget checks when available; after extracting delegates/components,

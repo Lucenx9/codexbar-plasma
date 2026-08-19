@@ -6,6 +6,7 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
 import "components" as Components
+import "Guards.js" as Guards
 import "ProviderIdentity.js" as ProviderIdentity
 import "SafeText.js" as SafeText
 import "ThemeContrast.js" as ThemeContrast
@@ -839,23 +840,15 @@ KCM.SimpleKCM {
     }
 
     function copyObject(item) {
-        var copy = ({})
-        for (var key in item) {
-            if (!hasOwnKey(item, key) || isUnsafeObjectKey(key)) {
-                continue
-            }
-            copy[key] = item[key]
-        }
-        return copy
+        return Guards.copyObject(item)
     }
 
     function hasOwnKey(item, key) {
-        return item ? Object.prototype.hasOwnProperty.call(item, key) : false
+        return Guards.hasOwnKey(item, key)
     }
 
     function isUnsafeObjectKey(key) {
-        var value = String(key || "")
-        return value === "__proto__" || value === "prototype" || value === "constructor"
+        return Guards.isUnsafeObjectKey(key)
     }
 
     function providerMapKey(providerID) {
@@ -1421,7 +1414,7 @@ KCM.SimpleKCM {
     }
 
     function shellQuote(value) {
-        return "'" + String(value).replace(/'/g, "'\\''") + "'"
+        return Guards.shellQuote(value)
     }
 
     // --- Provider visual identity (kept in sync with main.qml) ---

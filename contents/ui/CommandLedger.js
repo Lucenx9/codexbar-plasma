@@ -1,4 +1,5 @@
 .pragma library
+.import "Guards.js" as Guards
 
 // The ledger of external commands the applet has started and not yet retired.
 //
@@ -22,11 +23,11 @@
 // map so QML property bindings on `activeUsageCommands` re-evaluate.
 
 function hasOwnKey(item, key) {
-    return item ? Object.prototype.hasOwnProperty.call(item, key) : false
+    return Guards.hasOwnKey(item, key)
 }
 
 function isUnsafeObjectKey(key) {
-    return key === "__proto__" || key === "constructor" || key === "prototype"
+    return Guards.isUnsafeObjectKey(key)
 }
 
 function copyCommands(commands) {

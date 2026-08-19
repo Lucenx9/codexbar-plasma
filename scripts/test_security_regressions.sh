@@ -105,15 +105,43 @@ require_in_file "$SAFE_TEXT_JS" "credentialRedactionLookaheadLength"
 require_in_file "$SAFE_TEXT_JS" 'redactedLookaheadText.slice(0, redactedText.length) !== redactedText'
 require_in_file "$SAFE_TEXT_JS" "function cliJsonText(value)"
 
-require_definition_where_used applet hasOwnKey "Object.prototype.hasOwnProperty.call(item, key)"
-require_in_surface applet "function isUnsafeObjectKey(key)"
-require_in_surface applet "value === \"__proto__\" || value === \"prototype\" || value === \"constructor\""
+GUARDS_JS="${ROOT_DIR}/contents/ui/Guards.js"
+
+# QML and JS files share no function scope, so every file that calls these
+# unqualified must still declare them. The body is now a delegation, so the
+# guard itself lives once in Guards.js and is covered behaviourally by
+# tests/tst_guards.qml instead of being searched for inside each copy.
+require_definition_where_used applet hasOwnKey
+require_definition_where_used applet isUnsafeObjectKey
+require_definition_where_used applet copyObject
+require_definition_where_used applet shellQuote
+require_definition_where_used providers hasOwnKey
+
+# The guards themselves live once. `require_definition_where_used` above keeps
+# every calling file bound to a declaration; these assert the declaration is a
+# delegation and that exactly one file still carries the implementation, so a
+# re-inlined copy cannot drift away from the tested one.
+require_in_file "$GUARDS_JS" "Object.prototype.hasOwnProperty.call(item, key)"
+require_in_file "$GUARDS_JS" 'var value = String(key || "")'
+require_in_file "$GUARDS_JS" 'value === "__proto__" || value === "constructor" || value === "prototype"'
+require_in_file "$GUARDS_JS" "String(value).replace(/'/g"
+
+for guard_body in \
+  "Object.prototype.hasOwnProperty.call(item, key)" \
+  "String(value).replace(/'/g" \
+; do
+  guard_files="$(cd "$ROOT_DIR" && grep -rlF "$guard_body" --include='*.qml' --include='*.js' contents/ | sort | tr '\n' ' ')"
+  if [[ "$guard_files" != "contents/ui/Guards.js " ]]; then
+    echo "guard implementation must live only in contents/ui/Guards.js: ${guard_body}" >&2
+    echo "found in: ${guard_files}" >&2
+    exit 1
+  fi
+done
 require_in_surface applet "function providerMapKey(providerID)"
 require_in_surface applet 'import "ProviderIdentity.js" as ProviderIdentity'
 # The applet reaches the shared screen through the normalizer, which resolves CLI
 # aliases first so an alias cannot smuggle in a key the screen would have caught.
 require_in_surface applet "return ProviderIdentity.providerMapKey(ProviderIdentity.resolveProviderKey(providerID))"
-require_in_file "$PROVIDER_IDENTITY_JS" "Object.prototype.hasOwnProperty.call(item, key)"
 require_in_file "$PROVIDER_IDENTITY_JS" "Object.prototype.hasOwnProperty.call(Object.prototype, key)"
 require_in_surface applet "if (name.length === 0 || isUnsafeObjectKey(name))"
 require_in_surface applet "if (!hasOwnKey(byName, name))"
@@ -125,8 +153,11 @@ require_in_surface applet "var providerID = providerMapKey(item.provider || \"un
 require_in_surface applet "var key = providerMapKey(providerID)"
 require_in_surface providers "function providerMapKey(providerID)"
 require_in_surface providers "return ProviderIdentity.providerMapKey(key)"
-require_in_surface providers "if (!hasOwnKey(item, key) || isUnsafeObjectKey(key))"
-require_in_surface providers "Object.prototype.hasOwnProperty.call(item, key)"
+# Guards.js is not part of the providers surface, so assert the delegation here;
+# the filtering rule itself is covered by tests/tst_guards.qml.
+require_in_surface providers "return Guards.copyObject(item)"
+require_in_surface providers 'import "Guards.js" as Guards'
+require_definition_where_used providers hasOwnKey "Guards.hasOwnKey(item, key)"
 require_in_surface applet "maximumConcurrentProviderFallbackCommands: 8"
 require_in_surface applet "nextProviders.length < maximumProviderSnapshots"
 require_in_surface applet "value: boundedDisplayText(parts.join(\" · \"), 500)"
