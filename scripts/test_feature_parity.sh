@@ -340,6 +340,19 @@ require_in_surface applet "function costHistoryRows(tokenCost)"
 require_in_surface applet "function costPeakLine(points)"
 require_in_surface applet "function costAverageDailyLine(points)"
 require_in_surface applet "function costPerMillionLine(tokenCost)"
+# Cost presentation moved behind CostPresentation.js. Assert the delegation so
+# the maths cannot quietly grow a second copy back inside main.qml.
+require_in_surface applet "function spendSnapshots(tokenCosts, historyDays, titleFor)"
+require_in_surface applet "CostPresentation.spendSnapshots(tokenCosts, costHistoryDays"
+require_in_surface applet "CostPresentation.breakdownRows("
+require_in_surface applet "CostPresentation.modelRows("
+require_in_surface applet "CostPresentation.historyRows("
+require_in_surface applet "CostPresentation.averageDailyValue("
+require_in_surface applet "CostPresentation.perMillionAmount("
+require_in_surface applet "CostPresentation.spendTotals("
+require_in_surface applet "CostPresentation.historyStillBuilding("
+require_in_surface applet "CostPresentation.numberFormat("
+reject_in_surface applet "function appendTokenBreakdownRow("
 require_in_surface applet "function compactCostTokenSummary(cost, tokens, currency)"
 require_in_surface applet "function usageDashboard(providerID, usage, item)"
 require_in_surface applet 'import "UsageDetails.js" as UsageDetails'
@@ -483,22 +496,24 @@ require_in_surface applet "property int costHistoryDays"
 require_in_surface applet "property string costHistoryMetric"
 require_in_surface applet "function safeCostHistoryMetric(value)"
 require_in_surface applet "function setCostHistoryMetric(metric)"
-require_in_surface applet "costHistoryShowsTokens ? point.tokens : point.cost"
-require_in_surface applet "costHistoryShowsTokens ? points[i].tokens : points[i].cost"
+require_in_surface applet "function metricValue(point, showsTokens)"
+require_in_surface applet "Number(showsTokens ? point.tokens : point.cost)"
 # Every cost chart follows one metric: the provider detail chart must not stay
 # on cost while the rows beneath it switch to tokens.
-require_in_surface applet "costHistoryShowsTokens ? point.tokens : point.cost"
+require_in_surface applet "CostPresentation.chartPoints(costNumberFormat, points, costHistoryShowsTokens)"
 require_in_surface applet 'applet.costHistoryShowsTokens'
 # The chart's "Latest" summary annotates the same series the bars plot, so it
 # must follow the metric instead of always printing the cost amount.
-require_in_surface applet "tokenCountString(last.tokens)"
+require_in_surface applet "function sparklineSummary(fmt, points, showsTokens)"
+require_in_surface applet "metricText(fmt, metricValue(last, showsTokens), last.currency, showsTokens)"
 reject_in_surface applet 'i18n("%1: %2", label, amountString(last.cost'
 # Token counts carry no currency, so the money-only filter must not drop
 # providers from the token aggregation.
-require_in_surface applet "(!costHistoryShowsTokens && pointCurrency !== currency)"
+require_in_surface applet "(!showsTokens && pointCurrency !== currency)"
 # The peak and average annotations must name the same day the bars highlight.
-require_in_surface applet "costHistoryShowsTokens ? points[i].tokens : points[i].cost) || 0"
-require_in_surface applet "if (!peak || peak.magnitude <= 0) {"
+require_in_surface applet "function peakPoint(points, showsTokens)"
+require_in_surface applet "return peak && peak.magnitude > 0 ? peak : null"
+require_in_surface applet "CostPresentation.peakPoint(points, costHistoryShowsTokens)"
 reject_in_surface applet 'i18n("Average/day: %1", amountString('
 require_in_surface applet "function spendHistoryStillBuilding()"
 require_in_surface applet "historyCoverageEstablished: item.historyCoverageIsEstablished !== false"

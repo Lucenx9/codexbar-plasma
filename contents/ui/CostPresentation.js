@@ -1,0 +1,452 @@
+.pragma library
+
+// Cost and spend presentation: number formatting, chart geometry, and the row
+// and summary builders the Usage & Spend tab and the provider cost sections
+// bind to.
+//
+// Like ProviderNormalizer.js this module must not reach for `Qt`, `Kirigami`,
+// or `i18n`. Two consequences shape the interface:
+//
+//   * The caller supplies the words. Every function that would otherwise call
+//     `i18n` returns figures rather than sentences, so the plural rules and the
+//     placeholder order stay in QML where `i18np` lives.
+//   * The caller supplies the locale separators through `numberFormat`, because
+//     `Qt.locale()` is not reachable from a `.pragma library` module.
+//
+// Everything here is side-effect free apart from `paintRoundedTopBar`, which
+// draws into a caller-supplied canvas context.
+
+var maximumCostHistoryPoints = 365
+
+// Locale separators, resolved once by the caller from `Qt.locale()`.
+function numberFormat(groupSeparator, decimalPoint) {
+    return {
+        group: typeof groupSeparator === "string" ? groupSeparator : ",",
+        decimal: typeof decimalPoint === "string" ? decimalPoint : "."
+    }
+}
+
+function hasOwnKey(item, key) {
+    return item ? Object.prototype.hasOwnProperty.call(item, key) : false
+}
+
+function isUnsafeObjectKey(key) {
+    return key === "__proto__" || key === "constructor" || key === "prototype"
+}
+
+function boundedText(value, limit) {
+    if (value === null || value === undefined) {
+        return ""
+    }
+    var text = String(value)
+    return text.length > limit ? text.slice(0, limit) : text
+}
+
+// The metric the charts currently plot. Cost and tokens share one payload, so
+// every scale, peak, and summary has to read the same switch.
+function metricValue(point, showsTokens) {
+    if (!point) {
+        return 0
+    }
+    var raw = Number(showsTokens ? point.tokens : point.cost)
+    return isFinite(raw) ? raw : 0
+}
+
+function groupedDecimalString(fmt, value, digits) {
+    var numeric = Number(value)
+    if (!isFinite(numeric)) {
+        return "-"
+    }
+    var parts = Math.abs(numeric).toFixed(digits).split(".")
+    var whole = parts[0]
+    var grouped = ""
+    for (var i = 0; i < whole.length; i++) {
+        if (i > 0 && (whole.length - i) % 3 === 0) {
+            grouped += fmt.group
+        }
+        grouped += whole.charAt(i)
+    }
+    return parts.length > 1 ? grouped + fmt.decimal + parts[1] : grouped
+}
+
+// "Quota" is a credit balance, not money, so it prints as a bare rounded count.
+//
+// Non-numeric input is deliberately not guarded here: `groupedDecimalString`
+// already answers "-", which surfaces as "$-". That is the behaviour this
+// module was extracted from and changing it is a separate decision, not part of
+// moving the code.
+function amountString(fmt, value, currency) {
+    if (currency === "Quota") {
+        return Math.round(Number(value)).toString()
+    }
+    var numeric = Number(value)
+    var negative = numeric < 0
+    var amount = groupedDecimalString(fmt, Math.abs(numeric), 2)
+    if (currency === "USD") {
+        return negative ? "-$" + amount : "$" + amount
+    }
+    return (negative ? "-" : "") + currency + " " + amount
+}
+
+function scaledTokenCount(value) {
+    if (value >= 10) {
+        return Number(value).toFixed(0)
+    }
+    return Number(value).toFixed(1).replace(/\.0$/, "")
+}
+
+function tokenCountString(tokens) {
+    var value = Number(tokens)
+    if (!isFinite(value)) {
+        return "-"
+    }
+    var absValue = Math.abs(value)
+    var sign = value < 0 ? "-" : ""
+    if (absValue >= 1000000000) {
+        return sign + scaledTokenCount(absValue / 1000000000) + "B"
+    }
+    if (absValue >= 1000000) {
+        return sign + scaledTokenCount(absValue / 1000000) + "M"
+    }
+    if (absValue >= 1000) {
+        return sign + scaledTokenCount(absValue / 1000) + "K"
+    }
+    return Math.round(value).toString()
+}
+
+// Bar charts must fit the canvas for every point count the normalizers allow
+// (up to 365 cost-history days and 120 detail-chart points). Deriving both the
+// gap and the bar width from one step keeps the last bar inside `width`; a
+// fixed minimum gap or bar width would push dense charts off the right edge and
+// silently hide the newest data.
+function chartBarGeometry(width, count) {
+    var points = Math.max(1, Math.floor(Number(count) || 0))
+    var step = Math.max(0, Number(width) || 0) / points
+    var gap = Math.max(0, Math.min(4, step / 4))
+    return {
+        step: step,
+        gap: gap,
+        barWidth: Math.max(1, step - gap)
+    }
+}
+
+function paintRoundedTopBar(context, x, baseline, width, height, radius) {
+    var safeWidth = Math.max(0, width)
+    var safeHeight = Math.max(0, height)
+    var top = baseline - safeHeight
+    var corner = Math.max(0, Math.min(radius, safeWidth / 2, safeHeight))
+
+    context.beginPath()
+    context.moveTo(x, baseline)
+    context.lineTo(x, top + corner)
+    context.quadraticCurveTo(x, top, x + corner, top)
+    context.lineTo(x + safeWidth - corner, top)
+    context.quadraticCurveTo(x + safeWidth, top, x + safeWidth, top + corner)
+    context.lineTo(x + safeWidth, baseline)
+    context.closePath()
+    context.fill()
+}
+
+// Returns the peak of the currently plotted metric, so the bars keep their
+// scale when the Usage & Spend tab switches between cost and tokens.
+function sparklineMax(points, showsTokens) {
+    var maximum = 0
+    if (!points) {
+        return maximum
+    }
+    for (var i = 0; i < points.length; i++) {
+        maximum = Math.max(maximum, metricValue(points[i], showsTokens))
+    }
+    return maximum
+}
+
+function metricText(fmt, magnitude, currency, showsTokens) {
+    return showsTokens
+        ? tokenCountString(magnitude)
+        : amountString(fmt, magnitude, currency || "USD")
+}
+
+function chartPoints(fmt, points, showsTokens) {
+    var result = []
+    if (!points) {
+        return result
+    }
+    for (var i = 0; i < points.length; i++) {
+        var point = points[i]
+        var value = Math.max(0, metricValue(point, showsTokens))
+        result.push({
+            label: boundedText(point.label, 120),
+            value: value,
+            displayValue: metricText(fmt, value, point.currency, showsTokens)
+        })
+    }
+    return result
+}
+
+// The newest plotted point, as a label and an already-formatted value. Returns
+// null when there is nothing to summarise; the caller joins the two words.
+function sparklineSummary(fmt, points, showsTokens) {
+    if (!points || points.length === 0) {
+        return null
+    }
+    var last = points[points.length - 1]
+    return {
+        label: last.label && last.label.length > 0 ? last.label : "",
+        value: metricText(fmt, metricValue(last, showsTokens), last.currency, showsTokens)
+    }
+}
+
+// Joins a money figure and a token figure with the separator the cost sections
+// use. `tokensText` is the caller's already-worded token phrase, or "" to print
+// the bare count.
+function tokenSummary(fmt, cost, tokens, currency, tokensText) {
+    var parts = []
+    var costValue = Number(cost)
+    var tokenValue = Number(tokens)
+    if (isFinite(costValue) && costValue > 0) {
+        parts.push(amountString(fmt, costValue, currency || "USD"))
+    }
+    if (isFinite(tokenValue) && tokenValue > 0) {
+        parts.push(typeof tokensText === "string" && tokensText.length > 0
+            ? tokensText
+            : tokenCountString(tokenValue))
+    }
+    return parts.join(" · ")
+}
+
+// `entries` is an ordered list of `{ label, tokens }`. Rows with no positive
+// token count are dropped rather than printed as zero.
+function breakdownRows(entries) {
+    var rows = []
+    if (!entries) {
+        return rows
+    }
+    for (var i = 0; i < entries.length; i++) {
+        var value = Number(entries[i].tokens)
+        if (!isFinite(value) || value <= 0) {
+            continue
+        }
+        rows.push({
+            label: entries[i].label,
+            value: tokenCountString(value)
+        })
+    }
+    return rows
+}
+
+// `tokensTextFor(tokens)` lets the caller word the token half of each summary.
+function modelRows(fmt, tokenCost, tokensTextFor) {
+    var rows = []
+    if (!tokenCost || !tokenCost.models) {
+        return rows
+    }
+    for (var i = 0; i < tokenCost.models.length; i++) {
+        var item = tokenCost.models[i]
+        rows.push({
+            label: item.label,
+            value: tokenSummary(fmt, item.cost, item.tokens, item.currency,
+                tokensTextFor ? tokensTextFor(item.tokens) : "")
+        })
+    }
+    return rows
+}
+
+// The last seven days, newest first, scaled against the peak of the selected
+// metric so the bar lengths match the figures beside them. A point whose label
+// the payload omitted gets `fallbackLabel`.
+function historyRows(fmt, tokenCost, showsTokens, fallbackLabel) {
+    if (!tokenCost || !tokenCost.daily || tokenCost.daily.length === 0) {
+        return []
+    }
+
+    var visibleDaily = tokenCost.daily.slice(Math.max(0, tokenCost.daily.length - 7))
+    var rows = []
+    var maximum = sparklineMax(visibleDaily, showsTokens)
+    for (var i = visibleDaily.length - 1; i >= 0; i--) {
+        var item = visibleDaily[i]
+        var magnitude = Math.max(0, metricValue(item, showsTokens))
+        var value = tokenSummary(fmt, item.cost, item.tokens, item.currency, "")
+        rows.push({
+            label: item.label && item.label.length > 0 ? item.label : fallbackLabel,
+            value: value.length > 0 ? value : amountString(fmt, 0, item.currency || "USD"),
+            percent: maximum > 0 ? Math.max(3, magnitude * 100 / maximum) : 0,
+            isPeak: maximum > 0 && magnitude === maximum
+        })
+    }
+    return rows
+}
+
+// The bars highlight the peak of the selected metric, so this has to name the
+// same day, not the most expensive one. Returns null when nothing was spent.
+function peakPoint(points, showsTokens) {
+    if (!points || points.length === 0) {
+        return null
+    }
+    var peak = null
+    for (var i = 0; i < points.length; i++) {
+        var magnitude = metricValue(points[i], showsTokens)
+        if (!peak || magnitude > peak.magnitude) {
+            peak = {
+                label: points[i].label && points[i].label.length > 0 ? points[i].label : "",
+                magnitude: magnitude,
+                currency: points[i].currency || "USD"
+            }
+        }
+    }
+    return peak && peak.magnitude > 0 ? peak : null
+}
+
+function averageDailyValue(points, showsTokens) {
+    if (!points || points.length === 0) {
+        return null
+    }
+    var total = 0
+    var currency = "USD"
+    for (var i = 0; i < points.length; i++) {
+        total += Math.max(0, metricValue(points[i], showsTokens))
+        if (points[i].currency) {
+            currency = points[i].currency
+        }
+    }
+    if (total <= 0) {
+        return null
+    }
+    return { value: total / points.length, currency: currency }
+}
+
+function perMillionAmount(tokenCost) {
+    if (!tokenCost || !tokenCost.totals) {
+        return null
+    }
+    var cost = Number(tokenCost.totals.cost)
+    var tokens = Number(tokenCost.totals.tokens)
+    if (!isFinite(cost) || !isFinite(tokens) || cost <= 0 || tokens <= 0) {
+        return null
+    }
+    return {
+        value: cost * 1000000 / tokens,
+        currency: tokenCost.totals.currency || "USD"
+    }
+}
+
+// A cached cost snapshot belongs to the selected range only when the CLI
+// answered for the same window; a stale snapshot must not be summed into a
+// range the user has since changed.
+function snapshotMatchesRange(tokenCost, historyDays) {
+    if (!tokenCost) {
+        return false
+    }
+    var snapshotDays = Number(tokenCost.historyDays)
+    return isFinite(snapshotDays)
+        && Math.floor(snapshotDays) === Math.floor(Number(historyDays))
+}
+
+// `titleFor` maps a provider ID to its display title, so the sort order matches
+// what the Usage & Spend tab prints.
+function spendSnapshots(tokenCosts, historyDays, titleFor) {
+    var result = []
+    for (var providerID in tokenCosts) {
+        if (!hasOwnKey(tokenCosts, providerID)) {
+            continue
+        }
+        var tokenCost = tokenCosts[providerID]
+        if (!snapshotMatchesRange(tokenCost, historyDays)) {
+            continue
+        }
+        result.push(tokenCost)
+    }
+    result.sort(function(a, b) {
+        var left = titleFor ? titleFor(a.provider) : String(a.provider)
+        var right = titleFor ? titleFor(b.provider) : String(b.provider)
+        return left.localeCompare(right)
+    })
+    return result
+}
+
+function spendCurrency(costs) {
+    var items = costs || []
+    for (var i = 0; i < items.length; i++) {
+        var totals = items[i].totals || ({})
+        var currency = boundedText(totals.currency || "", 12)
+        if (currency.length > 0) {
+            return currency
+        }
+        var daily = items[i].daily || []
+        if (daily.length > 0) {
+            return boundedText(daily[0].currency || "USD", 12)
+        }
+    }
+    return "USD"
+}
+
+function spendDailyPoints(fmt, costs, showsTokens) {
+    var items = costs || []
+    var byDate = ({})
+    var currency = spendCurrency(items)
+    for (var i = 0; i < items.length; i++) {
+        var daily = items[i].daily || []
+        for (var j = 0; j < daily.length; j++) {
+            var point = daily[j]
+            var label = boundedText(point.label, 120)
+            var pointCurrency = boundedText(point.currency || "USD", 12)
+            // Mixed currencies cannot be summed as money, but token counts are
+            // currency-free: filtering them would silently drop whole providers
+            // from the chart.
+            if (label.length === 0
+                    || isUnsafeObjectKey(label)
+                    || (!showsTokens && pointCurrency !== currency)) {
+                continue
+            }
+            if (!hasOwnKey(byDate, label)) {
+                byDate[label] = { label: label, value: 0, currency: currency }
+            }
+            byDate[label].value += Math.max(0, metricValue(point, showsTokens))
+        }
+    }
+
+    var result = []
+    for (var day in byDate) {
+        if (!hasOwnKey(byDate, day)) {
+            continue
+        }
+        var item = byDate[day]
+        item.displayValue = metricText(fmt, item.value, item.currency, showsTokens)
+        result.push(item)
+    }
+    result.sort(function(a, b) { return a.label.localeCompare(b.label) })
+    return result.slice(Math.max(0, result.length - maximumCostHistoryPoints))
+}
+
+// Only snapshots whose currency matches the range currency are summed; the
+// caller words the result. Returns null when there is nothing to total.
+function spendTotals(costs) {
+    var items = costs || []
+    if (items.length === 0) {
+        return null
+    }
+    var currency = spendCurrency(items)
+    var totalCost = 0
+    var totalTokens = 0
+    for (var i = 0; i < items.length; i++) {
+        var totals = items[i].totals || ({})
+        if (boundedText(totals.currency || currency, 12) !== currency) {
+            continue
+        }
+        totalCost += Math.max(0, Number(totals.cost) || 0)
+        totalTokens += Math.max(0, Number(totals.tokens) || 0)
+    }
+    return { cost: totalCost, tokens: totalTokens, currency: currency }
+}
+
+// The CLI reports whether its local log scan already covers the requested
+// window; until it does, the earliest bars are short for a scan reason rather
+// than a spend reason. A missing flag counts as established.
+function historyStillBuilding(costs) {
+    var items = costs || []
+    for (var i = 0; i < items.length; i++) {
+        if (items[i].historyCoverageEstablished === false) {
+            return true
+        }
+    }
+    return false
+}

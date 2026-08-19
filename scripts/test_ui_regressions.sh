@@ -71,6 +71,7 @@ providers_qml = root / "contents/ui/configProviders.qml"
 advanced_qml = root / "contents/ui/configAdvanced.qml"
 config_xml = root / "contents/config/main.xml"
 theme_contrast_js = root / "contents/ui/ThemeContrast.js"
+cost_presentation_js = root / "contents/ui/CostPresentation.js"
 provider_accounts_panel_qml = root / "contents/ui/components/ProviderAccountsPanel.qml"
 provider_header_qml = root / "contents/ui/components/ProviderHeader.qml"
 provider_config_row_qml = root / "contents/ui/components/ProviderConfigRow.qml"
@@ -157,6 +158,7 @@ providers_text = providers_qml.read_text(encoding="utf-8")
 advanced_text = advanced_qml.read_text(encoding="utf-8")
 config_text = config_xml.read_text(encoding="utf-8")
 theme_contrast_text = theme_contrast_js.read_text(encoding="utf-8")
+cost_presentation_text = cost_presentation_js.read_text(encoding="utf-8")
 provider_accounts_panel_text = provider_accounts_panel_qml.read_text(encoding="utf-8")
 provider_header_text = provider_header_qml.read_text(encoding="utf-8")
 provider_config_row_text = provider_config_row_qml.read_text(encoding="utf-8")
@@ -461,16 +463,20 @@ cost_history_label_body = function_body(main_text, "costHistoryWindowLabel")
 if "rawDays = Number(requestedHistoryDays)" not in cost_history_label_body:
     raise AssertionError("invalid emitted cost ranges must fall back to the captured request range")
 
-spend_provider_costs_body = function_body(main_text, "spendProviderCosts")
-if "costSnapshotMatchesSelectedRange(tokenCost)" not in spend_provider_costs_body:
+# The aggregation moved into CostPresentation.js; the rule did not. A snapshot
+# answered for another window must still be excluded from the selected range.
+spend_snapshots_body = function_body(cost_presentation_text, "spendSnapshots")
+if "snapshotMatchesRange(tokenCost, historyDays)" not in spend_snapshots_body:
     raise AssertionError("global spend aggregates must exclude snapshots from another selected range")
-cost_range_match_body = function_body(main_text, "costSnapshotMatchesSelectedRange")
-for range_match_fragment in ("Number(tokenCost.historyDays)", "Number(costHistoryDays)"):
+cost_range_match_body = function_body(cost_presentation_text, "snapshotMatchesRange")
+for range_match_fragment in ("Number(tokenCost.historyDays)", "Number(historyDays)"):
     if range_match_fragment not in cost_range_match_body:
         raise AssertionError(
             "cost snapshot range matching must compare normalized snapshot and selected ranges; "
             f"missing {range_match_fragment!r}"
         )
+if "CostPresentation.spendSnapshots(" not in function_body(main_text, "spendProviderCosts"):
+    raise AssertionError("main.qml must read spend snapshots from CostPresentation.js")
 
 rate_window_body = function_body(main_text, "rateWindowMetrics")
 if "pace.expectedUsedPercent !== null" not in rate_window_body or "pace.expectedUsedPercent !== undefined" not in rate_window_body:
@@ -709,7 +715,7 @@ for function_name in ("readableAccentColor", "providerReadableColor"):
     if f"function {function_name}(" not in main_text:
         raise AssertionError(f"main.qml must expose theme contrast wrapper {function_name}")
 
-rounded_bar_body = function_body(main_text, "paintRoundedTopBar")
+rounded_bar_body = function_body(cost_presentation_text, "paintRoundedTopBar")
 for rounded_bar_fragment in (
     "Math.min(radius, safeWidth / 2, safeHeight)",
     "context.quadraticCurveTo(",
@@ -1139,10 +1145,10 @@ for history_row_fragment in (
             f"missing {history_row_fragment!r}"
         )
 
-cost_history_rows_body = function_body(main_text, "costHistoryRows")
+cost_history_rows_body = function_body(cost_presentation_text, "historyRows")
 if "tokenCost.daily.length - 7" not in cost_history_rows_body:
     raise AssertionError("cost history must show only the latest seven detailed rows")
-if "costSparklineMax(visibleDaily)" not in cost_history_rows_body:
+if "sparklineMax(visibleDaily, showsTokens)" not in cost_history_rows_body:
     raise AssertionError("cost history bars must scale against the seven visible days")
 if "tokenCost.daily.length - 14" in cost_history_rows_body:
     raise AssertionError("cost history must not dominate the popup with fourteen detailed rows")
@@ -1915,9 +1921,9 @@ if r'.replace(/(\d)([A-Za-z])/g, "$1 $2")' in reset_label_body:
 # points. A fixed minimum gap or bar width pushed the last bars past the canvas
 # width, silently hiding the newest data, so both charts share one step-derived
 # geometry helper instead of computing their own bar pitch.
-if "function chartBarGeometry(width, count)" not in main_text:
-    raise AssertionError("main.qml must expose a shared bar-chart geometry helper")
-chart_geometry_body = function_body(main_text, "chartBarGeometry")
+if "function chartBarGeometry(width, count)" not in cost_presentation_text:
+    raise AssertionError("CostPresentation.js must expose a shared bar-chart geometry helper")
+chart_geometry_body = function_body(cost_presentation_text, "chartBarGeometry")
 for fragment in ("var step = Math.max(0, Number(width) || 0) / points", "Math.max(1, step - gap)"):
     if fragment not in chart_geometry_body:
         raise AssertionError(

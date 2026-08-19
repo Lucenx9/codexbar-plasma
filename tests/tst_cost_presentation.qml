@@ -1,0 +1,290 @@
+import QtQuick
+import QtTest
+import "../contents/ui/CostPresentation.js" as CostPresentation
+
+TestCase {
+    name: "CostPresentation"
+
+    readonly property var fmt: CostPresentation.numberFormat(",", ".")
+
+    function dailyPoint(label, cost, tokens, currency) {
+        return { label: label, cost: cost, tokens: tokens, currency: currency || "USD" }
+    }
+
+    function test_numberFormatFallsBackWhenTheCallerHasNoLocale() {
+        var fallback = CostPresentation.numberFormat(undefined, undefined)
+        compare(fallback.group, ",")
+        compare(fallback.decimal, ".")
+        compare(CostPresentation.amountString(fallback, 1234.5, "USD"), "$1,234.50")
+    }
+
+    function test_amountStringHonoursTheCallerSeparators() {
+        var italian = CostPresentation.numberFormat(".", ",")
+        compare(CostPresentation.amountString(italian, 1234.5, "USD"), "$1.234,50")
+        compare(CostPresentation.amountString(fmt, 1234.5, "USD"), "$1,234.50")
+    }
+
+    function test_amountStringKeepsTheSignOutsideTheCurrencySymbol() {
+        compare(CostPresentation.amountString(fmt, -12, "USD"), "-$12.00")
+        compare(CostPresentation.amountString(fmt, -12, "EUR"), "-EUR 12.00")
+    }
+
+    function test_quotaIsACreditBalanceNotMoney() {
+        compare(CostPresentation.amountString(fmt, 1499.6, "Quota"), "1500")
+    }
+
+    // Pinning the pre-extraction behaviour, defect included: a non-numeric
+    // amount prints as "$-" rather than being rejected. Fixing that is a
+    // separate change; this asserts the extraction did not alter it.
+    function test_nonNumericAmountKeepsThePreExtractionOutput() {
+        compare(CostPresentation.amountString(fmt, "abc", "USD"), "$-")
+        compare(CostPresentation.amountString(fmt, "abc", "EUR"), "EUR -")
+        compare(CostPresentation.amountString(fmt, null, "USD"), "$0.00")
+        compare(CostPresentation.groupedDecimalString(fmt, "abc", 2), "-")
+    }
+
+    function test_tokenCountStringScalesAndDropsTrailingZero() {
+        compare(CostPresentation.tokenCountString(999), "999")
+        compare(CostPresentation.tokenCountString(1000), "1K")
+        compare(CostPresentation.tokenCountString(1500), "1.5K")
+        compare(CostPresentation.tokenCountString(15000), "15K")
+        compare(CostPresentation.tokenCountString(2500000), "2.5M")
+        compare(CostPresentation.tokenCountString(3000000000), "3B")
+        compare(CostPresentation.tokenCountString(-1500), "-1.5K")
+        compare(CostPresentation.tokenCountString("abc"), "-")
+    }
+
+    // The regression this guards: a marker or bar drawn against the wrong
+    // metric claims a spend level the payload never reported.
+    function test_sparklineMaxFollowsTheSelectedMetric() {
+        var points = [dailyPoint("Mon", 5, 900), dailyPoint("Tue", 2, 4000)]
+        compare(CostPresentation.sparklineMax(points, false), 5)
+        compare(CostPresentation.sparklineMax(points, true), 4000)
+        compare(CostPresentation.sparklineMax([], false), 0)
+        compare(CostPresentation.sparklineMax(null, false), 0)
+    }
+
+    function test_peakPointNamesTheDayTheBarsHighlight() {
+        var points = [dailyPoint("Mon", 5, 900), dailyPoint("Tue", 2, 4000)]
+        compare(CostPresentation.peakPoint(points, false).label, "Mon")
+        compare(CostPresentation.peakPoint(points, true).label, "Tue")
+    }
+
+    function test_peakPointIsNullWhenNothingWasSpent() {
+        compare(CostPresentation.peakPoint([dailyPoint("Mon", 0, 0)], false), null)
+        compare(CostPresentation.peakPoint([], false), null)
+        compare(CostPresentation.peakPoint(null, false), null)
+    }
+
+    function test_peakPointLeavesAnEmptyLabelForTheCallerToWord() {
+        compare(CostPresentation.peakPoint([dailyPoint("", 5, 900)], false).label, "")
+    }
+
+    function test_averageDailyValueDividesByEveryPlottedDay() {
+        var points = [dailyPoint("Mon", 3, 0), dailyPoint("Tue", 0, 0), dailyPoint("Wed", 6, 0)]
+        compare(CostPresentation.averageDailyValue(points, false).value, 3)
+        compare(CostPresentation.averageDailyValue([], false), null)
+    }
+
+    function test_perMillionAmountNeedsBothHalvesOfTheRatio() {
+        compare(CostPresentation.perMillionAmount({ totals: { cost: 2, tokens: 1000000, currency: "USD" } }).value, 2)
+        compare(CostPresentation.perMillionAmount({ totals: { cost: 2, tokens: 0 } }), null)
+        compare(CostPresentation.perMillionAmount({ totals: { cost: 0, tokens: 500 } }), null)
+        compare(CostPresentation.perMillionAmount(null), null)
+    }
+
+    function test_chartBarGeometryKeepsTheLastBarInsideTheCanvas() {
+        var dense = CostPresentation.chartBarGeometry(100, 365)
+        verify(dense.step * 365 <= 100.0001)
+        verify(dense.barWidth >= 1)
+        var sparse = CostPresentation.chartBarGeometry(100, 2)
+        compare(sparse.gap, 4)
+        compare(sparse.barWidth, 46)
+    }
+
+    function test_chartBarGeometrySurvivesAZeroPointChart() {
+        var empty = CostPresentation.chartBarGeometry(0, 0)
+        compare(empty.step, 0)
+        compare(empty.barWidth, 1)
+    }
+
+    function test_chartPointsClampNegativeValuesAndBoundLabels() {
+        var points = CostPresentation.chartPoints(fmt, [dailyPoint("Mon", -4, 100)], false)
+        compare(points[0].value, 0)
+        compare(points[0].displayValue, "$0.00")
+        // `long` is a QML reserved word, so the label fixture cannot borrow it.
+        var oversized = CostPresentation.chartPoints(fmt, [dailyPoint(new Array(300).join("x"), 1, 1)], false)
+        compare(oversized[0].label.length, 120)
+    }
+
+    function test_sparklineSummaryReportsTheNewestPoint() {
+        var points = [dailyPoint("Mon", 5, 900), dailyPoint("Tue", 2, 4000)]
+        compare(CostPresentation.sparklineSummary(fmt, points, false).label, "Tue")
+        compare(CostPresentation.sparklineSummary(fmt, points, false).value, "$2.00")
+        compare(CostPresentation.sparklineSummary(fmt, points, true).value, "4K")
+        compare(CostPresentation.sparklineSummary(fmt, [], false), null)
+    }
+
+    function test_breakdownRowsDropZeroAndMissingCounts() {
+        var rows = CostPresentation.breakdownRows([
+            { label: "Total", tokens: 1500 },
+            { label: "Input", tokens: 0 },
+            { label: "Output", tokens: undefined },
+            { label: "Cache", tokens: "abc" }
+        ])
+        compare(rows.length, 1)
+        compare(rows[0].label, "Total")
+        compare(rows[0].value, "1.5K")
+    }
+
+    function test_tokenSummaryOmitsTheHalfThatIsMissing() {
+        compare(CostPresentation.tokenSummary(fmt, 3, 0, "USD", ""), "$3.00")
+        compare(CostPresentation.tokenSummary(fmt, 0, 2000, "USD", ""), "2K")
+        compare(CostPresentation.tokenSummary(fmt, 0, 0, "USD", ""), "")
+        compare(CostPresentation.tokenSummary(fmt, 3, 2000, "USD", "2K tokens"), "$3.00 · 2K tokens")
+    }
+
+    function test_historyRowsRunNewestFirstAndScaleToTheSelectedMetric() {
+        var tokenCost = { daily: [
+            dailyPoint("Mon", 1, 4000),
+            dailyPoint("Tue", 4, 1000)
+        ] }
+        var byCost = CostPresentation.historyRows(fmt, tokenCost, false, "Latest")
+        compare(byCost[0].label, "Tue")
+        compare(byCost[0].isPeak, true)
+        compare(byCost[1].isPeak, false)
+
+        var byTokens = CostPresentation.historyRows(fmt, tokenCost, true, "Latest")
+        compare(byTokens[0].label, "Tue")
+        compare(byTokens[0].isPeak, false)
+        compare(byTokens[1].isPeak, true)
+    }
+
+    function test_historyRowsKeepAtMostSevenDays() {
+        var daily = []
+        for (var i = 0; i < 30; i++) {
+            daily.push(dailyPoint("d" + i, i + 1, 0))
+        }
+        compare(CostPresentation.historyRows(fmt, { daily: daily }, false, "Latest").length, 7)
+    }
+
+    function test_historyRowsUseTheCallerFallbackLabel() {
+        var rows = CostPresentation.historyRows(fmt, { daily: [dailyPoint("", 1, 0)] }, false, "Latest")
+        compare(rows[0].label, "Latest")
+    }
+
+    function test_historyRowsKeepAVisibleBarForSmallDays() {
+        var rows = CostPresentation.historyRows(fmt, { daily: [
+            dailyPoint("Mon", 1000, 0),
+            dailyPoint("Tue", 1, 0)
+        ] }, false, "Latest")
+        compare(rows[0].percent, 3)
+    }
+
+    function test_historyRowsSurviveAnEmptyPayload() {
+        compare(CostPresentation.historyRows(fmt, null, false, "Latest").length, 0)
+        compare(CostPresentation.historyRows(fmt, { daily: [] }, false, "Latest").length, 0)
+    }
+
+    function test_modelRowsLetTheCallerWordTheTokenHalf() {
+        var rows = CostPresentation.modelRows(fmt, { models: [
+            { label: "gpt", cost: 1, tokens: 2000, currency: "USD" }
+        ] }, function(tokens) { return CostPresentation.tokenCountString(tokens) + " tokens" })
+        compare(rows[0].value, "$1.00 · 2K tokens")
+    }
+
+    // A snapshot answered for a different window must not be summed into the
+    // range the user has since selected.
+    function test_snapshotMatchesRangeRejectsAStaleWindow() {
+        verify(CostPresentation.snapshotMatchesRange({ historyDays: 30 }, 30))
+        verify(!CostPresentation.snapshotMatchesRange({ historyDays: 7 }, 30))
+        verify(!CostPresentation.snapshotMatchesRange({ historyDays: "abc" }, 30))
+        verify(!CostPresentation.snapshotMatchesRange(null, 30))
+    }
+
+    function test_spendSnapshotsFilterByRangeAndSortByTitle() {
+        var tokenCosts = {
+            zed: { provider: "zed", historyDays: 30 },
+            alpha: { provider: "alpha", historyDays: 30 },
+            stale: { provider: "stale", historyDays: 7 }
+        }
+        var snapshots = CostPresentation.spendSnapshots(tokenCosts, 30, function(id) {
+            return id === "zed" ? "Zed" : "Alpha"
+        })
+        compare(snapshots.length, 2)
+        compare(snapshots[0].provider, "alpha")
+    }
+
+    function test_spendSnapshotsIgnoreInheritedKeys() {
+        var tokenCosts = { own: { provider: "own", historyDays: 30 } }
+        compare(CostPresentation.spendSnapshots(tokenCosts, 30, null).length, 1)
+        compare(CostPresentation.spendSnapshots({}, 30, null).length, 0)
+    }
+
+    function test_spendCurrencyPrefersTotalsThenFallsBackToDaily() {
+        compare(CostPresentation.spendCurrency([{ totals: { currency: "EUR" } }]), "EUR")
+        compare(CostPresentation.spendCurrency([{ totals: {}, daily: [dailyPoint("Mon", 1, 1, "GBP")] }]), "GBP")
+        compare(CostPresentation.spendCurrency([]), "USD")
+    }
+
+    // Money in mixed currencies cannot be summed, but token counts are
+    // currency-free: filtering them would drop whole providers from the chart.
+    function test_spendDailyPointsDropForeignMoneyButKeepForeignTokens() {
+        var costs = [
+            { totals: { currency: "USD" }, daily: [dailyPoint("Mon", 2, 100, "USD")] },
+            { totals: { currency: "EUR" }, daily: [dailyPoint("Mon", 9, 400, "EUR")] }
+        ]
+        var byCost = CostPresentation.spendDailyPoints(fmt, costs, false)
+        compare(byCost.length, 1)
+        compare(byCost[0].value, 2)
+
+        var byTokens = CostPresentation.spendDailyPoints(fmt, costs, true)
+        compare(byTokens[0].value, 500)
+    }
+
+    function test_spendDailyPointsRejectPrototypePollutingLabels() {
+        var costs = [{ totals: { currency: "USD" }, daily: [
+            dailyPoint("__proto__", 5, 5, "USD"),
+            dailyPoint("constructor", 5, 5, "USD"),
+            dailyPoint("", 5, 5, "USD"),
+            dailyPoint("Mon", 5, 5, "USD")
+        ] }]
+        var points = CostPresentation.spendDailyPoints(fmt, costs, false)
+        compare(points.length, 1)
+        compare(points[0].label, "Mon")
+    }
+
+    function test_spendDailyPointsSortByLabelAndCarryDisplayText() {
+        var costs = [{ totals: { currency: "USD" }, daily: [
+            dailyPoint("2026-08-02", 1, 0, "USD"),
+            dailyPoint("2026-08-01", 2, 0, "USD")
+        ] }]
+        var points = CostPresentation.spendDailyPoints(fmt, costs, false)
+        compare(points[0].label, "2026-08-01")
+        compare(points[0].displayValue, "$2.00")
+    }
+
+    function test_spendTotalsSumOnlyTheRangeCurrency() {
+        var totals = CostPresentation.spendTotals([
+            { totals: { cost: 2, tokens: 100, currency: "USD" } },
+            { totals: { cost: 9, tokens: 400, currency: "EUR" } }
+        ])
+        compare(totals.cost, 2)
+        compare(totals.tokens, 100)
+        compare(totals.currency, "USD")
+    }
+
+    function test_spendTotalsAreNullWithNoSnapshots() {
+        compare(CostPresentation.spendTotals([]), null)
+        compare(CostPresentation.spendTotals(null), null)
+    }
+
+    // A missing flag counts as established, so older CLI payloads do not print
+    // a permanent "still collecting" note.
+    function test_historyStillBuildingOnlyOnAnExplicitFalse() {
+        verify(CostPresentation.historyStillBuilding([{ historyCoverageEstablished: false }]))
+        verify(!CostPresentation.historyStillBuilding([{ historyCoverageEstablished: true }]))
+        verify(!CostPresentation.historyStillBuilding([{}]))
+        verify(!CostPresentation.historyStillBuilding([]))
+    }
+}
