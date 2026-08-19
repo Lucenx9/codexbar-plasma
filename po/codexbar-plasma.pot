@@ -1289,6 +1289,10 @@ msgid "Cache write"
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "%1 tokens"
+msgstr ""
+
+#: contents/ui/main.qml
 msgid "Peak: %1 - %2"
 msgstr ""
 
@@ -1298,10 +1302,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Average: %1 / 1M tokens"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 tokens"
 msgstr ""
 
 #: contents/ui/main.qml

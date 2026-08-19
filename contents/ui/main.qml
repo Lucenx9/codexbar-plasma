@@ -6,6 +6,7 @@ import org.kde.plasma.plasmoid
 import "components" as Components
 import "NotificationMemo.js" as NotificationMemo
 import "PanelElements.js" as PanelElements
+import "CostPresentation.js" as CostPresentation
 import "ProviderIdentity.js" as ProviderIdentity
 import "ProviderNormalizer.js" as Normalizer
 import "QuotaThresholds.js" as QuotaThresholds
@@ -41,6 +42,9 @@ PlasmoidItem {
     // switching the plotted metric never needs a second CLI call.
     property string costHistoryMetric: safeCostHistoryMetric(Plasmoid.configuration.costHistoryMetric)
     readonly property bool costHistoryShowsTokens: costHistoryMetric === "tokens"
+    // Resolved once: a .pragma library module cannot reach Qt.locale().
+    readonly property var costNumberFormat: CostPresentation.numberFormat(
+        Qt.locale().groupSeparator, Qt.locale().decimalPoint)
     property bool usageBarsShowUsed: Plasmoid.configuration.usageBarsShowUsed === true
     property bool showQuotaWarningMarkers: Plasmoid.configuration.showQuotaWarningMarkers !== false
     readonly property int quotaWarningPercent: QuotaThresholds.warningPercent(
@@ -1315,32 +1319,11 @@ PlasmoidItem {
     // Returns the peak of the currently plotted metric, so the bars keep their
     // scale when the Usage & Spend tab switches between cost and tokens.
     function costSparklineMax(points) {
-        var maximum = 0
-        if (!points) {
-            return maximum
-        }
-        for (var i = 0; i < points.length; i++) {
-            maximum = Math.max(maximum, Number(
-                costHistoryShowsTokens ? points[i].tokens : points[i].cost) || 0)
-        }
-        return maximum
+        return CostPresentation.sparklineMax(points, costHistoryShowsTokens)
     }
 
     function paintRoundedTopBar(context, x, baseline, width, height, radius) {
-        var safeWidth = Math.max(0, width)
-        var safeHeight = Math.max(0, height)
-        var top = baseline - safeHeight
-        var corner = Math.max(0, Math.min(radius, safeWidth / 2, safeHeight))
-
-        context.beginPath()
-        context.moveTo(x, baseline)
-        context.lineTo(x, top + corner)
-        context.quadraticCurveTo(x, top, x + corner, top)
-        context.lineTo(x + safeWidth - corner, top)
-        context.quadraticCurveTo(x + safeWidth, top, x + safeWidth, top + corner)
-        context.lineTo(x + safeWidth, baseline)
-        context.closePath()
-        context.fill()
+        CostPresentation.paintRoundedTopBar(context, x, baseline, width, height, radius)
     }
 
     // Bar charts must fit the canvas for every point count the normalizers
@@ -1349,14 +1332,7 @@ PlasmoidItem {
     // `width`; a fixed minimum gap or bar width would push dense charts off the
     // right edge and silently hide the newest data.
     function chartBarGeometry(width, count) {
-        var points = Math.max(1, Math.floor(Number(count) || 0))
-        var step = Math.max(0, Number(width) || 0) / points
-        var gap = Math.max(0, Math.min(4, step / 4))
-        return {
-            step: step,
-            gap: gap,
-            barWidth: Math.max(1, step - gap)
-        }
+        return CostPresentation.chartBarGeometry(width, count)
     }
 
     function buildChartBarGradient(context, accent, baseline, topOpacity, bottomOpacity) {
@@ -1367,139 +1343,43 @@ PlasmoidItem {
     }
 
     function costSparklineSummary(points) {
-        if (!points || points.length === 0) {
+        var summary = CostPresentation.sparklineSummary(costNumberFormat, points, costHistoryShowsTokens)
+        if (!summary) {
             return ""
         }
-        var last = points[points.length - 1]
-        var label = last.label && last.label.length > 0 ? last.label : i18n("Latest")
-        var value = costHistoryShowsTokens
-            ? tokenCountString(last.tokens)
-            : amountString(last.cost, last.currency || "USD")
-        return i18n("%1: %2", label, value)
+        return i18n("%1: %2", summary.label.length > 0 ? summary.label : i18n("Latest"), summary.value)
     }
 
     function costChartPoints(points) {
-        var result = []
-        if (!points) {
-            return result
-        }
-        for (var i = 0; i < points.length; i++) {
-            var point = points[i]
-            var value = Math.max(0, Number(
-                costHistoryShowsTokens ? point.tokens : point.cost) || 0)
-            result.push({
-                label: boundedDisplayText(point.label, 120),
-                value: value,
-                displayValue: costHistoryShowsTokens
-                    ? tokenCountString(value)
-                    : amountString(value, point.currency || "USD")
-            })
-        }
-        return result
+        return CostPresentation.chartPoints(costNumberFormat, points, costHistoryShowsTokens)
     }
 
     function spendProviderCosts() {
-        var result = []
-        for (var providerID in tokenCosts) {
-            if (!hasOwnKey(tokenCosts, providerID)) {
-                continue
-            }
-            var tokenCost = tokenCosts[providerID]
-            if (!costSnapshotMatchesSelectedRange(tokenCost)) {
-                continue
-            }
-            result.push(tokenCost)
-        }
-        result.sort(function(a, b) {
-            return providerTitle(a.provider).localeCompare(providerTitle(b.provider))
+        return CostPresentation.spendSnapshots(tokenCosts, costHistoryDays, function(providerID) {
+            return providerTitle(providerID)
         })
-        return result
     }
 
     function costSnapshotMatchesSelectedRange(tokenCost) {
-        if (!tokenCost) {
-            return false
-        }
-        var snapshotDays = Number(tokenCost.historyDays)
-        return isFinite(snapshotDays)
-            && Math.floor(snapshotDays) === Math.floor(Number(costHistoryDays))
+        return CostPresentation.snapshotMatchesRange(tokenCost, costHistoryDays)
     }
 
     function spendDailyPoints() {
-        var costs = spendProviderCosts()
-        var byDate = ({})
-        var currency = spendCurrency(costs)
-        for (var i = 0; i < costs.length; i++) {
-            var daily = costs[i].daily || []
-            for (var j = 0; j < daily.length; j++) {
-                var point = daily[j]
-                var label = boundedDisplayText(point.label, 120)
-                var pointCurrency = boundedDisplayText(point.currency || "USD", 12)
-                // Mixed currencies cannot be summed as money, but token counts
-                // are currency-free: filtering them would silently drop whole
-                // providers from the chart.
-                if (label.length === 0
-                        || isUnsafeObjectKey(label)
-                        || (!costHistoryShowsTokens && pointCurrency !== currency)) {
-                    continue
-                }
-                if (!hasOwnKey(byDate, label)) {
-                    byDate[label] = { label: label, value: 0, currency: currency }
-                }
-                byDate[label].value += Math.max(0, Number(
-                    costHistoryShowsTokens ? point.tokens : point.cost) || 0)
-            }
-        }
-
-        var result = []
-        for (var day in byDate) {
-            if (!hasOwnKey(byDate, day)) {
-                continue
-            }
-            var item = byDate[day]
-            item.displayValue = costHistoryShowsTokens
-                ? tokenCountString(item.value)
-                : amountString(item.value, item.currency)
-            result.push(item)
-        }
-        result.sort(function(a, b) { return a.label.localeCompare(b.label) })
-        return result.slice(Math.max(0, result.length - maximumCostHistoryPoints))
+        return CostPresentation.spendDailyPoints(costNumberFormat, spendProviderCosts(), costHistoryShowsTokens)
     }
 
     function spendCurrency(costs) {
-        var items = costs || spendProviderCosts()
-        for (var i = 0; i < items.length; i++) {
-            var totals = items[i].totals || ({})
-            var currency = boundedDisplayText(totals.currency || "", 12)
-            if (currency.length > 0) {
-                return currency
-            }
-            var daily = items[i].daily || []
-            if (daily.length > 0) {
-                return boundedDisplayText(daily[0].currency || "USD", 12)
-            }
-        }
-        return "USD"
+        return CostPresentation.spendCurrency(costs || spendProviderCosts())
     }
 
     function spendTotalLine() {
-        var costs = spendProviderCosts()
-        var totalCost = 0
-        var totalTokens = 0
-        var currency = spendCurrency(costs)
-        for (var i = 0; i < costs.length; i++) {
-            var totals = costs[i].totals || ({})
-            var itemCurrency = boundedDisplayText(totals.currency || currency, 12)
-            if (itemCurrency !== currency) {
-                continue
-            }
-            totalCost += Math.max(0, Number(totals.cost) || 0)
-            totalTokens += Math.max(0, Number(totals.tokens) || 0)
-        }
-        if (costs.length === 0) {
+        var totals = CostPresentation.spendTotals(spendProviderCosts())
+        if (!totals) {
             return ""
         }
-        return i18n("%1 total - %2 tokens", amountString(totalCost, currency), tokenCountString(totalTokens))
+        return i18n("%1 total - %2 tokens",
+            CostPresentation.amountString(costNumberFormat, totals.cost, totals.currency),
+            CostPresentation.tokenCountString(totals.tokens))
     }
 
     function setCostHistoryDays(days) {
@@ -1515,13 +1395,7 @@ PlasmoidItem {
     // window; until it does, the earliest bars are short for a scan reason
     // rather than a spend reason.
     function spendHistoryStillBuilding() {
-        var costs = spendProviderCosts()
-        for (var i = 0; i < costs.length; i++) {
-            if (costs[i].historyCoverageEstablished === false) {
-                return true
-            }
-        }
-        return false
+        return CostPresentation.historyStillBuilding(spendProviderCosts())
     }
 
     function costBreakdownRows(tokenCost) {
@@ -1530,137 +1404,59 @@ PlasmoidItem {
         }
 
         var totals = tokenCost.totals
-        var rows = []
-        appendTokenBreakdownRow(rows, i18n("Total tokens"), totals.tokens)
-        appendTokenBreakdownRow(rows, i18n("Input"), totals.inputTokens)
-        appendTokenBreakdownRow(rows, i18n("Output"), totals.outputTokens)
-        appendTokenBreakdownRow(rows, i18n("Cache read"), totals.cacheReadTokens)
-        appendTokenBreakdownRow(rows, i18n("Cache write"), totals.cacheCreationTokens)
-        return rows
-    }
-
-    function appendTokenBreakdownRow(rows, label, tokens) {
-        var value = Number(tokens)
-        if (!isFinite(value) || value <= 0) {
-            return
-        }
-        rows.push({
-            label: label,
-            value: tokenCountString(value)
-        })
+        return CostPresentation.breakdownRows([
+            { label: i18n("Total tokens"), tokens: totals.tokens },
+            { label: i18n("Input"), tokens: totals.inputTokens },
+            { label: i18n("Output"), tokens: totals.outputTokens },
+            { label: i18n("Cache read"), tokens: totals.cacheReadTokens },
+            { label: i18n("Cache write"), tokens: totals.cacheCreationTokens }
+        ])
     }
 
     function costModelRows(tokenCost) {
-        if (!tokenCost || !tokenCost.models) {
-            return []
-        }
-
-        var rows = []
-        for (var i = 0; i < tokenCost.models.length; i++) {
-            var item = tokenCost.models[i]
-            rows.push({
-                label: item.label,
-                value: costTokenSummary(item.cost, item.tokens, item.currency)
-            })
-        }
-        return rows
+        return CostPresentation.modelRows(costNumberFormat, tokenCost, function(tokens) {
+            return i18n("%1 tokens", CostPresentation.tokenCountString(Number(tokens)))
+        })
     }
 
     function costHistoryRows(tokenCost) {
-        if (!tokenCost || !tokenCost.daily || tokenCost.daily.length === 0) {
-            return []
-        }
-
-        var first = Math.max(0, tokenCost.daily.length - 7)
-        var visibleDaily = tokenCost.daily.slice(first)
-        var rows = []
-        var maximum = costSparklineMax(visibleDaily)
-        for (var i = visibleDaily.length - 1; i >= 0; i--) {
-            var item = visibleDaily[i]
-            var magnitude = Math.max(0, Number(
-                costHistoryShowsTokens ? item.tokens : item.cost) || 0)
-            var value = compactCostTokenSummary(item.cost, item.tokens, item.currency)
-            rows.push({
-                label: item.label && item.label.length > 0 ? item.label : i18n("Latest"),
-                value: value.length > 0 ? value : amountString(0, item.currency || "USD"),
-                percent: maximum > 0 ? Math.max(3, magnitude * 100 / maximum) : 0,
-                isPeak: maximum > 0 && magnitude === maximum
-            })
-        }
-        return rows
+        return CostPresentation.historyRows(costNumberFormat, tokenCost, costHistoryShowsTokens, i18n("Latest"))
     }
 
     function costPeakLine(points) {
-        if (!points || points.length === 0) {
+        var peak = CostPresentation.peakPoint(points, costHistoryShowsTokens)
+        if (!peak) {
             return ""
         }
-
-        // The bars highlight the peak of the selected metric, so this label has
-        // to name the same day, not the most expensive one.
-        var peak = null
-        for (var i = 0; i < points.length; i++) {
-            var magnitude = Number(
-                costHistoryShowsTokens ? points[i].tokens : points[i].cost) || 0
-            if (!peak || magnitude > peak.magnitude) {
-                peak = {
-                    label: points[i].label && points[i].label.length > 0 ? points[i].label : i18n("Latest"),
-                    magnitude: magnitude,
-                    currency: points[i].currency || "USD"
-                }
-            }
-        }
-        if (!peak || peak.magnitude <= 0) {
-            return ""
-        }
-        return i18n("Peak: %1 - %2", peak.label, costHistoryShowsTokens
-            ? tokenCountString(peak.magnitude)
-            : amountString(peak.magnitude, peak.currency))
+        return i18n("Peak: %1 - %2",
+            peak.label.length > 0 ? peak.label : i18n("Latest"),
+            costHistoryShowsTokens
+                ? CostPresentation.tokenCountString(peak.magnitude)
+                : CostPresentation.amountString(costNumberFormat, peak.magnitude, peak.currency))
     }
 
     function costAverageDailyLine(points) {
-        if (!points || points.length === 0) {
+        var average = CostPresentation.averageDailyValue(points, costHistoryShowsTokens)
+        if (!average) {
             return ""
         }
-
-        var total = 0
-        var currency = "USD"
-        for (var i = 0; i < points.length; i++) {
-            total += Math.max(0, Number(
-                costHistoryShowsTokens ? points[i].tokens : points[i].cost) || 0)
-            if (points[i].currency) {
-                currency = points[i].currency
-            }
-        }
-        if (total <= 0) {
-            return ""
-        }
-        var average = total / points.length
         return i18n("Average/day: %1", costHistoryShowsTokens
-            ? tokenCountString(average)
-            : amountString(average, currency))
+            ? CostPresentation.tokenCountString(average.value)
+            : CostPresentation.amountString(costNumberFormat, average.value, average.currency))
     }
 
     function costPerMillionLine(tokenCost) {
-        if (!tokenCost || !tokenCost.totals) {
+        var perMillion = CostPresentation.perMillionAmount(tokenCost)
+        if (!perMillion) {
             return ""
         }
-        var cost = Number(tokenCost.totals.cost)
-        var tokens = Number(tokenCost.totals.tokens)
-        if (!isFinite(cost) || !isFinite(tokens) || cost <= 0 || tokens <= 0) {
-            return ""
-        }
-        return i18n("Average: %1 / 1M tokens", amountString(cost * 1000000 / tokens, tokenCost.totals.currency || "USD"))
+        return i18n("Average: %1 / 1M tokens",
+            CostPresentation.amountString(costNumberFormat, perMillion.value, perMillion.currency))
     }
 
     function costTokenSummary(cost, tokens, currency) {
-        var parts = []
-        if (isFinite(Number(cost)) && Number(cost) > 0) {
-            parts.push(amountString(Number(cost), currency || "USD"))
-        }
-        if (isFinite(Number(tokens)) && Number(tokens) > 0) {
-            parts.push(i18n("%1 tokens", tokenCountString(Number(tokens))))
-        }
-        return parts.join(" · ")
+        return CostPresentation.tokenSummary(costNumberFormat, cost, tokens, currency,
+            i18n("%1 tokens", CostPresentation.tokenCountString(Number(tokens))))
     }
 
     readonly property int usageDashboardRowLimit: 10
@@ -1897,14 +1693,7 @@ PlasmoidItem {
     }
 
     function compactCostTokenSummary(cost, tokens, currency) {
-        var parts = []
-        if (isFinite(Number(cost)) && Number(cost) > 0) {
-            parts.push(amountString(Number(cost), currency || "USD"))
-        }
-        if (isFinite(Number(tokens)) && Number(tokens) > 0) {
-            parts.push(tokenCountString(Number(tokens)))
-        }
-        return parts.join(" · ")
+        return CostPresentation.tokenSummary(costNumberFormat, cost, tokens, currency, "")
     }
 
     function providerTokenCost(providerID) {
@@ -3446,34 +3235,11 @@ PlasmoidItem {
     // Number.toLocaleString with 'f' localizes the decimal mark without adding
     // group separators, so the grouping is applied here.
     function groupedDecimalString(value, digits) {
-        var numeric = Number(value)
-        if (!isFinite(numeric)) {
-            return "-"
-        }
-        var locale = Qt.locale()
-        var parts = Math.abs(numeric).toFixed(digits).split(".")
-        var whole = parts[0]
-        var grouped = ""
-        for (var i = 0; i < whole.length; i++) {
-            if (i > 0 && (whole.length - i) % 3 === 0) {
-                grouped += locale.groupSeparator
-            }
-            grouped += whole.charAt(i)
-        }
-        return parts.length > 1 ? grouped + locale.decimalPoint + parts[1] : grouped
+        return CostPresentation.groupedDecimalString(costNumberFormat, value, digits)
     }
 
     function amountString(value, currency) {
-        if (currency === "Quota") {
-            return Math.round(value).toString()
-        }
-        var numeric = Number(value)
-        var negative = numeric < 0
-        var amount = groupedDecimalString(Math.abs(numeric), 2)
-        if (currency === "USD") {
-            return negative ? "-$" + amount : "$" + amount
-        }
-        return (negative ? "-" : "") + currency + " " + amount
+        return CostPresentation.amountString(costNumberFormat, value, currency)
     }
 
     // Same figures as costLine without the window label, for surfaces that
@@ -3495,30 +3261,7 @@ PlasmoidItem {
     }
 
     function tokenCountString(tokens) {
-        var value = Number(tokens)
-        if (!isFinite(value)) {
-            return "-"
-        }
-        var absValue = Math.abs(value)
-        var sign = value < 0 ? "-" : ""
-        if (absValue >= 1000000000) {
-            return sign + scaledTokenCount(absValue / 1000000000) + "B"
-        }
-        if (absValue >= 1000000) {
-            return sign + scaledTokenCount(absValue / 1000000) + "M"
-        }
-        if (absValue >= 1000) {
-            return sign + scaledTokenCount(absValue / 1000) + "K"
-        }
-        return Math.round(value).toString()
-    }
-
-    function scaledTokenCount(value) {
-        if (value >= 10) {
-            return Number(value).toFixed(0)
-        }
-        var text = Number(value).toFixed(1)
-        return text.replace(/\.0$/, "")
+        return CostPresentation.tokenCountString(tokens)
     }
 
     function tokenCostHint(providerID) {
