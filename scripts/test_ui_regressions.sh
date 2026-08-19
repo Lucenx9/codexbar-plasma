@@ -896,6 +896,29 @@ for scroll_fragment in (
             "the tab strip must stay reachable without touch gestures; "
             f"missing {scroll_fragment!r}"
         )
+# The scroll arithmetic moved into TabStripGeometry.js, where the edge cases are
+# tested. Assert the delegation, and that neither decision grew a second copy
+# back inside the strip.
+for tab_geometry_fragment in (
+    "TabStripGeometry.boundedPosition(position, contentWidth, width)",
+    "TabStripGeometry.revealPosition(",
+    "if (target !== null) {",
+):
+    if tab_geometry_fragment not in provider_tabs_flickable_body:
+        raise AssertionError(
+            "the tab strip must take its scroll positions from TabStripGeometry.js; "
+            f"missing {tab_geometry_fragment!r}"
+        )
+for inlined_tab_geometry in (
+    "Math.min(contentWidth - width, position)",
+    "right + margin > contentX + width",
+):
+    if inlined_tab_geometry in provider_tabs_flickable_body:
+        raise AssertionError(
+            "tab strip scroll arithmetic must not be re-inlined beside the module; "
+            f"found {inlined_tab_geometry!r}"
+        )
+
 if main_text.count("providerTabsFlickable.focusAdjacentTab(") != 4:
     raise AssertionError("both the overview tab and the provider tabs must move focus with arrow keys")
 if "providerTabsFlickable.ensureVisible(overviewTab)" not in main_text:
