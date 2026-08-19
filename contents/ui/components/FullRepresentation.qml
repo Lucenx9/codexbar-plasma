@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 import "." as Components
+import "../TabStripGeometry.js" as TabStripGeometry
 
 Item {
     id: fullRoot
@@ -80,7 +81,7 @@ Item {
                 readonly property real tabWheelStep: Kirigami.Units.gridUnit * 5
 
                 function scrollTo(position) {
-                    var bounded = Math.max(0, Math.min(contentWidth - width, position))
+                    var bounded = TabStripGeometry.boundedPosition(position, contentWidth, width)
                     providerTabsScroll.stop()
                     providerTabsScroll.to = bounded
                     providerTabsScroll.start()
@@ -107,13 +108,16 @@ Item {
                     if (!interactive || !item || item.width <= 0 || !containsTab(item)) {
                         return
                     }
-                    var margin = Kirigami.Units.gridUnit
-                    var left = item.mapToItem(providerTabs, 0, 0).x
-                    var right = left + item.width
-                    if (left - margin < contentX) {
-                        scrollTo(left - margin)
-                    } else if (right + margin > contentX + width) {
-                        scrollTo(right + margin - width)
+                    var target = TabStripGeometry.revealPosition(
+                        item.mapToItem(providerTabs, 0, 0).x,
+                        item.width,
+                        contentX,
+                        width,
+                        Kirigami.Units.gridUnit)
+                    // null means the tab is already on screen; scrolling anyway
+                    // would restart the animation on every selection report.
+                    if (target !== null) {
+                        scrollTo(target)
                     }
                 }
 
