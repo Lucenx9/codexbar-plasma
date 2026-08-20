@@ -39,10 +39,11 @@ jobs:
         with:
           persist-credentials: false
 
-      # ubuntu-latest currently ships Qt 6.4 and no Plasma 6 QML modules. The
-      # KDE neon CI remains the source of truth for the full `make check` lint;
-      # these checks prove that the agent can run the portable Qt tests and
-      # build a package before it starts work.
+      # ubuntu-latest currently ships Qt 6.4 and no Plasma 6 QML modules. These
+      # checks prove that the agent can run the portable Qt tests and build a
+      # package before it starts work. Repository CI runs the remaining
+      # `make check` targets with relaxed import/type diagnostics; full Plasma
+      # and Kirigami import resolution still requires a Plasma desktop.
       - name: Verify agent environment
         run: |
           scripts/test_qml_logic.sh
