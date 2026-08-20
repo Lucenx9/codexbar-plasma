@@ -1,18 +1,55 @@
 import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
+import "../CostPresentation.js" as CostPresentation
 
 Kirigami.InlineMessage {
     id: noticeRoot
 
     property var summary: null
+    property var noticeState: ({ key: "", dismissed: false, shouldShow: false })
 
-    visible: summary !== null && text.length > 0
+    visible: false
     text: summaryText()
     type: summary && summary.level === "warning"
         ? Kirigami.MessageType.Warning
         : Kirigami.MessageType.Information
+    showCloseButton: true
     Layout.fillWidth: true
+
+    onSummaryChanged: refreshNoticeState()
+    onTextChanged: syncVisibility()
+    onVisibleChanged: {
+        // Kirigami's close button hides the message directly. Convert that
+        // effect into semantic state before a refresh can show it again. An
+        // invisible parent means ordinary tab navigation, not a close action.
+        if (!visible
+                && parent !== null
+                && parent.visible
+                && text.length > 0
+                && noticeState.shouldShow === true) {
+            dismissNotice()
+        }
+    }
+    Component.onCompleted: refreshNoticeState()
+
+    function refreshNoticeState() {
+        updateNoticeState(false)
+    }
+
+    function dismissNotice() {
+        updateNoticeState(true)
+    }
+
+    function updateNoticeState(shouldDismiss) {
+        noticeState = CostPresentation.costTrustNoticeTransition(
+            summary, noticeState, shouldDismiss)
+        syncVisibility()
+    }
+
+    function syncVisibility() {
+        visible = noticeState.shouldShow === true && text.length > 0
+    }
 
     function coverageText() {
         if (!summary) {
