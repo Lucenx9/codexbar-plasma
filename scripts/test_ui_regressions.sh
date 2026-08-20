@@ -1453,7 +1453,7 @@ for forbidden_planner_fragment in (
             f"found {forbidden_planner_fragment!r}"
         )
 
-observations_body = function_body(main_text, "notificationObservations")
+observations_body = applet.function_body("notificationObservations")
 for observation_fragment in (
     "providerID: providerMapKey(item.provider)",
     "scopeID: notificationScopeKey(item)",
@@ -1466,7 +1466,7 @@ for observation_fragment in (
             "notificationObservations must resolve normalized identity and freshness before the planner; "
             f"missing {observation_fragment!r}"
         )
-observation_rows_body = function_body(main_text, "notificationObservationRows")
+observation_rows_body = applet.function_body("notificationObservationRows")
 for row_fragment in (
     "hasPercent: row && row.hasPercent === true",
     "usedPercent: row ? Number(row.usedPercent) : NaN",
@@ -1479,7 +1479,7 @@ for row_fragment in (
             f"missing {row_fragment!r}"
         )
 
-process_notifications_body = function_body(main_text, "processNotifications")
+process_notifications_body = applet.function_body("processNotifications")
 for delegation_fragment in (
     "var observations = notificationObservations()",
     "NotificationPlanner.transition(",
@@ -1505,7 +1505,7 @@ for old_policy_fragment in (
     if old_policy_fragment in process_notifications_body:
         raise AssertionError("processNotifications must not reimplement planner policy in QML")
 
-dispatch_body = function_body(main_text, "dispatchNotificationIntents")
+dispatch_body = applet.function_body("dispatchNotificationIntents")
 for intent_fragment in (
     'intent.kind === "status"',
     'intent.kind === "quota"',
@@ -1519,7 +1519,7 @@ for intent_fragment in (
             f"missing {intent_fragment!r}"
         )
 
-reset_memo_body = function_body(main_text, "resetNotificationMemo")
+reset_memo_body = applet.function_body("resetNotificationMemo")
 if "NotificationPlanner.transition(" not in reset_memo_body or 'mode: "reset"' not in reset_memo_body:
     raise AssertionError("resetNotificationMemo must reset the opaque memo through NotificationPlanner")
 if re.search(r"notificationMemo\s*=\s*\(\{\}\)", reset_memo_body):

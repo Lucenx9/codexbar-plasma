@@ -24,9 +24,9 @@ function scopePrimedKey(observation) {
     return "scope:" + String(observation.scopeID || "")
 }
 
-function rowIdentity(row, index, resetIdentity) {
+function rowIdentity(row, index, useResetTimestamp) {
     var lane = row && row.lane ? String(row.lane) : ""
-    var identity = resetIdentity
+    var identity = useResetTimestamp
         ? (row && row.resetsAt ? String(row.resetsAt) : "")
         : (row && row.label ? String(row.label) : "")
     return lane + ":" + identity + ":" + index
