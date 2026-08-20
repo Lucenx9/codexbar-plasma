@@ -152,6 +152,8 @@ from qml_surfaces import Surface
 # component keeps these assertions meaningful instead of silently unhooking them.
 applet = Surface("applet", root)
 main_text = applet.text
+providers_surface = Surface("providers", root)
+providers_surface_text = providers_surface.text
 general_text = general_qml.read_text(encoding="utf-8")
 display_text = display_qml.read_text(encoding="utf-8")
 providers_text = providers_qml.read_text(encoding="utf-8")
@@ -564,12 +566,17 @@ if "tokenCosts = ({})" in parse_cost_body:
 
 if 'String(modelData.value || "")' in providers_text:
     raise AssertionError("descriptor text fields must preserve numeric zero")
-descriptor_value_body = function_body(providers_text, "descriptorValueText")
+descriptor_value_body = providers_surface.function_body("valueText")
 if "value === undefined || value === null" not in descriptor_value_body:
-    raise AssertionError("descriptorValueText must only blank nullish values")
-field_option_body = function_body(providers_text, "fieldOptionIndex")
-if "descriptorValueText(field.value)" not in field_option_body:
-    raise AssertionError("fieldOptionIndex must preserve numeric zero via descriptorValueText")
+    raise AssertionError("descriptor value text must only blank nullish values")
+if "valueText: normalizedValueText" not in providers_surface_text:
+    raise AssertionError("normalized descriptor fields must retain nullish-safe display text")
+if "selectedOptionIndex: optionIndex(options, normalizedValueText)" not in providers_surface_text:
+    raise AssertionError("descriptor enum selection must read the nullish-safe value text")
+if "text: modelData.valueText" not in providers_text:
+    raise AssertionError("descriptor text fields must render normalized value text")
+if "currentIndex: modelData.selectedOptionIndex" not in providers_text:
+    raise AssertionError("descriptor enum fields must render the normalized selection")
 
 accounts_body = function_body(main_text, "parseProviderAccountsOutput")
 if "var dedupedOptions = Normalizer.dedupeAccountOptions(options)" not in accounts_body:

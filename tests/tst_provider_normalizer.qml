@@ -597,8 +597,8 @@ TestCase {
     // SafeText.boundedInspectionText swallows numeric zero and `false`. That
     // helper also feeds credential redaction and the diagnostic paths, so
     // changing it is its own commit with its own security review, not a rider on
-    // the structured-value fix. configProviders.qml already works around this
-    // class of bug with its own descriptorValueText.
+    // the structured-value fix. ProviderDescriptor.js already works around this
+    // class of bug with nullish-only descriptor value conversion.
     function test_boundedDisplayTextStillSwallowsFalsyScalars() {
         compare(Normalizer.boundedDisplayText(0, 120), "")
         compare(Normalizer.boundedDisplayText(false, 120), "")

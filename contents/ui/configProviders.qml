@@ -11,6 +11,7 @@ import "Guards.js" as Guards
 import "ProviderIdentity.js" as ProviderIdentity
 import "SafeText.js" as SafeText
 import "ThemeContrast.js" as ThemeContrast
+import "config/ProviderDescriptor.js" as ProviderDescriptor
 
 KCM.SimpleKCM {
     id: page
@@ -61,11 +62,6 @@ KCM.SimpleKCM {
     readonly property int configCommandTimeoutMs: 60000
     readonly property int configSecretCommandTimeoutSeconds: 60
     readonly property int configSecretCommandKillAfterSeconds: 5
-    readonly property int maximumDescriptorFields: 32
-    readonly property int maximumDescriptorActions: 32
-    readonly property int maximumDescriptorOptions: 64
-    readonly property int maximumDescriptorCommandTokens: 64
-    readonly property int maximumDescriptorTokenLength: 2048
     readonly property int maximumDiagnosticListItems: 64
     readonly property int maximumProviderItems: 256
     // Mirrors the popup de-emphasis step in main.qml. 0.7 is the lowest value
@@ -370,7 +366,9 @@ KCM.SimpleKCM {
                 displayName: displayName.length > 0 ? displayName : providerTitle(providerID),
                 enabled: item.enabled === true,
                 defaultEnabled: item.defaultEnabled === true,
-                descriptor: normalizeProviderDescriptor(item.descriptor)
+                descriptor: ProviderDescriptor.normalize(item.descriptor, function(fieldID) {
+                    return page.providerTitle(fieldID)
+                })
             })
         }
         providers = next
@@ -538,8 +536,9 @@ KCM.SimpleKCM {
 
         if (payload.value && !Array.isArray(payload.value) && payload.value.url) {
             var url = String(payload.value.url).trim()
-            if (isSafeDescriptorUrl(url)) {
-                Qt.openUrlExternally(url)
+            var safeUrl = ProviderDescriptor.safeHttpsUrl(url)
+            if (safeUrl.length > 0) {
+                Qt.openUrlExternally(safeUrl)
             } else {
                 errorText = i18n("%1 returned an unsupported URL.", displayNameForProvider(descriptor.provider))
                 return
@@ -944,169 +943,6 @@ KCM.SimpleKCM {
         return false
     }
 
-    function normalizeProviderDescriptor(raw) {
-        if (!raw || Number(raw.schemaVersion) !== 1) {
-            return { schemaVersion: 0, fields: [], actions: [] }
-        }
-        var fields = []
-        var rawFields = Array.isArray(raw.fields) ? raw.fields : []
-        var fieldLimit = Math.min(rawFields.length, maximumDescriptorFields)
-        for (var i = 0; i < fieldLimit; i++) {
-            var field = normalizeDescriptorField(rawFields[i])
-            if (field) {
-                fields.push(field)
-            }
-        }
-        var actions = []
-        var rawActions = Array.isArray(raw.actions) ? raw.actions : []
-        var actionLimit = Math.min(rawActions.length, maximumDescriptorActions)
-        for (var j = 0; j < actionLimit; j++) {
-            var action = normalizeDescriptorAction(rawActions[j])
-            if (action) {
-                actions.push(action)
-            }
-        }
-        return { schemaVersion: 1, fields: fields, actions: actions }
-    }
-
-    function normalizeDescriptorField(raw) {
-        if (!raw || !raw.id || !raw.kind || !isSupportedDescriptorFieldKind(raw.kind)) {
-            return null
-        }
-        var fieldID = descriptorIdentifier(raw.id)
-        if (fieldID.length === 0) {
-            return null
-        }
-        var command = normalizeCommandTokens(raw.writeCommand)
-        if (command.length === 0 || !isAllowedDescriptorCommand(command, "field")) {
-            return null
-        }
-        var value = raw.value
-        if (value !== undefined && value !== null
-                && typeof value !== "string"
-                && typeof value !== "number"
-                && typeof value !== "boolean") {
-            value = ""
-        } else if (typeof value === "string" && value.length > maximumDescriptorTokenLength) {
-            return null
-        }
-        return {
-            id: fieldID,
-            kind: String(raw.kind),
-            title: raw.title ? SafeText.cliMessage(raw.title, 120) : providerTitle(fieldID),
-            description: raw.description ? SafeText.cliMessage(raw.description, 500) : "",
-            value: value === undefined || value === null ? "" : value,
-            redactedValue: raw.redactedValue ? boundedCliMessage(raw.redactedValue) : "",
-            required: raw.required === true,
-            options: normalizeDescriptorOptions(raw.options),
-            writeCommand: command
-        }
-    }
-
-    function normalizeDescriptorAction(raw) {
-        if (!raw || !raw.id || !raw.title) {
-            return null
-        }
-        var actionID = descriptorIdentifier(raw.id)
-        var actionTitle = SafeText.cliMessage(raw.title, 120)
-        if (actionID.length === 0 || actionTitle.length === 0) {
-            return null
-        }
-        var command = normalizeCommandTokens(raw.command)
-        if (command.length === 0 || !isAllowedDescriptorCommand(command, "action")) {
-            return null
-        }
-        return {
-            id: actionID,
-            kind: raw.kind ? String(raw.kind) : "command",
-            title: actionTitle,
-            description: raw.description ? SafeText.cliMessage(raw.description, 500) : "",
-            command: command
-        }
-    }
-
-    function isSupportedDescriptorFieldKind(kind) {
-        switch (String(kind)) {
-        case "text":
-        case "secret":
-        case "enum":
-        case "boolean":
-        case "number":
-            return true
-        default:
-            return false
-        }
-    }
-
-    function descriptorIdentifier(value) {
-        if (typeof value !== "string" || value.length === 0 || value.length > 128) {
-            return ""
-        }
-        return /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(value) ? value : ""
-    }
-
-    function normalizeDescriptorOptions(rawOptions) {
-        var result = []
-        if (!Array.isArray(rawOptions)) {
-            return result
-        }
-        var optionLimit = Math.min(rawOptions.length, maximumDescriptorOptions)
-        for (var i = 0; i < optionLimit; i++) {
-            var option = rawOptions[i]
-            if (!option || option.id === undefined || option.id === null) {
-                continue
-            }
-            var optionID = descriptorIdentifier(option.id)
-            if (optionID.length === 0) {
-                continue
-            }
-            result.push({
-                id: optionID,
-                title: option.title ? SafeText.cliMessage(option.title, 120) : optionID
-            })
-        }
-        return result
-    }
-
-    function normalizeCommandTokens(tokens) {
-        var result = []
-        if (!Array.isArray(tokens)) {
-            return result
-        }
-        if (tokens.length > maximumDescriptorCommandTokens) {
-            return result
-        }
-        for (var i = 0; i < tokens.length; i++) {
-            if (typeof tokens[i] !== "string") {
-                return []
-            }
-            var token = tokens[i]
-            if (token.length === 0 || token.length > maximumDescriptorTokenLength) {
-                return []
-            }
-            result.push(token)
-        }
-        return result
-    }
-
-    function isAllowedDescriptorCommand(commandTokens, purpose) {
-        if (!Array.isArray(commandTokens) || commandTokens.length < 3) {
-            return false
-        }
-        if (String(commandTokens[0]) !== "codexbar" || String(commandTokens[1]) !== "config") {
-            return false
-        }
-
-        var subcommand = String(commandTokens[2])
-        if (purpose === "field") {
-            return subcommand === "set" || subcommand === "set-api-key"
-        }
-        if (purpose === "action") {
-            return subcommand === "action"
-        }
-        return false
-    }
-
     function appendSettingsRow(rows, label, value) {
         if (value && String(value).length > 0) {
             rows.push({ label: label, value: String(value) })
@@ -1152,25 +988,23 @@ KCM.SimpleKCM {
         if (!field || !field.writeCommand || field.writeCommand.length === 0 || isFieldPending(providerID, field.id)) {
             return
         }
-        if (!isAllowedDescriptorCommand(field.writeCommand, "field")) {
-            errorText = i18n("%1 returned an unsupported descriptor command.", displayNameForProvider(providerID))
-            return
-        }
         // Every value written here ends up inside a shell command line, and
         // /proc/<pid>/cmdline stays world-readable while the child runs. Piping
         // the value through `sh -c script _ "$secret"` does not fix that: the
         // secret still lands in the shell argv. Secrets must go through
         // promptDescriptorSecret, which reads the value inside the script and
         // never puts it in a command line at all.
-        if (field.kind === "secret") {
-            errorText = i18n("%1 secrets must be set through the secure prompt.", displayNameForProvider(providerID))
+        var plan = ProviderDescriptor.planFieldWrite(field, value, commandPath)
+        if (!plan.ok) {
+            errorText = plan.reason !== "secretRequiresPrompt"
+                ? i18n("%1 returned an unsupported descriptor command.", displayNameForProvider(providerID))
+                : i18n("%1 secrets must be set through the secure prompt.", displayNameForProvider(providerID))
             return
         }
         errorText = ""
         statusText = ""
         markFieldPending(providerID, field.id, true)
-        var command = runDescriptorCommand(field.writeCommand, ({ "{value}": value }))
-        runCommand(command, {
+        runCommand(plan.commandLine, {
             kind: "descriptorField",
             provider: providerID,
             fieldID: field.id,
@@ -1182,7 +1016,8 @@ KCM.SimpleKCM {
         if (!field || !field.writeCommand || field.writeCommand.length === 0 || isFieldPending(providerID, field.id)) {
             return
         }
-        if (!isAllowedDescriptorCommand(field.writeCommand, "field")) {
+        var plan = ProviderDescriptor.planSecretPrompt(field, commandPath)
+        if (!plan.ok) {
             errorText = i18n("%1 returned an unsupported descriptor command.", displayNameForProvider(providerID))
             return
         }
@@ -1190,11 +1025,10 @@ KCM.SimpleKCM {
         statusText = ""
         markFieldPending(providerID, field.id, true)
         var prompt = i18n("%1 for %2", field.title, displayNameForProvider(providerID))
-        var commandLine = commandLineFromTokens(field.writeCommand, ({}))
         var boundedCommandLine = "timeout --kill-after="
             + shellQuote(configSecretCommandKillAfterSeconds + "s") + " "
             + shellQuote(configSecretCommandTimeoutSeconds + "s") + " "
-            + commandLine
+            + plan.commandLine
         var script = [
             "if ! command -v kdialog >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"kdialog is required to prompt for secrets.\"}}'; exit 1; fi",
             "if ! command -v timeout >/dev/null 2>&1 || ! timeout --kill-after=1s 1s true >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"GNU timeout is required to save secrets safely.\"}}'; exit 1; fi",
@@ -1211,72 +1045,20 @@ KCM.SimpleKCM {
         if (!action || !action.command || action.command.length === 0 || isFieldPending(providerID, action.id)) {
             return
         }
-        if (!isAllowedDescriptorCommand(action.command, "action")) {
+        var plan = ProviderDescriptor.planAction(action, commandPath)
+        if (!plan.ok) {
             errorText = i18n("%1 returned an unsupported descriptor command.", displayNameForProvider(providerID))
             return
         }
         errorText = ""
         statusText = ""
         markFieldPending(providerID, action.id, true)
-        var command = runDescriptorCommand(action.command, ({}))
-        runCommand(command, {
+        runCommand(plan.commandLine, {
             kind: "descriptorAction",
             provider: providerID,
             actionID: action.id,
             timeoutMs: configCommandTimeoutMs
         })
-    }
-
-    // Deliberately has no stdin channel: any caller-supplied value would have to
-    // travel through argv to reach it. promptDescriptorSecret owns the only
-    // secret-carrying script.
-    function runDescriptorCommand(commandTokens, replacements) {
-        return commandLineFromTokens(commandTokens, replacements)
-    }
-
-    function commandLineFromTokens(commandTokens, replacements) {
-        var parts = []
-        for (var i = 0; i < commandTokens.length; i++) {
-            var token = commandTokens[i]
-            if (i === 0 && token === "codexbar" && commandPath.length > 0) {
-                token = commandPath
-            }
-            parts.push(shellQuote(applyCommandTokenReplacements(token, replacements)))
-        }
-        return parts.join(" ")
-    }
-
-    function isSafeDescriptorUrl(url) {
-        var text = String(url || "").trim().toLowerCase()
-        return text.indexOf("https://") === 0
-    }
-
-    function applyCommandTokenReplacements(token, replacements) {
-        var result = String(token)
-        for (var key in replacements) {
-            if (!hasOwnKey(replacements, key)) {
-                continue
-            }
-            result = result.split(key).join(String(replacements[key]))
-        }
-        return result
-    }
-
-    function descriptorValueText(value) {
-        return value === undefined || value === null ? "" : String(value)
-    }
-
-    function fieldOptionIndex(field) {
-        if (!field || !Array.isArray(field.options)) {
-            return -1
-        }
-        var value = descriptorValueText(field.value)
-        for (var i = 0; i < field.options.length; i++) {
-            if (field.options[i].id === value) {
-                return i
-            }
-        }
-        return -1
     }
 
     function optionIDAt(options, index) {
@@ -1801,7 +1583,7 @@ KCM.SimpleKCM {
                                 Controls.TextField {
                                     id: descriptorTextField
                                     Layout.fillWidth: true
-                                    text: page.descriptorValueText(modelData.value)
+                                    text: modelData.valueText
                                     placeholderText: modelData.description
                                     inputMethodHints: modelData.kind === "number" ? Qt.ImhDigitsOnly : Qt.ImhNone
                                     enabled: page.selectedProvider
@@ -1835,7 +1617,7 @@ KCM.SimpleKCM {
                                     model: modelData.options
                                     textRole: "title"
                                     valueRole: "id"
-                                    currentIndex: page.fieldOptionIndex(modelData)
+                                    currentIndex: modelData.selectedOptionIndex
                                     enabled: page.selectedProvider
                                         && modelData.options.length > 0
                                         && !page.isFieldPending(page.selectedProvider.provider, modelData.id)
