@@ -612,7 +612,8 @@ function costTrustNoticeKey(summary) {
     }
 
     return [
-        summary.level === "warning" ? "warning" : "information",
+        hasOwnKey(summary, "level") && summary.level === "warning"
+            ? "warning" : "information",
         sourceKind,
         hasEstimated ? "estimated" : "exact",
         hasUnpriced ? "unpriced" : "priced",

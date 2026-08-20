@@ -472,6 +472,21 @@ TestCase {
         }
     }
 
+    function test_costTrustNoticeTransitionIgnoresInheritedLevel() {
+        function InheritedWarning() {}
+        InheritedWarning.prototype.level = "warning"
+        var summary = new InheritedWarning()
+        summary.sourceKind = "listPrice"
+        summary.hasEstimated = true
+        summary.hasUnpriced = false
+        summary.hasUnmetered = false
+
+        var state = CostPresentation.costTrustNoticeTransition(
+            summary, null, false)
+        compare(state.key, "information|listPrice|estimated|priced|metered")
+        verify(state.shouldShow)
+    }
+
     function test_costTrustNoticeTransitionRejectsMalformedPreviousState() {
         var summary = CostPresentation.costTrustSummary([trustedCost("USD", {
             priced: 4, unpriced: 0, unmetered: 0, estimated: 1
