@@ -1,0 +1,52 @@
+name: Copilot Setup Steps
+
+# Validate this environment when it changes and allow manual verification.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  # GitHub requires this exact job name for Copilot cloud agent setup.
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+
+    steps:
+      - name: Install Qt and repository tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake \
+            gettext \
+            jq \
+            libxml2-utils \
+            make \
+            qml6-module-qtqml-workerscript \
+            qml6-module-qtquick \
+            qml6-module-qtquick-window \
+            qml6-module-qttest \
+            qt6-declarative-dev-tools
+
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # ubuntu-latest currently ships Qt 6.4 and no Plasma 6 QML modules. These
+      # checks prove that the agent can run the portable Qt tests and build a
+      # package before it starts work. Repository CI runs the remaining
+      # `make check` targets with relaxed import/type diagnostics; full Plasma
+      # and Kirigami import resolution still requires a Plasma desktop.
+      - name: Verify agent environment
+        run: |
+          scripts/test_qml_logic.sh
+          xmllint --noout contents/config/main.xml
+          jq . metadata.json >/dev/null
+          make package
