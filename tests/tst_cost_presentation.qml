@@ -378,6 +378,17 @@ TestCase {
         compare(summary.sourceKind, "unknown")
     }
 
+    function test_costTrustSummaryDoesNotClassifyLegacyCostFromTrustedSubset() {
+        var summary = CostPresentation.costTrustSummary([
+            trustedCost("USD", null, "vendor"),
+            { totals: { cost: 9, tokens: 90, currency: "USD" }, trust: null }
+        ])
+
+        compare(summary.level, "warning")
+        compare(summary.valueMode, "approximate")
+        compare(summary.sourceKind, "unknown")
+    }
+
     function test_costTrustSummaryFoldsKnownSourcesWithoutCallingMixedIncomplete() {
         var summary = CostPresentation.costTrustSummary([
             trustedCost("USD", null, "listPrice"),

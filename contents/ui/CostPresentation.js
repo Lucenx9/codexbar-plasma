@@ -504,14 +504,18 @@ function costTrustSummary(costs) {
     var hasVendor = false
     var hasMixed = false
     var hasUnknown = false
+    var hasUnclassifiedSource = false
 
     for (var i = 0; i < items.length; i++) {
         var item = items[i]
-        if (!costMatchesSpendCurrency(item, currency)
-                || !item
+        if (!item || !costMatchesSpendCurrency(item, currency)) {
+            continue
+        }
+        if (!hasOwnKey(item, "trust")
                 || item.trust === null
                 || typeof item.trust !== "object"
                 || Array.isArray(item.trust)) {
+            hasUnclassifiedSource = true
             continue
         }
 
@@ -540,6 +544,9 @@ function costTrustSummary(costs) {
         case "unknown":
             hasUnknown = true
             break
+        default:
+            hasUnclassifiedSource = true
+            break
         }
     }
 
@@ -554,8 +561,14 @@ function costTrustSummary(costs) {
         sourceKind = "vendor"
     }
 
-    if (sourceKind === "listPrice" || sourceKind === "mixed") {
+    if (hasListPrice || hasMixed) {
         hasEstimated = true
+    }
+    // A source reported by only part of the displayed total cannot describe
+    // the whole amount. Keep all-legacy totals quiet, but make a mixed
+    // classified/unclassified aggregate explicitly conservative.
+    if (hasUnclassifiedSource && sourceKind.length > 0) {
+        sourceKind = "unknown"
     }
 
     var isPartial = hasUnpriced || hasUnmetered
