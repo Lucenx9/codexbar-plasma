@@ -11,6 +11,7 @@ import "Guards.js" as Guards
 import "ProviderIdentity.js" as ProviderIdentity
 import "SafeText.js" as SafeText
 import "ThemeContrast.js" as ThemeContrast
+import "config/ProviderConfigProtocol.js" as ProviderConfigProtocol
 import "config/ProviderDescriptor.js" as ProviderDescriptor
 
 KCM.SimpleKCM {
@@ -62,8 +63,6 @@ KCM.SimpleKCM {
     readonly property int configCommandTimeoutMs: 60000
     readonly property int configSecretCommandTimeoutSeconds: 60
     readonly property int configSecretCommandKillAfterSeconds: 5
-    readonly property int maximumDiagnosticListItems: 64
-    readonly property int maximumProviderItems: 256
     // Mirrors the popup de-emphasis step in main.qml. 0.7 is the lowest value
     // where Kirigami.Theme.textColor still clears WCAG AA 4.5:1 on Breeze Light.
     readonly property real secondaryTextOpacity: 0.7
@@ -106,21 +105,6 @@ KCM.SimpleKCM {
 
     function boundedCliMessage(value) {
         return SafeText.cliMessage(SafeText.stripLoaderDiagnostics(value), SafeText.maximumCliMessageLength)
-    }
-
-    function isCliRecord(value) {
-        return value !== null && typeof value === "object" && !Array.isArray(value)
-    }
-
-    function boundedProviderID(value) {
-        if (typeof value !== "string") {
-            return ""
-        }
-        var providerID = value.trim()
-        if (providerID.length === 0 || providerID.length > ProviderIdentity.maximumProviderIDLength) {
-            return ""
-        }
-        return providerMapKey(providerID).length > 0 ? providerID : ""
     }
 
     function runProviderListCommand(includeDescriptors) {
@@ -341,36 +325,16 @@ KCM.SimpleKCM {
             return
         }
 
-        var parseError = commandError(payload)
+        var parseError = ProviderConfigProtocol.commandError(payload)
         if (parseError.length > 0) {
             providers = []
             errorText = parseError
             return
         }
 
-        var items = Array.isArray(payload) ? payload : [payload]
-        var next = []
-        var itemLimit = Math.min(items.length, maximumProviderItems)
-        for (var i = 0; i < itemLimit; i++) {
-            var item = items[i]
-            if (!isCliRecord(item)) {
-                continue
-            }
-            var providerID = boundedProviderID(item.provider)
-            if (providerID.length === 0) {
-                continue
-            }
-            var displayName = SafeText.boundedDisplayText(item.displayName, 120)
-            next.push({
-                provider: providerID,
-                displayName: displayName.length > 0 ? displayName : providerTitle(providerID),
-                enabled: item.enabled === true,
-                defaultEnabled: item.defaultEnabled === true,
-                descriptor: ProviderDescriptor.normalize(item.descriptor, function(fieldID) {
-                    return page.providerTitle(fieldID)
-                })
-            })
-        }
+        var next = ProviderConfigProtocol.normalizeProviderList(payload, function(identifier) {
+            return page.providerTitle(identifier)
+        })
         providers = next
         if (!providerByID(selectedProviderID)) {
             selectedProviderID = firstSelectableProvider(next)
@@ -383,38 +347,7 @@ KCM.SimpleKCM {
     }
 
     function descriptorListUnsupportedMessage(stdoutText, stderrText) {
-        var stderrMessage = boundedCliMessage(stderrText)
-        if (isDescriptorUnsupportedMessage(stderrMessage)) {
-            return stderrMessage
-        }
-
-        var trimmed = String(stdoutText || "").trim()
-        if (trimmed.length === 0) {
-            return ""
-        }
-        try {
-            var payload = JSON.parse(trimmed)
-            var message = commandError(payload)
-            return isDescriptorUnsupportedMessage(message) ? message : ""
-        } catch (error) {
-            return ""
-        }
-    }
-
-    function isDescriptorUnsupportedMessage(message) {
-        var text = String(message || "").toLowerCase()
-        if (text.indexOf("descriptor") === -1) {
-            return false
-        }
-        return text.indexOf("unknown option") !== -1
-            || text.indexOf("unknown argument") !== -1
-            || text.indexOf("unrecognized option") !== -1
-            || text.indexOf("unrecognized argument") !== -1
-            || text.indexOf("unexpected option") !== -1
-            || text.indexOf("unexpected argument") !== -1
-            || text.indexOf("unsupported option") !== -1
-            || text.indexOf("unsupported argument") !== -1
-            || text.indexOf("invalid option") !== -1
+        return ProviderConfigProtocol.descriptorUnsupportedMessage(stdoutText, stderrText)
     }
 
     function handleToggleResult(descriptor, stdoutText, stderrText, exitCode) {
@@ -430,7 +363,7 @@ KCM.SimpleKCM {
             }
         }
 
-        var message = commandError(payload)
+        var message = ProviderConfigProtocol.commandError(payload)
         if (message.length === 0 && stderrText.trim().length > 0) {
             message = boundedCliMessage(stderrText)
         }
@@ -474,7 +407,7 @@ KCM.SimpleKCM {
             }
         }
 
-        var message = commandError(payload)
+        var message = ProviderConfigProtocol.commandError(payload)
         if (message.length === 0 && stderrText.trim().length > 0) {
             message = boundedCliMessage(stderrText)
         }
@@ -564,7 +497,7 @@ KCM.SimpleKCM {
                 }
             }
         }
-        var message = commandError(payload)
+        var message = ProviderConfigProtocol.commandError(payload)
         if (message.length === 0 && stderrText.trim().length > 0) {
             message = boundedCliMessage(stderrText)
         }
@@ -611,25 +544,16 @@ KCM.SimpleKCM {
             return
         }
 
-        var message = commandError(payload)
+        var message = ProviderConfigProtocol.commandError(payload)
         if (message.length > 0) {
             setProviderDiagnosticError(descriptor.provider, message)
             return
         }
 
-        setProviderDiagnostic(descriptor.provider, normalizeProviderDiagnostic(payload))
+        setProviderDiagnostic(
+            descriptor.provider,
+            ProviderConfigProtocol.normalizeProviderDiagnostic(payload))
         setProviderDiagnosticError(descriptor.provider, "")
-    }
-
-    function commandError(payload) {
-        if (!payload) {
-            return ""
-        }
-        var probe = Array.isArray(payload) ? (payload.length > 0 ? payload[0] : null) : payload
-        if (probe && probe.error && probe.error.message) {
-            return boundedCliMessage(probe.error.message)
-        }
-        return ""
     }
 
     function firstSelectableProvider(list) {
@@ -710,37 +634,6 @@ KCM.SimpleKCM {
         providerDiagnosticLoading = next
     }
 
-    function normalizeProviderDiagnostic(payload) {
-        var candidate = Array.isArray(payload) ? (payload.length > 0 ? payload[0] : ({})) : payload
-        var item = isCliRecord(candidate) ? candidate : ({})
-        var settings = isCliRecord(item.settings) ? item.settings : ({})
-        var auth = isCliRecord(item.auth) ? item.auth : ({})
-        return {
-            provider: item && item.provider ? SafeText.cliMessage(item.provider, 128) : "",
-            displayName: item && item.displayName ? SafeText.cliMessage(item.displayName, 120) : "",
-            source: item && item.source ? SafeText.cliMessage(item.source, 120) : "",
-            sourceMode: item && item.sourceMode ? SafeText.cliMessage(item.sourceMode, 120) : "",
-            authConfigured: auth.configured === true,
-            authModes: boundedDiagnosticList(auth.modes),
-            settingsKeys: boundedDiagnosticList(objectKeys(settings)),
-            fetchAttempts: item && Array.isArray(item.fetchAttempts) ? item.fetchAttempts.length : 0
-        }
-    }
-
-    function boundedDiagnosticList(items) {
-        if (!Array.isArray(items)) {
-            return ""
-        }
-        var result = []
-        var limit = Math.min(items.length, maximumDiagnosticListItems)
-        for (var i = 0; i < limit; i++) {
-            var value = SafeText.cliMessage(items[i], 120)
-            if (value.length > 0) {
-                result.push(value)
-            }
-        }
-        return SafeText.boundedDisplayText(result.join(", "), 500)
-    }
 
     function updateProviderEnabled(providerID, enabled) {
         var next = []
@@ -1290,24 +1183,6 @@ KCM.SimpleKCM {
             }
         }
         return words.join(" ")
-    }
-
-    function objectKeys(item) {
-        var keys = []
-        if (!item) {
-            return keys
-        }
-        for (var key in item) {
-            if (!hasOwnKey(item, key)) {
-                continue
-            }
-            keys.push(key)
-            if (keys.length >= maximumDiagnosticListItems) {
-                break
-            }
-        }
-        keys.sort()
-        return keys
     }
 
     Timer {
