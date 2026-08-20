@@ -588,6 +588,70 @@ function costTrustSummary(costs) {
     }
 }
 
+function costTrustNoticeKey(summary) {
+    if (summary === null
+            || typeof summary !== "object"
+            || Array.isArray(summary)) {
+        return ""
+    }
+
+    var sourceKind = hasOwnKey(summary, "sourceKind")
+        ? acceptedCostSourceKind(summary.sourceKind)
+        : ""
+    var hasEstimated = hasOwnKey(summary, "hasEstimated")
+        && summary.hasEstimated === true
+    var hasUnpriced = hasOwnKey(summary, "hasUnpriced")
+        && summary.hasUnpriced === true
+    var hasUnmetered = hasOwnKey(summary, "hasUnmetered")
+        && summary.hasUnmetered === true
+    if (sourceKind.length === 0
+            && !hasEstimated
+            && !hasUnpriced
+            && !hasUnmetered) {
+        return ""
+    }
+
+    return [
+        hasOwnKey(summary, "level") && summary.level === "warning"
+            ? "warning" : "information",
+        sourceKind,
+        hasEstimated ? "estimated" : "exact",
+        hasUnpriced ? "unpriced" : "priced",
+        hasUnmetered ? "unmetered" : "metered"
+    ].join("|")
+}
+
+// Keep dismissal state semantic rather than tying it to localized text or a
+// freshly allocated summary object. Refreshes preserve a dismissal; a changed
+// warning meaning becomes visible again, including a return to an older state.
+function costTrustNoticeTransition(summary, previousState, shouldDismiss) {
+    var key = costTrustNoticeKey(summary)
+    var previousKey = ""
+    var wasDismissed = false
+    if (previousState !== null
+            && typeof previousState === "object"
+            && !Array.isArray(previousState)) {
+        previousKey = hasOwnKey(previousState, "key")
+                && typeof previousState.key === "string"
+            ? previousState.key
+            : ""
+        wasDismissed = hasOwnKey(previousState, "dismissed")
+            && previousState.dismissed === true
+    }
+
+    var dismissed = key.length > 0
+        && key === previousKey
+        && wasDismissed
+    if (shouldDismiss === true && key.length > 0) {
+        dismissed = true
+    }
+    return {
+        key: key,
+        dismissed: dismissed,
+        shouldShow: key.length > 0 && !dismissed
+    }
+}
+
 function spendDailyPoints(fmt, costs, showsTokens) {
     var items = costs || []
     var byDate = ({})

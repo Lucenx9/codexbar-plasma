@@ -1857,6 +1857,10 @@ for trust_owner_source, trust_owner_text in (
 for cost_trust_fragment in (
     "Kirigami.InlineMessage",
     "property var summary: null",
+    "showCloseButton: true",
+    "CostPresentation.costTrustNoticeTransition(",
+    "onVisibleChanged: {",
+    "&& parent.visible",
     'i18n("%1 %2"',
     'i18n("The displayed range total',
 ):

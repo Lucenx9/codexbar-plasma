@@ -424,6 +424,95 @@ TestCase {
         }]), null)
     }
 
+    function test_costTrustNoticeDismissalSurvivesRefreshUntilMeaningChanges() {
+        var estimated = CostPresentation.costTrustSummary([trustedCost("USD", {
+            priced: 4, unpriced: 0, unmetered: 0, estimated: 1
+        }, "listPrice")])
+        var initial = CostPresentation.costTrustNoticeTransition(
+            estimated, null, false)
+        verify(initial.shouldShow)
+
+        var dismissed = CostPresentation.costTrustNoticeTransition(
+            estimated, initial, true)
+        verify(!dismissed.shouldShow)
+
+        var refreshed = CostPresentation.costTrustNoticeTransition(
+            CostPresentation.costTrustSummary([trustedCost("USD", {
+                priced: 4, unpriced: 0, unmetered: 0, estimated: 1
+            }, "listPrice")]),
+            dismissed,
+            false)
+        verify(!refreshed.shouldShow)
+
+        var partial = CostPresentation.costTrustSummary([trustedCost("USD", {
+            priced: 4, unpriced: 1, unmetered: 0, estimated: 1
+        }, "listPrice")])
+        var changed = CostPresentation.costTrustNoticeTransition(
+            partial, refreshed, false)
+        verify(changed.shouldShow)
+        verify(changed.key !== dismissed.key)
+
+        var dismissedPartial = CostPresentation.costTrustNoticeTransition(
+            partial, changed, true)
+        var returned = CostPresentation.costTrustNoticeTransition(
+            estimated, dismissedPartial, false)
+        verify(returned.shouldShow)
+    }
+
+    function test_costTrustNoticeTransitionRejectsMalformedSummaries() {
+        var invalidSummaries = [null, undefined, [], "estimated", 7, ({})]
+        for (var i = 0; i < invalidSummaries.length; i++) {
+            var state = CostPresentation.costTrustNoticeTransition(
+                invalidSummaries[i],
+                { key: "old", dismissed: true, shouldShow: false },
+                true)
+            compare(state.key, "")
+            verify(!state.dismissed)
+            verify(!state.shouldShow)
+        }
+    }
+
+    function test_costTrustNoticeTransitionIgnoresInheritedLevel() {
+        function InheritedWarning() {}
+        InheritedWarning.prototype.level = "warning"
+        var summary = new InheritedWarning()
+        summary.sourceKind = "listPrice"
+        summary.hasEstimated = true
+        summary.hasUnpriced = false
+        summary.hasUnmetered = false
+
+        var state = CostPresentation.costTrustNoticeTransition(
+            summary, null, false)
+        compare(state.key, "information|listPrice|estimated|priced|metered")
+        verify(state.shouldShow)
+    }
+
+    function test_costTrustNoticeTransitionRejectsMalformedPreviousState() {
+        var summary = CostPresentation.costTrustSummary([trustedCost("USD", {
+            priced: 4, unpriced: 0, unmetered: 0, estimated: 1
+        }, "listPrice")])
+
+        function InheritedDismissal() {}
+        InheritedDismissal.prototype.key = "inherited"
+        InheritedDismissal.prototype.dismissed = true
+        var invalidStates = [
+            null,
+            undefined,
+            [],
+            "dismissed",
+            { key: 7, dismissed: "yes" },
+            new InheritedDismissal()
+        ]
+        for (var i = 0; i < invalidStates.length; i++) {
+            var state = CostPresentation.costTrustNoticeTransition(
+                summary, invalidStates[i], false)
+            verify(state.key.length > 0)
+            verify(state.key.length < 80)
+            verify(!state.dismissed)
+            verify(state.shouldShow)
+        }
+    }
+
     // A missing flag counts as established, so older CLI payloads do not print
     // a permanent "still collecting" note.
     function test_historyStillBuildingOnlyOnAnExplicitFalse() {
