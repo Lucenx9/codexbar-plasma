@@ -2,9 +2,9 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+. "${ROOT_DIR}/scripts/lib/qml_surfaces.sh"
 CONTRACT_MD="${ROOT_DIR}/docs/cli-provider-settings-descriptor.md"
 TODO_MD="${ROOT_DIR}/TODO.md"
-PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
 
 require_in_file() {
   local file="$1"
@@ -51,20 +51,20 @@ require_in_file "$CONTRACT_MD" "64 options"
 require_in_file "$CONTRACT_MD" '[A-Za-z0-9][A-Za-z0-9._-]*'
 require_in_file "$CONTRACT_MD" "reject invalid IDs"
 
-require_in_file "$PROVIDERS_QML" "readonly property int maximumDescriptorFields: 32"
-require_in_file "$PROVIDERS_QML" "readonly property int maximumDescriptorActions: 32"
-require_in_file "$PROVIDERS_QML" "readonly property int maximumDescriptorOptions: 64"
-require_in_file "$PROVIDERS_QML" "Math.min(rawFields.length, maximumDescriptorFields)"
-require_in_file "$PROVIDERS_QML" "Math.min(rawActions.length, maximumDescriptorActions)"
-require_in_file "$PROVIDERS_QML" "Math.min(rawOptions.length, maximumDescriptorOptions)"
-require_in_file "$PROVIDERS_QML" "value.length > maximumDescriptorTokenLength"
-require_in_file "$PROVIDERS_QML" "function descriptorIdentifier(value)"
-require_in_file "$PROVIDERS_QML" 'return /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(value) ? value : ""'
-reject_in_file "$PROVIDERS_QML" "SafeText.boundedDisplayText(raw.id, 128)"
-reject_in_file "$PROVIDERS_QML" "SafeText.boundedDisplayText(option.id, 128)"
-require_in_file "$PROVIDERS_QML" "title: raw.title ? SafeText.cliMessage(raw.title, 120)"
-require_in_file "$PROVIDERS_QML" "description: raw.description ? SafeText.cliMessage(raw.description, 500)"
-require_in_file "$PROVIDERS_QML" "title: option.title ? SafeText.cliMessage(option.title, 120)"
+require_in_surface providers "var maximumFields = 32"
+require_in_surface providers "var maximumActions = 32"
+require_in_surface providers "var maximumOptions = 64"
+require_in_surface providers "Math.min(rawFields.length, maximumFields)"
+require_in_surface providers "Math.min(rawActions.length, maximumActions)"
+require_in_surface providers "Math.min(rawOptions.length, maximumOptions)"
+require_in_surface providers "value.length > maximumTokenLength"
+require_in_surface providers "function identifier(value)"
+require_in_surface providers 'return /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(value) ? value : ""'
+reject_in_surface providers "SafeText.boundedDisplayText(raw.id, 128)"
+reject_in_surface providers "SafeText.boundedDisplayText(option.id, 128)"
+require_in_surface providers "? SafeText.cliMessage(raw.title, 120)"
+require_in_surface providers "description: raw.description ? SafeText.cliMessage(raw.description, 500)"
+require_in_surface providers "title: option.title ? SafeText.cliMessage(option.title, 120)"
 
 require_in_file "$TODO_MD" "docs/cli-provider-settings-descriptor.md"
 

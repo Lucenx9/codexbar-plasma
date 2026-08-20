@@ -168,28 +168,28 @@ require_in_file "$PROVIDER_IDENTITY_JS" "var key = providerMapKey(resolveProvide
 require_in_file "$PROVIDER_IDENTITY_JS" 'if (!/^[a-z0-9][a-z0-9._-]*$/.test(key) || key.indexOf("..") !== -1) {'
 require_in_surface applet "var fileName = ProviderIdentity.providerIconFileName(value)"
 require_in_surface providers "var fileName = ProviderIdentity.providerIconFileName(value)"
-require_in_surface providers "function isAllowedDescriptorCommand(commandTokens, purpose)"
+require_in_surface providers "function isAllowedCommand(commandTokens, purpose)"
 require_in_surface providers "String(commandTokens[0]) !== \"codexbar\""
 require_in_surface providers "String(commandTokens[1]) !== \"config\""
 require_in_surface providers "subcommand === \"set\" || subcommand === \"set-api-key\""
 require_in_surface providers "subcommand === \"action\""
-require_in_surface providers "command.length === 0 || !isAllowedDescriptorCommand(command, \"field\")"
-require_in_surface providers "command.length === 0 || !isAllowedDescriptorCommand(command, \"action\")"
-require_in_surface providers "if (!isAllowedDescriptorCommand(field.writeCommand, \"field\"))"
-require_in_surface providers "if (!isAllowedDescriptorCommand(action.command, \"action\"))"
+require_in_surface providers "command.length === 0 || !isAllowedCommand(command, \"field\")"
+require_in_surface providers "command.length === 0 || !isAllowedCommand(command, \"action\")"
+require_in_surface providers "!isAllowedCommand(field.writeCommand, \"field\")"
+require_in_surface providers "!isAllowedCommand(action.command, \"action\")"
 # A descriptor secret must never reach a command line at all. /proc/<pid>/cmdline
 # is world-readable, so routing the value through `sh -c script _ "$secret"`
 # leaks it exactly like an expanded `{value}` placeholder would. Only
 # promptDescriptorSecret may carry a secret, and it reads the value inside the
 # script instead of receiving it as an argument.
-require_in_file "$PROVIDERS_QML" 'if (field.kind === "secret") {'
-require_in_surface providers "function runDescriptorCommand(commandTokens, replacements) {"
-reject_text "configProviders.qml" "$(cat "$PROVIDERS_QML")" 'shellQuote(stdinValue)'
-reject_text "configProviders.qml" "$(cat "$PROVIDERS_QML")" '({ "{value}": value }), field.kind === "secret" ? value : null)'
-require_in_surface providers "function isSafeDescriptorUrl(url)"
-require_in_surface providers "text.indexOf(\"https://\") === 0"
+require_in_surface providers 'if (field.kind === "secret") {'
+require_in_surface providers "function planSecretPrompt(field, commandPath)"
+reject_in_surface providers 'shellQuote(stdinValue)'
+reject_in_surface providers '({ "{value}": value }), field.kind === "secret" ? value : null)'
+require_in_surface providers "function safeHttpsUrl(value)"
+require_in_surface providers "text.toLowerCase().indexOf(\"https://\") === 0"
 require_in_surface providers "var url = String(payload.value.url)"
-require_in_surface providers "if (isSafeDescriptorUrl(url))"
+require_in_surface providers "var safeUrl = ProviderDescriptor.safeHttpsUrl(url)"
 # The key validation itself is asserted once above, against ProviderIdentity.js.
 # What each surface still owns is the refusal: an unusable key must fall back to
 # a generic icon rather than reaching Qt.resolvedUrl.
