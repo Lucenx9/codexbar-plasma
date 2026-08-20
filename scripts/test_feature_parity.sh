@@ -486,12 +486,15 @@ require_in_surface applet "id: usageRefreshTimer"
 require_in_surface applet "interval: Math.max(1, root.refreshIntervalSec) * 1000"
 require_in_surface applet "property var notificationMemo"
 require_in_surface applet "function processNotifications()"
-require_in_surface applet "function primeNotifications()"
+require_in_surface applet "function notificationObservations()"
+require_in_surface applet "function dispatchNotificationIntents(intents, observations)"
+require_in_surface applet "NotificationPlanner.transition("
 require_in_surface applet "function quotaNotificationLevel(row)"
 require_in_surface applet "function notificationUrgency(severity)"
 require_in_surface applet "function sendPlasmaNotification(title, body, urgency)"
-require_in_surface applet "function processLimitResetNotifications(item, nextMemo)"
-require_in_surface applet "function processPaceNotifications(item, nextMemo)"
+require_in_surface applet 'kind: "quota"'
+require_in_surface applet 'kind: "pace"'
+require_in_surface applet 'kind: "reset"'
 require_in_surface applet "notify-send --app-name=CodexBar"
 require_in_surface applet 'notificationSource.connectSource(commandWithRunNonce(":; " + command))'
 require_in_surface applet "property bool costUsageEnabled"

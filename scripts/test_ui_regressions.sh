@@ -1425,121 +1425,107 @@ if not re.search(
 ):
     raise AssertionError("setNotificationProviderRefreshPending must set or clear the provider entry")
 
-status_memo_key_body = function_body(
-    (root / "contents/ui/NotificationMemo.js").read_text(encoding="utf-8"), "statusMemoKey"
-)
+notification_memo_js = (root / "contents/ui/NotificationMemo.js").read_text(encoding="utf-8")
+notification_planner_js = (root / "contents/ui/NotificationPlanner.js").read_text(encoding="utf-8")
+status_memo_key_body = function_body(notification_memo_js, "statusMemoKey")
 if "providerID" not in status_memo_key_body or "account" in status_memo_key_body:
     raise AssertionError("statusMemoKey must remain exclusively provider-scoped across account switches")
-for key_function in ("quotaNotificationKey", "limitResetNotificationKey"):
-    key_body = function_body(main_text, key_function)
-    if "notificationScopeKey(item)" not in key_body:
-        raise AssertionError(f"{key_function} must scope memo state by account")
-primed_key_body = function_body(main_text, "notificationScopePrimedKey")
-if "notificationScopeKey(item)" not in primed_key_body:
-    raise AssertionError("notificationScopePrimedKey must identify each provider/account observation")
-prime_account_body = function_body(main_text, "primeAccountNotificationScope")
-for prime_fragment in (
-    "notificationScopePrimedKey(item)",
-    "quotaNotificationKey(item, rows[j], j)",
-    "limitResetNotificationKey(item, resetRow, k)",
-):
-    if prime_fragment not in prime_account_body:
-        raise AssertionError(
-            "primeAccountNotificationScope must seed account state without notifying; "
-            f"missing {prime_fragment!r}"
-        )
-for forbidden_prime_call in (
+
+# NotificationPlanner owns the opaque memo and every cross-signal transition.
+# The direct QtTest suite pins priming, pending refreshes, account scopes,
+# escalation/reset behavior, and intent ordering; these static assertions keep
+# QML as the thin observation/effect adapter instead of reintroducing policy.
+# Private planner helpers deliberately stay out of this check so a
+# behavior-preserving internal refactor does not have to rewrite the safety net.
+if "function transition(observations, previousMemo, options)" not in notification_planner_js:
+    raise AssertionError("NotificationPlanner.js must expose its transition boundary")
+for forbidden_planner_fragment in (
     "sendPlasmaNotification",
-    "processStatusNotification",
-    "processQuotaNotifications",
-    "processPaceNotifications",
-    "processLimitResetNotifications",
+    "notify-send",
+    "i18n(",
+    "Qt.",
+    "selectedAccountForProvider",
+    "notificationRefreshPending",
 ):
-    if forbidden_prime_call in prime_account_body:
+    if forbidden_planner_fragment in notification_planner_js:
         raise AssertionError(
-            "primeAccountNotificationScope must seed state without notification processing; "
-            f"found {forbidden_prime_call!r}"
+            "NotificationPlanner must stay pure and independent of QML lifecycle/effects; "
+            f"found {forbidden_planner_fragment!r}"
         )
-prime_notifications_body = function_body(main_text, "primeNotifications")
-if "notificationProviderRefreshPending(item.provider)" not in prime_notifications_body:
-    raise AssertionError("primeNotifications must not seed memo state from a cached account snapshot")
-process_notifications_body = function_body(main_text, "processNotifications")
-for memo_fragment in (
-    "copyObject(notificationMemo)",
-    "notificationProviderRefreshPending(item.provider)",
-    "notificationMemo[notificationScopePrimedKey(item)] !== \"1\"",
-    "primeAccountNotificationScope(item, nextMemo)",
-    "clearNotificationScopeMemo(nextMemo, item)",
+
+observations_body = applet.function_body("notificationObservations")
+for observation_fragment in (
+    "providerID: providerMapKey(item.provider)",
+    "scopeID: notificationScopeKey(item)",
+    "pending: notificationProviderRefreshPending(item.provider)",
+    "statusIncidentKey: String(item.statusIncidentKey || \"\")",
+    "rows: notificationObservationRows(item)",
 ):
-    if memo_fragment not in process_notifications_body:
+    if observation_fragment not in observations_body:
         raise AssertionError(
-            "processNotifications must preserve, suppress, or silently prime account state; "
-            f"missing {memo_fragment!r}"
+            "notificationObservations must resolve normalized identity and freshness before the planner; "
+            f"missing {observation_fragment!r}"
         )
-pending_guard_index = process_notifications_body.find("notificationProviderRefreshPending(item.provider)")
-status_process_index = process_notifications_body.find("processStatusNotification(item, nextMemo)")
-prime_guard_index = process_notifications_body.find("notificationMemo[notificationScopePrimedKey(item)] !== \"1\"")
-quota_process_index = process_notifications_body.find("processQuotaNotifications(item, nextMemo)")
-reset_process_index = process_notifications_body.find("processLimitResetNotifications(item, nextMemo)")
-pace_process_index = process_notifications_body.find("processPaceNotifications(item, nextMemo)")
-if pending_guard_index > status_process_index:
-    raise AssertionError("cached account snapshots must be suppressed before any status or quota notification")
-if not re.search(
-    r"if\s*\(notificationProviderRefreshPending\(item\.provider\)\)\s*\{\s*continue\s*\}",
-    process_notifications_body,
-    re.S,
+observation_rows_body = applet.function_body("notificationObservationRows")
+for row_fragment in (
+    "hasPercent: row && row.hasPercent === true",
+    "usedPercent: row ? Number(row.usedPercent) : NaN",
+    "quotaLevel: quotaNotificationLevel(row)",
+    "paceActive: paceWarningActive(row)",
 ):
-    raise AssertionError("cached account notification suppression must exit the provider loop")
-if (prime_guard_index > quota_process_index
-        or prime_guard_index > pace_process_index
-        or prime_guard_index > reset_process_index):
-    raise AssertionError("new account scopes must be primed before quota or reset notification processing")
-if not re.search(
-    r'if\s*\(notificationMemo\[notificationScopePrimedKey\(item\)\]\s*!==\s*"1"\)\s*\{'
-    r"\s*primeAccountNotificationScope\(item,\s*nextMemo\)\s*continue\s*\}",
-    process_notifications_body,
-    re.S,
-):
-    raise AssertionError("first account observation must prime state and exit before notification processing")
-# The notify decision itself lives in NotificationMemo.js and is covered
-# behaviourally by tests/tst_notification_memo.qml. What still needs pinning here
-# is that main.qml keeps delegating to it instead of growing a second copy.
-status_process_body = function_body(main_text, "processStatusNotification")
+    if row_fragment not in observation_rows_body:
+        raise AssertionError(
+            "notificationObservationRows must adapt display rows into semantic planner input; "
+            f"missing {row_fragment!r}"
+        )
+
+process_notifications_body = applet.function_body("processNotifications")
 for delegation_fragment in (
-    "NotificationMemo.statusDecision(",
-    "NotificationMemo.applyStatusDecision(nextMemo, providerID, decision)",
-    "if (decision.notify) {",
+    "var observations = notificationObservations()",
+    "NotificationPlanner.transition(",
+    "notificationPlannerOptions(mode)",
+    "notificationMemo = result.nextMemo",
+    "dispatchNotificationIntents(result.intents, observations)",
 ):
-    if delegation_fragment not in status_process_body:
+    if delegation_fragment not in process_notifications_body:
         raise AssertionError(
-            "processStatusNotification must delegate the notify decision to NotificationMemo; "
+            "processNotifications must delegate the whole transition and apply its result; "
             f"missing {delegation_fragment!r}"
         )
-if "sendPlasmaNotification" not in status_process_body:
-    raise AssertionError("processStatusNotification must keep the notification side effect in main.qml")
-apply_index = status_process_body.find("NotificationMemo.applyStatusDecision")
-notify_index = status_process_body.find("sendPlasmaNotification")
-if apply_index < 0 or notify_index < 0 or apply_index > notify_index:
-    raise AssertionError("the status baseline must be recorded before any status notification is sent")
-if "carryStatusNotificationMemo(item, nextMemo)" not in prime_notifications_body:
-    raise AssertionError(
-        "primeNotifications must carry an existing status baseline across a provider it skips, "
-        "otherwise a status change during the pending refresh primes silently instead of notifying"
-    )
-if "NotificationMemo.applyStatusDecision(" not in prime_notifications_body:
-    raise AssertionError("primeNotifications must record a status baseline through NotificationMemo")
-reset_memo_body = function_body(main_text, "resetNotificationMemo")
-if "NotificationMemo.preservedMemoAfterReset(notificationMemo)" not in reset_memo_body:
-    raise AssertionError(
-        "resetNotificationMemo must preserve provider status baselines; a threshold or toggle "
-        "change is not a status transition"
-    )
+memo_commit_index = process_notifications_body.find("notificationMemo = result.nextMemo")
+dispatch_index = process_notifications_body.find("dispatchNotificationIntents")
+if memo_commit_index < 0 or dispatch_index < 0 or memo_commit_index > dispatch_index:
+    raise AssertionError("the complete notification memo must commit before any intent side effect")
+for old_policy_fragment in (
+    "NotificationMemo.statusDecision(",
+    "quotaNotificationKey(",
+    "paceNotificationKey(",
+    "limitResetNotificationKey(",
+):
+    if old_policy_fragment in process_notifications_body:
+        raise AssertionError("processNotifications must not reimplement planner policy in QML")
+
+dispatch_body = applet.function_body("dispatchNotificationIntents")
+for intent_fragment in (
+    'intent.kind === "status"',
+    'intent.kind === "quota"',
+    'intent.kind === "pace"',
+    'intent.kind === "reset"',
+    "sendPlasmaNotification(",
+):
+    if intent_fragment not in dispatch_body:
+        raise AssertionError(
+            "dispatchNotificationIntents must keep every localized effect in QML; "
+            f"missing {intent_fragment!r}"
+        )
+
+reset_memo_body = applet.function_body("resetNotificationMemo")
+if "NotificationPlanner.transition(" not in reset_memo_body or 'mode: "reset"' not in reset_memo_body:
+    raise AssertionError("resetNotificationMemo must reset the opaque memo through NotificationPlanner")
 if re.search(r"notificationMemo\s*=\s*\(\{\}\)", reset_memo_body):
     raise AssertionError("resetNotificationMemo must not clear the whole memo, including status state")
 
-# NotificationMemo.js owns the rules the popup depends on; keep them there rather
-# than letting a copy drift back into main.qml.
-notification_memo_js = (root / "contents/ui/NotificationMemo.js").read_text(encoding="utf-8")
+# NotificationMemo remains an internal seam for provider-scoped status rules.
 for memo_function in (
     "function statusMemoKey(providerID)",
     "function statusPrimedMemoKey(providerID)",
@@ -1564,11 +1550,6 @@ unprimed_index = status_decision_body.find('statusPrimedMemoKey(providerID)] !==
 worsened_index = status_decision_body.find("worsened")
 if unprimed_index < 0 or worsened_index < 0 or unprimed_index > worsened_index:
     raise AssertionError("statusDecision must settle the unprimed case before comparing severities")
-clear_scope_body = function_body(main_text, "clearNotificationScopeMemo")
-if "notificationScopeKey(item)" not in clear_scope_body or "delete nextMemo[key]" not in clear_scope_body:
-    raise AssertionError("clearNotificationScopeMemo must remove stale quota/reset keys for the current account")
-if "statusMemoKey(" in clear_scope_body:
-    raise AssertionError("clearing an account scope must not erase provider-scoped status state")
 
 select_account_body = function_body(main_text, "selectAccount")
 pending_index = select_account_body.find("setNotificationProviderRefreshPending(key, true)")
@@ -1630,17 +1611,17 @@ if "previousValue !== text" in status_body:
         "severity-bearing memo values"
     )
 
-status_value_body = function_body(main_text, "notificationStatusValue")
-if "statusIncidentKey" not in status_value_body:
-    raise AssertionError("notificationStatusValue must prefer stable incident keys when present")
-if "NotificationMemo.statusMemoValue(item.statusSeverity, incidentKey)" not in status_value_body:
-    raise AssertionError("notificationStatusValue must include severity and stable incident key")
+status_value_body = function_body(notification_planner_js, "statusValue")
+if "observation.statusIncidentKey" not in status_value_body:
+    raise AssertionError("NotificationPlanner must prefer stable incident keys when present")
+if "NotificationMemo.statusMemoValue(" not in status_value_body:
+    raise AssertionError("NotificationPlanner must encode severity and stable incident key through NotificationMemo")
 if 'String(severity || "") + "|" + String(incidentKey || "")' not in function_body(
     notification_memo_js, "statusMemoValue"
 ):
     raise AssertionError("statusMemoValue must encode severity and incident key, and nothing else")
-if ': item.status' in status_value_body:
-    raise AssertionError("notificationStatusValue must not fall back to provider-controlled status text")
+if "statusText" in status_value_body:
+    raise AssertionError("NotificationPlanner must not use provider-controlled status text as incident identity")
 
 # autoSelectProvider must not clobber an explicit global-tab selection on every
 # refresh; once the user picks Overview, Spend, or Sessions it has to survive.

@@ -1639,6 +1639,12 @@ msgid "Maint."
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "%1 minute"
+msgid_plural "%1 minutes"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/main.qml
 msgid "%1 status issue"
 msgstr ""
 
@@ -1653,12 +1659,6 @@ msgstr ""
 #: contents/ui/main.qml
 msgid "%1 quota warning"
 msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 minute"
-msgid_plural "%1 minutes"
-msgstr[0] ""
-msgstr[1] ""
 
 #: contents/ui/main.qml
 msgid "%1 pace warning"

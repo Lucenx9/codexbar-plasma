@@ -13,6 +13,7 @@ DISPLAY_QML="${ROOT_DIR}/contents/ui/configDisplay.qml"
 DEBUG_QML="${ROOT_DIR}/contents/ui/configDebug.qml"
 SAFE_TEXT_JS="${ROOT_DIR}/contents/ui/SafeText.js"
 PROVIDER_IDENTITY_JS="${ROOT_DIR}/contents/ui/ProviderIdentity.js"
+NOTIFICATION_PLANNER_JS="${ROOT_DIR}/contents/ui/NotificationPlanner.js"
 WORKFLOW="${ROOT_DIR}/.github/workflows/ci.yml"
 MAKEFILE="${ROOT_DIR}/Makefile"
 UPDATER="${ROOT_DIR}/scripts/update-widget.sh"
@@ -125,6 +126,7 @@ require_in_file "$GUARDS_JS" "Object.prototype.hasOwnProperty.call(item, key)"
 require_in_file "$GUARDS_JS" 'var value = String(key || "")'
 require_in_file "$GUARDS_JS" 'value === "__proto__" || value === "constructor" || value === "prototype"'
 require_in_file "$GUARDS_JS" "String(value).replace(/'/g"
+require_in_file "$NOTIFICATION_PLANNER_JS" "return Guards.copyObject(memo || ({}))"
 
 for guard_body in \
   "Object.prototype.hasOwnProperty.call(item, key)" \

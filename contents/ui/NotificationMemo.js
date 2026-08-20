@@ -1,10 +1,10 @@
-// Pure decision helpers for the provider status notification memo.
+// Pure provider-status rules used inside NotificationPlanner.
 //
-// The memo is a flat string map owned by main.qml, which also owns the timers,
-// the refresh-pending state, and the actual notification call. Everything here
-// stays side-effect free apart from writing into a caller-supplied memo, so the
-// notify/stay-quiet decision can be exercised directly by
-// tests/tst_notification_memo.qml instead of only through static assertions.
+// NotificationPlanner owns the flat memo protocol and composes these rules with
+// quota, pace, reset, and account-scope transitions. Everything here stays
+// side-effect free apart from writing into a caller-supplied memo, so the
+// provider-scoped status behavior remains directly testable at its internal
+// seam as well as through the planner's public transition interface.
 //
 // Status state is deliberately provider-scoped, not account-scoped: a provider
 // incident is a property of the provider, not of the signed-in account.
