@@ -83,7 +83,7 @@ require_text "release job" "$RELEASE_JOB" "jq -r '.KPlugin.Version // empty' met
 # shellcheck disable=SC2016 # Match the literal shell expression in the workflow.
 require_text "release job" "$RELEASE_JOB" '"v${metadata_version}" != "$GITHUB_REF_NAME"'
 require_in_file "$WORKFLOW" "image: kdeneon/plasma@sha256:"
-require_in_file "$WORKFLOW" "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683"
+require_in_file "$WORKFLOW" "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
 reject_text "workflow" "$(cat "$WORKFLOW")" "actions/checkout@v4"
 reject_text "workflow" "$(cat "$WORKFLOW")" "image: kdeneon/plasma:user"
 require_in_file "$WORKFLOW" "dist/codexbar-plasma.plasmoid.sha256"
