@@ -27,45 +27,6 @@ TestCase {
         compare(Normalizer.maximumModelBreakdownsPerDay, 128)
     }
 
-    function test_truncatesOversizedProviderPayloadsAtTheBound() {
-        var payload = []
-        for (var i = 0; i < Normalizer.maximumProviderSnapshots + 40; i++) {
-            payload.push({ provider: "codex", index: i })
-        }
-
-        var records = Normalizer.payloadRecords(payload, Normalizer.maximumProviderSnapshots)
-        compare(records.length, Normalizer.maximumProviderSnapshots)
-        compare(records[0].index, 0)
-        compare(records[records.length - 1].index, Normalizer.maximumProviderSnapshots - 1)
-    }
-
-    function test_acceptsASingleRecordPayloadAsWellAsAList() {
-        var single = Normalizer.payloadRecords({ provider: "codex" }, Normalizer.maximumProviderSnapshots)
-        compare(single.length, 1)
-        compare(single[0].provider, "codex")
-
-        var list = Normalizer.payloadRecords([{ provider: "codex" }, { provider: "claude" }], 10)
-        compare(list.length, 2)
-    }
-
-    function test_dropsNonRecordEntriesInsteadOfIndexingThem() {
-        var records = Normalizer.payloadRecords(
-            [null, "codex", 42, [], { provider: "codex" }, undefined, true],
-            Normalizer.maximumProviderSnapshots)
-        compare(records.length, 1)
-        compare(records[0].provider, "codex")
-    }
-
-    function test_payloadRecordsFallsBackToTheProviderBoundForAnUnusableLimit() {
-        var payload = []
-        for (var i = 0; i < 300; i++) {
-            payload.push({ index: i })
-        }
-        compare(Normalizer.payloadRecords(payload, NaN).length, Normalizer.maximumProviderSnapshots)
-        compare(Normalizer.payloadRecords(payload, 0).length, Normalizer.maximumProviderSnapshots)
-        compare(Normalizer.payloadRecords(payload, -5).length, Normalizer.maximumProviderSnapshots)
-    }
-
     // --- object-key guards --------------------------------------------------
 
     function test_rejectsPrototypePollutingKeys() {

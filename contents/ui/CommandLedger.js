@@ -1,18 +1,15 @@
 .pragma library
 .import "Guards.js" as Guards
 
-// The ledger of external commands the applet has started and not yet retired.
+// The ledger of external commands a QML surface has started and not yet retired.
 //
 // One map, keyed by the source name Plasma hands back on every reply, holds
-// everything the applet needs to know about a running command: what kind it is,
-// which provider it belongs to, and when it stops being worth waiting for.
+// everything the caller needs to know about a running command: its kind and
+// deadline plus any caller-specific context.
 //
-// That map is the only record. main.qml used to keep a `connected*CommandSource`
-// string per kind beside it and route replies by comparing against those, which
-// meant the same fact lived in two places and the timeout handler checked both
-// halves in an `&&`. Routing now reads `kind` from the entry, so a reply is
-// delivered when the ledger still holds its source name and dropped when it does
-// not.
+// That map is the only record. Routing reads the entry for a returned source
+// name, so a reply is delivered while the ledger still holds it and dropped when
+// it does not.
 //
 // That is also the staleness rule. Starting a newer command retires the older
 // source name first, so a late reply from the retired one is no longer in the
@@ -20,7 +17,7 @@
 //
 // Like ProviderNormalizer.js this module must not reach for `Qt`, `Kirigami`, or
 // `i18n`, and it never mutates the map it is given: every change returns a new
-// map so QML property bindings on `activeUsageCommands` re-evaluate.
+// map so QML property bindings on command ledgers re-evaluate.
 
 function hasOwnKey(item, key) {
     return Guards.hasOwnKey(item, key)
@@ -88,13 +85,6 @@ function find(commands, sourceName) {
         return null
     }
     return commands[sourceName] || null
-}
-
-// "" when the ledger no longer holds the source name, which is what a stale
-// reply looks like from here.
-function kindOf(commands, sourceName) {
-    var entry = find(commands, sourceName)
-    return entry ? String(entry.kind || "") : ""
 }
 
 function sourcesOfKind(commands, kind) {

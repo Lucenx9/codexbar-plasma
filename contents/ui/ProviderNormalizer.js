@@ -85,24 +85,6 @@ function normalizedProviderID(value) {
     return providerSnapshotKey(trimmed)
 }
 
-// The CLI emits either a list of snapshots or a single object; both shapes are
-// accepted, then truncated to `limit` and reduced to plain records.
-function payloadRecords(payload, limit) {
-    var items = Array.isArray(payload) ? payload : [payload]
-    var bounded = Number(limit)
-    if (!isFinite(bounded) || bounded <= 0) {
-        bounded = maximumProviderSnapshots
-    }
-    var records = []
-    var itemLimit = Math.min(items.length, Math.floor(bounded))
-    for (var i = 0; i < itemLimit; i++) {
-        if (isCliRecord(items[i])) {
-            records.push(items[i])
-        }
-    }
-    return records
-}
-
 // `config providers` output reduced to the enabled provider ids plus every
 // display name it carried. A disabled provider still contributes its name,
 // because the popup labels providers it learns about from a later usage payload.

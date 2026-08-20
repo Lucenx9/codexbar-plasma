@@ -40,7 +40,8 @@ require_in_surface providers "page.expireConfigCommands(Date.now())"
 require_in_surface providers "onCfg_commandPathChanged: handleCommandPathChanged()"
 
 require_in_surface display "readonly property int overviewProviderCommandTimeoutMs: 60000"
-require_in_surface display "function commandWithRunNonce(command)"
+require_in_surface display 'import "CommandLedger.js" as CommandLedger'
+reject_in_surface display "function commandWithRunNonce(command)"
 require_in_surface display "function expireOverviewProviderCommands(nowMs)"
 require_in_surface display "id: overviewProviderCommandTimeoutTimer"
 require_in_surface display "page.expireOverviewProviderCommands(Date.now())"
@@ -240,8 +241,39 @@ require_all(
 
 require_all(
     providers.function_body("runCommand"),
-    ("nextDescriptor.timeoutMs", "nextDescriptor.deadlineMs", "nextDescriptor.commandPathSignature = commandPath"),
-    "runCommand must honor explicit command timeouts",
+    (
+        "CommandLedger.withRunNonce(command, commandRunSerial)",
+        "nextDescriptor.timeoutMs",
+        "nextDescriptor.deadlineMs",
+        "nextDescriptor.commandPathSignature = commandPath",
+        "CommandLedger.opened(commands, sourceName, nextDescriptor)",
+    ),
+    "runCommand must register bounded commands in the shared ledger",
+)
+
+require_all(
+    providers.function_body("disconnectCommandsByKind"),
+    (
+        "CommandLedger.sourcesOfKind(commands, kind)",
+        "configSource.disconnectSource(sourceName)",
+        "CommandLedger.closed(remaining, sourceName)",
+    ),
+    "config commands must retire one ledger kind without duplicating its scan",
+)
+
+require_all(
+    providers.function_body("hasTimedConfigCommands"),
+    ("CommandLedger.hasDeadlines(commands)",),
+    "the config timeout timer must read the shared ledger",
+)
+
+require_all(
+    providers.function_body("handleData"),
+    (
+        "CommandLedger.find(commands, sourceName)",
+        "CommandLedger.closed(commands, sourceName)",
+    ),
+    "config command completion must close the shared ledger entry",
 )
 
 require_all(
@@ -305,7 +337,12 @@ require_all(
 
 require_all(
     providers.function_body("expireConfigCommands"),
-    ("disconnectSource(sourceName)", "handleConfigCommandTimeout(descriptor)"),
+    (
+        "CommandLedger.expired(commands, nowMs)",
+        "disconnectSource(sourceName)",
+        "CommandLedger.closed(remaining, sourceName)",
+        "handleConfigCommandTimeout(descriptor)",
+    ),
     "config timeout cleanup is incomplete",
 )
 
@@ -326,14 +363,48 @@ require_all(
 
 require_all(
     display.function_body("loadOverviewProviders"),
-    ("commandWithRunNonce(command)", "deadlineMs: Date.now() + overviewProviderCommandTimeoutMs"),
+    (
+        "CommandLedger.withRunNonce(command, commandRunSerial)",
+        "CommandLedger.descriptor(",
+        "overviewProviderCommands = CommandLedger.opened(",
+    ),
     "overview provider loads need nonce and deadline",
 )
 
 require_all(
     display.function_body("expireOverviewProviderCommands"),
-    ("overviewProviderSource.disconnectSource(sourceName)", "Loading providers timed out. Try again."),
+    (
+        "CommandLedger.expired(overviewProviderCommands, nowMs)",
+        "overviewProviderSource.disconnectSource(sourceName)",
+        "CommandLedger.closed(remaining, sourceName)",
+        "Loading providers timed out. Try again.",
+    ),
     "overview provider timeout cleanup is incomplete",
+)
+
+require_all(
+    display.function_body("disconnectOverviewProviderCommands"),
+    (
+        "CommandLedger.sourcesOfKind(",
+        'overviewProviderCommands, "overviewProviders"',
+        "overviewProviderSource.disconnectSource(sourceName)",
+    ),
+    "overview provider retirement must read the shared ledger",
+)
+
+require_all(
+    display.function_body("hasPendingOverviewProviderCommands"),
+    ('CommandLedger.hasKind(overviewProviderCommands, "overviewProviders")',),
+    "overview provider loading state must read the shared ledger",
+)
+
+require_all(
+    display.function_body("handleOverviewProviderData"),
+    (
+        "CommandLedger.find(overviewProviderCommands, sourceName)",
+        "CommandLedger.closed(overviewProviderCommands, sourceName)",
+    ),
+    "overview provider completion must close the shared ledger entry",
 )
 
 require_all(

@@ -18,7 +18,6 @@ require_in_surface applet "commandWithRunNonce(providerConfigCommandSource)"
 # holding the retired source name. Assert that routing reads the ledger and not
 # a parallel per-kind string that could disagree with it.
 require_in_surface applet "CommandLedger.find(root.activeUsageCommands, sourceName)"
-require_in_surface applet "function kindOf(commands, sourceName)"
 reject_in_surface applet "property string connectedCommandSource"
 reject_in_surface applet "property string connectedCostCommandSource"
 reject_in_surface applet "property string connectedSessionsCommandSource"
@@ -33,14 +32,24 @@ CODEXBAR_PLASMA_RUN=1 :; if command -v notify-send >/dev/null 2>&1; then notify-
 SH
 
 require_in_surface providers "property int commandRunSerial: 0"
-require_in_surface providers "function commandWithRunNonce(command)"
+require_in_surface providers 'import "CommandLedger.js" as CommandLedger'
+reject_in_surface providers "function commandWithRunNonce(command)"
 require_in_surface providers "function disconnectCommandsByKind(kind)"
 require_in_surface providers "disconnectCommandsByKind(\"list\")"
-require_in_surface providers "var sourceName = commandWithRunNonce(command)"
-require_in_surface providers "existing[sourceName] = nextDescriptor"
+require_in_surface providers "commandRunSerial += 1"
+require_in_surface providers "var sourceName = CommandLedger.withRunNonce(command, commandRunSerial)"
+require_in_surface providers "commands = CommandLedger.opened(commands, sourceName, nextDescriptor)"
 require_in_surface providers "configSource.connectSource(sourceName)"
 reject_in_surface providers "existing[command] = descriptor"
 reject_in_surface providers "configSource.connectSource(command)"
+
+require_in_surface display "property int commandRunSerial: 0"
+require_in_surface display 'import "CommandLedger.js" as CommandLedger'
+reject_in_surface display "function commandWithRunNonce(command)"
+require_in_surface display "commandRunSerial += 1"
+require_in_surface display "var sourceName = CommandLedger.withRunNonce(command, commandRunSerial)"
+require_in_surface display "overviewProviderCommands = CommandLedger.opened("
+require_in_surface display "overviewProviderSource.connectSource(sourceName)"
 
 reject_in_surface applet "console.log(\"CodexBar"
 reject_in_surface providers "console.log(\"CodexBar"

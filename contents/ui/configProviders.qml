@@ -6,6 +6,7 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
 import "components" as Components
+import "CommandLedger.js" as CommandLedger
 import "Guards.js" as Guards
 import "ProviderIdentity.js" as ProviderIdentity
 import "SafeText.js" as SafeText
@@ -218,25 +219,13 @@ KCM.SimpleKCM {
         })
     }
 
-    function commandWithRunNonce(command) {
-        if (command.length === 0) {
-            return ""
-        }
-        commandRunSerial += 1
-        return "CODEXBAR_PLASMA_RUN=" + commandRunSerial + " " + command
-    }
-
     function disconnectCommandsByKind(kind) {
-        var remaining = copyObject(commands)
-        for (var sourceName in commands) {
-            if (!hasOwnKey(commands, sourceName)) {
-                continue
-            }
-            var descriptor = commands[sourceName]
-            if (descriptor && descriptor.kind === kind) {
-                configSource.disconnectSource(sourceName)
-                delete remaining[sourceName]
-            }
+        var sourceNames = CommandLedger.sourcesOfKind(commands, kind)
+        var remaining = commands
+        for (var i = 0; i < sourceNames.length; i++) {
+            var sourceName = sourceNames[i]
+            configSource.disconnectSource(sourceName)
+            remaining = CommandLedger.closed(remaining, sourceName)
         }
         commands = remaining
     }
@@ -256,50 +245,36 @@ KCM.SimpleKCM {
     }
 
     function runCommand(command, descriptor) {
-        var sourceName = commandWithRunNonce(command)
+        commandRunSerial += 1
+        var sourceName = CommandLedger.withRunNonce(command, commandRunSerial)
         var nextDescriptor = copyObject(descriptor)
         nextDescriptor.commandPathSignature = commandPath
         var timeoutMs = Number(nextDescriptor.timeoutMs)
         if (isFinite(timeoutMs) && timeoutMs > 0) {
             nextDescriptor.deadlineMs = Date.now() + timeoutMs
         }
-        var existing = copyObject(commands)
-        existing[sourceName] = nextDescriptor
-        commands = existing
+        commands = CommandLedger.opened(commands, sourceName, nextDescriptor)
         configSource.connectSource(sourceName)
     }
 
     function hasTimedConfigCommands() {
-        for (var sourceName in commands) {
-            if (hasOwnKey(commands, sourceName) && isFinite(Number(commands[sourceName].deadlineMs))) {
-                return true
-            }
-        }
-        return false
+        return CommandLedger.hasDeadlines(commands)
     }
 
     function expireConfigCommands(nowMs) {
-        var remaining = copyObject(commands)
-        var expired = []
-        for (var sourceName in commands) {
-            if (!hasOwnKey(commands, sourceName)) {
-                continue
-            }
-            var descriptor = commands[sourceName]
-            var deadline = Number(descriptor.deadlineMs)
-            if (!isFinite(deadline) || nowMs < deadline) {
-                continue
-            }
-            configSource.disconnectSource(sourceName)
-            delete remaining[sourceName]
-            expired.push(descriptor)
-        }
+        var expired = CommandLedger.expired(commands, nowMs)
         if (expired.length === 0) {
             return
         }
-        commands = remaining
+        var remaining = commands
         for (var i = 0; i < expired.length; i++) {
-            var descriptor = expired[i]
+            var sourceName = expired[i].sourceName
+            configSource.disconnectSource(sourceName)
+            remaining = CommandLedger.closed(remaining, sourceName)
+        }
+        commands = remaining
+        for (var j = 0; j < expired.length; j++) {
+            var descriptor = expired[j].descriptor
             handleConfigCommandTimeout(descriptor)
         }
     }
@@ -322,13 +297,11 @@ KCM.SimpleKCM {
     }
 
     function handleData(sourceName, stdoutText, stderrText, exitCode) {
-        var descriptor = commands[sourceName]
+        var descriptor = CommandLedger.find(commands, sourceName)
         if (!descriptor) {
             return
         }
-        var withoutCommand = copyObject(commands)
-        delete withoutCommand[sourceName]
-        commands = withoutCommand
+        commands = CommandLedger.closed(commands, sourceName)
         if (descriptor.commandPathSignature !== commandPath) {
             return
         }

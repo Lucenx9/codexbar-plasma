@@ -353,7 +353,6 @@ require_in_surface applet "CostPresentation.spendTotals("
 require_in_surface applet "CostPresentation.historyStillBuilding("
 require_in_surface applet "CostPresentation.numberFormat("
 reject_in_surface applet "function appendTokenBreakdownRow("
-require_in_surface applet "function compactCostTokenSummary(cost, tokens, currency)"
 require_in_surface applet "function usageDashboard(providerID, usage, item)"
 require_in_surface applet 'import "UsageDetails.js" as UsageDetails'
 require_in_surface applet "var providerDetails = UsageDetails.normalizeSections(usage.details)"

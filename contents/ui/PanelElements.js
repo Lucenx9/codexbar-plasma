@@ -27,10 +27,6 @@ function normalizedOrder(value) {
     return result
 }
 
-function serializedOrder(value) {
-    return normalizedOrder(value).join(",")
-}
-
 function movedOrder(value, index, delta) {
     var order = normalizedOrder(value)
     var from = Number(index)
