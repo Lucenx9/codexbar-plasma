@@ -6,6 +6,7 @@ import org.kde.plasma.plasmoid
 import "components" as Components
 import "Guards.js" as Guards
 import "NotificationMemo.js" as NotificationMemo
+import "NotificationPlanner.js" as NotificationPlanner
 import "PanelElements.js" as PanelElements
 import "CommandLedger.js" as CommandLedger
 import "CostPresentation.js" as CostPresentation
@@ -2286,7 +2287,8 @@ PlasmoidItem {
     // the first observation is silently primed, swallow an incident that starts
     // while the provider is still refreshing.
     function resetNotificationMemo() {
-        notificationMemo = NotificationMemo.preservedMemoAfterReset(notificationMemo)
+        notificationMemo = NotificationPlanner.transition(
+            [], notificationMemo, ({ mode: "reset" })).nextMemo
         notificationsPrimed = false
         Qt.callLater(processNotifications)
     }
@@ -2340,180 +2342,8 @@ PlasmoidItem {
         return JSON.stringify([providerID, currentAccount])
     }
 
-    function carryStatusNotificationMemo(item, nextMemo) {
-        NotificationMemo.carryStatusMemo(notificationMemo, providerMapKey(item.provider), nextMemo)
-    }
-
-    function notificationScopePrimedKey(item) {
-        return "scope:" + notificationScopeKey(item)
-    }
-
-    function clearNotificationScopeMemo(nextMemo, item) {
-        var scope = notificationScopeKey(item)
-        var quotaPrefix = "quota:" + scope + ":"
-        var resetPrefix = "reset:" + scope + ":"
-        var pacePrefix = "pace:" + scope + ":"
-        for (var key in nextMemo) {
-            if (key.indexOf(quotaPrefix) === 0
-                    || key.indexOf(resetPrefix) === 0
-                    || key.indexOf(pacePrefix) === 0) {
-                delete nextMemo[key]
-            }
-        }
-    }
-
-    function primeAccountNotificationScope(item, nextMemo) {
-        nextMemo[notificationScopePrimedKey(item)] = "1"
-        if (notifyQuotaWarnings) {
-            var rows = item.rows || []
-            for (var j = 0; j < rows.length; j++) {
-                var level = quotaNotificationLevel(rows[j])
-                if (level.length > 0) {
-                    nextMemo[quotaNotificationKey(item, rows[j], j)] = level
-                }
-            }
-        }
-        if (notifyLimitResets) {
-            // Arm rows that already sit at warning-level usage so a later
-            // reset fires, but never fire on this first observation.
-            var resetRows = item.rows || []
-            for (var k = 0; k < resetRows.length; k++) {
-                var resetRow = resetRows[k]
-                if (resetRow && resetRow.hasPercent
-                    && Number(resetRow.usedPercent) >= limitResetArmThreshold) {
-                    nextMemo[limitResetNotificationKey(item, resetRow, k)] = "1"
-                }
-            }
-        }
-        if (notifyPredictivePaceWarnings) {
-            var paceRows = item.rows || []
-            for (var m = 0; m < paceRows.length; m++) {
-                if (paceWarningActive(paceRows[m])) {
-                    nextMemo[paceNotificationKey(item, paceRows[m], m)] = "1"
-                }
-            }
-        }
-    }
-
-    function primeNotifications() {
-        var nextMemo = ({})
-        for (var i = 0; i < providers.length; i++) {
-            var item = providers[i]
-            if (!item) {
-                continue
-            }
-            if (notificationProviderRefreshPending(item.provider)) {
-                // The cached snapshot cannot become a baseline, but an existing
-                // baseline must not be lost either: without it a status change
-                // during the pending interval would prime silently instead of
-                // notifying.
-                carryStatusNotificationMemo(item, nextMemo)
-                continue
-            }
-            if (notifyStatusIncidents) {
-                NotificationMemo.applyStatusDecision(
-                    nextMemo,
-                    providerMapKey(item.provider),
-                    ({ notify: false, value: notificationStatusValue(item) }))
-            }
-            primeAccountNotificationScope(item, nextMemo)
-        }
-        notificationMemo = nextMemo
-        notificationsPrimed = true
-    }
-
-    function processNotifications() {
-        if (!enableNotifications || providers.length === 0) {
-            return
-        }
-        if (!notificationsPrimed) {
-            primeNotifications()
-            return
-        }
-
-        var nextMemo = copyObject(notificationMemo)
-        for (var i = 0; i < providers.length; i++) {
-            var item = providers[i]
-            if (!item) {
-                continue
-            }
-
-            if (notificationProviderRefreshPending(item.provider)) {
-                continue
-            }
-            if (notifyStatusIncidents) {
-                processStatusNotification(item, nextMemo)
-            }
-            clearNotificationScopeMemo(nextMemo, item)
-            if (notificationMemo[notificationScopePrimedKey(item)] !== "1") {
-                primeAccountNotificationScope(item, nextMemo)
-                continue
-            }
-            if (notifyQuotaWarnings) {
-                processQuotaNotifications(item, nextMemo)
-            }
-            if (notifyPredictivePaceWarnings) {
-                processPaceNotifications(item, nextMemo)
-            }
-            if (notifyLimitResets) {
-                processLimitResetNotifications(item, nextMemo)
-            }
-        }
-        notificationMemo = nextMemo
-    }
-
-    // The notify/stay-quiet decision lives in NotificationMemo.statusDecision so
-    // it can be tested directly; this keeps only the side effect.
-    function processStatusNotification(item, nextMemo) {
-        var providerID = providerMapKey(item.provider)
-        var decision = NotificationMemo.statusDecision(
-            notificationMemo,
-            providerID,
-            notificationStatusValue(item),
-            item.statusSeverity)
-        NotificationMemo.applyStatusDecision(nextMemo, providerID, decision)
-        if (decision.notify) {
-            sendPlasmaNotification(
-                i18n("%1 status issue", item.title),
-                item.status,
-                notificationUrgency(item.statusSeverity))
-        }
-    }
-
-    function processQuotaNotifications(item, nextMemo) {
-        var rows = item.rows || []
-        for (var i = 0; i < rows.length; i++) {
-            var row = rows[i]
-            var key = quotaNotificationKey(item, row, i)
-            var level = quotaNotificationLevel(row)
-            var previousLevel = String(notificationMemo[key] || "")
-            if (level.length > 0 && notificationRank(level) > notificationRank(previousLevel)) {
-                var body = i18n("%1 is %2% used", row.label, Math.round(row.usedPercent))
-                var resetLine = resetLabel(usageResetText(row))
-                if (resetLine.length > 0) {
-                    body += ". " + resetLine
-                }
-                sendPlasmaNotification(
-                    level === "major" ? i18n("%1 quota critical", item.title) : i18n("%1 quota warning", item.title),
-                    body,
-                    notificationUrgency(level))
-            }
-            if (level.length > 0) {
-                nextMemo[key] = level
-            } else {
-                delete nextMemo[key]
-            }
-        }
-    }
-
     function paceWarningActive(row) {
         return row && row.paceOnTop === false && Number(row.paceEtaSeconds) > 0
-    }
-
-    function paceNotificationKey(item, row, index) {
-        var lane = row && row.lane ? row.lane : ""
-        var reset = row && row.resetsAt ? row.resetsAt : ""
-        return "pace:" + notificationScopeKey(item) + ":" + lane + ":" + reset + ":" + index
     }
 
     function paceEtaText(seconds) {
@@ -2529,75 +2359,12 @@ PlasmoidItem {
         return i18np("%1 day", "%1 days", days)
     }
 
-    function processPaceNotifications(item, nextMemo) {
-        var rows = item.rows || []
-        for (var i = 0; i < rows.length; i++) {
-            var row = rows[i]
-            var key = paceNotificationKey(item, row, i)
-            if (paceWarningActive(row)) {
-                if (notificationMemo[key] !== "1") {
-                    sendPlasmaNotification(
-                        i18n("%1 pace warning", item.title),
-                        i18n("%1 may run out in %2", row.label, paceEtaText(row.paceEtaSeconds)),
-                        "normal")
-                }
-                nextMemo[key] = "1"
-            } else {
-                delete nextMemo[key]
-            }
-        }
-    }
-
     // Usage at or above this percent arms a row for reset detection; once armed,
     // dropping to or below the floor fires a single "limit reset" notification.
     // Mirrors the macOS weekly-limit reset detector, scoped to limits the user
     // was actually near so routine short-window resets stay quiet.
     readonly property int limitResetArmThreshold: 80
     readonly property int limitResetFloor: 5
-
-    function processLimitResetNotifications(item, nextMemo) {
-        var rows = item.rows || []
-        for (var i = 0; i < rows.length; i++) {
-            var row = rows[i]
-            if (!row || !row.hasPercent) {
-                continue
-            }
-            var used = Number(row.usedPercent)
-            if (!isFinite(used)) {
-                continue
-            }
-            var key = limitResetNotificationKey(item, row, i)
-            var wasArmed = notificationMemo[key] === "1"
-            if (wasArmed && used <= limitResetFloor) {
-                sendPlasmaNotification(
-                    i18n("%1 limit reset", item.title),
-                    i18n("%1 is back to %2% used", row.label, Math.round(used)),
-                    "low")
-            } else if (used >= limitResetArmThreshold || (wasArmed && used > limitResetFloor)) {
-                nextMemo[key] = "1"
-            }
-        }
-    }
-
-    function limitResetNotificationKey(item, row, index) {
-        var lane = row && row.lane ? row.lane : ""
-        var label = row && row.label ? row.label : ""
-        return "reset:" + notificationScopeKey(item) + ":" + lane + ":" + label + ":" + index
-    }
-
-    function notificationStatusValue(item) {
-        if (!item || !item.hasIncident || !item.statusSeverity || !item.status) {
-            return ""
-        }
-        var incidentKey = item.statusIncidentKey ? String(item.statusIncidentKey) : ""
-        return NotificationMemo.statusMemoValue(item.statusSeverity, incidentKey)
-    }
-
-    function quotaNotificationKey(item, row, index) {
-        var lane = row && row.lane ? row.lane : ""
-        var label = row && row.label ? row.label : ""
-        return "quota:" + notificationScopeKey(item) + ":" + lane + ":" + label + ":" + index
-    }
 
     function quotaNotificationLevel(row) {
         if (!row || !row.hasPercent) {
@@ -2607,6 +2374,126 @@ PlasmoidItem {
             row.usedPercent,
             quotaWarningPercent,
             quotaCriticalPercent)
+    }
+
+    // QML resolves account identity, refresh freshness, configured thresholds,
+    // and the rows to display. The pure planner receives only semantic
+    // observations and returns ordered intents; it never sees i18n or effects.
+    function notificationObservationRows(item) {
+        var sourceRows = item && Array.isArray(item.rows) ? item.rows : []
+        var result = []
+        for (var i = 0; i < sourceRows.length; i++) {
+            var row = sourceRows[i]
+            result.push({
+                lane: row && row.lane ? String(row.lane) : "",
+                label: row && row.label ? String(row.label) : "",
+                resetsAt: row && row.resetsAt ? String(row.resetsAt) : "",
+                hasPercent: row && row.hasPercent === true,
+                usedPercent: row ? Number(row.usedPercent) : NaN,
+                quotaLevel: quotaNotificationLevel(row),
+                paceActive: paceWarningActive(row)
+            })
+        }
+        return result
+    }
+
+    function notificationObservations() {
+        var result = []
+        for (var i = 0; i < providers.length; i++) {
+            var item = providers[i]
+            if (!item) {
+                continue
+            }
+            result.push({
+                providerIndex: i,
+                providerID: providerMapKey(item.provider),
+                scopeID: notificationScopeKey(item),
+                pending: notificationProviderRefreshPending(item.provider),
+                statusActive: item.hasIncident === true
+                    && String(item.statusSeverity || "").length > 0
+                    && String(item.status || "").length > 0,
+                statusSeverity: String(item.statusSeverity || ""),
+                statusIncidentKey: String(item.statusIncidentKey || ""),
+                rows: notificationObservationRows(item)
+            })
+        }
+        return result
+    }
+
+    function notificationPlannerOptions(mode) {
+        return {
+            mode: mode,
+            statusEnabled: notifyStatusIncidents,
+            quotaEnabled: notifyQuotaWarnings,
+            paceEnabled: notifyPredictivePaceWarnings,
+            resetEnabled: notifyLimitResets,
+            resetArmThreshold: limitResetArmThreshold,
+            resetFloor: limitResetFloor
+        }
+    }
+
+    function dispatchNotificationIntents(intents, observations) {
+        for (var i = 0; i < intents.length; i++) {
+            var intent = intents[i]
+            var observation = observations[intent.observationIndex]
+            var item = observation ? providers[observation.providerIndex] : null
+            if (!item) {
+                continue
+            }
+            if (intent.kind === "status") {
+                sendPlasmaNotification(
+                    i18n("%1 status issue", item.title),
+                    item.status,
+                    notificationUrgency(intent.severity))
+                continue
+            }
+
+            var rows = Array.isArray(item.rows) ? item.rows : []
+            var row = rows[intent.rowIndex]
+            if (!row) {
+                continue
+            }
+            if (intent.kind === "quota") {
+                var body = i18n("%1 is %2% used", row.label, Math.round(row.usedPercent))
+                var resetLine = resetLabel(usageResetText(row))
+                if (resetLine.length > 0) {
+                    body += ". " + resetLine
+                }
+                sendPlasmaNotification(
+                    intent.severity === "major"
+                        ? i18n("%1 quota critical", item.title)
+                        : i18n("%1 quota warning", item.title),
+                    body,
+                    notificationUrgency(intent.severity))
+            } else if (intent.kind === "pace") {
+                sendPlasmaNotification(
+                    i18n("%1 pace warning", item.title),
+                    i18n("%1 may run out in %2", row.label, paceEtaText(row.paceEtaSeconds)),
+                    "normal")
+            } else if (intent.kind === "reset") {
+                sendPlasmaNotification(
+                    i18n("%1 limit reset", item.title),
+                    i18n("%1 is back to %2% used", row.label, Math.round(row.usedPercent)),
+                    "low")
+            }
+        }
+    }
+
+    function processNotifications() {
+        if (!enableNotifications || providers.length === 0) {
+            return
+        }
+        var observations = notificationObservations()
+        var mode = notificationsPrimed ? "observe" : "prime"
+        var result = NotificationPlanner.transition(
+            observations,
+            notificationMemo,
+            notificationPlannerOptions(mode))
+        // Commit the full transition before running any external effect. A
+        // re-entrant refresh cannot observe the old baseline and notify twice.
+        notificationMemo = result.nextMemo
+        notificationsPrimed = true
+        dispatchNotificationIntents(result.intents, observations)
     }
 
     function notificationRank(severity) {
