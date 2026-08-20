@@ -1,14 +1,14 @@
 # TODO
 
-Parity baseline: `docs/research/2026-08-16-macos-parity-0.50.0.md`, pinned to
-upstream v0.50.0 and probed against the installed CLI 0.50.0.
+Parity baseline: `docs/research/2026-08-20-macos-parity-0.54.0.md`, pinned to
+upstream v0.54.0 and probed against the installed CLI 0.54.0.
 
 - Provider-specific editable settings: the Providers page renders generic
   fields/actions from `docs/cli-provider-settings-descriptor.md` without
   provider-specific QML branches. Declared coverage includes source mode, API
   key, cookie source/manual cookie, enterprise/base URL, workspace/project ID,
   region, AWS profile/auth mode, and boolean extras. That descriptor is still a
-  *proposal*: on CLI 0.50.0 `config providers --descriptors` returns
+  *proposal*: on CLI 0.54.0 `config providers --descriptors` returns
   `Unknown option --descriptors` and the plain payload carries no `descriptor`
   key, so the whole path is dormant and the page degrades to enable/disable,
   `set-api-key` and docs/dashboard/login links. Keep that fallback working.
@@ -17,8 +17,9 @@ upstream v0.50.0 and probed against the installed CLI 0.50.0.
   organization/team editors, provider metric pickers, and quota thresholds. Do
   not duplicate macOS Swift provider settings logic in QML; extend
   `codexbar config` first. IBM Bob can use the existing single-key command, but
-  its token-account editing and the required Fireworks account slug still need
-  generic CLI field/actions.
+  its token-account editing still needs generic CLI field/actions. Fireworks
+  0.54.0 auto-discovers its account slug from the API key, so a follow-up can
+  enable the generic single-key setup path without a separate slug editor.
 - Provider onboarding parity: descriptor-backed dashboard actions are supported,
   and legacy login/account/dashboard/docs links remain as fallbacks. Add safer
   setup actions for providers that need browser-cookie import, local app files,
@@ -39,6 +40,11 @@ upstream v0.50.0 and probed against the installed CLI 0.50.0.
   selector drives the range chart, the heatmap, and the per-provider bars from
   one `cost` payload, so it must never add a CLI call. `historyCoverageIsEstablished`
   drives the "still collecting" note; a missing flag means established.
+- Cost truthfulness: CLI 0.54.0 emits `coverage` counters and `provenance`, plus
+  bounded project breakdown inputs. The widget does not consume them yet.
+  Normalize them before adding richer spend presentation so partial, estimated,
+  unmetered, or unpriced totals do not look exact. A future Projects view must
+  discard the emitted local `path` and retain only bounded display fields.
 - Quota warning thresholds are configurable through `quotaWarningPercent` and
   `quotaCriticalPercent`, bounded by `contents/ui/QuotaThresholds.js`, and drive
   both the notification level and the usage-bar markers. Per-provider thresholds
@@ -64,7 +70,10 @@ upstream v0.50.0 and probed against the installed CLI 0.50.0.
   existing Plasma-native display settings. The `runOut` display mode shows the
   predicted duration only while the CLI pace forecast reports exhaustion before
   the reset; keep it tied to `paceWarningActive` instead of the percent used.
-  The macOS weekly reserve token is the remaining panel-presentation gap.
+  The macOS weekly reserve token remains open. CLI 0.54.0 also adds conditional
+  menu-bar rules and direct primary/secondary/tertiary lane tokens; these are
+  implementable from existing normalized data only through a Plasma-native rule
+  model and configuration UI, not by copying the Swift persistence model.
 - Translations: gettext template extraction is in place. Add real `.po`
   catalogs, compiled catalog packaging, and translator contribution docs when
   localization work starts.
@@ -73,7 +82,7 @@ upstream v0.50.0 and probed against the installed CLI 0.50.0.
   exhaustion. Consider reset-imminent notifications only if they remain quiet,
   configurable, and tied to clear state transitions.
 - Provider drift checks: the Plasma fallback catalog covers all 69 provider IDs
-  released in CodexBar v0.49.1 and re-verified on 0.50.0, while retaining
+  released in CodexBar v0.49.1 and re-verified on 0.54.0, while retaining
   fork-only compatibility assets.
   When upstream releases providers, sync provider keys, CLI aliases, titles,
   colors, docs/dashboard/login URLs, icon assets, and
