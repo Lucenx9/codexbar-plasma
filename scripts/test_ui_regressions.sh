@@ -1856,7 +1856,7 @@ for trust_owner_source, trust_owner_text in (
         )
 for cost_trust_fragment in (
     "Kirigami.InlineMessage",
-    "required property var summary",
+    "property var summary: null",
     'i18n("%1 %2"',
     'i18n("The displayed range total',
 ):

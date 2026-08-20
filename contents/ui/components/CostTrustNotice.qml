@@ -5,7 +5,7 @@ import org.kde.kirigami as Kirigami
 Kirigami.InlineMessage {
     id: noticeRoot
 
-    required property var summary
+    property var summary: null
 
     visible: summary !== null && text.length > 0
     text: summaryText()
