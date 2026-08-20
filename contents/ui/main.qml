@@ -1259,13 +1259,16 @@ PlasmoidItem {
         CostPresentation.paintRoundedTopBar(context, x, baseline, width, height, radius)
     }
 
-    // Bar charts must fit the canvas for every point count the normalizers
-    // allow (up to 365 cost-history days and 120 detail-chart points). Deriving
-    // both the gap and the bar width from one step keeps the last bar inside
-    // `width`; a fixed minimum gap or bar width would push dense charts off the
-    // right edge and silently hide the newest data.
     function chartBarGeometry(width, count) {
         return CostPresentation.chartBarGeometry(width, count)
+    }
+
+    function chartLineX(width, count, index, inset) {
+        return CostPresentation.chartLineX(width, count, index, inset)
+    }
+
+    function chartLineY(height, fraction, inset) {
+        return CostPresentation.chartLineY(height, fraction, inset)
     }
 
     function buildChartBarGradient(context, accent, baseline, topOpacity, bottomOpacity) {

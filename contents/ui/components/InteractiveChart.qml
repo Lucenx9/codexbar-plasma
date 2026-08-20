@@ -175,6 +175,7 @@ ColumnLayout {
             }
 
             if (chart.kind === "line") {
+                var markerInset = 3.5
                 context.strokeStyle = chart.applet.canvasColor(chart.accent, 0.9)
                 context.fillStyle = chart.applet.canvasColor(chart.accent, 1)
                 context.lineWidth = 2
@@ -182,8 +183,9 @@ ColumnLayout {
                 context.lineJoin = "round"
                 context.beginPath()
                 for (var lineIndex = 0; lineIndex < chart.points.length; lineIndex++) {
-                    var lineX = chart.points.length === 1 ? width / 2 : width * lineIndex / (chart.points.length - 1)
-                    var lineY = baseline - (height - 3) * chart.chartFraction(chart.pointValue(chart.points[lineIndex]))
+                    var lineX = chart.applet.chartLineX(width, chart.points.length, lineIndex, markerInset)
+                    var lineY = chart.applet.chartLineY(height,
+                        chart.chartFraction(chart.pointValue(chart.points[lineIndex])), markerInset)
                     if (lineIndex === 0) {
                         context.moveTo(lineX, lineY)
                     } else {
@@ -192,8 +194,9 @@ ColumnLayout {
                 }
                 context.stroke()
                 for (var dotIndex = 0; dotIndex < chart.points.length; dotIndex++) {
-                    var dotX = chart.points.length === 1 ? width / 2 : width * dotIndex / (chart.points.length - 1)
-                    var dotY = baseline - (height - 3) * chart.chartFraction(chart.pointValue(chart.points[dotIndex]))
+                    var dotX = chart.applet.chartLineX(width, chart.points.length, dotIndex, markerInset)
+                    var dotY = chart.applet.chartLineY(height,
+                        chart.chartFraction(chart.pointValue(chart.points[dotIndex])), markerInset)
                     context.beginPath()
                     context.arc(dotX, dotY, dotIndex === chart.activeIndex ? 3.5 : 1.5, 0, Math.PI * 2)
                     context.fill()
@@ -210,7 +213,7 @@ ColumnLayout {
                 context.fillStyle = barIndex === chart.activeIndex ? activeFill : normalFill
                 chart.applet.paintRoundedTopBar(
                     context,
-                    barIndex * geometry.step,
+                    geometry.offset + barIndex * geometry.step,
                     baseline,
                     geometry.barWidth,
                     barHeight,

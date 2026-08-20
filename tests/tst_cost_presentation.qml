@@ -95,17 +95,42 @@ TestCase {
 
     function test_chartBarGeometryKeepsTheLastBarInsideTheCanvas() {
         var dense = CostPresentation.chartBarGeometry(100, 365)
-        verify(dense.step * 365 <= 100.0001)
+        verify(dense.offset >= 0)
+        verify(dense.offset + dense.step * (365 - 1) + dense.barWidth <= 100.0001)
         verify(dense.barWidth >= 1)
         var sparse = CostPresentation.chartBarGeometry(100, 2)
+        compare(sparse.offset, 2)
         compare(sparse.gap, 4)
+        compare(sparse.step, 50)
         compare(sparse.barWidth, 46)
+    }
+
+    function test_chartLineGeometryInsetsEndpointMarkers() {
+        compare(CostPresentation.chartLineX(100, 3, 0, 3.5), 3.5)
+        compare(CostPresentation.chartLineX(100, 3, 1, 3.5), 50)
+        compare(CostPresentation.chartLineX(100, 3, 2, 3.5), 96.5)
+
+        compare(CostPresentation.chartLineX(4, 2, 0, 3.5), 2)
+        compare(CostPresentation.chartLineX(4, 2, 1, 3.5), 2)
+        compare(CostPresentation.chartLineX(100, 1, 0, 3.5), 50)
+    }
+
+    function test_chartLineGeometryInsetsVerticalMarkers() {
+        compare(CostPresentation.chartLineY(100, 0, 3.5), 96.5)
+        compare(CostPresentation.chartLineY(100, 0.5, 3.5), 50)
+        compare(CostPresentation.chartLineY(100, 1, 3.5), 3.5)
+
+        compare(CostPresentation.chartLineY(4, 0, 3.5), 2)
+        compare(CostPresentation.chartLineY(4, 1, 3.5), 2)
+        compare(CostPresentation.chartLineY(100, -1, 3.5), 96.5)
+        compare(CostPresentation.chartLineY(100, 2, 3.5), 3.5)
     }
 
     function test_chartBarGeometrySurvivesAZeroPointChart() {
         var empty = CostPresentation.chartBarGeometry(0, 0)
         compare(empty.step, 0)
         compare(empty.barWidth, 1)
+        compare(empty.offset, 0)
     }
 
     function test_chartPointsClampNegativeValuesAndBoundLabels() {

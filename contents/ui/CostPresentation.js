@@ -115,20 +115,67 @@ function tokenCountString(tokens) {
     return Math.round(value).toString()
 }
 
-// Bar charts must fit the canvas for every point count the normalizers allow
-// (up to 365 cost-history days and 120 detail-chart points). Deriving both the
-// gap and the bar width from one step keeps the last bar inside `width`; a
-// fixed minimum gap or bar width would push dense charts off the right edge and
-// silently hide the newest data.
+// Dense charts keep a one-pixel bar, so their drawing step must account for the
+// bar width instead of the nominal point slot. Otherwise the newest bar extends
+// beyond the right edge of the canvas.
 function chartBarGeometry(width, count) {
-    var points = Math.max(1, Math.floor(Number(count) || 0))
-    var step = Math.max(0, Number(width) || 0) / points
-    var gap = Math.max(0, Math.min(4, step / 4))
-    return {
-        step: step,
-        gap: gap,
-        barWidth: Math.max(1, step - gap)
+    var numericWidth = Number(width)
+    var safeWidth = isFinite(numericWidth) ? Math.max(0, numericWidth) : 0
+    var numericCount = Math.floor(Number(count))
+    var points = isFinite(numericCount) ? Math.max(1, numericCount) : 1
+    var slotStep = safeWidth / points
+    var gap = Math.max(0, Math.min(4, slotStep / 4))
+    var barWidth = Math.max(1, slotStep - gap)
+
+    if (barWidth > slotStep) {
+        return {
+            step: points > 1 ? Math.max(0, safeWidth - barWidth) / (points - 1) : 0,
+            gap: gap,
+            barWidth: barWidth,
+            offset: 0
+        }
     }
+
+    return {
+        step: slotStep,
+        gap: gap,
+        barWidth: barWidth,
+        offset: Math.max(0, slotStep - barWidth) / 2
+    }
+}
+
+// Keep the largest interactive marker fully inside the canvas at both ends.
+function chartLineX(width, count, index, inset) {
+    var numericWidth = Number(width)
+    var safeWidth = isFinite(numericWidth) ? Math.max(0, numericWidth) : 0
+    var numericCount = Math.floor(Number(count))
+    var points = isFinite(numericCount) ? Math.max(1, numericCount) : 1
+    var numericInset = Number(inset)
+    var padding = Math.min(safeWidth / 2,
+        isFinite(numericInset) ? Math.max(0, numericInset) : 0)
+
+    if (points === 1) {
+        return safeWidth / 2
+    }
+
+    var numericIndex = Math.floor(Number(index))
+    var boundedIndex = isFinite(numericIndex)
+        ? Math.max(0, Math.min(points - 1, numericIndex))
+        : 0
+    return padding + (safeWidth - padding * 2) * boundedIndex / (points - 1)
+}
+
+function chartLineY(height, fraction, inset) {
+    var numericHeight = Number(height)
+    var safeHeight = isFinite(numericHeight) ? Math.max(0, numericHeight) : 0
+    var numericInset = Number(inset)
+    var padding = Math.min(safeHeight / 2,
+        isFinite(numericInset) ? Math.max(0, numericInset) : 0)
+    var numericFraction = Number(fraction)
+    var boundedFraction = isFinite(numericFraction)
+        ? Math.max(0, Math.min(1, numericFraction))
+        : 0
+    return safeHeight - padding - (safeHeight - padding * 2) * boundedFraction
 }
 
 function paintRoundedTopBar(context, x, baseline, width, height, radius) {

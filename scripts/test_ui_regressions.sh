@@ -1942,16 +1942,21 @@ if r'.replace(/(\d)([A-Za-z])/g, "$1 $2")' in reset_label_body:
     raise AssertionError("resetLabel must not separate a number from its own unit")
 
 # Bar charts are painted for up to 365 cost-history days and 120 detail-chart
-# points. A fixed minimum gap or bar width pushed the last bars past the canvas
-# width, silently hiding the newest data, so both charts share one step-derived
-# geometry helper instead of computing their own bar pitch.
+# points. Their one-pixel minimum width can exceed a dense point slot, so the
+# shared geometry helper must distribute the drawable bar edges inside the
+# canvas instead of using the nominal slot as the drawing step.
 if "function chartBarGeometry(width, count)" not in cost_presentation_text:
     raise AssertionError("CostPresentation.js must expose a shared bar-chart geometry helper")
 chart_geometry_body = function_body(cost_presentation_text, "chartBarGeometry")
-for fragment in ("var step = Math.max(0, Number(width) || 0) / points", "Math.max(1, step - gap)"):
+for fragment in (
+    "var slotStep = safeWidth / points",
+    "var barWidth = Math.max(1, slotStep - gap)",
+    "Math.max(0, safeWidth - barWidth) / (points - 1)",
+    "offset: Math.max(0, slotStep - barWidth) / 2",
+):
     if fragment not in chart_geometry_body:
         raise AssertionError(
-            f"chartBarGeometry must derive gap and bar width from one step: {fragment}"
+            f"chartBarGeometry must keep sparse and dense bars inside the canvas: {fragment}"
         )
 for label, source_text in (
     ("main.qml", main_text),
@@ -1961,6 +1966,16 @@ for label, source_text in (
         raise AssertionError(f"{label} bar charts must use the shared geometry helper")
     if "barWidth + gap" in source_text:
         raise AssertionError(f"{label} bar charts must not recompute their own bar pitch")
+if "geometry.offset + barIndex * geometry.step" not in interactive_chart_text:
+    raise AssertionError("provider detail bars must apply the shared canvas offset")
+
+# The active line-chart point grows to a 3.5px radius. Both axes must use the
+# shared inset geometry or endpoint and extrema markers are clipped by Canvas.
+for helper_name in ("chartLineX", "chartLineY"):
+    if f"function {helper_name}(" not in cost_presentation_text:
+        raise AssertionError(f"CostPresentation.js must expose {helper_name} marker geometry")
+    if f"chart.applet.{helper_name}(" not in interactive_chart_text:
+        raise AssertionError(f"provider detail line charts must use {helper_name}")
 
 reset_credits_body = function_body(main_text, "resetCreditsSection")
 if 'i18np("%1 available", "%1 available"' not in reset_credits_body:
