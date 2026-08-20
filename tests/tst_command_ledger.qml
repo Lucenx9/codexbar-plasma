@@ -42,23 +42,22 @@ TestCase {
         compare(CommandLedger.descriptor("sessions", "", 1000, 250, 9000).deadlineMs, 1250)
     }
 
-    // QML bindings on activeUsageCommands only re-evaluate when the property is
-    // reassigned, so neither opening nor closing may edit the map in place.
+    // QML bindings on command maps only re-evaluate when the property is
+    // reassigned, so neither opening nor closing may edit a map in place.
     function test_openedAndClosedReturnNewMapsWithoutMutating() {
         var original = ({})
         var withOne = CommandLedger.opened(original, "a", entry("usage", "", 10))
-        compare(CommandLedger.kindOf(original, "a"), "")
-        compare(CommandLedger.kindOf(withOne, "a"), "usage")
+        compare(CommandLedger.find(original, "a"), null)
+        compare(CommandLedger.find(withOne, "a").kind, "usage")
 
         var withoutOne = CommandLedger.closed(withOne, "a")
-        compare(CommandLedger.kindOf(withOne, "a"), "usage")
-        compare(CommandLedger.kindOf(withoutOne, "a"), "")
+        compare(CommandLedger.find(withOne, "a").kind, "usage")
+        compare(CommandLedger.find(withoutOne, "a"), null)
     }
 
     function test_openedRecordsAnEntryEvenWithoutADescriptor() {
         var commands = CommandLedger.opened(({}), "a", null)
-        verify(CommandLedger.find(commands, "a") !== null)
-        compare(CommandLedger.kindOf(commands, "a"), "")
+        compare(CommandLedger.find(commands, "a").kind, "")
         compare(CommandLedger.hasDeadlines(commands), false)
     }
 
@@ -85,21 +84,20 @@ TestCase {
         commands = CommandLedger.opened(commands, second, entry("usage", "", 20))
 
         compare(CommandLedger.find(commands, first), null)
-        compare(CommandLedger.kindOf(commands, first), "")
-        compare(CommandLedger.kindOf(commands, second), "usage")
+        compare(CommandLedger.find(commands, second).kind, "usage")
     }
 
-    function test_kindOfIsEmptyForAnUnknownSource() {
+    function test_findIsNullForAnUnknownSource() {
         var commands = CommandLedger.opened(({}), "a", entry("usage", "", 10))
-        compare(CommandLedger.kindOf(commands, "b"), "")
-        compare(CommandLedger.kindOf(commands, ""), "")
-        compare(CommandLedger.kindOf(({}), "a"), "")
+        compare(CommandLedger.find(commands, "b"), null)
+        compare(CommandLedger.find(commands, ""), null)
+        compare(CommandLedger.find(({}), "a"), null)
     }
 
-    function test_kindOfIgnoresInheritedProperties() {
+    function test_findIgnoresInheritedProperties() {
         var commands = CommandLedger.opened(({}), "a", entry("usage", "", 10))
-        compare(CommandLedger.kindOf(commands, "toString"), "")
-        compare(CommandLedger.kindOf(commands, "hasOwnProperty"), "")
+        compare(CommandLedger.find(commands, "toString"), null)
+        compare(CommandLedger.find(commands, "hasOwnProperty"), null)
     }
 
     function test_sourcesOfKindFindsEveryLiveCommandOfThatKind() {
@@ -166,7 +164,7 @@ TestCase {
             commands = CommandLedger.opened(commands, "src-" + i, entry(kinds[i], "", 10))
         }
         for (var j = 0; j < kinds.length; j++) {
-            compare(CommandLedger.kindOf(commands, "src-" + j), kinds[j])
+            compare(CommandLedger.find(commands, "src-" + j).kind, kinds[j])
         }
     }
 

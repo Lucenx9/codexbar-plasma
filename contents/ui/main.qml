@@ -1255,12 +1255,6 @@ PlasmoidItem {
         return days === 1 ? i18n("Today") : i18np("Last %1 day", "Last %1 days", days)
     }
 
-    // Returns the peak of the currently plotted metric, so the bars keep their
-    // scale when the Usage & Spend tab switches between cost and tokens.
-    function costSparklineMax(points) {
-        return CostPresentation.sparklineMax(points, costHistoryShowsTokens)
-    }
-
     function paintRoundedTopBar(context, x, baseline, width, height, radius) {
         CostPresentation.paintRoundedTopBar(context, x, baseline, width, height, radius)
     }
@@ -1297,10 +1291,6 @@ PlasmoidItem {
         return CostPresentation.spendSnapshots(tokenCosts, costHistoryDays, function(providerID) {
             return providerTitle(providerID)
         })
-    }
-
-    function costSnapshotMatchesSelectedRange(tokenCost) {
-        return CostPresentation.snapshotMatchesRange(tokenCost, costHistoryDays)
     }
 
     function spendDailyPoints() {
@@ -1391,11 +1381,6 @@ PlasmoidItem {
         }
         return i18n("Average: %1 / 1M tokens",
             CostPresentation.amountString(costNumberFormat, perMillion.value, perMillion.currency))
-    }
-
-    function costTokenSummary(cost, tokens, currency) {
-        return CostPresentation.tokenSummary(costNumberFormat, cost, tokens, currency,
-            i18n("%1 tokens", CostPresentation.tokenCountString(Number(tokens))))
     }
 
     readonly property int usageDashboardRowLimit: 10
@@ -1629,10 +1614,6 @@ PlasmoidItem {
             return i18n("%1 requests", tokenCountString(Number(item.requests)))
         }
         return ""
-    }
-
-    function compactCostTokenSummary(cost, tokens, currency) {
-        return CostPresentation.tokenSummary(costNumberFormat, cost, tokens, currency, "")
     }
 
     function providerTokenCost(providerID) {
@@ -3138,10 +3119,6 @@ PlasmoidItem {
 
     function copyObject(item) {
         return Guards.copyObject(item)
-    }
-
-    function hasText(value) {
-        return String(value || "").trim().length > 0
     }
 
     function hasAdditionalSections(item) {

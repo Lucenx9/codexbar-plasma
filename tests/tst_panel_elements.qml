@@ -6,12 +6,12 @@ TestCase {
     name: "PanelElements"
 
     function test_defaultOrderFillsEmptyConfiguration() {
-        compare(PanelElements.serializedOrder(""), "identity,status,text,meters")
+        compare(PanelElements.normalizedOrder("").join(","), "identity,status,text,meters")
     }
 
     function test_normalizationDropsUnknownAndDuplicateTokens() {
         compare(
-            PanelElements.serializedOrder("text,unknown,text,identity"),
+            PanelElements.normalizedOrder("text,unknown,text,identity").join(","),
             "text,identity,status,meters")
     }
 
@@ -26,6 +26,6 @@ TestCase {
 
     function test_largeInputIsBoundedAndFallsBackSafely() {
         var oversized = "unknown,".repeat(1000) + "text"
-        compare(PanelElements.serializedOrder(oversized), "identity,status,text,meters")
+        compare(PanelElements.normalizedOrder(oversized).join(","), "identity,status,text,meters")
     }
 }

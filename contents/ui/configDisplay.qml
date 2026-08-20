@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasma5support as Plasma5Support
+import "CommandLedger.js" as CommandLedger
 import "Guards.js" as Guards
 import "ProviderIdentity.js" as ProviderIdentity
 import "PanelElements.js" as PanelElements
@@ -130,73 +131,54 @@ KCM.SimpleKCM {
             "json",
             "--json-only"
         ].join(" ")
-        var sourceName = commandWithRunNonce(command)
-        var next = copyObject(overviewProviderCommands)
-        next[sourceName] = {
-            deadlineMs: Date.now() + overviewProviderCommandTimeoutMs
-        }
-        overviewProviderCommands = next
+        commandRunSerial += 1
+        var sourceName = CommandLedger.withRunNonce(command, commandRunSerial)
+        var descriptor = CommandLedger.descriptor(
+            "overviewProviders", "", Date.now(),
+            overviewProviderCommandTimeoutMs, overviewProviderCommandTimeoutMs)
+        overviewProviderCommands = CommandLedger.opened(
+            overviewProviderCommands, sourceName, descriptor)
         overviewProviderSource.connectSource(sourceName)
     }
 
-    function commandWithRunNonce(command) {
-        if (command.length === 0) {
-            return ""
-        }
-        commandRunSerial += 1
-        return "CODEXBAR_PLASMA_RUN=" + commandRunSerial + " " + command
-    }
-
     function disconnectOverviewProviderCommands() {
-        for (var command in overviewProviderCommands) {
-            overviewProviderSource.disconnectSource(command)
+        var sourceNames = CommandLedger.sourcesOfKind(
+            overviewProviderCommands, "overviewProviders")
+        for (var i = 0; i < sourceNames.length; i++) {
+            var sourceName = sourceNames[i]
+            overviewProviderSource.disconnectSource(sourceName)
         }
         overviewProviderCommands = ({})
     }
 
     function hasPendingOverviewProviderCommands() {
-        for (var sourceName in overviewProviderCommands) {
-            if (Guards.hasOwnKey(overviewProviderCommands, sourceName)) {
-                return true
-            }
-        }
-        return false
+        return CommandLedger.hasKind(overviewProviderCommands, "overviewProviders")
     }
 
     function expireOverviewProviderCommands(nowMs) {
-        var commands = copyObject(overviewProviderCommands)
-        var expiredCount = 0
-        for (var sourceName in commands) {
-            if (!Guards.hasOwnKey(commands, sourceName)) {
-                continue
-            }
-            var descriptor = commands[sourceName]
-            var deadline = descriptor ? Number(descriptor.deadlineMs) : 0
-            if (!isFinite(deadline) || deadline <= 0 || nowMs < deadline) {
-                continue
-            }
-            overviewProviderSource.disconnectSource(sourceName)
-            delete commands[sourceName]
-            expiredCount++
-        }
-        if (expiredCount === 0) {
+        var expired = CommandLedger.expired(overviewProviderCommands, nowMs)
+        if (expired.length === 0) {
             return
         }
+        var remaining = overviewProviderCommands
+        for (var i = 0; i < expired.length; i++) {
+            var sourceName = expired[i].sourceName
+            overviewProviderSource.disconnectSource(sourceName)
+            remaining = CommandLedger.closed(remaining, sourceName)
+        }
 
-        overviewProviderCommands = commands
+        overviewProviderCommands = remaining
         overviewProviders = []
         overviewProvidersLoading = false
         overviewProvidersError = i18n("Loading providers timed out. Try again.")
     }
 
     function handleOverviewProviderData(sourceName, stdoutText, stderrText) {
-        if (!overviewProviderCommands[sourceName]) {
+        if (!CommandLedger.find(overviewProviderCommands, sourceName)) {
             return
         }
 
-        var remaining = copyObject(overviewProviderCommands)
-        delete remaining[sourceName]
-        overviewProviderCommands = remaining
+        overviewProviderCommands = CommandLedger.closed(overviewProviderCommands, sourceName)
         overviewProvidersLoading = false
 
         var trimmed = stdoutText.trim()
@@ -350,10 +332,6 @@ KCM.SimpleKCM {
 
     function selectedOverviewProviderCount() {
         return resolvedOverviewProviderIDs().length
-    }
-
-    function copyObject(item) {
-        return Guards.copyObject(item)
     }
 
     function providerTitle(value) {
