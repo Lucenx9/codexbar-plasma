@@ -31,6 +31,9 @@ var maximumSessions = 128
 var maximumCostHistoryPoints = 365
 var maximumCostHistoryScanItems = 2048
 var maximumModelBreakdownsPerDay = 128
+// Coverage counters are metadata, not allocation sizes, but bounding them keeps
+// later aggregation inside an exact and intentionally small numeric domain.
+var maximumCostCoverageCount = 1000000000
 
 // Longest CLI-controlled pace ETA we will keep, in seconds.
 var maximumPaceEtaSeconds = 31536000
@@ -334,6 +337,65 @@ function boundedHistoryDays(days) {
     return isFinite(Number(days))
         ? Math.max(1, Math.min(maximumCostHistoryPoints, Number(days)))
         : 30
+}
+
+function normalizedCostCoverage(coverage) {
+    if (!isCliRecord(coverage)) {
+        return null
+    }
+
+    var fields = ["priced", "unpriced", "unmetered", "estimated"]
+    var result = ({})
+    for (var i = 0; i < fields.length; i++) {
+        var field = fields[i]
+        if (!hasOwnKey(coverage, field)) {
+            return null
+        }
+        var value = coverage[field]
+        if (typeof value !== "number"
+                || !isFinite(value)
+                || Math.floor(value) !== value
+                || value < 0
+                || value > maximumCostCoverageCount) {
+            return null
+        }
+        result[field] = value
+    }
+    return result
+}
+
+// `coverage` and `provenance` describe how trustworthy the top-level cost
+// figures are. Preserve only the official bounded contract and translate the
+// provenance wire enum before the snapshot becomes QML state; older payloads
+// and records whose two axes are both unusable remain quiet.
+function normalizeCostTrustMetadata(rawCostRecord) {
+    if (!isCliRecord(rawCostRecord)) {
+        return null
+    }
+
+    var coverage = hasOwnKey(rawCostRecord, "coverage")
+        ? normalizedCostCoverage(rawCostRecord.coverage)
+        : null
+    var sourceKind = ""
+    if (hasOwnKey(rawCostRecord, "provenance")
+            && typeof rawCostRecord.provenance === "string") {
+        switch (rawCostRecord.provenance) {
+        case "listPriceEstimate":
+            sourceKind = "listPrice"
+            break
+        case "vendorMetered":
+            sourceKind = "vendor"
+            break
+        case "mixed":
+        case "unknown":
+            sourceKind = rawCostRecord.provenance
+            break
+        }
+    }
+
+    return coverage !== null || sourceKind.length > 0
+        ? { coverage: coverage, sourceKind: sourceKind }
+        : null
 }
 
 function normalizeCostDaily(items, currency, days) {

@@ -454,6 +454,140 @@ function spendCurrency(costs) {
     return "USD"
 }
 
+function costMatchesSpendCurrency(cost, currency) {
+    var totals = cost && cost.totals ? cost.totals : ({})
+    return boundedText(totals.currency || currency, 12) === currency
+}
+
+function acceptedCostCoverage(value) {
+    if (value === null || typeof value !== "object" || Array.isArray(value)) {
+        return null
+    }
+    var fields = ["priced", "unpriced", "unmetered", "estimated"]
+    for (var i = 0; i < fields.length; i++) {
+        var field = fields[i]
+        var count = value[field]
+        if (!hasOwnKey(value, field)
+                || typeof count !== "number"
+                || !isFinite(count)
+                || Math.floor(count) !== count
+                || count < 0) {
+            return null
+        }
+    }
+    return value
+}
+
+function acceptedCostSourceKind(value) {
+    return typeof value === "string"
+            && ["listPrice", "vendor", "mixed", "unknown"]
+                .indexOf(value) !== -1
+        ? value
+        : ""
+}
+
+// Fold normalized pricing coverage and provenance into one presentation
+// decision. The caller localizes it; wire enum values never cross this seam.
+// For global spend, eligibility deliberately matches `spendTotals()` so the
+// qualifier always describes the currencies included in the displayed total.
+function costTrustSummary(costs) {
+    var items = Array.isArray(costs) ? costs : []
+    if (items.length === 0) {
+        return null
+    }
+
+    var currency = spendCurrency(items)
+    var hasEstimated = false
+    var hasUnpriced = false
+    var hasUnmetered = false
+    var hasListPrice = false
+    var hasVendor = false
+    var hasMixed = false
+    var hasUnknown = false
+    var hasUnclassifiedSource = false
+
+    for (var i = 0; i < items.length; i++) {
+        var item = items[i]
+        if (!item || !costMatchesSpendCurrency(item, currency)) {
+            continue
+        }
+        if (!hasOwnKey(item, "trust")
+                || item.trust === null
+                || typeof item.trust !== "object"
+                || Array.isArray(item.trust)) {
+            hasUnclassifiedSource = true
+            continue
+        }
+
+        var coverage = hasOwnKey(item.trust, "coverage")
+            ? acceptedCostCoverage(item.trust.coverage)
+            : null
+        if (coverage) {
+            hasEstimated = hasEstimated || coverage.estimated > 0
+            hasUnpriced = hasUnpriced || coverage.unpriced > 0
+            hasUnmetered = hasUnmetered || coverage.unmetered > 0
+        }
+
+        var sourceKind = hasOwnKey(item.trust, "sourceKind")
+            ? acceptedCostSourceKind(item.trust.sourceKind)
+            : ""
+        switch (sourceKind) {
+        case "listPrice":
+            hasListPrice = true
+            break
+        case "vendor":
+            hasVendor = true
+            break
+        case "mixed":
+            hasMixed = true
+            break
+        case "unknown":
+            hasUnknown = true
+            break
+        default:
+            hasUnclassifiedSource = true
+            break
+        }
+    }
+
+    var sourceKind = ""
+    if (hasUnknown) {
+        sourceKind = "unknown"
+    } else if (hasMixed || (hasListPrice && hasVendor)) {
+        sourceKind = "mixed"
+    } else if (hasListPrice) {
+        sourceKind = "listPrice"
+    } else if (hasVendor) {
+        sourceKind = "vendor"
+    }
+
+    if (hasListPrice || hasMixed) {
+        hasEstimated = true
+    }
+    // A source reported by only part of the displayed total cannot describe
+    // the whole amount. Keep all-legacy totals quiet, but make a mixed
+    // classified/unclassified aggregate explicitly conservative.
+    if (hasUnclassifiedSource && sourceKind.length > 0) {
+        sourceKind = "unknown"
+    }
+
+    var isPartial = hasUnpriced || hasUnmetered
+    if (!hasEstimated && !isPartial && sourceKind.length === 0) {
+        return null
+    }
+
+    return {
+        level: isPartial || sourceKind === "unknown" ? "warning" : "information",
+        valueMode: isPartial ? "partial"
+            : (sourceKind === "unknown" ? "approximate"
+            : (hasEstimated ? "estimated" : "plain")),
+        sourceKind: sourceKind,
+        hasEstimated: hasEstimated,
+        hasUnpriced: hasUnpriced,
+        hasUnmetered: hasUnmetered
+    }
+}
+
 function spendDailyPoints(fmt, costs, showsTokens) {
     var items = costs || []
     var byDate = ({})
@@ -504,7 +638,7 @@ function spendTotals(costs) {
     var totalTokens = 0
     for (var i = 0; i < items.length; i++) {
         var totals = items[i].totals || ({})
-        if (boundedText(totals.currency || currency, 12) !== currency) {
+        if (!costMatchesSpendCurrency(items[i], currency)) {
             continue
         }
         totalCost += Math.max(0, Number(totals.cost) || 0)

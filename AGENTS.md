@@ -264,10 +264,13 @@ v0.54.0, probed against the installed CLI 0.54.0).
   same `cost` payload; never add a CLI call for the metric, and keep the bar
   scale reading the selected metric. `historyCoverageIsEstablished` drives the
   "still collecting" note, and a missing flag counts as established.
-- CLI 0.54.0 cost payloads add `coverage`, `provenance`, and project breakdowns.
-  Normalize those before richer spend UI so partial or estimated totals do not
-  look exact. Any project projection must discard local `path` values and keep
-  only bounded display fields.
+- CLI 0.54.0 cost `coverage` counters and `provenance` are normalized by
+  `ProviderNormalizer.normalizeCostTrustMetadata`; provider and global totals
+  use `CostPresentation.costTrustSummary` to qualify estimated, partial, or
+  approximate amounts and render one shared notice. Keep missing legacy metadata
+  quiet, keep pricing coverage separate from `historyCoverageIsEstablished`, and
+  never expose raw provenance values in QML. Project breakdowns remain future
+  work: discard local `path` values and keep only bounded display fields.
 - Panel element composition has a persisted, sanitized order for identity,
   status, usage text, and meters. Keep existing visibility settings working.
   The `runOut` display mode stays tied to `paceWarningActive`, so it prints a

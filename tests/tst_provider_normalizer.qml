@@ -394,6 +394,100 @@ TestCase {
 
     // --- cost ---------------------------------------------------------------
 
+    function test_costTrustMetadataNormalizesTheOfficialContract() {
+        var trust = Normalizer.normalizeCostTrustMetadata({
+            coverage: {
+                priced: 4,
+                unpriced: 0,
+                unmetered: 2,
+                estimated: 1
+            },
+            provenance: "listPriceEstimate"
+        })
+
+        verify(trust !== null)
+        compare(trust.coverage.priced, 4)
+        compare(trust.coverage.unpriced, 0)
+        compare(trust.coverage.unmetered, 2)
+        compare(trust.coverage.estimated, 1)
+        compare(trust.sourceKind, "listPrice")
+    }
+
+    function test_costTrustMetadataIsQuietWhenTheCliOmitsIt() {
+        compare(Normalizer.normalizeCostTrustMetadata({ provider: "codex" }), null)
+        compare(Normalizer.normalizeCostTrustMetadata(null), null)
+        compare(Normalizer.normalizeCostTrustMetadata([]), null)
+    }
+
+    function test_costTrustMetadataKeepsEitherValidAxisWithoutLeakingTheOther() {
+        var coverageOnly = Normalizer.normalizeCostTrustMetadata({
+            coverage: { priced: 1, unpriced: 0, unmetered: 0, estimated: 0 },
+            provenance: " future-wire-value "
+        })
+        compare(coverageOnly.sourceKind, "")
+        compare(coverageOnly.coverage.priced, 1)
+
+        var provenanceOnly = Normalizer.normalizeCostTrustMetadata({
+            coverage: { priced: "1", unpriced: 0, unmetered: 0, estimated: 0 },
+            provenance: "vendorMetered"
+        })
+        compare(provenanceOnly.coverage, null)
+        compare(provenanceOnly.sourceKind, "vendor")
+
+        var officialValues = [
+            { wire: "listPriceEstimate", semantic: "listPrice" },
+            { wire: "vendorMetered", semantic: "vendor" },
+            { wire: "mixed", semantic: "mixed" },
+            { wire: "unknown", semantic: "unknown" }
+        ]
+        for (var i = 0; i < officialValues.length; i++) {
+            compare(Normalizer.normalizeCostTrustMetadata({
+                provenance: officialValues[i].wire
+            }).sourceKind, officialValues[i].semantic)
+        }
+    }
+
+    function test_costTrustMetadataRejectsMalformedCoverageAsAWhole() {
+        var valid = { priced: 1, unpriced: 0, unmetered: 0, estimated: 0 }
+        var invalidValues = ["1", -1, 0.5, NaN, Infinity,
+            Normalizer.maximumCostCoverageCount + 1]
+        for (var i = 0; i < invalidValues.length; i++) {
+            var coverage = {
+                priced: invalidValues[i],
+                unpriced: valid.unpriced,
+                unmetered: valid.unmetered,
+                estimated: valid.estimated
+            }
+            compare(Normalizer.normalizeCostTrustMetadata({ coverage: coverage }), null)
+        }
+
+        compare(Normalizer.normalizeCostTrustMetadata({ coverage: null }), null)
+        compare(Normalizer.normalizeCostTrustMetadata({ coverage: [] }), null)
+        compare(Normalizer.normalizeCostTrustMetadata({ coverage: "priced" }), null)
+        compare(Normalizer.normalizeCostTrustMetadata({
+            coverage: { priced: 1, unpriced: 0, unmetered: 0 }
+        }), null)
+    }
+
+    function test_costTrustMetadataRequiresOwnMetadataAndCounterFields() {
+        function InheritedRecord() {}
+        InheritedRecord.prototype.coverage = {
+            priced: 1, unpriced: 0, unmetered: 0, estimated: 0
+        }
+        InheritedRecord.prototype.provenance = "unknown"
+        compare(Normalizer.normalizeCostTrustMetadata(new InheritedRecord()), null)
+
+        function InheritedCoverage() {
+            this.priced = 1
+            this.unpriced = 0
+            this.unmetered = 0
+        }
+        InheritedCoverage.prototype.estimated = 0
+        compare(Normalizer.normalizeCostTrustMetadata({
+            coverage: new InheritedCoverage()
+        }), null)
+    }
+
     function test_normalizesDailyCostAndKeepsTheRequestedRange() {
         var daily = []
         for (var i = 0; i < 40; i++) {

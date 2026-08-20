@@ -84,6 +84,8 @@ interactive_chart_qml = root / "contents/ui/components/InteractiveChart.qml"
 sessions_view_qml = root / "contents/ui/components/SessionsView.qml"
 copyable_value_qml = root / "contents/ui/components/CopyableValue.qml"
 spend_view_qml = root / "contents/ui/components/SpendView.qml"
+full_representation_qml = root / "contents/ui/components/FullRepresentation.qml"
+cost_trust_notice_qml = root / "contents/ui/components/CostTrustNotice.qml"
 
 
 def function_body(text, name):
@@ -173,6 +175,8 @@ interactive_chart_text = interactive_chart_qml.read_text(encoding="utf-8")
 sessions_view_text = sessions_view_qml.read_text(encoding="utf-8")
 copyable_value_text = copyable_value_qml.read_text(encoding="utf-8")
 spend_view_text = spend_view_qml.read_text(encoding="utf-8")
+full_representation_text = full_representation_qml.read_text(encoding="utf-8")
+cost_trust_notice_text = cost_trust_notice_qml.read_text(encoding="utf-8")
 
 internal_config_keys = {
     "autoUpdateLastCheck",
@@ -1837,6 +1841,46 @@ if "modelData.monthLine" in spend_view_text:
 if "windowValueLine: costValueLine(" not in main_text:
     raise AssertionError(
         "normalized token costs must expose a window-free value line for range-scoped surfaces"
+    )
+for trust_owner_source, trust_owner_text in (
+    ("FullRepresentation.qml", full_representation_text),
+    ("SpendView.qml", spend_view_text),
+):
+    if "Components.CostTrustNotice" not in trust_owner_text:
+        raise AssertionError(
+            f"{trust_owner_source} must render the shared cost-trust notice"
+        )
+    if "CostPresentation.costTrustSummary(" not in trust_owner_text:
+        raise AssertionError(
+            f"{trust_owner_source} must delegate cost-trust policy to CostPresentation"
+        )
+for cost_trust_fragment in (
+    "Kirigami.InlineMessage",
+    "property var summary: null",
+    'i18n("%1 %2"',
+    'i18n("The displayed range total',
+):
+    if cost_trust_fragment not in cost_trust_notice_text:
+        raise AssertionError(
+            "CostTrustNotice must own the shared localized message and standard styling; "
+            f"missing {cost_trust_fragment!r}"
+        )
+for qualified_value_fragment in (
+    'i18n("%1 (estimated)"',
+    'i18n("%1 (partial)"',
+    'i18n("%1 (approximate)"',
+):
+    if qualified_value_fragment not in main_text:
+        raise AssertionError(
+            "cost amount lines must carry their trust qualifier in localized text; "
+            f"missing {qualified_value_fragment!r}"
+        )
+if not re.search(
+        r'sessionLine:\s*costLine\(i18n\("Today"\),\s*item\.sessionCostUSD,\s*'
+        r'item\.sessionTokens,\s*currency\)',
+        main_text):
+    raise AssertionError(
+        "window-level cost trust must not qualify the independent Today/session amount"
     )
 if "view.dailyPoints.length - 42" in spend_view_text:
     raise AssertionError(
