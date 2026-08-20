@@ -131,15 +131,20 @@ Use this order when sources disagree:
 ## Layout
 
 - `metadata.json`: Plasma applet metadata.
-- `contents/ui/main.qml`: the applet root. Owns CLI commands, process/nonce
-  lifecycle, parsing, normalization, provider identity, selection and
-  notification state, and the presentation helpers the popup binds to.
+- `contents/ui/main.qml`: the applet composition root. Owns CLI process/nonce
+  lifecycles, refresh and account coordination, selected state, configuration
+  updates, external effects, and the adapters the popup binds to.
+- `contents/ui/*.js`: pure trust-boundary, normalization, presentation, and
+  decision modules. Their public behavior is covered directly by `tests/tst_*.qml`.
 - `contents/ui/components/CompactRepresentation.qml`: the panel representation.
 - `contents/ui/components/FullRepresentation.qml`: the popup - tab switcher,
   overview, provider details, status badges, bars, credits, cost sections.
 - `contents/ui/components/`: presentation-only QML components used by the panel, popup, and config pages.
 - `contents/ui/configGeneral.qml`: general widget settings.
-- `contents/ui/configProviders.qml`: provider enablement and provider actions.
+- `contents/ui/configProviders.qml`: provider enablement and actions. Owns their
+  CLI process lifecycle, QML state, prompts, configuration writes, and effects.
+- `contents/ui/config/*.js`: pure provider-config protocol and command-planning
+  modules, with direct adversarial QtTests.
 - `contents/config/main.xml`: persisted Plasma configuration schema.
 - `contents/icons/`: applet and provider icons.
 - `scripts/`: static regression checks.
@@ -156,17 +161,39 @@ Use this order when sources disagree:
 - Keep helper names honest. `build*`, `format*`, `provider*Url`, `*Rows`, and
   `*Text` helpers should stay side-effect free. `refresh*`, `load*`, `parse*`,
   `select*`, `set*`, and `process*` helpers may mutate state.
-- Keep parsing, normalization, presentation rows, and UI rendering separated.
-  For new provider data, add/adjust a normalization helper before wiring QML
-  controls directly to raw JSON.
+- Before implementing non-trivial behavior, identify its owning QML surface,
+  input contract, external effects, and cheapest behavioral test seam. Put pure
+  parsing, normalization, presentation, planning, or transition logic in a
+  focused JS module in the same change; do not land it in a QML page for a later
+  extraction.
+- Make a pure module's public interface the behavioral test surface. A protocol
+  boundary accepts untrusted input and returns bounded validated data; a decision
+  boundary accepts explicit observations/options and returns semantic results,
+  intents, or opaque next state. It must not read root properties, localize text,
+  or perform effects.
+- Keep DataSource and CLI process/nonce/timer lifecycle, configuration writes,
+  prompts, URL opening, notifications, and other effects in the owning QML
+  surface. QML adapts inputs, commits returned state, localizes semantic results,
+  and performs those effects.
+- When multiple surfaces consume one CLI envelope, share its low-level bounded
+  record/envelope contract and keep surface-specific projections separate. Do
+  not duplicate raw parsing or force distinct UI semantics through one lossy
+  high-level result.
+- Extract only when the interface hides real complexity. Avoid pass-through
+  controllers, callback-heavy modules that mirror root state, and declarative
+  file splits driven only by line count.
+- Complete the seam with the feature: use direct adversarial QtTests for the
+  pure interface and surface assertions for QML wiring, effect ownership, and
+  lifecycle ordering. Do not pin private helper names or body decomposition once
+  behavior is covered directly.
 - Treat CLI JSON as a contract. When adding a field, update the normalizer,
   the UI surface, the relevant static check, and docs/TODO if behavior changes.
 - Prefer small named helpers over repeated inline JavaScript in delegates,
   timers, and DataSource callbacks.
 - Prefer small presentation-only QML components for repeated or bulky UI blocks.
   Pass normalized data and an explicit parent API object such as `applet` or
-  `configPage`; keep CLI commands, parsing, nonce/process lifecycle, and config
-  writes in the owning page unless there is a focused plan and test coverage.
+  `configPage`; keep command execution, nonce/process lifecycle, configuration
+  writes, and effects in the owning page.
 - Put non-obvious lifecycle state in names: `connected*`, `pending*`,
   `*Memo`, `*Revision`, `*Initialized`. Update that state close to the side
   effect it represents.
@@ -175,8 +202,8 @@ Use this order when sources disagree:
 - Provider identity data is easy to drift. When adding a provider, check
   provider keys, CLI aliases, title, color, docs/dashboard/login URLs, icon
   asset, and `scripts/test_provider_icons.sh`.
-- Every new UI rule that agents might accidentally break should get a cheap
-  static assertion in `scripts/` before relying on manual review.
+- Give durable QML wiring and effect rules cheap surface assertions in `scripts/`;
+  cover pure behavioral rules with direct QtTests instead of body searches.
 - Keep `AGENTS.md` short and practical. Add rules only after repeated friction
   or a real bug, and prefer pointing to canonical local examples over copying a
   full style guide.
