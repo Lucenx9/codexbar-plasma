@@ -184,15 +184,15 @@ Use this order when sources disagree:
 ## Current TODO mirror
 
 Keep this in sync with `TODO.md` when feature parity decisions change. Current
-parity baseline: `docs/research/2026-08-16-macos-parity-0.50.0.md` (upstream
-v0.50.0, probed against the installed CLI 0.50.0).
+parity baseline: `docs/research/2026-08-20-macos-parity-0.54.0.md` (upstream
+v0.54.0, probed against the installed CLI 0.54.0).
 
 - Provider-specific editing should come from a stable CLI descriptor, not
   duplicated provider-specific config logic in QML. The Providers page renders
   descriptor fields/actions from `docs/cli-provider-settings-descriptor.md` for
   generic source mode, API key, cookie source/manual cookie, enterprise/base
   URL, workspace/project ID, region, AWS profile/auth mode, and boolean extras.
-  That descriptor is a proposal, not shipped: on CLI 0.50.0
+  That descriptor is a proposal, not shipped: on CLI 0.54.0
   `config providers --descriptors` fails with `Unknown option --descriptors` and
   the plain payload has no `descriptor` key, so the path is dormant and the page
   falls back to enable/disable, `set-api-key` and links. Keep that fallback
@@ -200,7 +200,9 @@ v0.50.0, probed against the installed CLI 0.50.0).
   Missing controls include token-account add/edit/remove, provider-specific
   auth mode nuances, organization/team, metric, and quota threshold editors.
   IBM Bob can use the existing single-key command, but its token-account editing
-  and the required Fireworks account slug still need generic CLI field/actions.
+  still needs generic CLI field/actions. Fireworks 0.54.0 auto-discovers its
+  account slug from the API key, so a follow-up can enable the generic
+  single-key setup path without a separate slug editor.
 - Provider onboarding improvements should stay CLI-backed: dashboard actions
   can come from the descriptor and login/account links are fine as fallbacks,
   but browser-cookie import, local-file, OAuth/device-flow, CLI-auth setup, and
@@ -235,10 +237,16 @@ v0.50.0, probed against the installed CLI 0.50.0).
   same `cost` payload; never add a CLI call for the metric, and keep the bar
   scale reading the selected metric. `historyCoverageIsEstablished` drives the
   "still collecting" note, and a missing flag counts as established.
+- CLI 0.54.0 cost payloads add `coverage`, `provenance`, and project breakdowns.
+  Normalize those before richer spend UI so partial or estimated totals do not
+  look exact. Any project projection must discard local `path` values and keep
+  only bounded display fields.
 - Panel element composition has a persisted, sanitized order for identity,
   status, usage text, and meters. Keep existing visibility settings working.
   The `runOut` display mode stays tied to `paceWarningActive`, so it prints a
-  duration only when the CLI predicts exhaustion before the reset.
+  duration only when the CLI predicts exhaustion before the reset. The weekly
+  reserve token remains open. CLI 0.54.0 conditional and direct-lane tokens are
+  optional Plasma-native work; do not copy the macOS persistence model.
 - Gettext template extraction exists. Real `.po` catalogs, compiled catalog
   packaging, and translator contribution docs should come with localization
   work.
@@ -247,7 +255,7 @@ v0.50.0, probed against the installed CLI 0.50.0).
   stay quiet, configurable, and tied to clear state transitions.
 - The fallback catalog covers the 69 provider IDs released in CodexBar v0.49.1
   and retains fork-only compatibility assets. Re-verified against the installed
-  0.50.0 CLI, which reports the same 69 and adds none. Future drift syncs should
+  0.54.0 CLI, which reports the same 69 and adds none. Future drift syncs should
   cover provider keys, CLI aliases, titles, colors, docs/dashboard/login URLs,
   icon assets, and `scripts/test_provider_icons.sh`.
 - The GitHub Release updater is current. If a KDE Store channel is added,
