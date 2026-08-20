@@ -40,11 +40,12 @@ upstream v0.54.0 and probed against the installed CLI 0.54.0.
   selector drives the range chart, the heatmap, and the per-provider bars from
   one `cost` payload, so it must never add a CLI call. `historyCoverageIsEstablished`
   drives the "still collecting" note; a missing flag means established.
-- Cost truthfulness: CLI 0.54.0 emits `coverage` counters and `provenance`, plus
-  bounded project breakdown inputs. The widget does not consume them yet.
-  Normalize them before adding richer spend presentation so partial, estimated,
-  unmetered, or unpriced totals do not look exact. A future Projects view must
-  discard the emitted local `path` and retain only bounded display fields.
+- Cost truthfulness: CLI 0.54.0 `coverage` counters and `provenance` are
+  normalized behind a bounded trust boundary. Provider and global cost amounts
+  are qualified as estimated, partial, or approximate, and share one semantic
+  notice decision; older payloads remain quiet. Project breakdown inputs remain
+  future work: a Projects view must discard the emitted local `path` and retain
+  only bounded display fields.
 - Quota warning thresholds are configurable through `quotaWarningPercent` and
   `quotaCriticalPercent`, bounded by `contents/ui/QuotaThresholds.js`, and drive
   both the notification level and the usage-bar markers. Per-provider thresholds

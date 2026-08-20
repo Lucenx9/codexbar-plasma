@@ -1226,17 +1226,29 @@ PlasmoidItem {
             ? Math.max(1, Math.min(maximumCostHistoryPoints, Math.floor(fallbackHistoryDays)))
             : 30)
         var windowLabel = boundedDisplayText(item.historyLabel || costHistoryWindowLabel(item, historyDays), 120)
+        var trust = Normalizer.normalizeCostTrustMetadata(item)
+        var totals = Normalizer.normalizeCostTotals(
+            item.totals, item.last30DaysCostUSD, item.last30DaysTokens, currency)
+        var trustSummary = CostPresentation.costTrustSummary([{
+            totals: totals,
+            trust: trust
+        }])
+        var valueMode = trustSummary ? trustSummary.valueMode : "plain"
         return {
             provider: providerID,
             historyDays: historyDays,
             // Older payloads omit the flag; absent means "do not warn".
             historyCoverageEstablished: item.historyCoverageIsEstablished !== false,
+            trust: trust,
             title: i18n("Cost"),
+            // Top-level coverage/provenance describes the requested history
+            // window, not the independently emitted current-session figure.
             sessionLine: costLine(i18n("Today"), item.sessionCostUSD, item.sessionTokens, currency),
-            monthLine: costLine(windowLabel, item.last30DaysCostUSD, item.last30DaysTokens, currency),
-            windowValueLine: costValueLine(item.last30DaysCostUSD, item.last30DaysTokens, currency),
+            monthLine: costLine(windowLabel, item.last30DaysCostUSD, item.last30DaysTokens, currency, valueMode),
+            windowValueLine: costValueLine(
+                item.last30DaysCostUSD, item.last30DaysTokens, currency, valueMode),
             hintLine: tokenCostHint(providerID),
-            totals: Normalizer.normalizeCostTotals(item.totals, item.last30DaysCostUSD, item.last30DaysTokens, currency),
+            totals: totals,
             models: Normalizer.normalizeCostModels(item.daily, currency, historyDays),
             daily: Normalizer.normalizeCostDaily(item.daily, currency, historyDays)
         }
@@ -1310,12 +1322,17 @@ PlasmoidItem {
     }
 
     function spendTotalLine() {
-        var totals = CostPresentation.spendTotals(spendProviderCosts())
+        var costs = spendProviderCosts()
+        var totals = CostPresentation.spendTotals(costs)
         if (!totals) {
             return ""
         }
-        return i18n("%1 total - %2 tokens",
+        var trustSummary = CostPresentation.costTrustSummary(costs)
+        var costValue = qualifiedCostValue(
             CostPresentation.amountString(costNumberFormat, totals.cost, totals.currency),
+            trustSummary ? trustSummary.valueMode : "plain")
+        return i18n("%1 total - %2 tokens",
+            costValue,
             CostPresentation.tokenCountString(totals.tokens))
     }
 
@@ -3054,16 +3071,37 @@ PlasmoidItem {
 
     // Same figures as costLine without the window label, for surfaces that
     // already state the range once (the Usage & Spend range selector).
-    function costValueLine(cost, tokens, currency) {
-        var costValue = isFinite(Number(cost)) ? amountString(Number(cost), currency) : "-"
+    function qualifiedCostValue(value, valueMode) {
+        switch (valueMode) {
+        case "estimated":
+            return i18n("%1 (estimated)", value)
+        case "partial":
+            return i18n("%1 (partial)", value)
+        case "approximate":
+            return i18n("%1 (approximate)", value)
+        default:
+            return value
+        }
+    }
+
+    function costValueLine(cost, tokens, currency, valueMode) {
+        var hasCost = isFinite(Number(cost))
+        var costValue = hasCost ? amountString(Number(cost), currency) : "-"
+        if (hasCost) {
+            costValue = qualifiedCostValue(costValue, valueMode)
+        }
         if (isFinite(Number(tokens))) {
             return i18n("%1 - %2 tokens", costValue, tokenCountString(Number(tokens)))
         }
         return costValue
     }
 
-    function costLine(label, cost, tokens, currency) {
-        var costValue = isFinite(Number(cost)) ? amountString(Number(cost), currency) : "-"
+    function costLine(label, cost, tokens, currency, valueMode) {
+        var hasCost = isFinite(Number(cost))
+        var costValue = hasCost ? amountString(Number(cost), currency) : "-"
+        if (hasCost) {
+            costValue = qualifiedCostValue(costValue, valueMode)
+        }
         if (isFinite(Number(tokens))) {
             return i18n("%1: %2 - %3 tokens", label, costValue, tokenCountString(Number(tokens)))
         }

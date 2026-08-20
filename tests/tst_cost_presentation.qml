@@ -11,6 +11,13 @@ TestCase {
         return { label: label, cost: cost, tokens: tokens, currency: currency || "USD" }
     }
 
+    function trustedCost(currency, coverage, sourceKind) {
+        return {
+            totals: { cost: 1, tokens: 10, currency: currency || "USD" },
+            trust: { coverage: coverage || null, sourceKind: sourceKind || "" }
+        }
+    }
+
     function test_numberFormatFallsBackWhenTheCallerHasNoLocale() {
         var fallback = CostPresentation.numberFormat(undefined, undefined)
         compare(fallback.group, ",")
@@ -310,6 +317,100 @@ TestCase {
     function test_spendTotalsAreNullWithNoSnapshots() {
         compare(CostPresentation.spendTotals([]), null)
         compare(CostPresentation.spendTotals(null), null)
+    }
+
+    function test_costTrustSummaryIsQuietForLegacyAndExactUnspecifiedData() {
+        compare(CostPresentation.costTrustSummary([]), null)
+        compare(CostPresentation.costTrustSummary(null), null)
+        compare(CostPresentation.costTrustSummary([{ totals: { currency: "USD" } }]), null)
+        compare(CostPresentation.costTrustSummary([trustedCost("USD", {
+            priced: 3, unpriced: 0, unmetered: 0, estimated: 0
+        }, "")]), null)
+        compare(CostPresentation.costTrustSummary([{
+            totals: { currency: "USD" },
+            trust: { coverage: { priced: "3" }, sourceKind: "not-a-semantic-value" }
+        }]), null)
+
+        function InheritedTrust() {}
+        InheritedTrust.prototype.coverage = {
+            priced: 0, unpriced: 1, unmetered: 0, estimated: 0
+        }
+        InheritedTrust.prototype.sourceKind = "unknown"
+        compare(CostPresentation.costTrustSummary([{
+            totals: { currency: "USD" },
+            trust: new InheritedTrust()
+        }]), null)
+    }
+
+    function test_costTrustSummaryMapsEstimateAndSourceToSemanticKeys() {
+        var summary = CostPresentation.costTrustSummary([trustedCost("USD", {
+            priced: 4, unpriced: 0, unmetered: 0, estimated: 1
+        }, "listPrice")])
+
+        compare(summary.level, "information")
+        compare(summary.valueMode, "estimated")
+        compare(summary.sourceKind, "listPrice")
+        verify(summary.hasEstimated)
+        verify(!summary.hasUnpriced)
+        verify(!summary.hasUnmetered)
+    }
+
+    function test_costTrustSummaryMakesIncompleteCoverageAWarning() {
+        var summary = CostPresentation.costTrustSummary([trustedCost("USD", {
+            priced: 5, unpriced: 2, unmetered: 1, estimated: 0
+        }, "vendor")])
+
+        compare(summary.level, "warning")
+        compare(summary.valueMode, "partial")
+        compare(summary.sourceKind, "vendor")
+        verify(summary.hasUnpriced)
+        verify(summary.hasUnmetered)
+    }
+
+    function test_costTrustSummaryTreatsUnknownAsApproximateAndConservative() {
+        var summary = CostPresentation.costTrustSummary([
+            trustedCost("USD", null, "listPrice"),
+            trustedCost("USD", null, "unknown")
+        ])
+
+        compare(summary.level, "warning")
+        compare(summary.valueMode, "approximate")
+        compare(summary.sourceKind, "unknown")
+    }
+
+    function test_costTrustSummaryFoldsKnownSourcesWithoutCallingMixedIncomplete() {
+        var summary = CostPresentation.costTrustSummary([
+            trustedCost("USD", null, "listPrice"),
+            trustedCost("USD", null, "vendor")
+        ])
+
+        compare(summary.level, "information")
+        compare(summary.valueMode, "estimated")
+        compare(summary.sourceKind, "mixed")
+        verify(summary.hasEstimated)
+        verify(!summary.hasUnpriced)
+        verify(!summary.hasUnmetered)
+    }
+
+    function test_costTrustSummaryUsesTheSpendTotalCurrencyEligibility() {
+        var summary = CostPresentation.costTrustSummary([
+            trustedCost("USD", null, "listPrice"),
+            trustedCost("EUR", {
+                priced: 0, unpriced: 3, unmetered: 0, estimated: 0
+            }, "unknown")
+        ])
+
+        compare(summary.level, "information")
+        compare(summary.valueMode, "estimated")
+        compare(summary.sourceKind, "listPrice")
+        verify(!summary.hasUnpriced)
+    }
+
+    function test_costTrustSummaryDoesNotConfuseScanCoverageWithPricingCoverage() {
+        compare(CostPresentation.costTrustSummary([{
+            totals: { currency: "USD" },
+            historyCoverageEstablished: false
+        }]), null)
     }
 
     // A missing flag counts as established, so older CLI payloads do not print

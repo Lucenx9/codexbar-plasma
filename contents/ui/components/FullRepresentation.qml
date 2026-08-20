@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 import "." as Components
+import "../CostPresentation.js" as CostPresentation
 import "../TabStripGeometry.js" as TabStripGeometry
 
 Item {
@@ -1139,6 +1140,8 @@ Item {
                         id: tokenCostSection
 
                         readonly property var tokenCost: applet.selectedProviderData ? applet.selectedProviderData.tokenCost : null
+                        readonly property var costTrustSummary: CostPresentation.costTrustSummary(
+                            tokenCost ? [tokenCost] : [])
                         readonly property string costErrorText: applet.costErrorText
                         readonly property bool supportsLocalCost: applet.selectedProviderData
                             && applet.tokenCostHint(applet.selectedProviderData.provider).length > 0
@@ -1187,6 +1190,10 @@ Item {
                             opacity: applet.secondaryTextOpacity
                             Layout.fillWidth: true
                             elide: Text.ElideRight
+                        }
+
+                        Components.CostTrustNotice {
+                            summary: tokenCostSection.costTrustSummary
                         }
 
                         Components.InteractiveChart {

@@ -3,6 +3,8 @@ import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
+import "." as Components
+import "../CostPresentation.js" as CostPresentation
 
 ColumnLayout {
     id: view
@@ -10,6 +12,7 @@ ColumnLayout {
     required property var applet
     readonly property var dailyPoints: applet.spendDailyPoints()
     readonly property var providerCosts: applet.spendProviderCosts()
+    readonly property var costTrustSummary: CostPresentation.costTrustSummary(providerCosts)
     readonly property real heatmapMaximum: chartMaximum(dailyPoints)
 
     Layout.fillWidth: true
@@ -139,6 +142,10 @@ ColumnLayout {
         text: i18n("Local history is still being collected, so early days may be incomplete.")
         type: Kirigami.MessageType.Information
         Layout.fillWidth: true
+    }
+
+    Components.CostTrustNotice {
+        summary: view.costTrustSummary
     }
 
     Kirigami.PlaceholderMessage {

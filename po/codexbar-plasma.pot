@@ -44,6 +44,50 @@ msgstr ""
 msgid "Copied"
 msgstr ""
 
+#: contents/ui/components/CostTrustNotice.qml
+msgid ""
+"Some usage in the selected range is unpriced or unmetered, so the displayed "
+"cost total is incomplete."
+msgstr ""
+
+#: contents/ui/components/CostTrustNotice.qml
+msgid ""
+"Some usage in the selected range is unpriced, so the displayed cost total is "
+"incomplete."
+msgstr ""
+
+#: contents/ui/components/CostTrustNotice.qml
+msgid ""
+"Some usage in the selected range is unmetered, so the displayed cost total "
+"is incomplete."
+msgstr ""
+
+#: contents/ui/components/CostTrustNotice.qml
+msgid "Some usage costs in the selected range are estimated."
+msgstr ""
+
+#: contents/ui/components/CostTrustNotice.qml
+msgid "The displayed range total is estimated from public list prices."
+msgstr ""
+
+#: contents/ui/components/CostTrustNotice.qml
+msgid "The displayed range total uses provider-metered cost data."
+msgstr ""
+
+#: contents/ui/components/CostTrustNotice.qml
+msgid ""
+"The displayed range total combines provider-metered cost data and public "
+"list-price estimates."
+msgstr ""
+
+#: contents/ui/components/CostTrustNotice.qml
+msgid "The source of the displayed range total could not be verified."
+msgstr ""
+
+#: contents/ui/components/CostTrustNotice.qml
+msgid "%1 %2"
+msgstr ""
+
 #: contents/ui/components/FullRepresentation.qml contents/ui/configDisplay.qml
 msgid "Overview"
 msgstr ""
@@ -1802,6 +1846,18 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Open Droid in Browser..."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 (estimated)"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 (partial)"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 (approximate)"
 msgstr ""
 
 #: contents/ui/main.qml

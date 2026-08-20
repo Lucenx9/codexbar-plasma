@@ -17,6 +17,11 @@ v0.54.0 is the latest upstream release at the time of writing. Every CLI claim
 below is a live probe of the exact installed binary; macOS-only claims come from
 the pinned release notes and tagged sources.
 
+Follow-up status: after this pinned comparison, Plasma implemented bounded cost
+coverage/provenance normalization, semantic notices, and estimated/partial/
+approximate amount qualifiers. References below that call cost trust a gap
+describe the pinned `a30e4ea` baseline. Project spend remains open.
+
 ## Verdict
 
 The provider-settings boundary is unchanged: the released CLI still has no
@@ -153,11 +158,9 @@ catalog sync is needed.
 
 Keep provider configuration blocked at the frontend boundary. Prioritize:
 
-1. cost coverage/provenance, because it prevents partial or estimated totals
-   from looking exact;
-2. a bounded, path-free project-spend projection if a richer spend view is the
+1. a bounded, path-free project-spend projection if a richer spend view is the
    next product goal;
-3. panel conditionals, direct lanes, pace visibility, and the weekly reserve
+2. panel conditionals, direct lanes, pace visibility, and the weekly reserve
    token only after choosing the smallest Plasma-native UX worth maintaining.
 
 Do not implement provider-specific settings, credential discovery, hourly
