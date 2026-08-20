@@ -165,6 +165,33 @@ function chartLineX(width, count, index, inset) {
     return padding + (safeWidth - padding * 2) * boundedIndex / (points - 1)
 }
 
+function chartLineIndexAt(width, count, positionX, inset) {
+    var numericWidth = Number(width)
+    var safeWidth = isFinite(numericWidth) ? Math.max(0, numericWidth) : 0
+    var numericCount = Math.floor(Number(count))
+    var points = isFinite(numericCount) ? Math.max(0, numericCount) : 0
+    if (points === 0 || safeWidth === 0) {
+        return -1
+    }
+    if (points === 1) {
+        return 0
+    }
+
+    var numericInset = Number(inset)
+    var padding = Math.min(safeWidth / 2,
+        isFinite(numericInset) ? Math.max(0, numericInset) : 0)
+    var numericPosition = Number(positionX)
+    var boundedPosition = isFinite(numericPosition)
+        ? Math.max(0, Math.min(safeWidth, numericPosition))
+        : 0
+    var drawableWidth = safeWidth - padding * 2
+    var normalizedPosition = drawableWidth > 0
+        ? (boundedPosition - padding) / drawableWidth
+        : boundedPosition / safeWidth
+    return Math.max(0, Math.min(points - 1,
+        Math.round(normalizedPosition * (points - 1))))
+}
+
 function chartLineY(height, fraction, inset) {
     var numericHeight = Number(height)
     var safeHeight = isFinite(numericHeight) ? Math.max(0, numericHeight) : 0

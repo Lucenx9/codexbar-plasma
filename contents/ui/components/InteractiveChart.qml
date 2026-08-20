@@ -20,6 +20,7 @@ ColumnLayout {
     readonly property int activeIndex: hoveredIndex >= 0 ? hoveredIndex : selectedIndex
     readonly property bool hasActivePoint: activeIndex >= 0 && activeIndex < points.length
     readonly property real maximumValue: chartMaximum(points)
+    readonly property real lineMarkerInset: 3.5
 
     Layout.fillWidth: true
     spacing: Kirigami.Units.smallSpacing / 2
@@ -64,8 +65,8 @@ ColumnLayout {
             return -1
         }
         if (kind === "line" && points.length > 1) {
-            return Math.max(0, Math.min(points.length - 1,
-                Math.round(positionX * (points.length - 1) / plot.width)))
+            return chart.applet.chartLineIndexAt(
+                plot.width, points.length, positionX, chart.lineMarkerInset)
         }
         return Math.max(0, Math.min(points.length - 1,
             Math.floor(positionX * points.length / plot.width)))
@@ -175,7 +176,6 @@ ColumnLayout {
             }
 
             if (chart.kind === "line") {
-                var markerInset = 3.5
                 context.strokeStyle = chart.applet.canvasColor(chart.accent, 0.9)
                 context.fillStyle = chart.applet.canvasColor(chart.accent, 1)
                 context.lineWidth = 2
@@ -183,9 +183,10 @@ ColumnLayout {
                 context.lineJoin = "round"
                 context.beginPath()
                 for (var lineIndex = 0; lineIndex < chart.points.length; lineIndex++) {
-                    var lineX = chart.applet.chartLineX(width, chart.points.length, lineIndex, markerInset)
+                    var lineX = chart.applet.chartLineX(
+                        width, chart.points.length, lineIndex, chart.lineMarkerInset)
                     var lineY = chart.applet.chartLineY(height,
-                        chart.chartFraction(chart.pointValue(chart.points[lineIndex])), markerInset)
+                        chart.chartFraction(chart.pointValue(chart.points[lineIndex])), chart.lineMarkerInset)
                     if (lineIndex === 0) {
                         context.moveTo(lineX, lineY)
                     } else {
@@ -194,11 +195,14 @@ ColumnLayout {
                 }
                 context.stroke()
                 for (var dotIndex = 0; dotIndex < chart.points.length; dotIndex++) {
-                    var dotX = chart.applet.chartLineX(width, chart.points.length, dotIndex, markerInset)
+                    var dotX = chart.applet.chartLineX(
+                        width, chart.points.length, dotIndex, chart.lineMarkerInset)
                     var dotY = chart.applet.chartLineY(height,
-                        chart.chartFraction(chart.pointValue(chart.points[dotIndex])), markerInset)
+                        chart.chartFraction(chart.pointValue(chart.points[dotIndex])), chart.lineMarkerInset)
                     context.beginPath()
-                    context.arc(dotX, dotY, dotIndex === chart.activeIndex ? 3.5 : 1.5, 0, Math.PI * 2)
+                    context.arc(dotX, dotY,
+                        dotIndex === chart.activeIndex ? chart.lineMarkerInset : 1.5,
+                        0, Math.PI * 2)
                     context.fill()
                 }
                 return

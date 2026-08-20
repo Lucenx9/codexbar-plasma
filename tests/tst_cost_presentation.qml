@@ -115,6 +115,14 @@ TestCase {
         compare(CostPresentation.chartLineX(100, 1, 0, 3.5), 50)
     }
 
+    function test_chartLineHitTestingMatchesInsetMarkerPositions() {
+        compare(CostPresentation.chartLineIndexAt(300, 120, 3.5, 3.5), 0)
+        compare(CostPresentation.chartLineIndexAt(300, 120, 296.5, 3.5), 119)
+        compare(CostPresentation.chartLineIndexAt(300, 120, 150, 3.5), 60)
+        compare(CostPresentation.chartLineIndexAt(300, 120, 0, 3.5), 0)
+        compare(CostPresentation.chartLineIndexAt(300, 120, 300, 3.5), 119)
+    }
+
     function test_chartLineGeometryInsetsVerticalMarkers() {
         compare(CostPresentation.chartLineY(100, 0, 3.5), 96.5)
         compare(CostPresentation.chartLineY(100, 0.5, 3.5), 50)

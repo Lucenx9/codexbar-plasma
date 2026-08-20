@@ -1267,6 +1267,10 @@ PlasmoidItem {
         return CostPresentation.chartLineX(width, count, index, inset)
     }
 
+    function chartLineIndexAt(width, count, positionX, inset) {
+        return CostPresentation.chartLineIndexAt(width, count, positionX, inset)
+    }
+
     function chartLineY(height, fraction, inset) {
         return CostPresentation.chartLineY(height, fraction, inset)
     }

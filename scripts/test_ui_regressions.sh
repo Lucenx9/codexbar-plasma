@@ -1969,11 +1969,14 @@ for label, source_text in (
 if "geometry.offset + barIndex * geometry.step" not in interactive_chart_text:
     raise AssertionError("provider detail bars must apply the shared canvas offset")
 
-# The active line-chart point grows to a 3.5px radius. Both axes must use the
-# shared inset geometry or endpoint and extrema markers are clipped by Canvas.
-for helper_name in ("chartLineX", "chartLineY"):
+# The active line-chart point grows to a 3.5px radius. Both axes and pointer hit
+# testing must use the shared inset geometry so the visible marker stays inside
+# Canvas and resolves back to its own point.
+for helper_name in ("chartLineX", "chartLineIndexAt", "chartLineY"):
     if f"function {helper_name}(" not in cost_presentation_text:
         raise AssertionError(f"CostPresentation.js must expose {helper_name} marker geometry")
+    if f"function {helper_name}(" not in main_text:
+        raise AssertionError(f"main.qml must expose {helper_name} to presentation components")
     if f"chart.applet.{helper_name}(" not in interactive_chart_text:
         raise AssertionError(f"provider detail line charts must use {helper_name}")
 
