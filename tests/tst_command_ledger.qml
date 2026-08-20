@@ -119,6 +119,15 @@ TestCase {
         compare(CommandLedger.hasKind(({}), "cost"), false)
     }
 
+    function test_hasAnyKindCanIgnoreIndependentCostWork() {
+        var refreshKinds = ["usage", "providerConfig", "sessions", "providerFallback"]
+        var commands = CommandLedger.opened(({}), "cost", entry("cost", "", 10))
+        compare(CommandLedger.hasAnyKind(commands, refreshKinds), false)
+
+        commands = CommandLedger.opened(commands, "usage", entry("usage", "", 10))
+        compare(CommandLedger.hasAnyKind(commands, refreshKinds), true)
+    }
+
     // Account loads are waited on without a clock, so they must not keep the
     // timeout timer running.
     function test_hasDeadlinesIgnoresCommandsWaitedOnWithoutAClock() {

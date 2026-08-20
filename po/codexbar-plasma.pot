@@ -36,6 +36,10 @@ msgstr ""
 msgid "%1: %2"
 msgstr ""
 
+#: contents/ui/components/CompactRepresentation.qml
+msgid "Open %1"
+msgstr ""
+
 #: contents/ui/components/CopyableValue.qml
 msgid "Copy value"
 msgstr ""

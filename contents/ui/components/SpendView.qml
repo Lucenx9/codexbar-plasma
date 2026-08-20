@@ -124,7 +124,7 @@ ColumnLayout {
             icon.name: "view-refresh"
             enabled: !view.applet.costLoading
             Accessible.name: i18n("Refresh cost data")
-            onClicked: view.applet.refreshCost()
+            onClicked: view.applet.refreshCost(true)
         }
     }
 

@@ -289,6 +289,19 @@ Item {
                             }
                         }
                     }
+
+                    MouseArea {
+                        id: compactMeterMouse
+
+                        anchors.fill: parent
+                        z: 1
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: compactRoot.applet.openProviderFromPanel(compactMeter.modelData.provider)
+
+                        Controls.ToolTip.visible: containsMouse
+                        Controls.ToolTip.text: i18n("Open %1", compactMeter.modelData.title)
+                    }
                 }
             }
         }

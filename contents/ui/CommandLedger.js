@@ -105,6 +105,22 @@ function hasKind(commands, kind) {
     return sourcesOfKind(commands, kind).length > 0
 }
 
+function hasAnyKind(commands, kinds) {
+    if (!Array.isArray(kinds) || kinds.length === 0) {
+        return false
+    }
+    for (var sourceName in commands) {
+        if (!hasOwnKey(commands, sourceName)) {
+            continue
+        }
+        var entry = commands[sourceName]
+        if (entry && kinds.indexOf(String(entry.kind || "")) >= 0) {
+            return true
+        }
+    }
+    return false
+}
+
 // Drives the timeout timer. A zero or absent deadline means the command is
 // waited on without a clock, so it must not keep the timer running.
 function hasDeadlines(commands) {

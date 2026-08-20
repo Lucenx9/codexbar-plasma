@@ -510,8 +510,8 @@ if "onResetTimesShowAbsoluteChanged: Qt.callLater(refreshNow)" in main_text:
     raise AssertionError("changing reset formatting must not fan out new CLI requests")
 
 refresh_body = function_body(main_text, "refreshNow")
-if "refreshCost()" not in refresh_body:
-    raise AssertionError("refreshNow must retire or refresh cost work before every return")
+if "refreshCost(" in refresh_body or 'retireUsageCommandKind("cost")' in refresh_body:
+    raise AssertionError("quota refreshes must not start or retire independent cost scans")
 fallback_body = function_body(main_text, "canUseProviderFallback")
 if not re.fullmatch(
     r"\s*return\s+source\.length\s*===\s*0\s*\|\|\s*hasSelectedAccountOverrides\(\)\s*",
@@ -829,6 +829,29 @@ for meter_fragment in (
         raise AssertionError(
             "panel provider meters must scale with the panel instead of using "
             f"fixed pixel sizes; missing {meter_fragment!r}"
+        )
+for provider_click_fragment in (
+    "id: compactMeterMouse",
+    "anchors.fill: parent",
+    "compactRoot.applet.openProviderFromPanel(compactMeter.modelData.provider)",
+):
+    if provider_click_fragment not in compact_meter_body:
+        raise AssertionError(
+            "each panel provider meter must open its matching provider tab; "
+            f"missing {provider_click_fragment!r}"
+        )
+
+open_panel_provider_body = function_body(main_text, "openProviderFromPanel")
+for panel_selection_fragment in (
+    "providerIndexForID(providerID)",
+    "selectedProviderID = providers[index].provider",
+    "selectionInitialized = true",
+    "expanded = true",
+):
+    if panel_selection_fragment not in open_panel_provider_body:
+        raise AssertionError(
+            "panel meter selection must stay in the applet state owner; "
+            f"missing {panel_selection_fragment!r}"
         )
 if "readonly property int meterContentHeight: Math.max(0, height" not in compact_representation_text:
     raise AssertionError("panel meter geometry must derive from the compact representation height")
@@ -1798,6 +1821,8 @@ if "elementLoader.implicitWidth" in compact_representation_text:
     raise AssertionError("compact panel text measurement must not feed back through its Loader width")
 if "rangeCombo.valueAt(index)" not in spend_view_text:
     raise AssertionError("the cost range selector must use the activated option instead of stale currentValue")
+if "view.applet.refreshCost(true)" not in spend_view_text:
+    raise AssertionError("the cost refresh button must explicitly bypass the automatic hourly throttle")
 for cost_loading_fragment in (
     "enabled: !view.applet.costLoading",
     "visible: view.applet.costLoading && view.providerCosts.length === 0",
