@@ -855,6 +855,10 @@ if "forceActiveFocus(Qt.MouseFocusReason)" in compact_meter_body:
     raise AssertionError(
         "a mouse click on a panel meter must not leave the keyboard focus ring active"
     )
+if "Controls.ToolTip" in compact_meter_body:
+    raise AssertionError(
+        "panel meters must rely on the plasmoid tooltip instead of stacking a second tooltip"
+    )
 
 open_panel_provider_body = function_body(main_text, "openProviderFromPanel")
 for panel_selection_fragment in (

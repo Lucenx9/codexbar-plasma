@@ -328,9 +328,6 @@ Item {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: compactMeter.activate()
-
-                        Controls.ToolTip.visible: containsMouse
-                        Controls.ToolTip.text: i18n("Open %1", compactMeter.modelData.title)
                     }
                 }
             }
