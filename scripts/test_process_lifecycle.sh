@@ -343,6 +343,15 @@ require_all(
 if "descriptor.commandPathSignature !== commandPath" not in providers.function_body("handleData"):
     raise AssertionError("config command results must reject a stale CLI path")
 
+list_start_body = providers.function_body("runProviderListCommand")
+if "providerConfigRevision: providerConfigRevisionValue()" not in list_start_body:
+    raise AssertionError("provider lists must capture the config revision they started with")
+list_result_body = providers.function_body("handleListResult")
+if "ProviderConfigProtocol.providerListResultIsCurrent(" not in list_result_body:
+    raise AssertionError("provider lists must reject results made stale by a completed mutation")
+if "reload(true)" not in list_result_body:
+    raise AssertionError("a stale provider list must schedule a current replacement")
+
 for function_name in ("runProviderListCommand", "setEnabled", "loadProviderSettings", "writeDescriptorField", "runDescriptorAction"):
     body = providers.function_body(function_name)
     if "timeoutMs: configCommandTimeoutMs" not in body:

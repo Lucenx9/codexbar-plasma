@@ -129,7 +129,7 @@ Rectangle {
             Layout.preferredHeight: Kirigami.Units.iconSizes.small
         }
 
-        PlasmaComponents.Label {
+        PlainPlasmaLabel {
             id: tabLabel
 
             text: tab.title

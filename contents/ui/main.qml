@@ -646,6 +646,8 @@ PlasmoidItem {
             nextProviders.push(normalizeProvider(items[i]))
         }
 
+        nextProviders = Normalizer.dedupeProviderSnapshots(nextProviders)
+
         markNotificationProvidersFresh(nextProviders)
         providers = nextProviders
         errorText = nextProviders.length === 0 ? boundedCliMessage(stderrText) : ""
@@ -847,6 +849,8 @@ PlasmoidItem {
                 nextProviders.push(items[j])
             }
         }
+
+        nextProviders = Normalizer.dedupeProviderSnapshots(nextProviders)
 
         markNotificationProvidersFresh(nextProviders)
         providers = nextProviders
@@ -1126,14 +1130,24 @@ PlasmoidItem {
         var items = Array.isArray(payload) ? payload : [payload]
         var nextCosts = ({})
         var costMessage = ""
+        var hadCostRecordError = false
+        var failedCostProviderIDs = []
         var itemLimit = Math.min(items.length, maximumCostSnapshots)
         for (var i = 0; i < itemLimit; i++) {
             var item = items[i]
             if (!isCliRecord(item)) {
                 continue
             }
+            var itemHasCostError = Normalizer.costRecordHasError(item)
+            if (itemHasCostError) {
+                hadCostRecordError = true
+                failedCostProviderIDs.push(item.provider)
+            }
             if (costMessage.length === 0 && item && item.error && item.error.message) {
                 costMessage = boundedCliMessage(item.error.message)
+            }
+            if (itemHasCostError) {
+                continue
             }
             var cost = normalizeTokenCost(item, requestedHistoryDays)
             var providerID = cost ? providerMapKey(cost.provider) : ""
@@ -1142,15 +1156,13 @@ PlasmoidItem {
             }
         }
 
-        if (costMessage.length > 0) {
-            var mergedCosts = copyObject(tokenCosts)
-            for (var providerKeyName in nextCosts) {
-                if (hasOwnKey(nextCosts, providerKeyName)) {
-                    mergedCosts[providerKeyName] = nextCosts[providerKeyName]
-                }
-            }
-            tokenCosts = mergedCosts
+        if (hadCostRecordError) {
+            tokenCosts = Normalizer.mergeCostSnapshotsAfterPartialFailure(
+                tokenCosts, nextCosts, failedCostProviderIDs)
             costErrorText = costMessage
+            if (costErrorText.length === 0) {
+                costErrorText = i18n("Some cost data could not be refreshed.")
+            }
         } else {
             tokenCosts = nextCosts
             costErrorText = ""

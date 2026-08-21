@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
-Kirigami.InlineMessage {
+PlainInlineMessage {
     id: noticeRoot
 
     property var stateOwner: null
@@ -12,7 +12,7 @@ Kirigami.InlineMessage {
     property var noticeState: ({ key: "", dismissed: false, shouldShow: false })
 
     visible: false
-    text: summaryText()
+    plainText: summaryText()
     type: summary && summary.level === "warning"
         ? Kirigami.MessageType.Warning
         : Kirigami.MessageType.Information

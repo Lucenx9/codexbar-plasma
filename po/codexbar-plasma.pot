@@ -1257,6 +1257,10 @@ msgid "Could not parse codexbar cost JSON: %1"
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "Some cost data could not be refreshed."
+msgstr ""
+
+#: contents/ui/main.qml
 msgid "codexbar sessions did not return JSON."
 msgstr ""
 

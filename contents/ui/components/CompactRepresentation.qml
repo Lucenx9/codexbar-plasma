@@ -49,7 +49,7 @@ Item {
 
     // Measure outside the Loader so its layout-assigned width cannot feed back
     // into the label's preferred width and collapse the compact representation.
-    PlasmaComponents.Label {
+    PlainPlasmaLabel {
         id: compactTextMeasurer
 
         visible: false
@@ -185,10 +185,12 @@ Item {
             border.width: 1
             border.color: Kirigami.Theme.backgroundColor
 
-            Controls.ToolTip.visible: compactStatusMouse.containsMouse
-            Controls.ToolTip.text: compactRoot.incidentProvider
-                ? i18n("%1: %2", compactRoot.incidentProvider.title, compactRoot.incidentProvider.status)
-                : ""
+            PlainToolTip {
+                visible: compactStatusMouse.containsMouse
+                plainText: compactRoot.incidentProvider
+                    ? i18n("%1: %2", compactRoot.incidentProvider.title, compactRoot.incidentProvider.status)
+                    : ""
+            }
 
             MouseArea {
                 id: compactStatusMouse
@@ -203,7 +205,7 @@ Item {
     Component {
         id: textElement
 
-        PlasmaComponents.Label {
+        PlainPlasmaLabel {
             visible: !compactRoot.verticalPanel && compactRoot.primaryText.length > 0
             text: compactRoot.primaryText
             elide: Text.ElideRight

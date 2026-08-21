@@ -55,7 +55,7 @@ RowLayout {
             Layout.fillWidth: true
             spacing: Kirigami.Units.smallSpacing
 
-            Kirigami.Heading {
+            PlainHeading {
                 text: providerHeaderRow.providerData ? providerHeaderRow.providerData.title : ""
                 level: 2
                 type: Kirigami.Heading.Type.Primary
@@ -75,7 +75,7 @@ RowLayout {
                     ? providerHeaderRow.applet.statusBadgeColor(providerHeaderRow.providerData.statusSeverity)
                     : "transparent"
 
-                PlasmaComponents.Label {
+                PlainPlasmaLabel {
                     id: providerStatusBadgeLabel
 
                     anchors.centerIn: parent
@@ -96,7 +96,7 @@ RowLayout {
             Layout.fillWidth: true
             spacing: Kirigami.Units.smallSpacing
 
-            PlasmaComponents.Label {
+            PlainPlasmaLabel {
                 id: providerUpdatedLabel
 
                 text: providerHeaderRow.applet.lastUpdatedText.length > 0
@@ -107,7 +107,7 @@ RowLayout {
                 elide: Text.ElideRight
             }
 
-            PlasmaComponents.Label {
+            PlainPlasmaLabel {
                 id: providerAccountLabel
 
                 visible: providerHeaderRow.providerData
@@ -120,7 +120,7 @@ RowLayout {
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 16
             }
 
-            PlasmaComponents.Label {
+            PlainPlasmaLabel {
                 id: providerPlanLabel
 
                 visible: providerHeaderRow.providerData

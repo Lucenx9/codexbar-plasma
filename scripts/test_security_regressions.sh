@@ -12,14 +12,25 @@ PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
 DISPLAY_QML="${ROOT_DIR}/contents/ui/configDisplay.qml"
 DEBUG_QML="${ROOT_DIR}/contents/ui/configDebug.qml"
 SAFE_TEXT_JS="${ROOT_DIR}/contents/ui/SafeText.js"
+PLAIN_INLINE_MESSAGE_QML="${ROOT_DIR}/contents/ui/components/PlainInlineMessage.qml"
+PLAIN_CONTROLS_LABEL_QML="${ROOT_DIR}/contents/ui/components/PlainControlsLabel.qml"
+PLAIN_BUTTON_QML="${ROOT_DIR}/contents/ui/components/PlainButton.qml"
+PLAIN_CHECK_BOX_QML="${ROOT_DIR}/contents/ui/components/PlainCheckBox.qml"
+PLAIN_COMBO_BOX_QML="${ROOT_DIR}/contents/ui/components/PlainComboBox.qml"
+PLAIN_PLASMA_LABEL_QML="${ROOT_DIR}/contents/ui/components/PlainPlasmaLabel.qml"
+PLAIN_HEADING_QML="${ROOT_DIR}/contents/ui/components/PlainHeading.qml"
+PLAIN_ITEM_DELEGATE_QML="${ROOT_DIR}/contents/ui/components/PlainItemDelegate.qml"
+PLAIN_PLACEHOLDER_MESSAGE_QML="${ROOT_DIR}/contents/ui/components/PlainPlaceholderMessage.qml"
+PLAIN_TOOL_TIP_QML="${ROOT_DIR}/contents/ui/components/PlainToolTip.qml"
 PROVIDER_IDENTITY_JS="${ROOT_DIR}/contents/ui/ProviderIdentity.js"
 NOTIFICATION_PLANNER_JS="${ROOT_DIR}/contents/ui/NotificationPlanner.js"
 WORKFLOW="${ROOT_DIR}/.github/workflows/ci.yml"
 MAKEFILE="${ROOT_DIR}/Makefile"
 UPDATER="${ROOT_DIR}/scripts/update-widget.sh"
 FULL_REPRESENTATION_QML="${ROOT_DIR}/contents/ui/components/FullRepresentation.qml"
-PROVIDER_DETAIL_SECTION_QML="${ROOT_DIR}/contents/ui/components/ProviderDetailSection.qml"
-INTERACTIVE_CHART_QML="${ROOT_DIR}/contents/ui/components/InteractiveChart.qml"
+PROVIDER_ACCOUNTS_PANEL_QML="${ROOT_DIR}/contents/ui/components/ProviderAccountsPanel.qml"
+COMPACT_REPRESENTATION_QML="${ROOT_DIR}/contents/ui/components/CompactRepresentation.qml"
+SPEND_VIEW_QML="${ROOT_DIR}/contents/ui/components/SpendView.qml"
 
 require_in_file() {
   local file="$1"
@@ -105,6 +116,88 @@ require_in_file "$SAFE_TEXT_JS" 'chunk.search(/[^\s\u0000-\u001f\u007f]/)'
 require_in_file "$SAFE_TEXT_JS" "credentialRedactionLookaheadLength"
 require_in_file "$SAFE_TEXT_JS" 'redactedLookaheadText.slice(0, redactedText.length) !== redactedText'
 require_in_file "$SAFE_TEXT_JS" "function cliJsonText(value)"
+require_in_file "$SAFE_TEXT_JS" "function plainTextAsRichText(value)"
+require_in_file "$SAFE_TEXT_JS" "function plainTextAsMnemonicRichText(value)"
+require_in_file "$PLAIN_INLINE_MESSAGE_QML" "text: SafeText.plainTextAsRichText(plainText)"
+require_in_file "$PLAIN_BUTTON_QML" "text: SafeText.plainTextAsMnemonicRichText(plainText)"
+require_in_file "$PLAIN_CHECK_BOX_QML" "text: SafeText.plainTextAsRichText(plainText)"
+require_in_file "$PLAIN_COMBO_BOX_QML" "plainText: control.textAt(index)"
+require_in_file "$PLAIN_CONTROLS_LABEL_QML" "textFormat: Text.PlainText"
+require_in_file "$PLAIN_PLASMA_LABEL_QML" "textFormat: Text.PlainText"
+require_in_file "$PLAIN_HEADING_QML" "textFormat: Text.PlainText"
+require_in_file "$PLAIN_ITEM_DELEGATE_QML" "text: SafeText.plainTextAsMnemonicRichText(plainText)"
+require_in_file "$PLAIN_PLACEHOLDER_MESSAGE_QML" "text: SafeText.plainTextAsRichText(plainText)"
+require_in_file "$PLAIN_PLACEHOLDER_MESSAGE_QML" "explanation: SafeText.plainTextAsRichText(plainExplanation)"
+require_in_file "$PLAIN_TOOL_TIP_QML" "text: SafeText.plainTextAsRichText(plainText)"
+require_in_file "$PROVIDER_ACCOUNTS_PANEL_QML" "delegate: PlainButton {"
+require_in_file "$DISPLAY_QML" "text: SafeText.plainTextAsRichText(modelData.displayName)"
+require_in_file "$PROVIDERS_QML" "text: SafeText.plainTextAsMnemonicRichText(modelData.title)"
+require_in_file "$PROVIDERS_QML" "Components.PlainComboBox {"
+require_in_file "$PROVIDERS_QML" "Components.PlainCheckBox {"
+require_in_file "$PROVIDERS_QML" "placeholderText: SafeText.plainTextAsRichText(modelData.description)"
+require_in_file "$COMPACT_REPRESENTATION_QML" "PlainToolTip {"
+require_in_file "$SPEND_VIEW_QML" "Components.PlainToolTip {"
+
+reject_raw_text_control() {
+  local pattern="$1"
+  local safe_file="$2"
+  local safe_type="$3"
+  local raw_files
+  raw_files="$(
+    grep -rlE "$pattern" --include='*.qml' "${ROOT_DIR}/contents/ui" \
+      | grep -vFx "$safe_file" || true
+  )"
+  if [[ -n "$raw_files" ]]; then
+    echo "untrusted text controls must pass through ${safe_type}:" >&2
+    printf '%s\n' "$raw_files" | _qml_relative_paths | sed 's/^/  found in /' >&2
+    exit 1
+  fi
+}
+
+reject_raw_text_control 'Kirigami\.InlineMessage[[:space:]]*\{' "$PLAIN_INLINE_MESSAGE_QML" "PlainInlineMessage"
+reject_raw_text_control 'Controls\.Label[[:space:]]*\{' "$PLAIN_CONTROLS_LABEL_QML" "PlainControlsLabel"
+reject_raw_text_control 'PlasmaComponents\.Label[[:space:]]*\{' "$PLAIN_PLASMA_LABEL_QML" "PlainPlasmaLabel"
+reject_raw_text_control 'Kirigami\.Heading[[:space:]]*\{' "$PLAIN_HEADING_QML" "PlainHeading"
+reject_raw_text_control 'Kirigami\.PlaceholderMessage[[:space:]]*\{' "$PLAIN_PLACEHOLDER_MESSAGE_QML" "PlainPlaceholderMessage"
+
+python3 - "$ROOT_DIR" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+sys.path.insert(0, str(root / "scripts" / "lib"))
+from qml_surfaces import Surface
+
+surface = Surface("all", root)
+escaped_control = re.compile(r"(?:Components\.)?Plain(?:Inline|Placeholder)Message\s*\{")
+plain_label = re.compile(r"(?:Components\.)?Plain(?:ControlsLabel|PlasmaLabel|Heading)\s*\{")
+plain_text_control = re.compile(
+    r"(?:Components\.)?Plain(?:Button|CheckBox|ItemDelegate|ToolTip)\s*\{"
+)
+
+for path, text in surface.texts.items():
+    for match in escaped_control.finditer(text):
+        body = Surface._match_braces(text, text.index("{", match.start()))
+        if re.search(r"(?m)^\s*(?:text|explanation)\s*:", body):
+            raise AssertionError(
+                f"{surface.rel(path)}: escaped message controls must use "
+                "plainText/plainExplanation instead of overriding the safe binding"
+            )
+    for match in plain_label.finditer(text):
+        body = Surface._match_braces(text, text.index("{", match.start()))
+        if re.search(r"(?m)^\s*textFormat\s*:", body):
+            raise AssertionError(
+                f"{surface.rel(path)}: plain labels must not override Text.PlainText"
+            )
+    for match in plain_text_control.finditer(text):
+        body = Surface._match_braces(text, text.index("{", match.start()))
+        if re.search(r"(?m)^\s*text\s*:", body):
+            raise AssertionError(
+                f"{surface.rel(path)}: escaped text controls must use plainText "
+                "instead of overriding the safe binding"
+            )
+PY
 
 GUARDS_JS="${ROOT_DIR}/contents/ui/Guards.js"
 
@@ -225,15 +318,6 @@ require_in_surface applet "Qt.openUrlExternally(safeStatusUrl(item.provider, ite
 
 require_in_surface applet "notify-send --app-name=CodexBar --icon=view-statistics --urgency="
 require_in_surface applet "+ \" -- \" + shellQuote(cleanTitle)"
-
-for qml_file in "$PROVIDER_DETAIL_SECTION_QML" "$INTERACTIVE_CHART_QML"; do
-  label_count="$(grep -c -F 'PlasmaComponents.Label {' "$qml_file" || true)"
-  plain_text_count="$(grep -c -F 'textFormat: Text.PlainText' "$qml_file" || true)"
-  if [[ "$plain_text_count" -ne "$label_count" ]]; then
-    echo "every CLI/provider-controlled label must force plain text in ${qml_file#"$ROOT_DIR"/}" >&2
-    exit 1
-  fi
-done
 
 require_in_file "$MAKEFILE" "scripts/test_security_regressions.sh"
 require_in_file "$MAKEFILE" "scripts/test_qml_hardening.sh"

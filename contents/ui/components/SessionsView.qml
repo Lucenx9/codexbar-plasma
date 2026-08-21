@@ -3,6 +3,7 @@ import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
+import "." as Components
 
 ColumnLayout {
     id: view
@@ -58,7 +59,7 @@ ColumnLayout {
             Layout.fillWidth: true
             spacing: Kirigami.Units.smallSpacing / 2
 
-            Kirigami.Heading {
+            PlainHeading {
                 text: i18n("Sessions")
                 level: 2
                 type: Kirigami.Heading.Type.Primary
@@ -66,7 +67,7 @@ ColumnLayout {
                 elide: Text.ElideRight
             }
 
-            PlasmaComponents.Label {
+            PlainPlasmaLabel {
                 text: view.applet.sessionsLastUpdatedText.length > 0
                     ? i18n("%1 - %2", view.applet.sessionsLastUpdatedText,
                         i18np("%1 local session", "%1 local sessions", view.applet.sessions.length))
@@ -85,9 +86,9 @@ ColumnLayout {
         }
     }
 
-    Kirigami.InlineMessage {
+    Components.PlainInlineMessage {
         visible: view.applet.sessionsErrorText.length > 0
-        text: view.applet.sessionsErrorText
+        plainText: view.applet.sessionsErrorText
         type: Kirigami.MessageType.Error
         Layout.fillWidth: true
     }
@@ -105,12 +106,12 @@ ColumnLayout {
         }
     }
 
-    Kirigami.PlaceholderMessage {
+    PlainPlaceholderMessage {
         visible: !view.applet.sessionsLoading
             && view.applet.sessions.length === 0
             && view.applet.sessionsErrorText.length === 0
-        text: i18n("No local agent sessions found.")
-        explanation: i18n("Sessions appear after a supported local CLI starts recording them.")
+        plainText: i18n("No local agent sessions found.")
+        plainExplanation: i18n("Sessions appear after a supported local CLI starts recording them.")
         icon.name: "system-run-symbolic"
         type: Kirigami.PlaceholderMessage.Type.Informational
         Layout.fillWidth: true
@@ -196,11 +197,10 @@ ColumnLayout {
                                 }
                             }
 
-                            PlasmaComponents.Label {
+                            PlainPlasmaLabel {
                                 visible: modelData.sessionName.length > 0
                                     && modelData.sessionName !== view.applet.sessionTitle(modelData)
                                 text: modelData.sessionName
-                                textFormat: Text.PlainText
                                 opacity: view.applet.valueTextOpacity
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
@@ -223,11 +223,10 @@ ColumnLayout {
                             spacing: 0
                             Layout.alignment: Qt.AlignTop
 
-                            PlasmaComponents.Label {
+                            PlainPlasmaLabel {
                                 text: modelData.state.length > 0
                                     ? view.applet.capitalize(modelData.state)
                                     : i18n("Unknown")
-                                textFormat: Text.PlainText
                                 color: sessionCard.activeSession
                                     ? sessionCard.accent
                                     : Kirigami.Theme.textColor
@@ -240,9 +239,8 @@ ColumnLayout {
                                 Layout.alignment: Qt.AlignRight
                             }
 
-                            PlasmaComponents.Label {
+                            PlainPlasmaLabel {
                                 text: view.applet.sessionActivityText(modelData, view.sessionClockMs)
-                                textFormat: Text.PlainText
                                 opacity: view.applet.secondaryTextOpacity
                                 font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                                 horizontalAlignment: Text.AlignRight

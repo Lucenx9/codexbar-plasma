@@ -10,6 +10,32 @@ TestCase {
         compare(SafeText.cliMessage("x".repeat(40), 12), "x".repeat(12))
     }
 
+    function test_plainTextRichWrapperEscapesActiveMarkup() {
+        var richText = SafeText.plainTextAsRichText(
+            "Status <img src=\"http://127.0.0.1/probe\"> & <test-org>")
+
+        compare(richText,
+            "<span>Status &lt;img src=&quot;http://127.0.0.1/probe&quot;&gt; &amp; &lt;test-org&gt;</span>")
+        verify(richText.indexOf("<img") === -1)
+        verify(richText.indexOf("<test-org>") === -1)
+    }
+
+    function test_plainTextRichWrapperPreservesLineBreaksAndRejectsStructures() {
+        compare(SafeText.plainTextAsRichText("first\nsecond"), "<span>first<br>second</span>")
+        compare(SafeText.plainTextAsRichText({ text: "unsafe" }), "")
+        compare(SafeText.plainTextAsRichText(["unsafe"]), "")
+    }
+
+    function test_plainTextRichWrapperRemovesNonDisplayControls() {
+        compare(SafeText.plainTextAsRichText("first\u0000\u0007\tsecond"),
+            "<span>first   second</span>")
+    }
+
+    function test_mnemonicRichWrapperPreservesEscapedEntities() {
+        compare(SafeText.plainTextAsMnemonicRichText("<test> & \"quoted\""),
+            "<span>&&lt;test&&gt; &&amp; &&quot;quoted&&quot;</span>")
+    }
+
     function test_emptyMessageStaysEmpty() {
         // QML's V4 engine returns -1 for "".indexOf(""), unlike ECMAScript's 0,
         // so the lookahead guard in redactCredentials must not use indexOf as a
@@ -18,6 +44,12 @@ TestCase {
         compare(SafeText.cliMessage("", 500), "")
         compare(SafeText.cliDiagnostic("", 500), "")
         compare(SafeText.cliMessage("   \n\t", 500), "")
+    }
+
+    function test_displayMessagesRejectStructuredPayloadsBeforeStringification() {
+        compare(SafeText.cliMessage({ message: "quota exceeded" }, 500), "")
+        compare(SafeText.cliMessage(["quota exceeded"], 500), "")
+        compare(SafeText.cliMessage(42, 500), "42")
     }
 
     function test_skipsBoundedLeadingPaddingBeforeMessage() {

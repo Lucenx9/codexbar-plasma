@@ -33,6 +33,15 @@ TestCase {
         compare(ProviderConfigProtocol.maximumDiagnosticListItems, 64)
     }
 
+    function test_providerListResultRequiresTheRevisionItStartedWith() {
+        verify(ProviderConfigProtocol.providerListResultIsCurrent(
+            { providerConfigRevision: 7 }, 7))
+        verify(!ProviderConfigProtocol.providerListResultIsCurrent(
+            { providerConfigRevision: 7 }, 8))
+        verify(!ProviderConfigProtocol.providerListResultIsCurrent({}, 0))
+        verify(!ProviderConfigProtocol.providerListResultIsCurrent(null, 0))
+    }
+
     function test_normalizesSingletonAndPreservesCliProviderSpelling() {
         var seen = []
         var normalized = ProviderConfigProtocol.normalizeProviderList({

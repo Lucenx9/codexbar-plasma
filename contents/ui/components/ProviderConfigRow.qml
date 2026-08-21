@@ -47,14 +47,14 @@ Controls.ItemDelegate {
             Layout.fillWidth: true
             spacing: 0
 
-            Controls.Label {
+            PlainControlsLabel {
                 text: providerRow.providerData.displayName
                 elide: Text.ElideRight
                 color: providerRow.highlighted ? providerRow.selectedForeground : Kirigami.Theme.textColor
                 Layout.fillWidth: true
             }
 
-            Controls.Label {
+            PlainControlsLabel {
                 text: providerRow.providerData.defaultEnabled
                     ? i18n("%1 - on by default", providerRow.providerData.provider)
                     : providerRow.providerData.provider

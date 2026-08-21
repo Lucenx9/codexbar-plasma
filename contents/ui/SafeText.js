@@ -74,6 +74,39 @@ function isStructuredValue(value) {
     return value !== null && typeof value === "object"
 }
 
+// Some Kirigami controls render Text.AutoText internally and do not expose
+// textFormat. Wrap escaped plain text in harmless rich text so CLI-controlled
+// tags stay visible as text instead of becoming images or links. This helper
+// escapes display-ready text; CLI adapters still own bounding and redaction.
+function plainTextAsRichText(value) {
+    if (isStructuredValue(value) || value === null || value === undefined) {
+        return ""
+    }
+    var text = String(value)
+        .replace(/\r\n?/g, "\n")
+        .replace(/[\u0000-\u0009\u000b\u000c\u000e-\u001f\u007f]/g, " ")
+    if (text.length === 0) {
+        return ""
+    }
+    return "<span>" + text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;")
+        .replace(/\n/g, "<br>")
+        + "</span>"
+}
+
+// Qt Quick abstract-button styles pass their label through mnemonic handling
+// before parsing rich text. A single ampersand is consumed there, which would
+// corrupt the entities emitted above ("&lt;" becomes "lt;"). Doubling entity
+// ampersands preserves one for the rich-text parser while still keeping the
+// provider text escaped.
+function plainTextAsMnemonicRichText(value) {
+    return plainTextAsRichText(value).replace(/&/g, "&&")
+}
+
 function boundedDisplayText(value, maximumLength) {
     if (isStructuredValue(value)) {
         return ""
@@ -123,6 +156,9 @@ function cliJsonText(value) {
 }
 
 function cliMessage(value, maximumLength) {
+    if (isStructuredValue(value)) {
+        return ""
+    }
     var limit = safeLimit(maximumLength, maximumCliMessageLength)
     return boundedDisplayText(redactCredentials(value, limit), limit)
 }

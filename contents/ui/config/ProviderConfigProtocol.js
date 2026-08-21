@@ -12,6 +12,18 @@
 var maximumProviderItems = 256
 var maximumDiagnosticListItems = 64
 
+function providerListResultIsCurrent(descriptor, currentRevision) {
+    if (!isCliRecord(descriptor)
+            || !Guards.hasOwnKey(descriptor, "providerConfigRevision")) {
+        return false
+    }
+    var startedRevision = Number(descriptor.providerConfigRevision)
+    var latestRevision = Number(currentRevision)
+    return isFinite(startedRevision)
+        && isFinite(latestRevision)
+        && startedRevision === latestRevision
+}
+
 function normalizeProviderList(payload, fallbackTitleResolver) {
     var items = Array.isArray(payload) ? payload : [payload]
     var providers = []

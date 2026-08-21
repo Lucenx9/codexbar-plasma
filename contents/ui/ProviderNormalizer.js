@@ -66,7 +66,7 @@ function boundedDisplayText(value, maximumLength) {
         limit = 500
     }
     limit = Math.min(2000, Math.floor(limit))
-    return SafeText.boundedDisplayText(value, limit)
+    return SafeText.cliMessage(value, limit)
 }
 
 // The canonical map key for a provider: CLI aliases resolved, then screened for
@@ -117,6 +117,46 @@ function normalizeProviderConfigEntries(payload) {
         providerIDs: providerIDs,
         displayNames: displayNames
     }
+}
+
+function providerSnapshotHasError(item) {
+    return isCliRecord(item)
+        && item.error !== undefined
+        && item.error !== null
+        && String(item.error).trim().length > 0
+}
+
+// Provider tabs are keyed by canonical provider id. Keep their model unique and
+// retain the first healthy snapshot when a malformed payload repeats an id.
+function dedupeProviderSnapshots(items) {
+    var result = []
+    var indexes = ({})
+    if (!Array.isArray(items)) {
+        return result
+    }
+    var itemLimit = Math.min(items.length, maximumProviderSnapshots)
+    for (var i = 0; i < itemLimit; i++) {
+        var item = isCliRecord(items[i]) ? items[i] : null
+        var providerID = item ? normalizedProviderID(item.provider) : ""
+        if (providerID.length === 0) {
+            continue
+        }
+        var snapshot = copyObject(item)
+        snapshot.provider = providerID
+        var hasError = providerSnapshotHasError(item)
+        if (!hasOwnKey(indexes, providerID)) {
+            indexes[providerID] = result.length
+            result.push(snapshot)
+            continue
+        }
+        var existingIndex = indexes[providerID]
+        var existing = result[existingIndex]
+        var existingHasError = providerSnapshotHasError(existing)
+        if (existingHasError && !hasError) {
+            result[existingIndex] = snapshot
+        }
+    }
+    return result
 }
 
 // The numeric half of one usage row. `null` when the payload carries no window
@@ -396,6 +436,34 @@ function normalizeCostTrustMetadata(rawCostRecord) {
     return coverage !== null || sourceKind.length > 0
         ? { coverage: coverage, sourceKind: sourceKind }
         : null
+}
+
+function costRecordHasError(item) {
+    return isCliRecord(item)
+        && hasOwnKey(item, "error")
+        && item.error !== null
+        && item.error !== undefined
+}
+
+// A partial cost response is a complete fresh snapshot except for the providers
+// named by error records. Carry only those providers forward; copying the whole
+// previous map would retain providers that the CLI no longer reports.
+function mergeCostSnapshotsAfterPartialFailure(previousSnapshots, freshSnapshots,
+        failedProviderIDs) {
+    var merged = isCliRecord(freshSnapshots) ? copyObject(freshSnapshots) : ({})
+    if (!isCliRecord(previousSnapshots) || !Array.isArray(failedProviderIDs)) {
+        return merged
+    }
+    var itemLimit = Math.min(failedProviderIDs.length, maximumCostSnapshots)
+    for (var i = 0; i < itemLimit; i++) {
+        var providerID = normalizedProviderID(failedProviderIDs[i])
+        if (providerID.length > 0
+                && !hasOwnKey(merged, providerID)
+                && hasOwnKey(previousSnapshots, providerID)) {
+            merged[providerID] = previousSnapshots[providerID]
+        }
+    }
+    return merged
 }
 
 function normalizeCostDaily(items, currency, days) {

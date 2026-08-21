@@ -312,7 +312,7 @@ Item {
                                 Layout.preferredHeight: Kirigami.Units.iconSizes.small
                             }
 
-                            PlasmaComponents.Label {
+                            PlainPlasmaLabel {
                                 id: overviewTabLabel
 
                                 text: i18n("Overview")
@@ -493,7 +493,7 @@ Item {
                                     Layout.preferredHeight: Kirigami.Units.iconSizes.small
                                 }
 
-                                PlasmaComponents.Label {
+                                PlainPlasmaLabel {
                                     id: providerTabLabel
 
                                     text: modelData.title
@@ -644,11 +644,11 @@ Item {
             Layout.fillWidth: true
         }
 
-        Kirigami.InlineMessage {
+        Components.PlainInlineMessage {
             id: globalErrorMessage
 
             visible: applet.providerUsageFeedbackVisible && applet.errorText.length > 0
-            text: applet.errorText
+            plainText: applet.errorText
             type: Kirigami.MessageType.Error
             Layout.fillWidth: true
         }
@@ -677,7 +677,7 @@ Item {
                     Layout.preferredHeight: Kirigami.Units.iconSizes.medium
                 }
 
-                PlasmaComponents.Label {
+                PlainPlasmaLabel {
                     text: i18n("Loading usage...")
                     opacity: applet.secondaryTextOpacity
                     Layout.fillWidth: true
@@ -686,14 +686,14 @@ Item {
             }
         }
 
-        Kirigami.PlaceholderMessage {
+        PlainPlaceholderMessage {
             id: emptyProvidersMessage
 
             visible: applet.providers.length === 0
                 && !applet.globalViewSelected
                 && applet.errorText.length === 0
                 && !applet.loading
-            text: i18n("No provider data.")
+            plainText: i18n("No provider data.")
             icon.name: "view-statistics-symbolic"
             type: Kirigami.PlaceholderMessage.Type.Informational
             Layout.fillWidth: true
@@ -727,7 +727,7 @@ Item {
                     Layout.fillWidth: true
                     spacing: Kirigami.Units.smallSpacing / 2
 
-                    Kirigami.Heading {
+                    PlainHeading {
                         text: i18n("Overview")
                         level: 2
                         type: Kirigami.Heading.Type.Primary
@@ -735,7 +735,7 @@ Item {
                         elide: Text.ElideRight
                     }
 
-                    PlasmaComponents.Label {
+                    PlainPlasmaLabel {
                         readonly property int providerCount: applet.overviewProviderItems.length
 
                         text: applet.lastUpdatedText.length > 0
@@ -780,11 +780,11 @@ Item {
                         overviewScroll.availableWidth - Kirigami.Units.smallSpacing)
                     spacing: Kirigami.Units.smallSpacing
 
-                    Kirigami.PlaceholderMessage {
+                    PlainPlaceholderMessage {
                         id: overviewPlaceholderMessage
 
                         visible: applet.overviewProviderItems.length === 0
-                        text: i18n("No overview data available.")
+                        plainText: i18n("No overview data available.")
                         icon.name: "view-grid-symbolic"
                         type: Kirigami.PlaceholderMessage.Type.Informational
                         Layout.fillWidth: true
@@ -825,27 +825,27 @@ Item {
                 providerData: applet.selectedProviderData
             }
 
-            Kirigami.InlineMessage {
+            Components.PlainInlineMessage {
                 id: providerStatusMessage
 
                 visible: applet.selectedProviderData
                     && applet.selectedProviderData.hasIncident
                     && applet.selectedProviderData.status
                     && applet.selectedProviderData.status.length > 0
-                text: applet.selectedProviderData ? applet.selectedProviderData.status : ""
+                plainText: applet.selectedProviderData ? applet.selectedProviderData.status : ""
                 type: applet.selectedProviderData
                     ? applet.statusMessageType(applet.selectedProviderData.statusSeverity)
                     : Kirigami.MessageType.Information
                 Layout.fillWidth: true
             }
 
-            Kirigami.InlineMessage {
+            Components.PlainInlineMessage {
                 id: providerErrorMessage
 
                 visible: applet.selectedProviderData
                     && applet.selectedProviderData.error
                     && applet.selectedProviderData.error.length > 0
-                text: applet.selectedProviderData ? applet.selectedProviderData.error : ""
+                plainText: applet.selectedProviderData ? applet.selectedProviderData.error : ""
                 type: Kirigami.MessageType.Error
                 Layout.fillWidth: true
             }
@@ -865,11 +865,11 @@ Item {
                         providerScroll.availableWidth - Kirigami.Units.smallSpacing)
                     spacing: Kirigami.Units.largeSpacing
 
-                    Kirigami.PlaceholderMessage {
+                    PlainPlaceholderMessage {
                         id: providerPlaceholderMessage
 
                         visible: applet.providerPlaceholderText(applet.selectedProviderData).length > 0
-                        text: applet.providerPlaceholderText(applet.selectedProviderData)
+                        plainText: applet.providerPlaceholderText(applet.selectedProviderData)
                         icon.name: "view-statistics-symbolic"
                         type: Kirigami.PlaceholderMessage.Type.Informational
                         Layout.fillWidth: true
@@ -895,7 +895,7 @@ Item {
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing / 1.5
 
-                        Kirigami.Heading {
+                        PlainHeading {
                             text: i18n("Credits")
                             level: 4
                             type: Kirigami.Heading.Type.Primary
@@ -911,7 +911,7 @@ Item {
                             Layout.fillWidth: true
                             spacing: Kirigami.Units.smallSpacing
 
-                            PlasmaComponents.Label {
+                            PlainPlasmaLabel {
                                 text: i18n("Remaining: %1", applet.selectedProviderData ? applet.formatNumber(applet.selectedProviderData.credits) : "")
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
@@ -932,14 +932,14 @@ Item {
                             Layout.fillWidth: true
                         }
 
-                        Kirigami.Heading {
+                        PlainHeading {
                             text: resetCreditsSection.resetCredits ? resetCreditsSection.resetCredits.title : ""
                             level: 4
                             type: Kirigami.Heading.Type.Primary
                             Layout.fillWidth: true
                         }
 
-                        PlasmaComponents.Label {
+                        PlainPlasmaLabel {
                             text: resetCreditsSection.resetCredits ? resetCreditsSection.resetCredits.line : ""
                             opacity: applet.secondaryTextOpacity
                             Layout.fillWidth: true
@@ -961,7 +961,7 @@ Item {
                             Layout.fillWidth: true
                         }
 
-                        Kirigami.Heading {
+                        PlainHeading {
                             text: providerCostSection.providerCost ? providerCostSection.providerCost.title : ""
                             level: 4
                             type: Kirigami.Heading.Type.Primary
@@ -997,13 +997,13 @@ Item {
                             Layout.fillWidth: true
                             spacing: Kirigami.Units.smallSpacing
 
-                            PlasmaComponents.Label {
+                            PlainPlasmaLabel {
                                 text: providerCostSection.providerCost ? providerCostSection.providerCost.spendLine : ""
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                             }
 
-                            PlasmaComponents.Label {
+                            PlainPlasmaLabel {
                                 visible: providerCostSection.providerCost && providerCostSection.providerCost.percentLine.length > 0 ? true : false
                                 text: providerCostSection.providerCost ? providerCostSection.providerCost.percentLine : ""
                                 opacity: applet.secondaryTextOpacity
@@ -1012,7 +1012,7 @@ Item {
                             }
                         }
 
-                        PlasmaComponents.Label {
+                        PlainPlasmaLabel {
                             visible: providerCostSection.providerCost && providerCostSection.providerCost.personalSpendLine.length > 0 ? true : false
                             text: providerCostSection.providerCost ? providerCostSection.providerCost.personalSpendLine : ""
                             opacity: applet.secondaryTextOpacity
@@ -1061,7 +1061,7 @@ Item {
                             Layout.fillWidth: true
                         }
 
-                        PlasmaComponents.Label {
+                        PlainPlasmaLabel {
                             text: i18n("Usage dashboard")
                             font.weight: Font.DemiBold
                             Layout.fillWidth: true
@@ -1084,7 +1084,7 @@ Item {
                                     Layout.fillWidth: true
                                     spacing: 0
 
-                                    PlasmaComponents.Label {
+                                    PlainPlasmaLabel {
                                         text: modelData.label
                                         opacity: applet.secondaryTextOpacity
                                         font.pixelSize: Kirigami.Theme.smallFont.pixelSize
@@ -1092,7 +1092,7 @@ Item {
                                         elide: Text.ElideRight
                                     }
 
-                                    PlasmaComponents.Label {
+                                    PlainPlasmaLabel {
                                         text: modelData.value
                                         font.weight: Font.DemiBold
                                         Layout.fillWidth: true
@@ -1116,14 +1116,14 @@ Item {
                                     Layout.fillWidth: true
                                     spacing: Kirigami.Units.smallSpacing
 
-                                    PlasmaComponents.Label {
+                                    PlainPlasmaLabel {
                                         text: modelData.label
                                         opacity: applet.secondaryTextOpacity
                                         Layout.fillWidth: true
                                         elide: Text.ElideRight
                                     }
 
-                                    PlasmaComponents.Label {
+                                    PlainPlasmaLabel {
                                         text: modelData.value
                                         opacity: applet.valueTextOpacity
                                         horizontalAlignment: Text.AlignRight
@@ -1154,14 +1154,14 @@ Item {
                             Layout.fillWidth: true
                         }
 
-                        Kirigami.Heading {
+                        PlainHeading {
                             text: i18n("Cost")
                             level: 4
                             type: Kirigami.Heading.Type.Primary
                             Layout.fillWidth: true
                         }
 
-                        PlasmaComponents.Label {
+                        PlainPlasmaLabel {
                             visible: !tokenCostSection.tokenCost && tokenCostSection.costErrorText.length > 0
                             text: i18n("Cost unavailable: %1", tokenCostSection.costErrorText)
                             color: Kirigami.Theme.negativeTextColor
@@ -1169,7 +1169,7 @@ Item {
                             wrapMode: Text.WordWrap
                         }
 
-                        PlasmaComponents.Label {
+                        PlainPlasmaLabel {
                             id: costSessionSummaryLabel
 
                             visible: tokenCostSection.tokenCost ? true : false
@@ -1179,7 +1179,7 @@ Item {
                             elide: Text.ElideRight
                         }
 
-                        PlasmaComponents.Label {
+                        PlainPlasmaLabel {
                             id: costMonthSummaryLabel
 
                             visible: tokenCostSection.tokenCost ? true : false
@@ -1220,7 +1220,7 @@ Item {
                             Layout.fillWidth: true
                             spacing: Kirigami.Units.smallSpacing
 
-                            PlasmaComponents.Label {
+                            PlainPlasmaLabel {
                                 id: costSparklineSummaryLabel
 
                                 text: tokenCostSection.tokenCost ? applet.costSparklineSummary(tokenCostSection.tokenCost.daily) : ""
@@ -1230,7 +1230,7 @@ Item {
                                 elide: Text.ElideRight
                             }
 
-                            PlasmaComponents.Label {
+                            PlainPlasmaLabel {
                                 id: costSparklineRangeLabel
 
                                 text: tokenCostSection.tokenCost
@@ -1261,14 +1261,14 @@ Item {
                                 Layout.fillWidth: true
                                 spacing: Kirigami.Units.smallSpacing
 
-                                PlasmaComponents.Label {
+                                PlainPlasmaLabel {
                                     text: i18n("Cost history")
                                     font.weight: Font.DemiBold
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
                                 }
 
-                                PlasmaComponents.Label {
+                                PlainPlasmaLabel {
                                     visible: costHistoryChartSection.averageLine.length > 0
                                     text: costHistoryChartSection.averageLine
                                     font: Kirigami.Theme.smallFont
@@ -1278,7 +1278,7 @@ Item {
                                 }
                             }
 
-                            PlasmaComponents.Label {
+                            PlainPlasmaLabel {
                                 visible: costHistoryChartSection.peakLine.length > 0
                                 text: costHistoryChartSection.peakLine
                                 font: Kirigami.Theme.smallFont
@@ -1298,7 +1298,7 @@ Item {
                                     Layout.fillWidth: true
                                     spacing: Kirigami.Units.smallSpacing
 
-                                    PlasmaComponents.Label {
+                                    PlainPlasmaLabel {
                                         id: costHistoryDateLabel
 
                                         text: modelData.label
@@ -1350,7 +1350,7 @@ Item {
                                         }
                                     }
 
-                                    PlasmaComponents.Label {
+                                    PlainPlasmaLabel {
                                         id: costHistoryValueLabel
 
                                         text: modelData.value
@@ -1378,14 +1378,14 @@ Item {
                             Layout.fillWidth: true
                             spacing: Kirigami.Units.smallSpacing
 
-                            PlasmaComponents.Label {
+                            PlainPlasmaLabel {
                                 text: i18n("Cost details")
                                 font.weight: Font.DemiBold
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                             }
 
-                            PlasmaComponents.Label {
+                            PlainPlasmaLabel {
                                 visible: tokenCostSection.tokenCost && applet.costPerMillionLine(tokenCostSection.tokenCost).length > 0
                                 text: tokenCostSection.tokenCost ? applet.costPerMillionLine(tokenCostSection.tokenCost) : ""
                                 font: Kirigami.Theme.smallFont
@@ -1408,7 +1408,7 @@ Item {
                                         Layout.fillWidth: true
                                         spacing: Kirigami.Units.smallSpacing
 
-                                        PlasmaComponents.Label {
+                                        PlainPlasmaLabel {
                                             text: modelData.label
                                             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                                             opacity: applet.secondaryTextOpacity
@@ -1416,7 +1416,7 @@ Item {
                                             elide: Text.ElideRight
                                         }
 
-                                        PlasmaComponents.Label {
+                                        PlainPlasmaLabel {
                                             id: costBreakdownValueLabel
 
                                             text: modelData.value
@@ -1443,7 +1443,7 @@ Item {
                                 Layout.fillWidth: true
                                 spacing: Kirigami.Units.smallSpacing / 2
 
-                                PlasmaComponents.Label {
+                                PlainPlasmaLabel {
                                     id: costModelsHeading
 
                                     text: i18n("Models")
@@ -1463,7 +1463,7 @@ Item {
                                         Layout.fillWidth: true
                                         spacing: Kirigami.Units.smallSpacing
 
-                                        PlasmaComponents.Label {
+                                        PlainPlasmaLabel {
                                             text: modelData.label
                                             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                                             opacity: applet.secondaryTextOpacity
@@ -1471,7 +1471,7 @@ Item {
                                             elide: Text.ElideRight
                                         }
 
-                                        PlasmaComponents.Label {
+                                        PlainPlasmaLabel {
                                             id: costModelValueLabel
 
                                             text: modelData.value
@@ -1489,7 +1489,7 @@ Item {
 
                         }
 
-                        PlasmaComponents.Label {
+                        PlainPlasmaLabel {
                             visible: tokenCostSection.tokenCost && tokenCostSection.tokenCost.hintLine.length > 0 ? true : false
                             text: tokenCostSection.tokenCost ? tokenCostSection.tokenCost.hintLine : ""
                             opacity: applet.secondaryTextOpacity
