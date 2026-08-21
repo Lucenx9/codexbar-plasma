@@ -19,9 +19,9 @@ Kirigami.InlineMessage {
     showCloseButton: true
     Layout.fillWidth: true
 
-    onSummaryChanged: refreshNoticeState()
-    onNoticeScopeChanged: refreshNoticeState()
-    onStateOwnerChanged: refreshNoticeState()
+    onSummaryChanged: scheduleRefreshNoticeState()
+    onNoticeScopeChanged: scheduleRefreshNoticeState()
+    onStateOwnerChanged: scheduleRefreshNoticeState()
     onTextChanged: syncVisibility()
     onVisibleChanged: {
         // Kirigami's close button hides the message directly. Convert that
@@ -35,7 +35,22 @@ Kirigami.InlineMessage {
             dismissNotice()
         }
     }
-    Component.onCompleted: refreshNoticeState()
+    Component.onCompleted: scheduleRefreshNoticeState()
+
+    Timer {
+        id: noticeRefresh
+
+        interval: 0
+        repeat: false
+        onTriggered: noticeRoot.refreshNoticeState()
+    }
+
+    function scheduleRefreshNoticeState() {
+        // Provider selection updates the scope and bound summary separately.
+        // Coalesce both bindings before touching the shared dismissal store so
+        // one provider's warning cannot overwrite another provider's state.
+        noticeRefresh.restart()
+    }
 
     function refreshNoticeState() {
         updateNoticeState(false)

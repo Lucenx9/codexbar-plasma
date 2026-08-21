@@ -1027,20 +1027,20 @@ for stale_selected_overlay in (
         )
 for tab_id in ("overviewTab", "providerTab"):
     tab_body = id_block(main_text, tab_id)
+    focus_id = "overviewFocus" if tab_id == "overviewTab" else "providerFocus"
     for focus_fragment in (
-        "readonly property bool keyboardFocusVisible: activeFocus",
+        f"readonly property bool keyboardFocusVisible: {focus_id}.visualFocus",
         "border.width: keyboardFocusVisible ? 1 : 0",
-        "onActiveFocusChanged:",
+        f"id: {focus_id}",
+        "activeFocusOnTab: true",
+        f"{focus_id}.forceActiveFocus(Qt.MouseFocusReason)",
     ):
         if focus_fragment not in tab_body:
             raise AssertionError(
-                f"{tab_id} must preserve pointer-neutral selection and keyboard focus; "
+                f"{tab_id} must transfer pointer focus without drawing a keyboard ring; "
                 f"missing {focus_fragment!r}"
             )
-    for stale_pointer_focus_fragment in (
-        "focusAcquiredByPointer",
-        "forceActiveFocus(Qt.MouseFocusReason)",
-    ):
+    for stale_pointer_focus_fragment in ("focusAcquiredByPointer",):
         if stale_pointer_focus_fragment in tab_body:
             raise AssertionError(
                 f"{tab_id} must not retain a pointer-assigned focus overlay after the popup reopens; "
@@ -1048,19 +1048,18 @@ for tab_id in ("overviewTab", "providerTab"):
             )
 
 for global_tab_focus_fragment in (
-    "readonly property bool keyboardFocusVisible: activeFocus",
+    "readonly property bool keyboardFocusVisible: tabFocus.visualFocus",
     "border.width: keyboardFocusVisible ? 1 : 0",
-    "onActiveFocusChanged:",
+    "id: tabFocus",
+    "activeFocusOnTab: true",
+    "tabFocus.forceActiveFocus(Qt.MouseFocusReason)",
 ):
     if global_tab_focus_fragment not in global_tab_text:
         raise AssertionError(
             "global tabs must preserve keyboard focus without pointer focus state; "
             f"missing {global_tab_focus_fragment!r}"
         )
-for stale_global_pointer_focus_fragment in (
-    "focusAcquiredByPointer",
-    "forceActiveFocus(Qt.MouseFocusReason)",
-):
+for stale_global_pointer_focus_fragment in ("focusAcquiredByPointer",):
     if stale_global_pointer_focus_fragment in global_tab_text:
         raise AssertionError(
             "global tabs must not retain a pointer-assigned focus overlay after the popup reopens; "
@@ -1944,6 +1943,12 @@ for cost_trust_fragment in (
     "onNoticeScopeChanged:",
     "onStateOwnerChanged:",
     'typeof stateOwner.updateCostTrustNoticeState !== "function"',
+    "onSummaryChanged: scheduleRefreshNoticeState()",
+    "onNoticeScopeChanged: scheduleRefreshNoticeState()",
+    "onStateOwnerChanged: scheduleRefreshNoticeState()",
+    "function scheduleRefreshNoticeState()",
+    "noticeRefresh.restart()",
+    "onTriggered: noticeRoot.refreshNoticeState()",
     "onVisibleChanged: {",
     "&& presentationVisible",
     'i18n("%1 %2"',
@@ -1953,6 +1958,16 @@ for cost_trust_fragment in (
         raise AssertionError(
             "CostTrustNotice must own the shared localized message and standard styling; "
             f"missing {cost_trust_fragment!r}"
+        )
+for non_atomic_notice_fragment in (
+    "onSummaryChanged: refreshNoticeState()",
+    "onNoticeScopeChanged: refreshNoticeState()",
+    "onStateOwnerChanged: refreshNoticeState()",
+):
+    if non_atomic_notice_fragment in cost_trust_notice_text:
+        raise AssertionError(
+            "cost notice scope and summary changes must be coalesced before mutating shared dismissal state; "
+            f"found {non_atomic_notice_fragment!r}"
         )
 for provider_notice_fragment in (
     'noticeScope: "provider:" +',
