@@ -156,6 +156,7 @@ applet = Surface("applet", root)
 main_text = applet.text
 providers_surface = Surface("providers", root)
 providers_surface_text = providers_surface.text
+general_surface = Surface("general", root)
 general_text = general_qml.read_text(encoding="utf-8")
 display_text = display_qml.read_text(encoding="utf-8")
 providers_text = providers_qml.read_text(encoding="utf-8")
@@ -271,7 +272,7 @@ for live_config_fragment in (
             f"missing {live_config_fragment!r}"
         )
 
-command_path_row_body = id_block(general_text, "commandPathRow")
+command_path_row_body = general_surface.id_block("commandPathRow")
 command_path_row_layout = command_path_row_body.split("Controls.TextField {", 1)[0]
 if "Layout.maximumWidth: Kirigami.Units.gridUnit * 24" not in command_path_row_layout:
     raise AssertionError(
