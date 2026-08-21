@@ -151,6 +151,21 @@ TestCase {
         compare(entries.displayNames["claude"], "Claude")
     }
 
+    function test_providerSnapshotsDeduplicateAliasesAndPreferHealthyData() {
+        var snapshots = Normalizer.dedupeProviderSnapshots([
+            { provider: "groqcloud", error: "temporary failure", marker: "error" },
+            { provider: "groq", error: "", marker: "healthy" },
+            { provider: "claude", error: "", marker: "first" },
+            { provider: "claude", error: "", marker: "later" },
+            { provider: "alibaba-coding-plan", error: "", marker: "alias" }
+        ])
+
+        compare(snapshots.length, 3)
+        compare(snapshots[0].marker, "healthy")
+        compare(snapshots[1].marker, "first")
+        compare(snapshots[2].provider, "alibaba")
+    }
+
     // --- rate window percentages -------------------------------------------
 
     function test_clampsUsedPercentagesReportedOutsideTheMeterRange() {
@@ -417,6 +432,20 @@ TestCase {
         compare(Normalizer.normalizeCostTrustMetadata({ provider: "codex" }), null)
         compare(Normalizer.normalizeCostTrustMetadata(null), null)
         compare(Normalizer.normalizeCostTrustMetadata([]), null)
+    }
+
+    function test_errorOnlyCostRecordCannotReplaceAHealthySnapshot() {
+        verify(!Normalizer.costRecordCanReplaceSnapshot({
+            provider: "codex",
+            daily: [],
+            error: { message: "scan failed" }
+        }))
+        verify(!Normalizer.costRecordCanReplaceSnapshot({
+            provider: "codex",
+            totals: { totalCost: 0, totalTokens: 0 },
+            error: { message: "scan failed" }
+        }))
+        verify(Normalizer.costRecordCanReplaceSnapshot({ provider: "codex" }))
     }
 
     function test_costTrustMetadataKeepsEitherValidAxisWithoutLeakingTheOther() {

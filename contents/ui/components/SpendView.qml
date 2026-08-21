@@ -78,7 +78,7 @@ ColumnLayout {
             Layout.fillWidth: true
             spacing: Kirigami.Units.smallSpacing / 2
 
-            Kirigami.Heading {
+            PlainHeading {
                 text: i18n("Usage & Spend")
                 level: 2
                 type: Kirigami.Heading.Type.Primary
@@ -86,7 +86,7 @@ ColumnLayout {
                 elide: Text.ElideRight
             }
 
-            PlasmaComponents.Label {
+            PlainPlasmaLabel {
                 text: view.applet.spendTotalLine()
                 opacity: view.applet.secondaryTextOpacity
                 Layout.fillWidth: true
@@ -128,18 +128,18 @@ ColumnLayout {
         }
     }
 
-    Kirigami.InlineMessage {
+    Components.PlainInlineMessage {
         visible: view.applet.costErrorText.length > 0
-        text: i18n("Some cost data is unavailable: %1", view.applet.costErrorText)
+        plainText: i18n("Some cost data is unavailable: %1", view.applet.costErrorText)
         type: Kirigami.MessageType.Warning
         Layout.fillWidth: true
     }
 
-    Kirigami.InlineMessage {
+    Components.PlainInlineMessage {
         // Distinguishes "you spent little" from "the local scan has not reached
         // that far back yet", which otherwise look identical on the chart.
         visible: view.providerCosts.length > 0 && view.applet.spendHistoryStillBuilding()
-        text: i18n("Local history is still being collected, so early days may be incomplete.")
+        plainText: i18n("Local history is still being collected, so early days may be incomplete.")
         type: Kirigami.MessageType.Information
         Layout.fillWidth: true
     }
@@ -151,12 +151,12 @@ ColumnLayout {
         summary: view.costTrustSummary
     }
 
-    Kirigami.PlaceholderMessage {
+    PlainPlaceholderMessage {
         visible: !view.applet.costLoading
             && view.providerCosts.length === 0
             && view.applet.costErrorText.length === 0
-        text: i18n("No local cost data available.")
-        explanation: i18n("Cost history appears for providers supported by the codexbar cost command.")
+        plainText: i18n("No local cost data available.")
+        plainExplanation: i18n("Cost history appears for providers supported by the codexbar cost command.")
         icon.name: "view-statistics-symbolic"
         type: Kirigami.PlaceholderMessage.Type.Informational
         Layout.fillWidth: true
@@ -215,7 +215,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing / 2
 
-                PlasmaComponents.Label {
+                PlainPlasmaLabel {
                     text: i18n("Activity heatmap")
                     font.weight: Font.DemiBold
                     Layout.fillWidth: true
@@ -292,7 +292,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing
 
-                PlasmaComponents.Label {
+                PlainPlasmaLabel {
                     text: i18n("Providers")
                     font.weight: Font.DemiBold
                     Layout.fillWidth: true
@@ -318,14 +318,14 @@ ColumnLayout {
                             Layout.preferredHeight: Kirigami.Units.iconSizes.small
                         }
 
-                        PlasmaComponents.Label {
+                        PlainPlasmaLabel {
                             text: view.applet.providerTitle(modelData.provider)
                             font.weight: Font.DemiBold
                             Layout.fillWidth: true
                             elide: Text.ElideRight
                         }
 
-                        PlasmaComponents.Label {
+                        PlainPlasmaLabel {
                             // The range selector above states the window once,
                             // so each row carries only its own figures.
                             text: modelData.windowValueLine

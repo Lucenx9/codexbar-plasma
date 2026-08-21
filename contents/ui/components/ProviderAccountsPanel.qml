@@ -23,7 +23,7 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
 
-        PlasmaComponents.Label {
+        PlainPlasmaLabel {
             text: i18n("Accounts")
             font.weight: Font.DemiBold
             Layout.fillWidth: true
@@ -77,7 +77,7 @@ ColumnLayout {
         }
     }
 
-    PlasmaComponents.Label {
+    PlainPlasmaLabel {
         visible: accountsPanel.providerID.length > 0
             && accountsPanel.applet.accountErrorForProvider(accountsPanel.providerID).length > 0
         text: accountsPanel.providerID.length > 0

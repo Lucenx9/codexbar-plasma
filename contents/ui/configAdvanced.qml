@@ -3,6 +3,7 @@ import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
+import "components" as Components
 
 KCM.SimpleKCM {
     id: page
@@ -18,7 +19,7 @@ KCM.SimpleKCM {
             Kirigami.FormData.isSection: true
         }
 
-        Controls.Label {
+        Components.PlainControlsLabel {
             id: advancedOverrideExplanation
 
             Layout.fillWidth: true

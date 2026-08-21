@@ -96,16 +96,25 @@ TestCase {
         compare(normalized.fields[0].title, "Known title")
     }
 
-    function test_truthyMalformedTitleDoesNotChangeFallbackRule() {
+    function test_structuredDisplayTextUsesFallbacksInsteadOfObjectStrings() {
         var called = false
         var normalized = ProviderDescriptor.normalize(descriptor([
-            field({ title: { malformed: true } })
+            field({ title: { malformed: true }, description: ["bad"] }),
+            field({ id: "region", kind: "enum", options: [
+                { id: "eu", title: { malformed: true } }
+            ] })
+        ], [
+            action({ title: { malformed: true }, description: ["bad"] })
         ]), function() {
             called = true
             return "Fallback"
         })
 
-        verify(!called)
+        verify(called)
+        compare(normalized.fields[0].title, "Fallback")
+        compare(normalized.fields[0].description, "")
+        compare(normalized.fields[1].options[0].title, "eu")
+        compare(normalized.actions.length, 0)
     }
 
     function test_numericZeroSelectsMatchingOption() {

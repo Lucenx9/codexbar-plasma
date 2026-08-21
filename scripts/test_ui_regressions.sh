@@ -441,6 +441,8 @@ if "codexbar cost did not return JSON." not in parse_cost_body:
     raise AssertionError("parseCostOutput must keep a visible fallback error when cost returns no JSON")
 for cost_error_fragment in (
     'var costMessage = ""',
+    "var hadCostRecordError = false",
+    "if (hadCostRecordError)",
     "item.error && item.error.message",
     "costErrorText = costMessage",
 ):
@@ -451,6 +453,12 @@ for cost_error_fragment in (
         )
 if "normalizeTokenCost(item, requestedHistoryDays)" not in parse_cost_body:
     raise AssertionError("cost snapshots must retain the range of the request that produced them")
+if "Normalizer.costRecordCanReplaceSnapshot(item)" not in parse_cost_body:
+    raise AssertionError("error-only cost records must preserve the previous healthy snapshot")
+
+parse_usage_body = function_body(main_text, "parseOutput")
+if "Normalizer.dedupeProviderSnapshots(nextProviders)" not in parse_usage_body:
+    raise AssertionError("direct usage payloads must not create duplicate provider tabs")
 
 token_cost_section_body = id_block(main_text, "tokenCostSection")
 if "applet.costErrorText" not in token_cost_section_body:
@@ -674,7 +682,7 @@ if "readonly property real compactMeterTrackHeight: Math.round(Kirigami.Units.gr
 # Section headings sit above metric rows that are already DemiBold. A Normal
 # weight heading therefore reads as less important than its own content, so the
 # structural labels stay Primary and the size scale carries the ranking.
-heading_chunks = main_text.split("Kirigami.Heading {")[1:]
+heading_chunks = main_text.split("PlainHeading {")[1:]
 if len(heading_chunks) < 5:
     raise AssertionError("main.qml must keep its popup section headings")
 for heading_chunk in heading_chunks:
@@ -1777,9 +1785,9 @@ if "valueRow.copyRevealed || valueRow.copied || hovered || activeFocus" not in c
         "the copy action must stay reachable by keyboard and while confirming a copy, "
         "not only while the owning row is hovered"
     )
-if "textFormat: Text.PlainText" not in copyable_value_text:
+if "PlainPlasmaLabel {" not in copyable_value_text:
     raise AssertionError("CopyableValue must render untrusted CLI values as plain text")
-if sessions_view_text.count("textFormat: Text.PlainText") < 3:
+if sessions_view_text.count("PlainPlasmaLabel {") < 3:
     raise AssertionError("all direct session labels must render CLI-derived text as plain text")
 if sessions_view_text.count("copyRevealed: sessionCardHover.hovered") != 2:
     raise AssertionError(
@@ -1942,7 +1950,7 @@ for persistent_notice_fragment in (
             f"missing {persistent_notice_fragment!r}"
         )
 for cost_trust_fragment in (
-    "Kirigami.InlineMessage",
+    "PlainInlineMessage",
     "property var summary: null",
     "property var stateOwner: null",
     'property string noticeScope: ""',

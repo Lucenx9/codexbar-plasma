@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasma5support as Plasma5Support
+import "components" as Components
 import "Guards.js" as Guards
 import "SafeText.js" as SafeText
 
@@ -119,7 +120,7 @@ KCM.SimpleKCM {
         width: parent.width
         spacing: Kirigami.Units.smallSpacing
 
-        Controls.Label {
+        Components.PlainControlsLabel {
             Layout.fillWidth: true
             text: i18n("Run redacted CodexBar CLI diagnostics from Plasma. The diagnostic command omits raw tokens, cookies, auth headers, emails, account IDs, org IDs, raw responses, and billing-history records.")
             opacity: 0.72
@@ -162,10 +163,10 @@ KCM.SimpleKCM {
             Layout.alignment: Qt.AlignHCenter
         }
 
-        Kirigami.InlineMessage {
+        Components.PlainInlineMessage {
             Layout.fillWidth: true
             type: Kirigami.MessageType.Error
-            text: page.diagnosticError
+            plainText: page.diagnosticError
             visible: page.diagnosticError.length > 0
             showCloseButton: true
             onVisibleChanged: if (!visible) page.diagnosticError = ""

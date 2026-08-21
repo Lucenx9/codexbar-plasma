@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasma5support as Plasma5Support
+import "components" as Components
 import "CommandLedger.js" as CommandLedger
 import "Guards.js" as Guards
 import "ProviderIdentity.js" as ProviderIdentity
@@ -393,7 +394,7 @@ KCM.SimpleKCM {
                         opacity: 0.55
                     }
 
-                    Controls.Label {
+                    Components.PlainControlsLabel {
                         text: page.panelElementTitle(modelData)
                         Layout.fillWidth: true
                         elide: Text.ElideRight
@@ -476,21 +477,21 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             spacing: Kirigami.Units.smallSpacing
 
-            Controls.Label {
+            Components.PlainControlsLabel {
                 Layout.fillWidth: true
                 text: i18np("Choose up to %1 provider", "Choose up to %1 providers", page.maxOverviewProviders)
                 opacity: 0.7
                 wrapMode: Text.WordWrap
             }
 
-            Controls.Label {
+            Components.PlainControlsLabel {
                 Layout.fillWidth: true
                 visible: page.overviewProvidersLoading
                 text: i18n("Loading providers...")
                 opacity: 0.7
             }
 
-            Controls.Label {
+            Components.PlainControlsLabel {
                 Layout.fillWidth: true
                 visible: !page.overviewProvidersLoading && page.overviewProviders.length === 0 && page.overviewProvidersError.length === 0
                 text: i18n("No enabled providers available for Overview.")
@@ -498,10 +499,10 @@ KCM.SimpleKCM {
                 wrapMode: Text.WordWrap
             }
 
-            Kirigami.InlineMessage {
+            Components.PlainInlineMessage {
                 Layout.fillWidth: true
                 type: Kirigami.MessageType.Error
-                text: page.overviewProvidersError
+                plainText: page.overviewProvidersError
                 visible: page.overviewProvidersError.length > 0
             }
 

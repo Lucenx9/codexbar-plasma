@@ -32,14 +32,14 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
 
-        PlasmaComponents.Label {
+        PlainPlasmaLabel {
             text: usageRow.rowData.label
             font.weight: Font.DemiBold
             Layout.fillWidth: true
             elide: Text.ElideRight
         }
 
-        PlasmaComponents.Label {
+        PlainPlasmaLabel {
             id: usagePercentLabel
 
             visible: usageRow.rowData.hasPercent
@@ -121,7 +121,7 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
 
-        PlasmaComponents.Label {
+        PlainPlasmaLabel {
             id: usagePaceLabel
 
             visible: usageRow.rowData.pace.length > 0
@@ -132,7 +132,7 @@ ColumnLayout {
             wrapMode: Text.WordWrap
         }
 
-        PlasmaComponents.Label {
+        PlainPlasmaLabel {
             id: usageResetLabel
 
             visible: usageRow.resetText.length > 0

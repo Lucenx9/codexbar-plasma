@@ -85,18 +85,16 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
 
-        PlasmaComponents.Label {
+        PlainPlasmaLabel {
             text: chart.hasActivePoint ? chart.pointLabel(chart.points[chart.activeIndex]) : ""
-            textFormat: Text.PlainText
             opacity: chart.applet.secondaryTextOpacity
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             Layout.fillWidth: true
             elide: Text.ElideRight
         }
 
-        PlasmaComponents.Label {
+        PlainPlasmaLabel {
             text: chart.hasActivePoint ? chart.pointDisplayValue(chart.points[chart.activeIndex]) : ""
-            textFormat: Text.PlainText
             font.weight: Font.DemiBold
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             horizontalAlignment: Text.AlignRight
@@ -245,18 +243,16 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
 
-        PlasmaComponents.Label {
+        PlainPlasmaLabel {
             text: chart.points.length > 0 ? chart.pointLabel(chart.points[0]) : ""
-            textFormat: Text.PlainText
             opacity: chart.applet.secondaryTextOpacity
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             Layout.fillWidth: true
             elide: Text.ElideRight
         }
 
-        PlasmaComponents.Label {
+        PlainPlasmaLabel {
             text: chart.points.length > 1 ? chart.pointLabel(chart.points[chart.points.length - 1]) : ""
-            textFormat: Text.PlainText
             opacity: chart.applet.secondaryTextOpacity
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             horizontalAlignment: Text.AlignRight

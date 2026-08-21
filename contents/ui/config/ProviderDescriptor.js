@@ -71,13 +71,16 @@ function normalizeField(raw, fallbackFieldTitle) {
     var options = normalizeOptions(raw.options)
     var normalizedValue = value === undefined || value === null ? "" : value
     var normalizedValueText = valueText(normalizedValue)
+    var fieldTitle = SafeText.cliMessage(raw.title, 120)
+    if (fieldTitle.length === 0) {
+        fieldTitle = SafeText.boundedDisplayText(
+            fallbackTitle(fallbackFieldTitle, fieldID), 120)
+    }
     return {
         id: fieldID,
         kind: String(raw.kind),
-        title: raw.title
-            ? SafeText.cliMessage(raw.title, 120)
-            : fallbackTitle(fallbackFieldTitle, fieldID),
-        description: raw.description ? SafeText.cliMessage(raw.description, 500) : "",
+        title: fieldTitle,
+        description: SafeText.cliMessage(raw.description, 500),
         value: normalizedValue,
         valueText: normalizedValueText,
         redactedValue: raw.redactedValue ? boundedCliMessage(raw.redactedValue) : "",
@@ -105,7 +108,7 @@ function normalizeAction(raw) {
         id: actionID,
         kind: raw.kind ? String(raw.kind) : "command",
         title: actionTitle,
-        description: raw.description ? SafeText.cliMessage(raw.description, 500) : "",
+        description: SafeText.cliMessage(raw.description, 500),
         command: command
     }
 }
@@ -186,9 +189,10 @@ function normalizeOptions(rawOptions) {
         if (optionID.length === 0) {
             continue
         }
+        var optionTitle = SafeText.cliMessage(option.title, 120)
         result.push({
             id: optionID,
-            title: option.title ? SafeText.cliMessage(option.title, 120) : optionID
+            title: optionTitle.length > 0 ? optionTitle : optionID
         })
     }
     return result

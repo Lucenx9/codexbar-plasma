@@ -74,6 +74,28 @@ function isStructuredValue(value) {
     return value !== null && typeof value === "object"
 }
 
+// Some Kirigami controls render Text.AutoText internally and do not expose
+// textFormat. Wrap escaped plain text in harmless rich text so CLI-controlled
+// tags stay visible as text instead of becoming images or links.
+function plainTextAsRichText(value) {
+    if (isStructuredValue(value) || value === null || value === undefined) {
+        return ""
+    }
+    var text = String(value)
+    if (text.length === 0) {
+        return ""
+    }
+    return "<span>" + text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;")
+        .replace(/\r\n?/g, "\n")
+        .replace(/\n/g, "<br>")
+        + "</span>"
+}
+
 function boundedDisplayText(value, maximumLength) {
     if (isStructuredValue(value)) {
         return ""
@@ -123,6 +145,9 @@ function cliJsonText(value) {
 }
 
 function cliMessage(value, maximumLength) {
+    if (isStructuredValue(value)) {
+        return ""
+    }
     var limit = safeLimit(maximumLength, maximumCliMessageLength)
     return boundedDisplayText(redactCredentials(value, limit), limit)
 }

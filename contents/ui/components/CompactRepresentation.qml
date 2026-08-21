@@ -49,7 +49,7 @@ Item {
 
     // Measure outside the Loader so its layout-assigned width cannot feed back
     // into the label's preferred width and collapse the compact representation.
-    PlasmaComponents.Label {
+    PlainPlasmaLabel {
         id: compactTextMeasurer
 
         visible: false
@@ -203,7 +203,7 @@ Item {
     Component {
         id: textElement
 
-        PlasmaComponents.Label {
+        PlainPlasmaLabel {
             visible: !compactRoot.verticalPanel && compactRoot.primaryText.length > 0
             text: compactRoot.primaryText
             elide: Text.ElideRight

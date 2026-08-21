@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
+import "components" as Components
 
 KCM.SimpleKCM {
     id: page
@@ -356,7 +357,7 @@ KCM.SimpleKCM {
             Layout.preferredWidth: Kirigami.Units.gridUnit * 10
         }
 
-        Controls.Label {
+        Components.PlainControlsLabel {
             text: i18n("Thresholds also position the markers drawn on the usage bars.")
             opacity: 0.7
             Layout.fillWidth: true
@@ -402,7 +403,7 @@ KCM.SimpleKCM {
             Layout.preferredWidth: Kirigami.Units.gridUnit * 10
         }
 
-        Controls.Label {
+        Components.PlainControlsLabel {
             id: lastUpdateCheckLabel
 
             text: autoUpdateLastCheck.length > 0
@@ -414,7 +415,7 @@ KCM.SimpleKCM {
             wrapMode: Text.WordWrap
         }
 
-        Controls.Label {
+        Components.PlainControlsLabel {
             id: lastUpdateStatusLabel
 
             text: i18n("Last update status: %1", widgetUpdateLastStatus)
@@ -424,10 +425,10 @@ KCM.SimpleKCM {
             wrapMode: Text.WordWrap
         }
 
-        Kirigami.InlineMessage {
+        Components.PlainInlineMessage {
             Layout.fillWidth: true
             type: Kirigami.MessageType.Error
-            text: widgetUpdateLastError.slice(0, 500)
+            plainText: widgetUpdateLastError.slice(0, 500)
             visible: updateChecksEnabledCheck.checked && widgetUpdateLastError.length > 0
         }
 
@@ -436,7 +437,7 @@ KCM.SimpleKCM {
             Kirigami.FormData.isSection: true
         }
 
-        Controls.Label {
+        Components.PlainControlsLabel {
             text: i18n("Restore every user-facing setting from General, Display, and Advanced. Provider accounts and CodexBar CLI configuration are not changed.")
             opacity: 0.7
             Layout.fillWidth: true
@@ -452,11 +453,11 @@ KCM.SimpleKCM {
             onClicked: page.restoreUserDefaults()
         }
 
-        Kirigami.InlineMessage {
+        Components.PlainInlineMessage {
             Layout.fillWidth: true
             type: Kirigami.MessageType.Information
             visible: page.defaultValuesPrepared
-            text: i18n("Default values are ready. Select Apply or OK to save them, or Cancel to keep the current settings.")
+            plainText: i18n("Default values are ready. Select Apply or OK to save them, or Cancel to keep the current settings.")
         }
     }
 }

@@ -122,6 +122,7 @@ KCM.SimpleKCM {
         runCommand(command.join(" "), {
             kind: "list",
             includeDescriptors: includeDescriptors === true,
+            providerConfigRevision: providerConfigRevisionValue(),
             timeoutMs: configCommandTimeoutMs
         })
     }
@@ -302,6 +303,11 @@ KCM.SimpleKCM {
     }
 
     function handleListResult(descriptor, stdoutText, stderrText) {
+        if (!ProviderConfigProtocol.providerListResultIsCurrent(
+                descriptor, providerConfigRevisionValue())) {
+            reload(true)
+            return
+        }
         if (descriptor.includeDescriptors === true && shouldRetryProviderListWithoutDescriptors(stdoutText, stderrText)) {
             runProviderListCommand(false)
             return
@@ -1054,8 +1060,13 @@ KCM.SimpleKCM {
         return ProviderIdentity.providerLoginUrl(providerID)
     }
 
-    function bumpProviderConfigRevision() {
+    function providerConfigRevisionValue() {
         var current = Number(Plasmoid.configuration.providerConfigRevision || cfg_providerConfigRevision || 0)
+        return isFinite(current) && current >= 0 ? Math.floor(current) : 0
+    }
+
+    function bumpProviderConfigRevision() {
+        var current = providerConfigRevisionValue()
         var next = current >= 2147480000 ? 1 : current + 1
         cfg_providerConfigRevision = next
         Plasmoid.configuration.providerConfigRevision = next
@@ -1244,23 +1255,23 @@ KCM.SimpleKCM {
             }
         }
 
-        Kirigami.InlineMessage {
+        Components.PlainInlineMessage {
             Layout.fillWidth: true
             Layout.leftMargin: Kirigami.Units.smallSpacing
             Layout.rightMargin: Kirigami.Units.smallSpacing
             type: Kirigami.MessageType.Error
-            text: page.errorText
+            plainText: page.errorText
             visible: page.errorText.length > 0
             showCloseButton: true
             onVisibleChanged: if (!visible) page.errorText = ""
         }
 
-        Kirigami.InlineMessage {
+        Components.PlainInlineMessage {
             Layout.fillWidth: true
             Layout.leftMargin: Kirigami.Units.smallSpacing
             Layout.rightMargin: Kirigami.Units.smallSpacing
             type: Kirigami.MessageType.Positive
-            text: page.statusText
+            plainText: page.statusText
             visible: page.statusText.length > 0
             showCloseButton: true
             onVisibleChanged: if (!visible) page.statusText = ""
@@ -1303,14 +1314,14 @@ KCM.SimpleKCM {
                     Layout.fillWidth: true
                     spacing: 0
 
-                    Controls.Label {
+                    Components.PlainControlsLabel {
                         text: page.selectedProvider ? page.selectedProvider.displayName : ""
                         font.weight: Font.DemiBold
                         Layout.fillWidth: true
                         elide: Text.ElideRight
                     }
 
-                    Controls.Label {
+                    Components.PlainControlsLabel {
                         text: page.selectedProvider
                             ? (page.selectedProvider.enabled ? i18n("%1 - enabled", page.selectedProvider.provider) : i18n("%1 - disabled", page.selectedProvider.provider))
                             : ""
@@ -1353,7 +1364,7 @@ KCM.SimpleKCM {
                     Layout.fillWidth: true
                     spacing: Kirigami.Units.smallSpacing
 
-                    Controls.Label {
+                    Components.PlainControlsLabel {
                         text: i18n("Provider settings")
                         font.weight: Font.DemiBold
                         Layout.fillWidth: true
@@ -1377,7 +1388,7 @@ KCM.SimpleKCM {
                     }
                 }
 
-                Controls.Label {
+                Components.PlainControlsLabel {
                     Layout.fillWidth: true
                     text: i18n("Provider-specific controls come from the CodexBar CLI descriptor. This panel also shows redacted source/auth details and exact CLI commands.")
                     opacity: page.secondaryTextOpacity
@@ -1385,13 +1396,13 @@ KCM.SimpleKCM {
                     wrapMode: Text.WordWrap
                 }
 
-                Kirigami.InlineMessage {
+                Components.PlainInlineMessage {
                     Layout.fillWidth: true
                     type: Kirigami.MessageType.Error
-                    text: page.selectedProvider
+                    plainText: page.selectedProvider
                         ? page.providerDiagnosticErrorFor(page.selectedProvider.provider)
                         : ""
-                    visible: text.length > 0
+                    visible: plainText.length > 0
                     showCloseButton: true
                 }
 
@@ -1400,7 +1411,7 @@ KCM.SimpleKCM {
                     spacing: Kirigami.Units.smallSpacing
                     visible: page.descriptorFieldRows(page.selectedProvider).length > 0
 
-                    Controls.Label {
+                    Components.PlainControlsLabel {
                         text: i18n("Provider descriptor fields")
                         font.weight: Font.DemiBold
                         Layout.fillWidth: true
@@ -1421,14 +1432,14 @@ KCM.SimpleKCM {
                                 spacing: Kirigami.Units.smallSpacing
                                 visible: modelData.kind === "secret"
 
-                                Controls.Label {
+                                Components.PlainControlsLabel {
                                     text: modelData.title
                                     opacity: page.secondaryTextOpacity
                                     Layout.preferredWidth: Kirigami.Units.gridUnit * 7
                                     elide: Text.ElideRight
                                 }
 
-                                Controls.Label {
+                                Components.PlainControlsLabel {
                                     text: modelData.redactedValue.length > 0 ? modelData.redactedValue : i18n("Not configured")
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
@@ -1448,7 +1459,7 @@ KCM.SimpleKCM {
                                 spacing: Kirigami.Units.smallSpacing
                                 visible: modelData.kind === "text" || modelData.kind === "number"
 
-                                Controls.Label {
+                                Components.PlainControlsLabel {
                                     text: modelData.title
                                     opacity: page.secondaryTextOpacity
                                     Layout.preferredWidth: Kirigami.Units.gridUnit * 7
@@ -1479,7 +1490,7 @@ KCM.SimpleKCM {
                                 spacing: Kirigami.Units.smallSpacing
                                 visible: modelData.kind === "enum"
 
-                                Controls.Label {
+                                Components.PlainControlsLabel {
                                     text: modelData.title
                                     opacity: page.secondaryTextOpacity
                                     Layout.preferredWidth: Kirigami.Units.gridUnit * 7
@@ -1516,7 +1527,7 @@ KCM.SimpleKCM {
                                 spacing: Kirigami.Units.smallSpacing
                                 visible: modelData.kind === "boolean"
 
-                                Controls.Label {
+                                Components.PlainControlsLabel {
                                     text: modelData.title
                                     opacity: page.secondaryTextOpacity
                                     Layout.preferredWidth: Kirigami.Units.gridUnit * 7
@@ -1542,7 +1553,7 @@ KCM.SimpleKCM {
                                 }
                             }
 
-                            Controls.Label {
+                            Components.PlainControlsLabel {
                                 Layout.fillWidth: true
                                 text: modelData.description
                                 opacity: page.secondaryTextOpacity
@@ -1566,14 +1577,14 @@ KCM.SimpleKCM {
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing
 
-                        Controls.Label {
+                        Components.PlainControlsLabel {
                             text: modelData.label
                             opacity: page.secondaryTextOpacity
                             Layout.preferredWidth: Kirigami.Units.gridUnit * 7
                             elide: Text.ElideRight
                         }
 
-                        Controls.Label {
+                        Components.PlainControlsLabel {
                             text: modelData.value
                             Layout.fillWidth: true
                             elide: Text.ElideRight
@@ -1640,14 +1651,14 @@ KCM.SimpleKCM {
             spacing: Kirigami.Units.smallSpacing
             visible: page.providers.length > 0
 
-            Controls.Label {
+            Components.PlainControlsLabel {
                 text: i18n("Providers")
                 font.weight: Font.DemiBold
                 Layout.fillWidth: true
                 elide: Text.ElideRight
             }
 
-            Controls.Label {
+            Components.PlainControlsLabel {
                 text: i18np("%1 provider enabled", "%1 providers enabled", page.enabledCount)
                 font: Kirigami.Theme.smallFont
                 opacity: page.secondaryTextOpacity
@@ -1655,22 +1666,22 @@ KCM.SimpleKCM {
             }
         }
 
-        Kirigami.PlaceholderMessage {
+        Components.PlainPlaceholderMessage {
             Layout.fillWidth: true
             Layout.topMargin: Kirigami.Units.gridUnit * 2
             visible: !page.loading && page.providers.length === 0 && page.errorText.length === 0
             icon.name: "view-list-details"
-            text: i18n("No providers reported")
-            explanation: i18n("codexbar did not return any providers.")
+            plainText: i18n("No providers reported")
+            plainExplanation: i18n("codexbar did not return any providers.")
         }
 
-        Kirigami.PlaceholderMessage {
+        Components.PlainPlaceholderMessage {
             Layout.fillWidth: true
             Layout.topMargin: Kirigami.Units.gridUnit * 2
             visible: page.providers.length > 0 && page.visibleProviders.length === 0
             icon.name: "search"
-            text: i18n("No matching providers")
-            explanation: i18n("No provider matches \"%1\".", page.filterText)
+            plainText: i18n("No matching providers")
+            plainExplanation: i18n("No provider matches \"%1\".", page.filterText)
         }
 
         Repeater {

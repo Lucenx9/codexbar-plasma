@@ -26,9 +26,8 @@ RowLayout {
     Layout.fillWidth: true
     spacing: Kirigami.Units.smallSpacing / 2
 
-    PlasmaComponents.Label {
+    PlainPlasmaLabel {
         text: valueRow.text
-        textFormat: Text.PlainText
         font.weight: valueRow.fontWeight
         font.pixelSize: valueRow.pixelSize > 0 ? valueRow.pixelSize : Kirigami.Theme.defaultFont.pixelSize
         opacity: valueRow.textOpacity

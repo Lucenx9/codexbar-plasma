@@ -119,6 +119,43 @@ function normalizeProviderConfigEntries(payload) {
     }
 }
 
+// Provider tabs are keyed by canonical provider id. Keep their model unique and
+// retain the first healthy snapshot when a malformed payload repeats an id.
+function dedupeProviderSnapshots(items) {
+    var result = []
+    var indexes = ({})
+    if (!Array.isArray(items)) {
+        return result
+    }
+    var itemLimit = Math.min(items.length, maximumProviderSnapshots)
+    for (var i = 0; i < itemLimit; i++) {
+        var item = isCliRecord(items[i]) ? items[i] : null
+        var providerID = item ? normalizedProviderID(item.provider) : ""
+        if (providerID.length === 0) {
+            continue
+        }
+        var snapshot = copyObject(item)
+        snapshot.provider = providerID
+        var hasError = item.error !== undefined
+            && item.error !== null
+            && String(item.error).trim().length > 0
+        if (!hasOwnKey(indexes, providerID)) {
+            indexes[providerID] = result.length
+            result.push(snapshot)
+            continue
+        }
+        var existingIndex = indexes[providerID]
+        var existing = result[existingIndex]
+        var existingHasError = existing.error !== undefined
+            && existing.error !== null
+            && String(existing.error).trim().length > 0
+        if (existingHasError && !hasError) {
+            result[existingIndex] = snapshot
+        }
+    }
+    return result
+}
+
 // The numeric half of one usage row. `null` when the payload carries no window
 // record at all, which is how the caller distinguishes "no such window" from
 // "window present but percentage unknown" (`hasPercent === false`).
@@ -396,6 +433,18 @@ function normalizeCostTrustMetadata(rawCostRecord) {
     return coverage !== null || sourceKind.length > 0
         ? { coverage: coverage, sourceKind: sourceKind }
         : null
+}
+
+// The official CLI emits either a cost snapshot or an error for a provider.
+// Error records must leave that provider's previous healthy snapshot untouched.
+function costRecordCanReplaceSnapshot(item) {
+    if (!isCliRecord(item)) {
+        return false
+    }
+    var hasError = hasOwnKey(item, "error")
+        && item.error !== null
+        && item.error !== undefined
+    return !hasError
 }
 
 function normalizeCostDaily(items, currency, days) {

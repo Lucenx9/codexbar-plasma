@@ -103,14 +103,14 @@ Rectangle {
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing
 
-                PlasmaComponents.Label {
+                PlainPlasmaLabel {
                     text: overviewRow.providerData.title
                     font.weight: Font.DemiBold
                     Layout.fillWidth: true
                     elide: Text.ElideRight
                 }
 
-                PlasmaComponents.Label {
+                PlainPlasmaLabel {
                     visible: overviewRow.hasUsage
                     text: i18n("%1% %2", Math.round(overviewRow.shownPercent), overviewRow.applet.percentSuffix())
                     font.weight: Font.DemiBold
@@ -119,7 +119,7 @@ Rectangle {
                 }
             }
 
-            PlasmaComponents.Label {
+            PlainPlasmaLabel {
                 visible: overviewRow.detail.length > 0
                 text: overviewRow.detail
                 opacity: overviewRow.applet.secondaryTextOpacity
@@ -159,7 +159,7 @@ Rectangle {
                 }
             }
 
-            PlasmaComponents.Label {
+            PlainPlasmaLabel {
                 visible: overviewRow.resetText.length > 0
                 text: overviewRow.resetText
                 opacity: overviewRow.applet.secondaryTextOpacity
