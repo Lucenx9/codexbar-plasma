@@ -1936,9 +1936,9 @@ for persistent_notice_fragment in (
 for cost_trust_fragment in (
     "Kirigami.InlineMessage",
     "property var summary: null",
-    "required property var stateOwner",
-    "required property string noticeScope",
-    "required property bool presentationVisible",
+    "property var stateOwner: null",
+    'property string noticeScope: ""',
+    "property bool presentationVisible: false",
     "showCloseButton: true",
     "stateOwner.updateCostTrustNoticeState(",
     "onNoticeScopeChanged:",

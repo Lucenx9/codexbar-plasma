@@ -5,9 +5,9 @@ import org.kde.kirigami as Kirigami
 Kirigami.InlineMessage {
     id: noticeRoot
 
-    required property var stateOwner
-    required property string noticeScope
-    required property bool presentationVisible
+    property var stateOwner: null
+    property string noticeScope: ""
+    property bool presentationVisible: false
     property var summary: null
     property var noticeState: ({ key: "", dismissed: false, shouldShow: false })
 
@@ -46,9 +46,9 @@ Kirigami.InlineMessage {
     }
 
     function updateNoticeState(shouldDismiss) {
-        // Required property bindings are installed one at a time while QML
-        // constructs the component. A summary can therefore arrive before its
-        // owner during that brief initialization window.
+        // Property bindings are installed one at a time while QML constructs
+        // the component. A summary can therefore arrive before its owner during
+        // that brief initialization window.
         if (!stateOwner
                 || typeof stateOwner.updateCostTrustNoticeState !== "function") {
             noticeState = ({ key: "", dismissed: false, shouldShow: false })
