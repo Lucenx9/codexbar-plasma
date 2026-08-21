@@ -199,9 +199,8 @@ Item {
                     Rectangle {
                         id: overviewTab
 
-                        property bool focusAcquiredByPointer: false
                         readonly property bool selected: applet.overviewSelected
-                        readonly property bool keyboardFocusVisible: activeFocus && !focusAcquiredByPointer
+                        readonly property bool keyboardFocusVisible: overviewFocus.visualFocus
                         readonly property color brandAccent: Kirigami.Theme.highlightColor
                         readonly property color accent: applet.readableAccentColor(
                             brandAccent,
@@ -235,43 +234,8 @@ Item {
                         border.width: keyboardFocusVisible ? 1 : 0
                         border.color: Kirigami.Theme.focusColor
                         scale: overviewTabMouse.pressed ? 0.985 : 1
-                        activeFocusOnTab: true
-
-                        onActiveFocusChanged: {
-                            if (activeFocus) {
-                                providerTabsFlickable.ensureVisible(overviewTab)
-                            } else {
-                                focusAcquiredByPointer = false
-                            }
-                        }
-
                         onSelectedChanged: overviewTab.claimSelectedTab()
                         Component.onCompleted: overviewTab.claimSelectedTab()
-
-                        Accessible.role: Accessible.PageTab
-                        Accessible.name: i18n("Overview")
-                        Accessible.selectable: true
-                        Accessible.selected: selected
-                        Accessible.onPressAction: overviewTab.activate()
-
-                        Keys.onPressed: function(event) {
-                            overviewTab.focusAcquiredByPointer = false
-                            switch (event.key) {
-                            case Qt.Key_Space:
-                            case Qt.Key_Enter:
-                            case Qt.Key_Return:
-                            case Qt.Key_Select:
-                                overviewTab.activate()
-                                event.accepted = true
-                                break
-                            case Qt.Key_Left:
-                                event.accepted = providerTabsFlickable.focusAdjacentTab(overviewTab, false)
-                                break
-                            case Qt.Key_Right:
-                                event.accepted = providerTabsFlickable.focusAdjacentTab(overviewTab, true)
-                                break
-                            }
-                        }
 
                         Behavior on color {
                             ColorAnimation {
@@ -286,16 +250,51 @@ Item {
                             }
                         }
 
+                        Controls.Control {
+                            id: overviewFocus
+
+                            anchors.fill: parent
+                            activeFocusOnTab: true
+                            background: null
+
+                            onActiveFocusChanged: {
+                                if (activeFocus) {
+                                    providerTabsFlickable.ensureVisible(overviewTab)
+                                }
+                            }
+
+                            Accessible.role: Accessible.PageTab
+                            Accessible.name: i18n("Overview")
+                            Accessible.selectable: true
+                            Accessible.selected: overviewTab.selected
+                            Accessible.onPressAction: overviewTab.activate()
+
+                            Keys.onPressed: function(event) {
+                                switch (event.key) {
+                                case Qt.Key_Space:
+                                case Qt.Key_Enter:
+                                case Qt.Key_Return:
+                                case Qt.Key_Select:
+                                    overviewTab.activate()
+                                    event.accepted = true
+                                    break
+                                case Qt.Key_Left:
+                                    event.accepted = providerTabsFlickable.focusAdjacentTab(overviewFocus, false)
+                                    break
+                                case Qt.Key_Right:
+                                    event.accepted = providerTabsFlickable.focusAdjacentTab(overviewFocus, true)
+                                    break
+                                }
+                            }
+                        }
+
                         MouseArea {
                             id: overviewTabMouse
 
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onPressed: {
-                                overviewTab.focusAcquiredByPointer = true
-                                overviewTab.forceActiveFocus(Qt.MouseFocusReason)
-                            }
+                            onPressed: overviewFocus.forceActiveFocus(Qt.MouseFocusReason)
                             onClicked: overviewTab.activate()
                         }
 
@@ -376,9 +375,8 @@ Item {
 
                             required property int index
                             required property var modelData
-                            property bool focusAcquiredByPointer: false
                             readonly property bool selected: index === applet.selectedProviderIndex
-                            readonly property bool keyboardFocusVisible: activeFocus && !focusAcquiredByPointer
+                            readonly property bool keyboardFocusVisible: providerFocus.visualFocus
                             readonly property real meter: applet.switcherPercent(modelData)
                             readonly property color accent: applet.providerReadableColor(
                                 modelData.provider,
@@ -416,43 +414,8 @@ Item {
                             border.color: Kirigami.Theme.focusColor
                             opacity: modelData.error.length > 0 ? 0.62 : 1
                             scale: providerTabMouse.pressed ? 0.985 : 1
-                            activeFocusOnTab: true
-
-                            onActiveFocusChanged: {
-                                if (activeFocus) {
-                                    providerTabsFlickable.ensureVisible(providerTab)
-                                } else {
-                                    focusAcquiredByPointer = false
-                                }
-                            }
-
                             onSelectedChanged: providerTab.claimSelectedTab()
                             Component.onCompleted: providerTab.claimSelectedTab()
-
-                            Accessible.role: Accessible.PageTab
-                            Accessible.name: modelData.title
-                            Accessible.selectable: true
-                            Accessible.selected: selected
-                            Accessible.onPressAction: providerTab.activate()
-
-                            Keys.onPressed: function(event) {
-                                providerTab.focusAcquiredByPointer = false
-                                switch (event.key) {
-                                case Qt.Key_Space:
-                                case Qt.Key_Enter:
-                                case Qt.Key_Return:
-                                case Qt.Key_Select:
-                                    providerTab.activate()
-                                    event.accepted = true
-                                    break
-                                case Qt.Key_Left:
-                                    event.accepted = providerTabsFlickable.focusAdjacentTab(providerTab, false)
-                                    break
-                                case Qt.Key_Right:
-                                    event.accepted = providerTabsFlickable.focusAdjacentTab(providerTab, true)
-                                    break
-                                }
-                            }
 
                             Behavior on color {
                                 ColorAnimation {
@@ -467,16 +430,51 @@ Item {
                                 }
                             }
 
+                            Controls.Control {
+                                id: providerFocus
+
+                                anchors.fill: parent
+                                activeFocusOnTab: true
+                                background: null
+
+                                onActiveFocusChanged: {
+                                    if (activeFocus) {
+                                        providerTabsFlickable.ensureVisible(providerTab)
+                                    }
+                                }
+
+                                Accessible.role: Accessible.PageTab
+                                Accessible.name: providerTab.modelData.title
+                                Accessible.selectable: true
+                                Accessible.selected: providerTab.selected
+                                Accessible.onPressAction: providerTab.activate()
+
+                                Keys.onPressed: function(event) {
+                                    switch (event.key) {
+                                    case Qt.Key_Space:
+                                    case Qt.Key_Enter:
+                                    case Qt.Key_Return:
+                                    case Qt.Key_Select:
+                                        providerTab.activate()
+                                        event.accepted = true
+                                        break
+                                    case Qt.Key_Left:
+                                        event.accepted = providerTabsFlickable.focusAdjacentTab(providerFocus, false)
+                                        break
+                                    case Qt.Key_Right:
+                                        event.accepted = providerTabsFlickable.focusAdjacentTab(providerFocus, true)
+                                        break
+                                    }
+                                }
+                            }
+
                             MouseArea {
                                 id: providerTabMouse
 
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onPressed: {
-                                    providerTab.focusAcquiredByPointer = true
-                                    providerTab.forceActiveFocus(Qt.MouseFocusReason)
-                                }
+                                onPressed: providerFocus.forceActiveFocus(Qt.MouseFocusReason)
                                 onClicked: providerTab.activate()
                             }
 
@@ -1193,6 +1191,10 @@ Item {
                         }
 
                         Components.CostTrustNotice {
+                            noticeScope: "provider:" + (applet.selectedProviderData
+                                ? applet.selectedProviderData.provider : "")
+                            stateOwner: fullRoot.applet
+                            presentationVisible: fullRoot.visible && !applet.globalViewSelected
                             summary: tokenCostSection.costTrustSummary
                         }
 

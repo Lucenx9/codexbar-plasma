@@ -18,6 +18,7 @@
 // draws into a caller-supplied canvas context.
 
 var maximumCostHistoryPoints = 365
+var maximumCostTrustNoticeScopes = 128
 
 // Locale separators, resolved once by the caller from `Qt.locale()`.
 function numberFormat(groupSeparator, decimalPoint) {
@@ -650,6 +651,53 @@ function costTrustNoticeTransition(summary, previousState, shouldDismiss) {
         dismissed: dismissed,
         shouldShow: key.length > 0 && !dismissed
     }
+}
+
+// The popup representation may be destroyed while the compact applet remains
+// alive. Keep each surface's semantic notice state in the applet owner so a
+// recreated notice does not forget that the user closed it.
+function costTrustNoticeStoreTransition(summary, states, scope, shouldDismiss) {
+    var safeScope = boundedText(scope, 120)
+    if (safeScope.length === 0 || isUnsafeObjectKey(safeScope)) {
+        safeScope = ""
+    }
+    var source = states !== null
+            && typeof states === "object"
+            && !Array.isArray(states)
+        ? states
+        : ({})
+    var previousState = safeScope.length > 0 && hasOwnKey(source, safeScope)
+        ? source[safeScope]
+        : null
+    var state = costTrustNoticeTransition(summary, previousState, shouldDismiss)
+    var nextStates = ({})
+    var copiedScopes = 0
+    for (var existingScope in source) {
+        if (!hasOwnKey(source, existingScope)
+                || isUnsafeObjectKey(existingScope)
+                || existingScope === safeScope
+                || copiedScopes >= maximumCostTrustNoticeScopes - 1) {
+            continue
+        }
+        nextStates[existingScope] = source[existingScope]
+        copiedScopes += 1
+    }
+    var stateToStore = state
+    if (state.key.length === 0
+            && previousState !== null
+            && typeof previousState === "object"
+            && !Array.isArray(previousState)
+            && hasOwnKey(previousState, "key")
+            && typeof previousState.key === "string"
+            && previousState.key.length > 0
+            && hasOwnKey(previousState, "dismissed")
+            && typeof previousState.dismissed === "boolean") {
+        stateToStore = previousState
+    }
+    if (safeScope.length > 0 && stateToStore.key.length > 0) {
+        nextStates[safeScope] = stateToStore
+    }
+    return { states: nextStates, state: state }
 }
 
 function spendDailyPoints(fmt, costs, showsTokens) {

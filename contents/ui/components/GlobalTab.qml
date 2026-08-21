@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
@@ -11,11 +12,10 @@ Rectangle {
     required property string iconName
     required property real tabHeight
     property bool selected: false
-    property bool focusAcquiredByPointer: false
     // Scrolling tab strip hosting this tab, so keyboard focus can pull an
     // overflowing tab back into view. Null when the host cannot overflow.
     property var tabStrip: null
-    readonly property bool keyboardFocusVisible: activeFocus && !focusAcquiredByPointer
+    readonly property bool keyboardFocusVisible: tabFocus.visualFocus
     readonly property color accent: applet.readableAccentColor(
         Kirigami.Theme.highlightColor,
         Kirigami.Theme.backgroundColor)
@@ -40,7 +40,6 @@ Rectangle {
     border.width: keyboardFocusVisible ? 1 : 0
     border.color: Kirigami.Theme.focusColor
     scale: tabMouse.pressed ? 0.985 : 1
-    activeFocusOnTab: true
 
     function claimSelectedTab() {
         if (tab.tabStrip) {
@@ -50,41 +49,6 @@ Rectangle {
 
     onSelectedChanged: tab.claimSelectedTab()
     Component.onCompleted: tab.claimSelectedTab()
-
-    onActiveFocusChanged: {
-        if (activeFocus) {
-            if (tab.tabStrip) {
-                tab.tabStrip.ensureVisible(tab)
-            }
-        } else {
-            focusAcquiredByPointer = false
-        }
-    }
-
-    Accessible.role: Accessible.PageTab
-    Accessible.name: title
-    Accessible.selectable: true
-    Accessible.selected: selected
-    Accessible.onPressAction: tab.activated()
-
-    Keys.onPressed: function(event) {
-        tab.focusAcquiredByPointer = false
-        switch (event.key) {
-        case Qt.Key_Space:
-        case Qt.Key_Enter:
-        case Qt.Key_Return:
-        case Qt.Key_Select:
-            tab.activated()
-            event.accepted = true
-            break
-        case Qt.Key_Left:
-            event.accepted = tab.tabStrip ? tab.tabStrip.focusAdjacentTab(tab, false) : false
-            break
-        case Qt.Key_Right:
-            event.accepted = tab.tabStrip ? tab.tabStrip.focusAdjacentTab(tab, true) : false
-            break
-        }
-    }
 
     Behavior on color {
         ColorAnimation { duration: Kirigami.Units.shortDuration }
@@ -97,16 +61,57 @@ Rectangle {
         }
     }
 
+    // Controls.Control exposes Qt's visualFocus contract: mouse focus follows
+    // the clicked tab without drawing or later restoring a keyboard-only ring.
+    Controls.Control {
+        id: tabFocus
+
+        anchors.fill: parent
+        activeFocusOnTab: true
+        background: null
+
+        onActiveFocusChanged: {
+            if (activeFocus && tab.tabStrip) {
+                tab.tabStrip.ensureVisible(tab)
+            }
+        }
+
+        Accessible.role: Accessible.PageTab
+        Accessible.name: tab.title
+        Accessible.selectable: true
+        Accessible.selected: tab.selected
+        Accessible.onPressAction: tab.activated()
+
+        Keys.onPressed: function(event) {
+            switch (event.key) {
+            case Qt.Key_Space:
+            case Qt.Key_Enter:
+            case Qt.Key_Return:
+            case Qt.Key_Select:
+                tab.activated()
+                event.accepted = true
+                break
+            case Qt.Key_Left:
+                event.accepted = tab.tabStrip
+                    ? tab.tabStrip.focusAdjacentTab(tabFocus, false)
+                    : false
+                break
+            case Qt.Key_Right:
+                event.accepted = tab.tabStrip
+                    ? tab.tabStrip.focusAdjacentTab(tabFocus, true)
+                    : false
+                break
+            }
+        }
+    }
+
     MouseArea {
         id: tabMouse
 
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onPressed: {
-            tab.focusAcquiredByPointer = true
-            tab.forceActiveFocus(Qt.MouseFocusReason)
-        }
+        onPressed: tabFocus.forceActiveFocus(Qt.MouseFocusReason)
         onClicked: tab.activated()
     }
 

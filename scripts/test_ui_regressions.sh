@@ -1027,20 +1027,44 @@ for stale_selected_overlay in (
         )
 for tab_id in ("overviewTab", "providerTab"):
     tab_body = id_block(main_text, tab_id)
+    focus_id = "overviewFocus" if tab_id == "overviewTab" else "providerFocus"
     for focus_fragment in (
-        "property bool focusAcquiredByPointer: false",
-        "readonly property bool keyboardFocusVisible: activeFocus && !focusAcquiredByPointer",
+        f"readonly property bool keyboardFocusVisible: {focus_id}.visualFocus",
         "border.width: keyboardFocusVisible ? 1 : 0",
-        "onActiveFocusChanged:",
-        "focusAcquiredByPointer = false",
-        f"{tab_id}.focusAcquiredByPointer = true",
-        f"{tab_id}.focusAcquiredByPointer = false",
+        f"id: {focus_id}",
+        "activeFocusOnTab: true",
+        f"{focus_id}.forceActiveFocus(Qt.MouseFocusReason)",
     ):
         if focus_fragment not in tab_body:
             raise AssertionError(
-                f"{tab_id} must preserve pointer-neutral selection and keyboard focus; "
+                f"{tab_id} must transfer pointer focus without drawing a keyboard ring; "
                 f"missing {focus_fragment!r}"
             )
+    for stale_pointer_focus_fragment in ("focusAcquiredByPointer",):
+        if stale_pointer_focus_fragment in tab_body:
+            raise AssertionError(
+                f"{tab_id} must not retain a pointer-assigned focus overlay after the popup reopens; "
+                f"found {stale_pointer_focus_fragment!r}"
+            )
+
+for global_tab_focus_fragment in (
+    "readonly property bool keyboardFocusVisible: tabFocus.visualFocus",
+    "border.width: keyboardFocusVisible ? 1 : 0",
+    "id: tabFocus",
+    "activeFocusOnTab: true",
+    "tabFocus.forceActiveFocus(Qt.MouseFocusReason)",
+):
+    if global_tab_focus_fragment not in global_tab_text:
+        raise AssertionError(
+            "global tabs must preserve keyboard focus without pointer focus state; "
+            f"missing {global_tab_focus_fragment!r}"
+        )
+for stale_global_pointer_focus_fragment in ("focusAcquiredByPointer",):
+    if stale_global_pointer_focus_fragment in global_tab_text:
+        raise AssertionError(
+            "global tabs must not retain a pointer-assigned focus overlay after the popup reopens; "
+            f"found {stale_global_pointer_focus_fragment!r}"
+        )
 
 provider_tab_body = id_block(main_text, "providerTab")
 if (
@@ -1898,13 +1922,35 @@ for trust_owner_source, trust_owner_text in (
         raise AssertionError(
             f"{trust_owner_source} must delegate cost-trust policy to CostPresentation"
         )
+for persistent_notice_fragment in (
+    "property var costTrustNoticeStates: ({})",
+    "function updateCostTrustNoticeState(",
+    "CostPresentation.costTrustNoticeStoreTransition(",
+):
+    if persistent_notice_fragment not in main_text:
+        raise AssertionError(
+            "the applet root must preserve scoped cost-notice dismissals across popup recreation; "
+            f"missing {persistent_notice_fragment!r}"
+        )
 for cost_trust_fragment in (
     "Kirigami.InlineMessage",
     "property var summary: null",
+    "property var stateOwner: null",
+    'property string noticeScope: ""',
+    "property bool presentationVisible: false",
     "showCloseButton: true",
-    "CostPresentation.costTrustNoticeTransition(",
+    "stateOwner.updateCostTrustNoticeState(",
+    "onNoticeScopeChanged:",
+    "onStateOwnerChanged:",
+    'typeof stateOwner.updateCostTrustNoticeState !== "function"',
+    "onSummaryChanged: scheduleRefreshNoticeState()",
+    "onNoticeScopeChanged: scheduleRefreshNoticeState()",
+    "onStateOwnerChanged: scheduleRefreshNoticeState()",
+    "function scheduleRefreshNoticeState()",
+    "noticeRefresh.restart()",
+    "onTriggered: noticeRoot.refreshNoticeState()",
     "onVisibleChanged: {",
-    "&& parent.visible",
+    "&& presentationVisible",
     'i18n("%1 %2"',
     'i18n("The displayed range total',
 ):
@@ -1912,6 +1958,36 @@ for cost_trust_fragment in (
         raise AssertionError(
             "CostTrustNotice must own the shared localized message and standard styling; "
             f"missing {cost_trust_fragment!r}"
+        )
+for non_atomic_notice_fragment in (
+    "onSummaryChanged: refreshNoticeState()",
+    "onNoticeScopeChanged: refreshNoticeState()",
+    "onStateOwnerChanged: refreshNoticeState()",
+):
+    if non_atomic_notice_fragment in cost_trust_notice_text:
+        raise AssertionError(
+            "cost notice scope and summary changes must be coalesced before mutating shared dismissal state; "
+            f"found {non_atomic_notice_fragment!r}"
+        )
+for provider_notice_fragment in (
+    'noticeScope: "provider:" +',
+    "stateOwner: fullRoot.applet",
+    "presentationVisible: fullRoot.visible && !applet.globalViewSelected",
+):
+    if provider_notice_fragment not in full_representation_text:
+        raise AssertionError(
+            "provider cost notices must use a persistent provider scope and visible context; "
+            f"missing {provider_notice_fragment!r}"
+        )
+for spend_notice_fragment in (
+    'noticeScope: "spend"',
+    "stateOwner: view.applet",
+    "presentationVisible: view.visible",
+):
+    if spend_notice_fragment not in spend_view_text:
+        raise AssertionError(
+            "Spend cost notices must use a persistent aggregate scope and visible context; "
+            f"missing {spend_notice_fragment!r}"
         )
 for qualified_value_fragment in (
     'i18n("%1 (estimated)"',

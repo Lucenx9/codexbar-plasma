@@ -459,6 +459,55 @@ TestCase {
         verify(returned.shouldShow)
     }
 
+    function test_costTrustNoticeDismissalSurvivesNoticeRecreationPerScope() {
+        var summary = CostPresentation.costTrustSummary([trustedCost("USD", {
+            priced: 4, unpriced: 1, unmetered: 0, estimated: 1
+        }, "listPrice")])
+        var initial = CostPresentation.costTrustNoticeStoreTransition(
+            summary, ({}), "provider:codex", false)
+        verify(initial.state.shouldShow)
+
+        var dismissed = CostPresentation.costTrustNoticeStoreTransition(
+            summary, initial.states, "provider:codex", true)
+        verify(!dismissed.state.shouldShow)
+        verify(dismissed.states !== initial.states)
+        verify(!initial.states["provider:codex"].dismissed)
+
+        var temporarilyMissing = CostPresentation.costTrustNoticeStoreTransition(
+            null, dismissed.states, "provider:codex", false)
+        verify(!temporarilyMissing.state.shouldShow)
+
+        // A new CostTrustNotice instance must recover the dismissal from its
+        // persistent owner even if its summary binding was briefly empty.
+        var recreated = CostPresentation.costTrustNoticeStoreTransition(
+            summary, temporarilyMissing.states, "provider:codex", false)
+        verify(!recreated.state.shouldShow)
+
+        // Provider details and aggregate Spend are separate information scopes.
+        var aggregate = CostPresentation.costTrustNoticeStoreTransition(
+            summary, dismissed.states, "spend", false)
+        verify(aggregate.state.shouldShow)
+    }
+
+    function test_costTrustNoticeStoreBoundsAndRejectsUnsafeScopes() {
+        var summary = CostPresentation.costTrustSummary([trustedCost("USD", {
+            priced: 4, unpriced: 1, unmetered: 0, estimated: 1
+        }, "listPrice")])
+        var oversized = ({})
+        for (var i = 0; i < 200; i++) {
+            oversized["provider:" + i] = { key: "old", dismissed: true }
+        }
+        var bounded = CostPresentation.costTrustNoticeStoreTransition(
+            summary, oversized, "spend", false)
+        verify(Object.keys(bounded.states).length <= 128)
+        verify(Object.prototype.hasOwnProperty.call(bounded.states, "spend"))
+
+        var unsafe = CostPresentation.costTrustNoticeStoreTransition(
+            summary, bounded.states, "__proto__", true)
+        verify(!Object.prototype.hasOwnProperty.call(unsafe.states, "__proto__"))
+        verify(unsafe.state.dismissed)
+    }
+
     function test_costTrustNoticeTransitionRejectsMalformedSummaries() {
         var invalidSummaries = [null, undefined, [], "estimated", 7, ({})]
         for (var i = 0; i < invalidSummaries.length; i++) {

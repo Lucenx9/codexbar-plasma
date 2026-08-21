@@ -145,6 +145,9 @@ ColumnLayout {
     }
 
     Components.CostTrustNotice {
+        noticeScope: "spend"
+        stateOwner: view.applet
+        presentationVisible: view.visible
         summary: view.costTrustSummary
     }
 

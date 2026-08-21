@@ -142,6 +142,10 @@ Costs and history:
   average cost per 1M tokens, with a configurable cost history window.
 - Cost totals qualified as estimated, partial, or approximate from the CLI's
   bounded pricing coverage and provenance metadata.
+- Cost-trust notices explain why a range is incomplete or estimated. Closing a
+  notice suppresses the same meaning for that provider or the aggregate Spend
+  view across refreshes and popup reopenings; a materially different warning is
+  shown again.
 
 Status and notifications:
 
