@@ -434,18 +434,40 @@ TestCase {
         compare(Normalizer.normalizeCostTrustMetadata([]), null)
     }
 
-    function test_errorOnlyCostRecordCannotReplaceAHealthySnapshot() {
-        verify(!Normalizer.costRecordCanReplaceSnapshot({
+    function test_costRecordErrorDetectionUsesTheOfficialEnvelope() {
+        verify(Normalizer.costRecordHasError({
             provider: "codex",
             daily: [],
             error: { message: "scan failed" }
         }))
-        verify(!Normalizer.costRecordCanReplaceSnapshot({
+        verify(Normalizer.costRecordHasError({
             provider: "codex",
             totals: { totalCost: 0, totalTokens: 0 },
             error: { message: "scan failed" }
         }))
-        verify(Normalizer.costRecordCanReplaceSnapshot({ provider: "codex" }))
+        verify(!Normalizer.costRecordHasError({ provider: "codex" }))
+        verify(!Normalizer.costRecordHasError(null))
+    }
+
+    function test_partialCostMergeKeepsOnlyExplicitlyFailedProviders() {
+        var previous = {
+            codex: { marker: "old-codex" },
+            claude: { marker: "old-claude" },
+            groq: { marker: "old-groq" },
+            removed: { marker: "stale-provider" }
+        }
+        var fresh = {
+            codex: { marker: "new-codex" }
+        }
+
+        var merged = Normalizer.mergeCostSnapshotsAfterPartialFailure(
+            previous, fresh, ["claude", "groqcloud"])
+
+        compare(Object.keys(merged).sort().join(","), "claude,codex,groq")
+        compare(merged.codex.marker, "new-codex")
+        compare(merged.claude.marker, "old-claude")
+        compare(merged.groq.marker, "old-groq")
+        verify(merged.removed === undefined)
     }
 
     function test_costTrustMetadataKeepsEitherValidAxisWithoutLeakingTheOther() {
@@ -714,6 +736,12 @@ TestCase {
         compare(Normalizer.boundedDisplayText([], 120), "")
         compare(Normalizer.boundedDisplayText(7, 120), "7")
         compare(Normalizer.boundedDisplayText(true, 120), "true")
+    }
+
+    function test_boundedDisplayTextRedactsCredentialsAtTheCliBoundary() {
+        compare(Normalizer.boundedDisplayText(
+            "Authorization: Bearer provider-secret", 120),
+            "Authorization: [redacted]")
     }
 
     // SEPARATE KNOWN GAP, pinned deliberately: `String(value || "")` inside

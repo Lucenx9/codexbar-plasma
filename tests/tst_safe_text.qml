@@ -26,6 +26,16 @@ TestCase {
         compare(SafeText.plainTextAsRichText(["unsafe"]), "")
     }
 
+    function test_plainTextRichWrapperRemovesNonDisplayControls() {
+        compare(SafeText.plainTextAsRichText("first\u0000\u0007\tsecond"),
+            "<span>first   second</span>")
+    }
+
+    function test_mnemonicRichWrapperPreservesEscapedEntities() {
+        compare(SafeText.plainTextAsMnemonicRichText("<test> & \"quoted\""),
+            "<span>&&lt;test&&gt; &&amp; &&quot;quoted&&quot;</span>")
+    }
+
     function test_emptyMessageStaysEmpty() {
         // QML's V4 engine returns -1 for "".indexOf(""), unlike ECMAScript's 0,
         // so the lookahead guard in redactCredentials must not use indexOf as a

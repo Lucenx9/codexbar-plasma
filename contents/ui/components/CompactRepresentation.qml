@@ -185,10 +185,12 @@ Item {
             border.width: 1
             border.color: Kirigami.Theme.backgroundColor
 
-            Controls.ToolTip.visible: compactStatusMouse.containsMouse
-            Controls.ToolTip.text: compactRoot.incidentProvider
-                ? i18n("%1: %2", compactRoot.incidentProvider.title, compactRoot.incidentProvider.status)
-                : ""
+            PlainToolTip {
+                visible: compactStatusMouse.containsMouse
+                plainText: compactRoot.incidentProvider
+                    ? i18n("%1: %2", compactRoot.incidentProvider.title, compactRoot.incidentProvider.status)
+                    : ""
+            }
 
             MouseArea {
                 id: compactStatusMouse

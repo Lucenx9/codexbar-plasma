@@ -441,8 +441,6 @@ if "codexbar cost did not return JSON." not in parse_cost_body:
     raise AssertionError("parseCostOutput must keep a visible fallback error when cost returns no JSON")
 for cost_error_fragment in (
     'var costMessage = ""',
-    "var hadCostRecordError = false",
-    "if (hadCostRecordError)",
     "item.error && item.error.message",
     "costErrorText = costMessage",
 ):
@@ -453,8 +451,10 @@ for cost_error_fragment in (
         )
 if "normalizeTokenCost(item, requestedHistoryDays)" not in parse_cost_body:
     raise AssertionError("cost snapshots must retain the range of the request that produced them")
-if "Normalizer.costRecordCanReplaceSnapshot(item)" not in parse_cost_body:
-    raise AssertionError("error-only cost records must preserve the previous healthy snapshot")
+if "Normalizer.costRecordHasError(item)" not in parse_cost_body:
+    raise AssertionError("cost error records must use the shared envelope contract")
+if "Normalizer.mergeCostSnapshotsAfterPartialFailure(" not in parse_cost_body:
+    raise AssertionError("partial cost errors must retain only explicitly failed providers")
 
 parse_usage_body = function_body(main_text, "parseOutput")
 if "Normalizer.dedupeProviderSnapshots(nextProviders)" not in parse_usage_body:

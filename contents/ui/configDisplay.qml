@@ -514,7 +514,8 @@ KCM.SimpleKCM {
 
                     readonly property bool selected: page.overviewProviderSelected(modelData.provider)
 
-                    text: modelData.displayName
+                    text: SafeText.plainTextAsRichText(modelData.displayName)
+                    Accessible.name: modelData.displayName
                     checked: selected
                     enabled: selected || page.selectedOverviewProviderCount() < page.maxOverviewProviders
                     onClicked: {

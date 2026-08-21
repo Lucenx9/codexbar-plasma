@@ -272,8 +272,10 @@ ColumnLayout {
                                 border.width: heatmapMouse.containsMouse ? 1 : 0
                                 border.color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.4)
 
-                                Controls.ToolTip.visible: heatmapMouse.containsMouse
-                                Controls.ToolTip.text: i18n("%1: %2", modelData.label, modelData.displayValue)
+                                Components.PlainToolTip {
+                                    visible: heatmapMouse.containsMouse
+                                    plainText: i18n("%1: %2", modelData.label, modelData.displayValue)
+                                }
 
                                 MouseArea {
                                     id: heatmapMouse

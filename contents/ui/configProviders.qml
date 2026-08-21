@@ -1344,7 +1344,8 @@ KCM.SimpleKCM {
                     delegate: Controls.Button {
                         required property var modelData
 
-                        text: modelData.title
+                        text: SafeText.plainTextAsMnemonicRichText(modelData.title)
+                        Accessible.name: modelData.title
                         icon.name: modelData.icon
                         enabled: modelData.enabled
                         onClicked: page.performProviderAction(modelData)
@@ -1470,7 +1471,8 @@ KCM.SimpleKCM {
                                     id: descriptorTextField
                                     Layout.fillWidth: true
                                     text: modelData.valueText
-                                    placeholderText: modelData.description
+                                    placeholderText: SafeText.plainTextAsRichText(modelData.description)
+                                    Accessible.description: modelData.description
                                     inputMethodHints: modelData.kind === "number" ? Qt.ImhDigitsOnly : Qt.ImhNone
                                     enabled: page.selectedProvider
                                         && !page.isFieldPending(page.selectedProvider.provider, modelData.id)
@@ -1497,7 +1499,7 @@ KCM.SimpleKCM {
                                     elide: Text.ElideRight
                                 }
 
-                                Controls.ComboBox {
+                                Components.PlainComboBox {
                                     id: descriptorEnumBox
                                     Layout.fillWidth: true
                                     model: modelData.options
@@ -1534,9 +1536,9 @@ KCM.SimpleKCM {
                                     elide: Text.ElideRight
                                 }
 
-                                Controls.CheckBox {
+                                Components.PlainCheckBox {
                                     checked: modelData.value === true || String(modelData.value).toLowerCase() === "true"
-                                    text: modelData.description
+                                    plainText: modelData.description
                                     Layout.fillWidth: true
                                     enabled: page.selectedProvider
                                         && !page.isFieldPending(page.selectedProvider.provider, modelData.id)

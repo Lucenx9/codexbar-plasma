@@ -59,7 +59,7 @@ ColumnLayout {
                 ? accountsPanel.applet.accountOptionsForProvider(accountsPanel.providerID)
                 : []
 
-            delegate: Controls.Button {
+            delegate: PlainButton {
                 required property var modelData
                 readonly property string label: accountsPanel.applet.accountLabel(modelData)
                 readonly property string subtitle: accountsPanel.applet.accountSubtitle(modelData)
@@ -67,7 +67,7 @@ ColumnLayout {
 
                 checkable: true
                 checked: accountSelected
-                text: subtitle.length > 0 ? label + " · " + subtitle : label
+                plainText: subtitle.length > 0 ? label + " · " + subtitle : label
                 icon.name: "user-identity"
                 onClicked: {
                     accountsPanel.applet.selectAccount(modelData.provider, label)
