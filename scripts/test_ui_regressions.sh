@@ -156,6 +156,7 @@ applet = Surface("applet", root)
 main_text = applet.text
 providers_surface = Surface("providers", root)
 providers_surface_text = providers_surface.text
+general_surface = Surface("general", root)
 general_text = general_qml.read_text(encoding="utf-8")
 display_text = display_qml.read_text(encoding="utf-8")
 providers_text = providers_qml.read_text(encoding="utf-8")
@@ -270,6 +271,14 @@ for live_config_fragment in (
             "configGeneral.qml must read update status directly from runtime config; "
             f"missing {live_config_fragment!r}"
         )
+
+command_path_row_body = general_surface.id_block("commandPathRow")
+command_path_row_layout = command_path_row_body.split("Controls.TextField {", 1)[0]
+if "Layout.maximumWidth: Kirigami.Units.gridUnit * 24" not in command_path_row_layout:
+    raise AssertionError(
+        "the command path row must stay bounded in the FormLayout control column so resizing "
+        "cannot push Use PATH outside the visible page"
+    )
 
 # The dash rule follows the visible text, not the file it lives in: an em dash
 # in an extracted component reads the same in the popup as one in main.qml, so
