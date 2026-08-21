@@ -111,6 +111,7 @@ PlasmoidItem {
     readonly property int costAutoRefreshIntervalMs: CostRefreshPolicy.automaticRefreshIntervalMs
     property double lastCostRefreshAttemptAt: -1
     property var tokenCosts: ({})
+    property var costTrustNoticeStates: ({})
     property string costErrorText: ""
     property string sessionsCommandSource: buildSessionsCommand()
     property var sessions: []
@@ -1363,6 +1364,13 @@ PlasmoidItem {
         return i18n("%1 total - %2 tokens",
             costValue,
             CostPresentation.tokenCountString(totals.tokens))
+    }
+
+    function updateCostTrustNoticeState(scope, summary, shouldDismiss) {
+        var transition = CostPresentation.costTrustNoticeStoreTransition(
+            summary, costTrustNoticeStates, scope, shouldDismiss)
+        costTrustNoticeStates = transition.states
+        return transition.state
     }
 
     function setCostHistoryDays(days) {

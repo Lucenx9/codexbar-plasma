@@ -1,11 +1,13 @@
 import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
-import "../CostPresentation.js" as CostPresentation
 
 Kirigami.InlineMessage {
     id: noticeRoot
 
+    required property var stateOwner
+    required property string noticeScope
+    required property bool presentationVisible
     property var summary: null
     property var noticeState: ({ key: "", dismissed: false, shouldShow: false })
 
@@ -18,14 +20,16 @@ Kirigami.InlineMessage {
     Layout.fillWidth: true
 
     onSummaryChanged: refreshNoticeState()
+    onNoticeScopeChanged: refreshNoticeState()
+    onStateOwnerChanged: refreshNoticeState()
     onTextChanged: syncVisibility()
     onVisibleChanged: {
         // Kirigami's close button hides the message directly. Convert that
         // effect into semantic state before a refresh can show it again. An
-        // invisible parent means ordinary tab navigation, not a close action.
+        // invisible presentation means ordinary tab navigation, not a close
+        // action.
         if (!visible
-                && parent !== null
-                && parent.visible
+                && presentationVisible
                 && text.length > 0
                 && noticeState.shouldShow === true) {
             dismissNotice()
@@ -42,8 +46,17 @@ Kirigami.InlineMessage {
     }
 
     function updateNoticeState(shouldDismiss) {
-        noticeState = CostPresentation.costTrustNoticeTransition(
-            summary, noticeState, shouldDismiss)
+        // Required property bindings are installed one at a time while QML
+        // constructs the component. A summary can therefore arrive before its
+        // owner during that brief initialization window.
+        if (!stateOwner
+                || typeof stateOwner.updateCostTrustNoticeState !== "function") {
+            noticeState = ({ key: "", dismissed: false, shouldShow: false })
+            syncVisibility()
+            return
+        }
+        noticeState = stateOwner.updateCostTrustNoticeState(
+            noticeScope, summary, shouldDismiss)
         syncVisibility()
     }
 

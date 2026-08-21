@@ -199,9 +199,8 @@ Item {
                     Rectangle {
                         id: overviewTab
 
-                        property bool focusAcquiredByPointer: false
                         readonly property bool selected: applet.overviewSelected
-                        readonly property bool keyboardFocusVisible: activeFocus && !focusAcquiredByPointer
+                        readonly property bool keyboardFocusVisible: activeFocus
                         readonly property color brandAccent: Kirigami.Theme.highlightColor
                         readonly property color accent: applet.readableAccentColor(
                             brandAccent,
@@ -240,8 +239,6 @@ Item {
                         onActiveFocusChanged: {
                             if (activeFocus) {
                                 providerTabsFlickable.ensureVisible(overviewTab)
-                            } else {
-                                focusAcquiredByPointer = false
                             }
                         }
 
@@ -255,7 +252,6 @@ Item {
                         Accessible.onPressAction: overviewTab.activate()
 
                         Keys.onPressed: function(event) {
-                            overviewTab.focusAcquiredByPointer = false
                             switch (event.key) {
                             case Qt.Key_Space:
                             case Qt.Key_Enter:
@@ -292,10 +288,6 @@ Item {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onPressed: {
-                                overviewTab.focusAcquiredByPointer = true
-                                overviewTab.forceActiveFocus(Qt.MouseFocusReason)
-                            }
                             onClicked: overviewTab.activate()
                         }
 
@@ -376,9 +368,8 @@ Item {
 
                             required property int index
                             required property var modelData
-                            property bool focusAcquiredByPointer: false
                             readonly property bool selected: index === applet.selectedProviderIndex
-                            readonly property bool keyboardFocusVisible: activeFocus && !focusAcquiredByPointer
+                            readonly property bool keyboardFocusVisible: activeFocus
                             readonly property real meter: applet.switcherPercent(modelData)
                             readonly property color accent: applet.providerReadableColor(
                                 modelData.provider,
@@ -421,8 +412,6 @@ Item {
                             onActiveFocusChanged: {
                                 if (activeFocus) {
                                     providerTabsFlickable.ensureVisible(providerTab)
-                                } else {
-                                    focusAcquiredByPointer = false
                                 }
                             }
 
@@ -436,7 +425,6 @@ Item {
                             Accessible.onPressAction: providerTab.activate()
 
                             Keys.onPressed: function(event) {
-                                providerTab.focusAcquiredByPointer = false
                                 switch (event.key) {
                                 case Qt.Key_Space:
                                 case Qt.Key_Enter:
@@ -473,10 +461,6 @@ Item {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onPressed: {
-                                    providerTab.focusAcquiredByPointer = true
-                                    providerTab.forceActiveFocus(Qt.MouseFocusReason)
-                                }
                                 onClicked: providerTab.activate()
                             }
 
@@ -1193,6 +1177,10 @@ Item {
                         }
 
                         Components.CostTrustNotice {
+                            noticeScope: "provider:" + (applet.selectedProviderData
+                                ? applet.selectedProviderData.provider : "")
+                            stateOwner: fullRoot.applet
+                            presentationVisible: fullRoot.visible && !applet.globalViewSelected
                             summary: tokenCostSection.costTrustSummary
                         }
 
