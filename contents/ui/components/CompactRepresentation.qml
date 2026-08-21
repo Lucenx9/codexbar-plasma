@@ -327,7 +327,6 @@ Item {
                         z: 1
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onPressed: compactMeter.forceActiveFocus(Qt.MouseFocusReason)
                         onClicked: compactMeter.activate()
 
                         Controls.ToolTip.visible: containsMouse

@@ -843,7 +843,6 @@ for provider_click_fragment in (
     "case Qt.Key_Space:",
     "case Qt.Key_Enter:",
     "compactRoot.applet.openProviderFromPanel(compactMeter.modelData.provider)",
-    "compactMeter.forceActiveFocus(Qt.MouseFocusReason)",
     "onClicked: compactMeter.activate()",
 ):
     if provider_click_fragment not in compact_meter_body:
@@ -852,6 +851,10 @@ for provider_click_fragment in (
             "and open its matching provider tab; "
             f"missing {provider_click_fragment!r}"
         )
+if "forceActiveFocus(Qt.MouseFocusReason)" in compact_meter_body:
+    raise AssertionError(
+        "a mouse click on a panel meter must not leave the keyboard focus ring active"
+    )
 
 open_panel_provider_body = function_body(main_text, "openProviderFromPanel")
 for panel_selection_fragment in (
