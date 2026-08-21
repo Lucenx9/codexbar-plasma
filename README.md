@@ -136,6 +136,8 @@ Providers and accounts:
 Costs and history:
 
 - Local cost drill-down when the CLI exposes cost data.
+- Local-history scans run independently from quota refreshes, automatically at
+  most once per hour; the **Usage & Spend** refresh button starts one immediately.
 - Token breakdowns, model summaries, recent daily spend, cost history bars, and
   average cost per 1M tokens, with a configurable cost history window.
 - Cost totals qualified as estimated, partial, or approximate from the CLI's

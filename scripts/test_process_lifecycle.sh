@@ -19,7 +19,8 @@ require_in_surface applet "id: usageCommandTimeoutTimer"
 require_in_surface applet "root.expireUsageCommands(Date.now())"
 require_in_surface applet "id: usageRefreshTimer"
 require_in_surface applet "running: root.refreshIntervalSec > 0"
-require_in_surface applet "if (!root.hasPendingUsageCommandTimeouts())"
+require_in_surface applet "if (!root.hasPendingPeriodicRefreshCommands())"
+require_in_surface applet "function hasPendingPeriodicRefreshCommands()"
 require_in_surface applet "interval: 0"
 require_in_surface applet "root.finishUsageCommandSource(sourceName)"
 require_in_surface applet "delete commands[sourceName]"
@@ -31,6 +32,10 @@ require_in_surface applet "id: accountCommandTimeoutTimer"
 require_in_surface applet "root.expirePendingAccountCommands(Date.now())"
 require_in_surface applet "readonly property int providerConfigWatchIntervalMs: 60000"
 require_in_surface applet "interval: root.providerConfigWatchIntervalMs"
+require_in_surface applet 'import "CostRefreshPolicy.js" as CostRefreshPolicy'
+require_in_surface applet "readonly property int costAutoRefreshIntervalMs: CostRefreshPolicy.automaticRefreshIntervalMs"
+require_in_surface applet "property double lastCostRefreshAttemptAt: -1"
+require_in_surface applet "id: costRefreshTimer"
 
 require_in_surface providers "readonly property int configCommandTimeoutMs: 60000"
 require_in_surface providers "readonly property int configSecretCommandTimeoutSeconds: 60"
@@ -235,8 +240,49 @@ require_all(
 
 require_all(
     applet.id_block("usageRefreshTimer"),
-    ("root.hasPendingUsageCommandTimeouts()", "root.refreshNow()"),
+    ("root.hasPendingPeriodicRefreshCommands()", "root.refreshNow()"),
     "periodic refreshes must not starve active command deadlines",
+)
+
+periodic_refresh_body = applet.function_body("hasPendingPeriodicRefreshCommands")
+require_all(
+    periodic_refresh_body,
+    (
+        "CommandLedger.hasAnyKind(",
+        '"usage"',
+        '"providerConfig"',
+        '"sessions"',
+        '"providerFallback"',
+    ),
+    "the quota timer must wait only for work it would retire",
+)
+if '"cost"' in periodic_refresh_body:
+    raise AssertionError("an independent cost scan must not block the quota refresh timer")
+
+cost_refresh_body = applet.function_body("refreshCost")
+require_all(
+    cost_refresh_body,
+    (
+        "CostRefreshPolicy.refreshAction(",
+        "costCommandSource.length > 0",
+        "costLoading",
+        "force === true",
+        "lastCostRefreshAttemptAt",
+        "CostRefreshPolicy.clearAction",
+        "CostRefreshPolicy.startAction",
+        'retireUsageCommandKind("cost")',
+    ),
+    "cost refreshes must preserve their independent hourly lifecycle",
+)
+
+require_all(
+    applet.id_block("costRefreshTimer"),
+    (
+        "interval: root.costAutoRefreshIntervalMs",
+        "running: root.costCommandSource.length > 0",
+        "root.refreshCost(false)",
+    ),
+    "automatic cost scans must use their own hourly scheduler",
 )
 
 require_all(

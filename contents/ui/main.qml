@@ -9,6 +9,7 @@ import "NotificationMemo.js" as NotificationMemo
 import "NotificationPlanner.js" as NotificationPlanner
 import "PanelElements.js" as PanelElements
 import "CommandLedger.js" as CommandLedger
+import "CostRefreshPolicy.js" as CostRefreshPolicy
 import "CostPresentation.js" as CostPresentation
 import "ProviderIdentity.js" as ProviderIdentity
 import "ProviderNormalizer.js" as Normalizer
@@ -86,6 +87,7 @@ PlasmoidItem {
     property string providerConfigStamp: ""
     readonly property int providerConfigWatchIntervalMs: 60000
     property int commandRunSerial: 0
+    property bool costLifecycleInitialized: false
     property var activeUsageCommands: ({})
     readonly property int usageCommandTimeoutMs: 120000
     readonly property int maximumExtraRateWindows: Normalizer.maximumExtraRateWindows
@@ -106,6 +108,8 @@ PlasmoidItem {
     property bool providerFallbackActive: false
     property string costCommandSource: buildCostCommand()
     readonly property bool costLoading: CommandLedger.hasKind(activeUsageCommands, "cost")
+    readonly property int costAutoRefreshIntervalMs: CostRefreshPolicy.automaticRefreshIntervalMs
+    property double lastCostRefreshAttemptAt: -1
     property var tokenCosts: ({})
     property string costErrorText: ""
     property string sessionsCommandSource: buildSessionsCommand()
@@ -174,8 +178,11 @@ PlasmoidItem {
     readonly property real compactMeterTrackHeight: Math.round(Kirigami.Units.gridUnit * 0.28)
 
     onCommandSourceChanged: Qt.callLater(refreshNow)
-    onCostUsageEnabledChanged: Qt.callLater(refreshCost)
-    onCostHistoryDaysChanged: Qt.callLater(refreshCost)
+    onCostCommandSourceChanged: {
+        if (costLifecycleInitialized) {
+            Qt.callLater(function() { root.refreshCost(true) })
+        }
+    }
     onProviderConfigRevisionChanged: Qt.callLater(refreshNow)
     onAutoSelectProviderChanged: updateSelectedProvider()
     onOverviewProviderIDsRawChanged: updateSelectedProvider()
@@ -217,10 +224,12 @@ PlasmoidItem {
     }
 
     Component.onCompleted: {
+        costLifecycleInitialized = true
         if (providerConfigWatchCommand.length > 0) {
             providerConfigWatcher.connectSource(providerConfigWatchCommand)
         }
         refreshNow()
+        refreshCost(false)
         if (updateChecksEnabled) {
             scheduleNextUpdateCheck()
             Qt.callLater(checkForWidgetUpdate)
@@ -500,7 +509,6 @@ PlasmoidItem {
     function refreshNow() {
         retireUsageCommands()
         retireStaleAccountCommands()
-        refreshCost()
         if (sessionsInitialized) {
             refreshSessions()
         }
@@ -559,20 +567,32 @@ PlasmoidItem {
         Qt.callLater(refreshNow)
     }
 
-    function refreshCost() {
-        retireUsageCommandKind("cost")
-
-        if (costCommandSource.length === 0) {
+    function refreshCost(force) {
+        var nowMs = Date.now()
+        var action = CostRefreshPolicy.refreshAction(
+            costCommandSource.length > 0,
+            costLoading,
+            force === true,
+            lastCostRefreshAttemptAt,
+            nowMs)
+        if (action === CostRefreshPolicy.clearAction) {
+            retireUsageCommandKind("cost")
             tokenCosts = ({})
             costErrorText = ""
             applyTokenCosts()
-            return
+            return false
+        }
+        if (action !== CostRefreshPolicy.startAction) {
+            return false
         }
 
+        retireUsageCommandKind("cost")
+        lastCostRefreshAttemptAt = nowMs
         costErrorText = ""
         connectUsageCommand(
             commandWithRunNonce(costCommandSource),
             buildCostCommandDescriptor())
+        return true
     }
 
     function refreshSessions() {
@@ -914,6 +934,15 @@ PlasmoidItem {
 
     function hasPendingUsageCommandTimeouts() {
         return CommandLedger.hasDeadlines(activeUsageCommands)
+    }
+
+    function hasPendingPeriodicRefreshCommands() {
+        return CommandLedger.hasAnyKind(activeUsageCommands, [
+            "usage",
+            "providerConfig",
+            "sessions",
+            "providerFallback"
+        ])
     }
 
     function expireUsageCommands(nowMs) {
@@ -3282,6 +3311,17 @@ PlasmoidItem {
         return -1
     }
 
+    function openProviderFromPanel(providerID) {
+        var index = providerIndexForID(providerID)
+        if (index < 0) {
+            return false
+        }
+        selectedProviderID = providers[index].provider
+        selectionInitialized = true
+        expanded = true
+        return true
+    }
+
     function overviewDetailText(item) {
         if (!item) {
             return ""
@@ -3700,10 +3740,20 @@ PlasmoidItem {
         running: root.refreshIntervalSec > 0
         triggeredOnStart: false
         onTriggered: {
-            if (!root.hasPendingUsageCommandTimeouts()) {
+            if (!root.hasPendingPeriodicRefreshCommands()) {
                 root.refreshNow()
             }
         }
+    }
+
+    Timer {
+        id: costRefreshTimer
+
+        interval: root.costAutoRefreshIntervalMs
+        repeat: true
+        running: root.costCommandSource.length > 0
+        triggeredOnStart: false
+        onTriggered: root.refreshCost(false)
     }
 
     Timer {
