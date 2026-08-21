@@ -833,11 +833,23 @@ for meter_fragment in (
 for provider_click_fragment in (
     "id: compactMeterMouse",
     "anchors.fill: parent",
+    "function activate()",
+    "activeFocusOnTab: true",
+    "visible: compactMeter.activeFocus",
+    "Accessible.role: Accessible.Button",
+    "Accessible.name: i18n(\"Open %1\", modelData.title)",
+    "Accessible.onPressAction: compactMeter.activate()",
+    "Keys.onPressed:",
+    "case Qt.Key_Space:",
+    "case Qt.Key_Enter:",
     "compactRoot.applet.openProviderFromPanel(compactMeter.modelData.provider)",
+    "compactMeter.forceActiveFocus(Qt.MouseFocusReason)",
+    "onClicked: compactMeter.activate()",
 ):
     if provider_click_fragment not in compact_meter_body:
         raise AssertionError(
-            "each panel provider meter must open its matching provider tab; "
+            "each panel provider meter must be keyboard- and assistive-accessible "
+            "and open its matching provider tab; "
             f"missing {provider_click_fragment!r}"
         )
 

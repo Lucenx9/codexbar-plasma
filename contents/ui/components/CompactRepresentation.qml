@@ -240,8 +240,38 @@ Item {
                         compactRoot.applet.switcherMetricRow(modelData),
                         accent)
 
+                    function activate() {
+                        compactRoot.applet.openProviderFromPanel(compactMeter.modelData.provider)
+                    }
+
                     Layout.preferredWidth: compactRoot.meterWidth
                     Layout.preferredHeight: compactRow.height
+                    activeFocusOnTab: true
+
+                    Accessible.role: Accessible.Button
+                    Accessible.name: i18n("Open %1", modelData.title)
+                    Accessible.onPressAction: compactMeter.activate()
+
+                    Keys.onPressed: function(event) {
+                        switch (event.key) {
+                        case Qt.Key_Space:
+                        case Qt.Key_Enter:
+                        case Qt.Key_Return:
+                        case Qt.Key_Select:
+                            compactMeter.activate()
+                            event.accepted = true
+                            break
+                        }
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        visible: compactMeter.activeFocus
+                        radius: Kirigami.Units.smallSpacing
+                        color: "transparent"
+                        border.width: 1
+                        border.color: Kirigami.Theme.focusColor
+                    }
 
                     ColumnLayout {
                         anchors.centerIn: parent
@@ -297,7 +327,8 @@ Item {
                         z: 1
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: compactRoot.applet.openProviderFromPanel(compactMeter.modelData.provider)
+                        onPressed: compactMeter.forceActiveFocus(Qt.MouseFocusReason)
+                        onClicked: compactMeter.activate()
 
                         Controls.ToolTip.visible: containsMouse
                         Controls.ToolTip.text: i18n("Open %1", compactMeter.modelData.title)
