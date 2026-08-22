@@ -4,6 +4,7 @@ name: Copilot Setup Steps
 on:
   workflow_dispatch:
   push:
+    branches: ['**']
     paths:
       - .github/workflows/copilot-setup-steps.yml
   pull_request:
@@ -30,6 +31,7 @@ jobs:
             make \
             qml6-module-qtqml-workerscript \
             qml6-module-qtquick \
+            qml6-module-qtquick-controls \
             qml6-module-qtquick-window \
             qml6-module-qttest \
             qt6-declarative-dev-tools
