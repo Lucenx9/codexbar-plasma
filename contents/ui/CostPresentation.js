@@ -72,14 +72,15 @@ function groupedDecimalString(fmt, value, digits) {
 }
 
 // "Quota" is a credit balance, not money, so it prints as a bare rounded count.
-//
-// Non-numeric input is deliberately not guarded here: `groupedDecimalString`
-// already answers "-", which surfaces as "$-". That is the behaviour this
-// module was extracted from and changing it is a separate decision, not part of
-// moving the code.
+// Like the money path it degrades to "-" for non-numeric input instead of
+// printing "NaN".
 function amountString(fmt, value, currency) {
     if (currency === "Quota") {
-        return Math.round(Number(value)).toString()
+        var quotaAmount = Number(value)
+        if (!isFinite(quotaAmount)) {
+            return "-"
+        }
+        return String(Math.round(quotaAmount))
     }
     var numeric = Number(value)
     var negative = numeric < 0
@@ -104,13 +105,16 @@ function tokenCountString(tokens) {
     }
     var absValue = Math.abs(value)
     var sign = value < 0 ? "-" : ""
-    if (absValue >= 1000000000) {
+    // Round inside each unit before choosing it, so a value that rounds up
+    // across a threshold promotes ("1M") instead of printing an overflowing
+    // unit ("1000K").
+    if (Math.round(absValue / 1000000) >= 1000) {
         return sign + scaledTokenCount(absValue / 1000000000) + "B"
     }
-    if (absValue >= 1000000) {
+    if (Math.round(absValue / 1000) >= 1000) {
         return sign + scaledTokenCount(absValue / 1000000) + "M"
     }
-    if (absValue >= 1000) {
+    if (Math.round(absValue) >= 1000) {
         return sign + scaledTokenCount(absValue / 1000) + "K"
     }
     return Math.round(value).toString()

@@ -197,6 +197,81 @@ TestCase {
         compare(intentKinds(fresh), "status")
     }
 
+    function test_quotaBaselineSurvivesUnrelatedRowInsertion() {
+        var weekly = usageRow("minor", 85, false, "Weekly", "secondary")
+        var primed = transition("prime", [observation("", "", [weekly])])
+
+        // The CLI starts reporting a new window ahead of the existing one.
+        var inserted = transition(
+            "observe",
+            [observation("", "", [usageRow("", 40, false, "Daily", "primary"), weekly])],
+            primed.nextMemo)
+        compare(inserted.intents.length, 0)
+
+        // Escalation still tracks the same row across the shifted index.
+        var escalated = transition(
+            "observe",
+            [observation("", "", [usageRow("", 96, false, "Daily", "primary"), usageRow("major", 96, false, "Weekly", "secondary")])],
+            inserted.nextMemo)
+        compare(escalated.intents.length, 1)
+        compare(escalated.intents[0].kind, "quota")
+        compare(escalated.intents[0].rowIndex, 1)
+        compare(escalated.intents[0].severity, "major")
+    }
+
+    function test_paceStateFollowsRowsThroughAReorder() {
+        var first = usageRow("", 60, true, "Weekly", "secondary")
+        var second = usageRow("", 70, true, "Daily", "primary", "2026-08-25T00:00:00Z")
+        var primed = transition("prime", [observation("", "", [first, second])])
+        compare(primed.intents.length, 0)
+
+        var swapped = transition(
+            "observe",
+            [observation("", "", [second, first])],
+            primed.nextMemo)
+        compare(swapped.intents.length, 0)
+    }
+
+    function test_armedResetStateSurvivesARowShift() {
+        var armed = usageRow("", 85, false, "Weekly", "secondary")
+        var primed = transition(
+            "prime",
+            [observation("", "", [usageRow("", 40, false, "Daily", "primary"), armed])])
+        compare(primed.intents.length, 0)
+
+        // The armed row moves to index 0 while its usage also falls back under
+        // the arming threshold: the armed baseline must survive both changes,
+        // otherwise the promised single reset notice can never fire.
+        var shiftedAndCooled = transition(
+            "observe",
+            [observation("", "", [usageRow("", 30, false, "Weekly", "secondary"), usageRow("", 40, false, "Daily", "primary")])],
+            primed.nextMemo)
+        compare(shiftedAndCooled.intents.length, 0)
+
+        var reset = transition(
+            "observe",
+            [observation("", "", [usageRow("", 5, false, "Weekly", "secondary"), usageRow("", 40, false, "Daily", "primary")])],
+            shiftedAndCooled.nextMemo)
+        compare(reset.intents.length, 1)
+        compare(reset.intents[0].kind, "reset")
+        compare(reset.intents[0].rowIndex, 0)
+    }
+
+    function test_duplicateLabelsStayDistinctAcrossAPass() {
+        var firstWindow = usageRow("minor", 30, false, "5 hours", "primary")
+        var secondWindow = usageRow("major", 96, false, "5 hours", "primary")
+        var primed = transition(
+            "prime",
+            [observation("", "", [firstWindow, secondWindow])])
+        compare(primed.intents.length, 0)
+
+        var unchanged = transition(
+            "observe",
+            [observation("", "", [firstWindow, secondWindow])],
+            primed.nextMemo)
+        compare(unchanged.intents.length, 0)
+    }
+
     function test_intentsKeepStatusQuotaPaceResetOrdering() {
         var initialRows = [
             usageRow("minor", 85, false, "Weekly", "secondary"),

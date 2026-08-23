@@ -383,7 +383,7 @@ KCM.SimpleKCM {
         }
         if (message.length > 0) {
             markPending(descriptor.provider, false)
-            errorText = i18n("%1: %2", descriptor.provider, message)
+            errorText = i18n("%1: %2", displayNameForProvider(descriptor.provider), message)
             return
         }
 
@@ -423,7 +423,7 @@ KCM.SimpleKCM {
                 : i18n("codexbar exited with code %1", Number(exitCode))
         }
         if (message.length > 0) {
-            errorText = i18n("%1: %2", descriptor.provider, message)
+            errorText = i18n("%1: %2", displayNameForProvider(descriptor.provider), message)
             return
         }
         if (payload && payload.cancelled === true) {
@@ -1256,6 +1256,8 @@ KCM.SimpleKCM {
         }
 
         Components.PlainInlineMessage {
+            id: providerErrorMessage
+
             Layout.fillWidth: true
             Layout.leftMargin: Kirigami.Units.smallSpacing
             Layout.rightMargin: Kirigami.Units.smallSpacing
@@ -1263,10 +1265,21 @@ KCM.SimpleKCM {
             plainText: page.errorText
             visible: page.errorText.length > 0
             showCloseButton: true
-            onVisibleChanged: if (!visible) page.errorText = ""
+            onVisibleChanged: {
+                if (visible || page.errorText.length === 0) {
+                    return
+                }
+                // Kirigami's close button hid the banner imperatively, severing
+                // the visible binding; clear the text and reinstall the binding
+                // so later errors still show up.
+                page.errorText = ""
+                visible = Qt.binding(function() { return page.errorText.length > 0 })
+            }
         }
 
         Components.PlainInlineMessage {
+            id: providerStatusMessage
+
             Layout.fillWidth: true
             Layout.leftMargin: Kirigami.Units.smallSpacing
             Layout.rightMargin: Kirigami.Units.smallSpacing
@@ -1274,7 +1287,13 @@ KCM.SimpleKCM {
             plainText: page.statusText
             visible: page.statusText.length > 0
             showCloseButton: true
-            onVisibleChanged: if (!visible) page.statusText = ""
+            onVisibleChanged: {
+                if (visible || page.statusText.length === 0) {
+                    return
+                }
+                page.statusText = ""
+                visible = Qt.binding(function() { return page.statusText.length > 0 })
+            }
         }
     }
 
@@ -1405,6 +1424,16 @@ KCM.SimpleKCM {
                         : ""
                     visible: plainText.length > 0
                     showCloseButton: true
+                    onVisibleChanged: {
+                        // Kirigami's close button hides the banner imperatively,
+                        // severing the visible binding. Clear the stored error so
+                        // the dismissal sticks, then reinstall the binding so the
+                        // next diagnostic error still shows up.
+                        if (!visible && plainText.length > 0 && page.selectedProvider) {
+                            page.setProviderDiagnosticError(page.selectedProvider.provider, "")
+                            visible = Qt.binding(function() { return plainText.length > 0 })
+                        }
+                    }
                 }
 
                 ColumnLayout {
@@ -1501,6 +1530,11 @@ KCM.SimpleKCM {
 
                                 Components.PlainComboBox {
                                     id: descriptorEnumBox
+
+                                    property bool restoreBindingAfterWrite: false
+                                    readonly property bool descriptorWritePending: page.selectedProvider
+                                        && page.isFieldPending(page.selectedProvider.provider, modelData.id)
+
                                     Layout.fillWidth: true
                                     model: modelData.options
                                     textRole: "title"
@@ -1508,19 +1542,41 @@ KCM.SimpleKCM {
                                     currentIndex: modelData.selectedOptionIndex
                                     enabled: page.selectedProvider
                                         && modelData.options.length > 0
-                                        && !page.isFieldPending(page.selectedProvider.provider, modelData.id)
+                                        && !descriptorWritePending
+                                    onDescriptorWritePendingChanged: {
+                                        if (descriptorWritePending || !restoreBindingAfterWrite) {
+                                            return
+                                        }
+                                        restoreBindingAfterWrite = false
+                                        currentIndex = Qt.binding(function() {
+                                            return modelData.selectedOptionIndex
+                                        })
+                                    }
                                 }
 
                                 Controls.Button {
+                                    id: descriptorEnumSaveButton
+
                                     text: i18n("Save")
                                     icon.name: "document-save"
                                     enabled: page.selectedProvider
                                         && descriptorEnumBox.currentIndex >= 0
                                         && !page.isFieldPending(page.selectedProvider.provider, modelData.id)
-                                    onClicked: if (page.selectedProvider) page.writeDescriptorField(
-                                        page.selectedProvider.provider,
-                                        modelData,
-                                        page.optionIDAt(modelData.options, descriptorEnumBox.currentIndex))
+                                    onClicked: {
+                                        if (!page.selectedProvider) {
+                                            return
+                                        }
+                                        page.writeDescriptorField(
+                                            page.selectedProvider.provider,
+                                            modelData,
+                                            page.optionIDAt(modelData.options, descriptorEnumBox.currentIndex))
+                                        // A rejected plan never enters the pending state,
+                                        // so it keeps the user's choice available to retry.
+                                        // A started write restores the binding only when its
+                                        // result clears the pending state.
+                                        descriptorEnumBox.restoreBindingAfterWrite =
+                                            descriptorEnumBox.descriptorWritePending
+                                    }
                                 }
                             }
 

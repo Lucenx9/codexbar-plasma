@@ -38,6 +38,10 @@ TestCase {
 
     function test_quotaIsACreditBalanceNotMoney() {
         compare(CostPresentation.amountString(fmt, 1499.6, "Quota"), "1500")
+        // Non-numeric input degrades like the money path; null counts as 0,
+        // matching the pinned "$0.00" behaviour of the USD branch.
+        compare(CostPresentation.amountString(fmt, "abc", "Quota"), "-")
+        compare(CostPresentation.amountString(fmt, null, "Quota"), "0")
     }
 
     // Pinning the pre-extraction behaviour, defect included: a non-numeric
@@ -59,6 +63,18 @@ TestCase {
         compare(CostPresentation.tokenCountString(3000000000), "3B")
         compare(CostPresentation.tokenCountString(-1500), "-1.5K")
         compare(CostPresentation.tokenCountString("abc"), "-")
+    }
+
+    // A value that rounds up across a unit boundary must promote to the larger
+    // unit instead of printing an overflowing one ("1000K", "1000M").
+    function test_tokenCountStringPromotesAtRoundedBoundaries() {
+        compare(CostPresentation.tokenCountString(999.6), "1K")
+        compare(CostPresentation.tokenCountString(999999), "1M")
+        compare(CostPresentation.tokenCountString(994999), "995K")
+        compare(CostPresentation.tokenCountString(999600), "1M")
+        compare(CostPresentation.tokenCountString(-999600), "-1M")
+        compare(CostPresentation.tokenCountString(999999999), "1B")
+        compare(CostPresentation.tokenCountString(999499999), "999M")
     }
 
     // The regression this guards: a marker or bar drawn against the wrong

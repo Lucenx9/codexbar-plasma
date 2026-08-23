@@ -24,24 +24,56 @@ function scopePrimedKey(observation) {
     return "scope:" + String(observation.scopeID || "")
 }
 
-function rowIdentity(row, index, useResetTimestamp) {
+function rowIdentityValue(row, useResetTimestamp) {
+    if (!row) {
+        return ""
+    }
+    return String(useResetTimestamp
+        ? (row.resetsAt ? row.resetsAt : "")
+        : (row.label ? row.label : ""))
+}
+
+// Occurrence ordinal among rows sharing the same lane and identity. Numbering
+// duplicates instead of keying on the absolute index keeps baseline state
+// stable when the CLI inserts or reorders unrelated usage windows.
+function rowOccurrence(rows, index, useResetTimestamp) {
+    var lane = rows[index] && rows[index].lane ? String(rows[index].lane) : ""
+    var identity = rowIdentityValue(rows[index], useResetTimestamp)
+    var occurrences = 0
+    for (var i = 0; i < index; i++) {
+        if (rowIdentityValue(rows[i], useResetTimestamp) !== identity) {
+            continue
+        }
+        var priorLane = rows[i] && rows[i].lane ? String(rows[i].lane) : ""
+        if (priorLane === lane) {
+            occurrences++
+        }
+    }
+    return occurrences
+}
+
+function rowIdentity(observation, row, index, useResetTimestamp) {
+    var rows = Array.isArray(observation && observation.rows)
+        ? observation.rows
+        : []
     var lane = row && row.lane ? String(row.lane) : ""
-    var identity = useResetTimestamp
-        ? (row && row.resetsAt ? String(row.resetsAt) : "")
-        : (row && row.label ? String(row.label) : "")
-    return lane + ":" + identity + ":" + index
+    return lane + ":" + rowIdentityValue(row, useResetTimestamp)
+        + ":" + rowOccurrence(rows, index, useResetTimestamp)
 }
 
 function quotaKey(observation, row, index) {
-    return "quota:" + String(observation.scopeID || "") + ":" + rowIdentity(row, index, false)
+    return "quota:" + String(observation.scopeID || "") + ":"
+        + rowIdentity(observation, row, index, false)
 }
 
 function paceKey(observation, row, index) {
-    return "pace:" + String(observation.scopeID || "") + ":" + rowIdentity(row, index, true)
+    return "pace:" + String(observation.scopeID || "") + ":"
+        + rowIdentity(observation, row, index, true)
 }
 
 function resetKey(observation, row, index) {
-    return "reset:" + String(observation.scopeID || "") + ":" + rowIdentity(row, index, false)
+    return "reset:" + String(observation.scopeID || "") + ":"
+        + rowIdentity(observation, row, index, false)
 }
 
 function clearScopeState(nextMemo, observation) {
