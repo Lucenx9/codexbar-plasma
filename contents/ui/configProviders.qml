@@ -1256,6 +1256,8 @@ KCM.SimpleKCM {
         }
 
         Components.PlainInlineMessage {
+            id: providerErrorMessage
+
             Layout.fillWidth: true
             Layout.leftMargin: Kirigami.Units.smallSpacing
             Layout.rightMargin: Kirigami.Units.smallSpacing
@@ -1264,7 +1266,7 @@ KCM.SimpleKCM {
             visible: page.errorText.length > 0
             showCloseButton: true
             onVisibleChanged: {
-                if (!visible || page.errorText.length === 0) {
+                if (visible || page.errorText.length === 0) {
                     return
                 }
                 // Kirigami's close button hid the banner imperatively, severing
@@ -1276,6 +1278,8 @@ KCM.SimpleKCM {
         }
 
         Components.PlainInlineMessage {
+            id: providerStatusMessage
+
             Layout.fillWidth: true
             Layout.leftMargin: Kirigami.Units.smallSpacing
             Layout.rightMargin: Kirigami.Units.smallSpacing
@@ -1284,7 +1288,7 @@ KCM.SimpleKCM {
             visible: page.statusText.length > 0
             showCloseButton: true
             onVisibleChanged: {
-                if (!visible || page.statusText.length === 0) {
+                if (visible || page.statusText.length === 0) {
                     return
                 }
                 page.statusText = ""
@@ -1534,26 +1538,30 @@ KCM.SimpleKCM {
                                     enabled: page.selectedProvider
                                         && modelData.options.length > 0
                                         && !page.isFieldPending(page.selectedProvider.provider, modelData.id)
-                                    onActivated: {
-                                        // The interactive pick severs the currentIndex
-                                        // binding; reinstall it so an unsaved choice
-                                        // reverts to the stored descriptor value.
-                                        currentIndex = Qt.binding(function() {
-                                            return modelData.selectedOptionIndex
-                                        })
-                                    }
                                 }
 
                                 Controls.Button {
+                                    id: descriptorEnumSaveButton
+
                                     text: i18n("Save")
                                     icon.name: "document-save"
                                     enabled: page.selectedProvider
                                         && descriptorEnumBox.currentIndex >= 0
                                         && !page.isFieldPending(page.selectedProvider.provider, modelData.id)
-                                    onClicked: if (page.selectedProvider) page.writeDescriptorField(
-                                        page.selectedProvider.provider,
-                                        modelData,
-                                        page.optionIDAt(modelData.options, descriptorEnumBox.currentIndex))
+                                    onClicked: {
+                                        if (!page.selectedProvider) {
+                                            return
+                                        }
+                                        page.writeDescriptorField(
+                                            page.selectedProvider.provider,
+                                            modelData,
+                                            page.optionIDAt(modelData.options, descriptorEnumBox.currentIndex))
+                                        // Submit the interactive choice before restoring
+                                        // the binding to the last saved descriptor value.
+                                        descriptorEnumBox.currentIndex = Qt.binding(function() {
+                                            return modelData.selectedOptionIndex
+                                        })
+                                    }
                                 }
                             }
 

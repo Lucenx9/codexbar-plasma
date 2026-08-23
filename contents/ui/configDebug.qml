@@ -168,13 +168,15 @@ KCM.SimpleKCM {
         }
 
         Components.PlainInlineMessage {
+            id: diagnosticErrorMessage
+
             Layout.fillWidth: true
             type: Kirigami.MessageType.Error
             plainText: page.diagnosticError
             visible: page.diagnosticError.length > 0
             showCloseButton: true
             onVisibleChanged: {
-                if (!visible || page.diagnosticError.length === 0) {
+                if (visible || page.diagnosticError.length === 0) {
                     return
                 }
                 // Kirigami's close button hid the banner imperatively, severing

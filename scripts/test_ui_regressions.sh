@@ -156,6 +156,7 @@ applet = Surface("applet", root)
 main_text = applet.text
 providers_surface = Surface("providers", root)
 providers_surface_text = providers_surface.text
+debug_surface = Surface("debug", root)
 general_surface = Surface("general", root)
 general_text = general_qml.read_text(encoding="utf-8")
 display_text = display_qml.read_text(encoding="utf-8")
@@ -598,6 +599,46 @@ if "text: modelData.valueText" not in providers_text:
     raise AssertionError("descriptor text fields must render normalized value text")
 if "currentIndex: modelData.selectedOptionIndex" not in providers_text:
     raise AssertionError("descriptor enum fields must render the normalized selection")
+
+descriptor_enum_box = providers_surface.id_block("descriptorEnumBox")
+if "Qt.binding" in descriptor_enum_box:
+    raise AssertionError(
+        "descriptor enum activation must preserve the user's choice until Save"
+    )
+descriptor_enum_save = providers_surface.id_block("descriptorEnumSaveButton")
+descriptor_write_index = descriptor_enum_save.find("page.writeDescriptorField(")
+descriptor_rebind_index = descriptor_enum_save.find(
+    "descriptorEnumBox.currentIndex = Qt.binding(function()"
+)
+if descriptor_write_index < 0 or descriptor_rebind_index < descriptor_write_index:
+    raise AssertionError(
+        "descriptor enum Save must submit the selected value before restoring its binding"
+    )
+
+
+def assert_dismissible_message_restores_visibility(surface, object_id, state_property):
+    block = surface.id_block(object_id)
+    for fragment in (
+        f"if (visible || {state_property}.length === 0)",
+        f'{state_property} = ""',
+        f"visible = Qt.binding(function() {{ return {state_property}.length > 0 }})",
+    ):
+        if fragment not in block:
+            raise AssertionError(
+                f"dismissible message {object_id!r} must clear only on close and restore "
+                f"its visibility binding; missing {fragment!r}"
+            )
+
+
+assert_dismissible_message_restores_visibility(
+    providers_surface, "providerErrorMessage", "page.errorText"
+)
+assert_dismissible_message_restores_visibility(
+    providers_surface, "providerStatusMessage", "page.statusText"
+)
+assert_dismissible_message_restores_visibility(
+    debug_surface, "diagnosticErrorMessage", "page.diagnosticError"
+)
 
 accounts_body = function_body(main_text, "parseProviderAccountsOutput")
 if "var dedupedOptions = Normalizer.dedupeAccountOptions(options)" not in accounts_body:
