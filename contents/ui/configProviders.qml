@@ -1530,6 +1530,11 @@ KCM.SimpleKCM {
 
                                 Components.PlainComboBox {
                                     id: descriptorEnumBox
+
+                                    property bool restoreBindingAfterWrite: false
+                                    readonly property bool descriptorWritePending: page.selectedProvider
+                                        && page.isFieldPending(page.selectedProvider.provider, modelData.id)
+
                                     Layout.fillWidth: true
                                     model: modelData.options
                                     textRole: "title"
@@ -1537,7 +1542,16 @@ KCM.SimpleKCM {
                                     currentIndex: modelData.selectedOptionIndex
                                     enabled: page.selectedProvider
                                         && modelData.options.length > 0
-                                        && !page.isFieldPending(page.selectedProvider.provider, modelData.id)
+                                        && !descriptorWritePending
+                                    onDescriptorWritePendingChanged: {
+                                        if (descriptorWritePending || !restoreBindingAfterWrite) {
+                                            return
+                                        }
+                                        restoreBindingAfterWrite = false
+                                        currentIndex = Qt.binding(function() {
+                                            return modelData.selectedOptionIndex
+                                        })
+                                    }
                                 }
 
                                 Controls.Button {
@@ -1556,11 +1570,12 @@ KCM.SimpleKCM {
                                             page.selectedProvider.provider,
                                             modelData,
                                             page.optionIDAt(modelData.options, descriptorEnumBox.currentIndex))
-                                        // Submit the interactive choice before restoring
-                                        // the binding to the last saved descriptor value.
-                                        descriptorEnumBox.currentIndex = Qt.binding(function() {
-                                            return modelData.selectedOptionIndex
-                                        })
+                                        // A rejected plan never enters the pending state,
+                                        // so it keeps the user's choice available to retry.
+                                        // A started write restores the binding only when its
+                                        // result clears the pending state.
+                                        descriptorEnumBox.restoreBindingAfterWrite =
+                                            descriptorEnumBox.descriptorWritePending
                                     }
                                 }
                             }

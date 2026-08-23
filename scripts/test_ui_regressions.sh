@@ -601,18 +601,29 @@ if "currentIndex: modelData.selectedOptionIndex" not in providers_text:
     raise AssertionError("descriptor enum fields must render the normalized selection")
 
 descriptor_enum_box = providers_surface.id_block("descriptorEnumBox")
-if "Qt.binding" in descriptor_enum_box:
-    raise AssertionError(
-        "descriptor enum activation must preserve the user's choice until Save"
-    )
+for fragment in (
+    "property bool restoreBindingAfterWrite: false",
+    "readonly property bool descriptorWritePending:",
+    "onDescriptorWritePendingChanged:",
+    "if (descriptorWritePending || !restoreBindingAfterWrite)",
+    "restoreBindingAfterWrite = false",
+    "currentIndex = Qt.binding(function()",
+):
+    if fragment not in descriptor_enum_box:
+        raise AssertionError(
+            "descriptor enum must restore its selection binding after a write result; "
+            f"missing {fragment!r}"
+        )
+if "onActivated:" in descriptor_enum_box:
+    raise AssertionError("descriptor enum activation must preserve the user's choice until Save")
 descriptor_enum_save = providers_surface.id_block("descriptorEnumSaveButton")
 descriptor_write_index = descriptor_enum_save.find("page.writeDescriptorField(")
-descriptor_rebind_index = descriptor_enum_save.find(
-    "descriptorEnumBox.currentIndex = Qt.binding(function()"
+descriptor_restore_arm_index = descriptor_enum_save.find(
+    "descriptorEnumBox.restoreBindingAfterWrite ="
 )
-if descriptor_write_index < 0 or descriptor_rebind_index < descriptor_write_index:
+if descriptor_write_index < 0 or descriptor_restore_arm_index < descriptor_write_index:
     raise AssertionError(
-        "descriptor enum Save must submit the selected value before restoring its binding"
+        "descriptor enum Save must submit the selected value before arming binding restore"
     )
 
 

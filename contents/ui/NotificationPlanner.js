@@ -24,7 +24,7 @@ function scopePrimedKey(observation) {
     return "scope:" + String(observation.scopeID || "")
 }
 
-function rowLabel(row, useResetTimestamp) {
+function rowIdentityValue(row, useResetTimestamp) {
     if (!row) {
         return ""
     }
@@ -38,10 +38,10 @@ function rowLabel(row, useResetTimestamp) {
 // stable when the CLI inserts or reorders unrelated usage windows.
 function rowOccurrence(rows, index, useResetTimestamp) {
     var lane = rows[index] && rows[index].lane ? String(rows[index].lane) : ""
-    var identity = rowLabel(rows[index], useResetTimestamp)
+    var identity = rowIdentityValue(rows[index], useResetTimestamp)
     var occurrences = 0
     for (var i = 0; i < index; i++) {
-        if (rowLabel(rows[i], useResetTimestamp) !== identity) {
+        if (rowIdentityValue(rows[i], useResetTimestamp) !== identity) {
             continue
         }
         var priorLane = rows[i] && rows[i].lane ? String(rows[i].lane) : ""
@@ -57,7 +57,7 @@ function rowIdentity(observation, row, index, useResetTimestamp) {
         ? observation.rows
         : []
     var lane = row && row.lane ? String(row.lane) : ""
-    return lane + ":" + rowLabel(row, useResetTimestamp)
+    return lane + ":" + rowIdentityValue(row, useResetTimestamp)
         + ":" + rowOccurrence(rows, index, useResetTimestamp)
 }
 
