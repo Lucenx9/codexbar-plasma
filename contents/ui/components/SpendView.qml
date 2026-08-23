@@ -104,6 +104,12 @@ ColumnLayout {
             Accessible.name: i18n("Cost history metric")
             onActivated: function(index) {
                 view.applet.setCostHistoryMetric(metricCombo.valueAt(index))
+                // The interactive pick severs the currentIndex binding; restore
+                // it so the combo keeps tracking settings changes made outside
+                // this view.
+                metricCombo.currentIndex = Qt.binding(function() {
+                    return view.metricIndex(metricCombo.model, view.applet.costHistoryMetric)
+                })
             }
         }
 
@@ -117,6 +123,11 @@ ColumnLayout {
             Accessible.name: i18n("Cost history range")
             onActivated: function(index) {
                 view.applet.setCostHistoryDays(rangeCombo.valueAt(index))
+                // Same restored binding as the metric combo: keep tracking
+                // external settings changes after a pick severs this one.
+                rangeCombo.currentIndex = Qt.binding(function() {
+                    return view.rangeIndex(rangeCombo.model, view.applet.costHistoryDays)
+                })
             }
         }
 

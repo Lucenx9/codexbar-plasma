@@ -105,7 +105,6 @@ PlasmoidItem {
     property var fallbackProviderResults: ({})
     property var fallbackProviderSeen: ({})
     property int pendingProviderCount: 0
-    property bool providerFallbackActive: false
     property string costCommandSource: buildCostCommand()
     readonly property bool costLoading: CommandLedger.hasKind(activeUsageCommands, "cost")
     readonly property int costAutoRefreshIntervalMs: CostRefreshPolicy.automaticRefreshIntervalMs
@@ -513,7 +512,6 @@ PlasmoidItem {
         if (sessionsInitialized) {
             refreshSessions()
         }
-        providerFallbackActive = false
 
         if (commandSource.length === 0) {
             loading = false
@@ -670,7 +668,6 @@ PlasmoidItem {
     }
 
     function startProviderFallback() {
-        providerFallbackActive = true
         retireUsageCommandKind("usage")
         if (provider.length > 0) {
             startProviderFallbackForProviders([providerKey(provider)])

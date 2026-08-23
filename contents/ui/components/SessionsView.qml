@@ -16,6 +16,15 @@ ColumnLayout {
     Layout.fillHeight: true
     spacing: Kirigami.Units.largeSpacing
 
+    // The age ticker only runs while the tab is visible, so the clock has to
+    // catch up when the view returns; otherwise hours-old sessions render as
+    // "just now" until the next tick.
+    onVisibleChanged: {
+        if (visible) {
+            sessionClockMs = Date.now()
+        }
+    }
+
     function copySessionValue(text, valueKey) {
         if (text.length === 0) {
             return

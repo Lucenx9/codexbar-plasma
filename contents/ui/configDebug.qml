@@ -94,7 +94,11 @@ KCM.SimpleKCM {
         var safeOutput = SafeText.cliDiagnostic(stdoutText, SafeText.maximumDiagnosticLength)
         var safeError = SafeText.cliMessage(SafeText.stripLoaderDiagnostics(stderrText), SafeText.maximumCliMessageLength)
         diagnosticOutput = safeOutput.length > 0 ? safeOutput : i18n("No diagnostic output.")
-        diagnosticError = exitCode !== 0 ? safeError : ""
+        diagnosticError = exitCode !== 0
+            ? (safeError.length > 0
+                ? safeError
+                : i18n("codexbar exited with code %1", Number(exitCode)))
+            : ""
     }
 
     Plasma5Support.DataSource {
@@ -169,7 +173,16 @@ KCM.SimpleKCM {
             plainText: page.diagnosticError
             visible: page.diagnosticError.length > 0
             showCloseButton: true
-            onVisibleChanged: if (!visible) page.diagnosticError = ""
+            onVisibleChanged: {
+                if (!visible || page.diagnosticError.length === 0) {
+                    return
+                }
+                // Kirigami's close button hid the banner imperatively, severing
+                // the visible binding; clear the text and reinstall the binding
+                // so later failures still show up.
+                page.diagnosticError = ""
+                visible = Qt.binding(function() { return page.diagnosticError.length > 0 })
+            }
         }
 
         Controls.ScrollView {

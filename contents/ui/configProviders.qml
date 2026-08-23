@@ -383,7 +383,7 @@ KCM.SimpleKCM {
         }
         if (message.length > 0) {
             markPending(descriptor.provider, false)
-            errorText = i18n("%1: %2", descriptor.provider, message)
+            errorText = i18n("%1: %2", displayNameForProvider(descriptor.provider), message)
             return
         }
 
@@ -423,7 +423,7 @@ KCM.SimpleKCM {
                 : i18n("codexbar exited with code %1", Number(exitCode))
         }
         if (message.length > 0) {
-            errorText = i18n("%1: %2", descriptor.provider, message)
+            errorText = i18n("%1: %2", displayNameForProvider(descriptor.provider), message)
             return
         }
         if (payload && payload.cancelled === true) {
@@ -1263,7 +1263,16 @@ KCM.SimpleKCM {
             plainText: page.errorText
             visible: page.errorText.length > 0
             showCloseButton: true
-            onVisibleChanged: if (!visible) page.errorText = ""
+            onVisibleChanged: {
+                if (!visible || page.errorText.length === 0) {
+                    return
+                }
+                // Kirigami's close button hid the banner imperatively, severing
+                // the visible binding; clear the text and reinstall the binding
+                // so later errors still show up.
+                page.errorText = ""
+                visible = Qt.binding(function() { return page.errorText.length > 0 })
+            }
         }
 
         Components.PlainInlineMessage {
@@ -1274,7 +1283,13 @@ KCM.SimpleKCM {
             plainText: page.statusText
             visible: page.statusText.length > 0
             showCloseButton: true
-            onVisibleChanged: if (!visible) page.statusText = ""
+            onVisibleChanged: {
+                if (!visible || page.statusText.length === 0) {
+                    return
+                }
+                page.statusText = ""
+                visible = Qt.binding(function() { return page.statusText.length > 0 })
+            }
         }
     }
 
@@ -1405,6 +1420,16 @@ KCM.SimpleKCM {
                         : ""
                     visible: plainText.length > 0
                     showCloseButton: true
+                    onVisibleChanged: {
+                        // Kirigami's close button hides the banner imperatively,
+                        // severing the visible binding. Clear the stored error so
+                        // the dismissal sticks, then reinstall the binding so the
+                        // next diagnostic error still shows up.
+                        if (!visible && plainText.length > 0 && page.selectedProvider) {
+                            page.setProviderDiagnosticError(page.selectedProvider.provider, "")
+                            visible = Qt.binding(function() { return plainText.length > 0 })
+                        }
+                    }
                 }
 
                 ColumnLayout {
@@ -1509,6 +1534,14 @@ KCM.SimpleKCM {
                                     enabled: page.selectedProvider
                                         && modelData.options.length > 0
                                         && !page.isFieldPending(page.selectedProvider.provider, modelData.id)
+                                    onActivated: {
+                                        // The interactive pick severs the currentIndex
+                                        // binding; reinstall it so an unsaved choice
+                                        // reverts to the stored descriptor value.
+                                        currentIndex = Qt.binding(function() {
+                                            return modelData.selectedOptionIndex
+                                        })
+                                    }
                                 }
 
                                 Controls.Button {

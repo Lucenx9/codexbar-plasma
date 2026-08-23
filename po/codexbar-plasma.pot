@@ -335,6 +335,10 @@ msgstr ""
 msgid "No diagnostic output."
 msgstr ""
 
+#: contents/ui/configDebug.qml contents/ui/configProviders.qml
+msgid "codexbar exited with code %1"
+msgstr ""
+
 #: contents/ui/configDebug.qml
 msgid ""
 "Run redacted CodexBar CLI diagnostics from Plasma. The diagnostic command "
@@ -678,10 +682,6 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "codexbar command timed out. Try again."
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "codexbar exited with code %1"
 msgstr ""
 
 #: contents/ui/configProviders.qml
