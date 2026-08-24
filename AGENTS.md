@@ -211,15 +211,16 @@ Use this order when sources disagree:
 ## Current TODO mirror
 
 Keep this in sync with `TODO.md` when feature parity decisions change. Current
-parity baseline: `docs/research/2026-08-20-macos-parity-0.54.0.md` (upstream
-v0.54.0, probed against the installed CLI 0.54.0).
+parity baseline: `docs/research/2026-08-24-macos-parity-0.55.0.md` (upstream
+v0.55.0, probed with the verified official Linux CLI 0.55.0 release asset; the
+host-installed CLI is now 0.55.0).
 
 - Provider-specific editing should come from a stable CLI descriptor, not
   duplicated provider-specific config logic in QML. The Providers page renders
   descriptor fields/actions from `docs/cli-provider-settings-descriptor.md` for
   generic source mode, API key, cookie source/manual cookie, enterprise/base
   URL, workspace/project ID, region, AWS profile/auth mode, and boolean extras.
-  That descriptor is a proposal, not shipped: on CLI 0.54.0
+  That descriptor is a proposal, not shipped: on CLI 0.55.0
   `config providers --descriptors` fails with `Unknown option --descriptors` and
   the plain payload has no `descriptor` key, so the path is dormant and the page
   falls back to enable/disable, `set-api-key` and links. Keep that fallback
@@ -227,9 +228,9 @@ v0.54.0, probed against the installed CLI 0.54.0).
   Missing controls include token-account add/edit/remove, provider-specific
   auth mode nuances, organization/team, metric, and quota threshold editors.
   IBM Bob can use the existing single-key command, but its token-account editing
-  still needs generic CLI field/actions. Fireworks 0.54.0 auto-discovers its
-  account slug from the API key, so a follow-up can enable the generic
-  single-key setup path without a separate slug editor.
+  still needs generic CLI field/actions. Fireworks 0.54.0 and later
+  auto-discovers its account slug from the API key, so a follow-up can enable the
+  generic single-key setup path without a separate slug editor.
 - Provider onboarding improvements should stay CLI-backed: dashboard actions
   can come from the descriptor and login/account links are fine as fallbacks,
   but browser-cookie import, local-file, OAuth/device-flow, CLI-auth setup, and
@@ -239,9 +240,10 @@ v0.54.0, probed against the installed CLI 0.54.0).
   surfaced, with legacy dashboard KPI/summary payloads retained as a
   compatibility fallback. Richer provider-specific layouts, billing summaries,
   usage breakdowns, credits history, and model/request/token sections should
-  wait for stable CLI presentation fields. `usage.credits` carries no allowance,
-  so the Credits section prints the balance without a meter; do not reintroduce
-  a meter with a hardcoded denominator.
+  wait for stable CLI presentation fields. A plain `usage.credits` balance has
+  no generic allowance, so it stays meter-free. The optional Codex-only
+  `credits.codexCreditLimit` record carries a real denominator and is an open
+  bounded presentation gap; add a meter only for that validated nested record.
 - Quota warning thresholds are user-configurable and bounded by
   `contents/ui/QuotaThresholds.js`; the notification level and the usage-bar
   markers both read them, so neither may hardcode a percentage. Changing a
@@ -257,14 +259,19 @@ v0.54.0, probed against the installed CLI 0.54.0).
   only safe display fields; never retain, render, open, or follow `cwd`,
   `transcriptPath`, IDs, or PIDs. Remote/SSH host focus is macOS-only.
 - Existing detail and cost charts support pointer and keyboard inspection; the
-  Usage & Spend tab adds bounded range and heatmap views. Credits history, plan
-  utilization history, and session-equivalent forecasts must wait for stable
-  CLI history payloads.
+  Usage & Spend tab adds bounded range and heatmap views. CLI 0.55.0 Kiro
+  overage, z.ai BigModel CN balance, and Cursor Grok Bot data already fit the
+  generic detail, provider-cost, and extra-window paths. Cursor/Antigravity
+  local spend remains blocked because Linux `cost` accepts only Claude and
+  Codex. Grok period-only responses no longer become false zeroes, but an
+  explicit unknown row with reset metadata needs a generic CLI window contract.
+  Credits history, plan utilization history, and session-equivalent forecasts
+  must wait for stable CLI history payloads.
 - `costHistoryMetric` switches every cost chart between cost and tokens from the
   same `cost` payload; never add a CLI call for the metric, and keep the bar
   scale reading the selected metric. `historyCoverageIsEstablished` drives the
   "still collecting" note, and a missing flag counts as established.
-- CLI 0.54.0 cost `coverage` counters and `provenance` are normalized by
+- CLI 0.55.0 cost `coverage` counters and `provenance` are normalized by
   `ProviderNormalizer.normalizeCostTrustMetadata`; provider and global totals
   use `CostPresentation.costTrustSummary` to qualify estimated, partial, or
   approximate amounts and render one shared notice. Keep missing legacy metadata
@@ -284,10 +291,10 @@ v0.54.0, probed against the installed CLI 0.54.0).
   a new projected-exhaustion transition. Other notification refinements should
   stay quiet, configurable, and tied to clear state transitions.
 - The fallback catalog covers the 69 provider IDs released in CodexBar v0.49.1
-  and retains fork-only compatibility assets. Re-verified against the installed
-  0.54.0 CLI, which reports the same 69 and adds none. Future drift syncs should
-  cover provider keys, CLI aliases, titles, colors, docs/dashboard/login URLs,
-  icon assets, and `scripts/test_provider_icons.sh`.
+  and retains fork-only compatibility assets. Re-verified against the official
+  0.55.0 Linux CLI, which reports the same 69 and adds none. Future drift syncs
+  should cover provider keys, CLI aliases, titles, colors,
+  docs/dashboard/login URLs, icon assets, and `scripts/test_provider_icons.sh`.
 - The GitHub Release updater is current. If a KDE Store channel is added,
   prefer KDE Store/KNewStuff/Discover for that channel.
 - Do not port macOS-only surfaces directly, including WidgetKit, Sparkle, and

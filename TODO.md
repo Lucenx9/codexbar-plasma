@@ -1,14 +1,15 @@
 # TODO
 
-Parity baseline: `docs/research/2026-08-20-macos-parity-0.54.0.md`, pinned to
-upstream v0.54.0 and probed against the installed CLI 0.54.0.
+Parity baseline: `docs/research/2026-08-24-macos-parity-0.55.0.md`, pinned to
+upstream v0.55.0 and probed with the verified official Linux CLI 0.55.0 release
+asset. The host-installed CLI is now 0.55.0.
 
 - Provider-specific editable settings: the Providers page renders generic
   fields/actions from `docs/cli-provider-settings-descriptor.md` without
   provider-specific QML branches. Declared coverage includes source mode, API
   key, cookie source/manual cookie, enterprise/base URL, workspace/project ID,
   region, AWS profile/auth mode, and boolean extras. That descriptor is still a
-  *proposal*: on CLI 0.54.0 `config providers --descriptors` returns
+  *proposal*: on CLI 0.55.0 `config providers --descriptors` returns
   `Unknown option --descriptors` and the plain payload carries no `descriptor`
   key, so the whole path is dormant and the page degrades to enable/disable,
   `set-api-key` and docs/dashboard/login links. Keep that fallback working.
@@ -18,8 +19,9 @@ upstream v0.54.0 and probed against the installed CLI 0.54.0.
   not duplicate macOS Swift provider settings logic in QML; extend
   `codexbar config` first. IBM Bob can use the existing single-key command, but
   its token-account editing still needs generic CLI field/actions. Fireworks
-  0.54.0 auto-discovers its account slug from the API key, so a follow-up can
-  enable the generic single-key setup path without a separate slug editor.
+  0.54.0 and later auto-discovers its account slug from the API key, so a
+  follow-up can enable the generic single-key setup path without a separate slug
+  editor.
 - Provider onboarding parity: descriptor-backed dashboard actions are supported,
   and legacy login/account/dashboard/docs links remain as fallbacks. Add safer
   setup actions for providers that need browser-cookie import, local app files,
@@ -31,19 +33,22 @@ upstream v0.54.0 and probed against the installed CLI 0.54.0.
   the CLI extends that stable presentation contract. Missing examples include
   billing summaries, usage breakdowns, credits history, and richer
   provider-specific model/request/token sections.
-- Credits allowance: `usage.credits` reports `remaining`, `updatedAt`, and
-  `events` only. With no allowance or plan total, the Credits section prints the
-  balance without a meter; the meter it replaced scaled against a hardcoded 1000
-  credits and so filled for reasons the payload never described. Restore a meter
-  only when the CLI reports the matching allowance.
+- Credits allowance: the generic `usage.credits` balance uses `remaining`,
+  `updatedAt`, and `events` and still has no generic allowance or plan total, so
+  it stays a line without a meter. The optional Codex-only
+  `credits.codexCreditLimit` record carries a real used amount, limit, remaining
+  amount, percentage, and reset metadata; v0.54.1 made it reliable for Business
+  and Enterprise accounts, but Plasma currently ignores it. Add a bounded
+  monthly-limit projection and meter for that nested record only. Never apply
+  its denominator to a plain credit balance.
 - Cost history plots either cost or tokens through `costHistoryMetric`; the
   selector drives the range chart, the heatmap, and the per-provider bars from
   one `cost` payload, so it must never add a CLI call. `historyCoverageIsEstablished`
   drives the "still collecting" note; a missing flag means established.
-- Cost truthfulness: CLI 0.54.0 `coverage` counters and `provenance` are
-  normalized behind a bounded trust boundary. Provider and global cost amounts
-  are qualified as estimated, partial, or approximate, and share one semantic
-  notice decision; older payloads remain quiet. Project breakdown inputs remain
+- Cost truthfulness: CLI 0.55.0 retains the `coverage` counters and
+  `provenance` normalized behind a bounded trust boundary. Provider and global
+  cost amounts are qualified as estimated, partial, or approximate, and share one
+  semantic notice decision; older payloads remain quiet. Project breakdown inputs remain
   future work: a Projects view must discard the emitted local `path` and retain
   only bounded display fields.
 - Quota warning thresholds are configurable through `quotaWarningPercent` and
@@ -63,7 +68,13 @@ upstream v0.54.0 and probed against the installed CLI 0.54.0.
   Remote/SSH host focus stays macOS-only.
 - Existing detail and cost charts now support hover, click selection, and
   keyboard inspection. The global Usage & Spend tab adds 7/30/90-day cost
-  ranges and a bounded activity heatmap. Credits history, plan-utilization
+  ranges and a bounded activity heatmap. CodexBar 0.55.0 Kiro overage data,
+  z.ai BigModel CN balance, and Cursor Grok Bot usage already fit the generic
+  detail, provider-cost, and extra-window paths, so they need only a CLI upgrade.
+  The macOS Cursor/Antigravity local spend readers are not exposed by Linux
+  `cost`, which still accepts only Claude and Codex. Grok period-only responses
+  no longer become a false 0%, but an explicit unknown-usage row with reset data
+  needs a generic CLI window representation. Credits history, plan-utilization
   history, and session-equivalent forecasts still need stable CLI history
   payloads; do not infer history from one snapshot.
 - Panel element composition now has a persisted, sanitized order for identity,
@@ -83,7 +94,7 @@ upstream v0.54.0 and probed against the installed CLI 0.54.0.
   exhaustion. Consider reset-imminent notifications only if they remain quiet,
   configurable, and tied to clear state transitions.
 - Provider drift checks: the Plasma fallback catalog covers all 69 provider IDs
-  released in CodexBar v0.49.1 and re-verified on 0.54.0, while retaining
+  released in CodexBar v0.49.1 and re-verified on 0.55.0, while retaining
   fork-only compatibility assets.
   When upstream releases providers, sync provider keys, CLI aliases, titles,
   colors, docs/dashboard/login URLs, icon assets, and
