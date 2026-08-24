@@ -518,9 +518,9 @@ for clamped_percent_fragment in (
 
 add_window_body = function_body(main_text, "addWindow")
 for reset_source_fragment in (
-    "resetsAt: boundedDisplayText(",
-    "resetDescription: boundedDisplayText(",
-    "reset: boundedDisplayText(",
+    "resetsAt: Normalizer.boundedDisplayText(",
+    "resetDescription: Normalizer.boundedDisplayText(",
+    "reset: Normalizer.boundedDisplayText(",
 ):
     if reset_source_fragment not in add_window_body:
         raise AssertionError("addWindow must retain raw reset data for render-time formatting")
@@ -2087,8 +2087,8 @@ if "heatmapMouse.containsMouse ? 1 : 0" not in spend_view_text:
 
 normalize_provider_body = function_body(main_text, "normalizeProvider")
 for bounded_provider_fragment in (
-    "title: boundedDisplayText(",
-    "status: boundedDisplayText(",
+    "title: Normalizer.boundedDisplayText(",
+    "status: Normalizer.boundedDisplayText(",
     "error: boundedCliMessage(",
 ):
     if bounded_provider_fragment not in normalize_provider_body:

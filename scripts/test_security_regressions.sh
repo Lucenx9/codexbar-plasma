@@ -255,7 +255,7 @@ require_in_surface providers 'import "Guards.js" as Guards'
 require_definition_where_used providers hasOwnKey "Guards.hasOwnKey(item, key)"
 require_in_surface applet "maximumConcurrentProviderFallbackCommands: 8"
 require_in_surface applet "nextProviders.length < maximumProviderSnapshots"
-require_in_surface applet "value: boundedDisplayText(parts.join(\" · \"), 500)"
+require_in_surface applet "value: Normalizer.boundedDisplayText(parts.join(\" · \"), 500)"
 # The icon file name is built from a provider-controlled key, so that key is
 # bounded and pattern-checked before it can name a path. Both surfaces reach that
 # validation through providerIconFileName, so it is asserted once where it lives.
