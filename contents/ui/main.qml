@@ -422,17 +422,9 @@ PlasmoidItem {
         return Math.max(0, Math.min(2147480000, Math.floor(revision)))
     }
 
-    function boundedDisplayText(value, maximumLength) {
-        var limit = Number(maximumLength)
-        if (!isFinite(limit) || limit <= 0) {
-            limit = 500
-        }
-        limit = Math.min(2000, Math.floor(limit))
-        return SafeText.boundedDisplayText(value, limit)
-    }
 
     function boundedWidgetUpdateText(value) {
-        return boundedDisplayText(value, 500)
+        return Normalizer.boundedDisplayText(value, 500)
     }
 
     function boundedCliMessage(value) {
@@ -1256,7 +1248,7 @@ PlasmoidItem {
         if (providerID.length === 0) {
             return null
         }
-        var currency = boundedDisplayText(item.currencyCode || "USD", 12)
+        var currency = Normalizer.boundedDisplayText(item.currencyCode || "USD", 12)
         var emittedHistoryDays = Number(item.historyDays)
         var fallbackHistoryDays = Number(requestedHistoryDays)
         var historyDays = isFinite(emittedHistoryDays) && emittedHistoryDays > 0
@@ -1264,7 +1256,7 @@ PlasmoidItem {
             : (isFinite(fallbackHistoryDays) && fallbackHistoryDays > 0
             ? Math.max(1, Math.min(maximumCostHistoryPoints, Math.floor(fallbackHistoryDays)))
             : 30)
-        var windowLabel = boundedDisplayText(item.historyLabel || costHistoryWindowLabel(item, historyDays), 120)
+        var windowLabel = Normalizer.boundedDisplayText(item.historyLabel || costHistoryWindowLabel(item, historyDays), 120)
         var trust = Normalizer.normalizeCostTrustMetadata(item)
         var totals = Normalizer.normalizeCostTotals(
             item.totals, item.last30DaysCostUSD, item.last30DaysTokens, currency)
@@ -1568,7 +1560,7 @@ PlasmoidItem {
             return
         }
         rows.push({
-            label: boundedDisplayText(label, 120),
+            label: Normalizer.boundedDisplayText(label, 120),
             value: text
         })
     }
@@ -1578,7 +1570,7 @@ PlasmoidItem {
             return
         }
         var parts = []
-        var currency = boundedDisplayText(source.currency || source.currencyCode || "USD", 12)
+        var currency = Normalizer.boundedDisplayText(source.currency || source.currencyCode || "USD", 12)
         var cost = source.costUSD !== undefined ? source.costUSD : (source.cost !== undefined ? source.cost : source.totalCost)
         var tokens = source.totalTokens !== undefined ? source.totalTokens : source.tokens
         var requests = source.requests !== undefined ? source.requests : source.requestCount
@@ -1601,8 +1593,8 @@ PlasmoidItem {
             return
         }
         rows.push({
-            label: boundedDisplayText(label, 120),
-            value: boundedDisplayText(parts.join(" · "), 500)
+            label: Normalizer.boundedDisplayText(label, 120),
+            value: Normalizer.boundedDisplayText(parts.join(" · "), 500)
         })
     }
 
@@ -1611,14 +1603,14 @@ PlasmoidItem {
             return
         }
         var item = items[0] || ({})
-        var name = boundedDisplayText(item.name || item.model || item.label || item.type || "", 120)
+        var name = Normalizer.boundedDisplayText(item.name || item.model || item.label || item.type || "", 120)
         if (name.length === 0) {
             return
         }
         var suffix = dashboardTopSuffix(item)
         rows.push({
-            label: boundedDisplayText(label, 120),
-            value: boundedDisplayText(suffix.length > 0 ? i18n("%1 (%2)", name, suffix) : name, 500)
+            label: Normalizer.boundedDisplayText(label, 120),
+            value: Normalizer.boundedDisplayText(suffix.length > 0 ? i18n("%1 (%2)", name, suffix) : name, 500)
         })
     }
 
@@ -1650,7 +1642,7 @@ PlasmoidItem {
             return ""
         }
         if (kind === "text") {
-            return boundedDisplayText(value, 120)
+            return Normalizer.boundedDisplayText(value, 120)
         }
         if (kind === "percent") {
             var percent = Number(value)
@@ -1666,7 +1658,7 @@ PlasmoidItem {
         }
         var number = Number(value)
         if (!isFinite(number)) {
-            return boundedDisplayText(value, 120)
+            return Normalizer.boundedDisplayText(value, 120)
         }
         return tokenCountString(number)
     }
@@ -1863,7 +1855,7 @@ PlasmoidItem {
         for (var i = 0; i < extraLimit; i++) {
             var extra = extras[i]
             if (isCliRecord(extra) && isCliRecord(extra.window)) {
-                addWindow(rows, boundedDisplayText(extra.title || extra.id || i18n("Extra"), 120), extra.window, null, extra.usageKnown !== false, "extra")
+                addWindow(rows, Normalizer.boundedDisplayText(extra.title || extra.id || i18n("Extra"), 120), extra.window, null, extra.usageKnown !== false, "extra")
             }
         }
 
@@ -1880,12 +1872,12 @@ PlasmoidItem {
 
         return {
             provider: providerID,
-            title: boundedDisplayText(providerTitle(providerID, displayName), 120),
-            source: boundedDisplayText(item.source || "", 120),
-            version: boundedDisplayText(item.version || "", 120),
-            account: boundedDisplayText(item.account || identity.accountEmail || usage.accountEmail || "", 256),
-            organization: boundedDisplayText(identity.accountOrganization || usage.accountOrganization || "", 256),
-            loginMethod: boundedDisplayText(identity.loginMethod || usage.loginMethod || "", 120),
+            title: Normalizer.boundedDisplayText(providerTitle(providerID, displayName), 120),
+            source: Normalizer.boundedDisplayText(item.source || "", 120),
+            version: Normalizer.boundedDisplayText(item.version || "", 120),
+            account: Normalizer.boundedDisplayText(item.account || identity.accountEmail || usage.accountEmail || "", 256),
+            organization: Normalizer.boundedDisplayText(identity.accountOrganization || usage.accountOrganization || "", 256),
+            loginMethod: Normalizer.boundedDisplayText(identity.loginMethod || usage.loginMethod || "", 120),
             rows: rows,
             primaryRow: primaryRow,
             providerDetails: providerDetails,
@@ -1893,20 +1885,20 @@ PlasmoidItem {
             providerCost: providerCostSection(providerID, usage.providerCost),
             resetCredits: resetCreditsSection(providerID, usage.codexResetCredits),
             tokenCost: providerTokenCost(providerID),
-            planText: boundedDisplayText(planText(providerID, usage, item), 120),
+            planText: Normalizer.boundedDisplayText(planText(providerID, usage, item), 120),
             dashboardUrl: providerDashboardUrl(providerID),
             statusUrl: safeStatusUrl(providerID, status && status.url ? status.url : ""),
             changelogUrl: providerChangelogUrl(providerID),
             credits: credits && credits.remaining !== null && credits.remaining !== undefined && isFinite(Number(credits.remaining))
                 ? Number(credits.remaining)
                 : null,
-            status: boundedDisplayText(status ? statusText(status) : "", 500),
+            status: Normalizer.boundedDisplayText(status ? statusText(status) : "", 500),
             statusSeverity: severity,
-            statusIncidentKey: boundedDisplayText(Normalizer.statusIncidentKey(status), 128),
+            statusIncidentKey: Normalizer.boundedDisplayText(Normalizer.statusIncidentKey(status), 128),
             hasIncident: severity.length > 0,
             error: boundedCliMessage(error && error.message ? error.message : ""),
             placeholder: placeholder,
-            updatedAt: boundedDisplayText(usage.updatedAt || (credits ? credits.updatedAt : ""), 128)
+            updatedAt: Normalizer.boundedDisplayText(usage.updatedAt || (credits ? credits.updatedAt : ""), 128)
         }
     }
 
@@ -1956,19 +1948,19 @@ PlasmoidItem {
 
         var row = {
             lane: lane || "",
-            label: boundedDisplayText(label, 120),
+            label: Normalizer.boundedDisplayText(label, 120),
             hasPercent: metrics.hasPercent,
             usedPercent: metrics.usedPercent,
             leftPercent: metrics.leftPercent,
             pacePercent: metrics.pacePercent,
             paceOnTop: metrics.paceOnTop,
             paceEtaSeconds: metrics.paceEtaSeconds,
-            resetsAt: boundedDisplayText(
+            resetsAt: Normalizer.boundedDisplayText(
                 window.resetsAt === undefined || window.resetsAt === null ? "" : window.resetsAt,
                 128),
-            resetDescription: boundedDisplayText(window.resetDescription || "", 500),
-            reset: boundedDisplayText(resetText(window, false), 500),
-            pace: boundedDisplayText(pace && pace.summary ? pace.summary : "", 500)
+            resetDescription: Normalizer.boundedDisplayText(window.resetDescription || "", 500),
+            reset: Normalizer.boundedDisplayText(resetText(window, false), 500),
+            pace: Normalizer.boundedDisplayText(pace && pace.summary ? pace.summary : "", 500)
         }
         rows.push(row)
         return row
@@ -2101,8 +2093,8 @@ PlasmoidItem {
 
         var used = Number(cost.used)
         var limit = Number(cost.limit)
-        var currency = boundedDisplayText(cost.currencyCode || "USD", 12)
-        var period = boundedDisplayText(cost.period || i18n("This month"), 120)
+        var currency = Normalizer.boundedDisplayText(cost.currencyCode || "USD", 12)
+        var period = Normalizer.boundedDisplayText(cost.period || i18n("This month"), 120)
         var hasUsed = isFinite(used)
         var hasLimit = isFinite(limit) && limit > 0
         if (!hasUsed) {
@@ -3610,7 +3602,7 @@ PlasmoidItem {
             lines.push(i18n("Refreshing usage..."))
         }
         if (lines.length === 0 && errorText.length > 0) {
-            return boundedDisplayText(errorText, 500)
+            return Normalizer.boundedDisplayText(errorText, 500)
         }
         return lines.join("\n")
     }
