@@ -422,7 +422,6 @@ PlasmoidItem {
         return Math.max(0, Math.min(2147480000, Math.floor(revision)))
     }
 
-
     function boundedWidgetUpdateText(value) {
         return Normalizer.boundedDisplayText(value, 500)
     }
