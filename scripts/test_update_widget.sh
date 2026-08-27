@@ -277,6 +277,20 @@ if [[ "$(jq -r '.status' "$fixture_dir/mutable-release-output.json")" != "error"
   exit 1
 fi
 
+printf '%s\n' '{"KPlugin":{"Version":"0.2.20"}}' > "$fixture_dir/legacy-current-metadata.json"
+jq '.tag_name = "v0.2.20" | .immutable = false | .assets = []' \
+  "$fixture_dir/release.json" > "$fixture_dir/legacy-current-release.json"
+legacy_current_output="$(
+  "$UPDATER" --check \
+    --metadata "$fixture_dir/legacy-current-metadata.json" \
+    --release-json "$fixture_dir/legacy-current-release.json"
+)"
+if ! jq -e '.status == "current" and .localVersion == "0.2.20" and .remoteVersion == "v0.2.20"' \
+  >/dev/null <<<"$legacy_current_output"; then
+  echo "the current legacy mutable release must be recognized before the immutability gate" >&2
+  exit 1
+fi
+
 jq '.draft = "false"' "$fixture_dir/release.json" > "$fixture_dir/wrong-type-release.json"
 if "$UPDATER" --check \
   --metadata "$fixture_dir/metadata.json" \

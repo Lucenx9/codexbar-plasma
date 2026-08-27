@@ -286,6 +286,8 @@ if ! version_gt "$remote_version" "$local_version"; then
   exit 0
 fi
 
+# The updater and metadata ship in the same package. A mutable release only
+# reaches this gate when it is newer than the package running this script.
 if [[ "$is_immutable" != "true" ]]; then
   fail "newer widget releases must be immutable"
 fi

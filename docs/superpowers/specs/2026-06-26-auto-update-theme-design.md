@@ -161,8 +161,8 @@ theme violations; do not normalize or alter provider identity colors.
 - QML memoizes the last notified version so an available update does not notify
   repeatedly on every refresh cycle.
 - Existing usage refresh behavior must keep working even if update checks fail.
-- If required tools are missing (`curl`, `jq`, `sha256sum`, `timeout`, or
-  `kpackagetool6`), the helper reports the missing tool clearly.
+- If required tools are missing (`curl`, `jq`, `python3`, `sha256sum`, `timeout`,
+  or `kpackagetool6`), the helper reports the missing tool clearly.
 
 ## Tests and verification
 
