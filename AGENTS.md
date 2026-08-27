@@ -212,8 +212,12 @@ Use this order when sources disagree:
 
 Keep this in sync with `TODO.md` when feature parity decisions change. Current
 parity baseline: `docs/research/2026-08-24-macos-parity-0.55.0.md` (upstream
-v0.55.0, probed with the verified official Linux CLI 0.55.0 release asset; the
-host-installed CLI is now 0.55.0).
+v0.55.0, probed with the verified official Linux CLI 0.55.0 release asset). The
+host-installed CLI is 0.55.1 as of 2026-08-27: the upgrade came from the
+checksum-verified official release asset, isolated probes confirmed the
+`config providers`, `usage`, and `cost` JSON contracts structurally unchanged,
+and v0.55.1 provider fixes flow through existing generic paths, so the 0.55.0
+report remains the pin.
 
 - Provider-specific editing should come from a stable CLI descriptor, not
   duplicated provider-specific config logic in QML. The Providers page renders
@@ -292,9 +296,10 @@ host-installed CLI is now 0.55.0).
   stay quiet, configurable, and tied to clear state transitions.
 - The fallback catalog covers the 69 provider IDs released in CodexBar v0.49.1
   and retains fork-only compatibility assets. Re-verified against the official
-  0.55.0 Linux CLI, which reports the same 69 and adds none. Future drift syncs
-  should cover provider keys, CLI aliases, titles, colors,
-  docs/dashboard/login URLs, icon assets, and `scripts/test_provider_icons.sh`.
+  0.55.0 Linux CLI and again against the 0.55.1 host CLI; both report the same
+  69 and add none. Future drift syncs should cover provider keys, CLI aliases,
+  titles, colors, docs/dashboard/login URLs, icon assets, and
+  `scripts/test_provider_icons.sh`.
 - The GitHub Release updater is current. If a KDE Store channel is added,
   prefer KDE Store/KNewStuff/Discover for that channel.
 - Do not port macOS-only surfaces directly, including WidgetKit, Sparkle, and

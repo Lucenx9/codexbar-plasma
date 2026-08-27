@@ -2,7 +2,11 @@
 
 Parity baseline: `docs/research/2026-08-24-macos-parity-0.55.0.md`, pinned to
 upstream v0.55.0 and probed with the verified official Linux CLI 0.55.0 release
-asset. The host-installed CLI is now 0.55.0.
+asset. On 2026-08-27 the host CLI was upgraded to 0.55.1 from the
+checksum-verified official release asset; isolated probes showed the
+`config providers`, `usage`, and `cost` JSON contracts structurally unchanged,
+so no new parity report is needed for v0.55.1 (its provider fixes flow through
+the existing generic paths).
 
 - Provider-specific editable settings: the Providers page renders generic
   fields/actions from `docs/cli-provider-settings-descriptor.md` without
@@ -94,8 +98,9 @@ asset. The host-installed CLI is now 0.55.0.
   exhaustion. Consider reset-imminent notifications only if they remain quiet,
   configurable, and tied to clear state transitions.
 - Provider drift checks: the Plasma fallback catalog covers all 69 provider IDs
-  released in CodexBar v0.49.1 and re-verified on 0.55.0, while retaining
-  fork-only compatibility assets.
+  released in CodexBar v0.49.1 and re-verified on 0.55.0 and again on the
+  0.55.1 host CLI (same 69, none added), while retaining fork-only compatibility
+  assets.
   When upstream releases providers, sync provider keys, CLI aliases, titles,
   colors, docs/dashboard/login URLs, icon assets, and
   `scripts/test_provider_icons.sh`.
