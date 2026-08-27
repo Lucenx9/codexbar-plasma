@@ -56,6 +56,16 @@ reject_in_file "$README_MD" 'for example `/usr/bin/codexbar`'
 
 require_in_surface providers "Provider-specific controls come from the CodexBar CLI descriptor"
 reject_in_surface providers "Provider-specific editing stays in the CodexBar CLI until it exposes a stable settings descriptor"
+# Successful provider commands must be classified by the shared outcome
+# contract, never re-inlined with stderr consulted before the parsed payload:
+# loader diagnostics make successful runs print to stderr, and the inlined
+# order reported those runs as failures.
+require_in_surface providers "ProviderConfigProtocol.commandOutcome("
+# The Spend tab owns these two keys at runtime and can rewrite them while the
+# settings dialog is open, so the General page must follow persisted state
+# instead of applying an open-time snapshot over it.
+require_in_file "$GENERAL_QML" "cfg_costHistoryDays: Plasmoid.configuration.costHistoryDays"
+require_in_file "$GENERAL_QML" "cfg_costHistoryMetric: Plasmoid.configuration.costHistoryMetric"
 require_in_file "$ADVANCED_QML" "id: advancedOverrideExplanation"
 
 python3 - "$ROOT_DIR" <<'PY'
@@ -347,9 +357,20 @@ for provider in ("crossmodel", "clawrouter"):
             f"supportsApiKeySetup must include released API-key provider {provider}"
         )
 
-toggle_body = function_body(providers_text, "handleToggleResult")
-if "stderrText.trim()" not in toggle_body or "exitCode" not in toggle_body:
-    raise AssertionError("handleToggleResult must treat stderr/exit-code failures as errors")
+# Failure precedence for provider mutations lives in
+# ProviderConfigProtocol.commandOutcome, covered adversarially by
+# tests/tst_provider_config_protocol.qml. The pages must classify results by
+# delegating to it instead of re-inlining an ordering around stderr.
+for mutation_handler in (
+    function_body(providers_text, "handleToggleResult"),
+    function_body(providers_text, "handleSetApiKeyResult"),
+    function_body(providers_text, "parseCommandPayload"),
+):
+    if "ProviderConfigProtocol.commandOutcome(" not in mutation_handler:
+        raise AssertionError(
+            "provider mutation handlers must classify CLI results through "
+            "ProviderConfigProtocol.commandOutcome"
+        )
 
 handle_data_body = function_body(providers_text, "handleData")
 for handler_call in (
@@ -363,14 +384,7 @@ for handler_call in (
             f"missing {handler_call!r}"
         )
 
-set_api_key_body = function_body(providers_text, "handleSetApiKeyResult")
-if "Number(exitCode) !== 0" not in set_api_key_body:
-    raise AssertionError("handleSetApiKeyResult must reject non-zero CLI exits")
-
-parse_command_payload_body = function_body(providers_text, "parseCommandPayload")
-if "Number(exitCode) !== 0" not in parse_command_payload_body:
-    raise AssertionError("parseCommandPayload must reject non-zero descriptor command exits")
-if "trimmed.length === 0" not in parse_command_payload_body or "codexbar did not return command data." not in parse_command_payload_body:
+if "codexbar did not return command data." not in function_body(providers_text, "parseCommandPayload"):
     raise AssertionError("parseCommandPayload must reject an empty successful descriptor response")
 
 # Overview selection is stored with the raw CLI provider IDs (e.g. groqcloud,
@@ -2110,9 +2124,16 @@ descriptor_action_result_body = function_body(providers_text, "handleDescriptorA
 if "bumpProviderConfigRevision()" not in descriptor_action_result_body:
     raise AssertionError("successful descriptor actions must invalidate the main applet snapshot")
 
-parse_command_payload_body = function_body(providers_text, "parseCommandPayload")
-for action_status_fragment in ('status === "error"', "payload.message"):
-    if action_status_fragment not in parse_command_payload_body:
+# Structured CLI error/cancel signalling is classified by
+# ProviderConfigProtocol.commandOutcome and exercised adversarially by
+# tests/tst_provider_config_protocol.qml; pin the classifier vocabulary so the
+# wire contract cannot lose a branch silently.
+outcome_body = function_body(
+    (root / "contents/ui/config/ProviderConfigProtocol.js").read_text(encoding="utf-8"),
+    "commandOutcome",
+)
+for action_status_fragment in ('"failed"', '"failure"', '"canceled"', "record.message"):
+    if action_status_fragment not in outcome_body:
         raise AssertionError(
             "descriptor command payloads must honor structured error status/message; "
             f"missing {action_status_fragment!r}"

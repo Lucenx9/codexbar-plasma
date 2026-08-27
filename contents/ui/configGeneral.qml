@@ -17,7 +17,12 @@ KCM.SimpleKCM {
     property bool cfg_includeStatusDefault
     property alias cfg_costUsageEnabled: costUsageEnabledCheck.checked
     property bool cfg_costUsageEnabledDefault
-    property alias cfg_costHistoryDays: costHistoryDaysSpin.value
+    // The Usage & Spend tab rewrites these two while this dialog can sit open,
+    // so their pending value must read current persisted state instead of an
+    // open-time snapshot; Apply then persists what the widget chose rather than
+    // silently reverting it. Editing below or restoring defaults assigns the
+    // property and breaks the binding like every other pending edit.
+    property int cfg_costHistoryDays: Plasmoid.configuration.costHistoryDays
     property int cfg_costHistoryDaysDefault
     property alias cfg_enableNotifications: enableNotificationsCheck.checked
     property bool cfg_enableNotificationsDefault
@@ -56,8 +61,9 @@ KCM.SimpleKCM {
     property string cfg_menuBarDisplayMode
     property string cfg_menuBarDisplayModeDefault
     // Chosen from the Usage & Spend tab, reset from here like the other
-    // popup-owned values.
-    property string cfg_costHistoryMetric
+    // popup-owned values. See cfg_costHistoryDays above for why the pending
+    // value follows current persisted state instead of a snapshot.
+    property string cfg_costHistoryMetric: Plasmoid.configuration.costHistoryMetric
     property string cfg_costHistoryMetricDefault
     property bool cfg_resetTimesShowAbsolute
     property bool cfg_resetTimesShowAbsoluteDefault
@@ -284,6 +290,11 @@ KCM.SimpleKCM {
             editable: true
             enabled: costUsageEnabledCheck.checked
             Layout.preferredWidth: Kirigami.Units.gridUnit * 8
+            // Two-way wiring that keeps following popup-made changes while the
+            // field itself is untouched: valueModified fires on user edits
+            // only, so an externally driven rebind cannot echo back.
+            value: page.cfg_costHistoryDays
+            onValueModified: page.cfg_costHistoryDays = value
         }
 
         Kirigami.Separator {
