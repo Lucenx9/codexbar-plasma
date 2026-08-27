@@ -52,8 +52,10 @@ To update using the bundled release helper:
 make update
 ```
 
-The helper verifies the release's published SHA-256 checksum before invoking
-`kpackagetool6`. A missing or mismatched checksum aborts the installation.
+The helper accepts only immutable GitHub releases. It binds both release assets
+to the advertised tag, checks their GitHub SHA-256 digests and published
+checksum, then validates the applet id and version inside the archive before
+invoking `kpackagetool6`. Any mismatch aborts the installation.
 
 The widget can also check GitHub Releases for newer `.plasmoid` packages.
 **Check for widget updates** and update-available notifications are enabled by
@@ -68,8 +70,8 @@ that install channel.
 - `org.kde.plasma.plasma5support`
 - `codexbar` CLI on `PATH`, or an absolute CLI path configured in the widget
 - `notify-send` for optional Plasma notifications
-- `curl`, `jq`, `sha256sum`, and GNU `timeout` for the bundled release updater;
-  GNU `timeout` also bounds CLI writes after a secret prompt
+- `curl`, `jq`, `python3`, `sha256sum`, and GNU `timeout` for the bundled release
+  updater; GNU `timeout` also bounds CLI writes after a secret prompt
 
 Leave **Command path** set to `codexbar` to resolve the CLI through Plasma's
 `PATH`. If the CLI works in a terminal but the widget cannot find it, locate the

@@ -43,3 +43,19 @@ function nextUpdateCheckDelay(updateChecksEnabled, lastCheck, intervalHours, now
     var remainingMs = lastCheckMs + intervalMs - Number(nowMs)
     return Math.max(minimum, Math.min(intervalMs, remainingMs))
 }
+
+function updateRetryDelay(consecutiveFailures, baseDelayMs, maximumDelayMs) {
+    var base = Number(baseDelayMs)
+    if (!isFinite(base) || base <= 0) {
+        base = 60000
+    }
+    var maximum = Number(maximumDelayMs)
+    if (!isFinite(maximum) || maximum < base) {
+        maximum = base
+    }
+    var failures = Math.floor(Number(consecutiveFailures))
+    if (!isFinite(failures) || failures < 1) {
+        failures = 1
+    }
+    return Math.min(maximum, base * Math.pow(2, Math.min(failures - 1, 30)))
+}

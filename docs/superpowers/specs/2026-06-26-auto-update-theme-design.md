@@ -79,11 +79,14 @@ The helper script owns all update mechanics:
 1. Read the installed/local version from `metadata.json`.
 2. Fetch GitHub release metadata for `Lucenx9/codexbar-plasma`.
 3. Pick the latest stable semver tag newer than the local version.
-4. Select the `codexbar-plasma.plasmoid` asset and its matching
-   `codexbar-plasma.plasmoid.sha256` checksum.
+4. Require an immutable release and select exactly one
+   `codexbar-plasma.plasmoid` asset plus its matching
+   `codexbar-plasma.plasmoid.sha256` checksum from that tag.
 5. In check-only mode, report the available version and asset URL without
    installing anything.
-6. In install mode, verify the SHA-256 checksum before installing with
+6. In install mode, verify bounded downloads against GitHub's asset digests and
+   the SHA-256 checksum, then confirm the archive contains the expected applet
+   id and release version before installing with
    `kpackagetool6 -t Plasma/Applet -u`.
 7. Tell the user to restart Plasma after a successful install.
 
@@ -105,14 +108,20 @@ the widget installs silently instead of only notifying.
 - Use `mktemp -d` and clean temporary files on exit.
 - Install only an asset named `codexbar-plasma.plasmoid`.
 - Require and verify the release's matching `.sha256` asset before installation.
+- Require GitHub release immutability and valid API SHA-256 digests.
+- Bind both canonical asset URLs to the validated release tag.
+- Restrict curl and redirects to HTTPS and bound metadata and asset sizes.
+- Validate archive paths, entry count, expanded size, applet id, and version.
 - Ignore prereleases and drafts.
 - Compare semver tags before installing.
 - Quote every shell variable used in paths or commands.
 - Keep the update URL and release asset expectations visible in the script.
 
-The implementation relies on HTTPS, GitHub Releases, and a SHA-256 checksum
-published by the same release workflow. An independently signed checksum can
-replace this trust model if release signing is introduced.
+The implementation relies on HTTPS and GitHub's immutable-release trust model.
+The updater verifies both GitHub asset digests and the checksum published by the
+release workflow. Repository administrators must enable release immutability
+before publishing a release that this updater can accept. Independent signing
+can replace this trust model if release signing is introduced.
 
 ## Theme handling approach
 
@@ -145,6 +154,8 @@ theme violations; do not normalize or alter provider identity colors.
 
 - If the updater cannot reach GitHub, cannot find a valid asset, or install
   fails, it exits non-zero with a concise error.
+- Failed checks retry with bounded exponential backoff. Only a successful check
+  advances the normal update interval.
 - QML records the failure as update status for Debug or General settings, but
   does not spam notifications.
 - QML memoizes the last notified version so an available update does not notify

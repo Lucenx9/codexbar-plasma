@@ -499,8 +499,39 @@ require_all(
 
 require_all(
     applet.function_body("finishUpdateCommand"),
-    ("var completedAt = new Date().toISOString()", "scheduleNextUpdateCheck(completedAt)"),
-    "every completed update command must rearm from its exact completion time",
+    (
+        "successfulCheck",
+        "Plasmoid.configuration.autoUpdateLastCheck = completedAt",
+        "scheduleNextUpdateCheck(completedAt)",
+        "scheduleUpdateRetry()",
+    ),
+    "successful update checks must use the normal interval and failures must retry sooner",
+)
+
+require_all(
+    applet.function_body("scheduleUpdateRetry"),
+    (
+        "UpdateLogic.updateRetryDelay(",
+        "consecutiveUpdateFailures",
+        "updateCheckTimer.restart()",
+    ),
+    "failed update checks need a bounded retry schedule",
+)
+
+require_all(
+    applet.function_body("handleUpdateCommandTimeout"),
+    ("finishUpdateCommand(sourceName, false)",),
+    "timed-out update checks must take the failure retry path",
+)
+
+require_all(
+    applet.function_body("handleUpdateData"),
+    (
+        "finishUpdateCommand(sourceName, false)",
+        "var successfulCheck = processUpdateCheck(payload)",
+        "finishUpdateCommand(sourceName, successfulCheck)",
+    ),
+    "update result parsing must choose success scheduling only after classifying the payload",
 )
 
 require_all(

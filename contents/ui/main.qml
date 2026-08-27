@@ -136,6 +136,9 @@ PlasmoidItem {
     readonly property int widgetUpdateCheckTimeoutMs: 60000
     readonly property int widgetAutoUpdateTimeoutMs: 600000
     readonly property int widgetUpdateMinimumTimerDelayMs: 60000
+    readonly property int widgetUpdateRetryBaseDelayMs: 300000
+    readonly property int widgetUpdateRetryMaximumDelayMs: 21600000
+    property int consecutiveUpdateFailures: 0
     property string updateStatusText: boundedWidgetUpdateText(Plasmoid.configuration.widgetUpdateLastStatus)
     property string updateErrorText: boundedWidgetUpdateText(Plasmoid.configuration.widgetUpdateLastError)
     property string lastNotifiedUpdateVersion: Plasmoid.configuration.lastNotifiedUpdateVersion || ""
@@ -2648,10 +2651,28 @@ PlasmoidItem {
         updateCheckTimer.restart()
     }
 
-    function finishUpdateCommand(sourceName) {
+    function scheduleUpdateRetry() {
+        updateCheckTimer.stop()
+        if (!updateChecksEnabled || connectedUpdateCommandSource.length > 0) {
+            return
+        }
+        updateCheckTimer.interval = UpdateLogic.updateRetryDelay(
+            consecutiveUpdateFailures,
+            widgetUpdateRetryBaseDelayMs,
+            widgetUpdateRetryMaximumDelayMs)
+        updateCheckTimer.restart()
+    }
+
+    function finishUpdateCommand(sourceName, successfulCheck) {
         updateCommandTimeoutTimer.stop()
         updateSource.disconnectSource(sourceName)
         connectedUpdateCommandSource = ""
+        if (successfulCheck !== true) {
+            consecutiveUpdateFailures = Math.min(31, consecutiveUpdateFailures + 1)
+            scheduleUpdateRetry()
+            return
+        }
+        consecutiveUpdateFailures = 0
         var completedAt = new Date().toISOString()
         Plasmoid.configuration.autoUpdateLastCheck = completedAt
         scheduleNextUpdateCheck(completedAt)
@@ -2662,7 +2683,7 @@ PlasmoidItem {
             return
         }
         var sourceName = connectedUpdateCommandSource
-        finishUpdateCommand(sourceName)
+        finishUpdateCommand(sourceName, false)
         setWidgetUpdateState(
             i18n("Widget update failed."),
             i18n("Widget update operation timed out."))
@@ -2682,10 +2703,10 @@ PlasmoidItem {
         if (sourceName !== connectedUpdateCommandSource) {
             return
         }
-        finishUpdateCommand(sourceName)
 
         var trimmed = stdoutText.trim()
         if (trimmed.length === 0) {
+            finishUpdateCommand(sourceName, false)
             setWidgetUpdateState(
                 i18n("Widget update check failed."),
                 stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("Widget update check returned no data."))
@@ -2696,13 +2717,15 @@ PlasmoidItem {
         try {
             payload = JSON.parse(trimmed)
         } catch (error) {
+            finishUpdateCommand(sourceName, false)
             setWidgetUpdateState(
                 i18n("Widget update check failed."),
                 i18n("Could not parse widget update JSON: %1", error.message))
             return
         }
 
-        processUpdateCheck(payload)
+        var successfulCheck = processUpdateCheck(payload)
+        finishUpdateCommand(sourceName, successfulCheck)
     }
 
     function processUpdateCheck(payload) {
@@ -2715,7 +2738,7 @@ PlasmoidItem {
             setWidgetUpdateState(
                 i18n("Widget update check failed."),
                 message.length > 0 ? message : i18n("Widget update check failed."))
-            return
+            return false
         }
 
         if (status === "available") {
@@ -2726,7 +2749,7 @@ PlasmoidItem {
             if (!autoUpdateEnabled) {
                 notifyAvailableUpdate(version, url)
             }
-            return
+            return true
         }
         if (status === "installed") {
             var restartText = i18n("Restart Plasma to apply the new widget version.")
@@ -2734,20 +2757,21 @@ PlasmoidItem {
                 ? i18n("Widget update %1 installed. %2", version, restartText)
                 : i18n("Widget update installed. %1", restartText), "")
             notifyInstalledUpdate(version)
-            return
+            return true
         }
         if (status === "current") {
             setWidgetUpdateState(i18n("Widget is up to date."), "")
-            return
+            return true
         }
         if (status === "skipped") {
             setWidgetUpdateState(message.length > 0 ? message : i18n("Widget update skipped."), "")
-            return
+            return true
         }
 
         setWidgetUpdateState(
             i18n("Widget update check failed."),
             i18n("Unknown widget update status: %1", status))
+        return false
     }
 
     function notifyAvailableUpdate(version, url) {
