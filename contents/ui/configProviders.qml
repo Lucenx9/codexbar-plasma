@@ -107,6 +107,26 @@ KCM.SimpleKCM {
         return SafeText.cliMessage(SafeText.stripLoaderDiagnostics(value), SafeText.maximumCliMessageLength)
     }
 
+    // Localizes the classified command result. The precedence decision itself
+    // lives in ProviderConfigProtocol.commandOutcome; only the words live here.
+    function providerCommandFailureText(result) {
+        switch (result.outcome) {
+        case "envelopeError":
+        case "stderrError":
+            return result.message
+        case "statusError":
+            return result.message.length > 0
+                ? result.message
+                : i18n("codexbar command failed.")
+        case "timeout":
+            return i18n("codexbar command timed out. Try again.")
+        case "exitCodeError":
+            return i18n("codexbar exited with code %1", Number(result.exitCode))
+        default:
+            return i18n("codexbar did not return provider data.")
+        }
+    }
+
     function runProviderListCommand(includeDescriptors) {
         var command = [
             shellQuote(commandPath),
@@ -369,28 +389,18 @@ KCM.SimpleKCM {
             }
         }
 
-        var message = ProviderConfigProtocol.commandError(payload)
-        if (message.length === 0 && stderrText.trim().length > 0) {
-            message = boundedCliMessage(stderrText)
-        }
-        if (message.length === 0 && Number(exitCode) !== 0) {
-            message = Number(exitCode) === 124 || Number(exitCode) === 137
-                ? i18n("codexbar command timed out. Try again.")
-                : i18n("codexbar exited with code %1", Number(exitCode))
-        }
-        if (message.length === 0 && !payload) {
-            message = i18n("codexbar did not return provider data.")
-        }
-        if (message.length > 0) {
+        var result = ProviderConfigProtocol.commandOutcome(payload, stderrText, exitCode)
+        if (result.outcome !== "success") {
             markPending(descriptor.provider, false)
-            errorText = i18n("%1: %2", displayNameForProvider(descriptor.provider), message)
+            errorText = i18n("%1: %2", displayNameForProvider(descriptor.provider),
+                providerCommandFailureText(result))
             return
         }
 
         // Trust the enabled value the CLI reports back; fall back to desired.
         var newEnabled = descriptor.desiredEnabled
-        if (payload && !Array.isArray(payload) && payload.enabled !== undefined) {
-            newEnabled = payload.enabled === true
+        if (result.value && !Array.isArray(result.value) && result.value.enabled !== undefined) {
+            newEnabled = result.value.enabled === true
         }
         updateProviderEnabled(descriptor.provider, newEnabled)
         markPending(descriptor.provider, false)
@@ -413,27 +423,20 @@ KCM.SimpleKCM {
             }
         }
 
-        var message = ProviderConfigProtocol.commandError(payload)
-        if (message.length === 0 && stderrText.trim().length > 0) {
-            message = boundedCliMessage(stderrText)
-        }
-        if (message.length === 0 && Number(exitCode) !== 0) {
-            message = Number(exitCode) === 124 || Number(exitCode) === 137
-                ? i18n("codexbar command timed out. Try again.")
-                : i18n("codexbar exited with code %1", Number(exitCode))
-        }
-        if (message.length > 0) {
-            errorText = i18n("%1: %2", displayNameForProvider(descriptor.provider), message)
-            return
-        }
-        if (payload && payload.cancelled === true) {
+        var result = ProviderConfigProtocol.commandOutcome(payload, stderrText, exitCode)
+        if (result.outcome === "cancelled") {
             statusText = ""
             errorText = ""
             return
         }
+        if (result.outcome !== "success") {
+            errorText = i18n("%1: %2", displayNameForProvider(descriptor.provider),
+                providerCommandFailureText(result))
+            return
+        }
 
-        if (payload && !Array.isArray(payload) && payload.enabled !== undefined) {
-            updateProviderEnabled(descriptor.provider, payload.enabled === true)
+        if (result.value && !Array.isArray(result.value) && result.value.enabled !== undefined) {
+            updateProviderEnabled(descriptor.provider, result.value.enabled === true)
         } else {
             updateProviderEnabled(descriptor.provider, true)
         }
@@ -503,32 +506,26 @@ KCM.SimpleKCM {
                 }
             }
         }
-        var message = ProviderConfigProtocol.commandError(payload)
-        if (message.length === 0 && stderrText.trim().length > 0) {
-            message = boundedCliMessage(stderrText)
+
+        var result = ProviderConfigProtocol.commandOutcome(payload, stderrText, exitCode)
+        if (result.outcome === "cancelled") {
+            return { value: result.value, cancelled: true, errorMessage: "" }
         }
-        if (message.length === 0 && Number(exitCode) !== 0) {
-            message = Number(exitCode) === 124 || Number(exitCode) === 137
-                ? i18n("codexbar command timed out. Try again.")
-                : i18n("codexbar exited with code %1", Number(exitCode))
+        if (result.outcome === "empty") {
+            return {
+                value: null,
+                cancelled: false,
+                errorMessage: i18n("codexbar did not return command data.")
+            }
         }
-        if (message.length === 0 && trimmed.length === 0) {
-            message = i18n("codexbar did not return command data.")
+        if (result.outcome !== "success") {
+            return {
+                value: null,
+                cancelled: false,
+                errorMessage: providerCommandFailureText(result)
+            }
         }
-        var status = payload && !Array.isArray(payload)
-            ? String(payload.status || "").trim().toLowerCase()
-            : ""
-        if (message.length === 0
-                && (status === "error" || status === "failed" || status === "failure")) {
-            message = payload.message
-                ? boundedCliMessage(payload.message)
-                : i18n("codexbar command failed.")
-        }
-        if (message.length === 0 && payload
-                && (payload.cancelled === true || status === "cancelled" || status === "canceled")) {
-            return { value: payload, cancelled: true, errorMessage: "" }
-        }
-        return { value: payload, cancelled: false, errorMessage: message }
+        return { value: result.value, cancelled: false, errorMessage: "" }
     }
 
     function handleDiagnoseResult(descriptor, stdoutText, stderrText) {

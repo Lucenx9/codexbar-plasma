@@ -62,6 +62,75 @@ function commandError(payload) {
     return ""
 }
 
+// Classified result of one finished provider command run (enable/disable,
+// set-api-key, descriptor field or action). `payload` is the already-parsed
+// stdout JSON, or null when stdout carried nothing parsable; `stderrText` and
+// `exitCode` are the raw process results.
+//
+// Precedence mirrors the usage surfaces (`handleListResult`, `main.qml`): a
+// healthy parsed envelope with exit 0 is a success regardless of stderr,
+// because loader diagnostics and other library noise can make a successful
+// run's stderr non-empty. Every other winner pair keeps its historical
+// ordering: without a payload stderr still explains the failure before exit
+// codes do, timeout codes keep beating stderr when nothing was printed, and
+// a non-zero exit still outweighs a printed-but-unconfirmed payload.
+//
+// Returns { outcome, value, message, exitCode } where outcome is one of:
+//   "success"      value = payload; stderr was noise
+//   "cancelled"    value = payload; user aborted inside the CLI flow
+//   "envelopeError"  message = bounded redacted text from the payload
+//   "statusError"    same, for status-flagged payloads; message may be ""
+//   "timeout"
+//   "exitCodeError"  exitCode = the non-zero numeric exit code
+//   "stderrError"  message = bounded redacted stderr
+//   "empty"        no stdout at all and no stderr to explain it
+function commandOutcome(payload, stderrText, exitCode) {
+    var record = isCliRecord(payload) ? payload : null
+    var envelopeMessage = commandError(payload)
+    if (envelopeMessage.length > 0) {
+        return ({ outcome: "envelopeError", value: null, message: envelopeMessage })
+    }
+
+    var status = record ? String(record.status || "").trim().toLowerCase() : ""
+    if (record
+            && (record.cancelled === true || status === "cancelled" || status === "canceled")) {
+        return ({ outcome: "cancelled", value: record, message: "" })
+    }
+    if (record && (status === "error" || status === "failed" || status === "failure")) {
+        return ({
+            outcome: "statusError",
+            value: null,
+            message: record.message ? boundedCliMessage(record.message) : ""
+        })
+    }
+
+    var code = Number(exitCode)
+    var timedOut = code === 124 || code === 137
+    // Without a usable payload the synthesized reasons follow their historical
+    // order, including stderr before generic exit codes.
+    if (!payload) {
+        var stderrMessage = boundedCliMessage(stderrText)
+        if (stderrMessage.length > 0) {
+            return ({ outcome: "stderrError", value: null, message: stderrMessage })
+        }
+        if (timedOut) {
+            return ({ outcome: "timeout", value: null, message: "" })
+        }
+        if (!isFinite(code) || code !== 0) {
+            return ({ outcome: "exitCodeError", value: null, message: "", exitCode: code })
+        }
+        return ({ outcome: "empty", value: null, message: "" })
+    }
+
+    if (timedOut) {
+        return ({ outcome: "timeout", value: null, message: "" })
+    }
+    if (!isFinite(code) || code !== 0) {
+        return ({ outcome: "exitCodeError", value: null, message: "", exitCode: code })
+    }
+    return ({ outcome: "success", value: payload, message: "" })
+}
+
 function descriptorUnsupportedMessage(stdoutText, stderrText) {
     var stderrMessage = boundedCliMessage(stderrText)
     if (isDescriptorUnsupportedMessage(stderrMessage)) {

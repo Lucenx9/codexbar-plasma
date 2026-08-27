@@ -145,6 +145,85 @@ TestCase {
         }
     }
 
+    function test_commandOutcomeTreatsHealthyEnvelopeAsSuccessDespiteStderr() {
+        var loaderNoise = "/usr/lib/x86_64-linux-gnu/libcurl.so.4:"
+            + " no version information available"
+            + " (required by /usr/local/bin/codexbar)"
+        var result = ProviderConfigProtocol.commandOutcome(
+            { provider: "codex", enabled: true }, loaderNoise, 0)
+        compare(result.outcome, "success")
+        compare(result.value.enabled, true)
+        verify(Array.isArray(ProviderConfigProtocol.commandOutcome(
+            [{ provider: "codex", enabled: false }], loaderNoise, 0).value))
+        verify(ProviderConfigProtocol.commandOutcome({}, loaderNoise, 0).outcome === "success")
+    }
+
+    function test_commandOutcomePrefersTheCliEnvelopeOverStderrAndExitCodes() {
+        var secret = "sk-abcdefghijklmnop"
+        var result = ProviderConfigProtocol.commandOutcome(
+            { error: { message: "Authorization: Bearer " + secret } },
+            "token=" + secret + " ambient noise",
+            1)
+        compare(result.outcome, "envelopeError")
+        compare(result.message.indexOf(secret), -1)
+        verify(result.message.indexOf("[redacted]") !== -1)
+        verify(result.message.length <= 500)
+    }
+
+    function test_commandOutcomeHonoursCancelledBeforeSynthesizedReasons() {
+        var cases = [
+            { cancelled: true },
+            { status: "cancelled" },
+            { status: "Canceled" }
+        ]
+        for (var i = 0; i < cases.length; i++) {
+            var result = ProviderConfigProtocol.commandOutcome(cases[i], "ambient stderr", 0)
+            compare(result.outcome, "cancelled")
+            verify(result.value === cases[i])
+        }
+    }
+
+    function test_commandOutcomeClassifiesStatusFlaggedFailures() {
+        var failed = ProviderConfigProtocol.commandOutcome(
+            { status: "failed", message: "token=" + "sk-abcdefghijklmnop" }, "", 0)
+        compare(failed.outcome, "statusError")
+        verify(failed.message.indexOf("[redacted]") !== -1)
+
+        var bare = ProviderConfigProtocol.commandOutcome({ status: "error" }, "", 0)
+        compare(bare.outcome, "statusError")
+        compare(bare.message, "")
+    }
+
+    function test_commandOutcomeKeepsTimeoutAndExitCodesOverAPrintedPayload() {
+        compare(ProviderConfigProtocol.commandOutcome({ provider: "x" }, "", 124).outcome,
+            "timeout")
+        compare(ProviderConfigProtocol.commandOutcome({ provider: "x" },
+            "ambient stderr", 137).outcome, "timeout")
+        var exited = ProviderConfigProtocol.commandOutcome({ provider: "x" }, "", 3)
+        compare(exited.outcome, "exitCodeError")
+        compare(exited.exitCode, 3)
+
+        // Without a payload, stderr keeps its historical priority over generic
+        // exit codes, but a printed-nothing timeout still names the timeout.
+        compare(ProviderConfigProtocol.commandOutcome(null, "disk full", 7).outcome,
+            "stderrError")
+        compare(ProviderConfigProtocol.commandOutcome(null, "disk full", 124).outcome,
+            "stderrError")
+        compare(ProviderConfigProtocol.commandOutcome(null, "", 9).outcome, "exitCodeError")
+        compare(ProviderConfigProtocol.commandOutcome(null, "", 124).outcome, "timeout")
+        compare(ProviderConfigProtocol.commandOutcome(null, "", 0).outcome, "empty")
+    }
+
+    function test_commandOutcomeRedactsTheStandaloneStderrReason() {
+        var secret = "sk-abcdefghijklmnop"
+        var result = ProviderConfigProtocol.commandOutcome(
+            null, "request failed with api_key=" + secret + repeated("y", 700).join(""), 1)
+        compare(result.outcome, "stderrError")
+        compare(result.message.indexOf(secret), -1)
+        verify(result.message.indexOf("[redacted]") !== -1)
+        verify(result.message.length <= 500)
+    }
+
     function test_descriptorUnsupportedRecognizesTheCompatibilityPhrases() {
         var phrases = [
             "unknown option", "unknown argument", "unrecognized option",
