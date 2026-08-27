@@ -53,7 +53,10 @@ SURFACES: dict[str, tuple[str, ...]] = {
     ),
     "display": ("contents/ui/configDisplay.qml",),
     "debug": ("contents/ui/configDebug.qml",),
-    "general": ("contents/ui/configGeneral.qml",),
+    "general": (
+        "contents/ui/configGeneral.qml",
+        "contents/ui/general/*.js",
+    ),
     "advanced": ("contents/ui/configAdvanced.qml",),
     # Everything qmllint, the hardening check, and gettext extraction must see.
     "all": (
@@ -66,6 +69,7 @@ SURFACES: dict[str, tuple[str, ...]] = {
         "contents/ui/controllers/*.js",
         "contents/ui/config/*.qml",
         "contents/ui/config/*.js",
+        "contents/ui/general/*.js",
     ),
 }
 

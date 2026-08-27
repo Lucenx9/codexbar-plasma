@@ -378,15 +378,21 @@ if 'printf \'%s\' \\"$key\\" | timeout --kill-after=' not in providers.function_
 if 'printf \'%s\' \\"$value\\" | " + boundedCommandLine' not in providers.function_body("promptDescriptorSecret"):
     raise AssertionError("descriptor secrets must stay on stdin and use the bounded CLI command")
 
-require_all(
-    providers.function_body("handleSetApiKeyResult"),
-    ("markPending(descriptor.provider, false)", "Number(exitCode) === 124", "Number(exitCode) === 137"),
-    "set-api-key timeout cleanup is incomplete",
-)
+set_api_key_result_body = providers.function_body("handleSetApiKeyResult")
+if "markPending(descriptor.provider, false)" not in set_api_key_result_body:
+    raise AssertionError("set-api-key timeout cleanup is incomplete: markPending(descriptor.provider, false)")
+if "ProviderConfigProtocol.commandOutcome(" not in set_api_key_result_body:
+    raise AssertionError(
+        "set-api-key results must classify through ProviderConfigProtocol.commandOutcome"
+    )
+if "ProviderConfigProtocol.setApiKeyOutcomeIsSuccess(result)" not in set_api_key_result_body:
+    raise AssertionError("set-api-key results must use the tested empty-output decision")
 
+# Timeout recognition is covered behaviorally by tst_provider_config_protocol;
+# the page owns only the localized wording and pending-state cleanup.
 require_all(
-    providers.function_body("parseCommandPayload"),
-    ("Number(exitCode) === 124", "Number(exitCode) === 137", "codexbar command timed out. Try again."),
+    providers.function_body("providerCommandFailureText"),
+    ("codexbar command timed out. Try again.",),
     "descriptor secret timeout reporting is incomplete",
 )
 

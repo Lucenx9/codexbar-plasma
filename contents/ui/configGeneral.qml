@@ -5,6 +5,7 @@ import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
 import "components" as Components
+import "general/ConfigValueSync.js" as ConfigValueSync
 
 KCM.SimpleKCM {
     id: page
@@ -17,7 +18,7 @@ KCM.SimpleKCM {
     property bool cfg_includeStatusDefault
     property alias cfg_costUsageEnabled: costUsageEnabledCheck.checked
     property bool cfg_costUsageEnabledDefault
-    property alias cfg_costHistoryDays: costHistoryDaysSpin.value
+    property int cfg_costHistoryDays
     property int cfg_costHistoryDaysDefault
     property alias cfg_enableNotifications: enableNotificationsCheck.checked
     property bool cfg_enableNotificationsDefault
@@ -79,11 +80,55 @@ KCM.SimpleKCM {
     property bool cfg_showCreditsInPanelDefault
 
     property bool defaultsActionRequested: false
+    // Plasma supplies cfg_* values as creation-time properties, which replaces
+    // bindings declared on them. Track runtime-owned values separately and
+    // copy them into the pending KCM state only while the user has no edit.
+    readonly property int persistedCostHistoryDays: Plasmoid.configuration.costHistoryDays
+    readonly property string persistedCostHistoryMetric: Plasmoid.configuration.costHistoryMetric
+    property bool costHistoryDaysEditPending: false
+    property bool costHistoryMetricEditPending: false
     readonly property bool defaultValuesPrepared: defaultsActionRequested
         && userSettingsAreDefault()
     readonly property string autoUpdateLastCheck: Plasmoid.configuration.autoUpdateLastCheck || ""
     readonly property string widgetUpdateLastStatus: Plasmoid.configuration.widgetUpdateLastStatus || ""
     readonly property string widgetUpdateLastError: Plasmoid.configuration.widgetUpdateLastError || ""
+
+    Component.onCompleted: {
+        syncCostHistoryDaysFromPersisted()
+        syncCostHistoryMetricFromPersisted()
+    }
+    onPersistedCostHistoryDaysChanged: syncCostHistoryDaysFromPersisted()
+    onPersistedCostHistoryMetricChanged: syncCostHistoryMetricFromPersisted()
+
+    function applyCostHistoryDaysTransition(transition) {
+        costHistoryDaysEditPending = transition.hasPendingEdit
+        cfg_costHistoryDays = transition.pendingValue
+    }
+
+    function applyCostHistoryMetricTransition(transition) {
+        costHistoryMetricEditPending = transition.hasPendingEdit
+        cfg_costHistoryMetric = transition.pendingValue
+    }
+
+    function editCostHistoryDays(value) {
+        applyCostHistoryDaysTransition(ConfigValueSync.afterUserEdit(
+            value, persistedCostHistoryDays))
+    }
+
+    function editCostHistoryMetric(value) {
+        applyCostHistoryMetricTransition(ConfigValueSync.afterUserEdit(
+            value, persistedCostHistoryMetric))
+    }
+
+    function syncCostHistoryDaysFromPersisted() {
+        applyCostHistoryDaysTransition(ConfigValueSync.afterPersistedChange(
+            cfg_costHistoryDays, costHistoryDaysEditPending, persistedCostHistoryDays))
+    }
+
+    function syncCostHistoryMetricFromPersisted() {
+        applyCostHistoryMetricTransition(ConfigValueSync.afterPersistedChange(
+            cfg_costHistoryMetric, costHistoryMetricEditPending, persistedCostHistoryMetric))
+    }
 
     function refreshPresetIndex(value) {
         var numeric = Number(value)
@@ -155,8 +200,8 @@ KCM.SimpleKCM {
         cfg_refreshInterval = cfg_refreshIntervalDefault
         cfg_includeStatus = cfg_includeStatusDefault
         cfg_costUsageEnabled = cfg_costUsageEnabledDefault
-        cfg_costHistoryDays = cfg_costHistoryDaysDefault
-        cfg_costHistoryMetric = cfg_costHistoryMetricDefault
+        editCostHistoryDays(cfg_costHistoryDaysDefault)
+        editCostHistoryMetric(cfg_costHistoryMetricDefault)
         cfg_usageBarsShowUsed = cfg_usageBarsShowUsedDefault
         cfg_showQuotaWarningMarkers = cfg_showQuotaWarningMarkersDefault
         cfg_quotaWarningPercent = cfg_quotaWarningPercentDefault
@@ -184,6 +229,8 @@ KCM.SimpleKCM {
     }
 
     function saveConfig() {
+        applyCostHistoryDaysTransition(ConfigValueSync.afterSave(cfg_costHistoryDays))
+        applyCostHistoryMetricTransition(ConfigValueSync.afterSave(cfg_costHistoryMetric))
         defaultsActionRequested = false
     }
 
@@ -284,6 +331,10 @@ KCM.SimpleKCM {
             editable: true
             enabled: costUsageEnabledCheck.checked
             Layout.preferredWidth: Kirigami.Units.gridUnit * 8
+            // valueModified fires on user edits only, so config-driven value
+            // changes do not become pending edits and echo back on Apply.
+            value: page.cfg_costHistoryDays
+            onValueModified: page.editCostHistoryDays(value)
         }
 
         Kirigami.Separator {

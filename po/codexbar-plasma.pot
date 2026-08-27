@@ -665,6 +665,14 @@ msgid ""
 msgstr ""
 
 #: contents/ui/configProviders.qml
+msgid "codexbar command failed."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "codexbar command timed out. Try again."
+msgstr ""
+
+#: contents/ui/configProviders.qml
 msgid "API key for %1"
 msgstr ""
 
@@ -678,10 +686,6 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "Could not parse codexbar response: %1"
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "codexbar command timed out. Try again."
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -706,10 +710,6 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "codexbar did not return command data."
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "codexbar command failed."
 msgstr ""
 
 #: contents/ui/configProviders.qml

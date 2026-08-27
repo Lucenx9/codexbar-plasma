@@ -62,6 +62,98 @@ function commandError(payload) {
     return ""
 }
 
+// Classified result of one finished provider command run (enable/disable,
+// set-api-key, descriptor field or action). `payload` is the already-parsed
+// stdout JSON, or undefined when stdout was empty; `stderrText` and
+// `exitCode` are the raw process results.
+//
+// A healthy parsed envelope with exit 0 is a success regardless of stderr,
+// because loader diagnostics and other library noise can make a successful
+// run's stderr non-empty. Every other result keeps the historical ordering:
+// structured error envelopes, stderr, timeout/exit code, unsupported data,
+// then structured cancellation or status.
+//
+// Returns { outcome, message, exitCode } where outcome is one of:
+//   "success"      payload was valid; stderr was noise
+//   "cancelled"    user aborted inside the CLI flow
+//   "envelopeError"  message = bounded redacted text from the payload
+//   "statusError"    same, for status-flagged payloads; message may be ""
+//   "timeout"
+//   "exitCodeError"  exitCode = the non-zero numeric exit code
+//   "stderrError"  message = bounded redacted stderr
+//   "empty"        no stdout at all and no stderr to explain it
+//   "invalidPayload"  stdout JSON had an unsupported shape
+function commandOutcome(payload, stderrText, exitCode) {
+    var record = isCliRecord(payload) ? payload : null
+    var envelopeMessage = commandError(payload)
+    if (envelopeMessage.length > 0) {
+        return ({ outcome: "envelopeError", message: envelopeMessage })
+    }
+
+    var status = record ? String(record.status || "").trim().toLowerCase() : ""
+    var cancelled = record
+        && (record.cancelled === true || status === "cancelled" || status === "canceled")
+    var statusFailed = record
+        && (status === "error" || status === "failed" || status === "failure")
+    var supportedPayload = commandPayloadIsSupported(payload)
+    var code = Number(exitCode)
+    var timedOut = code === 124 || code === 137
+
+    if (supportedPayload && !cancelled && !statusFailed && code === 0) {
+        return ({ outcome: "success", message: "" })
+    }
+
+    var stderrMessage = boundedCliMessage(stderrText)
+    if (stderrMessage.length > 0) {
+        return ({ outcome: "stderrError", message: stderrMessage })
+    }
+    if (timedOut) {
+        return ({ outcome: "timeout", message: "" })
+    }
+    if (!isFinite(code) || code !== 0) {
+        return ({ outcome: "exitCodeError", message: "", exitCode: code })
+    }
+    if (!supportedPayload) {
+        return ({
+            outcome: payload === undefined ? "empty" : "invalidPayload",
+            message: ""
+        })
+    }
+    if (cancelled) {
+        return ({ outcome: "cancelled", message: "" })
+    }
+    if (statusFailed) {
+        return ({
+            outcome: "statusError",
+            message: record.message ? boundedCliMessage(record.message) : ""
+        })
+    }
+    return ({ outcome: "success", message: "" })
+}
+
+function setApiKeyOutcomeIsSuccess(result) {
+    return result !== null
+        && result !== undefined
+        && (result.outcome === "success" || result.outcome === "empty")
+}
+
+function commandPayloadIsSupported(payload) {
+    if (isCliRecord(payload)) {
+        return true
+    }
+    if (!Array.isArray(payload)
+            || payload.length === 0
+            || payload.length > maximumProviderItems) {
+        return false
+    }
+    for (var i = 0; i < payload.length; i++) {
+        if (!isCliRecord(payload[i])) {
+            return false
+        }
+    }
+    return true
+}
+
 function descriptorUnsupportedMessage(stdoutText, stderrText) {
     var stderrMessage = boundedCliMessage(stderrText)
     if (isDescriptorUnsupportedMessage(stderrMessage)) {

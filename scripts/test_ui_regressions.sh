@@ -56,6 +56,20 @@ reject_in_file "$README_MD" 'for example `/usr/bin/codexbar`'
 
 require_in_surface providers "Provider-specific controls come from the CodexBar CLI descriptor"
 reject_in_surface providers "Provider-specific editing stays in the CodexBar CLI until it exposes a stable settings descriptor"
+# Successful provider commands must be classified by the shared outcome
+# contract, never re-inlined with stderr consulted before the parsed payload:
+# loader diagnostics make successful runs print to stderr, and the inlined
+# order reported those runs as failures.
+require_in_surface providers "ProviderConfigProtocol.commandOutcome("
+# Plasma injects cfg_* creation properties, so declarative cfg_* bindings do not
+# stay live. The General surface must observe the runtime values explicitly and
+# keep user edits pending until Apply.
+require_in_surface general 'import "general/ConfigValueSync.js" as ConfigValueSync'
+require_in_surface general "ConfigValueSync.afterPersistedChange("
+require_in_surface general "ConfigValueSync.afterUserEdit("
+require_in_surface general "ConfigValueSync.afterSave("
+reject_in_surface general "cfg_costHistoryDays: Plasmoid.configuration.costHistoryDays"
+reject_in_surface general "cfg_costHistoryMetric: Plasmoid.configuration.costHistoryMetric"
 require_in_file "$ADVANCED_QML" "id: advancedOverrideExplanation"
 
 python3 - "$ROOT_DIR" <<'PY'
@@ -158,7 +172,7 @@ providers_surface = Surface("providers", root)
 providers_surface_text = providers_surface.text
 debug_surface = Surface("debug", root)
 general_surface = Surface("general", root)
-general_text = general_qml.read_text(encoding="utf-8")
+general_text = general_surface.text
 display_text = display_qml.read_text(encoding="utf-8")
 providers_text = providers_qml.read_text(encoding="utf-8")
 advanced_text = advanced_qml.read_text(encoding="utf-8")
@@ -191,6 +205,10 @@ all_config_keys = set(re.findall(r'<entry name="([^"]+)"', config_text))
 resettable_config_keys = all_config_keys - internal_config_keys
 restore_defaults_body = function_body(general_text, "restoreUserDefaults")
 defaults_check_body = function_body(general_text, "userSettingsAreDefault")
+restore_statements = {
+    "costHistoryDays": "editCostHistoryDays(cfg_costHistoryDaysDefault)",
+    "costHistoryMetric": "editCostHistoryMetric(cfg_costHistoryMetricDefault)",
+}
 for config_key in sorted(resettable_config_keys):
     property_pattern = re.compile(
         rf"\bproperty\s+(?:alias|string|int|bool)\s+cfg_{re.escape(config_key)}(?::|\s|$)"
@@ -202,7 +220,9 @@ for config_key in sorted(resettable_config_keys):
         raise AssertionError(
             f"global defaults must declare the value and default for {config_key} on General"
         )
-    expected_assignment = f"cfg_{config_key} = cfg_{config_key}Default"
+    expected_assignment = restore_statements.get(
+        config_key, f"cfg_{config_key} = cfg_{config_key}Default"
+    )
     if expected_assignment not in restore_defaults_body:
         raise AssertionError(f"global defaults must restore {config_key}")
     expected_pair = f"[cfg_{config_key}, cfg_{config_key}Default]"
@@ -347,9 +367,20 @@ for provider in ("crossmodel", "clawrouter"):
             f"supportsApiKeySetup must include released API-key provider {provider}"
         )
 
-toggle_body = function_body(providers_text, "handleToggleResult")
-if "stderrText.trim()" not in toggle_body or "exitCode" not in toggle_body:
-    raise AssertionError("handleToggleResult must treat stderr/exit-code failures as errors")
+# Failure precedence for provider mutations lives in
+# ProviderConfigProtocol.commandOutcome, covered adversarially by
+# tests/tst_provider_config_protocol.qml. The pages must classify results by
+# delegating to it instead of re-inlining an ordering around stderr.
+for mutation_handler in (
+    function_body(providers_text, "handleToggleResult"),
+    function_body(providers_text, "handleSetApiKeyResult"),
+    function_body(providers_text, "parseCommandPayload"),
+):
+    if "ProviderConfigProtocol.commandOutcome(" not in mutation_handler:
+        raise AssertionError(
+            "provider mutation handlers must classify CLI results through "
+            "ProviderConfigProtocol.commandOutcome"
+        )
 
 handle_data_body = function_body(providers_text, "handleData")
 for handler_call in (
@@ -363,14 +394,7 @@ for handler_call in (
             f"missing {handler_call!r}"
         )
 
-set_api_key_body = function_body(providers_text, "handleSetApiKeyResult")
-if "Number(exitCode) !== 0" not in set_api_key_body:
-    raise AssertionError("handleSetApiKeyResult must reject non-zero CLI exits")
-
-parse_command_payload_body = function_body(providers_text, "parseCommandPayload")
-if "Number(exitCode) !== 0" not in parse_command_payload_body:
-    raise AssertionError("parseCommandPayload must reject non-zero descriptor command exits")
-if "trimmed.length === 0" not in parse_command_payload_body or "codexbar did not return command data." not in parse_command_payload_body:
+if "codexbar did not return command data." not in function_body(providers_text, "parseCommandPayload"):
     raise AssertionError("parseCommandPayload must reject an empty successful descriptor response")
 
 # Overview selection is stored with the raw CLI provider IDs (e.g. groqcloud,
@@ -2111,14 +2135,6 @@ if "onCfg_commandPathChanged: handleCommandPathChanged()" not in providers_text:
 descriptor_action_result_body = function_body(providers_text, "handleDescriptorActionResult")
 if "bumpProviderConfigRevision()" not in descriptor_action_result_body:
     raise AssertionError("successful descriptor actions must invalidate the main applet snapshot")
-
-parse_command_payload_body = function_body(providers_text, "parseCommandPayload")
-for action_status_fragment in ('status === "error"', "payload.message"):
-    if action_status_fragment not in parse_command_payload_body:
-        raise AssertionError(
-            "descriptor command payloads must honor structured error status/message; "
-            f"missing {action_status_fragment!r}"
-        )
 
 tooltip_body = function_body(main_text, "panelToolTipText")
 if "boundedDisplayText(errorText" not in tooltip_body:

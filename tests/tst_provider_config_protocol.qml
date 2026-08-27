@@ -145,6 +145,115 @@ TestCase {
         }
     }
 
+    function test_commandOutcomeTreatsHealthyEnvelopeAsSuccessDespiteStderr() {
+        var loaderNoise = "/usr/lib/x86_64-linux-gnu/libcurl.so.4:"
+            + " no version information available"
+            + " (required by /usr/local/bin/codexbar)"
+        var result = ProviderConfigProtocol.commandOutcome(
+            { provider: "codex", enabled: true }, loaderNoise, 0)
+        compare(result.outcome, "success")
+        verify(result.value === undefined)
+        compare(ProviderConfigProtocol.commandOutcome(
+            [{ provider: "codex", enabled: false }], loaderNoise, 0).outcome, "success")
+        verify(ProviderConfigProtocol.commandOutcome({}, loaderNoise, 0).outcome === "success")
+    }
+
+    function test_commandOutcomeRejectsUnsupportedPayloadShapes() {
+        var inputs = [null, true, 1, "ok", [], [{ provider: "codex" }, "bad"]]
+        inputs.push(repeated({}, ProviderConfigProtocol.maximumProviderItems + 1))
+        for (var i = 0; i < inputs.length; i++) {
+            compare(ProviderConfigProtocol.commandOutcome(inputs[i], "", 0).outcome,
+                "invalidPayload")
+        }
+    }
+
+    function test_commandOutcomePrefersTheCliEnvelopeOverStderrAndExitCodes() {
+        var secret = "sk-abcdefghijklmnop"
+        var result = ProviderConfigProtocol.commandOutcome(
+            { error: { message: "Authorization: Bearer " + secret } },
+            "token=" + secret + " ambient noise",
+            1)
+        compare(result.outcome, "envelopeError")
+        compare(result.message.indexOf(secret), -1)
+        verify(result.message.indexOf("[redacted]") !== -1)
+        verify(result.message.length <= 500)
+    }
+
+    function test_commandOutcomeClassifiesCancellationOnACleanExit() {
+        var cases = [
+            { cancelled: true },
+            { status: "cancelled" },
+            { status: "Canceled" }
+        ]
+        for (var i = 0; i < cases.length; i++) {
+            var result = ProviderConfigProtocol.commandOutcome(cases[i], "", 0)
+            compare(result.outcome, "cancelled")
+            verify(result.value === undefined)
+        }
+    }
+
+    function test_commandOutcomeClassifiesStatusFlaggedFailures() {
+        var failed = ProviderConfigProtocol.commandOutcome(
+            { status: "failed", message: "token=" + "sk-abcdefghijklmnop" }, "", 0)
+        compare(failed.outcome, "statusError")
+        verify(failed.message.indexOf("[redacted]") !== -1)
+
+        var bare = ProviderConfigProtocol.commandOutcome({ status: "error" }, "", 0)
+        compare(bare.outcome, "statusError")
+        compare(bare.message, "")
+    }
+
+    function test_commandOutcomeKeepsHistoricalFailurePrecedence() {
+        compare(ProviderConfigProtocol.commandOutcome({ provider: "x" }, "", 124).outcome,
+            "timeout")
+        compare(ProviderConfigProtocol.commandOutcome({ provider: "x" },
+            "ambient stderr", 137).outcome, "stderrError")
+        var exited = ProviderConfigProtocol.commandOutcome({ provider: "x" }, "", 3)
+        compare(exited.outcome, "exitCodeError")
+        compare(exited.exitCode, 3)
+
+        compare(ProviderConfigProtocol.commandOutcome(
+            { cancelled: true }, "ambient stderr", 0).outcome, "stderrError")
+        compare(ProviderConfigProtocol.commandOutcome(
+            { cancelled: true }, "", 7).outcome, "exitCodeError")
+        compare(ProviderConfigProtocol.commandOutcome(
+            { status: "failed" }, "ambient stderr", 0).outcome, "stderrError")
+        compare(ProviderConfigProtocol.commandOutcome(
+            { status: "failed" }, "", 7).outcome, "exitCodeError")
+
+        // Without a payload, stderr keeps its historical priority over generic
+        // exit codes, but a printed-nothing timeout still names the timeout.
+        compare(ProviderConfigProtocol.commandOutcome(null, "disk full", 7).outcome,
+            "stderrError")
+        compare(ProviderConfigProtocol.commandOutcome(null, "disk full", 124).outcome,
+            "stderrError")
+        compare(ProviderConfigProtocol.commandOutcome(null, "", 9).outcome, "exitCodeError")
+        compare(ProviderConfigProtocol.commandOutcome(null, "", 124).outcome, "timeout")
+        compare(ProviderConfigProtocol.commandOutcome(null, "", 0).outcome, "invalidPayload")
+        compare(ProviderConfigProtocol.commandOutcome(undefined, "", 0).outcome, "empty")
+    }
+
+    function test_setApiKeyAllowsOnlySupportedOrActuallyEmptyOutput() {
+        verify(ProviderConfigProtocol.setApiKeyOutcomeIsSuccess(
+            ProviderConfigProtocol.commandOutcome({ provider: "codex" }, "", 0)))
+        verify(ProviderConfigProtocol.setApiKeyOutcomeIsSuccess(
+            ProviderConfigProtocol.commandOutcome(undefined, "", 0)))
+        verify(!ProviderConfigProtocol.setApiKeyOutcomeIsSuccess(
+            ProviderConfigProtocol.commandOutcome(null, "", 0)))
+        verify(!ProviderConfigProtocol.setApiKeyOutcomeIsSuccess(
+            ProviderConfigProtocol.commandOutcome("ok", "", 0)))
+    }
+
+    function test_commandOutcomeRedactsTheStandaloneStderrReason() {
+        var secret = "sk-abcdefghijklmnop"
+        var result = ProviderConfigProtocol.commandOutcome(
+            null, "request failed with api_key=" + secret + repeated("y", 700).join(""), 1)
+        compare(result.outcome, "stderrError")
+        compare(result.message.indexOf(secret), -1)
+        verify(result.message.indexOf("[redacted]") !== -1)
+        verify(result.message.length <= 500)
+    }
+
     function test_descriptorUnsupportedRecognizesTheCompatibilityPhrases() {
         var phrases = [
             "unknown option", "unknown argument", "unrecognized option",
