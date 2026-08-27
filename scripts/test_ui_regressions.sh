@@ -1964,6 +1964,8 @@ for heatmap_range_fragment in (
     "Math.ceil(view.dailyPoints.length / rows)",
     "readonly property int fittingColumns",
     "readonly property real cellSize",
+    "Layout.preferredHeight: heatmapGrid.rows * heatmapGrid.cellSize",
+    "+ (heatmapGrid.rows - 1) * heatmapGrid.rowSpacing",
 ):
     if heatmap_range_fragment not in spend_view_text:
         raise AssertionError(
