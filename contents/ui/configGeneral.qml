@@ -5,6 +5,7 @@ import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
 import "components" as Components
+import "general/ConfigValueSync.js" as ConfigValueSync
 
 KCM.SimpleKCM {
     id: page
@@ -17,12 +18,7 @@ KCM.SimpleKCM {
     property bool cfg_includeStatusDefault
     property alias cfg_costUsageEnabled: costUsageEnabledCheck.checked
     property bool cfg_costUsageEnabledDefault
-    // The Usage & Spend tab rewrites these two while this dialog can sit open,
-    // so their pending value must read current persisted state instead of an
-    // open-time snapshot; Apply then persists what the widget chose rather than
-    // silently reverting it. Editing below or restoring defaults assigns the
-    // property and breaks the binding like every other pending edit.
-    property int cfg_costHistoryDays: Plasmoid.configuration.costHistoryDays
+    property int cfg_costHistoryDays
     property int cfg_costHistoryDaysDefault
     property alias cfg_enableNotifications: enableNotificationsCheck.checked
     property bool cfg_enableNotificationsDefault
@@ -61,9 +57,8 @@ KCM.SimpleKCM {
     property string cfg_menuBarDisplayMode
     property string cfg_menuBarDisplayModeDefault
     // Chosen from the Usage & Spend tab, reset from here like the other
-    // popup-owned values. See cfg_costHistoryDays above for why the pending
-    // value follows current persisted state instead of a snapshot.
-    property string cfg_costHistoryMetric: Plasmoid.configuration.costHistoryMetric
+    // popup-owned values.
+    property string cfg_costHistoryMetric
     property string cfg_costHistoryMetricDefault
     property bool cfg_resetTimesShowAbsolute
     property bool cfg_resetTimesShowAbsoluteDefault
@@ -85,11 +80,55 @@ KCM.SimpleKCM {
     property bool cfg_showCreditsInPanelDefault
 
     property bool defaultsActionRequested: false
+    // Plasma supplies cfg_* values as creation-time properties, which replaces
+    // bindings declared on them. Track runtime-owned values separately and
+    // copy them into the pending KCM state only while the user has no edit.
+    readonly property int persistedCostHistoryDays: Plasmoid.configuration.costHistoryDays
+    readonly property string persistedCostHistoryMetric: Plasmoid.configuration.costHistoryMetric
+    property bool costHistoryDaysEditPending: false
+    property bool costHistoryMetricEditPending: false
     readonly property bool defaultValuesPrepared: defaultsActionRequested
         && userSettingsAreDefault()
     readonly property string autoUpdateLastCheck: Plasmoid.configuration.autoUpdateLastCheck || ""
     readonly property string widgetUpdateLastStatus: Plasmoid.configuration.widgetUpdateLastStatus || ""
     readonly property string widgetUpdateLastError: Plasmoid.configuration.widgetUpdateLastError || ""
+
+    Component.onCompleted: {
+        syncCostHistoryDaysFromPersisted()
+        syncCostHistoryMetricFromPersisted()
+    }
+    onPersistedCostHistoryDaysChanged: syncCostHistoryDaysFromPersisted()
+    onPersistedCostHistoryMetricChanged: syncCostHistoryMetricFromPersisted()
+
+    function applyCostHistoryDaysTransition(transition) {
+        costHistoryDaysEditPending = transition.hasPendingEdit
+        cfg_costHistoryDays = transition.pendingValue
+    }
+
+    function applyCostHistoryMetricTransition(transition) {
+        costHistoryMetricEditPending = transition.hasPendingEdit
+        cfg_costHistoryMetric = transition.pendingValue
+    }
+
+    function editCostHistoryDays(value) {
+        applyCostHistoryDaysTransition(ConfigValueSync.afterUserEdit(
+            value, persistedCostHistoryDays))
+    }
+
+    function editCostHistoryMetric(value) {
+        applyCostHistoryMetricTransition(ConfigValueSync.afterUserEdit(
+            value, persistedCostHistoryMetric))
+    }
+
+    function syncCostHistoryDaysFromPersisted() {
+        applyCostHistoryDaysTransition(ConfigValueSync.afterPersistedChange(
+            cfg_costHistoryDays, costHistoryDaysEditPending, persistedCostHistoryDays))
+    }
+
+    function syncCostHistoryMetricFromPersisted() {
+        applyCostHistoryMetricTransition(ConfigValueSync.afterPersistedChange(
+            cfg_costHistoryMetric, costHistoryMetricEditPending, persistedCostHistoryMetric))
+    }
 
     function refreshPresetIndex(value) {
         var numeric = Number(value)
@@ -161,8 +200,8 @@ KCM.SimpleKCM {
         cfg_refreshInterval = cfg_refreshIntervalDefault
         cfg_includeStatus = cfg_includeStatusDefault
         cfg_costUsageEnabled = cfg_costUsageEnabledDefault
-        cfg_costHistoryDays = cfg_costHistoryDaysDefault
-        cfg_costHistoryMetric = cfg_costHistoryMetricDefault
+        editCostHistoryDays(cfg_costHistoryDaysDefault)
+        editCostHistoryMetric(cfg_costHistoryMetricDefault)
         cfg_usageBarsShowUsed = cfg_usageBarsShowUsedDefault
         cfg_showQuotaWarningMarkers = cfg_showQuotaWarningMarkersDefault
         cfg_quotaWarningPercent = cfg_quotaWarningPercentDefault
@@ -190,6 +229,8 @@ KCM.SimpleKCM {
     }
 
     function saveConfig() {
+        applyCostHistoryDaysTransition(ConfigValueSync.afterSave(cfg_costHistoryDays))
+        applyCostHistoryMetricTransition(ConfigValueSync.afterSave(cfg_costHistoryMetric))
         defaultsActionRequested = false
     }
 
@@ -290,11 +331,10 @@ KCM.SimpleKCM {
             editable: true
             enabled: costUsageEnabledCheck.checked
             Layout.preferredWidth: Kirigami.Units.gridUnit * 8
-            // Two-way wiring that keeps following popup-made changes while the
-            // field itself is untouched: valueModified fires on user edits
-            // only, so an externally driven rebind cannot echo back.
+            // valueModified fires on user edits only, so config-driven value
+            // changes do not become pending edits and echo back on Apply.
             value: page.cfg_costHistoryDays
-            onValueModified: page.cfg_costHistoryDays = value
+            onValueModified: page.editCostHistoryDays(value)
         }
 
         Kirigami.Separator {

@@ -152,10 +152,19 @@ TestCase {
         var result = ProviderConfigProtocol.commandOutcome(
             { provider: "codex", enabled: true }, loaderNoise, 0)
         compare(result.outcome, "success")
-        compare(result.value.enabled, true)
-        verify(Array.isArray(ProviderConfigProtocol.commandOutcome(
-            [{ provider: "codex", enabled: false }], loaderNoise, 0).value))
+        verify(result.value === undefined)
+        compare(ProviderConfigProtocol.commandOutcome(
+            [{ provider: "codex", enabled: false }], loaderNoise, 0).outcome, "success")
         verify(ProviderConfigProtocol.commandOutcome({}, loaderNoise, 0).outcome === "success")
+    }
+
+    function test_commandOutcomeRejectsUnsupportedPayloadShapes() {
+        var inputs = [null, true, 1, "ok", [], [{ provider: "codex" }, "bad"]]
+        inputs.push(repeated({}, ProviderConfigProtocol.maximumProviderItems + 1))
+        for (var i = 0; i < inputs.length; i++) {
+            compare(ProviderConfigProtocol.commandOutcome(inputs[i], "", 0).outcome,
+                "invalidPayload")
+        }
     }
 
     function test_commandOutcomePrefersTheCliEnvelopeOverStderrAndExitCodes() {
@@ -170,16 +179,16 @@ TestCase {
         verify(result.message.length <= 500)
     }
 
-    function test_commandOutcomeHonoursCancelledBeforeSynthesizedReasons() {
+    function test_commandOutcomeClassifiesCancellationOnACleanExit() {
         var cases = [
             { cancelled: true },
             { status: "cancelled" },
             { status: "Canceled" }
         ]
         for (var i = 0; i < cases.length; i++) {
-            var result = ProviderConfigProtocol.commandOutcome(cases[i], "ambient stderr", 0)
+            var result = ProviderConfigProtocol.commandOutcome(cases[i], "", 0)
             compare(result.outcome, "cancelled")
-            verify(result.value === cases[i])
+            verify(result.value === undefined)
         }
     }
 
@@ -194,14 +203,23 @@ TestCase {
         compare(bare.message, "")
     }
 
-    function test_commandOutcomeKeepsTimeoutAndExitCodesOverAPrintedPayload() {
+    function test_commandOutcomeKeepsHistoricalFailurePrecedence() {
         compare(ProviderConfigProtocol.commandOutcome({ provider: "x" }, "", 124).outcome,
             "timeout")
         compare(ProviderConfigProtocol.commandOutcome({ provider: "x" },
-            "ambient stderr", 137).outcome, "timeout")
+            "ambient stderr", 137).outcome, "stderrError")
         var exited = ProviderConfigProtocol.commandOutcome({ provider: "x" }, "", 3)
         compare(exited.outcome, "exitCodeError")
         compare(exited.exitCode, 3)
+
+        compare(ProviderConfigProtocol.commandOutcome(
+            { cancelled: true }, "ambient stderr", 0).outcome, "stderrError")
+        compare(ProviderConfigProtocol.commandOutcome(
+            { cancelled: true }, "", 7).outcome, "exitCodeError")
+        compare(ProviderConfigProtocol.commandOutcome(
+            { status: "failed" }, "ambient stderr", 0).outcome, "stderrError")
+        compare(ProviderConfigProtocol.commandOutcome(
+            { status: "failed" }, "", 7).outcome, "exitCodeError")
 
         // Without a payload, stderr keeps its historical priority over generic
         // exit codes, but a printed-nothing timeout still names the timeout.
@@ -211,7 +229,19 @@ TestCase {
             "stderrError")
         compare(ProviderConfigProtocol.commandOutcome(null, "", 9).outcome, "exitCodeError")
         compare(ProviderConfigProtocol.commandOutcome(null, "", 124).outcome, "timeout")
-        compare(ProviderConfigProtocol.commandOutcome(null, "", 0).outcome, "empty")
+        compare(ProviderConfigProtocol.commandOutcome(null, "", 0).outcome, "invalidPayload")
+        compare(ProviderConfigProtocol.commandOutcome(undefined, "", 0).outcome, "empty")
+    }
+
+    function test_setApiKeyAllowsOnlySupportedOrActuallyEmptyOutput() {
+        verify(ProviderConfigProtocol.setApiKeyOutcomeIsSuccess(
+            ProviderConfigProtocol.commandOutcome({ provider: "codex" }, "", 0)))
+        verify(ProviderConfigProtocol.setApiKeyOutcomeIsSuccess(
+            ProviderConfigProtocol.commandOutcome(undefined, "", 0)))
+        verify(!ProviderConfigProtocol.setApiKeyOutcomeIsSuccess(
+            ProviderConfigProtocol.commandOutcome(null, "", 0)))
+        verify(!ProviderConfigProtocol.setApiKeyOutcomeIsSuccess(
+            ProviderConfigProtocol.commandOutcome("ok", "", 0)))
     }
 
     function test_commandOutcomeRedactsTheStandaloneStderrReason() {

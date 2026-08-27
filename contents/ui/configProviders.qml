@@ -378,7 +378,7 @@ KCM.SimpleKCM {
 
     function handleToggleResult(descriptor, stdoutText, stderrText, exitCode) {
         var trimmed = stdoutText.trim()
-        var payload = null
+        var payload
         if (trimmed.length > 0) {
             try {
                 payload = JSON.parse(trimmed)
@@ -399,8 +399,8 @@ KCM.SimpleKCM {
 
         // Trust the enabled value the CLI reports back; fall back to desired.
         var newEnabled = descriptor.desiredEnabled
-        if (result.value && !Array.isArray(result.value) && result.value.enabled !== undefined) {
-            newEnabled = result.value.enabled === true
+        if (payload && !Array.isArray(payload) && payload.enabled !== undefined) {
+            newEnabled = payload.enabled === true
         }
         updateProviderEnabled(descriptor.provider, newEnabled)
         markPending(descriptor.provider, false)
@@ -413,7 +413,7 @@ KCM.SimpleKCM {
         markPending(descriptor.provider, false)
 
         var trimmed = stdoutText.trim()
-        var payload = null
+        var payload
         if (trimmed.length > 0) {
             try {
                 payload = JSON.parse(trimmed)
@@ -429,14 +429,17 @@ KCM.SimpleKCM {
             errorText = ""
             return
         }
-        if (result.outcome !== "success") {
+        // Older CLI builds completed set-api-key with exit 0 and no JSON. Keep
+        // that successful pair while requiring shaped data for every other
+        // printed response.
+        if (!ProviderConfigProtocol.setApiKeyOutcomeIsSuccess(result)) {
             errorText = i18n("%1: %2", displayNameForProvider(descriptor.provider),
                 providerCommandFailureText(result))
             return
         }
 
-        if (result.value && !Array.isArray(result.value) && result.value.enabled !== undefined) {
-            updateProviderEnabled(descriptor.provider, result.value.enabled === true)
+        if (payload && !Array.isArray(payload) && payload.enabled !== undefined) {
+            updateProviderEnabled(descriptor.provider, payload.enabled === true)
         } else {
             updateProviderEnabled(descriptor.provider, true)
         }
@@ -494,7 +497,7 @@ KCM.SimpleKCM {
 
     function parseCommandPayload(stdoutText, stderrText, exitCode) {
         var trimmed = stdoutText.trim()
-        var payload = null
+        var payload
         if (trimmed.length > 0) {
             try {
                 payload = JSON.parse(trimmed)
@@ -509,9 +512,9 @@ KCM.SimpleKCM {
 
         var result = ProviderConfigProtocol.commandOutcome(payload, stderrText, exitCode)
         if (result.outcome === "cancelled") {
-            return { value: result.value, cancelled: true, errorMessage: "" }
+            return { value: null, cancelled: true, errorMessage: "" }
         }
-        if (result.outcome === "empty") {
+        if (result.outcome === "empty" || result.outcome === "invalidPayload") {
             return {
                 value: null,
                 cancelled: false,
@@ -525,7 +528,7 @@ KCM.SimpleKCM {
                 errorMessage: providerCommandFailureText(result)
             }
         }
-        return { value: result.value, cancelled: false, errorMessage: "" }
+        return { value: payload, cancelled: false, errorMessage: "" }
     }
 
     function handleDiagnoseResult(descriptor, stdoutText, stderrText) {

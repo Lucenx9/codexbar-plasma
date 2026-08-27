@@ -385,17 +385,11 @@ if "ProviderConfigProtocol.commandOutcome(" not in set_api_key_result_body:
     raise AssertionError(
         "set-api-key results must classify through ProviderConfigProtocol.commandOutcome"
     )
+if "ProviderConfigProtocol.setApiKeyOutcomeIsSuccess(result)" not in set_api_key_result_body:
+    raise AssertionError("set-api-key results must use the tested empty-output decision")
 
-# Timeout recognition moved into the shared classifier; the page keeps only the
-# localized wording and the pending-state cleanup.
-command_outcome_body = (root / "contents/ui/config/ProviderConfigProtocol.js").read_text(
-    encoding="utf-8"
-)
-require_all(
-    command_outcome_body,
-    ("code === 124", "code === 137", '"timeout"'),
-    "descriptor secret timeout reporting is incomplete",
-)
+# Timeout recognition is covered behaviorally by tst_provider_config_protocol;
+# the page owns only the localized wording and pending-state cleanup.
 require_all(
     providers.function_body("providerCommandFailureText"),
     ("codexbar command timed out. Try again.",),
