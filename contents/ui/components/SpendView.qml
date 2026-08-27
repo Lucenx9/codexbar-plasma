@@ -237,7 +237,8 @@ ColumnLayout {
                 // width so the cells stay large enough to hover.
                 Item {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: heatmapGrid.implicitHeight
+                    Layout.preferredHeight: heatmapGrid.rows * heatmapGrid.cellSize
+                        + (heatmapGrid.rows - 1) * heatmapGrid.rowSpacing
                     clip: true
 
                     Grid {
