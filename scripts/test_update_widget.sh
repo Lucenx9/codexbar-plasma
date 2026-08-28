@@ -118,6 +118,7 @@ require_in_file "$UPDATER" "jq -r"
 require_in_file "$UPDATER" "curl --fail --location --show-error --silent"
 require_in_file "$UPDATER" "version_gt()"
 require_in_file "$UPDATER" "emit_status"
+require_in_file "$UPDATER" "errorCode"
 require_in_file "$UPDATER" "restart Plasma to apply the update"
 reject_in_file "$UPDATER" "schedule_plasmashell_restart"
 reject_in_file "$UPDATER" "systemd-run --user"
@@ -134,6 +135,8 @@ require_in_file "$MAKEFILE" "missing required command: cmake, zip, or python3"
 reject_in_file "$MAKEFILE" "cmake -E tar cf dist/codexbar-plasma.plasmoid --format=zip metadata.json contents docs scripts/update-widget.sh"
 require_in_surface applet "function missingUpdateScriptJson()"
 require_in_surface applet "Widget updater script is missing from the installed package."
+require_in_surface applet 'errorCode: "missing_updater"'
+require_in_surface applet "function widgetUpdateErrorText(errorCode, errorDetail)"
 require_in_surface applet "if [ -x \" + shellQuote(scriptPath) + \" ]; then \""
 require_in_surface applet "printf '%s\\\\n' \" + shellQuote(missingUpdateScriptJson())"
 require_in_surface applet "return \"sh -c \" + shellQuote(updateCommand)"
@@ -163,7 +166,7 @@ require_in_file "$README" "only immutable GitHub releases"
 require_in_file "$README" "curl\`, \`jq\`, \`python3\`, \`sha256sum\`"
 
 update_script_sample="${ROOT_DIR}/scripts/update-widget.sh"
-missing_json_sample='{"status":"error","message":"Widget updater script is missing from the installed package."}'
+missing_json_sample='{"status":"error","errorCode":"missing_updater","message":"Widget updater script is missing from the installed package."}'
 compound_sample="if [ -x '${update_script_sample}' ]; then '${update_script_sample}' --check; else printf '%s\n' '${missing_json_sample}'; fi"
 nonce_wrapped_sample="CODEXBAR_PLASMA_RUN=1 sh -c $(printf '%q' "${compound_sample}")"
 if ! /bin/sh -n -c "${nonce_wrapped_sample}"; then
@@ -244,7 +247,8 @@ if "$UPDATER" --check \
   echo "check mode must reject a newer release without its checksum asset" >&2
   exit 1
 fi
-if [[ "$(jq -r '.status' "$fixture_dir/missing-checksum-output.json")" != "error" ]]; then
+if ! jq -e '.status == "error" and .errorCode == "release_metadata_invalid"' \
+  "$fixture_dir/missing-checksum-output.json" >/dev/null; then
   echo "a missing release checksum must emit structured error JSON" >&2
   exit 1
 fi
@@ -272,7 +276,8 @@ if "$UPDATER" --check \
   echo "check mode must reject a newer mutable release" >&2
   exit 1
 fi
-if [[ "$(jq -r '.status' "$fixture_dir/mutable-release-output.json")" != "error" ]]; then
+if ! jq -e '.status == "error" and .errorCode == "release_not_immutable"' \
+  "$fixture_dir/mutable-release-output.json" >/dev/null; then
   echo "a mutable release must emit structured error JSON" >&2
   exit 1
 fi
@@ -301,6 +306,20 @@ if "$UPDATER" --check \
 fi
 if [[ "$(jq -r '.status' "$fixture_dir/wrong-type-output.json")" != "error" ]]; then
   echo "wrong release metadata types must emit structured error JSON" >&2
+  exit 1
+fi
+
+jq '.assets += [1]' "$fixture_dir/release.json" > "$fixture_dir/non-object-asset-release.json"
+if "$UPDATER" --check \
+  --metadata "$fixture_dir/metadata.json" \
+  --release-json "$fixture_dir/non-object-asset-release.json" \
+  > "$fixture_dir/non-object-asset-output.json"; then
+  echo "check mode must reject non-object release assets" >&2
+  exit 1
+fi
+if ! jq -e '.status == "error" and .errorCode == "release_metadata_invalid"' \
+  "$fixture_dir/non-object-asset-output.json" >/dev/null; then
+  echo "non-object release assets must emit structured error JSON" >&2
   exit 1
 fi
 
@@ -431,7 +450,8 @@ if [[ -f "$fixture_dir/install.marker" ]]; then
   echo "package manifest validation must happen before kpackagetool6" >&2
   exit 1
 fi
-if [[ "$(jq -r '.status' "$fixture_dir/wrong-package-output.json")" != "error" ]]; then
+if ! jq -e '.status == "error" and .errorCode == "package_invalid"' \
+  "$fixture_dir/wrong-package-output.json" >/dev/null; then
   echo "a mismatched package manifest must emit structured error JSON" >&2
   exit 1
 fi
@@ -467,7 +487,8 @@ if [[ -f "$fixture_dir/install.marker" ]]; then
   echo "GitHub digest verification must happen before kpackagetool6" >&2
   exit 1
 fi
-if [[ "$(jq -r '.status' "$fixture_dir/wrong-api-digest-output.json")" != "error" ]]; then
+if ! jq -e '.status == "error" and .errorCode == "release_integrity_failed"' \
+  "$fixture_dir/wrong-api-digest-output.json" >/dev/null; then
   echo "a mismatched GitHub digest must emit structured error JSON" >&2
   exit 1
 fi

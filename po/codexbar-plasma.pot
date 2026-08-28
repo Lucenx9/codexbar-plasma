@@ -1733,6 +1733,54 @@ msgid "Widget updater script is missing from the installed package."
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "Widget updater is missing the required tool: %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Widget updater is missing a required tool."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "The installed widget metadata is invalid."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Could not fetch widget release metadata from GitHub."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Widget release metadata is invalid."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "The available widget release is not immutable."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Could not download the widget release."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Widget release integrity verification failed."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "The widget package does not match the release."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "The widget package could not be installed."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "The widget updater command is invalid."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Widget update check failed."
+msgstr ""
+
+#: contents/ui/main.qml
 msgid "Checking for widget updates..."
 msgstr ""
 
@@ -1742,10 +1790,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Widget update operation timed out."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Widget update check failed."
 msgstr ""
 
 #: contents/ui/main.qml

@@ -36,6 +36,7 @@ require_in_surface applet 'import "CostRefreshPolicy.js" as CostRefreshPolicy'
 require_in_surface applet "readonly property int costAutoRefreshIntervalMs: CostRefreshPolicy.automaticRefreshIntervalMs"
 require_in_surface applet "property double lastCostRefreshAttemptAt: -1"
 require_in_surface applet "id: costRefreshTimer"
+require_in_surface applet "property bool updateRetryPending: false"
 
 require_in_surface providers "readonly property int configCommandTimeoutMs: 60000"
 require_in_surface providers "readonly property int configSecretCommandTimeoutSeconds: 60"
@@ -484,6 +485,7 @@ require_all(
     applet.function_body("scheduleNextUpdateCheck"),
     (
         "updateCheckTimer.stop()",
+        "updateRetryPending = false",
         "connectedUpdateCommandSource.length > 0",
         "UpdateLogic.nextUpdateCheckDelay(",
         "updateCheckTimer.restart()",
@@ -513,9 +515,20 @@ require_all(
     (
         "UpdateLogic.updateRetryDelay(",
         "consecutiveUpdateFailures",
+        "updateRetryPending = true",
         "updateCheckTimer.restart()",
     ),
     "failed update checks need a bounded retry schedule",
+)
+
+require_all(
+    applet.function_body("handleUpdateCheckTimer"),
+    (
+        "var forceCheck = updateRetryPending",
+        "updateRetryPending = false",
+        "checkForWidgetUpdate(forceCheck)",
+    ),
+    "a retry timer must bypass the normal successful-check interval gate",
 )
 
 require_all(
@@ -536,9 +549,22 @@ require_all(
 
 require_all(
     applet.id_block("updateCheckTimer"),
-    ("repeat: false", "running: false", "root.checkForWidgetUpdate()"),
+    ("repeat: false", "running: false", "root.handleUpdateCheckTimer()"),
     "update timer must remain single-shot",
 )
+
+process_update_body = applet.function_body("processUpdateCheck")
+require_all(
+    process_update_body,
+    (
+        "var errorCode =",
+        "var errorDetail =",
+        "widgetUpdateErrorText(errorCode, errorDetail)",
+    ),
+    "updater failures must be localized from semantic error fields",
+)
+if "payload.message" in process_update_body:
+    raise AssertionError("updater payload messages must not be rendered as user-facing text")
 
 applet.require(
     "onAutoUpdateIntervalHoursChanged: scheduleNextUpdateCheck()",

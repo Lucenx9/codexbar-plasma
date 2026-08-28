@@ -139,6 +139,7 @@ PlasmoidItem {
     readonly property int widgetUpdateRetryBaseDelayMs: 300000
     readonly property int widgetUpdateRetryMaximumDelayMs: 21600000
     property int consecutiveUpdateFailures: 0
+    property bool updateRetryPending: false
     property string updateStatusText: boundedWidgetUpdateText(Plasmoid.configuration.widgetUpdateLastStatus)
     property string updateErrorText: boundedWidgetUpdateText(Plasmoid.configuration.widgetUpdateLastError)
     property string lastNotifiedUpdateVersion: Plasmoid.configuration.lastNotifiedUpdateVersion || ""
@@ -204,6 +205,7 @@ PlasmoidItem {
         if (updateChecksEnabled) {
             Qt.callLater(function() { root.checkForWidgetUpdate(true) })
         } else {
+            updateRetryPending = false
             updateCheckTimer.stop()
         }
     }
@@ -2605,8 +2607,41 @@ PlasmoidItem {
     function missingUpdateScriptJson() {
         return JSON.stringify({
             status: "error",
+            errorCode: "missing_updater",
             message: i18n("Widget updater script is missing from the installed package.")
         })
+    }
+
+    function widgetUpdateErrorText(errorCode, errorDetail) {
+        var detail = boundedCliMessage(errorDetail)
+        switch (String(errorCode || "")) {
+        case "missing_updater":
+            return i18n("Widget updater script is missing from the installed package.")
+        case "missing_tool":
+            return detail.length > 0
+                ? i18n("Widget updater is missing the required tool: %1", detail)
+                : i18n("Widget updater is missing a required tool.")
+        case "local_metadata_invalid":
+            return i18n("The installed widget metadata is invalid.")
+        case "release_fetch_failed":
+            return i18n("Could not fetch widget release metadata from GitHub.")
+        case "release_metadata_invalid":
+            return i18n("Widget release metadata is invalid.")
+        case "release_not_immutable":
+            return i18n("The available widget release is not immutable.")
+        case "release_download_failed":
+            return i18n("Could not download the widget release.")
+        case "release_integrity_failed":
+            return i18n("Widget release integrity verification failed.")
+        case "package_invalid":
+            return i18n("The widget package does not match the release.")
+        case "package_install_failed":
+            return i18n("The widget package could not be installed.")
+        case "invalid_invocation":
+            return i18n("The widget updater command is invalid.")
+        default:
+            return i18n("Widget update check failed.")
+        }
     }
 
     function updateCheckDue(forceCheck) {
@@ -2638,6 +2673,7 @@ PlasmoidItem {
 
     function scheduleNextUpdateCheck(lastCheckOverride) {
         updateCheckTimer.stop()
+        updateRetryPending = false
         if (!updateChecksEnabled || connectedUpdateCommandSource.length > 0) {
             return
         }
@@ -2653,6 +2689,7 @@ PlasmoidItem {
 
     function scheduleUpdateRetry() {
         updateCheckTimer.stop()
+        updateRetryPending = false
         if (!updateChecksEnabled || connectedUpdateCommandSource.length > 0) {
             return
         }
@@ -2660,7 +2697,14 @@ PlasmoidItem {
             consecutiveUpdateFailures,
             widgetUpdateRetryBaseDelayMs,
             widgetUpdateRetryMaximumDelayMs)
+        updateRetryPending = true
         updateCheckTimer.restart()
+    }
+
+    function handleUpdateCheckTimer() {
+        var forceCheck = updateRetryPending
+        updateRetryPending = false
+        checkForWidgetUpdate(forceCheck)
     }
 
     function finishUpdateCommand(sourceName, successfulCheck) {
@@ -2730,14 +2774,15 @@ PlasmoidItem {
 
     function processUpdateCheck(payload) {
         var status = String(payload && payload.status ? payload.status : "")
-        var message = boundedCliMessage(payload && payload.message ? payload.message : "")
+        var errorCode = payload && typeof payload.errorCode === "string" ? payload.errorCode : ""
+        var errorDetail = payload && typeof payload.errorDetail === "string" ? payload.errorDetail : ""
         var version = String(payload && payload.remoteVersion ? payload.remoteVersion : "")
         var url = String(payload && payload.assetUrl ? payload.assetUrl : "")
 
         if (status === "error") {
             setWidgetUpdateState(
                 i18n("Widget update check failed."),
-                message.length > 0 ? message : i18n("Widget update check failed."))
+                widgetUpdateErrorText(errorCode, errorDetail))
             return false
         }
 
@@ -2764,7 +2809,7 @@ PlasmoidItem {
             return true
         }
         if (status === "skipped") {
-            setWidgetUpdateState(message.length > 0 ? message : i18n("Widget update skipped."), "")
+            setWidgetUpdateState(i18n("Widget update skipped."), "")
             return true
         }
 
@@ -3829,7 +3874,7 @@ PlasmoidItem {
         repeat: false
         running: false
         triggeredOnStart: false
-        onTriggered: root.checkForWidgetUpdate()
+        onTriggered: root.handleUpdateCheckTimer()
     }
 
     Timer {

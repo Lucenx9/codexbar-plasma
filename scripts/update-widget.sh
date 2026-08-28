@@ -45,22 +45,30 @@ emit_status() {
   local local_version="${3:-}"
   local remote_version="${4:-}"
   local asset_url="${5:-}"
+  local error_code="${6:-}"
+  local error_detail="${7:-}"
   jq -n \
     --arg status "$status" \
     --arg message "$message" \
     --arg localVersion "$local_version" \
     --arg remoteVersion "$remote_version" \
     --arg assetUrl "$asset_url" \
-    '{status: $status, message: $message, localVersion: $localVersion, remoteVersion: $remoteVersion, assetUrl: $assetUrl}'
+    --arg errorCode "$error_code" \
+    --arg errorDetail "$error_detail" \
+    '{status: $status, message: $message, localVersion: $localVersion, remoteVersion: $remoteVersion, assetUrl: $assetUrl, errorCode: $errorCode, errorDetail: $errorDetail}'
 }
 
 fail() {
-  emit_status "error" "$1"
+  local error_code="$1"
+  local message="$2"
+  local error_detail="${3:-}"
+  emit_status "error" "$message" "" "" "" "$error_code" "$error_detail"
   exit 1
 }
 
 require_command() {
-  command -v "$1" >/dev/null 2>&1 || fail "missing required command: $1"
+  command -v "$1" >/dev/null 2>&1 \
+    || fail "missing_tool" "missing required command: $1" "$1"
 }
 
 validate_asset_record() {
@@ -85,7 +93,7 @@ validate_asset_record() {
           | ($digest | type) == "string"
             and ($digest | test("^sha256:[0-9a-f]{64}$")))
     ' "$RELEASE_JSON" >/dev/null; then
-    fail "release ${label} metadata does not match the expected contract"
+    fail "release_metadata_invalid" "release ${label} metadata does not match the expected contract"
   fi
 }
 
@@ -192,11 +200,11 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ "$MODE" != "check" && "$MODE" != "install" ]]; then
-  fail "invalid update mode: $MODE"
+  fail "invalid_invocation" "invalid update mode: $MODE"
 fi
 
 if ! command -v jq >/dev/null 2>&1; then
-  printf '{"status":"error","message":"missing required command: jq","localVersion":"","remoteVersion":"","assetUrl":""}\n'
+  printf '{"status":"error","message":"missing required command: jq","localVersion":"","remoteVersion":"","assetUrl":"","errorCode":"missing_tool","errorDetail":"jq"}\n'
   exit 1
 fi
 
@@ -217,16 +225,16 @@ if [[ "$MODE" == "install" ]]; then
 fi
 
 if [[ ! -f "$METADATA_PATH" ]]; then
-  fail "metadata file not found: $METADATA_PATH"
+  fail "local_metadata_invalid" "metadata file not found: $METADATA_PATH"
 fi
 
 if ! jq -e 'type == "object" and (.KPlugin | type == "object") and (.KPlugin.Version | type == "string")' \
   "$METADATA_PATH" >/dev/null; then
-  fail "local widget metadata does not match the expected contract"
+  fail "local_metadata_invalid" "local widget metadata does not match the expected contract"
 fi
 local_version="$(jq -r '.KPlugin.Version' "$METADATA_PATH")"
 if [[ ! "$local_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  fail "local widget version must use X.Y.Z"
+  fail "local_metadata_invalid" "local widget version must use X.Y.Z"
 fi
 
 if [[ -z "$RELEASE_JSON" ]]; then
@@ -243,14 +251,15 @@ if [[ -z "$RELEASE_JSON" ]]; then
     -H "Accept: application/vnd.github+json" \
     -H "X-GitHub-Api-Version: ${API_VERSION}" \
     -H "User-Agent: CodexBar-Plasma-Updater" \
-    "$release_url" > "$RELEASE_JSON" || fail "failed to fetch release metadata from GitHub"
+    "$release_url" > "$RELEASE_JSON" \
+    || fail "release_fetch_failed" "failed to fetch release metadata from GitHub"
 fi
 
 if [[ ! -f "$RELEASE_JSON" ]]; then
-  fail "release metadata file not found: $RELEASE_JSON"
+  fail "release_metadata_invalid" "release metadata file not found: $RELEASE_JSON"
 fi
 if [[ "$(wc -c < "$RELEASE_JSON")" -gt "$MAX_RELEASE_METADATA_BYTES" ]]; then
-  fail "release metadata exceeds the supported size"
+  fail "release_metadata_invalid" "release metadata exceeds the supported size"
 fi
 
 if ! jq -e --argjson maxAssets "$MAX_RELEASE_ASSETS" '
@@ -261,8 +270,9 @@ if ! jq -e --argjson maxAssets "$MAX_RELEASE_ASSETS" '
   and (.immutable | type == "boolean")
   and (.assets | type == "array")
   and (.assets | length <= $maxAssets)
+  and (all(.assets[]; type == "object"))
 ' "$RELEASE_JSON" >/dev/null; then
-  fail "release metadata does not match the expected contract"
+  fail "release_metadata_invalid" "release metadata does not match the expected contract"
 fi
 
 remote_version="$(jq -r '.tag_name' "$RELEASE_JSON")"
@@ -273,7 +283,7 @@ asset_url="$(jq -r --arg name "$ASSET_NAME" '.assets[]? | select(.name == $name)
 checksum_url="$(jq -r --arg name "$CHECKSUM_NAME" '.assets[]? | select(.name == $name) | .browser_download_url' "$RELEASE_JSON" | head -n1)"
 
 if [[ ! "$remote_version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  fail "release tag must use vX.Y.Z"
+  fail "release_metadata_invalid" "release tag must use vX.Y.Z"
 fi
 
 if [[ "$is_draft" == "true" || "$is_prerelease" == "true" ]]; then
@@ -289,7 +299,7 @@ fi
 # The updater and metadata ship in the same package. A mutable release only
 # reaches this gate when it is newer than the package running this script.
 if [[ "$is_immutable" != "true" ]]; then
-  fail "newer widget releases must be immutable"
+  fail "release_not_immutable" "newer widget releases must be immutable"
 fi
 
 expected_prefix="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/"
@@ -320,7 +330,8 @@ curl --fail --location --show-error --silent \
   --proto '=https' \
   --proto-redir '=https' \
   -H "User-Agent: CodexBar-Plasma-Updater" \
-  "$checksum_url" --output "$checksum_path" || fail "failed to download release checksum"
+  "$checksum_url" --output "$checksum_path" \
+  || fail "release_download_failed" "failed to download release checksum"
 curl --fail --location --show-error --silent \
   --connect-timeout "$CURL_CONNECT_TIMEOUT_SECONDS" \
   --max-time "$CURL_ASSET_MAX_TIME_SECONDS" \
@@ -329,38 +340,40 @@ curl --fail --location --show-error --silent \
   --proto '=https' \
   --proto-redir '=https' \
   -H "User-Agent: CodexBar-Plasma-Updater" \
-  "$asset_url" --output "$package_path" || fail "failed to download release asset"
+  "$asset_url" --output "$package_path" \
+  || fail "release_download_failed" "failed to download release asset"
 actual_checksum_size="$(wc -c < "$checksum_path")"
 actual_asset_size="$(wc -c < "$package_path")"
 if [[ "$actual_checksum_size" != "$checksum_size" ]]; then
-  fail "downloaded release checksum size does not match release metadata"
+  fail "release_integrity_failed" "downloaded release checksum size does not match release metadata"
 fi
 if [[ "$actual_asset_size" != "$asset_size" ]]; then
-  fail "downloaded release asset size does not match release metadata"
+  fail "release_integrity_failed" "downloaded release asset size does not match release metadata"
 fi
 actual_checksum_digest="sha256:$(sha256sum "$checksum_path")"
 actual_checksum_digest="${actual_checksum_digest%% *}"
 actual_asset_digest="sha256:$(sha256sum "$package_path")"
 actual_asset_digest="${actual_asset_digest%% *}"
 if [[ "$actual_checksum_digest" != "$checksum_digest" ]]; then
-  fail "release checksum does not match the GitHub asset digest"
+  fail "release_integrity_failed" "release checksum does not match the GitHub asset digest"
 fi
 if [[ "$actual_asset_digest" != "$asset_digest" ]]; then
-  fail "release asset does not match the GitHub asset digest"
+  fail "release_integrity_failed" "release asset does not match the GitHub asset digest"
 fi
 if [[ "$(wc -l < "$checksum_path")" -ne 1 ]] \
   || ! grep -Eq '^[[:xdigit:]]{64}[[:space:]][ *]codexbar-plasma\.plasmoid$' "$checksum_path"; then
-  fail "release checksum has an invalid format"
+  fail "release_integrity_failed" "release checksum has an invalid format"
 fi
 (
   cd "$TMP_DIR"
   sha256sum --check --strict --status "$CHECKSUM_NAME"
-) || fail "release checksum verification failed"
+) || fail "release_integrity_failed" "release checksum verification failed"
 package_version="$(normalize_version "$remote_version")"
 validate_package_manifest "$package_path" "$package_version" \
-  || fail "widget package manifest does not match the release"
+  || fail "package_invalid" "widget package manifest does not match the release"
 timeout --kill-after="${KPACKAGE_INSTALL_KILL_AFTER_SECONDS}s" \
   "${KPACKAGE_INSTALL_MAX_TIME_SECONDS}s" \
-  kpackagetool6 -t Plasma/Applet -u "$package_path" >&2 || fail "failed to install widget package"
+  kpackagetool6 -t Plasma/Applet -u "$package_path" >&2 \
+  || fail "package_install_failed" "failed to install widget package"
 
 emit_status "installed" "widget update installed; restart Plasma to apply the update" "$local_version" "$remote_version" "$asset_url"

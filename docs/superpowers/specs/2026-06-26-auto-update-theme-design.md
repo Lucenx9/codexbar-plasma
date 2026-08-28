@@ -158,6 +158,9 @@ theme violations; do not normalize or alter provider identity colors.
   advances the normal update interval.
 - QML records the failure as update status for Debug or General settings, but
   does not spam notifications.
+- Failed envelopes keep a concise diagnostic `message` for manual helper use
+  and expose a semantic `errorCode` plus an optional bounded `errorDetail`.
+  QML localizes the allowlisted code and never renders the raw message.
 - QML memoizes the last notified version so an available update does not notify
   repeatedly on every refresh cycle.
 - Existing usage refresh behavior must keep working even if update checks fail.
