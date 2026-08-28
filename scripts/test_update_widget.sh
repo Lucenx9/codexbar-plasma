@@ -456,6 +456,69 @@ if ! jq -e '.status == "error" and .errorCode == "package_invalid"' \
   exit 1
 fi
 
+python3 - "$fixture_dir/symlink-package.plasmoid" <<'PY'
+import json
+import stat
+import sys
+import zipfile
+
+with zipfile.ZipFile(sys.argv[1], "w") as archive:
+    archive.writestr(
+        "metadata.json",
+        json.dumps({
+            "KPackageStructure": "Plasma/Applet",
+            "KPlugin": {"Id": "app.codexbar.plasma", "Version": "9.9.9"},
+        }),
+    )
+    link = zipfile.ZipInfo("contents/ui/external.qml")
+    link.create_system = 3
+    link.compress_type = zipfile.ZIP_STORED
+    link.external_attr = (stat.S_IFLNK | 0o777) << 16
+    archive.writestr(link, "../../../outside.qml")
+PY
+symlink_package_hash="$(sha256sum "$fixture_dir/symlink-package.plasmoid")"
+symlink_package_hash="${symlink_package_hash%% *}"
+printf '%s  %s\n' "$symlink_package_hash" "codexbar-plasma.plasmoid" \
+  > "$fixture_dir/symlink-package.plasmoid.sha256"
+symlink_package_size="$(wc -c < "$fixture_dir/symlink-package.plasmoid")"
+symlink_checksum_size="$(wc -c < "$fixture_dir/symlink-package.plasmoid.sha256")"
+symlink_package_digest="sha256:$(sha256sum "$fixture_dir/symlink-package.plasmoid")"
+symlink_package_digest="${symlink_package_digest%% *}"
+symlink_checksum_digest="sha256:$(sha256sum "$fixture_dir/symlink-package.plasmoid.sha256")"
+symlink_checksum_digest="${symlink_checksum_digest%% *}"
+jq \
+  --arg packageDigest "$symlink_package_digest" \
+  --arg checksumDigest "$symlink_checksum_digest" \
+  --argjson packageSize "$symlink_package_size" \
+  --argjson checksumSize "$symlink_checksum_size" '
+    (.assets[] | select(.name == "codexbar-plasma.plasmoid")) |=
+      (.size = $packageSize | .digest = $packageDigest)
+    | (.assets[] | select(.name == "codexbar-plasma.plasmoid.sha256")) |=
+      (.size = $checksumSize | .digest = $checksumDigest)
+  ' "$fixture_dir/release.json" > "$fixture_dir/symlink-package-release.json"
+rm -f "$fixture_dir/install.marker"
+if PATH="$fixture_dir/fakebin:$PATH" \
+  TEST_UPDATE_FIXTURE="$fixture_dir" \
+  TEST_UPDATE_PACKAGE_PATH="$fixture_dir/symlink-package.plasmoid" \
+  TEST_UPDATE_CHECKSUM_PATH="$fixture_dir/symlink-package.plasmoid.sha256" \
+  TEST_UPDATE_INSTALL_MARKER="$fixture_dir/install.marker" \
+    "$UPDATER" --install \
+      --metadata "$fixture_dir/metadata.json" \
+      --release-json "$fixture_dir/symlink-package-release.json" \
+      > "$fixture_dir/symlink-package-output.json"; then
+  echo "a package containing a non-metadata symlink must be rejected" >&2
+  exit 1
+fi
+if [[ -f "$fixture_dir/install.marker" ]]; then
+  echo "symlink validation must happen before kpackagetool6" >&2
+  exit 1
+fi
+if ! jq -e '.status == "error" and .errorCode == "package_invalid"' \
+  "$fixture_dir/symlink-package-output.json" >/dev/null; then
+  echo "a symlink package must emit structured error JSON" >&2
+  exit 1
+fi
+
 good_output="$(
   PATH="$fixture_dir/fakebin:$PATH" \
   TEST_UPDATE_FIXTURE="$fixture_dir" \

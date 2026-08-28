@@ -174,8 +174,11 @@ function rateWindowMetrics(window, pace, usageKnown) {
     }
 
     var known = usageKnown !== false
-    var used = Number(window.usedPercent)
-    var hasPercent = known && isFinite(used)
+    var usedValue = window.usedPercent
+    var usedTypeIsNumeric = typeof usedValue === "number"
+        || (typeof usedValue === "string" && usedValue.trim().length > 0)
+    var used = Number(usedValue)
+    var hasPercent = known && usedTypeIsNumeric && isFinite(used)
     var paceValue = pace
         && pace.expectedUsedPercent !== null
         && pace.expectedUsedPercent !== undefined

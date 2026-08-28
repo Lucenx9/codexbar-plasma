@@ -1618,11 +1618,16 @@ for forbidden_planner_fragment in (
 
 observations_body = applet.function_body("notificationObservations")
 for observation_fragment in (
+    "var rows = notificationObservationRows(item)",
     "providerID: providerMapKey(item.provider)",
     "scopeID: notificationScopeKey(item)",
-    "pending: notificationProviderRefreshPending(item.provider)",
+    "pending: NotificationPlanner.observationPending(",
+    "notificationProviderRefreshPending(item.provider)",
+    'String(item.error || "").length > 0',
+    "item.hasIncident === true",
+    "rows.length",
     "statusIncidentKey: String(item.statusIncidentKey || \"\")",
-    "rows: notificationObservationRows(item)",
+    "rows: rows",
 ):
     if observation_fragment not in observations_body:
         raise AssertionError(

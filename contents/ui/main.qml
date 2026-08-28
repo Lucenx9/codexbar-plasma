@@ -2463,17 +2463,22 @@ PlasmoidItem {
             if (!item) {
                 continue
             }
+            var rows = notificationObservationRows(item)
             result.push({
                 providerIndex: i,
                 providerID: providerMapKey(item.provider),
                 scopeID: notificationScopeKey(item),
-                pending: notificationProviderRefreshPending(item.provider),
+                pending: NotificationPlanner.observationPending(
+                    notificationProviderRefreshPending(item.provider),
+                    String(item.error || "").length > 0,
+                    item.hasIncident === true,
+                    rows.length),
                 statusActive: item.hasIncident === true
                     && String(item.statusSeverity || "").length > 0
                     && String(item.status || "").length > 0,
                 statusSeverity: String(item.statusSeverity || ""),
                 statusIncidentKey: String(item.statusIncidentKey || ""),
-                rows: notificationObservationRows(item)
+                rows: rows
             })
         }
         return result
