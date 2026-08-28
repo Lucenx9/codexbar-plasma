@@ -49,4 +49,17 @@ TestCase {
     function test_nextDelayIsZeroWhenChecksAreDisabled() {
         compare(UpdateLogic.nextUpdateCheckDelay(false, "", 12, nowMs, 60000), 0)
     }
+
+    function test_firstFailureUsesTheBaseRetryDelay() {
+        compare(UpdateLogic.updateRetryDelay(1, 300000, 21600000), 300000)
+    }
+
+    function test_retryDelayDoublesAfterEachFailure() {
+        compare(UpdateLogic.updateRetryDelay(2, 300000, 21600000), 600000)
+        compare(UpdateLogic.updateRetryDelay(3, 300000, 21600000), 1200000)
+    }
+
+    function test_retryDelayStopsAtTheMaximum() {
+        compare(UpdateLogic.updateRetryDelay(20, 300000, 21600000), 21600000)
+    }
 }

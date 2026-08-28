@@ -136,6 +136,10 @@ PlasmoidItem {
     readonly property int widgetUpdateCheckTimeoutMs: 60000
     readonly property int widgetAutoUpdateTimeoutMs: 600000
     readonly property int widgetUpdateMinimumTimerDelayMs: 60000
+    readonly property int widgetUpdateRetryBaseDelayMs: 300000
+    readonly property int widgetUpdateRetryMaximumDelayMs: 21600000
+    property int consecutiveUpdateFailures: 0
+    property bool updateRetryPending: false
     property string updateStatusText: boundedWidgetUpdateText(Plasmoid.configuration.widgetUpdateLastStatus)
     property string updateErrorText: boundedWidgetUpdateText(Plasmoid.configuration.widgetUpdateLastError)
     property string lastNotifiedUpdateVersion: Plasmoid.configuration.lastNotifiedUpdateVersion || ""
@@ -201,6 +205,7 @@ PlasmoidItem {
         if (updateChecksEnabled) {
             Qt.callLater(function() { root.checkForWidgetUpdate(true) })
         } else {
+            updateRetryPending = false
             updateCheckTimer.stop()
         }
     }
@@ -2602,8 +2607,41 @@ PlasmoidItem {
     function missingUpdateScriptJson() {
         return JSON.stringify({
             status: "error",
+            errorCode: "missing_updater",
             message: i18n("Widget updater script is missing from the installed package.")
         })
+    }
+
+    function widgetUpdateErrorText(errorCode, errorDetail) {
+        var detail = boundedCliMessage(errorDetail)
+        switch (String(errorCode || "")) {
+        case "missing_updater":
+            return i18n("Widget updater script is missing from the installed package.")
+        case "missing_tool":
+            return detail.length > 0
+                ? i18n("Widget updater is missing the required tool: %1", detail)
+                : i18n("Widget updater is missing a required tool.")
+        case "local_metadata_invalid":
+            return i18n("The installed widget metadata is invalid.")
+        case "release_fetch_failed":
+            return i18n("Could not fetch widget release metadata from GitHub.")
+        case "release_metadata_invalid":
+            return i18n("Widget release metadata is invalid.")
+        case "release_not_immutable":
+            return i18n("The available widget release is not immutable.")
+        case "release_download_failed":
+            return i18n("Could not download the widget release.")
+        case "release_integrity_failed":
+            return i18n("Widget release integrity verification failed.")
+        case "package_invalid":
+            return i18n("The widget package does not match the release.")
+        case "package_install_failed":
+            return i18n("The widget package could not be installed.")
+        case "invalid_invocation":
+            return i18n("The widget updater command is invalid.")
+        default:
+            return i18n("Widget update check failed.")
+        }
     }
 
     function updateCheckDue(forceCheck) {
@@ -2635,6 +2673,7 @@ PlasmoidItem {
 
     function scheduleNextUpdateCheck(lastCheckOverride) {
         updateCheckTimer.stop()
+        updateRetryPending = false
         if (!updateChecksEnabled || connectedUpdateCommandSource.length > 0) {
             return
         }
@@ -2648,10 +2687,36 @@ PlasmoidItem {
         updateCheckTimer.restart()
     }
 
-    function finishUpdateCommand(sourceName) {
+    function scheduleUpdateRetry() {
+        updateCheckTimer.stop()
+        updateRetryPending = false
+        if (!updateChecksEnabled || connectedUpdateCommandSource.length > 0) {
+            return
+        }
+        updateCheckTimer.interval = UpdateLogic.updateRetryDelay(
+            consecutiveUpdateFailures,
+            widgetUpdateRetryBaseDelayMs,
+            widgetUpdateRetryMaximumDelayMs)
+        updateRetryPending = true
+        updateCheckTimer.restart()
+    }
+
+    function handleUpdateCheckTimer() {
+        var forceCheck = updateRetryPending
+        updateRetryPending = false
+        checkForWidgetUpdate(forceCheck)
+    }
+
+    function finishUpdateCommand(sourceName, successfulCheck) {
         updateCommandTimeoutTimer.stop()
         updateSource.disconnectSource(sourceName)
         connectedUpdateCommandSource = ""
+        if (successfulCheck !== true) {
+            consecutiveUpdateFailures = Math.min(31, consecutiveUpdateFailures + 1)
+            scheduleUpdateRetry()
+            return
+        }
+        consecutiveUpdateFailures = 0
         var completedAt = new Date().toISOString()
         Plasmoid.configuration.autoUpdateLastCheck = completedAt
         scheduleNextUpdateCheck(completedAt)
@@ -2662,7 +2727,7 @@ PlasmoidItem {
             return
         }
         var sourceName = connectedUpdateCommandSource
-        finishUpdateCommand(sourceName)
+        finishUpdateCommand(sourceName, false)
         setWidgetUpdateState(
             i18n("Widget update failed."),
             i18n("Widget update operation timed out."))
@@ -2682,10 +2747,10 @@ PlasmoidItem {
         if (sourceName !== connectedUpdateCommandSource) {
             return
         }
-        finishUpdateCommand(sourceName)
 
         var trimmed = stdoutText.trim()
         if (trimmed.length === 0) {
+            finishUpdateCommand(sourceName, false)
             setWidgetUpdateState(
                 i18n("Widget update check failed."),
                 stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("Widget update check returned no data."))
@@ -2696,26 +2761,29 @@ PlasmoidItem {
         try {
             payload = JSON.parse(trimmed)
         } catch (error) {
+            finishUpdateCommand(sourceName, false)
             setWidgetUpdateState(
                 i18n("Widget update check failed."),
                 i18n("Could not parse widget update JSON: %1", error.message))
             return
         }
 
-        processUpdateCheck(payload)
+        var successfulCheck = processUpdateCheck(payload)
+        finishUpdateCommand(sourceName, successfulCheck)
     }
 
     function processUpdateCheck(payload) {
         var status = String(payload && payload.status ? payload.status : "")
-        var message = boundedCliMessage(payload && payload.message ? payload.message : "")
+        var errorCode = payload && typeof payload.errorCode === "string" ? payload.errorCode : ""
+        var errorDetail = payload && typeof payload.errorDetail === "string" ? payload.errorDetail : ""
         var version = String(payload && payload.remoteVersion ? payload.remoteVersion : "")
         var url = String(payload && payload.assetUrl ? payload.assetUrl : "")
 
         if (status === "error") {
             setWidgetUpdateState(
                 i18n("Widget update check failed."),
-                message.length > 0 ? message : i18n("Widget update check failed."))
-            return
+                widgetUpdateErrorText(errorCode, errorDetail))
+            return false
         }
 
         if (status === "available") {
@@ -2726,7 +2794,7 @@ PlasmoidItem {
             if (!autoUpdateEnabled) {
                 notifyAvailableUpdate(version, url)
             }
-            return
+            return true
         }
         if (status === "installed") {
             var restartText = i18n("Restart Plasma to apply the new widget version.")
@@ -2734,20 +2802,21 @@ PlasmoidItem {
                 ? i18n("Widget update %1 installed. %2", version, restartText)
                 : i18n("Widget update installed. %1", restartText), "")
             notifyInstalledUpdate(version)
-            return
+            return true
         }
         if (status === "current") {
             setWidgetUpdateState(i18n("Widget is up to date."), "")
-            return
+            return true
         }
         if (status === "skipped") {
-            setWidgetUpdateState(message.length > 0 ? message : i18n("Widget update skipped."), "")
-            return
+            setWidgetUpdateState(i18n("Widget update skipped."), "")
+            return true
         }
 
         setWidgetUpdateState(
             i18n("Widget update check failed."),
             i18n("Unknown widget update status: %1", status))
+        return false
     }
 
     function notifyAvailableUpdate(version, url) {
@@ -3805,7 +3874,7 @@ PlasmoidItem {
         repeat: false
         running: false
         triggeredOnStart: false
-        onTriggered: root.checkForWidgetUpdate()
+        onTriggered: root.handleUpdateCheckTimer()
     }
 
     Timer {
