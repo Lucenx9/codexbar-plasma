@@ -2357,16 +2357,6 @@ PlasmoidItem {
         return key.length > 0 && notificationRefreshPending[key] === true
     }
 
-    function notificationObservationPending(item) {
-        if (!item) {
-            return true
-        }
-        return notificationProviderRefreshPending(item.provider)
-            || (String(item.error || "").length > 0
-                && item.hasIncident !== true
-                && (!item.rows || item.rows.length === 0))
-    }
-
     function setNotificationProviderRefreshPending(providerID, pending) {
         var key = providerMapKey(providerID)
         if (key.length === 0) {
@@ -2473,17 +2463,22 @@ PlasmoidItem {
             if (!item) {
                 continue
             }
+            var rows = notificationObservationRows(item)
             result.push({
                 providerIndex: i,
                 providerID: providerMapKey(item.provider),
                 scopeID: notificationScopeKey(item),
-                pending: notificationObservationPending(item),
+                pending: NotificationPlanner.observationPending(
+                    notificationProviderRefreshPending(item.provider),
+                    String(item.error || "").length > 0,
+                    item.hasIncident === true,
+                    rows.length),
                 statusActive: item.hasIncident === true
                     && String(item.statusSeverity || "").length > 0
                     && String(item.status || "").length > 0,
                 statusSeverity: String(item.statusSeverity || ""),
                 statusIncidentKey: String(item.statusIncidentKey || ""),
-                rows: notificationObservationRows(item)
+                rows: rows
             })
         }
         return result

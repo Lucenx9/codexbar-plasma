@@ -11,6 +11,13 @@ function copyMemo(memo) {
     return Guards.copyObject(memo || ({}))
 }
 
+function observationPending(refreshPending, errorPresent, incidentPresent, usageRowCount) {
+    return refreshPending === true
+        || (errorPresent === true
+            && incidentPresent !== true
+            && Number(usageRowCount) === 0)
+}
+
 function statusValue(observation) {
     if (!observation || observation.statusActive !== true) {
         return ""

@@ -56,6 +56,17 @@ TestCase {
         return kinds.join(",")
     }
 
+    function test_errorOnlyObservationRemainsPending() {
+        compare(NotificationPlanner.observationPending(false, true, false, 0), true)
+    }
+
+    function test_observationPendingKeepsPartialHealthySignalsAndExplicitRefreshState() {
+        compare(NotificationPlanner.observationPending(false, true, true, 0), false)
+        compare(NotificationPlanner.observationPending(false, true, false, 1), false)
+        compare(NotificationPlanner.observationPending(false, false, false, 0), false)
+        compare(NotificationPlanner.observationPending(true, false, false, 0), true)
+    }
+
     function test_statusBaselinePrimesSilentlyThenNewIncidentNotifies() {
         var primed = transition("prime", [observation("", "")])
         compare(primed.intents.length, 0)
