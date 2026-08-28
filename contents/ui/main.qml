@@ -2357,6 +2357,16 @@ PlasmoidItem {
         return key.length > 0 && notificationRefreshPending[key] === true
     }
 
+    function notificationObservationPending(item) {
+        if (!item) {
+            return true
+        }
+        return notificationProviderRefreshPending(item.provider)
+            || (String(item.error || "").length > 0
+                && item.hasIncident !== true
+                && (!item.rows || item.rows.length === 0))
+    }
+
     function setNotificationProviderRefreshPending(providerID, pending) {
         var key = providerMapKey(providerID)
         if (key.length === 0) {
@@ -2467,7 +2477,7 @@ PlasmoidItem {
                 providerIndex: i,
                 providerID: providerMapKey(item.provider),
                 scopeID: notificationScopeKey(item),
-                pending: notificationProviderRefreshPending(item.provider),
+                pending: notificationObservationPending(item),
                 statusActive: item.hasIncident === true
                     && String(item.statusSeverity || "").length > 0
                     && String(item.status || "").length > 0,

@@ -222,6 +222,17 @@ TestCase {
         compare(malformed.usedPercent, 0)
     }
 
+    function test_rejectsEmptyBooleanAndStructuredUsagePercentages() {
+        var invalidValues = [null, undefined, "", "   ", true, false, [], {}]
+        for (var i = 0; i < invalidValues.length; i++) {
+            var metrics = Normalizer.rateWindowMetrics(
+                { usedPercent: invalidValues[i] }, null, true)
+            compare(metrics.hasPercent, false)
+            compare(metrics.usedPercent, 0)
+            compare(metrics.leftPercent, 0)
+        }
+    }
+
     function test_distinguishesAMissingWindowFromAnEmptyOne() {
         compare(Normalizer.rateWindowMetrics(null, null, true), null)
         compare(Normalizer.rateWindowMetrics(undefined, null, true), null)

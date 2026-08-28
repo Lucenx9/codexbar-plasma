@@ -17,7 +17,8 @@ function updateCheckDue(updateChecksEnabled, lastCheck, intervalHours, nowMs, fo
     if (!isFinite(hours) || hours <= 0) {
         return true
     }
-    return Number(nowMs) - lastCheckMs >= hours * 60 * 60 * 1000
+    var elapsedMs = Number(nowMs) - lastCheckMs
+    return elapsedMs < 0 || elapsedMs >= hours * 60 * 60 * 1000
 }
 
 function nextUpdateCheckDelay(updateChecksEnabled, lastCheck, intervalHours, nowMs, minimumDelayMs) {
@@ -40,7 +41,11 @@ function nextUpdateCheckDelay(updateChecksEnabled, lastCheck, intervalHours, now
         return minimum
     }
 
-    var remainingMs = lastCheckMs + intervalMs - Number(nowMs)
+    var now = Number(nowMs)
+    if (now < lastCheckMs) {
+        return minimum
+    }
+    var remainingMs = lastCheckMs + intervalMs - now
     return Math.max(minimum, Math.min(intervalMs, remainingMs))
 }
 

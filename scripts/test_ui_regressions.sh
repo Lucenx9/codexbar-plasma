@@ -1616,11 +1616,24 @@ for forbidden_planner_fragment in (
             f"found {forbidden_planner_fragment!r}"
         )
 
+observation_pending_body = applet.function_body("notificationObservationPending")
+for pending_fragment in (
+    "notificationProviderRefreshPending(item.provider)",
+    'String(item.error || "").length > 0',
+    "item.hasIncident !== true",
+    "(!item.rows || item.rows.length === 0)",
+):
+    if pending_fragment not in observation_pending_body:
+        raise AssertionError(
+            "notificationObservationPending must keep an unavailable failed snapshot from clearing memo state; "
+            f"missing {pending_fragment!r}"
+        )
+
 observations_body = applet.function_body("notificationObservations")
 for observation_fragment in (
     "providerID: providerMapKey(item.provider)",
     "scopeID: notificationScopeKey(item)",
-    "pending: notificationProviderRefreshPending(item.provider)",
+    "pending: notificationObservationPending(item)",
     "statusIncidentKey: String(item.statusIncidentKey || \"\")",
     "rows: notificationObservationRows(item)",
 ):

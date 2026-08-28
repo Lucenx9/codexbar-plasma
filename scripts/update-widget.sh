@@ -126,6 +126,8 @@ try:
             path = PurePosixPath(entry.filename)
             if path.is_absolute() or ".." in path.parts or "\\" in entry.filename:
                 raise ValueError
+            if stat.S_ISLNK(entry.external_attr >> 16):
+                raise ValueError
             expanded_bytes += entry.file_size
             if expanded_bytes > maximum_expanded_bytes:
                 raise ValueError
@@ -135,8 +137,6 @@ try:
             raise ValueError
         metadata_entry = metadata_entries[0]
         if metadata_entry.is_dir() or metadata_entry.file_size > maximum_metadata_bytes:
-            raise ValueError
-        if stat.S_ISLNK(metadata_entry.external_attr >> 16):
             raise ValueError
 
         metadata = json.loads(archive.read(metadata_entry))

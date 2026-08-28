@@ -41,9 +41,10 @@ TestCase {
         compare(UpdateLogic.nextUpdateCheckDelay(true, "", 12, nowMs, 60000), 60000)
     }
 
-    function test_nextDelayDoesNotExceedConfiguredIntervalAfterClockSkew() {
+    function test_clockRollbackMakesTheCheckDueAndSchedulesItSoon() {
         var future = new Date(nowMs + 24 * 60 * 60 * 1000).toISOString()
-        compare(UpdateLogic.nextUpdateCheckDelay(true, future, 12, nowMs, 60000), 12 * 60 * 60 * 1000)
+        compare(UpdateLogic.updateCheckDue(true, future, 12, nowMs, false), true)
+        compare(UpdateLogic.nextUpdateCheckDelay(true, future, 12, nowMs, 60000), 60000)
     }
 
     function test_nextDelayIsZeroWhenChecksAreDisabled() {
