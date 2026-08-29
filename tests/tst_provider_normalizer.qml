@@ -591,6 +591,18 @@ TestCase {
         compare(rows[2].cost, 0)
     }
 
+    function test_costHistoryPreservesDateOnlyUpdatedAtAcrossTimeZones() {
+        var rows = Normalizer.normalizeCostDaily([
+            { date: "2026-08-28", totalCost: 6, totalTokens: 60 }
+        ], "USD", 2, "2026-08-29")
+
+        compare(rows.length, 2)
+        compare(rows[0].label, "2026-08-28")
+        compare(rows[0].cost, 6)
+        compare(rows[1].label, "2026-08-29")
+        compare(rows[1].cost, 0)
+    }
+
     function test_costHistoryNeverExceedsTheHistoryPointBound() {
         var daily = []
         for (var i = 0; i < Normalizer.maximumCostHistoryPoints + 50; i++) {

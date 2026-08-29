@@ -425,6 +425,10 @@ function localCalendarDateKey(value) {
     if (typeof value !== "string" || value.trim().length === 0 || value.length > 100) {
         return ""
     }
+    var dateOnly = parsedCalendarDateKey(value.trim())
+    if (dateOnly) {
+        return dateOnly.key
+    }
     var date = new Date(value)
     if (!isFinite(date.getTime())) {
         return ""

@@ -9,5 +9,5 @@ if [[ ! -x "$QMLTESTRUNNER" ]]; then
   exit 1
 fi
 
-QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+TZ=America/Los_Angeles QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
   "$QMLTESTRUNNER" -input "$ROOT_DIR/tests"

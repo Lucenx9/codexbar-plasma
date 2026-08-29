@@ -226,7 +226,7 @@ require_all(
     applet.id_block("notificationSource"),
     (
         "CommandLedger.find(root.activeUsageCommands, sourceName)",
-        'descriptor.kind !== "notification"',
+        '!descriptor || descriptor.kind !== "notification"',
         "root.finishNotificationCommandSource(sourceName)",
     ),
     "notification replies must close only their live ledger entry",
