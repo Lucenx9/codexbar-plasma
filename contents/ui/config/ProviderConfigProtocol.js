@@ -91,18 +91,17 @@ function commandOutcome(payload, stderrText, exitCode) {
     }
 
     var hasStatus = record && Guards.hasOwnKey(record, "status")
-    var status = hasStatus ? String(record.status || "").trim().toLowerCase() : ""
+    var status = hasStatus && typeof record.status === "string"
+        ? record.status.trim().toLowerCase()
+        : ""
+    var statusCancelled = status === "cancelled" || status === "canceled"
     var cancelled = record
-        && (record.cancelled === true || status === "cancelled" || status === "canceled")
-    var statusFailed = record
-        && (status === "error" || status === "failed" || status === "failure")
+        && (record.cancelled === true || statusCancelled)
+    var statusFailed = status === "error" || status === "failed" || status === "failure"
     var statusSupported = !hasStatus
         || status === "ok"
-        || status === "cancelled"
-        || status === "canceled"
-        || status === "error"
-        || status === "failed"
-        || status === "failure"
+        || statusCancelled
+        || statusFailed
     var supportedPayload = commandPayloadIsSupported(payload)
     var code = Number(exitCode)
     var timedOut = code === 124 || code === 137

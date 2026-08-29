@@ -678,6 +678,30 @@ TestCase {
         compare(rows[0].tokens, 4)
     }
 
+    function test_costHistoryDoesNotFillAnExplicitlyMalformedDayWithZero() {
+        var rows = Normalizer.normalizeCostDaily([
+            { date: "2026-08-28", totalCost: 3, totalTokens: 30 },
+            { date: "2026-08-29", totalCost: null }
+        ], "USD", 2, "2026-08-29")
+
+        compare(rows.length, 1)
+        compare(rows[0].label, "2026-08-28")
+        compare(rows[0].cost, 3)
+    }
+
+    function test_costHistoryDoesNotFillBeyondAnIncompleteInspection() {
+        var daily = [{ date: "2026-08-29", totalCost: null }]
+        for (var i = 0; i < Normalizer.maximumCostHistoryScanItems - 1; i++) {
+            daily.push(null)
+        }
+        daily.push({ date: "2026-08-28", totalCost: 3, totalTokens: 30 })
+
+        var rows = Normalizer.normalizeCostDaily(daily, "USD", 2, "2026-08-29")
+
+        compare(rows.length, 1)
+        compare(rows[0].label, "2026-08-28")
+    }
+
     function test_costDailyDegradesToAnEmptyRangeForNonArrays() {
         compare(Normalizer.normalizeCostDaily(null, "USD", 30).length, 0)
         compare(Normalizer.normalizeCostDaily({ "0": { totalCost: 1 }, length: 1 }, "USD", 30).length, 0)

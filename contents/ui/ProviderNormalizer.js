@@ -436,7 +436,7 @@ function localCalendarDateKey(value) {
     return calendarDateKey(date.getFullYear(), date.getMonth() + 1, date.getDate())
 }
 
-function fillMissingCostDays(rows, currency, days, updatedAt) {
+function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys) {
     if (!rows || rows.length === 0) {
         return rows || []
     }
@@ -464,6 +464,9 @@ function fillMissingCostDays(rows, currency, days, updatedAt) {
         var date = new Date(firstTimestampMs + offset * dayMilliseconds)
         var key = calendarDateKey(
             date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate())
+        if (hasOwnKey(blockedDateKeys, key) && !hasOwnKey(byDate, key)) {
+            return rows
+        }
         if (hasOwnKey(byDate, key)) {
             result.push(byDate[key])
             observedInRange = true
@@ -577,6 +580,7 @@ function normalizeCostDaily(items, currency, days, updatedAt) {
     }
 
     var historyDays = boundedHistoryDays(days)
+    var blockedDateKeys = ({})
     var inspectedItems = 0
     for (var i = items.length - 1; i >= 0
             && result.length < historyDays
@@ -586,6 +590,7 @@ function normalizeCostDaily(items, currency, days, updatedAt) {
         if (!item) {
             continue
         }
+        var label = boundedDisplayText(item.date || item.day || item.dayKey || "", 120)
         var cost = firstStrictFiniteNumber(item.totalCost, item.costUSD)
         var tokens = firstStrictFiniteNumber(item.totalTokens, item.tokens)
         var inputTokens = strictFiniteNumber(item.inputTokens)
@@ -597,10 +602,14 @@ function normalizeCostDaily(items, currency, days, updatedAt) {
             tokens = sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens)
         }
         if (!isFinite(cost) && !isFinite(tokens) && !isFinite(inputTokens) && !isFinite(outputTokens)) {
+            var blockedDate = parsedCalendarDateKey(label)
+            if (blockedDate) {
+                blockedDateKeys[blockedDate.key] = true
+            }
             continue
         }
         result.unshift({
-            label: boundedDisplayText(item.date || item.day || item.dayKey || "", 120),
+            label: label,
             cost: isFinite(cost) ? Math.max(0, cost) : 0,
             tokens: isFinite(tokens) ? Math.max(0, tokens) : 0,
             inputTokens: isFinite(inputTokens) ? Math.max(0, inputTokens) : 0,
@@ -610,7 +619,10 @@ function normalizeCostDaily(items, currency, days, updatedAt) {
             currency: boundedDisplayText(currency || "USD", 12)
         })
     }
-    return fillMissingCostDays(result, currency, historyDays, updatedAt)
+    if (i >= 0) {
+        return result
+    }
+    return fillMissingCostDays(result, currency, historyDays, updatedAt, blockedDateKeys)
 }
 
 function normalizeCostTotals(totals, fallbackCost, fallbackTokens, currency) {

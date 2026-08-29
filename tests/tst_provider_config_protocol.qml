@@ -215,6 +215,14 @@ TestCase {
             { status: "ok" }, "", 0).outcome, "success")
     }
 
+    function test_commandOutcomeRejectsStructuredDescriptorStatuses() {
+        var statuses = [["ok"], ["cancelled"], ["error"], { value: "ok" }]
+        for (var i = 0; i < statuses.length; i++) {
+            compare(ProviderConfigProtocol.commandOutcome(
+                { status: statuses[i] }, "", 0).outcome, "invalidPayload")
+        }
+    }
+
     function test_commandOutcomeKeepsHistoricalFailurePrecedence() {
         compare(ProviderConfigProtocol.commandOutcome({ provider: "x" }, "", 124).outcome,
             "timeout")
