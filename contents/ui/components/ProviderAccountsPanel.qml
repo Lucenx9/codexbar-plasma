@@ -15,7 +15,8 @@ ColumnLayout {
     visible: providerID.length > 0
         && (applet.accountLoadingForProvider(providerID)
             || applet.accountOptionsForProvider(providerID).length > 0
-            || applet.accountErrorForProvider(providerID).length > 0)
+            || applet.accountErrorForProvider(providerID).length > 0
+            || applet.selectedAccountForProvider(providerID).length > 0)
     Layout.fillWidth: true
     spacing: Kirigami.Units.smallSpacing
 
@@ -27,6 +28,16 @@ ColumnLayout {
             text: i18n("Accounts")
             font.weight: Font.DemiBold
             Layout.fillWidth: true
+        }
+
+        PlasmaComponents.ToolButton {
+            id: clearAccountOverrideButton
+
+            visible: accountsPanel.applet.selectedAccountForProvider(accountsPanel.providerID).length > 0
+            enabled: !accountsPanel.applet.accountLoadingForProvider(accountsPanel.providerID)
+            icon.name: "edit-clear"
+            Accessible.name: i18n("Use default account")
+            onClicked: accountsPanel.applet.selectAccount(accountsPanel.providerID, "")
         }
 
         Controls.BusyIndicator {

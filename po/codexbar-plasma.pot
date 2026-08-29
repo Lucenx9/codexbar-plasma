@@ -201,6 +201,10 @@ msgid "Accounts"
 msgstr ""
 
 #: contents/ui/components/ProviderAccountsPanel.qml
+msgid "Use default account"
+msgstr ""
+
+#: contents/ui/components/ProviderAccountsPanel.qml
 msgid "Reload accounts"
 msgstr ""
 

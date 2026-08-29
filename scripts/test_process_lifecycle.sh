@@ -27,6 +27,9 @@ require_in_surface applet "delete commands[sourceName]"
 require_in_surface applet "pendingProviderCount = 0"
 require_in_surface applet "readonly property int accountCommandTimeoutMs: 60000"
 require_in_surface applet "readonly property int sessionsCommandTimeoutMs: 60000"
+require_in_surface applet "readonly property int notificationCommandTimeoutMs: 10000"
+require_in_surface applet "function connectNotificationCommand(sourceName)"
+require_in_surface applet "function finishNotificationCommandSource(sourceName)"
 require_in_surface applet "function refreshSessions()"
 require_in_surface applet "id: accountCommandTimeoutTimer"
 require_in_surface applet "root.expirePendingAccountCommands(Date.now())"
@@ -186,13 +189,47 @@ require_all(
         'case "sessions":',
         'case "providerConfig":',
         'case "providerFallback":',
+        'case "notification":',
         "finishUsageCommandSource(sourceName)",
+        "finishNotificationCommandSource(sourceName)",
         "Loading usage timed out. Try again.",
         "Loading cost data timed out. Try again.",
         "Loading sessions timed out. Try again.",
         "Loading provider configuration timed out. Try again.",
     ),
     "usage timeout cleanup is incomplete",
+)
+
+require_all(
+    applet.function_body("connectNotificationCommand"),
+    (
+        'buildUsageCommandDescriptor("notification", "", notificationCommandTimeoutMs)',
+        "CommandLedger.opened(activeUsageCommands, sourceName, descriptor)",
+        "notificationSource.connectSource(sourceName)",
+    ),
+    "notifications must enter the shared deadline ledger",
+)
+require_all(
+    applet.function_body("finishNotificationCommandSource"),
+    (
+        "notificationSource.disconnectSource(sourceName)",
+        "CommandLedger.closed(activeUsageCommands, sourceName)",
+    ),
+    "notification completion must disconnect and close its ledger entry",
+)
+require_all(
+    applet.function_body("sendPlasmaNotification"),
+    ("connectNotificationCommand(", "commandWithRunNonce("),
+    "notification dispatch must start a unique bounded command",
+)
+require_all(
+    applet.id_block("notificationSource"),
+    (
+        "CommandLedger.find(root.activeUsageCommands, sourceName)",
+        'descriptor.kind !== "notification"',
+        "root.finishNotificationCommandSource(sourceName)",
+    ),
+    "notification replies must close only their live ledger entry",
 )
 
 require_all(

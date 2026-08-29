@@ -129,6 +129,7 @@ PlasmoidItem {
     property var accountLoading: ({})
     property var pendingAccountCommands: ({})
     readonly property int accountCommandTimeoutMs: 60000
+    readonly property int notificationCommandTimeoutMs: 10000
     property var notificationMemo: ({})
     property var notificationRefreshPending: ({})
     property bool notificationsPrimed: false
@@ -489,6 +490,23 @@ PlasmoidItem {
         }
 
         usageSource.disconnectSource(sourceName)
+        activeUsageCommands = CommandLedger.closed(activeUsageCommands, sourceName)
+    }
+
+    function connectNotificationCommand(sourceName) {
+        if (sourceName.length === 0) {
+            return
+        }
+        var descriptor = buildUsageCommandDescriptor("notification", "", notificationCommandTimeoutMs)
+        activeUsageCommands = CommandLedger.opened(activeUsageCommands, sourceName, descriptor)
+        notificationSource.connectSource(sourceName)
+    }
+
+    function finishNotificationCommandSource(sourceName) {
+        if (sourceName.length === 0) {
+            return
+        }
+        notificationSource.disconnectSource(sourceName)
         activeUsageCommands = CommandLedger.closed(activeUsageCommands, sourceName)
     }
 
@@ -990,6 +1008,9 @@ PlasmoidItem {
                 "",
                 i18n("Loading usage timed out. Try again."))
             return
+        case "notification":
+            finishNotificationCommandSource(sourceName)
+            return
         default:
             finishUsageCommandSource(sourceName)
         }
@@ -1285,7 +1306,7 @@ PlasmoidItem {
             hintLine: tokenCostHint(providerID),
             totals: totals,
             models: Normalizer.normalizeCostModels(item.daily, currency, historyDays),
-            daily: Normalizer.normalizeCostDaily(item.daily, currency, historyDays)
+            daily: Normalizer.normalizeCostDaily(item.daily, currency, historyDays, item.updatedAt)
         }
     }
 
@@ -2589,7 +2610,7 @@ PlasmoidItem {
         var command = "if command -v notify-send >/dev/null 2>&1; then notify-send --app-name=CodexBar --icon=view-statistics --urgency="
             + shellQuote(cleanUrgency) + " -- " + shellQuote(cleanTitle) + " " + shellQuote(cleanBody) + "; fi"
         // A shell assignment cannot directly prefix the reserved word `if`.
-        notificationSource.connectSource(commandWithRunNonce(":; " + command))
+        connectNotificationCommand(commandWithRunNonce(":; " + command))
     }
 
     function updateScriptPath() {
@@ -3912,7 +3933,11 @@ PlasmoidItem {
         engine: "executable"
 
         onNewData: function(sourceName, data) {
-            notificationSource.disconnectSource(sourceName)
+            var descriptor = CommandLedger.find(root.activeUsageCommands, sourceName)
+            if (!descriptor || descriptor.kind !== "notification") {
+                return
+            }
+            root.finishNotificationCommandSource(sourceName)
         }
     }
 

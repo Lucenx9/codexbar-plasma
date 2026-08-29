@@ -211,6 +211,19 @@ TestCase {
             { usedPercent: 10 }, { expectedUsedPercent: 0 }, true).pacePercent, 0)
     }
 
+    function test_rejectsEmptyBooleanAndStructuredPaceValues() {
+        var invalidValues = [null, undefined, "", "   ", true, false, [], {}]
+        for (var i = 0; i < invalidValues.length; i++) {
+            var metrics = Normalizer.rateWindowMetrics(
+                { usedPercent: 10 }, {
+                    expectedUsedPercent: invalidValues[i],
+                    etaSeconds: invalidValues[i]
+                }, true)
+            compare(metrics.pacePercent, -1)
+            compare(metrics.paceEtaSeconds, 0)
+        }
+    }
+
     function test_reportsAnUnknownPercentageInsteadOfGuessingZero() {
         var unknown = Normalizer.rateWindowMetrics({ usedPercent: 80 }, null, false)
         compare(unknown.hasPercent, false)
@@ -563,6 +576,21 @@ TestCase {
         compare(rows[0].currency, "USD")
     }
 
+    function test_costHistoryFillsMissingCalendarDaysInTheReportedWindow() {
+        var rows = Normalizer.normalizeCostDaily([
+            { date: "2026-08-27", totalCost: 6, totalTokens: 60 }
+        ], "USD", 3, "2026-08-29T12:00:00Z")
+
+        compare(rows.length, 3)
+        compare(rows[0].label, "2026-08-27")
+        compare(rows[0].cost, 6)
+        compare(rows[1].label, "2026-08-28")
+        compare(rows[1].cost, 0)
+        compare(rows[1].tokens, 0)
+        compare(rows[2].label, "2026-08-29")
+        compare(rows[2].cost, 0)
+    }
+
     function test_costHistoryNeverExceedsTheHistoryPointBound() {
         var daily = []
         for (var i = 0; i < Normalizer.maximumCostHistoryPoints + 50; i++) {
@@ -624,6 +652,20 @@ TestCase {
         compare(current[0].label, legacy[0].label)
     }
 
+    function test_costHistoryRejectsNullAndBooleanNumbersButUsesValidAliases() {
+        var rows = Normalizer.normalizeCostDaily([
+            { date: "2026-08-01", totalCost: null },
+            { date: "2026-08-02", totalCost: false, totalTokens: true },
+            { date: "2026-08-03", totalCost: null, costUSD: 3, totalTokens: false, tokens: 4 },
+            { date: "2026-08-04", inputTokens: true }
+        ], "USD", 30)
+
+        compare(rows.length, 1)
+        compare(rows[0].label, "2026-08-03")
+        compare(rows[0].cost, 3)
+        compare(rows[0].tokens, 4)
+    }
+
     function test_costDailyDegradesToAnEmptyRangeForNonArrays() {
         compare(Normalizer.normalizeCostDaily(null, "USD", 30).length, 0)
         compare(Normalizer.normalizeCostDaily({ "0": { totalCost: 1 }, length: 1 }, "USD", 30).length, 0)
@@ -641,6 +683,20 @@ TestCase {
         compare(fallback.cost, 7.25)
         compare(fallback.tokens, 400)
         compare(fallback.currency, "USD")
+    }
+
+    function test_costTotalsRejectNullAndBooleanNumbersBeforeUsingFallbacks() {
+        var totals = Normalizer.normalizeCostTotals({
+            totalCost: null,
+            totalTokens: false,
+            inputTokens: true,
+            outputTokens: ""
+        }, 7.25, 400, "USD")
+
+        compare(totals.cost, 7.25)
+        compare(totals.tokens, 400)
+        compare(totals.inputTokens, 0)
+        compare(totals.outputTokens, 0)
     }
 
     function test_costTotalsSumTokenPartsWhenNoTotalIsEmitted() {

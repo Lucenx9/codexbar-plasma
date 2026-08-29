@@ -7,6 +7,11 @@
 // and notification effects. The memo is opaque outside this module: callers
 // only retain `nextMemo` and feed it into the next transition.
 
+// One normalized pass can carry 256 providers with 27 usage windows and three
+// threshold keys per window. This keeps a complete pass while bounding stale
+// account scopes accumulated across a long plasmashell session.
+var maximumMemoEntries = 32768
+
 function copyMemo(memo) {
     return Guards.copyObject(memo || ({}))
 }
@@ -81,6 +86,59 @@ function paceKey(observation, row, index) {
 function resetKey(observation, row, index) {
     return "reset:" + String(observation.scopeID || "") + ":"
         + rowIdentity(observation, row, index, false)
+}
+
+function currentMemoKeys(observations) {
+    var result = ({})
+    var items = Array.isArray(observations) ? observations : []
+    for (var i = 0; i < items.length; i++) {
+        var item = items[i]
+        if (!item) {
+            continue
+        }
+        result[NotificationMemo.statusMemoKey(item.providerID)] = true
+        result[NotificationMemo.statusPrimedMemoKey(item.providerID)] = true
+        result[scopePrimedKey(item)] = true
+        var rows = Array.isArray(item.rows) ? item.rows : []
+        for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+            result[quotaKey(item, rows[rowIndex], rowIndex)] = true
+            result[paceKey(item, rows[rowIndex], rowIndex)] = true
+            result[resetKey(item, rows[rowIndex], rowIndex)] = true
+        }
+    }
+    return result
+}
+
+function boundedMemo(memo, observations) {
+    var source = copyMemo(memo)
+    var keys = Object.keys(source)
+    if (keys.length <= maximumMemoEntries) {
+        return source
+    }
+
+    var protectedKeys = currentMemoKeys(observations)
+    var keptKeys = ({})
+    var keptCount = 0
+    for (var i = keys.length - 1; i >= 0 && keptCount < maximumMemoEntries; i--) {
+        if (Guards.hasOwnKey(protectedKeys, keys[i])) {
+            keptKeys[keys[i]] = true
+            keptCount++
+        }
+    }
+    for (var j = keys.length - 1; j >= 0 && keptCount < maximumMemoEntries; j--) {
+        if (!Guards.hasOwnKey(keptKeys, keys[j])) {
+            keptKeys[keys[j]] = true
+            keptCount++
+        }
+    }
+
+    var result = ({})
+    for (var k = 0; k < keys.length; k++) {
+        if (Guards.hasOwnKey(keptKeys, keys[k])) {
+            result[keys[k]] = source[keys[k]]
+        }
+    }
+    return result
 }
 
 function clearScopeState(nextMemo, observation) {
@@ -209,7 +267,8 @@ function transition(observations, previousMemo, options) {
     var items = Array.isArray(observations) ? observations : []
     if (mode === "reset") {
         return {
-            nextMemo: NotificationMemo.preservedMemoAfterReset(previousMemo),
+            nextMemo: boundedMemo(
+                NotificationMemo.preservedMemoAfterReset(previousMemo), []),
             intents: []
         }
     }
@@ -267,5 +326,5 @@ function transition(observations, previousMemo, options) {
             processReset(previousMemo, nextMemo, item, i, options, intents)
         }
     }
-    return { nextMemo: nextMemo, intents: intents }
+    return { nextMemo: boundedMemo(nextMemo, items), intents: intents }
 }

@@ -203,6 +203,18 @@ TestCase {
         compare(bare.message, "")
     }
 
+    function test_commandOutcomeRejectsUnknownDescriptorStatuses() {
+        var statuses = ["queued", "unknown", "", null, true]
+        for (var i = 0; i < statuses.length; i++) {
+            var result = ProviderConfigProtocol.commandOutcome(
+                { status: statuses[i] }, "", 0)
+            compare(result.outcome, "invalidPayload")
+        }
+
+        compare(ProviderConfigProtocol.commandOutcome(
+            { status: "ok" }, "", 0).outcome, "success")
+    }
+
     function test_commandOutcomeKeepsHistoricalFailurePrecedence() {
         compare(ProviderConfigProtocol.commandOutcome({ provider: "x" }, "", 124).outcome,
             "timeout")

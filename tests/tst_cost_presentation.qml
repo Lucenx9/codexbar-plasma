@@ -320,13 +320,13 @@ TestCase {
         compare(points[0].displayValue, "$2.00")
     }
 
-    function test_spendTotalsSumOnlyTheRangeCurrency() {
+    function test_spendTotalsKeepAllCurrencyFreeTokens() {
         var totals = CostPresentation.spendTotals([
             { totals: { cost: 2, tokens: 100, currency: "USD" } },
             { totals: { cost: 9, tokens: 400, currency: "EUR" } }
         ])
         compare(totals.cost, 2)
-        compare(totals.tokens, 100)
+        compare(totals.tokens, 500)
         compare(totals.currency, "USD")
     }
 
