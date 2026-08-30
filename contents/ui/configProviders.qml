@@ -1363,7 +1363,7 @@ KCM.SimpleKCM {
                     delegate: Controls.Button {
                         required property var modelData
 
-                        text: SafeText.plainTextAsMnemonicRichText(modelData.title)
+                        text: SafeText.plainButtonText(modelData.title, contentItem !== null)
                         Accessible.name: modelData.title
                         icon.name: modelData.icon
                         enabled: modelData.enabled

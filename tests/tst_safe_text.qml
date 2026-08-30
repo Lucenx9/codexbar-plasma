@@ -36,6 +36,18 @@ TestCase {
             "<span>&&lt;test&&gt; &&amp; &&quot;quoted&&quot;</span>")
     }
 
+    function test_plainMnemonicLabelLeavesMarkupLiteralAndEscapesAmpersands() {
+        compare(SafeText.plainTextAsMnemonicLabel("<test> & \"quoted\""),
+            "<test> && \"quoted\"")
+        compare(SafeText.plainTextAsMnemonicLabel({ text: "unsafe" }), "")
+    }
+
+    function test_plainButtonTextFollowsTheControlsStyleLabelPath() {
+        compare(SafeText.plainButtonText("Docs & help", false), "Docs && help")
+        compare(SafeText.plainButtonText("Docs & help", true),
+            SafeText.plainTextAsMnemonicRichText("Docs & help"))
+    }
+
     function test_emptyMessageStaysEmpty() {
         // QML's V4 engine returns -1 for "".indexOf(""), unlike ECMAScript's 0,
         // so the lookahead guard in redactCredentials must not use indexOf as a

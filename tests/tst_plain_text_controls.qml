@@ -33,12 +33,17 @@ TestCase {
         Components.PlainComboBox {}
     }
 
-    function test_abstractButtonsEscapeMarkup() {
+    function test_buttonUsesActiveStyleLabelPath() {
         var button = createTemporaryObject(buttonComponent, this, { plainText: activeMarkup })
+
+        compare(button.text, SafeText.plainButtonText(
+            activeMarkup, button.contentItem !== null))
+    }
+
+    function test_otherAbstractButtonsEscapeMarkup() {
         var checkBox = createTemporaryObject(checkBoxComponent, this, { plainText: activeMarkup })
         var itemDelegate = createTemporaryObject(itemDelegateComponent, this, { plainText: activeMarkup })
 
-        compare(button.text, SafeText.plainTextAsMnemonicRichText(activeMarkup))
         compare(checkBox.text, SafeText.plainTextAsRichText(activeMarkup))
         compare(itemDelegate.text, SafeText.plainTextAsMnemonicRichText(activeMarkup))
     }
