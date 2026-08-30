@@ -233,12 +233,12 @@ TestCase {
 
     function test_onlyLiteralFirstCodexbarTokenUsesConfiguredPath() {
         var normalized = ProviderDescriptor.normalize(descriptor([
-            field({ writeCommand: ["codexbar", "config", "set", "codexbar"] })
+            field({ writeCommand: ["codexbar", "config", "set", "{value}", "codexbar"] })
         ]))
         var plan = ProviderDescriptor.planFieldWrite(normalized.fields[0], "unused", "/custom/codexbar")
 
         verify(plan.ok)
-        compare(plan.commandLine, "'/custom/codexbar' 'config' 'set' 'codexbar'")
+        compare(plan.commandLine, "'/custom/codexbar' 'config' 'set' 'unused' 'codexbar'")
     }
 
     function test_genericFieldPlanRejectsSecretBeforeInterpolation() {
@@ -251,6 +251,31 @@ TestCase {
         verify(!plan.ok)
         compare(plan.reason, "secretRequiresPrompt")
         compare(plan.commandLine.indexOf(marker), -1)
+    }
+
+    function test_genericFieldPlanRequiresValuePlaceholder() {
+        var normalized = ProviderDescriptor.normalize(descriptor([
+            field({ writeCommand: ["codexbar", "config", "set", "--flag"] }),
+            field({ id: "healthy", writeCommand: ["codexbar", "config", "set", "--value", "{value}"] })
+        ]))
+        var plan = ProviderDescriptor.planFieldWrite(normalized.fields[0], "dropped", "codexbar")
+
+        verify(!plan.ok)
+        compare(plan.reason, "missingValuePlaceholder")
+        compare(plan.commandLine.indexOf("dropped"), -1)
+        verify(ProviderDescriptor.planFieldWrite(normalized.fields[1], "kept", "codexbar").ok)
+    }
+
+    function test_secretPromptPlanRejectsNonSecretAndValueChannelCommands() {
+        var normalized = ProviderDescriptor.normalize(descriptor([
+            field({ writeCommand: ["codexbar", "config", "set", "--value", "{value}"] }),
+            field({ id: "secretWithValue", kind: "secret", writeCommand: ["codexbar", "config", "set-api-key", "{value}"] })
+        ]))
+
+        verify(!ProviderDescriptor.planSecretPrompt(normalized.fields[0], "codexbar").ok)
+        var valueChannelPlan = ProviderDescriptor.planSecretPrompt(normalized.fields[1], "codexbar")
+        verify(!valueChannelPlan.ok)
+        compare(valueChannelPlan.reason, "unsupportedCommand")
     }
 
     function test_secretPromptPlanHasNoValueChannel() {

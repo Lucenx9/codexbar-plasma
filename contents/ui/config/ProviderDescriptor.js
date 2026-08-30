@@ -120,6 +120,11 @@ function planFieldWrite(field, value, commandPath) {
     if (field.kind === "secret") {
         return rejectedPlan("secretRequiresPrompt")
     }
+    // The writeCommand has no other value channel: without the placeholder the
+    // user's edit would be silently dropped and the stored value left as-is.
+    if (!commandTokensContainValue(field.writeCommand)) {
+        return rejectedPlan("missingValuePlaceholder")
+    }
     return acceptedPlan(commandLineFromTokens(
         field.writeCommand, ({ "{value}": value }), commandPath))
 }
@@ -127,10 +132,24 @@ function planFieldWrite(field, value, commandPath) {
 // There is deliberately no value argument. The QML prompt reads the secret
 // inside the child script and pipes it to stdin, so it never appears in argv.
 function planSecretPrompt(field, commandPath) {
-    if (!field || !isAllowedCommand(field.writeCommand, "field")) {
+    // Only secret fields may take the prompt path, and their command must not
+    // expect a {value}: the prompt supplies the secret on stdin only, so a
+    // placeholder would reach the CLI as a literal token.
+    if (!field || field.kind !== "secret"
+            || !isAllowedCommand(field.writeCommand, "field")
+            || commandTokensContainValue(field.writeCommand)) {
         return rejectedPlan("unsupportedCommand")
     }
     return acceptedPlan(commandLineFromTokens(field.writeCommand, ({}), commandPath))
+}
+
+function commandTokensContainValue(commandTokens) {
+    for (var i = 0; i < commandTokens.length; i++) {
+        if (String(commandTokens[i]).indexOf("{value}") !== -1) {
+            return true
+        }
+    }
+    return false
 }
 
 function planAction(action, commandPath) {

@@ -21,29 +21,29 @@ KCM.SimpleKCM {
     // widget uses. The provider list/toggles below persist immediately through
     // `codexbar config enable/disable`, independent of the KCM Apply cycle.
     property string cfg_commandPath
-    property string cfg_commandPathDefault
+    property string cfg_commandPathDefault: "codexbar"
     property string cfg_provider
-    property string cfg_providerDefault
+    property string cfg_providerDefault: ""
     property string cfg_source
-    property string cfg_sourceDefault
+    property string cfg_sourceDefault: ""
     property int cfg_refreshInterval
-    property int cfg_refreshIntervalDefault
+    property int cfg_refreshIntervalDefault: 300
     property bool cfg_includeStatus
-    property bool cfg_includeStatusDefault
+    property bool cfg_includeStatusDefault: false
     property bool cfg_usageBarsShowUsed
-    property bool cfg_usageBarsShowUsedDefault
+    property bool cfg_usageBarsShowUsedDefault: false
     property bool cfg_showProviderChangelogs
-    property bool cfg_showProviderChangelogsDefault
+    property bool cfg_showProviderChangelogsDefault: false
     property bool cfg_showProviderInPanel
-    property bool cfg_showProviderInPanelDefault
+    property bool cfg_showProviderInPanelDefault: true
     property bool cfg_showPercentInPanel
-    property bool cfg_showPercentInPanelDefault
+    property bool cfg_showPercentInPanelDefault: true
     property bool cfg_showMultiProviderInPanel
-    property bool cfg_showMultiProviderInPanelDefault
+    property bool cfg_showMultiProviderInPanelDefault: false
     property bool cfg_showCreditsInPanel
-    property bool cfg_showCreditsInPanelDefault
+    property bool cfg_showCreditsInPanelDefault: false
     property int cfg_providerConfigRevision
-    property int cfg_providerConfigRevisionDefault
+    property int cfg_providerConfigRevisionDefault: 0
 
     readonly property string commandPath: (cfg_commandPath || "codexbar").trim()
 
@@ -1392,7 +1392,7 @@ KCM.SimpleKCM {
                     }
 
                     Controls.BusyIndicator {
-                        running: page.selectedProvider
+                        running: page.selectedProvider !== null
                             && page.providerDiagnosticLoadingFor(page.selectedProvider.provider)
                         visible: running
                         Layout.preferredWidth: Kirigami.Units.iconSizes.small

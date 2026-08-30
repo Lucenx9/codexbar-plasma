@@ -9,9 +9,9 @@ KCM.SimpleKCM {
     id: page
 
     property alias cfg_provider: providerField.text
-    property string cfg_providerDefault
+    property string cfg_providerDefault: ""
     property alias cfg_source: sourceField.text
-    property string cfg_sourceDefault
+    property string cfg_sourceDefault: ""
 
     Kirigami.FormLayout {
         Kirigami.Separator {
