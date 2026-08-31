@@ -553,6 +553,41 @@ function costRecordHasError(item) {
         && item.error !== undefined
 }
 
+function normalizeCostEnvelope(payload) {
+    var items
+    if (Array.isArray(payload)) {
+        if (payload.length === 0) {
+            return []
+        }
+        items = payload
+    } else if (isCliRecord(payload)) {
+        items = [payload]
+    } else {
+        return null
+    }
+
+    var result = []
+    var itemLimit = Math.min(items.length, maximumCostSnapshots)
+    for (var i = 0; i < itemLimit; i++) {
+        var item = items[i]
+        if (!isCliRecord(item)) {
+            continue
+        }
+        var providerID = normalizedProviderID(item.provider)
+        var itemHasError = costRecordHasError(item)
+        if (providerID.length === 0 && itemHasError) {
+            return null
+        }
+        if (providerID.length === 0) {
+            continue
+        }
+        var snapshot = copyObject(item)
+        snapshot.provider = providerID
+        result.push(snapshot)
+    }
+    return result.length > 0 ? result : null
+}
+
 // A partial cost response is a complete fresh snapshot except for the providers
 // named by error records. Carry only those providers forward; copying the whole
 // previous map would retain providers that the CLI no longer reports.

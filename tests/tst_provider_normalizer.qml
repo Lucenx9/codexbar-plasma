@@ -231,6 +231,8 @@ TestCase {
         }
         compare(Normalizer.strictFiniteNumber(0), 0)
         compare(Normalizer.strictFiniteNumber(" 2.5 "), 2.5)
+        compare(Normalizer.firstStrictFiniteNumber({}, 0), 0)
+        compare(Normalizer.firstStrictFiniteNumber("   ", " 3.5 "), 3.5)
     }
 
     function test_reportsAnUnknownPercentageInsteadOfGuessingZero() {
@@ -441,6 +443,55 @@ TestCase {
     }
 
     // --- cost ---------------------------------------------------------------
+
+    function test_costEnvelopeAcceptsEmptyAndRecognizedSnapshots() {
+        var empty = Normalizer.normalizeCostEnvelope([])
+        verify(empty !== null)
+        compare(empty.length, 0)
+
+        var singleton = Normalizer.normalizeCostEnvelope({ provider: "groqcloud" })
+        verify(singleton !== null)
+        compare(singleton.length, 1)
+        compare(singleton[0].provider, "groq")
+
+        var mixed = Normalizer.normalizeCostEnvelope([
+            null,
+            { unexpected: true },
+            { provider: "codex" },
+            { provider: "claude", error: { message: "cost failed" } }
+        ])
+        verify(mixed !== null)
+        compare(mixed.length, 2)
+        compare(mixed[0].provider, "codex")
+        compare(mixed[1].provider, "claude")
+        verify(Normalizer.costRecordHasError(mixed[1]))
+    }
+
+    function test_costEnvelopeRejectsUnsupportedNonemptyPayloads() {
+        compare(Normalizer.normalizeCostEnvelope({ unexpected: true }), null)
+        compare(Normalizer.normalizeCostEnvelope([null, { unexpected: true }]), null)
+        compare(Normalizer.normalizeCostEnvelope({ error: { message: "cost failed" } }), null)
+        compare(Normalizer.normalizeCostEnvelope([
+            { provider: "codex" },
+            { error: { message: "cost failed" } }
+        ]), null)
+        compare(Normalizer.normalizeCostEnvelope("no cost data"), null)
+        compare(Normalizer.normalizeCostEnvelope(42), null)
+        compare(Normalizer.normalizeCostEnvelope(null), null)
+    }
+
+    function test_costEnvelopeAppliesTheSnapshotBoundBeforeFiltering() {
+        var payload = []
+        for (var i = 0; i < 256; i++) {
+            payload.push({ provider: "provider-" + i })
+        }
+        payload.push({ provider: "outside-bound" })
+
+        var snapshots = Normalizer.normalizeCostEnvelope(payload)
+        verify(snapshots !== null)
+        compare(snapshots.length, 256)
+        compare(snapshots[255].provider, "provider-255")
+    }
 
     function test_costTrustMetadataNormalizesTheOfficialContract() {
         var trust = Normalizer.normalizeCostTrustMetadata({
