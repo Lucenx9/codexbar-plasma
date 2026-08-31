@@ -8,6 +8,7 @@ import "Guards.js" as Guards
 import "NotificationMemo.js" as NotificationMemo
 import "NotificationPlanner.js" as NotificationPlanner
 import "PanelElements.js" as PanelElements
+import "PopupSelection.js" as PopupSelection
 import "CommandLedger.js" as CommandLedger
 import "CostRefreshPolicy.js" as CostRefreshPolicy
 import "CostPresentation.js" as CostPresentation
@@ -191,6 +192,9 @@ PlasmoidItem {
     onProviderConfigRevisionChanged: Qt.callLater(refreshNow)
     onAutoSelectProviderChanged: updateSelectedProvider()
     onOverviewProviderIDsRawChanged: updateSelectedProvider()
+    onOverviewAvailableChanged: reconcileGlobalViewAvailability()
+    onSpendAvailableChanged: reconcileGlobalViewAvailability()
+    onSessionsAvailableChanged: reconcileGlobalViewAvailability()
     onEnableNotificationsChanged: resetNotificationMemo()
     onNotifyStatusIncidentsChanged: resetNotificationMemo()
     onNotifyQuotaWarningsChanged: resetNotificationMemo()
@@ -218,10 +222,7 @@ PlasmoidItem {
     }
     onProvidersChanged: {
         if (providers.length === 0) {
-            selectedProviderID = ""
-            if (!globalNavigationAvailable) {
-                selectionInitialized = false
-            }
+            updateSelectedProvider()
             resetNotificationMemo()
             return
         }
@@ -1144,13 +1145,17 @@ PlasmoidItem {
             return
         }
 
-        var items = Array.isArray(payload) ? payload : [payload]
+        var items = Normalizer.normalizeCostEnvelope(payload)
+        if (items === null) {
+            costErrorText = i18n("codexbar cost returned an unsupported JSON payload.")
+            applyTokenCosts()
+            return
+        }
         var nextCosts = ({})
         var costMessage = ""
         var hadCostRecordError = false
         var failedCostProviderIDs = []
-        var itemLimit = Math.min(items.length, maximumCostSnapshots)
-        for (var i = 0; i < itemLimit; i++) {
+        for (var i = 0; i < items.length; i++) {
             var item = items[i]
             if (!isCliRecord(item)) {
                 continue
@@ -1599,25 +1604,46 @@ PlasmoidItem {
         }
         var parts = []
         var currency = Normalizer.boundedDisplayText(source.currency || source.currencyCode || "USD", 12)
-        var cost = source.costUSD !== undefined ? source.costUSD : (source.cost !== undefined ? source.cost : source.totalCost)
-        var tokens = source.totalTokens !== undefined ? source.totalTokens : source.tokens
-        var requests = source.requests !== undefined ? source.requests : source.requestCount
-        var points = source.points !== undefined ? source.points : source.totalPoints
+        var cost = Normalizer.firstStrictFiniteNumber(source.costUSD, source.cost)
+        if (!isFinite(cost)) {
+            cost = Normalizer.strictFiniteNumber(source.totalCost)
+        }
+        var tokens = Normalizer.firstStrictFiniteNumber(source.totalTokens, source.tokens)
+        var requests = Normalizer.firstStrictFiniteNumber(source.requests, source.requestCount)
+        var points = Normalizer.firstStrictFiniteNumber(source.points, source.totalPoints)
 
-        if (isFinite(Number(cost))) {
-            parts.push(amountString(Number(cost), currency))
+        if (isFinite(cost)) {
+            parts.push(amountString(cost, currency))
         }
-        if (isFinite(Number(tokens)) && Number(tokens) > 0) {
-            parts.push(i18n("%1 tokens", tokenCountString(Number(tokens))))
+        if (isFinite(tokens) && tokens > 0) {
+            parts.push(i18n("%1 tokens", tokenCountString(tokens)))
         }
-        if (isFinite(Number(requests)) && Number(requests) > 0) {
-            parts.push(i18n("%1 requests", tokenCountString(Number(requests))))
+        if (isFinite(requests) && requests > 0) {
+            parts.push(i18n("%1 requests", tokenCountString(requests)))
         }
-        if (isFinite(Number(points)) && Number(points) > 0) {
-            parts.push(i18n("%1 points", tokenCountString(Number(points))))
+        if (isFinite(points) && points > 0) {
+            parts.push(i18n("%1 points", tokenCountString(points)))
         }
         if (parts.length === 0) {
-            appendDashboardMetric(rows, label, source.value || source.total || source.used, "number")
+            var fallbackValue = Normalizer.firstStrictFiniteNumber(source.value,
+                Normalizer.firstStrictFiniteNumber(source.total, source.used))
+            if (!isFinite(fallbackValue)) {
+                var fallbackText = typeof source.value === "string"
+                    ? Normalizer.boundedDisplayText(source.value, 120)
+                    : ""
+                if (fallbackText.length === 0) {
+                    fallbackText = typeof source.total === "string"
+                        ? Normalizer.boundedDisplayText(source.total, 120)
+                        : ""
+                }
+                if (fallbackText.length === 0) {
+                    fallbackText = typeof source.used === "string"
+                        ? Normalizer.boundedDisplayText(source.used, 120)
+                        : ""
+                }
+                fallbackValue = fallbackText
+            }
+            appendDashboardMetric(rows, label, fallbackValue, "number")
             return
         }
         rows.push({
@@ -1672,37 +1698,40 @@ PlasmoidItem {
         if (kind === "text") {
             return Normalizer.boundedDisplayText(value, 120)
         }
+        var numericValue = Normalizer.strictFiniteNumber(value)
         if (kind === "percent") {
-            var percent = Number(value)
-            return isFinite(percent) ? i18n("%1%", Math.round(percent)) : ""
+            return isFinite(numericValue) ? i18n("%1%", Math.round(numericValue)) : ""
         }
         if (kind === "tokens") {
-            var tokens = Number(value)
-            return isFinite(tokens) ? i18n("%1 tokens", tokenCountString(tokens)) : ""
+            return isFinite(numericValue) ? i18n("%1 tokens", tokenCountString(numericValue)) : ""
         }
         if (kind === "currency") {
-            var cost = Number(value)
-            return isFinite(cost) ? amountString(cost, "USD") : ""
+            return isFinite(numericValue) ? amountString(numericValue, "USD") : ""
         }
-        var number = Number(value)
-        if (!isFinite(number)) {
-            return Normalizer.boundedDisplayText(value, 120)
+        if (!isFinite(numericValue)) {
+            return typeof value === "string"
+                ? Normalizer.boundedDisplayText(value, 120)
+                : ""
         }
-        return tokenCountString(number)
+        return tokenCountString(numericValue)
     }
 
     function dashboardTopSuffix(item) {
-        if (isFinite(Number(item.costUSD))) {
-            return amountString(Number(item.costUSD), "USD")
+        var cost = Normalizer.strictFiniteNumber(item.costUSD)
+        var points = Normalizer.strictFiniteNumber(item.points)
+        var tokens = Normalizer.strictFiniteNumber(item.totalTokens)
+        var requests = Normalizer.strictFiniteNumber(item.requests)
+        if (isFinite(cost)) {
+            return amountString(cost, "USD")
         }
-        if (isFinite(Number(item.points))) {
-            return i18n("%1 points", tokenCountString(Number(item.points)))
+        if (isFinite(points)) {
+            return i18n("%1 points", tokenCountString(points))
         }
-        if (isFinite(Number(item.totalTokens))) {
-            return i18n("%1 tokens", tokenCountString(Number(item.totalTokens)))
+        if (isFinite(tokens)) {
+            return i18n("%1 tokens", tokenCountString(tokens))
         }
-        if (isFinite(Number(item.requests))) {
-            return i18n("%1 requests", tokenCountString(Number(item.requests)))
+        if (isFinite(requests)) {
+            return i18n("%1 requests", tokenCountString(requests))
         }
         return ""
     }
@@ -1897,6 +1926,9 @@ PlasmoidItem {
         var providerUsageDashboard = providerDetails.length > 0 ? null : usageDashboard(providerID, usage, item)
         var hasSupplementalUsage = providerDetails.length > 0 || providerUsageDashboard !== null
         var placeholder = providerPlaceholder(providerID, rows, usage, item, error, hasSupplementalUsage)
+        var creditsRemaining = credits
+            ? Normalizer.strictFiniteNumber(credits.remaining)
+            : Number.NaN
 
         return {
             provider: providerID,
@@ -1917,8 +1949,8 @@ PlasmoidItem {
             dashboardUrl: providerDashboardUrl(providerID),
             statusUrl: safeStatusUrl(providerID, status && status.url ? status.url : ""),
             changelogUrl: providerChangelogUrl(providerID),
-            credits: credits && credits.remaining !== null && credits.remaining !== undefined && isFinite(Number(credits.remaining))
-                ? Number(credits.remaining)
+            credits: isFinite(creditsRemaining)
+                ? creditsRemaining
                 : null,
             status: Normalizer.boundedDisplayText(status ? statusText(status) : "", 500),
             statusSeverity: severity,
@@ -2119,8 +2151,9 @@ PlasmoidItem {
             return null
         }
 
-        var used = Number(cost.used)
-        var limit = Number(cost.limit)
+        var used = Normalizer.strictFiniteNumber(cost.used)
+        var limit = Normalizer.strictFiniteNumber(cost.limit)
+        var personalUsed = Normalizer.strictFiniteNumber(cost.personalUsed)
         var currency = Normalizer.boundedDisplayText(cost.currencyCode || "USD", 12)
         var period = Normalizer.boundedDisplayText(cost.period || i18n("This month"), 120)
         var hasUsed = isFinite(used)
@@ -2166,8 +2199,8 @@ PlasmoidItem {
                 percentUsed: percent,
                 spendLine: i18n("%1: %2 / %3", localizedPeriod(period), amountString(used, currency), amountString(limit, currency)),
                 percentLine: i18n("%1% used", Math.round(percent)),
-                personalSpendLine: cost.personalUsed && Number(cost.personalUsed) > 0
-                    ? i18n("Your spend: %1", amountString(Number(cost.personalUsed), currency))
+                personalSpendLine: isFinite(personalUsed) && personalUsed > 0
+                    ? i18n("Your spend: %1", amountString(personalUsed, currency))
                     : ""
             }
         }
@@ -2192,7 +2225,7 @@ PlasmoidItem {
             return null
         }
 
-        var count = Number(resetCredits.availableCount)
+        var count = Normalizer.strictFiniteNumber(resetCredits.availableCount)
         if (!isFinite(count) || count <= 0) {
             return null
         }
@@ -3541,14 +3574,17 @@ PlasmoidItem {
         return primaryProvider()
     }
 
+    function globalViewAvailability() {
+        return {
+            overview: overviewAvailable,
+            spend: spendAvailable,
+            sessions: sessionsAvailable
+        }
+    }
+
     function selectGlobalView(viewID) {
         var candidate = String(viewID || "")
-        if ((candidate === "overview" && !overviewAvailable)
-                || (candidate === "spend" && !spendAvailable)
-                || (candidate === "sessions" && !sessionsAvailable)) {
-            return
-        }
-        if (candidate !== "overview" && candidate !== "spend" && candidate !== "sessions") {
+        if (!PopupSelection.globalViewIsAvailable(candidate, globalViewAvailability())) {
             return
         }
 
@@ -3561,33 +3597,35 @@ PlasmoidItem {
     }
 
     function updateSelectedProvider() {
-        if (!providers || providers.length === 0) {
-            return
-        }
+        var firstProviderID = providers && providers.length > 0
+            ? providers[0].provider
+            : ""
+        var automaticProviderID = firstProviderID.length > 0
+            ? providers[autoSelectedProviderIndex()].provider
+            : ""
+        var next = PopupSelection.reconcile({
+            providerID: selectedProviderID,
+            globalView: selectedGlobalView,
+            initialized: selectionInitialized
+        }, {
+            autoSelect: autoSelectProvider,
+            currentProviderExists: selectedProviderIndex >= 0,
+            firstProviderID: firstProviderID,
+            automaticProviderID: automaticProviderID,
+            globalViews: globalViewAvailability()
+        })
+        selectedProviderID = next.providerID
+        selectedGlobalView = next.globalView
+        selectionInitialized = next.initialized
+    }
 
-        if (autoSelectProvider) {
-            // Don't override a global tab the user explicitly chose;
-            // auto-select only drives the initial pick and provider tabs.
-            if (selectionInitialized && globalViewSelected) {
-                return
-            }
-            selectedProviderID = providers[autoSelectedProviderIndex()].provider
-            selectionInitialized = true
-            return
-        }
-
-        if (!selectionInitialized) {
-            selectedProviderID = overviewAvailable ? "" : providers[0].provider
-            selectedGlobalView = "overview"
-            selectionInitialized = true
-            return
-        }
-        if (selectedProviderIndex < 0
-                && (!globalViewSelected
-                    || (selectedGlobalView === "overview" && !overviewAvailable)
-                    || (selectedGlobalView === "spend" && !spendAvailable)
-                    || (selectedGlobalView === "sessions" && !sessionsAvailable))) {
-            selectedProviderID = providers[0].provider
+    function reconcileGlobalViewAvailability() {
+        if (PopupSelection.globalSelectionNeedsReconciliation({
+            providerID: selectedProviderID,
+            globalView: selectedGlobalView,
+            initialized: selectionInitialized
+        }, globalViewAvailability())) {
+            updateSelectedProvider()
         }
     }
 

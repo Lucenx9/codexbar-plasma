@@ -1261,6 +1261,10 @@ msgid "Could not parse codexbar cost JSON: %1"
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "codexbar cost returned an unsupported JSON payload."
+msgstr ""
+
+#: contents/ui/main.qml
 msgid "Some cost data could not be refreshed."
 msgstr ""
 
