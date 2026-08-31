@@ -521,6 +521,19 @@ if "2147480000" not in bounded_revision_body or "1000000" in bounded_revision_bo
 parse_cost_body = function_body(main_text, "parseCostOutput")
 if "codexbar cost did not return JSON." not in parse_cost_body:
     raise AssertionError("parseCostOutput must keep a visible fallback error when cost returns no JSON")
+if "var items = Normalizer.normalizeCostEnvelope(payload)" not in parse_cost_body:
+    raise AssertionError("parseCostOutput must validate and bound the cost envelope before replacing snapshots")
+if "if (items === null)" not in parse_cost_body:
+    raise AssertionError("unsupported cost JSON must remain distinct from a valid empty snapshot")
+if "codexbar cost returned an unsupported JSON payload." not in parse_cost_body:
+    raise AssertionError("unsupported cost JSON must surface a scoped error")
+if parse_cost_body.find("Normalizer.normalizeCostEnvelope(payload)") > parse_cost_body.find("var nextCosts = ({})"):
+    raise AssertionError("cost envelope validation must happen before constructing replacement state")
+unsupported_cost_start = parse_cost_body.find("if (items === null)")
+unsupported_cost_end = parse_cost_body.find("var nextCosts = ({})", unsupported_cost_start)
+unsupported_cost_block = parse_cost_body[unsupported_cost_start:unsupported_cost_end]
+if "applyTokenCosts()" not in unsupported_cost_block or "return" not in unsupported_cost_block:
+    raise AssertionError("unsupported cost JSON must preserve and reapply the last healthy snapshot")
 for cost_error_fragment in (
     'var costMessage = ""',
     "item.error && item.error.message",
@@ -1855,18 +1868,37 @@ if 'String(severity || "") + "|" + String(incidentKey || "")' not in function_bo
 if "statusText" in status_value_body:
     raise AssertionError("NotificationPlanner must not use provider-controlled status text as incident identity")
 
-# autoSelectProvider must not clobber an explicit global-tab selection on every
-# refresh; once the user picks Overview, Spend, or Sessions it has to survive.
+# Selection policy is behavioral code in PopupSelection. The root only supplies
+# observations, commits the result, and invokes reconciliation for effects.
 select_body = function_body(main_text, "updateSelectedProvider")
-if "globalViewSelected" not in select_body:
-    raise AssertionError(
-        "updateSelectedProvider must preserve an explicit global-tab selection "
-        "when autoSelectProvider is enabled"
-    )
-if "selectedProviderID" not in select_body:
-    raise AssertionError("updateSelectedProvider must preserve selection by provider id")
+if 'import "PopupSelection.js" as PopupSelection' not in main_text:
+    raise AssertionError("main.qml must import the tested popup selection policy")
+if "PopupSelection.reconcile(" not in select_body:
+    raise AssertionError("updateSelectedProvider must delegate its transition to PopupSelection")
+for selection_commit in (
+    "selectedProviderID = next.providerID",
+    "selectedGlobalView = next.globalView",
+    "selectionInitialized = next.initialized",
+):
+    if selection_commit not in select_body:
+        raise AssertionError(f"main.qml must commit popup selection state: {selection_commit}")
 if "function providerIndexForID(providerID)" not in main_text:
     raise AssertionError("the selected provider index must be derived from its provider id")
+select_global_body = function_body(main_text, "selectGlobalView")
+if "PopupSelection.globalViewIsAvailable(candidate, globalViewAvailability())" not in select_global_body:
+    raise AssertionError("explicit global selection must use the shared availability contract")
+reconcile_global_body = function_body(main_text, "reconcileGlobalViewAvailability")
+if "PopupSelection.globalSelectionNeedsReconciliation(" not in reconcile_global_body:
+    raise AssertionError("availability handlers must ignore valid global and provider selections")
+if "updateSelectedProvider()" not in reconcile_global_body:
+    raise AssertionError("an unavailable global selection must reconcile immediately")
+for availability_handler in (
+    "onOverviewAvailableChanged: reconcileGlobalViewAvailability()",
+    "onSpendAvailableChanged: reconcileGlobalViewAvailability()",
+    "onSessionsAvailableChanged: reconcileGlobalViewAvailability()",
+):
+    if availability_handler not in main_text:
+        raise AssertionError(f"global selection is missing availability wiring: {availability_handler}")
 
 for global_view_fragment in (
     'applet.selectGlobalView("spend")',
@@ -2295,6 +2327,54 @@ for helper_name in ("chartLineX", "chartLineIndexAt", "chartLineY"):
 reset_credits_body = function_body(main_text, "resetCreditsSection")
 if 'i18np("%1 available", "%1 available"' not in reset_credits_body:
     raise AssertionError("reset credit counts must use plural-aware translations")
+if "Normalizer.strictFiniteNumber(resetCredits.availableCount)" not in reset_credits_body:
+    raise AssertionError("reset credits must reject coercive CLI numeric values")
+direct_number_call = re.compile(r"(?<![A-Za-z0-9_])Number\(")
+if direct_number_call.search(reset_credits_body):
+    raise AssertionError("reset credits must not use loose numeric coercion")
+
+normalize_provider_body = function_body(main_text, "normalizeProvider")
+if "Normalizer.strictFiniteNumber(credits.remaining)" not in normalize_provider_body:
+    raise AssertionError("remaining credits must reject coercive CLI numeric values")
+if direct_number_call.search(normalize_provider_body):
+    raise AssertionError("remaining credits must not use loose numeric coercion")
+
+provider_cost_body = function_body(main_text, "providerCostSection")
+for cost_numeric_field in ("cost.used", "cost.limit", "cost.personalUsed"):
+    if f"Normalizer.strictFiniteNumber({cost_numeric_field})" not in provider_cost_body:
+        raise AssertionError(f"provider cost must strictly parse {cost_numeric_field}")
+if direct_number_call.search(provider_cost_body):
+    raise AssertionError("provider cost must not use loose numeric coercion")
+
+dashboard_period_body = function_body(main_text, "appendDashboardPeriodRow")
+if "Normalizer.firstStrictFiniteNumber(" not in dashboard_period_body:
+    raise AssertionError("dashboard period aliases must use the strict numeric fallback contract")
+if "Normalizer.firstStrictFiniteNumber(source.value" not in dashboard_period_body:
+    raise AssertionError("generic dashboard aliases must preserve zero and skip malformed preferred values")
+for dashboard_text_alias in ("source.value", "source.total", "source.used"):
+    if f'typeof {dashboard_text_alias} === "string"' not in dashboard_period_body:
+        raise AssertionError(f"generic dashboard text fallback must reject nonstrings from {dashboard_text_alias}")
+    if f"Normalizer.boundedDisplayText({dashboard_text_alias}, 120)" not in dashboard_period_body:
+        raise AssertionError(f"generic dashboard aliases must validate text fallback {dashboard_text_alias}")
+if dashboard_period_body.count("if (fallbackText.length === 0)") < 2:
+    raise AssertionError("blank dashboard text aliases must not hide a later compatible value")
+if direct_number_call.search(dashboard_period_body):
+    raise AssertionError("dashboard periods must not use loose numeric coercion")
+
+dashboard_value_body = function_body(main_text, "dashboardValueText")
+if "Normalizer.strictFiniteNumber(value)" not in dashboard_value_body:
+    raise AssertionError("dashboard values must use the strict CLI numeric contract")
+if direct_number_call.search(dashboard_value_body):
+    raise AssertionError("dashboard values must not use loose numeric coercion")
+if 'typeof value === "string"' not in dashboard_value_body:
+    raise AssertionError("only strings may use the legacy nonnumeric dashboard fallback")
+
+dashboard_suffix_body = function_body(main_text, "dashboardTopSuffix")
+for suffix_numeric_field in ("item.costUSD", "item.points", "item.totalTokens", "item.requests"):
+    if f"Normalizer.strictFiniteNumber({suffix_numeric_field})" not in dashboard_suffix_body:
+        raise AssertionError(f"dashboard top rows must strictly parse {suffix_numeric_field}")
+if direct_number_call.search(dashboard_suffix_body):
+    raise AssertionError("dashboard top rows must not use loose numeric coercion")
 if "function providerCountText(count)" not in main_text:
     raise AssertionError("overview provider counts must use a plural-aware helper")
 provider_count_body = function_body(main_text, "providerCountText")
