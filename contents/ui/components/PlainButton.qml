@@ -5,6 +5,6 @@ import "../SafeText.js" as SafeText
 Controls.Button {
     property string plainText: ""
 
-    text: SafeText.plainTextAsMnemonicRichText(plainText)
+    text: SafeText.plainButtonText(plainText, contentItem !== null)
     Accessible.name: plainText
 }

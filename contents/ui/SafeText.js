@@ -107,6 +107,26 @@ function plainTextAsMnemonicRichText(value) {
     return plainTextAsRichText(value).replace(/&/g, "&&")
 }
 
+// The desktop Plasma button style draws its label through the native style
+// item instead of a QML Text item, so feeding it a rich-text wrapper prints the
+// wrapper literally. Keep markup as ordinary text and escape only mnemonic
+// ampersands for that native label path.
+function plainTextAsMnemonicLabel(value) {
+    if (isStructuredValue(value) || value === null || value === undefined) {
+        return ""
+    }
+    return String(value)
+        .replace(/\r\n?/g, "\n")
+        .replace(/[\u0000-\u0009\u000b\u000c\u000e-\u001f\u007f]/g, " ")
+        .replace(/&/g, "&&")
+}
+
+function plainButtonText(value, hasContentItem) {
+    return hasContentItem === true
+        ? plainTextAsMnemonicRichText(value)
+        : plainTextAsMnemonicLabel(value)
+}
+
 function boundedDisplayText(value, maximumLength) {
     if (isStructuredValue(value)) {
         return ""
