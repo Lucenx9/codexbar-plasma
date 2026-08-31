@@ -580,8 +580,9 @@ require_all(
     applet.function_body("handleUpdateData"),
     (
         "finishUpdateCommand(sourceName, false)",
-        "var successfulCheck = processUpdateCheck(payload)",
-        "finishUpdateCommand(sourceName, successfulCheck)",
+        "var resultIntent = UpdateLogic.resultIntent(payload, autoUpdateEnabled)",
+        "applyUpdateResultIntent(resultIntent)",
+        "finishUpdateCommand(sourceName, resultIntent.successful)",
     ),
     "update result parsing must choose success scheduling only after classifying the payload",
 )
@@ -592,18 +593,14 @@ require_all(
     "update timer must remain single-shot",
 )
 
-process_update_body = applet.function_body("processUpdateCheck")
+apply_update_body = applet.function_body("applyUpdateResultIntent")
 require_all(
-    process_update_body,
-    (
-        "var errorCode =",
-        "var errorDetail =",
-        "widgetUpdateErrorText(errorCode, errorDetail)",
-    ),
-    "updater failures must be localized from semantic error fields",
+    apply_update_body,
+    ("widgetUpdateErrorText(intent.errorCode, intent.errorDetail)",),
+    "the QML adapter must localize and apply semantic update intents",
 )
-if "payload.message" in process_update_body:
-    raise AssertionError("updater payload messages must not be rendered as user-facing text")
+if "payload" in apply_update_body:
+    raise AssertionError("the update effect adapter must not inspect raw updater payloads")
 
 applet.require(
     "onAutoUpdateIntervalHoursChanged: scheduleNextUpdateCheck()",

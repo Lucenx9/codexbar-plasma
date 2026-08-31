@@ -1,4 +1,28 @@
 .pragma library
+.import "Guards.js" as Guards
+
+var maximumResultStatusLength = 64
+var maximumVersionLength = 128
+var maximumAssetUrlLength = 2048
+var maximumErrorCodeLength = 128
+var maximumErrorDetailLength = 500
+
+function boundedString(value, maximumLength) {
+    return typeof value === "string"
+        && value.length <= maximumLength
+        && value.trim().length > 0
+        ? value
+        : ""
+}
+
+function boundedOwnString(payload, key, maximumLength) {
+    return Guards.hasOwnKey(payload, key) ? boundedString(payload[key], maximumLength) : ""
+}
+
+function boundedHttpsUrl(value) {
+    var text = boundedString(value, maximumAssetUrlLength).trim()
+    return text.toLowerCase().indexOf("https://") === 0 ? text : ""
+}
 
 function updateCheckDue(updateChecksEnabled, lastCheck, intervalHours, nowMs, forceCheck) {
     if (!updateChecksEnabled) {
@@ -63,4 +87,62 @@ function updateRetryDelay(consecutiveFailures, baseDelayMs, maximumDelayMs) {
         failures = 1
     }
     return Math.min(maximum, base * Math.pow(2, Math.min(failures - 1, 30)))
+}
+
+function resultIntent(payload, autoUpdateEnabled) {
+    var status = boundedOwnString(payload, "status", maximumResultStatusLength)
+    if (status === "error") {
+        return {
+            kind: "error",
+            successful: false,
+            version: "",
+            assetUrl: "",
+            errorCode: boundedOwnString(payload, "errorCode", maximumErrorCodeLength),
+            errorDetail: boundedOwnString(payload, "errorDetail", maximumErrorDetailLength),
+            notificationKind: ""
+        }
+    }
+    if (status === "available") {
+        return {
+            kind: "available",
+            successful: true,
+            version: boundedOwnString(payload, "remoteVersion", maximumVersionLength),
+            assetUrl: Guards.hasOwnKey(payload, "assetUrl") ? boundedHttpsUrl(payload.assetUrl) : "",
+            errorCode: "",
+            errorDetail: "",
+            notificationKind: autoUpdateEnabled === true ? "" : "available"
+        }
+    }
+    if (status === "installed") {
+        return {
+            kind: "installed",
+            successful: true,
+            version: boundedOwnString(payload, "remoteVersion", maximumVersionLength),
+            assetUrl: "",
+            errorCode: "",
+            errorDetail: "",
+            notificationKind: "installed"
+        }
+    }
+    if (status === "current" || status === "skipped") {
+        return {
+            kind: status,
+            successful: true,
+            version: "",
+            assetUrl: "",
+            errorCode: "",
+            errorDetail: "",
+            notificationKind: ""
+        }
+    }
+    return {
+        kind: "unknown",
+        successful: false,
+        status: status,
+        version: "",
+        assetUrl: "",
+        errorCode: "",
+        errorDetail: "",
+        notificationKind: ""
+    }
 }

@@ -2830,55 +2830,47 @@ PlasmoidItem {
             return
         }
 
-        var successfulCheck = processUpdateCheck(payload)
-        finishUpdateCommand(sourceName, successfulCheck)
+        var resultIntent = UpdateLogic.resultIntent(payload, autoUpdateEnabled)
+        applyUpdateResultIntent(resultIntent)
+        finishUpdateCommand(sourceName, resultIntent.successful)
     }
 
-    function processUpdateCheck(payload) {
-        var status = String(payload && payload.status ? payload.status : "")
-        var errorCode = payload && typeof payload.errorCode === "string" ? payload.errorCode : ""
-        var errorDetail = payload && typeof payload.errorDetail === "string" ? payload.errorDetail : ""
-        var version = String(payload && payload.remoteVersion ? payload.remoteVersion : "")
-        var url = String(payload && payload.assetUrl ? payload.assetUrl : "")
-
-        if (status === "error") {
+    function applyUpdateResultIntent(intent) {
+        switch (intent.kind) {
+        case "error":
             setWidgetUpdateState(
                 i18n("Widget update check failed."),
-                widgetUpdateErrorText(errorCode, errorDetail))
-            return false
-        }
-
-        if (status === "available") {
-            var availableStatus = version.length > 0
-                ? i18n("Widget update %1 is available.", version)
+                widgetUpdateErrorText(intent.errorCode, intent.errorDetail))
+            return
+        case "available":
+            var availableStatus = intent.version.length > 0
+                ? i18n("Widget update %1 is available.", intent.version)
                 : i18n("A widget update is available.")
             setWidgetUpdateState(availableStatus, "")
-            if (!autoUpdateEnabled) {
-                notifyAvailableUpdate(version, url)
+            if (intent.notificationKind === "available") {
+                notifyAvailableUpdate(intent.version, intent.assetUrl)
             }
-            return true
-        }
-        if (status === "installed") {
+            return
+        case "installed":
             var restartText = i18n("Restart Plasma to apply the new widget version.")
-            setWidgetUpdateState(version.length > 0
-                ? i18n("Widget update %1 installed. %2", version, restartText)
+            setWidgetUpdateState(intent.version.length > 0
+                ? i18n("Widget update %1 installed. %2", intent.version, restartText)
                 : i18n("Widget update installed. %1", restartText), "")
-            notifyInstalledUpdate(version)
-            return true
-        }
-        if (status === "current") {
+            if (intent.notificationKind === "installed") {
+                notifyInstalledUpdate(intent.version)
+            }
+            return
+        case "current":
             setWidgetUpdateState(i18n("Widget is up to date."), "")
-            return true
-        }
-        if (status === "skipped") {
+            return
+        case "skipped":
             setWidgetUpdateState(i18n("Widget update skipped."), "")
-            return true
+            return
         }
 
         setWidgetUpdateState(
             i18n("Widget update check failed."),
-            i18n("Unknown widget update status: %1", status))
-        return false
+            i18n("Unknown widget update status: %1", intent.status))
     }
 
     function notifyAvailableUpdate(version, url) {
