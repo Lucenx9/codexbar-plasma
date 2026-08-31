@@ -172,7 +172,6 @@ sys.path.insert(0, str(root / "scripts" / "lib"))
 from qml_surfaces import Surface
 
 surface = Surface("all", root)
-providers = Surface("providers", root)
 escaped_control = re.compile(r"(?:Components\.)?Plain(?:Inline|Placeholder)Message\s*\{")
 plain_label = re.compile(r"(?:Components\.)?Plain(?:ControlsLabel|PlasmaLabel|Heading)\s*\{")
 plain_text_control = re.compile(
@@ -199,35 +198,6 @@ for path, text in surface.texts.items():
             raise AssertionError(
                 f"{surface.rel(path)}: escaped text controls must use plainText "
                 "instead of overriding the safe binding"
-            )
-
-descriptor_guards = {
-    "normalizeField": (
-        "command.length === 0",
-        '!isAllowedCommand(command, "field")',
-        "!fieldCommandMatchesKind(kind, command)",
-    ),
-    "normalizeAction": (
-        "command.length === 0",
-        '!isAllowedCommand(command, "action")',
-    ),
-    "planFieldWrite": (
-        '!isAllowedCommand(field.writeCommand, "field")',
-        "!fieldCommandMatchesKind(field.kind, field.writeCommand)",
-    ),
-    "planSecretPrompt": (
-        'field.kind !== "secret"',
-        '!isAllowedCommand(field.writeCommand, "field")',
-        "!fieldCommandMatchesKind(field.kind, field.writeCommand)",
-    ),
-    "planAction": ('!isAllowedCommand(action.command, "action")',),
-}
-for function_name, fragments in descriptor_guards.items():
-    body = providers.function_body(function_name)
-    for fragment in fragments:
-        if fragment not in body:
-            raise AssertionError(
-                f"{function_name} must keep its descriptor command guard: {fragment}"
             )
 PY
 
@@ -300,6 +270,12 @@ require_in_surface providers "String(commandTokens[0]) !== \"codexbar\""
 require_in_surface providers "String(commandTokens[1]) !== \"config\""
 require_in_surface providers "subcommand === \"set\" || subcommand === \"set-api-key\""
 require_in_surface providers "subcommand === \"action\""
+# The pure planners and their adversarial command rules are covered by
+# tst_provider_descriptor.qml. Keep only the QML wiring here: the config page
+# must ask the planner before it performs the external process effect.
+require_in_surface providers "var plan = ProviderDescriptor.planFieldWrite(field, value, commandPath)"
+require_in_surface providers "var plan = ProviderDescriptor.planSecretPrompt(field, commandPath)"
+require_in_surface providers "var plan = ProviderDescriptor.planAction(action, commandPath)"
 # A descriptor secret must never reach a command line at all. /proc/<pid>/cmdline
 # is world-readable, so routing the value through `sh -c script _ "$secret"`
 # leaks it exactly like an expanded `{value}` placeholder would. Only
