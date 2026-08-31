@@ -742,8 +742,8 @@ function spendDailyPoints(fmt, costs, showsTokens) {
     return result.slice(Math.max(0, result.length - maximumCostHistoryPoints))
 }
 
-// Only snapshots whose currency matches the range currency are summed; the
-// caller words the result. Returns null when there is nothing to total.
+// Money is summed only in the range currency. Tokens have no currency, so the
+// total keeps every provider just like the token chart does.
 function spendTotals(costs) {
     var items = costs || []
     if (items.length === 0) {
@@ -754,11 +754,11 @@ function spendTotals(costs) {
     var totalTokens = 0
     for (var i = 0; i < items.length; i++) {
         var totals = items[i].totals || ({})
+        totalTokens += Math.max(0, Number(totals.tokens) || 0)
         if (!costMatchesSpendCurrency(items[i], currency)) {
             continue
         }
         totalCost += Math.max(0, Number(totals.cost) || 0)
-        totalTokens += Math.max(0, Number(totals.tokens) || 0)
     }
     return { cost: totalCost, tokens: totalTokens, currency: currency }
 }

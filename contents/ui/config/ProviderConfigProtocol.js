@@ -90,16 +90,23 @@ function commandOutcome(payload, stderrText, exitCode) {
         return ({ outcome: "envelopeError", message: envelopeMessage })
     }
 
-    var status = record ? String(record.status || "").trim().toLowerCase() : ""
+    var hasStatus = record && Guards.hasOwnKey(record, "status")
+    var status = hasStatus && typeof record.status === "string"
+        ? record.status.trim().toLowerCase()
+        : ""
+    var statusCancelled = status === "cancelled" || status === "canceled"
     var cancelled = record
-        && (record.cancelled === true || status === "cancelled" || status === "canceled")
-    var statusFailed = record
-        && (status === "error" || status === "failed" || status === "failure")
+        && (record.cancelled === true || statusCancelled)
+    var statusFailed = status === "error" || status === "failed" || status === "failure"
+    var statusSupported = !hasStatus
+        || status === "ok"
+        || statusCancelled
+        || statusFailed
     var supportedPayload = commandPayloadIsSupported(payload)
     var code = Number(exitCode)
     var timedOut = code === 124 || code === 137
 
-    if (supportedPayload && !cancelled && !statusFailed && code === 0) {
+    if (supportedPayload && statusSupported && !cancelled && !statusFailed && code === 0) {
         return ({ outcome: "success", message: "" })
     }
 
@@ -113,7 +120,7 @@ function commandOutcome(payload, stderrText, exitCode) {
     if (!isFinite(code) || code !== 0) {
         return ({ outcome: "exitCodeError", message: "", exitCode: code })
     }
-    if (!supportedPayload) {
+    if (!supportedPayload || !statusSupported) {
         return ({
             outcome: payload === undefined ? "empty" : "invalidPayload",
             message: ""
@@ -146,8 +153,10 @@ function commandPayloadIsSupported(payload) {
             || payload.length > maximumProviderItems) {
         return false
     }
+    // Descriptor command statuses belong to one structured result object.
+    // Status-bearing arrays are not part of that contract.
     for (var i = 0; i < payload.length; i++) {
-        if (!isCliRecord(payload[i])) {
+        if (!isCliRecord(payload[i]) || Guards.hasOwnKey(payload[i], "status")) {
             return false
         }
     }

@@ -331,12 +331,12 @@ for provider_id, cli_name in {
         sys.exit(1)
 PY
 
-require_in_surface applet "daily: Normalizer.normalizeCostDaily(item.daily, currency, historyDays)"
+require_in_surface applet "daily: Normalizer.normalizeCostDaily(item.daily, currency, historyDays, item.updatedAt)"
 require_in_surface applet "var totals = Normalizer.normalizeCostTotals("
 require_in_surface applet "totals: totals"
 require_in_surface applet "models: Normalizer.normalizeCostModels(item.daily, currency, historyDays)"
 require_in_surface applet "Normalizer.normalizeCostTrustMetadata(item)"
-require_in_surface applet "function normalizeCostDaily(items, currency, days)"
+require_in_surface applet "function normalizeCostDaily(items, currency, days, updatedAt)"
 require_in_surface applet "result.length < historyDays"
 require_in_surface applet "inspectedItems < maximumCostHistoryScanItems"
 require_in_surface applet "result.unshift({"
@@ -500,7 +500,7 @@ require_in_surface applet 'kind: "quota"'
 require_in_surface applet 'kind: "pace"'
 require_in_surface applet 'kind: "reset"'
 require_in_surface applet "notify-send --app-name=CodexBar"
-require_in_surface applet 'notificationSource.connectSource(commandWithRunNonce(":; " + command))'
+require_in_surface applet 'connectNotificationCommand(commandWithRunNonce(":; " + command))'
 require_in_surface applet "property bool costUsageEnabled"
 require_in_surface applet "property int costHistoryDays"
 # Cost and tokens both come from one cost payload: switching the plotted metric

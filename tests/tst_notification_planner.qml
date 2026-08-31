@@ -313,6 +313,21 @@ TestCase {
         verify(changed.nextMemo !== primed.nextMemo)
     }
 
+    function test_transitionBoundsStaleMemoWithoutDroppingTheCurrentScope() {
+        var limit = NotificationPlanner.maximumMemoEntries
+        verify(limit > 0)
+        var previous = ({})
+        for (var i = 0; i < limit + 32; i++) {
+            previous["scope:stale-" + i] = "1"
+        }
+
+        var currentScope = "codex/current-account"
+        var result = transition(
+            "observe", [observation("", "", [], currentScope)], previous)
+        verify(Object.keys(result.nextMemo).length <= limit)
+        compare(result.nextMemo["scope:" + currentScope], "1")
+    }
+
     function test_transitionRejectsUnsafeKeysWhenCopyingTheOpaqueMemo() {
         var hostile = JSON.parse(
             '{"__proto__":{"polluted":true},"constructor":1,"prototype":2,"keep":"yes"}')

@@ -60,6 +60,21 @@ function clamp(value, minimum, maximum) {
     return Math.max(minimum, Math.min(maximum, value))
 }
 
+function strictFiniteNumber(value) {
+    var numericType = typeof value === "number"
+        || (typeof value === "string" && value.trim().length > 0)
+    if (!numericType) {
+        return Number.NaN
+    }
+    var numeric = Number(value)
+    return isFinite(numeric) ? numeric : Number.NaN
+}
+
+function firstStrictFiniteNumber(preferred, fallback) {
+    var numeric = strictFiniteNumber(preferred)
+    return isFinite(numeric) ? numeric : strictFiniteNumber(fallback)
+}
+
 function boundedDisplayText(value, maximumLength) {
     var limit = Number(maximumLength)
     if (!isFinite(limit) || limit <= 0) {
@@ -174,16 +189,12 @@ function rateWindowMetrics(window, pace, usageKnown) {
     }
 
     var known = usageKnown !== false
-    var usedValue = window.usedPercent
-    var usedTypeIsNumeric = typeof usedValue === "number"
-        || (typeof usedValue === "string" && usedValue.trim().length > 0)
-    var used = Number(usedValue)
-    var hasPercent = known && usedTypeIsNumeric && isFinite(used)
-    var paceValue = pace
-        && pace.expectedUsedPercent !== null
-        && pace.expectedUsedPercent !== undefined
-        && isFinite(Number(pace.expectedUsedPercent))
-        ? clamp(Number(pace.expectedUsedPercent), 0, 100)
+    var used = strictFiniteNumber(window.usedPercent)
+    var hasPercent = known && isFinite(used)
+    var expectedUsed = strictFiniteNumber(pace && pace.expectedUsedPercent)
+    var paceEta = strictFiniteNumber(pace && pace.etaSeconds)
+    var paceValue = isFinite(expectedUsed)
+        ? clamp(expectedUsed, 0, 100)
         : -1
     return {
         hasPercent: hasPercent,
@@ -191,8 +202,8 @@ function rateWindowMetrics(window, pace, usageKnown) {
         leftPercent: hasPercent ? clamp(100 - used, 0, 100) : 0,
         pacePercent: paceValue,
         paceOnTop: !pace || pace.willLastToReset !== false,
-        paceEtaSeconds: pace && isFinite(Number(pace.etaSeconds))
-            ? Math.max(0, Math.min(maximumPaceEtaSeconds, Number(pace.etaSeconds)))
+        paceEtaSeconds: isFinite(paceEta)
+            ? Math.max(0, Math.min(maximumPaceEtaSeconds, paceEta))
             : 0
     }
 }
@@ -369,17 +380,111 @@ function sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreation
     var total = 0
     var values = [inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens]
     for (var i = 0; i < values.length; i++) {
-        if (isFinite(Number(values[i])) && Number(values[i]) > 0) {
-            total += Number(values[i])
+        var value = strictFiniteNumber(values[i])
+        if (isFinite(value) && value > 0) {
+            total += value
         }
     }
     return total > 0 ? total : Number.NaN
 }
 
 function boundedHistoryDays(days) {
-    return isFinite(Number(days))
-        ? Math.max(1, Math.min(maximumCostHistoryPoints, Number(days)))
+    var numericDays = strictFiniteNumber(days)
+    return isFinite(numericDays)
+        ? Math.max(1, Math.min(maximumCostHistoryPoints, numericDays))
         : 30
+}
+
+function calendarDateKey(year, month, day) {
+    var monthText = month < 10 ? "0" + month : String(month)
+    var dayText = day < 10 ? "0" + day : String(day)
+    return String(year) + "-" + monthText + "-" + dayText
+}
+
+function parsedCalendarDateKey(value) {
+    var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ""))
+    if (!match) {
+        return null
+    }
+    var year = Number(match[1])
+    var month = Number(match[2])
+    var day = Number(match[3])
+    if (year < 1970 || month < 1 || month > 12 || day < 1 || day > 31) {
+        return null
+    }
+    var timestampMs = Date.UTC(year, month - 1, day)
+    var date = new Date(timestampMs)
+    if (date.getUTCFullYear() !== year
+            || date.getUTCMonth() !== month - 1
+            || date.getUTCDate() !== day) {
+        return null
+    }
+    return { key: calendarDateKey(year, month, day), timestampMs: timestampMs }
+}
+
+function localCalendarDateKey(value) {
+    if (typeof value !== "string" || value.trim().length === 0 || value.length > 100) {
+        return ""
+    }
+    var dateOnly = parsedCalendarDateKey(value.trim())
+    if (dateOnly) {
+        return dateOnly.key
+    }
+    var date = new Date(value)
+    if (!isFinite(date.getTime())) {
+        return ""
+    }
+    return calendarDateKey(date.getFullYear(), date.getMonth() + 1, date.getDate())
+}
+
+function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys) {
+    if (!rows || rows.length === 0) {
+        return rows || []
+    }
+    var endDate = parsedCalendarDateKey(localCalendarDateKey(updatedAt))
+    if (!endDate) {
+        return rows
+    }
+
+    var byDate = ({})
+    for (var i = 0; i < rows.length; i++) {
+        var parsed = parsedCalendarDateKey(rows[i].label)
+        if (!parsed || hasOwnKey(byDate, parsed.key)) {
+            return rows
+        }
+        byDate[parsed.key] = rows[i]
+    }
+
+    var historyDays = Math.floor(boundedHistoryDays(days))
+    var dayMilliseconds = 24 * 60 * 60 * 1000
+    var firstTimestampMs = endDate.timestampMs - (historyDays - 1) * dayMilliseconds
+    var result = []
+    var observedInRange = false
+    var safeCurrency = boundedDisplayText(currency || "USD", 12)
+    for (var offset = 0; offset < historyDays; offset++) {
+        var date = new Date(firstTimestampMs + offset * dayMilliseconds)
+        var key = calendarDateKey(
+            date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate())
+        if (hasOwnKey(blockedDateKeys, key) && !hasOwnKey(byDate, key)) {
+            return rows
+        }
+        if (hasOwnKey(byDate, key)) {
+            result.push(byDate[key])
+            observedInRange = true
+        } else {
+            result.push({
+                label: key,
+                cost: 0,
+                tokens: 0,
+                inputTokens: 0,
+                outputTokens: 0,
+                cacheReadTokens: 0,
+                cacheCreationTokens: 0,
+                currency: safeCurrency
+            })
+        }
+    }
+    return observedInRange ? result : rows
 }
 
 function normalizedCostCoverage(coverage) {
@@ -469,13 +574,14 @@ function mergeCostSnapshotsAfterPartialFailure(previousSnapshots, freshSnapshots
     return merged
 }
 
-function normalizeCostDaily(items, currency, days) {
+function normalizeCostDaily(items, currency, days, updatedAt) {
     var result = []
     if (!items || !Array.isArray(items)) {
         return result
     }
 
     var historyDays = boundedHistoryDays(days)
+    var blockedDateKeys = ({})
     var inspectedItems = 0
     for (var i = items.length - 1; i >= 0
             && result.length < historyDays
@@ -485,20 +591,26 @@ function normalizeCostDaily(items, currency, days) {
         if (!item) {
             continue
         }
-        var cost = Number(item.totalCost !== undefined ? item.totalCost : item.costUSD)
-        var tokens = Number(item.totalTokens !== undefined ? item.totalTokens : item.tokens)
-        var inputTokens = Number(item.inputTokens)
-        var outputTokens = Number(item.outputTokens)
-        var cacheReadTokens = Number(item.cacheReadTokens)
-        var cacheCreationTokens = Number(item.cacheCreationTokens !== undefined ? item.cacheCreationTokens : item.cacheWriteTokens)
+        var label = boundedDisplayText(item.date || item.day || item.dayKey || "", 120)
+        var cost = firstStrictFiniteNumber(item.totalCost, item.costUSD)
+        var tokens = firstStrictFiniteNumber(item.totalTokens, item.tokens)
+        var inputTokens = strictFiniteNumber(item.inputTokens)
+        var outputTokens = strictFiniteNumber(item.outputTokens)
+        var cacheReadTokens = strictFiniteNumber(item.cacheReadTokens)
+        var cacheCreationTokens = firstStrictFiniteNumber(
+            item.cacheCreationTokens, item.cacheWriteTokens)
         if (!isFinite(tokens)) {
             tokens = sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens)
         }
         if (!isFinite(cost) && !isFinite(tokens) && !isFinite(inputTokens) && !isFinite(outputTokens)) {
+            var blockedDate = parsedCalendarDateKey(label)
+            if (blockedDate) {
+                blockedDateKeys[blockedDate.key] = true
+            }
             continue
         }
         result.unshift({
-            label: boundedDisplayText(item.date || item.day || item.dayKey || "", 120),
+            label: label,
             cost: isFinite(cost) ? Math.max(0, cost) : 0,
             tokens: isFinite(tokens) ? Math.max(0, tokens) : 0,
             inputTokens: isFinite(inputTokens) ? Math.max(0, inputTokens) : 0,
@@ -508,17 +620,21 @@ function normalizeCostDaily(items, currency, days) {
             currency: boundedDisplayText(currency || "USD", 12)
         })
     }
-    return result
+    if (i >= 0) {
+        return result
+    }
+    return fillMissingCostDays(result, currency, historyDays, updatedAt, blockedDateKeys)
 }
 
 function normalizeCostTotals(totals, fallbackCost, fallbackTokens, currency) {
     var source = totals || ({})
-    var cost = Number(source.totalCost !== undefined ? source.totalCost : fallbackCost)
-    var tokens = Number(source.totalTokens !== undefined ? source.totalTokens : fallbackTokens)
-    var inputTokens = Number(source.inputTokens)
-    var outputTokens = Number(source.outputTokens)
-    var cacheReadTokens = Number(source.cacheReadTokens)
-    var cacheCreationTokens = Number(source.cacheCreationTokens !== undefined ? source.cacheCreationTokens : source.cacheWriteTokens)
+    var cost = firstStrictFiniteNumber(source.totalCost, fallbackCost)
+    var tokens = firstStrictFiniteNumber(source.totalTokens, fallbackTokens)
+    var inputTokens = strictFiniteNumber(source.inputTokens)
+    var outputTokens = strictFiniteNumber(source.outputTokens)
+    var cacheReadTokens = strictFiniteNumber(source.cacheReadTokens)
+    var cacheCreationTokens = firstStrictFiniteNumber(
+        source.cacheCreationTokens, source.cacheWriteTokens)
     if (!isFinite(tokens)) {
         tokens = sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens)
     }
@@ -552,8 +668,9 @@ function normalizeCostModels(items, currency, days) {
             if (name.length === 0 || isUnsafeObjectKey(name)) {
                 continue
             }
-            var cost = Number(breakdown.cost !== undefined ? breakdown.cost : breakdown.totalCost)
-            var tokens = Number(breakdown.totalTokens !== undefined ? breakdown.totalTokens : breakdown.tokens)
+            var cost = firstStrictFiniteNumber(breakdown.cost, breakdown.totalCost)
+            var tokens = firstStrictFiniteNumber(
+                breakdown.totalTokens, breakdown.tokens)
             if (!isFinite(cost) && !isFinite(tokens)) {
                 continue
             }

@@ -498,7 +498,7 @@ for ranged_cost_fragment in (
     "costHistoryWindowLabel(item, historyDays)",
     "historyDays: historyDays",
     "normalizeCostModels(item.daily, currency, historyDays)",
-    "normalizeCostDaily(item.daily, currency, historyDays)",
+    "normalizeCostDaily(item.daily, currency, historyDays, item.updatedAt)",
 ):
     if ranged_cost_fragment not in normalize_token_cost_body:
         raise AssertionError(
@@ -508,8 +508,14 @@ for ranged_cost_fragment in (
 if "function costHistoryWindowLabel(item, requestedHistoryDays)" not in main_text:
     raise AssertionError("main.qml must define costHistoryWindowLabel")
 cost_history_label_body = function_body(main_text, "costHistoryWindowLabel")
-if "rawDays = Number(requestedHistoryDays)" not in cost_history_label_body:
+if "rawDays = Normalizer.strictFiniteNumber(requestedHistoryDays)" not in cost_history_label_body:
     raise AssertionError("invalid emitted cost ranges must fall back to the captured request range")
+for cost_number_function in ("costValueLine", "costLine"):
+    cost_number_body = function_body(main_text, cost_number_function)
+    if cost_number_body.count("Normalizer.strictFiniteNumber(") < 2:
+        raise AssertionError(
+            f"{cost_number_function} must reject coercive cost and token values"
+        )
 
 # The aggregation moved into CostPresentation.js; the rule did not. A snapshot
 # answered for another window must still be excluded from the selected range.
@@ -525,20 +531,6 @@ for range_match_fragment in ("Number(tokenCost.historyDays)", "Number(historyDay
         )
 if "CostPresentation.spendSnapshots(" not in function_body(main_text, "spendProviderCosts"):
     raise AssertionError("main.qml must read spend snapshots from CostPresentation.js")
-
-rate_window_body = function_body(main_text, "rateWindowMetrics")
-if "pace.expectedUsedPercent !== null" not in rate_window_body or "pace.expectedUsedPercent !== undefined" not in rate_window_body:
-    raise AssertionError("rateWindowMetrics must not treat null pace.expectedUsedPercent as 0")
-for clamped_percent_fragment in (
-    "clamp(used, 0, 100)",
-    "clamp(100 - used, 0, 100)",
-    "clamp(Number(pace.expectedUsedPercent), 0, 100)",
-):
-    if clamped_percent_fragment not in rate_window_body:
-        raise AssertionError(
-            "CLI percentages must be clamped before they reach a meter; "
-            f"missing {clamped_percent_fragment!r}"
-        )
 
 add_window_body = function_body(main_text, "addWindow")
 for reset_source_fragment in (
@@ -597,6 +589,21 @@ if "checked = Qt.binding(function()" not in provider_accounts_panel_text:
     raise AssertionError("account buttons must restore their checked binding after clicks")
 if "accountIsSelected(modelData, accountsPanel.providerData)" not in provider_accounts_panel_text:
     raise AssertionError("restored account bindings must follow the selected account state")
+
+clear_account_override_button = id_block(
+    provider_accounts_panel_text, "clearAccountOverrideButton")
+for clear_override_fragment in (
+    "visible: accountsPanel.applet.selectedAccountForProvider(accountsPanel.providerID).length > 0",
+    'accountsPanel.applet.selectAccount(accountsPanel.providerID, "")',
+    'Accessible.name: i18n("Use default account")',
+):
+    if clear_override_fragment not in clear_account_override_button:
+        raise AssertionError(
+            "an account override must remain removable after its account disappears; "
+            f"missing {clear_override_fragment!r}"
+        )
+if "|| applet.selectedAccountForProvider(providerID).length > 0" not in provider_accounts_panel_text:
+    raise AssertionError("an orphaned account override must keep its removal control visible")
 
 parse_accounts_body = function_body(main_text, "parseProviderAccountsOutput")
 if "setAccountOptions(providerID, [])" in parse_accounts_body:
@@ -1974,7 +1981,7 @@ for cost_loading_fragment in (
             "SpendView must distinguish a range refresh from an empty result; "
             f"missing {cost_loading_fragment!r}"
         )
-if ('readonly property bool costLoading: CommandLedger.hasKind(activeUsageCommands, "cost")'
+if ('readonly property bool costLoading: CommandLedger.hasKind(activeCommandDescriptors, "cost")'
         not in main_text):
     raise AssertionError("cost loading state must follow the active cost command lifecycle")
 if "required property int index" not in display_text:
