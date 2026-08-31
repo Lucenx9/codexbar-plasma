@@ -35,9 +35,11 @@ TestCase {
 
     function test_buttonUsesActiveStyleLabelPath() {
         var button = createTemporaryObject(buttonComponent, this, { plainText: activeMarkup })
+        var expectedText = button.contentItem === null
+            ? SafeText.plainTextAsMnemonicLabel(activeMarkup)
+            : SafeText.plainTextAsMnemonicRichText(activeMarkup)
 
-        compare(button.text, SafeText.plainButtonText(
-            activeMarkup, button.contentItem !== null))
+        compare(button.text, expectedText)
     }
 
     function test_otherAbstractButtonsEscapeMarkup() {
