@@ -574,13 +574,15 @@ function normalizeCostEnvelope(payload) {
             continue
         }
         var providerID = normalizedProviderID(item.provider)
-        if (providerID.length === 0 && !costRecordHasError(item)) {
+        var itemHasError = costRecordHasError(item)
+        if (providerID.length === 0 && itemHasError) {
+            return null
+        }
+        if (providerID.length === 0) {
             continue
         }
         var snapshot = copyObject(item)
-        if (providerID.length > 0) {
-            snapshot.provider = providerID
-        }
+        snapshot.provider = providerID
         result.push(snapshot)
     }
     return result.length > 0 ? result : null

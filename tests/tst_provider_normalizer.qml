@@ -458,17 +458,23 @@ TestCase {
             null,
             { unexpected: true },
             { provider: "codex" },
-            { error: { message: "cost failed" } }
+            { provider: "claude", error: { message: "cost failed" } }
         ])
         verify(mixed !== null)
         compare(mixed.length, 2)
         compare(mixed[0].provider, "codex")
+        compare(mixed[1].provider, "claude")
         verify(Normalizer.costRecordHasError(mixed[1]))
     }
 
     function test_costEnvelopeRejectsUnsupportedNonemptyPayloads() {
         compare(Normalizer.normalizeCostEnvelope({ unexpected: true }), null)
         compare(Normalizer.normalizeCostEnvelope([null, { unexpected: true }]), null)
+        compare(Normalizer.normalizeCostEnvelope({ error: { message: "cost failed" } }), null)
+        compare(Normalizer.normalizeCostEnvelope([
+            { provider: "codex" },
+            { error: { message: "cost failed" } }
+        ]), null)
         compare(Normalizer.normalizeCostEnvelope("no cost data"), null)
         compare(Normalizer.normalizeCostEnvelope(42), null)
         compare(Normalizer.normalizeCostEnvelope(null), null)
