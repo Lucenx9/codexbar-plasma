@@ -55,7 +55,9 @@ TestCase {
                     id: "workspace",
                     kind: "text",
                     title: "",
-                    writeCommand: ["codexbar", "config", "set"]
+                    writeCommand: [
+                        "codexbar", "config", "set", "--value", "{value}"
+                    ]
                 }]
             }
         }, function(identifier) {

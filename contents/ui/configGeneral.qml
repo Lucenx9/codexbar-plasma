@@ -11,73 +11,77 @@ KCM.SimpleKCM {
     id: page
 
     property alias cfg_commandPath: commandPathField.text
-    property string cfg_commandPathDefault
+    // cfg_*Default mirrors the schema default in contents/config/main.xml. The
+    // Plasma config dialog injects only cfg_<key>, never defaults, so these
+    // initializers are the only source for the restore-defaults action;
+    // scripts/test_ui_regressions.sh checks them against main.xml for drift.
+    property string cfg_commandPathDefault: "codexbar"
     property alias cfg_refreshInterval: refreshIntervalSpin.value
-    property int cfg_refreshIntervalDefault
+    property int cfg_refreshIntervalDefault: 300
     property alias cfg_includeStatus: includeStatusCheck.checked
-    property bool cfg_includeStatusDefault
+    property bool cfg_includeStatusDefault: false
     property alias cfg_costUsageEnabled: costUsageEnabledCheck.checked
-    property bool cfg_costUsageEnabledDefault
-    property int cfg_costHistoryDays
-    property int cfg_costHistoryDaysDefault
+    property bool cfg_costUsageEnabledDefault: true
+    property int cfg_costHistoryDays: 30
+    property int cfg_costHistoryDaysDefault: 30
     property alias cfg_enableNotifications: enableNotificationsCheck.checked
-    property bool cfg_enableNotificationsDefault
+    property bool cfg_enableNotificationsDefault: true
     property alias cfg_notifyStatusIncidents: notifyStatusIncidentsCheck.checked
-    property bool cfg_notifyStatusIncidentsDefault
+    property bool cfg_notifyStatusIncidentsDefault: true
     property alias cfg_notifyQuotaWarnings: notifyQuotaWarningsCheck.checked
-    property bool cfg_notifyQuotaWarningsDefault
+    property bool cfg_notifyQuotaWarningsDefault: true
     property alias cfg_notifyPredictivePaceWarnings: notifyPredictivePaceWarningsCheck.checked
-    property bool cfg_notifyPredictivePaceWarningsDefault
+    property bool cfg_notifyPredictivePaceWarningsDefault: false
     property alias cfg_notifyLimitResets: notifyLimitResetsCheck.checked
-    property bool cfg_notifyLimitResetsDefault
+    property bool cfg_notifyLimitResetsDefault: true
     property alias cfg_quotaWarningPercent: quotaWarningPercentSpin.value
-    property int cfg_quotaWarningPercentDefault
+    property int cfg_quotaWarningPercentDefault: 80
     property alias cfg_quotaCriticalPercent: quotaCriticalPercentSpin.value
-    property int cfg_quotaCriticalPercentDefault
+    property int cfg_quotaCriticalPercentDefault: 95
     property alias cfg_updateChecksEnabled: updateChecksEnabledCheck.checked
-    property bool cfg_updateChecksEnabledDefault
+    property bool cfg_updateChecksEnabledDefault: true
     property alias cfg_updateNotificationsEnabled: updateNotificationsEnabledCheck.checked
-    property bool cfg_updateNotificationsEnabledDefault
+    property bool cfg_updateNotificationsEnabledDefault: true
     property alias cfg_autoUpdateEnabled: autoUpdateEnabledCheck.checked
-    property bool cfg_autoUpdateEnabledDefault
+    property bool cfg_autoUpdateEnabledDefault: false
     property alias cfg_autoUpdateIntervalHours: autoUpdateIntervalHoursSpin.value
-    property int cfg_autoUpdateIntervalHoursDefault
+    property int cfg_autoUpdateIntervalHoursDefault: 24
 
     // Plasma saves the cfg_* properties declared by the current page. Keep the
     // user-facing Display and Advanced values here as well so one global reset
     // remains pending until Apply/OK instead of writing configuration directly.
     property string cfg_provider
-    property string cfg_providerDefault
+    property string cfg_providerDefault: ""
     property string cfg_source
-    property string cfg_sourceDefault
+    property string cfg_sourceDefault: ""
     property bool cfg_usageBarsShowUsed
-    property bool cfg_usageBarsShowUsedDefault
+    property bool cfg_usageBarsShowUsedDefault: false
     property bool cfg_showQuotaWarningMarkers
-    property bool cfg_showQuotaWarningMarkersDefault
+    property bool cfg_showQuotaWarningMarkersDefault: true
     property string cfg_menuBarDisplayMode
-    property string cfg_menuBarDisplayModeDefault
+    property string cfg_menuBarDisplayModeDefault: "percent"
     // Chosen from the Usage & Spend tab, reset from here like the other
     // popup-owned values.
-    property string cfg_costHistoryMetric
-    property string cfg_costHistoryMetricDefault
+    property string cfg_costHistoryMetric: "cost"
+    property string cfg_costHistoryMetricDefault: "cost"
     property bool cfg_resetTimesShowAbsolute
-    property bool cfg_resetTimesShowAbsoluteDefault
+    property bool cfg_resetTimesShowAbsoluteDefault: false
     property bool cfg_showProviderChangelogs
-    property bool cfg_showProviderChangelogsDefault
+    property bool cfg_showProviderChangelogsDefault: false
     property bool cfg_showProviderInPanel
-    property bool cfg_showProviderInPanelDefault
+    property bool cfg_showProviderInPanelDefault: true
     property bool cfg_showPercentInPanel
-    property bool cfg_showPercentInPanelDefault
+    property bool cfg_showPercentInPanelDefault: true
     property bool cfg_showMultiProviderInPanel
-    property bool cfg_showMultiProviderInPanelDefault
+    property bool cfg_showMultiProviderInPanelDefault: false
     property string cfg_panelElementOrder
-    property string cfg_panelElementOrderDefault
+    property string cfg_panelElementOrderDefault: "identity,status,text,meters"
     property bool cfg_autoSelectProvider
-    property bool cfg_autoSelectProviderDefault
+    property bool cfg_autoSelectProviderDefault: false
     property string cfg_overviewProviderIDs
-    property string cfg_overviewProviderIDsDefault
+    property string cfg_overviewProviderIDsDefault: ""
     property bool cfg_showCreditsInPanel
-    property bool cfg_showCreditsInPanelDefault
+    property bool cfg_showCreditsInPanelDefault: false
 
     property bool defaultsActionRequested: false
     // Plasma supplies cfg_* values as creation-time properties, which replaces
@@ -332,9 +336,14 @@ KCM.SimpleKCM {
             enabled: costUsageEnabledCheck.checked
             Layout.preferredWidth: Kirigami.Units.gridUnit * 8
             // valueModified fires on user edits only, so config-driven value
-            // changes do not become pending edits and echo back on Apply.
+            // changes do not become pending edits and echo back on Apply. The
+            // user edit severs the value binding, so re-install it here; other
+            // pages follow the same pattern after interactive writes.
             value: page.cfg_costHistoryDays
-            onValueModified: page.editCostHistoryDays(value)
+            onValueModified: {
+                page.editCostHistoryDays(value)
+                value = Qt.binding(function() { return page.cfg_costHistoryDays })
+            }
         }
 
         Kirigami.Separator {

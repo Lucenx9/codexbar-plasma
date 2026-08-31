@@ -49,6 +49,10 @@ require_block_fragment "$GENERAL_QML" "id: lastUpdateStatusLabel" "wrapMode: Tex
 require_block_fragment "$GENERAL_QML" "id: usePathCommandButton" 'text: i18n("Use PATH")'
 require_block_fragment "$GENERAL_QML" "id: usePathCommandButton" 'enabled: page.cfg_commandPath.trim() !== (page.cfg_commandPathDefault || "codexbar")'
 require_block_fragment "$GENERAL_QML" "id: usePathCommandButton" 'page.cfg_commandPath = page.cfg_commandPathDefault || "codexbar"'
+# A user edit severs the SpinBox value binding, so it must re-install the
+# binding like every other interactive settings control; otherwise runtime
+# costHistoryDays writes from the Usage & Spend tab stop reaching the spin.
+require_block_fragment "$GENERAL_QML" "id: costHistoryDaysSpin" "value = Qt.binding(function() { return page.cfg_costHistoryDays })"
 
 require_in_file "$README_MD" "command -v codexbar"
 reject_in_file "$README_MD" "yay -S codexbar-cli"
@@ -214,7 +218,7 @@ for config_key in sorted(resettable_config_keys):
         rf"\bproperty\s+(?:alias|string|int|bool)\s+cfg_{re.escape(config_key)}(?::|\s|$)"
     )
     default_property_pattern = re.compile(
-        rf"\bproperty\s+(?:string|int|bool)\s+cfg_{re.escape(config_key)}Default(?:\s|$)"
+        rf"\bproperty\s+(?:string|int|bool|real)\s+cfg_{re.escape(config_key)}Default(?::|\s|$)"
     )
     if not property_pattern.search(general_text) or not default_property_pattern.search(general_text):
         raise AssertionError(
@@ -228,6 +232,59 @@ for config_key in sorted(resettable_config_keys):
     expected_pair = f"[cfg_{config_key}, cfg_{config_key}Default]"
     if expected_pair not in defaults_check_body:
         raise AssertionError(f"global defaults button state must account for {config_key}")
+
+# The Plasma config dialog injects only cfg_<key>, never defaults, so the
+# cfg_*Default initializers are the restore-defaults source of truth. They must
+# keep mirroring contents/config/main.xml: an initializer matching every schema
+# default and no initializer contradicting it.
+xml_entry_pattern = re.compile(r'<entry name="([^"]+)" type="(\w+)">(.*?)</entry>', re.S)
+xml_defaults = {}
+for entry_name, entry_type, entry_body in xml_entry_pattern.findall(config_text):
+    default_match = re.search(r"<default>(.*?)</default>", entry_body, re.S)
+    xml_defaults[entry_name] = (entry_type, default_match.group(1) if default_match else "")
+
+def qml_default_literal(entry_type, value):
+    if entry_type == "String":
+        return '"' + value + '"'
+    if entry_type == "Bool":
+        return "true" if value == "true" else "false"
+    return str(int(value))
+
+qml_default_pattern = re.compile(
+    r"\bproperty\s+(?:string|int|bool|real)\s+cfg_(\w+)Default\s*:\s*(.+?)\s*$", re.M
+)
+for settings_page_text, settings_page_name in (
+    (general_text, "configGeneral.qml"),
+    (display_text, "configDisplay.qml"),
+    (providers_text, "configProviders.qml"),
+    (advanced_text, "configAdvanced.qml"),
+):
+    for default_key, literal in qml_default_pattern.findall(settings_page_text):
+        if default_key not in xml_defaults:
+            raise AssertionError(
+                f"{settings_page_name} initializes cfg_{default_key}Default "
+                "without a main.xml entry"
+            )
+        entry_type, xml_value = xml_defaults[default_key]
+        expected_literal = qml_default_literal(entry_type, xml_value)
+        if literal != expected_literal:
+            raise AssertionError(
+                f"{settings_page_name} cfg_{default_key}Default initializer {literal} "
+                f"drifts from the main.xml default {expected_literal}"
+            )
+
+uninitialized_general_defaults = sorted(
+    key for key in resettable_config_keys
+    if not re.search(
+        rf"\bproperty\s+(?:string|int|bool|real)\s+cfg_{re.escape(key)}Default\s*:",
+        general_text,
+    )
+)
+if uninitialized_general_defaults:
+    raise AssertionError(
+        "global defaults must initialize cfg_*Default from main.xml for: "
+        + ", ".join(uninitialized_general_defaults)
+    )
 for internal_key in sorted(internal_config_keys):
     if f"cfg_{internal_key}" in restore_defaults_body:
         raise AssertionError(f"global defaults must preserve internal state {internal_key}")

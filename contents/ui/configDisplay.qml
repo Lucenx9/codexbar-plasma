@@ -15,31 +15,31 @@ KCM.SimpleKCM {
     id: page
 
     property string cfg_commandPath
-    property string cfg_commandPathDefault
+    property string cfg_commandPathDefault: "codexbar"
     property alias cfg_usageBarsShowUsed: usageBarsShowUsedCheck.checked
-    property bool cfg_usageBarsShowUsedDefault
+    property bool cfg_usageBarsShowUsedDefault: false
     property alias cfg_showQuotaWarningMarkers: showQuotaWarningMarkersCheck.checked
-    property bool cfg_showQuotaWarningMarkersDefault
+    property bool cfg_showQuotaWarningMarkersDefault: true
     property string cfg_menuBarDisplayMode: "percent"
-    property string cfg_menuBarDisplayModeDefault
+    property string cfg_menuBarDisplayModeDefault: "percent"
     property alias cfg_resetTimesShowAbsolute: resetTimesShowAbsoluteCheck.checked
-    property bool cfg_resetTimesShowAbsoluteDefault
+    property bool cfg_resetTimesShowAbsoluteDefault: false
     property alias cfg_showProviderChangelogs: showProviderChangelogsCheck.checked
-    property bool cfg_showProviderChangelogsDefault
+    property bool cfg_showProviderChangelogsDefault: false
     property alias cfg_showProviderInPanel: showProviderCheck.checked
-    property bool cfg_showProviderInPanelDefault
+    property bool cfg_showProviderInPanelDefault: true
     property alias cfg_showPercentInPanel: showPercentCheck.checked
-    property bool cfg_showPercentInPanelDefault
+    property bool cfg_showPercentInPanelDefault: true
     property alias cfg_showMultiProviderInPanel: showMultiProviderCheck.checked
-    property bool cfg_showMultiProviderInPanelDefault
+    property bool cfg_showMultiProviderInPanelDefault: false
     property string cfg_panelElementOrder: "identity,status,text,meters"
-    property string cfg_panelElementOrderDefault
+    property string cfg_panelElementOrderDefault: "identity,status,text,meters"
     property alias cfg_autoSelectProvider: autoSelectProviderCheck.checked
-    property bool cfg_autoSelectProviderDefault
+    property bool cfg_autoSelectProviderDefault: false
     property string cfg_overviewProviderIDs: ""
-    property string cfg_overviewProviderIDsDefault
+    property string cfg_overviewProviderIDsDefault: ""
     property alias cfg_showCreditsInPanel: showCreditsCheck.checked
-    property bool cfg_showCreditsInPanelDefault
+    property bool cfg_showCreditsInPanelDefault: false
 
     readonly property int maxOverviewProviders: 3
     readonly property int maximumProviderItems: 256

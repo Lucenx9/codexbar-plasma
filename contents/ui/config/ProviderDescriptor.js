@@ -53,8 +53,11 @@ function normalizeField(raw, fallbackFieldTitle) {
     if (fieldID.length === 0) {
         return null
     }
+    var kind = String(raw.kind)
     var command = normalizeCommandTokens(raw.writeCommand)
-    if (command.length === 0 || !isAllowedCommand(command, "field")) {
+    if (command.length === 0
+            || !isAllowedCommand(command, "field")
+            || !fieldCommandMatchesKind(kind, command)) {
         return null
     }
 
@@ -78,7 +81,7 @@ function normalizeField(raw, fallbackFieldTitle) {
     }
     return {
         id: fieldID,
-        kind: String(raw.kind),
+        kind: kind,
         title: fieldTitle,
         description: SafeText.cliMessage(raw.description, 500),
         value: normalizedValue,
@@ -120,6 +123,11 @@ function planFieldWrite(field, value, commandPath) {
     if (field.kind === "secret") {
         return rejectedPlan("secretRequiresPrompt")
     }
+    // The writeCommand has no other value channel: without the placeholder the
+    // user's edit would be silently dropped and the stored value left as-is.
+    if (!fieldCommandMatchesKind(field.kind, field.writeCommand)) {
+        return rejectedPlan("missingValuePlaceholder")
+    }
     return acceptedPlan(commandLineFromTokens(
         field.writeCommand, ({ "{value}": value }), commandPath))
 }
@@ -127,10 +135,41 @@ function planFieldWrite(field, value, commandPath) {
 // There is deliberately no value argument. The QML prompt reads the secret
 // inside the child script and pipes it to stdin, so it never appears in argv.
 function planSecretPrompt(field, commandPath) {
-    if (!field || !isAllowedCommand(field.writeCommand, "field")) {
+    // Only secret fields may take the prompt path, and their command must not
+    // expect a {value}: the prompt supplies the secret on stdin only, so a
+    // placeholder would reach the CLI as a literal token.
+    if (!field || field.kind !== "secret"
+            || !isAllowedCommand(field.writeCommand, "field")
+            || !fieldCommandMatchesKind(field.kind, field.writeCommand)) {
         return rejectedPlan("unsupportedCommand")
     }
     return acceptedPlan(commandLineFromTokens(field.writeCommand, ({}), commandPath))
+}
+
+function commandTokensContainValue(commandTokens) {
+    for (var i = 0; i < commandTokens.length; i++) {
+        if (String(commandTokens[i]).indexOf("{value}") !== -1) {
+            return true
+        }
+    }
+    return false
+}
+
+function commandTokensContainToken(commandTokens, expectedToken) {
+    for (var i = 0; i < commandTokens.length; i++) {
+        if (String(commandTokens[i]) === expectedToken) {
+            return true
+        }
+    }
+    return false
+}
+
+function fieldCommandMatchesKind(kind, commandTokens) {
+    if (kind === "secret") {
+        return commandTokensContainToken(commandTokens, "--stdin")
+            && !commandTokensContainValue(commandTokens)
+    }
+    return commandTokensContainValue(commandTokens)
 }
 
 function planAction(action, commandPath) {
