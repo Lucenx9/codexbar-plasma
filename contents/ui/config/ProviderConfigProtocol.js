@@ -153,8 +153,10 @@ function commandPayloadIsSupported(payload) {
             || payload.length > maximumProviderItems) {
         return false
     }
+    // Descriptor command statuses belong to one structured result object.
+    // Status-bearing arrays are not part of that contract.
     for (var i = 0; i < payload.length; i++) {
-        if (!isCliRecord(payload[i])) {
+        if (!isCliRecord(payload[i]) || Guards.hasOwnKey(payload[i], "status")) {
             return false
         }
     }

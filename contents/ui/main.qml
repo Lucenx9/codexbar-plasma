@@ -88,8 +88,8 @@ PlasmoidItem {
     readonly property int providerConfigWatchIntervalMs: 60000
     property int commandRunSerial: 0
     property bool costLifecycleInitialized: false
-    property var activeUsageCommands: ({})
-    readonly property int usageCommandTimeoutMs: 120000
+    property var activeCommandDescriptors: ({})
+    readonly property int defaultCommandTimeoutMs: 120000
     readonly property int maximumExtraRateWindows: Normalizer.maximumExtraRateWindows
     readonly property int maximumProviderSnapshots: Normalizer.maximumProviderSnapshots
     readonly property int maximumAccountSnapshots: Normalizer.maximumAccountSnapshots
@@ -106,7 +106,7 @@ PlasmoidItem {
     property var fallbackProviderSeen: ({})
     property int pendingProviderCount: 0
     property string costCommandSource: buildCostCommand()
-    readonly property bool costLoading: CommandLedger.hasKind(activeUsageCommands, "cost")
+    readonly property bool costLoading: CommandLedger.hasKind(activeCommandDescriptors, "cost")
     readonly property int costAutoRefreshIntervalMs: CostRefreshPolicy.automaticRefreshIntervalMs
     property double lastCostRefreshAttemptAt: -1
     property var tokenCosts: ({})
@@ -469,17 +469,18 @@ PlasmoidItem {
             return
         }
 
-        activeUsageCommands = CommandLedger.opened(activeUsageCommands, sourceName, descriptor)
+        activeCommandDescriptors = CommandLedger.opened(
+            activeCommandDescriptors, sourceName, descriptor)
         usageSource.connectSource(sourceName)
     }
 
-    function buildUsageCommandDescriptor(kind, providerID, timeoutMs) {
+    function buildCommandDescriptor(kind, providerID, timeoutMs) {
         return CommandLedger.descriptor(
-            kind, providerID, Date.now(), timeoutMs, usageCommandTimeoutMs)
+            kind, providerID, Date.now(), timeoutMs, defaultCommandTimeoutMs)
     }
 
     function buildCostCommandDescriptor() {
-        var descriptor = buildUsageCommandDescriptor("cost", "")
+        var descriptor = buildCommandDescriptor("cost", "")
         descriptor.costHistoryDays = costHistoryDays
         return descriptor
     }
@@ -490,15 +491,17 @@ PlasmoidItem {
         }
 
         usageSource.disconnectSource(sourceName)
-        activeUsageCommands = CommandLedger.closed(activeUsageCommands, sourceName)
+        activeCommandDescriptors = CommandLedger.closed(activeCommandDescriptors, sourceName)
     }
 
     function connectNotificationCommand(sourceName) {
         if (sourceName.length === 0) {
             return
         }
-        var descriptor = buildUsageCommandDescriptor("notification", "", notificationCommandTimeoutMs)
-        activeUsageCommands = CommandLedger.opened(activeUsageCommands, sourceName, descriptor)
+        var descriptor = buildCommandDescriptor(
+            "notification", "", notificationCommandTimeoutMs)
+        activeCommandDescriptors = CommandLedger.opened(
+            activeCommandDescriptors, sourceName, descriptor)
         notificationSource.connectSource(sourceName)
     }
 
@@ -507,13 +510,13 @@ PlasmoidItem {
             return
         }
         notificationSource.disconnectSource(sourceName)
-        activeUsageCommands = CommandLedger.closed(activeUsageCommands, sourceName)
+        activeCommandDescriptors = CommandLedger.closed(activeCommandDescriptors, sourceName)
     }
 
     // Retiring by kind is what makes a late reply harmless: the source name
     // leaves the ledger, so routing no longer recognises it.
     function retireUsageCommandKind(kind) {
-        var sourceNames = CommandLedger.sourcesOfKind(activeUsageCommands, kind)
+        var sourceNames = CommandLedger.sourcesOfKind(activeCommandDescriptors, kind)
         for (var i = 0; i < sourceNames.length; i++) {
             finishUsageCommandSource(sourceNames[i])
         }
@@ -541,7 +544,7 @@ PlasmoidItem {
         }
         connectUsageCommand(
             commandWithRunNonce(commandSource),
-            buildUsageCommandDescriptor("usage", ""))
+            buildCommandDescriptor("usage", ""))
     }
 
     function retireUsageCommands() {
@@ -622,7 +625,7 @@ PlasmoidItem {
         sessionsErrorText = ""
         connectUsageCommand(
             commandWithRunNonce(sessionsCommandSource),
-            buildUsageCommandDescriptor("sessions", "", sessionsCommandTimeoutMs))
+            buildCommandDescriptor("sessions", "", sessionsCommandTimeoutMs))
     }
 
     function parseOutput(stdoutText, stderrText) {
@@ -697,7 +700,7 @@ PlasmoidItem {
 
         connectUsageCommand(
             commandWithRunNonce(providerConfigCommandSource),
-            buildUsageCommandDescriptor("providerConfig", ""))
+            buildCommandDescriptor("providerConfig", ""))
     }
 
     function parseProviderConfigOutput(stdoutText, stderrText) {
@@ -779,7 +782,7 @@ PlasmoidItem {
             activeProviderFallbackCount++
             connectUsageCommand(
                 sourceName,
-                buildUsageCommandDescriptor("providerFallback", providerID))
+                buildCommandDescriptor("providerFallback", providerID))
         }
         fallbackProviderQueue = queue
     }
@@ -948,12 +951,12 @@ PlasmoidItem {
         }
     }
 
-    function hasPendingUsageCommandTimeouts() {
-        return CommandLedger.hasDeadlines(activeUsageCommands)
+    function hasPendingCommandTimeouts() {
+        return CommandLedger.hasDeadlines(activeCommandDescriptors)
     }
 
     function hasPendingPeriodicRefreshCommands() {
-        return CommandLedger.hasAnyKind(activeUsageCommands, [
+        return CommandLedger.hasAnyKind(activeCommandDescriptors, [
             "usage",
             "providerConfig",
             "sessions",
@@ -961,17 +964,17 @@ PlasmoidItem {
         ])
     }
 
-    function expireUsageCommands(nowMs) {
-        var expired = CommandLedger.expired(activeUsageCommands, nowMs)
+    function expireCommands(nowMs) {
+        var expired = CommandLedger.expired(activeCommandDescriptors, nowMs)
         for (var i = 0; i < expired.length; i++) {
-            handleUsageCommandTimeout(expired[i].sourceName, expired[i].descriptor)
+            handleCommandTimeout(expired[i].sourceName, expired[i].descriptor)
         }
     }
 
     // The ledger entry already proves the command is the live one for its kind,
     // so the kind alone decides how the timeout is reported.
-    function handleUsageCommandTimeout(sourceName, descriptor) {
-        if (!descriptor || !CommandLedger.find(activeUsageCommands, sourceName)) {
+    function handleCommandTimeout(sourceName, descriptor) {
+        if (!descriptor || !CommandLedger.find(activeCommandDescriptors, sourceName)) {
             return
         }
 
@@ -1274,8 +1277,8 @@ PlasmoidItem {
             return null
         }
         var currency = Normalizer.boundedDisplayText(item.currencyCode || "USD", 12)
-        var emittedHistoryDays = Number(item.historyDays)
-        var fallbackHistoryDays = Number(requestedHistoryDays)
+        var emittedHistoryDays = Normalizer.strictFiniteNumber(item.historyDays)
+        var fallbackHistoryDays = Normalizer.strictFiniteNumber(requestedHistoryDays)
         var historyDays = isFinite(emittedHistoryDays) && emittedHistoryDays > 0
             ? Math.max(1, Math.min(maximumCostHistoryPoints, Math.floor(emittedHistoryDays)))
             : (isFinite(fallbackHistoryDays) && fallbackHistoryDays > 0
@@ -1312,10 +1315,10 @@ PlasmoidItem {
 
     function costHistoryWindowLabel(item, requestedHistoryDays) {
         var rawDays = item && item.historyDays !== undefined && item.historyDays !== null
-            ? Number(item.historyDays)
+            ? Normalizer.strictFiniteNumber(item.historyDays)
             : NaN
         if (!isFinite(rawDays) || rawDays <= 0) {
-            rawDays = Number(requestedHistoryDays)
+            rawDays = Normalizer.strictFiniteNumber(requestedHistoryDays)
         }
         if (!isFinite(rawDays) || rawDays <= 0) {
             return i18n("Last 30 days")
@@ -3217,25 +3220,29 @@ PlasmoidItem {
     }
 
     function costValueLine(cost, tokens, currency, valueMode) {
-        var hasCost = isFinite(Number(cost))
-        var costValue = hasCost ? amountString(Number(cost), currency) : "-"
+        var numericCost = Normalizer.strictFiniteNumber(cost)
+        var numericTokens = Normalizer.strictFiniteNumber(tokens)
+        var hasCost = isFinite(numericCost)
+        var costValue = hasCost ? amountString(numericCost, currency) : "-"
         if (hasCost) {
             costValue = qualifiedCostValue(costValue, valueMode)
         }
-        if (isFinite(Number(tokens))) {
-            return i18n("%1 - %2 tokens", costValue, tokenCountString(Number(tokens)))
+        if (isFinite(numericTokens)) {
+            return i18n("%1 - %2 tokens", costValue, tokenCountString(numericTokens))
         }
         return costValue
     }
 
     function costLine(label, cost, tokens, currency, valueMode) {
-        var hasCost = isFinite(Number(cost))
-        var costValue = hasCost ? amountString(Number(cost), currency) : "-"
+        var numericCost = Normalizer.strictFiniteNumber(cost)
+        var numericTokens = Normalizer.strictFiniteNumber(tokens)
+        var hasCost = isFinite(numericCost)
+        var costValue = hasCost ? amountString(numericCost, currency) : "-"
         if (hasCost) {
             costValue = qualifiedCostValue(costValue, valueMode)
         }
-        if (isFinite(Number(tokens))) {
-            return i18n("%1: %2 - %3 tokens", label, costValue, tokenCountString(Number(tokens)))
+        if (isFinite(numericTokens)) {
+            return i18n("%1: %2 - %3 tokens", label, costValue, tokenCountString(numericTokens))
         }
         return i18n("%1: %2", label, costValue)
     }
@@ -3798,7 +3805,7 @@ PlasmoidItem {
             // A reply the ledger no longer holds is a late result from a
             // retired run. Dropping it is what keeps it from overwriting the
             // refresh that replaced it.
-            var descriptor = CommandLedger.find(root.activeUsageCommands, sourceName)
+            var descriptor = CommandLedger.find(root.activeCommandDescriptors, sourceName)
             if (!descriptor) {
                 return
             }
@@ -3860,13 +3867,13 @@ PlasmoidItem {
     }
 
     Timer {
-        id: usageCommandTimeoutTimer
+        id: commandTimeoutTimer
 
         interval: 1000
         repeat: true
-        running: root.hasPendingUsageCommandTimeouts()
+        running: root.hasPendingCommandTimeouts()
         triggeredOnStart: false
-        onTriggered: root.expireUsageCommands(Date.now())
+        onTriggered: root.expireCommands(Date.now())
     }
 
     Timer {
@@ -3933,7 +3940,7 @@ PlasmoidItem {
         engine: "executable"
 
         onNewData: function(sourceName, data) {
-            var descriptor = CommandLedger.find(root.activeUsageCommands, sourceName)
+            var descriptor = CommandLedger.find(root.activeCommandDescriptors, sourceName)
             if (!descriptor || descriptor.kind !== "notification") {
                 return
             }

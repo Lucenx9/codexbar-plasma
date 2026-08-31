@@ -9,14 +9,14 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # either is correct as long as the rule is still there. Assert against the
 # surface so a file split cannot silently drop a nonce, deadline, or cleanup.
 
-require_in_surface applet "readonly property int usageCommandTimeoutMs: 120000"
+require_in_surface applet "readonly property int defaultCommandTimeoutMs: 120000"
 require_in_surface applet "function connectUsageCommand(sourceName, descriptor)"
 require_in_surface applet "function finishUsageCommandSource(sourceName)"
 require_in_surface applet "function retireUsageCommands()"
-require_in_surface applet "function expireUsageCommands(nowMs)"
-require_in_surface applet "function handleUsageCommandTimeout(sourceName, descriptor)"
-require_in_surface applet "id: usageCommandTimeoutTimer"
-require_in_surface applet "root.expireUsageCommands(Date.now())"
+require_in_surface applet "function expireCommands(nowMs)"
+require_in_surface applet "function handleCommandTimeout(sourceName, descriptor)"
+require_in_surface applet "id: commandTimeoutTimer"
+require_in_surface applet "root.expireCommands(Date.now())"
 require_in_surface applet "id: usageRefreshTimer"
 require_in_surface applet "running: root.refreshIntervalSec > 0"
 require_in_surface applet "if (!root.hasPendingPeriodicRefreshCommands())"
@@ -103,7 +103,7 @@ for retired_kind in ('retireUsageCommandKind("usage")',
 if "sessionsLoading = false" not in retire_body:
     raise AssertionError("retiring the sessions command must clear its loading flag")
 retire_kind_body = applet.function_body("retireUsageCommandKind")
-for retire_kind_fragment in ("CommandLedger.sourcesOfKind(activeUsageCommands, kind)",
+for retire_kind_fragment in ("CommandLedger.sourcesOfKind(activeCommandDescriptors, kind)",
                              "finishUsageCommandSource("):
     if retire_kind_fragment not in retire_kind_body:
         raise AssertionError(
@@ -165,9 +165,9 @@ require_all(
 # hands every overdue command to the timeout handler, and that the scan itself
 # keeps comparing against the recorded deadline.
 require_all(
-    applet.function_body("expireUsageCommands"),
-    ("CommandLedger.expired(activeUsageCommands, nowMs)", "handleUsageCommandTimeout("),
-    "usage timeout scan is incomplete",
+    applet.function_body("expireCommands"),
+    ("CommandLedger.expired(activeCommandDescriptors, nowMs)", "handleCommandTimeout("),
+    "command timeout scan is incomplete",
 )
 require_all(
     applet.function_body("expired"),
@@ -175,13 +175,13 @@ require_all(
     "the ledger deadline scan is incomplete",
 )
 require_all(
-    applet.function_body("hasPendingUsageCommandTimeouts"),
-    ("CommandLedger.hasDeadlines(activeUsageCommands)",),
+    applet.function_body("hasPendingCommandTimeouts"),
+    ("CommandLedger.hasDeadlines(activeCommandDescriptors)",),
     "the timeout timer must read its deadlines from the ledger",
 )
 
 require_all(
-    applet.function_body("handleUsageCommandTimeout"),
+    applet.function_body("handleCommandTimeout"),
     (
         "switch (descriptor.kind) {",
         'case "usage":',
@@ -197,14 +197,16 @@ require_all(
         "Loading sessions timed out. Try again.",
         "Loading provider configuration timed out. Try again.",
     ),
-    "usage timeout cleanup is incomplete",
+    "command timeout cleanup is incomplete",
 )
 
 require_all(
     applet.function_body("connectNotificationCommand"),
     (
-        'buildUsageCommandDescriptor("notification", "", notificationCommandTimeoutMs)',
-        "CommandLedger.opened(activeUsageCommands, sourceName, descriptor)",
+        'buildCommandDescriptor(',
+        '"notification", "", notificationCommandTimeoutMs)',
+        "CommandLedger.opened(",
+        "activeCommandDescriptors, sourceName, descriptor)",
         "notificationSource.connectSource(sourceName)",
     ),
     "notifications must enter the shared deadline ledger",
@@ -213,7 +215,7 @@ require_all(
     applet.function_body("finishNotificationCommandSource"),
     (
         "notificationSource.disconnectSource(sourceName)",
-        "CommandLedger.closed(activeUsageCommands, sourceName)",
+        "CommandLedger.closed(activeCommandDescriptors, sourceName)",
     ),
     "notification completion must disconnect and close its ledger entry",
 )
@@ -225,7 +227,7 @@ require_all(
 require_all(
     applet.id_block("notificationSource"),
     (
-        "CommandLedger.find(root.activeUsageCommands, sourceName)",
+        "CommandLedger.find(root.activeCommandDescriptors, sourceName)",
         '!descriptor || descriptor.kind !== "notification"',
         "root.finishNotificationCommandSource(sourceName)",
     ),
@@ -234,11 +236,11 @@ require_all(
 
 require_all(
     applet.function_body("buildCostCommandDescriptor"),
-    ('buildUsageCommandDescriptor("cost", "")', "descriptor.costHistoryDays = costHistoryDays"),
+    ('buildCommandDescriptor("cost", "")', "descriptor.costHistoryDays = costHistoryDays"),
     "cost command descriptors must retain the requested history range",
 )
 for fragment in (
-    "var descriptor = CommandLedger.find(root.activeUsageCommands, sourceName)",
+    "var descriptor = CommandLedger.find(root.activeCommandDescriptors, sourceName)",
     "descriptor.costHistoryDays !== undefined",
     "root.parseCostOutput(stdoutText, stderrText, requestedHistoryDays)",
 ):

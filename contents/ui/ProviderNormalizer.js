@@ -389,8 +389,9 @@ function sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreation
 }
 
 function boundedHistoryDays(days) {
-    return isFinite(Number(days))
-        ? Math.max(1, Math.min(maximumCostHistoryPoints, Number(days)))
+    var numericDays = strictFiniteNumber(days)
+    return isFinite(numericDays)
+        ? Math.max(1, Math.min(maximumCostHistoryPoints, numericDays))
         : 30
 }
 
@@ -667,8 +668,9 @@ function normalizeCostModels(items, currency, days) {
             if (name.length === 0 || isUnsafeObjectKey(name)) {
                 continue
             }
-            var cost = Number(breakdown.cost !== undefined ? breakdown.cost : breakdown.totalCost)
-            var tokens = Number(breakdown.totalTokens !== undefined ? breakdown.totalTokens : breakdown.tokens)
+            var cost = firstStrictFiniteNumber(breakdown.cost, breakdown.totalCost)
+            var tokens = firstStrictFiniteNumber(
+                breakdown.totalTokens, breakdown.tokens)
             if (!isFinite(cost) && !isFinite(tokens)) {
                 continue
             }

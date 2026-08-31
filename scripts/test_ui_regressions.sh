@@ -508,8 +508,14 @@ for ranged_cost_fragment in (
 if "function costHistoryWindowLabel(item, requestedHistoryDays)" not in main_text:
     raise AssertionError("main.qml must define costHistoryWindowLabel")
 cost_history_label_body = function_body(main_text, "costHistoryWindowLabel")
-if "rawDays = Number(requestedHistoryDays)" not in cost_history_label_body:
+if "rawDays = Normalizer.strictFiniteNumber(requestedHistoryDays)" not in cost_history_label_body:
     raise AssertionError("invalid emitted cost ranges must fall back to the captured request range")
+for cost_number_function in ("costValueLine", "costLine"):
+    cost_number_body = function_body(main_text, cost_number_function)
+    if cost_number_body.count("Normalizer.strictFiniteNumber(") < 2:
+        raise AssertionError(
+            f"{cost_number_function} must reject coercive cost and token values"
+        )
 
 # The aggregation moved into CostPresentation.js; the rule did not. A snapshot
 # answered for another window must still be excluded from the selected range.
@@ -1975,7 +1981,7 @@ for cost_loading_fragment in (
             "SpendView must distinguish a range refresh from an empty result; "
             f"missing {cost_loading_fragment!r}"
         )
-if ('readonly property bool costLoading: CommandLedger.hasKind(activeUsageCommands, "cost")'
+if ('readonly property bool costLoading: CommandLedger.hasKind(activeCommandDescriptors, "cost")'
         not in main_text):
     raise AssertionError("cost loading state must follow the active cost command lifecycle")
 if "required property int index" not in display_text:

@@ -215,6 +215,17 @@ TestCase {
             { status: "ok" }, "", 0).outcome, "success")
     }
 
+    function test_commandOutcomeRejectsStatusBearingArrays() {
+        var payloads = [
+            [{ status: "queued" }],
+            [{ provider: "codex" }, { status: "ok" }]
+        ]
+        for (var i = 0; i < payloads.length; i++) {
+            compare(ProviderConfigProtocol.commandOutcome(
+                payloads[i], "", 0).outcome, "invalidPayload")
+        }
+    }
+
     function test_commandOutcomeRejectsStructuredDescriptorStatuses() {
         var statuses = [["ok"], ["cancelled"], ["error"], { value: "ok" }]
         for (var i = 0; i < statuses.length; i++) {

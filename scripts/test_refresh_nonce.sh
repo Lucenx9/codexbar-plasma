@@ -17,7 +17,7 @@ require_in_surface applet "commandWithRunNonce(providerConfigCommandSource)"
 # The nonce alone does not drop a late result; the ledger does, by no longer
 # holding the retired source name. Assert that routing reads the ledger and not
 # a parallel per-kind string that could disagree with it.
-require_in_surface applet "CommandLedger.find(root.activeUsageCommands, sourceName)"
+require_in_surface applet "CommandLedger.find(root.activeCommandDescriptors, sourceName)"
 reject_in_surface applet "property string connectedCommandSource"
 reject_in_surface applet "property string connectedCostCommandSource"
 reject_in_surface applet "property string connectedSessionsCommandSource"

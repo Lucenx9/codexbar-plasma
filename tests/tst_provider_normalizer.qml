@@ -224,6 +224,15 @@ TestCase {
         }
     }
 
+    function test_strictFiniteNumberRejectsCoerciveValues() {
+        var invalidValues = [null, undefined, "", "   ", true, false, [], {}]
+        for (var i = 0; i < invalidValues.length; i++) {
+            verify(isNaN(Normalizer.strictFiniteNumber(invalidValues[i])))
+        }
+        compare(Normalizer.strictFiniteNumber(0), 0)
+        compare(Normalizer.strictFiniteNumber(" 2.5 "), 2.5)
+    }
+
     function test_reportsAnUnknownPercentageInsteadOfGuessingZero() {
         var unknown = Normalizer.rateWindowMetrics({ usedPercent: 80 }, null, false)
         compare(unknown.hasPercent, false)
@@ -771,6 +780,20 @@ TestCase {
         compare(rows[1].label, "gpt-5")
         compare(rows[1].cost, 3)
         compare(rows[1].tokens, 30)
+    }
+
+    function test_costModelsRejectCoerciveNumbersAndUseValidAliases() {
+        var rows = Normalizer.normalizeCostModels([{ modelBreakdowns: [
+            { modelName: "null-cost", cost: null },
+            { modelName: "boolean-tokens", cost: false, totalTokens: true },
+            { modelName: "valid-aliases", cost: null, totalCost: 3,
+                totalTokens: false, tokens: 4 }
+        ] }], "USD", 30)
+
+        compare(rows.length, 1)
+        compare(rows[0].label, "valid-aliases")
+        compare(rows[0].cost, 3)
+        compare(rows[0].tokens, 4)
     }
 
     function test_costModelsDropPrototypePollutingModelNames() {
