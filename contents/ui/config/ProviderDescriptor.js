@@ -53,8 +53,11 @@ function normalizeField(raw, fallbackFieldTitle) {
     if (fieldID.length === 0) {
         return null
     }
+    var kind = String(raw.kind)
     var command = normalizeCommandTokens(raw.writeCommand)
-    if (command.length === 0 || !isAllowedCommand(command, "field")) {
+    if (command.length === 0
+            || !isAllowedCommand(command, "field")
+            || !fieldCommandMatchesKind(kind, command)) {
         return null
     }
 
@@ -78,7 +81,7 @@ function normalizeField(raw, fallbackFieldTitle) {
     }
     return {
         id: fieldID,
-        kind: String(raw.kind),
+        kind: kind,
         title: fieldTitle,
         description: SafeText.cliMessage(raw.description, 500),
         value: normalizedValue,
@@ -122,7 +125,7 @@ function planFieldWrite(field, value, commandPath) {
     }
     // The writeCommand has no other value channel: without the placeholder the
     // user's edit would be silently dropped and the stored value left as-is.
-    if (!commandTokensContainValue(field.writeCommand)) {
+    if (!fieldCommandMatchesKind(field.kind, field.writeCommand)) {
         return rejectedPlan("missingValuePlaceholder")
     }
     return acceptedPlan(commandLineFromTokens(
@@ -137,7 +140,7 @@ function planSecretPrompt(field, commandPath) {
     // placeholder would reach the CLI as a literal token.
     if (!field || field.kind !== "secret"
             || !isAllowedCommand(field.writeCommand, "field")
-            || commandTokensContainValue(field.writeCommand)) {
+            || !fieldCommandMatchesKind(field.kind, field.writeCommand)) {
         return rejectedPlan("unsupportedCommand")
     }
     return acceptedPlan(commandLineFromTokens(field.writeCommand, ({}), commandPath))
@@ -150,6 +153,23 @@ function commandTokensContainValue(commandTokens) {
         }
     }
     return false
+}
+
+function commandTokensContainToken(commandTokens, expectedToken) {
+    for (var i = 0; i < commandTokens.length; i++) {
+        if (String(commandTokens[i]) === expectedToken) {
+            return true
+        }
+    }
+    return false
+}
+
+function fieldCommandMatchesKind(kind, commandTokens) {
+    if (kind === "secret") {
+        return commandTokensContainToken(commandTokens, "--stdin")
+            && !commandTokensContainValue(commandTokens)
+    }
+    return commandTokensContainValue(commandTokens)
 }
 
 function planAction(action, commandPath) {
