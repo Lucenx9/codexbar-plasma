@@ -63,4 +63,140 @@ TestCase {
     function test_retryDelayStopsAtTheMaximum() {
         compare(UpdateLogic.updateRetryDelay(20, 300000, 21600000), 21600000)
     }
+
+    function test_availableResultRequestsNotificationWithoutAutomaticInstall() {
+        var intent = UpdateLogic.resultIntent({
+            status: "available",
+            remoteVersion: "v0.2.24",
+            assetUrl: "https://github.com/Lucenx9/codexbar-plasma/releases/download/v0.2.24/codexbar-plasma.plasmoid"
+        }, false)
+
+        compare(intent.kind, "available")
+        compare(intent.successful, true)
+        compare(intent.version, "v0.2.24")
+        compare(intent.notificationKind, "available")
+    }
+
+    function test_availableResultStaysQuietDuringAutomaticInstall() {
+        var intent = UpdateLogic.resultIntent({ status: "available" }, true)
+
+        compare(intent.notificationKind, "")
+    }
+
+    function test_installedResultRequestsInstalledNotification() {
+        var intent = UpdateLogic.resultIntent({
+            status: "installed",
+            remoteVersion: "v0.2.24"
+        }, true)
+
+        compare(intent.kind, "installed")
+        compare(intent.successful, true)
+        compare(intent.version, "v0.2.24")
+        compare(intent.notificationKind, "installed")
+    }
+
+    function test_terminalQuietResultsAreSuccessful() {
+        var currentIntent = UpdateLogic.resultIntent({ status: "current" }, false)
+        var skippedIntent = UpdateLogic.resultIntent({ status: "skipped" }, false)
+
+        compare(currentIntent.kind, "current")
+        compare(currentIntent.successful, true)
+        compare(currentIntent.notificationKind, "")
+        compare(skippedIntent.kind, "skipped")
+        compare(skippedIntent.successful, true)
+        compare(skippedIntent.notificationKind, "")
+    }
+
+    function test_errorResultKeepsOnlySemanticErrorFields() {
+        var intent = UpdateLogic.resultIntent({
+            status: "error",
+            errorCode: "missing_tool",
+            errorDetail: "jq",
+            message: "raw updater message"
+        }, false)
+
+        compare(intent.kind, "error")
+        compare(intent.successful, false)
+        compare(intent.errorCode, "missing_tool")
+        compare(intent.errorDetail, "jq")
+        verify(!intent.hasOwnProperty("message"))
+    }
+
+    function test_unknownResultCarriesTheStrictStatusForLocalization() {
+        var intent = UpdateLogic.resultIntent({ status: "future-status" }, false)
+
+        compare(intent.kind, "unknown")
+        compare(intent.successful, false)
+        compare(intent.status, "future-status")
+    }
+
+    function test_resultIntentRejectsOversizedRetainedFields() {
+        var oversized = new Array(4097).join("x")
+        var availableIntent = UpdateLogic.resultIntent({
+            status: "available",
+            remoteVersion: oversized,
+            assetUrl: oversized
+        }, false)
+        var errorIntent = UpdateLogic.resultIntent({
+            status: "error",
+            errorCode: oversized,
+            errorDetail: oversized
+        }, false)
+        var unknownIntent = UpdateLogic.resultIntent({ status: oversized }, false)
+
+        compare(availableIntent.version, "")
+        compare(availableIntent.assetUrl, "")
+        compare(errorIntent.errorCode, "")
+        compare(errorIntent.errorDetail, "")
+        compare(unknownIntent.status, "")
+    }
+
+    function test_resultIntentIgnoresInheritedPayloadFields() {
+        var intent = UpdateLogic.resultIntent(Object.create({
+            status: "installed",
+            remoteVersion: "v9.9.9"
+        }), false)
+
+        compare(intent.kind, "unknown")
+        compare(intent.status, "")
+        compare(intent.version, "")
+        compare(intent.notificationKind, "")
+    }
+
+    function test_resultIntentDoesNotCoerceStructuredOrBlankFields() {
+        var structuredIntent = UpdateLogic.resultIntent({
+            status: "available",
+            remoteVersion: { value: "v9.9.9" },
+            assetUrl: ["https://example.com/widget"]
+        }, false)
+        var blankIntent = UpdateLogic.resultIntent({
+            status: "available",
+            remoteVersion: "   "
+        }, false)
+
+        compare(structuredIntent.version, "")
+        compare(structuredIntent.assetUrl, "")
+        compare(blankIntent.version, "")
+    }
+
+    function test_resultIntentKeepsOnlyHttpsAssetUrls() {
+        var httpsIntent = UpdateLogic.resultIntent({
+            status: "available",
+            assetUrl: "  HTTPS://example.com/widget  "
+        }, false)
+
+        compare(httpsIntent.assetUrl, "HTTPS://example.com/widget")
+        compare(UpdateLogic.resultIntent({
+            status: "available",
+            assetUrl: "http://example.com/widget"
+        }, false).assetUrl, "")
+        compare(UpdateLogic.resultIntent({
+            status: "available",
+            assetUrl: "javascript:alert(1)"
+        }, false).assetUrl, "")
+        compare(UpdateLogic.resultIntent({
+            status: "available",
+            assetUrl: "file:///tmp/widget"
+        }, false).assetUrl, "")
+    }
 }
