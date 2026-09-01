@@ -326,6 +326,33 @@ TestCase {
         compare(CostPresentation.spendCurrency([]), "USD")
     }
 
+    function test_spendCurrencyPrefersPricedDataOverTokenOnlyFallbacks() {
+        var costs = [
+            {
+                totals: { cost: null, tokens: 250, currency: "USD" },
+                daily: [dailyPoint("Mon", null, 250, "USD")]
+            },
+            {
+                totals: { cost: 9, tokens: 400, currency: "EUR" },
+                daily: [dailyPoint("Mon", 9, 400, "EUR")]
+            }
+        ]
+
+        compare(CostPresentation.spendCurrency(costs), "EUR")
+
+        var totals = CostPresentation.spendTotals(costs)
+        compare(totals.cost, 9)
+        compare(totals.tokens, 650)
+        compare(totals.currency, "EUR")
+
+        var costPoints = CostPresentation.spendDailyPoints(fmt, costs, false)
+        compare(costPoints.length, 1)
+        compare(costPoints[0].value, 9)
+
+        var tokenPoints = CostPresentation.spendDailyPoints(fmt, costs, true)
+        compare(tokenPoints[0].value, 650)
+    }
+
     // Money in mixed currencies cannot be summed, but token counts are
     // currency-free: filtering them would drop whole providers from the chart.
     function test_spendDailyPointsDropForeignMoneyButKeepForeignTokens() {
@@ -435,6 +462,20 @@ TestCase {
                 totals: { cost: null, tokens: 250, currency: "USD" },
                 trust: { coverage: null, sourceKind: "unknown" }
             }
+        ])
+
+        compare(summary.level, "warning")
+        compare(summary.valueMode, "approximate")
+        compare(summary.sourceKind, "unknown")
+    }
+
+    function test_costTrustSummaryKeepsCurrencyFreeTokenOnlyGaps() {
+        var summary = CostPresentation.costTrustSummary([
+            {
+                totals: { cost: null, tokens: 250, currency: "USD" },
+                trust: { coverage: null, sourceKind: "unknown" }
+            },
+            trustedCost("EUR", null, "vendor")
         ])
 
         compare(summary.level, "warning")

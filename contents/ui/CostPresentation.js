@@ -477,15 +477,36 @@ function spendSnapshots(tokenCosts, historyDays, titleFor) {
 
 function spendCurrency(costs) {
     var items = costs || []
+    // A token-only snapshot still carries a fallback currency, but it must not
+    // choose which priced providers participate in the money aggregate.
     for (var i = 0; i < items.length; i++) {
         var totals = items[i].totals || ({})
-        var currency = boundedText(totals.currency || "", 12)
-        if (currency.length > 0) {
-            return currency
+        if (hasMetricValue(totals, false)) {
+            var totalsCurrency = boundedText(totals.currency || "", 12)
+            if (totalsCurrency.length > 0) {
+                return totalsCurrency
+            }
         }
         var daily = items[i].daily || []
-        if (daily.length > 0) {
-            return boundedText(daily[0].currency || "USD", 12)
+        for (var j = 0; j < daily.length; j++) {
+            if (!hasMetricValue(daily[j], false)) {
+                continue
+            }
+            var dailyCurrency = boundedText(daily[j].currency || "", 12)
+            if (dailyCurrency.length > 0) {
+                return dailyCurrency
+            }
+        }
+    }
+    for (var fallbackIndex = 0; fallbackIndex < items.length; fallbackIndex++) {
+        var fallbackTotals = items[fallbackIndex].totals || ({})
+        var fallbackCurrency = boundedText(fallbackTotals.currency || "", 12)
+        if (fallbackCurrency.length > 0) {
+            return fallbackCurrency
+        }
+        var fallbackDaily = items[fallbackIndex].daily || []
+        if (fallbackDaily.length > 0) {
+            return boundedText(fallbackDaily[0].currency || "USD", 12)
         }
     }
     return "USD"
@@ -547,11 +568,12 @@ function costTrustSummary(costs) {
 
     for (var i = 0; i < items.length; i++) {
         var item = items[i]
-        if (!item || !costMatchesSpendCurrency(item, currency)) {
+        var itemHasCost = item && hasMetricValue(item.totals, false)
+        if (!item || (itemHasCost && !costMatchesSpendCurrency(item, currency))) {
             continue
         }
         hasDisplayedCost = hasDisplayedCost
-            || hasMetricValue(item.totals, false)
+            || itemHasCost
         if (!hasOwnKey(item, "trust")
                 || item.trust === null
                 || typeof item.trust !== "object"
