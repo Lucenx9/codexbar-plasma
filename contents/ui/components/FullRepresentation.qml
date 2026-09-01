@@ -891,7 +891,17 @@ Item {
                     }
 
                     ColumnLayout {
-                        visible: applet.selectedProviderData && applet.selectedProviderData.credits !== null
+                        id: creditsSection
+
+                        readonly property var creditLimit: applet.selectedProviderData
+                            ? applet.selectedProviderData.codexCreditLimit
+                            : null
+                        readonly property var creditLimitRow: applet.codexCreditLimitUsageRow(
+                            creditsSection.creditLimit)
+
+                        visible: applet.selectedProviderData
+                            && (applet.selectedProviderData.credits !== null
+                                || creditsSection.creditLimit !== null)
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing / 1.5
 
@@ -902,12 +912,18 @@ Item {
                             Layout.fillWidth: true
                         }
 
-                        // `usage.credits` reports only `remaining`, so a meter
-                        // here has to invent its own denominator and then
-                        // fills or empties for reasons the balance never
-                        // describes. The figure stands alone until the CLI
-                        // reports the matching allowance.
+                        Repeater {
+                            model: creditsSection.creditLimitRow ? [creditsSection.creditLimitRow] : []
+
+                            delegate: Components.ProviderUsageRow {
+                                applet: fullRoot.applet
+                                providerData: applet.selectedProviderData
+                            }
+                        }
+
                         RowLayout {
+                            visible: applet.selectedProviderData
+                                && applet.selectedProviderData.credits !== null
                             Layout.fillWidth: true
                             spacing: Kirigami.Units.smallSpacing
 

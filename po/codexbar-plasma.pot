@@ -1632,6 +1632,14 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: contents/ui/main.qml
+msgid "Monthly credit limit"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Used: %1, remaining: %2 of %3"
+msgstr ""
+
+#: contents/ui/main.qml
 msgid "now"
 msgstr ""
 

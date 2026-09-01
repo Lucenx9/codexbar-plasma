@@ -1273,19 +1273,42 @@ for full_height_marker in ("height: usageBar.height\n", "y: 0\n"):
             "quota markers must not span the meter track edge to edge again"
         )
 
-credits_section_index = main_text.find('text: i18n("Credits")')
-if credits_section_index < 0:
-    raise AssertionError("main.qml must keep the Credits section")
-credits_section_text = main_text[credits_section_index:credits_section_index + 900]
-if "Remaining: %1" not in credits_section_text:
-    raise AssertionError("the Credits section must keep the remaining-balance line")
-if re.search(r"credits\s*(?:,|/)\s*\d", credits_section_text):
+credits_section_body = id_block(full_representation_text, "creditsSection")
+for credit_limit_fragment in (
+    "readonly property var creditLimit:",
+    "applet.selectedProviderData.codexCreditLimit",
+    "applet.codexCreditLimitUsageRow(",
+    "model: creditsSection.creditLimitRow ? [creditsSection.creditLimitRow] : []",
+    "delegate: Components.ProviderUsageRow",
+):
+    if credit_limit_fragment not in credits_section_body:
+        raise AssertionError(
+            "the Credits section must render the validated Codex monthly limit "
+            f"without adding a meter to plain balances; missing {credit_limit_fragment!r}"
+        )
+if not re.search(
+    r"visible:\s*applet\.selectedProviderData\s*"
+    r"&&\s*applet\.selectedProviderData\.credits\s*!==\s*null",
+    credits_section_body,
+):
     raise AssertionError(
-        "the credits balance must not be plotted against an invented denominator; "
-        "`usage.credits` reports only `remaining`, so a meter here fills for "
-        "reasons the payload never describes. Add a meter back only once the CLI "
-        "reports the matching allowance"
+        "the plain credits balance must stay null-safe and independent of QML formatting"
     )
+if 'i18n("Remaining: %1",' not in credits_section_body:
+    raise AssertionError("the Credits section must keep the plain remaining-balance fallback")
+credit_limit_row_body = function_body(main_text, "codexCreditLimitUsageRow")
+for credit_limit_row_fragment in (
+    'i18n("Monthly credit limit")',
+    'i18n("Used: %1, remaining: %2 of %3"',
+    "usedPercent: creditLimit.usedPercent",
+    "leftPercent: creditLimit.leftPercent",
+    "resetsAt: creditLimit.resetsAt",
+):
+    if credit_limit_row_fragment not in credit_limit_row_body:
+        raise AssertionError(
+            "the Codex monthly-limit row must present every validated field through "
+            f"the shared usage-meter component; missing {credit_limit_row_fragment!r}"
+        )
 
 quota_meter_color_body = function_body(main_text, "quotaMeterColor")
 if "statusBadgeColor(" not in quota_meter_color_body:
@@ -2335,6 +2358,14 @@ if direct_number_call.search(reset_credits_body):
 normalize_provider_body = function_body(main_text, "normalizeProvider")
 if "Normalizer.strictFiniteNumber(credits.remaining)" not in normalize_provider_body:
     raise AssertionError("remaining credits must reject coercive CLI numeric values")
+if "Normalizer.normalizeCodexCreditLimit(" not in normalize_provider_body:
+    raise AssertionError("Codex monthly limits must cross the shared bounded normalizer")
+if 'hasOwnKey(credits, "codexCreditLimit")' not in normalize_provider_body:
+    raise AssertionError("Codex monthly limits must come from an own credits field")
+if "credits: isFinite(creditsRemaining)" not in normalize_provider_body:
+    raise AssertionError("the plain credits balance must remain independent of the monthly limit")
+if "credits: codexCreditLimit" in normalize_provider_body:
+    raise AssertionError("the monthly-limit remainder must not replace the plain credits balance")
 if direct_number_call.search(normalize_provider_body):
     raise AssertionError("remaining credits must not use loose numeric coercion")
 
@@ -2384,6 +2415,11 @@ if "readonly property var overviewProviderItems: overviewProviders()" not in mai
     raise AssertionError("overview provider rows must be cached in a QML property binding")
 if ".overviewProviders()" in main_text:
     raise AssertionError("overview UI bindings must reuse overviewProviderItems")
+overview_error_only_body = function_body(main_text, "isOverviewErrorOnly")
+if "item.codexCreditLimit === null" not in overview_error_only_body:
+    raise AssertionError(
+        "a valid Codex monthly limit must keep a partially healthy provider overview-eligible"
+    )
 
 # Text de-emphasis had drifted into eleven ad-hoc opacity literals, several
 # below the WCAG AA 4.5:1 floor for Kirigami.Theme.textColor on Breeze Light.
@@ -2401,11 +2437,10 @@ if "readonly property real secondaryTextOpacity: 0.7" not in providers_text:
     raise AssertionError(
         "configProviders.qml must mirror main.qml's secondaryTextOpacity step"
     )
-if main_text.count("Layout.preferredHeight: applet.meterTrackHeight") != 1:
+provider_cost_section_body = id_block(full_representation_text, "providerCostSection")
+if provider_cost_section_body.count("Layout.preferredHeight: applet.meterTrackHeight") != 1:
     raise AssertionError(
-        "the provider-cost meter must consume meterTrackHeight, and it is the "
-        "only meter left in the popup now that the credits balance has no "
-        "allowance to plot against"
+        "the provider-cost meter must consume the shared meterTrackHeight"
     )
 if provider_usage_row_text.count(
     "Layout.preferredHeight: usageRow.applet.meterTrackHeight"
