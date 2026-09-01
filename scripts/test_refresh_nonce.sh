@@ -23,7 +23,7 @@ reject_in_surface applet "property string connectedCostCommandSource"
 reject_in_surface applet "property string connectedSessionsCommandSource"
 reject_in_surface applet "property string connectedProviderConfigCommandSource"
 require_in_surface applet "var baseCommand = buildProviderUsageCommand(providerID)"
-require_in_surface applet "var command = commandWithRunNonce(baseCommand)"
+require_in_surface applet "sourceName: commandWithRunNonce(baseCommand)"
 require_in_surface applet 'connectNotificationCommand(commandWithRunNonce(":; " + command))'
 reject_in_surface applet "notificationSource.connectSource(command)"
 

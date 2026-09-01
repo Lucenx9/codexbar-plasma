@@ -12,6 +12,7 @@ import "PopupSelection.js" as PopupSelection
 import "CommandLedger.js" as CommandLedger
 import "CostRefreshPolicy.js" as CostRefreshPolicy
 import "CostPresentation.js" as CostPresentation
+import "ProviderFallbackQueue.js" as ProviderFallbackQueue
 import "ProviderIdentity.js" as ProviderIdentity
 import "ProviderNormalizer.js" as Normalizer
 import "QuotaThresholds.js" as QuotaThresholds
@@ -99,13 +100,7 @@ PlasmoidItem {
     readonly property int maximumCostHistoryScanItems: Normalizer.maximumCostHistoryScanItems
     readonly property int maximumModelBreakdownsPerDay: Normalizer.maximumModelBreakdownsPerDay
     readonly property int maximumConcurrentProviderFallbackCommands: 8
-    property var pendingProviderCommands: ({})
-    property var fallbackProviderQueue: []
-    property int activeProviderFallbackCount: 0
-    property var fallbackProviderOrder: []
-    property var fallbackProviderResults: ({})
-    property var fallbackProviderSeen: ({})
-    property int pendingProviderCount: 0
+    property var providerFallbackState: null
     property string costCommandSource: buildCostCommand()
     readonly property bool costLoading: CommandLedger.hasKind(activeCommandDescriptors, "cost")
     readonly property int costAutoRefreshIntervalMs: CostRefreshPolicy.automaticRefreshIntervalMs
@@ -551,21 +546,13 @@ PlasmoidItem {
     function retireUsageCommands() {
         retireUsageCommandKind("usage")
         retireUsageCommandKind("providerConfig")
+        retireUsageCommandKind("providerFallback")
         if (retireUsageCommandKind("sessions") > 0) {
             sessionsLoading = false
         }
-        for (var command in pendingProviderCommands) {
-            finishUsageCommandSource(command)
-        }
         // Account loads are user-triggered; keep them alive across usage refreshes
         // so their replies can still populate the account picker.
-        pendingProviderCommands = ({})
-        fallbackProviderQueue = []
-        activeProviderFallbackCount = 0
-        fallbackProviderOrder = []
-        fallbackProviderResults = ({})
-        fallbackProviderSeen = ({})
-        pendingProviderCount = 0
+        providerFallbackState = null
     }
 
     function handleProviderConfigWatch(stdoutText) {
@@ -729,20 +716,10 @@ PlasmoidItem {
     }
 
     function startProviderFallbackForProviders(providerIDs) {
-        for (var existingCommand in pendingProviderCommands) {
-            finishUsageCommandSource(existingCommand)
-        }
-        pendingProviderCommands = ({})
-        fallbackProviderQueue = []
-        activeProviderFallbackCount = 0
-        fallbackProviderOrder = []
-        fallbackProviderResults = ({})
-        fallbackProviderSeen = ({})
-        pendingProviderCount = 0
+        retireUsageCommandKind("providerFallback")
+        providerFallbackState = null
 
-        var seenCommands = ({})
-        var commands = ({})
-        var commandList = []
+        var requests = []
         var providerLimit = Math.min(providerIDs.length, maximumProviderSnapshots)
         for (var i = 0; i < providerLimit; i++) {
             var providerID = normalizedProviderID(String(providerIDs[i] || ""))
@@ -750,61 +727,47 @@ PlasmoidItem {
                 continue
             }
             var baseCommand = buildProviderUsageCommand(providerID)
-            if (seenCommands[baseCommand]) {
-                continue
-            }
-            seenCommands[baseCommand] = true
-            var command = commandWithRunNonce(baseCommand)
-            commands[command] = providerID
-            commandList.push(command)
-            fallbackProviderOrder.push(providerID)
-            pendingProviderCount++
+            requests.push({
+                sourceName: commandWithRunNonce(baseCommand),
+                providerID: providerID
+            })
         }
 
-        pendingProviderCommands = commands
-        fallbackProviderQueue = commandList
-        pumpProviderFallbackCommands()
-        if (pendingProviderCount === 0) {
+        var transition = ProviderFallbackQueue.begin(requests, {
+            maximumConcurrent: maximumConcurrentProviderFallbackCommands,
+            maximumSnapshots: maximumProviderSnapshots
+        })
+        if (transition.finished) {
+            providerFallbackState = null
             providers = []
             errorText = i18n("No enabled CodexBar providers.")
             loading = false
+            return
         }
+        applyProviderFallbackTransition(transition)
     }
 
-    function pumpProviderFallbackCommands() {
-        var queue = fallbackProviderQueue.slice()
-        while (activeProviderFallbackCount < maximumConcurrentProviderFallbackCommands
-                && queue.length > 0) {
-            var sourceName = queue.shift()
-            var providerID = pendingProviderCommands[sourceName] || ""
-            if (providerID.length === 0) {
-                continue
-            }
-            activeProviderFallbackCount++
+    function applyProviderFallbackTransition(transition) {
+        providerFallbackState = transition.state
+        var sourcesToStart = transition.sourcesToStart
+        for (var i = 0; i < sourcesToStart.length; i++) {
+            var request = sourcesToStart[i]
             connectUsageCommand(
-                sourceName,
-                buildCommandDescriptor("providerFallback", providerID))
+                request.sourceName,
+                buildCommandDescriptor("providerFallback", request.providerID))
         }
-        fallbackProviderQueue = queue
+        if (transition.finished) {
+            finishProviderFallback(transition.orderedItems)
+        }
     }
 
-    function parseProviderFallbackOutput(sourceName, stdoutText, stderrText) {
-        var providerID = pendingProviderCommands[sourceName] || ""
+    function parseProviderFallbackOutput(sourceName, providerID, stdoutText, stderrText) {
+        providerID = normalizedProviderID(providerID)
         if (providerID.length === 0) {
+            finishUsageCommandSource(sourceName)
             return
         }
-        var commands = copyObject(pendingProviderCommands)
-        delete commands[sourceName]
-        pendingProviderCommands = commands
         finishUsageCommandSource(sourceName)
-
-        if (hasOwnKey(fallbackProviderSeen, providerID)) {
-            completeProviderFallbackCommand()
-            return
-        }
-        var seen = copyObject(fallbackProviderSeen)
-        seen[providerID] = true
-        fallbackProviderSeen = seen
 
         var normalizedItems = []
         var trimmed = stdoutText.trim()
@@ -835,36 +798,15 @@ PlasmoidItem {
             }
         }
 
-        var results = copyObject(fallbackProviderResults)
-        results[providerID] = normalizedItems
-        fallbackProviderResults = results
-        completeProviderFallbackCommand()
+        var transition = ProviderFallbackQueue.complete(providerFallbackState, {
+            sourceName: sourceName,
+            items: normalizedItems
+        })
+        applyProviderFallbackTransition(transition)
     }
 
-    function completeProviderFallbackCommand() {
-        activeProviderFallbackCount = Math.max(0, activeProviderFallbackCount - 1)
-        pendingProviderCount = Math.max(0, pendingProviderCount - 1)
-        pumpProviderFallbackCommands()
-
-        if (pendingProviderCount === 0) {
-            finishProviderFallback()
-        }
-    }
-
-    function finishProviderFallback() {
-        var nextProviders = []
-        // This global delegate budget deliberately wins over completeness if a
-        // future provider-scoped CLI response starts returning many accounts.
-        for (var i = 0; i < fallbackProviderOrder.length
-                && nextProviders.length < maximumProviderSnapshots; i++) {
-            var providerID = fallbackProviderOrder[i]
-            var items = fallbackProviderResults[providerID] || []
-            for (var j = 0; j < items.length
-                    && nextProviders.length < maximumProviderSnapshots; j++) {
-                nextProviders.push(items[j])
-            }
-        }
-
+    function finishProviderFallback(orderedItems) {
+        var nextProviders = Array.isArray(orderedItems) ? orderedItems : []
         nextProviders = Normalizer.dedupeProviderSnapshots(nextProviders)
 
         markNotificationProvidersFresh(nextProviders)
@@ -872,11 +814,7 @@ PlasmoidItem {
         errorText = nextProviders.length === 0 ? i18n("codexbar did not return JSON.") : ""
         lastUpdatedText = i18n("Updated %1", Qt.formatDateTime(new Date(), "hh:mm"))
         loading = false
-        pendingProviderCommands = ({})
-        fallbackProviderQueue = []
-        activeProviderFallbackCount = 0
-        fallbackProviderSeen = ({})
-        pendingProviderCount = 0
+        providerFallbackState = null
         applyTokenCosts()
     }
 
@@ -1009,6 +947,7 @@ PlasmoidItem {
         case "providerFallback":
             parseProviderFallbackOutput(
                 sourceName,
+                descriptor.providerID,
                 "",
                 i18n("Loading usage timed out. Try again."))
             return
@@ -3860,7 +3799,8 @@ PlasmoidItem {
                 root.parseProviderAccountsOutput(sourceName, stdoutText, stderrText)
                 return
             case "providerFallback":
-                root.parseProviderFallbackOutput(sourceName, stdoutText, stderrText)
+                root.parseProviderFallbackOutput(
+                    sourceName, descriptor.providerID, stdoutText, stderrText)
                 return
             case "usage":
                 root.finishUsageCommandSource(sourceName)

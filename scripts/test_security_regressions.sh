@@ -256,7 +256,9 @@ require_in_surface providers "return Guards.copyObject(item)"
 require_in_surface providers 'import "Guards.js" as Guards'
 require_definition_where_used providers hasOwnKey "Guards.hasOwnKey(item, key)"
 require_in_surface applet "maximumConcurrentProviderFallbackCommands: 8"
-require_in_surface applet "nextProviders.length < maximumProviderSnapshots"
+# ProviderFallbackQueue enforces the global snapshot budget behaviourally in
+# tst_provider_fallback_queue.qml; the applet must still pass its canonical cap.
+require_in_surface applet "maximumSnapshots: maximumProviderSnapshots"
 require_in_surface applet "value: Normalizer.boundedDisplayText(parts.join(\" · \"), 500)"
 # The icon file name is built from a provider-controlled key, so that key is
 # bounded and pattern-checked before it can name a path. Both surfaces reach that

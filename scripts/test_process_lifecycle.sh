@@ -24,7 +24,8 @@ require_in_surface applet "function hasPendingPeriodicRefreshCommands()"
 require_in_surface applet "interval: 0"
 require_in_surface applet "root.finishUsageCommandSource(sourceName)"
 require_in_surface applet "delete commands[sourceName]"
-require_in_surface applet "pendingProviderCount = 0"
+require_in_surface applet 'import "ProviderFallbackQueue.js" as ProviderFallbackQueue'
+require_in_surface applet "property var providerFallbackState: null"
 require_in_surface applet "readonly property int accountCommandTimeoutMs: 60000"
 require_in_surface applet "readonly property int sessionsCommandTimeoutMs: 60000"
 require_in_surface applet "readonly property int notificationCommandTimeoutMs: 10000"
@@ -65,8 +66,12 @@ reject_in_surface applet "retiredUsageCommands"
 reject_in_surface applet "pendingAccountCommandStartedAt"
 reject_in_surface applet "function retireUsageCommandSource(sourceName)"
 reject_in_surface applet "interval: root.refreshIntervalSec > 0 ? root.refreshIntervalSec * 1000 : 0"
-reject_in_surface applet "pendingProviderCount = fallbackProviderOrder.length"
 reject_in_surface applet "--source cli"
+for legacy_fallback_state in \
+  pendingProviderCommands fallbackProviderQueue activeProviderFallbackCount \
+  fallbackProviderOrder fallbackProviderResults fallbackProviderSeen pendingProviderCount; do
+  reject_in_surface applet "$legacy_fallback_state"
+done
 
 python3 - "$ROOT_DIR" <<'PY'
 import sys
@@ -180,8 +185,9 @@ require_all(
     "the timeout timer must read its deadlines from the ledger",
 )
 
+timeout_body = applet.function_body("handleCommandTimeout")
 require_all(
-    applet.function_body("handleCommandTimeout"),
+    timeout_body,
     (
         "switch (descriptor.kind) {",
         'case "usage":',
@@ -198,6 +204,15 @@ require_all(
         "Loading provider configuration timed out. Try again.",
     ),
     "command timeout cleanup is incomplete",
+)
+fallback_timeout_start = timeout_body.find('case "providerFallback":')
+fallback_timeout_end = timeout_body.find('case "notification":', fallback_timeout_start)
+if fallback_timeout_start < 0 or fallback_timeout_end < 0:
+    raise AssertionError("provider fallback timeout branch is missing")
+require_all(
+    timeout_body[fallback_timeout_start:fallback_timeout_end],
+    ("parseProviderFallbackOutput(", "descriptor.providerID"),
+    "provider fallback timeouts must complete the queue before returning",
 )
 
 require_all(
@@ -263,19 +278,32 @@ for stale_route_fragment in (
             f"per-kind source name: {stale_route_fragment}"
         )
 
-fallback_result_body = applet.function_body("parseProviderFallbackOutput")
-if fallback_result_body.count("completeProviderFallbackCommand()") != 2:
-    raise AssertionError("every accepted fallback result path must complete its queue accounting")
-
 require_all(
-    applet.function_body("completeProviderFallbackCommand"),
+    applet.function_body("parseProviderFallbackOutput"),
     (
-        "activeProviderFallbackCount = Math.max(0, activeProviderFallbackCount - 1)",
-        "pendingProviderCount = Math.max(0, pendingProviderCount - 1)",
-        "pumpProviderFallbackCommands()",
-        "finishProviderFallback()",
+        "ProviderFallbackQueue.complete(",
+        "applyProviderFallbackTransition(transition)",
     ),
-    "fallback completion must preserve liveness",
+    "fallback replies must cross the pure queue interface",
+)
+require_all(
+    applet.function_body("applyProviderFallbackTransition"),
+    (
+        "providerFallbackState = transition.state",
+        "transition.sourcesToStart",
+        "connectUsageCommand(",
+        'buildCommandDescriptor("providerFallback", request.providerID)',
+        "finishProviderFallback(transition.orderedItems)",
+    ),
+    "the QML adapter must apply queue transitions and own process effects",
+)
+require_all(
+    applet.function_body("retireUsageCommands"),
+    (
+        'retireUsageCommandKind("providerFallback")',
+        "providerFallbackState = null",
+    ),
+    "retiring usage work must cancel active fallback commands and discard queued state",
 )
 
 require_all(
