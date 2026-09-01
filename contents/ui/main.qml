@@ -123,7 +123,6 @@ PlasmoidItem {
     property var accountOptions: ({})
     property var accountErrors: ({})
     property var accountLoading: ({})
-    property var pendingAccountCommands: ({})
     readonly property int accountCommandTimeoutMs: 60000
     readonly property int notificationCommandTimeoutMs: 10000
     property var notificationMemo: ({})
@@ -845,18 +844,10 @@ PlasmoidItem {
         setAccountError(normalizedProviderID, "")
         setAccountLoading(normalizedProviderID, true)
         var connectedCommand = commandWithRunNonce(command)
-        var commands = copyObject(pendingAccountCommands)
-        commands[connectedCommand] = {
-            providerID: normalizedProviderID,
-            commandSignature: command,
-            deadlineMs: Date.now() + accountCommandTimeoutMs
-        }
-        pendingAccountCommands = commands
-        connectUsageCommand(connectedCommand, {
-            kind: "account",
-            providerID: normalizedProviderID,
-            deadlineMs: 0
-        })
+        var descriptor = buildCommandDescriptor(
+            "account", normalizedProviderID, accountCommandTimeoutMs)
+        descriptor.commandSignature = command
+        connectUsageCommand(connectedCommand, descriptor)
     }
 
     function accountCommandIsCurrent(descriptor) {
@@ -865,24 +856,20 @@ PlasmoidItem {
     }
 
     function retireStaleAccountCommands() {
-        var commands = copyObject(pendingAccountCommands)
+        var sourceNames = CommandLedger.sourcesOfKind(activeCommandDescriptors, "account")
         var staleProviders = ({})
-        for (var sourceName in commands) {
-            if (!hasOwnKey(commands, sourceName)) {
-                continue
-            }
-            var descriptor = commands[sourceName]
+        for (var i = 0; i < sourceNames.length; i++) {
+            var sourceName = sourceNames[i]
+            var descriptor = CommandLedger.find(activeCommandDescriptors, sourceName)
             if (accountCommandIsCurrent(descriptor)) {
                 continue
             }
             var providerID = descriptor ? providerMapKey(descriptor.providerID) : ""
             finishUsageCommandSource(sourceName)
-            delete commands[sourceName]
             if (providerID.length > 0) {
                 staleProviders[providerID] = true
             }
         }
-        pendingAccountCommands = commands
         for (var staleProviderID in staleProviders) {
             if (hasOwnKey(staleProviders, staleProviderID)) {
                 setAccountLoading(staleProviderID, false)
@@ -944,6 +931,13 @@ PlasmoidItem {
             loading = false
             errorText = i18n("Loading provider configuration timed out. Try again.")
             return
+        case "account":
+            finishUsageCommandSource(sourceName)
+            setAccountLoading(descriptor.providerID, false)
+            setAccountError(
+                descriptor.providerID,
+                i18n("Loading accounts timed out. Try again."))
+            return
         case "providerFallback":
             parseProviderFallbackOutput(
                 sourceName,
@@ -959,56 +953,13 @@ PlasmoidItem {
         }
     }
 
-    function hasPendingAccountCommands() {
-        for (var sourceName in pendingAccountCommands) {
-            if (hasOwnKey(pendingAccountCommands, sourceName)) {
-                return true
-            }
-        }
-        return false
-    }
-
-    function expirePendingAccountCommands(nowMs) {
-        var commands = copyObject(pendingAccountCommands)
-        var expired = []
-        for (var pendingSourceName in commands) {
-            if (!hasOwnKey(commands, pendingSourceName)) {
-                continue
-            }
-            var descriptor = commands[pendingSourceName]
-            var deadline = Number(descriptor.deadlineMs)
-            if (!isFinite(deadline) || nowMs < deadline) {
-                continue
-            }
-            expired.push({ sourceName: pendingSourceName, providerID: descriptor.providerID })
-            delete commands[pendingSourceName]
-        }
-        if (expired.length === 0) {
-            return
-        }
-
-        pendingAccountCommands = commands
-        for (var i = 0; i < expired.length; i++) {
-            var item = expired[i]
-            var sourceName = item.sourceName
-            var providerID = item.providerID
-            finishUsageCommandSource(sourceName)
-            setAccountLoading(providerID, false)
-            setAccountError(providerID, i18n("Loading accounts timed out. Try again."))
-        }
-    }
-
-    function parseProviderAccountsOutput(sourceName, stdoutText, stderrText) {
-        var descriptor = pendingAccountCommands[sourceName] || null
-        var providerID = descriptor ? descriptor.providerID : ""
+    function parseProviderAccountsOutput(sourceName, descriptor, stdoutText, stderrText) {
+        var providerID = descriptor ? providerMapKey(descriptor.providerID) : ""
+        finishUsageCommandSource(sourceName)
         if (providerID.length === 0) {
             return
         }
 
-        var commands = copyObject(pendingAccountCommands)
-        delete commands[sourceName]
-        pendingAccountCommands = commands
-        finishUsageCommandSource(sourceName)
         setAccountLoading(providerID, false)
         if (!accountCommandIsCurrent(descriptor)) {
             return
@@ -3796,7 +3747,7 @@ PlasmoidItem {
                 root.parseProviderConfigOutput(stdoutText, stderrText)
                 return
             case "account":
-                root.parseProviderAccountsOutput(sourceName, stdoutText, stderrText)
+                root.parseProviderAccountsOutput(sourceName, descriptor, stdoutText, stderrText)
                 return
             case "providerFallback":
                 root.parseProviderFallbackOutput(
@@ -3844,16 +3795,6 @@ PlasmoidItem {
         running: root.hasPendingCommandTimeouts()
         triggeredOnStart: false
         onTriggered: root.expireCommands(Date.now())
-    }
-
-    Timer {
-        id: accountCommandTimeoutTimer
-
-        interval: 1000
-        repeat: true
-        running: root.hasPendingAccountCommands()
-        triggeredOnStart: false
-        onTriggered: root.expirePendingAccountCommands(Date.now())
     }
 
     Plasma5Support.DataSource {
