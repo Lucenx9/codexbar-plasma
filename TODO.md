@@ -42,9 +42,9 @@ the existing generic paths).
   it stays a line without a meter. The optional Codex-only
   `credits.codexCreditLimit` record carries a real used amount, limit, remaining
   amount, percentage, and reset metadata; v0.54.1 made it reliable for Business
-  and Enterprise accounts, but Plasma currently ignores it. Add a bounded
-  monthly-limit projection and meter for that nested record only. Never apply
-  its denominator to a plain credit balance.
+  and Enterprise accounts. Plasma now validates that nested record and shows its
+  monthly meter, amounts, and reset time. Its denominator never applies to a
+  plain credit balance.
 - Cost history plots either cost or tokens through `costHistoryMetric`; the
   selector drives the range chart, the heatmap, and the per-provider bars from
   one `cost` payload, so it must never add a CLI call. `historyCoverageIsEstablished`

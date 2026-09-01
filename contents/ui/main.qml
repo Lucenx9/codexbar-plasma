@@ -1811,10 +1811,17 @@ PlasmoidItem {
         var status = isCliRecord(item.status) ? item.status : null
         var severity = Normalizer.statusSeverity(status)
         var credits = isCliRecord(item.credits) ? item.credits : null
+        var codexCreditLimit = Normalizer.normalizeCodexCreditLimit(
+            providerID,
+            credits && hasOwnKey(credits, "codexCreditLimit")
+                ? credits.codexCreditLimit
+                : null)
         var displayName = item.displayName || item.title || providerDisplayNames[providerID] || ""
         var providerDetails = UsageDetails.normalizeSections(usage.details)
         var providerUsageDashboard = providerDetails.length > 0 ? null : usageDashboard(providerID, usage, item)
-        var hasSupplementalUsage = providerDetails.length > 0 || providerUsageDashboard !== null
+        var hasSupplementalUsage = providerDetails.length > 0
+            || providerUsageDashboard !== null
+            || codexCreditLimit !== null
         var placeholder = providerPlaceholder(providerID, rows, usage, item, error, hasSupplementalUsage)
         var creditsRemaining = credits
             ? Normalizer.strictFiniteNumber(credits.remaining)
@@ -1835,6 +1842,7 @@ PlasmoidItem {
             providerCost: providerCostSection(providerID, usage.providerCost),
             resetCredits: resetCreditsSection(providerID, usage.codexResetCredits),
             tokenCost: providerTokenCost(providerID),
+            codexCreditLimit: codexCreditLimit,
             planText: Normalizer.boundedDisplayText(planText(providerID, usage, item), 120),
             dashboardUrl: providerDashboardUrl(providerID),
             statusUrl: safeStatusUrl(providerID, status && status.url ? status.url : ""),
@@ -2123,6 +2131,31 @@ PlasmoidItem {
         return {
             title: i18n("Reset credits"),
             line: i18np("%1 available", "%1 available", Math.round(count))
+        }
+    }
+
+    function codexCreditLimitUsageRow(creditLimit) {
+        if (!creditLimit) {
+            return null
+        }
+        return {
+            lane: "monthlyCredits",
+            label: creditLimit.title.length > 0
+                ? creditLimit.title
+                : i18n("Monthly credit limit"),
+            hasPercent: true,
+            usedPercent: creditLimit.usedPercent,
+            leftPercent: creditLimit.leftPercent,
+            pacePercent: -1,
+            paceOnTop: true,
+            paceEtaSeconds: 0,
+            resetsAt: creditLimit.resetsAt,
+            resetDescription: "",
+            reset: "",
+            pace: i18n("Used: %1, remaining: %2 of %3",
+                formatNumber(creditLimit.used),
+                formatNumber(creditLimit.remaining),
+                formatNumber(creditLimit.limit))
         }
     }
 
@@ -3249,6 +3282,7 @@ PlasmoidItem {
             && (!item.rows || item.rows.length === 0)
             && providerPlaceholderText(item).length === 0
             && item.credits === null
+            && item.codexCreditLimit === null
             && !item.resetCredits
             && !item.providerCost
             && !item.tokenCost

@@ -246,8 +246,10 @@ report remains the pin.
   usage breakdowns, credits history, and model/request/token sections should
   wait for stable CLI presentation fields. A plain `usage.credits` balance has
   no generic allowance, so it stays meter-free. The optional Codex-only
-  `credits.codexCreditLimit` record carries a real denominator and is an open
-  bounded presentation gap; add a meter only for that validated nested record.
+  `credits.codexCreditLimit` record is normalized into finite non-negative
+  amounts, clamped percentages, and bounded reset metadata. Show its meter only
+  for that validated nested record; never apply its denominator to a plain credit
+  balance.
 - Quota warning thresholds are user-configurable and bounded by
   `contents/ui/QuotaThresholds.js`; the notification level and the usage-bar
   markers both read them, so neither may hardcode a percentage. Changing a

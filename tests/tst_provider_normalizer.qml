@@ -166,6 +166,96 @@ TestCase {
         compare(snapshots[2].provider, "alibaba")
     }
 
+    // --- Codex monthly credit limit ---------------------------------------
+
+    function test_normalizesCodexMonthlyCreditLimitForThePopup() {
+        var limit = Normalizer.normalizeCodexCreditLimit("codex", {
+            title: "  Monthly credit limit  ",
+            used: 125.5,
+            limit: 500,
+            remaining: 374.5,
+            remainingPercent: 74.9,
+            resetsAt: "2026-09-30T23:59:59Z"
+        })
+
+        compare(limit.title, "Monthly credit limit")
+        compare(limit.used, 125.5)
+        compare(limit.limit, 500)
+        compare(limit.remaining, 374.5)
+        compare(limit.usedPercent, 25.1)
+        compare(limit.leftPercent, 74.9)
+        compare(limit.resetsAt, "2026-09-30T23:59:59Z")
+    }
+
+    function test_rejectsMalformedCodexMonthlyCreditLimitAmounts() {
+        var fields = ["used", "limit", "remaining", "remainingPercent"]
+        var invalidValues = [null, undefined, "", "   ", true, false, [], {}, "not-a-number"]
+        for (var fieldIndex = 0; fieldIndex < fields.length; fieldIndex++) {
+            for (var valueIndex = 0; valueIndex < invalidValues.length; valueIndex++) {
+                var payload = {
+                    used: 25,
+                    limit: 100,
+                    remaining: 75,
+                    remainingPercent: 75
+                }
+                payload[fields[fieldIndex]] = invalidValues[valueIndex]
+                compare(Normalizer.normalizeCodexCreditLimit("codex", payload), null,
+                    fields[fieldIndex] + " must reject " + valueIndex)
+            }
+        }
+
+        compare(Normalizer.normalizeCodexCreditLimit("codex", {
+            used: -1, limit: 100, remaining: 101, remainingPercent: 101
+        }), null)
+        compare(Normalizer.normalizeCodexCreditLimit("codex", {
+            used: 0, limit: 0, remaining: 0, remainingPercent: 100
+        }), null)
+        compare(Normalizer.normalizeCodexCreditLimit("claude", {
+            used: 25, limit: 100, remaining: 75, remainingPercent: 75
+        }), null)
+    }
+
+    function test_codexMonthlyCreditLimitRequiresOwnAmountFields() {
+        function InheritedLimit() {}
+        InheritedLimit.prototype.used = 25
+        InheritedLimit.prototype.limit = 100
+        InheritedLimit.prototype.remaining = 75
+        InheritedLimit.prototype.remainingPercent = 75
+
+        compare(Normalizer.normalizeCodexCreditLimit("codex", new InheritedLimit()), null)
+    }
+
+    function test_clampsCodexMonthlyCreditPercentagesAndBoundsItsText() {
+        var oversizedTitle = ""
+        for (var i = 0; i < 200; i++) {
+            oversizedTitle += "x"
+        }
+        var over = Normalizer.normalizeCodexCreditLimit("codex", {
+            title: oversizedTitle,
+            used: 0,
+            limit: 100,
+            remaining: 100,
+            remainingPercent: 130,
+            resetsAt: { raw: "not display text" }
+        })
+        compare(over.title.length, 120)
+        compare(over.usedPercent, 0)
+        compare(over.leftPercent, 100)
+        compare(over.resetsAt, "")
+
+        var under = Normalizer.normalizeCodexCreditLimit("codex", {
+            used: 100,
+            limit: 100,
+            remaining: 0,
+            remainingPercent: -30
+        })
+        compare(under.usedPercent, 100)
+        compare(under.leftPercent, 0)
+
+        compare(Normalizer.normalizeCodexCreditLimit("codex", null), null)
+        compare(Normalizer.normalizeCodexCreditLimit("codex", []), null)
+    }
+
     // --- rate window percentages -------------------------------------------
 
     function test_clampsUsedPercentagesReportedOutsideTheMeterRange() {

@@ -174,6 +174,41 @@ function dedupeProviderSnapshots(items) {
     return result
 }
 
+function normalizeCodexCreditLimit(providerID, creditLimit) {
+    if (normalizedProviderID(providerID) !== "codex" || !isCliRecord(creditLimit)) {
+        return null
+    }
+
+    var requiredAmountFields = ["used", "limit", "remaining", "remainingPercent"]
+    for (var fieldIndex = 0; fieldIndex < requiredAmountFields.length; fieldIndex++) {
+        if (!hasOwnKey(creditLimit, requiredAmountFields[fieldIndex])) {
+            return null
+        }
+    }
+
+    var used = strictFiniteNumber(creditLimit.used)
+    var limit = strictFiniteNumber(creditLimit.limit)
+    var remaining = strictFiniteNumber(creditLimit.remaining)
+    var remainingPercent = strictFiniteNumber(creditLimit.remainingPercent)
+    if (!isFinite(used) || used < 0
+            || !isFinite(limit) || limit <= 0
+            || !isFinite(remaining) || remaining < 0
+            || !isFinite(remainingPercent)) {
+        return null
+    }
+
+    remainingPercent = clamp(remainingPercent, 0, 100)
+    return {
+        title: boundedDisplayText(hasOwnKey(creditLimit, "title") ? creditLimit.title : "", 120),
+        used: used,
+        limit: limit,
+        remaining: remaining,
+        usedPercent: 100 - remainingPercent,
+        leftPercent: remainingPercent,
+        resetsAt: boundedDisplayText(hasOwnKey(creditLimit, "resetsAt") ? creditLimit.resetsAt : "", 128)
+    }
+}
+
 // The numeric half of one usage row. `null` when the payload carries no window
 // record at all, which is how the caller distinguishes "no such window" from
 // "window present but percentage unknown" (`hasPercent === false`).
