@@ -23,7 +23,6 @@ require_in_surface applet "if (!root.hasPendingPeriodicRefreshCommands())"
 require_in_surface applet "function hasPendingPeriodicRefreshCommands()"
 require_in_surface applet "interval: 0"
 require_in_surface applet "root.finishUsageCommandSource(sourceName)"
-require_in_surface applet "delete commands[sourceName]"
 require_in_surface applet 'import "ProviderFallbackQueue.js" as ProviderFallbackQueue'
 require_in_surface applet "property var providerFallbackState: null"
 require_in_surface applet "readonly property int accountCommandTimeoutMs: 60000"
@@ -32,8 +31,6 @@ require_in_surface applet "readonly property int notificationCommandTimeoutMs: 1
 require_in_surface applet "function connectNotificationCommand(sourceName)"
 require_in_surface applet "function finishNotificationCommandSource(sourceName)"
 require_in_surface applet "function refreshSessions()"
-require_in_surface applet "id: accountCommandTimeoutTimer"
-require_in_surface applet "root.expirePendingAccountCommands(Date.now())"
 require_in_surface applet "readonly property int providerConfigWatchIntervalMs: 60000"
 require_in_surface applet "interval: root.providerConfigWatchIntervalMs"
 require_in_surface applet 'import "CostRefreshPolicy.js" as CostRefreshPolicy'
@@ -64,6 +61,10 @@ require_in_surface debug "page.handleDiagnosticTimeout()"
 
 reject_in_surface applet "retiredUsageCommands"
 reject_in_surface applet "pendingAccountCommandStartedAt"
+reject_in_surface applet "pendingAccountCommands"
+reject_in_surface applet "accountCommandTimeoutTimer"
+reject_in_surface applet "hasPendingAccountCommands"
+reject_in_surface applet "expirePendingAccountCommands"
 reject_in_surface applet "function retireUsageCommandSource(sourceName)"
 reject_in_surface applet "interval: root.refreshIntervalSec > 0 ? root.refreshIntervalSec * 1000 : 0"
 reject_in_surface applet "--source cli"
@@ -119,18 +120,19 @@ for retire_kind_fragment in ("CommandLedger.sourcesOfKind(activeCommandDescripto
 require_all(
     applet.function_body("loadAccounts"),
     (
-        "providerID: normalizedProviderID",
-        "commandSignature: command",
-        "deadlineMs: Date.now() + accountCommandTimeoutMs",
+        "buildCommandDescriptor(",
+        '"account", normalizedProviderID, accountCommandTimeoutMs)',
+        "descriptor.commandSignature = command",
+        "connectUsageCommand(connectedCommand, descriptor)",
     ),
-    "loadAccounts must store one timeout descriptor",
+    "account loads must enter the shared deadline ledger",
 )
 
 require_all(
     applet.function_body("parseProviderAccountsOutput"),
     (
         "descriptor.providerID",
-        "delete commands[sourceName]",
+        "finishUsageCommandSource(sourceName)",
         "accountCommandIsCurrent(descriptor)",
     ),
     "normal account completion must reject stale context",
@@ -139,6 +141,8 @@ require_all(
 require_all(
     applet.function_body("retireStaleAccountCommands"),
     (
+        'CommandLedger.sourcesOfKind(activeCommandDescriptors, "account")',
+        "CommandLedger.find(activeCommandDescriptors, sourceName)",
         "accountCommandIsCurrent(descriptor)",
         "finishUsageCommandSource(sourceName)",
         "setAccountLoading(staleProviderID, false)",
@@ -155,16 +159,6 @@ for function_name in ("buildProviderAccountsCommand", "buildProviderUsageCommand
         raise AssertionError(f"{function_name} must preserve the automatic CLI source by default")
     if 'effectiveSource' in body or '"cli"' in body:
         raise AssertionError(f"{function_name} must not force Codex to the CLI source")
-
-require_all(
-    applet.function_body("expirePendingAccountCommands"),
-    (
-        "finishUsageCommandSource(sourceName)",
-        "setAccountLoading(providerID, false)",
-        "Loading accounts timed out. Try again.",
-    ),
-    "account timeout cleanup is incomplete",
-)
 
 # The deadline scan moved into CommandLedger.js. Assert that main.qml still
 # hands every overdue command to the timeout handler, and that the scan itself
@@ -194,6 +188,7 @@ require_all(
         'case "cost":',
         'case "sessions":',
         'case "providerConfig":',
+        'case "account":',
         'case "providerFallback":',
         'case "notification":',
         "finishUsageCommandSource(sourceName)",
@@ -202,8 +197,23 @@ require_all(
         "Loading cost data timed out. Try again.",
         "Loading sessions timed out. Try again.",
         "Loading provider configuration timed out. Try again.",
+        "Loading accounts timed out. Try again.",
     ),
     "command timeout cleanup is incomplete",
+)
+account_timeout_start = timeout_body.find('case "account":')
+account_timeout_end = timeout_body.find('case "providerFallback":', account_timeout_start)
+if account_timeout_start < 0 or account_timeout_end < 0:
+    raise AssertionError("account timeout branch is missing")
+require_all(
+    timeout_body[account_timeout_start:account_timeout_end],
+    (
+        "finishUsageCommandSource(sourceName)",
+        "setAccountLoading(descriptor.providerID, false)",
+        "setAccountError(",
+        "descriptor.providerID",
+    ),
+    "account timeout must close the shared ledger entry and clear its loading state",
 )
 fallback_timeout_start = timeout_body.find('case "providerFallback":')
 fallback_timeout_end = timeout_body.find('case "notification":', fallback_timeout_start)
@@ -277,6 +287,9 @@ for stale_route_fragment in (
             "process replies must route on the ledger entry, not a parallel "
             f"per-kind source name: {stale_route_fragment}"
         )
+
+if "root.parseProviderAccountsOutput(sourceName, descriptor, stdoutText, stderrText)" not in usage_source_block:
+    raise AssertionError("account completion must consume the descriptor routed by the shared ledger")
 
 require_all(
     applet.function_body("parseProviderFallbackOutput"),

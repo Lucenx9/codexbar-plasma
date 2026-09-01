@@ -489,8 +489,7 @@ if config_watch_body.index("CODEXBAR_CONFIG") > config_watch_body.index("XDG_CON
 
 retire_body = function_body(main_text, "retireUsageCommands")
 for stale_account_fragment in (
-    "for (var accountCommand in pendingAccountCommands)",
-    "pendingAccountCommands = ({})",
+    'retireUsageCommandKind("account")',
     "accountLoading = ({})",
 ):
     if stale_account_fragment in retire_body:

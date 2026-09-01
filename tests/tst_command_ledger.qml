@@ -128,12 +128,11 @@ TestCase {
         compare(CommandLedger.hasAnyKind(commands, refreshKinds), true)
     }
 
-    // Account loads are waited on without a clock, so they must not keep the
-    // timeout timer running.
+    // A descriptor may deliberately opt out of the shared timeout clock.
     function test_hasDeadlinesIgnoresCommandsWaitedOnWithoutAClock() {
         compare(CommandLedger.hasDeadlines(({})), false)
         compare(CommandLedger.hasDeadlines(
-            CommandLedger.opened(({}), "a", entry("account", "codex", 0))), false)
+            CommandLedger.opened(({}), "a", entry("clockless", "", 0))), false)
         compare(CommandLedger.hasDeadlines(
             CommandLedger.opened(({}), "a", entry("usage", "", 10))), true)
     }
@@ -155,7 +154,7 @@ TestCase {
     }
 
     function test_expiredSkipsAbsentAndUnusableDeadlines() {
-        var commands = CommandLedger.opened(({}), "clockless", entry("account", "codex", 0))
+        var commands = CommandLedger.opened(({}), "clockless", entry("clockless", "", 0))
         commands = CommandLedger.opened(commands, "broken", entry("usage", "", "abc"))
         compare(CommandLedger.expired(commands, 9999999).length, 0)
     }
