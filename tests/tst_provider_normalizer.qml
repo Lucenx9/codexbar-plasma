@@ -803,6 +803,39 @@ TestCase {
         compare(rows[0].inputTokens, 10)
     }
 
+    function test_costHistoryPreservesMissingCostForTokenOnlyRows() {
+        var rows = Normalizer.normalizeCostDaily([
+            { date: "2026-08-01", totalTokens: 250 }
+        ], "USD", 30)
+
+        compare(rows.length, 1)
+        compare(rows[0].cost, null)
+        compare(rows[0].tokens, 250)
+    }
+
+    function test_costHistoryFillsTokenOnlyGapsWithoutInventingCost() {
+        var rows = Normalizer.normalizeCostDaily([
+            { date: "2026-08-01", totalTokens: 250 }
+        ], "USD", 2, "2026-08-02")
+
+        compare(rows.length, 2)
+        compare(rows[0].cost, null)
+        compare(rows[1].cost, null)
+        compare(rows[1].tokens, 0)
+    }
+
+    function test_costHistoryIgnoresPricedRowsBeforeTheRenderedWindow() {
+        var rows = Normalizer.normalizeCostDaily([
+            { date: "2026-08-27", totalCost: 3, totalTokens: 30 },
+            { date: "2026-08-29", totalTokens: 250 }
+        ], "USD", 2, "2026-08-29")
+
+        compare(rows.length, 2)
+        compare(rows[0].label, "2026-08-28")
+        compare(rows[0].cost, null)
+        compare(rows[1].cost, null)
+    }
+
     function test_costHistoryAcceptsBothLegacyAndCurrentFieldNames() {
         var current = Normalizer.normalizeCostDaily(
             [{ date: "2026-08-01", totalCost: 2, totalTokens: 20, cacheCreationTokens: 3 }], "USD", 30)
@@ -871,6 +904,14 @@ TestCase {
         compare(fallback.currency, "USD")
     }
 
+    function test_costTotalsPreserveMissingCostForTokenOnlySnapshots() {
+        var totals = Normalizer.normalizeCostTotals(
+            { totalTokens: 900 }, undefined, undefined, "USD")
+
+        compare(totals.cost, null)
+        compare(totals.tokens, 900)
+    }
+
     function test_costTotalsRejectNullAndBooleanNumbersBeforeUsingFallbacks() {
         var totals = Normalizer.normalizeCostTotals({
             totalCost: null,
@@ -900,6 +941,17 @@ TestCase {
         compare(totals.inputTokens, 0)
     }
 
+    function test_providerCostTotalsHideAntigravityCostButKeepOtherZeroes() {
+        var antigravity = Normalizer.normalizeProviderCostTotals(
+            "antigravity", { totalCost: 0, totalTokens: 0 }, 0, 0, "USD")
+        var codex = Normalizer.normalizeProviderCostTotals(
+            "codex", { totalCost: 0, totalTokens: 0 }, 0, 0, "USD")
+
+        compare(antigravity.cost, null)
+        compare(antigravity.tokens, 0)
+        compare(codex.cost, 0)
+    }
+
     function test_sumTokenPartsReportsNaNWhenNothingIsUsable() {
         verify(isNaN(Normalizer.sumTokenParts(undefined, null, "x", NaN)))
         verify(isNaN(Normalizer.sumTokenParts(0, 0, 0, 0)))
@@ -921,6 +973,18 @@ TestCase {
         compare(rows[1].label, "gpt-5")
         compare(rows[1].cost, 3)
         compare(rows[1].tokens, 30)
+    }
+
+    function test_costModelsPreserveMissingCostForTokenOnlyBreakdowns() {
+        var rows = Normalizer.normalizeCostModels([{ modelBreakdowns: [{
+            modelName: "gemini-2.5-pro",
+            cost: null,
+            totalTokens: 198
+        }] }], "USD", 30)
+
+        compare(rows.length, 1)
+        compare(rows[0].cost, null)
+        compare(rows[0].tokens, 198)
     }
 
     function test_costModelsRejectCoerciveNumbersAndUseValidAliases() {

@@ -46,12 +46,19 @@ function boundedText(value, limit) {
 
 // The metric the charts currently plot. Cost and tokens share one payload, so
 // every scale, peak, and summary has to read the same switch.
-function metricValue(point, showsTokens) {
+function hasMetricValue(point, showsTokens) {
     if (!point) {
+        return false
+    }
+    var value = showsTokens ? point.tokens : point.cost
+    return typeof value === "number" && isFinite(value)
+}
+
+function metricValue(point, showsTokens) {
+    if (!hasMetricValue(point, showsTokens)) {
         return 0
     }
-    var raw = Number(showsTokens ? point.tokens : point.cost)
-    return isFinite(raw) ? raw : 0
+    return showsTokens ? point.tokens : point.cost
 }
 
 function groupedDecimalString(fmt, value, digits) {
@@ -253,6 +260,9 @@ function chartPoints(fmt, points, showsTokens) {
     }
     for (var i = 0; i < points.length; i++) {
         var point = points[i]
+        if (!hasMetricValue(point, showsTokens)) {
+            continue
+        }
         var value = Math.max(0, metricValue(point, showsTokens))
         result.push({
             label: boundedText(point.label, 120),
@@ -269,7 +279,16 @@ function sparklineSummary(fmt, points, showsTokens) {
     if (!points || points.length === 0) {
         return null
     }
-    var last = points[points.length - 1]
+    var last = null
+    for (var i = points.length - 1; i >= 0; i--) {
+        if (hasMetricValue(points[i], showsTokens)) {
+            last = points[i]
+            break
+        }
+    }
+    if (!last) {
+        return null
+    }
     return {
         label: last.label && last.label.length > 0 ? last.label : "",
         value: metricText(fmt, metricValue(last, showsTokens), last.currency, showsTokens)
@@ -339,7 +358,13 @@ function historyRows(fmt, tokenCost, showsTokens, fallbackLabel) {
         return []
     }
 
-    var visibleDaily = tokenCost.daily.slice(Math.max(0, tokenCost.daily.length - 7))
+    var recentDaily = tokenCost.daily.slice(Math.max(0, tokenCost.daily.length - 7))
+    var visibleDaily = []
+    for (var day = 0; day < recentDaily.length; day++) {
+        if (hasMetricValue(recentDaily[day], showsTokens)) {
+            visibleDaily.push(recentDaily[day])
+        }
+    }
     var rows = []
     var maximum = sparklineMax(visibleDaily, showsTokens)
     for (var i = visibleDaily.length - 1; i >= 0; i--) {
@@ -348,7 +373,9 @@ function historyRows(fmt, tokenCost, showsTokens, fallbackLabel) {
         var value = tokenSummary(fmt, item.cost, item.tokens, item.currency, "")
         rows.push({
             label: item.label && item.label.length > 0 ? item.label : fallbackLabel,
-            value: value.length > 0 ? value : amountString(fmt, 0, item.currency || "USD"),
+            value: value.length > 0
+                ? value
+                : metricText(fmt, 0, item.currency, showsTokens),
             percent: maximum > 0 ? Math.max(3, magnitude * 100 / maximum) : 0,
             isPeak: maximum > 0 && magnitude === maximum
         })
@@ -381,9 +408,14 @@ function averageDailyValue(points, showsTokens) {
         return null
     }
     var total = 0
+    var count = 0
     var currency = "USD"
     for (var i = 0; i < points.length; i++) {
+        if (!hasMetricValue(points[i], showsTokens)) {
+            continue
+        }
         total += Math.max(0, metricValue(points[i], showsTokens))
+        count += 1
         if (points[i].currency) {
             currency = points[i].currency
         }
@@ -391,7 +423,7 @@ function averageDailyValue(points, showsTokens) {
     if (total <= 0) {
         return null
     }
-    return { value: total / points.length, currency: currency }
+    return { value: total / count, currency: currency }
 }
 
 function perMillionAmount(tokenCost) {
@@ -445,15 +477,36 @@ function spendSnapshots(tokenCosts, historyDays, titleFor) {
 
 function spendCurrency(costs) {
     var items = costs || []
+    // A token-only snapshot still carries a fallback currency, but it must not
+    // choose which priced providers participate in the money aggregate.
     for (var i = 0; i < items.length; i++) {
         var totals = items[i].totals || ({})
-        var currency = boundedText(totals.currency || "", 12)
-        if (currency.length > 0) {
-            return currency
+        if (hasMetricValue(totals, false)) {
+            var totalsCurrency = boundedText(totals.currency || "", 12)
+            if (totalsCurrency.length > 0) {
+                return totalsCurrency
+            }
         }
         var daily = items[i].daily || []
-        if (daily.length > 0) {
-            return boundedText(daily[0].currency || "USD", 12)
+        for (var j = 0; j < daily.length; j++) {
+            if (!hasMetricValue(daily[j], false)) {
+                continue
+            }
+            var dailyCurrency = boundedText(daily[j].currency || "", 12)
+            if (dailyCurrency.length > 0) {
+                return dailyCurrency
+            }
+        }
+    }
+    for (var fallbackIndex = 0; fallbackIndex < items.length; fallbackIndex++) {
+        var fallbackTotals = items[fallbackIndex].totals || ({})
+        var fallbackCurrency = boundedText(fallbackTotals.currency || "", 12)
+        if (fallbackCurrency.length > 0) {
+            return fallbackCurrency
+        }
+        var fallbackDaily = items[fallbackIndex].daily || []
+        if (fallbackDaily.length > 0) {
+            return boundedText(fallbackDaily[0].currency || "USD", 12)
         }
     }
     return "USD"
@@ -493,8 +546,9 @@ function acceptedCostSourceKind(value) {
 
 // Fold normalized pricing coverage and provenance into one presentation
 // decision. The caller localizes it; wire enum values never cross this seam.
-// For global spend, eligibility deliberately matches `spendTotals()` so the
-// qualifier always describes the currencies included in the displayed total.
+// For global spend, currency eligibility deliberately matches `spendTotals()`.
+// Token-only snapshots still qualify a mixed total, but cannot create a notice
+// when there is no finite cost to qualify.
 function costTrustSummary(costs) {
     var items = Array.isArray(costs) ? costs : []
     if (items.length === 0) {
@@ -510,12 +564,16 @@ function costTrustSummary(costs) {
     var hasMixed = false
     var hasUnknown = false
     var hasUnclassifiedSource = false
+    var hasDisplayedCost = false
 
     for (var i = 0; i < items.length; i++) {
         var item = items[i]
-        if (!item || !costMatchesSpendCurrency(item, currency)) {
+        var itemHasCost = item && hasMetricValue(item.totals, false)
+        if (!item || (itemHasCost && !costMatchesSpendCurrency(item, currency))) {
             continue
         }
+        hasDisplayedCost = hasDisplayedCost
+            || itemHasCost
         if (!hasOwnKey(item, "trust")
                 || item.trust === null
                 || typeof item.trust !== "object"
@@ -577,7 +635,8 @@ function costTrustSummary(costs) {
     }
 
     var isPartial = hasUnpriced || hasUnmetered
-    if (!hasEstimated && !isPartial && sourceKind.length === 0) {
+    if (!hasDisplayedCost
+            || (!hasEstimated && !isPartial && sourceKind.length === 0)) {
         return null
     }
 
@@ -719,6 +778,7 @@ function spendDailyPoints(fmt, costs, showsTokens) {
             // from the chart.
             if (label.length === 0
                     || isUnsafeObjectKey(label)
+                    || !hasMetricValue(point, showsTokens)
                     || (!showsTokens && pointCurrency !== currency)) {
                 continue
             }
@@ -752,15 +812,22 @@ function spendTotals(costs) {
     var currency = spendCurrency(items)
     var totalCost = 0
     var totalTokens = 0
+    var hasCost = false
     for (var i = 0; i < items.length; i++) {
         var totals = items[i].totals || ({})
         totalTokens += Math.max(0, Number(totals.tokens) || 0)
-        if (!costMatchesSpendCurrency(items[i], currency)) {
+        if (!costMatchesSpendCurrency(items[i], currency)
+                || !hasMetricValue(totals, false)) {
             continue
         }
-        totalCost += Math.max(0, Number(totals.cost) || 0)
+        totalCost += Math.max(0, totals.cost)
+        hasCost = true
     }
-    return { cost: totalCost, tokens: totalTokens, currency: currency }
+    return {
+        cost: hasCost ? totalCost : null,
+        tokens: totalTokens,
+        currency: currency
+    }
 }
 
 // The CLI reports whether its local log scan already covers the requested

@@ -58,6 +58,11 @@ TestCase {
         verify(url.indexOf("https://github.com/steipete/CodexBar/blob/main/docs/") === 0)
     }
 
+    function test_openRouterDashboardUsesTheCanonicalActivityUrl() {
+        compare(ProviderIdentity.providerDashboardUrl("openrouter"),
+            "https://openrouter.ai/activity")
+    }
+
     function test_brandColorsAreThreeChannelsInRange() {
         var channels = ProviderIdentity.providerBrandColorChannels("aiand")
         compare(channels.length, 3)

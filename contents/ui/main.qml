@@ -1181,8 +1181,9 @@ PlasmoidItem {
             : 30)
         var windowLabel = Normalizer.boundedDisplayText(item.historyLabel || costHistoryWindowLabel(item, historyDays), 120)
         var trust = Normalizer.normalizeCostTrustMetadata(item)
-        var totals = Normalizer.normalizeCostTotals(
-            item.totals, item.last30DaysCostUSD, item.last30DaysTokens, currency)
+        var totals = Normalizer.normalizeProviderCostTotals(
+            providerID, item.totals, item.last30DaysCostUSD,
+            item.last30DaysTokens, currency)
         var trustSummary = CostPresentation.costTrustSummary([{
             totals: totals,
             trust: trust
@@ -1198,9 +1199,10 @@ PlasmoidItem {
             // Top-level coverage/provenance describes the requested history
             // window, not the independently emitted current-session figure.
             sessionLine: costLine(i18n("Today"), item.sessionCostUSD, item.sessionTokens, currency),
-            monthLine: costLine(windowLabel, item.last30DaysCostUSD, item.last30DaysTokens, currency, valueMode),
+            monthLine: costLine(windowLabel, totals.cost, totals.tokens,
+                currency, valueMode),
             windowValueLine: costValueLine(
-                item.last30DaysCostUSD, item.last30DaysTokens, currency, valueMode),
+                totals.cost, totals.tokens, currency, valueMode),
             hintLine: tokenCostHint(providerID),
             totals: totals,
             models: Normalizer.normalizeCostModels(item.daily, currency, historyDays),
@@ -1281,9 +1283,13 @@ PlasmoidItem {
         if (!totals) {
             return ""
         }
+        var numericCost = Normalizer.strictFiniteNumber(totals.cost)
+        if (!isFinite(numericCost)) {
+            return i18n("%1 tokens", CostPresentation.tokenCountString(totals.tokens))
+        }
         var trustSummary = CostPresentation.costTrustSummary(costs)
         var costValue = qualifiedCostValue(
-            CostPresentation.amountString(costNumberFormat, totals.cost, totals.currency),
+            CostPresentation.amountString(costNumberFormat, numericCost, totals.currency),
             trustSummary ? trustSummary.valueMode : "plain")
         return i18n("%1 total - %2 tokens",
             costValue,
@@ -3201,6 +3207,8 @@ PlasmoidItem {
 
     function tokenCostHint(providerID) {
         switch (providerKey(providerID)) {
+        case "antigravity":
+            return i18n("Local Antigravity history includes token totals. Dollar costs are unavailable.")
         case "codex":
             return i18n("Estimated from local Codex logs for the selected account.")
         case "claude":

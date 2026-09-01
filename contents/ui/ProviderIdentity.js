@@ -252,7 +252,7 @@ var providerDashboardUrls = {
     "openai": "https://platform.openai.com/usage",
     "opencode": "https://opencode.ai/auth",
     "opencodego": "https://opencode.ai/auth",
-    "openrouter": "https://openrouter.ai/settings/credits",
+    "openrouter": "https://openrouter.ai/activity",
     "perplexity": "https://www.perplexity.ai/account/usage",
     "poe": "https://poe.com/api/keys",
     "qoder": "https://qoder.com/account/usage",

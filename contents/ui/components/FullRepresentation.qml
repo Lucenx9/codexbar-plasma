@@ -1154,6 +1154,8 @@ Item {
                         id: tokenCostSection
 
                         readonly property var tokenCost: applet.selectedProviderData ? applet.selectedProviderData.tokenCost : null
+                        readonly property var chartPoints: tokenCost
+                            ? applet.costChartPoints(tokenCost.daily) : []
                         readonly property var costTrustSummary: CostPresentation.costTrustSummary(
                             tokenCost ? [tokenCost] : [])
                         readonly property string costErrorText: applet.costErrorText
@@ -1218,9 +1220,9 @@ Item {
                             readonly property var tokenCost: tokenCostSection.tokenCost
                             readonly property var providerData: applet.selectedProviderData
 
-                            visible: tokenCost && tokenCost.daily.length > 1
+                            visible: tokenCostSection.chartPoints.length > 1
                             applet: fullRoot.applet
-                            points: applet.costChartPoints(tokenCost ? tokenCost.daily : [])
+                            points: tokenCostSection.chartPoints
                             accent: applet.providerReadableColor(providerData ? providerData.provider : "")
                             kind: "bar"
                             accessibleTitle: applet.costHistoryShowsTokens
@@ -1230,9 +1232,7 @@ Item {
                         }
 
                         RowLayout {
-                            visible: tokenCostSection.tokenCost
-                                && tokenCostSection.tokenCost.daily
-                                && tokenCostSection.tokenCost.daily.length > 1
+                            visible: tokenCostSection.chartPoints.length > 1
                             Layout.fillWidth: true
                             spacing: Kirigami.Units.smallSpacing
 

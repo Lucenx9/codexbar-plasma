@@ -561,6 +561,11 @@ if "Cost unavailable: %1" not in token_cost_section_body:
     raise AssertionError("tokenCostSection must label visible cost errors")
 if "supportsLocalCost" not in token_cost_section_body:
     raise AssertionError("tokenCostSection must scope global cost errors to supported providers")
+if "points: tokenCostSection.chartPoints" not in token_cost_section_body \
+        or token_cost_section_body.count("tokenCostSection.chartPoints.length > 1") < 2:
+    raise AssertionError(
+        "provider cost charts must use the points available for the selected metric"
+    )
 
 normalize_token_cost_body = function_body(main_text, "normalizeTokenCost")
 for ranged_cost_fragment in (
@@ -574,6 +579,17 @@ for ranged_cost_fragment in (
             "normalizeTokenCost must retain and apply its bounded history range; "
             f"missing {ranged_cost_fragment!r}"
         )
+for provider_cost_pattern in (
+    r"Normalizer\.normalizeProviderCostTotals\(\s*providerID,\s*item\.totals,"
+    r"\s*item\.last30DaysCostUSD,\s*item\.last30DaysTokens,\s*currency\)",
+    r"costLine\(\s*windowLabel,\s*totals\.cost,\s*totals\.tokens,",
+    r"costValueLine\(\s*totals\.cost,\s*totals\.tokens,",
+):
+    if not re.search(provider_cost_pattern, normalize_token_cost_body):
+        raise AssertionError(
+            "normalized provider totals must drive every range cost line; "
+            f"missing pattern {provider_cost_pattern!r}"
+        )
 if "function costHistoryWindowLabel(item, requestedHistoryDays)" not in main_text:
     raise AssertionError("main.qml must define costHistoryWindowLabel")
 cost_history_label_body = function_body(main_text, "costHistoryWindowLabel")
@@ -584,6 +600,26 @@ for cost_number_function in ("costValueLine", "costLine"):
     if cost_number_body.count("Normalizer.strictFiniteNumber(") < 2:
         raise AssertionError(
             f"{cost_number_function} must reject coercive cost and token values"
+        )
+spend_total_body = function_body(main_text, "spendTotalLine")
+for token_only_total_fragment in (
+    "Normalizer.strictFiniteNumber(totals.cost)",
+    'i18n("%1 tokens", CostPresentation.tokenCountString(totals.tokens))',
+):
+    if token_only_total_fragment not in spend_total_body:
+        raise AssertionError(
+            "the global spend summary must not print a fabricated zero-dollar total; "
+            f"missing {token_only_total_fragment!r}"
+        )
+token_cost_hint_body = function_body(main_text, "tokenCostHint")
+for antigravity_hint_fragment in (
+    'case "antigravity":',
+    'i18n("Local Antigravity history includes token totals. Dollar costs are unavailable.")',
+):
+    if antigravity_hint_fragment not in token_cost_hint_body:
+        raise AssertionError(
+            "Antigravity local history must be described as token-only; "
+            f"missing {antigravity_hint_fragment!r}"
         )
 
 # The aggregation moved into CostPresentation.js; the rule did not. A snapshot
