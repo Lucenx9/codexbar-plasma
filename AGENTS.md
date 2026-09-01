@@ -286,10 +286,13 @@ replace a host CLI.
   quiet, keep pricing coverage separate from `historyCoverageIsEstablished`, and
   never expose raw provenance values in QML. Project breakdowns remain future
   work: discard local `path` values and keep only bounded display fields.
-  Antigravity now emits token-only history through the same generic envelope and
-  intentionally omits dollar amounts. `normalizeCostDaily` and
-  `normalizeCostTotals` preserve absent costs instead of turning them into zero;
-  token charts render while cost totals and cost-mode charts remain unavailable.
+  Antigravity now emits token-only history through the same generic envelope.
+  It normally omits dollar amounts, but CLI 0.56.2 uses zero as the
+  established-empty sentinel even though its renderer says costs are
+  unavailable. `normalizeCostDaily` and `normalizeCostModels` preserve absent
+  costs; `normalizeProviderCostTotals` masks that provider sentinel until the
+  CLI exposes explicit cost availability. Token charts render while cost totals
+  and cost-mode charts remain unavailable.
 - Panel element composition has a persisted, sanitized order for identity,
   status, usage text, and meters. Keep existing visibility settings working.
   The `runOut` display mode stays tied to `paceWarningActive`, so it prints a

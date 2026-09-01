@@ -120,7 +120,12 @@ and routes it through the existing payload in
 
 The JSON schema itself did not change. A valid Antigravity snapshot carries
 tokens with nil dollar costs; corrupt, partial, or absent stores keep
-`historyCoverageIsEstablished` false. The official
+`historyCoverageIsEstablished` false. An established but empty snapshot is the
+exception: CLI 0.56.2 emits zero for both token and dollar totals, while its text
+renderer still says dollar costs are unavailable. No generic JSON field
+distinguishes that sentinel from an observed zero, so Plasma masks cost totals
+for Antigravity at the provider normalization boundary. An explicit CLI cost
+availability field remains the upstream contract requirement. The official
 [`AntigravityCLICostTests.swift`](https://github.com/steipete/CodexBar/blob/v0.56.2/Tests/CodexBarTests/AntigravityCLICostTests.swift)
 pins those semantics. Project records remain Codex-only and keep the same
 `name`, local `path`, totals, daily rows, model breakdowns, and sources. Plasma
@@ -146,13 +151,12 @@ must not retain or expose `path`.
 
 ### Preserve token-only cost semantics
 
-The cost boundary already validates records and bounds history. It now needs to
-retain whether each cost amount was present. Antigravity token totals, daily
-points, model totals, and coverage can then use the existing token metric while
-cost-mode summaries and charts remain unavailable instead of displaying a
-fabricated zero. The change should be generic at the numeric boundary, with an
-Antigravity-specific user-facing hint only where the CLI contract is explicitly
-provider-specific.
+The cost boundary validates records, bounds history, and retains whether each
+cost amount was present. Antigravity token totals, daily points, model totals,
+and coverage use the existing token metric while cost-mode summaries and charts
+remain unavailable. Missing amounts stay generic at the numeric boundary. The
+0.56.2 established-empty sentinel requires one provider compatibility rule and
+an Antigravity-specific hint until the CLI exposes explicit cost availability.
 
 ### Fireworks single-key setup
 

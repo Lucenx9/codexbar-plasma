@@ -1181,8 +1181,9 @@ PlasmoidItem {
             : 30)
         var windowLabel = Normalizer.boundedDisplayText(item.historyLabel || costHistoryWindowLabel(item, historyDays), 120)
         var trust = Normalizer.normalizeCostTrustMetadata(item)
-        var totals = Normalizer.normalizeCostTotals(
-            item.totals, item.last30DaysCostUSD, item.last30DaysTokens, currency)
+        var totals = Normalizer.normalizeProviderCostTotals(
+            providerID, item.totals, item.last30DaysCostUSD,
+            item.last30DaysTokens, currency)
         var trustSummary = CostPresentation.costTrustSummary([{
             totals: totals,
             trust: trust
@@ -1198,9 +1199,10 @@ PlasmoidItem {
             // Top-level coverage/provenance describes the requested history
             // window, not the independently emitted current-session figure.
             sessionLine: costLine(i18n("Today"), item.sessionCostUSD, item.sessionTokens, currency),
-            monthLine: costLine(windowLabel, item.last30DaysCostUSD, item.last30DaysTokens, currency, valueMode),
+            monthLine: costLine(windowLabel, totals.cost, totals.tokens,
+                currency, valueMode),
             windowValueLine: costValueLine(
-                item.last30DaysCostUSD, item.last30DaysTokens, currency, valueMode),
+                totals.cost, totals.tokens, currency, valueMode),
             hintLine: tokenCostHint(providerID),
             totals: totals,
             models: Normalizer.normalizeCostModels(item.daily, currency, historyDays),

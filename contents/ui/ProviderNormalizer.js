@@ -481,6 +481,9 @@ function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys) {
         return rows
     }
 
+    var historyDays = Math.floor(boundedHistoryDays(days))
+    var dayMilliseconds = 24 * 60 * 60 * 1000
+    var firstTimestampMs = endDate.timestampMs - (historyDays - 1) * dayMilliseconds
     var byDate = ({})
     var hasObservedCost = false
     for (var i = 0; i < rows.length; i++) {
@@ -490,12 +493,12 @@ function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys) {
         }
         byDate[parsed.key] = rows[i]
         hasObservedCost = hasObservedCost
-            || isFinite(strictFiniteNumber(rows[i].cost))
+            || (parsed.timestampMs >= firstTimestampMs
+                && parsed.timestampMs <= endDate.timestampMs
+                && typeof rows[i].cost === "number"
+                && isFinite(rows[i].cost))
     }
 
-    var historyDays = Math.floor(boundedHistoryDays(days))
-    var dayMilliseconds = 24 * 60 * 60 * 1000
-    var firstTimestampMs = endDate.timestampMs - (historyDays - 1) * dayMilliseconds
     var result = []
     var observedInRange = false
     var safeCurrency = boundedDisplayText(currency || "USD", 12)
@@ -722,6 +725,19 @@ function normalizeCostTotals(totals, fallbackCost, fallbackTokens, currency) {
     }
 }
 
+// CodexBar 0.56.2 reports zero cost for an established-empty Antigravity
+// history even though that provider has no dollar pricing. Keep this
+// compatibility rule at the provider boundary so generic zeroes stay valid.
+function normalizeProviderCostTotals(providerID, totals, fallbackCost,
+        fallbackTokens, currency) {
+    var result = normalizeCostTotals(
+        totals, fallbackCost, fallbackTokens, currency)
+    if (normalizedProviderID(providerID) === "antigravity") {
+        result.cost = null
+    }
+    return result
+}
+
 function normalizeCostModels(items, currency, days) {
     var byName = ({})
     if (!items || !Array.isArray(items)) {
@@ -750,13 +766,14 @@ function normalizeCostModels(items, currency, days) {
             if (!hasOwnKey(byName, name)) {
                 byName[name] = {
                     label: name,
-                    cost: 0,
+                    cost: null,
                     tokens: 0,
                     currency: boundedDisplayText(currency || "USD", 12)
                 }
             }
             if (isFinite(cost)) {
-                byName[name].cost += Math.max(0, cost)
+                byName[name].cost = (byName[name].cost === null
+                    ? 0 : byName[name].cost) + Math.max(0, cost)
             }
             if (isFinite(tokens)) {
                 byName[name].tokens += Math.max(0, tokens)
@@ -772,8 +789,10 @@ function normalizeCostModels(items, currency, days) {
         rows.push(byName[modelName])
     }
     rows.sort(function(a, b) {
-        if (b.cost !== a.cost) {
-            return b.cost - a.cost
+        var aCost = a.cost === null ? 0 : a.cost
+        var bCost = b.cost === null ? 0 : b.cost
+        if (bCost !== aCost) {
+            return bCost - aCost
         }
         return b.tokens - a.tokens
     })

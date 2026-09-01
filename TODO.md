@@ -55,10 +55,12 @@ replace a host CLI.
   one semantic notice decision; older payloads remain quiet. Project breakdown
   inputs remain future work: a Projects view must discard the emitted local
   `path` and retain only bounded display fields. Antigravity now emits token-only
-  history through the same generic `cost` envelope and intentionally omits
-  dollar amounts. The Plasma normalizer preserves those absent costs instead of
-  turning them into zero in `normalizeCostDaily` and `normalizeCostTotals`;
-  token charts render while cost totals and cost-mode charts remain unavailable.
+  history through the same generic `cost` envelope. It normally omits dollar
+  amounts, but CLI 0.56.2 uses zero as the established-empty sentinel even
+  though its renderer says costs are unavailable. `normalizeCostDaily` and
+  `normalizeCostModels` preserve absent costs; `normalizeProviderCostTotals`
+  masks that provider sentinel until the CLI exposes explicit cost availability.
+  Token charts render while cost totals and cost-mode charts remain unavailable.
 - Quota warning thresholds are configurable through `quotaWarningPercent` and
   `quotaCriticalPercent`, bounded by `contents/ui/QuotaThresholds.js`, and drive
   both the notification level and the usage-bar markers. Per-provider thresholds

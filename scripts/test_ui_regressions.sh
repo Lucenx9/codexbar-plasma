@@ -579,6 +579,17 @@ for ranged_cost_fragment in (
             "normalizeTokenCost must retain and apply its bounded history range; "
             f"missing {ranged_cost_fragment!r}"
         )
+for provider_cost_pattern in (
+    r"Normalizer\.normalizeProviderCostTotals\(\s*providerID,\s*item\.totals,"
+    r"\s*item\.last30DaysCostUSD,\s*item\.last30DaysTokens,\s*currency\)",
+    r"costLine\(\s*windowLabel,\s*totals\.cost,\s*totals\.tokens,",
+    r"costValueLine\(\s*totals\.cost,\s*totals\.tokens,",
+):
+    if not re.search(provider_cost_pattern, normalize_token_cost_body):
+        raise AssertionError(
+            "normalized provider totals must drive every range cost line; "
+            f"missing pattern {provider_cost_pattern!r}"
+        )
 if "function costHistoryWindowLabel(item, requestedHistoryDays)" not in main_text:
     raise AssertionError("main.qml must define costHistoryWindowLabel")
 cost_history_label_body = function_body(main_text, "costHistoryWindowLabel")
