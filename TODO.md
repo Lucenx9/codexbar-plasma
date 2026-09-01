@@ -1,19 +1,19 @@
 # TODO
 
-Parity baseline: `docs/research/2026-08-24-macos-parity-0.55.0.md`, pinned to
-upstream v0.55.0 and probed with the verified official Linux CLI 0.55.0 release
-asset. On 2026-08-27 the host CLI was upgraded to 0.55.1 from the
-checksum-verified official release asset; isolated probes showed the
-`config providers`, `usage`, and `cost` JSON contracts structurally unchanged,
-so no new parity report is needed for v0.55.1 (its provider fixes flow through
-the existing generic paths).
+Parity baseline: `docs/research/2026-09-01-macos-parity-0.56.2.md`, pinned to
+upstream v0.56.2 and probed with the checksum-verified official Linux CLI
+0.56.2 release asset. The audit compared the verified v0.55.0 and v0.56.2
+binaries in isolated accounts. The provider catalog and the `config providers`,
+`usage`, and `sessions` contracts remain compatible. The `cost` command now
+supports Antigravity token-only local history. The audit did not install or
+replace a host CLI.
 
 - Provider-specific editable settings: the Providers page renders generic
   fields/actions from `docs/cli-provider-settings-descriptor.md` without
   provider-specific QML branches. Declared coverage includes source mode, API
   key, cookie source/manual cookie, enterprise/base URL, workspace/project ID,
   region, AWS profile/auth mode, and boolean extras. That descriptor is still a
-  *proposal*: on CLI 0.55.0 `config providers --descriptors` returns
+  *proposal*: on CLI 0.56.2 `config providers --descriptors` returns
   `Unknown option --descriptors` and the plain payload carries no `descriptor`
   key, so the whole path is dormant and the page degrades to enable/disable,
   `set-api-key` and docs/dashboard/login links. Keep that fallback working.
@@ -49,12 +49,17 @@ the existing generic paths).
   selector drives the range chart, the heatmap, and the per-provider bars from
   one `cost` payload, so it must never add a CLI call. `historyCoverageIsEstablished`
   drives the "still collecting" note; a missing flag means established.
-- Cost truthfulness: CLI 0.55.0 retains the `coverage` counters and
+- Cost truthfulness: CLI 0.56.2 retains the `coverage` counters and
   `provenance` normalized behind a bounded trust boundary. Provider and global
-  cost amounts are qualified as estimated, partial, or approximate, and share one
-  semantic notice decision; older payloads remain quiet. Project breakdown inputs remain
-  future work: a Projects view must discard the emitted local `path` and retain
-  only bounded display fields.
+  cost amounts are qualified as estimated, partial, or approximate, and share
+  one semantic notice decision; older payloads remain quiet. Project breakdown
+  inputs remain future work: a Projects view must discard the emitted local
+  `path` and retain only bounded display fields. Antigravity now emits token-only
+  history through the same generic `cost` envelope and intentionally omits
+  dollar amounts. The first 0.56.2 frontend follow-up must preserve absent costs
+  instead of turning them into zero in `normalizeCostDaily` and
+  `normalizeCostTotals`; token charts can then render while cost totals and
+  cost-mode charts remain unavailable.
 - Quota warning thresholds are configurable through `quotaWarningPercent` and
   `quotaCriticalPercent`, bounded by `contents/ui/QuotaThresholds.js`, and drive
   both the notification level and the usage-bar markers. Per-provider thresholds
@@ -75,12 +80,14 @@ the existing generic paths).
   ranges and a bounded activity heatmap. CodexBar 0.55.0 Kiro overage data,
   z.ai BigModel CN balance, and Cursor Grok Bot usage already fit the generic
   detail, provider-cost, and extra-window paths, so they need only a CLI upgrade.
-  The macOS Cursor/Antigravity local spend readers are not exposed by Linux
-  `cost`, which still accepts only Claude and Codex. Grok period-only responses
-  no longer become a false 0%, but an explicit unknown-usage row with reset data
-  needs a generic CLI window representation. Credits history, plan-utilization
-  history, and session-equivalent forecasts still need stable CLI history
-  payloads; do not infer history from one snapshot.
+  Antigravity local token history now comes from Linux `cost`; it is not priced
+  spend and needs the missing-cost follow-up above. Cursor local or dashboard
+  cost remains blocked because the Linux command still rejects Cursor. Grok
+  period-only responses no longer become a false 0%, but an explicit
+  unknown-usage row with reset data needs a generic CLI window representation.
+  Credits history, plan-utilization history, and session-equivalent forecasts
+  still need stable CLI history payloads; do not infer history from one
+  snapshot.
 - Panel element composition now has a persisted, sanitized order for identity,
   status, usage text, and provider meters. Visibility remains controlled by the
   existing Plasma-native display settings. The `runOut` display mode shows the
@@ -98,9 +105,11 @@ the existing generic paths).
   exhaustion. Consider reset-imminent notifications only if they remain quiet,
   configurable, and tied to clear state transitions.
 - Provider drift checks: the Plasma fallback catalog covers all 69 provider IDs
-  released in CodexBar v0.49.1 and re-verified on 0.55.0 and again on the
-  0.55.1 host CLI (same 69, none added), while retaining fork-only compatibility
-  assets.
+  released in CodexBar v0.49.1 and re-verified with the official 0.56.2 Linux
+  CLI (same 69, none added), while retaining fork-only compatibility assets.
+  OpenRouter changed its canonical dashboard action from credit settings to
+  `https://openrouter.ai/activity`; sync that one fallback URL and its drift
+  assertion. No other provider identity metadata changed.
   When upstream releases providers, sync provider keys, CLI aliases, titles,
   colors, docs/dashboard/login URLs, icon assets, and
   `scripts/test_provider_icons.sh`.
