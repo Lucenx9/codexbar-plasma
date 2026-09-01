@@ -1281,9 +1281,13 @@ PlasmoidItem {
         if (!totals) {
             return ""
         }
+        var numericCost = Normalizer.strictFiniteNumber(totals.cost)
+        if (!isFinite(numericCost)) {
+            return i18n("%1 tokens", CostPresentation.tokenCountString(totals.tokens))
+        }
         var trustSummary = CostPresentation.costTrustSummary(costs)
         var costValue = qualifiedCostValue(
-            CostPresentation.amountString(costNumberFormat, totals.cost, totals.currency),
+            CostPresentation.amountString(costNumberFormat, numericCost, totals.currency),
             trustSummary ? trustSummary.valueMode : "plain")
         return i18n("%1 total - %2 tokens",
             costValue,
@@ -3201,6 +3205,8 @@ PlasmoidItem {
 
     function tokenCostHint(providerID) {
         switch (providerKey(providerID)) {
+        case "antigravity":
+            return i18n("Local Antigravity history includes token totals. Dollar costs are unavailable.")
         case "codex":
             return i18n("Estimated from local Codex logs for the selected account.")
         case "claude":

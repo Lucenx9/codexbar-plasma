@@ -510,8 +510,6 @@ require_in_surface applet "property int costHistoryDays"
 require_in_surface applet "property string costHistoryMetric"
 require_in_surface applet "function safeCostHistoryMetric(value)"
 require_in_surface applet "function setCostHistoryMetric(metric)"
-require_in_surface applet "function metricValue(point, showsTokens)"
-require_in_surface applet "Number(showsTokens ? point.tokens : point.cost)"
 # Every cost chart follows one metric: the provider detail chart must not stay
 # on cost while the rows beneath it switch to tokens.
 require_in_surface applet "CostPresentation.chartPoints(costNumberFormat, points, costHistoryShowsTokens)"

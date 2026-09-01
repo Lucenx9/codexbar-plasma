@@ -803,6 +803,27 @@ TestCase {
         compare(rows[0].inputTokens, 10)
     }
 
+    function test_costHistoryPreservesMissingCostForTokenOnlyRows() {
+        var rows = Normalizer.normalizeCostDaily([
+            { date: "2026-08-01", totalTokens: 250 }
+        ], "USD", 30)
+
+        compare(rows.length, 1)
+        compare(rows[0].cost, null)
+        compare(rows[0].tokens, 250)
+    }
+
+    function test_costHistoryFillsTokenOnlyGapsWithoutInventingCost() {
+        var rows = Normalizer.normalizeCostDaily([
+            { date: "2026-08-01", totalTokens: 250 }
+        ], "USD", 2, "2026-08-02")
+
+        compare(rows.length, 2)
+        compare(rows[0].cost, null)
+        compare(rows[1].cost, null)
+        compare(rows[1].tokens, 0)
+    }
+
     function test_costHistoryAcceptsBothLegacyAndCurrentFieldNames() {
         var current = Normalizer.normalizeCostDaily(
             [{ date: "2026-08-01", totalCost: 2, totalTokens: 20, cacheCreationTokens: 3 }], "USD", 30)
@@ -869,6 +890,14 @@ TestCase {
         compare(fallback.cost, 7.25)
         compare(fallback.tokens, 400)
         compare(fallback.currency, "USD")
+    }
+
+    function test_costTotalsPreserveMissingCostForTokenOnlySnapshots() {
+        var totals = Normalizer.normalizeCostTotals(
+            { totalTokens: 900 }, undefined, undefined, "USD")
+
+        compare(totals.cost, null)
+        compare(totals.tokens, 900)
     }
 
     function test_costTotalsRejectNullAndBooleanNumbersBeforeUsingFallbacks() {

@@ -87,6 +87,13 @@ TestCase {
         compare(CostPresentation.sparklineMax(null, false), 0)
     }
 
+    function test_chartPointsDropUnavailableCostButKeepTokens() {
+        var points = [dailyPoint("Mon", null, 250)]
+
+        compare(CostPresentation.chartPoints(fmt, points, false).length, 0)
+        compare(CostPresentation.chartPoints(fmt, points, true)[0].value, 250)
+    }
+
     function test_peakPointNamesTheDayTheBarsHighlight() {
         var points = [dailyPoint("Mon", 5, 900), dailyPoint("Tue", 2, 4000)]
         compare(CostPresentation.peakPoint(points, false).label, "Mon")
@@ -107,6 +114,16 @@ TestCase {
         var points = [dailyPoint("Mon", 3, 0), dailyPoint("Tue", 0, 0), dailyPoint("Wed", 6, 0)]
         compare(CostPresentation.averageDailyValue(points, false).value, 3)
         compare(CostPresentation.averageDailyValue([], false), null)
+    }
+
+    function test_averageDailyValueExcludesUnavailableMetricDays() {
+        var points = [
+            dailyPoint("Mon", null, 100),
+            dailyPoint("Tue", 6, 300)
+        ]
+
+        compare(CostPresentation.averageDailyValue(points, false).value, 6)
+        compare(CostPresentation.averageDailyValue(points, true).value, 200)
     }
 
     function test_perMillionAmountNeedsBothHalvesOfTheRatio() {
@@ -181,6 +198,13 @@ TestCase {
         compare(CostPresentation.sparklineSummary(fmt, [], false), null)
     }
 
+    function test_sparklineSummaryHidesUnavailableCostButKeepsTokens() {
+        var points = [dailyPoint("Mon", null, 250)]
+
+        compare(CostPresentation.sparklineSummary(fmt, points, false), null)
+        compare(CostPresentation.sparklineSummary(fmt, points, true).value, "250")
+    }
+
     function test_breakdownRowsDropZeroAndMissingCounts() {
         var rows = CostPresentation.breakdownRows([
             { label: "Total", tokens: 1500 },
@@ -227,6 +251,25 @@ TestCase {
     function test_historyRowsUseTheCallerFallbackLabel() {
         var rows = CostPresentation.historyRows(fmt, { daily: [dailyPoint("", 1, 0)] }, false, "Latest")
         compare(rows[0].label, "Latest")
+    }
+
+    function test_historyRowsHideUnavailableCostButKeepTokenHistory() {
+        var tokenCost = { daily: [
+            dailyPoint("Mon", null, 100),
+            dailyPoint("Tue", null, 250)
+        ] }
+
+        compare(CostPresentation.historyRows(fmt, tokenCost, false, "Latest").length, 0)
+        compare(CostPresentation.historyRows(fmt, tokenCost, true, "Latest").length, 2)
+    }
+
+    function test_historyRowsUseTheSelectedMetricForZeroTokenGaps() {
+        var rows = CostPresentation.historyRows(fmt, {
+            daily: [dailyPoint("Mon", null, 0)]
+        }, true, "Latest")
+
+        compare(rows.length, 1)
+        compare(rows[0].value, "0")
     }
 
     function test_historyRowsKeepAVisibleBarForSmallDays() {
@@ -298,6 +341,16 @@ TestCase {
         compare(byTokens[0].value, 500)
     }
 
+    function test_spendDailyPointsDropUnavailableCostButKeepTokens() {
+        var costs = [{
+            totals: { cost: null, tokens: 250, currency: "USD" },
+            daily: [dailyPoint("Mon", null, 250, "USD")]
+        }]
+
+        compare(CostPresentation.spendDailyPoints(fmt, costs, false).length, 0)
+        compare(CostPresentation.spendDailyPoints(fmt, costs, true)[0].value, 250)
+    }
+
     function test_spendDailyPointsRejectPrototypePollutingLabels() {
         var costs = [{ totals: { currency: "USD" }, daily: [
             dailyPoint("__proto__", 5, 5, "USD"),
@@ -330,6 +383,16 @@ TestCase {
         compare(totals.currency, "USD")
     }
 
+    function test_spendTotalsPreserveUnavailableCostAndKeepTokens() {
+        var totals = CostPresentation.spendTotals([
+            { totals: { cost: null, tokens: 250, currency: "USD" } }
+        ])
+
+        compare(totals.cost, null)
+        compare(totals.tokens, 250)
+        compare(totals.currency, "USD")
+    }
+
     function test_spendTotalsAreNullWithNoSnapshots() {
         compare(CostPresentation.spendTotals([]), null)
         compare(CostPresentation.spendTotals(null), null)
@@ -356,6 +419,27 @@ TestCase {
             totals: { currency: "USD" },
             trust: new InheritedTrust()
         }]), null)
+    }
+
+    function test_costTrustSummaryIgnoresTokenOnlySnapshots() {
+        compare(CostPresentation.costTrustSummary([{
+            totals: { cost: null, tokens: 250, currency: "USD" },
+            trust: { coverage: null, sourceKind: "unknown" }
+        }]), null)
+    }
+
+    function test_costTrustSummaryKeepsTokenOnlyGapsInAMixedTotal() {
+        var summary = CostPresentation.costTrustSummary([
+            trustedCost("USD", null, "vendor"),
+            {
+                totals: { cost: null, tokens: 250, currency: "USD" },
+                trust: { coverage: null, sourceKind: "unknown" }
+            }
+        ])
+
+        compare(summary.level, "warning")
+        compare(summary.valueMode, "approximate")
+        compare(summary.sourceKind, "unknown")
     }
 
     function test_costTrustSummaryMapsEstimateAndSourceToSemanticKeys() {

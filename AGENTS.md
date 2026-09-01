@@ -268,13 +268,13 @@ replace a host CLI.
   Usage & Spend tab adds bounded range and heatmap views. CodexBar 0.55.0 Kiro
   overage, z.ai BigModel CN balance, and Cursor Grok Bot data already fit the
   generic detail, provider-cost, and extra-window paths. Antigravity local token
-  history now comes from Linux `cost`; it is not priced spend and needs the
-  missing-cost follow-up below. Cursor local or dashboard cost remains blocked
-  because the Linux command still rejects Cursor. Grok period-only responses no
-  longer become false zeroes, but an explicit unknown row with reset metadata
-  needs a generic CLI window contract. Credits history, plan utilization
-  history, and session-equivalent forecasts must wait for stable CLI history
-  payloads.
+  history now comes from Linux `cost`; it is not priced spend, so Plasma keeps
+  its token charts separate from unavailable dollar amounts. Cursor local or
+  dashboard cost remains blocked because the Linux command still rejects
+  Cursor. Grok period-only responses no longer become false zeroes, but an
+  explicit unknown row with reset metadata needs a generic CLI window contract.
+  Credits history, plan utilization history, and session-equivalent forecasts
+  must wait for stable CLI history payloads.
 - `costHistoryMetric` switches every cost chart between cost and tokens from the
   same `cost` payload; never add a CLI call for the metric, and keep the bar
   scale reading the selected metric. `historyCoverageIsEstablished` drives the
@@ -287,9 +287,9 @@ replace a host CLI.
   never expose raw provenance values in QML. Project breakdowns remain future
   work: discard local `path` values and keep only bounded display fields.
   Antigravity now emits token-only history through the same generic envelope and
-  intentionally omits dollar amounts. Preserve absent costs instead of turning
-  them into zero in `normalizeCostDaily` and `normalizeCostTotals`; token charts
-  can then render while cost totals and cost-mode charts remain unavailable.
+  intentionally omits dollar amounts. `normalizeCostDaily` and
+  `normalizeCostTotals` preserve absent costs instead of turning them into zero;
+  token charts render while cost totals and cost-mode charts remain unavailable.
 - Panel element composition has a persisted, sanitized order for identity,
   status, usage text, and meters. Keep existing visibility settings working.
   The `runOut` display mode stays tied to `paceWarningActive`, so it prints a
@@ -305,8 +305,8 @@ replace a host CLI.
 - The fallback catalog covers the 69 provider IDs released in CodexBar v0.49.1
   and retains fork-only compatibility assets. Re-verified against the official
   0.56.2 Linux CLI: it reports the same 69 and adds none. OpenRouter changed its
-  canonical dashboard action to `https://openrouter.ai/activity`; sync that one
-  fallback URL and its drift assertion. No other provider identity metadata
+  canonical dashboard action to `https://openrouter.ai/activity`; the fallback
+  and its drift assertion now use that URL. No other provider identity metadata
   changed. Future drift syncs should cover provider keys, CLI aliases, titles,
   colors, docs/dashboard/login URLs, icon assets, and
   `scripts/test_provider_icons.sh`.

@@ -482,12 +482,15 @@ function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys) {
     }
 
     var byDate = ({})
+    var hasObservedCost = false
     for (var i = 0; i < rows.length; i++) {
         var parsed = parsedCalendarDateKey(rows[i].label)
         if (!parsed || hasOwnKey(byDate, parsed.key)) {
             return rows
         }
         byDate[parsed.key] = rows[i]
+        hasObservedCost = hasObservedCost
+            || isFinite(strictFiniteNumber(rows[i].cost))
     }
 
     var historyDays = Math.floor(boundedHistoryDays(days))
@@ -509,7 +512,7 @@ function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys) {
         } else {
             result.push({
                 label: key,
-                cost: 0,
+                cost: hasObservedCost ? 0 : null,
                 tokens: 0,
                 inputTokens: 0,
                 outputTokens: 0,
@@ -681,7 +684,7 @@ function normalizeCostDaily(items, currency, days, updatedAt) {
         }
         result.unshift({
             label: label,
-            cost: isFinite(cost) ? Math.max(0, cost) : 0,
+            cost: isFinite(cost) ? Math.max(0, cost) : null,
             tokens: isFinite(tokens) ? Math.max(0, tokens) : 0,
             inputTokens: isFinite(inputTokens) ? Math.max(0, inputTokens) : 0,
             outputTokens: isFinite(outputTokens) ? Math.max(0, outputTokens) : 0,
@@ -709,7 +712,7 @@ function normalizeCostTotals(totals, fallbackCost, fallbackTokens, currency) {
         tokens = sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens)
     }
     return {
-        cost: isFinite(cost) ? Math.max(0, cost) : 0,
+        cost: isFinite(cost) ? Math.max(0, cost) : null,
         tokens: isFinite(tokens) ? Math.max(0, tokens) : 0,
         inputTokens: isFinite(inputTokens) ? Math.max(0, inputTokens) : 0,
         outputTokens: isFinite(outputTokens) ? Math.max(0, outputTokens) : 0,

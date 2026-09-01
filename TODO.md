@@ -56,10 +56,9 @@ replace a host CLI.
   inputs remain future work: a Projects view must discard the emitted local
   `path` and retain only bounded display fields. Antigravity now emits token-only
   history through the same generic `cost` envelope and intentionally omits
-  dollar amounts. The first 0.56.2 frontend follow-up must preserve absent costs
-  instead of turning them into zero in `normalizeCostDaily` and
-  `normalizeCostTotals`; token charts can then render while cost totals and
-  cost-mode charts remain unavailable.
+  dollar amounts. The Plasma normalizer preserves those absent costs instead of
+  turning them into zero in `normalizeCostDaily` and `normalizeCostTotals`;
+  token charts render while cost totals and cost-mode charts remain unavailable.
 - Quota warning thresholds are configurable through `quotaWarningPercent` and
   `quotaCriticalPercent`, bounded by `contents/ui/QuotaThresholds.js`, and drive
   both the notification level and the usage-bar markers. Per-provider thresholds
@@ -81,8 +80,9 @@ replace a host CLI.
   z.ai BigModel CN balance, and Cursor Grok Bot usage already fit the generic
   detail, provider-cost, and extra-window paths, so they need only a CLI upgrade.
   Antigravity local token history now comes from Linux `cost`; it is not priced
-  spend and needs the missing-cost follow-up above. Cursor local or dashboard
-  cost remains blocked because the Linux command still rejects Cursor. Grok
+  spend, so Plasma keeps its token charts separate from unavailable dollar
+  amounts. Cursor local or dashboard cost remains blocked because the Linux
+  command still rejects Cursor. Grok
   period-only responses no longer become a false 0%, but an explicit
   unknown-usage row with reset data needs a generic CLI window representation.
   Credits history, plan-utilization history, and session-equivalent forecasts
@@ -108,8 +108,8 @@ replace a host CLI.
   released in CodexBar v0.49.1 and re-verified with the official 0.56.2 Linux
   CLI (same 69, none added), while retaining fork-only compatibility assets.
   OpenRouter changed its canonical dashboard action from credit settings to
-  `https://openrouter.ai/activity`; sync that one fallback URL and its drift
-  assertion. No other provider identity metadata changed.
+  `https://openrouter.ai/activity`; the fallback and its drift assertion now use
+  that URL. No other provider identity metadata changed.
   When upstream releases providers, sync provider keys, CLI aliases, titles,
   colors, docs/dashboard/login URLs, icon assets, and
   `scripts/test_provider_icons.sh`.

@@ -1325,6 +1325,10 @@ msgid "Latest"
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "%1 tokens"
+msgstr ""
+
+#: contents/ui/main.qml
 msgid "%1 total - %2 tokens"
 msgstr ""
 
@@ -1346,10 +1350,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Cache write"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 tokens"
 msgstr ""
 
 #: contents/ui/main.qml
@@ -1934,6 +1934,12 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "%1: %2 - %3 tokens"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid ""
+"Local Antigravity history includes token totals. Dollar costs are "
+"unavailable."
 msgstr ""
 
 #: contents/ui/main.qml
