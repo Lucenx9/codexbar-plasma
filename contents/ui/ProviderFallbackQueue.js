@@ -16,7 +16,7 @@ function begin(requests, options) {
         state: {
             queue: queue,
             active: sourcesToStart.slice(),
-            results: [],
+            resultsByProvider: ({}),
             order: validRequests.map(function(request) { return request.providerID }),
             maximumConcurrent: maximumConcurrent,
             maximumSnapshots: maximumSnapshots
@@ -68,9 +68,10 @@ function normalizedRequests(requests, maximumRequests) {
 function complete(state, result) {
     if (!result || typeof result !== "object" || Array.isArray(result)
             || !Guards.hasOwnKey(result, "sourceName")
-            || !Guards.hasOwnKey(result, "items")
+            || !Guards.hasOwnKey(result, "item")
             || typeof result.sourceName !== "string"
-            || !Array.isArray(result.items)) {
+            || (result.item !== null
+                && (typeof result.item !== "object" || Array.isArray(result.item)))) {
         return unchangedTransition(state)
     }
     var active = state.active.slice()
@@ -86,11 +87,10 @@ function complete(state, result) {
     }
 
     var completedRequest = active.splice(completedIndex, 1)[0]
-    var results = state.results.slice()
-    results.push({
-        providerID: completedRequest.providerID,
-        items: result.items.slice(0, state.maximumSnapshots)
-    })
+    var resultsByProvider = Guards.copyObject(state.resultsByProvider)
+    if (result.item !== null) {
+        resultsByProvider[completedRequest.providerID] = result.item
+    }
 
     var queue = state.queue.slice()
     var sourcesToStart = []
@@ -103,7 +103,7 @@ function complete(state, result) {
     var nextState = {
         queue: queue,
         active: active,
-        results: results,
+        resultsByProvider: resultsByProvider,
         order: state.order.slice(),
         maximumConcurrent: state.maximumConcurrent,
         maximumSnapshots: state.maximumSnapshots
@@ -132,16 +132,8 @@ function finalItems(state) {
     for (var i = 0; i < state.order.length
             && orderedItems.length < state.maximumSnapshots; i++) {
         var providerID = state.order[i]
-        for (var j = 0; j < state.results.length; j++) {
-            if (state.results[j].providerID !== providerID) {
-                continue
-            }
-            var items = state.results[j].items
-            for (var k = 0; k < items.length
-                    && orderedItems.length < state.maximumSnapshots; k++) {
-                orderedItems.push(items[k])
-            }
-            break
+        if (Guards.hasOwnKey(state.resultsByProvider, providerID)) {
+            orderedItems.push(state.resultsByProvider[providerID])
         }
     }
     return orderedItems

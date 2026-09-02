@@ -41,7 +41,7 @@ TestCase {
 
         transition = ProviderFallbackQueue.complete(transition.state, {
             sourceName: "source-codex",
-            items: [{ provider: "codex" }]
+            item: { provider: "codex" }
         })
 
         compare(transition.sourcesToStart.length, 1)
@@ -50,7 +50,7 @@ TestCase {
         compare(transition.orderedItems.length, 0)
     }
 
-    function test_finalItemsFollowProviderOrderAndTheSnapshotBudget() {
+    function test_finalItemsFollowProviderOrderWithOneSnapshotPerProvider() {
         var transition = ProviderFallbackQueue.begin([
             request("source-codex", "codex"),
             request("source-claude", "claude"),
@@ -62,24 +62,23 @@ TestCase {
 
         transition = ProviderFallbackQueue.complete(transition.state, {
             sourceName: "source-gemini",
-            items: [{ account: "gemini-1" }, { account: "gemini-2" }]
+            item: { account: "gemini-1" }
         })
         transition = ProviderFallbackQueue.complete(transition.state, {
             sourceName: "source-codex",
-            items: [{ account: "codex-1" }, { account: "codex-2" }]
+            item: { account: "codex-1" }
         })
         transition = ProviderFallbackQueue.complete(transition.state, {
             sourceName: "source-claude",
-            items: [{ account: "claude-1" }]
+            item: { account: "claude-1" }
         })
 
         compare(transition.finished, true)
         compare(transition.sourcesToStart.length, 0)
-        compare(transition.orderedItems.length, 4)
+        compare(transition.orderedItems.length, 3)
         compare(transition.orderedItems[0].account, "codex-1")
-        compare(transition.orderedItems[1].account, "codex-2")
-        compare(transition.orderedItems[2].account, "claude-1")
-        compare(transition.orderedItems[3].account, "gemini-1")
+        compare(transition.orderedItems[1].account, "claude-1")
+        compare(transition.orderedItems[2].account, "gemini-1")
     }
 
     function test_beginDropsMalformedAndDuplicateRequests() {
@@ -125,7 +124,7 @@ TestCase {
 
         transition = ProviderFallbackQueue.complete(transition.state, {
             sourceName: "source-codex",
-            items: [{ provider: "codex" }]
+            item: { provider: "codex" }
         })
         compare(transition.sourcesToStart.length, 1)
         compare(transition.sourcesToStart[0].sourceName, "source-claude")
@@ -143,19 +142,19 @@ TestCase {
 
         transition = ProviderFallbackQueue.complete(transition.state, {
             sourceName: "source-codex",
-            items: [{ provider: "codex" }]
+            item: { provider: "codex" }
         })
         compare(transition.sourcesToStart[0].sourceName, "source-claude")
 
         transition = ProviderFallbackQueue.complete(transition.state, {
             sourceName: "source-codex",
-            items: [{ provider: "codex" }]
+            item: { provider: "codex" }
         })
         compare(transition.sourcesToStart.length, 0)
 
         transition = ProviderFallbackQueue.complete(transition.state, {
             sourceName: "source-claude",
-            items: [{ provider: "claude" }]
+            item: { provider: "claude" }
         })
         compare(transition.sourcesToStart.length, 1)
         compare(transition.sourcesToStart[0].sourceName, "source-gemini")
@@ -172,5 +171,46 @@ TestCase {
 
         compare(transition.sourcesToStart.length, 1)
         compare(transition.sourcesToStart[0].sourceName, "source-codex")
+    }
+
+    function test_completedStateRetainsAtMostOneItemPerProvider() {
+        var transition = ProviderFallbackQueue.begin([
+            request("source-codex", "codex"),
+            request("source-claude", "claude")
+        ], {
+            maximumConcurrent: 2,
+            maximumSnapshots: 10
+        })
+
+        transition = ProviderFallbackQueue.complete(transition.state, {
+            sourceName: "source-claude",
+            item: { provider: "claude" }
+        })
+        transition = ProviderFallbackQueue.complete(transition.state, {
+            sourceName: "source-codex",
+            item: { provider: "codex" }
+        })
+
+        compare(Object.keys(transition.state.resultsByProvider).length, 2)
+        verify(!Array.isArray(transition.state.resultsByProvider.codex))
+        verify(!Array.isArray(transition.state.resultsByProvider.claude))
+    }
+
+    function test_nullItemCompletesWithoutRetainingAResult() {
+        var transition = ProviderFallbackQueue.begin([
+            request("source-codex", "codex")
+        ], {
+            maximumConcurrent: 1,
+            maximumSnapshots: 10
+        })
+
+        transition = ProviderFallbackQueue.complete(transition.state, {
+            sourceName: "source-codex",
+            item: null
+        })
+
+        compare(transition.finished, true)
+        compare(transition.orderedItems.length, 0)
+        compare(Object.keys(transition.state.resultsByProvider).length, 0)
     }
 }

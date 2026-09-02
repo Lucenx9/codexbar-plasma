@@ -15,8 +15,10 @@ import "CostPresentation.js" as CostPresentation
 import "ProviderFallbackQueue.js" as ProviderFallbackQueue
 import "ProviderIdentity.js" as ProviderIdentity
 import "ProviderNormalizer.js" as Normalizer
+import "ProviderRosterCache.js" as ProviderRosterCache
 import "QuotaThresholds.js" as QuotaThresholds
 import "SafeText.js" as SafeText
+import "SessionRefreshPolicy.js" as SessionRefreshPolicy
 import "ThemeContrast.js" as ThemeContrast
 import "UsageDetails.js" as UsageDetails
 import "UpdateLogic.js" as UpdateLogic
@@ -87,6 +89,8 @@ PlasmoidItem {
     property string providerConfigCommandSource: buildProviderConfigCommand()
     property string providerConfigWatchCommand: buildProviderConfigWatchCommand()
     property string providerConfigStamp: ""
+    property var providerRosterCache: null
+    property bool usageRefreshScheduled: false
     readonly property int providerConfigWatchIntervalMs: 60000
     property int commandRunSerial: 0
     property bool costLifecycleInitialized: false
@@ -113,7 +117,9 @@ PlasmoidItem {
     property string sessionsErrorText: ""
     property string sessionsLastUpdatedText: ""
     property bool sessionsLoading: false
-    property bool sessionsInitialized: false
+    property double sessionsLastCompletedAtMs: -1
+    property string sessionsLoadedCommandSource: ""
+    readonly property int sessionsStaleAfterMs: SessionRefreshPolicy.staleAfterMs(refreshIntervalSec)
     readonly property int maximumSessions: Normalizer.maximumSessions
     readonly property int sessionsCommandTimeoutMs: 60000
     property string selectedProviderID: ""
@@ -177,13 +183,38 @@ PlasmoidItem {
     // two scales apart is what makes the primary meters read as primary.
     readonly property real compactMeterTrackHeight: Math.round(Kirigami.Units.gridUnit * 0.28)
 
-    onCommandSourceChanged: Qt.callLater(refreshNow)
+    onCommandSourceChanged: scheduleUsageRefresh()
+    onProviderConfigCommandSourceChanged: {
+        invalidateProviderRosterCache()
+        scheduleUsageRefresh()
+    }
     onCostCommandSourceChanged: {
         if (costLifecycleInitialized) {
             Qt.callLater(function() { root.refreshCost(true) })
         }
     }
-    onProviderConfigRevisionChanged: Qt.callLater(refreshNow)
+    onProviderConfigRevisionChanged: {
+        invalidateProviderRosterCache()
+        scheduleUsageRefresh()
+    }
+    onSessionsCommandSourceChanged: {
+        if (retireUsageCommandKind("sessions") > 0) {
+            sessionsLoading = false
+        }
+        if (expanded && sessionsSelected) {
+            Qt.callLater(refreshSessionsIfStale)
+        }
+    }
+    onExpandedChanged: {
+        if (expanded) {
+            Qt.callLater(refreshSessionsIfStale)
+        }
+    }
+    onSessionsSelectedChanged: {
+        if (sessionsSelected && expanded) {
+            Qt.callLater(refreshSessionsIfStale)
+        }
+    }
     onAutoSelectProviderChanged: updateSelectedProvider()
     onOverviewProviderIDsRawChanged: updateSelectedProvider()
     onOverviewAvailableChanged: reconcileGlobalViewAvailability()
@@ -480,6 +511,20 @@ PlasmoidItem {
         return descriptor
     }
 
+    function providerRosterContext() {
+        return {
+            commandSource: providerConfigCommandSource,
+            revision: providerConfigRevision,
+            stamp: providerConfigStamp
+        }
+    }
+
+    function buildProviderConfigCommandDescriptor() {
+        var descriptor = buildCommandDescriptor("providerConfig", "")
+        descriptor.providerRosterContext = providerRosterContext()
+        return descriptor
+    }
+
     function finishUsageCommandSource(sourceName) {
         if (sourceName.length === 0) {
             return
@@ -518,12 +563,24 @@ PlasmoidItem {
         return sourceNames.length
     }
 
+    function scheduleUsageRefresh() {
+        if (usageRefreshScheduled) {
+            return
+        }
+        usageRefreshScheduled = true
+        Qt.callLater(function() {
+            if (!root.usageRefreshScheduled) {
+                return
+            }
+            root.usageRefreshScheduled = false
+            root.refreshNow()
+        })
+    }
+
     function refreshNow() {
+        usageRefreshScheduled = false
         retireUsageCommands()
         retireStaleAccountCommands()
-        if (sessionsInitialized) {
-            refreshSessions()
-        }
 
         if (commandSource.length === 0) {
             loading = false
@@ -546,9 +603,6 @@ PlasmoidItem {
         retireUsageCommandKind("usage")
         retireUsageCommandKind("providerConfig")
         retireUsageCommandKind("providerFallback")
-        if (retireUsageCommandKind("sessions") > 0) {
-            sessionsLoading = false
-        }
         // Account loads are user-triggered; keep them alive across usage refreshes
         // so their replies can still populate the account picker.
         providerFallbackState = null
@@ -561,13 +615,15 @@ PlasmoidItem {
         }
         if (providerConfigStamp.length === 0) {
             providerConfigStamp = stamp
+            invalidateProviderRosterCache()
             return
         }
         if (stamp === providerConfigStamp) {
             return
         }
         providerConfigStamp = stamp
-        Qt.callLater(refreshNow)
+        invalidateProviderRosterCache()
+        scheduleUsageRefresh()
     }
 
     function refreshCost(force) {
@@ -598,21 +654,41 @@ PlasmoidItem {
         return true
     }
 
-    function refreshSessions() {
-        retireUsageCommandKind("sessions")
-
-        sessionsInitialized = true
-        if (sessionsCommandSource.length === 0) {
+    function requestSessionsRefresh(force) {
+        var action = SessionRefreshPolicy.refreshAction({
+            commandSource: sessionsCommandSource,
+            loadedCommandSource: sessionsLoadedCommandSource,
+            loading: sessionsLoading,
+            visible: expanded && sessionsSelected,
+            force: force === true,
+            lastCompletedAtMs: sessionsLastCompletedAtMs,
+            nowMs: Date.now(),
+            staleAfterMs: sessionsStaleAfterMs
+        })
+        if (action === SessionRefreshPolicy.keepAction) {
+            return false
+        }
+        if (action === SessionRefreshPolicy.missingCommandAction) {
             sessionsLoading = false
             sessionsErrorText = i18n("Set the codexbar command path in widget settings.")
-            return
+            return false
         }
 
+        retireUsageCommandKind("sessions")
         sessionsLoading = true
         sessionsErrorText = ""
         connectUsageCommand(
             commandWithRunNonce(sessionsCommandSource),
             buildCommandDescriptor("sessions", "", sessionsCommandTimeoutMs))
+        return true
+    }
+
+    function refreshSessionsIfStale() {
+        return requestSessionsRefresh(false)
+    }
+
+    function refreshSessions() {
+        return requestSessionsRefresh(true)
     }
 
     function parseOutput(stdoutText, stderrText) {
@@ -678,6 +754,13 @@ PlasmoidItem {
             return
         }
 
+        var cachedProviderIDs = ProviderRosterCache.read(
+            providerRosterCache, providerRosterContext())
+        if (cachedProviderIDs !== null) {
+            startProviderFallbackForProviders(cachedProviderIDs)
+            return
+        }
+
         if (providerConfigCommandSource.length === 0) {
             providers = []
             errorText = i18n("codexbar did not return JSON.")
@@ -687,10 +770,21 @@ PlasmoidItem {
 
         connectUsageCommand(
             commandWithRunNonce(providerConfigCommandSource),
-            buildCommandDescriptor("providerConfig", ""))
+            buildProviderConfigCommandDescriptor())
     }
 
-    function parseProviderConfigOutput(stdoutText, stderrText) {
+    function invalidateProviderRosterCache() {
+        providerRosterCache = null
+    }
+
+    function parseProviderConfigOutput(descriptor, stdoutText, stderrText) {
+        // Config reads are asynchronous. A reply from an older command,
+        // revision, or checksum must not seed a cache for the current context.
+        if (!descriptor || !ProviderRosterCache.contextsMatch(
+                descriptor.providerRosterContext, providerRosterContext())) {
+            scheduleUsageRefresh()
+            return
+        }
         var trimmed = stdoutText.trim()
         if (trimmed.length === 0) {
             providers = []
@@ -711,6 +805,8 @@ PlasmoidItem {
 
         var entries = Normalizer.normalizeProviderConfigEntries(payload)
         providerDisplayNames = entries.displayNames
+        providerRosterCache = ProviderRosterCache.remember(
+            entries.providerIDs, descriptor.providerRosterContext)
         startProviderFallbackForProviders(entries.providerIDs)
     }
 
@@ -797,9 +893,10 @@ PlasmoidItem {
             }
         }
 
+        var semanticItems = Normalizer.dedupeProviderSnapshots(normalizedItems)
         var transition = ProviderFallbackQueue.complete(providerFallbackState, {
             sourceName: sourceName,
-            items: normalizedItems
+            item: semanticItems.length > 0 ? semanticItems[0] : null
         })
         applyProviderFallbackTransition(transition)
     }
@@ -885,7 +982,6 @@ PlasmoidItem {
         return CommandLedger.hasAnyKind(activeCommandDescriptors, [
             "usage",
             "providerConfig",
-            "sessions",
             "providerFallback"
         ])
     }
@@ -1109,6 +1205,8 @@ PlasmoidItem {
         }
         sessions = nextSessions
         sessionsErrorText = ""
+        sessionsLastCompletedAtMs = Date.now()
+        sessionsLoadedCommandSource = sessionsCommandSource
         sessionsLastUpdatedText = i18n("Updated %1", Qt.formatDateTime(new Date(), "hh:mm"))
     }
 
@@ -3518,8 +3616,8 @@ PlasmoidItem {
         selectedGlobalView = candidate
         selectedProviderID = ""
         selectionInitialized = true
-        if (candidate === "sessions" && !sessionsInitialized) {
-            refreshSessions()
+        if (candidate === "sessions") {
+            refreshSessionsIfStale()
         }
     }
 
@@ -3789,7 +3887,7 @@ PlasmoidItem {
                 return
             case "providerConfig":
                 root.finishUsageCommandSource(sourceName)
-                root.parseProviderConfigOutput(stdoutText, stderrText)
+                root.parseProviderConfigOutput(descriptor, stdoutText, stderrText)
                 return
             case "account":
                 root.parseProviderAccountsOutput(sourceName, descriptor, stdoutText, stderrText)
