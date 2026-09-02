@@ -222,7 +222,16 @@ function processQuota(previousMemo, nextMemo, observation, observationIndex, int
 function processPace(previousMemo, nextMemo, observation, observationIndex, intents) {
     var rows = Array.isArray(observation.rows) ? observation.rows : []
     for (var i = 0; i < rows.length; i++) {
-        if (!rows[i] || rows[i].paceActive !== true) {
+        var row = rows[i]
+        var key = paceKey(observation, row, i)
+        if (!row || row.paceActive !== true) {
+            // An unreadable percentage is not a recovered one. Carry an
+            // active pace baseline across the degraded pass so the next
+            // refresh cannot re-announce an unchanged condition.
+            if (row && row.hasPercent !== true
+                    && previousMemo && previousMemo[key] === "1") {
+                nextMemo[key] = "1"
+            }
             continue
         }
         var key = paceKey(observation, rows[i], i)
@@ -318,6 +327,13 @@ function transition(observations, previousMemo, options) {
             }
         }
         if (mode === "prime") {
+            if (item.errorPresent === true && Array.isArray(item.rows) && item.rows.length === 0) {
+                // A failed first observation establishes no threshold
+                // baseline: leave the scope unprimed so the first healthy
+                // pass primes silently. The status block above already
+                // recorded the incident, so it keeps notifying later.
+                continue
+            }
             primeScope(nextMemo, item, options)
             continue
         }
