@@ -1,5 +1,6 @@
 .pragma library
 .import "Guards.js" as Guards
+.import "ProviderNormalizer.js" as Normalizer
 
 function validResponseContext(context) {
     return !!context && typeof context === "object" && !Array.isArray(context)
@@ -35,22 +36,28 @@ function responseContextsMatch(left, right) {
         && contextValuesMatch(left, right)
 }
 
-function copyProviderIDs(providerIDs) {
-    if (!Array.isArray(providerIDs)) {
+function copyNormalizedProviderIDs(providerIDs) {
+    if (!Array.isArray(providerIDs)
+            || providerIDs.length > Normalizer.maximumProviderSnapshots) {
         return null
     }
     var copy = []
+    var seenProviderIDs = ({})
     for (var i = 0; i < providerIDs.length; i++) {
-        if (typeof providerIDs[i] !== "string" || providerIDs[i].length === 0) {
+        var providerID = providerIDs[i]
+        if (typeof providerID !== "string"
+                || Normalizer.normalizedProviderID(providerID) !== providerID
+                || Guards.hasOwnKey(seenProviderIDs, providerID)) {
             return null
         }
-        copy.push(providerIDs[i])
+        seenProviderIDs[providerID] = true
+        copy.push(providerID)
     }
     return copy
 }
 
 function remember(providerIDs, context) {
-    var copiedProviderIDs = copyProviderIDs(providerIDs)
+    var copiedProviderIDs = copyNormalizedProviderIDs(providerIDs)
     if (copiedProviderIDs === null || !validContext(context)) {
         return null
     }
@@ -71,5 +78,5 @@ function read(cache, currentContext) {
             || !contextsMatch(cache.context, currentContext)) {
         return null
     }
-    return copyProviderIDs(cache.providerIDs)
+    return copyNormalizedProviderIDs(cache.providerIDs)
 }

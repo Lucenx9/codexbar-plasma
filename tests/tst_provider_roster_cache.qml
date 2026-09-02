@@ -41,6 +41,38 @@ TestCase {
         compare(providerIDs.length, 0)
     }
 
+    function test_rejectsProviderIDsOutsideTheNormalizedContract() {
+        var tooLong = Array(130).join("a")
+        var invalidRosters = [
+            [" codex "],
+            ["Codex"],
+            ["groqcloud"],
+            ["codex", "codex"],
+            ["__proto__"],
+            [tooLong]
+        ]
+
+        for (var i = 0; i < invalidRosters.length; i++) {
+            compare(ProviderRosterCache.remember(invalidRosters[i], context()), null)
+        }
+    }
+
+    function test_rejectsRostersAboveTheProviderSnapshotBound() {
+        var providerIDs = []
+        for (var i = 0; i < 257; i++) {
+            providerIDs.push("future-provider-" + i)
+        }
+
+        compare(ProviderRosterCache.remember(providerIDs, context()), null)
+    }
+
+    function test_readRejectsAMutatedRoster() {
+        var cache = ProviderRosterCache.remember(["codex"], context())
+        cache.providerIDs.push(" groq ")
+
+        compare(ProviderRosterCache.read(cache, context()), null)
+    }
+
     function test_unknownChecksumNeverCreatesAReusableCache() {
         compare(ProviderRosterCache.remember(["codex"], context(undefined, 7, "")), null)
         compare(ProviderRosterCache.read({
