@@ -2007,6 +2007,25 @@ for shared_copy_fragment in (
             "SessionsView must own one shared clipboard lifecycle; "
             f"missing {shared_copy_fragment!r}"
         )
+if not re.search(
+    r"Connections\s*\{.*?target:\s*view\.applet.*?"
+    r"function\s+onSessionsChanged\(\)\s*\{\s*"
+    r'view\.copiedValueKey\s*=\s*""\s*\}',
+    sessions_view_text,
+    re.S,
+):
+    raise AssertionError(
+        "SessionsView must clear copy feedback when the sessions snapshot is replaced"
+    )
+for snapshot_copy_key_fragment in (
+    'readonly property string titleCopyKey: "title:" + index',
+    'readonly property string detailsCopyKey: "details:" + index',
+):
+    if snapshot_copy_key_fragment not in sessions_view_text:
+        raise AssertionError(
+            "session copy keys must remain index-scoped inside one unchanged snapshot; "
+            f"missing {snapshot_copy_key_fragment!r}"
+        )
 if sessions_view_text.count("Controls.TextField {") != 1 or sessions_view_text.count("Timer {") != 2:
     raise AssertionError("SessionsView must instantiate exactly one clipboard field and two shared timers")
 for per_delegate_copy_fragment in ("Controls.TextField {", "Timer {"):

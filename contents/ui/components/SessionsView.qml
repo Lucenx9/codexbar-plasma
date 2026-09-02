@@ -37,6 +37,18 @@ ColumnLayout {
         copiedTimer.restart()
     }
 
+    // The CLI's stable ID is deliberately discarded at the trust boundary, and
+    // every remaining display field may collide or change during a refresh.
+    // Clear this ephemeral feedback when the snapshot changes rather than
+    // attributing it to a different card.
+    Connections {
+        target: view.applet
+
+        function onSessionsChanged() {
+            view.copiedValueKey = ""
+        }
+    }
+
     Controls.TextField {
         id: clipboardBuffer
 
@@ -149,15 +161,8 @@ ColumnLayout {
                     required property var modelData
 
                     readonly property bool activeSession: modelData.state === "active"
-                    // A refresh can replace and reorder the sessions array
-                    // inside the 1.2 s confirmation window, so the copied
-                    // marker must key on the session identity rather than the
-                    // delegate index or it lights up the wrong card.
-                    readonly property string sessionCopyID: modelData.provider + ":"
-                        + modelData.projectName + ":" + modelData.sessionName + ":"
-                        + modelData.activityAt
-                    readonly property string titleCopyKey: "title:" + sessionCopyID
-                    readonly property string detailsCopyKey: "details:" + sessionCopyID
+                    readonly property string titleCopyKey: "title:" + index
+                    readonly property string detailsCopyKey: "details:" + index
                     readonly property color accent: view.applet.providerReadableColor(
                         modelData.provider,
                         Kirigami.Theme.backgroundColor)
