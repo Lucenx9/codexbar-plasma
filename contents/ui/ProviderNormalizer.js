@@ -228,6 +228,11 @@ function rateWindowMetrics(window, pace, usageKnown) {
     var hasPercent = known && isFinite(used)
     var expectedUsed = strictFiniteNumber(pace && pace.expectedUsedPercent)
     var paceEta = strictFiniteNumber(pace && pace.etaSeconds)
+    var paceWillLastKnown = isCliRecord(pace)
+        && hasOwnKey(pace, "willLastToReset")
+        && typeof pace.willLastToReset === "boolean"
+    var paceKnown = paceWillLastKnown
+        && (pace.willLastToReset === true || (isFinite(paceEta) && paceEta > 0))
     var paceValue = isFinite(expectedUsed)
         ? clamp(expectedUsed, 0, 100)
         : -1
@@ -235,6 +240,7 @@ function rateWindowMetrics(window, pace, usageKnown) {
         hasPercent: hasPercent,
         usedPercent: hasPercent ? clamp(used, 0, 100) : 0,
         leftPercent: hasPercent ? clamp(100 - used, 0, 100) : 0,
+        paceKnown: paceKnown,
         pacePercent: paceValue,
         paceOnTop: !pace || pace.willLastToReset !== false,
         paceEtaSeconds: isFinite(paceEta)

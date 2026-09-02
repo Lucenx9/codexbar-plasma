@@ -330,10 +330,40 @@ TestCase {
         compare(unknown.hasPercent, false)
         compare(unknown.usedPercent, 0)
         compare(unknown.leftPercent, 0)
+        compare(unknown.paceKnown, false)
 
         var malformed = Normalizer.rateWindowMetrics({ usedPercent: "quite a lot" }, null, true)
         compare(malformed.hasPercent, false)
         compare(malformed.usedPercent, 0)
+    }
+
+    function test_marksPaceAvailabilityIndependentlyFromUsage() {
+        var recoveredPace = Normalizer.rateWindowMetrics(
+            { usedPercent: 80 }, { willLastToReset: true }, false)
+        compare(recoveredPace.hasPercent, false)
+        compare(recoveredPace.paceKnown, true)
+
+        var activePace = Normalizer.rateWindowMetrics(
+            { usedPercent: 80 }, { willLastToReset: false, etaSeconds: 60 }, false)
+        compare(activePace.paceKnown, true)
+
+        var incompletePace = Normalizer.rateWindowMetrics(
+            { usedPercent: 80 }, { willLastToReset: false }, false)
+        compare(incompletePace.paceKnown, false)
+
+        var invalidFlags = [null, undefined, "true", 1, [], {}]
+        for (var i = 0; i < invalidFlags.length; i++) {
+            var invalidPace = Normalizer.rateWindowMetrics(
+                { usedPercent: 80 }, {
+                    willLastToReset: invalidFlags[i],
+                    etaSeconds: 60
+                }, false)
+            compare(invalidPace.paceKnown, false)
+        }
+
+        var inheritedRecovery = Normalizer.rateWindowMetrics(
+            { usedPercent: 80 }, Object.create({ willLastToReset: true }), false)
+        compare(inheritedRecovery.paceKnown, false)
     }
 
     function test_rejectsEmptyBooleanAndStructuredUsagePercentages() {

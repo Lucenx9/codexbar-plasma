@@ -225,16 +225,15 @@ function processPace(previousMemo, nextMemo, observation, observationIndex, inte
         var row = rows[i]
         var key = paceKey(observation, row, i)
         if (!row || row.paceActive !== true) {
-            // An unreadable percentage is not a recovered one. Carry an
-            // active pace baseline across the degraded pass so the next
-            // refresh cannot re-announce an unchanged condition.
-            if (row && row.hasPercent !== true
+            // Carry only an unavailable forecast. Pace remains authoritative
+            // when usage percentage is unknown, so a valid recovery still
+            // clears the active baseline.
+            if (row && row.paceKnown !== true
                     && previousMemo && previousMemo[key] === "1") {
                 nextMemo[key] = "1"
             }
             continue
         }
-        var key = paceKey(observation, rows[i], i)
         if (!previousMemo || previousMemo[key] !== "1") {
             intents.push({
                 kind: "pace",

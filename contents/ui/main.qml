@@ -1916,6 +1916,7 @@ PlasmoidItem {
             hasPercent: metrics.hasPercent,
             usedPercent: metrics.usedPercent,
             leftPercent: metrics.leftPercent,
+            paceKnown: metrics.paceKnown,
             pacePercent: metrics.pacePercent,
             paceOnTop: metrics.paceOnTop,
             paceEtaSeconds: metrics.paceEtaSeconds,
@@ -2436,6 +2437,7 @@ PlasmoidItem {
                 hasPercent: row && row.hasPercent === true,
                 usedPercent: row ? Number(row.usedPercent) : NaN,
                 quotaLevel: quotaNotificationLevel(row),
+                paceKnown: row && row.paceKnown === true,
                 paceActive: paceWarningActive(row)
             })
         }

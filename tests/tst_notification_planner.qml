@@ -30,12 +30,13 @@ TestCase {
         }
     }
 
-    function usageRow(level, usedPercent, paceActive, label, lane, resetsAt, hasPercent) {
+    function usageRow(level, usedPercent, paceActive, label, lane, resetsAt, hasPercent, paceKnown) {
         return {
             quotaLevel: level || "",
             hasPercent: hasPercent !== false,
             usedPercent: usedPercent,
             paceActive: paceActive === true,
+            paceKnown: paceKnown !== false,
             label: label || "Weekly",
             lane: lane || "secondary",
             resetsAt: resetsAt || "2026-08-24T00:00:00Z"
@@ -449,7 +450,7 @@ TestCase {
         // pace data: the active pace baseline must survive the degraded pass.
         var degraded = transition(
             "observe",
-            [observation("", "", [usageRow("", 0, false, "Daily", "primary", "", false)])],
+            [observation("", "", [usageRow("", 0, false, "Daily", "primary", "", false, false)])],
             primed.nextMemo)
         compare(degraded.intents.length, 0)
 
@@ -471,6 +472,27 @@ TestCase {
             "observe",
             [observation("", "", [usageRow("", 60, true, "Daily", "primary")])],
             quiet.nextMemo)
+        compare(regressed.intents.length, 1)
+        compare(regressed.intents[0].kind, "pace")
+    }
+
+    function test_knownPaceRecoveryClearsTheBaselineWhenUsageIsUnknown() {
+        var primed = transition(
+            "prime",
+            [observation("", "", [usageRow("", 60, true, "Daily", "primary")])])
+
+        // Usage availability and pace availability are independent. A valid
+        // pace forecast can report recovery while the percentage is unknown.
+        var recovered = transition(
+            "observe",
+            [observation("", "", [usageRow("", 0, false, "Daily", "primary", "", false, true)])],
+            primed.nextMemo)
+        compare(recovered.intents.length, 0)
+
+        var regressed = transition(
+            "observe",
+            [observation("", "", [usageRow("", 0, true, "Daily", "primary", "", false, true)])],
+            recovered.nextMemo)
         compare(regressed.intents.length, 1)
         compare(regressed.intents[0].kind, "pace")
     }

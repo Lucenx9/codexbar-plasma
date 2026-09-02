@@ -645,6 +645,8 @@ for reset_source_fragment in (
 ):
     if reset_source_fragment not in add_window_body:
         raise AssertionError("addWindow must retain raw reset data for render-time formatting")
+if "paceKnown: metrics.paceKnown" not in add_window_body:
+    raise AssertionError("addWindow must retain normalized pace availability for notifications")
 if "onResetTimesShowAbsoluteChanged: Qt.callLater(refreshNow)" in main_text:
     raise AssertionError("changing reset formatting must not fan out new CLI requests")
 
@@ -1761,6 +1763,7 @@ for observation_fragment in (
     'String(item.error || "").length > 0',
     "item.hasIncident === true",
     "rows.length",
+    'errorPresent: String(item.error || "").length > 0',
     "statusIncidentKey: String(item.statusIncidentKey || \"\")",
     "rows: rows",
 ):
@@ -1774,6 +1777,7 @@ for row_fragment in (
     "hasPercent: row && row.hasPercent === true",
     "usedPercent: row ? Number(row.usedPercent) : NaN",
     "quotaLevel: quotaNotificationLevel(row)",
+    "paceKnown: row && row.paceKnown === true",
     "paceActive: paceWarningActive(row)",
 ):
     if row_fragment not in observation_rows_body:
