@@ -49,6 +49,15 @@ TestCase {
         }, context(undefined, 7, "")), null)
     }
 
+    function test_responseContextAcceptsMatchingUnknownChecksums() {
+        compare(ProviderRosterCache.responseContextsMatch(
+            context(undefined, 7, ""), context(undefined, 7, "")), true)
+        compare(ProviderRosterCache.responseContextsMatch(
+            context(undefined, 7, ""), context(undefined, 8, "")), false)
+        compare(ProviderRosterCache.responseContextsMatch(
+            context(undefined, 7, ""), context(undefined, 7, "known")), false)
+    }
+
     function test_contextMatchRejectsMalformedAndInheritedRecords() {
         compare(ProviderRosterCache.contextsMatch(context(), context()), true)
         compare(ProviderRosterCache.contextsMatch(null, context()), false)

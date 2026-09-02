@@ -393,7 +393,7 @@ require_all(
 require_all(
     applet.function_body("parseProviderConfigOutput"),
     (
-        "ProviderRosterCache.contextsMatch(",
+        "ProviderRosterCache.responseContextsMatch(",
         "descriptor.providerRosterContext",
         "ProviderRosterCache.remember(",
     ),

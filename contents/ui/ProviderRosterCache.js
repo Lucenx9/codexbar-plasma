@@ -1,7 +1,7 @@
 .pragma library
 .import "Guards.js" as Guards
 
-function validContext(context) {
+function validResponseContext(context) {
     return !!context && typeof context === "object" && !Array.isArray(context)
         && Guards.hasOwnKey(context, "commandSource")
         && typeof context.commandSource === "string"
@@ -13,14 +13,26 @@ function validContext(context) {
         && Math.floor(context.revision) === context.revision
         && Guards.hasOwnKey(context, "stamp")
         && typeof context.stamp === "string"
-        && context.stamp.length > 0
+}
+
+function validContext(context) {
+    return validResponseContext(context) && context.stamp.length > 0
+}
+
+function contextValuesMatch(left, right) {
+    return left.commandSource === right.commandSource
+        && left.revision === right.revision
+        && left.stamp === right.stamp
 }
 
 function contextsMatch(left, right) {
     return validContext(left) && validContext(right)
-        && left.commandSource === right.commandSource
-        && left.revision === right.revision
-        && left.stamp === right.stamp
+        && contextValuesMatch(left, right)
+}
+
+function responseContextsMatch(left, right) {
+    return validResponseContext(left) && validResponseContext(right)
+        && contextValuesMatch(left, right)
 }
 
 function copyProviderIDs(providerIDs) {

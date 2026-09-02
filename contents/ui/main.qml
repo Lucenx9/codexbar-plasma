@@ -780,7 +780,7 @@ PlasmoidItem {
     function parseProviderConfigOutput(descriptor, stdoutText, stderrText) {
         // Config reads are asynchronous. A reply from an older command,
         // revision, or checksum must not seed a cache for the current context.
-        if (!descriptor || !ProviderRosterCache.contextsMatch(
+        if (!descriptor || !ProviderRosterCache.responseContextsMatch(
                 descriptor.providerRosterContext, providerRosterContext())) {
             scheduleUsageRefresh()
             return
