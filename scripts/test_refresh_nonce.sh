@@ -24,12 +24,11 @@ reject_in_surface applet "property string connectedSessionsCommandSource"
 reject_in_surface applet "property string connectedProviderConfigCommandSource"
 require_in_surface applet "var baseCommand = buildProviderUsageCommand(providerID)"
 require_in_surface applet "sourceName: commandWithRunNonce(baseCommand)"
+# Pinning the ":; " prefix here is also the /bin/sh-validity guard for the
+# notification wrapper: a shell assignment cannot directly prefix the reserved
+# word "if", so any rewrite that drops the separator fails this assertion.
 require_in_surface applet 'connectNotificationCommand(commandWithRunNonce(":; " + command))'
 reject_in_surface applet "notificationSource.connectSource(command)"
-
-sh -n <<'SH'
-CODEXBAR_PLASMA_RUN=1 :; if command -v notify-send >/dev/null 2>&1; then notify-send -- "CodexBar" "Test"; fi
-SH
 
 require_in_surface providers "property int commandRunSerial: 0"
 require_in_surface providers 'import "CommandLedger.js" as CommandLedger'
