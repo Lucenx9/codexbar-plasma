@@ -17,11 +17,12 @@ TestCase {
         }
     }
 
-    function observation(severity, incidentKey, rows, scopeID, pending) {
+    function observation(severity, incidentKey, rows, scopeID, pending, errorPresent) {
         return {
             providerID: "codex",
             scopeID: scopeID || "codex/account-a",
             pending: pending === true,
+            errorPresent: errorPresent === true,
             statusActive: String(severity || "").length > 0,
             statusSeverity: severity || "",
             statusIncidentKey: incidentKey || "",
@@ -29,12 +30,13 @@ TestCase {
         }
     }
 
-    function usageRow(level, usedPercent, paceActive, label, lane, resetsAt) {
+    function usageRow(level, usedPercent, paceActive, label, lane, resetsAt, hasPercent, paceKnown) {
         return {
             quotaLevel: level || "",
-            hasPercent: true,
+            hasPercent: hasPercent !== false,
             usedPercent: usedPercent,
             paceActive: paceActive === true,
+            paceKnown: paceKnown !== false,
             label: label || "Weekly",
             lane: lane || "secondary",
             resetsAt: resetsAt || "2026-08-24T00:00:00Z"
@@ -65,6 +67,81 @@ TestCase {
         compare(NotificationPlanner.observationPending(false, true, false, 1), false)
         compare(NotificationPlanner.observationPending(false, false, false, 0), false)
         compare(NotificationPlanner.observationPending(true, false, false, 0), true)
+    }
+    function test_errorPassWithIncidentKeepsThresholdBaselines() {
+        var primedRows = [
+            usageRow("minor", 85, false, "Weekly", "secondary"),
+            usageRow("", 60, true, "Daily", "primary")
+        ]
+        var primed = transition(
+            "prime",
+            [observation("minor", "incident-1", primedRows)])
+        compare(primed.intents.length, 0)
+
+        // The usage refresh fails while the status incident continues. The
+        // error carries no usage evidence, so it must not read as a quiet
+        // recovery: quota, pace, and reset baselines all survive.
+        var errored = transition(
+            "observe",
+            [observation("minor", "incident-1", [], "codex/account-a", false, true)],
+            primed.nextMemo)
+        compare(errored.intents.length, 0)
+
+        var recovered = transition(
+            "observe",
+            [observation("minor", "incident-1", primedRows)],
+            errored.nextMemo)
+        compare(recovered.intents.length, 0)
+
+        // The armed reset survives the outage and still fires once usage
+        // collapses.
+        var collapsed = transition(
+            "observe",
+            [observation("minor", "incident-1", [usageRow("", 3, false, "Weekly", "secondary"), usageRow("", 60, false, "Daily", "primary")])],
+            recovered.nextMemo)
+        compare(collapsed.intents.length, 1)
+        compare(collapsed.intents[0].kind, "reset")
+        compare(collapsed.intents[0].rowIndex, 0)
+
+        // Escalation after recovery still announces: the baseline was kept,
+        // not merely suppressed.
+        var escalated = transition(
+            "observe",
+            [observation("minor", "incident-1", [usageRow("major", 96, false, "Weekly", "secondary"), usageRow("", 60, false, "Daily", "primary")])],
+            collapsed.nextMemo)
+        compare(escalated.intents.length, 1)
+        compare(escalated.intents[0].kind, "quota")
+        compare(escalated.intents[0].severity, "major")
+    }
+
+    function test_erroredFirstObservationLeavesTheScopeUnprimed() {
+        var errored = transition(
+            "observe",
+            [observation("minor", "incident-1", [], "codex/account-a", false, true)])
+        compare(errored.intents.length, 0)
+
+        // The first healthy pass establishes the baseline silently instead of
+        // announcing a level that was never observed before.
+        var recovered = transition(
+            "observe",
+            [observation("minor", "incident-1", [usageRow("minor", 85, false)])],
+            errored.nextMemo)
+        compare(recovered.intents.length, 0)
+    }
+
+    function test_erroredFirstPrimePassLeavesTheScopeUnprimed() {
+        var primed = transition(
+            "prime",
+            [observation("minor", "incident-1", [], "codex/account-a", false, true)])
+        compare(primed.intents.length, 0)
+
+        // The first healthy pass after the outage establishes the baseline
+        // silently instead of announcing a level that was never observed.
+        var recovered = transition(
+            "observe",
+            [observation("minor", "incident-1", [usageRow("minor", 85, false)])],
+            primed.nextMemo)
+        compare(recovered.intents.length, 0)
     }
 
     function test_statusBaselinePrimesSilentlyThenNewIncidentNotifies() {
@@ -311,6 +388,113 @@ TestCase {
             primed.nextMemo)
         compare(JSON.stringify(primed.nextMemo), before)
         verify(changed.nextMemo !== primed.nextMemo)
+    }
+
+    function test_armedResetSurvivesAnUnknownPercentagePass() {
+        var armed = usageRow("", 85, false, "Weekly", "secondary")
+        var primed = transition("prime", [observation("", "", [armed])])
+        compare(primed.intents.length, 0)
+
+        // The same window reports back without a usable percentage. The arm
+        // must survive the degraded pass, otherwise the promised single reset
+        // notice can never fire.
+        var degraded = transition(
+            "observe",
+            [observation("", "", [usageRow("", 0, false, "Weekly", "secondary", "", false)])],
+            primed.nextMemo)
+        compare(degraded.intents.length, 0)
+
+        var reset = transition(
+            "observe",
+            [observation("", "", [usageRow("", 3, false, "Weekly", "secondary")])],
+            degraded.nextMemo)
+        compare(reset.intents.length, 1)
+        compare(reset.intents[0].kind, "reset")
+        compare(reset.intents[0].rowIndex, 0)
+    }
+
+    function test_unknownPercentagePassKeepsTheQuotaBaseline() {
+        var primed = transition(
+            "prime",
+            [observation("", "", [usageRow("minor", 85, false, "Weekly", "secondary")])])
+
+        var degraded = transition(
+            "observe",
+            [observation("", "", [usageRow("", 0, false, "Weekly", "secondary", "", false)])],
+            primed.nextMemo)
+        compare(degraded.intents.length, 0)
+
+        // Recovery at the unchanged level stays quiet; a later real
+        // escalation still announces.
+        var recovered = transition(
+            "observe",
+            [observation("", "", [usageRow("minor", 85, false, "Weekly", "secondary")])],
+            degraded.nextMemo)
+        compare(recovered.intents.length, 0)
+
+        var escalated = transition(
+            "observe",
+            [observation("", "", [usageRow("major", 96, false, "Weekly", "secondary")])],
+            recovered.nextMemo)
+        compare(escalated.intents.length, 1)
+        compare(escalated.intents[0].kind, "quota")
+        compare(escalated.intents[0].severity, "major")
+    }
+
+    function test_unknownPercentagePassKeepsThePaceBaseline() {
+        var primed = transition(
+            "prime",
+            [observation("", "", [usageRow("", 60, true, "Daily", "primary")])])
+
+        // The window reports back without a usable percentage and without
+        // pace data: the active pace baseline must survive the degraded pass.
+        var degraded = transition(
+            "observe",
+            [observation("", "", [usageRow("", 0, false, "Daily", "primary", "", false, false)])],
+            primed.nextMemo)
+        compare(degraded.intents.length, 0)
+
+        var recovered = transition(
+            "observe",
+            [observation("", "", [usageRow("", 60, true, "Daily", "primary")])],
+            degraded.nextMemo)
+        compare(recovered.intents.length, 0)
+
+        // A genuine recovery stays quiet, and pace returning afterwards
+        // still announces.
+        var quiet = transition(
+            "observe",
+            [observation("", "", [usageRow("", 60, false, "Daily", "primary")])],
+            recovered.nextMemo)
+        compare(quiet.intents.length, 0)
+
+        var regressed = transition(
+            "observe",
+            [observation("", "", [usageRow("", 60, true, "Daily", "primary")])],
+            quiet.nextMemo)
+        compare(regressed.intents.length, 1)
+        compare(regressed.intents[0].kind, "pace")
+    }
+
+    function test_knownPaceRecoveryClearsTheBaselineWhenUsageIsUnknown() {
+        var primed = transition(
+            "prime",
+            [observation("", "", [usageRow("", 60, true, "Daily", "primary")])])
+
+        // Usage availability and pace availability are independent. A valid
+        // pace forecast can report recovery while the percentage is unknown.
+        var recovered = transition(
+            "observe",
+            [observation("", "", [usageRow("", 0, false, "Daily", "primary", "", false, true)])],
+            primed.nextMemo)
+        compare(recovered.intents.length, 0)
+
+        var regressed = transition(
+            "observe",
+            [observation("", "", [usageRow("", 0, true, "Daily", "primary", "", false, true)])],
+            recovered.nextMemo)
+        compare(regressed.intents.length, 1)
+        compare(regressed.intents[0].kind, "pace")
     }
 
     function test_transitionBoundsStaleMemoWithoutDroppingTheCurrentScope() {
