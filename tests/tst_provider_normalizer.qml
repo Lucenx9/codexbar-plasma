@@ -1075,15 +1075,9 @@ TestCase {
             "Authorization: [redacted]")
     }
 
-    // SEPARATE KNOWN GAP, pinned deliberately: `String(value || "")` inside
-    // SafeText.boundedInspectionText swallows numeric zero and `false`. That
-    // helper also feeds credential redaction and the diagnostic paths, so
-    // changing it is its own commit with its own security review, not a rider on
-    // the structured-value fix. ProviderDescriptor.js already works around this
-    // class of bug with nullish-only descriptor value conversion.
-    function test_boundedDisplayTextStillSwallowsFalsyScalars() {
-        compare(Normalizer.boundedDisplayText(0, 120), "")
-        compare(Normalizer.boundedDisplayText(false, 120), "")
+    function test_boundedDisplayTextKeepsFalsyScalars() {
+        compare(Normalizer.boundedDisplayText(0, 120), "0")
+        compare(Normalizer.boundedDisplayText(false, 120), "false")
     }
 
     function test_structuredSessionFieldsDegradeWithoutDroppingTheSession() {

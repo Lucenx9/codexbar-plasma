@@ -14,7 +14,7 @@ function safeLimit(maximumLength, fallback) {
 }
 
 function boundedInspectionText(value, inspectionLimit, lookaheadLength) {
-    var text = typeof value === "string" ? value : String(value || "")
+    var text = value === null || value === undefined ? "" : String(value)
     var windowLength = safeLimit(inspectionLimit, maximumCliMessageLength)
     var lookahead = Math.max(0, Math.min(credentialRedactionLookaheadLength, Number(lookaheadLength) || 0))
     var scanLimit = Math.min(text.length, maximumDiagnosticLength)
