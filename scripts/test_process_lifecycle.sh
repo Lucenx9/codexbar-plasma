@@ -422,9 +422,12 @@ require_ordered(
         "ProviderRosterCache.responseContextsMatch(",
         "scheduleUsageRefresh()",
         "return",
+        "var entries = Normalizer.normalizeProviderConfigEntries(payload)",
+        "if (entries === null)",
+        "return",
         "ProviderRosterCache.remember(",
     ),
-    "provider config replies must reject stale contexts before caching",
+    "provider config replies must reject stale contexts and unsupported envelopes before caching",
 )
 require_ordered(
     applet.function_body("handleProviderConfigWatch"),

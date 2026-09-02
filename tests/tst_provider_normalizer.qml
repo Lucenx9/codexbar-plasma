@@ -114,6 +114,32 @@ TestCase {
         compare(entries.displayNames["groq"], "Groq")
     }
 
+    function test_providerConfigDistinguishesAnEmptyRosterFromAnUnsupportedEnvelope() {
+        var emptyEntries = Normalizer.normalizeProviderConfigEntries([])
+        compare(emptyEntries.providerIDs.length, 0)
+        compare(Object.keys(emptyEntries.displayNames).length, 0)
+
+        compare(Normalizer.normalizeProviderConfigEntries({
+            provider: "cli",
+            error: { message: "command failed" }
+        }), null)
+        compare(Normalizer.normalizeProviderConfigEntries([{
+            provider: "cli",
+            error: { message: "command failed" }
+        }]), null)
+    }
+
+    function test_providerConfigAcceptsASingleDisabledProviderRecord() {
+        var entries = Normalizer.normalizeProviderConfigEntries({
+            provider: "claude",
+            displayName: "Claude",
+            enabled: false
+        })
+
+        compare(entries.providerIDs.length, 0)
+        compare(entries.displayNames["claude"], "Claude")
+    }
+
     function test_providerConfigDropsPollutingProviderIDsWithoutLosingTheOthers() {
         var entries = Normalizer.normalizeProviderConfigEntries(JSON.parse(
             '[{"provider":"__proto__","displayName":"Evil","enabled":true},'

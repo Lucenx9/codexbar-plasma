@@ -804,6 +804,12 @@ PlasmoidItem {
         }
 
         var entries = Normalizer.normalizeProviderConfigEntries(payload)
+        if (entries === null) {
+            providers = []
+            errorText = i18n("Could not load CodexBar provider configuration.")
+            loading = false
+            return
+        }
         providerDisplayNames = entries.displayNames
         providerRosterCache = ProviderRosterCache.remember(
             entries.providerIDs, descriptor.providerRosterContext)

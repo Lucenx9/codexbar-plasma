@@ -106,27 +106,37 @@ function normalizedProviderID(value) {
 // `config providers` output reduced to the enabled provider ids plus every
 // display name it carried. A disabled provider still contributes its name,
 // because the popup labels providers it learns about from a later usage payload.
+// null means the envelope had no provider-config records. An empty array is a
+// valid success and remains distinguishable from an error-shaped JSON payload.
 function normalizeProviderConfigEntries(payload) {
     var providerIDs = []
     var displayNames = ({})
     var seenProviderIDs = ({})
     var items = Array.isArray(payload) ? payload : [payload]
+    var sawProviderConfigEntry = items.length === 0
     var itemLimit = Math.min(items.length, maximumProviderSnapshots)
     for (var i = 0; i < itemLimit; i++) {
-        if (isCliRecord(items[i]) && items[i].provider) {
-            var providerID = normalizedProviderID(items[i].provider)
-            if (providerID.length === 0) {
-                continue
-            }
-            var displayName = boundedDisplayText(items[i].displayName, 120)
-            if (displayName.length > 0) {
-                displayNames[providerID] = displayName
-            }
-            if (items[i].enabled === true && !hasOwnKey(seenProviderIDs, providerID)) {
-                seenProviderIDs[providerID] = true
-                providerIDs.push(providerID)
-            }
+        if (!isCliRecord(items[i])
+                || !hasOwnKey(items[i], "enabled")
+                || typeof items[i].enabled !== "boolean") {
+            continue
         }
+        var providerID = normalizedProviderID(items[i].provider)
+        if (providerID.length === 0) {
+            continue
+        }
+        sawProviderConfigEntry = true
+        var displayName = boundedDisplayText(items[i].displayName, 120)
+        if (displayName.length > 0) {
+            displayNames[providerID] = displayName
+        }
+        if (items[i].enabled && !hasOwnKey(seenProviderIDs, providerID)) {
+            seenProviderIDs[providerID] = true
+            providerIDs.push(providerID)
+        }
+    }
+    if (!sawProviderConfigEntry) {
+        return null
     }
     return {
         providerIDs: providerIDs,
