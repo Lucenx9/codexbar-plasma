@@ -37,6 +37,18 @@ ColumnLayout {
         copiedTimer.restart()
     }
 
+    // The CLI's stable ID is deliberately discarded at the trust boundary, and
+    // every remaining display field may collide or change during a refresh.
+    // Clear this ephemeral feedback when the snapshot changes rather than
+    // attributing it to a different card.
+    Connections {
+        target: view.applet
+
+        function onSessionsChanged() {
+            view.copiedValueKey = ""
+        }
+    }
+
     Controls.TextField {
         id: clipboardBuffer
 
