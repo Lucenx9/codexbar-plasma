@@ -75,7 +75,10 @@ KCM.SimpleKCM {
     readonly property int enabledCount: countEnabled(providers)
     readonly property var selectedProvider: providerByID(selectedProviderID)
 
-    Component.onCompleted: reload()
+    // Qt.callLater coalesces this with the reload the cfg_commandPathChanged
+    // handler queues when Plasma injects the stored command path during page
+    // creation, so opening the page spawns one CLI list command, not two.
+    Component.onCompleted: Qt.callLater(reload)
     onCfg_commandPathChanged: handleCommandPathChanged()
 
     function handleCommandPathChanged() {

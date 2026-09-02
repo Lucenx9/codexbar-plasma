@@ -52,7 +52,11 @@ KCM.SimpleKCM {
     property int commandRunSerial: 0
     readonly property int overviewProviderCommandTimeoutMs: 60000
 
-    Component.onCompleted: loadOverviewProviders()
+    // Qt.callLater coalesces this with the loadOverviewProviders call the
+    // cfg_commandPathChanged handler queues when Plasma injects the stored
+    // command path during page creation, so opening the page spawns one CLI
+    // list command, not two.
+    Component.onCompleted: Qt.callLater(loadOverviewProviders)
 
     onCfg_commandPathChanged: Qt.callLater(loadOverviewProviders)
 
