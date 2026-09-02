@@ -99,6 +99,15 @@ def require_all(body, fragments, reason):
             raise AssertionError(f"{reason}: {fragment}")
 
 
+def require_ordered(body, fragments, reason):
+    offset = 0
+    for fragment in fragments:
+        index = body.find(fragment, offset)
+        if index < 0:
+            raise AssertionError(f"{reason}: {fragment}")
+        offset = index + len(fragment)
+
+
 retire_body = applet.function_body("retireUsageCommands")
 if "finishUsageCommandSource(" not in retire_body and "retireUsageCommandKind(" not in retire_body:
     raise AssertionError("retiring active usage sources must disconnect them immediately")
@@ -364,8 +373,16 @@ require_all(
     ),
     "Sessions intent must cross the freshness policy before starting a command",
 )
-applet.require("onExpandedChanged:", "opening the popup must check visible Sessions freshness")
-applet.require("onSessionsSelectedChanged:", "entering Sessions must check freshness")
+require_all(
+    applet.handler_body("onExpandedChanged"),
+    ("if (expanded)", "Qt.callLater(refreshSessionsIfStale)"),
+    "opening the popup must check visible Sessions freshness",
+)
+require_all(
+    applet.handler_body("onSessionsSelectedChanged"),
+    ("if (sessionsSelected && expanded)", "Qt.callLater(refreshSessionsIfStale)"),
+    "entering Sessions must check freshness",
+)
 require_all(
     applet.function_body("selectGlobalView"),
     ('candidate === "sessions"', "refreshSessionsIfStale()"),
@@ -399,8 +416,27 @@ require_all(
     ),
     "provider config replies must reject stale contexts before caching",
 )
-if "invalidateProviderRosterCache()" not in applet.function_body("handleProviderConfigWatch"):
-    raise AssertionError("a changed provider config checksum must invalidate the roster cache")
+require_ordered(
+    applet.function_body("parseProviderConfigOutput"),
+    (
+        "ProviderRosterCache.responseContextsMatch(",
+        "scheduleUsageRefresh()",
+        "return",
+        "ProviderRosterCache.remember(",
+    ),
+    "provider config replies must reject stale contexts before caching",
+)
+require_ordered(
+    applet.function_body("handleProviderConfigWatch"),
+    (
+        "if (stamp === providerConfigStamp)",
+        "return",
+        "providerConfigStamp = stamp",
+        "invalidateProviderRosterCache()",
+        "scheduleUsageRefresh()",
+    ),
+    "a changed provider config checksum must invalidate and refresh the roster",
+)
 
 cost_refresh_body = applet.function_body("refreshCost")
 require_all(

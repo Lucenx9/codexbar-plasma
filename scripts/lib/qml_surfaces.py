@@ -240,6 +240,12 @@ class Surface:
         _, text, start = self._locate(marker)
         return self._match_braces(text, text.index("{", start))
 
+    def handler_body(self, name: str) -> str:
+        """Body of the unique braced QML signal handler named `name`."""
+        marker = f"{name}: {{"
+        _, text, start = self._locate(marker)
+        return self._match_braces(text, text.index("{", start))
+
     def id_block(self, object_id: str) -> str:
         """Body of the QML object declaring `object_id`.
 
