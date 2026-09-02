@@ -337,7 +337,7 @@ require_all(
 
 require_all(
     applet.id_block("usageRefreshTimer"),
-    ("root.hasPendingPeriodicRefreshCommands()", "root.refreshNow()"),
+    ("root.hasPendingPeriodicRefreshCommands()", "root.refreshNow(false)"),
     "periodic refreshes must not starve active command deadlines",
 )
 
@@ -392,6 +392,7 @@ require_all(
 require_all(
     applet.function_body("startProviderFallback"),
     (
+        "bypassProviderRosterCache !== true",
         "ProviderRosterCache.read(",
         "providerRosterContext()",
         "startProviderFallbackForProviders(cachedProviderIDs)",
@@ -399,6 +400,31 @@ require_all(
     ),
     "global fallback must reuse only a current provider roster",
 )
+require_all(
+    applet.function_body("refreshNow"),
+    ("startProviderFallback(bypassProviderRosterCache === true)",),
+    "manual refresh intent must reach provider discovery",
+)
+
+manual_refresh_fragments = {
+    root / "contents/ui/main.qml": (
+        "onTriggered: root.refreshNow(true)",
+        'actionID === "refresh"',
+        "root.refreshNow(true)",
+    ),
+    root / "contents/ui/components/ProviderHeader.qml": (
+        "onClicked: providerHeaderRow.applet.refreshNow(true)",
+    ),
+    root / "contents/ui/components/FullRepresentation.qml": (
+        "onClicked: applet.refreshNow(true)",
+    ),
+}
+for path, fragments in manual_refresh_fragments.items():
+    require_all(
+        path.read_text(),
+        fragments,
+        f"{path.relative_to(root)} manual refresh must bypass the provider roster cache",
+    )
 require_all(
     applet.function_body("buildProviderConfigCommandDescriptor"),
     (

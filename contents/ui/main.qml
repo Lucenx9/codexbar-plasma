@@ -35,7 +35,7 @@ PlasmoidItem {
         PlasmaCore.Action {
             text: i18n("Refresh")
             icon.name: "view-refresh"
-            onTriggered: root.refreshNow()
+            onTriggered: root.refreshNow(true)
         }
     ]
 
@@ -260,7 +260,7 @@ PlasmoidItem {
         if (providerConfigWatchCommand.length > 0) {
             providerConfigWatcher.connectSource(providerConfigWatchCommand)
         }
-        refreshNow()
+        refreshNow(false)
         refreshCost(false)
         if (updateChecksEnabled) {
             scheduleNextUpdateCheck()
@@ -573,11 +573,11 @@ PlasmoidItem {
                 return
             }
             root.usageRefreshScheduled = false
-            root.refreshNow()
+            root.refreshNow(false)
         })
     }
 
-    function refreshNow() {
+    function refreshNow(bypassProviderRosterCache) {
         usageRefreshScheduled = false
         retireUsageCommands()
         retireStaleAccountCommands()
@@ -591,7 +591,7 @@ PlasmoidItem {
         loading = true
         errorText = ""
         if (canUseProviderFallback()) {
-            startProviderFallback()
+            startProviderFallback(bypassProviderRosterCache === true)
             return
         }
         connectUsageCommand(
@@ -747,18 +747,20 @@ PlasmoidItem {
         return source.length === 0 || hasSelectedAccountOverrides()
     }
 
-    function startProviderFallback() {
+    function startProviderFallback(bypassProviderRosterCache) {
         retireUsageCommandKind("usage")
         if (provider.length > 0) {
             startProviderFallbackForProviders([providerKey(provider)])
             return
         }
 
-        var cachedProviderIDs = ProviderRosterCache.read(
-            providerRosterCache, providerRosterContext())
-        if (cachedProviderIDs !== null) {
-            startProviderFallbackForProviders(cachedProviderIDs)
-            return
+        if (bypassProviderRosterCache !== true) {
+            var cachedProviderIDs = ProviderRosterCache.read(
+                providerRosterCache, providerRosterContext())
+            if (cachedProviderIDs !== null) {
+                startProviderFallbackForProviders(cachedProviderIDs)
+                return
+            }
         }
 
         if (providerConfigCommandSource.length === 0) {
@@ -3181,7 +3183,7 @@ PlasmoidItem {
         } else if (actionID === "account-url" && actionRow && actionRow.url) {
             Qt.openUrlExternally(actionRow.url)
         } else if (actionID === "refresh") {
-            root.refreshNow()
+            root.refreshNow(true)
         } else if (actionID === "about") {
             Qt.openUrlExternally("https://github.com/steipete/CodexBar")
         } else if (actionID === "settings") {
@@ -3921,7 +3923,7 @@ PlasmoidItem {
         triggeredOnStart: false
         onTriggered: {
             if (!root.hasPendingPeriodicRefreshCommands()) {
-                root.refreshNow()
+                root.refreshNow(false)
             }
         }
     }
