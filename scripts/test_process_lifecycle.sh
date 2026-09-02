@@ -44,11 +44,14 @@ require_in_surface providers "readonly property int configSecretCommandTimeoutSe
 require_in_surface providers "readonly property int configSecretCommandKillAfterSeconds: 5"
 require_in_surface providers "id: configCommandTimeoutTimer"
 require_in_surface providers "page.expireConfigCommands(Date.now())"
+require_in_surface providers "Component.onCompleted: Qt.callLater(reload)"
 require_in_surface providers "onCfg_commandPathChanged: handleCommandPathChanged()"
 
 require_in_surface display "readonly property int overviewProviderCommandTimeoutMs: 60000"
 require_in_surface display 'import "CommandLedger.js" as CommandLedger'
 reject_in_surface display "function commandWithRunNonce(command)"
+require_in_surface display "Component.onCompleted: Qt.callLater(loadOverviewProviders)"
+require_in_surface display "onCfg_commandPathChanged: Qt.callLater(loadOverviewProviders)"
 require_in_surface display "function expireOverviewProviderCommands(nowMs)"
 require_in_surface display "id: overviewProviderCommandTimeoutTimer"
 require_in_surface display "page.expireOverviewProviderCommands(Date.now())"
