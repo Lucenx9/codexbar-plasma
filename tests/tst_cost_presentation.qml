@@ -455,11 +455,46 @@ TestCase {
         }]), null)
     }
 
+    function test_costTrustSummaryIgnoresEmptySnapshots_data() {
+        return [
+            { tag: "missing history flag" },
+            { tag: "established history", historyEstablished: true },
+            { tag: "unestablished history", historyEstablished: false }
+        ]
+    }
+
+    function test_costTrustSummaryIgnoresEmptySnapshots(data) {
+        var emptySnapshot = {
+            totals: { cost: null, tokens: 0, currency: "USD" },
+            daily: [],
+            trust: {
+                coverage: {
+                    priced: 0, unpriced: 0, unmetered: 0, estimated: 0
+                },
+                sourceKind: "unknown"
+            }
+        }
+        if (data.historyEstablished !== undefined) {
+            emptySnapshot.historyCoverageEstablished = data.historyEstablished
+        }
+
+        var summary = CostPresentation.costTrustSummary([
+            trustedCost("USD", {
+                priced: 1, unpriced: 0, unmetered: 0, estimated: 1
+            }, "listPrice"),
+            emptySnapshot
+        ])
+
+        compare(summary.sourceKind, "listPrice")
+        compare(summary.valueMode, "estimated")
+    }
+
     function test_costTrustSummaryKeepsTokenOnlyGapsInAMixedTotal() {
         var summary = CostPresentation.costTrustSummary([
             trustedCost("USD", null, "vendor"),
             {
                 totals: { cost: null, tokens: 250, currency: "USD" },
+                historyCoverageEstablished: false,
                 trust: { coverage: null, sourceKind: "unknown" }
             }
         ])

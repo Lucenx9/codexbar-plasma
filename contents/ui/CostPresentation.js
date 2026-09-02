@@ -544,6 +544,44 @@ function acceptedCostSourceKind(value) {
         : ""
 }
 
+// Provenance without observed cost, token, daily, or coverage data cannot
+// qualify a displayed total. Missing token totals normalize to zero, so only a
+// positive token count is evidence; explicit finite cost values matter at zero.
+function costTrustSnapshotHasEvidence(item) {
+    if (!item) {
+        return false
+    }
+
+    var totals = item.totals || ({})
+    if (hasMetricValue(totals, false)
+            || (hasMetricValue(totals, true) && totals.tokens > 0)) {
+        return true
+    }
+
+    var trust = item.trust
+    var coverage = trust !== null
+            && typeof trust === "object"
+            && !Array.isArray(trust)
+            && hasOwnKey(trust, "coverage")
+        ? acceptedCostCoverage(trust.coverage)
+        : null
+    if (coverage && (coverage.priced > 0
+            || coverage.unpriced > 0
+            || coverage.unmetered > 0
+            || coverage.estimated > 0)) {
+        return true
+    }
+
+    var daily = Array.isArray(item.daily) ? item.daily : []
+    for (var i = 0; i < daily.length; i++) {
+        if (hasMetricValue(daily[i], false)
+                || (hasMetricValue(daily[i], true) && daily[i].tokens > 0)) {
+            return true
+        }
+    }
+    return false
+}
+
 // Fold normalized pricing coverage and provenance into one presentation
 // decision. The caller localizes it; wire enum values never cross this seam.
 // For global spend, currency eligibility deliberately matches `spendTotals()`.
@@ -568,6 +606,9 @@ function costTrustSummary(costs) {
 
     for (var i = 0; i < items.length; i++) {
         var item = items[i]
+        if (!costTrustSnapshotHasEvidence(item)) {
+            continue
+        }
         var itemHasCost = item && hasMetricValue(item.totals, false)
         if (!item || (itemHasCost && !costMatchesSpendCurrency(item, currency))) {
             continue
