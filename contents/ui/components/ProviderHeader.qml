@@ -155,6 +155,6 @@ RowLayout {
         Layout.alignment: Qt.AlignTop
         icon.name: "view-refresh"
         Accessible.name: i18n("Refresh")
-        onClicked: providerHeaderRow.applet.refreshNow()
+        onClicked: providerHeaderRow.applet.refreshNow(true)
     }
 }

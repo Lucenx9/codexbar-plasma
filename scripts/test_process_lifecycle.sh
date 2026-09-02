@@ -24,6 +24,8 @@ require_in_surface applet "function hasPendingPeriodicRefreshCommands()"
 require_in_surface applet "interval: 0"
 require_in_surface applet "root.finishUsageCommandSource(sourceName)"
 require_in_surface applet 'import "ProviderFallbackQueue.js" as ProviderFallbackQueue'
+require_in_surface applet 'import "ProviderRosterCache.js" as ProviderRosterCache'
+require_in_surface applet 'import "SessionRefreshPolicy.js" as SessionRefreshPolicy'
 require_in_surface applet "property var providerFallbackState: null"
 require_in_surface applet "readonly property int accountCommandTimeoutMs: 60000"
 require_in_surface applet "readonly property int sessionsCommandTimeoutMs: 60000"
@@ -97,20 +99,29 @@ def require_all(body, fragments, reason):
             raise AssertionError(f"{reason}: {fragment}")
 
 
+def require_ordered(body, fragments, reason):
+    offset = 0
+    for fragment in fragments:
+        index = body.find(fragment, offset)
+        if index < 0:
+            raise AssertionError(f"{reason}: {fragment}")
+        offset = index + len(fragment)
+
+
 retire_body = applet.function_body("retireUsageCommands")
 if "finishUsageCommandSource(" not in retire_body and "retireUsageCommandKind(" not in retire_body:
     raise AssertionError("retiring active usage sources must disconnect them immediately")
-# Retirement is by kind now, not by a per-kind source-name property, but a
-# retired sessions command must still clear the spinner it was driving.
+# A quota refresh replaces only quota work. Sessions has its own lifecycle and
+# must survive a concurrent quota refresh.
 for retired_kind in ('retireUsageCommandKind("usage")',
                      'retireUsageCommandKind("providerConfig")',
-                     'retireUsageCommandKind("sessions")'):
+                     'retireUsageCommandKind("providerFallback")'):
     if retired_kind not in retire_body:
         raise AssertionError(
             f"retiring active usage sources must also retire {retired_kind}"
         )
-if "sessionsLoading = false" not in retire_body:
-    raise AssertionError("retiring the sessions command must clear its loading flag")
+if 'retireUsageCommandKind("sessions")' in retire_body or "sessionsLoading" in retire_body:
+    raise AssertionError("quota refresh must not retire or mutate independent Sessions work")
 retire_kind_body = applet.function_body("retireUsageCommandKind")
 for retire_kind_fragment in ("CommandLedger.sourcesOfKind(activeCommandDescriptors, kind)",
                              "finishUsageCommandSource("):
@@ -297,7 +308,9 @@ if "root.parseProviderAccountsOutput(sourceName, descriptor, stdoutText, stderrT
 require_all(
     applet.function_body("parseProviderFallbackOutput"),
     (
+        "Normalizer.dedupeProviderSnapshots(normalizedItems)",
         "ProviderFallbackQueue.complete(",
+        "item: semanticItems.length > 0 ? semanticItems[0] : null",
         "applyProviderFallbackTransition(transition)",
     ),
     "fallback replies must cross the pure queue interface",
@@ -324,7 +337,7 @@ require_all(
 
 require_all(
     applet.id_block("usageRefreshTimer"),
-    ("root.hasPendingPeriodicRefreshCommands()", "root.refreshNow()"),
+    ("root.hasPendingPeriodicRefreshCommands()", "root.refreshNow(false)"),
     "periodic refreshes must not starve active command deadlines",
 )
 
@@ -335,13 +348,124 @@ require_all(
         "CommandLedger.hasAnyKind(",
         '"usage"',
         '"providerConfig"',
-        '"sessions"',
         '"providerFallback"',
     ),
     "the quota timer must wait only for work it would retire",
 )
-if '"cost"' in periodic_refresh_body:
-    raise AssertionError("an independent cost scan must not block the quota refresh timer")
+for independent_kind in ('"cost"', '"sessions"'):
+    if independent_kind in periodic_refresh_body:
+        raise AssertionError(
+            f"independent {independent_kind} work must not block the quota refresh timer"
+        )
+
+if "refreshSessions" in applet.function_body("refreshNow"):
+    raise AssertionError("quota refresh must not start Sessions work")
+
+require_all(
+    applet.function_body("requestSessionsRefresh"),
+    (
+        "SessionRefreshPolicy.refreshAction(",
+        "expanded && sessionsSelected",
+        "sessionsLastCompletedAtMs",
+        "sessionsLoadedCommandSource",
+        'retireUsageCommandKind("sessions")',
+        "commandWithRunNonce(sessionsCommandSource)",
+    ),
+    "Sessions intent must cross the freshness policy before starting a command",
+)
+require_all(
+    applet.handler_body("onExpandedChanged"),
+    ("if (expanded)", "Qt.callLater(refreshSessionsIfStale)"),
+    "opening the popup must check visible Sessions freshness",
+)
+require_all(
+    applet.handler_body("onSessionsSelectedChanged"),
+    ("if (sessionsSelected && expanded)", "Qt.callLater(refreshSessionsIfStale)"),
+    "entering Sessions must check freshness",
+)
+require_all(
+    applet.function_body("selectGlobalView"),
+    ('candidate === "sessions"', "refreshSessionsIfStale()"),
+    "reselecting the Sessions tab must check whether its snapshot became stale",
+)
+
+require_all(
+    applet.function_body("startProviderFallback"),
+    (
+        "bypassProviderRosterCache !== true",
+        "ProviderRosterCache.read(",
+        "providerRosterContext()",
+        "startProviderFallbackForProviders(cachedProviderIDs)",
+        "buildProviderConfigCommandDescriptor()",
+    ),
+    "global fallback must reuse only a current provider roster",
+)
+require_all(
+    applet.function_body("refreshNow"),
+    ("startProviderFallback(bypassProviderRosterCache === true)",),
+    "manual refresh intent must reach provider discovery",
+)
+
+manual_refresh_fragments = {
+    root / "contents/ui/main.qml": (
+        "onTriggered: root.refreshNow(true)",
+        'actionID === "refresh"',
+        "root.refreshNow(true)",
+    ),
+    root / "contents/ui/components/ProviderHeader.qml": (
+        "onClicked: providerHeaderRow.applet.refreshNow(true)",
+    ),
+    root / "contents/ui/components/FullRepresentation.qml": (
+        "onClicked: applet.refreshNow(true)",
+    ),
+}
+for path, fragments in manual_refresh_fragments.items():
+    require_all(
+        path.read_text(),
+        fragments,
+        f"{path.relative_to(root)} manual refresh must bypass the provider roster cache",
+    )
+require_all(
+    applet.function_body("buildProviderConfigCommandDescriptor"),
+    (
+        'buildCommandDescriptor("providerConfig", "")',
+        "descriptor.providerRosterContext = providerRosterContext()",
+    ),
+    "provider config commands must capture their roster context",
+)
+require_all(
+    applet.function_body("parseProviderConfigOutput"),
+    (
+        "ProviderRosterCache.responseContextsMatch(",
+        "descriptor.providerRosterContext",
+        "ProviderRosterCache.remember(",
+    ),
+    "provider config replies must reject stale contexts before caching",
+)
+require_ordered(
+    applet.function_body("parseProviderConfigOutput"),
+    (
+        "ProviderRosterCache.responseContextsMatch(",
+        "scheduleUsageRefresh()",
+        "return",
+        "var entries = Normalizer.normalizeProviderConfigEntries(payload)",
+        "if (entries === null)",
+        "return",
+        "ProviderRosterCache.remember(",
+    ),
+    "provider config replies must reject stale contexts and unsupported envelopes before caching",
+)
+require_ordered(
+    applet.function_body("handleProviderConfigWatch"),
+    (
+        "if (stamp === providerConfigStamp)",
+        "return",
+        "providerConfigStamp = stamp",
+        "invalidateProviderRosterCache()",
+        "scheduleUsageRefresh()",
+    ),
+    "a changed provider config checksum must invalidate and refresh the roster",
+)
 
 cost_refresh_body = applet.function_body("refreshCost")
 require_all(

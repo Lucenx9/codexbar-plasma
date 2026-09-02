@@ -761,7 +761,7 @@ Item {
                     visible: !applet.loading
                     icon.name: "view-refresh"
                     Accessible.name: i18n("Refresh")
-                    onClicked: applet.refreshNow()
+                    onClicked: applet.refreshNow(true)
                 }
             }
 
