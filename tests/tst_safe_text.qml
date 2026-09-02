@@ -58,10 +58,12 @@ TestCase {
         compare(SafeText.cliMessage("   \n\t", 500), "")
     }
 
-    function test_displayMessagesRejectStructuredPayloadsBeforeStringification() {
+    function test_displayMessagesRejectStructuresAndKeepScalars() {
         compare(SafeText.cliMessage({ message: "quota exceeded" }, 500), "")
         compare(SafeText.cliMessage(["quota exceeded"], 500), "")
         compare(SafeText.cliMessage(42, 500), "42")
+        compare(SafeText.cliMessage(0, 500), "0")
+        compare(SafeText.cliMessage(false, 500), "false")
     }
 
     function test_skipsBoundedLeadingPaddingBeforeMessage() {
