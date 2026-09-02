@@ -210,6 +210,11 @@ function processQuota(previousMemo, nextMemo, observation, observationIndex, int
         }
         if (level.length > 0) {
             nextMemo[key] = level
+        } else if (rows[i] && rows[i].hasPercent !== true && previousLevel.length > 0) {
+            // An unreadable percentage is not a recovered one. Carry the
+            // previous level across the degraded pass so the next refresh
+            // cannot re-announce an unchanged condition.
+            nextMemo[key] = previousLevel
         }
     }
 }
@@ -244,12 +249,17 @@ function processReset(previousMemo, nextMemo, observation, observationIndex, opt
     }
     for (var i = 0; i < rows.length; i++) {
         var row = rows[i]
-        var used = Number(row && row.usedPercent)
-        if (!row || row.hasPercent !== true || !isFinite(used)) {
-            continue
-        }
         var key = resetKey(observation, row, i)
         var wasArmed = previousMemo && previousMemo[key] === "1"
+        var used = Number(row && row.usedPercent)
+        if (!row || row.hasPercent !== true || !isFinite(used)) {
+            // An unreadable percentage is not a disarmed one. Keep the arm so
+            // one degraded pass cannot swallow the promised reset notice.
+            if (wasArmed) {
+                nextMemo[key] = "1"
+            }
+            continue
+        }
         if (wasArmed && used <= floor) {
             intents.push({
                 kind: "reset",
@@ -309,6 +319,14 @@ function transition(observations, previousMemo, options) {
         }
         if (mode === "prime") {
             primeScope(nextMemo, item, options)
+            continue
+        }
+        // An error observation with no usage rows carries no threshold
+        // evidence: keep quota/pace/reset state untouched instead of treating
+        // the outage as a quiet recovery, and leave an unprimed scope
+        // unprimed so the next healthy pass primes silently. Status above has
+        // already processed, so incidents keep notifying through the outage.
+        if (item.errorPresent === true && Array.isArray(item.rows) && item.rows.length === 0) {
             continue
         }
         clearScopeState(nextMemo, item)

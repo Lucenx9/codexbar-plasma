@@ -2459,6 +2459,7 @@ PlasmoidItem {
                     String(item.error || "").length > 0,
                     item.hasIncident === true,
                     rows.length),
+                errorPresent: String(item.error || "").length > 0,
                 statusActive: item.hasIncident === true
                     && String(item.statusSeverity || "").length > 0
                     && String(item.status || "").length > 0,
