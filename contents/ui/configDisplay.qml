@@ -7,6 +7,7 @@ import org.kde.plasma.plasma5support as Plasma5Support
 import "components" as Components
 import "CommandLedger.js" as CommandLedger
 import "Guards.js" as Guards
+import "PanelDisplay.js" as PanelDisplay
 import "ProviderIdentity.js" as ProviderIdentity
 import "PanelElements.js" as PanelElements
 import "SafeText.js" as SafeText
@@ -91,7 +92,7 @@ KCM.SimpleKCM {
     function panelElementTitle(elementID) {
         switch (elementID) {
         case "identity":
-            return i18n("Provider identity")
+            return i18n("Provider icon")
         case "status":
             return i18n("Service status")
         case "text":
@@ -361,19 +362,35 @@ KCM.SimpleKCM {
 
         Controls.ComboBox {
             id: displayModeCombo
-            Kirigami.FormData.label: i18n("Display mode:")
+            Kirigami.FormData.label: i18n("Panel text:")
             textRole: "text"
             valueRole: "value"
             model: [
-                { text: i18n("Percent"), value: "percent" },
-                { text: i18n("Pace"), value: "pace" },
-                { text: i18n("Percent and pace"), value: "both" },
-                { text: i18n("Reset time"), value: "resetTime" },
-                { text: i18n("Run-out forecast"), value: "runOut" }
+                {
+                    text: page.cfg_usageBarsShowUsed
+                        ? i18n("Percent used")
+                        : i18n("Percent left"),
+                    value: PanelDisplay.percentMode
+                },
+                { text: i18n("Pace"), value: PanelDisplay.paceMode },
+                { text: i18n("Usage and pace"), value: PanelDisplay.bothMode },
+                { text: i18n("Reset time"), value: PanelDisplay.resetTimeMode },
+                { text: i18n("Run-out forecast"), value: PanelDisplay.runOutMode }
             ]
+            enabled: showPercentCheck.checked
             Layout.preferredWidth: Kirigami.Units.gridUnit * 12
+            onModelChanged: currentIndex = page.displayModeIndex(page.cfg_menuBarDisplayMode)
             Component.onCompleted: currentIndex = page.displayModeIndex(page.cfg_menuBarDisplayMode)
             onActivated: page.cfg_menuBarDisplayMode = currentValue
+        }
+
+        Components.PlainControlsLabel {
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+            text: i18n("Pace shows the expected used or left percentage at this point in the window. Reset time appears when the provider supplies it. Run-out appears only when the quota is forecast to run out before reset.")
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+            wrapMode: Text.WordWrap
         }
 
         ColumnLayout {
@@ -423,17 +440,17 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: showProviderCheck
-            text: i18n("Show provider in panel")
+            text: i18n("Show provider name in panel")
         }
 
         Controls.CheckBox {
             id: showPercentCheck
-            text: i18n("Show percent in panel")
+            text: i18n("Show usage text in panel")
         }
 
         Controls.CheckBox {
             id: showMultiProviderCheck
-            text: i18n("Show multi-provider details in panel")
+            text: i18n("Show multi-provider meters in panel")
         }
 
         Controls.CheckBox {
@@ -444,6 +461,15 @@ KCM.SimpleKCM {
         Controls.CheckBox {
             id: autoSelectProviderCheck
             text: i18n("Auto-select highest-usage provider")
+        }
+
+        Components.PlainControlsLabel {
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+            text: i18n("Usage text and provider meters are available only in horizontal panels.")
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+            wrapMode: Text.WordWrap
         }
 
         Kirigami.Separator {
@@ -458,7 +484,7 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: showQuotaWarningMarkersCheck
-            text: i18n("Show quota warning markers")
+            text: i18n("Show quota warnings on usage meters")
         }
 
         Controls.CheckBox {

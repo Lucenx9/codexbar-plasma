@@ -7,6 +7,7 @@ import "components" as Components
 import "Guards.js" as Guards
 import "NotificationMemo.js" as NotificationMemo
 import "NotificationPlanner.js" as NotificationPlanner
+import "PanelDisplay.js" as PanelDisplay
 import "PanelElements.js" as PanelElements
 import "PopupSelection.js" as PopupSelection
 import "CommandLedger.js" as CommandLedger
@@ -85,6 +86,12 @@ PlasmoidItem {
     property string errorText: ""
     property string lastUpdatedText: ""
     property bool loading: false
+    // Reset labels and run-out durations keep moving even when automatic CLI
+    // refresh is disabled. The usage timestamp anchors forecast durations; cost
+    // enrichment must not restart that countdown.
+    property double panelClockMs: Date.now()
+    property double usageSnapshotReceivedAtMs: panelClockMs
+    readonly property int panelClockIntervalMs: 60000
     property string commandSource: buildCommand()
     property string providerConfigCommandSource: buildProviderConfigCommand()
     property string providerConfigWatchCommand: buildProviderConfigWatchCommand()
@@ -435,12 +442,7 @@ PlasmoidItem {
     }
 
     function safeMenuBarDisplayMode(value) {
-        var mode = String(value || "percent")
-        if (mode === "percent" || mode === "pace" || mode === "both"
-                || mode === "resetTime" || mode === "runOut") {
-            return mode
-        }
-        return "percent"
+        return PanelDisplay.safeMode(value)
     }
 
     function safeCostHistoryMetric(value) {
@@ -604,6 +606,12 @@ PlasmoidItem {
             buildCommandDescriptor("usage", ""))
     }
 
+    function markUsageSnapshotReceived() {
+        var nowMs = Date.now()
+        usageSnapshotReceivedAtMs = nowMs
+        panelClockMs = nowMs
+    }
+
     function retireUsageCommands() {
         retireUsageCommandKind("usage")
         retireUsageCommandKind("providerConfig")
@@ -732,6 +740,7 @@ PlasmoidItem {
         nextProviders = Normalizer.dedupeProviderSnapshots(nextProviders)
 
         markNotificationProvidersFresh(nextProviders)
+        markUsageSnapshotReceived()
         providers = nextProviders
         errorText = nextProviders.length === 0 ? boundedCliMessage(stderrText) : ""
         lastUpdatedText = i18n("Updated %1", Qt.formatDateTime(new Date(), "hh:mm"))
@@ -919,6 +928,7 @@ PlasmoidItem {
         nextProviders = Normalizer.dedupeProviderSnapshots(nextProviders)
 
         markNotificationProvidersFresh(nextProviders)
+        markUsageSnapshotReceived()
         providers = nextProviders
         errorText = nextProviders.length === 0 ? i18n("codexbar did not return JSON.") : ""
         lastUpdatedText = i18n("Updated %1", Qt.formatDateTime(new Date(), "hh:mm"))
@@ -2291,11 +2301,7 @@ PlasmoidItem {
             return Qt.formatDateTime(date, "ddd HH:mm")
         }
 
-        if (window.resetDescription && window.resetDescription.length > 0) {
-            return window.resetDescription
-        }
-
-        var remainingMs = date.getTime() - Date.now()
+        var remainingMs = date.getTime() - panelClockMs
         if (remainingMs <= 0) {
             return i18n("now")
         }
@@ -2504,7 +2510,11 @@ PlasmoidItem {
     }
 
     function paceEtaText(seconds) {
-        var minutes = Math.max(1, Math.round(Number(seconds) / 60))
+        var numericSeconds = Number(seconds)
+        if (!isFinite(numericSeconds) || numericSeconds <= 0) {
+            return i18n("now")
+        }
+        var minutes = Math.max(1, Math.round(numericSeconds / 60))
         if (minutes < 60) {
             return i18np("%1 minute", "%1 minutes", minutes)
         }
@@ -3355,51 +3365,54 @@ PlasmoidItem {
         }
     }
 
-    function firstUsageRow(item) {
-        if (!item || !item.rows) {
-            return null
-        }
-        for (var i = 0; i < item.rows.length; i++) {
-            if (item.rows[i] && item.rows[i].hasPercent) {
-                return item.rows[i]
-            }
-        }
-        return null
-    }
-
     function usageRowForLane(item, lane) {
         if (!item || !item.rows) {
             return null
         }
         for (var i = 0; i < item.rows.length; i++) {
-            if (item.rows[i] && item.rows[i].lane === lane && item.rows[i].hasPercent) {
+            if (item.rows[i] && item.rows[i].lane === lane) {
                 return item.rows[i]
             }
         }
         return null
     }
 
-    function switcherMetricRow(item) {
+    function appendUniqueUsageRow(rows, row) {
+        if (row && rows.indexOf(row) === -1) {
+            rows.push(row)
+        }
+    }
+
+    // Preserve each provider's compact-row preference, then let PanelDisplay
+    // choose by capability. A pace or reset mode must not discard a useful row
+    // merely because that row has no percentage.
+    function switcherCandidateRows(item) {
         if (!item || !item.rows || item.rows.length === 0) {
-            return null
+            return []
         }
 
         var key = providerKey(item.provider)
         var primary = usageRowForLane(item, "primary")
         var secondary = usageRowForLane(item, "secondary")
+        var tertiary = usageRowForLane(item, "tertiary")
+        var preferred = []
         if (key === "factory") {
-            return secondary || primary || firstUsageRow(item)
+            appendUniqueUsageRow(preferred, secondary)
+            appendUniqueUsageRow(preferred, primary)
+        } else if (key === "perplexity" && primary && primary.hasPercent
+                && primary.leftPercent <= 0) {
+            appendUniqueUsageRow(preferred, secondary)
+            appendUniqueUsageRow(preferred, tertiary)
+            appendUniqueUsageRow(preferred, primary)
+        } else {
+            appendUniqueUsageRow(preferred, primary)
+            appendUniqueUsageRow(preferred, secondary)
+            appendUniqueUsageRow(preferred, tertiary)
         }
-        if (key === "perplexity") {
-            if (primary && primary.leftPercent > 0) {
-                return primary
-            }
-            return secondary || usageRowForLane(item, "tertiary") || primary || firstUsageRow(item)
-        }
-        if (key === "cursor" && primary && primary.leftPercent <= 0
+        if (key === "cursor" && primary && primary.hasPercent && primary.leftPercent <= 0
                 && item.providerCost && item.providerCost.percentUsed >= 0) {
             var used = clamp(Number(item.providerCost.percentUsed), 0, 100)
-            return {
+            preferred.unshift({
                 lane: "providerCost",
                 label: i18n("Included plan"),
                 hasPercent: true,
@@ -3409,10 +3422,21 @@ PlasmoidItem {
                 paceOnTop: true,
                 reset: "",
                 pace: ""
-            }
+            })
         }
 
-        return primary || secondary || firstUsageRow(item)
+        for (var i = 0; i < item.rows.length; i++) {
+            appendUniqueUsageRow(preferred, item.rows[i])
+        }
+        return preferred
+    }
+
+    function panelDisplayRow(item, mode) {
+        return PanelDisplay.rowForMode(switcherCandidateRows(item), mode)
+    }
+
+    function switcherMetricRow(item) {
+        return panelDisplayRow(item, "percent")
     }
 
     function switcherPercent(item) {
@@ -3813,33 +3837,35 @@ PlasmoidItem {
         }
 
         var mode = String(menuBarDisplayMode || "percent")
+        var row = panelDisplayRow(item, mode)
         if (mode === "pace") {
-            return primaryPaceText(item)
+            return paceTextForRow(row)
         }
         if (mode === "both") {
-            var percentText = primaryPercentText(item)
-            var paceText = primaryPaceText(item)
+            var percentText = percentTextForRow(row)
+            var paceText = paceTextForRow(row)
             if (percentText.length > 0 && paceText.length > 0) {
                 return i18n("%1 - %2", percentText, paceText)
             }
             return percentText.length > 0 ? percentText : paceText
         }
         if (mode === "resetTime") {
-            return primaryResetText(item)
+            return resetTextForRow(row)
         }
         if (mode === "runOut") {
-            return primaryRunOutText(item)
+            return runOutTextForRow(row)
         }
-        return primaryPercentText(item)
+        return percentTextForRow(row)
     }
 
-    function primaryPercentText(item) {
-        var percent = switcherPercent(item)
-        return percent >= 0 ? i18n("%1%", Math.round(percent)) : ""
+    function percentTextForRow(row) {
+        if (!row || !row.hasPercent) {
+            return ""
+        }
+        return i18n("%1% %2", Math.round(displayPercent(row)), percentSuffix())
     }
 
-    function primaryPaceText(item) {
-        var row = switcherMetricRow(item)
+    function paceTextForRow(row) {
         if (!row || row.pacePercent < 0) {
             return ""
         }
@@ -3848,23 +3874,22 @@ PlasmoidItem {
             return ""
         }
         return row.paceOnTop
-            ? i18n("%1% pace", Math.round(shownPace))
-            : i18n("%1% pace late", Math.round(shownPace))
+            ? i18n("%1% %2 at pace", Math.round(shownPace), percentSuffix())
+            : i18n("%1% %2, behind pace", Math.round(shownPace), percentSuffix())
     }
 
     // Duration-only forecast token. It stays empty unless the CLI actually
     // predicts exhaustion before the reset, so the panel never shows a
     // countdown the pace data does not support.
-    function primaryRunOutText(item) {
-        var row = switcherMetricRow(item)
+    function runOutTextForRow(row) {
         if (!paceWarningActive(row)) {
             return ""
         }
-        return paceEtaText(row.paceEtaSeconds)
+        return paceEtaText(PanelDisplay.remainingSeconds(
+            row.paceEtaSeconds, usageSnapshotReceivedAtMs, panelClockMs))
     }
 
-    function primaryResetText(item) {
-        var row = switcherMetricRow(item)
+    function resetTextForRow(row) {
         var reset = usageResetText(row)
         if (reset.length === 0) {
             return ""
@@ -3954,6 +3979,16 @@ PlasmoidItem {
                 root.refreshNow(false)
             }
         }
+    }
+
+    Timer {
+        id: panelClockTimer
+
+        interval: root.panelClockIntervalMs
+        repeat: true
+        running: root.providers.length > 0
+        triggeredOnStart: false
+        onTriggered: root.panelClockMs = Date.now()
     }
 
     Timer {

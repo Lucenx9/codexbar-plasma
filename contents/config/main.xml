@@ -46,7 +46,7 @@
       <default>false</default>
     </entry>
     <entry name="showQuotaWarningMarkers" type="Bool">
-      <label>Show quota warning markers on usage bars.</label>
+      <label>Show quota warning indicators on usage meters.</label>
       <default>true</default>
     </entry>
     <entry name="quotaWarningPercent" type="Int">
@@ -116,7 +116,7 @@
       <default></default>
     </entry>
     <entry name="menuBarDisplayMode" type="String">
-      <label>Menu bar text display mode.</label>
+      <label>Panel text display mode.</label>
       <default>percent</default>
     </entry>
     <entry name="resetTimesShowAbsolute" type="Bool">
@@ -132,11 +132,11 @@
       <default>true</default>
     </entry>
     <entry name="showPercentInPanel" type="Bool">
-      <label>Show the primary usage percentage in the panel.</label>
+      <label>Show the selected usage text in the panel.</label>
       <default>true</default>
     </entry>
     <entry name="showMultiProviderInPanel" type="Bool">
-      <label>Show multi-provider details in the panel.</label>
+      <label>Show multi-provider meters in the panel.</label>
       <default>false</default>
     </entry>
     <entry name="panelElementOrder" type="String">
