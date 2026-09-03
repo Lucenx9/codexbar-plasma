@@ -75,6 +75,7 @@ require_in_file "$PROVIDERS_QML" "function providerSettingsRows(item)"
 require_in_file "$PROVIDERS_QML" "function providerCliCommandText(item)"
 require_in_file "$PROVIDERS_QML" "property var providerDiagnostics"
 require_in_file "$PROVIDERS_QML" "property var providerFieldPending"
+require_in_file "$PROVIDERS_QML" "property bool providerDescriptorsUnavailable"
 require_in_file "$PROVIDERS_QML" "--descriptors"
 require_in_file "$PROVIDERS_QML" "runProviderListCommand(false)"
 require_in_file "$PROVIDERS_QML" "descriptor.includeDescriptors === true"
@@ -85,7 +86,7 @@ require_in_file "$PROVIDERS_QML" "!descriptorHasAction(item, \"openDashboard\")"
 require_in_file "$PROVIDERS_QML" "kind: \"descriptorField\""
 require_in_file "$PROVIDERS_QML" "kind: \"descriptorAction\""
 require_in_file "$PROVIDERS_QML" "page.reload(true)"
-require_in_file "$PROVIDERS_QML" "Provider descriptor fields"
+require_in_file "$PROVIDERS_QML" "Provider options"
 require_in_file "$PROVIDERS_QML" "modelData.kind === \"secret\""
 require_in_file "$PROVIDERS_QML" "modelData.kind === \"enum\""
 require_in_file "$PROVIDERS_QML" "modelData.kind === \"boolean\""
@@ -101,7 +102,8 @@ require_in_file "$PROVIDERS_QML" "function providerCliArgument(value)"
 require_in_file "$PROVIDERS_QML" "function supportsApiKeySetup(providerID)"
 require_in_file "$PROVIDERS_QML" "action: \"set-api-key\""
 require_in_file "$PROVIDERS_QML" "Provider settings"
-require_in_file "$PROVIDERS_QML" "Load redacted settings"
+require_in_file "$PROVIDERS_QML" "Inspect redacted settings"
+require_in_file "$PROVIDERS_QML" "Provider changes are saved by CodexBar immediately"
 require_in_file "$PROVIDERS_QML" "CLI commands"
 require_in_file "$PROVIDER_IDENTITY_JS" "\"openai\": \"openai.md\""
 require_in_file "$PROVIDER_IDENTITY_JS" "\"openrouter\": \"openrouter.md\""
@@ -295,8 +297,8 @@ if hardcoded:
 if 'case "ibmbob":' not in body:
     print("IBM Bob must offer the official generic set-api-key setup path", file=sys.stderr)
     sys.exit(1)
-if 'case "fireworks":' in body:
-    print("Fireworks setup must stay hidden until the CLI can also set accountSlug", file=sys.stderr)
+if 'case "fireworks":' not in body:
+    print("Fireworks must offer generic API-key setup now that the CLI discovers accountSlug", file=sys.stderr)
     sys.exit(1)
 
 for function_name in ("setEnabled", "setApiKey", "loadProviderSettings", "providerCliCommandText"):

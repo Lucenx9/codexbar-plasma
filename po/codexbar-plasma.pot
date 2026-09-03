@@ -209,7 +209,11 @@ msgid "Reload accounts"
 msgstr ""
 
 #: contents/ui/components/ProviderConfigRow.qml
-msgid "%1 - on by default"
+msgid "%1 - CodexBar default"
+msgstr ""
+
+#: contents/ui/components/ProviderConfigRow.qml
+msgid "Enable %1"
 msgstr ""
 
 #: contents/ui/components/ProviderDetailSection.qml
@@ -761,15 +765,7 @@ msgid "State"
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "Default"
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "Off by default"
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "On by default"
+msgid "CodexBar default"
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -817,7 +813,7 @@ msgid "Settings keys"
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "Load redacted settings to inspect source/auth details"
+msgid "Inspect redacted settings to view source and authentication details"
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -1133,6 +1129,12 @@ msgid "Reload provider list"
 msgstr ""
 
 #: contents/ui/configProviders.qml
+msgid ""
+"Provider changes are saved by CodexBar immediately. Apply and Cancel affect "
+"widget settings only."
+msgstr ""
+
+#: contents/ui/configProviders.qml
 msgid "%1 - disabled"
 msgstr ""
 
@@ -1145,17 +1147,24 @@ msgid "Provider settings"
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "Load redacted settings"
+msgid "Inspect redacted settings"
 msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid ""
-"Provider-specific controls come from the CodexBar CLI descriptor. This panel "
-"also shows redacted source/auth details and exact CLI commands."
+"This CodexBar version does not expose editable provider options. Enable/"
+"disable, supported API key setup, provider links, and redacted diagnostics "
+"remain available."
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "Provider descriptor fields"
+msgid ""
+"Editable provider options come from CodexBar. Redacted source and "
+"authentication details are available on request."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Provider options"
 msgstr ""
 
 #: contents/ui/configProviders.qml

@@ -127,7 +127,8 @@ Panel and popup:
 
 Providers and accounts:
 
-- Provider enable/disable controls.
+- Provider enable/disable and setup actions write CodexBar configuration
+  immediately; Apply and Cancel cover widget settings only.
 - Account discovery and selection through `codexbar usage --all-accounts`.
 - Provider docs, dashboards, login/account links, and redacted diagnostics.
 - Descriptor-backed provider settings for CLI-advertised fields such as source,
@@ -135,6 +136,8 @@ Providers and accounts:
   and optional usage extras.
 - Provider-specific CLI command hints as a fallback when a descriptor is not
   available.
+- Generic API key setup for Fireworks, whose current CLI contract discovers the
+  account slug from the key.
 - Fallback names, colors, links, aliases, and icons for all 69 providers in the
   official CodexBar 0.49.1 registry; fork-only provider assets remain available
   for compatibility.

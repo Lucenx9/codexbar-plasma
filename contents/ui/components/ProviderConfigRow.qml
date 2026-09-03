@@ -56,7 +56,7 @@ Controls.ItemDelegate {
 
             PlainControlsLabel {
                 text: providerRow.providerData.defaultEnabled
-                    ? i18n("%1 - on by default", providerRow.providerData.provider)
+                    ? i18n("%1 - CodexBar default", providerRow.providerData.provider)
                     : providerRow.providerData.provider
                 elide: Text.ElideRight
                 color: providerRow.highlighted ? providerRow.selectedSecondaryForeground : providerRow.withAlpha(Kirigami.Theme.textColor, 0.6)
@@ -73,6 +73,7 @@ Controls.ItemDelegate {
         }
 
         Controls.Switch {
+            Accessible.name: i18n("Enable %1", providerRow.providerData.displayName)
             checked: providerRow.configPage.visualEnabled(providerRow.providerData.provider, providerRow.providerData.enabled)
             enabled: !providerRow.configPage.isPending(providerRow.providerData.provider)
             onClicked: {
