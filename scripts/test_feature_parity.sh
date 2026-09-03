@@ -432,11 +432,8 @@ require_in_surface applet "function menuBarDisplayText(item)"
 require_in_surface applet "function safeMenuBarDisplayMode(value)"
 require_in_surface applet 'import "PanelDisplay.js" as PanelDisplay'
 require_in_surface applet "PanelDisplay.rowForMode("
-require_in_surface applet "function primaryPaceText(item)"
-require_in_surface applet "function primaryResetText(item)"
 # The run-out token reports a duration only when the CLI predicts exhaustion,
 # so it must stay tied to the pace forecast instead of the percent used.
-require_in_surface applet "function primaryRunOutText(item)"
 require_in_surface applet 'mode === "runOut"'
 require_in_surface applet "if (!paceWarningActive(row)) {"
 require_in_surface applet "PanelDisplay.remainingSeconds("

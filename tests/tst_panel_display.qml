@@ -60,6 +60,22 @@ TestCase {
         compare(PanelDisplay.rowForMode([pace], "both"), pace);
     }
 
+    function test_bothPrefersACompleteRowOverAnEarlierPartialRow() {
+        var partial = usageRow({
+            hasPercent: true,
+            usedPercent: 25,
+            leftPercent: 75
+        });
+        var complete = usageRow({
+            hasPercent: true,
+            usedPercent: 30,
+            leftPercent: 70,
+            pacePercent: 40
+        });
+
+        compare(PanelDisplay.rowForMode([partial, complete], "both"), complete);
+    }
+
     function test_resetAcceptsDescriptionsButRejectsStructuredText() {
         var description = usageRow({
             resetDescription: "Tomorrow"

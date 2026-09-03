@@ -60,9 +60,16 @@ function rowForMode(rows, value) {
         return null;
     }
     var mode = safeMode(value);
-    for (var i = 0; i < rows.length; i++) {
-        if (rowSupportsMode(rows[i], mode)) {
-            return rows[i];
+    if (mode === bothMode) {
+        for (var i = 0; i < rows.length; i++) {
+            if (rowHasPercent(rows[i]) && rowHasPace(rows[i])) {
+                return rows[i];
+            }
+        }
+    }
+    for (var j = 0; j < rows.length; j++) {
+        if (rowSupportsMode(rows[j], mode)) {
+            return rows[j];
         }
     }
     return null;

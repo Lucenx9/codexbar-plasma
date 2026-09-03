@@ -2335,6 +2335,20 @@ if "var row = panelDisplayRow(item, mode)" not in menu_bar_display_body:
 run_out_text_body = function_body(main_text, "runOutTextForRow")
 if "PanelDisplay.remainingSeconds(" not in run_out_text_body:
     raise AssertionError("the run-out token must advance from the usage observation time")
+reset_text_body = function_body(main_text, "resetText")
+valid_reset_timestamp_index = reset_text_body.find("var date = new Date(window.resetsAt)")
+relative_countdown_index = reset_text_body.find(
+    "var remainingMs = date.getTime() - panelClockMs"
+)
+last_description_index = reset_text_body.rfind("window.resetDescription")
+if not (
+    valid_reset_timestamp_index >= 0
+    and relative_countdown_index > valid_reset_timestamp_index
+    and last_description_index < valid_reset_timestamp_index
+):
+    raise AssertionError(
+        "a valid reset timestamp must drive the live relative countdown instead of a stale description"
+    )
 # Every file that calls this unqualified must declare it: QML and JS share no
 # function scope, so a surface-wide search would be satisfied by SafeText.js while
 # the applet root's callers were left with an undefined function.

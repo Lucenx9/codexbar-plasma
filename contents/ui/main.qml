@@ -2301,10 +2301,6 @@ PlasmoidItem {
             return Qt.formatDateTime(date, "ddd HH:mm")
         }
 
-        if (window.resetDescription && window.resetDescription.length > 0) {
-            return window.resetDescription
-        }
-
         var remainingMs = date.getTime() - panelClockMs
         if (remainingMs <= 0) {
             return i18n("now")
@@ -3869,10 +3865,6 @@ PlasmoidItem {
         return i18n("%1% %2", Math.round(displayPercent(row)), percentSuffix())
     }
 
-    function primaryPercentText(item) {
-        return percentTextForRow(panelDisplayRow(item, "percent"))
-    }
-
     function paceTextForRow(row) {
         if (!row || row.pacePercent < 0) {
             return ""
@@ -3886,10 +3878,6 @@ PlasmoidItem {
             : i18n("%1% %2, behind pace", Math.round(shownPace), percentSuffix())
     }
 
-    function primaryPaceText(item) {
-        return paceTextForRow(panelDisplayRow(item, "pace"))
-    }
-
     // Duration-only forecast token. It stays empty unless the CLI actually
     // predicts exhaustion before the reset, so the panel never shows a
     // countdown the pace data does not support.
@@ -3901,20 +3889,12 @@ PlasmoidItem {
             row.paceEtaSeconds, usageSnapshotReceivedAtMs, panelClockMs))
     }
 
-    function primaryRunOutText(item) {
-        return runOutTextForRow(panelDisplayRow(item, "runOut"))
-    }
-
     function resetTextForRow(row) {
         var reset = usageResetText(row)
         if (reset.length === 0) {
             return ""
         }
         return resetLabel(reset)
-    }
-
-    function primaryResetText(item) {
-        return resetTextForRow(panelDisplayRow(item, "resetTime"))
     }
 
     // Credit balances are plain counts, so they share the popup's grouped,
