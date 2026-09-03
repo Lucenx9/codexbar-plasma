@@ -517,6 +517,14 @@ msgid "codexbar response exceeded the supported size."
 msgstr ""
 
 #: contents/ui/configGeneral.qml
+msgid "Last checked: never"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Last checked: %1"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
 msgid "Command"
 msgstr ""
 
@@ -529,11 +537,11 @@ msgid "Use PATH"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
-msgid "Refresh preset:"
+msgid "Usage refresh:"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
-msgid "Manual"
+msgid "No periodic refresh"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -557,7 +565,7 @@ msgid "Custom"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
-msgid "Custom refresh:"
+msgid "Custom interval:"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -565,7 +573,11 @@ msgid "%1 s"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
-msgid "Fetch provider status"
+msgid "Fetch provider service status"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Required for status incident notifications."
 msgstr ""
 
 #: contents/ui/configGeneral.qml contents/ui/main.qml
@@ -573,11 +585,11 @@ msgid "Usage"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
-msgid "Show local cost usage"
+msgid "Load local usage and spend history"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
-msgid "Cost history days:"
+msgid "History window:"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -622,7 +634,7 @@ msgid "Quota critical at:"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
-msgid "Thresholds also position the markers drawn on the usage bars."
+msgid "Thresholds also set warning colors and markers on usage meters."
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -642,7 +654,7 @@ msgid "Install widget updates automatically"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
-msgid "Update check interval:"
+msgid "Check every:"
 msgstr ""
 
 #: contents/ui/configGeneral.qml contents/ui/main.qml
@@ -650,14 +662,6 @@ msgid "%1 hour"
 msgid_plural "%1 hours"
 msgstr[0] ""
 msgstr[1] ""
-
-#: contents/ui/configGeneral.qml
-msgid "Last update check: %1"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Last update check: never"
-msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid "Last update status: %1"

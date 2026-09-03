@@ -6,6 +6,7 @@ var maximumVersionLength = 128
 var maximumAssetUrlLength = 2048
 var maximumErrorCodeLength = 128
 var maximumErrorDetailLength = 500
+var maximumLastCheckLength = 64
 
 function boundedString(value, maximumLength) {
     return typeof value === "string"
@@ -24,6 +25,18 @@ function boundedHttpsUrl(value) {
     return text.toLowerCase().indexOf("https://") === 0 ? text : ""
 }
 
+function lastCheckMs(value) {
+    if (typeof value !== "string") {
+        return NaN
+    }
+    var timestamp = value.trim()
+    if (timestamp.length === 0 || timestamp.length > maximumLastCheckLength) {
+        return NaN
+    }
+    var parsed = Date.parse(timestamp)
+    return isFinite(parsed) ? parsed : NaN
+}
+
 function updateCheckDue(updateChecksEnabled, lastCheck, intervalHours, nowMs, forceCheck) {
     if (!updateChecksEnabled) {
         return false
@@ -32,8 +45,8 @@ function updateCheckDue(updateChecksEnabled, lastCheck, intervalHours, nowMs, fo
         return true
     }
 
-    var lastCheckMs = Date.parse(String(lastCheck || ""))
-    if (!isFinite(lastCheckMs)) {
+    var parsedLastCheckMs = lastCheckMs(lastCheck)
+    if (!isFinite(parsedLastCheckMs)) {
         return true
     }
 
@@ -41,7 +54,7 @@ function updateCheckDue(updateChecksEnabled, lastCheck, intervalHours, nowMs, fo
     if (!isFinite(hours) || hours <= 0) {
         return true
     }
-    var elapsedMs = Number(nowMs) - lastCheckMs
+    var elapsedMs = Number(nowMs) - parsedLastCheckMs
     return elapsedMs < 0 || elapsedMs >= hours * 60 * 60 * 1000
 }
 
@@ -60,16 +73,16 @@ function nextUpdateCheckDelay(updateChecksEnabled, lastCheck, intervalHours, now
     }
 
     var intervalMs = hours * 60 * 60 * 1000
-    var lastCheckMs = Date.parse(String(lastCheck || ""))
-    if (!isFinite(lastCheckMs)) {
+    var parsedLastCheckMs = lastCheckMs(lastCheck)
+    if (!isFinite(parsedLastCheckMs)) {
         return minimum
     }
 
     var now = Number(nowMs)
-    if (now < lastCheckMs) {
+    if (now < parsedLastCheckMs) {
         return minimum
     }
-    var remainingMs = lastCheckMs + intervalMs - now
+    var remainingMs = parsedLastCheckMs + intervalMs - now
     return Math.max(minimum, Math.min(intervalMs, remainingMs))
 }
 

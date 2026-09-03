@@ -53,6 +53,7 @@ require_block_fragment "$GENERAL_QML" "id: usePathCommandButton" 'page.cfg_comma
 # binding like every other interactive settings control; otherwise runtime
 # costHistoryDays writes from the Usage & Spend tab stop reaching the spin.
 require_block_fragment "$GENERAL_QML" "id: costHistoryDaysSpin" "value = Qt.binding(function() { return page.cfg_costHistoryDays })"
+require_block_fragment "$GENERAL_QML" "id: notifyStatusIncidentsCheck" "enabled: enableNotificationsCheck.checked && includeStatusCheck.checked"
 
 require_in_file "$README_MD" "command -v codexbar"
 reject_in_file "$README_MD" "yay -S codexbar-cli"
@@ -358,6 +359,21 @@ if "Layout.maximumWidth: Kirigami.Units.gridUnit * 24" not in command_path_row_l
         "the command path row must stay bounded in the FormLayout control column so resizing "
         "cannot push Use PATH outside the visible page"
     )
+
+last_update_check_body = function_body(general_text, "lastUpdateCheckText")
+for last_check_fragment in (
+    "UpdateLogic.lastCheckMs(value)",
+    'i18n("Last checked: never")',
+    "Qt.locale().toString(checkedAt, Locale.ShortFormat)",
+):
+    if last_check_fragment not in last_update_check_body:
+        raise AssertionError(
+            "General must display the last update check in the local short format; "
+            f"missing {last_check_fragment!r}"
+        )
+last_update_check_label = id_block(general_text, "lastUpdateCheckLabel")
+if "page.lastUpdateCheckText(autoUpdateLastCheck)" not in last_update_check_label:
+    raise AssertionError("the last update check label must use the bounded local formatter")
 
 # The dash rule follows the visible text, not the file it lives in: an em dash
 # in an extracted component reads the same in the popup as one in main.qml, so

@@ -167,8 +167,9 @@ Settings:
   advanced provider overrides, and redacted CLI diagnostics.
 - A global, cancelable **Restore all defaults** action for user-facing widget
   settings; provider accounts and CodexBar CLI configuration are left intact.
-- Refresh presets: Manual, 1 min, 2 min, 5 min, 15 min, or custom seconds.
-- Configurable order for the provider icon, service status, usage text, and
+- Usage refresh choices: no periodic refresh, 1 min, 2 min, 5 min, 15 min, or a
+  custom interval. Provider service status remains opt-in.
+- Configurable order for the provider identity, service status, usage text, and
   provider meters shown in the panel.
 - Check for widget updates, notify when an update is available, and opt in to
   silent automatic widget installation.
