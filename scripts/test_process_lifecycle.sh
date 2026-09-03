@@ -40,6 +40,8 @@ require_in_surface applet "readonly property int costAutoRefreshIntervalMs: Cost
 require_in_surface applet "property double lastCostRefreshAttemptAt: -1"
 require_in_surface applet "id: costRefreshTimer"
 require_in_surface applet "property bool updateRetryPending: false"
+require_in_surface applet "property bool connectedUpdateInstallMode: false"
+require_in_surface applet "property bool pendingAutomaticUpdateCheck: false"
 
 require_in_surface providers "readonly property int configCommandTimeoutMs: 60000"
 require_in_surface providers "readonly property int configSecretCommandTimeoutSeconds: 60"
@@ -702,20 +704,39 @@ require_all(
 
 require_all(
     applet.function_body("checkForWidgetUpdate"),
-    ("scheduleNextUpdateCheck()", "updateCheckTimer.stop()"),
-    "update checks must avoid overlap and rearm when not due",
+    (
+        "UpdateLogic.updateRequestDecision(",
+        "pendingAutomaticUpdateCheck = requestDecision.pendingAutomaticCheck",
+        "var installMode = requestDecision.installMode",
+        "buildUpdateCommand(installMode)",
+        "updateCommandTimeoutTimer.interval = installMode",
+        "scheduleNextUpdateCheck()",
+        "updateCheckTimer.stop()",
+    ),
+    "update checks must queue automatic installs and capture each command mode",
 )
 
+finish_update_body = applet.function_body("finishUpdateCommand")
 require_all(
-    applet.function_body("finishUpdateCommand"),
+    finish_update_body,
     (
         "successfulCheck",
+        "connectedUpdateInstallMode = false",
+        "UpdateLogic.updateCompletionDecision(",
+        "pendingAutomaticUpdateCheck = completionDecision.pendingAutomaticCheck",
+        "completionDecision.startAutomaticCheck",
+        "Qt.callLater(function() { root.checkForWidgetUpdate(true) })",
         "Plasmoid.configuration.autoUpdateLastCheck = completedAt",
         "scheduleNextUpdateCheck(completedAt)",
         "scheduleUpdateRetry()",
     ),
-    "successful update checks must use the normal interval and failures must retry sooner",
+    "update completion must run a queued automatic install before normal scheduling",
 )
+queued_check_index = finish_update_body.find("completionDecision.startAutomaticCheck")
+retry_index = finish_update_body.find("scheduleUpdateRetry()")
+next_check_index = finish_update_body.find("scheduleNextUpdateCheck(completedAt)")
+if queued_check_index > retry_index or queued_check_index > next_check_index:
+    raise AssertionError("a queued automatic install must take precedence over retry and interval scheduling")
 
 require_all(
     applet.function_body("scheduleUpdateRetry"),
@@ -748,12 +769,15 @@ require_all(
     applet.function_body("handleUpdateData"),
     (
         "finishUpdateCommand(sourceName, false)",
-        "var resultIntent = UpdateLogic.resultIntent(payload, autoUpdateEnabled)",
+        "var installMode = connectedUpdateInstallMode",
+        "var resultIntent = UpdateLogic.resultIntent(payload, installMode)",
         "applyUpdateResultIntent(resultIntent)",
         "finishUpdateCommand(sourceName, resultIntent.successful)",
     ),
-    "update result parsing must choose success scheduling only after classifying the payload",
+    "update results must use the mode captured when their command started",
 )
+if "autoUpdateEnabled" in applet.function_body("handleUpdateData"):
+    raise AssertionError("update result handling must not read the current automatic-update setting")
 
 require_all(
     applet.id_block("updateCheckTimer"),

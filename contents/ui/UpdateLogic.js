@@ -89,7 +89,36 @@ function updateRetryDelay(consecutiveFailures, baseDelayMs, maximumDelayMs) {
     return Math.min(maximum, base * Math.pow(2, Math.min(failures - 1, 30)))
 }
 
-function resultIntent(payload, autoUpdateEnabled) {
+function updateRequestDecision(commandActive, activeInstallMode,
+        pendingAutomaticCheck, requestedInstallMode) {
+    var installMode = requestedInstallMode === true
+    if (commandActive !== true) {
+        return {
+            startNow: true,
+            installMode: installMode,
+            pendingAutomaticCheck: false
+        }
+    }
+
+    return {
+        startNow: false,
+        installMode: activeInstallMode === true,
+        pendingAutomaticCheck: pendingAutomaticCheck === true
+            || (installMode && activeInstallMode !== true)
+    }
+}
+
+function updateCompletionDecision(pendingAutomaticCheck,
+        updateChecksEnabled, autoUpdateEnabled) {
+    return {
+        startAutomaticCheck: pendingAutomaticCheck === true
+            && updateChecksEnabled === true
+            && autoUpdateEnabled === true,
+        pendingAutomaticCheck: false
+    }
+}
+
+function resultIntent(payload, installMode) {
     var status = boundedOwnString(payload, "status", maximumResultStatusLength)
     if (status === "error") {
         return {
@@ -110,7 +139,7 @@ function resultIntent(payload, autoUpdateEnabled) {
             assetUrl: Guards.hasOwnKey(payload, "assetUrl") ? boundedHttpsUrl(payload.assetUrl) : "",
             errorCode: "",
             errorDetail: "",
-            notificationKind: autoUpdateEnabled === true ? "" : "available"
+            notificationKind: installMode === true ? "" : "available"
         }
     }
     if (status === "installed") {

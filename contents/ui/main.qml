@@ -135,6 +135,8 @@ PlasmoidItem {
     property var notificationRefreshPending: ({})
     property bool notificationsPrimed: false
     property string connectedUpdateCommandSource: ""
+    property bool connectedUpdateInstallMode: false
+    property bool pendingAutomaticUpdateCheck: false
     readonly property int widgetUpdateCheckTimeoutMs: 60000
     readonly property int widgetAutoUpdateTimeoutMs: 600000
     readonly property int widgetUpdateMinimumTimerDelayMs: 60000
@@ -236,6 +238,7 @@ PlasmoidItem {
             Qt.callLater(function() { root.checkForWidgetUpdate(true) })
         } else {
             updateRetryPending = false
+            pendingAutomaticUpdateCheck = false
             updateCheckTimer.stop()
         }
     }
@@ -243,6 +246,8 @@ PlasmoidItem {
     onAutoUpdateEnabledChanged: {
         if (updateChecksEnabled && autoUpdateEnabled) {
             Qt.callLater(function() { root.checkForWidgetUpdate(true) })
+        } else {
+            pendingAutomaticUpdateCheck = false
         }
     }
     onProvidersChanged: {
@@ -2754,18 +2759,26 @@ PlasmoidItem {
     }
 
     function checkForWidgetUpdate(forceCheck) {
-        if (connectedUpdateCommandSource.length > 0) {
+        var requestDecision = UpdateLogic.updateRequestDecision(
+            connectedUpdateCommandSource.length > 0,
+            connectedUpdateInstallMode,
+            pendingAutomaticUpdateCheck,
+            autoUpdateEnabled)
+        pendingAutomaticUpdateCheck = requestDecision.pendingAutomaticCheck
+        if (!requestDecision.startNow) {
             return
         }
         if (!updateCheckDue(forceCheck)) {
             scheduleNextUpdateCheck()
             return
         }
+        var installMode = requestDecision.installMode
         updateCheckTimer.stop()
         setWidgetUpdateState(i18n("Checking for widget updates..."), "", false)
-        connectedUpdateCommandSource = commandWithRunNonce(buildUpdateCommand(autoUpdateEnabled))
+        connectedUpdateInstallMode = installMode
+        connectedUpdateCommandSource = commandWithRunNonce(buildUpdateCommand(installMode))
         updateSource.connectSource(connectedUpdateCommandSource)
-        updateCommandTimeoutTimer.interval = autoUpdateEnabled
+        updateCommandTimeoutTimer.interval = installMode
             ? widgetAutoUpdateTimeoutMs
             : widgetUpdateCheckTimeoutMs
         updateCommandTimeoutTimer.restart()
@@ -2811,14 +2824,28 @@ PlasmoidItem {
         updateCommandTimeoutTimer.stop()
         updateSource.disconnectSource(sourceName)
         connectedUpdateCommandSource = ""
-        if (successfulCheck !== true) {
+        connectedUpdateInstallMode = false
+        var completionDecision = UpdateLogic.updateCompletionDecision(
+            pendingAutomaticUpdateCheck,
+            updateChecksEnabled,
+            autoUpdateEnabled)
+        pendingAutomaticUpdateCheck = completionDecision.pendingAutomaticCheck
+        var completedAt = ""
+        if (successfulCheck === true) {
+            consecutiveUpdateFailures = 0
+            completedAt = new Date().toISOString()
+            Plasmoid.configuration.autoUpdateLastCheck = completedAt
+        } else {
             consecutiveUpdateFailures = Math.min(31, consecutiveUpdateFailures + 1)
+        }
+        if (completionDecision.startAutomaticCheck) {
+            Qt.callLater(function() { root.checkForWidgetUpdate(true) })
+            return
+        }
+        if (successfulCheck !== true) {
             scheduleUpdateRetry()
             return
         }
-        consecutiveUpdateFailures = 0
-        var completedAt = new Date().toISOString()
-        Plasmoid.configuration.autoUpdateLastCheck = completedAt
         scheduleNextUpdateCheck(completedAt)
     }
 
@@ -2847,6 +2874,7 @@ PlasmoidItem {
         if (sourceName !== connectedUpdateCommandSource) {
             return
         }
+        var installMode = connectedUpdateInstallMode
 
         var trimmed = stdoutText.trim()
         if (trimmed.length === 0) {
@@ -2868,7 +2896,7 @@ PlasmoidItem {
             return
         }
 
-        var resultIntent = UpdateLogic.resultIntent(payload, autoUpdateEnabled)
+        var resultIntent = UpdateLogic.resultIntent(payload, installMode)
         applyUpdateResultIntent(resultIntent)
         finishUpdateCommand(sourceName, resultIntent.successful)
     }
