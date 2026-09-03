@@ -12,31 +12,33 @@ fi
 REPOSITORY_FILES="$(mktemp)"
 trap 'rm -f "$REPOSITORY_FILES"' EXIT
 
-if ! git -C "$ROOT_DIR" ls-files --cached --others --exclude-standard -z \
-    > "$REPOSITORY_FILES"; then
+if ! find "$ROOT_DIR" \
+    -path "$ROOT_DIR/.git" -prune -o \
+    -path "$ROOT_DIR/dist" -prune -o \
+    -type f -print0 \
+    | sort -z > "$REPOSITORY_FILES"; then
   echo "failed to discover repository files" >&2
   exit 1
 fi
 
 SHELL_FILES=()
-while IFS= read -r -d '' repository_path; do
-  absolute_path="${ROOT_DIR}/${repository_path}"
-  [[ -f "$absolute_path" ]] || continue
+while IFS= read -r -d '' source_path; do
+  [[ -f "$source_path" ]] || continue
 
-  if [[ "$repository_path" == *.sh ]]; then
-    SHELL_FILES+=("$absolute_path")
+  if [[ "$source_path" == *.sh ]]; then
+    SHELL_FILES+=("$source_path")
     continue
   fi
 
-  [[ -x "$absolute_path" ]] || continue
+  [[ -x "$source_path" ]] || continue
   first_line=""
-  if ! IFS= read -r first_line < "$absolute_path" \
-      && [[ -s "$absolute_path" && -z "$first_line" ]]; then
-    echo "failed to inspect executable: $repository_path" >&2
+  if ! IFS= read -r first_line < "$source_path" \
+      && [[ -s "$source_path" && -z "$first_line" ]]; then
+    echo "failed to inspect executable: ${source_path#"$ROOT_DIR"/}" >&2
     exit 1
   fi
   if [[ "$first_line" =~ ^\#!.*[/[:space:]](ba|da|k)?sh([[:space:]]|$) ]]; then
-    SHELL_FILES+=("$absolute_path")
+    SHELL_FILES+=("$source_path")
   fi
 done < "$REPOSITORY_FILES"
 
