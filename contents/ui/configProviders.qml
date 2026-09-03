@@ -53,6 +53,7 @@ KCM.SimpleKCM {
     property string errorText: ""
     property string statusText: ""
     property bool providerDescriptorsUnavailable: false
+    property bool fireworksSingleKeySetupSupported: false
     // provider id -> true while an enable/disable command is in flight
     property var pending: ({})
     // provider id -> desired enabled value while the CLI command is in flight
@@ -89,11 +90,14 @@ KCM.SimpleKCM {
         providerDiagnosticErrors = ({})
         selectedProviderID = ""
         providerDescriptorsUnavailable = false
+        fireworksSingleKeySetupSupported = false
         Qt.callLater(reload)
     }
 
     function reload(preserveMessages) {
         disconnectCommandsByKind("list")
+        disconnectCommandsByKind("version")
+        fireworksSingleKeySetupSupported = false
         if (commandPath.length === 0) {
             errorText = i18n("Set the codexbar command path in the General page.")
             providers = []
@@ -106,6 +110,7 @@ KCM.SimpleKCM {
             statusText = ""
         }
         runProviderListCommand(true)
+        runCliVersionCommand()
     }
 
     function boundedCliMessage(value) {
@@ -148,6 +153,13 @@ KCM.SimpleKCM {
             kind: "list",
             includeDescriptors: includeDescriptors === true,
             providerConfigRevision: providerConfigRevisionValue(),
+            timeoutMs: configCommandTimeoutMs
+        })
+    }
+
+    function runCliVersionCommand() {
+        runCommand([shellQuote(commandPath), "--version"].join(" "), {
+            kind: "version",
             timeoutMs: configCommandTimeoutMs
         })
     }
@@ -289,6 +301,8 @@ KCM.SimpleKCM {
         if (descriptor.kind === "list") {
             loading = false
             errorText = i18n("Loading providers timed out. Try again.")
+        } else if (descriptor.kind === "version") {
+            fireworksSingleKeySetupSupported = false
         } else if (descriptor.kind === "diagnose") {
             setProviderDiagnosticLoading(descriptor.provider, false)
             setProviderDiagnosticError(descriptor.provider, i18n("Loading provider diagnostics timed out. Try again."))
@@ -314,6 +328,8 @@ KCM.SimpleKCM {
 
         if (descriptor.kind === "list") {
             handleListResult(descriptor, stdoutText, stderrText)
+        } else if (descriptor.kind === "version") {
+            handleCliVersionResult(stdoutText, exitCode)
         } else if (descriptor.kind === "toggle") {
             handleToggleResult(descriptor, stdoutText, stderrText, exitCode)
         } else if (descriptor.kind === "setApiKey") {
@@ -325,6 +341,11 @@ KCM.SimpleKCM {
         } else if (descriptor.kind === "diagnose") {
             handleDiagnoseResult(descriptor, stdoutText, stderrText)
         }
+    }
+
+    function handleCliVersionResult(stdoutText, exitCode) {
+        fireworksSingleKeySetupSupported = Number(exitCode) === 0
+            && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 54, 0)
     }
 
     function handleListResult(descriptor, stdoutText, stderrText) {
@@ -369,7 +390,8 @@ KCM.SimpleKCM {
             selectedProviderID = firstSelectableProvider(next)
         }
         if (descriptor.includeDescriptors === true) {
-            providerDescriptorsUnavailable = false
+            providerDescriptorsUnavailable = !ProviderConfigProtocol
+                .providerListHasSupportedDescriptors(next)
         }
         errorText = ""
     }
@@ -1026,6 +1048,7 @@ KCM.SimpleKCM {
         case "doubao":
         case "elevenlabs":
         case "fireworks":
+            return fireworksSingleKeySetupSupported
         case "grok":
         case "groq":
         case "ibmbob":

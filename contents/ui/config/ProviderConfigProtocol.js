@@ -11,6 +11,7 @@
 
 var maximumProviderItems = 256
 var maximumDiagnosticListItems = 64
+var maximumCliVersionTextLength = 128
 
 function providerListResultIsCurrent(descriptor, currentRevision) {
     if (!isCliRecord(descriptor)
@@ -49,6 +50,47 @@ function normalizeProviderList(payload, fallbackTitleResolver) {
         })
     }
     return providers
+}
+
+function providerListHasSupportedDescriptors(providers) {
+    if (!Array.isArray(providers)) {
+        return false
+    }
+    for (var i = 0; i < providers.length; i++) {
+        var item = providers[i]
+        if (isCliRecord(item)
+                && isCliRecord(item.descriptor)
+                && item.descriptor.schemaVersion === 1) {
+            return true
+        }
+    }
+    return false
+}
+
+function cliVersionAtLeast(value, requiredMajor, requiredMinor, requiredPatch) {
+    if (typeof value !== "string") {
+        return false
+    }
+    var text = SafeText.cliMessage(
+        SafeText.stripLoaderDiagnostics(value), maximumCliVersionTextLength)
+    var match = text.match(/(?:^|\s)v?(\d{1,3})\.(\d{1,3})\.(\d{1,3})(?:\s|$)/)
+    if (!match) {
+        return false
+    }
+    var actual = [Number(match[1]), Number(match[2]), Number(match[3])]
+    var required = [
+        Number(requiredMajor), Number(requiredMinor), Number(requiredPatch)
+    ]
+    for (var i = 0; i < required.length; i++) {
+        if (!isFinite(required[i]) || required[i] < 0
+                || required[i] !== Math.floor(required[i])) {
+            return false
+        }
+        if (actual[i] !== required[i]) {
+            return actual[i] > required[i]
+        }
+    }
+    return true
 }
 
 function commandError(payload) {

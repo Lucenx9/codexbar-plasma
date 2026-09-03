@@ -425,6 +425,15 @@ for provider in ("crossmodel", "clawrouter", "fireworks"):
         raise AssertionError(
             f"supportsApiKeySetup must include released API-key provider {provider}"
         )
+if "return fireworksSingleKeySetupSupported" not in api_key_setup_body:
+    raise AssertionError(
+        "Fireworks API-key setup must stay hidden until the CLI version proves slug discovery support"
+    )
+if "runCliVersionCommand()" not in function_body(providers_text, "reload"):
+    raise AssertionError("provider reload must probe the selected CodexBar CLI version")
+cli_version_result_body = function_body(providers_text, "handleCliVersionResult")
+if "ProviderConfigProtocol.cliVersionAtLeast(" not in cli_version_result_body:
+    raise AssertionError("the Providers page must gate versioned capabilities through the bounded CLI parser")
 
 # Failure precedence for provider mutations lives in
 # ProviderConfigProtocol.commandOutcome, covered adversarially by
@@ -461,7 +470,7 @@ if "providers = []" in provider_list_result_body:
     raise AssertionError("a failed provider reload must preserve the last healthy provider list")
 for descriptor_fallback_fragment in (
     "providerDescriptorsUnavailable = true",
-    "providerDescriptorsUnavailable = false",
+    "providerListHasSupportedDescriptors(next)",
     "runProviderListCommand(false)",
 ):
     if descriptor_fallback_fragment not in provider_list_result_body:
@@ -471,7 +480,7 @@ for descriptor_fallback_fragment in (
         )
 provider_publish_index = provider_list_result_body.find("providers = next")
 descriptor_supported_index = provider_list_result_body.find(
-    "providerDescriptorsUnavailable = false"
+    "providerListHasSupportedDescriptors(next)"
 )
 if provider_publish_index < 0 or descriptor_supported_index < provider_publish_index:
     raise AssertionError(

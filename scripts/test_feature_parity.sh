@@ -300,6 +300,9 @@ if 'case "ibmbob":' not in body:
 if 'case "fireworks":' not in body:
     print("Fireworks must offer generic API-key setup now that the CLI discovers accountSlug", file=sys.stderr)
     sys.exit(1)
+if "return fireworksSingleKeySetupSupported" not in body:
+    print("Fireworks API-key setup must require CLI 0.54.0 slug discovery", file=sys.stderr)
+    sys.exit(1)
 
 for function_name in ("setEnabled", "setApiKey", "loadProviderSettings", "providerCliCommandText"):
     marker = f"    function {function_name}("
