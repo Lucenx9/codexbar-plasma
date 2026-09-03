@@ -35,6 +35,7 @@ jobs:
             qml6-module-qtquick-templates \
             qml6-module-qtquick-window \
             qml6-module-qttest \
+            shellcheck \
             qt6-declarative-dev-tools
 
       - name: Checkout repository
@@ -49,6 +50,7 @@ jobs:
       # and Kirigami import resolution still requires a Plasma desktop.
       - name: Verify agent environment
         run: |
+          scripts/test_shellcheck.sh
           scripts/test_qml_logic.sh
           xmllint --noout contents/config/main.xml
           jq . metadata.json >/dev/null
