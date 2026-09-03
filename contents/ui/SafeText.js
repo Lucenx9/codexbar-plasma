@@ -58,10 +58,10 @@ function redactCredentials(value, inspectionLimit) {
 
 function redactCredentialText(text) {
     return text
-        .replace(/((?:proxy-)?authorization["']?\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\r\n]*)/gi, "$1[redacted]")
-        .replace(/\bbearer\s+(?:"[^"]*"|'[^']*'|[^\s,;]+)/gi, "Bearer [redacted]")
-        .replace(/((?:set-cookie|cookie)["']?\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\r\n]*)/gi, "$1[redacted]")
-        .replace(/((?:api[-_ ]?key|access[-_ ]?token|refresh[-_ ]?token|id[-_ ]?token|token)["']?\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\s,;]+)/gi, "$1[redacted]")
+        .replace(/((?:proxy-)?authorization["']?\s*[:=]\s*)(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^\r\n]*)/gi, "$1[redacted]")
+        .replace(/\bbearer\s+(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^\s,;]+)/gi, "Bearer [redacted]")
+        .replace(/((?:set-cookie|cookie)["']?\s*[:=]\s*)(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^\r\n]*)/gi, "$1[redacted]")
+        .replace(/((?:api[-_ ]?key|access[-_ ]?token|refresh[-_ ]?token|id[-_ ]?token|token)["']?\s*[:=]\s*)(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^\s,;]+)/gi, "$1[redacted]")
         .replace(/\bsk-[A-Za-z0-9_-]{8,}\b/gi, "[redacted]")
 }
 

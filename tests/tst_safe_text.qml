@@ -96,6 +96,21 @@ TestCase {
         compare(message.match(/\[redacted\]/g).length, 4)
     }
 
+    function test_redactsEscapedQuotesInsideCredentialValues() {
+        var diagnostic = SafeText.cliDiagnostic(
+            "Authorization: \"Bearer prefix\\\"AUTHLEAK\"\n"
+                + "Cookie: \"prefix\\\"COOKIELEAK\"\n"
+                + "token=\"prefix\\\"TOKENLEAK\"\n"
+                + "Bearer \"prefix\\\"BEARERLEAK\"",
+            500)
+
+        var leakedMarkers = ["AUTHLEAK", "COOKIELEAK", "TOKENLEAK", "BEARERLEAK"]
+        for (var i = 0; i < leakedMarkers.length; i++) {
+            verify(diagnostic.indexOf(leakedMarkers[i]) === -1)
+        }
+        compare(diagnostic.match(/\[redacted\]/g).length, 4)
+    }
+
     function test_redactsCompleteUnquotedAuthorizationValues() {
         var message = SafeText.cliDiagnostic(
             "Authorization: Basic dXNlcjpwYXNzd29yZA==\n"
