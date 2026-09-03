@@ -127,6 +127,22 @@ TestCase {
         compare(diagnostic.match(/\[redacted\]/g).length, 4)
     }
 
+    function test_redactsUnterminatedQuotedCredentialsAcrossLineBreaks() {
+        var credentials = [
+            "Authorization: \"Bearer prefix\nAUTHLEAK",
+            "Cookie: \"session=prefix\nCOOKIELEAK",
+            "token=\"prefix\nTOKENLEAK",
+            "Bearer \"prefix\nBEARERLEAK"
+        ]
+        var secrets = ["AUTHLEAK", "COOKIELEAK", "TOKENLEAK", "BEARERLEAK"]
+
+        for (var index = 0; index < credentials.length; index++) {
+            var diagnostic = SafeText.cliDiagnostic(credentials[index], 500)
+            verify(diagnostic.indexOf(secrets[index]) === -1)
+            verify(diagnostic.indexOf("[redacted]") !== -1)
+        }
+    }
+
     function test_redactsCompleteUnquotedAuthorizationValues() {
         var message = SafeText.cliDiagnostic(
             "Authorization: Basic dXNlcjpwYXNzd29yZA==\n"

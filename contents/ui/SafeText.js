@@ -70,10 +70,10 @@ function redactCredentialWindow(text, lookaheadText) {
 
 function redactCredentialText(text) {
     return text
-        .replace(/((?:proxy-)?authorization["']?\s*[:=]\s*)(?:"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|[^\r\n]*)/gi, "$1[redacted]")
-        .replace(/\bbearer\s+(?:"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|[^\s,;]+)/gi, "Bearer [redacted]")
-        .replace(/((?:set-cookie|cookie)["']?\s*[:=]\s*)(?:"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|[^\r\n]*)/gi, "$1[redacted]")
-        .replace(/((?:api[-_ ]?key|access[-_ ]?token|refresh[-_ ]?token|id[-_ ]?token|token)["']?\s*[:=]\s*)(?:"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|[^\s,;]+)/gi, "$1[redacted]")
+        .replace(/((?:proxy-)?authorization["']?\s*[:=]\s*)(?:"(?:\\(?:[\s\S]|$)|[^"\\])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^'\\])*(?:'|$)|[^\r\n]*)/gi, "$1[redacted]")
+        .replace(/\bbearer\s+(?:"(?:\\(?:[\s\S]|$)|[^"\\])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^'\\])*(?:'|$)|[^\s,;]+)/gi, "Bearer [redacted]")
+        .replace(/((?:set-cookie|cookie)["']?\s*[:=]\s*)(?:"(?:\\(?:[\s\S]|$)|[^"\\])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^'\\])*(?:'|$)|[^\r\n]*)/gi, "$1[redacted]")
+        .replace(/((?:api[-_ ]?key|access[-_ ]?token|refresh[-_ ]?token|id[-_ ]?token|token)["']?\s*[:=]\s*)(?:"(?:\\(?:[\s\S]|$)|[^"\\])*(?:"|$)|'(?:\\(?:[\s\S]|$)|[^'\\])*(?:'|$)|[^\s,;]+)/gi, "$1[redacted]")
         .replace(/\bsk-[A-Za-z0-9_-]{8,}\b/gi, "[redacted]")
 }
 
