@@ -21,9 +21,9 @@ function optionalText(value) {
     // here would corrupt valid combining and emoji sequences. Keep an exact
     // ASCII fast path plus a separate storage bound for untrusted payloads.
     var isAscii = /^[\x00-\x7F]*$/.test(trimmed)
-    var bounded = isAscii ? trimmed.slice(0, maximumStringLength) : trimmed
-    var redacted = SafeText.redactCredentials(
-        bounded, isAscii ? maximumStringLength : maximumStringCodeUnitsForSafety)
+    var redacted = isAscii
+        ? SafeText.redactCredentialsWithinSourceLimit(trimmed, maximumStringLength)
+        : SafeText.redactCredentials(trimmed, maximumStringCodeUnitsForSafety)
     if (redacted.length > maximumStringCodeUnitsForSafety) {
         return ""
     }

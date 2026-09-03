@@ -170,6 +170,29 @@ TestCase {
         verify(diagnostic.length <= SafeText.maximumDiagnosticLength)
     }
 
+    function test_redactsCredentialsCrossingSourceLimitWithoutExtendingOutput() {
+        var limit = 120
+        var marker = "POST_BOUNDARY_TEXT"
+        var quotedCredential = "x".repeat(100)
+            + " token=\"safe LEAK " + "a".repeat(100) + "\" " + marker
+        var bareCredential = "x".repeat(109)
+            + ":sk-1234567890-secret " + marker
+
+        var quotedResult = SafeText.redactCredentialsWithinSourceLimit(
+            quotedCredential, limit)
+        var bareResult = SafeText.redactCredentialsWithinSourceLimit(
+            bareCredential, limit)
+
+        verify(quotedResult.indexOf("LEAK") === -1)
+        verify(quotedResult.indexOf("[redacted]") !== -1)
+        verify(quotedResult.indexOf(marker) === -1)
+        verify(bareResult.indexOf("sk-123") === -1)
+        verify(bareResult.indexOf("[redacted]") !== -1)
+        verify(bareResult.indexOf(marker) === -1)
+        verify(quotedResult.length <= limit)
+        verify(bareResult.length <= limit)
+    }
+
     function test_doesNotExposeDiagnosticLookaheadAfterRedactionShrinksText() {
         var authorization = "Authorization: Bearer " + "a".repeat(200) + "\n"
         var padding = "x".repeat(SafeText.maximumDiagnosticLength - authorization.length)

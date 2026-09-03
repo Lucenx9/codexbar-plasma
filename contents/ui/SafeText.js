@@ -35,6 +35,18 @@ function redactCredentials(value, inspectionLimit) {
     var inspectionLength = Math.min(maximumDiagnosticLength, limit * 8)
     var text = boundedInspectionText(value, inspectionLength)
     var lookaheadText = boundedInspectionText(value, inspectionLength, credentialRedactionLookaheadLength)
+    return redactCredentialWindow(text, lookaheadText)
+}
+
+function redactCredentialsWithinSourceLimit(value, sourceLimit) {
+    var limit = safeLimit(sourceLimit, maximumCliMessageLength)
+    var text = value === null || value === undefined ? "" : String(value)
+    var boundedText = text.slice(0, limit)
+    var inspectionText = text.slice(0, maximumDiagnosticLength)
+    return redactCredentialWindow(boundedText, inspectionText).slice(0, limit)
+}
+
+function redactCredentialWindow(text, lookaheadText) {
     var redactedText = redactCredentialText(text)
     var redactedLookaheadText = redactCredentialText(lookaheadText)
 

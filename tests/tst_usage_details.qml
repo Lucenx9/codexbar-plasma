@@ -190,6 +190,23 @@ TestCase {
         verify(bounded[0].title.indexOf(postBoundaryMarker) === -1)
     }
 
+    function test_redactsCredentialsCrossingTheAsciiDisplayBoundary() {
+        var quotedCredential = "x".repeat(100)
+            + " token=\"safe LEAK " + "a".repeat(100) + "\""
+        var bareCredential = "x".repeat(109) + ":sk-1234567890-secret"
+
+        var sections = UsageDetails.normalizeSections([
+            { title: quotedCredential, rows: [] },
+            { title: bareCredential, rows: [] }
+        ])
+
+        compare(sections.length, 2)
+        verify(sections[0].title.indexOf("LEAK") === -1)
+        verify(sections[0].title.indexOf("[redacted]") !== -1)
+        verify(sections[1].title.indexOf("sk-123") === -1)
+        verify(sections[1].title.indexOf("[redacted]") !== -1)
+    }
+
     function test_rejectsMalformedOptionalDetailDataWithoutStringifyingIt() {
         var sections = UsageDetails.normalizeSections([
             null,
