@@ -377,7 +377,7 @@ require_all(
 )
 require_all(
     applet.handler_body("onExpandedChanged"),
-    ("if (expanded)", "Qt.callLater(refreshSessionsIfStale)"),
+    ("if (root.expanded)", "Qt.callLater(refreshSessionsIfStale)"),
     "opening the popup must check visible Sessions freshness",
 )
 require_all(
@@ -389,6 +389,17 @@ require_all(
     applet.function_body("selectGlobalView"),
     ('candidate === "sessions"', "refreshSessionsIfStale()"),
     "reselecting the Sessions tab must check whether its snapshot became stale",
+)
+require_all(
+    applet.id_block("sessionsRefreshTimer"),
+    (
+        "interval: root.sessionsStaleAfterMs",
+        "root.expanded",
+        "root.sessionsSelected",
+        "root.sessionsCommandSource.length > 0",
+        "root.refreshSessionsIfStale()",
+    ),
+    "a visible Sessions tab must periodically check whether its snapshot is stale",
 )
 
 require_all(

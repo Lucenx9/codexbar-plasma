@@ -208,7 +208,7 @@ PlasmoidItem {
         }
     }
     onExpandedChanged: {
-        if (expanded) {
+        if (root.expanded) {
             Qt.callLater(refreshSessionsIfStale)
         }
     }
@@ -1402,9 +1402,13 @@ PlasmoidItem {
         var costValue = qualifiedCostValue(
             CostPresentation.amountString(costNumberFormat, numericCost, totals.currency),
             trustSummary ? trustSummary.valueMode : "plain")
-        return i18n("%1 total - %2 tokens",
-            costValue,
-            CostPresentation.tokenCountString(totals.tokens))
+        return totals.hasMixedCostCurrencies
+            ? i18n("%1 subtotal - %2 tokens",
+                costValue,
+                CostPresentation.tokenCountString(totals.tokens))
+            : i18n("%1 total - %2 tokens",
+                costValue,
+                CostPresentation.tokenCountString(totals.tokens))
     }
 
     function updateCostTrustNoticeState(scope, summary, shouldDismiss) {
@@ -3964,6 +3968,18 @@ PlasmoidItem {
         running: root.costCommandSource.length > 0
         triggeredOnStart: false
         onTriggered: root.refreshCost(false)
+    }
+
+    Timer {
+        id: sessionsRefreshTimer
+
+        interval: root.sessionsStaleAfterMs
+        repeat: true
+        running: root.expanded
+            && root.sessionsSelected
+            && root.sessionsCommandSource.length > 0
+        triggeredOnStart: false
+        onTriggered: root.refreshSessionsIfStale()
     }
 
     Timer {

@@ -408,6 +408,30 @@ TestCase {
         compare(totals.cost, 2)
         compare(totals.tokens, 500)
         compare(totals.currency, "USD")
+        verify(totals.hasMixedCostCurrencies)
+    }
+
+    function test_spendCurrencyStatusIgnoresTokenOnlyProviders() {
+        var totals = CostPresentation.spendTotals([
+            { totals: { cost: null, tokens: 100, currency: "USD" } },
+            { totals: { cost: 9, tokens: 400, currency: "EUR" } }
+        ])
+
+        compare(totals.currency, "EUR")
+        verify(!totals.hasMixedCostCurrencies)
+    }
+
+    function test_spendCurrencyStatusChecksDailyCostWhenTotalsAreUnavailable() {
+        verify(CostPresentation.spendHasMixedCostCurrencies([
+            {
+                totals: { cost: 2, tokens: 100, currency: "USD" },
+                daily: [dailyPoint("Mon", 2, 100, "USD")]
+            },
+            {
+                totals: { cost: null, tokens: 400, currency: "EUR" },
+                daily: [dailyPoint("Mon", 9, 400, "EUR")]
+            }
+        ]))
     }
 
     function test_spendTotalsPreserveUnavailableCostAndKeepTokens() {

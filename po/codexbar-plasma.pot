@@ -267,19 +267,29 @@ msgid "Tokens"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
-msgid "Cost history metric"
+msgid "History metric"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
-msgid "Cost history range"
+msgid "History range"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
-msgid "Refresh cost data"
+msgid "Refresh local history"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
-msgid "Some cost data is unavailable: %1"
+msgid "Some local history is unavailable: %1"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "Local history is unavailable: %1"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid ""
+"The cost subtotal and charts use %1. Providers reporting another currency "
+"remain separate below. Token figures include every provider."
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
@@ -288,12 +298,21 @@ msgid ""
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
-msgid "No local cost data available."
+msgid "No daily token history is available for this range."
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
 msgid ""
-"Cost history appears for providers supported by the codexbar cost command."
+"No daily cost history is available for this range. Try Tokens to check for "
+"token-only history."
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "No local token or cost history."
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "History appears for providers supported by the codexbar cost command."
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
@@ -1326,6 +1345,10 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "%1 tokens"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 subtotal - %2 tokens"
 msgstr ""
 
 #: contents/ui/main.qml

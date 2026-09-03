@@ -161,6 +161,8 @@ ColumnLayout {
                     required property var modelData
 
                     readonly property bool activeSession: modelData.state === "active"
+                        || modelData.state === "running"
+                    readonly property string subtitle: view.applet.sessionSubtitle(modelData)
                     readonly property string titleCopyKey: "title:" + index
                     readonly property string detailsCopyKey: "details:" + index
                     readonly property color accent: view.applet.providerReadableColor(
@@ -178,7 +180,7 @@ ColumnLayout {
 
                     Accessible.role: Accessible.ListItem
                     Accessible.name: view.applet.sessionTitle(modelData)
-                    Accessible.description: view.applet.sessionSubtitle(modelData)
+                    Accessible.description: subtitle
 
                     HoverHandler {
                         id: sessionCardHover
@@ -228,7 +230,8 @@ ColumnLayout {
                             }
 
                             CopyableValue {
-                                text: view.applet.sessionSubtitle(modelData)
+                                visible: sessionCard.subtitle.length > 0
+                                text: sessionCard.subtitle
                                 textOpacity: view.applet.secondaryTextOpacity
                                 pixelSize: Kirigami.Theme.smallFont.pixelSize
                                 copyAccessibleName: i18n("Copy session details")

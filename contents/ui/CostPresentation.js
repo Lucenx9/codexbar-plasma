@@ -517,6 +517,29 @@ function costMatchesSpendCurrency(cost, currency) {
     return boundedText(totals.currency || currency, 12) === currency
 }
 
+// Cost figures from different currencies cannot share one aggregate. The
+// caller uses this to label the selected-currency amount as a subtotal and to
+// explain why token totals can cover more providers than money totals.
+function spendHasMixedCostCurrencies(costs) {
+    var items = costs || []
+    var currency = spendCurrency(items)
+    for (var i = 0; i < items.length; i++) {
+        var totals = items[i].totals || ({})
+        if (hasMetricValue(totals, false)
+                && boundedText(totals.currency || currency, 12) !== currency) {
+            return true
+        }
+        var daily = items[i].daily || []
+        for (var j = 0; j < daily.length; j++) {
+            if (hasMetricValue(daily[j], false)
+                    && boundedText(daily[j].currency || "USD", 12) !== currency) {
+                return true
+            }
+        }
+    }
+    return false
+}
+
 function acceptedCostCoverage(value) {
     if (value === null || typeof value !== "object" || Array.isArray(value)) {
         return null
@@ -867,7 +890,8 @@ function spendTotals(costs) {
     return {
         cost: hasCost ? totalCost : null,
         tokens: totalTokens,
-        currency: currency
+        currency: currency,
+        hasMixedCostCurrencies: spendHasMixedCostCurrencies(items)
     }
 }
 
