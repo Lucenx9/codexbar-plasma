@@ -24,15 +24,15 @@
       <max>3600</max>
     </entry>
     <entry name="includeStatus" type="Bool">
-      <label>Fetch provider status pages.</label>
+      <label>Fetch provider service status.</label>
       <default>false</default>
     </entry>
     <entry name="costUsageEnabled" type="Bool">
-      <label>Show local cost usage.</label>
+      <label>Load local usage and spend history.</label>
       <default>true</default>
     </entry>
     <entry name="costHistoryDays" type="Int">
-      <label>Cost history window in days.</label>
+      <label>Local usage and spend history window in days.</label>
       <default>30</default>
       <min>1</min>
       <max>365</max>

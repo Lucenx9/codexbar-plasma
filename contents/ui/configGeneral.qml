@@ -144,6 +144,19 @@ KCM.SimpleKCM {
         return refreshPresetCombo.model.length - 1
     }
 
+    function lastUpdateCheckText(value) {
+        var timestamp = typeof value === "string" ? value.trim() : ""
+        if (timestamp.length === 0 || timestamp.length > 64) {
+            return i18n("Last checked: never")
+        }
+        var checkedAt = new Date(timestamp)
+        if (isNaN(checkedAt.getTime())) {
+            return i18n("Last checked: never")
+        }
+        return i18n("Last checked: %1",
+            Qt.locale().toString(checkedAt, Locale.ShortFormat))
+    }
+
     onCfg_refreshIntervalChanged: {
         var nextIndex = refreshPresetIndex(cfg_refreshInterval)
         if (refreshPresetCombo.currentIndex !== nextIndex) {
@@ -274,11 +287,11 @@ KCM.SimpleKCM {
 
         Controls.ComboBox {
             id: refreshPresetCombo
-            Kirigami.FormData.label: i18n("Refresh preset:")
+            Kirigami.FormData.label: i18n("Usage refresh:")
             textRole: "text"
             valueRole: "value"
             model: [
-                { text: i18n("Manual"), value: 0 },
+                { text: i18n("No periodic refresh"), value: 0 },
                 { text: i18n("1 min"), value: 60 },
                 { text: i18n("2 min"), value: 120 },
                 { text: i18n("5 min"), value: 300 },
@@ -296,14 +309,14 @@ KCM.SimpleKCM {
 
         Controls.SpinBox {
             id: refreshIntervalSpin
-            Kirigami.FormData.label: i18n("Custom refresh:")
+            Kirigami.FormData.label: i18n("Custom interval:")
             from: 0
             to: 3600
             stepSize: 10
             editable: true
             visible: refreshPresetCombo.currentValue < 0
             textFromValue: function(value, locale) {
-                return value <= 0 ? i18n("Manual") : i18n("%1 s", value)
+                return value <= 0 ? i18n("No periodic refresh") : i18n("%1 s", value)
             }
             valueFromText: function(text, locale) {
                 var match = text.match(/\d+/)
@@ -314,7 +327,14 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: includeStatusCheck
-            text: i18n("Fetch provider status")
+            text: i18n("Fetch provider service status")
+        }
+
+        Components.PlainControlsLabel {
+            text: i18n("Required for status incident notifications.")
+            opacity: 0.7
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
         }
 
         Kirigami.Separator {
@@ -324,12 +344,12 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: costUsageEnabledCheck
-            text: i18n("Show local cost usage")
+            text: i18n("Load local usage and spend history")
         }
 
         Controls.SpinBox {
             id: costHistoryDaysSpin
-            Kirigami.FormData.label: i18n("Cost history days:")
+            Kirigami.FormData.label: i18n("History window:")
             from: 1
             to: 365
             editable: true
@@ -359,7 +379,7 @@ KCM.SimpleKCM {
         Controls.CheckBox {
             id: notifyStatusIncidentsCheck
             text: i18n("Notify status incidents")
-            enabled: enableNotificationsCheck.checked
+            enabled: enableNotificationsCheck.checked && includeStatusCheck.checked
         }
 
         Controls.CheckBox {
@@ -418,7 +438,7 @@ KCM.SimpleKCM {
         }
 
         Components.PlainControlsLabel {
-            text: i18n("Thresholds also position the markers drawn on the usage bars.")
+            text: i18n("Thresholds also set warning colors and markers on usage meters.")
             opacity: 0.7
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
@@ -448,7 +468,7 @@ KCM.SimpleKCM {
 
         Controls.SpinBox {
             id: autoUpdateIntervalHoursSpin
-            Kirigami.FormData.label: i18n("Update check interval:")
+            Kirigami.FormData.label: i18n("Check every:")
             from: 1
             to: 168
             editable: true
@@ -466,9 +486,7 @@ KCM.SimpleKCM {
         Components.PlainControlsLabel {
             id: lastUpdateCheckLabel
 
-            text: autoUpdateLastCheck.length > 0
-                ? i18n("Last update check: %1", autoUpdateLastCheck)
-                : i18n("Last update check: never")
+            text: page.lastUpdateCheckText(autoUpdateLastCheck)
             visible: updateChecksEnabledCheck.checked
             opacity: 0.7
             Layout.fillWidth: true
