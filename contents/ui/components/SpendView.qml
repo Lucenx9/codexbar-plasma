@@ -13,6 +13,8 @@ ColumnLayout {
     readonly property var dailyPoints: applet.spendDailyPoints()
     readonly property var providerCosts: applet.spendProviderCosts()
     readonly property var costTrustSummary: CostPresentation.costTrustSummary(providerCosts)
+    readonly property string spendCurrency: applet.spendCurrency(providerCosts)
+    readonly property bool hasMixedCostCurrencies: CostPresentation.spendHasMixedCostCurrencies(providerCosts)
     readonly property real heatmapMaximum: chartMaximum(dailyPoints)
 
     Layout.fillWidth: true
@@ -101,7 +103,7 @@ ColumnLayout {
             valueRole: "value"
             model: view.metricOptions()
             currentIndex: view.metricIndex(model, view.applet.costHistoryMetric)
-            Accessible.name: i18n("Cost history metric")
+            Accessible.name: i18n("History metric")
             onActivated: function(index) {
                 view.applet.setCostHistoryMetric(metricCombo.valueAt(index))
                 // The interactive pick severs the currentIndex binding; restore
@@ -120,7 +122,7 @@ ColumnLayout {
             valueRole: "value"
             model: view.rangeOptions(view.applet.costHistoryDays)
             currentIndex: view.rangeIndex(model, view.applet.costHistoryDays)
-            Accessible.name: i18n("Cost history range")
+            Accessible.name: i18n("History range")
             onActivated: function(index) {
                 view.applet.setCostHistoryDays(rangeCombo.valueAt(index))
                 // Same restored binding as the metric combo: keep tracking
@@ -134,15 +136,24 @@ ColumnLayout {
         PlasmaComponents.ToolButton {
             icon.name: "view-refresh"
             enabled: !view.applet.costLoading
-            Accessible.name: i18n("Refresh cost data")
+            Accessible.name: i18n("Refresh local history")
             onClicked: view.applet.refreshCost(true)
         }
     }
 
     Components.PlainInlineMessage {
         visible: view.applet.costErrorText.length > 0
-        plainText: i18n("Some cost data is unavailable: %1", view.applet.costErrorText)
+        plainText: view.providerCosts.length > 0
+            ? i18n("Some local history is unavailable: %1", view.applet.costErrorText)
+            : i18n("Local history is unavailable: %1", view.applet.costErrorText)
         type: Kirigami.MessageType.Warning
+        Layout.fillWidth: true
+    }
+
+    Components.PlainInlineMessage {
+        visible: view.hasMixedCostCurrencies
+        plainText: i18n("The cost subtotal and charts use %1. Providers reporting another currency remain separate below. Token figures include every provider.", view.spendCurrency)
+        type: Kirigami.MessageType.Information
         Layout.fillWidth: true
     }
 
@@ -162,12 +173,21 @@ ColumnLayout {
         summary: view.costTrustSummary
     }
 
+    Components.PlainInlineMessage {
+        visible: view.providerCosts.length > 0 && view.dailyPoints.length === 0
+        plainText: view.applet.costHistoryShowsTokens
+            ? i18n("No daily token history is available for this range.")
+            : i18n("No daily cost history is available for this range. Try Tokens to check for token-only history.")
+        type: Kirigami.MessageType.Information
+        Layout.fillWidth: true
+    }
+
     PlainPlaceholderMessage {
         visible: !view.applet.costLoading
             && view.providerCosts.length === 0
             && view.applet.costErrorText.length === 0
-        plainText: i18n("No local cost data available.")
-        plainExplanation: i18n("Cost history appears for providers supported by the codexbar cost command.")
+        plainText: i18n("No local token or cost history.")
+        plainExplanation: i18n("History appears for providers supported by the codexbar cost command.")
         icon.name: "view-statistics-symbolic"
         type: Kirigami.PlaceholderMessage.Type.Informational
         Layout.fillWidth: true
@@ -206,7 +226,7 @@ ColumnLayout {
             spacing: Kirigami.Units.largeSpacing
 
             InteractiveChart {
-                visible: view.dailyPoints.length > 1
+                visible: view.dailyPoints.length > 0
                 applet: view.applet
                 points: view.dailyPoints
                 accent: view.applet.readableAccentColor(

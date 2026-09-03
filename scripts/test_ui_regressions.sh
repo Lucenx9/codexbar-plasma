@@ -2108,6 +2108,25 @@ if sessions_view_text.count("copyRevealed: sessionCardHover.hovered") != 2:
         "both session copy actions must be revealed by the shared card hover handler "
         "instead of crowding every card permanently"
     )
+for active_session_state in (
+    'modelData.state === "active"',
+    'modelData.state === "running"',
+):
+    if active_session_state not in sessions_view_text:
+        raise AssertionError(
+            "SessionsView must highlight both live state spellings accepted from the CLI; "
+            f"missing {active_session_state!r}"
+        )
+for optional_session_details_fragment in (
+    "readonly property string subtitle: view.applet.sessionSubtitle(modelData)",
+    "visible: sessionCard.subtitle.length > 0",
+    "text: sessionCard.subtitle",
+):
+    if optional_session_details_fragment not in sessions_view_text:
+        raise AssertionError(
+            "sessions without optional detail fields must not render an empty copy action; "
+            f"missing {optional_session_details_fragment!r}"
+        )
 
 # The shape check lives in the normalizer and the error text in the applet, so
 # the rule is asserted on both halves: an unrecognized payload must return the
@@ -2222,6 +2241,10 @@ for localized_pair_source, localized_pair_text in (
         )
 if "InteractiveChart" not in spend_view_text or "Activity heatmap" not in spend_view_text:
     raise AssertionError("SpendView must expose the interactive chart and bounded activity heatmap")
+if "visible: view.dailyPoints.length > 0" not in spend_view_text:
+    raise AssertionError("SpendView must keep a one-day history keyboard-inspectable")
+if "visible: view.dailyPoints.length > 1" in spend_view_text:
+    raise AssertionError("SpendView must not hide the accessible chart when one history day is available")
 for heatmap_range_fragment in (
     "Math.ceil(view.dailyPoints.length / rows)",
     "readonly property int fittingColumns",
@@ -2243,6 +2266,26 @@ if "windowValueLine: costValueLine(" not in main_text:
     raise AssertionError(
         "normalized token costs must expose a window-free value line for range-scoped surfaces"
     )
+for mixed_currency_fragment in (
+    "CostPresentation.spendHasMixedCostCurrencies(providerCosts)",
+    "The cost subtotal and charts use %1.",
+    'i18n("%1 subtotal - %2 tokens"',
+):
+    if mixed_currency_fragment not in main_text:
+        raise AssertionError(
+            "mixed-currency spend must be labelled as a subtotal and explain its scope; "
+            f"missing {mixed_currency_fragment!r}"
+        )
+for empty_metric_fragment in (
+    "view.providerCosts.length > 0 && view.dailyPoints.length === 0",
+    "No daily token history is available for this range.",
+    "Try Tokens to check for token-only history.",
+):
+    if empty_metric_fragment not in spend_view_text:
+        raise AssertionError(
+            "a provider snapshot without the selected daily metric needs a scoped explanation; "
+            f"missing {empty_metric_fragment!r}"
+        )
 for trust_owner_source, trust_owner_text in (
     ("FullRepresentation.qml", full_representation_text),
     ("SpendView.qml", spend_view_text),

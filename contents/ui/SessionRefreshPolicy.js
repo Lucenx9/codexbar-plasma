@@ -55,3 +55,24 @@ function refreshAction(observation) {
         : defaultStaleAfterMs
     return nowMs - completedAtMs >= maximumAgeMs ? startAction : keepAction
 }
+
+function nextCheckDelay(observation) {
+    var current = observation && typeof observation === "object"
+        && !Array.isArray(observation) ? observation : ({})
+    var commandSource = typeof current.commandSource === "string"
+        ? current.commandSource.trim() : ""
+    if (current.visible !== true || current.loading === true
+            || commandSource.length === 0) {
+        return 0
+    }
+
+    var maximumAgeMs = typeof current.staleAfterMs === "number"
+        && isFinite(current.staleAfterMs) && current.staleAfterMs > 0
+        ? Math.floor(current.staleAfterMs)
+        : defaultStaleAfterMs
+    if (refreshAction(current) !== keepAction) {
+        return maximumAgeMs
+    }
+    var ageMs = current.nowMs - current.lastCompletedAtMs
+    return Math.max(1, maximumAgeMs - ageMs)
+}

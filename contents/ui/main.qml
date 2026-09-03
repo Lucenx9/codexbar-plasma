@@ -212,16 +212,22 @@ PlasmoidItem {
         }
         if (expanded && sessionsSelected) {
             Qt.callLater(refreshSessionsIfStale)
+        } else {
+            scheduleSessionsRefreshCheck()
         }
     }
     onExpandedChanged: {
-        if (expanded) {
+        if (root.expanded) {
             Qt.callLater(refreshSessionsIfStale)
+        } else {
+            scheduleSessionsRefreshCheck()
         }
     }
     onSessionsSelectedChanged: {
         if (sessionsSelected && expanded) {
             Qt.callLater(refreshSessionsIfStale)
+        } else {
+            scheduleSessionsRefreshCheck()
         }
     }
     onAutoSelectProviderChanged: updateSelectedProvider()
@@ -697,11 +703,34 @@ PlasmoidItem {
     }
 
     function refreshSessionsIfStale() {
-        return requestSessionsRefresh(false)
+        var started = requestSessionsRefresh(false)
+        scheduleSessionsRefreshCheck()
+        return started
     }
 
     function refreshSessions() {
-        return requestSessionsRefresh(true)
+        var started = requestSessionsRefresh(true)
+        scheduleSessionsRefreshCheck()
+        return started
+    }
+
+    function scheduleSessionsRefreshCheck() {
+        sessionsRefreshTimer.stop()
+        var delayMs = SessionRefreshPolicy.nextCheckDelay({
+            commandSource: sessionsCommandSource,
+            loadedCommandSource: sessionsLoadedCommandSource,
+            loading: sessionsLoading,
+            visible: expanded && sessionsSelected,
+            force: false,
+            lastCompletedAtMs: sessionsLastCompletedAtMs,
+            nowMs: Date.now(),
+            staleAfterMs: sessionsStaleAfterMs
+        })
+        if (delayMs <= 0) {
+            return
+        }
+        sessionsRefreshTimer.interval = delayMs
+        sessionsRefreshTimer.start()
     }
 
     function parseOutput(stdoutText, stderrText) {
@@ -1043,6 +1072,7 @@ PlasmoidItem {
             finishUsageCommandSource(sourceName)
             sessionsLoading = false
             sessionsErrorText = i18n("Loading sessions timed out. Try again.")
+            scheduleSessionsRefreshCheck()
             return
         case "providerConfig":
             finishUsageCommandSource(sourceName)
@@ -1412,9 +1442,13 @@ PlasmoidItem {
         var costValue = qualifiedCostValue(
             CostPresentation.amountString(costNumberFormat, numericCost, totals.currency),
             trustSummary ? trustSummary.valueMode : "plain")
-        return i18n("%1 total - %2 tokens",
-            costValue,
-            CostPresentation.tokenCountString(totals.tokens))
+        return totals.hasMixedCostCurrencies
+            ? i18n("%1 subtotal - %2 tokens",
+                costValue,
+                CostPresentation.tokenCountString(totals.tokens))
+            : i18n("%1 total - %2 tokens",
+                costValue,
+                CostPresentation.tokenCountString(totals.tokens))
     }
 
     function updateCostTrustNoticeState(scope, summary, shouldDismiss) {
@@ -3945,6 +3979,7 @@ PlasmoidItem {
             case "sessions":
                 root.finishUsageCommandSource(sourceName)
                 root.parseSessionsOutput(stdoutText, stderrText)
+                root.scheduleSessionsRefreshCheck()
                 return
             case "providerConfig":
                 root.finishUsageCommandSource(sourceName)
@@ -3999,6 +4034,16 @@ PlasmoidItem {
         running: root.costCommandSource.length > 0
         triggeredOnStart: false
         onTriggered: root.refreshCost(false)
+    }
+
+    Timer {
+        id: sessionsRefreshTimer
+
+        interval: root.sessionsStaleAfterMs
+        repeat: false
+        running: false
+        triggeredOnStart: false
+        onTriggered: root.refreshSessionsIfStale()
     }
 
     Timer {
