@@ -23,9 +23,9 @@ replace a host CLI.
   not duplicate macOS Swift provider settings logic in QML; extend
   `codexbar config` first. IBM Bob can use the existing single-key command, but
   its token-account editing still needs generic CLI field/actions. Fireworks
-  0.54.0 and later auto-discovers its account slug from the API key, so a
-  follow-up can enable the generic single-key setup path without a separate slug
-  editor.
+  0.54.0 and later auto-discovers its single account slug from the API key, so
+  Plasma enables the generic single-key setup path; multi-account slug editing
+  remains blocked on a generic field/action descriptor.
 - Provider onboarding parity: descriptor-backed dashboard actions are supported,
   and legacy login/account/dashboard/docs links remain as fallbacks. Add safer
   setup actions for providers that need browser-cookie import, local app files,

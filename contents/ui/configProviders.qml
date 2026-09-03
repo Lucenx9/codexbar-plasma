@@ -1022,6 +1022,7 @@ KCM.SimpleKCM {
         case "deepseek":
         case "doubao":
         case "elevenlabs":
+        case "fireworks":
         case "grok":
         case "groq":
         case "ibmbob":

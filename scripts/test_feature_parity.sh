@@ -295,8 +295,11 @@ if hardcoded:
 if 'case "ibmbob":' not in body:
     print("IBM Bob must offer the official generic set-api-key setup path", file=sys.stderr)
     sys.exit(1)
-if 'case "fireworks":' in body:
-    print("Fireworks setup must stay hidden until the CLI can also set accountSlug", file=sys.stderr)
+# CLI 0.54.0+ auto-discovers the single Fireworks account slug from the API
+# key, so the generic single-key path is supported; multi-account slug editing
+# stays blocked on the descriptor contract.
+if 'case "fireworks":' not in body:
+    print("Fireworks must offer the generic single-key setup path (CLI auto-discovers slug)", file=sys.stderr)
     sys.exit(1)
 
 for function_name in ("setEnabled", "setApiKey", "loadProviderSettings", "providerCliCommandText"):
