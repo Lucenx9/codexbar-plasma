@@ -11,6 +11,7 @@ QML_IMPORT_DIR ?= /usr/lib/qt6/qml
 # failures; locally (modules present) they are no-ops, so the check stays full.
 QMLLINT_FLAGS ?= --unqualified disable
 check:
+	scripts/test_shellcheck.sh
 	scripts/test_feature_parity.sh
 	scripts/test_refresh_nonce.sh
 	scripts/test_process_lifecycle.sh

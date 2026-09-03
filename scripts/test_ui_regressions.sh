@@ -56,6 +56,7 @@ require_block_fragment "$GENERAL_QML" "id: costHistoryDaysSpin" "value = Qt.bind
 
 require_in_file "$README_MD" "command -v codexbar"
 reject_in_file "$README_MD" "yay -S codexbar-cli"
+# shellcheck disable=SC2016 # Match the literal Markdown code span.
 reject_in_file "$README_MD" 'for example `/usr/bin/codexbar`'
 
 require_in_surface providers "Provider-specific controls come from the CodexBar CLI descriptor"

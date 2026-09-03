@@ -32,7 +32,8 @@ done < <(cd "$ROOT_DIR" && find contents -type f \( -name '*.qml' -o -name '*.js
 # twice, so reject them by name instead of relying on whichever Qt the developer
 # happens to have. qmllint does not catch this: the file never reaches it.
 reserved_hits="$(
-  cd "$ROOT_DIR" && grep -nE \
+  cd "$ROOT_DIR"
+  grep -nE \
     '\b(var|let|const)[[:space:]]+(abstract|boolean|byte|char|double|enum|export|extends|final|float|goto|implements|import|int|interface|long|native|package|private|protected|public|short|static|super|synchronized|throws|transient|volatile)\b' \
     "${QML_FILES[@]}" tests/*.qml 2>/dev/null || true
 )"

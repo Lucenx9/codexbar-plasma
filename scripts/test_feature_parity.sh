@@ -569,6 +569,7 @@ require_in_file "$CONFIG_QML" "configDebug.qml"
 reject_in_file "$CONFIG_QML" "configAbout.qml"
 reject_in_file "$CONFIG_QML" "name: i18n(\"About\")"
 
+require_in_file "$MAKEFILE" "scripts/test_shellcheck.sh"
 require_in_file "$MAKEFILE" "scripts/test_qml_hardening.sh"
 require_in_file "$MAKEFILE" "scripts/test_update_widget.sh"
 require_in_file "$MAKEFILE" "scripts/test_theme_boundaries.sh"
@@ -646,6 +647,7 @@ reject_in_file "$TODO_MD" "Release automation:"
 require_in_file "$TODO_MD" "Provider-specific editable settings"
 require_in_file "$TODO_MD" "Existing detail and cost charts now support hover"
 require_in_file "$TODO_MD" "Dashboard extras"
+# shellcheck disable=SC2016 # Match the literal Markdown code span.
 require_in_file "$TODO_MD" '`usage.details` rows and bounded bar/line charts'
 require_in_file "$TODO_MD" "Translations"
 
@@ -655,6 +657,7 @@ require_in_file "$README_MD" "kpackagetool6 -t Plasma/Applet -u codexbar-plasma.
 require_in_file "$README_MD" "make install"
 reject_in_file "$README_MD" "kpackagetool6 -t Plasma/Applet -u ."
 require_in_file "$TODO_MD" "all 69 provider IDs"
+# shellcheck disable=SC2016 # Match the literal Markdown code span.
 require_in_file "$README_MD" '`usage.details` contract'
 require_in_file "$README_MD" "all 69 providers"
 require_in_file "$AGENTS_MD" "69 provider IDs released in CodexBar v0.49.1"

@@ -256,9 +256,10 @@ Package locally:
 make package
 ```
 
-`make check` runs the static shell checks, XML/JSON checks, and `qmllint` with
-`--unqualified disable` because Plasma injects helpers such as `i18n()` as
-context properties that otherwise create noisy false-positive warnings.
+`make check` runs ShellCheck, the static regression checks, the Qt tests,
+XML/JSON validation, and `qmllint`. It passes `--unqualified disable` to
+`qmllint` because Plasma injects helpers such as `i18n()` as context properties
+that otherwise create noisy false-positive warnings.
 
 Project structure:
 

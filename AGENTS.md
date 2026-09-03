@@ -396,7 +396,7 @@ Agent instruction references:
   implementation appears outside `Guards.js`.
 - All user-facing text must go through `i18n` or `i18np`.
 - Test with `make check` first. Use `plasmawindowed` or `plasmoidviewer` for
-  quick widget checks when available; after extracting delegates/components,
+  quick widget checks when available. After extracting delegates or components,
   install or upgrade the local plasmoid and check recent Plasma logs for
   `ReferenceError`, `TypeError`, and `SyntaxError`.
 - Restarting or replacing `plasmashell` is a final runtime check, not the
@@ -423,11 +423,29 @@ Primary references:
 
 ## Verification
 
-Run this before committing QML, config, packaging, or README changes:
+Run this before handing off any repository change:
 
 ```sh
 make check
 ```
+
+`make check` is the required gate. It runs `qmllint`, `qmltestrunner`,
+ShellCheck, and the `kpackagetool6` AppStream metadata check. If
+`kpackagetool6` is unavailable, the command reports a skip. Do not report that
+metadata check as passed.
+
+Use the other QML tools for these narrower jobs:
+
+- Use `qmlformat` on new files or in a dedicated formatting change, then inspect
+  its diff. The existing tree has no formatter baseline, so do not reformat an
+  existing file as part of unrelated work.
+- Keep `qmlls` in the editor. Do not commit a machine-specific `.qmlls.ini` or
+  treat language-server diagnostics as a replacement for `make check`.
+- Run `qmlprofiler` only after reproducing a performance problem. Keep profiler
+  traces out of the repository.
+- Use `plasmoidviewer -a "$PWD" -l topedge -f horizontal` for a panel smoke
+  test when `plasma-sdk` is installed. Use `plasmawindowed app.codexbar` for an
+  installed-widget smoke test.
 
 For packaging changes, also run:
 

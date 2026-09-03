@@ -327,7 +327,9 @@ require_in_surface applet "+ \" -- \" + shellQuote(cleanTitle)"
 
 require_in_file "$MAKEFILE" "scripts/test_security_regressions.sh"
 require_in_file "$MAKEFILE" "scripts/test_qml_hardening.sh"
+# shellcheck disable=SC2016 # Match the literal Make variable syntax.
 reject_text "Makefile" "$(cat "$MAKEFILE")" 'QML_FILES := $(shell'
+# shellcheck disable=SC2016 # Match the literal Make variable syntax.
 reject_text "Makefile" "$(cat "$MAKEFILE")" '$(QML_FILES)'
 
 echo "Security regression checks passed."
