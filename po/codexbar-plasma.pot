@@ -192,7 +192,7 @@ msgid "Use the arrow keys to inspect chart points"
 msgstr ""
 
 #: contents/ui/components/OverviewProviderRow.qml
-#: contents/ui/components/ProviderUsageRow.qml
+#: contents/ui/components/ProviderUsageRow.qml contents/ui/main.qml
 msgid "%1% %2"
 msgstr ""
 
@@ -367,7 +367,7 @@ msgid "Diagnostic output appears here."
 msgstr ""
 
 #: contents/ui/configDisplay.qml
-msgid "Provider identity"
+msgid "Provider icon"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
@@ -399,11 +399,15 @@ msgid "Panel"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
-msgid "Display mode:"
+msgid "Panel text:"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
-msgid "Percent"
+msgid "Percent used"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Percent left"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
@@ -411,7 +415,7 @@ msgid "Pace"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
-msgid "Percent and pace"
+msgid "Usage and pace"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
@@ -420,6 +424,13 @@ msgstr ""
 
 #: contents/ui/configDisplay.qml
 msgid "Run-out forecast"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid ""
+"Pace shows the expected used or left percentage at this point in the window. "
+"Reset time appears when the provider supplies it. Run-out appears only when "
+"the quota is forecast to run out before reset."
 msgstr ""
 
 #: contents/ui/configDisplay.qml
@@ -435,15 +446,15 @@ msgid "Move %1 down"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
-msgid "Show provider in panel"
+msgid "Show provider name in panel"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
-msgid "Show percent in panel"
+msgid "Show usage text in panel"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
-msgid "Show multi-provider details in panel"
+msgid "Show multi-provider meters in panel"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
@@ -455,6 +466,10 @@ msgid "Auto-select highest-usage provider"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
+msgid "Usage text and provider meters are available only in horizontal panels."
+msgstr ""
+
+#: contents/ui/configDisplay.qml
 msgid "Usage details"
 msgstr ""
 
@@ -463,7 +478,7 @@ msgid "Show usage as percent used"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
-msgid "Show quota warning markers"
+msgid "Show quota warnings on usage meters"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
@@ -1990,13 +2005,11 @@ msgid "Refreshing usage..."
 msgstr ""
 
 #: contents/ui/main.qml
-#, javascript-format
-msgid "%1% pace"
+msgid "%1% %2 at pace"
 msgstr ""
 
 #: contents/ui/main.qml
-#, javascript-format
-msgid "%1% pace late"
+msgid "%1% %2, behind pace"
 msgstr ""
 
 #: contents/ui/main.qml

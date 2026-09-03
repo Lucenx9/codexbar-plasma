@@ -1871,9 +1871,12 @@ if refresh_index < 0 or return_index < 0 or refresh_index > return_index:
 for fresh_function in ("parseOutput", "finishProviderFallback"):
     fresh_body = function_body(main_text, fresh_function)
     fresh_index = fresh_body.find("markNotificationProvidersFresh(nextProviders)")
+    received_index = fresh_body.find("markUsageSnapshotReceived()")
     providers_index = fresh_body.find("providers = nextProviders")
     if fresh_index < 0 or providers_index < 0 or fresh_index > providers_index:
         raise AssertionError(f"{fresh_function} must mark fresh provider data before publishing it")
+    if received_index < 0 or received_index > providers_index:
+        raise AssertionError(f"{fresh_function} must timestamp usage before publishing it")
 mark_fresh_body = function_body(main_text, "markNotificationProvidersFresh")
 error_guard = "if (!item || (item.error && String(item.error).length > 0))"
 selected_guard = "selectedAccount.length > 0 && accountLabel(item) !== selectedAccount"
@@ -2325,6 +2328,26 @@ if "boundedDisplayText(errorText" not in tooltip_body:
 if 'i18n("%1 - %2", line, incident)' not in tooltip_body:
     raise AssertionError(
         "the panel tooltip must report incidents even when the provider also reports usage"
+    )
+menu_bar_display_body = function_body(main_text, "menuBarDisplayText")
+if "var row = panelDisplayRow(item, mode)" not in menu_bar_display_body:
+    raise AssertionError("each panel text mode must select a row that supports its own data")
+run_out_text_body = function_body(main_text, "runOutTextForRow")
+if "PanelDisplay.remainingSeconds(" not in run_out_text_body:
+    raise AssertionError("the run-out token must advance from the usage observation time")
+reset_text_body = function_body(main_text, "resetText")
+valid_reset_timestamp_index = reset_text_body.find("var date = new Date(window.resetsAt)")
+relative_countdown_index = reset_text_body.find(
+    "var remainingMs = date.getTime() - panelClockMs"
+)
+last_description_index = reset_text_body.rfind("window.resetDescription")
+if not (
+    valid_reset_timestamp_index >= 0
+    and relative_countdown_index > valid_reset_timestamp_index
+    and last_description_index < valid_reset_timestamp_index
+):
+    raise AssertionError(
+        "a valid reset timestamp must drive the live relative countdown instead of a stale description"
     )
 # Every file that calls this unqualified must declare it: QML and JS share no
 # function scope, so a surface-wide search would be satisfied by SafeText.js while

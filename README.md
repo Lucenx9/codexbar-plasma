@@ -107,9 +107,9 @@ Panel and popup:
 - Compact panel indicator for one provider or multiple providers.
 - Provider tabs with usage bars, reset windows, account identity, status, and
   credits.
-- Display modes for percent used, pace, percent plus pace, reset time, and a
-  run-out forecast that shows the predicted duration only while the CLI expects
-  the quota to run out before its reset.
+- Panel text modes for percent used or left, pace, usage plus pace, reset time,
+  and a run-out forecast that shows the predicted duration only while the CLI
+  expects the quota to run out before its reset.
 - Auto-select highest-usage provider for the compact panel and provider detail
   focus.
 - Overview tab with per-provider usage summary and quick switching.
@@ -168,7 +168,7 @@ Settings:
 - A global, cancelable **Restore all defaults** action for user-facing widget
   settings; provider accounts and CodexBar CLI configuration are left intact.
 - Refresh presets: Manual, 1 min, 2 min, 5 min, 15 min, or custom seconds.
-- Configurable order for the provider identity, service status, usage text, and
+- Configurable order for the provider icon, service status, usage text, and
   provider meters shown in the panel.
 - Check for widget updates, notify when an update is available, and opt in to
   silent automatic widget installation.
