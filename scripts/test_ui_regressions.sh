@@ -362,7 +362,7 @@ if "Layout.maximumWidth: Kirigami.Units.gridUnit * 24" not in command_path_row_l
 
 last_update_check_body = function_body(general_text, "lastUpdateCheckText")
 for last_check_fragment in (
-    "timestamp.length === 0 || timestamp.length > 64",
+    "UpdateLogic.lastCheckMs(value)",
     'i18n("Last checked: never")',
     "Qt.locale().toString(checkedAt, Locale.ShortFormat)",
 ):

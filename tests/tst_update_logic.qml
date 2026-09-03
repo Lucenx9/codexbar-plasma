@@ -7,6 +7,15 @@ TestCase {
 
     readonly property double nowMs: Date.UTC(2026, 6, 31, 12, 0, 0)
 
+    function test_lastCheckTimestampIsParsedOnceAtTheBoundary() {
+        var timestamp = "2026-07-31T11:00:00.000Z"
+
+        compare(UpdateLogic.lastCheckMs("  " + timestamp + "  "), Date.parse(timestamp))
+        verify(isNaN(UpdateLogic.lastCheckMs("not-a-date")))
+        verify(isNaN(UpdateLogic.lastCheckMs("x".repeat(65))))
+        verify(isNaN(UpdateLogic.lastCheckMs({ value: timestamp })))
+    }
+
     function test_disabledChecksStayDisabledWhenForced() {
         compare(UpdateLogic.updateCheckDue(false, "", 12, nowMs, true), false)
     }

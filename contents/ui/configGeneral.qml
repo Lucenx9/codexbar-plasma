@@ -145,14 +145,11 @@ KCM.SimpleKCM {
     }
 
     function lastUpdateCheckText(value) {
-        var timestamp = typeof value === "string" ? value.trim() : ""
-        if (timestamp.length === 0 || timestamp.length > 64) {
+        var checkedAtMs = UpdateLogic.lastCheckMs(value)
+        if (!isFinite(checkedAtMs)) {
             return i18n("Last checked: never")
         }
-        var checkedAt = new Date(timestamp)
-        if (isNaN(checkedAt.getTime())) {
-            return i18n("Last checked: never")
-        }
+        var checkedAt = new Date(checkedAtMs)
         return i18n("Last checked: %1",
             Qt.locale().toString(checkedAt, Locale.ShortFormat))
     }
