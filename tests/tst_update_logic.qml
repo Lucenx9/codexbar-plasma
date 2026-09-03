@@ -64,6 +64,45 @@ TestCase {
         compare(UpdateLogic.updateRetryDelay(20, 300000, 21600000), 21600000)
     }
 
+    function test_automaticInstallRequestedDuringManualCheckRunsAfterCompletion() {
+        var manualRequest = UpdateLogic.updateRequestDecision(
+            false, false, false, false)
+
+        compare(manualRequest.startNow, true)
+        compare(manualRequest.installMode, false)
+
+        var automaticRequest = UpdateLogic.updateRequestDecision(
+            true, manualRequest.installMode, false, true)
+
+        compare(automaticRequest.startNow, false)
+        compare(automaticRequest.pendingAutomaticCheck, true)
+
+        var manualResult = UpdateLogic.resultIntent({ status: "available" },
+            manualRequest.installMode)
+
+        compare(manualResult.notificationKind, "available")
+
+        var completion = UpdateLogic.updateCompletionDecision(
+            automaticRequest.pendingAutomaticCheck, true, true)
+
+        compare(completion.startAutomaticCheck, true)
+        compare(completion.pendingAutomaticCheck, false)
+    }
+
+    function test_activeAutomaticInstallDoesNotQueueDuplicateCheck() {
+        var request = UpdateLogic.updateRequestDecision(true, true, false, true)
+
+        compare(request.startNow, false)
+        compare(request.pendingAutomaticCheck, false)
+    }
+
+    function test_disablingAutomaticUpdatesCancelsPendingCheck() {
+        var completion = UpdateLogic.updateCompletionDecision(true, true, false)
+
+        compare(completion.startAutomaticCheck, false)
+        compare(completion.pendingAutomaticCheck, false)
+    }
+
     function test_availableResultRequestsNotificationWithoutAutomaticInstall() {
         var intent = UpdateLogic.resultIntent({
             status: "available",

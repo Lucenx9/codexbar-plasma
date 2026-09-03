@@ -94,11 +94,11 @@ install_timeout = re.search(
 if not install_timeout:
     raise AssertionError("kpackagetool6 installation must have a hard timeout with a force-kill grace")
 install_timer = re.search(
-    r'updateCommandTimeoutTimer\.interval\s*=\s*autoUpdateEnabled\s*\?\s*widgetAutoUpdateTimeoutMs\s*:\s*widgetUpdateCheckTimeoutMs',
+    r'updateCommandTimeoutTimer\.interval\s*=\s*installMode\s*\?\s*widgetAutoUpdateTimeoutMs\s*:\s*widgetUpdateCheckTimeoutMs',
     main_qml_text,
 )
 if not install_timer:
-    raise AssertionError("automatic installs must select widgetAutoUpdateTimeoutMs")
+    raise AssertionError("the captured install mode must select widgetAutoUpdateTimeoutMs")
 PY
 require_in_file "$UPDATER" "https://api.github.com/repos/\${REPO_OWNER}/\${REPO_NAME}/releases/latest"
 require_in_file "$UPDATER" "browser_download_url"
