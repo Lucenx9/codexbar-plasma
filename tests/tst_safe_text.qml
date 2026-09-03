@@ -111,6 +111,22 @@ TestCase {
         compare(diagnostic.match(/\[redacted\]/g).length, 4)
     }
 
+    function test_redactsEscapedLineBreaksInsideCredentialValues() {
+        var escapedLineBreak = "\\" + "\n"
+        var secrets = ["AUTHLEAK", "COOKIELEAK", "TOKENLEAK", "BEARERLEAK"]
+        var diagnostic = SafeText.cliDiagnostic(
+            "Authorization: \"Bearer prefix" + escapedLineBreak + secrets[0] + "\"\n"
+            + "Cookie: \"session=prefix" + escapedLineBreak + secrets[1] + "\"\n"
+            + "token=\"prefix" + escapedLineBreak + secrets[2] + "\"\n"
+            + "Bearer \"prefix" + escapedLineBreak + secrets[3] + "\"",
+            500)
+
+        for (var index = 0; index < secrets.length; index++) {
+            verify(diagnostic.indexOf(secrets[index]) === -1)
+        }
+        compare(diagnostic.match(/\[redacted\]/g).length, 4)
+    }
+
     function test_redactsCompleteUnquotedAuthorizationValues() {
         var message = SafeText.cliDiagnostic(
             "Authorization: Basic dXNlcjpwYXNzd29yZA==\n"
