@@ -377,12 +377,20 @@ require_all(
 )
 require_all(
     applet.handler_body("onExpandedChanged"),
-    ("if (root.expanded)", "Qt.callLater(refreshSessionsIfStale)"),
+    (
+        "if (root.expanded)",
+        "Qt.callLater(refreshSessionsIfStale)",
+        "scheduleSessionsRefreshCheck()",
+    ),
     "opening the popup must check visible Sessions freshness",
 )
 require_all(
     applet.handler_body("onSessionsSelectedChanged"),
-    ("if (sessionsSelected && expanded)", "Qt.callLater(refreshSessionsIfStale)"),
+    (
+        "if (sessionsSelected && expanded)",
+        "Qt.callLater(refreshSessionsIfStale)",
+        "scheduleSessionsRefreshCheck()",
+    ),
     "entering Sessions must check freshness",
 )
 require_all(
@@ -393,13 +401,31 @@ require_all(
 require_all(
     applet.id_block("sessionsRefreshTimer"),
     (
-        "interval: root.sessionsStaleAfterMs",
-        "root.expanded",
-        "root.sessionsSelected",
-        "root.sessionsCommandSource.length > 0",
+        "repeat: false",
+        "running: false",
         "root.refreshSessionsIfStale()",
     ),
-    "a visible Sessions tab must periodically check whether its snapshot is stale",
+    "the Sessions timer must run once at the snapshot's exact stale boundary",
+)
+require_all(
+    applet.function_body("scheduleSessionsRefreshCheck"),
+    (
+        "sessionsRefreshTimer.stop()",
+        "SessionRefreshPolicy.nextCheckDelay(",
+        "sessionsRefreshTimer.interval = delayMs",
+        "sessionsRefreshTimer.start()",
+    ),
+    "Sessions checks must be scheduled from the current snapshot completion",
+)
+require_all(
+    applet.function_body("refreshSessionsIfStale"),
+    ("requestSessionsRefresh(false)", "scheduleSessionsRefreshCheck()"),
+    "each stale check must schedule the next exact boundary",
+)
+require_all(
+    applet.function_body("handleCommandTimeout"),
+    ('case "sessions"', "scheduleSessionsRefreshCheck()"),
+    "a failed Sessions refresh must schedule a bounded retry",
 )
 
 require_all(

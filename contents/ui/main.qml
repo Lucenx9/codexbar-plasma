@@ -205,16 +205,22 @@ PlasmoidItem {
         }
         if (expanded && sessionsSelected) {
             Qt.callLater(refreshSessionsIfStale)
+        } else {
+            scheduleSessionsRefreshCheck()
         }
     }
     onExpandedChanged: {
         if (root.expanded) {
             Qt.callLater(refreshSessionsIfStale)
+        } else {
+            scheduleSessionsRefreshCheck()
         }
     }
     onSessionsSelectedChanged: {
         if (sessionsSelected && expanded) {
             Qt.callLater(refreshSessionsIfStale)
+        } else {
+            scheduleSessionsRefreshCheck()
         }
     }
     onAutoSelectProviderChanged: updateSelectedProvider()
@@ -689,11 +695,34 @@ PlasmoidItem {
     }
 
     function refreshSessionsIfStale() {
-        return requestSessionsRefresh(false)
+        var started = requestSessionsRefresh(false)
+        scheduleSessionsRefreshCheck()
+        return started
     }
 
     function refreshSessions() {
-        return requestSessionsRefresh(true)
+        var started = requestSessionsRefresh(true)
+        scheduleSessionsRefreshCheck()
+        return started
+    }
+
+    function scheduleSessionsRefreshCheck() {
+        sessionsRefreshTimer.stop()
+        var delayMs = SessionRefreshPolicy.nextCheckDelay({
+            commandSource: sessionsCommandSource,
+            loadedCommandSource: sessionsLoadedCommandSource,
+            loading: sessionsLoading,
+            visible: expanded && sessionsSelected,
+            force: false,
+            lastCompletedAtMs: sessionsLastCompletedAtMs,
+            nowMs: Date.now(),
+            staleAfterMs: sessionsStaleAfterMs
+        })
+        if (delayMs <= 0) {
+            return
+        }
+        sessionsRefreshTimer.interval = delayMs
+        sessionsRefreshTimer.start()
     }
 
     function parseOutput(stdoutText, stderrText) {
@@ -1033,6 +1062,7 @@ PlasmoidItem {
             finishUsageCommandSource(sourceName)
             sessionsLoading = false
             sessionsErrorText = i18n("Loading sessions timed out. Try again.")
+            scheduleSessionsRefreshCheck()
             return
         case "providerConfig":
             finishUsageCommandSource(sourceName)
@@ -3924,6 +3954,7 @@ PlasmoidItem {
             case "sessions":
                 root.finishUsageCommandSource(sourceName)
                 root.parseSessionsOutput(stdoutText, stderrText)
+                root.scheduleSessionsRefreshCheck()
                 return
             case "providerConfig":
                 root.finishUsageCommandSource(sourceName)
@@ -3974,10 +4005,8 @@ PlasmoidItem {
         id: sessionsRefreshTimer
 
         interval: root.sessionsStaleAfterMs
-        repeat: true
-        running: root.expanded
-            && root.sessionsSelected
-            && root.sessionsCommandSource.length > 0
+        repeat: false
+        running: false
         triggeredOnStart: false
         onTriggered: root.refreshSessionsIfStale()
     }

@@ -88,4 +88,28 @@ TestCase {
         compare(SessionRefreshPolicy.staleAfterMs(120), 120000)
         compare(SessionRefreshPolicy.staleAfterMs("120"), 300000)
     }
+
+    function test_nextCheckIsScheduledFromSnapshotCompletion() {
+        compare(SessionRefreshPolicy.nextCheckDelay(observation({
+            loadedCommandSource: "codexbar sessions --json-v2",
+            lastCompletedAtMs: 900000
+        })), 200000)
+        compare(SessionRefreshPolicy.nextCheckDelay(observation({
+            loadedCommandSource: "codexbar sessions --json-v2",
+            lastCompletedAtMs: 700001
+        })), 1)
+    }
+
+    function test_nextCheckStopsWhenInactiveAndRetriesMissingSnapshotsLater() {
+        compare(SessionRefreshPolicy.nextCheckDelay(observation({
+            visible: false
+        })), 0)
+        compare(SessionRefreshPolicy.nextCheckDelay(observation({
+            loading: true
+        })), 0)
+        compare(SessionRefreshPolicy.nextCheckDelay(observation({
+            commandSource: ""
+        })), 0)
+        compare(SessionRefreshPolicy.nextCheckDelay(observation()), 300000)
+    }
 }
