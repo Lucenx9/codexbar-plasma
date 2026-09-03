@@ -118,6 +118,95 @@ TestCase {
         compare(UsageDetails.normalizeSections([{ title: unsafeTitle, rows: [] }]).length, 0)
     }
 
+    function test_redactsCredentialsFromEveryDisplayField() {
+        var secrets = [
+            "sk-sectionsecret",
+            "label-secret",
+            "value-secret",
+            "secondary-secret",
+            "sk-chartsecret",
+            "unit-secret",
+            "point-secret"
+        ]
+        var sections = UsageDetails.normalizeSections([
+            {
+                title: "API key: " + secrets[0],
+                rows: [
+                    {
+                        label: "Authorization: Bearer " + secrets[1],
+                        value: "Bearer " + secrets[2],
+                        secondaryValue: "token=" + secrets[3]
+                    }
+                ],
+                chart: {
+                    kind: "bars",
+                    title: secrets[4],
+                    unit: "access_token=" + secrets[5],
+                    points: [
+                        { label: "Cookie: session=" + secrets[6], value: 1 }
+                    ]
+                }
+            }
+        ])
+
+        compare(sections.length, 1)
+        var normalized = JSON.stringify(sections)
+        for (var i = 0; i < secrets.length; i++) {
+            verify(normalized.indexOf(secrets[i]) === -1)
+        }
+        verify(normalized.indexOf("[redacted]") !== -1)
+
+        var escapedQuote = UsageDetails.normalizeSections([
+            { title: "token=\"prefix\\\"LEAK\"", rows: [] }
+        ])
+        verify(JSON.stringify(escapedQuote).indexOf("LEAK") === -1)
+    }
+
+    function test_redactionPreservesUnicodeAndTheStorageBound() {
+        var secret = "sk-latesecret"
+        var unicodePrefix = "é".repeat(3000)
+        var sections = UsageDetails.normalizeSections([
+            { title: unicodePrefix + " " + secret, rows: [] }
+        ])
+
+        compare(sections.length, 1)
+        verify(sections[0].title.indexOf(secret) === -1)
+        verify(sections[0].title.indexOf("[redacted]") !== -1)
+        verify(sections[0].title.indexOf(unicodePrefix) === 0)
+
+        var expandingCredentials = "é " + "token=a ".repeat(400)
+        verify(expandingCredentials.length < UsageDetails.maximumStringCodeUnitsForSafety)
+        compare(UsageDetails.normalizeSections([
+            { title: expandingCredentials, rows: [] }
+        ]).length, 0)
+
+        var postBoundaryMarker = "POST_BOUNDARY_TEXT"
+        var longAsciiCredential = "token=" + "a".repeat(200) + " " + postBoundaryMarker
+        verify(longAsciiCredential.indexOf(postBoundaryMarker) > UsageDetails.maximumStringLength)
+        var bounded = UsageDetails.normalizeSections([
+            { title: longAsciiCredential, rows: [] }
+        ])
+        compare(bounded.length, 1)
+        verify(bounded[0].title.indexOf(postBoundaryMarker) === -1)
+    }
+
+    function test_redactsCredentialsCrossingTheAsciiDisplayBoundary() {
+        var quotedCredential = "x".repeat(100)
+            + " token=\"safe LEAK " + "a".repeat(100) + "\""
+        var bareCredential = "x".repeat(109) + ":sk-1234567890-secret"
+
+        var sections = UsageDetails.normalizeSections([
+            { title: quotedCredential, rows: [] },
+            { title: bareCredential, rows: [] }
+        ])
+
+        compare(sections.length, 2)
+        verify(sections[0].title.indexOf("LEAK") === -1)
+        verify(sections[0].title.indexOf("[redacted]") !== -1)
+        verify(sections[1].title.indexOf("sk-123") === -1)
+        verify(sections[1].title.indexOf("[redacted]") !== -1)
+    }
+
     function test_rejectsMalformedOptionalDetailDataWithoutStringifyingIt() {
         var sections = UsageDetails.normalizeSections([
             null,

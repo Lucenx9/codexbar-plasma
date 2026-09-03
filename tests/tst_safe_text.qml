@@ -96,6 +96,53 @@ TestCase {
         compare(message.match(/\[redacted\]/g).length, 4)
     }
 
+    function test_redactsEscapedQuotesInsideCredentialValues() {
+        var diagnostic = SafeText.cliDiagnostic(
+            "Authorization: \"Bearer prefix\\\"AUTHLEAK\"\n"
+                + "Cookie: \"prefix\\\"COOKIELEAK\"\n"
+                + "token=\"prefix\\\"TOKENLEAK\"\n"
+                + "Bearer \"prefix\\\"BEARERLEAK\"",
+            500)
+
+        var leakedMarkers = ["AUTHLEAK", "COOKIELEAK", "TOKENLEAK", "BEARERLEAK"]
+        for (var i = 0; i < leakedMarkers.length; i++) {
+            verify(diagnostic.indexOf(leakedMarkers[i]) === -1)
+        }
+        compare(diagnostic.match(/\[redacted\]/g).length, 4)
+    }
+
+    function test_redactsEscapedLineBreaksInsideCredentialValues() {
+        var escapedLineBreak = "\\" + "\n"
+        var secrets = ["AUTHLEAK", "COOKIELEAK", "TOKENLEAK", "BEARERLEAK"]
+        var diagnostic = SafeText.cliDiagnostic(
+            "Authorization: \"Bearer prefix" + escapedLineBreak + secrets[0] + "\"\n"
+            + "Cookie: \"session=prefix" + escapedLineBreak + secrets[1] + "\"\n"
+            + "token=\"prefix" + escapedLineBreak + secrets[2] + "\"\n"
+            + "Bearer \"prefix" + escapedLineBreak + secrets[3] + "\"",
+            500)
+
+        for (var index = 0; index < secrets.length; index++) {
+            verify(diagnostic.indexOf(secrets[index]) === -1)
+        }
+        compare(diagnostic.match(/\[redacted\]/g).length, 4)
+    }
+
+    function test_redactsUnterminatedQuotedCredentialsAcrossLineBreaks() {
+        var credentials = [
+            "Authorization: \"Bearer prefix\nAUTHLEAK",
+            "Cookie: \"session=prefix\nCOOKIELEAK",
+            "token=\"prefix\nTOKENLEAK",
+            "Bearer \"prefix\nBEARERLEAK"
+        ]
+        var secrets = ["AUTHLEAK", "COOKIELEAK", "TOKENLEAK", "BEARERLEAK"]
+
+        for (var index = 0; index < credentials.length; index++) {
+            var diagnostic = SafeText.cliDiagnostic(credentials[index], 500)
+            verify(diagnostic.indexOf(secrets[index]) === -1)
+            verify(diagnostic.indexOf("[redacted]") !== -1)
+        }
+    }
+
     function test_redactsCompleteUnquotedAuthorizationValues() {
         var message = SafeText.cliDiagnostic(
             "Authorization: Basic dXNlcjpwYXNzd29yZA==\n"
@@ -153,6 +200,29 @@ TestCase {
         verify(diagnostic.indexOf("sk-123") === -1)
         verify(diagnostic.indexOf(":[reda") !== -1)
         verify(diagnostic.length <= SafeText.maximumDiagnosticLength)
+    }
+
+    function test_redactsCredentialsCrossingSourceLimitWithoutExtendingOutput() {
+        var limit = 120
+        var marker = "POST_BOUNDARY_TEXT"
+        var quotedCredential = "x".repeat(100)
+            + " token=\"safe LEAK " + "a".repeat(100) + "\" " + marker
+        var bareCredential = "x".repeat(109)
+            + ":sk-1234567890-secret " + marker
+
+        var quotedResult = SafeText.redactCredentialsWithinSourceLimit(
+            quotedCredential, limit)
+        var bareResult = SafeText.redactCredentialsWithinSourceLimit(
+            bareCredential, limit)
+
+        verify(quotedResult.indexOf("LEAK") === -1)
+        verify(quotedResult.indexOf("[redacted]") !== -1)
+        verify(quotedResult.indexOf(marker) === -1)
+        verify(bareResult.indexOf("sk-123") === -1)
+        verify(bareResult.indexOf("[redacted]") !== -1)
+        verify(bareResult.indexOf(marker) === -1)
+        verify(quotedResult.length <= limit)
+        verify(bareResult.length <= limit)
     }
 
     function test_doesNotExposeDiagnosticLookaheadAfterRedactionShrinksText() {

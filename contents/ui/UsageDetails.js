@@ -1,4 +1,5 @@
 .pragma library
+.import "SafeText.js" as SafeText
 
 var maximumSectionsPerSnapshot = 8
 var maximumRowsPerSection = 24
@@ -19,9 +20,16 @@ function optionalText(value) {
     // validates the 120-character Swift String contract; re-counting UTF-16
     // here would corrupt valid combining and emoji sequences. Keep an exact
     // ASCII fast path plus a separate storage bound for untrusted payloads.
-    return /^[\x00-\x7F]*$/.test(trimmed)
-        ? trimmed.slice(0, maximumStringLength)
-        : trimmed
+    var isAscii = /^[\x00-\x7F]*$/.test(trimmed)
+    var redacted = isAscii
+        ? SafeText.redactCredentialsWithinSourceLimit(trimmed, maximumStringLength)
+        : SafeText.redactCredentials(trimmed, maximumStringCodeUnitsForSafety)
+    if (redacted.length > maximumStringCodeUnitsForSafety) {
+        return ""
+    }
+    return isAscii
+        ? redacted.slice(0, maximumStringLength)
+        : redacted
 }
 
 function normalizeSections(rawSections) {
