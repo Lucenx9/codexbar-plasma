@@ -233,8 +233,9 @@ replace a host CLI.
   auth mode nuances, organization/team, metric, and quota threshold editors.
   IBM Bob can use the existing single-key command, but its token-account editing
   still needs generic CLI field/actions. Fireworks 0.54.0 and later
-  auto-discovers its account slug from the API key, so a follow-up can enable the
-  generic single-key setup path without a separate slug editor.
+  auto-discovers its account slug from the API key. Plasma enables the generic
+  single-key setup path only when the selected CLI reports 0.54.0 or later;
+  multi-account slug editing still needs generic CLI field/actions.
 - Provider onboarding improvements should stay CLI-backed: dashboard actions
   can come from the descriptor and login/account links are fine as fallbacks,
   but browser-cookie import, local-file, OAuth/device-flow, CLI-auth setup, and

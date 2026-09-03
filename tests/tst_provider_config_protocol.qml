@@ -75,6 +75,37 @@ TestCase {
         compare(seen.join(","), "groqcloud,workspace")
     }
 
+    function test_providerListReportsOnlyValidatedDescriptorSupport() {
+        var withoutDescriptors = ProviderConfigProtocol.normalizeProviderList([
+            provider("codex"),
+            provider("claude", { descriptor: { schemaVersion: 2 } })
+        ])
+        verify(!ProviderConfigProtocol.providerListHasSupportedDescriptors(
+            withoutDescriptors))
+
+        var withEmptyDescriptor = ProviderConfigProtocol.normalizeProviderList(
+            provider("codex", { descriptor: {
+                schemaVersion: 1,
+                fields: [],
+                actions: []
+            } }))
+        verify(ProviderConfigProtocol.providerListHasSupportedDescriptors(
+            withEmptyDescriptor))
+    }
+
+    function test_cliVersionComparisonGatesVersionedCapabilities() {
+        verify(ProviderConfigProtocol.cliVersionAtLeast(
+            "CodexBar 0.54.0", 0, 54, 0))
+        verify(ProviderConfigProtocol.cliVersionAtLeast(
+            "CodexBar 0.56.2\n", 0, 54, 0))
+        verify(!ProviderConfigProtocol.cliVersionAtLeast(
+            "CodexBar 0.53.9", 0, 54, 0))
+        verify(!ProviderConfigProtocol.cliVersionAtLeast(
+            "unknown", 0, 54, 0))
+        verify(!ProviderConfigProtocol.cliVersionAtLeast(
+            { version: "0.56.2" }, 0, 54, 0))
+    }
+
     function test_acceptsArraysSkipsMalformedRowsAndPreservesDuplicates() {
         var oversized = repeated("x", 129).join("")
         var normalized = ProviderConfigProtocol.normalizeProviderList([

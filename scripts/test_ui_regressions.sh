@@ -60,7 +60,8 @@ reject_in_file "$README_MD" "yay -S codexbar-cli"
 # shellcheck disable=SC2016 # Match the literal Markdown code span.
 reject_in_file "$README_MD" 'for example `/usr/bin/codexbar`'
 
-require_in_surface providers "Provider-specific controls come from the CodexBar CLI descriptor"
+require_in_surface providers "Editable provider options come from CodexBar"
+require_in_surface providers "This CodexBar version does not expose editable provider options"
 reject_in_surface providers "Provider-specific editing stays in the CodexBar CLI until it exposes a stable settings descriptor"
 # Successful provider commands must be classified by the shared outcome
 # contract, never re-inlined with stderr consulted before the parsed payload:
@@ -435,11 +436,20 @@ for source_text, label in ((main_text, "main.qml"), (providers_text, "configProv
         raise AssertionError(f"{label} must expose the Wayfinder display name")
 
 api_key_setup_body = function_body(providers_text, "supportsApiKeySetup")
-for provider in ("crossmodel", "clawrouter"):
+for provider in ("crossmodel", "clawrouter", "fireworks"):
     if f'case "{provider}":' not in api_key_setup_body:
         raise AssertionError(
             f"supportsApiKeySetup must include released API-key provider {provider}"
         )
+if "return fireworksSingleKeySetupSupported" not in api_key_setup_body:
+    raise AssertionError(
+        "Fireworks API-key setup must stay hidden until the CLI version proves slug discovery support"
+    )
+if "runCliVersionCommand()" not in function_body(providers_text, "reload"):
+    raise AssertionError("provider reload must probe the selected CodexBar CLI version")
+cli_version_result_body = function_body(providers_text, "handleCliVersionResult")
+if "ProviderConfigProtocol.cliVersionAtLeast(" not in cli_version_result_body:
+    raise AssertionError("the Providers page must gate versioned capabilities through the bounded CLI parser")
 
 # Failure precedence for provider mutations lives in
 # ProviderConfigProtocol.commandOutcome, covered adversarially by
@@ -470,6 +480,28 @@ for handler_call in (
 
 if "codexbar did not return command data." not in function_body(providers_text, "parseCommandPayload"):
     raise AssertionError("parseCommandPayload must reject an empty successful descriptor response")
+
+provider_list_result_body = function_body(providers_text, "handleListResult")
+if "providers = []" in provider_list_result_body:
+    raise AssertionError("a failed provider reload must preserve the last healthy provider list")
+for descriptor_fallback_fragment in (
+    "providerDescriptorsUnavailable = true",
+    "providerListHasSupportedDescriptors(next)",
+    "runProviderListCommand(false)",
+):
+    if descriptor_fallback_fragment not in provider_list_result_body:
+        raise AssertionError(
+            "the Providers page must expose descriptor compatibility fallback state; "
+            f"missing {descriptor_fallback_fragment!r}"
+        )
+provider_publish_index = provider_list_result_body.find("providers = next")
+descriptor_supported_index = provider_list_result_body.find(
+    "providerListHasSupportedDescriptors(next)"
+)
+if provider_publish_index < 0 or descriptor_supported_index < provider_publish_index:
+    raise AssertionError(
+        "descriptor support must be confirmed only after a valid provider list is published"
+    )
 
 # Overview selection is stored with the raw CLI provider IDs (e.g. groqcloud,
 # alibaba-coding-plan) but matched at runtime against providerKey-normalized
@@ -1005,6 +1037,10 @@ for contrast_fragment in (
         )
 if "providerReadableColor(" not in provider_config_row_text:
     raise AssertionError("ProviderConfigRow must keep unselected provider icons theme-readable")
+if 'Accessible.name: i18n("Enable %1", providerRow.providerData.displayName)' not in provider_config_row_text:
+    raise AssertionError("ProviderConfigRow switches must name the provider for assistive technology")
+if 'i18n("%1 - CodexBar default", providerRow.providerData.provider)' not in provider_config_row_text:
+    raise AssertionError("ProviderConfigRow must distinguish the CodexBar default from widget defaults")
 
 for source_name, source_text in (
     ("ProviderUsageRow.qml", provider_usage_row_text),

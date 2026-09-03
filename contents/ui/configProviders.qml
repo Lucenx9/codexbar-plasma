@@ -52,6 +52,8 @@ KCM.SimpleKCM {
     property bool loading: false
     property string errorText: ""
     property string statusText: ""
+    property bool providerDescriptorsUnavailable: false
+    property bool fireworksSingleKeySetupSupported: false
     // provider id -> true while an enable/disable command is in flight
     property var pending: ({})
     // provider id -> desired enabled value while the CLI command is in flight
@@ -87,11 +89,15 @@ KCM.SimpleKCM {
         providerDiagnostics = ({})
         providerDiagnosticErrors = ({})
         selectedProviderID = ""
+        providerDescriptorsUnavailable = false
+        fireworksSingleKeySetupSupported = false
         Qt.callLater(reload)
     }
 
     function reload(preserveMessages) {
         disconnectCommandsByKind("list")
+        disconnectCommandsByKind("version")
+        fireworksSingleKeySetupSupported = false
         if (commandPath.length === 0) {
             errorText = i18n("Set the codexbar command path in the General page.")
             providers = []
@@ -104,6 +110,7 @@ KCM.SimpleKCM {
             statusText = ""
         }
         runProviderListCommand(true)
+        runCliVersionCommand()
     }
 
     function boundedCliMessage(value) {
@@ -146,6 +153,13 @@ KCM.SimpleKCM {
             kind: "list",
             includeDescriptors: includeDescriptors === true,
             providerConfigRevision: providerConfigRevisionValue(),
+            timeoutMs: configCommandTimeoutMs
+        })
+    }
+
+    function runCliVersionCommand() {
+        runCommand([shellQuote(commandPath), "--version"].join(" "), {
+            kind: "version",
             timeoutMs: configCommandTimeoutMs
         })
     }
@@ -287,6 +301,8 @@ KCM.SimpleKCM {
         if (descriptor.kind === "list") {
             loading = false
             errorText = i18n("Loading providers timed out. Try again.")
+        } else if (descriptor.kind === "version") {
+            fireworksSingleKeySetupSupported = false
         } else if (descriptor.kind === "diagnose") {
             setProviderDiagnosticLoading(descriptor.provider, false)
             setProviderDiagnosticError(descriptor.provider, i18n("Loading provider diagnostics timed out. Try again."))
@@ -312,6 +328,8 @@ KCM.SimpleKCM {
 
         if (descriptor.kind === "list") {
             handleListResult(descriptor, stdoutText, stderrText)
+        } else if (descriptor.kind === "version") {
+            handleCliVersionResult(stdoutText, exitCode)
         } else if (descriptor.kind === "toggle") {
             handleToggleResult(descriptor, stdoutText, stderrText, exitCode)
         } else if (descriptor.kind === "setApiKey") {
@@ -325,6 +343,11 @@ KCM.SimpleKCM {
         }
     }
 
+    function handleCliVersionResult(stdoutText, exitCode) {
+        fireworksSingleKeySetupSupported = Number(exitCode) === 0
+            && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 54, 0)
+    }
+
     function handleListResult(descriptor, stdoutText, stderrText) {
         if (!ProviderConfigProtocol.providerListResultIsCurrent(
                 descriptor, providerConfigRevisionValue())) {
@@ -332,13 +355,13 @@ KCM.SimpleKCM {
             return
         }
         if (descriptor.includeDescriptors === true && shouldRetryProviderListWithoutDescriptors(stdoutText, stderrText)) {
+            providerDescriptorsUnavailable = true
             runProviderListCommand(false)
             return
         }
         loading = false
         var trimmed = stdoutText.trim()
         if (trimmed.length === 0) {
-            providers = []
             errorText = stderrText.trim().length > 0
                 ? boundedCliMessage(stderrText)
                 : i18n("codexbar did not return provider data.")
@@ -349,14 +372,12 @@ KCM.SimpleKCM {
         try {
             payload = JSON.parse(trimmed)
         } catch (error) {
-            providers = []
             errorText = i18n("Could not parse codexbar provider JSON: %1", error.message)
             return
         }
 
         var parseError = ProviderConfigProtocol.commandError(payload)
         if (parseError.length > 0) {
-            providers = []
             errorText = parseError
             return
         }
@@ -367,6 +388,10 @@ KCM.SimpleKCM {
         providers = next
         if (!providerByID(selectedProviderID)) {
             selectedProviderID = firstSelectableProvider(next)
+        }
+        if (descriptor.includeDescriptors === true) {
+            providerDescriptorsUnavailable = !ProviderConfigProtocol
+                .providerListHasSupportedDescriptors(next)
         }
         errorText = ""
     }
@@ -798,7 +823,7 @@ KCM.SimpleKCM {
         var rows = []
         rows.push({ label: i18n("Provider id"), value: item.provider })
         rows.push({ label: i18n("State"), value: item.enabled ? i18n("Enabled") : i18n("Disabled") })
-        rows.push({ label: i18n("Default"), value: item.defaultEnabled ? i18n("On by default") : i18n("Off by default") })
+        rows.push({ label: i18n("CodexBar default"), value: item.defaultEnabled ? i18n("Enabled") : i18n("Disabled") })
         rows.push({
             label: i18n("API key setup"),
             value: supportsApiKeySetup(item.provider) ? i18n("Supported") : i18n("Use provider login/source")
@@ -812,7 +837,7 @@ KCM.SimpleKCM {
             rows.push({ label: i18n("Fetch attempts"), value: String(diagnostic.fetchAttempts) })
             appendSettingsRow(rows, i18n("Settings keys"), diagnostic.settingsKeys)
         } else {
-            rows.push({ label: i18n("Provider diagnostics"), value: i18n("Load redacted settings to inspect source/auth details") })
+            rows.push({ label: i18n("Provider diagnostics"), value: i18n("Inspect redacted settings to view source and authentication details") })
         }
         return rows
     }
@@ -1022,6 +1047,8 @@ KCM.SimpleKCM {
         case "deepseek":
         case "doubao":
         case "elevenlabs":
+        case "fireworks":
+            return fireworksSingleKeySetupSupported
         case "grok":
         case "groq":
         case "ibmbob":
@@ -1304,6 +1331,17 @@ KCM.SimpleKCM {
         width: parent.width
         spacing: Kirigami.Units.smallSpacing
 
+        Components.PlainInlineMessage {
+            id: providerImmediateChangesMessage
+
+            Layout.fillWidth: true
+            Layout.leftMargin: Kirigami.Units.smallSpacing
+            Layout.rightMargin: Kirigami.Units.smallSpacing
+            type: Kirigami.MessageType.Information
+            visible: page.providers.length > 0
+            plainText: i18n("Provider changes are saved by CodexBar immediately. Apply and Cancel affect widget settings only.")
+        }
+
         ColumnLayout {
             Layout.fillWidth: true
             Layout.leftMargin: Kirigami.Units.smallSpacing
@@ -1403,7 +1441,7 @@ KCM.SimpleKCM {
                     }
 
                     Controls.Button {
-                        text: i18n("Load redacted settings")
+                        text: i18n("Inspect redacted settings")
                         icon.name: "view-refresh"
                         enabled: page.selectedProvider
                             && !page.providerDiagnosticLoadingFor(page.selectedProvider.provider)
@@ -1413,7 +1451,9 @@ KCM.SimpleKCM {
 
                 Components.PlainControlsLabel {
                     Layout.fillWidth: true
-                    text: i18n("Provider-specific controls come from the CodexBar CLI descriptor. This panel also shows redacted source/auth details and exact CLI commands.")
+                    text: page.providerDescriptorsUnavailable
+                        ? i18n("This CodexBar version does not expose editable provider options. Enable/disable, supported API key setup, provider links, and redacted diagnostics remain available.")
+                        : i18n("Editable provider options come from CodexBar. Redacted source and authentication details are available on request.")
                     opacity: page.secondaryTextOpacity
                     font: Kirigami.Theme.smallFont
                     wrapMode: Text.WordWrap
@@ -1445,7 +1485,7 @@ KCM.SimpleKCM {
                     visible: page.descriptorFieldRows(page.selectedProvider).length > 0
 
                     Components.PlainControlsLabel {
-                        text: i18n("Provider descriptor fields")
+                        text: i18n("Provider options")
                         font.weight: Font.DemiBold
                         Layout.fillWidth: true
                         elide: Text.ElideRight
