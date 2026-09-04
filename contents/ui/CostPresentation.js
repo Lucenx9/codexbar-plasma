@@ -82,7 +82,8 @@ function groupedDecimalString(fmt, value, digits) {
 // Like the money path it degrades to "-" for non-numeric input instead of
 // printing "NaN".
 function amountString(fmt, value, currency) {
-    if (currency === "Quota") {
+    var code = typeof currency === "string" ? currency.trim() : ""
+    if (code === "Quota") {
         var quotaAmount = Number(value)
         if (!isFinite(quotaAmount)) {
             return "-"
@@ -92,10 +93,13 @@ function amountString(fmt, value, currency) {
     var numeric = Number(value)
     var negative = numeric < 0
     var amount = groupedDecimalString(fmt, Math.abs(numeric), 2)
-    if (currency === "USD") {
+    if (code === "USD") {
         return negative ? "-$" + amount : "$" + amount
     }
-    return (negative ? "-" : "") + currency + " " + amount
+    if (code.length === 0) {
+        return (negative ? "-" : "") + amount
+    }
+    return (negative ? "-" : "") + code + " " + amount
 }
 
 function scaledTokenCount(value) {

@@ -38,6 +38,7 @@ TestCase {
 
     function test_quotaIsACreditBalanceNotMoney() {
         compare(CostPresentation.amountString(fmt, 1499.6, "Quota"), "1500")
+        compare(CostPresentation.amountString(fmt, 1499.6, " Quota "), "1500")
         // Non-numeric input degrades like the money path; null counts as 0,
         // matching the pinned "$0.00" behaviour of the USD branch.
         compare(CostPresentation.amountString(fmt, "abc", "Quota"), "-")
@@ -52,6 +53,14 @@ TestCase {
         compare(CostPresentation.amountString(fmt, "abc", "EUR"), "EUR -")
         compare(CostPresentation.amountString(fmt, null, "USD"), "$0.00")
         compare(CostPresentation.groupedDecimalString(fmt, "abc", 2), "-")
+    }
+
+    function test_amountStringHandlesEmptyOrMissingCurrencyGracefully() {
+        compare(CostPresentation.amountString(fmt, 12, ""), "12.00")
+        compare(CostPresentation.amountString(fmt, -12, ""), "-12.00")
+        compare(CostPresentation.amountString(fmt, 12, null), "12.00")
+        compare(CostPresentation.amountString(fmt, 12, undefined), "12.00")
+        compare(CostPresentation.amountString(fmt, 12, "   "), "12.00")
     }
 
     function test_tokenCountStringScalesAndDropsTrailingZero() {

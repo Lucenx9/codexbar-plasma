@@ -339,6 +339,9 @@ function accountLabel(item) {
 }
 
 function dedupeAccountOptions(items) {
+    if (!Array.isArray(items)) {
+        return []
+    }
     var seen = ({})
     var result = []
     for (var i = 0; i < items.length; i++) {

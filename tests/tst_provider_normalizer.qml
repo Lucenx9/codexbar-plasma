@@ -483,6 +483,13 @@ TestCase {
         compare(deduped[4].account, "b@example.com")
     }
 
+    function test_dedupeAccountOptionsRejectsNonArrayInputs() {
+        compare(Normalizer.dedupeAccountOptions(null).length, 0)
+        compare(Normalizer.dedupeAccountOptions(undefined).length, 0)
+        compare(Normalizer.dedupeAccountOptions("invalid").length, 0)
+        compare(Normalizer.dedupeAccountOptions({ account: "a" }).length, 0)
+    }
+
     function test_treatsMissingTokenAccountsAsAnEmptyListNotAFailure() {
         verify(Normalizer.isMissingTokenAccountsError("No token accounts configured for codex."))
         verify(Normalizer.isMissingTokenAccountsError("NO TOKEN ACCOUNTS CONFIGURED"))
