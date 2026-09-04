@@ -12,6 +12,7 @@ ColumnLayout {
     required property var applet
     readonly property var dailyPoints: applet.spendDailyPoints()
     readonly property var providerCosts: applet.spendProviderCosts()
+    readonly property var presentedProviderCosts: applet.presentedSpendProviderCosts(providerCosts)
     readonly property var costTrustSummary: CostPresentation.costTrustSummary(providerCosts)
     readonly property string spendCurrency: applet.spendCurrency(providerCosts)
     readonly property bool hasMixedCostCurrencies: CostPresentation.spendHasMixedCostCurrencies(providerCosts)
@@ -333,7 +334,9 @@ ColumnLayout {
                 }
 
                 Repeater {
-                    model: view.providerCosts
+                    id: spendProviderRepeater
+
+                    model: view.presentedProviderCosts
 
                     delegate: RowLayout {
                         required property var modelData

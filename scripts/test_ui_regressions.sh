@@ -1227,15 +1227,22 @@ for applet_fragment in (
 ):
     applet.require(applet_fragment, "the popup must apply persisted tab customization")
 spend_provider_costs_body = applet.function_body("spendProviderCosts")
+if "ProviderOrder.orderedItems(" in spend_provider_costs_body:
+    raise AssertionError(
+        "saved display order must not change the stable cost aggregation order"
+    )
+presented_spend_provider_costs_body = applet.function_body("presentedSpendProviderCosts")
 for spend_order_fragment in (
     "ProviderOrder.orderedItems(",
     "providerOrderRaw",
 ):
-    if spend_order_fragment not in spend_provider_costs_body:
+    if spend_order_fragment not in presented_spend_provider_costs_body:
         raise AssertionError(
             "Usage & Spend must follow the saved provider order; "
             f"missing {spend_order_fragment!r}"
         )
+if "model: view.presentedProviderCosts" not in applet.id_block("spendProviderRepeater"):
+    raise AssertionError("the visible spend provider list must use presentation order")
 for global_tab_id in ("spendTab", "sessionsTab"):
     if "showLabel: applet.showPopupTabLabels" not in applet.id_block(global_tab_id):
         raise AssertionError(f"{global_tab_id} must use the popup label preference")
