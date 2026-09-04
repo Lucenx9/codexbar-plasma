@@ -73,6 +73,8 @@ ColumnLayout {
     }
 
     RowLayout {
+        id: spendHeaderRow
+
         Layout.fillWidth: true
         Layout.rightMargin: Kirigami.Units.smallSpacing
         spacing: Kirigami.Units.smallSpacing
@@ -95,6 +97,27 @@ ColumnLayout {
                 Layout.fillWidth: true
                 elide: Text.ElideRight
             }
+        }
+
+        Components.RefreshButton {
+            busy: view.applet.costLoading
+            label: i18n("Refresh local history")
+            onRequested: view.applet.refreshCost(true)
+        }
+    }
+
+    RowLayout {
+        id: historyControlsRow
+
+        Layout.fillWidth: true
+        Layout.rightMargin: Kirigami.Units.smallSpacing
+        spacing: Kirigami.Units.smallSpacing
+
+        PlainPlasmaLabel {
+            text: i18n("History")
+            opacity: view.applet.secondaryTextOpacity
+            Layout.fillWidth: true
+            elide: Text.ElideRight
         }
 
         Controls.ComboBox {
@@ -132,13 +155,6 @@ ColumnLayout {
                     return view.rangeIndex(rangeCombo.model, view.applet.costHistoryDays)
                 })
             }
-        }
-
-        PlasmaComponents.ToolButton {
-            icon.name: "view-refresh"
-            enabled: !view.applet.costLoading
-            Accessible.name: i18n("Refresh local history")
-            onClicked: view.applet.refreshCost(true)
         }
     }
 

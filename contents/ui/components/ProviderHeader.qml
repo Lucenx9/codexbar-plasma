@@ -1,14 +1,16 @@
 import QtQuick
-import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
-import org.kde.plasma.components as PlasmaComponents
 
 RowLayout {
     id: providerHeaderRow
 
     required property var applet
     required property var providerData
+    readonly property bool hasAccount: providerData
+        && providerData.account && providerData.account.length > 0
+    readonly property bool hasPlan: providerData
+        && providerData.planText && providerData.planText.length > 0
     readonly property color brandAccent: applet.providerColor(providerData ? providerData.provider : "")
     readonly property color accent: applet.providerReadableColor(
         providerData ? providerData.provider : "",
@@ -93,29 +95,17 @@ RowLayout {
         RowLayout {
             id: providerMetaRow
 
+            visible: providerHeaderRow.hasAccount || providerHeaderRow.hasPlan
             Layout.fillWidth: true
             spacing: Kirigami.Units.smallSpacing
 
             PlainPlasmaLabel {
-                id: providerUpdatedLabel
-
-                text: providerHeaderRow.applet.lastUpdatedText.length > 0
-                    ? providerHeaderRow.applet.lastUpdatedText
-                    : i18n("Updated just now")
-                opacity: providerHeaderRow.applet.secondaryTextOpacity
-                Layout.fillWidth: true
-                elide: Text.ElideRight
-            }
-
-            PlainPlasmaLabel {
                 id: providerAccountLabel
 
-                visible: providerHeaderRow.providerData
-                    && providerHeaderRow.providerData.account
-                    && providerHeaderRow.providerData.account.length > 0
+                visible: providerHeaderRow.hasAccount
                 text: providerHeaderRow.providerData ? providerHeaderRow.providerData.account : ""
                 opacity: providerHeaderRow.applet.secondaryTextOpacity
-                horizontalAlignment: Text.AlignRight
+                Layout.fillWidth: true
                 elide: Text.ElideMiddle
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 16
             }
@@ -123,38 +113,35 @@ RowLayout {
             PlainPlasmaLabel {
                 id: providerPlanLabel
 
-                visible: providerHeaderRow.providerData
-                    && providerHeaderRow.providerData.planText
-                    && providerHeaderRow.providerData.planText.length > 0
+                visible: providerHeaderRow.hasPlan
                 text: providerHeaderRow.providerData ? providerHeaderRow.providerData.planText : ""
+                font: Kirigami.Theme.smallFont
                 opacity: providerHeaderRow.applet.secondaryTextOpacity
                 horizontalAlignment: Text.AlignRight
                 elide: Text.ElideRight
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 5
             }
         }
+
+        PlainPlasmaLabel {
+            id: providerUpdatedLabel
+
+            text: providerHeaderRow.applet.lastUpdatedText.length > 0
+                ? providerHeaderRow.applet.lastUpdatedText
+                : i18n("Updated just now")
+            font: Kirigami.Theme.smallFont
+            opacity: providerHeaderRow.applet.secondaryTextOpacity
+            Layout.fillWidth: true
+            elide: Text.ElideRight
+        }
     }
 
-    // A refresh over data that is already on screen used to leave nothing here
-    // but a greyed button, so the only sign of work was the panel icon spinning
-    // behind the popup.
-    Controls.BusyIndicator {
-        id: providerRefreshIndicator
-
-        visible: providerHeaderRow.applet.loading
-        running: visible
-        Layout.alignment: Qt.AlignTop
-        Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
-        Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
-    }
-
-    PlasmaComponents.ToolButton {
+    RefreshButton {
         id: providerRefreshButton
 
-        visible: !providerHeaderRow.applet.loading
         Layout.alignment: Qt.AlignTop
-        icon.name: "view-refresh"
-        Accessible.name: i18n("Refresh")
-        onClicked: providerHeaderRow.applet.refreshNow(true)
+        busy: providerHeaderRow.applet.loading
+        label: i18n("Refresh")
+        onRequested: providerHeaderRow.applet.refreshNow(true)
     }
 }

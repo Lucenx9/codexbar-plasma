@@ -271,15 +271,19 @@ msgid "Tokens"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
+msgid "Refresh local history"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "History"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
 msgid "History metric"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
 msgid "History range"
-msgstr ""
-
-#: contents/ui/components/SpendView.qml
-msgid "Refresh local history"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml

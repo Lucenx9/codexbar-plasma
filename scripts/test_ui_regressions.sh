@@ -1564,12 +1564,41 @@ for header_id, header_body in (
     ("overviewHeaderRow", overview_header_body),
     ("providerHeaderRow", provider_header_body),
 ):
-    if "Controls.BusyIndicator" not in header_body or "running: visible" not in header_body:
+    if "RefreshButton {" not in header_body or "busy:" not in header_body:
         raise AssertionError(
-            f"{header_id} must show a running busy indicator while a refresh "
-            "runs over data that is already on screen; a greyed button is not "
-            "feedback"
+            f"{header_id} must use the shared refresh control with busy feedback"
         )
+
+refresh_control_body = applet.id_block("refreshControl")
+for fragment in (
+    "implicitWidth: refreshButton.implicitWidth",
+    "implicitHeight: refreshButton.implicitHeight",
+    "visible: !refreshControl.busy",
+    "visible: refreshControl.busy",
+    "running: visible",
+    "Accessible.name: refreshControl.label",
+    "delay: Kirigami.Units.toolTipDelay",
+):
+    if fragment not in refresh_control_body:
+        raise AssertionError(f"refresh controls must retain their footprint and feedback: {fragment}")
+for effect in ("refreshNow(", "refreshCost(", "refreshSessions("):
+    if effect in refresh_control_body:
+        raise AssertionError("the shared refresh control must leave effects in its owning view")
+for fragment in (
+    "busy: view.applet.costLoading",
+    "busy: view.applet.sessionsLoading",
+    "onRequested: view.applet.refreshCost(true)",
+    "onRequested: view.applet.refreshSessions()",
+):
+    applet.require(fragment, "history and sessions must retain scoped refresh feedback and actions")
+
+spend_header = applet.id_block("spendHeaderRow")
+history_controls = applet.id_block("historyControlsRow")
+if "ComboBox" in spend_header or "spendTotalLine()" not in spend_header:
+    raise AssertionError("history filters must leave the full header width available for the spend total")
+for control_id in ("metricCombo", "rangeCombo"):
+    if f"id: {control_id}" not in history_controls:
+        raise AssertionError("history filters must remain grouped on their own row")
 
 if "fullRepresentation:" not in main_text:
     raise AssertionError("the applet must keep a fullRepresentation root")
@@ -1684,6 +1713,15 @@ if "function costDailyRows(tokenCost)" in main_text:
     raise AssertionError("cost details must not repeat the daily history below the chart")
 
 overview_row_body = id_block(overview_provider_row_text, "overviewRow")
+for fragment in (
+    "implicitHeight: overviewRowContent.implicitHeight + Kirigami.Units.largeSpacing * 2",
+    "Layout.preferredHeight: implicitHeight",
+    "readonly property bool keyboardFocusVisible: overviewRowFocus.visualFocus",
+    "border.width: overviewRow.keyboardFocusVisible ? 1 : 0",
+    "overviewRowFocus.forceActiveFocus(Qt.MouseFocusReason)",
+):
+    if fragment not in overview_row_body:
+        raise AssertionError(f"overview rows must fit their content and distinguish keyboard focus: {fragment}")
 if "applet.withAlpha(Kirigami.Theme.textColor, 0.035)" not in overview_row_body:
     raise AssertionError("overview rows must keep a quiet neutral resting surface")
 overview_row_surface_bindings = overview_row_body.split("RowLayout {", 1)[0]
@@ -1779,6 +1817,9 @@ if "providerHeaderRow.width" in provider_account_label_body or "providerMetaRow.
 provider_plan_label_body = id_block(provider_header_text, "providerPlanLabel")
 if "Layout.maximumWidth: Kirigami.Units.gridUnit * 5" not in provider_plan_label_body:
     raise AssertionError("providerPlanLabel must keep plan text from crowding provider metadata")
+
+if "providerUpdatedLabel" in applet.id_block("providerMetaRow"):
+    raise AssertionError("account identity and the update timestamp must have separate lines")
 
 cost_drill_down_body = id_block(main_text, "costDrillDownSection")
 if "readonly property real metricValueColumnWidth: Kirigami.Units.gridUnit * 9" not in cost_drill_down_body:
@@ -2362,7 +2403,7 @@ if "rangeCombo.valueAt(index)" not in spend_view_text:
 if "view.applet.refreshCost(true)" not in spend_view_text:
     raise AssertionError("the cost refresh button must explicitly bypass the automatic hourly throttle")
 for cost_loading_fragment in (
-    "enabled: !view.applet.costLoading",
+    "busy: view.applet.costLoading",
     "visible: view.applet.costLoading && view.providerCosts.length === 0",
     "visible: !view.applet.costLoading",
 ):

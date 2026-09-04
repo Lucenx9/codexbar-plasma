@@ -457,10 +457,10 @@ manual_refresh_fragments = {
         "root.refreshNow(true)",
     ),
     root / "contents/ui/components/ProviderHeader.qml": (
-        "onClicked: providerHeaderRow.applet.refreshNow(true)",
+        "onRequested: providerHeaderRow.applet.refreshNow(true)",
     ),
     root / "contents/ui/components/FullRepresentation.qml": (
-        "onClicked: applet.refreshNow(true)",
+        "onRequested: applet.refreshNow(true)",
     ),
 }
 for path, fragments in manual_refresh_fragments.items():

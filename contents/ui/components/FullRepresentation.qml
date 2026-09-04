@@ -801,21 +801,10 @@ Item {
                     }
                 }
 
-                // A refresh over data that is already on screen used to show
-                // nothing here but a greyed button, so the only sign of work
-                // was the spinning panel icon behind the popup.
-                Controls.BusyIndicator {
-                    visible: applet.loading
-                    running: visible
-                    Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
-                    Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
-                }
-
-                PlasmaComponents.ToolButton {
-                    visible: !applet.loading
-                    icon.name: "view-refresh"
-                    Accessible.name: i18n("Refresh")
-                    onClicked: applet.refreshNow(true)
+                Components.RefreshButton {
+                    busy: applet.loading
+                    label: i18n("Refresh")
+                    onRequested: applet.refreshNow(true)
                 }
             }
 

@@ -99,11 +99,10 @@ ColumnLayout {
             }
         }
 
-        PlasmaComponents.ToolButton {
-            icon.name: "view-refresh"
-            enabled: !view.applet.sessionsLoading
-            Accessible.name: i18n("Refresh sessions")
-            onClicked: view.applet.refreshSessions()
+        Components.RefreshButton {
+            busy: view.applet.sessionsLoading
+            label: i18n("Refresh sessions")
+            onRequested: view.applet.refreshSessions()
         }
     }
 
