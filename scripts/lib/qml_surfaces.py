@@ -70,6 +70,8 @@ SURFACES: dict[str, tuple[str, ...]] = {
         "contents/ui/config/*.qml",
         "contents/ui/config/*.js",
         "contents/ui/general/*.js",
+        # Preview-only capture code is linted, but never packaged with the applet.
+        "scripts/smoke/*.qml",
     ),
 }
 

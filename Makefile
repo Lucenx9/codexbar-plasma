@@ -1,4 +1,4 @@
-.PHONY: check install restart package translations update
+.PHONY: check smoke install restart package translations update
 
 PACKAGE_FILES := metadata.json contents docs/codexbar-plasma-overview.png docs/codexbar-plasma-codex.png scripts/update-widget.sh LICENSE NOTICE.md README.md
 
@@ -27,6 +27,7 @@ check:
 	scripts/test_i18n_catalog.sh
 	scripts/test_cli_descriptor_contract.sh
 	scripts/test_qml_logic.sh
+	python3 -m unittest discover -s tests -p 'test_smoke_popup.py'
 	scripts/test_qml_hardening.sh
 	xmllint --noout contents/config/main.xml
 	jq . metadata.json >/dev/null
@@ -35,6 +36,9 @@ check:
 	else \
 		echo "kpackagetool6 not found; skipping appstream metainfo check"; \
 	fi
+
+smoke:
+	python3 scripts/smoke_popup.py $(SMOKE_ARGS)
 
 install: package
 	kpackagetool6 -t Plasma/Applet -u dist/codexbar-plasma.plasmoid || kpackagetool6 -t Plasma/Applet -i dist/codexbar-plasma.plasmoid

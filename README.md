@@ -250,6 +250,57 @@ Run checks:
 make check
 ```
 
+Run the popup smoke test from a graphical Plasma 6 session:
+
+```sh
+make smoke
+```
+
+This requires Python 3, `plasmawindowed`, `dbus-run-session`, and the Plasma,
+Kirigami, and KDE desktop control QML modules. It opens a temporary applet for
+each scenario, captures the popup, and closes the preview automatically:
+
+| Scenario | Captured state |
+| --- | --- |
+| `normal` | Overview with synthetic Codex and Claude quotas. |
+| `loading` | Initial loading while the fixture CLI waits. |
+| `partial-error` | Claude's error view while healthy Codex data remains available. |
+| `long-text` | Codex with long account and workspace labels, two accounts, and doubled body text. |
+
+Select one scenario or choose a new artifact directory:
+
+```sh
+make smoke SMOKE_ARGS='--scenario long-text'
+python3 scripts/smoke_popup.py --scenario normal --output /tmp/codexbar-preview
+```
+
+The command prints the artifact directory, defaulting to `dist/smoke/run-*`.
+Each scenario produces a PNG and a process log; `results.json` records pass or
+failure. Existing output directories are never overwritten. The timeout is
+30 seconds per scenario and can be changed with `--timeout 60`.
+
+The runner copies the current applet into temporary XDG directories under a
+separate applet ID and uses a private D-Bus session. It sets a synthetic CLI
+path and disables updates and notifications before QML starts. It does not
+install a package, use real provider accounts, change the installed widget's
+settings, or restart Plasma. Temporary files and preview processes are removed
+on completion, timeout, or interruption.
+
+The capture component selects the real popup views and waits for the expected
+state before using Qt's
+[`grabToImage`](https://doc.qt.io/qt-6/qml-qtquick-item.html#grabToImage-method).
+Screenshots contain only the popup, with its theme background. QML errors,
+missing captures, early exits, and timeouts fail the command. The screenshots
+still need visual review: this is not a pixel-comparison test, and it does not
+exercise panel placement, keyboard navigation, or the real CLI. Synthetic
+payloads cover a small subset of the repository's CLI 0.56.2 contract; dates
+are relative to the run time. Typography uses Noto Sans and the Breeze icons.
+
+`make check` covers the runner's portable isolation and failure-handling tests
+and lints the capture QML.
+`make smoke` additionally requires the graphical environment and reports a
+failure rather than silently skipping when that environment is unavailable.
+
 Update the translation template after changing user-facing `i18n` strings:
 
 ```sh
