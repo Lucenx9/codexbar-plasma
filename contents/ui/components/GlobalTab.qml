@@ -128,12 +128,22 @@ Rectangle {
         anchors.bottomMargin: Kirigami.Units.smallSpacing + 2
         spacing: Kirigami.Units.smallSpacing
 
+        Item {
+            visible: !tab.showLabel
+            Layout.fillWidth: !tab.showLabel
+        }
+
         Kirigami.Icon {
             source: tab.iconName
             isMask: true
             color: tab.selected ? tab.accent : tab.foreground
             Layout.preferredWidth: Kirigami.Units.iconSizes.small
             Layout.preferredHeight: Kirigami.Units.iconSizes.small
+        }
+
+        Item {
+            visible: !tab.showLabel
+            Layout.fillWidth: !tab.showLabel
         }
 
         PlainPlasmaLabel {

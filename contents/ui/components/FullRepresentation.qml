@@ -311,12 +311,22 @@ Item {
                             anchors.bottomMargin: Kirigami.Units.smallSpacing + 2
                             spacing: Kirigami.Units.smallSpacing
 
+                            Item {
+                                visible: !applet.showPopupTabLabels
+                                Layout.fillWidth: !applet.showPopupTabLabels
+                            }
+
                             Kirigami.Icon {
                                 source: "view-grid-symbolic"
                                 isMask: true
                                 color: overviewTab.selected ? overviewTab.accent : overviewTab.foreground
                                 Layout.preferredWidth: Kirigami.Units.iconSizes.small
                                 Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                            }
+
+                            Item {
+                                visible: !applet.showPopupTabLabels
+                                Layout.fillWidth: !applet.showPopupTabLabels
                             }
 
                             PlainPlasmaLabel {
@@ -501,6 +511,11 @@ Item {
                                 anchors.bottomMargin: Kirigami.Units.smallSpacing + 2
                                 spacing: Kirigami.Units.smallSpacing
 
+                                Item {
+                                    visible: !applet.showPopupTabLabels
+                                    Layout.fillWidth: !applet.showPopupTabLabels
+                                }
+
                                 Kirigami.Icon {
                                     source: applet.providerIconSource(modelData.provider)
                                     fallback: "view-statistics"
@@ -508,6 +523,11 @@ Item {
                                     color: providerTab.accent
                                     Layout.preferredWidth: Kirigami.Units.iconSizes.small
                                     Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                                }
+
+                                Item {
+                                    visible: !applet.showPopupTabLabels
+                                    Layout.fillWidth: !applet.showPopupTabLabels
                                 }
 
                                 PlainPlasmaLabel {

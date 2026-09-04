@@ -1183,7 +1183,7 @@ for tooltip_fragment in (
     if tooltip_fragment not in main_text:
         raise AssertionError(f"the panel tooltip/form-factor contract is missing {tooltip_fragment!r}")
 
-provider_tabs_body = id_block(main_text, "providerTabsBar")
+provider_tabs_body = applet.id_block("providerTabsBar")
 for config_fragment in (
     '<entry name="providerOrder" type="String">',
     '<entry name="showPopupTabLabels" type="Bool">',
@@ -1215,6 +1215,8 @@ for icon_only_fragment in (
         raise AssertionError(
             f"icon-only popup tabs must retain discoverable names; missing {icon_only_fragment!r}"
         )
+if provider_tabs_body.count("Layout.fillWidth: !applet.showPopupTabLabels") != 4:
+    raise AssertionError("overview and provider icons must stay centered inside icon-only tabs")
 for global_tab_fragment in (
     'property bool showLabel: true',
     'visible: tab.showLabel',
@@ -1224,6 +1226,8 @@ for global_tab_fragment in (
         raise AssertionError(
             f"global tabs must support accessible icon-only display; missing {global_tab_fragment!r}"
         )
+if global_tab_text.count("Layout.fillWidth: !tab.showLabel") != 2:
+    raise AssertionError("global tab icons must stay centered inside icon-only tabs")
 for tabs_fragment in (
     "Layout.preferredHeight: Kirigami.Units.gridUnit * 2.35",
     "id: providerTabsSurface",
