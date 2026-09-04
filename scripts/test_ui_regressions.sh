@@ -68,6 +68,14 @@ reject_in_surface providers "Provider-specific editing stays in the CodexBar CLI
 # loader diagnostics make successful runs print to stderr, and the inlined
 # order reported those runs as failures.
 require_in_surface providers "ProviderConfigProtocol.commandOutcome("
+for provider_group_fragment in \
+  'import "ProviderOrder.js" as ProviderOrder' \
+  'property string cfg_providerOrder' \
+  'ProviderOrder.settingsGroups(' \
+  'model: page.visibleEnabledProviders' \
+  'model: page.visibleDisabledProviders'; do
+  require_in_surface providers "$provider_group_fragment"
+done
 # Plasma injects cfg_* creation properties, so declarative cfg_* bindings do not
 # stay live. The General surface must observe the runtime values explicitly and
 # keep user edits pending until Apply.

@@ -9,6 +9,7 @@ import "components" as Components
 import "CommandLedger.js" as CommandLedger
 import "Guards.js" as Guards
 import "ProviderIdentity.js" as ProviderIdentity
+import "ProviderOrder.js" as ProviderOrder
 import "SafeText.js" as SafeText
 import "ThemeContrast.js" as ThemeContrast
 import "config/ProviderConfigProtocol.js" as ProviderConfigProtocol
@@ -24,6 +25,8 @@ KCM.SimpleKCM {
     property string cfg_commandPathDefault: "codexbar"
     property string cfg_provider
     property string cfg_providerDefault: ""
+    property string cfg_providerOrder
+    property string cfg_providerOrderDefault: ""
     property string cfg_source
     property string cfg_sourceDefault: ""
     property int cfg_refreshInterval
@@ -74,6 +77,10 @@ KCM.SimpleKCM {
     property string selectedProviderID: ""
 
     readonly property var visibleProviders: filterProviders(providers, filterText)
+    readonly property var providerSettingsGroups: ProviderOrder.settingsGroups(
+        visibleProviders, cfg_providerOrder)
+    readonly property var visibleEnabledProviders: providerSettingsGroups.enabled
+    readonly property var visibleDisabledProviders: providerSettingsGroups.disabled
     readonly property int enabledCount: countEnabled(providers)
     readonly property var selectedProvider: providerByID(selectedProviderID)
 
@@ -1785,8 +1792,42 @@ KCM.SimpleKCM {
             plainExplanation: i18n("No provider matches \"%1\".", page.filterText)
         }
 
+        Components.PlainControlsLabel {
+            Layout.fillWidth: true
+            Layout.leftMargin: Kirigami.Units.smallSpacing
+            Layout.rightMargin: Kirigami.Units.smallSpacing
+            visible: page.visibleEnabledProviders.length > 0
+            text: i18n("Enabled")
+            font.weight: Font.DemiBold
+        }
+
         Repeater {
-            model: page.visibleProviders
+            model: page.visibleEnabledProviders
+
+            delegate: Components.ProviderConfigRow {
+                configPage: page
+            }
+        }
+
+        Kirigami.Separator {
+            Layout.fillWidth: true
+            Layout.leftMargin: Kirigami.Units.smallSpacing
+            Layout.rightMargin: Kirigami.Units.smallSpacing
+            visible: page.visibleEnabledProviders.length > 0
+                && page.visibleDisabledProviders.length > 0
+        }
+
+        Components.PlainControlsLabel {
+            Layout.fillWidth: true
+            Layout.leftMargin: Kirigami.Units.smallSpacing
+            Layout.rightMargin: Kirigami.Units.smallSpacing
+            visible: page.visibleDisabledProviders.length > 0
+            text: i18n("Disabled")
+            font.weight: Font.DemiBold
+        }
+
+        Repeater {
+            model: page.visibleDisabledProviders
 
             delegate: Components.ProviderConfigRow {
                 configPage: page

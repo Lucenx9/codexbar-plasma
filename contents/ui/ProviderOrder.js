@@ -58,6 +58,45 @@ function orderedItems(items, configuredValue) {
     return result;
 }
 
+function providerDisplaySortKey(item) {
+    var displayName = item && typeof item === "object"
+        ? String(item.displayName || "").trim().toLowerCase()
+        : "";
+    return displayName.length > 0 ? displayName : itemProviderID(item);
+}
+
+function compareProviderDisplayNames(left, right) {
+    var leftKey = providerDisplaySortKey(left);
+    var rightKey = providerDisplaySortKey(right);
+    if (leftKey !== rightKey) {
+        return leftKey < rightKey ? -1 : 1;
+    }
+
+    var leftProviderID = itemProviderID(left);
+    var rightProviderID = itemProviderID(right);
+    return leftProviderID === rightProviderID ? 0 : (leftProviderID < rightProviderID ? -1 : 1);
+}
+
+function settingsGroups(items, configuredValue) {
+    var source = Array.isArray(items) ? items.slice(0, maximumProviderItems) : [];
+    var enabled = [];
+    var disabled = [];
+
+    for (var i = 0; i < source.length; i++) {
+        if (source[i] && source[i].enabled === true) {
+            enabled.push(source[i]);
+        } else {
+            disabled.push(source[i]);
+        }
+    }
+
+    disabled.sort(compareProviderDisplayNames);
+    return {
+        enabled: orderedItems(enabled, configuredValue),
+        disabled: disabled
+    };
+}
+
 function serializedOrder(items) {
     var result = [];
     var source = Array.isArray(items) ? items.slice(0, maximumProviderItems) : [];

@@ -25,6 +25,40 @@ TestCase {
         }).join(","), "claude,codex,gemini");
     }
 
+    function test_settingsGroupsPutEnabledProvidersFirstInPopupOrder() {
+        var providers = [
+            {
+                provider: "openrouter",
+                displayName: "OpenRouter",
+                enabled: false
+            },
+            {
+                provider: "codex",
+                displayName: "Codex",
+                enabled: true
+            },
+            {
+                provider: "anthropic",
+                displayName: "Anthropic",
+                enabled: false
+            },
+            {
+                provider: "antigravity",
+                displayName: "Antigravity",
+                enabled: true
+            }
+        ];
+
+        var groups = ProviderOrder.settingsGroups(providers, "antigravity,codex");
+
+        compare(groups.enabled.map(function (item) {
+            return item.provider;
+        }).join(","), "antigravity,codex");
+        compare(groups.disabled.map(function (item) {
+            return item.provider;
+        }).join(","), "anthropic,openrouter");
+    }
+
     function test_moveReturnsTheCompleteCanonicalOrder() {
         var providers = [
             {
