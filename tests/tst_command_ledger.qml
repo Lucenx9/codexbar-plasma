@@ -42,6 +42,22 @@ TestCase {
         compare(CommandLedger.descriptor("sessions", "", 1000, 250, 9000).deadlineMs, 1250)
     }
 
+    // Even when both the timeout and the caller fallback are unusable, the
+    // descriptor must stay finite: a NaN deadline disables the timeout timer
+    // (hasDeadlines) while expired() skips it for ever, leaking the entry.
+    function test_descriptorNeverMintsAnImmortalDeadline() {
+        var bothBad = CommandLedger.descriptor("usage", "codex", 1000, 0, 0)
+        verify(isFinite(bothBad.deadlineMs))
+        verify(bothBad.deadlineMs > 0)
+        var commands = CommandLedger.opened(({}), "a", bothBad)
+        verify(CommandLedger.hasDeadlines(commands))
+        compare(CommandLedger.expired(commands, bothBad.deadlineMs).length, 1)
+
+        var badClock = CommandLedger.descriptor("usage", "codex", Number.NaN, "abc", undefined)
+        verify(isFinite(badClock.deadlineMs))
+        verify(badClock.deadlineMs > 0)
+    }
+
     // QML bindings on command maps only re-evaluate when the property is
     // reassigned, so neither opening nor closing may edit a map in place.
     function test_openedAndClosedReturnNewMapsWithoutMutating() {
