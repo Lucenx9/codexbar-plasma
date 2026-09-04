@@ -47,8 +47,8 @@ require_in_surface display 'import "CommandLedger.js" as CommandLedger'
 reject_in_surface display "function commandWithRunNonce(command)"
 require_in_surface display "commandRunSerial += 1"
 require_in_surface display "var sourceName = CommandLedger.withRunNonce(command, commandRunSerial)"
-require_in_surface display "overviewProviderCommands = CommandLedger.opened("
-require_in_surface display "overviewProviderSource.connectSource(sourceName)"
+require_in_surface display "providerRosterCommands = CommandLedger.opened("
+require_in_surface display "providerRosterSource.connectSource(sourceName)"
 
 reject_in_surface applet "console.log(\"CodexBar"
 reject_in_surface providers "console.log(\"CodexBar"

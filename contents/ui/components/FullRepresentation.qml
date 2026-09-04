@@ -218,9 +218,11 @@ Item {
                         }
 
                         visible: applet.overviewAvailable
-                        Layout.preferredWidth: Math.max(
-                            Kirigami.Units.gridUnit * 5.2,
-                            overviewTabLabel.implicitWidth + Kirigami.Units.gridUnit * 2.2)
+                        Layout.preferredWidth: applet.showPopupTabLabels
+                            ? Math.max(
+                                Kirigami.Units.gridUnit * 5.2,
+                                overviewTabLabel.implicitWidth + Kirigami.Units.gridUnit * 2.2)
+                            : providerTabsFlickable.height
                         Layout.preferredHeight: providerTabsFlickable.height
                         radius: applet.roundedSurfaceRadius
                         color: overviewTabMouse.pressed
@@ -298,11 +300,25 @@ Item {
                             onClicked: overviewTab.activate()
                         }
 
+                        PlainToolTip {
+                            visible: !applet.showPopupTabLabels && overviewTabMouse.containsMouse
+                            plainText: i18n("Overview")
+                        }
+
                         RowLayout {
+                            id: overviewTabContent
+
                             anchors.fill: parent
                             anchors.margins: Kirigami.Units.smallSpacing
                             anchors.bottomMargin: Kirigami.Units.smallSpacing + 2
                             spacing: Kirigami.Units.smallSpacing
+
+                            Item {
+                                id: overviewTabLeadingSpacer
+
+                                visible: !applet.showPopupTabLabels
+                                Layout.fillWidth: !applet.showPopupTabLabels
+                            }
 
                             Kirigami.Icon {
                                 source: "view-grid-symbolic"
@@ -312,9 +328,17 @@ Item {
                                 Layout.preferredHeight: Kirigami.Units.iconSizes.small
                             }
 
+                            Item {
+                                id: overviewTabTrailingSpacer
+
+                                visible: !applet.showPopupTabLabels
+                                Layout.fillWidth: !applet.showPopupTabLabels
+                            }
+
                             PlainPlasmaLabel {
                                 id: overviewTabLabel
 
+                                visible: applet.showPopupTabLabels
                                 text: i18n("Overview")
                                 font.weight: overviewTab.selected ? Font.DemiBold : Font.Normal
                                 color: overviewTab.foreground
@@ -337,9 +361,12 @@ Item {
                     }
 
                     Components.GlobalTab {
+                        id: spendTab
+
                         visible: applet.spendAvailable
                         applet: fullRoot.applet
                         title: i18n("Usage & Spend")
+                        showLabel: applet.showPopupTabLabels
                         tabStrip: providerTabsFlickable
                         iconName: "office-chart-bar"
                         tabHeight: providerTabsFlickable.height
@@ -348,9 +375,12 @@ Item {
                     }
 
                     Components.GlobalTab {
+                        id: sessionsTab
+
                         visible: applet.sessionsAvailable
                         applet: fullRoot.applet
                         title: i18n("Sessions")
+                        showLabel: applet.showPopupTabLabels
                         tabStrip: providerTabsFlickable
                         iconName: "system-run-symbolic"
                         tabHeight: providerTabsFlickable.height
@@ -396,10 +426,12 @@ Item {
                                 providerTabsFlickable.claimSelectedTab(providerTab, selected)
                             }
 
-                            Layout.preferredWidth: Math.min(
-                                Kirigami.Units.gridUnit * 7,
-                                Math.max(Kirigami.Units.gridUnit * 4.2,
-                                    providerTabLabel.implicitWidth + Kirigami.Units.gridUnit * 2.2))
+                            Layout.preferredWidth: applet.showPopupTabLabels
+                                ? Math.min(
+                                    Kirigami.Units.gridUnit * 7,
+                                    Math.max(Kirigami.Units.gridUnit * 4.2,
+                                        providerTabLabel.implicitWidth + Kirigami.Units.gridUnit * 2.2))
+                                : providerTabsFlickable.height
                             Layout.preferredHeight: providerTabsFlickable.height
                             radius: applet.roundedSurfaceRadius
                             color: providerTabMouse.pressed
@@ -478,11 +510,25 @@ Item {
                                 onClicked: providerTab.activate()
                             }
 
+                            PlainToolTip {
+                                visible: !applet.showPopupTabLabels && providerTabMouse.containsMouse
+                                plainText: modelData.title
+                            }
+
                             RowLayout {
+                                id: providerTabContent
+
                                 anchors.fill: parent
                                 anchors.margins: Kirigami.Units.smallSpacing
                                 anchors.bottomMargin: Kirigami.Units.smallSpacing + 2
                                 spacing: Kirigami.Units.smallSpacing
+
+                                Item {
+                                    id: providerTabLeadingSpacer
+
+                                    visible: !applet.showPopupTabLabels
+                                    Layout.fillWidth: !applet.showPopupTabLabels
+                                }
 
                                 Kirigami.Icon {
                                     source: applet.providerIconSource(modelData.provider)
@@ -493,9 +539,17 @@ Item {
                                     Layout.preferredHeight: Kirigami.Units.iconSizes.small
                                 }
 
+                                Item {
+                                    id: providerTabTrailingSpacer
+
+                                    visible: !applet.showPopupTabLabels
+                                    Layout.fillWidth: !applet.showPopupTabLabels
+                                }
+
                                 PlainPlasmaLabel {
                                     id: providerTabLabel
 
+                                    visible: applet.showPopupTabLabels
                                     text: modelData.title
                                     font.weight: providerTab.selected ? Font.DemiBold : Font.Normal
                                     color: providerTab.foreground

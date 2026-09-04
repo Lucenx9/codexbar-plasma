@@ -61,6 +61,10 @@ KCM.SimpleKCM {
     property bool cfg_showQuotaWarningMarkersDefault: true
     property string cfg_menuBarDisplayMode
     property string cfg_menuBarDisplayModeDefault: "percent"
+    property bool cfg_showPopupTabLabels
+    property bool cfg_showPopupTabLabelsDefault: true
+    property string cfg_providerOrder
+    property string cfg_providerOrderDefault: ""
     // Chosen from the Usage & Spend tab, reset from here like the other
     // popup-owned values.
     property string cfg_costHistoryMetric: "cost"
@@ -190,6 +194,8 @@ KCM.SimpleKCM {
             [cfg_autoUpdateEnabled, cfg_autoUpdateEnabledDefault],
             [cfg_autoUpdateIntervalHours, cfg_autoUpdateIntervalHoursDefault],
             [cfg_menuBarDisplayMode, cfg_menuBarDisplayModeDefault],
+            [cfg_showPopupTabLabels, cfg_showPopupTabLabelsDefault],
+            [cfg_providerOrder, cfg_providerOrderDefault],
             [cfg_resetTimesShowAbsolute, cfg_resetTimesShowAbsoluteDefault],
             [cfg_showProviderChangelogs, cfg_showProviderChangelogsDefault],
             [cfg_showProviderInPanel, cfg_showProviderInPanelDefault],
@@ -231,6 +237,8 @@ KCM.SimpleKCM {
         cfg_autoUpdateEnabled = cfg_autoUpdateEnabledDefault
         cfg_autoUpdateIntervalHours = cfg_autoUpdateIntervalHoursDefault
         cfg_menuBarDisplayMode = cfg_menuBarDisplayModeDefault
+        cfg_showPopupTabLabels = cfg_showPopupTabLabelsDefault
+        cfg_providerOrder = cfg_providerOrderDefault
         cfg_resetTimesShowAbsolute = cfg_resetTimesShowAbsoluteDefault
         cfg_showProviderChangelogs = cfg_showProviderChangelogsDefault
         cfg_showProviderInPanel = cfg_showProviderInPanelDefault

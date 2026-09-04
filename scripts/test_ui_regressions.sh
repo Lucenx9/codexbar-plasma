@@ -68,6 +68,14 @@ reject_in_surface providers "Provider-specific editing stays in the CodexBar CLI
 # loader diagnostics make successful runs print to stderr, and the inlined
 # order reported those runs as failures.
 require_in_surface providers "ProviderConfigProtocol.commandOutcome("
+for provider_group_fragment in \
+  'import "ProviderOrder.js" as ProviderOrder' \
+  'property string cfg_providerOrder' \
+  'ProviderOrder.settingsGroups(' \
+  'model: page.visibleEnabledProviders' \
+  'model: page.visibleDisabledProviders'; do
+  require_in_surface providers "$provider_group_fragment"
+done
 # Plasma injects cfg_* creation properties, so declarative cfg_* bindings do not
 # stay live. The General surface must observe the runtime values explicitly and
 # keep user edits pending until Apply.
@@ -181,7 +189,8 @@ providers_surface_text = providers_surface.text
 debug_surface = Surface("debug", root)
 general_surface = Surface("general", root)
 general_text = general_surface.text
-display_text = display_qml.read_text(encoding="utf-8")
+display_surface = Surface("display", root)
+display_text = display_surface.text
 providers_text = providers_qml.read_text(encoding="utf-8")
 advanced_text = advanced_qml.read_text(encoding="utf-8")
 config_text = config_xml.read_text(encoding="utf-8")
@@ -548,14 +557,16 @@ for stale_account_fragment in (
             f"refresh; found {stale_account_fragment!r}"
         )
 
-display_load_body = function_body(display_text, "loadOverviewProviders")
-if "disconnectOverviewProviderCommands()" not in display_load_body:
+provider_roster_load_body = display_surface.function_body("loadProviderRoster")
+if "disconnectProviderRosterCommands()" not in provider_roster_load_body:
     raise AssertionError(
-        "loadOverviewProviders must invalidate older overview provider commands "
+        "loadProviderRoster must invalidate older provider roster commands "
         "before connecting a replacement"
     )
-if "function disconnectOverviewProviderCommands()" not in display_text:
-    raise AssertionError("configDisplay.qml must define disconnectOverviewProviderCommands")
+display_surface.require(
+    "function disconnectProviderRosterCommands()",
+    "Display must define provider roster command retirement",
+)
 
 provider_index_body = function_body(main_text, "providerIndexForID")
 if "return -1" not in provider_index_body or "return 0" in provider_index_body:
@@ -1183,7 +1194,105 @@ for tooltip_fragment in (
     if tooltip_fragment not in main_text:
         raise AssertionError(f"the panel tooltip/form-factor contract is missing {tooltip_fragment!r}")
 
-provider_tabs_body = id_block(main_text, "providerTabsBar")
+provider_tabs_body = applet.id_block("providerTabsBar")
+for config_fragment in (
+    '<entry name="providerOrder" type="String">',
+    '<entry name="showPopupTabLabels" type="Bool">',
+):
+    if config_fragment not in config_text:
+        raise AssertionError(f"popup tab customization must be persisted; missing {config_fragment!r}")
+for display_fragment in (
+    'id: showPopupTabLabelsCheck',
+    'model: page.orderedEnabledProviderRoster',
+    'ProviderOrder.movedOrder(',
+):
+    display_surface.require(display_fragment, "Display must expose popup tab customization")
+overview_provider_selection_body = display_surface.id_block("overviewProviderSelection")
+if 'model: page.orderedEnabledProviderRoster' not in overview_provider_selection_body:
+    raise AssertionError(
+        "Display must show the saved provider order in the Overview selection"
+    )
+for overview_order_function in (
+    "resolvedOverviewProviderIDs",
+    "toggleOverviewProvider",
+):
+    if "orderedEnabledProviderRoster" not in display_surface.function_body(overview_order_function):
+        raise AssertionError(
+            f"{overview_order_function} must use the saved provider order"
+        )
+for applet_fragment in (
+    'property string providerOrderRaw:',
+    'property bool showPopupTabLabels:',
+    'ProviderOrder.orderedItems(',
+):
+    applet.require(applet_fragment, "the popup must apply persisted tab customization")
+spend_provider_costs_body = applet.function_body("spendProviderCosts")
+if "ProviderOrder.orderedItems(" in spend_provider_costs_body:
+    raise AssertionError(
+        "saved display order must not change the stable cost aggregation order"
+    )
+presented_spend_provider_costs_body = applet.function_body("presentedSpendProviderCosts")
+for spend_order_fragment in (
+    "ProviderOrder.orderedItems(",
+    "providerOrderRaw",
+):
+    if spend_order_fragment not in presented_spend_provider_costs_body:
+        raise AssertionError(
+            "Usage & Spend must follow the saved provider order; "
+            f"missing {spend_order_fragment!r}"
+        )
+if "model: view.presentedProviderCosts" not in applet.id_block("spendProviderRepeater"):
+    raise AssertionError("the visible spend provider list must use presentation order")
+for global_tab_id in ("spendTab", "sessionsTab"):
+    if "showLabel: applet.showPopupTabLabels" not in applet.id_block(global_tab_id):
+        raise AssertionError(f"{global_tab_id} must use the popup label preference")
+for icon_only_fragment in (
+    'visible: applet.showPopupTabLabels',
+    'visible: !applet.showPopupTabLabels && overviewTabMouse.containsMouse',
+    'visible: !applet.showPopupTabLabels && providerTabMouse.containsMouse',
+):
+    if icon_only_fragment not in provider_tabs_body:
+        raise AssertionError(
+            f"icon-only popup tabs must retain discoverable names; missing {icon_only_fragment!r}"
+        )
+for global_tab_fragment in (
+    'property bool showLabel: true',
+    'visible: tab.showLabel',
+    'visible: !tab.showLabel && tabMouse.containsMouse',
+):
+    applet.require(global_tab_fragment, "global tabs must support accessible icon-only display")
+for tab_content_id, leading_spacer_id, trailing_spacer_id, condition in (
+    (
+        "overviewTabContent",
+        "overviewTabLeadingSpacer",
+        "overviewTabTrailingSpacer",
+        "!applet.showPopupTabLabels",
+    ),
+    (
+        "providerTabContent",
+        "providerTabLeadingSpacer",
+        "providerTabTrailingSpacer",
+        "!applet.showPopupTabLabels",
+    ),
+    (
+        "globalTabContent",
+        "globalTabLeadingSpacer",
+        "globalTabTrailingSpacer",
+        "!tab.showLabel",
+    ),
+):
+    tab_content_body = applet.id_block(tab_content_id)
+    for centered_icon_fragment in (
+        f"id: {leading_spacer_id}",
+        f"id: {trailing_spacer_id}",
+        f"visible: {condition}",
+        f"Layout.fillWidth: {condition}",
+    ):
+        if centered_icon_fragment not in tab_content_body:
+            raise AssertionError(
+                f"{tab_content_id} must center its icon-only content; "
+                f"missing {centered_icon_fragment!r}"
+            )
 for tabs_fragment in (
     "Layout.preferredHeight: Kirigami.Units.gridUnit * 2.35",
     "id: providerTabsSurface",

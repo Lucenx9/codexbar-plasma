@@ -29,6 +29,17 @@ function providerMapKey(value) {
     return key
 }
 
+function normalizedProviderID(value) {
+    if (typeof value !== "string") {
+        return ""
+    }
+    var candidate = value.trim()
+    if (candidate.length === 0 || candidate.length > maximumProviderIDLength) {
+        return ""
+    }
+    return providerMapKey(resolveProviderKey(candidate))
+}
+
 // Provider identity tables shared by the popup and the provider-config page.
 //
 // Both surfaces render the same provider metadata, so these tables used to exist

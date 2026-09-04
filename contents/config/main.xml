@@ -119,6 +119,14 @@
       <label>Panel text display mode.</label>
       <default>percent</default>
     </entry>
+    <entry name="showPopupTabLabels" type="Bool">
+      <label>Show text labels in the popup tab bar.</label>
+      <default>true</default>
+    </entry>
+    <entry name="providerOrder" type="String">
+      <label>Ordered provider identifiers used by the widget.</label>
+      <default></default>
+    </entry>
     <entry name="resetTimesShowAbsolute" type="Bool">
       <label>Show reset times as absolute local times.</label>
       <default>false</default>

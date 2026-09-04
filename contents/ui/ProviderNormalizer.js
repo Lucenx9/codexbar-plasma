@@ -93,14 +93,7 @@ function providerSnapshotKey(providerID) {
 // "" for anything that cannot name a provider, so callers skip the entry rather
 // than inventing an id from a non-string or an oversized payload field.
 function normalizedProviderID(value) {
-    if (typeof value !== "string") {
-        return ""
-    }
-    var trimmed = value.trim()
-    if (trimmed.length === 0 || trimmed.length > ProviderIdentity.maximumProviderIDLength) {
-        return ""
-    }
-    return providerSnapshotKey(trimmed)
+    return ProviderIdentity.normalizedProviderID(value)
 }
 
 // `config providers` output reduced to the enabled provider ids plus every

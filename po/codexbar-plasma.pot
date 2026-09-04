@@ -418,6 +418,34 @@ msgid "Could not parse codexbar provider JSON: %1"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
+msgid "Popup"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Show text labels in the tab bar"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Provider order:"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Loading providers..."
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "No enabled providers available."
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Move %1 up"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Move %1 down"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
 msgid "Panel"
 msgstr ""
 
@@ -458,14 +486,6 @@ msgstr ""
 
 #: contents/ui/configDisplay.qml
 msgid "Element order:"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Move %1 up"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Move %1 down"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
@@ -521,10 +541,6 @@ msgid "Choose up to %1 provider"
 msgid_plural "Choose up to %1 providers"
 msgstr[0] ""
 msgstr[1] ""
-
-#: contents/ui/configDisplay.qml
-msgid "Loading providers..."
-msgstr ""
 
 #: contents/ui/configDisplay.qml
 msgid "No enabled providers available for Overview."

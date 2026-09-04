@@ -9,6 +9,7 @@ import "CommandLedger.js" as CommandLedger
 import "Guards.js" as Guards
 import "PanelDisplay.js" as PanelDisplay
 import "ProviderIdentity.js" as ProviderIdentity
+import "ProviderOrder.js" as ProviderOrder
 import "PanelElements.js" as PanelElements
 import "SafeText.js" as SafeText
 
@@ -23,6 +24,10 @@ KCM.SimpleKCM {
     property bool cfg_showQuotaWarningMarkersDefault: true
     property string cfg_menuBarDisplayMode: "percent"
     property string cfg_menuBarDisplayModeDefault: "percent"
+    property alias cfg_showPopupTabLabels: showPopupTabLabelsCheck.checked
+    property bool cfg_showPopupTabLabelsDefault: true
+    property string cfg_providerOrder: ""
+    property string cfg_providerOrderDefault: ""
     property alias cfg_resetTimesShowAbsolute: resetTimesShowAbsoluteCheck.checked
     property bool cfg_resetTimesShowAbsoluteDefault: false
     property alias cfg_showProviderChangelogs: showProviderChangelogsCheck.checked
@@ -43,23 +48,24 @@ KCM.SimpleKCM {
     property bool cfg_showCreditsInPanelDefault: false
 
     readonly property int maxOverviewProviders: 3
-    readonly property int maximumProviderItems: 256
     readonly property string overviewNoneValue: "__none__"
     readonly property string commandPath: (cfg_commandPath || "codexbar").trim()
-    property var overviewProviders: []
-    property bool overviewProvidersLoading: false
-    property string overviewProvidersError: ""
-    property var overviewProviderCommands: ({})
+    property var enabledProviderRoster: []
+    readonly property var orderedEnabledProviderRoster: ProviderOrder.orderedItems(
+        enabledProviderRoster, cfg_providerOrder)
+    property bool providerRosterLoading: false
+    property string providerRosterError: ""
+    property var providerRosterCommands: ({})
     property int commandRunSerial: 0
-    readonly property int overviewProviderCommandTimeoutMs: 60000
+    readonly property int providerRosterCommandTimeoutMs: 60000
 
-    // Qt.callLater coalesces this with the loadOverviewProviders call the
+    // Qt.callLater coalesces this with the loadProviderRoster call the
     // cfg_commandPathChanged handler queues when Plasma injects the stored
     // command path during page creation, so opening the page spawns one CLI
     // list command, not two.
-    Component.onCompleted: Qt.callLater(loadOverviewProviders)
+    Component.onCompleted: Qt.callLater(loadProviderRoster)
 
-    onCfg_commandPathChanged: Qt.callLater(loadOverviewProviders)
+    onCfg_commandPathChanged: Qt.callLater(loadProviderRoster)
 
     function boundedCliMessage(value) {
         return SafeText.cliMessage(SafeText.stripLoaderDiagnostics(value), SafeText.maximumCliMessageLength)
@@ -111,6 +117,14 @@ KCM.SimpleKCM {
             delta).join(",")
     }
 
+    function moveProvider(index, delta) {
+        cfg_providerOrder = ProviderOrder.movedOrder(
+            enabledProviderRoster,
+            cfg_providerOrder,
+            index,
+            delta)
+    }
+
     onCfg_menuBarDisplayModeChanged: {
         var nextIndex = displayModeIndex(cfg_menuBarDisplayMode)
         if (displayModeCombo.currentIndex !== nextIndex) {
@@ -118,17 +132,17 @@ KCM.SimpleKCM {
         }
     }
 
-    function loadOverviewProviders() {
-        disconnectOverviewProviderCommands()
+    function loadProviderRoster() {
+        disconnectProviderRosterCommands()
         if (commandPath.length === 0) {
-            overviewProviders = []
-            overviewProvidersError = i18n("Set the codexbar command path in the General page.")
-            overviewProvidersLoading = false
+            enabledProviderRoster = []
+            providerRosterError = i18n("Set the codexbar command path in the General page.")
+            providerRosterLoading = false
             return
         }
 
-        overviewProvidersLoading = true
-        overviewProvidersError = ""
+        providerRosterLoading = true
+        providerRosterError = ""
         var command = [
             shellQuote(commandPath),
             "config",
@@ -140,57 +154,57 @@ KCM.SimpleKCM {
         commandRunSerial += 1
         var sourceName = CommandLedger.withRunNonce(command, commandRunSerial)
         var descriptor = CommandLedger.descriptor(
-            "overviewProviders", "", Date.now(),
-            overviewProviderCommandTimeoutMs, overviewProviderCommandTimeoutMs)
-        overviewProviderCommands = CommandLedger.opened(
-            overviewProviderCommands, sourceName, descriptor)
-        overviewProviderSource.connectSource(sourceName)
+            "enabledProviderRoster", "", Date.now(),
+            providerRosterCommandTimeoutMs, providerRosterCommandTimeoutMs)
+        providerRosterCommands = CommandLedger.opened(
+            providerRosterCommands, sourceName, descriptor)
+        providerRosterSource.connectSource(sourceName)
     }
 
-    function disconnectOverviewProviderCommands() {
+    function disconnectProviderRosterCommands() {
         var sourceNames = CommandLedger.sourcesOfKind(
-            overviewProviderCommands, "overviewProviders")
+            providerRosterCommands, "enabledProviderRoster")
         for (var i = 0; i < sourceNames.length; i++) {
             var sourceName = sourceNames[i]
-            overviewProviderSource.disconnectSource(sourceName)
+            providerRosterSource.disconnectSource(sourceName)
         }
-        overviewProviderCommands = ({})
+        providerRosterCommands = ({})
     }
 
-    function hasPendingOverviewProviderCommands() {
-        return CommandLedger.hasKind(overviewProviderCommands, "overviewProviders")
+    function hasPendingProviderRosterCommands() {
+        return CommandLedger.hasKind(providerRosterCommands, "enabledProviderRoster")
     }
 
-    function expireOverviewProviderCommands(nowMs) {
-        var expired = CommandLedger.expired(overviewProviderCommands, nowMs)
+    function expireProviderRosterCommands(nowMs) {
+        var expired = CommandLedger.expired(providerRosterCommands, nowMs)
         if (expired.length === 0) {
             return
         }
-        var remaining = overviewProviderCommands
+        var remaining = providerRosterCommands
         for (var i = 0; i < expired.length; i++) {
             var sourceName = expired[i].sourceName
-            overviewProviderSource.disconnectSource(sourceName)
+            providerRosterSource.disconnectSource(sourceName)
             remaining = CommandLedger.closed(remaining, sourceName)
         }
 
-        overviewProviderCommands = remaining
-        overviewProviders = []
-        overviewProvidersLoading = false
-        overviewProvidersError = i18n("Loading providers timed out. Try again.")
+        providerRosterCommands = remaining
+        enabledProviderRoster = []
+        providerRosterLoading = false
+        providerRosterError = i18n("Loading providers timed out. Try again.")
     }
 
-    function handleOverviewProviderData(sourceName, stdoutText, stderrText) {
-        if (!CommandLedger.find(overviewProviderCommands, sourceName)) {
+    function handleProviderRosterData(sourceName, stdoutText, stderrText) {
+        if (!CommandLedger.find(providerRosterCommands, sourceName)) {
             return
         }
 
-        overviewProviderCommands = CommandLedger.closed(overviewProviderCommands, sourceName)
-        overviewProvidersLoading = false
+        providerRosterCommands = CommandLedger.closed(providerRosterCommands, sourceName)
+        providerRosterLoading = false
 
         var trimmed = stdoutText.trim()
         if (trimmed.length === 0) {
-            overviewProviders = []
-            overviewProvidersError = stderrText.trim().length > 0
+            enabledProviderRoster = []
+            providerRosterError = stderrText.trim().length > 0
                 ? boundedCliMessage(stderrText)
                 : i18n("codexbar did not return provider data.")
             return
@@ -200,21 +214,21 @@ KCM.SimpleKCM {
         try {
             payload = JSON.parse(trimmed)
         } catch (error) {
-            overviewProviders = []
-            overviewProvidersError = i18n("Could not parse codexbar provider JSON: %1", error.message)
+            enabledProviderRoster = []
+            providerRosterError = i18n("Could not parse codexbar provider JSON: %1", error.message)
             return
         }
 
         var message = commandError(payload)
         if (message.length > 0) {
-            overviewProviders = []
-            overviewProvidersError = message
+            enabledProviderRoster = []
+            providerRosterError = message
             return
         }
 
         var items = Array.isArray(payload) ? payload : [payload]
         var nextProviders = []
-        var itemLimit = Math.min(items.length, maximumProviderItems)
+        var itemLimit = Math.min(items.length, ProviderOrder.maximumProviderItems)
         for (var i = 0; i < itemLimit; i++) {
             var item = items[i]
             if (!item || typeof item !== "object" || Array.isArray(item) || item.enabled !== true) {
@@ -230,8 +244,8 @@ KCM.SimpleKCM {
                 displayName: displayName.length > 0 ? displayName : providerTitle(providerID)
             })
         }
-        overviewProviders = nextProviders
-        overviewProvidersError = ""
+        enabledProviderRoster = nextProviders
+        providerRosterError = ""
     }
 
     function commandError(payload) {
@@ -252,8 +266,8 @@ KCM.SimpleKCM {
         }
 
         var automatic = []
-        for (var i = 0; i < overviewProviders.length; i++) {
-            automatic.push(overviewProviders[i].provider)
+        for (var i = 0; i < orderedEnabledProviderRoster.length; i++) {
+            automatic.push(orderedEnabledProviderRoster[i].provider)
             if (automatic.length >= maxOverviewProviders) {
                 break
             }
@@ -311,8 +325,8 @@ KCM.SimpleKCM {
         }
 
         var ordered = []
-        for (var j = 0; j < overviewProviders.length; j++) {
-            var candidate = overviewProviders[j].provider
+        for (var j = 0; j < orderedEnabledProviderRoster.length; j++) {
+            var candidate = orderedEnabledProviderRoster[j].provider
             if (selectedSet[providerSelectionKey(candidate)] && ordered.indexOf(candidate) === -1) {
                 ordered.push(candidate)
                 if (ordered.length >= maxOverviewProviders) {
@@ -355,6 +369,85 @@ KCM.SimpleKCM {
     }
 
     Kirigami.FormLayout {
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Popup")
+            Kirigami.FormData.isSection: true
+        }
+
+        Controls.CheckBox {
+            id: showPopupTabLabelsCheck
+            text: i18n("Show text labels in the tab bar")
+        }
+
+        ColumnLayout {
+            Kirigami.FormData.label: i18n("Provider order:")
+            Layout.fillWidth: true
+            spacing: Kirigami.Units.smallSpacing / 2
+
+            Components.PlainControlsLabel {
+                Layout.fillWidth: true
+                visible: page.providerRosterLoading
+                text: i18n("Loading providers...")
+                opacity: 0.7
+            }
+
+            Components.PlainControlsLabel {
+                Layout.fillWidth: true
+                visible: !page.providerRosterLoading
+                    && page.orderedEnabledProviderRoster.length === 0
+                    && page.providerRosterError.length === 0
+                text: i18n("No enabled providers available.")
+                opacity: 0.7
+                wrapMode: Text.WordWrap
+            }
+
+            Components.PlainInlineMessage {
+                Layout.fillWidth: true
+                type: Kirigami.MessageType.Error
+                plainText: page.providerRosterError
+                visible: page.providerRosterError.length > 0
+            }
+
+            Repeater {
+                model: page.orderedEnabledProviderRoster
+
+                delegate: RowLayout {
+                    required property var modelData
+                    required property int index
+
+                    Layout.fillWidth: true
+                    spacing: Kirigami.Units.smallSpacing
+
+                    Kirigami.Icon {
+                        source: "handle-sort"
+                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                        opacity: 0.55
+                    }
+
+                    Components.PlainControlsLabel {
+                        text: modelData.displayName
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                    }
+
+                    Controls.ToolButton {
+                        icon.name: "go-up"
+                        enabled: index > 0
+                        Accessible.name: i18n("Move %1 up", modelData.displayName)
+                        onClicked: page.moveProvider(index, -1)
+                    }
+
+                    Controls.ToolButton {
+                        icon.name: "go-down"
+                        enabled: index < page.orderedEnabledProviderRoster.length - 1
+                        Accessible.name: i18n("Move %1 down", modelData.displayName)
+                        onClicked: page.moveProvider(index, 1)
+                    }
+                }
+            }
+        }
+
         Kirigami.Separator {
             Kirigami.FormData.label: i18n("Panel")
             Kirigami.FormData.isSection: true
@@ -503,6 +596,8 @@ KCM.SimpleKCM {
         }
 
         ColumnLayout {
+            id: overviewProviderSelection
+
             Kirigami.FormData.label: i18n("Overview providers:")
             Layout.fillWidth: true
             spacing: Kirigami.Units.smallSpacing
@@ -516,28 +611,21 @@ KCM.SimpleKCM {
 
             Components.PlainControlsLabel {
                 Layout.fillWidth: true
-                visible: page.overviewProvidersLoading
+                visible: page.providerRosterLoading
                 text: i18n("Loading providers...")
                 opacity: 0.7
             }
 
             Components.PlainControlsLabel {
                 Layout.fillWidth: true
-                visible: !page.overviewProvidersLoading && page.overviewProviders.length === 0 && page.overviewProvidersError.length === 0
+                visible: !page.providerRosterLoading && page.enabledProviderRoster.length === 0 && page.providerRosterError.length === 0
                 text: i18n("No enabled providers available for Overview.")
                 opacity: 0.7
                 wrapMode: Text.WordWrap
             }
 
-            Components.PlainInlineMessage {
-                Layout.fillWidth: true
-                type: Kirigami.MessageType.Error
-                plainText: page.overviewProvidersError
-                visible: page.overviewProvidersError.length > 0
-            }
-
             Repeater {
-                model: page.overviewProviders
+                model: page.orderedEnabledProviderRoster
 
                 delegate: Controls.CheckBox {
                     required property var modelData
@@ -566,7 +654,7 @@ KCM.SimpleKCM {
     }
 
     Plasma5Support.DataSource {
-        id: overviewProviderSource
+        id: providerRosterSource
 
         engine: "executable"
         interval: 0
@@ -580,17 +668,17 @@ KCM.SimpleKCM {
                 stderrText = i18n("codexbar response exceeded the supported size.")
             }
             disconnectSource(sourceName)
-            page.handleOverviewProviderData(sourceName, stdoutText, stderrText)
+            page.handleProviderRosterData(sourceName, stdoutText, stderrText)
         }
     }
 
     Timer {
-        id: overviewProviderCommandTimeoutTimer
+        id: providerRosterCommandTimeoutTimer
 
         interval: 1000
         repeat: true
-        running: page.hasPendingOverviewProviderCommands()
+        running: page.hasPendingProviderRosterCommands()
         triggeredOnStart: false
-        onTriggered: page.expireOverviewProviderCommands(Date.now())
+        onTriggered: page.expireProviderRosterCommands(Date.now())
     }
 }

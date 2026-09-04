@@ -31,6 +31,13 @@ TestCase {
         compare(ProviderIdentity.providerMapKey("future/provider:v3"), "future/provider:v3")
     }
 
+    function test_normalizesBoundedProviderIDsForSharedConsumers() {
+        compare(ProviderIdentity.normalizedProviderID("  GROQCLOUD  "), "groq")
+        compare(ProviderIdentity.normalizedProviderID("constructor"), "")
+        compare(ProviderIdentity.normalizedProviderID(42), "")
+        compare(ProviderIdentity.normalizedProviderID("x".repeat(129)), "")
+    }
+
     function test_resolvesSharedAliasesBeforeEveryLookup() {
         compare(ProviderIdentity.resolveProviderKey("ai&"), "aiand")
         compare(ProviderIdentity.resolveProviderKey("AZURE-OPENAI"), "azureopenai")
