@@ -86,14 +86,13 @@ function groupedDecimalString(fmt, value, digits) {
 // printing "NaN".
 function amountString(fmt, value, currency) {
     var code = typeof currency === "string" ? currency.trim() : ""
-    if (code === "Quota") {
-        var quotaAmount = Number(value)
-        if (!isFinite(quotaAmount)) {
-            return "-"
-        }
-        return String(Math.round(quotaAmount))
-    }
     var numeric = Number(value)
+    if (!isFinite(numeric)) {
+        return "-"
+    }
+    if (code === "Quota") {
+        return String(Math.round(numeric))
+    }
     var negative = numeric < 0
     var amount = groupedDecimalString(fmt, Math.abs(numeric), 2)
     if (code === "USD") {
@@ -245,7 +244,7 @@ function paintRoundedTopBar(context, x, baseline, width, height, radius) {
 // scale when the Usage & Spend tab switches between cost and tokens.
 function sparklineMax(points, showsTokens) {
     var maximum = 0
-    if (!points) {
+    if (!Array.isArray(points)) {
         return maximum
     }
     for (var i = 0; i < points.length; i++) {
@@ -262,7 +261,7 @@ function metricText(fmt, magnitude, currency, showsTokens) {
 
 function chartPoints(fmt, points, showsTokens) {
     var result = []
-    if (!points) {
+    if (!Array.isArray(points)) {
         return result
     }
     for (var i = 0; i < points.length; i++) {
@@ -283,7 +282,7 @@ function chartPoints(fmt, points, showsTokens) {
 // The newest plotted point, as a label and an already-formatted value. Returns
 // null when there is nothing to summarise; the caller joins the two words.
 function sparklineSummary(fmt, points, showsTokens) {
-    if (!points || points.length === 0) {
+    if (!Array.isArray(points) || points.length === 0) {
         return null
     }
     var last = null
@@ -324,7 +323,7 @@ function tokenSummary(fmt, cost, tokens, currency, tokensText) {
 // token count are dropped rather than printed as zero.
 function breakdownRows(entries) {
     var rows = []
-    if (!entries) {
+    if (!Array.isArray(entries)) {
         return rows
     }
     for (var i = 0; i < entries.length; i++) {
@@ -343,7 +342,7 @@ function breakdownRows(entries) {
 // `tokensTextFor(tokens)` lets the caller word the token half of each summary.
 function modelRows(fmt, tokenCost, tokensTextFor) {
     var rows = []
-    if (!tokenCost || !tokenCost.models) {
+    if (!tokenCost || !Array.isArray(tokenCost.models)) {
         return rows
     }
     for (var i = 0; i < tokenCost.models.length; i++) {
@@ -361,7 +360,7 @@ function modelRows(fmt, tokenCost, tokensTextFor) {
 // metric so the bar lengths match the figures beside them. A point whose label
 // the payload omitted gets `fallbackLabel`.
 function historyRows(fmt, tokenCost, showsTokens, fallbackLabel) {
-    if (!tokenCost || !tokenCost.daily || tokenCost.daily.length === 0) {
+    if (!tokenCost || !Array.isArray(tokenCost.daily) || tokenCost.daily.length === 0) {
         return []
     }
 
@@ -393,7 +392,7 @@ function historyRows(fmt, tokenCost, showsTokens, fallbackLabel) {
 // The bars highlight the peak of the selected metric, so this has to name the
 // same day, not the most expensive one. Returns null when nothing was spent.
 function peakPoint(points, showsTokens) {
-    if (!points || points.length === 0) {
+    if (!Array.isArray(points) || points.length === 0) {
         return null
     }
     var peak = null
@@ -411,7 +410,7 @@ function peakPoint(points, showsTokens) {
 }
 
 function averageDailyValue(points, showsTokens) {
-    if (!points || points.length === 0) {
+    if (!Array.isArray(points) || points.length === 0) {
         return null
     }
     var total = 0
@@ -483,7 +482,7 @@ function spendSnapshots(tokenCosts, historyDays, titleFor) {
 }
 
 function spendCurrency(costs) {
-    var items = costs || []
+    var items = Array.isArray(costs) ? costs : []
     // A token-only snapshot still carries a fallback currency, but it must not
     // choose which priced providers participate in the money aggregate.
     for (var i = 0; i < items.length; i++) {
@@ -528,7 +527,7 @@ function costMatchesSpendCurrency(cost, currency) {
 // caller uses this to label the selected-currency amount as a subtotal and to
 // explain why token totals can cover more providers than money totals.
 function spendHasMixedCostCurrencies(costs) {
-    var items = costs || []
+    var items = Array.isArray(costs) ? costs : []
     var currency = spendCurrency(items)
     for (var i = 0; i < items.length; i++) {
         var totals = items[i].totals || ({})
@@ -876,7 +875,7 @@ function spendDailyPoints(fmt, costs, showsTokens) {
 // Money is summed only in the range currency. Tokens have no currency, so the
 // total keeps every provider just like the token chart does.
 function spendTotals(costs) {
-    var items = costs || []
+    var items = Array.isArray(costs) ? costs : []
     if (items.length === 0) {
         return null
     }
@@ -906,7 +905,7 @@ function spendTotals(costs) {
 // window; until it does, the earliest bars are short for a scan reason rather
 // than a spend reason. A missing flag counts as established.
 function historyStillBuilding(costs) {
-    var items = costs || []
+    var items = Array.isArray(costs) ? costs : []
     for (var i = 0; i < items.length; i++) {
         if (items[i].historyCoverageEstablished === false) {
             return true
