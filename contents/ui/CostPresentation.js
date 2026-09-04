@@ -382,7 +382,7 @@ function historyRows(fmt, tokenCost, showsTokens, fallbackLabel) {
             value: value.length > 0
                 ? value
                 : metricText(fmt, 0, item.currency, showsTokens),
-            percent: maximum > 0 ? Math.max(3, magnitude * 100 / maximum) : 0,
+            percent: maximum > 0 && magnitude > 0 ? Math.max(3, magnitude * 100 / maximum) : 0,
             isPeak: maximum > 0 && magnitude === maximum
         })
     }

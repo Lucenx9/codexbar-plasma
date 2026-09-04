@@ -298,6 +298,26 @@ TestCase {
         compare(rows[0].percent, 3)
     }
 
+    function test_historyRowsDistinguishZeroFromSmallPositiveDays_data() {
+        return [
+            { tag: "cost", showsTokens: false, zeroCost: 0, zeroTokens: 2000 },
+            { tag: "tokens", showsTokens: true, zeroCost: 2000, zeroTokens: 0 }
+        ]
+    }
+
+    function test_historyRowsDistinguishZeroFromSmallPositiveDays(data) {
+        var rows = CostPresentation.historyRows(fmt, { daily: [
+            dailyPoint("Mon", 1000, 1000),
+            dailyPoint("Tue", 1, 1),
+            dailyPoint("Wed", data.zeroCost, data.zeroTokens)
+        ] }, data.showsTokens, "Latest")
+
+        compare(rows[0].percent, 0)
+        compare(rows[0].isPeak, false)
+        compare(rows[1].percent, 3)
+        compare(rows[2].percent, 100)
+    }
+
     function test_historyRowsSurviveAnEmptyPayload() {
         compare(CostPresentation.historyRows(fmt, null, false, "Latest").length, 0)
         compare(CostPresentation.historyRows(fmt, { daily: [] }, false, "Latest").length, 0)

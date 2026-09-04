@@ -394,6 +394,11 @@ require_all(
     "entering Sessions must check freshness",
 )
 require_all(
+    applet.handler_body("onSessionsStaleAfterMsChanged"),
+    ("Qt.callLater(refreshSessionsIfStale)",),
+    "changing the refresh interval must recheck Sessions and reschedule its timer",
+)
+require_all(
     applet.function_body("selectGlobalView"),
     ('candidate === "sessions"', "refreshSessionsIfStale()"),
     "reselecting the Sessions tab must check whether its snapshot became stale",

@@ -18,6 +18,15 @@ function globalSelectionNeedsReconciliation(current, globalViews) {
         && !globalViewIsAvailable(current.globalView, globalViews)
 }
 
+function compactProviderIndex(autoSelect, selectedProviderIndex, automaticProviderIndex) {
+    if (autoSelect !== true) {
+        return 0
+    }
+    // Global popup views have no selected provider. Their selection must not
+    // replace the panel's highest-usage provider with the first roster entry.
+    return selectedProviderIndex >= 0 ? selectedProviderIndex : automaticProviderIndex
+}
+
 function reconcile(current, options) {
     var providerID = String(current && current.providerID || "")
     var globalView = String(current && current.globalView || "overview")

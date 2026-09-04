@@ -222,6 +222,9 @@ PlasmoidItem {
             scheduleSessionsRefreshCheck()
         }
     }
+    onSessionsStaleAfterMsChanged: {
+        Qt.callLater(refreshSessionsIfStale)
+    }
     onExpandedChanged: {
         if (root.expanded) {
             Qt.callLater(refreshSessionsIfStale)
@@ -3709,10 +3712,14 @@ PlasmoidItem {
     }
 
     function selectedCompactProvider() {
-        if (autoSelectProvider && selectedProviderData) {
-            return selectedProviderData
+        if (providers.length === 0) {
+            return null
         }
-        return primaryProvider()
+        var automaticProviderIndex = autoSelectProvider && selectedProviderIndex < 0
+            ? autoSelectedProviderIndex() : 0
+        var index = PopupSelection.compactProviderIndex(
+            autoSelectProvider, selectedProviderIndex, automaticProviderIndex)
+        return providers[index]
     }
 
     function globalViewAvailability() {

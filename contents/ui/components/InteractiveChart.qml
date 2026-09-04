@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
+import "../ChartScale.js" as ChartScale
 
 ColumnLayout {
     id: chart
@@ -18,26 +19,14 @@ ColumnLayout {
     property int hoveredIndex: -1
     readonly property int activeIndex: hoveredIndex >= 0 ? hoveredIndex : selectedIndex
     readonly property bool hasActivePoint: activeIndex >= 0 && activeIndex < points.length
-    readonly property real maximumValue: chartMaximum(points)
+    readonly property var valueDomain: ChartScale.domain(points)
     readonly property real lineMarkerInset: 3.5
 
     Layout.fillWidth: true
     spacing: Kirigami.Units.smallSpacing / 2
 
-    function chartMaximum(items) {
-        var maximum = 0
-        for (var i = 0; i < items.length; i++) {
-            var value = pointValue(items[i])
-            if (value > maximum) {
-                maximum = value
-            }
-        }
-        return maximum
-    }
-
     function pointValue(point) {
-        var value = point && point.value !== undefined ? Number(point.value) : 0
-        return isFinite(value) ? Math.max(0, value) : 0
+        return ChartScale.pointValue(point)
     }
 
     function pointLabel(point) {
@@ -56,7 +45,7 @@ ColumnLayout {
     }
 
     function chartFraction(value) {
-        return maximumValue > 0 ? Math.min(1, Math.max(0, value) / maximumValue) : 0
+        return ChartScale.fraction(value, valueDomain)
     }
 
     function indexAt(positionX) {
@@ -130,7 +119,7 @@ ColumnLayout {
                 }
                 plot.requestPaint()
             }
-            function onMaximumValueChanged() { plot.requestPaint() }
+            function onValueDomainChanged() { plot.requestPaint() }
             function onAccentChanged() { plot.requestPaint() }
             function onKindChanged() { plot.requestPaint() }
             function onSelectedIndexChanged() { plot.requestPaint() }
@@ -165,10 +154,14 @@ ColumnLayout {
                 return
             }
 
-            var baseline = height - 1
+            var baseline = ChartScale.barGeometry(height, 0, chart.valueDomain).baseline
+            if (chart.kind === "line" && chart.valueDomain.minimum < 0) {
+                baseline = chart.applet.chartLineY(height,
+                    chart.chartFraction(0), chart.lineMarkerInset)
+            }
             context.fillStyle = chart.applet.canvasColor(Kirigami.Theme.textColor, 0.12)
             context.fillRect(0, baseline, width, 1)
-            if (chart.points.length === 0 || chart.maximumValue <= 0) {
+            if (chart.points.length === 0 || chart.valueDomain.minimum === chart.valueDomain.maximum) {
                 return
             }
 
@@ -209,16 +202,22 @@ ColumnLayout {
             var normalFill = chart.applet.buildChartBarGradient(context, chart.accent, baseline, 0.78, 0.36)
             var activeFill = chart.applet.buildChartBarGradient(context, chart.accent, baseline, 1, 0.7)
             for (var barIndex = 0; barIndex < chart.points.length; barIndex++) {
-                var fraction = chart.chartFraction(chart.pointValue(chart.points[barIndex]))
-                var barHeight = fraction > 0 ? Math.max(2, (height - 3) * fraction) : 1
+                var bar = ChartScale.barGeometry(height,
+                    chart.pointValue(chart.points[barIndex]), chart.valueDomain)
+                context.save()
+                if (bar.negative) {
+                    context.translate(0, baseline * 2)
+                    context.scale(1, -1)
+                }
                 context.fillStyle = barIndex === chart.activeIndex ? activeFill : normalFill
                 chart.applet.paintRoundedTopBar(
                     context,
                     geometry.offset + barIndex * geometry.step,
                     baseline,
                     geometry.barWidth,
-                    barHeight,
+                    bar.height,
                     Kirigami.Units.smallSpacing / 2)
+                context.restore()
             }
         }
 
