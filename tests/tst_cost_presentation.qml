@@ -39,18 +39,21 @@ TestCase {
     function test_quotaIsACreditBalanceNotMoney() {
         compare(CostPresentation.amountString(fmt, 1499.6, "Quota"), "1500")
         compare(CostPresentation.amountString(fmt, 1499.6, " Quota "), "1500")
-        // Non-numeric input degrades like the money path; null counts as 0,
-        // matching the pinned "$0.00" behaviour of the USD branch.
         compare(CostPresentation.amountString(fmt, "abc", "Quota"), "-")
-        compare(CostPresentation.amountString(fmt, null, "Quota"), "0")
+        compare(CostPresentation.amountString(fmt, null, "Quota"), "-")
     }
 
     function test_nonNumericAmountDegradesToDash() {
         compare(CostPresentation.amountString(fmt, "abc", "USD"), "-")
         compare(CostPresentation.amountString(fmt, "abc", "EUR"), "-")
+        compare(CostPresentation.amountString(fmt, "12", "USD"), "-")
+        compare(CostPresentation.amountString(fmt, "", "USD"), "-")
         compare(CostPresentation.amountString(fmt, undefined, "USD"), "-")
         compare(CostPresentation.amountString(fmt, Number.NaN, "USD"), "-")
-        compare(CostPresentation.amountString(fmt, null, "USD"), "$0.00")
+        compare(CostPresentation.amountString(fmt, null, "USD"), "-")
+        compare(CostPresentation.amountString(fmt, false, "USD"), "-")
+        compare(CostPresentation.amountString(fmt, [], "USD"), "-")
+        compare(CostPresentation.amountString(fmt, {}, "USD"), "-")
         compare(CostPresentation.groupedDecimalString(fmt, "abc", 2), "-")
     }
 
@@ -317,6 +320,7 @@ TestCase {
         compare(CostPresentation.chartPoints(fmt, "invalid", false).length, 0)
         compare(CostPresentation.sparklineMax(null, false), 0)
         compare(CostPresentation.sparklineMax("invalid", false), 0)
+        compare(CostPresentation.sparklineSummary(fmt, "invalid", false), null)
     }
 
     function test_averageDailyValueAndPeakPointSurviveNonArrayInputs() {
@@ -326,7 +330,11 @@ TestCase {
         compare(CostPresentation.peakPoint("invalid", false), null)
     }
 
-    function test_spendTotalsSurviveNonArrayInputs() {
+    function test_spendHelpersSurviveNonArrayInputs() {
+        var arrayLike = { length: 1, 0: null }
+        compare(CostPresentation.spendDailyPoints(fmt, arrayLike, false).length, 0)
+        compare(CostPresentation.spendCurrency(arrayLike), "USD")
+        compare(CostPresentation.spendHasMixedCostCurrencies(arrayLike), false)
         compare(CostPresentation.spendTotals("invalid"), null)
         compare(CostPresentation.historyStillBuilding("invalid"), false)
     }

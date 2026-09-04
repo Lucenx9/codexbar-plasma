@@ -495,8 +495,16 @@ TestCase {
         for (var i = 0; i < Normalizer.maximumAccountSnapshots + 20; i++) {
             oversized.push({ account: "acc" + i })
         }
+        var inspectedPastBound = false
+        Object.defineProperty(oversized[Normalizer.maximumAccountSnapshots], "account", {
+            get: function() {
+                inspectedPastBound = true
+                return "outside-bound"
+            }
+        })
         var deduped = Normalizer.dedupeAccountOptions(oversized)
         compare(deduped.length, Normalizer.maximumAccountSnapshots)
+        verify(!inspectedPastBound)
     }
 
     function test_treatsMissingTokenAccountsAsAnEmptyListNotAFailure() {

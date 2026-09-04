@@ -86,10 +86,10 @@ function groupedDecimalString(fmt, value, digits) {
 // printing "NaN".
 function amountString(fmt, value, currency) {
     var code = typeof currency === "string" ? currency.trim() : ""
-    var numeric = Number(value)
-    if (!isFinite(numeric)) {
+    if (typeof value !== "number" || !isFinite(value)) {
         return "-"
     }
+    var numeric = value
     if (code === "Quota") {
         return String(Math.round(numeric))
     }
@@ -834,7 +834,7 @@ function costTrustNoticeStoreTransition(summary, states, scope, shouldDismiss) {
 }
 
 function spendDailyPoints(fmt, costs, showsTokens) {
-    var items = costs || []
+    var items = Array.isArray(costs) ? costs : []
     var byDate = ({})
     var currency = spendCurrency(items)
     for (var i = 0; i < items.length; i++) {
