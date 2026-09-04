@@ -6,6 +6,15 @@ QMLLINT="${QMLLINT:-/usr/lib/qt6/bin/qmllint}"
 QML_IMPORT_DIR="${QML_IMPORT_DIR:-/usr/lib/qt6/qml}"
 QMLLINT_FLAGS="${QMLLINT_FLAGS:---unqualified disable}"
 
+if [[ ! -d "$QML_IMPORT_DIR" ]]; then
+  for candidate in /usr/lib/*-linux-gnu/qt6/qml; do
+    if [[ -d "$candidate" ]]; then
+      QML_IMPORT_DIR="$candidate"
+      break
+    fi
+  done
+fi
+
 # The `all` surface in scripts/lib/qml_surfaces.py is the one list of QML/JS
 # sources; this check and scripts/update_translations.sh read it, so a new or
 # moved file cannot fall out of one list while staying in another. Keep the

@@ -5,7 +5,7 @@ PACKAGE_FILES := metadata.json contents docs/codexbar-plasma-overview.png docs/c
 # Override on distros where Qt6 ships QML modules elsewhere (e.g. Debian/Ubuntu
 # multiarch: make check QML_IMPORT_DIR=/usr/lib/x86_64-linux-gnu/qt6/qml).
 QMLLINT ?= /usr/lib/qt6/bin/qmllint
-QML_IMPORT_DIR ?= /usr/lib/qt6/qml
+QML_IMPORT_DIR ?= $(or $(firstword $(wildcard /usr/lib/qt6/qml /usr/lib/*-linux-gnu/qt6/qml)),/usr/lib/qt6/qml)
 # Extra qmllint flags. CI without the Plasma QML modules sets these to downgrade
 # the type/import-resolution categories that would otherwise cascade into
 # failures; locally (modules present) they are no-ops, so the check stays full.
