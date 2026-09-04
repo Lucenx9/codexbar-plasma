@@ -266,8 +266,8 @@ KCM.SimpleKCM {
         }
 
         var automatic = []
-        for (var i = 0; i < overviewProviders.length; i++) {
-            automatic.push(overviewProviders[i].provider)
+        for (var i = 0; i < orderedEnabledProviders.length; i++) {
+            automatic.push(orderedEnabledProviders[i].provider)
             if (automatic.length >= maxOverviewProviders) {
                 break
             }
@@ -325,8 +325,8 @@ KCM.SimpleKCM {
         }
 
         var ordered = []
-        for (var j = 0; j < overviewProviders.length; j++) {
-            var candidate = overviewProviders[j].provider
+        for (var j = 0; j < orderedEnabledProviders.length; j++) {
+            var candidate = orderedEnabledProviders[j].provider
             if (selectedSet[providerSelectionKey(candidate)] && ordered.indexOf(candidate) === -1) {
                 ordered.push(candidate)
                 if (ordered.length >= maxOverviewProviders) {
@@ -623,7 +623,7 @@ KCM.SimpleKCM {
             }
 
             Repeater {
-                model: page.overviewProviders
+                model: page.orderedEnabledProviders
 
                 delegate: Controls.CheckBox {
                     required property var modelData

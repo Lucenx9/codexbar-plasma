@@ -1205,6 +1205,19 @@ for display_fragment in (
 ):
     if display_fragment not in display_text:
         raise AssertionError(f"Display must expose popup tab customization; missing {display_fragment!r}")
+if display_text.count('model: page.orderedEnabledProviders') != 2:
+    raise AssertionError(
+        "Display must show the saved provider order in both the reorder controls "
+        "and the Overview selection"
+    )
+for overview_order_function in (
+    "resolvedOverviewProviderIDs",
+    "toggleOverviewProvider",
+):
+    if "orderedEnabledProviders" not in function_body(display_text, overview_order_function):
+        raise AssertionError(
+            f"{overview_order_function} must use the saved provider order"
+        )
 for applet_fragment in (
     'property string providerOrderRaw:',
     'property bool showPopupTabLabels:',
