@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kcmutils as KCM
@@ -1264,6 +1265,30 @@ KCM.SimpleKCM {
         }
     }
 
+    // Unlike FormLayout, a plain ColumnLayout does not reveal focused controls
+    // in its enclosing ScrollablePage. Keep provider rows and their switches visible.
+    function revealFocusedProviderControl() {
+        var control = page.Window.activeFocusItem
+        var ancestor = control
+        while (ancestor && ancestor !== providerContent) {
+            ancestor = ancestor.parent
+        }
+        if (!ancestor) {
+            return
+        }
+        var position = page.flickable.contentItem.mapFromItem(control, 0, 0)
+        page.ensureVisible(control, position.x - control.x, position.y - control.y)
+    }
+
+    Connections {
+        target: page.Window
+        enabled: page.visible
+
+        function onActiveFocusItemChanged() {
+            page.revealFocusedProviderControl()
+        }
+    }
+
     header: ColumnLayout {
         spacing: Kirigami.Units.smallSpacing
 
@@ -1335,6 +1360,8 @@ KCM.SimpleKCM {
     }
 
     ColumnLayout {
+        id: providerContent
+
         width: parent.width
         spacing: Kirigami.Units.smallSpacing
 

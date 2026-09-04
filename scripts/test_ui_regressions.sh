@@ -186,11 +186,46 @@ applet = Surface("applet", root)
 main_text = applet.text
 providers_surface = Surface("providers", root)
 providers_surface_text = providers_surface.text
+providers_surface.require_definition_where_used("revealFocusedProviderControl")
+for focus_fragment in (
+    "target: page.Window",
+    "function onActiveFocusItemChanged()",
+    "page.revealFocusedProviderControl()",
+):
+    providers_surface.require(focus_fragment, "provider settings must reveal focused controls")
+focused_provider_control_body = providers_surface.function_body("revealFocusedProviderControl")
+for focus_fragment in (
+    "ancestor !== providerContent",
+    "page.flickable.contentItem.mapFromItem(control, 0, 0)",
+    "page.ensureVisible(control, position.x - control.x, position.y - control.y)",
+):
+    if focus_fragment not in focused_provider_control_body:
+        raise AssertionError("provider focus scrolling must be scoped to the page content")
 debug_surface = Surface("debug", root)
 general_surface = Surface("general", root)
 general_text = general_surface.text
 display_surface = Surface("display", root)
 display_text = display_surface.text
+display_surface.require_definition_where_used("restoreOrderFocus")
+display_surface.require_definition_where_used("revealFocusedOrderButton")
+display_surface.require(
+    "onYChanged: page.revealFocusedOrderButton(upButton, downButton)",
+    "reordered rows must reveal focused buttons after layout placement")
+reveal_order_focus_body = display_surface.function_body("revealFocusedOrderButton")
+for focus_fragment in ("upButton.activeFocus", "downButton.activeFocus",
+                       "page.ensureVisible(button, position.x - button.x, position.y - button.y)"):
+    if focus_fragment not in reveal_order_focus_body:
+        raise AssertionError("reorder scrolling must follow only the focused button")
+for move_function, repeater in (("moveProvider", "providerOrderRepeater"),
+                                ("movePanelElement", "panelOrderRepeater")):
+    move_body = display_surface.function_body(move_function)
+    if f"Qt.callLater(restoreOrderFocus, {repeater}, key, delta)" not in move_body:
+        raise AssertionError("keyboard reorder must restore focus after delegates are replaced")
+restore_order_focus_body = display_surface.function_body("restoreOrderFocus")
+for focus_fragment in ("row.orderKey === key", "!button.enabled",
+                       "button.forceActiveFocus(Qt.TabFocusReason)"):
+    if focus_fragment not in restore_order_focus_body:
+        raise AssertionError("reorder focus must follow identity and use an enabled button")
 providers_text = providers_qml.read_text(encoding="utf-8")
 advanced_text = advanced_qml.read_text(encoding="utf-8")
 config_text = config_xml.read_text(encoding="utf-8")

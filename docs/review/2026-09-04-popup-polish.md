@@ -88,12 +88,80 @@ stretching the Kirigami placeholder itself would separate those elements.
 | Direct interaction checks | QtTests cover meter activation by keyboard and pointer, chart keyboard and pointer inspection, empty chart selection, the three panel dot sizes, and the Sessions heading in empty/loading/error states. |
 
 The new tests reproduced five failures against the previous code (three panel
-sizes, chart overflow, and Sessions error layout). The final `make check` passes
+sizes, chart overflow, and Sessions error layout). At this stage `make check` passed
 550 QtTests and 3 desktop-style checks with no failures or skips. QML lint,
 ShellCheck, static checks, catalog validation, and AppStream validation pass.
 Packaging and the installed-widget runtime check are recorded in the PR.
 
-`plasmoidviewer` is unavailable on this host. Panel variants were checked using
-the actual compact component in the native gallery, rather than by rearranging
-the user's live desktop panels. The native checks supplement the earlier light
+`plasmoidviewer` is unavailable on this host. This first panel pass used
+the actual compact component in the native gallery. The additional live-panel
+checks are recorded below. The native checks supplement the earlier light
 theme and larger-text comparisons; no claim is made about every Plasma theme.
+
+## Accounts and Settings keyboard navigation
+
+This comparison starts at `853acef`. It uses the same design skills and native
+Plasma controls as the earlier passes. The account and provider fixtures remain
+synthetic. Settings uses an isolated preview package with mocked roster loading.
+The three fixes belong to the account panel, provider settings rows/page, and
+Display ordering controls; they do not change the config schema or CLI payloads.
+
+| Before | After | Why |
+| --- | --- | --- |
+| ![Long account before](interaction-accounts-before.png) | ![Long account after](interaction-accounts-after.png) | Bound the account button to the popup width and elide its label. Keep the full account and workspace text in its accessible name and tooltip. |
+| ![Provider focus before](interaction-providers-before.png) | ![Provider focus after](interaction-providers-after.png) | Provider rows now accept keyboard focus and Space selects their settings without changing enablement. The page scrolls focused rows and controls into view. Previously the disabled-provider switch received focus below the viewport. |
+| ![Display reorder before](interaction-display-before.png) | ![Display reorder after](interaction-display-after.png) | Reordering recreated delegates and lost focus after one move. Restore focus by provider or panel-element identity, choosing the available direction at an edge. The after view shows three consecutive Space presses with focus retained. |
+
+The account tooltip also opens on keyboard focus:
+
+![Full account label on keyboard focus](interaction-accounts-keyboard-after.png)
+
+Panel element reordering uses the same focus restoration. After layout places a
+rebuilt row, the focused arrow remains inside the scroll viewport:
+
+![Panel order keyboard focus](interaction-panel-order-after.png)
+
+| Native keyboard check | Result |
+| --- | --- |
+| General | Tab/Shift+Tab navigation, native checkbox and combo input, scrolling, and Apply worked. Applying a preview setting returned Apply to its disabled state. |
+| Providers | Rows, separate enable switches, disclosure, search, reload, and actions were reachable. Space selected a disabled provider without enabling it. Focused lower rows scrolled into view. |
+| Display | Repeated provider and panel-element moves retained the focus outline. At the last row focus moved to the enabled up arrow. The focused control stayed visible after layout. |
+| Advanced and Debug | Fields and buttons were keyboard reachable with native focus feedback. Diagnostics were not run. |
+| Credential dialog | The actual API-key action opened the native masked-input dialog. Dummy input remained masked; Escape canceled and returned the action to its enabled state. No key was saved. |
+| Unsaved settings | Native confirmation appeared on page navigation. Escape canceled navigation; Discard then opened the requested page. |
+
+[Masked credential dialog](interaction-credential-dialog.png) ·
+[Unsaved-settings confirmation](interaction-settings-confirmation.png)
+
+The new QtTests reproduced three failures against `853acef`: account overflow
+at 240 and 540 logical pixels, and keyboard selection of a provider row. All
+three pass after the fixes, including full account identity preservation and
+the separate enable switch. Static checks guard the page-owned focus/scroll
+wiring; native keyboard checks cover ordering after delegate replacement.
+Final verification passes **553 QtTests and 3 desktop-style checks**, with no
+failures or skips, plus the remaining `make check` gates. Packaging and local
+package upgrade passed. The installed widget opened successfully and its runtime
+log and recent Plasma logs contained no matching QML errors.
+
+## Real panel popup placement
+
+A temporary panel hosted a synthetic copy of the actual widget in the running
+Plasma shell. The [Plasma scripting API](https://develop.kde.org/docs/plasma/scripting/api/)
+positioned only that temporary panel. Native input opened the popup at all four
+screen edges and opposite horizontal alignments. The available screen was
+1920 × 1080 at scale 1; the temporary panel was 36 pixels thick.
+
+| Panel placement | Popup bounds (x, y, width, height) | Result |
+| --- | --- | --- |
+| Top, left aligned | 0, 36, 620, 413 | Inside the screen |
+| Top, right aligned | 1300, 36, 620, 413 | Inside the screen |
+| Right, top aligned | 1263, 0, 621, 412 | Inside the screen |
+| Bottom, right aligned | 1300, 631, 620, 413 | Inside the screen |
+| Left, bottom aligned | 36, 668, 621, 412 | Inside the screen |
+
+![Popup beside the left panel at the bottom corner](interaction-panel-left-bottom.png)
+
+The temporary panel and package were removed after inspection. The original
+panel was not rearranged and Plasma was not restarted. Only one monitor is
+connected, so movement between monitors with different scales remains untested.
+The earlier isolated Qt scaling checks do not substitute for that hardware test.

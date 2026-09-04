@@ -110,19 +110,55 @@ KCM.SimpleKCM {
         }
     }
 
-    function movePanelElement(index, delta) {
+    function revealFocusedOrderButton(upButton, downButton) {
+        var button = upButton && upButton.activeFocus ? upButton
+            : (downButton && downButton.activeFocus ? downButton : null)
+        if (!button) {
+            return
+        }
+        var position = page.flickable.contentItem.mapFromItem(button, 0, 0)
+        page.ensureVisible(button, position.x - button.x, position.y - button.y)
+    }
+
+    function restoreOrderFocus(repeater, key, delta) {
+        for (var i = 0; i < repeater.count; i++) {
+            var row = repeater.itemAt(i)
+            if (row && row.orderKey === key) {
+                var button = delta < 0 ? row.upButton : row.downButton
+                if (!button.enabled) {
+                    button = delta < 0 ? row.downButton : row.upButton
+                }
+                button.forceActiveFocus(Qt.TabFocusReason)
+                revealFocusedOrderButton(row.upButton, row.downButton)
+                return
+            }
+        }
+    }
+
+    function movePanelElement(index, delta, keyboardFocus) {
+        var key = PanelElements.normalizedOrder(cfg_panelElementOrder)[index]
         cfg_panelElementOrder = PanelElements.movedOrder(
             cfg_panelElementOrder,
             index,
             delta).join(",")
+        if (keyboardFocus) {
+            Qt.callLater(restoreOrderFocus, panelOrderRepeater, key, delta)
+        }
     }
 
-    function moveProvider(index, delta) {
+    function moveProvider(index, delta, keyboardFocus) {
+        var item = orderedEnabledProviderRoster[index]
+        var key = item ? item.provider : ""
         cfg_providerOrder = ProviderOrder.movedOrder(
             enabledProviderRoster,
             cfg_providerOrder,
             index,
             delta)
+        if (keyboardFocus) {
+            // Repeater replaces the delegates when the order changes. Restore
+            // focus by provider identity so repeated keyboard moves stay local.
+            Qt.callLater(restoreOrderFocus, providerOrderRepeater, key, delta)
+        }
     }
 
     onCfg_menuBarDisplayModeChanged: {
@@ -419,11 +455,18 @@ KCM.SimpleKCM {
             }
 
             Repeater {
+                id: providerOrderRepeater
+
                 model: page.orderedEnabledProviderRoster
 
                 delegate: RowLayout {
                     required property var modelData
                     required property int index
+                    readonly property string orderKey: modelData.provider
+                    readonly property Item upButton: providerMoveUp
+                    readonly property Item downButton: providerMoveDown
+                    // The layout may place a rebuilt row after focus is restored.
+                    onYChanged: page.revealFocusedOrderButton(upButton, downButton)
 
                     Layout.fillWidth: true
                     spacing: Kirigami.Units.smallSpacing
@@ -443,23 +486,27 @@ KCM.SimpleKCM {
                     }
 
                     Controls.ToolButton {
+                        id: providerMoveUp
+
                         icon.name: "go-up"
                         enabled: index > 0
                         Accessible.name: i18n("Move %1 up", modelData.displayName)
                         Controls.ToolTip.text: Accessible.name
                         Controls.ToolTip.visible: hovered
                         Controls.ToolTip.delay: Kirigami.Units.toolTipDelay
-                        onClicked: page.moveProvider(index, -1)
+                        onClicked: page.moveProvider(index, -1, visualFocus)
                     }
 
                     Controls.ToolButton {
+                        id: providerMoveDown
+
                         icon.name: "go-down"
                         enabled: index < page.orderedEnabledProviderRoster.length - 1
                         Accessible.name: i18n("Move %1 down", modelData.displayName)
                         Controls.ToolTip.text: Accessible.name
                         Controls.ToolTip.visible: hovered
                         Controls.ToolTip.delay: Kirigami.Units.toolTipDelay
-                        onClicked: page.moveProvider(index, 1)
+                        onClicked: page.moveProvider(index, 1, visualFocus)
                     }
                 }
             }
@@ -565,11 +612,17 @@ KCM.SimpleKCM {
             spacing: Kirigami.Units.smallSpacing / 2
 
             Repeater {
+                id: panelOrderRepeater
+
                 model: PanelElements.normalizedOrder(page.cfg_panelElementOrder)
 
                 delegate: RowLayout {
                     required property var modelData
                     required property int index
+                    readonly property string orderKey: modelData
+                    readonly property Item upButton: panelMoveUp
+                    readonly property Item downButton: panelMoveDown
+                    onYChanged: page.revealFocusedOrderButton(upButton, downButton)
 
                     Layout.fillWidth: true
                     spacing: Kirigami.Units.smallSpacing
@@ -587,23 +640,27 @@ KCM.SimpleKCM {
                     }
 
                     Controls.ToolButton {
+                        id: panelMoveUp
+
                         icon.name: "go-up"
                         enabled: index > 0
                         Accessible.name: i18n("Move %1 up", page.panelElementTitle(modelData))
                         Controls.ToolTip.text: Accessible.name
                         Controls.ToolTip.visible: hovered
                         Controls.ToolTip.delay: Kirigami.Units.toolTipDelay
-                        onClicked: page.movePanelElement(index, -1)
+                        onClicked: page.movePanelElement(index, -1, visualFocus)
                     }
 
                     Controls.ToolButton {
+                        id: panelMoveDown
+
                         icon.name: "go-down"
                         enabled: index < PanelElements.defaultOrder.length - 1
                         Accessible.name: i18n("Move %1 down", page.panelElementTitle(modelData))
                         Controls.ToolTip.text: Accessible.name
                         Controls.ToolTip.visible: hovered
                         Controls.ToolTip.delay: Kirigami.Units.toolTipDelay
-                        onClicked: page.movePanelElement(index, 1)
+                        onClicked: page.movePanelElement(index, 1, visualFocus)
                     }
                 }
             }

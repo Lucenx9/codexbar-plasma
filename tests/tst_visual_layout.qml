@@ -22,6 +22,56 @@ TestCase {
         property bool sessionsLoading: false
         property string sessionsLastUpdatedText: ""
         property string sessionsErrorText: "Loading sessions timed out. Try again."
+        property string selectedAccount: ""
+        property string selectedProviderID: "codex"
+        property int providerToggleCount: 0
+        property bool providerEnabled: false
+        function isPending() {
+            return false;
+        }
+        function visualEnabled() {
+            return providerEnabled;
+        }
+        function setEnabled(providerID, enabled) {
+            providerToggleCount++;
+            providerEnabled = enabled;
+        }
+        property var accountItems: [
+            {
+                provider: "codex",
+                account: "engineering-with-an-unusually-long-account-name@example.com",
+                subtitle: "Workspace with a long display name for the example team"
+            },
+            {
+                provider: "codex",
+                account: "demo@example.com",
+                subtitle: ""
+            }
+        ]
+        function accountOptionsForProvider() {
+            return accountItems;
+        }
+        function accountLoadingForProvider() {
+            return false;
+        }
+        function accountErrorForProvider() {
+            return "";
+        }
+        function selectedAccountForProvider() {
+            return selectedAccount;
+        }
+        function accountLabel(item) {
+            return item.account;
+        }
+        function accountSubtitle(item) {
+            return item.subtitle;
+        }
+        function accountIsSelected(item) {
+            return item.account === selectedAccount;
+        }
+        function selectAccount(providerID, label) {
+            selectedAccount = label;
+        }
         function refreshSessions() {
         }
         function panelElementOrder() {
@@ -210,6 +260,49 @@ TestCase {
         ];
     }
 
+    function test_longAccountButtonsFitAndKeepFullAccessibleNames_data() {
+        return [
+            {
+                tag: "narrow",
+                width: 240
+            },
+            {
+                tag: "popup",
+                width: 540
+            }
+        ];
+    }
+
+    function test_longAccountButtonsFitAndKeepFullAccessibleNames(data) {
+        applet.selectedAccount = "";
+        var view = createControl("ProviderAccountsPanel", {
+            applet: applet,
+            providerData: {
+                provider: "codex"
+            },
+            width: data.width
+        });
+        if (!view)
+            return;
+        wait(0);
+        var button = findItem(view, function (item) {
+            return item.checkable && item.Accessible.name.indexOf("engineering-") === 0;
+        });
+        verify(button !== null);
+        verify(button.width > 0);
+        verify(button.mapToItem(view, button.width, 0).x <= view.width);
+        var fullLabel = applet.accountItems[0].account + " · " + applet.accountItems[0].subtitle;
+        compare(button.Accessible.name, fullLabel);
+        verify(button.plainText.length < fullLabel.length);
+        button.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(applet.selectedAccount, applet.accountItems[0].account);
+        compare(button.checked, true);
+        applet.selectedAccount = applet.accountItems[1].account;
+        tryCompare(button, "checked", false);
+        testCase.forceActiveFocus();
+    }
+
     function test_statusDotStaysSquare(data) {
         var panel = createControl("CompactRepresentation", {
             applet: applet,
@@ -226,6 +319,36 @@ TestCase {
         compare(dot.width, dot.height);
         var center = dot.mapToItem(panel, dot.width / 2, dot.height / 2);
         verify(Math.abs(center.y - panel.height / 2) < 1);
+    }
+
+    function test_providerRowKeyboardSelectionDoesNotToggleEnablement() {
+        applet.selectedProviderID = "codex";
+        applet.providerToggleCount = 0;
+        applet.providerEnabled = false;
+        var row = createControl("ProviderConfigRow", {
+            configPage: applet,
+            modelData: {
+                provider: "gemini",
+                displayName: "Gemini",
+                enabled: false,
+                defaultEnabled: false
+            },
+            width: 300
+        });
+        if (!row)
+            return;
+        verify(row.activeFocusOnTab);
+        compare(row.Accessible.name, "Gemini");
+        row.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(applet.selectedProviderID, "gemini");
+        compare(applet.providerToggleCount, 0);
+        var toggle = row.nextItemInFocusChain(true);
+        verify(toggle !== row);
+        toggle.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(applet.providerToggleCount, 1);
+        compare(applet.providerEnabled, true);
     }
 
     function test_providerMetersSupportKeyboardAndPointer() {
@@ -282,9 +405,9 @@ TestCase {
             return item.text === chart.points[1].displayValue;
         });
         verify(value !== null);
-        verify(value.width > 0);
-        verify(value.mapToItem(chart, value.width, 0).x <= chart.width);
-        verify(plot.width <= chart.width);
+        tryVerify(function () {
+            return value.width > 0 && value.mapToItem(chart, value.width, 0).x <= chart.width && plot.width <= chart.width;
+        });
         keyClick(Qt.Key_Left);
         compare(chart.selectedIndex, 0);
         mouseMove(plot, plot.width - 1, plot.height / 2);
