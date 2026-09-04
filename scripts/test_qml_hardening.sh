@@ -12,6 +12,12 @@ resolve_qml_import_dir() {
     echo "$current"
     return 0
   fi
+  # Mirror the Makefile priority: the standard path wins when present and the
+  # multiarch trees are only a fallback when it is absent.
+  if [[ -d "${root_prefix}/qt6/qml" ]]; then
+    echo "${root_prefix}/qt6/qml"
+    return 0
+  fi
   local triplet
   triplet="$(dpkg-architecture -qDEB_HOST_MULTIARCH 2>/dev/null || true)"
   if [[ -z "$triplet" ]]; then
@@ -47,6 +53,13 @@ test_resolve_qml_import_dir() {
   resolved="$(resolve_qml_import_dir "" "$fixture_dir")"
   if [[ "$resolved" != "$fixture_dir/${triplet}/qt6/qml" ]]; then
     echo "resolve_qml_import_dir failed: got '$resolved', expected '$fixture_dir/${triplet}/qt6/qml'" >&2
+    exit 1
+  fi
+  # The standard path wins when both layouts exist (Makefile `or` priority).
+  mkdir -p "$fixture_dir/qt6/qml"
+  resolved="$(resolve_qml_import_dir "" "$fixture_dir")"
+  if [[ "$resolved" != "$fixture_dir/qt6/qml" ]]; then
+    echo "resolve_qml_import_dir failed: got '$resolved', expected '$fixture_dir/qt6/qml'" >&2
     exit 1
   fi
 }
