@@ -46,10 +46,31 @@ class SmokePopupTests(unittest.TestCase):
             values = {entry.attrib["name"]: entry.find("k:default", ns).text
                       for entry in tree.findall(".//k:entry", ns)}
             self.assertEqual(values["commandPath"], str(work / "codexbar-fixture"))
-            for key in ("enableNotifications", "updateChecksEnabled", "autoUpdateEnabled"):
+            for key in ("enableNotifications", "updateChecksEnabled", "autoUpdateEnabled",
+                        "updateNotificationsEnabled"):
                 self.assertEqual(values[key], "false")
             self.assertIn(json.dumps(str(image)), (package / "contents/ui/main.qml").read_text())
         self.assertEqual(before, {name: (smoke.ROOT / name).read_bytes() for name in sources})
+
+    def test_wayland_only_preview_selects_a_graphical_backend(self):
+        for display in (None, ""):
+            host = {"WAYLAND_DISPLAY": "wayland-test", "QT_QPA_PLATFORM": "offscreen"}
+            if display is not None:
+                host["DISPLAY"] = display
+            with self.subTest(display=display), tempfile.TemporaryDirectory() as temporary:
+                with patch.dict(os.environ, host, clear=True):
+                    env = smoke.preview_environment(Path(temporary), "normal")
+                self.assertEqual(env.get("QT_QPA_PLATFORM"), "wayland")
+
+    def test_x11_available_preview_keeps_qt_platform_autodetection(self):
+        for wayland_display in (None, "wayland-test"):
+            host = {"DISPLAY": ":1", "QT_QPA_PLATFORM": "offscreen"}
+            if wayland_display is not None:
+                host["WAYLAND_DISPLAY"] = wayland_display
+            with self.subTest(wayland_display=wayland_display), tempfile.TemporaryDirectory() as temporary:
+                with patch.dict(os.environ, host, clear=True):
+                    env = smoke.preview_environment(Path(temporary), "normal")
+                self.assertNotIn("QT_QPA_PLATFORM", env)
 
     def test_partial_failure_preserves_healthy_usage(self):
         now = datetime(2026, 9, 1, tzinfo=timezone.utc)

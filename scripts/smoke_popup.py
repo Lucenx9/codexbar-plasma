@@ -38,6 +38,10 @@ def preview_environment(work, scenario):
                CODEXBAR_SMOKE_SCENARIO=scenario, QT_QUICK_BACKEND="software",
                QT_FORCE_STDERR_LOGGING="1", XDG_CURRENT_DESKTOP="KDE",
                QT_QPA_PLATFORMTHEME="kde", QT_QUICK_CONTROLS_STYLE="org.kde.desktop")
+    # Qt builds can default to xcb even with WAYLAND_DISPLAY set. Select the
+    # available backend when X11 is absent without inheriting host Qt overrides.
+    if env.get("WAYLAND_DISPLAY") and not env.get("DISPLAY"):
+        env["QT_QPA_PLATFORM"] = "wayland"
     for name in ("config", "data", "cache", "state", "system-config"):
         (work / name).mkdir()
     return env
