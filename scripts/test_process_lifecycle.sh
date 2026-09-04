@@ -51,14 +51,14 @@ require_in_surface providers "page.expireConfigCommands(Date.now())"
 require_in_surface providers "Component.onCompleted: Qt.callLater(reload)"
 require_in_surface providers "onCfg_commandPathChanged: handleCommandPathChanged()"
 
-require_in_surface display "readonly property int overviewProviderCommandTimeoutMs: 60000"
+require_in_surface display "readonly property int providerRosterCommandTimeoutMs: 60000"
 require_in_surface display 'import "CommandLedger.js" as CommandLedger'
 reject_in_surface display "function commandWithRunNonce(command)"
-require_in_surface display "Component.onCompleted: Qt.callLater(loadOverviewProviders)"
-require_in_surface display "onCfg_commandPathChanged: Qt.callLater(loadOverviewProviders)"
-require_in_surface display "function expireOverviewProviderCommands(nowMs)"
-require_in_surface display "id: overviewProviderCommandTimeoutTimer"
-require_in_surface display "page.expireOverviewProviderCommands(Date.now())"
+require_in_surface display "Component.onCompleted: Qt.callLater(loadProviderRoster)"
+require_in_surface display "onCfg_commandPathChanged: Qt.callLater(loadProviderRoster)"
+require_in_surface display "function expireProviderRosterCommands(nowMs)"
+require_in_surface display "id: providerRosterCommandTimeoutTimer"
+require_in_surface display "page.expireProviderRosterCommands(Date.now())"
 
 require_in_surface debug "readonly property int diagnosticCommandTimeoutMs: 60000"
 require_in_surface debug "function commandWithRunNonce(command)"
@@ -670,49 +670,49 @@ require_all(
 )
 
 require_all(
-    display.function_body("loadOverviewProviders"),
+    display.function_body("loadProviderRoster"),
     (
         "CommandLedger.withRunNonce(command, commandRunSerial)",
         "CommandLedger.descriptor(",
-        "overviewProviderCommands = CommandLedger.opened(",
+        "providerRosterCommands = CommandLedger.opened(",
     ),
-    "overview provider loads need nonce and deadline",
+    "provider roster loads need nonce and deadline",
 )
 
 require_all(
-    display.function_body("expireOverviewProviderCommands"),
+    display.function_body("expireProviderRosterCommands"),
     (
-        "CommandLedger.expired(overviewProviderCommands, nowMs)",
-        "overviewProviderSource.disconnectSource(sourceName)",
+        "CommandLedger.expired(providerRosterCommands, nowMs)",
+        "providerRosterSource.disconnectSource(sourceName)",
         "CommandLedger.closed(remaining, sourceName)",
         "Loading providers timed out. Try again.",
     ),
-    "overview provider timeout cleanup is incomplete",
+    "provider roster timeout cleanup is incomplete",
 )
 
 require_all(
-    display.function_body("disconnectOverviewProviderCommands"),
+    display.function_body("disconnectProviderRosterCommands"),
     (
         "CommandLedger.sourcesOfKind(",
-        'overviewProviderCommands, "overviewProviders"',
-        "overviewProviderSource.disconnectSource(sourceName)",
+        'providerRosterCommands, "enabledProviderRoster"',
+        "providerRosterSource.disconnectSource(sourceName)",
     ),
-    "overview provider retirement must read the shared ledger",
+    "provider roster retirement must read the shared ledger",
 )
 
 require_all(
-    display.function_body("hasPendingOverviewProviderCommands"),
-    ('CommandLedger.hasKind(overviewProviderCommands, "overviewProviders")',),
-    "overview provider loading state must read the shared ledger",
+    display.function_body("hasPendingProviderRosterCommands"),
+    ('CommandLedger.hasKind(providerRosterCommands, "enabledProviderRoster")',),
+    "provider roster loading state must read the shared ledger",
 )
 
 require_all(
-    display.function_body("handleOverviewProviderData"),
+    display.function_body("handleProviderRosterData"),
     (
-        "CommandLedger.find(overviewProviderCommands, sourceName)",
-        "CommandLedger.closed(overviewProviderCommands, sourceName)",
+        "CommandLedger.find(providerRosterCommands, sourceName)",
+        "CommandLedger.closed(providerRosterCommands, sourceName)",
     ),
-    "overview provider completion must close the shared ledger entry",
+    "provider roster completion must close the shared ledger entry",
 )
 
 require_all(

@@ -123,12 +123,16 @@ Rectangle {
     }
 
     RowLayout {
+        id: globalTabContent
+
         anchors.fill: parent
         anchors.margins: Kirigami.Units.smallSpacing
         anchors.bottomMargin: Kirigami.Units.smallSpacing + 2
         spacing: Kirigami.Units.smallSpacing
 
         Item {
+            id: globalTabLeadingSpacer
+
             visible: !tab.showLabel
             Layout.fillWidth: !tab.showLabel
         }
@@ -142,6 +146,8 @@ Rectangle {
         }
 
         Item {
+            id: globalTabTrailingSpacer
+
             visible: !tab.showLabel
             Layout.fillWidth: !tab.showLabel
         }

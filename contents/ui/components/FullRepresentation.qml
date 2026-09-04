@@ -306,12 +306,16 @@ Item {
                         }
 
                         RowLayout {
+                            id: overviewTabContent
+
                             anchors.fill: parent
                             anchors.margins: Kirigami.Units.smallSpacing
                             anchors.bottomMargin: Kirigami.Units.smallSpacing + 2
                             spacing: Kirigami.Units.smallSpacing
 
                             Item {
+                                id: overviewTabLeadingSpacer
+
                                 visible: !applet.showPopupTabLabels
                                 Layout.fillWidth: !applet.showPopupTabLabels
                             }
@@ -325,6 +329,8 @@ Item {
                             }
 
                             Item {
+                                id: overviewTabTrailingSpacer
+
                                 visible: !applet.showPopupTabLabels
                                 Layout.fillWidth: !applet.showPopupTabLabels
                             }
@@ -355,6 +361,8 @@ Item {
                     }
 
                     Components.GlobalTab {
+                        id: spendTab
+
                         visible: applet.spendAvailable
                         applet: fullRoot.applet
                         title: i18n("Usage & Spend")
@@ -367,6 +375,8 @@ Item {
                     }
 
                     Components.GlobalTab {
+                        id: sessionsTab
+
                         visible: applet.sessionsAvailable
                         applet: fullRoot.applet
                         title: i18n("Sessions")
@@ -506,12 +516,16 @@ Item {
                             }
 
                             RowLayout {
+                                id: providerTabContent
+
                                 anchors.fill: parent
                                 anchors.margins: Kirigami.Units.smallSpacing
                                 anchors.bottomMargin: Kirigami.Units.smallSpacing + 2
                                 spacing: Kirigami.Units.smallSpacing
 
                                 Item {
+                                    id: providerTabLeadingSpacer
+
                                     visible: !applet.showPopupTabLabels
                                     Layout.fillWidth: !applet.showPopupTabLabels
                                 }
@@ -526,6 +540,8 @@ Item {
                                 }
 
                                 Item {
+                                    id: providerTabTrailingSpacer
+
                                     visible: !applet.showPopupTabLabels
                                     Layout.fillWidth: !applet.showPopupTabLabels
                                 }

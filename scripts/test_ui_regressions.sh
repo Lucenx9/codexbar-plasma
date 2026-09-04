@@ -557,14 +557,16 @@ for stale_account_fragment in (
             f"refresh; found {stale_account_fragment!r}"
         )
 
-display_load_body = function_body(display_text, "loadOverviewProviders")
-if "disconnectOverviewProviderCommands()" not in display_load_body:
+provider_roster_load_body = display_surface.function_body("loadProviderRoster")
+if "disconnectProviderRosterCommands()" not in provider_roster_load_body:
     raise AssertionError(
-        "loadOverviewProviders must invalidate older overview provider commands "
+        "loadProviderRoster must invalidate older provider roster commands "
         "before connecting a replacement"
     )
-if "function disconnectOverviewProviderCommands()" not in display_text:
-    raise AssertionError("configDisplay.qml must define disconnectOverviewProviderCommands")
+display_surface.require(
+    "function disconnectProviderRosterCommands()",
+    "Display must define provider roster command retirement",
+)
 
 provider_index_body = function_body(main_text, "providerIndexForID")
 if "return -1" not in provider_index_body or "return 0" in provider_index_body:
@@ -1201,12 +1203,12 @@ for config_fragment in (
         raise AssertionError(f"popup tab customization must be persisted; missing {config_fragment!r}")
 for display_fragment in (
     'id: showPopupTabLabelsCheck',
-    'model: page.orderedEnabledProviders',
+    'model: page.orderedEnabledProviderRoster',
     'ProviderOrder.movedOrder(',
 ):
     display_surface.require(display_fragment, "Display must expose popup tab customization")
 overview_provider_selection_body = display_surface.id_block("overviewProviderSelection")
-if 'model: page.orderedEnabledProviders' not in overview_provider_selection_body:
+if 'model: page.orderedEnabledProviderRoster' not in overview_provider_selection_body:
     raise AssertionError(
         "Display must show the saved provider order in the Overview selection"
     )
@@ -1214,7 +1216,7 @@ for overview_order_function in (
     "resolvedOverviewProviderIDs",
     "toggleOverviewProvider",
 ):
-    if "orderedEnabledProviders" not in display_surface.function_body(overview_order_function):
+    if "orderedEnabledProviderRoster" not in display_surface.function_body(overview_order_function):
         raise AssertionError(
             f"{overview_order_function} must use the saved provider order"
         )
@@ -1223,8 +1225,7 @@ for applet_fragment in (
     'property bool showPopupTabLabels:',
     'ProviderOrder.orderedItems(',
 ):
-    if applet_fragment not in main_text:
-        raise AssertionError(f"the popup must apply persisted tab customization; missing {applet_fragment!r}")
+    applet.require(applet_fragment, "the popup must apply persisted tab customization")
 spend_provider_costs_body = applet.function_body("spendProviderCosts")
 for spend_order_fragment in (
     "ProviderOrder.orderedItems(",
@@ -1235,8 +1236,9 @@ for spend_order_fragment in (
             "Usage & Spend must follow the saved provider order; "
             f"missing {spend_order_fragment!r}"
         )
-if full_representation_text.count("showLabel: applet.showPopupTabLabels") != 2:
-    raise AssertionError("both global tab delegates must use the popup label preference")
+for global_tab_id in ("spendTab", "sessionsTab"):
+    if "showLabel: applet.showPopupTabLabels" not in applet.id_block(global_tab_id):
+        raise AssertionError(f"{global_tab_id} must use the popup label preference")
 for icon_only_fragment in (
     'visible: applet.showPopupTabLabels',
     'visible: !applet.showPopupTabLabels && overviewTabMouse.containsMouse',
@@ -1246,19 +1248,44 @@ for icon_only_fragment in (
         raise AssertionError(
             f"icon-only popup tabs must retain discoverable names; missing {icon_only_fragment!r}"
         )
-if provider_tabs_body.count("Layout.fillWidth: !applet.showPopupTabLabels") != 4:
-    raise AssertionError("overview and provider icons must stay centered inside icon-only tabs")
 for global_tab_fragment in (
     'property bool showLabel: true',
     'visible: tab.showLabel',
     'visible: !tab.showLabel && tabMouse.containsMouse',
 ):
-    if global_tab_fragment not in global_tab_text:
-        raise AssertionError(
-            f"global tabs must support accessible icon-only display; missing {global_tab_fragment!r}"
-        )
-if global_tab_text.count("Layout.fillWidth: !tab.showLabel") != 2:
-    raise AssertionError("global tab icons must stay centered inside icon-only tabs")
+    applet.require(global_tab_fragment, "global tabs must support accessible icon-only display")
+for tab_content_id, leading_spacer_id, trailing_spacer_id, condition in (
+    (
+        "overviewTabContent",
+        "overviewTabLeadingSpacer",
+        "overviewTabTrailingSpacer",
+        "!applet.showPopupTabLabels",
+    ),
+    (
+        "providerTabContent",
+        "providerTabLeadingSpacer",
+        "providerTabTrailingSpacer",
+        "!applet.showPopupTabLabels",
+    ),
+    (
+        "globalTabContent",
+        "globalTabLeadingSpacer",
+        "globalTabTrailingSpacer",
+        "!tab.showLabel",
+    ),
+):
+    tab_content_body = applet.id_block(tab_content_id)
+    for centered_icon_fragment in (
+        f"id: {leading_spacer_id}",
+        f"id: {trailing_spacer_id}",
+        f"visible: {condition}",
+        f"Layout.fillWidth: {condition}",
+    ):
+        if centered_icon_fragment not in tab_content_body:
+            raise AssertionError(
+                f"{tab_content_id} must center its icon-only content; "
+                f"missing {centered_icon_fragment!r}"
+            )
 for tabs_fragment in (
     "Layout.preferredHeight: Kirigami.Units.gridUnit * 2.35",
     "id: providerTabsSurface",
