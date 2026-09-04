@@ -11,6 +11,7 @@ Rectangle {
     required property string iconName
     required property real tabHeight
     property bool selected: false
+    property bool showLabel: true
     // Scrolling tab strip hosting this tab, so keyboard focus can pull an
     // overflowing tab back into view. Null when the host cannot overflow.
     property var tabStrip: null
@@ -24,9 +25,11 @@ Rectangle {
 
     signal activated()
 
-    Layout.preferredWidth: Math.max(
-        Kirigami.Units.gridUnit * 5.2,
-        tabLabel.implicitWidth + Kirigami.Units.gridUnit * 2.2)
+    Layout.preferredWidth: showLabel
+        ? Math.max(
+            Kirigami.Units.gridUnit * 5.2,
+            tabLabel.implicitWidth + Kirigami.Units.gridUnit * 2.2)
+        : tabHeight
     Layout.preferredHeight: tabHeight
     radius: applet.roundedSurfaceRadius
     color: tabMouse.pressed
@@ -114,6 +117,11 @@ Rectangle {
         onClicked: tab.activated()
     }
 
+    PlainToolTip {
+        visible: !tab.showLabel && tabMouse.containsMouse
+        plainText: tab.title
+    }
+
     RowLayout {
         anchors.fill: parent
         anchors.margins: Kirigami.Units.smallSpacing
@@ -131,6 +139,7 @@ Rectangle {
         PlainPlasmaLabel {
             id: tabLabel
 
+            visible: tab.showLabel
             text: tab.title
             font.weight: tab.selected ? Font.DemiBold : Font.Normal
             color: tab.foreground

@@ -16,6 +16,7 @@ import "CostPresentation.js" as CostPresentation
 import "ProviderFallbackQueue.js" as ProviderFallbackQueue
 import "ProviderIdentity.js" as ProviderIdentity
 import "ProviderNormalizer.js" as Normalizer
+import "ProviderOrder.js" as ProviderOrder
 import "ProviderRosterCache.js" as ProviderRosterCache
 import "QuotaThresholds.js" as QuotaThresholds
 import "SafeText.js" as SafeText
@@ -74,6 +75,8 @@ PlasmoidItem {
     property int autoUpdateIntervalHours: isFinite(Number(Plasmoid.configuration.autoUpdateIntervalHours)) ? Math.max(1, Math.min(168, Number(Plasmoid.configuration.autoUpdateIntervalHours))) : 24
     property string autoUpdateLastCheck: Plasmoid.configuration.autoUpdateLastCheck || ""
     property string menuBarDisplayMode: safeMenuBarDisplayMode(Plasmoid.configuration.menuBarDisplayMode)
+    property bool showPopupTabLabels: Plasmoid.configuration.showPopupTabLabels !== false
+    property string providerOrderRaw: Plasmoid.configuration.providerOrder || ""
     property string panelElementOrderRaw: Plasmoid.configuration.panelElementOrder || ""
     property bool resetTimesShowAbsolute: Plasmoid.configuration.resetTimesShowAbsolute === true
     property bool showProviderChangelogs: Plasmoid.configuration.showProviderChangelogs === true
@@ -193,6 +196,8 @@ PlasmoidItem {
     readonly property real compactMeterTrackHeight: Math.round(Kirigami.Units.gridUnit * 0.28)
 
     onCommandSourceChanged: scheduleUsageRefresh()
+    onProviderOrderRawChanged: providers = ProviderOrder.orderedItems(
+        providers, providerOrderRaw)
     onProviderConfigCommandSourceChanged: {
         invalidateProviderRosterCache()
         scheduleUsageRefresh()
@@ -767,7 +772,9 @@ PlasmoidItem {
             nextProviders.push(normalizeProvider(items[i]))
         }
 
-        nextProviders = Normalizer.dedupeProviderSnapshots(nextProviders)
+        nextProviders = ProviderOrder.orderedItems(
+            Normalizer.dedupeProviderSnapshots(nextProviders),
+            providerOrderRaw)
 
         markNotificationProvidersFresh(nextProviders)
         markUsageSnapshotReceived()
@@ -866,10 +873,12 @@ PlasmoidItem {
         retireUsageCommandKind("providerFallback")
         providerFallbackState = null
 
+        var orderedProviderIDs = ProviderOrder.orderedItems(
+            providerIDs, providerOrderRaw)
         var requests = []
-        var providerLimit = Math.min(providerIDs.length, maximumProviderSnapshots)
+        var providerLimit = Math.min(orderedProviderIDs.length, maximumProviderSnapshots)
         for (var i = 0; i < providerLimit; i++) {
-            var providerID = normalizedProviderID(String(providerIDs[i] || ""))
+            var providerID = normalizedProviderID(String(orderedProviderIDs[i] || ""))
             if (providerID.length === 0) {
                 continue
             }
@@ -955,7 +964,9 @@ PlasmoidItem {
 
     function finishProviderFallback(orderedItems) {
         var nextProviders = Array.isArray(orderedItems) ? orderedItems : []
-        nextProviders = Normalizer.dedupeProviderSnapshots(nextProviders)
+        nextProviders = ProviderOrder.orderedItems(
+            Normalizer.dedupeProviderSnapshots(nextProviders),
+            providerOrderRaw)
 
         markNotificationProvidersFresh(nextProviders)
         markUsageSnapshotReceived()

@@ -1184,6 +1184,46 @@ for tooltip_fragment in (
         raise AssertionError(f"the panel tooltip/form-factor contract is missing {tooltip_fragment!r}")
 
 provider_tabs_body = id_block(main_text, "providerTabsBar")
+for config_fragment in (
+    '<entry name="providerOrder" type="String">',
+    '<entry name="showPopupTabLabels" type="Bool">',
+):
+    if config_fragment not in config_text:
+        raise AssertionError(f"popup tab customization must be persisted; missing {config_fragment!r}")
+for display_fragment in (
+    'id: showPopupTabLabelsCheck',
+    'model: page.orderedEnabledProviders',
+    'ProviderOrder.movedOrder(',
+):
+    if display_fragment not in display_text:
+        raise AssertionError(f"Display must expose popup tab customization; missing {display_fragment!r}")
+for applet_fragment in (
+    'property string providerOrderRaw:',
+    'property bool showPopupTabLabels:',
+    'ProviderOrder.orderedItems(',
+):
+    if applet_fragment not in main_text:
+        raise AssertionError(f"the popup must apply persisted tab customization; missing {applet_fragment!r}")
+if full_representation_text.count("showLabel: applet.showPopupTabLabels") != 2:
+    raise AssertionError("both global tab delegates must use the popup label preference")
+for icon_only_fragment in (
+    'visible: applet.showPopupTabLabels',
+    'visible: !applet.showPopupTabLabels && overviewTabMouse.containsMouse',
+    'visible: !applet.showPopupTabLabels && providerTabMouse.containsMouse',
+):
+    if icon_only_fragment not in provider_tabs_body:
+        raise AssertionError(
+            f"icon-only popup tabs must retain discoverable names; missing {icon_only_fragment!r}"
+        )
+for global_tab_fragment in (
+    'property bool showLabel: true',
+    'visible: tab.showLabel',
+    'visible: !tab.showLabel && tabMouse.containsMouse',
+):
+    if global_tab_fragment not in global_tab_text:
+        raise AssertionError(
+            f"global tabs must support accessible icon-only display; missing {global_tab_fragment!r}"
+        )
 for tabs_fragment in (
     "Layout.preferredHeight: Kirigami.Units.gridUnit * 2.35",
     "id: providerTabsSurface",

@@ -9,6 +9,7 @@ import "CommandLedger.js" as CommandLedger
 import "Guards.js" as Guards
 import "PanelDisplay.js" as PanelDisplay
 import "ProviderIdentity.js" as ProviderIdentity
+import "ProviderOrder.js" as ProviderOrder
 import "PanelElements.js" as PanelElements
 import "SafeText.js" as SafeText
 
@@ -23,6 +24,10 @@ KCM.SimpleKCM {
     property bool cfg_showQuotaWarningMarkersDefault: true
     property string cfg_menuBarDisplayMode: "percent"
     property string cfg_menuBarDisplayModeDefault: "percent"
+    property alias cfg_showPopupTabLabels: showPopupTabLabelsCheck.checked
+    property bool cfg_showPopupTabLabelsDefault: true
+    property string cfg_providerOrder: ""
+    property string cfg_providerOrderDefault: ""
     property alias cfg_resetTimesShowAbsolute: resetTimesShowAbsoluteCheck.checked
     property bool cfg_resetTimesShowAbsoluteDefault: false
     property alias cfg_showProviderChangelogs: showProviderChangelogsCheck.checked
@@ -43,10 +48,11 @@ KCM.SimpleKCM {
     property bool cfg_showCreditsInPanelDefault: false
 
     readonly property int maxOverviewProviders: 3
-    readonly property int maximumProviderItems: 256
     readonly property string overviewNoneValue: "__none__"
     readonly property string commandPath: (cfg_commandPath || "codexbar").trim()
     property var overviewProviders: []
+    readonly property var orderedEnabledProviders: ProviderOrder.orderedItems(
+        overviewProviders, cfg_providerOrder)
     property bool overviewProvidersLoading: false
     property string overviewProvidersError: ""
     property var overviewProviderCommands: ({})
@@ -109,6 +115,14 @@ KCM.SimpleKCM {
             cfg_panelElementOrder,
             index,
             delta).join(",")
+    }
+
+    function moveProvider(index, delta) {
+        cfg_providerOrder = ProviderOrder.movedOrder(
+            overviewProviders,
+            cfg_providerOrder,
+            index,
+            delta)
     }
 
     onCfg_menuBarDisplayModeChanged: {
@@ -214,7 +228,7 @@ KCM.SimpleKCM {
 
         var items = Array.isArray(payload) ? payload : [payload]
         var nextProviders = []
-        var itemLimit = Math.min(items.length, maximumProviderItems)
+        var itemLimit = Math.min(items.length, ProviderOrder.maximumProviderItems)
         for (var i = 0; i < itemLimit; i++) {
             var item = items[i]
             if (!item || typeof item !== "object" || Array.isArray(item) || item.enabled !== true) {
@@ -355,6 +369,85 @@ KCM.SimpleKCM {
     }
 
     Kirigami.FormLayout {
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Popup")
+            Kirigami.FormData.isSection: true
+        }
+
+        Controls.CheckBox {
+            id: showPopupTabLabelsCheck
+            text: i18n("Show text labels in the tab bar")
+        }
+
+        ColumnLayout {
+            Kirigami.FormData.label: i18n("Provider order:")
+            Layout.fillWidth: true
+            spacing: Kirigami.Units.smallSpacing / 2
+
+            Components.PlainControlsLabel {
+                Layout.fillWidth: true
+                visible: page.overviewProvidersLoading
+                text: i18n("Loading providers...")
+                opacity: 0.7
+            }
+
+            Components.PlainControlsLabel {
+                Layout.fillWidth: true
+                visible: !page.overviewProvidersLoading
+                    && page.orderedEnabledProviders.length === 0
+                    && page.overviewProvidersError.length === 0
+                text: i18n("No enabled providers available.")
+                opacity: 0.7
+                wrapMode: Text.WordWrap
+            }
+
+            Components.PlainInlineMessage {
+                Layout.fillWidth: true
+                type: Kirigami.MessageType.Error
+                plainText: page.overviewProvidersError
+                visible: page.overviewProvidersError.length > 0
+            }
+
+            Repeater {
+                model: page.orderedEnabledProviders
+
+                delegate: RowLayout {
+                    required property var modelData
+                    required property int index
+
+                    Layout.fillWidth: true
+                    spacing: Kirigami.Units.smallSpacing
+
+                    Kirigami.Icon {
+                        source: "handle-sort"
+                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                        opacity: 0.55
+                    }
+
+                    Components.PlainControlsLabel {
+                        text: modelData.displayName
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                    }
+
+                    Controls.ToolButton {
+                        icon.name: "go-up"
+                        enabled: index > 0
+                        Accessible.name: i18n("Move %1 up", modelData.displayName)
+                        onClicked: page.moveProvider(index, -1)
+                    }
+
+                    Controls.ToolButton {
+                        icon.name: "go-down"
+                        enabled: index < page.orderedEnabledProviders.length - 1
+                        Accessible.name: i18n("Move %1 down", modelData.displayName)
+                        onClicked: page.moveProvider(index, 1)
+                    }
+                }
+            }
+        }
+
         Kirigami.Separator {
             Kirigami.FormData.label: i18n("Panel")
             Kirigami.FormData.isSection: true
@@ -527,13 +620,6 @@ KCM.SimpleKCM {
                 text: i18n("No enabled providers available for Overview.")
                 opacity: 0.7
                 wrapMode: Text.WordWrap
-            }
-
-            Components.PlainInlineMessage {
-                Layout.fillWidth: true
-                type: Kirigami.MessageType.Error
-                plainText: page.overviewProvidersError
-                visible: page.overviewProvidersError.length > 0
             }
 
             Repeater {
