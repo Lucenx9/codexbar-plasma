@@ -92,6 +92,7 @@ TestCase {
         actionSpy.target = null;
         actionSpy.signalName = "";
         actionSpy.clear();
+        applet.lastUpdatedText = "Updated 12:00";
     }
 
     function cleanupTestCase() {
@@ -163,9 +164,70 @@ TestCase {
             return;
         actionSpy.signalName = "requested";
         actionSpy.target = control;
-        control.nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocusReason);
+        var button = control.nextItemInFocusChain(true);
+        button.forceActiveFocus(Qt.TabFocusReason);
+        control.requested.connect(function () {
+            control.busy = true;
+        });
         keyClick(Qt.Key_Space);
         compare(actionSpy.count, 1);
+        verify(control.busy);
+        verify(button.visible);
+        verify(button.enabled);
+        verify(button.activeFocus);
+        verify(button.visualFocus);
+        keyClick(Qt.Key_Space);
+        keyClick(Qt.Key_Return);
+        mouseClick(control, control.width / 2, control.height / 2);
+        compare(actionSpy.count, 1);
+        control.busy = false;
+        verify(button.activeFocus);
+        keyClick(Qt.Key_Space);
+        compare(actionSpy.count, 2);
+        // Completion must not steal focus if the user has moved elsewhere.
+        testCase.forceActiveFocus(Qt.TabFocusReason);
+        control.busy = false;
+        verify(!button.activeFocus);
+    }
+
+    function test_overviewPointerSelectionMovesKeyboardFocusToTheClickedRow() {
+        var first = createControl("OverviewProviderRow", {
+            applet: applet, modelData: provider, width: 260
+        });
+        var second = createControl("OverviewProviderRow", {
+            applet: applet, modelData: {provider: "claude", title: "Claude"},
+            x: 280, width: 260
+        });
+        if (!first || !second)
+            return;
+        var firstFocus = first.nextItemInFocusChain(true);
+        var secondFocus = second.nextItemInFocusChain(true);
+        firstFocus.forceActiveFocus(Qt.TabFocusReason);
+        verify(first.keyboardFocusVisible);
+        actionSpy.target = second;
+        actionSpy.signalName = "selected";
+        mouseClick(second, second.width / 2, second.height / 2);
+        verify(!firstFocus.activeFocus);
+        verify(secondFocus.activeFocus);
+        verify(!first.keyboardFocusVisible && !second.keyboardFocusVisible);
+        keyClick(Qt.Key_Space);
+        compare(actionSpy.count, 2);
+        compare(actionSpy.signalArguments[1][0].provider, "claude");
+    }
+
+    function test_headerTimestampRequiresAnObservedUpdate() {
+        var header = createControl("ProviderHeader", {
+            applet: applet, providerData: provider, width: 540
+        });
+        if (!header)
+            return;
+        var timestamp = findText(header, applet.lastUpdatedText);
+        verify(timestamp !== null);
+        applet.lastUpdatedText = "";
+        tryCompare(timestamp, "visible", false);
+        applet.lastUpdatedText = "Updated 12:05";
+        tryCompare(timestamp, "visible", true);
+        compare(timestamp.text, "Updated 12:05");
     }
 
     function test_headerIdentityAppearsAfterDataAndPopupBecomeVisible() {

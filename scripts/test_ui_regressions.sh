@@ -1608,7 +1608,7 @@ refresh_control_body = applet.id_block("refreshControl")
 for fragment in (
     "implicitWidth: refreshButton.implicitWidth",
     "implicitHeight: refreshButton.implicitHeight",
-    "visible: !refreshControl.busy",
+    "if (!refreshControl.busy)",
     "visible: refreshControl.busy",
     "running: visible",
     "Accessible.name: refreshControl.label",
@@ -1619,6 +1619,8 @@ for fragment in (
 for effect in ("refreshNow(", "refreshCost(", "refreshSessions("):
     if effect in refresh_control_body:
         raise AssertionError("the shared refresh control must leave effects in its owning view")
+if ".focusReason =" in applet.id_block("overviewRowMouse"):
+    raise AssertionError("overview rows must use a supported focus transition")
 for fragment in (
     "busy: view.applet.costLoading",
     "busy: view.applet.sessionsLoading",

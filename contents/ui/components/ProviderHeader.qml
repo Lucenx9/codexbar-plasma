@@ -126,9 +126,8 @@ RowLayout {
         PlainPlasmaLabel {
             id: providerUpdatedLabel
 
-            text: providerHeaderRow.applet.lastUpdatedText.length > 0
-                ? providerHeaderRow.applet.lastUpdatedText
-                : i18n("Updated just now")
+            visible: providerHeaderRow.applet.lastUpdatedText.length > 0
+            text: providerHeaderRow.applet.lastUpdatedText
             font: Kirigami.Theme.smallFont
             opacity: providerHeaderRow.applet.secondaryTextOpacity
             Layout.fillWidth: true

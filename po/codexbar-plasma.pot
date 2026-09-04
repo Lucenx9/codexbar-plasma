@@ -221,10 +221,6 @@ msgstr ""
 msgid "Usage chart"
 msgstr ""
 
-#: contents/ui/components/ProviderHeader.qml
-msgid "Updated just now"
-msgstr ""
-
 #: contents/ui/components/SessionsView.qml
 msgid "%1 local session"
 msgid_plural "%1 local sessions"

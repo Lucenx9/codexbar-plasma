@@ -202,8 +202,8 @@ Rectangle {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onPressed: {
-            // An already-focused control may not receive a new focus event.
-            overviewRowFocus.focusReason = Qt.MouseFocusReason
+            // Re-enter focus so an already-focused row also gets a mouse reason.
+            overviewRowFocus.focus = false
             overviewRowFocus.forceActiveFocus(Qt.MouseFocusReason)
         }
         onClicked: overviewRow.activate()

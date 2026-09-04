@@ -20,16 +20,28 @@ Item {
         id: refreshButton
 
         anchors.fill: parent
-        visible: !refreshControl.busy
         icon.name: "view-refresh"
         Accessible.name: refreshControl.label
-        onClicked: refreshControl.requested()
+        onClicked: {
+            if (!refreshControl.busy) {
+                refreshControl.requested()
+            }
+        }
 
         PlainToolTip {
             visible: refreshButton.hovered
             delay: Kirigami.Units.toolTipDelay
             plainText: refreshControl.label
         }
+    }
+
+    // Preserve focus and the native background while the spinner replaces
+    // only the icon. Opacity keeps the content's size in the button layout.
+    Binding {
+        target: refreshButton.contentItem
+        property: "opacity"
+        when: refreshControl.busy && refreshButton.contentItem !== null
+        value: 0
     }
 
     Controls.BusyIndicator {

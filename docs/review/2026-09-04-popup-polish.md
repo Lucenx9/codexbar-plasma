@@ -205,3 +205,30 @@ The check changes text size only; it does not test multiple monitors.
 skips. Packaging and the local package upgrade pass. The runtime check uses the
 installed widget without restarting Plasma. Its log and recent Plasma logs
 contain no matching QML runtime errors.
+
+
+## Bot review follow-up, 2026-09-05
+
+The Codex and CodeRabbit comments on `9d4cb1d` were checked against the current
+code. The focused tests reproduced two failures before correction: the timestamp
+stayed visible without an observed update, and keyboard refresh hid its focused
+button. All focused tests pass after these changes.
+
+| Before | After | Why |
+| --- | --- | --- |
+| Refresh hid its focused button while busy. | The button stays visible and enabled, its icon becomes transparent under the spinner, and its action rejects requests while busy. | Preserve native focus feedback and layout without allowing duplicate keyboard, pointer, or accessibility activation. |
+| The header substituted “Updated just now” for an empty timestamp. | The timestamp is hidden until the applet supplies an update time. | Initial loading or a failed first refresh must not imply a completed update. |
+| Pointer selection assigned `focusReason` directly. | Clear focus and reacquire it with `Qt.MouseFocusReason`. | Use the supported focus transition, including when clicking a row that already has keyboard focus. |
+
+The reported focus-assignment TypeError did not reproduce on the local Qt
+6.11.2 runtime. The [Qt 6.5 Control API](https://doc.qt.io/qt-6.5/qml-qtquick-controls-control.html#focusReason-prop)
+documents the property as read-only, so the change removes reliance on its
+setter. Tests cover same-row and different-row mouse selection after keyboard
+focus, followed by Space activation of the selected row.
+
+Refresh tests cover synchronous busy state, retained focus and geometry,
+repeated Space/Return and pointer input while busy, and completion after focus
+moves elsewhere. The header test covers timestamp disappearance and reappearance.
+`make check` passes **555 QtTests and 3 desktop-style checks**, with no failures
+or skips. Packaging, package upgrade, and the installed-widget runtime check
+pass; no matching QML runtime errors were found. Plasma was not restarted.
