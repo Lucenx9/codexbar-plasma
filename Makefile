@@ -1,6 +1,6 @@
 .PHONY: check smoke install restart package translations update
 
-PACKAGE_FILES := metadata.json contents docs/codexbar-plasma-overview.png docs/codexbar-plasma-codex.png scripts/update-widget.sh LICENSE NOTICE.md README.md
+PACKAGE_FILES := metadata.json contents docs/codexbar-plasma-overview.png docs/codexbar-plasma-codex.png docs/codexbar-plasma-usage-spend.png docs/codexbar-plasma-sessions.png scripts/update-widget.sh LICENSE NOTICE.md README.md
 
 # Override on distros where Qt6 ships QML modules elsewhere (e.g. Debian/Ubuntu
 # multiarch: make check QML_IMPORT_DIR=/usr/lib/x86_64-linux-gnu/qt6/qml).

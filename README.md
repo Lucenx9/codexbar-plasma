@@ -16,7 +16,7 @@ authentication, configuration, quota parsing, and JSON output come from the
 
 ![Codex provider detail](docs/codexbar-plasma-codex.png)
 
-Screenshots use synthetic demo accounts, usage, spend, and session data; no
+Screenshots show version 0.2.30 with synthetic demo accounts, usage, spend, and session data; no
 personal account data is included. They use one Plasma theme and accent color.
 The widget follows the user's Plasma theme for text, surfaces, selection, and
 status colors; provider accent colors stay stable for recognition.
