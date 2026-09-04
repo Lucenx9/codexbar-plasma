@@ -257,8 +257,8 @@ ColumnLayout {
                 // width so the cells stay large enough to hover.
                 Item {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: heatmapGrid.rows * heatmapGrid.cellSize
-                        + (heatmapGrid.rows - 1) * heatmapGrid.rowSpacing
+                    Layout.preferredHeight: 7 * heatmapGrid.cellSize
+                        + 6 * heatmapGrid.rowSpacing
                     clip: true
 
                     Grid {
@@ -272,12 +272,12 @@ ColumnLayout {
                         readonly property int fittingColumns: Math.max(1, Math.floor(
                             (width + cellSpacing) / (minimumCellSize + cellSpacing)))
                         readonly property int columnCount: Math.max(1, Math.min(
-                            fittingColumns, Math.ceil(view.dailyPoints.length / rows)))
+                            fittingColumns, Math.ceil(view.dailyPoints.length / 7)))
                         readonly property real cellSize: Math.max(minimumCellSize, Math.min(
                             maximumCellSize,
                             (width - cellSpacing * (columnCount - 1)) / columnCount))
                         readonly property var cells: view.dailyPoints.slice(
-                            Math.max(0, view.dailyPoints.length - columnCount * rows))
+                            Math.max(0, view.dailyPoints.length - columnCount * 7))
 
                         width: parent.width
                         rows: 7
