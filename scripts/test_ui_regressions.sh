@@ -1904,6 +1904,19 @@ provider_cli_view_body = id_block(providers_text, "providerCliCommandsView")
 if "visible: providerCliCommandsToggle.checked" not in provider_cli_view_body:
     raise AssertionError("Provider CLI command output must follow the disclosure state")
 
+settings_toggle = providers_surface.id_block("providerSettingsToggle")
+for fragment in ("checkable: true", "checked: false"):
+    if fragment not in settings_toggle:
+        raise AssertionError("Provider settings must start collapsed with a native disclosure control")
+settings_details = providers_surface.id_block("providerSettingsDetails")
+if "visible: providerSettingsToggle.checked" not in settings_details:
+    raise AssertionError("Provider settings details must follow the disclosure state")
+if "delegate: Components.ProviderConfigRow" in settings_details:
+    raise AssertionError("Collapsing provider settings must leave the provider list available")
+
+display_surface.reject('source: "handle-sort"',
+    "Arrow-based ordering must not advertise unsupported dragging")
+
 provider_list_heading_body = id_block(providers_text, "providerListHeading")
 for heading_fragment in (
     'text: i18n("Providers")',

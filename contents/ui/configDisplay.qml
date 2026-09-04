@@ -364,6 +364,13 @@ KCM.SimpleKCM {
         return words.join(" ")
     }
 
+    function providerIconSource(providerID) {
+        var fileName = ProviderIdentity.providerIconFileName(providerID)
+        return fileName.length > 0
+            ? Qt.resolvedUrl("../icons/providers/" + fileName)
+            : "view-statistics"
+    }
+
     function shellQuote(value) {
         return Guards.shellQuote(value)
     }
@@ -381,7 +388,10 @@ KCM.SimpleKCM {
 
         ColumnLayout {
             Kirigami.FormData.label: i18n("Provider order:")
+            Kirigami.FormData.labelAlignment: Qt.AlignTop
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             spacing: Kirigami.Units.smallSpacing / 2
 
             Components.PlainControlsLabel {
@@ -419,10 +429,11 @@ KCM.SimpleKCM {
                     spacing: Kirigami.Units.smallSpacing
 
                     Kirigami.Icon {
-                        source: "handle-sort"
+                        source: page.providerIconSource(modelData.provider)
+                        fallback: "view-statistics"
+                        isMask: true
                         Layout.preferredWidth: Kirigami.Units.iconSizes.small
                         Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                        opacity: 0.55
                     }
 
                     Components.PlainControlsLabel {
@@ -435,6 +446,9 @@ KCM.SimpleKCM {
                         icon.name: "go-up"
                         enabled: index > 0
                         Accessible.name: i18n("Move %1 up", modelData.displayName)
+                        Controls.ToolTip.text: Accessible.name
+                        Controls.ToolTip.visible: hovered
+                        Controls.ToolTip.delay: Kirigami.Units.toolTipDelay
                         onClicked: page.moveProvider(index, -1)
                     }
 
@@ -442,6 +456,9 @@ KCM.SimpleKCM {
                         icon.name: "go-down"
                         enabled: index < page.orderedEnabledProviderRoster.length - 1
                         Accessible.name: i18n("Move %1 down", modelData.displayName)
+                        Controls.ToolTip.text: Accessible.name
+                        Controls.ToolTip.visible: hovered
+                        Controls.ToolTip.delay: Kirigami.Units.toolTipDelay
                         onClicked: page.moveProvider(index, 1)
                     }
                 }
@@ -451,84 +468,6 @@ KCM.SimpleKCM {
         Kirigami.Separator {
             Kirigami.FormData.label: i18n("Panel")
             Kirigami.FormData.isSection: true
-        }
-
-        Controls.ComboBox {
-            id: displayModeCombo
-            Kirigami.FormData.label: i18n("Panel text:")
-            textRole: "text"
-            valueRole: "value"
-            model: [
-                {
-                    text: page.cfg_usageBarsShowUsed
-                        ? i18n("Percent used")
-                        : i18n("Percent left"),
-                    value: PanelDisplay.percentMode
-                },
-                { text: i18n("Pace"), value: PanelDisplay.paceMode },
-                { text: i18n("Usage and pace"), value: PanelDisplay.bothMode },
-                { text: i18n("Reset time"), value: PanelDisplay.resetTimeMode },
-                { text: i18n("Run-out forecast"), value: PanelDisplay.runOutMode }
-            ]
-            enabled: showPercentCheck.checked
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 12
-            onModelChanged: currentIndex = page.displayModeIndex(page.cfg_menuBarDisplayMode)
-            Component.onCompleted: currentIndex = page.displayModeIndex(page.cfg_menuBarDisplayMode)
-            onActivated: page.cfg_menuBarDisplayMode = currentValue
-        }
-
-        Components.PlainControlsLabel {
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 18
-            text: i18n("Pace shows the expected used or left percentage at this point in the window. Reset time appears when the provider supplies it. Run-out appears only when the quota is forecast to run out before reset.")
-            font: Kirigami.Theme.smallFont
-            opacity: 0.7
-            wrapMode: Text.WordWrap
-        }
-
-        ColumnLayout {
-            Kirigami.FormData.label: i18n("Element order:")
-            Layout.fillWidth: true
-            spacing: Kirigami.Units.smallSpacing / 2
-
-            Repeater {
-                model: PanelElements.normalizedOrder(page.cfg_panelElementOrder)
-
-                delegate: RowLayout {
-                    required property var modelData
-                    required property int index
-
-                    Layout.fillWidth: true
-                    spacing: Kirigami.Units.smallSpacing
-
-                    Kirigami.Icon {
-                        source: "handle-sort"
-                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                        opacity: 0.55
-                    }
-
-                    Components.PlainControlsLabel {
-                        text: page.panelElementTitle(modelData)
-                        Layout.fillWidth: true
-                        elide: Text.ElideRight
-                    }
-
-                    Controls.ToolButton {
-                        icon.name: "go-up"
-                        enabled: index > 0
-                        Accessible.name: i18n("Move %1 up", page.panelElementTitle(modelData))
-                        onClicked: page.movePanelElement(index, -1)
-                    }
-
-                    Controls.ToolButton {
-                        icon.name: "go-down"
-                        enabled: index < PanelElements.defaultOrder.length - 1
-                        Accessible.name: i18n("Move %1 down", page.panelElementTitle(modelData))
-                        onClicked: page.movePanelElement(index, 1)
-                    }
-                }
-            }
         }
 
         Controls.CheckBox {
@@ -558,11 +497,116 @@ KCM.SimpleKCM {
 
         Components.PlainControlsLabel {
             Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             text: i18n("Usage text and provider meters are available only in horizontal panels.")
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             wrapMode: Text.WordWrap
+        }
+
+        Controls.ComboBox {
+            id: displayModeCombo
+            Kirigami.FormData.label: i18n("Panel text:")
+            textRole: "text"
+            valueRole: "value"
+            model: [
+                {
+                    text: page.cfg_usageBarsShowUsed
+                        ? i18n("Percent used")
+                        : i18n("Percent left"),
+                    value: PanelDisplay.percentMode,
+                    description: ""
+                },
+                {
+                    text: i18n("Pace"), value: PanelDisplay.paceMode,
+                    description: i18n("Shows the expected used or left percentage at this point in the window.")
+                },
+                {
+                    text: i18n("Usage and pace"), value: PanelDisplay.bothMode,
+                    description: i18n("Shows current usage alongside the expected used or left percentage.")
+                },
+                {
+                    text: i18n("Reset time"), value: PanelDisplay.resetTimeMode,
+                    description: i18n("Appears when the provider supplies a reset time.")
+                },
+                {
+                    text: i18n("Run-out forecast"), value: PanelDisplay.runOutMode,
+                    description: i18n("Appears only when the quota is forecast to run out before reset.")
+                }
+            ]
+            enabled: showPercentCheck.checked
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 12
+            onModelChanged: currentIndex = page.displayModeIndex(page.cfg_menuBarDisplayMode)
+            Component.onCompleted: currentIndex = page.displayModeIndex(page.cfg_menuBarDisplayMode)
+            onActivated: page.cfg_menuBarDisplayMode = currentValue
+        }
+
+        Components.PlainControlsLabel {
+            id: displayModeDescription
+
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            text: displayModeCombo.currentIndex >= 0
+                ? displayModeCombo.model[displayModeCombo.currentIndex].description : ""
+            visible: showPercentCheck.checked && text.length > 0
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+            wrapMode: Text.WordWrap
+        }
+
+        ColumnLayout {
+            Kirigami.FormData.label: i18n("Element order:")
+            Kirigami.FormData.labelAlignment: Qt.AlignTop
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            spacing: Kirigami.Units.smallSpacing / 2
+
+            Repeater {
+                model: PanelElements.normalizedOrder(page.cfg_panelElementOrder)
+
+                delegate: RowLayout {
+                    required property var modelData
+                    required property int index
+
+                    Layout.fillWidth: true
+                    spacing: Kirigami.Units.smallSpacing
+
+                    Components.PlainControlsLabel {
+                        text: i18n("%1.", index + 1)
+                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                        opacity: 0.7
+                    }
+
+                    Components.PlainControlsLabel {
+                        text: page.panelElementTitle(modelData)
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                    }
+
+                    Controls.ToolButton {
+                        icon.name: "go-up"
+                        enabled: index > 0
+                        Accessible.name: i18n("Move %1 up", page.panelElementTitle(modelData))
+                        Controls.ToolTip.text: Accessible.name
+                        Controls.ToolTip.visible: hovered
+                        Controls.ToolTip.delay: Kirigami.Units.toolTipDelay
+                        onClicked: page.movePanelElement(index, -1)
+                    }
+
+                    Controls.ToolButton {
+                        icon.name: "go-down"
+                        enabled: index < PanelElements.defaultOrder.length - 1
+                        Accessible.name: i18n("Move %1 down", page.panelElementTitle(modelData))
+                        Controls.ToolTip.text: Accessible.name
+                        Controls.ToolTip.visible: hovered
+                        Controls.ToolTip.delay: Kirigami.Units.toolTipDelay
+                        onClicked: page.movePanelElement(index, 1)
+                    }
+                }
+            }
         }
 
         Kirigami.Separator {
@@ -599,6 +643,7 @@ KCM.SimpleKCM {
             id: overviewProviderSelection
 
             Kirigami.FormData.label: i18n("Overview providers:")
+            Kirigami.FormData.labelAlignment: Qt.AlignTop
             Layout.fillWidth: true
             spacing: Kirigami.Units.smallSpacing
 

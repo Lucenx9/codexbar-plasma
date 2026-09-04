@@ -24,3 +24,34 @@ The light-theme check uses Breeze Light, a 14-point body font, and a 12-point
 small font in an isolated preview configuration.
 
 ![Overview with larger text in Breeze Light](popup-overview-large-text-light.png)
+
+## Settings
+
+The same review covers General, Providers, and Display. These screenshots use
+an isolated Plasma configuration and the same synthetic roster of four enabled
+and two disabled providers. Provider loading is replaced only in the temporary
+preview package. No provider credentials or live account data are included.
+
+| Before | After | Why |
+| --- | --- | --- |
+| ![General before](settings-general-before.png) | ![General after](settings-general-after.png) | Bound supporting text lets the native form place labels beside controls when space permits. Notifications and update options indent beneath their parent setting. The history window includes its day unit. |
+| ![Providers before](settings-providers-before.png) | ![Providers after](settings-providers-after.png) | Settings and diagnostics start collapsed, making all four enabled example providers visible. Provider links and the immediate-save notice remain available. |
+| ![Display before](settings-display-before.png) | ![Display after](settings-display-after.png) | Provider icons replace inactive drag handles. Panel visibility controls precede ordering, arrow buttons have tooltips, and help describes only the selected text mode. |
+
+The General form was checked at frame widths of 690, 818, and 1100 pixels.
+It switches to stacked labels in a narrow window, while supporting text wraps
+inside the form. The Defaults explanation no longer extends beyond the page.
+
+![General defaults with wrapped text](settings-general-defaults-after.png)
+
+The additional light-theme check uses a 14-point body font and 12-point small
+font. The settings disclosure follows the user's body font.
+
+![General with larger text in Breeze Light](settings-general-large-text-light.png)
+
+[Providers with larger text in Breeze Light](settings-providers-large-text-light.png)
+
+Provider disclosure and selection, and provider reordering were exercised in
+the preview. Opening details does not fetch diagnostics. The disclosure is a
+native checkable control and retains the existing CLI-backed options and
+redacted diagnostics behind it. No configuration schema or CLI contract changed.

@@ -1424,37 +1424,49 @@ KCM.SimpleKCM {
                 Layout.fillWidth: true
             }
 
-            ColumnLayout {
+            RowLayout {
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing
 
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Kirigami.Units.smallSpacing
+                Controls.Button {
+                    id: providerSettingsToggle
 
-                    Components.PlainControlsLabel {
-                        text: i18n("Provider settings")
-                        font.weight: Font.DemiBold
-                        Layout.fillWidth: true
-                        elide: Text.ElideRight
-                    }
-
-                    Controls.BusyIndicator {
-                        running: page.selectedProvider !== null
-                            && page.providerDiagnosticLoadingFor(page.selectedProvider.provider)
-                        visible: running
-                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                    }
-
-                    Controls.Button {
-                        text: i18n("Inspect redacted settings")
-                        icon.name: "view-refresh"
-                        enabled: page.selectedProvider
-                            && !page.providerDiagnosticLoadingFor(page.selectedProvider.provider)
-                        onClicked: if (page.selectedProvider) page.loadProviderSettings(page.selectedProvider.provider)
-                    }
+                    text: i18n("Settings and diagnostics")
+                    flat: true
+                    icon.name: checked ? "arrow-down" : "arrow-right"
+                    display: Controls.AbstractButton.TextBesideIcon
+                    checkable: true
+                    checked: false
                 }
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                Controls.BusyIndicator {
+                    running: page.selectedProvider !== null
+                        && page.providerDiagnosticLoadingFor(page.selectedProvider.provider)
+                    visible: running
+                    Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                    Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                }
+
+                Controls.Button {
+                    text: i18n("Inspect redacted settings")
+                    icon.name: "view-refresh"
+                    visible: providerSettingsToggle.checked
+                    enabled: page.selectedProvider
+                        && !page.providerDiagnosticLoadingFor(page.selectedProvider.provider)
+                    onClicked: if (page.selectedProvider) page.loadProviderSettings(page.selectedProvider.provider)
+                }
+            }
+
+            ColumnLayout {
+                id: providerSettingsDetails
+
+                Layout.fillWidth: true
+                spacing: Kirigami.Units.smallSpacing
+                visible: providerSettingsToggle.checked
 
                 Components.PlainControlsLabel {
                     Layout.fillWidth: true
