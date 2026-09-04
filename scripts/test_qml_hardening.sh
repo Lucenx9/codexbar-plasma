@@ -65,7 +65,48 @@ test_resolve_qml_import_dir() {
 }
 test_resolve_qml_import_dir
 
+resolve_qmllint_flags() {
+  local current="${1:-}"
+  local import_dir="${2:-}"
+  if [[ -n "$current" && "$current" == *"--import"* ]]; then
+    echo "$current"
+    return 0
+  fi
+  local base="${current:---unqualified disable}"
+  if [[ -n "$import_dir" && ( ! -d "${import_dir}/org/kde/plasma/plasmoid" || ! -d "${import_dir}/org/kde/plasma/configuration" ) ]]; then
+    echo "--import info --unresolved-type info --missing-property info $base"
+    return 0
+  fi
+  echo "$base"
+}
+
+test_resolve_qmllint_flags() {
+  local fixture_dir
+  fixture_dir="$(mktemp -d)"
+  # shellcheck disable=SC2064
+  trap "rm -rf '$fixture_dir'" RETURN
+  local resolved
+  resolved="$(resolve_qmllint_flags "" "$fixture_dir")"
+  if [[ "$resolved" != *"--import info"* ]]; then
+    echo "resolve_qmllint_flags failed: expected info downgrade when plasma modules absent, got '$resolved'" >&2
+    exit 1
+  fi
+  mkdir -p "$fixture_dir/org/kde/plasma/plasmoid" "$fixture_dir/org/kde/plasma/configuration"
+  resolved="$(resolve_qmllint_flags "" "$fixture_dir")"
+  if [[ "$resolved" != "--unqualified disable" ]]; then
+    echo "resolve_qmllint_flags failed: expected standard flags when plasma modules present, got '$resolved'" >&2
+    exit 1
+  fi
+  resolved="$(resolve_qmllint_flags "--import error --unqualified disable" "$fixture_dir")"
+  if [[ "$resolved" != "--import error --unqualified disable" ]]; then
+    echo "resolve_qmllint_flags failed: expected explicit --import flag to be preserved, got '$resolved'" >&2
+    exit 1
+  fi
+}
+test_resolve_qmllint_flags
+
 QML_IMPORT_DIR="$(resolve_qml_import_dir "${QML_IMPORT_DIR:-}")"
+QMLLINT_FLAGS="$(resolve_qmllint_flags "${QMLLINT_FLAGS:-}" "$QML_IMPORT_DIR")"
 
 # The `all` surface in scripts/lib/qml_surfaces.py is the one list of QML/JS
 # sources; this check and scripts/update_translations.sh read it, so a new or
