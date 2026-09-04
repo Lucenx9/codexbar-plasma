@@ -335,6 +335,7 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: includeStatusCheck
+            Layout.fillWidth: true
             text: i18n("Fetch provider service status")
         }
 
@@ -354,6 +355,7 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: costUsageEnabledCheck
+            Layout.fillWidth: true
             text: i18n("Load local usage and spend history")
         }
 
@@ -390,6 +392,7 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: enableNotificationsCheck
+            Layout.fillWidth: true
             text: i18n("Enable Plasma notifications")
         }
 
@@ -399,6 +402,7 @@ KCM.SimpleKCM {
 
             Controls.CheckBox {
                 id: notifyStatusIncidentsCheck
+                Layout.fillWidth: true
                 Layout.leftMargin: Kirigami.Units.gridUnit
                 text: i18n("Notify status incidents")
                 enabled: enableNotificationsCheck.checked && includeStatusCheck.checked
@@ -406,6 +410,7 @@ KCM.SimpleKCM {
 
             Controls.CheckBox {
                 id: notifyQuotaWarningsCheck
+                Layout.fillWidth: true
                 Layout.leftMargin: Kirigami.Units.gridUnit
                 text: i18n("Notify quota warnings")
                 enabled: enableNotificationsCheck.checked
@@ -413,6 +418,7 @@ KCM.SimpleKCM {
 
             Controls.CheckBox {
                 id: notifyPredictivePaceWarningsCheck
+                Layout.fillWidth: true
                 Layout.leftMargin: Kirigami.Units.gridUnit
                 text: i18n("Notify predicted quota exhaustion")
                 enabled: enableNotificationsCheck.checked
@@ -422,6 +428,7 @@ KCM.SimpleKCM {
 
             Controls.CheckBox {
                 id: notifyLimitResetsCheck
+                Layout.fillWidth: true
                 Layout.leftMargin: Kirigami.Units.gridUnit
                 text: i18n("Notify limit resets")
                 enabled: enableNotificationsCheck.checked
@@ -479,6 +486,7 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: updateChecksEnabledCheck
+            Layout.fillWidth: true
             text: i18n("Check for widget updates")
         }
 
@@ -488,6 +496,7 @@ KCM.SimpleKCM {
 
             Controls.CheckBox {
                 id: updateNotificationsEnabledCheck
+                Layout.fillWidth: true
                 Layout.leftMargin: Kirigami.Units.gridUnit
                 text: i18n("Notify when a widget update is available")
                 enabled: updateChecksEnabledCheck.checked && enableNotificationsCheck.checked
@@ -495,6 +504,7 @@ KCM.SimpleKCM {
 
             Controls.CheckBox {
                 id: autoUpdateEnabledCheck
+                Layout.fillWidth: true
                 Layout.leftMargin: Kirigami.Units.gridUnit
                 text: i18n("Install widget updates automatically")
                 enabled: updateChecksEnabledCheck.checked

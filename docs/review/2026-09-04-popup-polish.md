@@ -165,3 +165,43 @@ The temporary panel and package were removed after inspection. The original
 panel was not rearranged and Plasma was not restarted. Only one monitor is
 connected, so movement between monitors with different scales remains untested.
 The earlier isolated Qt scaling checks do not substitute for that hardware test.
+
+
+## Text at 200%
+
+The next pass doubles the configured fonts without changing display scaling:
+body and menu text from 11 to 22 points, small text from 9 to 18 points, and
+monospace text from 12 to 24 points. A temporary `XDG_CONFIG_HOME` contains these
+font settings; the host configuration stays unchanged. The native preview uses
+synthetic provider and account data. Comparisons start at `fe55926`.
+
+Settings was inspected at frame widths of 818 and 690 pixels. At 690 pixels,
+two layout problems needed correction:
+
+| Before | After | Why |
+| --- | --- | --- |
+| ![Large option labels before](text200-general-before.png) | ![Large option labels after](text200-general-after.png) | Checkboxes kept their full implicit label width and extended beyond the viewport. General and Display now let the layout constrain their width, allowing the native KDE checkbox label to wrap. Dependent options retain their indentation. |
+| ![Expanded provider settings before](text200-providers-before.png) | ![Expanded provider settings after](text200-providers-after.png) | The disclosure and inspection buttons forced the entire Providers page beyond the viewport. A Flow places them on separate lines when necessary and keeps the notice, details, and provider rows within the page. |
+
+The changes keep the native control content, keyboard behavior, configuration
+bindings, and CLI actions. No diagnostics or credential writes were submitted.
+At normal font sizes, the provider buttons remain together on one line.
+
+| Additional check | Result |
+| --- | --- |
+| General and Display | Large labels wrap, supporting text remains readable, and focusing lower controls scrolls them into view. [Display at 200%](text200-display.png). |
+| Providers | Collapsed and expanded details stay within the narrow page. Provider selection and the API-key action remain reachable. |
+| Advanced and Debug | Explanations wrap and controls remain available. Native text-field placeholders and the horizontally scrollable diagnostic output retain their existing behavior. |
+| Account tooltip | Native keyboard focus shows the full long account and workspace label. The tooltip fits inside the 620 × 900 popup frame. [Screenshot](text200-account-tooltip.png). |
+| Unsaved-settings confirmation | The prompt wraps; Apply, Discard, and Cancel remain visible. Discard successfully completes navigation. [Screenshot](text200-confirmation.png). |
+| Credential dialog | The native password dialog fits its title, field, and buttons at 22 points. It was canceled with no value submitted. [Screenshot](text200-credential.png). |
+| Normal text | General and expanded Providers were inspected again at the original font sizes and an 818-pixel frame width. No clipping appeared. |
+
+The Plasma-owned Settings sidebar wraps category names across lines at this
+font size and remains scrollable. The widget does not override that shell UI.
+The check changes text size only; it does not test multiple monitors.
+
+`make check` passes 553 QtTests and 3 desktop-style checks with no failures or
+skips. Packaging and the local package upgrade pass. The runtime check uses the
+installed widget without restarting Plasma. Its log and recent Plasma logs
+contain no matching QML runtime errors.

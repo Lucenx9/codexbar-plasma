@@ -419,6 +419,7 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: showPopupTabLabelsCheck
+            Layout.fillWidth: true
             text: i18n("Show text labels in the tab bar")
         }
 
@@ -519,26 +520,31 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: showProviderCheck
+            Layout.fillWidth: true
             text: i18n("Show provider name in panel")
         }
 
         Controls.CheckBox {
             id: showPercentCheck
+            Layout.fillWidth: true
             text: i18n("Show usage text in panel")
         }
 
         Controls.CheckBox {
             id: showMultiProviderCheck
+            Layout.fillWidth: true
             text: i18n("Show multi-provider meters in panel")
         }
 
         Controls.CheckBox {
             id: showCreditsCheck
+            Layout.fillWidth: true
             text: i18n("Show credits in panel")
         }
 
         Controls.CheckBox {
             id: autoSelectProviderCheck
+            Layout.fillWidth: true
             text: i18n("Auto-select highest-usage provider")
         }
 
@@ -673,21 +679,25 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: usageBarsShowUsedCheck
+            Layout.fillWidth: true
             text: i18n("Show usage as percent used")
         }
 
         Controls.CheckBox {
             id: showQuotaWarningMarkersCheck
+            Layout.fillWidth: true
             text: i18n("Show quota warnings on usage meters")
         }
 
         Controls.CheckBox {
             id: resetTimesShowAbsoluteCheck
+            Layout.fillWidth: true
             text: i18n("Show reset times as clock time")
         }
 
         Controls.CheckBox {
             id: showProviderChangelogsCheck
+            Layout.fillWidth: true
             text: i18n("Show provider changelog links")
         }
 
@@ -730,6 +740,7 @@ KCM.SimpleKCM {
                 model: page.orderedEnabledProviderRoster
 
                 delegate: Controls.CheckBox {
+                    Layout.fillWidth: true
                     required property var modelData
 
                     readonly property bool selected: page.overviewProviderSelected(modelData.provider)

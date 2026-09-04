@@ -1451,7 +1451,9 @@ KCM.SimpleKCM {
                 Layout.fillWidth: true
             }
 
-            RowLayout {
+            Flow {
+                id: providerSettingsActions
+
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing
 
@@ -1466,16 +1468,12 @@ KCM.SimpleKCM {
                     checked: false
                 }
 
-                Item {
-                    Layout.fillWidth: true
-                }
-
                 Controls.BusyIndicator {
                     running: page.selectedProvider !== null
                         && page.providerDiagnosticLoadingFor(page.selectedProvider.provider)
                     visible: running
-                    Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                    Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                    width: Kirigami.Units.iconSizes.small
+                    height: Kirigami.Units.iconSizes.small
                 }
 
                 Controls.Button {
