@@ -1139,6 +1139,22 @@ if "Controls.ToolTip" in compact_meter_body:
         "panel meters must rely on the plasmoid tooltip instead of stacking a second tooltip"
     )
 
+compact_provider_body = applet.function_body("selectedCompactProvider")
+for compact_selection_fragment in (
+    "providers.length === 0",
+    "return null",
+    "? autoSelectedProviderIndex() : 0",
+    "PopupSelection.compactProviderIndex(",
+    "autoSelectProvider, selectedProviderIndex, automaticProviderIndex",
+    "return providers[index]",
+):
+    if compact_selection_fragment not in compact_provider_body:
+        raise AssertionError(
+            "compact provider selection must adapt the current roster and popup "
+            "selection through PopupSelection; "
+            f"missing {compact_selection_fragment!r}"
+        )
+
 open_panel_provider_body = function_body(main_text, "openProviderFromPanel")
 for panel_selection_fragment in (
     "providerIndexForID(providerID)",
@@ -1591,13 +1607,25 @@ if "chart.applet.paintRoundedTopBar(" not in interactive_chart_text:
 for detail_chart_fragment in (
     "chart.applet.buildChartBarGradient(",
     "chart.applet.chartBarGeometry(width, chart.points.length)",
-    "Math.max(2, (height - 3) * fraction)",
+    "ChartScale.barGeometry(height,",
 ):
     if detail_chart_fragment not in interactive_chart_text:
         raise AssertionError(
             "provider detail bar charts must retain the polished cost-chart language; "
             f"missing {detail_chart_fragment!r}"
         )
+
+for signed_chart_fragment in (
+    'import "../ChartScale.js" as ChartScale',
+    "ChartScale.domain(points)",
+    "ChartScale.pointValue(point)",
+    "ChartScale.fraction(value, valueDomain)",
+    "chart.chartFraction(0), chart.lineMarkerInset)",
+    "if (bar.negative)",
+    "context.scale(1, -1)",
+    "context.restore()",
+):
+    applet.require(signed_chart_fragment, "detail charts must retain signed values and their zero baseline")
 
 chart_gradient_body = function_body(main_text, "buildChartBarGradient")
 for gradient_fragment in (

@@ -112,4 +112,23 @@ TestCase {
         })), 0)
         compare(SessionRefreshPolicy.nextCheckDelay(observation()), 300000)
     }
+
+    function test_intervalChangeReevaluatesTheExistingSnapshot() {
+        var current = observation({
+            loadedCommandSource: "codexbar sessions --json-v2",
+            lastCompletedAtMs: 900000
+        })
+        compare(SessionRefreshPolicy.nextCheckDelay(current), 200000)
+
+        current.staleAfterMs = SessionRefreshPolicy.staleAfterMs(60)
+        compare(SessionRefreshPolicy.refreshAction(current), SessionRefreshPolicy.startAction)
+
+        current.staleAfterMs = SessionRefreshPolicy.staleAfterMs(600)
+        compare(SessionRefreshPolicy.refreshAction(current), SessionRefreshPolicy.keepAction)
+        compare(SessionRefreshPolicy.nextCheckDelay(current), 500000)
+
+        current.visible = false
+        compare(SessionRefreshPolicy.refreshAction(current), SessionRefreshPolicy.keepAction)
+        compare(SessionRefreshPolicy.nextCheckDelay(current), 0)
+    }
 }
