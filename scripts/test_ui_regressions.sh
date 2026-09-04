@@ -72,6 +72,7 @@ require_in_surface providers "ProviderConfigProtocol.commandOutcome("
 # stay live. The General surface must observe the runtime values explicitly and
 # keep user edits pending until Apply.
 require_in_surface general 'import "general/ConfigValueSync.js" as ConfigValueSync'
+require_in_surface general 'import "UpdateLogic.js" as UpdateLogic'
 require_in_surface general "ConfigValueSync.afterPersistedChange("
 require_in_surface general "ConfigValueSync.afterUserEdit("
 require_in_surface general "ConfigValueSync.afterSave("
@@ -733,6 +734,13 @@ if empty_command_index < 0 or loading_false_index < 0 or loading_false_index > e
 provider_token_cost_body = function_body(main_text, "providerTokenCost")
 if "tokenCosts[key]" not in provider_token_cost_body:
     raise AssertionError("providerTokenCost must read the current token-cost map")
+if (
+    "CostPresentation.snapshotMatchesRange(" not in provider_token_cost_body
+    or "costHistoryDays" not in provider_token_cost_body
+):
+    raise AssertionError("providerTokenCost must hide snapshots from a stale history range")
+if "onCostHistoryDaysChanged: applyTokenCosts()" not in main_text:
+    raise AssertionError("changing the cost history range must reproject provider details")
 replace_snapshot_body = function_body(main_text, "replaceProviderSnapshot")
 for snapshot_fragment in ("copyObject(snapshot)", "providerTokenCost(key)", "replacement"):
     if snapshot_fragment not in replace_snapshot_body:

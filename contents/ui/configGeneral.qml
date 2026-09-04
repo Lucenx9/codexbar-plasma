@@ -5,6 +5,7 @@ import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
 import "components" as Components
+import "UpdateLogic.js" as UpdateLogic
 import "general/ConfigValueSync.js" as ConfigValueSync
 
 KCM.SimpleKCM {
