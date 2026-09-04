@@ -92,10 +92,14 @@ function amountString(fmt, value, currency) {
     var numeric = Number(value)
     var negative = numeric < 0
     var amount = groupedDecimalString(fmt, Math.abs(numeric), 2)
-    if (currency === "USD") {
+    var code = typeof currency === "string" ? currency.trim() : ""
+    if (code === "USD") {
         return negative ? "-$" + amount : "$" + amount
     }
-    return (negative ? "-" : "") + currency + " " + amount
+    if (code.length === 0) {
+        return (negative ? "-" : "") + amount
+    }
+    return (negative ? "-" : "") + code + " " + amount
 }
 
 function scaledTokenCount(value) {

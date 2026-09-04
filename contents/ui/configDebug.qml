@@ -12,7 +12,7 @@ KCM.SimpleKCM {
     id: page
 
     property string cfg_commandPath
-    property string cfg_commandPathDefault
+    property string cfg_commandPathDefault: "codexbar"
 
     readonly property string commandPath: (cfg_commandPath || "codexbar").trim()
     property bool diagnosticRunning: false

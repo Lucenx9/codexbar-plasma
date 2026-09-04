@@ -54,6 +54,14 @@ TestCase {
         compare(CostPresentation.groupedDecimalString(fmt, "abc", 2), "-")
     }
 
+    function test_amountStringHandlesEmptyOrMissingCurrencyGracefully() {
+        compare(CostPresentation.amountString(fmt, 12, ""), "12.00")
+        compare(CostPresentation.amountString(fmt, -12, ""), "-12.00")
+        compare(CostPresentation.amountString(fmt, 12, null), "12.00")
+        compare(CostPresentation.amountString(fmt, 12, undefined), "12.00")
+        compare(CostPresentation.amountString(fmt, 12, "   "), "12.00")
+    }
+
     function test_tokenCountStringScalesAndDropsTrailingZero() {
         compare(CostPresentation.tokenCountString(999), "999")
         compare(CostPresentation.tokenCountString(1000), "1K")
