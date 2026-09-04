@@ -3,17 +3,56 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 QMLLINT="${QMLLINT:-/usr/lib/qt6/bin/qmllint}"
-QML_IMPORT_DIR="${QML_IMPORT_DIR:-/usr/lib/qt6/qml}"
 QMLLINT_FLAGS="${QMLLINT_FLAGS:---unqualified disable}"
 
-if [[ ! -d "$QML_IMPORT_DIR" ]]; then
-  for candidate in /usr/lib/*-linux-gnu/qt6/qml; do
+resolve_qml_import_dir() {
+  local current="${1:-}"
+  local root_prefix="${2:-/usr/lib}"
+  if [[ -n "$current" && -d "$current" ]]; then
+    echo "$current"
+    return 0
+  fi
+  local triplet
+  triplet="$(dpkg-architecture -qDEB_HOST_MULTIARCH 2>/dev/null || true)"
+  if [[ -z "$triplet" ]]; then
+    local arch
+    arch="$(uname -m 2>/dev/null || true)"
+    if [[ -n "$arch" && -d "${root_prefix}/${arch}-linux-gnu/qt6/qml" ]]; then
+      triplet="${arch}-linux-gnu"
+    fi
+  fi
+  if [[ -n "$triplet" && -d "${root_prefix}/${triplet}/qt6/qml" ]]; then
+    echo "${root_prefix}/${triplet}/qt6/qml"
+    return 0
+  fi
+  for candidate in "${root_prefix}"/*-linux-gnu/qt6/qml; do
     if [[ -d "$candidate" ]]; then
-      QML_IMPORT_DIR="$candidate"
-      break
+      echo "$candidate"
+      return 0
     fi
   done
-fi
+  echo "${root_prefix}/qt6/qml"
+}
+
+test_resolve_qml_import_dir() {
+  local fixture_dir
+  fixture_dir="$(mktemp -d)"
+  # shellcheck disable=SC2064
+  trap "rm -rf '$fixture_dir'" RETURN
+  local triplet
+  triplet="$(dpkg-architecture -qDEB_HOST_MULTIARCH 2>/dev/null || true)"
+  [[ -z "$triplet" ]] && triplet="$(uname -m 2>/dev/null || true)-linux-gnu"
+  mkdir -p "$fixture_dir/aaaa-linux-gnu/qt6/qml" "$fixture_dir/${triplet}/qt6/qml"
+  local resolved
+  resolved="$(resolve_qml_import_dir "" "$fixture_dir")"
+  if [[ "$resolved" != "$fixture_dir/${triplet}/qt6/qml" ]]; then
+    echo "resolve_qml_import_dir failed: got '$resolved', expected '$fixture_dir/${triplet}/qt6/qml'" >&2
+    exit 1
+  fi
+}
+test_resolve_qml_import_dir
+
+QML_IMPORT_DIR="$(resolve_qml_import_dir "${QML_IMPORT_DIR:-}")"
 
 # The `all` surface in scripts/lib/qml_surfaces.py is the one list of QML/JS
 # sources; this check and scripts/update_translations.sh read it, so a new or
