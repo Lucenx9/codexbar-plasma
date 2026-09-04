@@ -344,7 +344,8 @@ function dedupeAccountOptions(items) {
     }
     var seen = ({})
     var result = []
-    for (var i = 0; i < items.length; i++) {
+    var itemLimit = Math.min(items.length, maximumAccountSnapshots)
+    for (var i = 0; i < itemLimit; i++) {
         var label = accountLabel(items[i])
         var key = "account:" + label
         if (label.length === 0 || hasOwnKey(seen, key)) {

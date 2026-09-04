@@ -39,19 +39,21 @@ TestCase {
     function test_quotaIsACreditBalanceNotMoney() {
         compare(CostPresentation.amountString(fmt, 1499.6, "Quota"), "1500")
         compare(CostPresentation.amountString(fmt, 1499.6, " Quota "), "1500")
-        // Non-numeric input degrades like the money path; null counts as 0,
-        // matching the pinned "$0.00" behaviour of the USD branch.
         compare(CostPresentation.amountString(fmt, "abc", "Quota"), "-")
-        compare(CostPresentation.amountString(fmt, null, "Quota"), "0")
+        compare(CostPresentation.amountString(fmt, null, "Quota"), "-")
     }
 
-    // Pinning the pre-extraction behaviour, defect included: a non-numeric
-    // amount prints as "$-" rather than being rejected. Fixing that is a
-    // separate change; this asserts the extraction did not alter it.
-    function test_nonNumericAmountKeepsThePreExtractionOutput() {
-        compare(CostPresentation.amountString(fmt, "abc", "USD"), "$-")
-        compare(CostPresentation.amountString(fmt, "abc", "EUR"), "EUR -")
-        compare(CostPresentation.amountString(fmt, null, "USD"), "$0.00")
+    function test_nonNumericAmountDegradesToDash() {
+        compare(CostPresentation.amountString(fmt, "abc", "USD"), "-")
+        compare(CostPresentation.amountString(fmt, "abc", "EUR"), "-")
+        compare(CostPresentation.amountString(fmt, "12", "USD"), "-")
+        compare(CostPresentation.amountString(fmt, "", "USD"), "-")
+        compare(CostPresentation.amountString(fmt, undefined, "USD"), "-")
+        compare(CostPresentation.amountString(fmt, Number.NaN, "USD"), "-")
+        compare(CostPresentation.amountString(fmt, null, "USD"), "-")
+        compare(CostPresentation.amountString(fmt, false, "USD"), "-")
+        compare(CostPresentation.amountString(fmt, [], "USD"), "-")
+        compare(CostPresentation.amountString(fmt, {}, "USD"), "-")
         compare(CostPresentation.groupedDecimalString(fmt, "abc", 2), "-")
     }
 
@@ -299,6 +301,42 @@ TestCase {
     function test_historyRowsSurviveAnEmptyPayload() {
         compare(CostPresentation.historyRows(fmt, null, false, "Latest").length, 0)
         compare(CostPresentation.historyRows(fmt, { daily: [] }, false, "Latest").length, 0)
+        compare(CostPresentation.historyRows(fmt, { daily: "invalid" }, false, "Latest").length, 0)
+    }
+
+    function test_breakdownRowsSurviveNonArrayInputs() {
+        compare(CostPresentation.breakdownRows(null).length, 0)
+        compare(CostPresentation.breakdownRows(undefined).length, 0)
+        compare(CostPresentation.breakdownRows("invalid").length, 0)
+    }
+
+    function test_modelRowsSurviveNonArrayInputs() {
+        compare(CostPresentation.modelRows(fmt, null, null).length, 0)
+        compare(CostPresentation.modelRows(fmt, { models: "invalid" }, null).length, 0)
+    }
+
+    function test_chartPointsAndSparklineMaxSurviveNonArrayInputs() {
+        compare(CostPresentation.chartPoints(fmt, null, false).length, 0)
+        compare(CostPresentation.chartPoints(fmt, "invalid", false).length, 0)
+        compare(CostPresentation.sparklineMax(null, false), 0)
+        compare(CostPresentation.sparklineMax("invalid", false), 0)
+        compare(CostPresentation.sparklineSummary(fmt, "invalid", false), null)
+    }
+
+    function test_averageDailyValueAndPeakPointSurviveNonArrayInputs() {
+        compare(CostPresentation.averageDailyValue(null, false), null)
+        compare(CostPresentation.averageDailyValue("invalid", false), null)
+        compare(CostPresentation.peakPoint(null, false), null)
+        compare(CostPresentation.peakPoint("invalid", false), null)
+    }
+
+    function test_spendHelpersSurviveNonArrayInputs() {
+        var arrayLike = { length: 1, 0: null }
+        compare(CostPresentation.spendDailyPoints(fmt, arrayLike, false).length, 0)
+        compare(CostPresentation.spendCurrency(arrayLike), "USD")
+        compare(CostPresentation.spendHasMixedCostCurrencies(arrayLike), false)
+        compare(CostPresentation.spendTotals("invalid"), null)
+        compare(CostPresentation.historyStillBuilding("invalid"), false)
     }
 
     function test_modelRowsLetTheCallerWordTheTokenHalf() {

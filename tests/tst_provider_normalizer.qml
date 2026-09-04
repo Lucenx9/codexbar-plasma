@@ -490,6 +490,23 @@ TestCase {
         compare(Normalizer.dedupeAccountOptions({ account: "a" }).length, 0)
     }
 
+    function test_dedupeAccountOptionsBoundsAtMaximumAccountSnapshots() {
+        var oversized = []
+        for (var i = 0; i < Normalizer.maximumAccountSnapshots + 20; i++) {
+            oversized.push({ account: "acc" + i })
+        }
+        var inspectedPastBound = false
+        Object.defineProperty(oversized[Normalizer.maximumAccountSnapshots], "account", {
+            get: function() {
+                inspectedPastBound = true
+                return "outside-bound"
+            }
+        })
+        var deduped = Normalizer.dedupeAccountOptions(oversized)
+        compare(deduped.length, Normalizer.maximumAccountSnapshots)
+        verify(!inspectedPastBound)
+    }
+
     function test_treatsMissingTokenAccountsAsAnEmptyListNotAFailure() {
         verify(Normalizer.isMissingTokenAccountsError("No token accounts configured for codex."))
         verify(Normalizer.isMissingTokenAccountsError("NO TOKEN ACCOUNTS CONFIGURED"))
