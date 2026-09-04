@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
@@ -17,6 +18,7 @@ Rectangle {
     readonly property real shownPercent: hasUsage ? applet.displayPercent(usageRow) : -1
     readonly property string resetText: usageRow ? applet.resetLabel(applet.usageResetText(usageRow)) : ""
     readonly property string detail: applet.overviewDetailText(providerData)
+    readonly property bool keyboardFocusVisible: overviewRowFocus.visualFocus
 
     signal selected(var providerData)
 
@@ -25,34 +27,17 @@ Rectangle {
     }
 
     Layout.fillWidth: true
-    Layout.preferredHeight: Kirigami.Units.gridUnit * (detail.length > 0 ? 4.35 : 3.95)
+    implicitHeight: overviewRowContent.implicitHeight + Kirigami.Units.largeSpacing * 2
+    Layout.preferredHeight: implicitHeight
     radius: applet.roundedSurfaceRadius
     color: overviewRowMouse.pressed
         ? applet.withAlpha(Kirigami.Theme.focusColor, 0.16)
-        : (activeFocus
+        : (keyboardFocusVisible
         ? applet.withAlpha(Kirigami.Theme.focusColor, 0.1)
         : (overviewRowMouse.containsMouse
         ? applet.withAlpha(Kirigami.Theme.textColor, 0.075)
         : applet.withAlpha(Kirigami.Theme.textColor, 0.035)))
     scale: overviewRowMouse.pressed ? 0.99 : 1
-    activeFocusOnTab: true
-
-    Accessible.role: Accessible.Button
-    Accessible.name: providerData.title
-    Accessible.description: detail
-    Accessible.onPressAction: overviewRow.activate()
-
-    Keys.onPressed: function(event) {
-        switch (event.key) {
-        case Qt.Key_Space:
-        case Qt.Key_Enter:
-        case Qt.Key_Return:
-        case Qt.Key_Select:
-            overviewRow.activate()
-            event.accepted = true
-            break
-        }
-    }
 
     Behavior on color {
         ColorAnimation {
@@ -68,9 +53,11 @@ Rectangle {
     }
 
     RowLayout {
+        id: overviewRowContent
+
         anchors.fill: parent
-        anchors.margins: Kirigami.Units.smallSpacing
-        spacing: Kirigami.Units.smallSpacing
+        anchors.margins: Kirigami.Units.largeSpacing
+        spacing: Kirigami.Units.largeSpacing
 
         Rectangle {
             id: overviewProviderIdentitySurface
@@ -96,7 +83,7 @@ Rectangle {
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: Kirigami.Units.smallSpacing / 2
+            spacing: Kirigami.Units.smallSpacing
 
             RowLayout {
                 Layout.fillWidth: true
@@ -161,9 +148,49 @@ Rectangle {
             PlainPlasmaLabel {
                 visible: overviewRow.resetText.length > 0
                 text: overviewRow.resetText
+                font: Kirigami.Theme.smallFont
                 opacity: overviewRow.applet.secondaryTextOpacity
                 Layout.fillWidth: true
                 elide: Text.ElideRight
+            }
+        }
+
+        Kirigami.Icon {
+            source: "go-next-symbolic"
+            isMask: true
+            color: Kirigami.Theme.textColor
+            opacity: overviewRow.applet.secondaryTextOpacity
+            Layout.preferredWidth: Kirigami.Units.iconSizes.small
+            Layout.preferredHeight: Kirigami.Units.iconSizes.small
+        }
+    }
+
+    Controls.Control {
+        id: overviewRowFocus
+
+        anchors.fill: parent
+        activeFocusOnTab: true
+        background: Rectangle {
+            radius: overviewRow.radius
+            color: "transparent"
+            border.width: overviewRow.keyboardFocusVisible ? 1 : 0
+            border.color: Kirigami.Theme.focusColor
+        }
+
+        Accessible.role: Accessible.Button
+        Accessible.name: overviewRow.providerData.title
+        Accessible.description: overviewRow.detail
+        Accessible.onPressAction: overviewRow.activate()
+
+        Keys.onPressed: function(event) {
+            switch (event.key) {
+            case Qt.Key_Space:
+            case Qt.Key_Enter:
+            case Qt.Key_Return:
+            case Qt.Key_Select:
+                overviewRow.activate()
+                event.accepted = true
+                break
             }
         }
     }
@@ -174,7 +201,11 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onPressed: overviewRow.forceActiveFocus(Qt.MouseFocusReason)
+        onPressed: {
+            // Re-enter focus so an already-focused row also gets a mouse reason.
+            overviewRowFocus.focus = false
+            overviewRowFocus.forceActiveFocus(Qt.MouseFocusReason)
+        }
         onClicked: overviewRow.activate()
     }
 }

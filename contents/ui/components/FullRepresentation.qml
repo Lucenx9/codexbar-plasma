@@ -715,18 +715,18 @@ Item {
 
             visible: applet.providerUsageFeedbackVisible
                 && applet.providers.length === 0
-                && applet.errorText.length === 0
-                && applet.loading
+                && (applet.loading || applet.errorText.length > 0)
             Layout.fillWidth: true
             Layout.fillHeight: true
 
             RowLayout {
+                visible: applet.loading && applet.errorText.length === 0
                 anchors.centerIn: parent
                 width: Math.min(implicitWidth, parent.width)
                 spacing: Kirigami.Units.smallSpacing
 
                 Controls.BusyIndicator {
-                    running: providerUsageLoadingRow.visible
+                    running: providerUsageLoadingRow.visible && parent.visible
                     Layout.preferredWidth: Kirigami.Units.iconSizes.medium
                     Layout.preferredHeight: Kirigami.Units.iconSizes.medium
                 }
@@ -740,18 +740,27 @@ Item {
             }
         }
 
-        PlainPlaceholderMessage {
+        Item {
             id: emptyProvidersMessage
 
+            implicitHeight: emptyProvidersPlaceholder.implicitHeight
             visible: applet.providers.length === 0
                 && !applet.globalViewSelected
                 && applet.errorText.length === 0
                 && !applet.loading
-            plainText: i18n("No provider data.")
-            icon.name: "view-statistics-symbolic"
-            type: Kirigami.PlaceholderMessage.Type.Informational
             Layout.fillWidth: true
             Layout.fillHeight: true
+
+            // Keep the native placeholder together while this item fills the view.
+            PlainPlaceholderMessage {
+                id: emptyProvidersPlaceholder
+
+                anchors.centerIn: parent
+                width: parent.width
+                plainText: i18n("No provider data.")
+                icon.name: "view-statistics-symbolic"
+                type: Kirigami.PlaceholderMessage.Type.Informational
+            }
         }
 
         Components.SpendView {
@@ -801,21 +810,10 @@ Item {
                     }
                 }
 
-                // A refresh over data that is already on screen used to show
-                // nothing here but a greyed button, so the only sign of work
-                // was the spinning panel icon behind the popup.
-                Controls.BusyIndicator {
-                    visible: applet.loading
-                    running: visible
-                    Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
-                    Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
-                }
-
-                PlasmaComponents.ToolButton {
-                    visible: !applet.loading
-                    icon.name: "view-refresh"
-                    Accessible.name: i18n("Refresh")
-                    onClicked: applet.refreshNow(true)
+                Components.RefreshButton {
+                    busy: applet.loading
+                    label: i18n("Refresh")
+                    onRequested: applet.refreshNow(true)
                 }
             }
 

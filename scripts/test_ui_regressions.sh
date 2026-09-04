@@ -186,11 +186,46 @@ applet = Surface("applet", root)
 main_text = applet.text
 providers_surface = Surface("providers", root)
 providers_surface_text = providers_surface.text
+providers_surface.require_definition_where_used("revealFocusedProviderControl")
+for focus_fragment in (
+    "target: page.Window",
+    "function onActiveFocusItemChanged()",
+    "page.revealFocusedProviderControl()",
+):
+    providers_surface.require(focus_fragment, "provider settings must reveal focused controls")
+focused_provider_control_body = providers_surface.function_body("revealFocusedProviderControl")
+for focus_fragment in (
+    "ancestor !== providerContent",
+    "page.flickable.contentItem.mapFromItem(control, 0, 0)",
+    "page.ensureVisible(control, position.x - control.x, position.y - control.y)",
+):
+    if focus_fragment not in focused_provider_control_body:
+        raise AssertionError("provider focus scrolling must be scoped to the page content")
 debug_surface = Surface("debug", root)
 general_surface = Surface("general", root)
 general_text = general_surface.text
 display_surface = Surface("display", root)
 display_text = display_surface.text
+display_surface.require_definition_where_used("restoreOrderFocus")
+display_surface.require_definition_where_used("revealFocusedOrderButton")
+display_surface.require(
+    "onYChanged: page.revealFocusedOrderButton(upButton, downButton)",
+    "reordered rows must reveal focused buttons after layout placement")
+reveal_order_focus_body = display_surface.function_body("revealFocusedOrderButton")
+for focus_fragment in ("upButton.activeFocus", "downButton.activeFocus",
+                       "page.ensureVisible(button, position.x - button.x, position.y - button.y)"):
+    if focus_fragment not in reveal_order_focus_body:
+        raise AssertionError("reorder scrolling must follow only the focused button")
+for move_function, repeater in (("moveProvider", "providerOrderRepeater"),
+                                ("movePanelElement", "panelOrderRepeater")):
+    move_body = display_surface.function_body(move_function)
+    if f"Qt.callLater(restoreOrderFocus, {repeater}, key, delta)" not in move_body:
+        raise AssertionError("keyboard reorder must restore focus after delegates are replaced")
+restore_order_focus_body = display_surface.function_body("restoreOrderFocus")
+for focus_fragment in ("row.orderKey === key", "!button.enabled",
+                       "button.forceActiveFocus(Qt.TabFocusReason)"):
+    if focus_fragment not in restore_order_focus_body:
+        raise AssertionError("reorder focus must follow identity and use an enabled button")
 providers_text = providers_qml.read_text(encoding="utf-8")
 advanced_text = advanced_qml.read_text(encoding="utf-8")
 config_text = config_xml.read_text(encoding="utf-8")
@@ -1564,12 +1599,43 @@ for header_id, header_body in (
     ("overviewHeaderRow", overview_header_body),
     ("providerHeaderRow", provider_header_body),
 ):
-    if "Controls.BusyIndicator" not in header_body or "running: visible" not in header_body:
+    if "RefreshButton {" not in header_body or "busy:" not in header_body:
         raise AssertionError(
-            f"{header_id} must show a running busy indicator while a refresh "
-            "runs over data that is already on screen; a greyed button is not "
-            "feedback"
+            f"{header_id} must use the shared refresh control with busy feedback"
         )
+
+refresh_control_body = applet.id_block("refreshControl")
+for fragment in (
+    "implicitWidth: refreshButton.implicitWidth",
+    "implicitHeight: refreshButton.implicitHeight",
+    "if (!refreshControl.busy)",
+    "visible: refreshControl.busy",
+    "running: visible",
+    "Accessible.name: refreshControl.label",
+    "delay: Kirigami.Units.toolTipDelay",
+):
+    if fragment not in refresh_control_body:
+        raise AssertionError(f"refresh controls must retain their footprint and feedback: {fragment}")
+for effect in ("refreshNow(", "refreshCost(", "refreshSessions("):
+    if effect in refresh_control_body:
+        raise AssertionError("the shared refresh control must leave effects in its owning view")
+if ".focusReason =" in applet.id_block("overviewRowMouse"):
+    raise AssertionError("overview rows must use a supported focus transition")
+for fragment in (
+    "busy: view.applet.costLoading",
+    "busy: view.applet.sessionsLoading",
+    "onRequested: view.applet.refreshCost(true)",
+    "onRequested: view.applet.refreshSessions()",
+):
+    applet.require(fragment, "history and sessions must retain scoped refresh feedback and actions")
+
+spend_header = applet.id_block("spendHeaderRow")
+history_controls = applet.id_block("historyControlsRow")
+if "ComboBox" in spend_header or "spendTotalLine()" not in spend_header:
+    raise AssertionError("history filters must leave the full header width available for the spend total")
+for control_id in ("metricCombo", "rangeCombo"):
+    if f"id: {control_id}" not in history_controls:
+        raise AssertionError("history filters must remain grouped on their own row")
 
 if "fullRepresentation:" not in main_text:
     raise AssertionError("the applet must keep a fullRepresentation root")
@@ -1684,6 +1750,15 @@ if "function costDailyRows(tokenCost)" in main_text:
     raise AssertionError("cost details must not repeat the daily history below the chart")
 
 overview_row_body = id_block(overview_provider_row_text, "overviewRow")
+for fragment in (
+    "implicitHeight: overviewRowContent.implicitHeight + Kirigami.Units.largeSpacing * 2",
+    "Layout.preferredHeight: implicitHeight",
+    "readonly property bool keyboardFocusVisible: overviewRowFocus.visualFocus",
+    "border.width: overviewRow.keyboardFocusVisible ? 1 : 0",
+    "overviewRowFocus.forceActiveFocus(Qt.MouseFocusReason)",
+):
+    if fragment not in overview_row_body:
+        raise AssertionError(f"overview rows must fit their content and distinguish keyboard focus: {fragment}")
 if "applet.withAlpha(Kirigami.Theme.textColor, 0.035)" not in overview_row_body:
     raise AssertionError("overview rows must keep a quiet neutral resting surface")
 overview_row_surface_bindings = overview_row_body.split("RowLayout {", 1)[0]
@@ -1724,6 +1799,10 @@ for message_id, message_type in (
 
 global_error_body = id_block(main_text, "globalErrorMessage")
 provider_usage_loading_body = id_block(main_text, "providerUsageLoadingRow")
+if "(applet.loading || applet.errorText.length > 0)" not in provider_usage_loading_body:
+    raise AssertionError("usage feedback must absorb remaining height for errors as well as loading")
+if "visible: applet.loading && applet.errorText.length === 0" not in provider_usage_loading_body:
+    raise AssertionError("an error-only popup must not display a loading indicator")
 for scoped_feedback_body, feedback_name in (
     (global_error_body, "globalErrorMessage"),
     (provider_usage_loading_body, "providerUsageLoadingRow"),
@@ -1779,6 +1858,9 @@ if "providerHeaderRow.width" in provider_account_label_body or "providerMetaRow.
 provider_plan_label_body = id_block(provider_header_text, "providerPlanLabel")
 if "Layout.maximumWidth: Kirigami.Units.gridUnit * 5" not in provider_plan_label_body:
     raise AssertionError("providerPlanLabel must keep plan text from crowding provider metadata")
+
+if "providerUpdatedLabel" in applet.id_block("providerMetaRow"):
+    raise AssertionError("account identity and the update timestamp must have separate lines")
 
 cost_drill_down_body = id_block(main_text, "costDrillDownSection")
 if "readonly property real metricValueColumnWidth: Kirigami.Units.gridUnit * 9" not in cost_drill_down_body:
@@ -1862,6 +1944,21 @@ for toggle_fragment in (
 provider_cli_view_body = id_block(providers_text, "providerCliCommandsView")
 if "visible: providerCliCommandsToggle.checked" not in provider_cli_view_body:
     raise AssertionError("Provider CLI command output must follow the disclosure state")
+
+settings_toggle = providers_surface.id_block("providerSettingsToggle")
+for fragment in ("checkable: true", "checked: false"):
+    if fragment not in settings_toggle:
+        raise AssertionError("Provider settings must start collapsed with a native disclosure control")
+settings_details = providers_surface.id_block("providerSettingsDetails")
+if "visible: providerSettingsToggle.checked" not in settings_details:
+    raise AssertionError("Provider settings details must follow the disclosure state")
+if "delegate: Components.ProviderConfigRow" in settings_details:
+    raise AssertionError("Collapsing provider settings must leave the provider list available")
+if "!visible && providerSettingsToggle.checked" not in settings_details:
+    raise AssertionError("Collapsing provider settings must not dismiss a diagnostic error")
+
+display_surface.reject('source: "handle-sort"',
+    "Arrow-based ordering must not advertise unsupported dragging")
 
 provider_list_heading_body = id_block(providers_text, "providerListHeading")
 for heading_fragment in (
@@ -2362,7 +2459,7 @@ if "rangeCombo.valueAt(index)" not in spend_view_text:
 if "view.applet.refreshCost(true)" not in spend_view_text:
     raise AssertionError("the cost refresh button must explicitly bypass the automatic hourly throttle")
 for cost_loading_fragment in (
-    "enabled: !view.applet.costLoading",
+    "busy: view.applet.costLoading",
     "visible: view.applet.costLoading && view.providerCosts.length === 0",
     "visible: !view.applet.costLoading",
 ):

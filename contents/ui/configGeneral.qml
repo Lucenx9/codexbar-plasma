@@ -258,6 +258,8 @@ KCM.SimpleKCM {
     }
 
     Kirigami.FormLayout {
+        // Bound supporting text below so its implicit width cannot force the
+        // whole form into narrow mode or push content past the viewport.
         Kirigami.Separator {
             Kirigami.FormData.label: i18n("Command")
             Kirigami.FormData.isSection: true
@@ -333,6 +335,7 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: includeStatusCheck
+            Layout.fillWidth: true
             text: i18n("Fetch provider service status")
         }
 
@@ -340,6 +343,8 @@ KCM.SimpleKCM {
             text: i18n("Required for status incident notifications.")
             opacity: 0.7
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             wrapMode: Text.WordWrap
         }
 
@@ -350,6 +355,7 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: costUsageEnabledCheck
+            Layout.fillWidth: true
             text: i18n("Load local usage and spend history")
         }
 
@@ -359,6 +365,13 @@ KCM.SimpleKCM {
             from: 1
             to: 365
             editable: true
+            textFromValue: function(value, locale) {
+                return i18np("%1 day", "%1 days", value)
+            }
+            valueFromText: function(text, locale) {
+                var match = text.match(/\d+/)
+                return match ? parseInt(match[0], 10) : page.cfg_costHistoryDays
+            }
             enabled: costUsageEnabledCheck.checked
             Layout.preferredWidth: Kirigami.Units.gridUnit * 8
             // valueModified fires on user edits only, so config-driven value
@@ -379,33 +392,47 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: enableNotificationsCheck
+            Layout.fillWidth: true
             text: i18n("Enable Plasma notifications")
         }
 
-        Controls.CheckBox {
-            id: notifyStatusIncidentsCheck
-            text: i18n("Notify status incidents")
-            enabled: enableNotificationsCheck.checked && includeStatusCheck.checked
-        }
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: Kirigami.Units.smallSpacing
 
-        Controls.CheckBox {
-            id: notifyQuotaWarningsCheck
-            text: i18n("Notify quota warnings")
-            enabled: enableNotificationsCheck.checked
-        }
+            Controls.CheckBox {
+                id: notifyStatusIncidentsCheck
+                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.gridUnit
+                text: i18n("Notify status incidents")
+                enabled: enableNotificationsCheck.checked && includeStatusCheck.checked
+            }
 
-        Controls.CheckBox {
-            id: notifyPredictivePaceWarningsCheck
-            text: i18n("Notify predicted quota exhaustion")
-            enabled: enableNotificationsCheck.checked
-            Controls.ToolTip.text: i18n("Uses the pace forecast reported by codexbar.")
-            Controls.ToolTip.visible: hovered
-        }
+            Controls.CheckBox {
+                id: notifyQuotaWarningsCheck
+                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.gridUnit
+                text: i18n("Notify quota warnings")
+                enabled: enableNotificationsCheck.checked
+            }
 
-        Controls.CheckBox {
-            id: notifyLimitResetsCheck
-            text: i18n("Notify limit resets")
-            enabled: enableNotificationsCheck.checked
+            Controls.CheckBox {
+                id: notifyPredictivePaceWarningsCheck
+                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.gridUnit
+                text: i18n("Notify predicted quota exhaustion")
+                enabled: enableNotificationsCheck.checked
+                Controls.ToolTip.text: i18n("Uses the pace forecast reported by codexbar.")
+                Controls.ToolTip.visible: hovered
+            }
+
+            Controls.CheckBox {
+                id: notifyLimitResetsCheck
+                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.gridUnit
+                text: i18n("Notify limit resets")
+                enabled: enableNotificationsCheck.checked
+            }
         }
 
         Controls.SpinBox {
@@ -447,6 +474,8 @@ KCM.SimpleKCM {
             text: i18n("Thresholds also set warning colors and markers on usage meters.")
             opacity: 0.7
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             wrapMode: Text.WordWrap
         }
 
@@ -457,19 +486,29 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: updateChecksEnabledCheck
+            Layout.fillWidth: true
             text: i18n("Check for widget updates")
         }
 
-        Controls.CheckBox {
-            id: updateNotificationsEnabledCheck
-            text: i18n("Notify when a widget update is available")
-            enabled: updateChecksEnabledCheck.checked && enableNotificationsCheck.checked
-        }
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: Kirigami.Units.smallSpacing
 
-        Controls.CheckBox {
-            id: autoUpdateEnabledCheck
-            text: i18n("Install widget updates automatically")
-            enabled: updateChecksEnabledCheck.checked
+            Controls.CheckBox {
+                id: updateNotificationsEnabledCheck
+                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.gridUnit
+                text: i18n("Notify when a widget update is available")
+                enabled: updateChecksEnabledCheck.checked && enableNotificationsCheck.checked
+            }
+
+            Controls.CheckBox {
+                id: autoUpdateEnabledCheck
+                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.gridUnit
+                text: i18n("Install widget updates automatically")
+                enabled: updateChecksEnabledCheck.checked
+            }
         }
 
         Controls.SpinBox {
@@ -496,6 +535,8 @@ KCM.SimpleKCM {
             visible: updateChecksEnabledCheck.checked
             opacity: 0.7
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             wrapMode: Text.WordWrap
         }
 
@@ -506,11 +547,15 @@ KCM.SimpleKCM {
             visible: updateChecksEnabledCheck.checked && widgetUpdateLastStatus.length > 0
             opacity: 0.7
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             wrapMode: Text.WordWrap
         }
 
         Components.PlainInlineMessage {
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             type: Kirigami.MessageType.Error
             plainText: widgetUpdateLastError.slice(0, 500)
             visible: updateChecksEnabledCheck.checked && widgetUpdateLastError.length > 0
@@ -525,6 +570,8 @@ KCM.SimpleKCM {
             text: i18n("Restore every user-facing setting from General, Display, and Advanced. Provider accounts and CodexBar CLI configuration are not changed.")
             opacity: 0.7
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             wrapMode: Text.WordWrap
         }
 
@@ -539,6 +586,8 @@ KCM.SimpleKCM {
 
         Components.PlainInlineMessage {
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             type: Kirigami.MessageType.Information
             visible: page.defaultValuesPrepared
             plainText: i18n("Default values are ready. Select Apply or OK to save them, or Cancel to keep the current settings.")

@@ -71,15 +71,38 @@ ColumnLayout {
                 : []
 
             delegate: PlainButton {
+                id: accountButton
+
                 required property var modelData
                 readonly property string label: accountsPanel.applet.accountLabel(modelData)
                 readonly property string subtitle: accountsPanel.applet.accountSubtitle(modelData)
                 readonly property bool accountSelected: accountsPanel.applet.accountIsSelected(modelData, accountsPanel.providerData)
+                readonly property string fullLabel: subtitle.length > 0 ? label + " · " + subtitle : label
+                readonly property real labelPadding: icon.width + Kirigami.Units.largeSpacing * 2
 
+                // Measure the full label independently: measuring elided text
+                // through implicitWidth would feed the truncation back into sizing.
+                width: Math.min(accountFontMetrics.advanceWidth(fullLabel) + labelPadding, parent.width)
                 checkable: true
                 checked: accountSelected
-                plainText: subtitle.length > 0 ? label + " · " + subtitle : label
+                plainText: accountFontMetrics.elidedText(fullLabel, Qt.ElideRight,
+                    Math.max(0, width - labelPadding))
+                Accessible.name: fullLabel
                 icon.name: "user-identity"
+                icon.width: Kirigami.Units.iconSizes.small
+                icon.height: Kirigami.Units.iconSizes.small
+
+                FontMetrics {
+                    id: accountFontMetrics
+
+                    font: accountButton.font
+                }
+
+                PlainToolTip {
+                    visible: accountButton.hovered || accountButton.visualFocus
+                    plainText: accountButton.fullLabel
+                }
+
                 onClicked: {
                     accountsPanel.applet.selectAccount(modelData.provider, label)
                     checked = Qt.binding(function() { return accountSelected })

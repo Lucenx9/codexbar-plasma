@@ -110,19 +110,55 @@ KCM.SimpleKCM {
         }
     }
 
-    function movePanelElement(index, delta) {
+    function revealFocusedOrderButton(upButton, downButton) {
+        var button = upButton && upButton.activeFocus ? upButton
+            : (downButton && downButton.activeFocus ? downButton : null)
+        if (!button) {
+            return
+        }
+        var position = page.flickable.contentItem.mapFromItem(button, 0, 0)
+        page.ensureVisible(button, position.x - button.x, position.y - button.y)
+    }
+
+    function restoreOrderFocus(repeater, key, delta) {
+        for (var i = 0; i < repeater.count; i++) {
+            var row = repeater.itemAt(i)
+            if (row && row.orderKey === key) {
+                var button = delta < 0 ? row.upButton : row.downButton
+                if (!button.enabled) {
+                    button = delta < 0 ? row.downButton : row.upButton
+                }
+                button.forceActiveFocus(Qt.TabFocusReason)
+                revealFocusedOrderButton(row.upButton, row.downButton)
+                return
+            }
+        }
+    }
+
+    function movePanelElement(index, delta, keyboardFocus) {
+        var key = PanelElements.normalizedOrder(cfg_panelElementOrder)[index]
         cfg_panelElementOrder = PanelElements.movedOrder(
             cfg_panelElementOrder,
             index,
             delta).join(",")
+        if (keyboardFocus) {
+            Qt.callLater(restoreOrderFocus, panelOrderRepeater, key, delta)
+        }
     }
 
-    function moveProvider(index, delta) {
+    function moveProvider(index, delta, keyboardFocus) {
+        var item = orderedEnabledProviderRoster[index]
+        var key = item ? item.provider : ""
         cfg_providerOrder = ProviderOrder.movedOrder(
             enabledProviderRoster,
             cfg_providerOrder,
             index,
             delta)
+        if (keyboardFocus) {
+            // Repeater replaces the delegates when the order changes. Restore
+            // focus by provider identity so repeated keyboard moves stay local.
+            Qt.callLater(restoreOrderFocus, providerOrderRepeater, key, delta)
+        }
     }
 
     onCfg_menuBarDisplayModeChanged: {
@@ -364,6 +400,13 @@ KCM.SimpleKCM {
         return words.join(" ")
     }
 
+    function providerIconSource(providerID) {
+        var fileName = ProviderIdentity.providerIconFileName(providerID)
+        return fileName.length > 0
+            ? Qt.resolvedUrl("../icons/providers/" + fileName)
+            : "view-statistics"
+    }
+
     function shellQuote(value) {
         return Guards.shellQuote(value)
     }
@@ -376,12 +419,16 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: showPopupTabLabelsCheck
+            Layout.fillWidth: true
             text: i18n("Show text labels in the tab bar")
         }
 
         ColumnLayout {
             Kirigami.FormData.label: i18n("Provider order:")
+            Kirigami.FormData.labelAlignment: Qt.AlignTop
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             spacing: Kirigami.Units.smallSpacing / 2
 
             Components.PlainControlsLabel {
@@ -409,20 +456,28 @@ KCM.SimpleKCM {
             }
 
             Repeater {
+                id: providerOrderRepeater
+
                 model: page.orderedEnabledProviderRoster
 
                 delegate: RowLayout {
                     required property var modelData
                     required property int index
+                    readonly property string orderKey: modelData.provider
+                    readonly property Item upButton: providerMoveUp
+                    readonly property Item downButton: providerMoveDown
+                    // The layout may place a rebuilt row after focus is restored.
+                    onYChanged: page.revealFocusedOrderButton(upButton, downButton)
 
                     Layout.fillWidth: true
                     spacing: Kirigami.Units.smallSpacing
 
                     Kirigami.Icon {
-                        source: "handle-sort"
+                        source: page.providerIconSource(modelData.provider)
+                        fallback: "view-statistics"
+                        isMask: true
                         Layout.preferredWidth: Kirigami.Units.iconSizes.small
                         Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                        opacity: 0.55
                     }
 
                     Components.PlainControlsLabel {
@@ -432,17 +487,27 @@ KCM.SimpleKCM {
                     }
 
                     Controls.ToolButton {
+                        id: providerMoveUp
+
                         icon.name: "go-up"
                         enabled: index > 0
                         Accessible.name: i18n("Move %1 up", modelData.displayName)
-                        onClicked: page.moveProvider(index, -1)
+                        Controls.ToolTip.text: Accessible.name
+                        Controls.ToolTip.visible: hovered
+                        Controls.ToolTip.delay: Kirigami.Units.toolTipDelay
+                        onClicked: page.moveProvider(index, -1, visualFocus)
                     }
 
                     Controls.ToolButton {
+                        id: providerMoveDown
+
                         icon.name: "go-down"
                         enabled: index < page.orderedEnabledProviderRoster.length - 1
                         Accessible.name: i18n("Move %1 down", modelData.displayName)
-                        onClicked: page.moveProvider(index, 1)
+                        Controls.ToolTip.text: Accessible.name
+                        Controls.ToolTip.visible: hovered
+                        Controls.ToolTip.delay: Kirigami.Units.toolTipDelay
+                        onClicked: page.moveProvider(index, 1, visualFocus)
                     }
                 }
             }
@@ -451,6 +516,46 @@ KCM.SimpleKCM {
         Kirigami.Separator {
             Kirigami.FormData.label: i18n("Panel")
             Kirigami.FormData.isSection: true
+        }
+
+        Controls.CheckBox {
+            id: showProviderCheck
+            Layout.fillWidth: true
+            text: i18n("Show provider name in panel")
+        }
+
+        Controls.CheckBox {
+            id: showPercentCheck
+            Layout.fillWidth: true
+            text: i18n("Show usage text in panel")
+        }
+
+        Controls.CheckBox {
+            id: showMultiProviderCheck
+            Layout.fillWidth: true
+            text: i18n("Show multi-provider meters in panel")
+        }
+
+        Controls.CheckBox {
+            id: showCreditsCheck
+            Layout.fillWidth: true
+            text: i18n("Show credits in panel")
+        }
+
+        Controls.CheckBox {
+            id: autoSelectProviderCheck
+            Layout.fillWidth: true
+            text: i18n("Auto-select highest-usage provider")
+        }
+
+        Components.PlainControlsLabel {
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            text: i18n("Usage text and provider meters are available only in horizontal panels.")
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+            wrapMode: Text.WordWrap
         }
 
         Controls.ComboBox {
@@ -463,12 +568,25 @@ KCM.SimpleKCM {
                     text: page.cfg_usageBarsShowUsed
                         ? i18n("Percent used")
                         : i18n("Percent left"),
-                    value: PanelDisplay.percentMode
+                    value: PanelDisplay.percentMode,
+                    description: ""
                 },
-                { text: i18n("Pace"), value: PanelDisplay.paceMode },
-                { text: i18n("Usage and pace"), value: PanelDisplay.bothMode },
-                { text: i18n("Reset time"), value: PanelDisplay.resetTimeMode },
-                { text: i18n("Run-out forecast"), value: PanelDisplay.runOutMode }
+                {
+                    text: i18n("Pace"), value: PanelDisplay.paceMode,
+                    description: i18n("Shows the expected used or left percentage at this point in the window.")
+                },
+                {
+                    text: i18n("Usage and pace"), value: PanelDisplay.bothMode,
+                    description: i18n("Shows current usage alongside the expected used or left percentage.")
+                },
+                {
+                    text: i18n("Reset time"), value: PanelDisplay.resetTimeMode,
+                    description: i18n("Appears when the provider supplies a reset time.")
+                },
+                {
+                    text: i18n("Run-out forecast"), value: PanelDisplay.runOutMode,
+                    description: i18n("Appears only when the quota is forecast to run out before reset.")
+                }
             ]
             enabled: showPercentCheck.checked
             Layout.preferredWidth: Kirigami.Units.gridUnit * 12
@@ -478,9 +596,14 @@ KCM.SimpleKCM {
         }
 
         Components.PlainControlsLabel {
+            id: displayModeDescription
+
             Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 18
-            text: i18n("Pace shows the expected used or left percentage at this point in the window. Reset time appears when the provider supplies it. Run-out appears only when the quota is forecast to run out before reset.")
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            text: displayModeCombo.currentIndex >= 0
+                ? displayModeCombo.model[displayModeCombo.currentIndex].description : ""
+            visible: showPercentCheck.checked && text.length > 0
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             wrapMode: Text.WordWrap
@@ -488,24 +611,32 @@ KCM.SimpleKCM {
 
         ColumnLayout {
             Kirigami.FormData.label: i18n("Element order:")
+            Kirigami.FormData.labelAlignment: Qt.AlignTop
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             spacing: Kirigami.Units.smallSpacing / 2
 
             Repeater {
+                id: panelOrderRepeater
+
                 model: PanelElements.normalizedOrder(page.cfg_panelElementOrder)
 
                 delegate: RowLayout {
                     required property var modelData
                     required property int index
+                    readonly property string orderKey: modelData
+                    readonly property Item upButton: panelMoveUp
+                    readonly property Item downButton: panelMoveDown
+                    onYChanged: page.revealFocusedOrderButton(upButton, downButton)
 
                     Layout.fillWidth: true
                     spacing: Kirigami.Units.smallSpacing
 
-                    Kirigami.Icon {
-                        source: "handle-sort"
+                    Components.PlainControlsLabel {
+                        text: i18n("%1.", index + 1)
                         Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                        opacity: 0.55
+                        opacity: 0.7
                     }
 
                     Components.PlainControlsLabel {
@@ -515,54 +646,30 @@ KCM.SimpleKCM {
                     }
 
                     Controls.ToolButton {
+                        id: panelMoveUp
+
                         icon.name: "go-up"
                         enabled: index > 0
                         Accessible.name: i18n("Move %1 up", page.panelElementTitle(modelData))
-                        onClicked: page.movePanelElement(index, -1)
+                        Controls.ToolTip.text: Accessible.name
+                        Controls.ToolTip.visible: hovered
+                        Controls.ToolTip.delay: Kirigami.Units.toolTipDelay
+                        onClicked: page.movePanelElement(index, -1, visualFocus)
                     }
 
                     Controls.ToolButton {
+                        id: panelMoveDown
+
                         icon.name: "go-down"
                         enabled: index < PanelElements.defaultOrder.length - 1
                         Accessible.name: i18n("Move %1 down", page.panelElementTitle(modelData))
-                        onClicked: page.movePanelElement(index, 1)
+                        Controls.ToolTip.text: Accessible.name
+                        Controls.ToolTip.visible: hovered
+                        Controls.ToolTip.delay: Kirigami.Units.toolTipDelay
+                        onClicked: page.movePanelElement(index, 1, visualFocus)
                     }
                 }
             }
-        }
-
-        Controls.CheckBox {
-            id: showProviderCheck
-            text: i18n("Show provider name in panel")
-        }
-
-        Controls.CheckBox {
-            id: showPercentCheck
-            text: i18n("Show usage text in panel")
-        }
-
-        Controls.CheckBox {
-            id: showMultiProviderCheck
-            text: i18n("Show multi-provider meters in panel")
-        }
-
-        Controls.CheckBox {
-            id: showCreditsCheck
-            text: i18n("Show credits in panel")
-        }
-
-        Controls.CheckBox {
-            id: autoSelectProviderCheck
-            text: i18n("Auto-select highest-usage provider")
-        }
-
-        Components.PlainControlsLabel {
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 18
-            text: i18n("Usage text and provider meters are available only in horizontal panels.")
-            font: Kirigami.Theme.smallFont
-            opacity: 0.7
-            wrapMode: Text.WordWrap
         }
 
         Kirigami.Separator {
@@ -572,21 +679,25 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: usageBarsShowUsedCheck
+            Layout.fillWidth: true
             text: i18n("Show usage as percent used")
         }
 
         Controls.CheckBox {
             id: showQuotaWarningMarkersCheck
+            Layout.fillWidth: true
             text: i18n("Show quota warnings on usage meters")
         }
 
         Controls.CheckBox {
             id: resetTimesShowAbsoluteCheck
+            Layout.fillWidth: true
             text: i18n("Show reset times as clock time")
         }
 
         Controls.CheckBox {
             id: showProviderChangelogsCheck
+            Layout.fillWidth: true
             text: i18n("Show provider changelog links")
         }
 
@@ -599,6 +710,7 @@ KCM.SimpleKCM {
             id: overviewProviderSelection
 
             Kirigami.FormData.label: i18n("Overview providers:")
+            Kirigami.FormData.labelAlignment: Qt.AlignTop
             Layout.fillWidth: true
             spacing: Kirigami.Units.smallSpacing
 
@@ -628,6 +740,7 @@ KCM.SimpleKCM {
                 model: page.orderedEnabledProviderRoster
 
                 delegate: Controls.CheckBox {
+                    Layout.fillWidth: true
                     required property var modelData
 
                     readonly property bool selected: page.overviewProviderSelected(modelData.provider)

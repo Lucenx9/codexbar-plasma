@@ -131,14 +131,27 @@ KCM.SimpleKCM {
             wrapMode: Text.WordWrap
         }
 
-        Kirigami.FormLayout {
+        RowLayout {
             Layout.fillWidth: true
+            spacing: Kirigami.Units.smallSpacing
+
+            Components.PlainControlsLabel {
+                id: diagnosticProviderLabel
+
+                text: i18n("Provider:")
+            }
 
             Controls.TextField {
                 id: diagnosticProviderField
-                Kirigami.FormData.label: i18n("Provider:")
+                Accessible.name: diagnosticProviderLabel.text
+                Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 14
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
                 placeholderText: i18n("all")
+            }
+
+            Item {
+                Layout.fillWidth: true
             }
         }
 
@@ -148,7 +161,7 @@ KCM.SimpleKCM {
 
             Controls.Button {
                 text: i18n("Run redacted diagnostics")
-                icon.name: "tools-report-bug"
+                icon.name: "utilities-terminal"
                 enabled: !page.diagnosticRunning
                 onClicked: page.runDiagnostic()
             }

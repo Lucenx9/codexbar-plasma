@@ -11,6 +11,8 @@ Controls.ItemDelegate {
     readonly property var providerData: modelData
 
     Layout.fillWidth: true
+    focusPolicy: Qt.StrongFocus
+    Accessible.name: providerData.displayName
     hoverEnabled: true
     down: false
     highlighted: providerData.provider === configPage.selectedProviderID

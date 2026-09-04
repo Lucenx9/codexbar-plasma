@@ -73,6 +73,8 @@ ColumnLayout {
     }
 
     RowLayout {
+        id: spendHeaderRow
+
         Layout.fillWidth: true
         Layout.rightMargin: Kirigami.Units.smallSpacing
         spacing: Kirigami.Units.smallSpacing
@@ -95,6 +97,27 @@ ColumnLayout {
                 Layout.fillWidth: true
                 elide: Text.ElideRight
             }
+        }
+
+        Components.RefreshButton {
+            busy: view.applet.costLoading
+            label: i18n("Refresh local history")
+            onRequested: view.applet.refreshCost(true)
+        }
+    }
+
+    RowLayout {
+        id: historyControlsRow
+
+        Layout.fillWidth: true
+        Layout.rightMargin: Kirigami.Units.smallSpacing
+        spacing: Kirigami.Units.smallSpacing
+
+        PlainPlasmaLabel {
+            text: i18n("History")
+            opacity: view.applet.secondaryTextOpacity
+            Layout.fillWidth: true
+            elide: Text.ElideRight
         }
 
         Controls.ComboBox {
@@ -132,13 +155,6 @@ ColumnLayout {
                     return view.rangeIndex(rangeCombo.model, view.applet.costHistoryDays)
                 })
             }
-        }
-
-        PlasmaComponents.ToolButton {
-            icon.name: "view-refresh"
-            enabled: !view.applet.costLoading
-            Accessible.name: i18n("Refresh local history")
-            onClicked: view.applet.refreshCost(true)
         }
     }
 
@@ -183,16 +199,25 @@ ColumnLayout {
         Layout.fillWidth: true
     }
 
-    PlainPlaceholderMessage {
+    Item {
         visible: !view.applet.costLoading
             && view.providerCosts.length === 0
             && view.applet.costErrorText.length === 0
-        plainText: i18n("No local token or cost history.")
-        plainExplanation: i18n("History appears for providers supported by the codexbar cost command.")
-        icon.name: "view-statistics-symbolic"
-        type: Kirigami.PlaceholderMessage.Type.Informational
+        implicitHeight: emptySpendPlaceholder.implicitHeight
         Layout.fillWidth: true
         Layout.fillHeight: true
+
+        // Keep the native placeholder together while this item fills the view.
+        PlainPlaceholderMessage {
+            id: emptySpendPlaceholder
+
+            anchors.centerIn: parent
+            width: parent.width
+            plainText: i18n("No local token or cost history.")
+            plainExplanation: i18n("History appears for providers supported by the codexbar cost command.")
+            icon.name: "view-statistics-symbolic"
+            type: Kirigami.PlaceholderMessage.Type.Informational
+        }
     }
 
     Item {

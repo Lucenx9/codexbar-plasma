@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kcmutils as KCM
@@ -1264,6 +1265,30 @@ KCM.SimpleKCM {
         }
     }
 
+    // Unlike FormLayout, a plain ColumnLayout does not reveal focused controls
+    // in its enclosing ScrollablePage. Keep provider rows and their switches visible.
+    function revealFocusedProviderControl() {
+        var control = page.Window.activeFocusItem
+        var ancestor = control
+        while (ancestor && ancestor !== providerContent) {
+            ancestor = ancestor.parent
+        }
+        if (!ancestor) {
+            return
+        }
+        var position = page.flickable.contentItem.mapFromItem(control, 0, 0)
+        page.ensureVisible(control, position.x - control.x, position.y - control.y)
+    }
+
+    Connections {
+        target: page.Window
+        enabled: page.visible
+
+        function onActiveFocusItemChanged() {
+            page.revealFocusedProviderControl()
+        }
+    }
+
     header: ColumnLayout {
         spacing: Kirigami.Units.smallSpacing
 
@@ -1335,6 +1360,8 @@ KCM.SimpleKCM {
     }
 
     ColumnLayout {
+        id: providerContent
+
         width: parent.width
         spacing: Kirigami.Units.smallSpacing
 
@@ -1424,37 +1451,47 @@ KCM.SimpleKCM {
                 Layout.fillWidth: true
             }
 
-            ColumnLayout {
+            Flow {
+                id: providerSettingsActions
+
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing
 
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Kirigami.Units.smallSpacing
+                Controls.Button {
+                    id: providerSettingsToggle
 
-                    Components.PlainControlsLabel {
-                        text: i18n("Provider settings")
-                        font.weight: Font.DemiBold
-                        Layout.fillWidth: true
-                        elide: Text.ElideRight
-                    }
-
-                    Controls.BusyIndicator {
-                        running: page.selectedProvider !== null
-                            && page.providerDiagnosticLoadingFor(page.selectedProvider.provider)
-                        visible: running
-                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                    }
-
-                    Controls.Button {
-                        text: i18n("Inspect redacted settings")
-                        icon.name: "view-refresh"
-                        enabled: page.selectedProvider
-                            && !page.providerDiagnosticLoadingFor(page.selectedProvider.provider)
-                        onClicked: if (page.selectedProvider) page.loadProviderSettings(page.selectedProvider.provider)
-                    }
+                    text: i18n("Settings and diagnostics")
+                    flat: true
+                    icon.name: checked ? "arrow-down" : "arrow-right"
+                    display: Controls.AbstractButton.TextBesideIcon
+                    checkable: true
+                    checked: false
                 }
+
+                Controls.BusyIndicator {
+                    running: page.selectedProvider !== null
+                        && page.providerDiagnosticLoadingFor(page.selectedProvider.provider)
+                    visible: running
+                    width: Kirigami.Units.iconSizes.small
+                    height: Kirigami.Units.iconSizes.small
+                }
+
+                Controls.Button {
+                    text: i18n("Inspect redacted settings")
+                    icon.name: "view-refresh"
+                    visible: providerSettingsToggle.checked
+                    enabled: page.selectedProvider
+                        && !page.providerDiagnosticLoadingFor(page.selectedProvider.provider)
+                    onClicked: if (page.selectedProvider) page.loadProviderSettings(page.selectedProvider.provider)
+                }
+            }
+
+            ColumnLayout {
+                id: providerSettingsDetails
+
+                Layout.fillWidth: true
+                spacing: Kirigami.Units.smallSpacing
+                visible: providerSettingsToggle.checked
 
                 Components.PlainControlsLabel {
                     Layout.fillWidth: true
@@ -1478,8 +1515,10 @@ KCM.SimpleKCM {
                         // Kirigami's close button hides the banner imperatively,
                         // severing the visible binding. Clear the stored error so
                         // the dismissal sticks, then reinstall the binding so the
-                        // next diagnostic error still shows up.
-                        if (!visible && plainText.length > 0 && page.selectedProvider) {
+                        // next diagnostic error still shows up. Collapsing the
+                        // parent details is not a dismissal of the error.
+                        if (!visible && providerSettingsToggle.checked
+                                && plainText.length > 0 && page.selectedProvider) {
                             page.setProviderDiagnosticError(page.selectedProvider.provider, "")
                             visible = Qt.binding(function() { return plainText.length > 0 })
                         }

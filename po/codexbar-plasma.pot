@@ -169,7 +169,8 @@ msgid "Daily cost history"
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
-#: contents/ui/components/SpendView.qml contents/ui/main.qml
+#: contents/ui/components/SpendView.qml contents/ui/configGeneral.qml
+#: contents/ui/main.qml
 msgid "%1 day"
 msgid_plural "%1 days"
 msgstr[0] ""
@@ -220,10 +221,6 @@ msgstr ""
 msgid "Usage chart"
 msgstr ""
 
-#: contents/ui/components/ProviderHeader.qml
-msgid "Updated just now"
-msgstr ""
-
 #: contents/ui/components/SessionsView.qml
 msgid "%1 local session"
 msgid_plural "%1 local sessions"
@@ -271,15 +268,19 @@ msgid "Tokens"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
+msgid "Refresh local history"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
+msgid "History"
+msgstr ""
+
+#: contents/ui/components/SpendView.qml
 msgid "History metric"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
 msgid "History range"
-msgstr ""
-
-#: contents/ui/components/SpendView.qml
-msgid "Refresh local history"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
@@ -450,45 +451,6 @@ msgid "Panel"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
-msgid "Panel text:"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Percent used"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Percent left"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Pace"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Usage and pace"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Reset time"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Run-out forecast"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid ""
-"Pace shows the expected used or left percentage at this point in the window. "
-"Reset time appears when the provider supplies it. Run-out appears only when "
-"the quota is forecast to run out before reset."
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Element order:"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
 msgid "Show provider name in panel"
 msgstr ""
 
@@ -510,6 +472,58 @@ msgstr ""
 
 #: contents/ui/configDisplay.qml
 msgid "Usage text and provider meters are available only in horizontal panels."
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Panel text:"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Percent used"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Percent left"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Pace"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Shows the expected used or left percentage at this point in the window."
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Usage and pace"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Shows current usage alongside the expected used or left percentage."
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Reset time"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Appears when the provider supplies a reset time."
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Run-out forecast"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Appears only when the quota is forecast to run out before reset."
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Element order:"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "%1."
 msgstr ""
 
 #: contents/ui/configDisplay.qml
@@ -1197,7 +1211,7 @@ msgid "%1 - enabled"
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "Provider settings"
+msgid "Settings and diagnostics"
 msgstr ""
 
 #: contents/ui/configProviders.qml
