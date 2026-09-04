@@ -2246,11 +2246,11 @@ if "visible: view.dailyPoints.length > 0" not in spend_view_text:
 if "visible: view.dailyPoints.length > 1" in spend_view_text:
     raise AssertionError("SpendView must not hide the accessible chart when one history day is available")
 for heatmap_range_fragment in (
-    "Math.ceil(view.dailyPoints.length / rows)",
+    "Math.ceil(view.dailyPoints.length / 7)",
     "readonly property int fittingColumns",
     "readonly property real cellSize",
-    "Layout.preferredHeight: heatmapGrid.rows * heatmapGrid.cellSize",
-    "+ (heatmapGrid.rows - 1) * heatmapGrid.rowSpacing",
+    "Layout.preferredHeight: 7 * heatmapGrid.cellSize",
+    "+ 6 * heatmapGrid.rowSpacing",
 ):
     if heatmap_range_fragment not in spend_view_text:
         raise AssertionError(
