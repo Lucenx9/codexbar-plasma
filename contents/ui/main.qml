@@ -197,6 +197,7 @@ PlasmoidItem {
         invalidateProviderRosterCache()
         scheduleUsageRefresh()
     }
+    onCostHistoryDaysChanged: applyTokenCosts()
     onCostCommandSourceChanged: {
         if (costLifecycleInitialized) {
             Qt.callLater(function() { root.refreshCost(true) })
@@ -1789,7 +1790,13 @@ PlasmoidItem {
 
     function providerTokenCost(providerID) {
         var key = providerMapKey(providerID)
-        return key.length > 0 ? tokenCosts[key] || null : null
+        if (key.length === 0) {
+            return null
+        }
+        var snapshot = tokenCosts[key] || null
+        return CostPresentation.snapshotMatchesRange(snapshot, costHistoryDays)
+            ? snapshot
+            : null
     }
 
     function applyTokenCosts() {
