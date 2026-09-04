@@ -55,6 +55,13 @@ TestCase {
         compare(CostPresentation.groupedDecimalString(fmt, "abc", 2), "-")
     }
 
+    function test_amountStringHandlesNullOrMissingFormatGracefully() {
+        compare(CostPresentation.amountString(null, 12, "USD"), "$12.00")
+        compare(CostPresentation.amountString(undefined, 12, "USD"), "$12.00")
+        compare(CostPresentation.amountString({}, 12, "USD"), "$12.00")
+        compare(CostPresentation.groupedDecimalString(null, 1234.5, 2), "1,234.50")
+    }
+
     function test_amountStringHandlesEmptyOrMissingCurrencyGracefully() {
         compare(CostPresentation.amountString(fmt, 12, ""), "12.00")
         compare(CostPresentation.amountString(fmt, -12, ""), "-12.00")

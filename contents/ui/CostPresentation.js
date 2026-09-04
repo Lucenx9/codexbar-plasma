@@ -66,16 +66,19 @@ function groupedDecimalString(fmt, value, digits) {
     if (!isFinite(numeric)) {
         return "-"
     }
+    var f = fmt && typeof fmt === "object" ? fmt : numberFormat()
+    var groupSep = typeof f.group === "string" ? f.group : ","
+    var decPoint = typeof f.decimal === "string" ? f.decimal : "."
     var parts = Math.abs(numeric).toFixed(digits).split(".")
     var whole = parts[0]
     var grouped = ""
     for (var i = 0; i < whole.length; i++) {
         if (i > 0 && (whole.length - i) % 3 === 0) {
-            grouped += fmt.group
+            grouped += groupSep
         }
         grouped += whole.charAt(i)
     }
-    return parts.length > 1 ? grouped + fmt.decimal + parts[1] : grouped
+    return parts.length > 1 ? grouped + decPoint + parts[1] : grouped
 }
 
 // "Quota" is a credit balance, not money, so it prints as a bare rounded count.
