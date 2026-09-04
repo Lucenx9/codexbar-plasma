@@ -106,6 +106,9 @@ Use this order when sources disagree:
 - Run the narrowest relevant check while iterating, then the repository-required
   checks before completion. Packaging and runtime checks count only when they
   were actually performed.
+- When opening or updating a pull request, use
+  `.github/pull_request_template.md`. Complete every section and report the
+  exact verification results, including failures, skips, and unavailable checks.
 - When a parity decision changes, update `TODO.md` and the mirror below in the
   same change so future agents do not revive a rejected port or obsolete gap.
 
