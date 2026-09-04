@@ -5,14 +5,7 @@ var maximumProviderItems = 256;
 var maximumProviderOrderLength = maximumProviderItems * (ProviderIdentity.maximumProviderIDLength + 1);
 
 function normalizedProviderID(value) {
-    if (typeof value !== "string") {
-        return "";
-    }
-    var candidate = value.trim();
-    if (candidate.length === 0 || candidate.length > ProviderIdentity.maximumProviderIDLength) {
-        return "";
-    }
-    return ProviderIdentity.providerMapKey(ProviderIdentity.resolveProviderKey(candidate));
+    return ProviderIdentity.normalizedProviderID(value);
 }
 
 function configuredProviderIDs(value) {
@@ -83,10 +76,15 @@ function settingsGroups(items, configuredValue) {
     var disabled = [];
 
     for (var i = 0; i < source.length; i++) {
-        if (source[i] && source[i].enabled === true) {
-            enabled.push(source[i]);
+        var item = source[i];
+        if (!item || typeof item !== "object" || Array.isArray(item)
+                || itemProviderID(item).length === 0) {
+            continue;
+        }
+        if (item.enabled === true) {
+            enabled.push(item);
         } else {
-            disabled.push(source[i]);
+            disabled.push(item);
         }
     }
 

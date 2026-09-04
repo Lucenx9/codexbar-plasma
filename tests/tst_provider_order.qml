@@ -59,6 +59,55 @@ TestCase {
         }).join(","), "anthropic,openrouter");
     }
 
+    function test_settingsGroupsRejectMalformedItemsAndResolveAliases() {
+        var providers = [
+            null,
+            [],
+            "codex",
+            {
+                provider: "constructor",
+                enabled: false
+            },
+            {
+                provider: "gemini",
+                enabled: false
+            },
+            {
+                provider: "groqcloud",
+                enabled: true
+            },
+            {
+                provider: "codex",
+                enabled: true
+            }
+        ];
+
+        var groups = ProviderOrder.settingsGroups(providers, "groq,codex");
+
+        compare(groups.enabled.map(function (item) {
+            return item.provider;
+        }).join(","), "groqcloud,codex");
+        compare(groups.disabled.map(function (item) {
+            return item.provider;
+        }).join(","), "gemini");
+    }
+
+    function test_settingsGroupsBoundsTheCombinedRoster() {
+        var providers = [];
+        for (var i = 0; i < 300; i++) {
+            providers.push({
+                provider: "provider-" + i,
+                enabled: i % 2 === 0
+            });
+        }
+
+        var groups = ProviderOrder.settingsGroups(providers, "provider-12");
+
+        compare(groups.enabled.length + groups.disabled.length,
+            ProviderOrder.maximumProviderItems);
+        compare(groups.enabled[0].provider, "provider-12");
+    }
+
     function test_moveReturnsTheCompleteCanonicalOrder() {
         var providers = [
             {

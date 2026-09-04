@@ -596,6 +596,8 @@ KCM.SimpleKCM {
         }
 
         ColumnLayout {
+            id: overviewProviderSelection
+
             Kirigami.FormData.label: i18n("Overview providers:")
             Layout.fillWidth: true
             spacing: Kirigami.Units.smallSpacing

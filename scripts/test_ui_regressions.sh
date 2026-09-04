@@ -189,7 +189,8 @@ providers_surface_text = providers_surface.text
 debug_surface = Surface("debug", root)
 general_surface = Surface("general", root)
 general_text = general_surface.text
-display_text = display_qml.read_text(encoding="utf-8")
+display_surface = Surface("display", root)
+display_text = display_surface.text
 providers_text = providers_qml.read_text(encoding="utf-8")
 advanced_text = advanced_qml.read_text(encoding="utf-8")
 config_text = config_xml.read_text(encoding="utf-8")
@@ -1203,18 +1204,17 @@ for display_fragment in (
     'model: page.orderedEnabledProviders',
     'ProviderOrder.movedOrder(',
 ):
-    if display_fragment not in display_text:
-        raise AssertionError(f"Display must expose popup tab customization; missing {display_fragment!r}")
-if display_text.count('model: page.orderedEnabledProviders') != 2:
+    display_surface.require(display_fragment, "Display must expose popup tab customization")
+overview_provider_selection_body = display_surface.id_block("overviewProviderSelection")
+if 'model: page.orderedEnabledProviders' not in overview_provider_selection_body:
     raise AssertionError(
-        "Display must show the saved provider order in both the reorder controls "
-        "and the Overview selection"
+        "Display must show the saved provider order in the Overview selection"
     )
 for overview_order_function in (
     "resolvedOverviewProviderIDs",
     "toggleOverviewProvider",
 ):
-    if "orderedEnabledProviders" not in function_body(display_text, overview_order_function):
+    if "orderedEnabledProviders" not in display_surface.function_body(overview_order_function):
         raise AssertionError(
             f"{overview_order_function} must use the saved provider order"
         )
@@ -1225,6 +1225,16 @@ for applet_fragment in (
 ):
     if applet_fragment not in main_text:
         raise AssertionError(f"the popup must apply persisted tab customization; missing {applet_fragment!r}")
+spend_provider_costs_body = applet.function_body("spendProviderCosts")
+for spend_order_fragment in (
+    "ProviderOrder.orderedItems(",
+    "providerOrderRaw",
+):
+    if spend_order_fragment not in spend_provider_costs_body:
+        raise AssertionError(
+            "Usage & Spend must follow the saved provider order; "
+            f"missing {spend_order_fragment!r}"
+        )
 if full_representation_text.count("showLabel: applet.showPopupTabLabels") != 2:
     raise AssertionError("both global tab delegates must use the popup label preference")
 for icon_only_fragment in (

@@ -1427,9 +1427,10 @@ PlasmoidItem {
     }
 
     function spendProviderCosts() {
-        return CostPresentation.spendSnapshots(tokenCosts, costHistoryDays, function(providerID) {
+        var snapshots = CostPresentation.spendSnapshots(tokenCosts, costHistoryDays, function(providerID) {
             return providerTitle(providerID)
         })
+        return ProviderOrder.orderedItems(snapshots, providerOrderRaw)
     }
 
     function spendDailyPoints() {
