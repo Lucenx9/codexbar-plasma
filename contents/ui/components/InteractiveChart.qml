@@ -86,6 +86,7 @@ ColumnLayout {
             font.weight: Font.DemiBold
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             horizontalAlignment: Text.AlignRight
+            Layout.maximumWidth: chart.width / 2
             elide: Text.ElideRight
         }
     }

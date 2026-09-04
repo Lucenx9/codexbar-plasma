@@ -23,7 +23,7 @@ ConfigModel {
     }
     ConfigCategory {
         name: i18n("Debug")
-        icon: "tools-report-bug"
+        icon: "utilities-terminal"
         source: "configDebug.qml"
     }
 }

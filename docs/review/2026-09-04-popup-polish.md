@@ -56,3 +56,44 @@ the preview. An injected diagnostic error survived collapsing and reopening
 the details. Opening details does not fetch diagnostics. The disclosure is a
 native checkable control and retains the existing CLI-backed options and
 redacted diagnostics behind it. No configuration schema or CLI contract changed.
+
+## Panel, empty states, and Debug
+
+This additional comparison uses commit `74558da` as its before state. It renders
+the actual QML components with identical synthetic fixtures in `plasmawindowed`.
+The panel gallery uses horizontal rows of 24, 32, and 48 logical pixels, a vertical
+representation, and a loading row. The chart deliberately supplies a long value
+and label at the final point of a narrow plot.
+
+| Before | After | Why |
+| --- | --- | --- |
+| ![Panel and chart before](edge-panel-chart-before.png) | ![Panel and chart after](edge-panel-chart-after.png) | The incident dot remains square and centered instead of stretching with the panel. Long chart values elide within their allotted width and preserve the point label. |
+| ![Sessions error before](edge-sessions-error-before.png) | ![Sessions error after](edge-sessions-error-after.png) | An empty error state absorbs the remaining height, keeping tabs, the heading, and refresh at the top. The same correction covers an initial CLI error. |
+| ![Empty Sessions before](edge-sessions-empty-before.png) | ![Empty Sessions after](edge-sessions-empty-after.png) | A containing item fills the view while the native placeholder retains its natural size. This also fixes empty provider and Usage & Spend views. |
+| ![Debug before](settings-debug-before.png) | ![Debug after](settings-debug-after.png) | The provider filter aligns with its actions and output. A terminal icon identifies diagnostics without implying an active error. The field retains an accessible label. |
+
+The empty-state wrappers preserve the grouped icon, message, and explanation;
+stretching the Kirigami placeholder itself would separate those elements.
+[Empty providers](edge-empty-providers-after.png) and
+[empty Usage & Spend](edge-spend-empty-after.png) use the same layout rule.
+
+| Check | Result |
+| --- | --- |
+| Panel composition | Inspected icon/text/meter combinations, four providers, long text, loading, and incidents at the sizes above. |
+| Fractional scaling | Inspected isolated Qt render scales of 125% and [150%](edge-panel-chart-150-after.png), without changing the host display scale. |
+| Many provider tabs | Traversed 16 providers with native arrow-key input, then selected the final long-name tab with Space. The focused tab scrolls into view and retains its focus outline: [screenshot](edge-tabs-keyboard-after.png). |
+| Sessions | Checked empty, loading, timeout, and [25 long-name sessions](edge-sessions-long-after.png). Names elide and the list scrolls vertically. |
+| Usage feedback | Checked no data, initial loading, missing CLI, partial provider failure with retained data, and unavailable local cost history. |
+| Settings | Checked Debug and Advanced in the native window. Advanced needed no change. Earlier General, Providers, and Display comparisons remain above. |
+| Direct interaction checks | QtTests cover meter activation by keyboard and pointer, chart keyboard and pointer inspection, empty chart selection, the three panel dot sizes, and the Sessions heading in empty/loading/error states. |
+
+The new tests reproduced five failures against the previous code (three panel
+sizes, chart overflow, and Sessions error layout). The final `make check` passes
+550 QtTests and 3 desktop-style checks with no failures or skips. QML lint,
+ShellCheck, static checks, catalog validation, and AppStream validation pass.
+Packaging and the installed-widget runtime check are recorded in the PR.
+
+`plasmoidviewer` is unavailable on this host. Panel variants were checked using
+the actual compact component in the native gallery, rather than by rearranging
+the user's live desktop panels. The native checks supplement the earlier light
+theme and larger-text comparisons; no claim is made about every Plasma theme.

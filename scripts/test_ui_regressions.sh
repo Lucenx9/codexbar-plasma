@@ -1762,6 +1762,10 @@ for message_id, message_type in (
 
 global_error_body = id_block(main_text, "globalErrorMessage")
 provider_usage_loading_body = id_block(main_text, "providerUsageLoadingRow")
+if "(applet.loading || applet.errorText.length > 0)" not in provider_usage_loading_body:
+    raise AssertionError("usage feedback must absorb remaining height for errors as well as loading")
+if "visible: applet.loading && applet.errorText.length === 0" not in provider_usage_loading_body:
+    raise AssertionError("an error-only popup must not display a loading indicator")
 for scoped_feedback_body, feedback_name in (
     (global_error_body, "globalErrorMessage"),
     (provider_usage_loading_body, "providerUsageLoadingRow"),

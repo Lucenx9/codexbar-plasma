@@ -168,7 +168,7 @@ Item {
     Component {
         id: statusElement
 
-        Rectangle {
+        Item {
             id: compactStatusBadge
 
             visible: !compactRoot.verticalPanel
@@ -176,26 +176,34 @@ Item {
                 && compactRoot.incidentProvider.hasIncident
             implicitWidth: Kirigami.Units.smallSpacing * 1.5
             implicitHeight: implicitWidth
-            radius: width / 2
-            color: compactRoot.incidentProvider
-                ? compactRoot.applet.statusBadgeColor(compactRoot.incidentProvider.statusSeverity)
-                : "transparent"
-            border.width: 1
-            border.color: Kirigami.Theme.backgroundColor
 
-            PlainToolTip {
-                visible: compactStatusMouse.containsMouse
-                plainText: compactRoot.incidentProvider
-                    ? i18n("%1: %2", compactRoot.incidentProvider.title, compactRoot.incidentProvider.status)
-                    : ""
-            }
+            // The Loader gives this item the full panel row height. Keep the
+            // status dot square inside it instead of stretching into a pill.
+            Rectangle {
+                anchors.centerIn: parent
+                width: parent.implicitWidth
+                height: width
+                radius: width / 2
+                color: compactRoot.incidentProvider
+                    ? compactRoot.applet.statusBadgeColor(compactRoot.incidentProvider.statusSeverity)
+                    : "transparent"
+                border.width: 1
+                border.color: Kirigami.Theme.backgroundColor
 
-            MouseArea {
-                id: compactStatusMouse
+                PlainToolTip {
+                    visible: compactStatusMouse.containsMouse
+                    plainText: compactRoot.incidentProvider
+                        ? i18n("%1: %2", compactRoot.incidentProvider.title, compactRoot.incidentProvider.status)
+                        : ""
+                }
 
-                anchors.fill: parent
-                hoverEnabled: true
-                acceptedButtons: Qt.NoButton
+                MouseArea {
+                    id: compactStatusMouse
+
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    acceptedButtons: Qt.NoButton
+                }
             }
         }
     }

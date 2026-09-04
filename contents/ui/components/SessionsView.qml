@@ -114,28 +114,39 @@ ColumnLayout {
     }
 
     // Mirrors SpendView: one filler item owns the leftover height so the
-    // heading stays pinned to the top while sessions are still loading.
+    // heading stays pinned to the top while sessions load or an error is shown.
     Item {
-        visible: view.applet.sessionsLoading && view.applet.sessions.length === 0
+        visible: view.applet.sessions.length === 0
+            && (view.applet.sessionsLoading || view.applet.sessionsErrorText.length > 0)
         Layout.fillWidth: true
         Layout.fillHeight: true
 
         Controls.BusyIndicator {
             anchors.centerIn: parent
-            running: parent.visible
+            running: parent.visible && view.applet.sessionsLoading
+            visible: running
         }
     }
 
-    PlainPlaceholderMessage {
+    Item {
         visible: !view.applet.sessionsLoading
             && view.applet.sessions.length === 0
             && view.applet.sessionsErrorText.length === 0
-        plainText: i18n("No local agent sessions found.")
-        plainExplanation: i18n("Sessions appear after a supported local CLI starts recording them.")
-        icon.name: "system-run-symbolic"
-        type: Kirigami.PlaceholderMessage.Type.Informational
+        implicitHeight: emptySessionsPlaceholder.implicitHeight
         Layout.fillWidth: true
         Layout.fillHeight: true
+
+        // Keep the native placeholder together while this item fills the view.
+        PlainPlaceholderMessage {
+            id: emptySessionsPlaceholder
+
+            anchors.centerIn: parent
+            width: parent.width
+            plainText: i18n("No local agent sessions found.")
+            plainExplanation: i18n("Sessions appear after a supported local CLI starts recording them.")
+            icon.name: "system-run-symbolic"
+            type: Kirigami.PlaceholderMessage.Type.Informational
+        }
     }
 
     PlasmaComponents.ScrollView {

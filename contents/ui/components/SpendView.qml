@@ -199,16 +199,25 @@ ColumnLayout {
         Layout.fillWidth: true
     }
 
-    PlainPlaceholderMessage {
+    Item {
         visible: !view.applet.costLoading
             && view.providerCosts.length === 0
             && view.applet.costErrorText.length === 0
-        plainText: i18n("No local token or cost history.")
-        plainExplanation: i18n("History appears for providers supported by the codexbar cost command.")
-        icon.name: "view-statistics-symbolic"
-        type: Kirigami.PlaceholderMessage.Type.Informational
+        implicitHeight: emptySpendPlaceholder.implicitHeight
         Layout.fillWidth: true
         Layout.fillHeight: true
+
+        // Keep the native placeholder together while this item fills the view.
+        PlainPlaceholderMessage {
+            id: emptySpendPlaceholder
+
+            anchors.centerIn: parent
+            width: parent.width
+            plainText: i18n("No local token or cost history.")
+            plainExplanation: i18n("History appears for providers supported by the codexbar cost command.")
+            icon.name: "view-statistics-symbolic"
+            type: Kirigami.PlaceholderMessage.Type.Informational
+        }
     }
 
     Item {
