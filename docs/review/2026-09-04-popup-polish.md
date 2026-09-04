@@ -52,6 +52,7 @@ font. The settings disclosure follows the user's body font.
 [Providers with larger text in Breeze Light](settings-providers-large-text-light.png)
 
 Provider disclosure and selection, and provider reordering were exercised in
-the preview. Opening details does not fetch diagnostics. The disclosure is a
+the preview. An injected diagnostic error survived collapsing and reopening
+the details. Opening details does not fetch diagnostics. The disclosure is a
 native checkable control and retains the existing CLI-backed options and
 redacted diagnostics behind it. No configuration schema or CLI contract changed.

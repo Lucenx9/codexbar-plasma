@@ -1913,6 +1913,8 @@ if "visible: providerSettingsToggle.checked" not in settings_details:
     raise AssertionError("Provider settings details must follow the disclosure state")
 if "delegate: Components.ProviderConfigRow" in settings_details:
     raise AssertionError("Collapsing provider settings must leave the provider list available")
+if "!visible && providerSettingsToggle.checked" not in settings_details:
+    raise AssertionError("Collapsing provider settings must not dismiss a diagnostic error")
 
 display_surface.reject('source: "handle-sort"',
     "Arrow-based ordering must not advertise unsupported dragging")

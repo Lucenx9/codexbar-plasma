@@ -1490,8 +1490,10 @@ KCM.SimpleKCM {
                         // Kirigami's close button hides the banner imperatively,
                         // severing the visible binding. Clear the stored error so
                         // the dismissal sticks, then reinstall the binding so the
-                        // next diagnostic error still shows up.
-                        if (!visible && plainText.length > 0 && page.selectedProvider) {
+                        // next diagnostic error still shows up. Collapsing the
+                        // parent details is not a dismissal of the error.
+                        if (!visible && providerSettingsToggle.checked
+                                && plainText.length > 0 && page.selectedProvider) {
                             page.setProviderDiagnosticError(page.selectedProvider.provider, "")
                             visible = Qt.binding(function() { return plainText.length > 0 })
                         }
