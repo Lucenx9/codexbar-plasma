@@ -50,16 +50,29 @@ function withRunNonce(command, serial) {
 
 // `timeoutMs` falls back to `fallbackTimeoutMs` when it is missing or not a
 // positive number, so a caller cannot accidentally register a command that never
-// expires.
+// expires. When the fallback is unusable too, a 1ms timeout fails closed
+// instead of minting a NaN deadline: NaN disables the timeout timer
+// (hasDeadlines) while expired() skips it for ever, leaking the entry.
 function descriptor(kind, providerID, nowMs, timeoutMs, fallbackTimeoutMs) {
     var boundedTimeout = Number(timeoutMs)
     if (!isFinite(boundedTimeout) || boundedTimeout <= 0) {
         boundedTimeout = Number(fallbackTimeoutMs)
     }
+    if (!isFinite(boundedTimeout) || boundedTimeout <= 0) {
+        boundedTimeout = 1
+    }
+    var now = Number(nowMs)
+    if (!isFinite(now) || now < 0) {
+        now = 0
+    }
+    var deadline = now + boundedTimeout
+    if (!isFinite(deadline)) {
+        deadline = Number.MAX_VALUE
+    }
     return {
         kind: String(kind || ""),
         providerID: String(providerID || ""),
-        deadlineMs: Number(nowMs) + boundedTimeout
+        deadlineMs: deadline
     }
 }
 
