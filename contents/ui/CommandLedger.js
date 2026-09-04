@@ -65,10 +65,14 @@ function descriptor(kind, providerID, nowMs, timeoutMs, fallbackTimeoutMs) {
     if (!isFinite(now) || now < 0) {
         now = 0
     }
+    var deadline = now + boundedTimeout
+    if (!isFinite(deadline)) {
+        deadline = Number.MAX_VALUE
+    }
     return {
         kind: String(kind || ""),
         providerID: String(providerID || ""),
-        deadlineMs: now + boundedTimeout
+        deadlineMs: deadline
     }
 }
 

@@ -56,6 +56,12 @@ TestCase {
         var badClock = CommandLedger.descriptor("usage", "codex", Number.NaN, "abc", undefined)
         verify(isFinite(badClock.deadlineMs))
         verify(badClock.deadlineMs > 0)
+
+        var overflow = CommandLedger.descriptor(
+            "usage", "codex", Number.MAX_VALUE, Number.MAX_VALUE, 1)
+        verify(isFinite(overflow.deadlineMs))
+        commands = CommandLedger.opened(({}), "overflow", overflow)
+        compare(CommandLedger.expired(commands, Number.MAX_VALUE).length, 1)
     }
 
     // QML bindings on command maps only re-evaluate when the property is
