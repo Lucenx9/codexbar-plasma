@@ -490,10 +490,13 @@ if "return fireworksSingleKeySetupSupported" not in api_key_setup_body:
     raise AssertionError(
         "Fireworks API-key setup must stay hidden until the CLI version proves slug discovery support"
     )
-if not re.search(
-    r'case "fireworks":\s*return fireworksSingleKeySetupSupported',
+fireworks_gate = re.search(
+    r'((?:case "[^"]+":\s*)+)return fireworksSingleKeySetupSupported',
     api_key_setup_body,
-):
+)
+if fireworks_gate is None or re.findall(
+    r'case "([^"]+)":', fireworks_gate.group(1)
+) != ["fireworks"]:
     raise AssertionError(
         "the CLI version gate must apply only to Fireworks API-key setup"
     )
