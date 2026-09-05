@@ -288,8 +288,13 @@ replace a host CLI.
   use `CostPresentation.costTrustSummary` to qualify estimated, partial, or
   approximate amounts and render one shared notice. Keep missing legacy metadata
   quiet, keep pricing coverage separate from `historyCoverageIsEstablished`, and
-  never expose raw provenance values in QML. Project breakdowns remain future
-  work: discard local `path` values and keep only bounded display fields.
+  never expose raw provenance values in QML. Usage & Spend shows project totals
+  from CLI 0.56.2 `cost.projects` using the existing range and metric selectors.
+  `normalizeCostProjects` retains only bounded names and optional amounts,
+  discarding paths and nested source records. Keep provider currencies separate,
+  preserve unknown amounts and duplicate names, and signal truncation at 128
+  inspected projects per provider or 128 displayed rows overall. Project rows
+  never contribute to provider or global totals.
   Antigravity now emits token-only history through the same generic envelope.
   It normally omits dollar amounts, but CLI 0.56.2 uses zero as the
   established-empty sentinel even though its renderer says costs are

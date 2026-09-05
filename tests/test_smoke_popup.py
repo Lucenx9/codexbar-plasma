@@ -87,6 +87,18 @@ class SmokePopupTests(unittest.TestCase):
             with self.subTest(args=args), self.assertRaisesRegex(ValueError, "unsupported"):
                 response(args, "normal", now)
 
+    def test_project_fixture_changes_totals_with_the_requested_range(self):
+        now = datetime(2026, 9, 1, tzinfo=timezone.utc)
+        command = ["cost", "--format", "json", "--json-only", "--days"]
+        month = response(command + ["30"], "project-costs", now)[0]
+        week = response(command + ["7"], "project-range", now)[0]
+        self.assertEqual(month["projects"][0]["totalCost"], 5.5)
+        self.assertEqual(week["projects"][0]["totalCost"], 2.75)
+        self.assertEqual(week["historyDays"], 7)
+        self.assertNotIn("totalCost", month["projects"][2])
+        self.assertEqual(month["projects"][3]["totalCost"], 0)
+        self.assertNotIn("projects", response(command + ["30"], "normal", now)[0])
+
     def test_qml_failure_wins_even_if_capture_marker_is_present(self):
         for error in ("TypeError: synthetic failure",
                       "QJSValue::call() failed: cannot call function with argument created in a different engine"):
