@@ -139,6 +139,11 @@ require_in_surface display "plainText: panelMoveDown.Accessible.name"
 require_in_surface providers "plainText: reloadProvidersButton.Accessible.name"
 require_in_surface general 'plainText: i18n("Uses the pace forecast reported by codexbar.")'
 require_in_file "$COPYABLE_VALUE_QML" 'plainText: valueRow.copied ? i18n("Copied") : valueRow.copyAccessibleName'
+require_in_surface applet "parent: copyButton"
+require_in_surface display "parent: panelMoveUp"
+require_in_surface display "parent: panelMoveDown"
+require_in_surface providers "parent: reloadProvidersButton"
+require_in_surface general "parent: notifyPredictivePaceWarningsCheck"
 require_in_file "$PROVIDER_ACCOUNTS_PANEL_QML" "delegate: PlainButton {"
 require_in_file "$DISPLAY_QML" "text: SafeText.plainTextAsRichText(modelData.displayName)"
 require_in_surface providers "SafeText.plainButtonText(modelData.title, contentItem !== null)"
@@ -169,7 +174,7 @@ reject_raw_text_control 'Controls\.Label[[:space:]]*\{' "$PLAIN_CONTROLS_LABEL_Q
 reject_raw_text_control 'PlasmaComponents\.Label[[:space:]]*\{' "$PLAIN_PLASMA_LABEL_QML" "PlainPlasmaLabel"
 reject_raw_text_control 'Kirigami\.Heading[[:space:]]*\{' "$PLAIN_HEADING_QML" "PlainHeading"
 reject_raw_text_control 'Kirigami\.PlaceholderMessage[[:space:]]*\{' "$PLAIN_PLACEHOLDER_MESSAGE_QML" "PlainPlaceholderMessage"
-reject_raw_text_control 'Controls\.ToolTip(\.text|[[:space:]]*\{)' "$PLAIN_TOOL_TIP_QML" "PlainToolTip"
+reject_raw_text_control 'Controls\.ToolTip(\.|[[:space:]]*\{)' "$PLAIN_TOOL_TIP_QML" "PlainToolTip"
 
 python3 - "$ROOT_DIR" <<'PY'
 import re

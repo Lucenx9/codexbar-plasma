@@ -1314,6 +1314,7 @@ KCM.SimpleKCM {
                 Accessible.name: i18n("Reload provider list")
 
                 Components.PlainToolTip {
+                    parent: reloadProvidersButton
                     plainText: reloadProvidersButton.Accessible.name
                     visible: reloadProvidersButton.hovered
                     delay: Kirigami.Units.toolTipDelay

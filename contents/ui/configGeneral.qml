@@ -424,6 +424,7 @@ KCM.SimpleKCM {
                 enabled: enableNotificationsCheck.checked
 
                 Components.PlainToolTip {
+                    parent: notifyPredictivePaceWarningsCheck
                     plainText: i18n("Uses the pace forecast reported by codexbar.")
                     visible: notifyPredictivePaceWarningsCheck.hovered
                     delay: Kirigami.Units.toolTipDelay

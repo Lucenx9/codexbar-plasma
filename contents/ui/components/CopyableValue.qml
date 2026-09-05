@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
@@ -47,6 +46,7 @@ RowLayout {
         Accessible.name: valueRow.copyAccessibleName
 
         PlainToolTip {
+            parent: copyButton
             plainText: valueRow.copied ? i18n("Copied") : valueRow.copyAccessibleName
             visible: copyButton.hovered || valueRow.copied
         }

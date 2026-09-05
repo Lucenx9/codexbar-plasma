@@ -661,6 +661,7 @@ KCM.SimpleKCM {
                         Accessible.name: i18n("Move %1 up", page.panelElementTitle(modelData))
 
                         Components.PlainToolTip {
+                            parent: panelMoveUp
                             plainText: panelMoveUp.Accessible.name
                             visible: panelMoveUp.hovered
                             delay: Kirigami.Units.toolTipDelay
@@ -677,6 +678,7 @@ KCM.SimpleKCM {
                         Accessible.name: i18n("Move %1 down", page.panelElementTitle(modelData))
 
                         Components.PlainToolTip {
+                            parent: panelMoveDown
                             plainText: panelMoveDown.Accessible.name
                             visible: panelMoveDown.hovered
                             delay: Kirigami.Units.toolTipDelay
