@@ -1305,15 +1305,22 @@ KCM.SimpleKCM {
             }
 
             Controls.ToolButton {
+                id: reloadProvidersButton
+
                 icon.name: "view-refresh"
                 text: i18n("Reload")
                 display: Controls.AbstractButton.IconOnly
                 enabled: !page.loading
-                onClicked: page.reload()
+                Accessible.name: i18n("Reload provider list")
 
-                Controls.ToolTip.text: i18n("Reload provider list")
-                Controls.ToolTip.visible: hovered
-                Controls.ToolTip.delay: Kirigami.Units.toolTipDelay
+                Components.PlainToolTip {
+                    parent: reloadProvidersButton
+                    plainText: reloadProvidersButton.Accessible.name
+                    visible: reloadProvidersButton.hovered
+                    delay: Kirigami.Units.toolTipDelay
+                }
+
+                onClicked: page.reload()
             }
         }
 

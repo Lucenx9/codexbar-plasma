@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
@@ -45,8 +44,13 @@ RowLayout {
         Layout.preferredWidth: valueRow.actionSize
         Layout.preferredHeight: valueRow.actionSize
         Accessible.name: valueRow.copyAccessibleName
-        Controls.ToolTip.visible: hovered || valueRow.copied
-        Controls.ToolTip.text: valueRow.copied ? i18n("Copied") : valueRow.copyAccessibleName
+
+        PlainToolTip {
+            parent: copyButton
+            plainText: valueRow.copied ? i18n("Copied") : valueRow.copyAccessibleName
+            visible: copyButton.hovered || valueRow.copied
+        }
+
         onClicked: valueRow.copyRequested(valueRow.text)
 
         Behavior on opacity {
