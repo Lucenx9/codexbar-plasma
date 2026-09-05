@@ -490,6 +490,16 @@ if "return fireworksSingleKeySetupSupported" not in api_key_setup_body:
     raise AssertionError(
         "Fireworks API-key setup must stay hidden until the CLI version proves slug discovery support"
     )
+fireworks_gate = re.search(
+    r'((?:case "[^"]+":\s*)+)return fireworksSingleKeySetupSupported',
+    api_key_setup_body,
+)
+if fireworks_gate is None or re.findall(
+    r'case "([^"]+)":', fireworks_gate.group(1)
+) != ["fireworks"]:
+    raise AssertionError(
+        "the CLI version gate must apply only to Fireworks API-key setup"
+    )
 if "runCliVersionCommand()" not in function_body(providers_text, "reload"):
     raise AssertionError("provider reload must probe the selected CodexBar CLI version")
 cli_version_result_body = function_body(providers_text, "handleCliVersionResult")
