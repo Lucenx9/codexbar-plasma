@@ -87,6 +87,22 @@ Item {
         console.log("SMOKE_PANEL_RULES_VERIFIED");
     }
 
+    function verifyEmptyPanelRules() {
+        var config = applet.Plasmoid.configuration;
+        var wasLoading = applet.loading;
+        var conditions = ["usageAtLeast", "resetWithin", "runOut"];
+        for (var busy = 0; busy < 2; busy++) {
+            applet.loading = busy === 1;
+            for (var i = 0; i < conditions.length; i++) {
+                config.panelVisibilityRules = JSON.stringify({text: {condition: conditions[i]}});
+                verifyPanel(applet.compactText() === "", "missing data bypassed the text condition");
+            }
+            config.panelVisibilityRules = "{}";
+            verifyPanel(applet.compactText().length > 0, "Always lost its loading or empty text");
+        }
+        applet.loading = wasLoading;
+    }
+
     Component.onCompleted: {
         applet.expanded = true;
         console.log("SMOKE_LOADED:" + scenario);
@@ -167,7 +183,9 @@ Item {
                 capture.applet.expanded = true;
                 if (capture.scenario !== "loading" && (capture.applet.loading || capture.applet.providers.length !== 2))
                     return;
-                if (capture.scenario === "panel-rules") {
+                if (capture.scenario === "loading") {
+                    capture.verifyEmptyPanelRules();
+                } else if (capture.scenario === "panel-rules") {
                     capture.preparePanelScenario();
                 } else if (capture.scenario === "long-text") {
                     capture.applet.openProviderFromPanel("codex");

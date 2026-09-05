@@ -3846,12 +3846,12 @@ PlasmoidItem {
 
     function compactText() {
         var item = selectedCompactProvider()
-        if (!item) {
-            return loading ? i18n("Loading") : "CodexBar"
-        }
         var row = panelDisplayRow(item, menuBarDisplayMode)
         if (!PanelRules.matches(panelVisibilityRules.text, row, panelClockMs)) {
             return ""
+        }
+        if (!item) {
+            return loading ? i18n("Loading") : "CodexBar"
         }
 
         var parts = []
