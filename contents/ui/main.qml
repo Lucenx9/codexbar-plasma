@@ -1371,6 +1371,7 @@ PlasmoidItem {
                 totals.cost, totals.tokens, currency, valueMode),
             hintLine: tokenCostHint(providerID),
             totals: totals,
+            projects: Normalizer.normalizeCostProjects(item.projects, currency),
             models: Normalizer.normalizeCostModels(item.daily, currency, historyDays),
             daily: Normalizer.normalizeCostDaily(item.daily, currency, historyDays, item.updatedAt)
         }

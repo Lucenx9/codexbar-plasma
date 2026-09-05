@@ -5,6 +5,86 @@ import "../contents/ui/CostPresentation.js" as CostPresentation
 TestCase {
     name: "CostPresentation"
 
+    function test_projectRowsFollowProviderOrderAndSelectedMetric() {
+        var costs = [{ provider: "codex", projects: { rows: [
+            { label: "Token heavy", cost: 1, tokens: 9000, currency: "USD" },
+            { label: "Cost heavy", cost: 8, tokens: 100, currency: "USD" },
+            { label: "Token only", cost: null, tokens: 500, currency: "USD" }
+        ], truncated: false } }, { provider: "future", projects: { rows: [
+            { label: "Another currency", cost: 100, tokens: 10, currency: "EUR" }
+        ], truncated: false } }]
+
+        var money = CostPresentation.projectRows(costs, false)
+        compare(money.rows.map(function(row) { return row.label }),
+            ["Cost heavy", "Token heavy", "Token only", "Another currency"])
+        compare(money.rows[0].provider, "codex")
+        compare(money.rows[2].cost, null)
+        compare(money.rows[3].currency, "EUR")
+        compare(money.truncated, false)
+        compare(CostPresentation.projectRows(costs, true).rows[0].label, "Token heavy")
+        compare(costs[0].projects.rows[0].label, "Token heavy")
+    }
+
+    function test_projectRowsKeepDuplicatesUnknownsAndWindowTrust() {
+        var snapshot = {
+            provider: "codex", totals: { cost: 3, tokens: 90, currency: "USD" },
+            trust: { sourceKind: "listPrice",
+                coverage: { priced: 0, estimated: 2, unpriced: 1, unmetered: 0 } },
+            projects: { rows: [
+                { label: "Same", cost: 1, tokens: null, currency: "USD" },
+                { label: "Same", cost: 2, tokens: 20, currency: "USD" },
+                { label: "No price", cost: null, tokens: 70, currency: "USD" },
+                { label: "Empty", cost: 0, tokens: 0, currency: "USD" }
+            ] }
+        }
+        var money = CostPresentation.projectRows([snapshot], false).rows
+        compare(money.length, 4)
+        compare(money[0].label, "Same")
+        compare(money[1].label, "Same")
+        compare(money[0].valueMode, "partial")
+        compare(money[2].cost, 0)
+        compare(money[3].cost, null)
+        var tokens = CostPresentation.projectRows([snapshot], true).rows
+        compare(tokens[0].label, "No price")
+        compare(tokens[2].tokens, 0)
+        compare(tokens[3].tokens, null)
+    }
+
+    function test_projectRowsBoundTheWholePopupAndSignalOmissions() {
+        var rows = []
+        for (var i = 0; i < 128; i++) {
+            rows.push({ label: "Project " + i, cost: i, tokens: i, currency: "USD" })
+        }
+        var result = CostPresentation.projectRows([
+            { provider: "codex", projects: { rows: rows } },
+            { provider: "future", projects: { rows: rows } }
+        ], false)
+        compare(result.rows.length, 128)
+        compare(result.rows[0].cost, 127)
+        compare(result.truncated, true)
+        compare(CostPresentation.projectRows([
+            { provider: "codex", projects: { rows: [], truncated: true } }
+        ], false).truncated, true)
+        compare(CostPresentation.projectRows([
+            { provider: "codex", projects: { rows: rows } }
+        ], false).truncated, false)
+    }
+
+    function test_projectRowsUseOnlyRangeMatchedSnapshotsAndTolerateLegacyData() {
+        var current = { provider: "codex", historyDays: 7, projects: { rows: [
+            { label: "Current", cost: 2, tokens: 10, currency: "USD" }
+        ] } }
+        var stale = { provider: "claude", historyDays: 30, projects: { rows: [
+            { label: "Stale", cost: 99, tokens: 100, currency: "USD" }
+        ] } }
+        var snapshots = CostPresentation.spendSnapshots({ codex: current, claude: stale }, 7)
+        compare(CostPresentation.projectRows(snapshots, false).rows.length, 1)
+        compare(CostPresentation.projectRows(snapshots, false).rows[0].label, "Current")
+        compare(CostPresentation.projectRows([{ provider: "legacy" }], false),
+            { rows: [], truncated: false })
+        compare(CostPresentation.projectRows(null, false), { rows: [], truncated: false })
+    }
+
     readonly property var fmt: CostPresentation.numberFormat(",", ".")
 
     function dailyPoint(label, cost, tokens, currency) {

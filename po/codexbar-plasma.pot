@@ -197,6 +197,36 @@ msgstr ""
 msgid "%1% %2"
 msgstr ""
 
+#: contents/ui/components/ProjectCostSection.qml
+msgid "Cost unavailable"
+msgstr ""
+
+#: contents/ui/components/ProjectCostSection.qml
+msgid "Tokens unavailable"
+msgstr ""
+
+#: contents/ui/components/ProjectCostSection.qml contents/ui/main.qml
+msgid "%1 tokens"
+msgstr ""
+
+#: contents/ui/components/ProjectCostSection.qml
+msgid "Projects"
+msgstr ""
+
+#: contents/ui/components/ProjectCostSection.qml
+msgid "API-rate estimates for the selected range, not billed amounts."
+msgstr ""
+
+#: contents/ui/components/ProjectCostSection.qml
+msgid "Local token usage for the selected range."
+msgstr ""
+
+#: contents/ui/components/ProjectCostSection.qml
+msgid ""
+"Some projects are omitted from this list. Provider totals include the full "
+"reported range."
+msgstr ""
+
 #: contents/ui/components/ProviderAccountsPanel.qml
 msgid "Accounts"
 msgstr ""
@@ -1399,10 +1429,6 @@ msgstr[1] ""
 
 #: contents/ui/main.qml
 msgid "Latest"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 tokens"
 msgstr ""
 
 #: contents/ui/main.qml

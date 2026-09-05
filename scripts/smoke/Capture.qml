@@ -40,7 +40,38 @@ Item {
             return false;
         if (scenario === "long-text")
             return applet.selectedProviderID === "codex" && !applet.accountLoadingForProvider("codex") && applet.accountOptionsForProvider("codex").length === 2 && codex.account.length > 50;
+        if (scenario.indexOf("project-") === 0) {
+            if (!applet.spendSelected || !applet.tokenCosts.codex)
+                return false;
+            var section = findItem(applet.fullRepresentationItem, "projectCostSection");
+            if (!section || section.projectData.rows.length !== 4)
+                return false;
+            var rows = section.projectData.rows;
+            var expectedFirst = scenario === "project-tokens" ? "Documentation site"
+                : (scenario === "project-long-text"
+                    ? "Example project with a long display name for the engineering and documentation team"
+                    : "CodexBar Plasma");
+            var expectedCost = scenario === "project-range" ? 2.75 : 5.5;
+            if (rows[0].label !== expectedFirst
+                    || (scenario !== "project-tokens" && rows[0].cost !== expectedCost)
+                    || JSON.stringify(rows).indexOf("/private/") >= 0) {
+                console.error("SMOKE_FAILED: unexpected project presentation");
+                return false;
+            }
+            return true;
+        }
         return applet.overviewSelected;
+    }
+
+    function findItem(item, name) {
+        if (item.objectName === name)
+            return item;
+        for (var i = 0; i < item.children.length; i++) {
+            var found = findItem(item.children[i], name);
+            if (found)
+                return found;
+        }
+        return null;
     }
 
     Timer {
@@ -58,6 +89,20 @@ Item {
                 if (capture.scenario === "long-text") {
                     capture.applet.openProviderFromPanel("codex");
                     capture.applet.loadAccounts("codex");
+                } else if (capture.scenario.indexOf("project-") === 0) {
+                    if (capture.applet.costLoading || !capture.applet.tokenCosts.codex)
+                        return;
+                    capture.applet.selectGlobalView("spend");
+                    if (capture.scenario === "project-range") {
+                        capture.applet.setCostHistoryDays(7);
+                        if (capture.applet.spendProviderCosts().length !== 0)
+                            console.error("SMOKE_FAILED: stale project range remained visible");
+                    } else if (capture.scenario === "project-tokens") {
+                        var previousCosts = capture.applet.tokenCosts;
+                        capture.applet.setCostHistoryMetric("tokens");
+                        if (capture.applet.costLoading || capture.applet.tokenCosts !== previousCosts)
+                            console.error("SMOKE_FAILED: metric switch reloaded project history");
+                    }
                 } else if (capture.scenario === "normal")
                     capture.applet.selectGlobalView("overview");
                 else if (capture.scenario === "partial-error")
@@ -65,6 +110,11 @@ Item {
                 capture.prepared = true;
             }
             if (capture.scenarioReady()) {
+                if (capture.scenario.indexOf("project-") === 0) {
+                    var section = capture.findItem(popup, "projectCostSection");
+                    var scroll = capture.findItem(popup, "spendHistoryScroll");
+                    scroll.contentItem.contentY = section.y;
+                }
                 console.log("SMOKE_READY:" + capture.scenario);
                 stop();
                 settle.start();

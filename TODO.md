@@ -53,9 +53,14 @@ replace a host CLI.
 - Cost truthfulness: CLI 0.56.2 retains the `coverage` counters and
   `provenance` normalized behind a bounded trust boundary. Provider and global
   cost amounts are qualified as estimated, partial, or approximate, and share
-  one semantic notice decision; older payloads remain quiet. Project breakdown
-  inputs remain future work: a Projects view must discard the emitted local
-  `path` and retain only bounded display fields. Antigravity now emits token-only
+  one semantic notice decision; older payloads remain quiet. Usage & Spend now
+  shows project totals from CLI 0.56.2 `cost.projects`, with the existing range
+  and metric selectors. `normalizeCostProjects` retains only bounded names and
+  optional amounts, discarding paths and nested source records. The list keeps
+  provider currencies separate, preserves unknown amounts and duplicate names,
+  and signals truncation at 128 inspected projects per provider or 128 displayed
+  rows overall. Project rows never contribute to provider or global totals.
+  Antigravity now emits token-only
   history through the same generic `cost` envelope. It normally omits dollar
   amounts, but CLI 0.56.2 uses zero as the established-empty sentinel even
   though its renderer says costs are unavailable. `normalizeCostDaily` and

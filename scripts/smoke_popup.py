@@ -86,7 +86,7 @@ def stage_applet(work, scenario, image_path):
                         + "        imagePath: " + json.dumps(str(image_path)) + "\n    }\n}\n")
     # Stable default typography; long-text exercises the same doubled text size
     # used in the existing visual review, without changing the desktop settings.
-    size = 20 if scenario == "long-text" else 10
+    size = 20 if scenario in ("long-text", "project-long-text") else 10
     (work / "config/kdeglobals").write_text(
         f"[General]\nfont=Noto Sans,{size},-1,5,50,0,0,0,0,0\n"
         f"smallestReadableFont=Noto Sans,{size - 2},-1,5,50,0,0,0,0,0\n"

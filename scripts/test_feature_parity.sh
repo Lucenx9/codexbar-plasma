@@ -340,6 +340,13 @@ require_in_surface applet "daily: Normalizer.normalizeCostDaily(item.daily, curr
 require_in_surface applet "var totals = Normalizer.normalizeProviderCostTotals("
 require_in_surface applet "totals: totals"
 require_in_surface applet "models: Normalizer.normalizeCostModels(item.daily, currency, historyDays)"
+require_in_surface applet "projects: Normalizer.normalizeCostProjects(item.projects, currency)"
+require_in_surface applet "Components.ProjectCostSection"
+require_in_surface applet "providerCosts: view.presentedProviderCosts"
+require_in_surface applet "CostPresentation.projectRows(providerCosts, applet.costHistoryShowsTokens)"
+require_in_surface applet "model: section.projectData.rows"
+require_in_surface applet 'i18n("Cost unavailable")'
+require_in_surface applet 'i18n("Tokens unavailable")'
 require_in_surface applet "Normalizer.normalizeCostTrustMetadata(item)"
 require_in_surface applet "function normalizeCostDaily(items, currency, days, updatedAt)"
 require_in_surface applet "result.length < historyDays"

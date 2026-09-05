@@ -153,6 +153,11 @@ Costs and history:
   average cost per 1M tokens, with a configurable cost history window.
 - Cost totals qualified as estimated, partial, or approximate from the CLI's
   bounded pricing coverage and provenance metadata.
+- Project cost and token totals in **Usage & Spend**, ranked within each provider
+  by the selected metric and using the same history range. The official CLI
+  0.56.2 exposes project data for Codex. Missing amounts remain unavailable;
+  project paths and nested source records are discarded. The bounded list
+  signals omitted projects and does not change provider or global totals.
 - Cost-trust notices explain why a range is incomplete or estimated. Closing a
   notice suppresses the same meaning for that provider or the aggregate Spend
   view across refreshes and popup reopenings; a materially different warning is
@@ -266,6 +271,10 @@ each scenario, captures the popup, and closes the preview automatically:
 | `loading` | Initial loading while the fixture CLI waits. |
 | `partial-error` | Claude's error view while healthy Codex data remains available. |
 | `long-text` | Codex with long account and workspace labels, two accounts, and doubled body text. |
+| `project-costs` | Project estimates, an explicit zero, and an unavailable cost in Usage & Spend. |
+| `project-tokens` | Switching to tokens reorders projects without reloading history. |
+| `project-range` | Switching to 7 days removes the old range before the new project totals arrive. |
+| `project-long-text` | Project names wrap with doubled body text. |
 
 Select one scenario or choose a new artifact directory:
 
