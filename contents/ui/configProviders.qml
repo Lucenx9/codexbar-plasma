@@ -1038,6 +1038,8 @@ KCM.SimpleKCM {
 
     function supportsApiKeySetup(providerID) {
         switch (providerKey(providerID)) {
+        case "fireworks":
+            return fireworksSingleKeySetupSupported
         case "abacus":
         case "alibaba":
         case "alibabatokenplan":
@@ -1055,8 +1057,6 @@ KCM.SimpleKCM {
         case "deepseek":
         case "doubao":
         case "elevenlabs":
-        case "fireworks":
-            return fireworksSingleKeySetupSupported
         case "grok":
         case "groq":
         case "ibmbob":
