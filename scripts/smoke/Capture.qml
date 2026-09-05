@@ -1,5 +1,6 @@
 import QtQuick
 import org.kde.kirigami as Kirigami
+import org.kde.plasma.plasmoid
 
 // Added only to a temporary copy of main.qml by smoke_popup.py.
 Item {
@@ -9,6 +10,82 @@ Item {
     required property string scenario
     required property string imagePath
     property bool prepared: false
+    property var panelUsageSnapshot
+
+    Loader {
+        id: panelPreview
+        parent: capture.applet.fullRepresentationItem
+        anchors.centerIn: parent
+        active: capture.scenario === "panel-rules"
+        z: 100
+        sourceComponent: Rectangle {
+            width: Math.max(240, panel.compactItem ? panel.compactItem.implicitWidth + 48 : 240)
+            height: 84
+            color: Kirigami.Theme.backgroundColor
+            Loader {
+                id: panel
+                readonly property Item compactItem: item as Item
+                sourceComponent: capture.applet.compactRepresentation
+                anchors.centerIn: parent
+                width: compactItem ? compactItem.implicitWidth : 0
+                height: 40
+            }
+        }
+    }
+
+    function verifyPanel(condition, message) {
+        if (!condition)
+            throw new Error("SMOKE_FAILED: " + message);
+    }
+
+    function preparePanelScenario() {
+        var config = applet.Plasmoid.configuration;
+        var codex = applet.providers[applet.providerIndexForID("codex")];
+        panelUsageSnapshot = applet.providers;
+        applet.openProviderFromPanel("codex");
+        config.showMultiProviderInPanel = true;
+        config.usageBarsShowUsed = true;
+        config.panelQuotaLane = "secondary";
+        verifyPanel(applet.panelDisplayRow(codex, "percent").usedPercent === 28, "secondary quota not selected");
+        verifyPanel(applet.compactText().indexOf("28%") >= 0, "text does not show the selected quota");
+        verifyPanel(applet.switcherMetricRow(codex).usedPercent === 43, "panel preference changed popup quota");
+        config.panelQuotaLane = "tertiary";
+        verifyPanel(applet.panelDisplayRow(codex, "percent") === null, "missing quota fell back to another lane");
+        verifyPanel(applet.compactProviders().length === 0, "missing quotas retained meters");
+        verifyPanel(applet.compactText().indexOf("%") < 0, "missing quota retained a percentage");
+        config.panelQuotaLane = "primary";
+        config.panelVisibilityRules = JSON.stringify({text: {condition: "usageAtLeast", usedPercent: 50},
+            meters: {condition: "usageAtLeast", usedPercent: 50}});
+        verifyPanel(applet.compactText() === "", "text condition did not hide healthy usage");
+        verifyPanel(applet.compactProviders().length === 1 && applet.compactProviders()[0].provider === "claude",
+            "meter rules were not evaluated per provider");
+        config.usageBarsShowUsed = false;
+        verifyPanel(applet.compactText() === "" && applet.compactProviders().length === 1,
+            "left-percent preference changed the used-percent condition");
+        config.panelVisibilityRules = '{"text":{"condition":"resetWithin","resetMinutes":60}}';
+        var originalClock = applet.panelClockMs;
+        verifyPanel(applet.compactText() === "", "distant reset satisfied the condition");
+        applet.panelClockMs = Date.parse(codex.rows[0].resetsAt) - 1800000;
+        verifyPanel(applet.compactText().length > 0, "reset condition did not advance with the clock");
+        applet.panelClockMs = Date.parse(codex.rows[0].resetsAt) + 1;
+        verifyPanel(applet.compactText() === "", "expired reset satisfied the condition");
+        applet.panelClockMs = originalClock;
+        config.panelVisibilityRules = '{"text":{"condition":"runOut"},"meters":{"condition":"runOut"}}';
+        verifyPanel(applet.compactText() === "" && applet.compactProviders().length === 0,
+            "absent forecasts satisfied the condition");
+        config.panelQuotaLane = "auto";
+        config.panelVisibilityRules = "{}";
+        verifyPanel(applet.compactText().indexOf("57%") >= 0 && applet.compactProviders().length === 2,
+            "defaults did not restore the original panel");
+        config.showPercentInPanel = false;
+        config.showMultiProviderInPanel = false;
+        verifyPanel(applet.compactText().indexOf("%") < 0 && applet.compactProviders().length === 0,
+            "rules overrode the visibility checkboxes");
+        config.showPercentInPanel = true;
+        config.showMultiProviderInPanel = true;
+        config.panelQuotaLane = "secondary";
+        console.log("SMOKE_PANEL_RULES_VERIFIED");
+    }
 
     Component.onCompleted: {
         applet.expanded = true;
@@ -38,6 +115,10 @@ Item {
             return applet.selectedProviderID === "claude" && claude.error.indexOf("Synthetic provider timeout") >= 0;
         if (claude.error.length > 0 || claude.rows.length !== 2)
             return false;
+        if (scenario === "panel-rules") {
+            verifyPanel(applet.providers === panelUsageSnapshot, "panel settings reloaded usage");
+            return panelPreview.item !== null && applet.compactProviders().length === 2;
+        }
         if (scenario === "long-text")
             return applet.selectedProviderID === "codex" && !applet.accountLoadingForProvider("codex") && applet.accountOptionsForProvider("codex").length === 2 && codex.account.length > 50;
         if (scenario.indexOf("project-") === 0) {
@@ -86,7 +167,9 @@ Item {
                 capture.applet.expanded = true;
                 if (capture.scenario !== "loading" && (capture.applet.loading || capture.applet.providers.length !== 2))
                     return;
-                if (capture.scenario === "long-text") {
+                if (capture.scenario === "panel-rules") {
+                    capture.preparePanelScenario();
+                } else if (capture.scenario === "long-text") {
                     capture.applet.openProviderFromPanel("codex");
                     capture.applet.loadAccounts("codex");
                 } else if (capture.scenario.indexOf("project-") === 0) {
@@ -132,7 +215,7 @@ Item {
                 console.error("SMOKE_FAILED: scenario changed before capture");
                 return;
             }
-            var popup = capture.applet.fullRepresentationItem;
+            var popup = capture.scenario === "panel-rules" ? panelPreview.item : capture.applet.fullRepresentationItem;
             console.log("SMOKE_CAPTURE_START:" + capture.scenario);
             var accepted = popup.grabToImage(function (result) {
                 if (result.saveToFile(capture.imagePath))

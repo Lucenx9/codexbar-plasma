@@ -81,6 +81,10 @@ KCM.SimpleKCM {
     property bool cfg_showMultiProviderInPanelDefault: false
     property string cfg_panelElementOrder
     property string cfg_panelElementOrderDefault: "identity,status,text,meters"
+    property string cfg_panelQuotaLane
+    property string cfg_panelQuotaLaneDefault: "auto"
+    property string cfg_panelVisibilityRules
+    property string cfg_panelVisibilityRulesDefault: "{}"
     property bool cfg_autoSelectProvider
     property bool cfg_autoSelectProviderDefault: false
     property string cfg_overviewProviderIDs
@@ -202,6 +206,8 @@ KCM.SimpleKCM {
             [cfg_showPercentInPanel, cfg_showPercentInPanelDefault],
             [cfg_showMultiProviderInPanel, cfg_showMultiProviderInPanelDefault],
             [cfg_panelElementOrder, cfg_panelElementOrderDefault],
+            [cfg_panelQuotaLane, cfg_panelQuotaLaneDefault],
+            [cfg_panelVisibilityRules, cfg_panelVisibilityRulesDefault],
             [cfg_autoSelectProvider, cfg_autoSelectProviderDefault],
             [cfg_overviewProviderIDs, cfg_overviewProviderIDsDefault],
             [cfg_showCreditsInPanel, cfg_showCreditsInPanelDefault]
@@ -245,6 +251,8 @@ KCM.SimpleKCM {
         cfg_showPercentInPanel = cfg_showPercentInPanelDefault
         cfg_showMultiProviderInPanel = cfg_showMultiProviderInPanelDefault
         cfg_panelElementOrder = cfg_panelElementOrderDefault
+        cfg_panelQuotaLane = cfg_panelQuotaLaneDefault
+        cfg_panelVisibilityRules = cfg_panelVisibilityRulesDefault
         cfg_autoSelectProvider = cfg_autoSelectProviderDefault
         cfg_overviewProviderIDs = cfg_overviewProviderIDsDefault
         cfg_showCreditsInPanel = cfg_showCreditsInPanelDefault
