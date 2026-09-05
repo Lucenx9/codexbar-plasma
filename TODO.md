@@ -101,10 +101,15 @@ replace a host CLI.
   existing Plasma-native display settings. The `runOut` display mode shows the
   predicted duration only while the CLI pace forecast reports exhaustion before
   the reset; keep it tied to `paceWarningActive` instead of the percent used.
-  The macOS weekly reserve token remains open. CLI 0.54.0 also adds conditional
-  menu-bar rules and direct primary/secondary/tertiary lane tokens; these are
-  implementable from existing normalized data only through a Plasma-native rule
-  model and configuration UI, not by copying the Swift persistence model.
+  Plasma now offers automatic or direct primary/secondary/tertiary quota
+  selection for panel text and meters through `panelQuotaLane`. Missing direct
+  quotas are omitted; popup tabs keep automatic selection. `panelVisibilityRules`
+  stores independent conditions for the whole panel text and each provider
+  meter: always, minimum used percent, reset within minutes, or CLI-predicted
+  exhaustion. `PanelRules.js` bounds the settings and evaluates the displayed
+  quota without effects. Keep the visibility checkboxes, icon fallback, and
+  minute clock working; changing these preferences must not fetch usage or
+  alter notifications. The macOS weekly reserve token remains open.
 - Translations: gettext template extraction is in place. Add real `.po`
   catalogs, compiled catalog packaging, and translator contribution docs when
   localization work starts.

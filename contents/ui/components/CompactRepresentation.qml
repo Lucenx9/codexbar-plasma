@@ -237,7 +237,8 @@ Item {
                     id: compactMeter
 
                     required property var modelData
-                    readonly property real meter: compactRoot.applet.switcherPercent(modelData)
+                    readonly property var quotaRow: compactRoot.applet.panelDisplayRow(modelData, "percent")
+                    readonly property real meter: quotaRow ? compactRoot.applet.displayPercent(quotaRow) : -1
                     readonly property color accent: compactRoot.applet.providerReadableColor(
                         modelData.provider,
                         Kirigami.Theme.backgroundColor)
@@ -245,7 +246,7 @@ Item {
                     // anything, so it carries the same quota level as the popup
                     // meters instead of staying provider-coloured at 99% used.
                     readonly property color meterColor: compactRoot.applet.quotaMeterColor(
-                        compactRoot.applet.switcherMetricRow(modelData),
+                        quotaRow,
                         accent)
 
                     function activate() {

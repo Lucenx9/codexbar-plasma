@@ -11,6 +11,7 @@ import "PanelDisplay.js" as PanelDisplay
 import "ProviderIdentity.js" as ProviderIdentity
 import "ProviderOrder.js" as ProviderOrder
 import "PanelElements.js" as PanelElements
+import "PanelRules.js" as PanelRules
 import "SafeText.js" as SafeText
 
 KCM.SimpleKCM {
@@ -40,6 +41,11 @@ KCM.SimpleKCM {
     property bool cfg_showMultiProviderInPanelDefault: false
     property string cfg_panelElementOrder: "identity,status,text,meters"
     property string cfg_panelElementOrderDefault: "identity,status,text,meters"
+    property string cfg_panelQuotaLane: "auto"
+    property string cfg_panelQuotaLaneDefault: "auto"
+    property string cfg_panelVisibilityRules: "{}"
+    property string cfg_panelVisibilityRulesDefault: "{}"
+    readonly property var panelVisibilityRules: PanelRules.normalizedRules(cfg_panelVisibilityRules)
     property alias cfg_autoSelectProvider: autoSelectProviderCheck.checked
     property bool cfg_autoSelectProviderDefault: false
     property string cfg_overviewProviderIDs: ""
@@ -108,6 +114,10 @@ KCM.SimpleKCM {
         default:
             return ""
         }
+    }
+
+    function setPanelVisibilityRule(elementID, patch) {
+        cfg_panelVisibilityRules = PanelRules.updatedRules(cfg_panelVisibilityRules, elementID, patch)
     }
 
     function revealFocusedOrderButton(upButton, downButton) {
@@ -567,6 +577,35 @@ KCM.SimpleKCM {
         }
 
         Controls.ComboBox {
+            id: panelQuotaCombo
+            objectName: "panelQuotaCombo"
+            Kirigami.FormData.label: i18n("Panel quota:")
+            textRole: "text"
+            valueRole: "value"
+            model: [
+                {text: i18n("Automatic"), value: "auto"},
+                {text: i18n("Primary"), value: "primary"},
+                {text: i18n("Secondary"), value: "secondary"},
+                {text: i18n("Tertiary"), value: "tertiary"}
+            ]
+            currentIndex: ["auto", "primary", "secondary", "tertiary"].indexOf(PanelDisplay.safeLane(page.cfg_panelQuotaLane))
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 12
+            enabled: showProviderCheck.checked || showPercentCheck.checked
+                || showCreditsCheck.checked || showMultiProviderCheck.checked
+            onActivated: function(index) { page.cfg_panelQuotaLane = valueAt(index) }
+        }
+
+        Components.PlainControlsLabel {
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            text: i18n("Uses the provider's primary, secondary or tertiary quota for panel text and meters. Unavailable quotas are omitted.")
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+            wrapMode: Text.WordWrap
+        }
+
+        Controls.ComboBox {
             id: displayModeCombo
             Kirigami.FormData.label: i18n("Panel text:")
             textRole: "text"
@@ -612,6 +651,36 @@ KCM.SimpleKCM {
             text: displayModeCombo.currentIndex >= 0
                 ? displayModeCombo.model[displayModeCombo.currentIndex].description : ""
             visible: showPercentCheck.checked && text.length > 0
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+            wrapMode: Text.WordWrap
+        }
+
+        Components.PanelRuleEditor {
+            configPage: page
+            elementID: "text"
+            Kirigami.FormData.label: i18n("Show panel text:")
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            enabled: showProviderCheck.checked || showPercentCheck.checked || showCreditsCheck.checked
+        }
+
+        Components.PanelRuleEditor {
+            configPage: page
+            elementID: "meters"
+            Kirigami.FormData.label: i18n("Show each meter:")
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            enabled: showMultiProviderCheck.checked
+        }
+
+        Components.PlainControlsLabel {
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            text: i18n("Conditions use the quota shown by each element. The text condition also applies to the provider name and credits. Missing data does not satisfy a condition.")
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             wrapMode: Text.WordWrap
