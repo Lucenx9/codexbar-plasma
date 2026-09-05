@@ -151,6 +151,14 @@
       <label>Ordered panel element identifiers.</label>
       <default>identity,status,text,meters</default>
     </entry>
+    <entry name="panelQuotaLane" type="String">
+      <label>Quota shown in panel text and meters: auto, primary, secondary, or tertiary.</label>
+      <default>auto</default>
+    </entry>
+    <entry name="panelVisibilityRules" type="String">
+      <label>Visibility conditions for panel text and individual provider meters.</label>
+      <default>{}</default>
+    </entry>
     <entry name="autoSelectProvider" type="Bool">
       <label>Auto-select the highest-usage provider.</label>
       <default>false</default>

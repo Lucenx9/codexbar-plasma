@@ -9,6 +9,7 @@ import "NotificationMemo.js" as NotificationMemo
 import "NotificationPlanner.js" as NotificationPlanner
 import "PanelDisplay.js" as PanelDisplay
 import "PanelElements.js" as PanelElements
+import "PanelRules.js" as PanelRules
 import "PopupSelection.js" as PopupSelection
 import "CommandLedger.js" as CommandLedger
 import "CostRefreshPolicy.js" as CostRefreshPolicy
@@ -78,6 +79,8 @@ PlasmoidItem {
     property bool showPopupTabLabels: Plasmoid.configuration.showPopupTabLabels !== false
     property string providerOrderRaw: Plasmoid.configuration.providerOrder || ""
     property string panelElementOrderRaw: Plasmoid.configuration.panelElementOrder || ""
+    readonly property string panelQuotaLane: PanelDisplay.safeLane(Plasmoid.configuration.panelQuotaLane)
+    readonly property var panelVisibilityRules: PanelRules.normalizedRules(Plasmoid.configuration.panelVisibilityRules)
     property bool resetTimesShowAbsolute: Plasmoid.configuration.resetTimesShowAbsolute === true
     property bool showProviderChangelogs: Plasmoid.configuration.showProviderChangelogs === true
     property bool autoSelectProvider: Plasmoid.configuration.autoSelectProvider === true
@@ -3492,11 +3495,12 @@ PlasmoidItem {
     }
 
     function panelDisplayRow(item, mode) {
-        return PanelDisplay.rowForMode(switcherCandidateRows(item), mode)
+        return PanelDisplay.rowForMode(switcherCandidateRows(item), mode, panelQuotaLane)
     }
 
     function switcherMetricRow(item) {
-        return panelDisplayRow(item, "percent")
+        // Popup tabs retain their automatic quota independently of panel settings.
+        return PanelDisplay.rowForMode(switcherCandidateRows(item), "percent")
     }
 
     function switcherPercent(item) {
@@ -3832,7 +3836,8 @@ PlasmoidItem {
 
         var result = []
         for (var i = 0; i < providers.length && result.length < 4; i++) {
-            if (switcherPercent(providers[i]) >= 0) {
+            var row = panelDisplayRow(providers[i], "percent")
+            if (row && PanelRules.matches(panelVisibilityRules.meters, row, panelClockMs)) {
                 result.push(providers[i])
             }
         }
@@ -3841,6 +3846,10 @@ PlasmoidItem {
 
     function compactText() {
         var item = selectedCompactProvider()
+        var row = panelDisplayRow(item, menuBarDisplayMode)
+        if (!PanelRules.matches(panelVisibilityRules.text, row, panelClockMs)) {
+            return ""
+        }
         if (!item) {
             return loading ? i18n("Loading") : "CodexBar"
         }
@@ -3872,7 +3881,8 @@ PlasmoidItem {
             // Vertical panels collapse to a bare icon, so the tooltip is the only
             // incident surface there; never drop status just because usage exists.
             var incident = item.hasIncident && item.status.length > 0 ? item.status : ""
-            var percent = switcherPercent(item)
+            var row = panelDisplayRow(item, "percent")
+            var percent = row ? displayPercent(row) : -1
             var line = ""
             if (percent >= 0) {
                 line = i18n("%1: %2% %3", item.title, Math.round(percent), percentSuffix())

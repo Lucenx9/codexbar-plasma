@@ -305,9 +305,16 @@ replace a host CLI.
 - Panel element composition has a persisted, sanitized order for identity,
   status, usage text, and meters. Keep existing visibility settings working.
   The `runOut` display mode stays tied to `paceWarningActive`, so it prints a
-  duration only when the CLI predicts exhaustion before the reset. The weekly
-  reserve token remains open. CLI 0.54.0 conditional and direct-lane tokens are
-  optional Plasma-native work; do not copy the macOS persistence model.
+  duration only when the CLI predicts exhaustion before the reset.
+  `panelQuotaLane` selects automatic or direct primary/secondary/tertiary quotas
+  for panel text and meters. Missing direct quotas are omitted; popup tabs keep
+  automatic selection. `panelVisibilityRules` stores independent conditions for
+  the whole panel text and each provider meter: always, minimum used percent,
+  reset within minutes, or CLI-predicted exhaustion. `PanelRules.js` bounds the
+  settings and evaluates the displayed quota without effects. Keep the visibility
+  checkboxes, icon fallback, and minute clock working; changing these preferences
+  must not fetch usage or alter notifications. The weekly reserve token remains
+  open.
 - Gettext template extraction exists. Real `.po` catalogs, compiled catalog
   packaging, and translator contribution docs should come with localization
   work.

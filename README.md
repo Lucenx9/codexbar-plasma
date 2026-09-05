@@ -110,6 +110,15 @@ Panel and popup:
 - Panel text modes for percent used or left, pace, usage plus pace, reset time,
   and a run-out forecast that shows the predicted duration only while the CLI
   expects the quota to run out before its reset.
+- Choose the automatic, primary, secondary, or tertiary quota for panel text and
+  meters in **Display** settings. Missing quotas are omitted; popup tabs keep
+  their automatic quota selection.
+- Set independent visibility conditions for the full panel text and each
+  provider meter: always, minimum percent used, reset within a chosen number of
+  minutes, or forecast exhaustion before reset. Conditions use the displayed
+  quota, respect the existing visibility checkboxes, and need no extra CLI calls.
+  Missing data does not satisfy a condition. Reset conditions update each minute;
+  the provider icon remains available when all conditional elements are hidden.
 - Auto-select highest-usage provider for the compact panel and provider detail
   focus.
 - Overview tab with per-provider usage summary and quick switching.
@@ -263,7 +272,7 @@ make smoke
 
 This requires Python 3, `plasmawindowed`, `dbus-run-session`, and the Plasma,
 Kirigami, and KDE desktop control QML modules. It opens a temporary applet for
-each scenario, captures the popup, and closes the preview automatically:
+each scenario, captures the view, and closes the preview automatically:
 
 | Scenario | Captured state |
 | --- | --- |
@@ -271,6 +280,7 @@ each scenario, captures the popup, and closes the preview automatically:
 | `loading` | Initial loading while the fixture CLI waits. |
 | `partial-error` | Claude's error view while healthy Codex data remains available. |
 | `long-text` | Codex with long account and workspace labels, two accounts, and doubled body text. |
+| `panel-rules` | Compact panel with secondary quotas after checking conditional visibility and defaults. |
 | `project-costs` | Project estimates, an explicit zero, and an unavailable cost in Usage & Spend. |
 | `project-tokens` | Switching to tokens reorders projects without reloading history. |
 | `project-range` | Switching to 7 days removes the old range before the new project totals arrive. |
@@ -298,7 +308,10 @@ on completion, timeout, or interruption.
 The capture component selects the real popup views and waits for the expected
 state before using Qt's
 [`grabToImage`](https://doc.qt.io/qt-6/qml-qtquick-item.html#grabToImage-method).
-Screenshots contain only the popup, with its theme background. QML errors,
+The `panel-rules` scenario exercises quota selection, visibility conditions,
+checkboxes, and clock changes in the real applet, then captures its compact
+representation. Other screenshots contain only the popup, with its theme
+background. QML errors,
 missing captures, early exits, and timeouts fail the command. The screenshots
 still need visual review: this is not a pixel-comparison test, and it does not
 exercise panel placement, keyboard navigation, or the real CLI. Synthetic

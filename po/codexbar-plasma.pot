@@ -197,6 +197,46 @@ msgstr ""
 msgid "%1% %2"
 msgstr ""
 
+#: contents/ui/components/PanelRuleEditor.qml
+msgid "Show each provider meter"
+msgstr ""
+
+#: contents/ui/components/PanelRuleEditor.qml
+msgid "Show panel text"
+msgstr ""
+
+#: contents/ui/components/PanelRuleEditor.qml
+msgid "Always"
+msgstr ""
+
+#: contents/ui/components/PanelRuleEditor.qml
+msgid "Usage at least"
+msgstr ""
+
+#: contents/ui/components/PanelRuleEditor.qml
+msgid "Reset within"
+msgstr ""
+
+#: contents/ui/components/PanelRuleEditor.qml
+msgid "Forecast to run out"
+msgstr ""
+
+#: contents/ui/components/PanelRuleEditor.qml
+msgid "Minimum usage percent"
+msgstr ""
+
+#: contents/ui/components/PanelRuleEditor.qml
+msgid "Minutes before reset"
+msgstr ""
+
+#: contents/ui/components/PanelRuleEditor.qml
+msgid "%"
+msgstr ""
+
+#: contents/ui/components/PanelRuleEditor.qml
+msgid "min"
+msgstr ""
+
 #: contents/ui/components/ProjectCostSection.qml
 msgid "Cost unavailable"
 msgstr ""
@@ -505,6 +545,32 @@ msgid "Usage text and provider meters are available only in horizontal panels."
 msgstr ""
 
 #: contents/ui/configDisplay.qml
+msgid "Panel quota:"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Automatic"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Primary"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Secondary"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Tertiary"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid ""
+"Uses the provider's primary, secondary or tertiary quota for panel text and "
+"meters. Unavailable quotas are omitted."
+msgstr ""
+
+#: contents/ui/configDisplay.qml
 msgid "Panel text:"
 msgstr ""
 
@@ -546,6 +612,21 @@ msgstr ""
 
 #: contents/ui/configDisplay.qml
 msgid "Appears only when the quota is forecast to run out before reset."
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Show panel text:"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Show each meter:"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid ""
+"Conditions use the quota shown by each element. The text condition also "
+"applies to the provider name and credits. Missing data does not satisfy a "
+"condition."
 msgstr ""
 
 #: contents/ui/configDisplay.qml

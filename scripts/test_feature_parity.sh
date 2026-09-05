@@ -624,6 +624,20 @@ require_in_file "$CONFIG_XML" "autoSelectProvider"
 require_in_file "$CONFIG_XML" "notifyLimitResets"
 require_in_file "$CONFIG_XML" "notifyPredictivePaceWarnings"
 require_in_file "$CONFIG_XML" "panelElementOrder"
+require_in_file "$CONFIG_XML" 'name="panelQuotaLane"'
+require_in_file "$CONFIG_XML" 'name="panelVisibilityRules"'
+require_in_surface applet "PanelDisplay.safeLane(Plasmoid.configuration.panelQuotaLane)"
+require_in_surface applet "PanelRules.normalizedRules(Plasmoid.configuration.panelVisibilityRules)"
+require_in_surface applet "PanelDisplay.rowForMode(switcherCandidateRows(item), mode, panelQuotaLane)"
+require_in_surface applet "PanelRules.matches(panelVisibilityRules.text, row, panelClockMs)"
+require_in_surface applet "PanelRules.matches(panelVisibilityRules.meters, row, panelClockMs)"
+require_in_surface display "property string cfg_panelQuotaLane"
+require_in_surface display "property string cfg_panelVisibilityRules"
+require_in_surface display "PanelRules.updatedRules(cfg_panelVisibilityRules, elementID, patch)"
+require_in_surface display 'elementID: "text"'
+require_in_surface display 'elementID: "meters"'
+reject_in_surface applet "onPanelQuotaLaneChanged: Qt.callLater(refreshNow)"
+reject_in_surface applet "onPanelVisibilityRulesChanged: Qt.callLater(refreshNow)"
 require_in_surface applet '"sessions", "--json-v2"'
 require_in_surface applet "function parseSessionsOutput(stdoutText, stderrText)"
 require_in_surface applet "function normalizeSession(item)"

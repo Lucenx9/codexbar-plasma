@@ -125,6 +125,12 @@ TestCase {
         function switcherMetricRow(item) {
             return item;
         }
+        function panelDisplayRow(item, mode) {
+            return item;
+        }
+        function displayPercent(row) {
+            return row.value;
+        }
         function quotaMeterColor(item, accent) {
             return accent;
         }

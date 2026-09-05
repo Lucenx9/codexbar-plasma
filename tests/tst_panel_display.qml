@@ -29,6 +29,29 @@ TestCase {
         compare(PanelDisplay.safeMode(null), "percent");
     }
 
+    function test_explicitLaneOverridesAutomaticPreferenceWithoutFallback() {
+        var primary = usageRow({lane: "primary", hasPercent: true, usedPercent: 20, leftPercent: 80});
+        var secondary = usageRow({lane: "secondary", hasPercent: true, usedPercent: 90, leftPercent: 10});
+        var rows = [primary, secondary];
+        compare(PanelDisplay.rowForMode(rows, "percent"), primary);
+        compare(PanelDisplay.rowForMode(rows, "percent", "secondary"), secondary);
+        compare(PanelDisplay.rowForMode(rows, "percent", "tertiary"), null);
+        compare(rows.length, 2);
+    }
+
+    function test_directLaneKeepsModeCapabilitiesAndUnknownLanesAreHarmless() {
+        var secondary = usageRow({lane: "secondary", hasPercent: true, usedPercent: 90, leftPercent: 10, pacePercent: 50});
+        var tertiary = usageRow({lane: "tertiary", pacePercent: 40, resetsAt: "2026-09-05T13:00:00Z"});
+        var rows = [secondary, tertiary];
+        compare(PanelDisplay.rowForMode(rows, "both", "tertiary"), tertiary);
+        compare(PanelDisplay.rowForMode(rows, "resetTime", "tertiary"), tertiary);
+        compare(PanelDisplay.rowForMode(rows, "percent", "tertiary"), null);
+        compare(PanelDisplay.rowForMode(rows, "runOut", "secondary"), null);
+        compare(PanelDisplay.rowForMode(rows, "both", "unknown"), secondary);
+        compare(PanelDisplay.safeLane({toString: function() { return "primary"; }}), "auto");
+        compare(PanelDisplay.rowForMode(null, "percent", "primary"), null);
+    }
+
     function test_eachModeSelectsARowWithTheDataItNeeds() {
         var percent = usageRow({
             hasPercent: true,

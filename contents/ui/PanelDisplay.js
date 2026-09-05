@@ -14,6 +14,10 @@ function safeMode(value) {
     return percentMode;
 }
 
+function safeLane(value) {
+    return value === "primary" || value === "secondary" || value === "tertiary" ? value : "auto";
+}
+
 function hasFiniteNumber(value) {
     return typeof value === "number" && isFinite(value);
 }
@@ -55,9 +59,13 @@ function rowSupportsMode(row, value) {
 
 // The caller supplies provider-specific preference order. This function only
 // decides whether a row carries the data required by the selected mode.
-function rowForMode(rows, value) {
+function rowForMode(rows, value, laneValue) {
     if (!Array.isArray(rows)) {
         return null;
+    }
+    var lane = safeLane(laneValue);
+    if (lane !== "auto") {
+        rows = rows.filter(function(row) { return row && row.lane === lane; });
     }
     var mode = safeMode(value);
     if (mode === bothMode) {
