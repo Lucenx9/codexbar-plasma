@@ -31,6 +31,7 @@ FULL_REPRESENTATION_QML="${ROOT_DIR}/contents/ui/components/FullRepresentation.q
 PROVIDER_ACCOUNTS_PANEL_QML="${ROOT_DIR}/contents/ui/components/ProviderAccountsPanel.qml"
 COMPACT_REPRESENTATION_QML="${ROOT_DIR}/contents/ui/components/CompactRepresentation.qml"
 SPEND_VIEW_QML="${ROOT_DIR}/contents/ui/components/SpendView.qml"
+COPYABLE_VALUE_QML="${ROOT_DIR}/contents/ui/components/CopyableValue.qml"
 
 require_in_file() {
   local file="$1"
@@ -133,6 +134,11 @@ require_in_file "$PLAIN_PLACEHOLDER_MESSAGE_QML" "explanation: SafeText.plainTex
 require_in_file "$PLAIN_TOOL_TIP_QML" "text: SafeText.plainTextAsRichText(plainText)"
 require_in_surface display "plainText: providerMoveUp.Accessible.name"
 require_in_surface display "plainText: providerMoveDown.Accessible.name"
+require_in_surface display "plainText: panelMoveUp.Accessible.name"
+require_in_surface display "plainText: panelMoveDown.Accessible.name"
+require_in_surface providers "plainText: reloadProvidersButton.Accessible.name"
+require_in_surface general 'plainText: i18n("Uses the pace forecast reported by codexbar.")'
+require_in_file "$COPYABLE_VALUE_QML" 'plainText: valueRow.copied ? i18n("Copied") : valueRow.copyAccessibleName'
 require_in_file "$PROVIDER_ACCOUNTS_PANEL_QML" "delegate: PlainButton {"
 require_in_file "$DISPLAY_QML" "text: SafeText.plainTextAsRichText(modelData.displayName)"
 require_in_surface providers "SafeText.plainButtonText(modelData.title, contentItem !== null)"
@@ -163,6 +169,7 @@ reject_raw_text_control 'Controls\.Label[[:space:]]*\{' "$PLAIN_CONTROLS_LABEL_Q
 reject_raw_text_control 'PlasmaComponents\.Label[[:space:]]*\{' "$PLAIN_PLASMA_LABEL_QML" "PlainPlasmaLabel"
 reject_raw_text_control 'Kirigami\.Heading[[:space:]]*\{' "$PLAIN_HEADING_QML" "PlainHeading"
 reject_raw_text_control 'Kirigami\.PlaceholderMessage[[:space:]]*\{' "$PLAIN_PLACEHOLDER_MESSAGE_QML" "PlainPlaceholderMessage"
+reject_raw_text_control 'Controls\.ToolTip(\.text|[[:space:]]*\{)' "$PLAIN_TOOL_TIP_QML" "PlainToolTip"
 
 python3 - "$ROOT_DIR" <<'PY'
 import re

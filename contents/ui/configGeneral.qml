@@ -422,8 +422,12 @@ KCM.SimpleKCM {
                 Layout.leftMargin: Kirigami.Units.gridUnit
                 text: i18n("Notify predicted quota exhaustion")
                 enabled: enableNotificationsCheck.checked
-                Controls.ToolTip.text: i18n("Uses the pace forecast reported by codexbar.")
-                Controls.ToolTip.visible: hovered
+
+                Components.PlainToolTip {
+                    plainText: i18n("Uses the pace forecast reported by codexbar.")
+                    visible: notifyPredictivePaceWarningsCheck.hovered
+                    delay: Kirigami.Units.toolTipDelay
+                }
             }
 
             Controls.CheckBox {

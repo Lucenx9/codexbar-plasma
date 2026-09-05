@@ -45,8 +45,12 @@ RowLayout {
         Layout.preferredWidth: valueRow.actionSize
         Layout.preferredHeight: valueRow.actionSize
         Accessible.name: valueRow.copyAccessibleName
-        Controls.ToolTip.visible: hovered || valueRow.copied
-        Controls.ToolTip.text: valueRow.copied ? i18n("Copied") : valueRow.copyAccessibleName
+
+        PlainToolTip {
+            plainText: valueRow.copied ? i18n("Copied") : valueRow.copyAccessibleName
+            visible: copyButton.hovered || valueRow.copied
+        }
+
         onClicked: valueRow.copyRequested(valueRow.text)
 
         Behavior on opacity {

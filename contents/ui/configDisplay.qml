@@ -659,9 +659,13 @@ KCM.SimpleKCM {
                         icon.name: "go-up"
                         enabled: index > 0
                         Accessible.name: i18n("Move %1 up", page.panelElementTitle(modelData))
-                        Controls.ToolTip.text: Accessible.name
-                        Controls.ToolTip.visible: hovered
-                        Controls.ToolTip.delay: Kirigami.Units.toolTipDelay
+
+                        Components.PlainToolTip {
+                            plainText: panelMoveUp.Accessible.name
+                            visible: panelMoveUp.hovered
+                            delay: Kirigami.Units.toolTipDelay
+                        }
+
                         onClicked: page.movePanelElement(index, -1, visualFocus)
                     }
 
@@ -671,9 +675,13 @@ KCM.SimpleKCM {
                         icon.name: "go-down"
                         enabled: index < PanelElements.defaultOrder.length - 1
                         Accessible.name: i18n("Move %1 down", page.panelElementTitle(modelData))
-                        Controls.ToolTip.text: Accessible.name
-                        Controls.ToolTip.visible: hovered
-                        Controls.ToolTip.delay: Kirigami.Units.toolTipDelay
+
+                        Components.PlainToolTip {
+                            plainText: panelMoveDown.Accessible.name
+                            visible: panelMoveDown.hovered
+                            delay: Kirigami.Units.toolTipDelay
+                        }
+
                         onClicked: page.movePanelElement(index, 1, visualFocus)
                     }
                 }
