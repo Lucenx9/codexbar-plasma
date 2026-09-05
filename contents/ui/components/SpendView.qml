@@ -240,6 +240,7 @@ ColumnLayout {
     }
 
     PlasmaComponents.ScrollView {
+        objectName: "spendHistoryScroll"
         visible: view.providerCosts.length > 0
         Layout.fillWidth: true
         Layout.fillHeight: true
@@ -265,6 +266,11 @@ ColumnLayout {
                 accessibleTitle: view.applet.costHistoryShowsTokens
                     ? i18n("Daily token history")
                     : i18n("Daily cost history")
+            }
+
+            Components.ProjectCostSection {
+                applet: view.applet
+                providerCosts: view.presentedProviderCosts
             }
 
             ColumnLayout {

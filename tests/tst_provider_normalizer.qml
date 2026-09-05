@@ -614,6 +614,97 @@ TestCase {
 
     // --- cost ---------------------------------------------------------------
 
+    function test_costProjectsKeepOnlyDisplayFieldsFromTheOfficialContract() {
+        var result = Normalizer.normalizeCostProjects([{
+            name: "Example project", path: "/private/example",
+            totalCost: 12.5, totalTokens: 42000,
+            daily: [{ path: "/private/daily" }],
+            sources: [{ name: "source", path: "/private/source" }],
+            modelBreakdowns: [{ modelName: "example" }]
+        }], "EUR")
+
+        compare(result.rows, [{
+            label: "Example project", cost: 12.5, tokens: 42000, currency: "EUR"
+        }])
+        compare(result.truncated, false)
+        verify(JSON.stringify(result).indexOf("/private") === -1)
+    }
+
+    function test_costProjectsPreserveUnknownAmountsAndExplicitZero() {
+        var rows = Normalizer.normalizeCostProjects([
+            { name: "Tokens only", totalTokens: 12 },
+            { name: "Cost only", totalCost: "2.5", totalTokens: false },
+            { name: "Empty", totalCost: 0, totalTokens: 0 },
+            { name: "Negative", totalCost: -1, totalTokens: -2 },
+            { name: "No amounts", totalCost: null, totalTokens: true },
+            { name: "Nonfinite", totalCost: Infinity, totalTokens: NaN }
+        ], "USD").rows
+        compare(rows.length, 4)
+        compare(rows[0].cost, null)
+        compare(rows[0].tokens, 12)
+        compare(rows[1].cost, 2.5)
+        compare(rows[1].tokens, null)
+        compare(rows[2].cost, 0)
+        compare(rows[2].tokens, 0)
+        compare(rows[3].cost, 0)
+        compare(rows[3].tokens, 0)
+    }
+
+    function test_costProjectsRejectMalformedAndInheritedDisplayFields() {
+        var inheritedName = Object.create({ name: "Inherited" })
+        inheritedName.totalCost = 3
+        var inheritedCost = Object.create({ totalCost: 8 })
+        inheritedCost.name = "Inherited amount"
+        inheritedCost.totalTokens = 2
+        var result = Normalizer.normalizeCostProjects([
+            null, false, [], "bad", { name: {}, totalCost: 1 },
+            { name: 123, totalCost: 1 }, { name: "   ", totalCost: 1 },
+            { path: "/private/no-name", totalCost: 1 }, inheritedName,
+            inheritedCost, { name: "Healthy", totalCost: 4 }
+        ], "USD")
+        compare(result.rows.length, 2)
+        compare(result.rows[0].cost, null)
+        compare(result.rows[1].label, "Healthy")
+        var malformed = [null, undefined, {}, "projects", 12]
+        for (var i = 0; i < malformed.length; i++) {
+            compare(Normalizer.normalizeCostProjects(malformed[i], "USD"),
+                { rows: [], truncated: false })
+        }
+    }
+
+    function test_costProjectNamesAreBoundedRedactedLabelsNotIdentities() {
+        var rows = Normalizer.normalizeCostProjects([
+            { name: "same", totalCost: 1, path: "/private/one" },
+            { name: "same", totalCost: 2, path: "/private/two" },
+            { name: "__proto__", totalCost: 3 },
+            { name: "Example\nAuthorization: Bearer synthetic-secret", totalCost: 4 },
+            { name: new Array(300).join("x"), totalCost: 5 },
+            { name: "<b>Example</b>", totalCost: 6 }
+        ], "USD").rows
+        compare(rows.length, 6)
+        compare(rows[0].label, rows[1].label)
+        compare(rows[0].cost, 1)
+        compare(rows[1].cost, 2)
+        compare(rows[2].label, "__proto__")
+        verify(rows[3].label.indexOf("synthetic-secret") === -1)
+        verify(rows[3].label.indexOf("[redacted]") >= 0)
+        verify(rows[4].label.length <= 120)
+        compare(rows[5].label, "<b>Example</b>")
+    }
+
+    function test_costProjectsBoundInspectionBeforeFiltering() {
+        var items = new Array(129)
+        items[0] = { name: "First", totalCost: 1 }
+        items[127] = { name: "Last inspected", totalCost: 2 }
+        Object.defineProperty(items, "128", { get: function() {
+            fail("Project inspection exceeded its bound")
+        } })
+        var result = Normalizer.normalizeCostProjects(items, "USD")
+        compare(result.rows.length, 2)
+        compare(result.rows[1].label, "Last inspected")
+        compare(result.truncated, true)
+    }
+
     function test_costEnvelopeAcceptsEmptyAndRecognizedSnapshots() {
         var empty = Normalizer.normalizeCostEnvelope([])
         verify(empty !== null)

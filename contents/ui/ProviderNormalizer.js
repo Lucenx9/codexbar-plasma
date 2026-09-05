@@ -26,6 +26,7 @@
 var maximumProviderSnapshots = 256
 var maximumAccountSnapshots = 128
 var maximumCostSnapshots = 256
+var maximumCostProjects = 128
 var maximumExtraRateWindows = 24
 var maximumSessions = 128
 var maximumCostHistoryPoints = 365
@@ -661,6 +662,37 @@ function mergeCostSnapshotsAfterPartialFailure(previousSnapshots, freshSnapshots
         }
     }
     return merged
+}
+
+// CLI 0.56.2 projects carry local paths and nested source records. Retain only
+// the display name and range totals; project names are labels, never map keys.
+function normalizeCostProjects(items, currency) {
+    var result = { rows: [], truncated: false }
+    if (!Array.isArray(items)) {
+        return result
+    }
+    var limit = Math.min(items.length, maximumCostProjects)
+    result.truncated = items.length > limit
+    for (var i = 0; i < limit; i++) {
+        var item = items[i]
+        if (!isCliRecord(item) || !hasOwnKey(item, "name")
+                || typeof item.name !== "string") {
+            continue
+        }
+        var label = boundedDisplayText(item.name, 120)
+        var cost = hasOwnKey(item, "totalCost") ? strictFiniteNumber(item.totalCost) : NaN
+        var tokens = hasOwnKey(item, "totalTokens") ? strictFiniteNumber(item.totalTokens) : NaN
+        if (label.length === 0 || (!isFinite(cost) && !isFinite(tokens))) {
+            continue
+        }
+        result.rows.push({
+            label: label,
+            cost: isFinite(cost) ? Math.max(0, cost) : null,
+            tokens: isFinite(tokens) ? Math.max(0, tokens) : null,
+            currency: boundedDisplayText(currency || "USD", 12)
+        })
+    }
+    return result
 }
 
 function normalizeCostDaily(items, currency, days, updatedAt) {

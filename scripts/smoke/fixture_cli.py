@@ -8,7 +8,8 @@ import sys
 import time
 from datetime import datetime, timedelta, timezone
 
-SCENARIOS = ("normal", "loading", "partial-error", "long-text")
+SCENARIOS = ("normal", "loading", "partial-error", "long-text",
+             "project-costs", "project-tokens", "project-range", "project-long-text")
 
 
 def usage(provider, scenario, now):
@@ -42,12 +43,29 @@ def response(args, scenario, now):
     if args == ["sessions", "--json-v2"]:
         return {"sessions": [{"provider": "codex", "projectName": "Example project",
                               "state": "working", "lastActivityAt": now.isoformat()}]}
-    if args == ["cost", "--format", "json", "--json-only", "--days", "30"]:
-        return [{"provider": "codex", "updatedAt": now.isoformat(), "historyDays": 30,
+    if (args[:5] == ["cost", "--format", "json", "--json-only", "--days"]
+            and len(args) == 6 and args[5] in ("7", "30", "90")):
+        days = int(args[5])
+        factor = 0.5 if days == 7 else 1
+        snapshot = {"provider": "codex", "updatedAt": now.isoformat(), "historyDays": days,
                  "currencyCode": "USD", "sessionCostUSD": 1.25, "sessionTokens": 12000,
-                 "totals": {"totalCost": 8.75, "totalTokens": 84000},
+                 "totals": {"totalCost": 8.75 * factor, "totalTokens": 84000 * factor},
                  "daily": [{"date": (now - timedelta(days=6 - i)).date().isoformat(),
-                            "totalCost": 1.25, "totalTokens": 12000} for i in range(7)]}]
+                            "totalCost": 1.25 * factor, "totalTokens": 12000 * factor}
+                           for i in range(7)]}
+        if scenario.startswith("project-"):
+            snapshot["projects"] = [
+                {"name": "CodexBar Plasma", "totalCost": 5.5 * factor, "totalTokens": 24000 * factor},
+                {"name": "Documentation site", "totalCost": 3.25 * factor, "totalTokens": 55000 * factor},
+                {"name": "Unpriced experiment", "totalTokens": 5000 * factor},
+                {"name": "Empty project", "totalCost": 0, "totalTokens": 0},
+            ]
+            for project in snapshot["projects"]:
+                project["path"] = "/private/synthetic-project-path"
+                project["sources"] = [{"path": "/private/synthetic-source-path"}]
+            if scenario == "project-long-text":
+                snapshot["projects"][0]["name"] = "Example project with a long display name for the engineering and documentation team"
+        return [snapshot]
     for provider in ("codex", "claude"):
         prefix = ["usage", "--provider", provider]
         if args == prefix + ["--format", "json", "--json-only"]:

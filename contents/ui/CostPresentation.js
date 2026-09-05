@@ -18,6 +18,7 @@
 // draws into a caller-supplied canvas context.
 
 var maximumCostHistoryPoints = 365
+var maximumProjectRows = 128
 var maximumCostTrustNoticeScopes = 128
 
 // Locale separators, resolved once by the caller from `Qt.locale()`.
@@ -478,6 +479,48 @@ function spendSnapshots(tokenCosts, historyDays, titleFor) {
         var right = titleFor ? titleFor(b.provider) : String(b.provider)
         return left.localeCompare(right)
     })
+    return result
+}
+
+// Callers supply range-matched snapshots in their displayed provider order.
+// Rank within each provider, so different currencies are never compared.
+function projectRows(costs, showsTokens) {
+    var result = { rows: [], truncated: false }
+    var items = Array.isArray(costs) ? costs : []
+    for (var i = 0; i < items.length; i++) {
+        var snapshot = items[i]
+        var projects = snapshot.projects
+        if (!projects || !Array.isArray(projects.rows)) {
+            continue
+        }
+        result.truncated = result.truncated || projects.truncated === true
+        if (result.rows.length === maximumProjectRows) {
+            result.truncated = result.truncated || projects.rows.length > 0
+            continue
+        }
+        var rows = projects.rows.slice(0, maximumProjectRows)
+        rows.sort(function(a, b) {
+            var aHasValue = hasMetricValue(a, showsTokens)
+            var bHasValue = hasMetricValue(b, showsTokens)
+            if (aHasValue !== bHasValue) {
+                return aHasValue ? -1 : 1
+            }
+            var difference = metricValue(b, showsTokens) - metricValue(a, showsTokens)
+            return difference || a.label.localeCompare(b.label)
+        })
+        var trust = costTrustSummary([snapshot])
+        for (var j = 0; j < rows.length && result.rows.length < maximumProjectRows; j++) {
+            result.rows.push({
+                provider: snapshot.provider,
+                label: rows[j].label,
+                cost: rows[j].cost,
+                tokens: rows[j].tokens,
+                currency: rows[j].currency,
+                valueMode: trust ? trust.valueMode : "plain"
+            })
+        }
+        result.truncated = result.truncated || j < projects.rows.length
+    }
     return result
 }
 
