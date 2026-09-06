@@ -502,14 +502,23 @@ function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys) {
     var hasObservedCost = false
     for (var i = 0; i < rows.length; i++) {
         var parsed = parsedCalendarDateKey(rows[i].label)
-        if (!parsed || hasOwnKey(byDate, parsed.key)) {
+        if (!parsed) {
+            // Preserve malformed labels in the retained tail, but older labels
+            // discovered by the extended scan must not suppress a healthy window.
+            if (i >= rows.length - historyDays) {
+                return rows
+            }
+            continue
+        }
+        if (parsed.timestampMs < firstTimestampMs || parsed.timestampMs > endDate.timestampMs) {
+            continue
+        }
+        if (hasOwnKey(byDate, parsed.key)) {
             return rows
         }
         byDate[parsed.key] = rows[i]
         hasObservedCost = hasObservedCost
-            || (parsed.timestampMs >= firstTimestampMs
-                && parsed.timestampMs <= endDate.timestampMs
-                && typeof rows[i].cost === "number"
+            || (typeof rows[i].cost === "number"
                 && isFinite(rows[i].cost))
     }
 
@@ -701,11 +710,10 @@ function normalizeCostDaily(items, currency, days, updatedAt) {
         return result
     }
 
-    var historyDays = boundedHistoryDays(days)
+    var historyDays = Math.floor(boundedHistoryDays(days))
     var blockedDateKeys = ({})
     var inspectedItems = 0
     for (var i = items.length - 1; i >= 0
-            && result.length < historyDays
             && inspectedItems < maximumCostHistoryScanItems; i--) {
         inspectedItems++
         var item = isCliRecord(items[i]) ? items[i] : null
@@ -741,10 +749,13 @@ function normalizeCostDaily(items, currency, days, updatedAt) {
             currency: boundedDisplayText(currency || "USD", 12)
         })
     }
-    if (i >= 0) {
-        return result
+    // Inspect beyond the display limit: earlier records may contain valid or
+    // malformed days inside the window, so they must be known before filling.
+    if (i >= 0 && inspectedItems >= maximumCostHistoryScanItems) {
+        return result.slice(-historyDays)
     }
     return fillMissingCostDays(result, currency, historyDays, updatedAt, blockedDateKeys)
+        .slice(-historyDays)
 }
 
 function normalizeCostTotals(totals, fallbackCost, fallbackTokens, currency) {

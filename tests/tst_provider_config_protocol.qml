@@ -98,12 +98,41 @@ TestCase {
             "CodexBar 0.54.0", 0, 54, 0))
         verify(ProviderConfigProtocol.cliVersionAtLeast(
             "CodexBar 0.56.2\n", 0, 54, 0))
+        // Self-built and distro CLI builds decorate the release version with
+        // build metadata or revision suffixes; the gate must still read it.
+        verify(ProviderConfigProtocol.cliVersionAtLeast(
+            "CodexBar 0.56.2+g4b1c2d", 0, 54, 0))
+        verify(ProviderConfigProtocol.cliVersionAtLeast(
+            "codexbar 0.54.1-1", 0, 54, 0))
+        verify(!ProviderConfigProtocol.cliVersionAtLeast(
+            "CodexBar 0.54.0-rc2", 0, 54, 0))
+        verify(!ProviderConfigProtocol.cliVersionAtLeast(
+            "CodexBar 0.53.9+dev", 0, 54, 0))
+        verify(!ProviderConfigProtocol.cliVersionAtLeast(
+            "CodexBar 0.53.9-1", 0, 54, 0))
         verify(!ProviderConfigProtocol.cliVersionAtLeast(
             "CodexBar 0.53.9", 0, 54, 0))
         verify(!ProviderConfigProtocol.cliVersionAtLeast(
             "unknown", 0, 54, 0))
         verify(!ProviderConfigProtocol.cliVersionAtLeast(
             { version: "0.56.2" }, 0, 54, 0))
+    }
+
+    function test_cliVersionDistinguishesPrereleasesFromReleaseBuilds() {
+        var prereleases = ["-rc2", "-alpha.1", "-beta.2+build", "~rc1", "-1~rc1"]
+        for (var i = 0; i < prereleases.length; i++) {
+            verify(!ProviderConfigProtocol.cliVersionAtLeast(
+                "CodexBar 0.54.0" + prereleases[i], 0, 54, 0))
+            verify(ProviderConfigProtocol.cliVersionAtLeast(
+                "CodexBar 0.54.1" + prereleases[i], 0, 54, 0))
+        }
+        var releases = ["", "+g4b1c2d", "-1", "-1ubuntu1"]
+        for (var j = 0; j < releases.length; j++) {
+            verify(ProviderConfigProtocol.cliVersionAtLeast(
+                "CodexBar 0.54.0" + releases[j], 0, 54, 0))
+        }
+        verify(!ProviderConfigProtocol.cliVersionAtLeast("0.54.0.1", 0, 54, 0))
+        verify(!ProviderConfigProtocol.cliVersionAtLeast("0.54.0-", 0, 54, 0))
     }
 
     function test_acceptsArraysSkipsMalformedRowsAndPreservesDuplicates() {

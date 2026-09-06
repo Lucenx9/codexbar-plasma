@@ -940,6 +940,7 @@ PlasmoidItem {
                 stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("codexbar did not return JSON."))))
         } else {
             var payload
+            var parsedWithoutRecords = false
             try {
                 payload = JSON.parse(trimmed)
                 var items = Array.isArray(payload) ? payload : [payload]
@@ -954,10 +955,19 @@ PlasmoidItem {
                     providerItem.provider = providerID
                     normalizedItems.push(normalizeProvider(providerItem))
                 }
+                parsedWithoutRecords = normalizedItems.length === 0
             } catch (error) {
                 normalizedItems.push(normalizeProvider(providerErrorPayload(
                     providerID,
                     i18n("Could not parse codexbar JSON: %1", error.message))))
+            }
+            if (parsedWithoutRecords) {
+                // Valid JSON without CLI records (null, [], scalars) must
+                // degrade to a scoped error row: a null item would silently
+                // drop this provider from the roster while others stay healthy.
+                normalizedItems.push(normalizeProvider(providerErrorPayload(
+                    providerID,
+                    i18n("codexbar did not return provider data."))))
             }
         }
 

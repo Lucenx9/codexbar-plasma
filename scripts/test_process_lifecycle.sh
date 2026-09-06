@@ -314,6 +314,7 @@ require_all(
         "ProviderFallbackQueue.complete(",
         "item: semanticItems.length > 0 ? semanticItems[0] : null",
         "applyProviderFallbackTransition(transition)",
+        "codexbar did not return provider data.",
     ),
     "fallback replies must cross the pure queue interface",
 )
