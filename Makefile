@@ -1,4 +1,4 @@
-.PHONY: check smoke install restart package translations update
+.PHONY: check smoke install restart package translations compile-translations update
 
 PACKAGE_FILES := metadata.json contents docs/codexbar-plasma-overview.png docs/codexbar-plasma-codex.png docs/codexbar-plasma-usage-spend.png docs/codexbar-plasma-sessions.png scripts/update-widget.sh LICENSE NOTICE.md README.md
 
@@ -26,7 +26,7 @@ check:
 	scripts/test_i18n_catalog.sh
 	scripts/test_cli_descriptor_contract.sh
 	scripts/test_qml_logic.sh
-	python3 -m unittest discover -s tests -p 'test_smoke_popup.py'
+	python3 -m unittest discover -s tests -p 'test_*.py'
 	scripts/test_qml_hardening.sh
 	xmllint --noout contents/config/main.xml
 	jq . metadata.json >/dev/null
@@ -51,6 +51,9 @@ update:
 translations:
 	scripts/update_translations.sh
 
+compile-translations:
+	python3 scripts/compile_translations.py
+
 package:
 	mkdir -p dist
 	rm -f dist/codexbar-plasma.plasmoid dist/codexbar-plasma.plasmoid.sha256
@@ -59,6 +62,7 @@ package:
 		find $(PACKAGE_FILES) -type l -print >&2; \
 		exit 1; \
 	fi
+	$(MAKE) compile-translations
 	@if command -v cmake >/dev/null 2>&1; then \
 		cmake -E tar cf dist/codexbar-plasma.plasmoid --format=zip $(PACKAGE_FILES); \
 	elif command -v zip >/dev/null 2>&1; then \

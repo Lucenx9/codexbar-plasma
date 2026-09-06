@@ -315,9 +315,10 @@ replace a host CLI.
   checkboxes, icon fallback, and minute clock working; changing these preferences
   must not fetch usage or alter notifications. The weekly reserve token remains
   open.
-- Gettext template extraction exists. Real `.po` catalogs, compiled catalog
-  packaging, and translator contribution docs should come with localization
-  work.
+- Italian, French, German, and Spanish catalogs are included. Packaging compiles
+  the package-local Plasma domain; checks cover catalog completeness,
+  placeholders, and plurals. Popup smoke tests verify all four languages.
+  See `docs/translations.md` to contribute another language.
 - Predictive pace warnings are opt-in, CLI-backed, silently primed, and tied to
   a new projected-exhaustion transition. Other notification refinements should
   stay quiet, configurable, and tied to clear state transitions.
