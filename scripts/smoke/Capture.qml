@@ -144,12 +144,15 @@ Item {
                 it: ["Panoramica", "Sessioni", "1 ora", "2 ore"],
                 fr: ["Vue d'ensemble", "Sessions", "1 heure", "2 heures"],
                 de: ["Übersicht", "Sitzungen", "1 Stunde", "2 Stunden"],
-                es: ["Resumen", "Sesiones", "1 hora", "2 horas"]
+                es: ["Resumen", "Sesiones", "1 hora", "2 horas"],
+                pt_BR: ["Visão geral", "Sessões", "1 hora", "2 horas"]
             }[language];
             verifyScenario(i18n("Overview") === expected[0], "package catalog did not load");
             verifyScenario(i18n("Sessions") === expected[1], "session label did not translate");
             verifyScenario(i18np("%1 hour", "%1 hours", 1) === expected[2], "singular translation failed");
             verifyScenario(i18np("%1 hour", "%1 hours", 2) === expected[3], "plural translation failed");
+            if (language === "pt_BR")
+                verifyScenario(i18np("%1 hour", "%1 hours", 0) === "0 hora", "Brazilian Portuguese zero form failed");
             verifyScenario(hasText(applet.fullRepresentationItem, expected[0]), "translated popup label missing");
             if (settingsPreview.status !== Loader.Ready)
                 return false;

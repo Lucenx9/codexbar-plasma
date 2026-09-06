@@ -62,7 +62,8 @@ class TranslationTests(unittest.TestCase):
                      source=source or 'msgid "One item"\nmsgid_plural "%1 items"\n')
 
     def test_shipped_catalogs_compile_with_plurals_and_english_fallback(self):
-        expected = {"it": "Panoramica", "fr": "Vue d'ensemble", "de": "Übersicht", "es": "Resumen"}
+        expected = {"it": "Panoramica", "fr": "Vue d'ensemble", "de": "Übersicht", "es": "Resumen",
+                    "pt_BR": "Visão geral"}
         with tempfile.TemporaryDirectory() as temporary:
             output = Path(temporary) / "locale"
             self.assertEqual(compile_catalogs(output), sorted(expected))
@@ -194,11 +195,17 @@ class TranslationTests(unittest.TestCase):
                            check=True, capture_output=True, text=True)
             with zipfile.ZipFile(root / "dist/codexbar-plasma.plasmoid") as archive:
                 paths = [name for name in archive.namelist() if name.endswith(".mo")]
-                self.assertEqual(len(paths), 4)
+                self.assertEqual(len(paths), 5)
                 self.assertFalse(any(name.endswith(".po") for name in archive.namelist()))
                 italian = "contents/locale/it/LC_MESSAGES/plasma_applet_app.codexbar.plasma.mo"
                 catalog = gettext.GNUTranslations(io.BytesIO(archive.read(italian)))
                 self.assertEqual(catalog.gettext("Overview"), "Panoramica")
+                portuguese = "contents/locale/pt_BR/LC_MESSAGES/plasma_applet_app.codexbar.plasma.mo"
+                catalog = gettext.GNUTranslations(io.BytesIO(archive.read(portuguese)))
+                self.assertEqual(catalog.gettext("Overview"), "Visão geral")
+                self.assertEqual(catalog.ngettext("%1 hour", "%1 hours", 0), "%1 hora")
+                self.assertEqual(catalog.ngettext("%1 hour", "%1 hours", 1), "%1 hora")
+                self.assertEqual(catalog.ngettext("%1 hour", "%1 hours", 2), "%1 horas")
 
     def test_package_rejects_source_symlinks_before_compiling(self):
         with tempfile.TemporaryDirectory() as temporary:
