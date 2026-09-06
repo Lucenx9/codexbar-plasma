@@ -701,11 +701,10 @@ function normalizeCostDaily(items, currency, days, updatedAt) {
         return result
     }
 
-    var historyDays = boundedHistoryDays(days)
+    var historyDays = Math.floor(boundedHistoryDays(days))
     var blockedDateKeys = ({})
     var inspectedItems = 0
     for (var i = items.length - 1; i >= 0
-            && result.length < historyDays
             && inspectedItems < maximumCostHistoryScanItems; i--) {
         inspectedItems++
         var item = isCliRecord(items[i]) ? items[i] : null
@@ -741,14 +740,13 @@ function normalizeCostDaily(items, currency, days, updatedAt) {
             currency: boundedDisplayText(currency || "USD", 12)
         })
     }
-    // A full inspection of the payload may still collect historyDays rows that
-    // leave calendar gaps inside the rendered window while keeping older days;
-    // only an inspection cut short by the scan bound justifies skipping the
-    // fill, because unexamined rows could still cover those days.
+    // Inspect beyond the display limit: earlier records may contain valid or
+    // malformed days inside the window, so they must be known before filling.
     if (i >= 0 && inspectedItems >= maximumCostHistoryScanItems) {
-        return result
+        return result.slice(-historyDays)
     }
     return fillMissingCostDays(result, currency, historyDays, updatedAt, blockedDateKeys)
+        .slice(-historyDays)
 }
 
 function normalizeCostTotals(totals, fallbackCost, fallbackTokens, currency) {

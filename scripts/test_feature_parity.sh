@@ -349,7 +349,7 @@ require_in_surface applet 'i18n("Cost unavailable")'
 require_in_surface applet 'i18n("Tokens unavailable")'
 require_in_surface applet "Normalizer.normalizeCostTrustMetadata(item)"
 require_in_surface applet "function normalizeCostDaily(items, currency, days, updatedAt)"
-require_in_surface applet "result.length < historyDays"
+# Daily output bounds are covered directly by tst_provider_normalizer.qml.
 require_in_surface applet "inspectedItems < maximumCostHistoryScanItems"
 require_in_surface applet "result.unshift({"
 require_in_surface applet "function normalizeCostTotals(totals, fallbackCost, fallbackTokens, currency)"

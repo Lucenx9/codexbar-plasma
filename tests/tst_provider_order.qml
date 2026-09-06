@@ -144,6 +144,10 @@ TestCase {
             "claude,gemini,codex");
         compare(ProviderOrder.movedOrder(providers, "claude,codex,gemini", 0, -1),
             "claude,codex,gemini");
+        compare(ProviderOrder.movedOrder(providers, "codex,claude,gemini", 1, -1),
+            "gemini,claude,codex");
+        compare(ProviderOrder.movedOrder(providers, "codex,claude,gemini", 0, 1),
+            "gemini,claude,codex");
     }
 
     function test_moveBetweenDuplicateRosterEntriesKeepsEveryProvider() {
@@ -163,6 +167,16 @@ TestCase {
         ];
 
         compare(ProviderOrder.movedOrder(providers, "", 0, 1), "codex,claude");
+    }
+
+    function test_moveAcrossMultipleVisibleSlotsPreservesDisabledSlots() {
+        var providers = ["codex", "gemini", "openrouter"];
+        var order = "codex,claude,gemini,kiro,openrouter";
+        compare(ProviderOrder.movedOrder(providers, order, 0, 2),
+            "gemini,claude,openrouter,kiro,codex");
+        compare(ProviderOrder.movedOrder(providers, order, 2, -2),
+            "openrouter,claude,codex,kiro,gemini");
+        compare(ProviderOrder.movedOrder(providers, order, 1, 0), order);
     }
 
     function test_ordersProviderIDListsUsedByTheFallbackQueue() {

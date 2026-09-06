@@ -1082,6 +1082,32 @@ TestCase {
         compare(rows[0].label, "2026-08-28")
     }
 
+    function test_costHistoryInspectsMalformedDaysBeyondTheResultBound() {
+        var rows = Normalizer.normalizeCostDaily([
+            { date: "2026-08-29", totalCost: null },
+            { date: "2026-08-27", totalCost: 2 },
+            { date: "2026-08-28", totalCost: 3 }
+        ], "USD", 2, "2026-08-29")
+
+        compare(rows.length, 2)
+        compare(rows[0].label, "2026-08-27")
+        compare(rows[1].label, "2026-08-28")
+        compare(rows[1].cost, 3)
+    }
+
+    function test_costHistoryInspectsValidDaysBeyondTheResultBound() {
+        var rows = Normalizer.normalizeCostDaily([
+            { date: "2026-08-29", totalCost: 9 },
+            { date: "2026-08-27", totalCost: 2 },
+            { date: "2026-08-28", totalCost: 3 }
+        ], "USD", 2, "2026-08-29")
+
+        compare(rows.length, 2)
+        compare(rows[0].label, "2026-08-28")
+        compare(rows[1].label, "2026-08-29")
+        compare(rows[1].cost, 9)
+    }
+
     function test_costDailyDegradesToAnEmptyRangeForNonArrays() {
         compare(Normalizer.normalizeCostDaily(null, "USD", 30).length, 0)
         compare(Normalizer.normalizeCostDaily({ "0": { totalCost: 1 }, length: 1 }, "USD", 30).length, 0)

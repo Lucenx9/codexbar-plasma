@@ -120,24 +120,24 @@ function movedOrder(items, configuredValue, index, delta) {
         return tokens.join(",");
     }
 
-    // Relocate the moved provider next to the visible provider it passed, so
-    // tokens for absent providers keep their configured slots between them.
-    // Resolve both indexes before mutating tokens: removing the moved token
-    // first would invalidate the anchor lookup and drop the provider.
-    var movedProviderID = itemProviderID(ordered[from]);
-    var anchorProviderID = itemProviderID(ordered[target]);
-    var movedIndex = movedProviderID.length > 0 ? tokens.indexOf(movedProviderID) : -1;
-    var anchorIndex = anchorProviderID.length > 0 ? tokens.indexOf(anchorProviderID) : -1;
-    // Duplicate roster entries share one persisted token, so a move whose
-    // anchor is the same provider has no unambiguous target slot.
-    if (movedIndex === -1 || anchorIndex === -1
-            || (anchorProviderID === movedProviderID && target !== from)) {
-        return tokens.join(",");
+    // Rotate only visible slots; intervening disabled providers stay put.
+    // Resolve every slot first so missing or duplicate tokens leave no partial move.
+    var step = target < from ? -1 : 1;
+    var slots = [];
+    for (var i = from; ; i += step) {
+        var slot = tokens.indexOf(itemProviderID(ordered[i]));
+        if (slot < 0 || slots.indexOf(slot) !== -1) {
+            return tokens.join(",");
+        }
+        slots.push(slot);
+        if (i === target) {
+            break;
+        }
     }
-    tokens.splice(movedIndex, 1);
-    if (anchorIndex > movedIndex) {
-        anchorIndex -= 1;
+    var movedProviderID = tokens[slots[0]];
+    for (var j = 0; j < slots.length - 1; j++) {
+        tokens[slots[j]] = tokens[slots[j + 1]];
     }
-    tokens.splice(target < from ? anchorIndex : anchorIndex + 1, 0, movedProviderID);
+    tokens[slots[slots.length - 1]] = movedProviderID;
     return tokens.join(",");
 }
