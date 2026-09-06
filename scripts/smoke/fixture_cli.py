@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, timezone
 
 SCENARIOS = ("normal", "loading", "partial-error", "long-text", "panel-rules", "legacy-dashboard",
              "project-costs", "project-tokens", "project-range", "project-long-text",
-             "localization-it", "localization-fr", "localization-de", "localization-es")
+             "localization-it", "localization-fr", "localization-de", "localization-es", "localization-pt")
 
 
 def usage(provider, scenario, now):

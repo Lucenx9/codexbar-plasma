@@ -144,7 +144,8 @@ Item {
                 it: ["Panoramica", "Sessioni", "1 ora", "2 ore"],
                 fr: ["Vue d'ensemble", "Sessions", "1 heure", "2 heures"],
                 de: ["Übersicht", "Sitzungen", "1 Stunde", "2 Stunden"],
-                es: ["Resumen", "Sesiones", "1 hora", "2 horas"]
+                es: ["Resumen", "Sesiones", "1 hora", "2 horas"],
+                pt: ["Visão geral", "Sessões", "1 hora", "2 horas"]
             }[language];
             verifyScenario(i18n("Overview") === expected[0], "package catalog did not load");
             verifyScenario(i18n("Sessions") === expected[1], "session label did not translate");

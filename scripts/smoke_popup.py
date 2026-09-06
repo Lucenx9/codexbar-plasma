@@ -19,7 +19,8 @@ from compile_translations import compile_catalogs
 
 ROOT = Path(__file__).resolve().parent.parent
 APPLET_ID = "app.codexbar.smoke"
-LOCALES = {"it": "it_IT.UTF-8", "fr": "fr_FR.UTF-8", "de": "de_DE.UTF-8", "es": "es_ES.UTF-8"}
+LOCALES = {"it": "it_IT.UTF-8", "fr": "fr_FR.UTF-8", "de": "de_DE.UTF-8", "es": "es_ES.UTF-8",
+           "pt": "pt_PT.UTF-8"}
 QML_ERRORS = re.compile(
     r"ReferenceError|TypeError|SyntaxError|RangeError|SMOKE_FAILED|"
     r"is not a type|is not installed|Error loading QML|"
