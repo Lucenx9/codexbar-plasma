@@ -15,9 +15,11 @@ import time
 import xml.etree.ElementTree as ET
 
 from smoke.fixture_cli import SCENARIOS
+from compile_translations import compile_catalogs
 
 ROOT = Path(__file__).resolve().parent.parent
 APPLET_ID = "app.codexbar.smoke"
+LOCALES = {"it": "it_IT.UTF-8", "fr": "fr_FR.UTF-8", "de": "de_DE.UTF-8", "es": "es_ES.UTF-8"}
 QML_ERRORS = re.compile(
     r"ReferenceError|TypeError|SyntaxError|RangeError|SMOKE_FAILED|"
     r"is not a type|is not installed|Error loading QML|"
@@ -38,6 +40,9 @@ def preview_environment(work, scenario):
                CODEXBAR_SMOKE_SCENARIO=scenario, QT_QUICK_BACKEND="software",
                QT_FORCE_STDERR_LOGGING="1", XDG_CURRENT_DESKTOP="KDE",
                QT_QPA_PLATFORMTHEME="kde", QT_QUICK_CONTROLS_STYLE="org.kde.desktop")
+    if scenario.startswith("localization-"):
+        language = scenario.removeprefix("localization-")
+        env.update(LANG=LOCALES[language], LC_ALL=LOCALES[language], LANGUAGE=language)
     # Qt builds can default to xcb even with WAYLAND_DISPLAY set. Select the
     # available backend when X11 is absent without inheriting host Qt overrides.
     if env.get("WAYLAND_DISPLAY") and not env.get("DISPLAY"):
@@ -54,6 +59,7 @@ def stage_applet(work, scenario, image_path):
     metadata = json.loads((ROOT / "metadata.json").read_text())
     metadata["KPlugin"].update(Id=APPLET_ID, Name="CodexBar smoke test")
     (package / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
+    compile_catalogs(package / "contents/locale", applet_id=APPLET_ID)
 
     fixture_cli = work / "codexbar-fixture"
     fixture_source = (ROOT / "scripts/smoke/fixture_cli.py").read_text()
@@ -172,7 +178,7 @@ def main():
                     raise RuntimeError("Missing or invalid screenshot")
             results.append({"scenario": scenario, "passed": True})
             print(f"PASS {scenario}", flush=True)
-        except (OSError, RuntimeError) as error:
+        except (OSError, RuntimeError, ValueError, subprocess.CalledProcessError) as error:
             results.append({"scenario": scenario, "passed": False, "error": str(error)})
             print(f"FAIL {scenario}: {error}", file=sys.stderr, flush=True)
     (output / "results.json").write_text(json.dumps(results, indent=2) + "\n")

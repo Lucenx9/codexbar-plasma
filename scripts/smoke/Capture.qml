@@ -13,6 +13,13 @@ Item {
     property var panelUsageSnapshot
 
     Loader {
+        id: settingsPreview
+        active: capture.scenario.indexOf("localization-") === 0
+        visible: false
+        source: "configGeneral.qml"
+    }
+
+    Loader {
         id: panelPreview
         parent: capture.applet.fullRepresentationItem
         anchors.centerIn: parent
@@ -131,6 +138,25 @@ Item {
             return applet.selectedProviderID === "claude" && claude.error.indexOf("Synthetic provider timeout") >= 0;
         if (claude.error.length > 0 || claude.rows.length !== 2)
             return false;
+        if (scenario.indexOf("localization-") === 0) {
+            var language = scenario.substring("localization-".length);
+            var expected = {
+                it: ["Panoramica", "Sessioni", "1 ora", "2 ore"],
+                fr: ["Vue d'ensemble", "Sessions", "1 heure", "2 heures"],
+                de: ["Übersicht", "Sitzungen", "1 Stunde", "2 Stunden"],
+                es: ["Resumen", "Sesiones", "1 hora", "2 horas"]
+            }[language];
+            verifyScenario(i18n("Overview") === expected[0], "package catalog did not load");
+            verifyScenario(i18n("Sessions") === expected[1], "session label did not translate");
+            verifyScenario(i18np("%1 hour", "%1 hours", 1) === expected[2], "singular translation failed");
+            verifyScenario(i18np("%1 hour", "%1 hours", 2) === expected[3], "plural translation failed");
+            verifyScenario(hasText(applet.fullRepresentationItem, expected[0]), "translated popup label missing");
+            if (settingsPreview.status !== Loader.Ready)
+                return false;
+            verifyScenario(hasText(settingsPreview.item, i18n("Fetch provider service status")),
+                "translated settings label missing");
+            return applet.overviewSelected;
+        }
         if (scenario === "legacy-dashboard") {
             if (applet.selectedProviderID !== "codex")
                 return false;
@@ -185,6 +211,16 @@ Item {
         return null;
     }
 
+    function hasText(item, text) {
+        if (item.text === text)
+            return true;
+        for (var i = 0; i < item.children.length; i++) {
+            if (hasText(item.children[i], text))
+                return true;
+        }
+        return false;
+    }
+
     Timer {
         interval: 100
         running: true
@@ -220,7 +256,7 @@ Item {
                         if (capture.applet.costLoading || capture.applet.tokenCosts !== previousCosts)
                             console.error("SMOKE_FAILED: metric switch reloaded project history");
                     }
-                } else if (capture.scenario === "normal")
+                } else if (capture.scenario === "normal" || capture.scenario.indexOf("localization-") === 0)
                     capture.applet.selectGlobalView("overview");
                 else if (capture.scenario === "partial-error")
                     capture.applet.openProviderFromPanel("claude");

@@ -8,3 +8,5 @@ dist/
 # bytecode next to it.
 __pycache__/
 *.pyc
+# Compiled from po/*.po by make package; included in the .plasmoid archive.
+contents/locale/

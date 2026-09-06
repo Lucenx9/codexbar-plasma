@@ -22,14 +22,25 @@ class SmokePopupTests(unittest.TestCase):
             "CODEXBAR_CONFIG": "/host/config.json", "XDG_DATA_HOME": "/host/data",
             "DBUS_SESSION_BUS_ADDRESS": "host-bus", "OPENAI_API_KEY": "synthetic-test-value",
             "QML_IMPORT_PATH": "/host/imports", "WAYLAND_DISPLAY": "wayland-test",
+            "LANGUAGE": "unknown", "LANG": "unknown", "LC_ALL": "unknown",
         }, clear=True):
             work = Path(temporary)
             env = smoke.preview_environment(work, "normal")
             self.assertEqual(env["CODEXBAR_CONFIG"], str(work / "config/codexbar/config.json"))
             self.assertEqual(env["XDG_DATA_HOME"], str(work / "data"))
             self.assertEqual(env["WAYLAND_DISPLAY"], "wayland-test")
+            self.assertEqual(env["LANG"], "C.UTF-8")
+            self.assertNotIn("LANGUAGE", env)
             for key in ("DBUS_SESSION_BUS_ADDRESS", "OPENAI_API_KEY", "QML_IMPORT_PATH"):
                 self.assertNotIn(key, env)
+
+    def test_localized_previews_use_explicit_language_and_locale(self):
+        for language, locale in smoke.LOCALES.items():
+            with self.subTest(language=language), tempfile.TemporaryDirectory() as temporary:
+                env = smoke.preview_environment(Path(temporary), "localization-" + language)
+                self.assertEqual(env["LANG"], locale)
+                self.assertEqual(env["LC_ALL"], locale)
+                self.assertEqual(env["LANGUAGE"], language)
 
     def test_staging_uses_separate_id_and_safe_defaults_without_changing_sources(self):
         sources = ("contents/ui/main.qml", "contents/config/main.xml", "metadata.json")
@@ -41,6 +52,9 @@ class SmokePopupTests(unittest.TestCase):
             smoke.stage_applet(work, "normal", image)
             package = work / "data/plasma/plasmoids" / smoke.APPLET_ID
             self.assertEqual(json.loads((package / "metadata.json").read_text())["KPlugin"]["Id"], smoke.APPLET_ID)
+            for language in smoke.LOCALES:
+                self.assertTrue((package / "contents/locale" / language / "LC_MESSAGES"
+                                 / ("plasma_applet_" + smoke.APPLET_ID + ".mo")).is_file())
             tree = ET.parse(package / "contents/config/main.xml")
             ns = {"k": "http://www.kde.org/standards/kcfg/1.0"}
             values = {entry.attrib["name"]: entry.find("k:default", ns).text
