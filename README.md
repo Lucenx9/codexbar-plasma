@@ -142,11 +142,14 @@ Providers and accounts:
   immediately; Apply and Cancel cover widget settings only.
 - Account discovery and selection through `codexbar usage --all-accounts`.
 - Provider docs, dashboards, login/account links, and redacted diagnostics.
-- Descriptor-backed provider settings for CLI-advertised fields such as source,
-  API key, cookie source/manual cookie, base URL, workspace/project ID, region,
-  and optional usage extras.
-- Provider-specific CLI command hints as a fallback when a descriptor is not
-  available.
+- With the official CLI 0.56.2 verified by this repository, the Providers page
+  offers enable/disable, supported single API key setup, CLI command hints, and
+  docs/dashboard/login links.
+- The widget also has a renderer for the proposed
+  [provider settings descriptor](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/cli-provider-settings-descriptor.md).
+  CLI 0.56.2 does not expose that contract, so source, cookie, base URL,
+  workspace/project, region, and other descriptor-backed editors remain
+  unavailable. They require upstream CLI support.
 - Generic API key setup for Fireworks, whose current CLI contract discovers the
   account slug from the key.
 - Fallback names, colors, links, aliases, and icons for all 69 providers in the
@@ -281,6 +284,7 @@ each scenario, captures the view, and closes the preview automatically:
 | `partial-error` | Claude's error view while healthy Codex data remains available. |
 | `long-text` | Codex with long account and workspace labels, two accounts, and doubled body text. |
 | `panel-rules` | Compact panel with secondary quotas after checking conditional visibility and defaults. |
+| `legacy-dashboard` | Legacy dashboard zeroes and formatted rows, with generic details taking precedence when present. |
 | `project-costs` | Project estimates, an explicit zero, and an unavailable cost in Usage & Spend. |
 | `project-tokens` | Switching to tokens reorders projects without reloading history. |
 | `project-range` | Switching to 7 days removes the old range before the new project totals arrive. |
@@ -341,6 +345,20 @@ validates the AppStream metadata; otherwise, it reports that the check was
 skipped. The command passes `--unqualified disable` to `qmllint` because Plasma
 injects helpers such as `i18n()` as context properties that otherwise create
 noisy false-positive warnings.
+
+CI installs the Plasma, Kirigami, and KDE desktop control modules and rejects
+skipped Qt tests. Import and type warnings fail the check. A separate smoke job
+runs the real popup scenarios under Xvfb and saves screenshots and logs as
+workflow artifacts. Releases require both jobs to pass.
+
+Older Plasma packages register some applet types only at runtime. On machines
+without their QML type metadata, `make check` reports partial import/type
+checks. CI supplies that metadata through its pinned image. To require the
+same checks locally, run:
+
+```sh
+QML_TEST_REQUIRE_NO_SKIPS=1 make check QMLLINT_FLAGS='--import warning --unqualified disable'
+```
 
 Project structure:
 

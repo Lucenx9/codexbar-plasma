@@ -10,9 +10,8 @@ QMLLINT ?= /usr/lib/qt6/bin/qmllint
 # a dead `/usr/lib/<arch>/qt6/qml` candidate that never exists.
 DEB_HOST_MULTIARCH := $(shell dpkg-architecture -qDEB_HOST_MULTIARCH 2>/dev/null || true)
 QML_IMPORT_DIR ?= $(or $(wildcard /usr/lib/qt6/qml),$(wildcard /usr/lib/$(DEB_HOST_MULTIARCH)/qt6/qml),$(wildcard /usr/lib/$(shell uname -m)-linux-gnu/qt6/qml),$(firstword $(wildcard /usr/lib/*-linux-gnu/qt6/qml)),/usr/lib/qt6/qml)
-# Extra qmllint flags. CI without the Plasma QML modules sets these to downgrade
-# the type/import-resolution categories that would otherwise cascade into
-# failures; locally (modules present) they are no-ops, so the check stays full.
+# CI explicitly enables import warnings so the portable fallback in
+# test_qml_hardening.sh cannot hide missing Plasma modules.
 QMLLINT_FLAGS ?= --unqualified disable
 check:
 	scripts/test_shellcheck.sh

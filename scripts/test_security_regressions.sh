@@ -82,11 +82,15 @@ if ! awk '
 fi
 
 CHECK_JOB="$(workflow_job_block check)"
+SMOKE_JOB="$(workflow_job_block smoke)"
 RELEASE_JOB="$(workflow_job_block release)"
 require_text "check job" "$CHECK_JOB" "contents: read"
 require_text "check job" "$CHECK_JOB" "persist-credentials: false"
 reject_text "check job" "$CHECK_JOB" "contents: write"
+require_text "smoke job" "$SMOKE_JOB" "persist-credentials: false"
+reject_text "smoke job" "$SMOKE_JOB" "contents: write"
 require_text "release job" "$RELEASE_JOB" "if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')"
+require_text "release job" "$RELEASE_JOB" "needs: [check, smoke]"
 require_text "release job" "$RELEASE_JOB" "contents: write"
 require_text "release job" "$RELEASE_JOB" "persist-credentials: false"
 require_text "release job" "$RELEASE_JOB" "Verify release tag matches metadata"
@@ -94,10 +98,16 @@ require_text "release job" "$RELEASE_JOB" "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
 require_text "release job" "$RELEASE_JOB" "jq -r '.KPlugin.Version // empty' metadata.json"
 # shellcheck disable=SC2016 # Match the literal shell expression in the workflow.
 require_text "release job" "$RELEASE_JOB" '"v${metadata_version}" != "$GITHUB_REF_NAME"'
-require_in_file "$WORKFLOW" "image: kdeneon/plasma@sha256:"
+for job in check smoke release; do
+  require_text "$job job" "$(workflow_job_block "$job")" "image: invent-registry.kde.org/neon/docker-images/plasma@sha256:"
+done
+if sed -n 's/^[[:space:]]*image: //p' "$WORKFLOW" | grep -Evq '^invent-registry\.kde\.org/neon/docker-images/plasma@sha256:[0-9a-f]{64}$'; then
+  echo "CI container images must pin the official KDE neon image by SHA-256 digest" >&2
+  exit 1
+fi
 require_in_file "$WORKFLOW" "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
 reject_text "workflow" "$(cat "$WORKFLOW")" "actions/checkout@v4"
-reject_text "workflow" "$(cat "$WORKFLOW")" "image: kdeneon/plasma:user"
+require_in_file "$WORKFLOW" "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02"
 require_in_file "$WORKFLOW" "dist/codexbar-plasma.plasmoid.sha256"
 require_in_file "$MAKEFILE" "sha256sum codexbar-plasma.plasmoid > codexbar-plasma.plasmoid.sha256"
 require_in_file "$UPDATER" "sha256sum --check --strict"

@@ -2704,12 +2704,6 @@ applet.require_definition_where_used("boundedDisplayText")
 if "applet.usageResetText(usageRow)" not in overview_provider_row_text:
     raise AssertionError("Overview reset labels must use render-time formatting")
 
-dashboard_rows_body = function_body(main_text, "usageDashboardRows")
-if "arguments[" in dashboard_rows_body:
-    raise AssertionError("usageDashboardRows must declare its state and depth contract")
-if "function usageDashboardRows(source, state, depth)" not in main_text:
-    raise AssertionError("usageDashboardRows must expose named state and depth parameters")
-
 # The 80/95 steps used to be literals in these two functions, so the notification
 # level and the markers drawn on the bar could drift apart and neither could be
 # configured. Both now delegate to one bounded library.
@@ -2806,35 +2800,22 @@ for cost_numeric_field in ("cost.used", "cost.limit", "cost.personalUsed"):
 if direct_number_call.search(provider_cost_body):
     raise AssertionError("provider cost must not use loose numeric coercion")
 
-dashboard_period_body = function_body(main_text, "appendDashboardPeriodRow")
-if "Normalizer.firstStrictFiniteNumber(" not in dashboard_period_body:
-    raise AssertionError("dashboard period aliases must use the strict numeric fallback contract")
-if "Normalizer.firstStrictFiniteNumber(source.value" not in dashboard_period_body:
-    raise AssertionError("generic dashboard aliases must preserve zero and skip malformed preferred values")
-for dashboard_text_alias in ("source.value", "source.total", "source.used"):
-    if f'typeof {dashboard_text_alias} === "string"' not in dashboard_period_body:
-        raise AssertionError(f"generic dashboard text fallback must reject nonstrings from {dashboard_text_alias}")
-    if f"Normalizer.boundedDisplayText({dashboard_text_alias}, 120)" not in dashboard_period_body:
-        raise AssertionError(f"generic dashboard aliases must validate text fallback {dashboard_text_alias}")
-if dashboard_period_body.count("if (fallbackText.length === 0)") < 2:
-    raise AssertionError("blank dashboard text aliases must not hide a later compatible value")
-if direct_number_call.search(dashboard_period_body):
-    raise AssertionError("dashboard periods must not use loose numeric coercion")
-
-dashboard_value_body = function_body(main_text, "dashboardValueText")
-if "Normalizer.strictFiniteNumber(value)" not in dashboard_value_body:
-    raise AssertionError("dashboard values must use the strict CLI numeric contract")
-if direct_number_call.search(dashboard_value_body):
-    raise AssertionError("dashboard values must not use loose numeric coercion")
-if 'typeof value === "string"' not in dashboard_value_body:
-    raise AssertionError("only strings may use the legacy nonnumeric dashboard fallback")
-
-dashboard_suffix_body = function_body(main_text, "dashboardTopSuffix")
-for suffix_numeric_field in ("item.costUSD", "item.points", "item.totalTokens", "item.requests"):
-    if f"Normalizer.strictFiniteNumber({suffix_numeric_field})" not in dashboard_suffix_body:
-        raise AssertionError(f"dashboard top rows must strictly parse {suffix_numeric_field}")
-if direct_number_call.search(dashboard_suffix_body):
-    raise AssertionError("dashboard top rows must not use loose numeric coercion")
+# Parsing and fallback behavior are covered directly by
+# tst_legacy_usage_dashboard.qml; keep localization and generic-detail priority
+# wired through the applet without pinning the module's private helpers.
+dashboard_body = applet.function_body("usageDashboard")
+if "LegacyUsageDashboard.normalize(usage, item)" not in dashboard_body:
+    raise AssertionError("legacy dashboards must use the bounded normalization module")
+for dashboard_rows in ("kpis", "rows"):
+    if f"{dashboard_rows}: dashboard.{dashboard_rows}.map(dashboardDisplayRow)" not in dashboard_body:
+        raise AssertionError("legacy dashboard rows and KPIs must use the localized row adapter")
+if "providerDetails.length > 0 ? null : usageDashboard(usage, item)" not in normalize_provider_body:
+    raise AssertionError("generic usage.details must take precedence over legacy dashboards")
+dashboard_display_body = applet.function_body("dashboardDisplayRow")
+if "row.parts.map(dashboardPartText)" not in dashboard_display_body:
+    raise AssertionError("dashboard number formatting must remain in the QML adapter")
+if "dashboardLabelText(row.labelKey)" not in dashboard_display_body:
+    raise AssertionError("semantic dashboard labels must be localized in QML")
 if "function providerCountText(count)" not in main_text:
     raise AssertionError("overview provider counts must use a plural-aware helper")
 provider_count_body = function_body(main_text, "providerCountText")
