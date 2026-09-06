@@ -95,28 +95,49 @@ function settingsGroups(items, configuredValue) {
     };
 }
 
-function serializedOrder(items) {
-    var result = [];
-    var source = Array.isArray(items) ? items.slice(0, maximumProviderItems) : [];
-    for (var i = 0; i < source.length; i++) {
-        var providerID = itemProviderID(source[i]);
-        if (providerID.length > 0 && result.indexOf(providerID) === -1) {
-            result.push(providerID);
+// The persisted order is a preference over every provider the user has ever
+// ordered, not just the current roster: moves happen on the visible (enabled)
+// subset, but configured tokens without a matching item must survive so a
+// re-enabled provider returns to its configured position.
+function providerOrderTokens(items, configuredValue) {
+    var tokens = configuredProviderIDs(configuredValue);
+    var ordered = orderedItems(items, configuredValue);
+    for (var i = 0; i < ordered.length && tokens.length < maximumProviderItems; i++) {
+        var providerID = itemProviderID(ordered[i]);
+        if (providerID.length > 0 && tokens.indexOf(providerID) === -1) {
+            tokens.push(providerID);
         }
     }
-    return result.join(",");
+    return tokens;
 }
 
 function movedOrder(items, configuredValue, index, delta) {
     var ordered = orderedItems(items, configuredValue);
+    var tokens = providerOrderTokens(items, configuredValue);
     var from = Math.floor(Number(index));
     var target = from + Math.floor(Number(delta));
     if (!isFinite(from) || !isFinite(target) || from < 0 || from >= ordered.length || target < 0 || target >= ordered.length) {
-        return serializedOrder(ordered);
+        return tokens.join(",");
     }
 
-    var item = ordered[from];
-    ordered.splice(from, 1);
-    ordered.splice(target, 0, item);
-    return serializedOrder(ordered);
+    // Relocate the moved provider next to the visible provider it passed, so
+    // tokens for absent providers keep their configured slots between them.
+    // Resolve both indexes before mutating tokens: removing the moved token
+    // first would invalidate the anchor lookup and drop the provider.
+    var movedProviderID = itemProviderID(ordered[from]);
+    var anchorProviderID = itemProviderID(ordered[target]);
+    var movedIndex = movedProviderID.length > 0 ? tokens.indexOf(movedProviderID) : -1;
+    var anchorIndex = anchorProviderID.length > 0 ? tokens.indexOf(anchorProviderID) : -1;
+    // Duplicate roster entries share one persisted token, so a move whose
+    // anchor is the same provider has no unambiguous target slot.
+    if (movedIndex === -1 || anchorIndex === -1
+            || (anchorProviderID === movedProviderID && target !== from)) {
+        return tokens.join(",");
+    }
+    tokens.splice(movedIndex, 1);
+    if (anchorIndex > movedIndex) {
+        anchorIndex -= 1;
+    }
+    tokens.splice(target < from ? anchorIndex : anchorIndex + 1, 0, movedProviderID);
+    return tokens.join(",");
 }

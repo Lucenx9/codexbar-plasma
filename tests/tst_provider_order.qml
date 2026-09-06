@@ -125,6 +125,46 @@ TestCase {
         compare(ProviderOrder.movedOrder(providers, "claude,codex", 0, -1), "claude,codex,alibaba");
     }
 
+    function test_moveKeepsAbsentProvidersInThePersistedOrder() {
+        // The Display page moves providers within the enabled roster only, but
+        // the persisted preference must remember disabled providers so they
+        // return to their configured position once re-enabled.
+        var providers = [
+            {
+                provider: "codex"
+            },
+            {
+                provider: "gemini"
+            }
+        ];
+
+        compare(ProviderOrder.movedOrder(providers, "claude,codex,gemini", 1, -1),
+            "claude,gemini,codex");
+        compare(ProviderOrder.movedOrder(providers, "claude,codex,gemini", 0, 1),
+            "claude,gemini,codex");
+        compare(ProviderOrder.movedOrder(providers, "claude,codex,gemini", 0, -1),
+            "claude,codex,gemini");
+    }
+
+    function test_moveBetweenDuplicateRosterEntriesKeepsEveryProvider() {
+        // Duplicate roster entries share one persisted token, so a move whose
+        // anchor is the same provider has no unambiguous target slot: it must
+        // degrade to a no-op, never drop or teleport the provider.
+        var providers = [
+            {
+                provider: "codex"
+            },
+            {
+                provider: "codex"
+            },
+            {
+                provider: "claude"
+            }
+        ];
+
+        compare(ProviderOrder.movedOrder(providers, "", 0, 1), "codex,claude");
+    }
+
     function test_ordersProviderIDListsUsedByTheFallbackQueue() {
         compare(ProviderOrder.orderedItems(["codex", "claude", "gemini"], "claude,codex").join(","), "claude,codex,gemini");
     }
