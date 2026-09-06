@@ -315,7 +315,7 @@ replace a host CLI.
   checkboxes, icon fallback, and minute clock working; changing these preferences
   must not fetch usage or alter notifications. The weekly reserve token remains
   open.
-- Italian, French, German, Spanish, and European Portuguese catalogs are included.
+- Italian, French, German, Spanish, and Brazilian Portuguese catalogs are included.
   Packaging compiles the package-local Plasma domain; checks cover catalog
   completeness, placeholders, and plurals. Popup smoke tests verify all five
   languages. See `docs/translations.md` to contribute another language.

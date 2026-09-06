@@ -110,7 +110,7 @@ replace a host CLI.
   quota without effects. Keep the visibility checkboxes, icon fallback, and
   minute clock working; changing these preferences must not fetch usage or
   alter notifications. The macOS weekly reserve token remains open.
-- Translations: Italian, French, German, Spanish, and European Portuguese catalogs
+- Translations: Italian, French, German, Spanish, and Brazilian Portuguese catalogs
   are included. Packaging compiles the package-local Plasma domain; checks cover
   catalog completeness, placeholders, and plurals. The popup smoke tests verify
   all five languages. See `docs/translations.md` to contribute another language.

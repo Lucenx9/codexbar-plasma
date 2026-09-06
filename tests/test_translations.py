@@ -63,7 +63,7 @@ class TranslationTests(unittest.TestCase):
 
     def test_shipped_catalogs_compile_with_plurals_and_english_fallback(self):
         expected = {"it": "Panoramica", "fr": "Vue d'ensemble", "de": "Übersicht", "es": "Resumen",
-                    "pt": "Visão geral"}
+                    "pt_BR": "Visão geral"}
         with tempfile.TemporaryDirectory() as temporary:
             output = Path(temporary) / "locale"
             self.assertEqual(compile_catalogs(output), sorted(expected))
@@ -200,10 +200,10 @@ class TranslationTests(unittest.TestCase):
                 italian = "contents/locale/it/LC_MESSAGES/plasma_applet_app.codexbar.plasma.mo"
                 catalog = gettext.GNUTranslations(io.BytesIO(archive.read(italian)))
                 self.assertEqual(catalog.gettext("Overview"), "Panoramica")
-                portuguese = "contents/locale/pt/LC_MESSAGES/plasma_applet_app.codexbar.plasma.mo"
+                portuguese = "contents/locale/pt_BR/LC_MESSAGES/plasma_applet_app.codexbar.plasma.mo"
                 catalog = gettext.GNUTranslations(io.BytesIO(archive.read(portuguese)))
                 self.assertEqual(catalog.gettext("Overview"), "Visão geral")
-                self.assertEqual(catalog.ngettext("%1 hour", "%1 hours", 0), "%1 horas")
+                self.assertEqual(catalog.ngettext("%1 hour", "%1 hours", 0), "%1 hora")
                 self.assertEqual(catalog.ngettext("%1 hour", "%1 hours", 1), "%1 hora")
                 self.assertEqual(catalog.ngettext("%1 hour", "%1 hours", 2), "%1 horas")
 

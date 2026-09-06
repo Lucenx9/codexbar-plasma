@@ -242,7 +242,7 @@ journalctl --user -u plasma-plasmashell.service --since "10 minutes ago" --no-pa
 
 ## Languages
 
-The widget includes Italian, French, German, Spanish, and European Portuguese
+The widget includes Italian, French, German, Spanish, and Brazilian Portuguese
 translations. It uses your Plasma language preferences and falls back to English
 for other languages.
 Provider names and text supplied by the CLI retain their original language.
@@ -301,7 +301,7 @@ each scenario, captures the view, and closes the preview automatically:
 | `project-tokens` | Switching to tokens reorders projects without reloading history. |
 | `project-range` | Switching to 7 days removes the old range before the new project totals arrive. |
 | `project-long-text` | Project names wrap with doubled body text. |
-| `localization-it`, `localization-fr`, `localization-de`, `localization-es`, `localization-pt` | Translated overview, with catalog loading, plural forms, and a settings label checked in each language. |
+| `localization-it`, `localization-fr`, `localization-de`, `localization-es`, `localization-pt_BR` | Translated overview, with catalog loading, plural forms, and a settings label checked in each language. |
 
 Select one scenario or choose a new artifact directory:
 

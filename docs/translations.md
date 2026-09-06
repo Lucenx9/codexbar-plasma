@@ -1,7 +1,7 @@
 # Translate the widget
 
 The applet ships Italian (`it`), French (`fr`), German (`de`), Spanish (`es`),
-and European Portuguese (`pt`).
+and Brazilian Portuguese (`pt_BR`).
 It follows Plasma's language preferences and uses English when no matching
 catalog exists. CLI-provided labels and provider names are outside the applet's
 translation catalog.
@@ -56,9 +56,9 @@ From a Plasma 6 graphical session, run a preview with synthetic data:
 make smoke SMOKE_ARGS='--scenario localization-it'
 ```
 
-Use `localization-fr`, `localization-de`, `localization-es`, or `localization-pt`
+Use `localization-fr`, `localization-de`, `localization-es`, or `localization-pt_BR`
 for the other catalogs. Install or generate the corresponding UTF-8 locale first:
-`it_IT.UTF-8`, `fr_FR.UTF-8`, `de_DE.UTF-8`, `es_ES.UTF-8`, or `pt_PT.UTF-8`.
+`it_IT.UTF-8`, `fr_FR.UTF-8`, `de_DE.UTF-8`, `es_ES.UTF-8`, or `pt_BR.UTF-8`.
 The CI container generates all five locales.
 
 The preview uses isolated settings and a private D-Bus session. It checks
