@@ -1,6 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/CostPresentation.js" as CostPresentation
+import "../contents/ui/UsageDetails.js" as UsageDetails
 
 TestCase {
     id: testCase
@@ -18,6 +19,7 @@ TestCase {
         property bool expanded: false
         property string openedProvider: ""
         property real secondaryTextOpacity: 0.7
+        property real valueTextOpacity: 0.85
         property var sessions: []
         property bool sessionsLoading: false
         property string sessionsLastUpdatedText: ""
@@ -424,5 +426,56 @@ TestCase {
         tryCompare(chart, "selectedIndex", -1);
         keyClick(Qt.Key_End);
         compare(chart.selectedIndex, -1);
+    }
+
+    function test_providerDetailValuesStayWithinPopup_data() {
+        return [
+            { tag: "primary-narrow", field: "value", width: 240 },
+            { tag: "primary-popup", field: "value", width: 540 },
+            { tag: "secondary-narrow", field: "secondaryValue", width: 240 },
+            { tag: "secondary-popup", field: "secondaryValue", width: 540 },
+            { tag: "unit-narrow", field: "unit", width: 240 },
+            { tag: "unit-popup", field: "unit", width: 540 },
+            { tag: "short-values", field: "", width: 540 }
+        ];
+    }
+
+    function test_providerDetailValuesStayWithinPopup(data) {
+        var longValue = "LongModelName".repeat(10).slice(0, 120);
+        var rawSection = {
+            title: "Details",
+            rows: [{ label: "Model", value: "42", secondaryValue: "Included" }],
+            chart: { kind: "line", title: "Daily usage", unit: "tokens", points: [] }
+        };
+        if (data.field === "unit")
+            rawSection.chart.unit = longValue;
+        else if (data.field.length > 0)
+            rawSection.rows[0][data.field] = longValue;
+        var section = UsageDetails.normalizeSections([rawSection])[0];
+        var view = createControl("ProviderDetailSection", {
+            applet: applet,
+            providerData: { provider: "codex" },
+            modelData: section,
+            width: data.width
+        });
+        if (!view)
+            return;
+        wait(0);
+        var expectedTexts = [section.rows[0].label, section.rows[0].value,
+            section.rows[0].secondaryValue, section.chart.title, section.chart.unit];
+        for (var i = 0; i < expectedTexts.length; i++) {
+            var expectedText = expectedTexts[i];
+            var label = findItem(view, function (item) {
+                return item.visible && item.text === expectedText;
+            });
+            verify(label !== null, "Missing detail text: " + expectedText);
+            verify(label.width > 0, "Detail text has no available width");
+            verify(label.mapToItem(view, 0, 0).x >= 0);
+            verify(label.mapToItem(view, label.width, 0).x <= view.width + 1,
+                "Detail text overflows the popup: " + expectedText);
+            if (expectedText !== longValue)
+                verify(label.width + 1 >= label.implicitWidth,
+                    "A long value hides its short label");
+        }
     }
 }

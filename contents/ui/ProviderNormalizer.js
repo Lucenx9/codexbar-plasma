@@ -770,16 +770,19 @@ function normalizeCostTotals(totals, fallbackCost, fallbackTokens, currency) {
     }
 }
 
-// CodexBar 0.56.2 reports zero cost for an established-empty Antigravity
-// history even though that provider has no dollar pricing. Keep this
-// compatibility rule at the provider boundary so generic zeroes stay valid.
+// CodexBar 0.56.2 reports zero cost for Antigravity when today has no usage
+// or the whole history is empty, even though the provider has no pricing.
+function normalizeProviderCostAmount(providerID, amount) {
+    var cost = strictFiniteNumber(amount)
+    return normalizedProviderID(providerID) !== "antigravity" && isFinite(cost)
+        ? cost : null
+}
+
 function normalizeProviderCostTotals(providerID, totals, fallbackCost,
         fallbackTokens, currency) {
     var result = normalizeCostTotals(
         totals, fallbackCost, fallbackTokens, currency)
-    if (normalizedProviderID(providerID) === "antigravity") {
-        result.cost = null
-    }
+    result.cost = normalizeProviderCostAmount(providerID, result.cost)
     return result
 }
 

@@ -1123,6 +1123,25 @@ TestCase {
         compare(codex.cost, 0)
     }
 
+    function test_providerCostAmountsPreserveUnavailableAntigravityPricing_data() {
+        return [
+            { tag: "antigravity-idle-today", provider: "antigravity", amount: 0, expected: null },
+            { tag: "antigravity-no-pricing", provider: "antigravity", amount: 1, expected: null },
+            { tag: "antigravity-missing", provider: "antigravity", amount: undefined, expected: null },
+            { tag: "codex-zero", provider: "codex", amount: 0, expected: 0 },
+            { tag: "claude-zero", provider: "claude", amount: 0, expected: 0 },
+            { tag: "codex-positive", provider: "codex", amount: 1.25, expected: 1.25 },
+            { tag: "legacy-numeric-string", provider: "claude", amount: "2.5", expected: 2.5 },
+            { tag: "missing", provider: "codex", amount: undefined, expected: null },
+            { tag: "null", provider: "claude", amount: null, expected: null },
+            { tag: "boolean", provider: "codex", amount: false, expected: null }
+        ]
+    }
+
+    function test_providerCostAmountsPreserveUnavailableAntigravityPricing(data) {
+        compare(Normalizer.normalizeProviderCostAmount(data.provider, data.amount), data.expected)
+    }
+
     function test_sumTokenPartsReportsNaNWhenNothingIsUsable() {
         verify(isNaN(Normalizer.sumTokenParts(undefined, null, "x", NaN)))
         verify(isNaN(Normalizer.sumTokenParts(0, 0, 0, 0)))

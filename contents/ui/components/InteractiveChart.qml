@@ -145,7 +145,10 @@ ColumnLayout {
                 chart.selectedIndex = chart.points.length - 1
                 event.accepted = true
                 break
+            default:
+                return
             }
+            chart.hoveredIndex = -1
         }
 
         onPaint: {

@@ -44,6 +44,9 @@ ColumnLayout {
             }
 
             ColumnLayout {
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                Layout.maximumWidth: detailSection.width / 2
                 spacing: 0
 
                 PlainPlasmaLabel {
@@ -51,6 +54,8 @@ ColumnLayout {
                     opacity: detailSection.applet.valueTextOpacity
                     font.weight: Font.Medium
                     horizontalAlignment: Text.AlignRight
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 0
                     Layout.alignment: Qt.AlignRight
                     elide: Text.ElideRight
                 }
@@ -61,6 +66,8 @@ ColumnLayout {
                     opacity: detailSection.applet.secondaryTextOpacity
                     font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                     horizontalAlignment: Text.AlignRight
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 0
                     Layout.alignment: Qt.AlignRight
                     elide: Text.ElideRight
                 }
@@ -89,6 +96,7 @@ ColumnLayout {
             opacity: detailSection.applet.secondaryTextOpacity
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             horizontalAlignment: Text.AlignRight
+            Layout.maximumWidth: detailSection.width / 2
             elide: Text.ElideRight
         }
     }

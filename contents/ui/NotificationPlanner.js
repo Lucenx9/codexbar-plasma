@@ -16,10 +16,10 @@ function copyMemo(memo) {
     return Guards.copyObject(memo || ({}))
 }
 
-function observationPending(refreshPending, errorPresent, incidentPresent, usageRowCount) {
+function observationPending(refreshPending, errorPresent, statusKnown, usageRowCount) {
     return refreshPending === true
         || (errorPresent === true
-            && incidentPresent !== true
+            && statusKnown !== true
             && Number(usageRowCount) === 0)
 }
 
@@ -304,7 +304,7 @@ function transition(observations, previousMemo, options) {
             }
             continue
         }
-        if (!options || options.statusEnabled !== false) {
+        if ((!options || options.statusEnabled !== false) && item.statusKnown !== false) {
             var value = statusValue(item)
             if (mode === "prime") {
                 NotificationMemo.applyStatusDecision(nextMemo, item.providerID,
@@ -324,6 +324,10 @@ function transition(observations, previousMemo, options) {
                     })
                 }
             }
+        } else if (mode === "prime") {
+            // A cached usage-only snapshot is still missing status evidence
+            // after status fetching is re-enabled.
+            NotificationMemo.carryStatusMemo(previousMemo, item.providerID, nextMemo)
         }
         if (mode === "prime") {
             if (item.errorPresent === true && Array.isArray(item.rows) && item.rows.length === 0) {

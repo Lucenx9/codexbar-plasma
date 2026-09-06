@@ -1368,7 +1368,9 @@ PlasmoidItem {
             title: i18n("Cost"),
             // Top-level coverage/provenance describes the requested history
             // window, not the independently emitted current-session figure.
-            sessionLine: costLine(i18n("Today"), item.sessionCostUSD, item.sessionTokens, currency),
+            sessionLine: costLine(i18n("Today"),
+                Normalizer.normalizeProviderCostAmount(providerID, item.sessionCostUSD),
+                item.sessionTokens, currency),
             monthLine: costLine(windowLabel, totals.cost, totals.tokens,
                 currency, valueMode),
             windowValueLine: costValueLine(
@@ -1796,7 +1798,7 @@ PlasmoidItem {
 
         var primaryRow = addWindow(rows, rateWindowLabel(providerID, "primary"), usage.primary, pace.primary, true, "primary")
         addWindow(rows, rateWindowLabel(providerID, "secondary"), usage.secondary, pace.secondary, true, "secondary")
-        addWindow(rows, rateWindowLabel(providerID, "tertiary"), usage.tertiary, null, true, "tertiary")
+        addWindow(rows, rateWindowLabel(providerID, "tertiary"), usage.tertiary, pace.tertiary, true, "tertiary")
 
         var extras = Array.isArray(usage.extraRateWindows) ? usage.extraRateWindows : []
         var extraLimit = Math.min(extras.length, maximumExtraRateWindows)
@@ -1852,6 +1854,7 @@ PlasmoidItem {
                 ? creditsRemaining
                 : null,
             status: Normalizer.boundedDisplayText(status ? statusText(status) : "", 500),
+            statusKnown: status !== null,
             statusSeverity: severity,
             statusIncidentKey: Normalizer.boundedDisplayText(Normalizer.statusIncidentKey(status), 128),
             hasIncident: severity.length > 0,
@@ -2353,7 +2356,7 @@ PlasmoidItem {
         var nextPending = copyObject(notificationRefreshPending)
         for (var i = 0; i < items.length; i++) {
             var item = items[i]
-            if (!item || (item.error && String(item.error).length > 0)) {
+            if (!item) {
                 continue
             }
             var providerID = providerMapKey(item.provider)
@@ -2364,6 +2367,8 @@ PlasmoidItem {
             if (selectedAccount.length > 0 && accountLabel(item) !== selectedAccount) {
                 continue
             }
+            // A failed account refresh can still carry fresh provider status.
+            // The planner separately ignores missing quota evidence.
             delete nextPending[providerID]
         }
         notificationRefreshPending = nextPending
@@ -2454,9 +2459,10 @@ PlasmoidItem {
                 pending: NotificationPlanner.observationPending(
                     notificationProviderRefreshPending(item.provider),
                     String(item.error || "").length > 0,
-                    item.hasIncident === true,
+                    item.statusKnown === true,
                     rows.length),
                 errorPresent: String(item.error || "").length > 0,
+                statusKnown: item.statusKnown === true,
                 statusActive: item.hasIncident === true
                     && String(item.statusSeverity || "").length > 0
                     && String(item.status || "").length > 0,
@@ -2471,7 +2477,7 @@ PlasmoidItem {
     function notificationPlannerOptions(mode) {
         return {
             mode: mode,
-            statusEnabled: notifyStatusIncidents,
+            statusEnabled: includeStatus && notifyStatusIncidents,
             quotaEnabled: notifyQuotaWarnings,
             paceEnabled: notifyPredictivePaceWarnings,
             resetEnabled: notifyLimitResets,

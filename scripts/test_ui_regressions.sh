@@ -2070,6 +2070,7 @@ for observation_fragment in (
     "item.hasIncident === true",
     "rows.length",
     'errorPresent: String(item.error || "").length > 0',
+    "statusKnown: item.statusKnown === true",
     "statusIncidentKey: String(item.statusIncidentKey || \"\")",
     "rows: rows",
 ):
@@ -2183,17 +2184,10 @@ for fresh_function in ("parseOutput", "finishProviderFallback"):
     if received_index < 0 or received_index > providers_index:
         raise AssertionError(f"{fresh_function} must timestamp usage before publishing it")
 mark_fresh_body = function_body(main_text, "markNotificationProvidersFresh")
-error_guard = "if (!item || (item.error && String(item.error).length > 0))"
 selected_guard = "selectedAccount.length > 0 && accountLabel(item) !== selectedAccount"
 delete_pending_index = mark_fresh_body.find("delete nextPending[providerID]")
-if error_guard not in mark_fresh_body or mark_fresh_body.find(error_guard) > delete_pending_index:
-    raise AssertionError("markNotificationProvidersFresh must retain suppression for failed refreshes")
-if not re.search(
-    r"if\s*\(!item\s*\|\|\s*\(item\.error\s*&&\s*String\(item\.error\)\.length\s*>\s*0\)\)\s*\{\s*continue\s*\}",
-    mark_fresh_body,
-    re.S,
-):
-    raise AssertionError("failed refreshes must continue without clearing notification suppression")
+if "item.error" in mark_fresh_body:
+    raise AssertionError("usage errors must not discard fresh provider status before the planner classifies the evidence")
 if "var selectedAccount = selectedAccountForProvider(providerID)" not in mark_fresh_body:
     raise AssertionError("markNotificationProvidersFresh must correlate fresh data with the selected account")
 if selected_guard not in mark_fresh_body or mark_fresh_body.find(selected_guard) > delete_pending_index:
@@ -2629,11 +2623,12 @@ for qualified_value_fragment in (
             f"missing {qualified_value_fragment!r}"
         )
 if not re.search(
-        r'sessionLine:\s*costLine\(i18n\("Today"\),\s*item\.sessionCostUSD,\s*'
+        r'sessionLine:\s*costLine\(i18n\("Today"\),\s*'
+        r'Normalizer\.normalizeProviderCostAmount\(providerID,\s*item\.sessionCostUSD\),\s*'
         r'item\.sessionTokens,\s*currency\)',
-        main_text):
+        applet.function_body("normalizeTokenCost")):
     raise AssertionError(
-        "window-level cost trust must not qualify the independent Today/session amount"
+        "Today must respect provider cost availability without inheriting window-level trust qualifiers"
     )
 if "view.dailyPoints.length - 42" in spend_view_text:
     raise AssertionError(
@@ -2646,6 +2641,11 @@ if "heatmapMouse.containsMouse ? 1 : 0" not in spend_view_text:
     raise AssertionError("SpendView activity heatmap cells must display hover highlight feedback")
 
 normalize_provider_body = function_body(main_text, "normalizeProvider")
+if "statusKnown: status !== null" not in normalize_provider_body:
+    raise AssertionError("provider snapshots must distinguish absent status from an observed recovery")
+for lane in ("primary", "secondary", "tertiary"):
+    if not re.search(rf'usage\.{lane},\s*pace\.{lane},\s*true,\s*"{lane}"', normalize_provider_body):
+        raise AssertionError(f"the {lane} quota must retain its CLI pace data")
 for bounded_provider_fragment in (
     "title: Normalizer.boundedDisplayText(",
     "status: Normalizer.boundedDisplayText(",

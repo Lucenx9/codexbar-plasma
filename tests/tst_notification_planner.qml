@@ -58,7 +58,7 @@ TestCase {
         return kinds.join(",")
     }
 
-    function test_errorOnlyObservationRemainsPending() {
+    function test_errorWithoutStatusOrUsageRemainsPending() {
         compare(NotificationPlanner.observationPending(false, true, false, 0), true)
     }
 
@@ -67,6 +67,7 @@ TestCase {
         compare(NotificationPlanner.observationPending(false, true, false, 1), false)
         compare(NotificationPlanner.observationPending(false, false, false, 0), false)
         compare(NotificationPlanner.observationPending(true, false, false, 0), true)
+        compare(NotificationPlanner.observationPending(true, true, true, 0), true)
     }
     function test_errorPassWithIncidentKeepsThresholdBaselines() {
         var primedRows = [
@@ -179,6 +180,90 @@ TestCase {
             [observation("", "", [usageRow("minor", 90, false)])],
             escalated.nextMemo)
         compare(improved.intents.length, 0)
+    }
+
+    function test_disabledStatusPreservesTheIncidentWhileQuotaStillNotifies() {
+        var initial = transition("prime", [observation(
+            "minor", "incident-1", [usageRow("minor", 85, false)])])
+        var disabledOptions = plannerOptions("observe")
+        disabledOptions.statusEnabled = false
+        var withoutStatus = NotificationPlanner.transition(
+            [observation("", "", [usageRow("major", 96, false)])],
+            initial.nextMemo,
+            disabledOptions)
+        compare(intentKinds(withoutStatus), "quota")
+
+        var restored = transition("observe", [observation(
+            "minor", "incident-1", [usageRow("major", 96, false)])],
+            withoutStatus.nextMemo)
+        compare(restored.intents.length, 0)
+
+        var changed = transition("observe", [observation(
+            "major", "incident-2", [usageRow("major", 96, false)])],
+            restored.nextMemo)
+        compare(intentKinds(changed), "status")
+    }
+
+    function test_disabledStatusSurvivesResetAndPrime_data() {
+        return [
+            { tag: "unchanged", before: "minor", beforeID: "incident-1", after: "minor", afterID: "incident-1", expected: "" },
+            { tag: "worsened", before: "minor", beforeID: "incident-1", after: "major", afterID: "incident-1", expected: "status" },
+            { tag: "replacement", before: "minor", beforeID: "incident-1", after: "minor", afterID: "incident-2", expected: "status" },
+            { tag: "new", before: "", beforeID: "", after: "major", afterID: "incident-1", expected: "status" }
+        ]
+    }
+
+    function test_disabledStatusSurvivesResetAndPrime(data) {
+        var initial = transition("prime", [observation(data.before, data.beforeID)])
+        var reset = transition("reset", [], initial.nextMemo)
+        var disabledOptions = plannerOptions("prime")
+        disabledOptions.statusEnabled = false
+        var primedWithoutStatus = NotificationPlanner.transition(
+            [observation("", "", [usageRow("minor", 85, false)])],
+            reset.nextMemo,
+            disabledOptions)
+        compare(primedWithoutStatus.intents.length, 0)
+
+        var restored = transition("observe", [observation(
+            data.after, data.afterID, [usageRow("minor", 85, false)])],
+            primedWithoutStatus.nextMemo)
+        compare(intentKinds(restored), data.expected)
+    }
+
+    function test_unknownStatusKeepsTheLastIncidentUntilAnAuthoritativeReply_data() {
+        return [{ tag: "observe", mode: "observe" }, { tag: "prime", mode: "prime" }]
+    }
+
+    function test_unknownStatusKeepsTheLastIncidentUntilAnAuthoritativeReply(data) {
+        var initial = transition("prime", [observation(
+            "minor", "incident-1", [usageRow("minor", 85, false)])])
+        var unknown = observation("", "", [usageRow("major", 96, false)])
+        unknown.statusKnown = false
+        var unavailable = transition(data.mode, [unknown], initial.nextMemo)
+        compare(intentKinds(unavailable), data.mode === "observe" ? "quota" : "")
+
+        var restored = transition("observe", [observation(
+            "minor", "incident-1", [usageRow("major", 96, false)])],
+            unavailable.nextMemo)
+        compare(restored.intents.length, 0)
+
+        var healthy = observation("", "", [usageRow("major", 96, false)])
+        healthy.statusKnown = true
+        var recovered = transition("observe", [healthy], restored.nextMemo)
+        compare(recovered.intents.length, 0)
+        var recurring = transition("observe", [observation(
+            "minor", "incident-1", [usageRow("major", 96, false)])],
+            recovered.nextMemo)
+        compare(intentKinds(recurring), "status")
+    }
+
+    function test_unknownStatusDoesNotInventAHealthyBaseline() {
+        var unknown = observation("", "", [usageRow("minor", 85, false)])
+        unknown.statusKnown = false
+        var initial = transition("prime", [unknown])
+        var firstStatus = transition("observe", [observation(
+            "major", "incident-1", [usageRow("minor", 85, false)])], initial.nextMemo)
+        compare(firstStatus.intents.length, 0)
     }
 
     function test_paceWarningPrimesStaysQuietAndReannouncesAfterRecovery() {
