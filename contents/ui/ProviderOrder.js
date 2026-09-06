@@ -137,13 +137,23 @@ function movedOrder(items, configuredValue, index, delta) {
         return tokens.join(",");
     }
 
+    // Any duplicate makes the visible order ambiguous, even outside the move path.
+    var orderedProviderIDs = [];
+    for (var rosterIndex = 0; rosterIndex < ordered.length; rosterIndex++) {
+        var providerID = itemProviderID(ordered[rosterIndex]);
+        if (orderedProviderIDs.indexOf(providerID) !== -1) {
+            return tokens.join(",");
+        }
+        orderedProviderIDs.push(providerID);
+    }
+
     // Rotate only visible slots; intervening disabled providers stay put.
-    // Resolve every slot first so missing or duplicate tokens leave no partial move.
+    // Resolve every slot first so missing tokens leave no partial move.
     var step = target < from ? -1 : 1;
     var slots = [];
     for (var i = from; ; i += step) {
-        var slot = tokens.indexOf(itemProviderID(ordered[i]));
-        if (slot < 0 || slots.indexOf(slot) !== -1) {
+        var slot = tokens.indexOf(orderedProviderIDs[i]);
+        if (slot < 0) {
             return tokens.join(",");
         }
         slots.push(slot);

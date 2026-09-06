@@ -167,6 +167,12 @@ TestCase {
         ];
 
         compare(ProviderOrder.movedOrder(providers, "", 0, 1), "codex,claude");
+        compare(ProviderOrder.movedOrder(["codex", "claude", "codex"], "", 1, 1),
+            "codex,claude");
+        compare(ProviderOrder.movedOrder(["codex", "claude", "codex"], "", 1, -1),
+            "codex,claude");
+        compare(ProviderOrder.movedOrder(["groq", "claude", "groqcloud"], "", 1, 1),
+            "groq,claude");
     }
 
     function test_moveAcrossMultipleVisibleSlotsPreservesDisabledSlots() {
