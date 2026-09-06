@@ -346,7 +346,8 @@ ColumnLayout {
 
                                     anchors.fill: parent
                                     hoverEnabled: true
-                                    acceptedButtons: 0
+                                    // A binding avoids Qt rejecting a bare zero enum literal.
+                                    acceptedButtons: (0)
                                 }
                             }
                         }
