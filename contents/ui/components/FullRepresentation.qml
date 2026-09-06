@@ -904,6 +904,7 @@ Item {
 
             PlasmaComponents.ScrollView {
                 id: providerScroll
+                objectName: "providerScroll"
 
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -1116,6 +1117,7 @@ Item {
 
                     ColumnLayout {
                         id: usageDashboardSection
+                        objectName: "usageDashboardSection"
 
                         readonly property var dashboard: applet.selectedProviderData ? applet.selectedProviderData.usageDashboard : null
                         readonly property var kpis: dashboard ? dashboard.kpis : []

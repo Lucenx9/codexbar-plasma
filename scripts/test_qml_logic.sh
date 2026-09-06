@@ -9,8 +9,16 @@ if [[ ! -x "$QMLTESTRUNNER" ]]; then
   exit 1
 fi
 
+TEST_OUTPUT="$(mktemp)"
+trap 'rm -f "$TEST_OUTPUT"' EXIT
+
 TZ=America/Los_Angeles QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
-  "$QMLTESTRUNNER" -input "$ROOT_DIR/tests"
+  "$QMLTESTRUNNER" -input "$ROOT_DIR/tests" | tee "$TEST_OUTPUT"
+
+if [[ "${QML_TEST_REQUIRE_NO_SKIPS:-0}" == 1 ]] && grep -q '^SKIP[[:space:]]' "$TEST_OUTPUT"; then
+  echo "QML tests were skipped; the CI environment must provide the KDE QML modules." >&2
+  exit 1
+fi
 
 # Plasma KCMs use the desktop controls style, whose native buttons do not have
 # a QML content item. Exercise that label path as well as the default test style.
@@ -22,5 +30,9 @@ if [[ -x "$QT_PATHS_TOOL" ]] \
     "$QMLTESTRUNNER" -input "$ROOT_DIR/tests/tst_plain_text_controls.qml" \
     PlainTextControls::test_buttonUsesActiveStyleLabelPath
 else
+  if [[ "${QML_TEST_REQUIRE_NO_SKIPS:-0}" == 1 ]]; then
+    echo "org.kde.desktop is required for the desktop-style button test." >&2
+    exit 1
+  fi
   echo "org.kde.desktop is unavailable; desktop-style button test skipped."
 fi
