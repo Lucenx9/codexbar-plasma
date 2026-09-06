@@ -2263,7 +2263,7 @@ msgstr "%1 % %2 au rythme prévu"
 
 #: contents/ui/main.qml
 msgid "%1% %2, behind pace"
-msgstr "%1 % %2, en deçà du rythme prévu"
+msgstr "%1 % %2, consommation trop élevée"
 
 #: contents/ui/main.qml
 msgid "Widget updater response exceeded the supported size."

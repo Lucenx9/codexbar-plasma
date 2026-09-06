@@ -29,19 +29,37 @@ msgstr ""
 
 '''
 
+PLURAL_CASES = (
+    ("it", "nplurals=2; plural=(n != 1);", ("Un elemento", "%1 elementi"), ((1, 0), (2, 1)), (1,)),
+    ("fr", "nplurals=2; plural=(n > 1);", ("%1 élément", "%1 éléments"), ((0, 0), (1, 0), (2, 1)), (1,)),
+    ("ru", "nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);",
+     ("%1 элемент", "%1 элемента", "%1 элементов"), ((1, 0), (21, 0), (2, 1), (5, 2)), (0, 1, 2)),
+    ("ja", "nplurals=1; plural=0;", ("%1 個",), ((1, 0), (2, 0)), (0,)),
+    ("it", "nplurals=2; plural=(n == 1);", ("%1 elementi", "Un elemento"), ((1, 1), (2, 0)), (0,)),
+)
+
 
 class TranslationTests(unittest.TestCase):
-    def fixture(self, root, translated, *, flags="", plural=False):
+    def fixture(self, root, translated, *, flags="", plural=False, source=None,
+                language="it", plural_forms="nplurals=2; plural=(n != 1);"):
         (root / "po").mkdir(exist_ok=True)
         (root / "metadata.json").write_text(json.dumps({"KPlugin": {"Id": "test.widget"}}))
         if plural:
-            source = 'msgid "%1 minute"\nmsgid_plural "%1 minutes"\n'
+            source = source or 'msgid "%1 minute"\nmsgid_plural "%1 minutes"\n'
             empty = 'msgstr[0] ""\nmsgstr[1] ""\n'
         else:
-            source = 'msgid "Updated %1"\n'
+            source = source or 'msgid "Updated %1"\n'
             empty = 'msgstr ""\n'
-        (root / "po/codexbar-plasma.pot").write_text(HEADER + source + empty)
-        (root / "po/it.po").write_text(HEADER + flags + source + translated)
+        header = HEADER.replace("Language: it", "Language: " + language).replace(
+            "nplurals=2; plural=(n != 1);", plural_forms)
+        (root / "po/codexbar-plasma.pot").write_text(header + source + empty, encoding="utf-8")
+        (root / f"po/{language}.po").write_text(header + flags + source + translated, encoding="utf-8")
+
+    def plural_fixture(self, root, language, plural_forms, translations, source=None):
+        translated = "".join(f"msgstr[{index}] {json.dumps(text, ensure_ascii=False)}\n"
+                             for index, text in enumerate(translations))
+        self.fixture(root, translated, plural=True, language=language, plural_forms=plural_forms,
+                     source=source or 'msgid "One item"\nmsgid_plural "%1 items"\n')
 
     def test_shipped_catalogs_compile_with_plurals_and_english_fallback(self):
         expected = {"it": "Panoramica", "fr": "Vue d'ensemble", "de": "Übersicht", "es": "Resumen"}
@@ -73,7 +91,7 @@ class TranslationTests(unittest.TestCase):
             output = root / "locale"
             output.mkdir()
             (output / "previous.mo").write_bytes(b"previous catalog")
-            with self.assertRaisesRegex(ValueError, "changed placeholders"):
+            with self.assertRaises((ValueError, subprocess.CalledProcessError)):
                 compile_catalogs(output, root)
             self.assertEqual((output / "previous.mo").read_bytes(), b"previous catalog")
 
@@ -81,7 +99,62 @@ class TranslationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             self.fixture(root, 'msgstr[0] "%1 minuto"\nmsgstr[1] "minuti"\n', plural=True)
-            with self.assertRaisesRegex(ValueError, "changed placeholders"):
+            with self.assertRaises((ValueError, subprocess.CalledProcessError)):
+                compile_catalogs(root / "locale", root)
+
+    def test_differing_source_placeholders_follow_the_language_plural_rules(self):
+        for language, formula, translations, probes, _ in PLURAL_CASES:
+            with self.subTest(language=language, formula=formula), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                self.plural_fixture(root, language, formula, translations)
+                compile_catalogs(root / "locale", root)
+                catalog = gettext.translation("plasma_applet_test.widget", root / "locale", languages=[language])
+                for count, index in probes:
+                    self.assertEqual(catalog.ngettext("One item", "%1 items", count), translations[index])
+
+    def test_plural_only_arguments_cannot_disappear_from_forms_used_for_many(self):
+        for language, formula, translations, _, required_forms in PLURAL_CASES:
+            for index in required_forms:
+                with self.subTest(language=language, formula=formula, form=index), tempfile.TemporaryDirectory() as temporary:
+                    root = Path(temporary)
+                    changed = list(translations)
+                    changed[index] = changed[index].replace("%1", "")
+                    self.plural_fixture(root, language, formula, changed)
+                    with self.assertRaises((ValueError, subprocess.CalledProcessError)):
+                        compile_catalogs(root / "locale", root)
+
+    def test_every_plural_form_preserves_shared_arguments_and_rejects_added_arguments(self):
+        source = 'msgid "%1 item for %2"\nmsgid_plural "%1 items for %2"\n'
+        for language, formula, translations, _, _ in PLURAL_CASES:
+            for index in range(len(translations)):
+                for changed_text in ("Item %1", "Item %2", "Item %1 %2 %3", "Item %1 %1 %2"):
+                    with self.subTest(language=language, formula=formula, form=index,
+                                      text=changed_text), tempfile.TemporaryDirectory() as temporary:
+                        root = Path(temporary)
+                        changed = ["Item %1 %2"] * len(translations)
+                        changed[index] = changed_text
+                        self.plural_fixture(root, language, formula, changed, source)
+                        with self.assertRaises((ValueError, subprocess.CalledProcessError)):
+                            compile_catalogs(root / "locale", root)
+
+    def test_context_and_multiline_plural_sources_keep_their_own_arguments(self):
+        source = ('msgctxt ""\n"Count\\n"\n"context %9"\n'
+                  'msgid ""\n"One item\\n"\n"for %2"\n'
+                  'msgid_plural ""\n"%1 items\\n"\n"for %2"\n')
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.plural_fixture(root, "it", "nplurals=2; plural=(n != 1);",
+                                ("Un elemento\nper %2", "%1 elementi\nper %2"), source)
+            compile_catalogs(root / "locale", root)
+            catalog = gettext.translation("plasma_applet_test.widget", root / "locale", languages=["it"])
+            self.assertEqual(catalog.npgettext("Count\ncontext %9", "One item\nfor %2", "%1 items\nfor %2", 2),
+                             "%1 elementi\nper %2")
+
+    def test_no_format_flag_cannot_disable_argument_validation(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.fixture(root, 'msgstr "Aggiornato %2"\n', flags="#, no-kde-format\n")
+            with self.assertRaises((ValueError, subprocess.CalledProcessError)):
                 compile_catalogs(root / "locale", root)
 
     def test_rebuild_removes_stale_catalogs_and_uses_requested_domain(self):

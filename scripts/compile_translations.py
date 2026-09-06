@@ -8,12 +8,41 @@ import json
 from pathlib import Path
 import re
 import shutil
+import struct
 import subprocess
 import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parent.parent
 PLACEHOLDERS = re.compile(r"%[1-9][0-9]*")
+
+
+def validate_placeholders(compiled, catalog, source_name):
+    # GNUTranslations validates this freshly generated MO, but its lookup table
+    # discards msgid_plural. Read the original pairs from the MO string tables.
+    data = compiled.read_bytes()
+    endian = "<" if data[:4] == b"\xde\x12\x04\x95" else ">"
+    count, originals, translations = struct.unpack_from(endian + "III", data, 8)
+    for index in range(count):
+        source_size, source_offset = struct.unpack_from(endian + "II", data, originals + index * 8)
+        translated_size, translated_offset = struct.unpack_from(endian + "II", data, translations + index * 8)
+        if source_size == 0:
+            continue
+        source_forms = data[source_offset:source_offset + source_size].decode(catalog.charset()).split("\0")
+        source_forms[0] = source_forms[0].rsplit("\x04", 1)[-1]
+        required = Counter(PLACEHOLDERS.findall(source_forms[0]))
+        allowed = required.copy()
+        for original in source_forms[1:]:
+            placeholders = Counter(PLACEHOLDERS.findall(original))
+            required &= placeholders
+            allowed |= placeholders
+        translated_forms = data[translated_offset:translated_offset + translated_size].decode(catalog.charset()).split("\0")
+        for translated in translated_forms:
+            actual = Counter(PLACEHOLDERS.findall(translated))
+            # Gettext permits a count argument to be omitted in finite singular
+            # forms. Arguments shared by both English forms must still survive.
+            if required - actual or actual - allowed:
+                raise ValueError(f"{source_name}: changed placeholders in {source_forms[0]!r}")
 
 
 def compile_catalogs(output, root=ROOT, applet_id=None):
@@ -38,21 +67,24 @@ def compile_catalogs(output, root=ROOT, applet_id=None):
                             str(root / "po/codexbar-plasma.pot")], check=True, capture_output=True, text=True)
             compiled = staged / language / "LC_MESSAGES" / f"plasma_applet_{applet_id}.mo"
             compiled.parent.mkdir(parents=True)
-            subprocess.run(["msgfmt", "--check", "--check-format", "-o", str(compiled), str(source)],
+            # msgcat gives each complete entry its own block, preserving
+            # contexts and multiline strings. Mark every active entry because
+            # JavaScript extraction leaves some KDE arguments unflagged.
+            normalized = subprocess.run(["msgcat", "--no-wrap", "--to-code=UTF-8", str(source)],
+                                        check=True, capture_output=True, text=True, encoding="utf-8").stdout
+            checked_source = Path(temporary) / source.name
+            checked_source.write_text("\n\n".join(
+                re.sub(r"(?m)^(msgctxt |msgid )", r"#, kde-format\n\1", entry, count=1)
+                for entry in normalized.split("\n\n")), encoding="utf-8")
+            # Gettext retains both English forms and interprets Plural-Forms;
+            # msgstr[0] is not necessarily a translation of the English singular.
+            subprocess.run(["msgfmt", "--check", "--check-format", "-o", str(compiled), str(checked_source)],
                            check=True, capture_output=True, text=True)
             with compiled.open("rb") as catalog_file:
                 catalog = gettext.GNUTranslations(catalog_file)
             if catalog.info().get("language") != language:
                 raise ValueError(f"{source.name}: Language header must match its filename")
-            # JavaScript extraction does not mark every KDE %1 argument as a
-            # format string. Check all compiled entries, including plural forms.
-            for key, translated in catalog._catalog.items():
-                original = key[0] if isinstance(key, tuple) else key
-                if not original:
-                    continue
-                original = original.rsplit("\x04", 1)[-1]
-                if Counter(PLACEHOLDERS.findall(original)) != Counter(PLACEHOLDERS.findall(translated)):
-                    raise ValueError(f"{source.name}: changed placeholders in {original!r}")
+            validate_placeholders(compiled, catalog, source.name)
         if output.exists():
             shutil.rmtree(output)
         staged.rename(output)
