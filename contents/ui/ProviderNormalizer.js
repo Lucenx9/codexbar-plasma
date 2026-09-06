@@ -803,7 +803,10 @@ function normalizeCostModels(items, currency, days) {
         return []
     }
 
-    var historyDays = boundedHistoryDays(days)
+    // Floor like normalizeCostDaily: a fractional bound would leave the loop
+    // index fractional, so every day lookup would miss and all model rows
+    // would silently disappear.
+    var historyDays = Math.floor(boundedHistoryDays(days))
     var firstItem = Math.max(0, items.length - historyDays)
     for (var i = firstItem; i < items.length; i++) {
         var breakdowns = items[i] && Array.isArray(items[i].modelBreakdowns)

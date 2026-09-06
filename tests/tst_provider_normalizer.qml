@@ -1318,6 +1318,24 @@ TestCase {
         ], "USD", 30).length, 0)
     }
 
+    function test_costModelsFloorFractionalDayBounds() {
+        // A fractional window must keep the last whole days like
+        // normalizeCostDaily does: without the floor the loop index stays
+        // fractional, every day lookup misses, and all model rows disappear.
+        var items = [
+            { modelBreakdowns: [{ modelName: "old", cost: 1 }] },
+            { modelBreakdowns: [{ modelName: "mid", cost: 2 }] },
+            { modelBreakdowns: [{ modelName: "new", cost: 3 }] }
+        ]
+        var rows = Normalizer.normalizeCostModels(items, "USD", 2.5)
+        compare(rows.length, 2)
+        compare(rows[0].label, "new")
+        compare(rows[1].label, "mid")
+        var singleDay = Normalizer.normalizeCostModels(items, "USD", 0.5)
+        compare(singleDay.length, 1)
+        compare(singleDay[0].label, "new")
+    }
+
     // --- bounded display text ----------------------------------------------
 
     function test_boundedDisplayTextBlanksNullishValues() {
