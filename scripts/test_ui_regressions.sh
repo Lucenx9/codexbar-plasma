@@ -1116,7 +1116,7 @@ for source_name, source_text in (
         raise AssertionError(f"{source_name} must use a theme-readable provider accent")
 
 compact_status_mouse_body = id_block(compact_representation_text, "compactStatusMouse")
-if "acceptedButtons: Qt.NoButton" not in compact_status_mouse_body:
+if "acceptedButtons: Qt.NoButton" not in compact_status_mouse_body and "acceptedButtons: 0" not in compact_status_mouse_body:
     raise AssertionError("the compact incident badge must not consume panel clicks")
 for vertical_fragment in (
     "readonly property bool verticalPanel: applet.verticalFormFactor",

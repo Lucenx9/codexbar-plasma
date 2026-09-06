@@ -346,7 +346,7 @@ ColumnLayout {
 
                                     anchors.fill: parent
                                     hoverEnabled: true
-                                    acceptedButtons: Qt.NoButton
+                                    acceptedButtons: 0
                                 }
                             }
                         }
