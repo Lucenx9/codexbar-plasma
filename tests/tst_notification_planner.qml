@@ -58,7 +58,7 @@ TestCase {
         return kinds.join(",")
     }
 
-    function test_errorOnlyObservationRemainsPending() {
+    function test_errorWithoutStatusOrUsageRemainsPending() {
         compare(NotificationPlanner.observationPending(false, true, false, 0), true)
     }
 
@@ -67,6 +67,7 @@ TestCase {
         compare(NotificationPlanner.observationPending(false, true, false, 1), false)
         compare(NotificationPlanner.observationPending(false, false, false, 0), false)
         compare(NotificationPlanner.observationPending(true, false, false, 0), true)
+        compare(NotificationPlanner.observationPending(true, true, true, 0), true)
     }
     function test_errorPassWithIncidentKeepsThresholdBaselines() {
         var primedRows = [

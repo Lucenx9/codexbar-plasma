@@ -114,6 +114,35 @@ TestCase {
         compare(result.intents[0].kind, "status");
         compare(notificationProviderRefreshPending("codex"), false);
     }
+    function test_knownRecoveryWithoutUsageClearsOnlyTheMatchedAccountStatus_data() {
+        return [
+            {tag: "matched-observe", account: "account-b", mode: "observe", accepted: true},
+            {tag: "matched-prime", account: "account-b", mode: "prime", accepted: true},
+            {tag: "foreign-observe", account: "account-a", mode: "observe", accepted: false},
+            {tag: "foreign-prime", account: "account-a", mode: "prime", accepted: false},
+            {tag: "unidentified-observe", account: "", mode: "observe", accepted: false},
+            {tag: "unidentified-prime", account: "", mode: "prime", accepted: false}
+        ];
+    }
+    function test_knownRecoveryWithoutUsageClearsOnlyTheMatchedAccountStatus(data) {
+        providers = [item("account-a", "major", "", 85)];
+        var initial = observe("prime");
+        selectedAccounts = ({codex: "account-b"});
+        notificationRefreshPending = ({codex: true});
+        receive([item(data.account, "", "Expired credentials", undefined, {indicator: "none"})]);
+        var recovered = observe(data.mode, initial.nextMemo);
+        compare(recovered.intents.length, 0);
+        compare(notificationProviderRefreshPending("codex"), !data.accepted);
+        receive([item("account-b", "major", "", 85)]);
+        var recurring = observe("observe", recovered.nextMemo);
+        compare(recurring.intents.length, data.accepted ? 1 : 0);
+        if (data.accepted)
+            compare(recurring.intents[0].kind, "status");
+        receive([item("account-b", "major", "", 96)]);
+        var escalated = observe("observe", recurring.nextMemo);
+        compare(escalated.intents.length, 1);
+        compare(escalated.intents[0].kind, "quota");
+    }
     function test_foreignAccountErrorKeepsTheSelectionPending_data() {
         return [{tag: "previous-account", account: "account-a"}, {tag: "unidentified", account: ""}];
     }

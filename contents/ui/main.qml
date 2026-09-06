@@ -2459,7 +2459,7 @@ PlasmoidItem {
                 pending: NotificationPlanner.observationPending(
                     notificationProviderRefreshPending(item.provider),
                     String(item.error || "").length > 0,
-                    item.hasIncident === true,
+                    item.statusKnown === true,
                     rows.length),
                 errorPresent: String(item.error || "").length > 0,
                 statusKnown: item.statusKnown === true,
