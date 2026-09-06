@@ -98,6 +98,18 @@ TestCase {
             "CodexBar 0.54.0", 0, 54, 0))
         verify(ProviderConfigProtocol.cliVersionAtLeast(
             "CodexBar 0.56.2\n", 0, 54, 0))
+        // Self-built and distro CLI builds decorate the release version with
+        // build metadata or revision suffixes; the gate must still read it.
+        verify(ProviderConfigProtocol.cliVersionAtLeast(
+            "CodexBar 0.56.2+g4b1c2d", 0, 54, 0))
+        verify(ProviderConfigProtocol.cliVersionAtLeast(
+            "codexbar 0.54.1-1", 0, 54, 0))
+        verify(ProviderConfigProtocol.cliVersionAtLeast(
+            "CodexBar 0.54.0-rc2", 0, 54, 0))
+        verify(!ProviderConfigProtocol.cliVersionAtLeast(
+            "CodexBar 0.53.9+dev", 0, 54, 0))
+        verify(!ProviderConfigProtocol.cliVersionAtLeast(
+            "CodexBar 0.53.9-1", 0, 54, 0))
         verify(!ProviderConfigProtocol.cliVersionAtLeast(
             "CodexBar 0.53.9", 0, 54, 0))
         verify(!ProviderConfigProtocol.cliVersionAtLeast(

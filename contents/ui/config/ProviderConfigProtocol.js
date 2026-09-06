@@ -73,7 +73,10 @@ function cliVersionAtLeast(value, requiredMajor, requiredMinor, requiredPatch) {
     }
     var text = SafeText.cliMessage(
         SafeText.stripLoaderDiagnostics(value), maximumCliVersionTextLength)
-    var match = text.match(/(?:^|\s)v?(\d{1,3})\.(\d{1,3})\.(\d{1,3})(?:\s|$)/)
+    // Self-built and distro CLI builds append build metadata or revision
+    // suffixes (0.56.2+g4b1c2d, 0.54.1-1, 0.54.0-rc2); those versions still
+    // gate versioned capabilities, so allow a bounded suffix after the patch.
+    var match = text.match(/(?:^|\s)v?(\d{1,3})\.(\d{1,3})\.(\d{1,3})(?:\s|$|[-+~])/)
     if (!match) {
         return false
     }
