@@ -1854,6 +1854,7 @@ PlasmoidItem {
                 ? creditsRemaining
                 : null,
             status: Normalizer.boundedDisplayText(status ? statusText(status) : "", 500),
+            statusKnown: status !== null,
             statusSeverity: severity,
             statusIncidentKey: Normalizer.boundedDisplayText(Normalizer.statusIncidentKey(status), 128),
             hasIncident: severity.length > 0,
@@ -2461,6 +2462,7 @@ PlasmoidItem {
                     item.hasIncident === true,
                     rows.length),
                 errorPresent: String(item.error || "").length > 0,
+                statusKnown: item.statusKnown === true,
                 statusActive: item.hasIncident === true
                     && String(item.statusSeverity || "").length > 0
                     && String(item.status || "").length > 0,

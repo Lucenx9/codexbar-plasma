@@ -304,7 +304,7 @@ function transition(observations, previousMemo, options) {
             }
             continue
         }
-        if (!options || options.statusEnabled !== false) {
+        if ((!options || options.statusEnabled !== false) && item.statusKnown !== false) {
             var value = statusValue(item)
             if (mode === "prime") {
                 NotificationMemo.applyStatusDecision(nextMemo, item.providerID,
@@ -325,8 +325,8 @@ function transition(observations, previousMemo, options) {
                 }
             }
         } else if (mode === "prime") {
-            // Rebuilding quota state while status fetching is disabled must
-            // preserve the last provider incident observation.
+            // A cached usage-only snapshot is still missing status evidence
+            // after status fetching is re-enabled.
             NotificationMemo.carryStatusMemo(previousMemo, item.providerID, nextMemo)
         }
         if (mode === "prime") {

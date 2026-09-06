@@ -2070,6 +2070,7 @@ for observation_fragment in (
     "item.hasIncident === true",
     "rows.length",
     'errorPresent: String(item.error || "").length > 0',
+    "statusKnown: item.statusKnown === true",
     "statusIncidentKey: String(item.statusIncidentKey || \"\")",
     "rows: rows",
 ):
@@ -2640,6 +2641,8 @@ if "heatmapMouse.containsMouse ? 1 : 0" not in spend_view_text:
     raise AssertionError("SpendView activity heatmap cells must display hover highlight feedback")
 
 normalize_provider_body = function_body(main_text, "normalizeProvider")
+if "statusKnown: status !== null" not in normalize_provider_body:
+    raise AssertionError("provider snapshots must distinguish absent status from an observed recovery")
 for lane in ("primary", "secondary", "tertiary"):
     if not re.search(rf'usage\.{lane},\s*pace\.{lane},\s*true,\s*"{lane}"', normalize_provider_body):
         raise AssertionError(f"the {lane} quota must retain its CLI pace data")

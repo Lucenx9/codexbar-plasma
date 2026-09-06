@@ -17,6 +17,7 @@ FUNCTIONS = (
     "markNotificationProvidersFresh", "notificationProviderRefreshPending",
     "notificationScopeKey", "notificationObservationRows", "notificationObservations",
     "quotaNotificationLevel", "paceWarningActive", "notificationPlannerOptions",
+    "applyTokenCosts", "providerTokenCost",
 )
 
 QML = '''import QtQuick
@@ -25,6 +26,7 @@ import "SOURCE_URL/NotificationPlanner.js" as NotificationPlanner
 import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
 import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/QuotaThresholds.js" as QuotaThresholds
+import "SOURCE_URL/CostPresentation.js" as CostPresentation
 TestCase {
     name: "NotificationWiring"
     property bool includeStatus: true
@@ -39,6 +41,8 @@ TestCase {
     property var selectedAccounts: ({})
     property var notificationRefreshPending: ({})
     property var providers: []
+    property var tokenCosts: ({})
+    property int costHistoryDays: 30
 
     SOURCE_FUNCTIONS
 
@@ -48,12 +52,14 @@ TestCase {
         notificationRefreshPending = ({});
         providers = [];
     }
-    function item(account, severity, error, used) {
+    function item(account, severity, error, used, statusEnvelope) {
+        var status = statusEnvelope === undefined ? {indicator: severity || "none"} : statusEnvelope;
         return {
             provider: "codex", account: account, error: error,
             hasIncident: severity.length > 0, statusSeverity: severity,
             statusIncidentKey: severity.length > 0 ? "incident-1" : "",
             status: severity.length > 0 ? "Service degraded" : "",
+            statusKnown: status !== null,
             rows: used === undefined ? [] : [{
                 lane: "primary", label: "Session", hasPercent: true,
                 usedPercent: used, paceKnown: false
@@ -79,13 +85,26 @@ TestCase {
         providers = [item("account-a", "major", "", 85)];
         var initial = observe("prime");
         includeStatus = false;
-        receive([item("account-a", "", "", 96)]);
+        receive([item("account-a", "", "", 96, null)]);
         var withoutStatus = observe("observe", initial.nextMemo);
         compare(withoutStatus.intents.length, 1);
         compare(withoutStatus.intents[0].kind, "quota");
         includeStatus = true;
         receive([item("account-a", "major", "", 96)]);
         compare(observe("observe", withoutStatus.nextMemo).intents.length, 0);
+    }
+    function test_costRepublishBeforeFreshStatusDoesNotClearTheIncident() {
+        providers = [item("account-a", "major", "", 85)];
+        var initial = observe("prime");
+        includeStatus = false;
+        receive([item("account-a", "", "", 85, null)]);
+        var withoutStatus = observe("observe", initial.nextMemo);
+        includeStatus = true;
+        applyTokenCosts();
+        var republished = observe("observe", withoutStatus.nextMemo);
+        compare(republished.intents.length, 0);
+        receive([item("account-a", "major", "", 85)]);
+        compare(observe("observe", republished.nextMemo).intents.length, 0);
     }
     function test_matchingAccountErrorStillReportsAFreshProviderIncident() {
         var memo = beginAccountChange();

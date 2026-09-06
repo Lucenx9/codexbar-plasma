@@ -229,6 +229,42 @@ TestCase {
         compare(intentKinds(restored), data.expected)
     }
 
+    function test_unknownStatusKeepsTheLastIncidentUntilAnAuthoritativeReply_data() {
+        return [{ tag: "observe", mode: "observe" }, { tag: "prime", mode: "prime" }]
+    }
+
+    function test_unknownStatusKeepsTheLastIncidentUntilAnAuthoritativeReply(data) {
+        var initial = transition("prime", [observation(
+            "minor", "incident-1", [usageRow("minor", 85, false)])])
+        var unknown = observation("", "", [usageRow("major", 96, false)])
+        unknown.statusKnown = false
+        var unavailable = transition(data.mode, [unknown], initial.nextMemo)
+        compare(intentKinds(unavailable), data.mode === "observe" ? "quota" : "")
+
+        var restored = transition("observe", [observation(
+            "minor", "incident-1", [usageRow("major", 96, false)])],
+            unavailable.nextMemo)
+        compare(restored.intents.length, 0)
+
+        var healthy = observation("", "", [usageRow("major", 96, false)])
+        healthy.statusKnown = true
+        var recovered = transition("observe", [healthy], restored.nextMemo)
+        compare(recovered.intents.length, 0)
+        var recurring = transition("observe", [observation(
+            "minor", "incident-1", [usageRow("major", 96, false)])],
+            recovered.nextMemo)
+        compare(intentKinds(recurring), "status")
+    }
+
+    function test_unknownStatusDoesNotInventAHealthyBaseline() {
+        var unknown = observation("", "", [usageRow("minor", 85, false)])
+        unknown.statusKnown = false
+        var initial = transition("prime", [unknown])
+        var firstStatus = transition("observe", [observation(
+            "major", "incident-1", [usageRow("minor", 85, false)])], initial.nextMemo)
+        compare(firstStatus.intents.length, 0)
+    }
+
     function test_paceWarningPrimesStaysQuietAndReannouncesAfterRecovery() {
         var activeRow = usageRow("", 60, true)
         var primed = transition("prime", [observation("", "", [activeRow])])
