@@ -283,7 +283,9 @@ make smoke
 ```
 
 This requires Python 3, GNU gettext, `plasmawindowed`, `dbus-run-session`, and the Plasma,
-Kirigami, and KDE desktop control QML modules. It opens a temporary applet for
+Kirigami, and KDE desktop control QML modules. The localized scenarios also use
+the UTF-8 locales listed in the translation guide; CI generates them during
+setup. The runner opens a temporary applet for
 each scenario, captures the view, and closes the preview automatically:
 
 | Scenario | Captured state |

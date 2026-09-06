@@ -1,6 +1,6 @@
 name: CI
 
-# Runs the full `make check` on every push/PR to main, and on version tags
+# Runs the full `make check` on every PR and push to main, and on version tags
 # (`vX.Y.Z`) additionally builds the `.plasmoid` and publishes a GitHub Release.
 #
 # Checks and smoke tests use the full Plasma toolchain inside the supported KDE neon image.
@@ -10,7 +10,6 @@ on:
     branches: [main]
     tags: ['v*']
   pull_request:
-    branches: [main]
 
 permissions:
   contents: read
