@@ -502,14 +502,23 @@ function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys) {
     var hasObservedCost = false
     for (var i = 0; i < rows.length; i++) {
         var parsed = parsedCalendarDateKey(rows[i].label)
-        if (!parsed || hasOwnKey(byDate, parsed.key)) {
+        if (!parsed) {
+            // Preserve malformed labels in the retained tail, but older labels
+            // discovered by the extended scan must not suppress a healthy window.
+            if (i >= rows.length - historyDays) {
+                return rows
+            }
+            continue
+        }
+        if (parsed.timestampMs < firstTimestampMs || parsed.timestampMs > endDate.timestampMs) {
+            continue
+        }
+        if (hasOwnKey(byDate, parsed.key)) {
             return rows
         }
         byDate[parsed.key] = rows[i]
         hasObservedCost = hasObservedCost
-            || (parsed.timestampMs >= firstTimestampMs
-                && parsed.timestampMs <= endDate.timestampMs
-                && typeof rows[i].cost === "number"
+            || (typeof rows[i].cost === "number"
                 && isFinite(rows[i].cost))
     }
 

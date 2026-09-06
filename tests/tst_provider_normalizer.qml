@@ -1108,6 +1108,33 @@ TestCase {
         compare(rows[1].cost, 9)
     }
 
+    function test_costHistoryIgnoresMalformedLabelsBeforeTheRetainedRows() {
+        var rows = Normalizer.normalizeCostDaily([
+            { date: "bad-date", totalCost: 1 },
+            { date: "2026-08-28", totalCost: 2 },
+            { date: "2026-08-29", totalCost: 3 }
+        ], "USD", 2, "2026-08-30")
+
+        compare(rows.length, 2)
+        compare(rows[0].label, "2026-08-29")
+        compare(rows[0].cost, 3)
+        compare(rows[1].label, "2026-08-30")
+        compare(rows[1].cost, 0)
+    }
+
+    function test_costHistoryIgnoresDuplicateDatesOutsideTheWindow() {
+        var rows = Normalizer.normalizeCostDaily([
+            { date: "2026-08-20", totalCost: 1 },
+            { date: "2026-08-20", totalCost: 2 },
+            { date: "2026-08-29", totalCost: 3 }
+        ], "USD", 2, "2026-08-30")
+
+        compare(rows.length, 2)
+        compare(rows[0].label, "2026-08-29")
+        compare(rows[1].label, "2026-08-30")
+        compare(rows[1].cost, 0)
+    }
+
     function test_costDailyDegradesToAnEmptyRangeForNonArrays() {
         compare(Normalizer.normalizeCostDaily(null, "USD", 30).length, 0)
         compare(Normalizer.normalizeCostDaily({ "0": { totalCost: 1 }, length: 1 }, "USD", 30).length, 0)

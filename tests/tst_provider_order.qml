@@ -183,6 +183,24 @@ TestCase {
         compare(ProviderOrder.orderedItems(["codex", "claude", "gemini"], "claude,codex").join(","), "claude,codex,gemini");
     }
 
+    function test_fullPersistedOrderReservesSpaceForLiveProviders() {
+        var stale = [];
+        for (var i = 0; i < ProviderOrder.maximumProviderItems; i++) {
+            stale.push("stale-" + i);
+        }
+        var moved = ProviderOrder.movedOrder(["codex", "gemini"], stale.join(","), 1, -1).split(",");
+        compare(moved.length, ProviderOrder.maximumProviderItems);
+        compare(moved.slice(-2).join(","), "gemini,codex");
+        compare(moved.slice(0, -2).join(","), stale.slice(0, -2).join(","));
+
+        var configured = ["codex"].concat(stale.slice(0, -1));
+        moved = ProviderOrder.movedOrder(["codex", "gemini"], configured.join(","), 1, -1).split(",");
+        compare(moved.length, ProviderOrder.maximumProviderItems);
+        compare(moved[0], "gemini");
+        compare(moved[moved.length - 1], "codex");
+        compare(moved.slice(1, -1).join(","), stale.slice(0, -2).join(","));
+    }
+
     function test_rejectsUnsafeOrderTokensAndBoundsTheProviderList() {
         var providers = [];
         for (var i = 0; i < 300; i++) {

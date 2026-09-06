@@ -100,12 +100,29 @@ function settingsGroups(items, configuredValue) {
 // subset, but configured tokens without a matching item must survive so a
 // re-enabled provider returns to its configured position.
 function providerOrderTokens(items, configuredValue) {
-    var tokens = configuredProviderIDs(configuredValue);
+    var configured = configuredProviderIDs(configuredValue);
     var ordered = orderedItems(items, configuredValue);
-    for (var i = 0; i < ordered.length && tokens.length < maximumProviderItems; i++) {
+    var liveProviderIDs = [];
+    for (var i = 0; i < ordered.length; i++) {
         var providerID = itemProviderID(ordered[i]);
-        if (providerID.length > 0 && tokens.indexOf(providerID) === -1) {
-            tokens.push(providerID);
+        if (providerID.length > 0 && liveProviderIDs.indexOf(providerID) === -1) {
+            liveProviderIDs.push(providerID);
+        }
+    }
+    // On overflow, discard trailing absent tokens to keep every live provider movable.
+    var absentCapacity = maximumProviderItems - liveProviderIDs.length;
+    var tokens = [];
+    for (var j = 0; j < configured.length; j++) {
+        if (liveProviderIDs.indexOf(configured[j]) !== -1) {
+            tokens.push(configured[j]);
+        } else if (absentCapacity > 0) {
+            tokens.push(configured[j]);
+            absentCapacity--;
+        }
+    }
+    for (var k = 0; k < liveProviderIDs.length; k++) {
+        if (tokens.indexOf(liveProviderIDs[k]) === -1) {
+            tokens.push(liveProviderIDs[k]);
         }
     }
     return tokens;
