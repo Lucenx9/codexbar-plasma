@@ -106,7 +106,11 @@ test_resolve_qmllint_flags() {
 test_resolve_qmllint_flags
 
 QML_IMPORT_DIR="$(resolve_qml_import_dir "${QML_IMPORT_DIR:-}")"
-QMLLINT_FLAGS="$(resolve_qmllint_flags "${QMLLINT_FLAGS:-}" "$QML_IMPORT_DIR")"
+resolved_flags="$(resolve_qmllint_flags "${QMLLINT_FLAGS:-}" "$QML_IMPORT_DIR")"
+if [[ "$resolved_flags" != "$QMLLINT_FLAGS" ]]; then
+  echo "Plasma QML type metadata is missing; import/type checks are partial. CI requires full checks." >&2
+fi
+QMLLINT_FLAGS="$resolved_flags"
 
 # The `all` surface in scripts/lib/qml_surfaces.py is the one list of QML/JS
 # sources; this check and scripts/update_translations.sh read it, so a new or
@@ -128,9 +132,9 @@ while IFS= read -r qml_source; do
   fi
 done < <(cd "$ROOT_DIR" && find contents -type f \( -name '*.qml' -o -name '*.js' \) -print | sort)
 
-# The Qt 6.7 QML parser the CI runs on (KDE neon) still treats the ECMAScript
-# future-reserved words as reserved, while newer local Qt builds parse them as
-# ordinary identifiers. A local named `long` compiled here and failed there
+# Older Qt 6.7 QML parsers treat the ECMAScript future-reserved words as
+# reserved, while newer Qt builds parse them as ordinary identifiers.
+# A local named `long` compiled locally and failed in the former neon CI
 # twice, so reject them by name instead of relying on whichever Qt the developer
 # happens to have. qmllint does not catch this: the file never reaches it.
 reserved_hits="$(

@@ -60,6 +60,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 HEADER
+    # These are KDE positional arguments, not JavaScript printf conversions.
+    # compile_translations.py also checks unflagged messages and every plural.
     (
       cd "$ROOT_DIR"
       LC_ALL=C.utf8 xgettext \
@@ -73,7 +75,8 @@ HEADER
         --sort-by-file \
         --omit-header \
         -o - \
-        "${QML_SOURCES[@]}"
+        "${QML_SOURCES[@]}" \
+        | sed 's/^#, javascript-format$/#, kde-format/'
     )
   } > "$output"
 }

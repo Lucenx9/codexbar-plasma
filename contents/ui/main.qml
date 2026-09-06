@@ -24,6 +24,7 @@ import "SafeText.js" as SafeText
 import "SessionRefreshPolicy.js" as SessionRefreshPolicy
 import "ThemeContrast.js" as ThemeContrast
 import "UsageDetails.js" as UsageDetails
+import "LegacyUsageDashboard.js" as LegacyUsageDashboard
 import "UpdateLogic.js" as UpdateLogic
 
 PlasmoidItem {
@@ -1553,261 +1554,71 @@ PlasmoidItem {
             CostPresentation.amountString(costNumberFormat, perMillion.value, perMillion.currency))
     }
 
-    readonly property int usageDashboardRowLimit: 10
-    readonly property int usageDashboardMaxDepth: 4
-
-    function usageDashboard(providerID, usage, item) {
-        var kpis = []
-        var rows = []
-        var dashboardState = {
-            rowLimit: usageDashboardRowLimit,
-            maxDepth: usageDashboardMaxDepth,
-            seen: []
-        }
-        var sources = [
-            { title: i18n("Codex dashboard"), value: item.openaiDashboard },
-            { title: i18n("OpenAI API"), value: usage.openAIAPIUsage },
-            { title: i18n("OpenRouter"), value: usage.openRouterUsage },
-            { title: i18n("Claude Admin"), value: usage.claudeAdminAPIUsage },
-            { title: i18n("Poe"), value: usage.poeUsage },
-            { title: i18n("DeepSeek"), value: usage.deepseekUsage },
-            { title: i18n("MiniMax"), value: usage.minimaxUsage },
-            { title: i18n("Z.ai"), value: usage.zaiUsage }
-        ]
-
-        for (var i = 0; i < sources.length; i++) {
-            appendDashboardSource(kpis, rows, sources[i].title, sources[i].value, dashboardState, 0)
-            if (rows.length >= dashboardState.rowLimit && kpis.length >= 4) {
-                break
-            }
-        }
-
-        if (kpis.length === 0 && rows.length === 0) {
+    function usageDashboard(usage, item) {
+        var dashboard = LegacyUsageDashboard.normalize(usage, item)
+        if (!dashboard) {
             return null
         }
         return {
-            kpis: kpis.slice(0, 4),
-            rows: rows.slice(0, usageDashboardRowLimit)
+            kpis: dashboard.kpis.map(dashboardDisplayRow),
+            rows: dashboard.rows.map(dashboardDisplayRow)
         }
     }
 
-    function appendDashboardSource(kpis, rows, title, source, state, depth) {
-        if (!isDashboardObject(source)) {
-            return
+    function dashboardLabelText(labelKey) {
+        var labels = {
+            codexDashboard: i18n("Codex dashboard"),
+            openaiApi: i18n("OpenAI API"),
+            openRouter: i18n("OpenRouter"),
+            claudeAdmin: i18n("Claude Admin"),
+            poe: i18n("Poe"),
+            deepseek: i18n("DeepSeek"),
+            minimax: i18n("MiniMax"),
+            zai: i18n("Z.ai"),
+            codeReviewRemaining: i18n("Code review remaining"),
+            creditsRemaining: i18n("Credits remaining"),
+            plan: i18n("Plan"),
+            signedIn: i18n("Signed in"),
+            today: i18n("Today"),
+            last7Days: i18n("7d"),
+            last30Days: i18n("30d"),
+            currentMonth: i18n("This month"),
+            topModel: i18n("Top model"),
+            usageMix: i18n("Usage mix"),
+            latest: i18n("Latest"),
+            latestDashboardDay: i18n("Latest dashboard day")
         }
-        if (!state) {
-            state = {
-                rowLimit: usageDashboardRowLimit,
-                maxDepth: usageDashboardMaxDepth,
-                seen: []
-            }
-        }
-        depth = depth || 0
+        return labels[labelKey] || ""
+    }
 
-        var sourceRows = usageDashboardRows(source, state, depth)
-        if (sourceRows.length === 0) {
-            return
-        }
-
-        if (kpis.length < 4) {
-            kpis.push({
-                label: title,
-                value: sourceRows[0].value
-            })
-        }
-
-        for (var i = 0; i < sourceRows.length && rows.length < state.rowLimit; i++) {
-            rows.push({
-                label: sourceRows[i].label,
-                value: sourceRows[i].value
-            })
+    function dashboardPartText(part) {
+        switch (part.kind) {
+        case "text":
+            return part.value
+        case "percent":
+            return i18n("%1%", Math.round(part.value))
+        case "currency":
+            return amountString(part.value, part.currency)
+        case "tokens":
+            return i18n("%1 tokens", tokenCountString(part.value))
+        case "requests":
+            return i18n("%1 requests", tokenCountString(part.value))
+        case "points":
+            return i18n("%1 points", tokenCountString(part.value))
+        default:
+            return tokenCountString(part.value)
         }
     }
 
-    function isDashboardObject(source) {
-        return source && typeof source === "object" && !Array.isArray(source)
-    }
-
-    function usageDashboardRows(source, state, depth) {
-        state = state || {
-            rowLimit: usageDashboardRowLimit,
-            maxDepth: usageDashboardMaxDepth,
-            seen: []
+    function dashboardDisplayRow(row) {
+        var parts = row.parts.map(dashboardPartText)
+        if (row.name.length > 0) {
+            parts = [parts.length > 0 ? i18n("%1 (%2)", row.name, parts[0]) : row.name]
         }
-        depth = depth || 0
-        var rows = []
-        if (!isDashboardObject(source) || depth > state.maxDepth || state.seen.indexOf(source) !== -1) {
-            return rows
-        }
-        state.seen.push(source)
-        appendDashboardMetric(rows, i18n("Code review remaining"), source.codeReviewRemainingPercent, "percent")
-        appendDashboardMetric(rows, i18n("Credits remaining"), source.creditsRemaining, "number")
-        appendDashboardMetric(rows, i18n("Plan"), source.accountPlan, "text")
-        appendDashboardMetric(rows, i18n("Signed in"), source.signedInEmail, "text")
-
-        appendDashboardPeriodRow(rows, i18n("Today"), source.currentDay || source.today)
-        appendDashboardPeriodRow(rows, i18n("7d"), source.last7Days)
-        appendDashboardPeriodRow(rows, source.historyWindowLabel || i18n("30d"), source.last30Days)
-        appendDashboardPeriodRow(rows, i18n("This month"), source.currentMonth || source.month || source.billingSummary)
-
-        appendDashboardTopRow(rows, i18n("Top model"), source.topModels)
-        appendDashboardTopRow(rows, i18n("Usage mix"), source.topUsageTypes)
-        appendDashboardLatestDailyRow(rows, source.daily)
-        appendDashboardLatestBreakdownRow(rows, source.usageBreakdown || source.dailyBreakdown)
-        if (rows.length < state.rowLimit && depth < state.maxDepth && isDashboardObject(source.modelUsage)) {
-            appendDashboardSource([], rows, i18n("Models"), source.modelUsage, state, depth + 1)
-        }
-        state.seen.pop()
-        return rows.slice(0, state.rowLimit)
-    }
-
-    function appendDashboardMetric(rows, label, value, kind) {
-        var text = dashboardValueText(value, kind)
-        if (text.length === 0) {
-            return
-        }
-        rows.push({
-            label: Normalizer.boundedDisplayText(label, 120),
-            value: text
-        })
-    }
-
-    function appendDashboardPeriodRow(rows, label, source) {
-        if (!isCliRecord(source)) {
-            return
-        }
-        var parts = []
-        var currency = Normalizer.boundedDisplayText(source.currency || source.currencyCode || "USD", 12)
-        var cost = Normalizer.firstStrictFiniteNumber(source.costUSD, source.cost)
-        if (!isFinite(cost)) {
-            cost = Normalizer.strictFiniteNumber(source.totalCost)
-        }
-        var tokens = Normalizer.firstStrictFiniteNumber(source.totalTokens, source.tokens)
-        var requests = Normalizer.firstStrictFiniteNumber(source.requests, source.requestCount)
-        var points = Normalizer.firstStrictFiniteNumber(source.points, source.totalPoints)
-
-        if (isFinite(cost)) {
-            parts.push(amountString(cost, currency))
-        }
-        if (isFinite(tokens) && tokens > 0) {
-            parts.push(i18n("%1 tokens", tokenCountString(tokens)))
-        }
-        if (isFinite(requests) && requests > 0) {
-            parts.push(i18n("%1 requests", tokenCountString(requests)))
-        }
-        if (isFinite(points) && points > 0) {
-            parts.push(i18n("%1 points", tokenCountString(points)))
-        }
-        if (parts.length === 0) {
-            var fallbackValue = Normalizer.firstStrictFiniteNumber(source.value,
-                Normalizer.firstStrictFiniteNumber(source.total, source.used))
-            if (!isFinite(fallbackValue)) {
-                var fallbackText = typeof source.value === "string"
-                    ? Normalizer.boundedDisplayText(source.value, 120)
-                    : ""
-                if (fallbackText.length === 0) {
-                    fallbackText = typeof source.total === "string"
-                        ? Normalizer.boundedDisplayText(source.total, 120)
-                        : ""
-                }
-                if (fallbackText.length === 0) {
-                    fallbackText = typeof source.used === "string"
-                        ? Normalizer.boundedDisplayText(source.used, 120)
-                        : ""
-                }
-                fallbackValue = fallbackText
-            }
-            appendDashboardMetric(rows, label, fallbackValue, "number")
-            return
-        }
-        rows.push({
-            label: Normalizer.boundedDisplayText(label, 120),
+        return {
+            label: row.labelKey.length > 0 ? dashboardLabelText(row.labelKey) : row.label,
             value: Normalizer.boundedDisplayText(parts.join(" · "), 500)
-        })
-    }
-
-    function appendDashboardTopRow(rows, label, items) {
-        if (!items || !Array.isArray(items) || items.length === 0) {
-            return
         }
-        var item = items[0] || ({})
-        var name = Normalizer.boundedDisplayText(item.name || item.model || item.label || item.type || "", 120)
-        if (name.length === 0) {
-            return
-        }
-        var suffix = dashboardTopSuffix(item)
-        rows.push({
-            label: Normalizer.boundedDisplayText(label, 120),
-            value: Normalizer.boundedDisplayText(suffix.length > 0 ? i18n("%1 (%2)", name, suffix) : name, 500)
-        })
-    }
-
-    function appendDashboardLatestDailyRow(rows, items) {
-        if (!items || !Array.isArray(items) || items.length === 0) {
-            return
-        }
-        var item = items[items.length - 1] || ({})
-        appendDashboardPeriodRow(rows, item.label || item.day || item.date || i18n("Latest"), item)
-    }
-
-    function appendDashboardLatestBreakdownRow(rows, items) {
-        if (!items || !Array.isArray(items) || items.length === 0) {
-            return
-        }
-        var item = items[items.length - 1] || ({})
-        var label = item.day || item.date || item.label || i18n("Latest dashboard day")
-        appendDashboardPeriodRow(rows, label, {
-            costUSD: item.costUSD,
-            totalTokens: item.totalTokens,
-            requests: item.requests,
-            points: item.points,
-            value: item.totalCreditsUsed
-        })
-    }
-
-    function dashboardValueText(value, kind) {
-        if (value === null || value === undefined) {
-            return ""
-        }
-        if (kind === "text") {
-            return Normalizer.boundedDisplayText(value, 120)
-        }
-        var numericValue = Normalizer.strictFiniteNumber(value)
-        if (kind === "percent") {
-            return isFinite(numericValue) ? i18n("%1%", Math.round(numericValue)) : ""
-        }
-        if (kind === "tokens") {
-            return isFinite(numericValue) ? i18n("%1 tokens", tokenCountString(numericValue)) : ""
-        }
-        if (kind === "currency") {
-            return isFinite(numericValue) ? amountString(numericValue, "USD") : ""
-        }
-        if (!isFinite(numericValue)) {
-            return typeof value === "string"
-                ? Normalizer.boundedDisplayText(value, 120)
-                : ""
-        }
-        return tokenCountString(numericValue)
-    }
-
-    function dashboardTopSuffix(item) {
-        var cost = Normalizer.strictFiniteNumber(item.costUSD)
-        var points = Normalizer.strictFiniteNumber(item.points)
-        var tokens = Normalizer.strictFiniteNumber(item.totalTokens)
-        var requests = Normalizer.strictFiniteNumber(item.requests)
-        if (isFinite(cost)) {
-            return amountString(cost, "USD")
-        }
-        if (isFinite(points)) {
-            return i18n("%1 points", tokenCountString(points))
-        }
-        if (isFinite(tokens)) {
-            return i18n("%1 tokens", tokenCountString(tokens))
-        }
-        if (isFinite(requests)) {
-            return i18n("%1 requests", tokenCountString(requests))
-        }
-        return ""
     }
 
     function providerTokenCost(providerID) {
@@ -2008,7 +1819,7 @@ PlasmoidItem {
                 : null)
         var displayName = item.displayName || item.title || providerDisplayNames[providerID] || ""
         var providerDetails = UsageDetails.normalizeSections(usage.details)
-        var providerUsageDashboard = providerDetails.length > 0 ? null : usageDashboard(providerID, usage, item)
+        var providerUsageDashboard = providerDetails.length > 0 ? null : usageDashboard(usage, item)
         var hasSupplementalUsage = providerDetails.length > 0
             || providerUsageDashboard !== null
             || codexCreditLimit !== null

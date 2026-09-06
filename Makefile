@@ -1,4 +1,4 @@
-.PHONY: check smoke install restart package translations update
+.PHONY: check smoke install restart package translations compile-translations update
 
 PACKAGE_FILES := metadata.json contents docs/codexbar-plasma-overview.png docs/codexbar-plasma-codex.png docs/codexbar-plasma-usage-spend.png docs/codexbar-plasma-sessions.png scripts/update-widget.sh LICENSE NOTICE.md README.md
 
@@ -10,9 +10,8 @@ QMLLINT ?= /usr/lib/qt6/bin/qmllint
 # a dead `/usr/lib/<arch>/qt6/qml` candidate that never exists.
 DEB_HOST_MULTIARCH := $(shell dpkg-architecture -qDEB_HOST_MULTIARCH 2>/dev/null || true)
 QML_IMPORT_DIR ?= $(or $(wildcard /usr/lib/qt6/qml),$(wildcard /usr/lib/$(DEB_HOST_MULTIARCH)/qt6/qml),$(wildcard /usr/lib/$(shell uname -m)-linux-gnu/qt6/qml),$(firstword $(wildcard /usr/lib/*-linux-gnu/qt6/qml)),/usr/lib/qt6/qml)
-# Extra qmllint flags. CI without the Plasma QML modules sets these to downgrade
-# the type/import-resolution categories that would otherwise cascade into
-# failures; locally (modules present) they are no-ops, so the check stays full.
+# CI explicitly enables import warnings so the portable fallback in
+# test_qml_hardening.sh cannot hide missing Plasma modules.
 QMLLINT_FLAGS ?= --unqualified disable
 check:
 	scripts/test_shellcheck.sh
@@ -27,7 +26,7 @@ check:
 	scripts/test_i18n_catalog.sh
 	scripts/test_cli_descriptor_contract.sh
 	scripts/test_qml_logic.sh
-	python3 -m unittest discover -s tests -p 'test_smoke_popup.py'
+	python3 -m unittest discover -s tests -p 'test_*.py'
 	scripts/test_qml_hardening.sh
 	xmllint --noout contents/config/main.xml
 	jq . metadata.json >/dev/null
@@ -52,6 +51,9 @@ update:
 translations:
 	scripts/update_translations.sh
 
+compile-translations:
+	python3 scripts/compile_translations.py
+
 package:
 	mkdir -p dist
 	rm -f dist/codexbar-plasma.plasmoid dist/codexbar-plasma.plasmoid.sha256
@@ -60,6 +62,7 @@ package:
 		find $(PACKAGE_FILES) -type l -print >&2; \
 		exit 1; \
 	fi
+	$(MAKE) compile-translations
 	@if command -v cmake >/dev/null 2>&1; then \
 		cmake -E tar cf dist/codexbar-plasma.plasmoid --format=zip $(PACKAGE_FILES); \
 	elif command -v zip >/dev/null 2>&1; then \

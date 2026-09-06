@@ -142,11 +142,14 @@ Providers and accounts:
   immediately; Apply and Cancel cover widget settings only.
 - Account discovery and selection through `codexbar usage --all-accounts`.
 - Provider docs, dashboards, login/account links, and redacted diagnostics.
-- Descriptor-backed provider settings for CLI-advertised fields such as source,
-  API key, cookie source/manual cookie, base URL, workspace/project ID, region,
-  and optional usage extras.
-- Provider-specific CLI command hints as a fallback when a descriptor is not
-  available.
+- With the official CLI 0.56.2 verified by this repository, the Providers page
+  offers enable/disable, supported single API key setup, CLI command hints, and
+  docs/dashboard/login links.
+- The widget also has a renderer for the proposed
+  [provider settings descriptor](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/cli-provider-settings-descriptor.md).
+  CLI 0.56.2 does not expose that contract, so source, cookie, base URL,
+  workspace/project, region, and other descriptor-backed editors remain
+  unavailable. They require upstream CLI support.
 - Generic API key setup for Fireworks, whose current CLI contract discovers the
   account slug from the key.
 - Fallback names, colors, links, aliases, and icons for all 69 providers in the
@@ -237,6 +240,16 @@ For Plasma/QML errors:
 journalctl --user -u plasma-plasmashell.service --since "10 minutes ago" --no-pager | grep -iE "codexbar|app.codexbar|qml|error"
 ```
 
+## Languages
+
+The widget includes Italian, French, German, Spanish, and Brazilian Portuguese
+translations. It uses your Plasma language preferences and falls back to English
+for other languages.
+Provider names and text supplied by the CLI retain their original language.
+
+To add or improve a translation, see the
+[translation guide](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/translations.md).
+
 ## Development
 
 Install from a local checkout:
@@ -270,8 +283,10 @@ Run the popup smoke test from a graphical Plasma 6 session:
 make smoke
 ```
 
-This requires Python 3, `plasmawindowed`, `dbus-run-session`, and the Plasma,
-Kirigami, and KDE desktop control QML modules. It opens a temporary applet for
+This requires Python 3, GNU gettext, `plasmawindowed`, `dbus-run-session`, and the Plasma,
+Kirigami, and KDE desktop control QML modules. The localized scenarios also use
+the UTF-8 locales listed in the translation guide; CI generates them during
+setup. The runner opens a temporary applet for
 each scenario, captures the view, and closes the preview automatically:
 
 | Scenario | Captured state |
@@ -281,10 +296,12 @@ each scenario, captures the view, and closes the preview automatically:
 | `partial-error` | Claude's error view while healthy Codex data remains available. |
 | `long-text` | Codex with long account and workspace labels, two accounts, and doubled body text. |
 | `panel-rules` | Compact panel with secondary quotas after checking conditional visibility and defaults. |
+| `legacy-dashboard` | Legacy dashboard zeroes and formatted rows, with generic details taking precedence when present. |
 | `project-costs` | Project estimates, an explicit zero, and an unavailable cost in Usage & Spend. |
 | `project-tokens` | Switching to tokens reorders projects without reloading history. |
 | `project-range` | Switching to 7 days removes the old range before the new project totals arrive. |
 | `project-long-text` | Project names wrap with doubled body text. |
+| `localization-it`, `localization-fr`, `localization-de`, `localization-es`, `localization-pt_BR` | Translated overview, with catalog loading, plural forms, and a settings label checked in each language. |
 
 Select one scenario or choose a new artifact directory:
 
@@ -329,11 +346,19 @@ Update the translation template after changing user-facing `i18n` strings:
 make translations
 ```
 
+After extracting strings, update the `.po` catalogs with `msgmerge` and translate
+new entries as described in the translation guide. `make check` rejects missing
+translations, fuzzy entries, and changed `%1` placeholders.
+
 Package locally:
 
 ```sh
 make package
 ```
+
+Packaging requires Python 3 and GNU gettext. It compiles `po/*.po` into
+`contents/locale/<language>/LC_MESSAGES/plasma_applet_app.codexbar.plasma.mo`
+and includes those catalogs in the archive. Generated `.mo` files are not committed.
 
 `make check` runs ShellCheck, the static regression checks, the Qt tests,
 XML/JSON validation, and `qmllint`. When `kpackagetool6` is available, it also
@@ -341,6 +366,20 @@ validates the AppStream metadata; otherwise, it reports that the check was
 skipped. The command passes `--unqualified disable` to `qmllint` because Plasma
 injects helpers such as `i18n()` as context properties that otherwise create
 noisy false-positive warnings.
+
+CI installs the Plasma, Kirigami, and KDE desktop control modules and rejects
+skipped Qt tests. Import and type warnings fail the check. A separate smoke job
+runs the real popup scenarios under Xvfb and saves screenshots and logs as
+workflow artifacts. Releases require both jobs to pass.
+
+Older Plasma packages register some applet types only at runtime. On machines
+without their QML type metadata, `make check` reports partial import/type
+checks. CI supplies that metadata through its pinned image. To require the
+same checks locally, run:
+
+```sh
+QML_TEST_REQUIRE_NO_SKIPS=1 make check QMLLINT_FLAGS='--import warning --unqualified disable'
+```
 
 Project structure:
 

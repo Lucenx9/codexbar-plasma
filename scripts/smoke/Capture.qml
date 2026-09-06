@@ -13,6 +13,13 @@ Item {
     property var panelUsageSnapshot
 
     Loader {
+        id: settingsPreview
+        active: capture.scenario.indexOf("localization-") === 0
+        visible: false
+        source: "configGeneral.qml"
+    }
+
+    Loader {
         id: panelPreview
         parent: capture.applet.fullRepresentationItem
         anchors.centerIn: parent
@@ -33,7 +40,7 @@ Item {
         }
     }
 
-    function verifyPanel(condition, message) {
+    function verifyScenario(condition, message) {
         if (!condition)
             throw new Error("SMOKE_FAILED: " + message);
     }
@@ -46,40 +53,40 @@ Item {
         config.showMultiProviderInPanel = true;
         config.usageBarsShowUsed = true;
         config.panelQuotaLane = "secondary";
-        verifyPanel(applet.panelDisplayRow(codex, "percent").usedPercent === 28, "secondary quota not selected");
-        verifyPanel(applet.compactText().indexOf("28%") >= 0, "text does not show the selected quota");
-        verifyPanel(applet.switcherMetricRow(codex).usedPercent === 43, "panel preference changed popup quota");
+        verifyScenario(applet.panelDisplayRow(codex, "percent").usedPercent === 28, "secondary quota not selected");
+        verifyScenario(applet.compactText().indexOf("28%") >= 0, "text does not show the selected quota");
+        verifyScenario(applet.switcherMetricRow(codex).usedPercent === 43, "panel preference changed popup quota");
         config.panelQuotaLane = "tertiary";
-        verifyPanel(applet.panelDisplayRow(codex, "percent") === null, "missing quota fell back to another lane");
-        verifyPanel(applet.compactProviders().length === 0, "missing quotas retained meters");
-        verifyPanel(applet.compactText().indexOf("%") < 0, "missing quota retained a percentage");
+        verifyScenario(applet.panelDisplayRow(codex, "percent") === null, "missing quota fell back to another lane");
+        verifyScenario(applet.compactProviders().length === 0, "missing quotas retained meters");
+        verifyScenario(applet.compactText().indexOf("%") < 0, "missing quota retained a percentage");
         config.panelQuotaLane = "primary";
         config.panelVisibilityRules = JSON.stringify({text: {condition: "usageAtLeast", usedPercent: 50},
             meters: {condition: "usageAtLeast", usedPercent: 50}});
-        verifyPanel(applet.compactText() === "", "text condition did not hide healthy usage");
-        verifyPanel(applet.compactProviders().length === 1 && applet.compactProviders()[0].provider === "claude",
+        verifyScenario(applet.compactText() === "", "text condition did not hide healthy usage");
+        verifyScenario(applet.compactProviders().length === 1 && applet.compactProviders()[0].provider === "claude",
             "meter rules were not evaluated per provider");
         config.usageBarsShowUsed = false;
-        verifyPanel(applet.compactText() === "" && applet.compactProviders().length === 1,
+        verifyScenario(applet.compactText() === "" && applet.compactProviders().length === 1,
             "left-percent preference changed the used-percent condition");
         config.panelVisibilityRules = '{"text":{"condition":"resetWithin","resetMinutes":60}}';
         var originalClock = applet.panelClockMs;
-        verifyPanel(applet.compactText() === "", "distant reset satisfied the condition");
+        verifyScenario(applet.compactText() === "", "distant reset satisfied the condition");
         applet.panelClockMs = Date.parse(codex.rows[0].resetsAt) - 1800000;
-        verifyPanel(applet.compactText().length > 0, "reset condition did not advance with the clock");
+        verifyScenario(applet.compactText().length > 0, "reset condition did not advance with the clock");
         applet.panelClockMs = Date.parse(codex.rows[0].resetsAt) + 1;
-        verifyPanel(applet.compactText() === "", "expired reset satisfied the condition");
+        verifyScenario(applet.compactText() === "", "expired reset satisfied the condition");
         applet.panelClockMs = originalClock;
         config.panelVisibilityRules = '{"text":{"condition":"runOut"},"meters":{"condition":"runOut"}}';
-        verifyPanel(applet.compactText() === "" && applet.compactProviders().length === 0,
+        verifyScenario(applet.compactText() === "" && applet.compactProviders().length === 0,
             "absent forecasts satisfied the condition");
         config.panelQuotaLane = "auto";
         config.panelVisibilityRules = "{}";
-        verifyPanel(applet.compactText().indexOf("57%") >= 0 && applet.compactProviders().length === 2,
+        verifyScenario(applet.compactText().indexOf("57%") >= 0 && applet.compactProviders().length === 2,
             "defaults did not restore the original panel");
         config.showPercentInPanel = false;
         config.showMultiProviderInPanel = false;
-        verifyPanel(applet.compactText().indexOf("%") < 0 && applet.compactProviders().length === 0,
+        verifyScenario(applet.compactText().indexOf("%") < 0 && applet.compactProviders().length === 0,
             "rules overrode the visibility checkboxes");
         config.showPercentInPanel = true;
         config.showMultiProviderInPanel = true;
@@ -95,10 +102,10 @@ Item {
             applet.loading = busy === 1;
             for (var i = 0; i < conditions.length; i++) {
                 config.panelVisibilityRules = JSON.stringify({text: {condition: conditions[i]}});
-                verifyPanel(applet.compactText() === "", "missing data bypassed the text condition");
+                verifyScenario(applet.compactText() === "", "missing data bypassed the text condition");
             }
             config.panelVisibilityRules = "{}";
-            verifyPanel(applet.compactText().length > 0, "Always lost its loading or empty text");
+            verifyScenario(applet.compactText().length > 0, "Always lost its loading or empty text");
         }
         applet.loading = wasLoading;
     }
@@ -131,8 +138,44 @@ Item {
             return applet.selectedProviderID === "claude" && claude.error.indexOf("Synthetic provider timeout") >= 0;
         if (claude.error.length > 0 || claude.rows.length !== 2)
             return false;
+        if (scenario.indexOf("localization-") === 0) {
+            var language = scenario.substring("localization-".length);
+            var expected = {
+                it: ["Panoramica", "Sessioni", "1 ora", "2 ore"],
+                fr: ["Vue d'ensemble", "Sessions", "1 heure", "2 heures"],
+                de: ["Übersicht", "Sitzungen", "1 Stunde", "2 Stunden"],
+                es: ["Resumen", "Sesiones", "1 hora", "2 horas"],
+                pt_BR: ["Visão geral", "Sessões", "1 hora", "2 horas"]
+            }[language];
+            verifyScenario(i18n("Overview") === expected[0], "package catalog did not load");
+            verifyScenario(i18n("Sessions") === expected[1], "session label did not translate");
+            verifyScenario(i18np("%1 hour", "%1 hours", 1) === expected[2], "singular translation failed");
+            verifyScenario(i18np("%1 hour", "%1 hours", 2) === expected[3], "plural translation failed");
+            if (language === "pt_BR")
+                verifyScenario(i18np("%1 hour", "%1 hours", 0) === "0 hora", "Brazilian Portuguese zero form failed");
+            verifyScenario(hasText(applet.fullRepresentationItem, expected[0]), "translated popup label missing");
+            if (settingsPreview.status !== Loader.Ready)
+                return false;
+            verifyScenario(hasText(settingsPreview.item, i18n("Fetch provider service status")),
+                "translated settings label missing");
+            return applet.overviewSelected;
+        }
+        if (scenario === "legacy-dashboard") {
+            if (applet.selectedProviderID !== "codex")
+                return false;
+            var dashboard = codex.usageDashboard;
+            var dashboardSection = findItem(applet.fullRepresentationItem, "usageDashboardSection");
+            verifyScenario(dashboard !== null && dashboard.rows.length === 3, "legacy dashboard rows missing");
+            verifyScenario(dashboard.kpis[0].value === "0", "legacy dashboard lost explicit zero");
+            verifyScenario(dashboard.rows[0].label === "Credits remaining", "legacy label adapter failed");
+            verifyScenario(dashboard.rows[1].value === "$1.25 · 1.2K tokens", "legacy period formatting changed");
+            verifyScenario(dashboard.rows[2].value === "Example model (0 requests)", "legacy top model formatting changed");
+            verifyScenario(claude.usageDashboard === null && claude.providerDetails.length === 1,
+                "legacy dashboard overrode generic details");
+            return dashboardSection !== null && dashboardSection.visible && dashboardSection.rows.length === 3;
+        }
         if (scenario === "panel-rules") {
-            verifyPanel(applet.providers === panelUsageSnapshot, "panel settings reloaded usage");
+            verifyScenario(applet.providers === panelUsageSnapshot, "panel settings reloaded usage");
             return panelPreview.item !== null && applet.compactProviders().length === 2;
         }
         if (scenario === "long-text")
@@ -171,6 +214,16 @@ Item {
         return null;
     }
 
+    function hasText(item, text) {
+        if (item.text === text)
+            return true;
+        for (var i = 0; i < item.children.length; i++) {
+            if (hasText(item.children[i], text))
+                return true;
+        }
+        return false;
+    }
+
     Timer {
         interval: 100
         running: true
@@ -190,6 +243,8 @@ Item {
                 } else if (capture.scenario === "long-text") {
                     capture.applet.openProviderFromPanel("codex");
                     capture.applet.loadAccounts("codex");
+                } else if (capture.scenario === "legacy-dashboard") {
+                    capture.applet.openProviderFromPanel("codex");
                 } else if (capture.scenario.indexOf("project-") === 0) {
                     if (capture.applet.costLoading || !capture.applet.tokenCosts.codex)
                         return;
@@ -204,13 +259,17 @@ Item {
                         if (capture.applet.costLoading || capture.applet.tokenCosts !== previousCosts)
                             console.error("SMOKE_FAILED: metric switch reloaded project history");
                     }
-                } else if (capture.scenario === "normal")
+                } else if (capture.scenario === "normal" || capture.scenario.indexOf("localization-") === 0)
                     capture.applet.selectGlobalView("overview");
                 else if (capture.scenario === "partial-error")
                     capture.applet.openProviderFromPanel("claude");
                 capture.prepared = true;
             }
             if (capture.scenarioReady()) {
+                if (capture.scenario === "legacy-dashboard") {
+                    var dashboard = capture.findItem(popup, "usageDashboardSection");
+                    capture.findItem(popup, "providerScroll").contentItem.contentY = dashboard.y;
+                }
                 if (capture.scenario.indexOf("project-") === 0) {
                     var section = capture.findItem(popup, "projectCostSection");
                     var scroll = capture.findItem(popup, "spendHistoryScroll");

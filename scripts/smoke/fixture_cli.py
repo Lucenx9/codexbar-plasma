@@ -8,15 +8,16 @@ import sys
 import time
 from datetime import datetime, timedelta, timezone
 
-SCENARIOS = ("normal", "loading", "partial-error", "long-text", "panel-rules",
-             "project-costs", "project-tokens", "project-range", "project-long-text")
+SCENARIOS = ("normal", "loading", "partial-error", "long-text", "panel-rules", "legacy-dashboard",
+             "project-costs", "project-tokens", "project-range", "project-long-text",
+             "localization-it", "localization-fr", "localization-de", "localization-es", "localization-pt_BR")
 
 
 def usage(provider, scenario, now):
     if scenario == "partial-error" and provider == "claude":
         return {"provider": provider, "error": {"message": "Synthetic provider timeout. Try again."}}
     long_text = scenario == "long-text"
-    return {
+    snapshot = {
         "provider": provider,
         "account": "engineering-with-an-unusually-long-account-name@example.com" if long_text else "demo@example.com",
         "source": "cli",
@@ -32,6 +33,16 @@ def usage(provider, scenario, now):
                           "resetsAt": (now + timedelta(days=4)).isoformat()},
         },
     }
+    if scenario == "legacy-dashboard":
+        snapshot["openaiDashboard"] = {
+            "creditsRemaining": 0,
+            "currentDay": {"costUSD": 1.25, "totalTokens": 1200},
+            "topModels": [{"name": "Example model", "requests": 0}],
+        }
+        if provider == "claude":
+            snapshot["usage"]["details"] = [{"title": "Generic details",
+                                             "rows": [{"label": "Requests", "value": "7"}]}]
+    return snapshot
 
 
 def response(args, scenario, now):
