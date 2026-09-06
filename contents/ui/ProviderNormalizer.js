@@ -741,7 +741,11 @@ function normalizeCostDaily(items, currency, days, updatedAt) {
             currency: boundedDisplayText(currency || "USD", 12)
         })
     }
-    if (i >= 0) {
+    // A full inspection of the payload may still collect historyDays rows that
+    // leave calendar gaps inside the rendered window while keeping older days;
+    // only an inspection cut short by the scan bound justifies skipping the
+    // fill, because unexamined rows could still cover those days.
+    if (i >= 0 && inspectedItems >= maximumCostHistoryScanItems) {
         return result
     }
     return fillMissingCostDays(result, currency, historyDays, updatedAt, blockedDateKeys)

@@ -1007,6 +1007,32 @@ TestCase {
         compare(rows[1].cost, null)
     }
 
+    function test_costHistoryFillsGapsEvenWhenTheDayBoundIsAlreadyCollected() {
+        // The CLI emits its default 30-day daily array while the user renders a
+        // 7-day range: collecting historyDays rows must not skip the calendar
+        // gap fill, or the chart compresses out a missing day and keeps a day
+        // from before the rendered window.
+        var rows = Normalizer.normalizeCostDaily([
+            { date: "2026-08-22", totalCost: 1, totalTokens: 10 },
+            { date: "2026-08-23", totalCost: 2, totalTokens: 20 },
+            { date: "2026-08-24", totalCost: 3, totalTokens: 30 },
+            { date: "2026-08-25", totalCost: 4, totalTokens: 40 },
+            { date: "2026-08-26", totalCost: 5, totalTokens: 50 },
+            { date: "2026-08-27", totalCost: 6, totalTokens: 60 },
+            { date: "2026-08-29", totalCost: 8, totalTokens: 80 },
+            { date: "2026-08-30", totalCost: 9, totalTokens: 90 }
+        ], "USD", 7, "2026-08-30")
+
+        compare(rows.length, 7)
+        compare(rows.map(function (row) { return row.label }).join(","),
+            "2026-08-24,2026-08-25,2026-08-26,2026-08-27,2026-08-28,2026-08-29,2026-08-30")
+        compare(rows[0].cost, 3)
+        compare(rows[4].label, "2026-08-28")
+        compare(rows[4].cost, 0)
+        compare(rows[4].tokens, 0)
+        compare(rows[6].cost, 9)
+    }
+
     function test_costHistoryAcceptsBothLegacyAndCurrentFieldNames() {
         var current = Normalizer.normalizeCostDaily(
             [{ date: "2026-08-01", totalCost: 2, totalTokens: 20, cacheCreationTokens: 3 }], "USD", 30)
