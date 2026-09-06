@@ -324,6 +324,10 @@ function transition(observations, previousMemo, options) {
                     })
                 }
             }
+        } else if (mode === "prime") {
+            // Rebuilding quota state while status fetching is disabled must
+            // preserve the last provider incident observation.
+            NotificationMemo.carryStatusMemo(previousMemo, item.providerID, nextMemo)
         }
         if (mode === "prime") {
             if (item.errorPresent === true && Array.isArray(item.rows) && item.rows.length === 0) {

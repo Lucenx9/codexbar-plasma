@@ -3,6 +3,10 @@ import QtTest
 
 TestCase {
     name: "InteractiveChart"
+    when: windowShown
+    width: 340
+    height: 240
+    visible: true
     property var componentHolders: []
 
     function cleanupTestCase() {
@@ -72,5 +76,46 @@ TestCase {
         compare(chart.chartFraction(-3), 0)
         compare(chart.chartFraction(0), 0.25)
         compare(chart.chartFraction(9), 1)
+    }
+
+    function test_keyboardSelectionOverridesStationaryPointer_data() {
+        return [
+            { tag: "left", key: Qt.Key_Left, hovered: 2, selected: 0 },
+            { tag: "right", key: Qt.Key_Right, hovered: 0, selected: 2 },
+            { tag: "home", key: Qt.Key_Home, hovered: 2, selected: 0 },
+            { tag: "end", key: Qt.Key_End, hovered: 0, selected: 2 }
+        ]
+    }
+
+    function test_keyboardSelectionOverridesStationaryPointer(data) {
+        var chart = createChart({
+            applet: {
+                secondaryTextOpacity: 0.7,
+                canvasColor: function() { return "#000000" }
+            },
+            width: 300,
+            points: [
+                { label: "First", value: 0 },
+                { label: "Middle", value: 0 },
+                { label: "Last", value: 0 }
+            ],
+            accent: "blue",
+            selectedIndex: 1
+        })
+        if (!chart)
+            return
+        var plot = chart.nextItemInFocusChain(true)
+        verify(typeof plot.requestPaint === "function")
+        mouseMove(plot, (data.hovered + 0.5) * plot.width / 3, plot.height / 2)
+        compare(chart.activeIndex, data.hovered)
+        plot.forceActiveFocus(Qt.TabFocusReason)
+        keyClick(data.key)
+        compare(chart.selectedIndex, data.selected)
+        compare(chart.activeIndex, data.selected)
+        mouseMove(plot, plot.width / 2, plot.height / 2)
+        compare(chart.activeIndex, 1)
+        mouseMove(this, 330, 230)
+        tryCompare(chart, "hoveredIndex", -1)
+        compare(chart.activeIndex, data.selected)
     }
 }

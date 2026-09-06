@@ -181,6 +181,54 @@ TestCase {
         compare(improved.intents.length, 0)
     }
 
+    function test_disabledStatusPreservesTheIncidentWhileQuotaStillNotifies() {
+        var initial = transition("prime", [observation(
+            "minor", "incident-1", [usageRow("minor", 85, false)])])
+        var disabledOptions = plannerOptions("observe")
+        disabledOptions.statusEnabled = false
+        var withoutStatus = NotificationPlanner.transition(
+            [observation("", "", [usageRow("major", 96, false)])],
+            initial.nextMemo,
+            disabledOptions)
+        compare(intentKinds(withoutStatus), "quota")
+
+        var restored = transition("observe", [observation(
+            "minor", "incident-1", [usageRow("major", 96, false)])],
+            withoutStatus.nextMemo)
+        compare(restored.intents.length, 0)
+
+        var changed = transition("observe", [observation(
+            "major", "incident-2", [usageRow("major", 96, false)])],
+            restored.nextMemo)
+        compare(intentKinds(changed), "status")
+    }
+
+    function test_disabledStatusSurvivesResetAndPrime_data() {
+        return [
+            { tag: "unchanged", before: "minor", beforeID: "incident-1", after: "minor", afterID: "incident-1", expected: "" },
+            { tag: "worsened", before: "minor", beforeID: "incident-1", after: "major", afterID: "incident-1", expected: "status" },
+            { tag: "replacement", before: "minor", beforeID: "incident-1", after: "minor", afterID: "incident-2", expected: "status" },
+            { tag: "new", before: "", beforeID: "", after: "major", afterID: "incident-1", expected: "status" }
+        ]
+    }
+
+    function test_disabledStatusSurvivesResetAndPrime(data) {
+        var initial = transition("prime", [observation(data.before, data.beforeID)])
+        var reset = transition("reset", [], initial.nextMemo)
+        var disabledOptions = plannerOptions("prime")
+        disabledOptions.statusEnabled = false
+        var primedWithoutStatus = NotificationPlanner.transition(
+            [observation("", "", [usageRow("minor", 85, false)])],
+            reset.nextMemo,
+            disabledOptions)
+        compare(primedWithoutStatus.intents.length, 0)
+
+        var restored = transition("observe", [observation(
+            data.after, data.afterID, [usageRow("minor", 85, false)])],
+            primedWithoutStatus.nextMemo)
+        compare(intentKinds(restored), data.expected)
+    }
+
     function test_paceWarningPrimesStaysQuietAndReannouncesAfterRecovery() {
         var activeRow = usageRow("", 60, true)
         var primed = transition("prime", [observation("", "", [activeRow])])
