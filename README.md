@@ -130,6 +130,8 @@ Panel and popup:
 - Auto-select highest-usage provider for the compact panel and provider detail
   focus.
 - Overview tab with per-provider usage summary and quick switching.
+- Overflowing popup tabs have separate scroll buttons and immediate keyboard
+  focus reveal, so navigation never covers provider labels.
 - Global **Usage & Spend** tab with a Cost/Tokens selector, a 7/30/90-day range
   selector, interactive daily chart, activity heatmap, and provider totals that
   keep different currencies separate.
@@ -146,6 +148,8 @@ Panel and popup:
 
 Providers and accounts:
 
+- Search providers by name or ID and filter All, Enabled, or Disabled locally.
+  Clear filters restores the list without changing selection or provider settings.
 - Provider enable/disable and setup actions write CodexBar configuration
   immediately; Apply and Cancel cover widget settings only.
 - Account discovery and selection through `codexbar usage --all-accounts`.
@@ -300,6 +304,8 @@ each scenario, captures the view, and closes the preview automatically:
 | Scenario | Captured state |
 | --- | --- |
 | `normal` | Overview with synthetic Codex and Claude quotas. |
+| `tabs-overflow` | Ten providers, with scroll-button geometry, immediate focus reveal, and endpoint states checked. |
+| `provider-settings` | Enabled-only settings list, after checking combined search/filter behavior and selection isolation. |
 | `loading` | Initial loading while the fixture CLI waits. |
 | `partial-error` | Claude's error view while healthy Codex data remains available. |
 | `long-text` | Codex with long account and workspace labels, two accounts, and doubled body text. |

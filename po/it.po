@@ -2343,3 +2343,22 @@ msgstr "Usa la preimpostazione minimale"
 #: contents/ui/configDisplay.qml
 msgid "The preset enables provider meters and hides provider names, usage text and credits in the panel."
 msgstr "La preimpostazione abilita gli indicatori dei provider e nasconde nomi dei provider, testo di utilizzo e crediti nel pannello."
+
+#: contents/ui/configProviders.qml
+msgid "All providers"
+msgstr "Tutti i provider"
+
+#: contents/ui/configProviders.qml
+msgid "Try another search or choose a different filter."
+msgstr "Prova un’altra ricerca o scegli un filtro diverso."
+
+#: contents/ui/configProviders.qml
+msgid "Clear filters"
+msgstr "Azzera filtri"
+
+#: contents/ui/configProviders.qml
+#, kde-format
+msgid "%1 matching provider"
+msgid_plural "%1 matching providers"
+msgstr[0] "%1 provider corrispondente"
+msgstr[1] "%1 provider corrispondenti"

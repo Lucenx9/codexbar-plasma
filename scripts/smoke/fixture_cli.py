@@ -8,7 +8,7 @@ import sys
 import time
 from datetime import datetime, timedelta, timezone
 
-SCENARIOS = ("normal", "loading", "partial-error", "long-text", "panel-rules", "panel-standard", "panel-minimal", "panel-minimal-single", "legacy-dashboard",
+SCENARIOS = ("normal", "tabs-overflow", "provider-settings", "loading", "partial-error", "long-text", "panel-rules", "panel-standard", "panel-minimal", "panel-minimal-single", "legacy-dashboard",
              "project-costs", "project-tokens", "project-range", "project-long-text",
              "localization-it", "localization-fr", "localization-de", "localization-es", "localization-pt_BR")
 
@@ -52,11 +52,16 @@ def usage(provider, scenario, now):
 
 def response(args, scenario, now):
     """Only the read commands used by the applet are supported."""
+    if args == ["config", "providers", "--descriptors", "--format", "json", "--json-only"]:
+        raise ValueError("Unknown option --descriptors")
     if args == ["--version"]:
         return "CodexBar 0.56.2 (synthetic smoke fixture)"
     if args == ["config", "providers", "--format", "json", "--json-only"]:
         providers = ("codex",) if scenario == "panel-minimal-single" else ("codex", "claude")
-        return [{"provider": key, "enabled": True} for key in providers]
+        rows = [{"provider": key, "enabled": True} for key in providers]
+        if scenario == "provider-settings":
+            rows.extend({"provider": key, "enabled": False} for key in ("gemini", "cursor", "openrouter"))
+        return rows
     if args == ["sessions", "--json-v2"]:
         return {"sessions": [{"provider": "codex", "projectName": "Example project",
                               "state": "active", "source": "desktopApp", "lastActivityAt": now.isoformat()},

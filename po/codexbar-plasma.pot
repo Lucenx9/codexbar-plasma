@@ -1322,6 +1322,10 @@ msgid "ZoomMate"
 msgstr ""
 
 #: contents/ui/configProviders.qml
+msgid "Clear filters"
+msgstr ""
+
+#: contents/ui/configProviders.qml
 msgid "Search providers..."
 msgstr ""
 
@@ -1331,6 +1335,10 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "Reload provider list"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "All providers"
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -1389,6 +1397,12 @@ msgid "CLI commands"
 msgstr ""
 
 #: contents/ui/configProviders.qml
+msgid "%1 matching provider"
+msgid_plural "%1 matching providers"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/configProviders.qml
 msgid "%1 provider enabled"
 msgid_plural "%1 providers enabled"
 msgstr[0] ""
@@ -1407,7 +1421,7 @@ msgid "No matching providers"
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "No provider matches \"%1\"."
+msgid "Try another search or choose a different filter."
 msgstr ""
 
 #: contents/ui/main.qml
