@@ -154,6 +154,15 @@ require_all(
     "normal account completion must reject stale context",
 )
 
+require_ordered(
+    applet.function_body("parseProviderAccountsOutput"),
+    (
+        "accountCommandIsCurrent(descriptor)",
+        "setAccountLoading(providerID, false)",
+    ),
+    "a stale account reply must be validated before it touches the loading indicator",
+)
+
 require_all(
     applet.function_body("retireStaleAccountCommands"),
     (

@@ -1138,10 +1138,12 @@ PlasmoidItem {
             return
         }
 
-        setAccountLoading(providerID, false)
+        // Validate before any visible side effect: a stale reply must leave
+        // the loading indicator untouched so the live command still owns it.
         if (!accountCommandIsCurrent(descriptor)) {
             return
         }
+        setAccountLoading(providerID, false)
 
         var trimmed = stdoutText.trim()
         if (trimmed.length === 0) {
@@ -2340,6 +2342,11 @@ PlasmoidItem {
         notificationMemo = NotificationPlanner.transition(
             [], notificationMemo, ({ mode: "reset" })).nextMemo
         notificationsPrimed = false
+        // Prime synchronously against the current snapshot so an incident that
+        // starts between the reset and the next deferred pass cannot be
+        // absorbed silently into the new baseline. The deferred call stays as
+        // a coalesced follow-up for refreshes already in flight.
+        processNotifications()
         Qt.callLater(processNotifications)
     }
 

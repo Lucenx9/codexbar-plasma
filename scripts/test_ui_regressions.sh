@@ -2138,6 +2138,14 @@ if "NotificationPlanner.transition(" not in reset_memo_body or 'mode: "reset"' n
     raise AssertionError("resetNotificationMemo must reset the opaque memo through NotificationPlanner")
 if re.search(r"notificationMemo\s*=\s*\(\{\}\)", reset_memo_body):
     raise AssertionError("resetNotificationMemo must not clear the whole memo, including status state")
+reset_index = reset_memo_body.find('mode: "reset"')
+prime_index = reset_memo_body.find("processNotifications()", reset_index)
+deferred_index = reset_memo_body.find("Qt.callLater(processNotifications)", reset_index)
+if reset_index < 0 or prime_index < 0 or prime_index == deferred_index or deferred_index < 0 or prime_index > deferred_index:
+    raise AssertionError(
+        "resetNotificationMemo must prime synchronously before the deferred pass, "
+        "so an incident starting in between cannot join the baseline silently"
+    )
 
 # NotificationMemo remains an internal seam for provider-scoped status rules.
 for memo_function in (
