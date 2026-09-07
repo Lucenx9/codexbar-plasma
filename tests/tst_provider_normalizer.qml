@@ -1008,6 +1008,63 @@ TestCase {
         compare(rows[0].tokens, 250)
     }
 
+    function test_costHistoryPreservesZeroTokenParts_data() {
+        return [
+            { tag: "input", field: "inputTokens", value: 0 },
+            { tag: "output", field: "outputTokens", value: 0 },
+            { tag: "cache-read", field: "cacheReadTokens", value: 0 },
+            { tag: "cache-creation", field: "cacheCreationTokens", value: 0 },
+            { tag: "legacy-cache-write", field: "cacheWriteTokens", value: 0 },
+            { tag: "numeric-string", field: "cacheReadTokens", value: "0" }
+        ]
+    }
+
+    function test_costHistoryPreservesZeroTokenParts(data) {
+        var day = { date: "2026-08-01" }
+        day[data.field] = data.value
+        var rows = Normalizer.normalizeCostDaily([day], "USD", 1, day.date)
+
+        compare(rows.length, 1)
+        compare(rows[0].label, day.date)
+        compare(rows[0].tokens, 0)
+        compare(rows[0].cost, null)
+    }
+
+    function test_zeroCacheDayDoesNotRevivePricedHistoryOutsideTheRange() {
+        var rows = Normalizer.normalizeCostDaily([
+            { date: "2026-07-31", totalCost: 9, totalTokens: 100 },
+            { date: "2026-08-01", cacheReadTokens: 0 }
+        ], "USD", 1, "2026-08-01")
+
+        compare(rows.length, 1)
+        compare(rows[0].label, "2026-08-01")
+        compare(rows[0].tokens, 0)
+        compare(rows[0].cost, null)
+    }
+
+    function test_costHistoryRejectsMissingOrInvalidCacheTokenParts_data() {
+        return [
+            { tag: "missing", value: undefined },
+            { tag: "null", value: null },
+            { tag: "boolean", value: false },
+            { tag: "blank", value: "" },
+            { tag: "text", value: "unknown" },
+            { tag: "object", value: {} },
+            { tag: "not-finite", value: Infinity }
+        ]
+    }
+
+    function test_costHistoryRejectsMissingOrInvalidCacheTokenParts(data) {
+        var rows = Normalizer.normalizeCostDaily([{
+            date: "2026-08-01",
+            cacheReadTokens: data.value,
+            cacheCreationTokens: data.value,
+            cacheWriteTokens: data.value
+        }], "USD", 1, "2026-08-01")
+
+        compare(rows.length, 0)
+    }
+
     function test_costHistoryFillsTokenOnlyGapsWithoutInventingCost() {
         var rows = Normalizer.normalizeCostDaily([
             { date: "2026-08-01", totalTokens: 250 }
