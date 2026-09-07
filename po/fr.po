@@ -568,8 +568,8 @@ msgid "Show usage text in panel"
 msgstr "Afficher le texte d'utilisation dans le panneau"
 
 #: contents/ui/configDisplay.qml
-msgid "Show multi-provider meters in panel"
-msgstr "Afficher les jauges de plusieurs fournisseurs dans le panneau"
+msgid "Show provider meters in panel"
+msgstr "Afficher les jauges des fournisseurs dans le panneau"
 
 #: contents/ui/configDisplay.qml
 msgid "Show credits in panel"

@@ -14,15 +14,18 @@ Item {
     property bool navigationVerified: false
     property int localizationStep: 0
     property var panelUsageSnapshot
+    property var compactPanelItem
     property var displaySettingsPage
     property var providerSettingsPage
     readonly property bool settingsScenario: scenario.indexOf("settings-") === 0
+    readonly property bool panelDefaultsScenario: scenario === "panel-default" || scenario === "panel-default-single"
     readonly property bool readmePanelScenario: scenario.indexOf("readme-panel-") === 0
     readonly property bool standardPanelScenario: scenario === "panel-standard" || scenario === "readme-panel-standard"
     readonly property bool panelAppearanceScenario: scenario === "panel-standard" || scenario === "panel-minimal"
         || scenario === "panel-minimal-single" || readmePanelScenario
     readonly property bool readmeScenario: scenario.indexOf("readme-") === 0
-    readonly property int expectedProviderCount: scenario === "panel-minimal-single" ? 1 : (readmeScenario ? 3 : 2)
+    readonly property int expectedProviderCount: scenario === "panel-minimal-single" || scenario === "panel-default-single"
+        ? 1 : (readmeScenario ? 3 : 2)
 
     Loader {
         id: configurationPreview
@@ -48,7 +51,7 @@ Item {
         id: panelPreview
         parent: capture.applet.fullRepresentationItem
         anchors.centerIn: parent
-        active: capture.scenario === "panel-rules" || capture.panelAppearanceScenario
+        active: capture.scenario === "panel-rules" || capture.panelAppearanceScenario || capture.panelDefaultsScenario
         z: 100
         sourceComponent: Rectangle {
             width: Math.max(240, panel.compactItem ? panel.compactItem.implicitWidth + 48 : 240)
@@ -58,9 +61,10 @@ Item {
                 id: panel
                 readonly property Item compactItem: item as Item
                 sourceComponent: capture.applet.compactRepresentation
+                onLoaded: capture.compactPanelItem = item
                 anchors.centerIn: parent
                 width: compactItem ? compactItem.implicitWidth : 0
-                height: capture.panelAppearanceScenario ? 44 : 40
+                height: capture.panelAppearanceScenario || capture.panelDefaultsScenario ? 44 : 40
             }
         }
     }
@@ -96,20 +100,69 @@ Item {
         var row = applet.providers[applet.providerIndexForID("codex")].rows[0];
         verifyScenario(applet.displayPercent(row) === 43 && !applet.notifyLimitResets,
             "fresh defaults must show used quota and leave reset notifications off");
+        verifyScenario(!config.showProviderInPanel && !config.showPercentInPanel
+            && config.showMultiProviderInPanel && !applet.minimalPanel,
+            "fresh defaults must show Standard icons and meters without panel text");
         config.usageBarsShowUsed = false;
         config.notifyLimitResets = true;
+        config.panelStyle = "minimal";
+        config.showProviderInPanel = true;
+        config.showPercentInPanel = true;
+        config.showMultiProviderInPanel = false;
         verifyScenario(applet.displayPercent(row) === 57 && applet.notifyLimitResets,
             "explicit preferences must override the defaults");
         page.cfg_usageBarsShowUsed = false;
         page.cfg_notifyLimitResets = true;
+        page.cfg_panelStyle = "minimal";
+        page.cfg_showProviderInPanel = true;
+        page.cfg_showPercentInPanel = true;
+        page.cfg_showMultiProviderInPanel = false;
         page.restoreUserDefaults();
         verifyScenario(page.defaultValuesPrepared && page.cfg_usageBarsShowUsed && !page.cfg_notifyLimitResets,
             "Restore all defaults did not prepare the new defaults");
         verifyScenario(!config.usageBarsShowUsed && config.notifyLimitResets,
             "restoring pending defaults changed the live configuration before Apply");
+        verifyScenario(page.cfg_panelStyle === "standard" && !page.cfg_showProviderInPanel
+            && !page.cfg_showPercentInPanel && page.cfg_showMultiProviderInPanel,
+            "Restore all defaults did not prepare the Standard icon-and-meter preset");
+        verifyScenario(applet.minimalPanel && config.showProviderInPanel && config.showPercentInPanel
+            && !config.showMultiProviderInPanel,
+            "restoring pending panel defaults changed the live configuration before Apply");
         config.usageBarsShowUsed = true;
         config.notifyLimitResets = false;
+        config.panelStyle = "standard";
+        config.showProviderInPanel = false;
+        config.showPercentInPanel = false;
+        config.showMultiProviderInPanel = true;
         page.defaultsActionRequested = false;
+    }
+
+    function verifyPanelDefaults() {
+        var config = applet.Plasmoid.configuration;
+        panelUsageSnapshot = applet.providers;
+        verifyScenario(!applet.minimalPanel && !config.showProviderInPanel
+            && !config.showPercentInPanel && config.showMultiProviderInPanel,
+            "fresh panel defaults must use Standard icons and meters");
+        verifyScenario(applet.compactText() === "" && applet.compactProviders().length === expectedProviderCount,
+            "fresh panel defaults lost a provider meter or retained text");
+        config.showProviderInPanel = true;
+        config.showPercentInPanel = true;
+        config.showMultiProviderInPanel = false;
+        verifyScenario(applet.compactText().indexOf("%") >= 0
+            && applet.compactText().indexOf(applet.selectedCompactProvider().title) >= 0
+            && applet.compactProviders().length === 0,
+            "explicit text and meter preferences must override the defaults");
+        config.showProviderInPanel = false;
+        config.showPercentInPanel = false;
+        verifyScenario(applet.compactText() === "" && compactPanelItem.showPrimaryIdentity
+            && compactPanelItem.implicitWidth > 0,
+            "hiding panel text and meters lost the icon fallback");
+        config.showMultiProviderInPanel = true;
+        config.panelQuotaLane = "tertiary";
+        verifyScenario(applet.compactProviders().length === 0 && compactPanelItem.showPrimaryIdentity,
+            "missing quotas lost the icon fallback");
+        config.panelQuotaLane = "auto";
+        verifyScenario(applet.providers === panelUsageSnapshot, "panel defaults reloaded usage");
     }
 
     function preparePanelAppearance() {
@@ -145,7 +198,7 @@ Item {
         if (scenario === "panel-minimal-single") {
             verifyScenario(applet.compactProviders().length === 1, "minimal preset hid the single-provider quota");
             config.panelStyle = "unknown";
-            verifyScenario(!applet.minimalPanel && applet.compactProviders().length === 0,
+            verifyScenario(!applet.minimalPanel && applet.compactProviders().length === 1,
                 "unknown style did not preserve Standard single-provider behavior");
             config.panelStyle = "minimal";
             config.showMultiProviderInPanel = false;
@@ -166,6 +219,8 @@ Item {
         var codex = applet.providers[applet.providerIndexForID("codex")];
         panelUsageSnapshot = applet.providers;
         applet.openProviderFromPanel("codex");
+        config.showProviderInPanel = true;
+        config.showPercentInPanel = true;
         config.showMultiProviderInPanel = true;
         config.usageBarsShowUsed = true;
         config.panelQuotaLane = "secondary";
@@ -341,6 +396,10 @@ Item {
             verifyScenario(applet.compactText() === "", "minimal preset left panel text visible");
             return panelPreview.item !== null && applet.compactProviders().length === expectedProviderCount;
         }
+        if (panelDefaultsScenario) {
+            return prepared && panelPreview.item !== null && applet.compactText() === ""
+                && applet.compactProviders().length === expectedProviderCount;
+        }
         if (!claude)
             return false;
         if (scenario === "partial-error")
@@ -483,7 +542,11 @@ Item {
                 if (capture.scenario !== "loading"
                         && (capture.applet.loading || capture.applet.providers.length !== capture.expectedProviderCount))
                     return;
-                if (capture.readmePanelScenario) {
+                if (capture.panelDefaultsScenario) {
+                    if (capture.applet.costLoading || panelPreview.item === null)
+                        return;
+                    capture.verifyPanelDefaults();
+                } else if (capture.readmePanelScenario) {
                     capture.preparePanelAppearance();
                 } else if (capture.readmeScenario) {
                     popup.Window.window.width = 640;
@@ -566,7 +629,7 @@ Item {
                 capture.verifyScenario(next !== null && !next.visible, "scroll controls appear when tabs fit");
             }
             var popup = capture.settingsScenario ? configurationPreview.item
-                : capture.scenario === "panel-rules" || capture.panelAppearanceScenario
+                : capture.scenario === "panel-rules" || capture.panelAppearanceScenario || capture.panelDefaultsScenario
                 ? panelPreview.item : (capture.scenario === "provider-settings"
                     ? providerSettingsPreview.item : capture.applet.fullRepresentationItem);
             console.log("SMOKE_CAPTURE_START:" + capture.scenario);

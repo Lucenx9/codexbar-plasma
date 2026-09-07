@@ -40,11 +40,11 @@ KCM.SimpleKCM {
     property bool cfg_showProviderChangelogs
     property bool cfg_showProviderChangelogsDefault: false
     property bool cfg_showProviderInPanel
-    property bool cfg_showProviderInPanelDefault: true
+    property bool cfg_showProviderInPanelDefault: false
     property bool cfg_showPercentInPanel
-    property bool cfg_showPercentInPanelDefault: true
+    property bool cfg_showPercentInPanelDefault: false
     property bool cfg_showMultiProviderInPanel
-    property bool cfg_showMultiProviderInPanelDefault: false
+    property bool cfg_showMultiProviderInPanelDefault: true
     property bool cfg_showCreditsInPanel
     property bool cfg_showCreditsInPanelDefault: false
     property int cfg_providerConfigRevision

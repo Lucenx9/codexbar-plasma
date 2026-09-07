@@ -109,7 +109,8 @@ provider-defined detail rows and bounded bar/line charts.
 
 Panel and popup:
 
-- Compact panel indicator for one provider or multiple providers.
+- Colored Standard icons with usage meters by default, for one or multiple
+  providers. Provider names and percentage text can be enabled in **Display**.
 - Optional **Minimal** panel style in **Display → Panel** uses neutral provider
   icons, thin meters in the Plasma accent color, and wider click targets.
   **Use minimal preset** also enables provider meters, including with a single
@@ -228,8 +229,8 @@ and 95% critical thresholds. Reset notifications are off until enabled.
 | Quota display | Percent used; warning markers on; thresholds at 80% and 95% used |
 | Plasma notifications | On; quota warnings on; predicted exhaustion and limit-reset notices off |
 | Widget updates | Check and notify every 24 hours; automatic installation off |
-| Panel appearance | Standard style, provider name and usage percentage visible |
-| Extra panel content | Multi-provider meters and credit balances off |
+| Panel appearance | Standard style with colored provider icons and usage meters, including a single provider |
+| Extra panel content | Provider names, usage text and credit balances off |
 | Panel element order | Identity, service status, usage text, meters, respecting visibility settings |
 | Panel quota and visibility | Automatic quota selection; text and enabled meters always visible |
 | Provider selection | Keep the selected provider; automatic highest-usage selection off |
@@ -351,6 +352,7 @@ each scenario, captures the view, and closes the preview automatically:
 | `partial-error` | Claude's error view while healthy Codex data remains available. |
 | `long-text` | Codex with long account and workspace labels, two accounts, and doubled body text. |
 | `panel-rules` | Compact panel with secondary quotas after checking conditional visibility and defaults. |
+| `panel-default`, `panel-default-single` | Fresh Standard defaults with two providers or one, preserving explicit text/meter preferences and the icon fallback. |
 | `panel-standard`, `panel-minimal` | Same synthetic provider meters in both styles, with the real Display preset and configuration isolation checked. |
 | `panel-minimal-single` | Minimal with one provider, including meter visibility, missing quotas, and Standard fallback. |
 | `legacy-dashboard` | Legacy dashboard zeroes and formatted rows, with generic details taking precedence when present. |
