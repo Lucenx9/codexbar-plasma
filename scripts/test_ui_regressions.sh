@@ -677,7 +677,7 @@ normalize_token_cost_body = function_body(main_text, "normalizeTokenCost")
 for ranged_cost_fragment in (
     "costHistoryWindowLabel(item, historyDays)",
     "historyDays: historyDays",
-    "normalizeCostModels(item.daily, currency, historyDays)",
+    "normalizeCostModels(item.daily, currency, historyDays, item.updatedAt)",
     "normalizeCostDaily(item.daily, currency, historyDays, item.updatedAt)",
 ):
     if ranged_cost_fragment not in normalize_token_cost_body:
