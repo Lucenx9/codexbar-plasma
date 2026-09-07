@@ -489,7 +489,7 @@ function projectRows(costs, showsTokens) {
     var items = Array.isArray(costs) ? costs : []
     for (var i = 0; i < items.length; i++) {
         var snapshot = items[i]
-        var projects = snapshot.projects
+        var projects = snapshot && typeof snapshot === "object" ? snapshot.projects : null
         if (!projects || !Array.isArray(projects.rows)) {
             continue
         }
@@ -499,6 +499,7 @@ function projectRows(costs, showsTokens) {
             continue
         }
         var rows = projects.rows.slice(0, maximumProjectRows)
+            .filter(function(row) { return row && typeof row === "object" && !Array.isArray(row) })
         rows.sort(function(a, b) {
             var aHasValue = hasMetricValue(a, showsTokens)
             var bHasValue = hasMetricValue(b, showsTokens)
@@ -506,13 +507,15 @@ function projectRows(costs, showsTokens) {
                 return aHasValue ? -1 : 1
             }
             var difference = metricValue(b, showsTokens) - metricValue(a, showsTokens)
-            return difference || a.label.localeCompare(b.label)
+            var left = boundedText(a.label, 120)
+            var right = boundedText(b.label, 120)
+            return difference || left.localeCompare(right)
         })
         var trust = costTrustSummary([snapshot])
         for (var j = 0; j < rows.length && result.rows.length < maximumProjectRows; j++) {
             result.rows.push({
                 provider: snapshot.provider,
-                label: rows[j].label,
+                label: boundedText(rows[j].label, 120),
                 cost: rows[j].cost,
                 tokens: rows[j].tokens,
                 currency: rows[j].currency,
@@ -529,14 +532,17 @@ function spendCurrency(costs) {
     // A token-only snapshot still carries a fallback currency, but it must not
     // choose which priced providers participate in the money aggregate.
     for (var i = 0; i < items.length; i++) {
-        var totals = items[i].totals || ({})
+        var snapshot = items[i]
+        var totals = snapshot && typeof snapshot === "object" && snapshot.totals
+            ? snapshot.totals : ({})
         if (hasMetricValue(totals, false)) {
             var totalsCurrency = boundedText(totals.currency || "", 12)
             if (totalsCurrency.length > 0) {
                 return totalsCurrency
             }
         }
-        var daily = items[i].daily || []
+        var daily = snapshot && snapshot.daily && typeof snapshot.daily.length === "number"
+            ? snapshot.daily : []
         for (var j = 0; j < daily.length; j++) {
             if (!hasMetricValue(daily[j], false)) {
                 continue
@@ -548,14 +554,20 @@ function spendCurrency(costs) {
         }
     }
     for (var fallbackIndex = 0; fallbackIndex < items.length; fallbackIndex++) {
-        var fallbackTotals = items[fallbackIndex].totals || ({})
+        var fallbackSnapshot = items[fallbackIndex]
+        var fallbackTotals = fallbackSnapshot && typeof fallbackSnapshot === "object"
+            && fallbackSnapshot.totals ? fallbackSnapshot.totals : ({})
         var fallbackCurrency = boundedText(fallbackTotals.currency || "", 12)
         if (fallbackCurrency.length > 0) {
             return fallbackCurrency
         }
-        var fallbackDaily = items[fallbackIndex].daily || []
+        var fallbackDaily = fallbackSnapshot && fallbackSnapshot.daily
+            && typeof fallbackSnapshot.daily.length === "number" ? fallbackSnapshot.daily : []
         if (fallbackDaily.length > 0) {
-            return boundedText(fallbackDaily[0].currency || "USD", 12)
+            var firstDaily = fallbackDaily[0]
+            var firstCurrency = firstDaily && typeof firstDaily === "object"
+                ? firstDaily.currency : null
+            return boundedText(firstCurrency || "USD", 12)
         }
     }
     return "USD"
@@ -573,12 +585,15 @@ function spendHasMixedCostCurrencies(costs) {
     var items = Array.isArray(costs) ? costs : []
     var currency = spendCurrency(items)
     for (var i = 0; i < items.length; i++) {
-        var totals = items[i].totals || ({})
+        var snapshot = items[i]
+        var totals = snapshot && typeof snapshot === "object" && snapshot.totals
+            ? snapshot.totals : ({})
         if (hasMetricValue(totals, false)
                 && boundedText(totals.currency || currency, 12) !== currency) {
             return true
         }
-        var daily = items[i].daily || []
+        var daily = snapshot && snapshot.daily && typeof snapshot.daily.length === "number"
+            ? snapshot.daily : []
         for (var j = 0; j < daily.length; j++) {
             if (hasMetricValue(daily[j], false)
                     && boundedText(daily[j].currency || "USD", 12) !== currency) {
@@ -881,9 +896,13 @@ function spendDailyPoints(fmt, costs, showsTokens) {
     var byDate = ({})
     var currency = spendCurrency(items)
     for (var i = 0; i < items.length; i++) {
-        var daily = items[i].daily || []
+        var snapshot = items[i]
+        var daily = snapshot && snapshot.daily && typeof snapshot.daily.length === "number" ? snapshot.daily : []
         for (var j = 0; j < daily.length; j++) {
             var point = daily[j]
+            if (!point || typeof point !== "object" || Array.isArray(point)) {
+                continue
+            }
             var label = boundedText(point.label, 120)
             var pointCurrency = boundedText(point.currency || "USD", 12)
             // Mixed currencies cannot be summed as money, but token counts are
@@ -927,8 +946,12 @@ function spendTotals(costs) {
     var totalTokens = 0
     var hasCost = false
     for (var i = 0; i < items.length; i++) {
-        var totals = items[i].totals || ({})
-        totalTokens += Math.max(0, Number(totals.tokens) || 0)
+        var snapshot = items[i]
+        var totals = snapshot && typeof snapshot === "object" && snapshot.totals
+            ? snapshot.totals : ({})
+        var tokenValue = typeof totals.tokens === "number" && isFinite(totals.tokens)
+            ? totals.tokens : 0
+        totalTokens += Math.max(0, tokenValue)
         if (!costMatchesSpendCurrency(items[i], currency)
                 || !hasMetricValue(totals, false)) {
             continue
@@ -950,7 +973,9 @@ function spendTotals(costs) {
 function historyStillBuilding(costs) {
     var items = Array.isArray(costs) ? costs : []
     for (var i = 0; i < items.length; i++) {
-        if (items[i].historyCoverageEstablished === false) {
+        var snapshot = items[i]
+        if (snapshot && typeof snapshot === "object"
+                && snapshot.historyCoverageEstablished === false) {
             return true
         }
     }

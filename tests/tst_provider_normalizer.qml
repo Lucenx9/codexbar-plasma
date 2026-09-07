@@ -462,6 +462,15 @@ TestCase {
         compare(Normalizer.accountLabel(null), "")
     }
 
+    function test_accountLabelRejectsNonStringIdentityFields() {
+        compare(Normalizer.accountLabel({ account: { length: 3 }, organization: "Org" }), "Org")
+        compare(Normalizer.accountLabel({ account: 42, organization: 7, loginMethod: "oauth" }), "oauth")
+        compare(Normalizer.accountLabel({ account: ["a@example.com"] }), "")
+        var deduped = Normalizer.dedupeAccountOptions([{ account: { length: 3 } }, { account: "b@example.com" }])
+        compare(deduped.length, 1)
+        compare(deduped[0].account, "b@example.com")
+    }
+
     function test_dedupesAccountsWithoutLosingPrototypeNamedOnes() {
         // "constructor" and "toString" are legitimate account labels. A raw map
         // lookup would treat them as already seen and silently drop them.

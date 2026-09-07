@@ -320,13 +320,13 @@ function accountLabel(item) {
     if (!item) {
         return ""
     }
-    if (item.account && item.account.length > 0) {
+    if (typeof item.account === "string" && item.account.length > 0) {
         return item.account
     }
-    if (item.organization && item.organization.length > 0) {
+    if (typeof item.organization === "string" && item.organization.length > 0) {
         return item.organization
     }
-    if (item.loginMethod && item.loginMethod.length > 0) {
+    if (typeof item.loginMethod === "string" && item.loginMethod.length > 0) {
         return item.loginMethod
     }
     return ""
