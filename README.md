@@ -8,6 +8,13 @@ This repository contains only the Plasma applet. Provider logic,
 authentication, configuration, quota parsing, and JSON output come from the
 `codexbar` CLI.
 
+| Standard panel | Minimal panel |
+| --- | --- |
+| [![Colored provider icons and usage meters in the Standard panel](docs/codexbar-plasma-panel-standard.png)](docs/codexbar-plasma-panel-standard.png) | [![Neutral provider icons and thin accent-colored usage meters in the Minimal panel](docs/codexbar-plasma-panel-minimal.png)](docs/codexbar-plasma-panel-minimal.png) |
+
+The same Codex, Claude, and Gemini usage in both styles. Choose the appearance
+in **Display → Panel**; these examples show provider meters with panel text hidden.
+
 | Provider overview | Local sessions |
 | --- | --- |
 | [![Overview with Codex, Claude, and Gemini usage](docs/codexbar-plasma-overview.png)](docs/codexbar-plasma-overview.png) | [![Active and idle local agent sessions](docs/codexbar-plasma-sessions.png)](docs/codexbar-plasma-sessions.png) |
@@ -334,6 +341,7 @@ each scenario, captures the view, and closes the preview automatically:
 | --- | --- |
 | `normal` | Overview with synthetic Codex and Claude quotas. |
 | `readme-overview`, `readme-spend`, `readme-sessions`, `readme-codex` | README gallery in Breeze Dark, with three providers, varied 30-day history, and four local sessions. |
+| `readme-panel-standard`, `readme-panel-minimal` | Standard and Minimal panel icons and usage meters, with identical three-provider data in Breeze Dark. |
 | `tabs-overflow` | Ten providers, with scroll-button geometry, immediate focus reveal, and endpoint states checked. |
 | `provider-settings` | Enabled-only settings list, after checking combined search/filter behavior and selection isolation. |
 | `provider-header`, `provider-header-large` | Provider identity and incident badge at normal and doubled body text sizes. |

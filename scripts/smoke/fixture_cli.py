@@ -13,6 +13,7 @@ SCENARIOS = ("normal", "tabs-overflow", "provider-settings", "provider-header", 
              "localization-it", "localization-fr", "localization-de", "localization-es", "localization-pt_BR")
 SCENARIOS += ("settings-general", "settings-display", "settings-advanced", "settings-debug")
 SCENARIOS += ("readme-overview", "readme-spend", "readme-sessions", "readme-codex")
+SCENARIOS += ("readme-panel-standard", "readme-panel-minimal")
 
 
 def usage(provider, scenario, now):
