@@ -924,6 +924,21 @@ TestCase {
         compare(rows[1].cost, 0)
     }
 
+    function test_costHistoryDoesNotReuseDatesOutsideAnEmptyWindow_data() {
+        return [
+            { tag: "older", date: "2026-08-20" },
+            { tag: "future", date: "2026-08-31" }
+        ]
+    }
+
+    function test_costHistoryDoesNotReuseDatesOutsideAnEmptyWindow(data) {
+        var rows = Normalizer.normalizeCostDaily([
+            { date: data.date, totalCost: 100, totalTokens: 1000 }
+        ], "USD", 7, "2026-08-30")
+
+        compare(rows.length, 0)
+    }
+
     function test_costHistoryNeverExceedsTheHistoryPointBound() {
         var daily = []
         for (var i = 0; i < Normalizer.maximumCostHistoryPoints + 50; i++) {
@@ -1242,6 +1257,113 @@ TestCase {
         compare(rows[1].label, "gpt-5")
         compare(rows[1].cost, 3)
         compare(rows[1].tokens, 30)
+    }
+
+    function test_costModelsUseTheSameCalendarWindowAsDailyHistory_data() {
+        return [
+            { tag: "date-only", updatedAt: "2026-08-30" },
+            { tag: "timestamp", updatedAt: new Date(2026, 7, 30, 12).toISOString() }
+        ]
+    }
+
+    function test_costModelsUseTheSameCalendarWindowAsDailyHistory(data) {
+        var items = [
+            { date: "2026-08-20", totalCost: 100, totalTokens: 1000,
+                modelBreakdowns: [{ modelName: "old", cost: 100, totalTokens: 1000 }] },
+            { date: "2026-08-24", totalCost: 2, totalTokens: 20,
+                modelBreakdowns: [{ modelName: "current", cost: 2, totalTokens: 20 }] },
+            { date: "2026-08-29", totalCost: 1, totalTokens: 10,
+                modelBreakdowns: [{ modelName: "current", cost: 1, totalTokens: 10 }] },
+            { date: "2026-08-31", totalCost: 200, totalTokens: 2000,
+                modelBreakdowns: [{ modelName: "future", cost: 200, totalTokens: 2000 }] }
+        ]
+        var daily = Normalizer.normalizeCostDaily(items, "USD", 7, data.updatedAt)
+        var models = Normalizer.normalizeCostModels(items, "USD", 7, data.updatedAt)
+
+        compare(daily.length, 7)
+        compare(models.length, 1)
+        compare(models[0].label, "current")
+        compare(models[0].cost, 3)
+        compare(models[0].tokens, 30)
+        compare(daily.reduce(function(total, row) { return total + row.cost }, 0),
+            models[0].cost)
+    }
+
+    function test_costModelsFindInRangeDatesBeyondTheRowCount() {
+        var items = [
+            { day: "2026-08-29", modelBreakdowns: [{ modelName: "current", cost: 2 }] },
+            null,
+            { dayKey: "2026-08-20", modelBreakdowns: [{ modelName: "old", cost: 100 }] },
+            { date: "2026-08-30", modelBreakdowns: [{ modelName: "current", cost: 3 }] }
+        ]
+        var rows = Normalizer.normalizeCostModels(items, "USD", 2, "2026-08-30")
+
+        compare(rows.length, 1)
+        compare(rows[0].label, "current")
+        compare(rows[0].cost, 5)
+    }
+
+    function test_costModelsDoNotReuseDatesOutsideAnEmptyWindow() {
+        var rows = Normalizer.normalizeCostModels([
+            { date: "2026-08-20", modelBreakdowns: [{ modelName: "old", cost: 100 }] }
+        ], "USD", 7, "2026-08-30")
+
+        compare(rows.length, 0)
+    }
+
+    function test_costModelsKeepLegacyTailWithoutUsableDates_data() {
+        return [
+            { tag: "missing-update", updatedAt: undefined, dated: true },
+            { tag: "invalid-update", updatedAt: "not-a-date", dated: true },
+            { tag: "missing-days", updatedAt: "2026-08-30", dated: false }
+        ]
+    }
+
+    function test_costModelsKeepLegacyTailWithoutUsableDates(data) {
+        var items = []
+        for (var i = 0; i < 3; i++) {
+            items.push({
+                date: data.dated ? "2026-08-" + (20 + i) : "",
+                modelBreakdowns: [{ modelName: "model-" + i, cost: i + 1 }]
+            })
+        }
+        var rows = Normalizer.normalizeCostModels(items, "USD", 2, data.updatedAt)
+
+        compare(rows.length, 2)
+        compare(rows[0].label, "model-2")
+        compare(rows[1].label, "model-1")
+    }
+
+    function test_costModelsStopAtTheCalendarInspectionBound() {
+        var items = [{
+            date: "2026-08-29",
+            modelBreakdowns: [{ modelName: "uninspected", cost: 100 }]
+        }]
+        for (var i = 0; i < Normalizer.maximumCostHistoryScanItems - 1; i++) {
+            items.push(null)
+        }
+        items.push({
+            date: "2026-08-30",
+            modelBreakdowns: [{ modelName: "inspected", cost: 1 }]
+        })
+        var rows = Normalizer.normalizeCostModels(items, "USD", 2, "2026-08-30")
+
+        compare(rows.length, 1)
+        compare(rows[0].label, "inspected")
+    }
+
+    function test_costModelsKeepTheDayBudgetWithDuplicateDates() {
+        var items = []
+        for (var i = 0; i < 5; i++) {
+            items.push({
+                date: "2026-08-30",
+                modelBreakdowns: [{ modelName: "current", cost: 1 }]
+            })
+        }
+        var rows = Normalizer.normalizeCostModels(items, "USD", 2, "2026-08-30")
+
+        compare(rows.length, 1)
+        compare(rows[0].cost, 2)
     }
 
     function test_costModelsPreserveMissingCostForTokenOnlyBreakdowns() {

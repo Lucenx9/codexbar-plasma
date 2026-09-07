@@ -486,18 +486,30 @@ function localCalendarDateKey(value) {
     return calendarDateKey(date.getFullYear(), date.getMonth() + 1, date.getDate())
 }
 
+function costHistoryCalendarWindow(days, updatedAt) {
+    var endDate = parsedCalendarDateKey(localCalendarDateKey(updatedAt))
+    if (!endDate) {
+        return null
+    }
+    var historyDays = Math.floor(boundedHistoryDays(days))
+    return {
+        firstTimestampMs: endDate.timestampMs - (historyDays - 1) * 24 * 60 * 60 * 1000,
+        lastTimestampMs: endDate.timestampMs
+    }
+}
+
 function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys) {
     if (!rows || rows.length === 0) {
         return rows || []
     }
-    var endDate = parsedCalendarDateKey(localCalendarDateKey(updatedAt))
-    if (!endDate) {
+    var window = costHistoryCalendarWindow(days, updatedAt)
+    if (!window) {
         return rows
     }
 
     var historyDays = Math.floor(boundedHistoryDays(days))
     var dayMilliseconds = 24 * 60 * 60 * 1000
-    var firstTimestampMs = endDate.timestampMs - (historyDays - 1) * dayMilliseconds
+    var firstTimestampMs = window.firstTimestampMs
     var byDate = ({})
     var hasObservedCost = false
     for (var i = 0; i < rows.length; i++) {
@@ -510,7 +522,7 @@ function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys) {
             }
             continue
         }
-        if (parsed.timestampMs < firstTimestampMs || parsed.timestampMs > endDate.timestampMs) {
+        if (parsed.timestampMs < firstTimestampMs || parsed.timestampMs > window.lastTimestampMs) {
             continue
         }
         if (hasOwnKey(byDate, parsed.key)) {
@@ -548,7 +560,9 @@ function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys) {
             })
         }
     }
-    return observedInRange ? result : rows
+    // No observation in a valid window must not revive older or future dates.
+    // Leave it empty rather than manufacture a zero-cost history without evidence.
+    return observedInRange ? result : []
 }
 
 function normalizedCostCoverage(coverage) {
@@ -797,20 +811,42 @@ function normalizeProviderCostTotals(providerID, totals, fallbackCost,
     return result
 }
 
-function normalizeCostModels(items, currency, days) {
+function normalizeCostModels(items, currency, days, updatedAt) {
     var byName = ({})
     if (!items || !Array.isArray(items)) {
         return []
     }
 
-    // Floor like normalizeCostDaily: a fractional bound would leave the loop
-    // index fractional, so every day lookup would miss and all model rows
-    // would silently disappear.
+    // Match the daily history's whole-day budget, including the legacy tail.
     var historyDays = Math.floor(boundedHistoryDays(days))
     var firstItem = Math.max(0, items.length - historyDays)
-    for (var i = firstItem; i < items.length; i++) {
-        var breakdowns = items[i] && Array.isArray(items[i].modelBreakdowns)
-            ? items[i].modelBreakdowns
+    var window = costHistoryCalendarWindow(historyDays, updatedAt)
+    var firstInspectedItem = window
+        ? Math.max(0, items.length - maximumCostHistoryScanItems) : firstItem
+    var modelDays = []
+    for (var itemIndex = items.length - 1; itemIndex >= firstInspectedItem
+            && modelDays.length < historyDays; itemIndex--) {
+        var item = isCliRecord(items[itemIndex]) ? items[itemIndex] : null
+        if (!item) {
+            continue
+        }
+        if (window) {
+            var parsed = parsedCalendarDateKey(boundedDisplayText(
+                item.date || item.day || item.dayKey || "", 120))
+            if (parsed && (parsed.timestampMs < window.firstTimestampMs
+                    || parsed.timestampMs > window.lastTimestampMs)) {
+                continue
+            }
+            // Undated legacy records retain the original bounded tail behavior.
+            if (!parsed && itemIndex < firstItem) {
+                continue
+            }
+        }
+        modelDays.unshift(item)
+    }
+    for (var i = 0; i < modelDays.length; i++) {
+        var breakdowns = Array.isArray(modelDays[i].modelBreakdowns)
+            ? modelDays[i].modelBreakdowns
             : []
         var breakdownLimit = Math.min(breakdowns.length, maximumModelBreakdownsPerDay)
         for (var j = 0; j < breakdownLimit; j++) {
