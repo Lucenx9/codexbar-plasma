@@ -258,6 +258,10 @@ Item {
                     readonly property color meterColor: compactRoot.applet.quotaMeterColor(
                         quotaRow,
                         accent)
+                    // An exhausted remaining quota has no fill, so its track
+                    // must still carry the warning color.
+                    readonly property bool neutralTrack: compactRoot.minimalStyle
+                        && compactRoot.applet.quotaSeverity(quotaRow).length === 0
 
                     function activate() {
                         compactRoot.applet.openProviderFromPanel(compactMeter.modelData.provider)
@@ -316,8 +320,8 @@ Item {
                                 ? compactRoot.meterIconSize + Kirigami.Units.smallSpacing : compactRoot.meterWidth
                             Layout.preferredHeight: compactRoot.meterBarHeight
                             radius: height / 2
-                            color: compactRoot.applet.withAlpha(compactRoot.minimalStyle
-                                ? Kirigami.Theme.textColor : compactMeter.meterColor, compactRoot.minimalStyle ? 0.18 : 0.28)
+                            color: compactRoot.applet.withAlpha(compactMeter.neutralTrack
+                                ? Kirigami.Theme.textColor : compactMeter.meterColor, compactMeter.neutralTrack ? 0.18 : 0.28)
                             clip: true
 
                             Rectangle {

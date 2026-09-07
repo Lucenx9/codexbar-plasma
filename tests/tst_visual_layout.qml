@@ -138,6 +138,9 @@ TestCase {
         function quotaMeterColor(item, accent) {
             return quotaWarning ? Qt.rgba(1, 0.5, 0, 1) : accent;
         }
+        function quotaSeverity() {
+            return quotaWarning ? "major" : "";
+        }
         function withAlpha(c, a) {
             return Qt.rgba(c.r, c.g, c.b, a);
         }
@@ -244,6 +247,26 @@ TestCase {
                 return found;
         }
         return null;
+    }
+
+    function test_emptyQuotaRetainsWarningColor_data() {
+        return [{tag: "standard", minimal: false}, {tag: "minimal", minimal: true}];
+    }
+
+    function test_emptyQuotaRetainsWarningColor(data) {
+        applet.minimalPanel = data.minimal;
+        applet.quotaWarning = true;
+        var panel = createControl("CompactRepresentation", {applet: applet, height: 44});
+        if (!panel)
+            return;
+        wait(0);
+        var meter = findItem(panel, item => item.modelData && item.modelData.provider === "claude");
+        verify(meter !== null);
+        var track = findItem(meter, item => item.objectName === "panelMeterTrack");
+        var fill = findItem(meter, item => item.objectName === "panelMeterFill");
+        verify(track !== null && fill !== null);
+        tryCompare(fill, "width", 0);
+        compare(track.color, Qt.rgba(1, 0.5, 0, 0.28));
     }
 
     function test_sessionFeedbackKeepsHeadingAtTop_data() {

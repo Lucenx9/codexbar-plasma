@@ -14,6 +14,8 @@ Item {
     property var panelUsageSnapshot
     property var displaySettingsPage
     readonly property bool panelAppearanceScenario: scenario === "panel-standard" || scenario === "panel-minimal"
+        || scenario === "panel-minimal-single"
+    readonly property int expectedProviderCount: scenario === "panel-minimal-single" ? 1 : 2
 
     Loader {
         id: settingsPreview
@@ -70,7 +72,7 @@ Item {
         verifyScenario(page.cfg_panelQuotaLane === "secondary" && page.cfg_providerOrder === "claude,codex"
             && page.cfg_panelVisibilityRules === oldRules, "preset changed quota, order or visibility rules");
         verifyScenario(config.panelStyle === "standard", "settings took effect before Apply");
-        config.panelStyle = scenario === "panel-minimal" ? page.cfg_panelStyle : "standard";
+        config.panelStyle = scenario === "panel-standard" ? "standard" : page.cfg_panelStyle;
         config.showMultiProviderInPanel = page.cfg_showMultiProviderInPanel;
         config.showProviderInPanel = page.cfg_showProviderInPanel;
         config.showPercentInPanel = page.cfg_showPercentInPanel;
@@ -78,6 +80,23 @@ Item {
         page.destroy();
         displaySettingsPage = null;
         component.destroy();
+        if (scenario === "panel-minimal-single") {
+            verifyScenario(applet.compactProviders().length === 1, "minimal preset hid the single-provider quota");
+            config.panelStyle = "unknown";
+            verifyScenario(!applet.minimalPanel && applet.compactProviders().length === 0,
+                "unknown style did not preserve Standard single-provider behavior");
+            config.panelStyle = "minimal";
+            config.showMultiProviderInPanel = false;
+            verifyScenario(applet.compactProviders().length === 0, "single-provider meter ignored visibility checkbox");
+            config.showMultiProviderInPanel = true;
+            config.panelQuotaLane = "tertiary";
+            verifyScenario(applet.compactProviders().length === 0, "single-provider meter ignored missing quota");
+            config.panelQuotaLane = "auto";
+            config.panelVisibilityRules = '{"meters":{"condition":"usageAtLeast","usedPercent":100}}';
+            verifyScenario(applet.compactProviders().length === 0, "single-provider meter ignored visibility rules");
+            config.panelVisibilityRules = "{}";
+            verifyScenario(applet.compactProviders().length === 1, "single-provider meter did not recover");
+        }
     }
 
     function preparePanelScenario() {
@@ -163,11 +182,19 @@ Item {
     function scenarioReady() {
         if (scenario === "loading")
             return applet.loading && applet.providers.length === 0;
-        if (applet.loading || applet.costLoading || applet.providers.length !== 2)
+        if (applet.loading || applet.costLoading || applet.providers.length !== expectedProviderCount)
             return false;
         var codex = applet.providers[applet.providerIndexForID("codex")];
         var claude = applet.providers[applet.providerIndexForID("claude")];
-        if (!codex || !claude || codex.rows.length !== 2 || codex.error.length > 0)
+        if (!codex || codex.rows.length !== 2 || codex.error.length > 0)
+            return false;
+        if (panelAppearanceScenario) {
+            verifyScenario(applet.providers === panelUsageSnapshot, "panel preset reloaded usage");
+            verifyScenario(applet.minimalPanel === (scenario !== "panel-standard"), "panel style did not reach the renderer");
+            verifyScenario(applet.compactText() === "", "minimal preset left panel text visible");
+            return panelPreview.item !== null && applet.compactProviders().length === expectedProviderCount;
+        }
+        if (!claude)
             return false;
         if (scenario === "partial-error")
             return applet.selectedProviderID === "claude" && claude.error.indexOf("Synthetic provider timeout") >= 0;
@@ -248,12 +275,6 @@ Item {
             verifyScenario(applet.providers === panelUsageSnapshot, "panel settings reloaded usage");
             return panelPreview.item !== null && applet.compactProviders().length === 2;
         }
-        if (panelAppearanceScenario) {
-            verifyScenario(applet.providers === panelUsageSnapshot, "panel preset reloaded usage");
-            verifyScenario(applet.minimalPanel === (scenario === "panel-minimal"), "panel style did not reach the renderer");
-            verifyScenario(applet.compactText() === "", "minimal preset left panel text visible");
-            return panelPreview.item !== null && applet.compactProviders().length === 2;
-        }
         if (scenario === "long-text")
             return applet.selectedProviderID === "codex" && !applet.accountLoadingForProvider("codex") && applet.accountOptionsForProvider("codex").length === 2 && codex.account.length > 50;
         if (scenario.indexOf("project-") === 0) {
@@ -310,7 +331,8 @@ Item {
                 return;
             if (!capture.prepared) {
                 capture.applet.expanded = true;
-                if (capture.scenario !== "loading" && (capture.applet.loading || capture.applet.providers.length !== 2))
+                if (capture.scenario !== "loading"
+                        && (capture.applet.loading || capture.applet.providers.length !== capture.expectedProviderCount))
                     return;
                 if (capture.scenario === "loading") {
                     capture.verifyEmptyPanelRules();

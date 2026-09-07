@@ -8,7 +8,7 @@ import sys
 import time
 from datetime import datetime, timedelta, timezone
 
-SCENARIOS = ("normal", "loading", "partial-error", "long-text", "panel-rules", "panel-standard", "panel-minimal", "legacy-dashboard",
+SCENARIOS = ("normal", "loading", "partial-error", "long-text", "panel-rules", "panel-standard", "panel-minimal", "panel-minimal-single", "legacy-dashboard",
              "project-costs", "project-tokens", "project-range", "project-long-text",
              "localization-it", "localization-fr", "localization-de", "localization-es", "localization-pt_BR")
 
@@ -55,7 +55,8 @@ def response(args, scenario, now):
     if args == ["--version"]:
         return "CodexBar 0.56.2 (synthetic smoke fixture)"
     if args == ["config", "providers", "--format", "json", "--json-only"]:
-        return [{"provider": key, "enabled": True} for key in ("codex", "claude")]
+        providers = ("codex",) if scenario == "panel-minimal-single" else ("codex", "claude")
+        return [{"provider": key, "enabled": True} for key in providers]
     if args == ["sessions", "--json-v2"]:
         return {"sessions": [{"provider": "codex", "projectName": "Example project",
                               "state": "active", "source": "desktopApp", "lastActivityAt": now.isoformat()},

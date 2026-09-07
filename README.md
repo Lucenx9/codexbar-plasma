@@ -107,7 +107,8 @@ Panel and popup:
 - Compact panel indicator for one provider or multiple providers.
 - Optional **Minimal** panel style in **Display → Panel** uses neutral provider
   icons, thin meters in the Plasma accent color, and wider click targets.
-  **Use minimal preset** also enables provider meters and hides panel names,
+  **Use minimal preset** also enables provider meters, including with a single
+  provider, and hides panel names,
   usage text and credits. The style selector changes appearance alone, so custom
   visibility settings remain available. Quota and service warnings retain their
   semantic colors. Existing installations keep the Standard style; neither option
@@ -304,6 +305,7 @@ each scenario, captures the view, and closes the preview automatically:
 | `long-text` | Codex with long account and workspace labels, two accounts, and doubled body text. |
 | `panel-rules` | Compact panel with secondary quotas after checking conditional visibility and defaults. |
 | `panel-standard`, `panel-minimal` | Same synthetic provider meters in both styles, with the real Display preset and configuration isolation checked. |
+| `panel-minimal-single` | Minimal with one provider, including meter visibility, missing quotas, and Standard fallback. |
 | `legacy-dashboard` | Legacy dashboard zeroes and formatted rows, with generic details taking precedence when present. |
 | `project-costs` | Project estimates, an explicit zero, and an unavailable cost in Usage & Spend. |
 | `project-tokens` | Switching to tokens reorders projects without reloading history. |

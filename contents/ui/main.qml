@@ -3731,7 +3731,7 @@ PlasmoidItem {
     }
 
     function compactProviders() {
-        if (!providers || providers.length <= 1
+        if (!providers || (!minimalPanel && providers.length <= 1)
                 || Plasmoid.configuration.showMultiProviderInPanel !== true) {
             return []
         }
