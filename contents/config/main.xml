@@ -43,7 +43,7 @@
     </entry>
     <entry name="usageBarsShowUsed" type="Bool">
       <label>Show usage bars as percent used instead of percent left.</label>
-      <default>false</default>
+      <default>true</default>
     </entry>
     <entry name="showQuotaWarningMarkers" type="Bool">
       <label>Show quota warning indicators on usage meters.</label>
@@ -79,7 +79,7 @@
     </entry>
     <entry name="notifyLimitResets" type="Bool">
       <label>Notify when a heavily used limit resets back to empty.</label>
-      <default>true</default>
+      <default>false</default>
     </entry>
     <entry name="updateChecksEnabled" type="Bool">
       <label>Check for widget updates.</label>

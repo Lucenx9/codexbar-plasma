@@ -20,7 +20,7 @@ KCM.SimpleKCM {
     property string cfg_commandPath
     property string cfg_commandPathDefault: "codexbar"
     property alias cfg_usageBarsShowUsed: usageBarsShowUsedCheck.checked
-    property bool cfg_usageBarsShowUsedDefault: false
+    property bool cfg_usageBarsShowUsedDefault: true
     property alias cfg_showQuotaWarningMarkers: showQuotaWarningMarkersCheck.checked
     property bool cfg_showQuotaWarningMarkersDefault: true
     property string cfg_menuBarDisplayMode: "percent"

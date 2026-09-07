@@ -87,6 +87,27 @@ Item {
             throw new Error("SMOKE_FAILED: " + message);
     }
 
+    function verifyGeneralDefaults(page) {
+        var config = applet.Plasmoid.configuration;
+        var row = applet.providers[applet.providerIndexForID("codex")].rows[0];
+        verifyScenario(applet.displayPercent(row) === 43 && !applet.notifyLimitResets,
+            "fresh defaults must show used quota and leave reset notifications off");
+        config.usageBarsShowUsed = false;
+        config.notifyLimitResets = true;
+        verifyScenario(applet.displayPercent(row) === 57 && applet.notifyLimitResets,
+            "explicit preferences must override the defaults");
+        page.cfg_usageBarsShowUsed = false;
+        page.cfg_notifyLimitResets = true;
+        page.restoreUserDefaults();
+        verifyScenario(page.defaultValuesPrepared && page.cfg_usageBarsShowUsed && !page.cfg_notifyLimitResets,
+            "Restore all defaults did not prepare the new defaults");
+        verifyScenario(!config.usageBarsShowUsed && config.notifyLimitResets,
+            "restoring pending defaults changed the live configuration before Apply");
+        config.usageBarsShowUsed = true;
+        config.notifyLimitResets = false;
+        page.defaultsActionRequested = false;
+    }
+
     function preparePanelAppearance() {
         var config = applet.Plasmoid.configuration;
         panelUsageSnapshot = applet.providers;
@@ -247,7 +268,13 @@ Item {
     function scenarioReady() {
         if (settingsScenario) {
             var preview = configurationPreview.item as SettingsPreview;
-            return preview !== null && preview.ready;
+            if (preview === null || !preview.ready)
+                return false;
+            if (scenario === "settings-general" && !navigationVerified) {
+                verifyGeneralDefaults(preview.page);
+                navigationVerified = true;
+            }
+            return true;
         }
         if (scenario === "provider-settings") {
             var page = providerSettingsPage;

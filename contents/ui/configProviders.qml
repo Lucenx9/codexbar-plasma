@@ -36,7 +36,7 @@ KCM.SimpleKCM {
     property bool cfg_includeStatus
     property bool cfg_includeStatusDefault: false
     property bool cfg_usageBarsShowUsed
-    property bool cfg_usageBarsShowUsedDefault: false
+    property bool cfg_usageBarsShowUsedDefault: true
     property bool cfg_showProviderChangelogs
     property bool cfg_showProviderChangelogsDefault: false
     property bool cfg_showProviderInPanel

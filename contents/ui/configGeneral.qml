@@ -34,7 +34,7 @@ KCM.SimpleKCM {
     property alias cfg_notifyPredictivePaceWarnings: notifyPredictivePaceWarningsCheck.checked
     property bool cfg_notifyPredictivePaceWarningsDefault: false
     property alias cfg_notifyLimitResets: notifyLimitResetsCheck.checked
-    property bool cfg_notifyLimitResetsDefault: true
+    property bool cfg_notifyLimitResetsDefault: false
     property alias cfg_quotaWarningPercent: quotaWarningPercentSpin.value
     property int cfg_quotaWarningPercentDefault: 80
     property alias cfg_quotaCriticalPercent: quotaCriticalPercentSpin.value
@@ -56,7 +56,7 @@ KCM.SimpleKCM {
     property string cfg_source
     property string cfg_sourceDefault: ""
     property bool cfg_usageBarsShowUsed
-    property bool cfg_usageBarsShowUsedDefault: false
+    property bool cfg_usageBarsShowUsedDefault: true
     property bool cfg_showQuotaWarningMarkers
     property bool cfg_showQuotaWarningMarkersDefault: true
     property string cfg_menuBarDisplayMode

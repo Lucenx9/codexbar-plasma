@@ -208,6 +208,36 @@ Settings:
 - Check for widget updates, notify when an update is available, and opt in to
   silent automatic widget installation.
 
+### Default settings
+
+The defaults keep quota usage visible and reserve notifications for quota warnings
+and available updates. Percentages show **used** quota, matching the 80% warning
+and 95% critical thresholds. Reset notifications are off until enabled.
+
+| Setting | Default |
+| --- | --- |
+| Command and provider source | `codexbar` from PATH; no provider or source override |
+| Usage refresh | Every 5 minutes |
+| Provider service status | Off; incident notifications become active when status fetching is enabled |
+| Local usage and spend history | On, 30 days, cost metric |
+| Quota display | Percent used; warning markers on; thresholds at 80% and 95% used |
+| Plasma notifications | On; quota warnings on; predicted exhaustion and limit-reset notices off |
+| Widget updates | Check and notify every 24 hours; automatic installation off |
+| Panel appearance | Standard style, provider name and usage percentage visible |
+| Extra panel content | Multi-provider meters and credit balances off |
+| Panel element order | Identity, service status, usage text, meters, respecting visibility settings |
+| Panel quota and visibility | Automatic quota selection; text and enabled meters always visible |
+| Provider selection | Keep the selected provider; automatic highest-usage selection off |
+| Popup navigation | Tab text labels on; provider order from the CLI |
+| Overview | First three enabled providers automatically |
+| Reset times | Relative countdown |
+| Provider changelog links | Off |
+
+These values apply to new widgets and settings without a stored override. Existing
+stored choices take precedence. **General → Restore all defaults** prepares these
+values for an existing widget; select **Apply** or **OK** to save them, or **Cancel**
+to keep its settings. Provider accounts and CLI configuration are not reset.
+
 ## Troubleshooting
 
 If the widget stays on **Loading**:
