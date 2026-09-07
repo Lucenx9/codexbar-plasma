@@ -75,6 +75,8 @@ KCM.SimpleKCM {
     property bool cfg_showProviderChangelogsDefault: false
     property bool cfg_showProviderInPanel
     property bool cfg_showProviderInPanelDefault: true
+    property string cfg_panelStyle
+    property string cfg_panelStyleDefault: "standard"
     property bool cfg_showPercentInPanel
     property bool cfg_showPercentInPanelDefault: true
     property bool cfg_showMultiProviderInPanel
@@ -203,6 +205,7 @@ KCM.SimpleKCM {
             [cfg_resetTimesShowAbsolute, cfg_resetTimesShowAbsoluteDefault],
             [cfg_showProviderChangelogs, cfg_showProviderChangelogsDefault],
             [cfg_showProviderInPanel, cfg_showProviderInPanelDefault],
+            [cfg_panelStyle, cfg_panelStyleDefault],
             [cfg_showPercentInPanel, cfg_showPercentInPanelDefault],
             [cfg_showMultiProviderInPanel, cfg_showMultiProviderInPanelDefault],
             [cfg_panelElementOrder, cfg_panelElementOrderDefault],
@@ -248,6 +251,7 @@ KCM.SimpleKCM {
         cfg_resetTimesShowAbsolute = cfg_resetTimesShowAbsoluteDefault
         cfg_showProviderChangelogs = cfg_showProviderChangelogsDefault
         cfg_showProviderInPanel = cfg_showProviderInPanelDefault
+        cfg_panelStyle = cfg_panelStyleDefault
         cfg_showPercentInPanel = cfg_showPercentInPanelDefault
         cfg_showMultiProviderInPanel = cfg_showMultiProviderInPanelDefault
         cfg_panelElementOrder = cfg_panelElementOrderDefault

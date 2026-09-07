@@ -2323,3 +2323,23 @@ msgstr "Esaurimento previsto ora"
 #: contents/ui/main.qml
 msgid "Runs out in %1"
 msgstr "Esaurimento previsto tra %1"
+
+#: contents/ui/configDisplay.qml
+msgid "Panel style:"
+msgstr "Stile del pannello:"
+
+#: contents/ui/configDisplay.qml
+msgid "Minimal"
+msgstr "Minimale"
+
+#: contents/ui/configDisplay.qml
+msgid "Minimal uses neutral icons and thin meters in the Plasma accent color. Quota warnings keep their warning colors."
+msgstr "Lo stile minimale usa icone neutre e indicatori sottili nel colore di accento di Plasma. Gli avvisi sulle quote mantengono i colori di avvertimento."
+
+#: contents/ui/configDisplay.qml
+msgid "Use minimal preset"
+msgstr "Usa la preimpostazione minimale"
+
+#: contents/ui/configDisplay.qml
+msgid "The preset enables provider meters and hides provider names, usage text and credits in the panel."
+msgstr "La preimpostazione abilita gli indicatori dei provider e nasconde nomi dei provider, testo di utilizzo e crediti nel pannello."

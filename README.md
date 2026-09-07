@@ -105,6 +105,13 @@ provider-defined detail rows and bounded bar/line charts.
 Panel and popup:
 
 - Compact panel indicator for one provider or multiple providers.
+- Optional **Minimal** panel style in **Display → Panel** uses neutral provider
+  icons, thin meters in the Plasma accent color, and wider click targets.
+  **Use minimal preset** also enables provider meters and hides panel names,
+  usage text and credits. The style selector changes appearance alone, so custom
+  visibility settings remain available. Quota and service warnings retain their
+  semantic colors. Existing installations keep the Standard style; neither option
+  changes the desktop theme, panel geometry, provider selection or popup.
 - Provider tabs with usage bars, reset windows, account identity, status, and
   credits.
 - Panel text modes for percent used or left, pace, usage plus pace, reset time,
@@ -296,6 +303,7 @@ each scenario, captures the view, and closes the preview automatically:
 | `partial-error` | Claude's error view while healthy Codex data remains available. |
 | `long-text` | Codex with long account and workspace labels, two accounts, and doubled body text. |
 | `panel-rules` | Compact panel with secondary quotas after checking conditional visibility and defaults. |
+| `panel-standard`, `panel-minimal` | Same synthetic provider meters in both styles, with the real Display preset and configuration isolation checked. |
 | `legacy-dashboard` | Legacy dashboard zeroes and formatted rows, with generic details taking precedence when present. |
 | `project-costs` | Project estimates, an explicit zero, and an unavailable cost in Usage & Spend. |
 | `project-tokens` | Switching to tokens reorders projects without reloading history. |
@@ -308,7 +316,13 @@ Select one scenario or choose a new artifact directory:
 ```sh
 make smoke SMOKE_ARGS='--scenario long-text'
 python3 scripts/smoke_popup.py --scenario normal --output /tmp/codexbar-preview
+python3 scripts/smoke_popup.py --scenario panel-minimal --renderer opengl
 ```
+
+Use `--renderer opengl` on a graphical session with OpenGL for accurate provider
+icon colors. The default software renderer checks layout and behavior, but does
+not render Kirigami's icon color masking. Qt documents the software renderer's
+[effect limitations](https://doc.qt.io/qt-6/qtquick-visualcanvas-adaptations-software.html).
 
 The command prints the artifact directory, defaulting to `dist/smoke/run-*`.
 Each scenario produces a PNG and a process log; `results.json` records pass or

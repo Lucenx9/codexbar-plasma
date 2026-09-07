@@ -8,7 +8,7 @@ import sys
 import time
 from datetime import datetime, timedelta, timezone
 
-SCENARIOS = ("normal", "loading", "partial-error", "long-text", "panel-rules", "legacy-dashboard",
+SCENARIOS = ("normal", "loading", "partial-error", "long-text", "panel-rules", "panel-standard", "panel-minimal", "legacy-dashboard",
              "project-costs", "project-tokens", "project-range", "project-long-text",
              "localization-it", "localization-fr", "localization-de", "localization-es", "localization-pt_BR")
 

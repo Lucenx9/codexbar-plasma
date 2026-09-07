@@ -2314,3 +2314,23 @@ msgstr "Esgotamento previsto agora"
 #: contents/ui/main.qml
 msgid "Runs out in %1"
 msgstr "Esgotamento previsto em %1"
+
+#: contents/ui/configDisplay.qml
+msgid "Panel style:"
+msgstr "Estilo do painel:"
+
+#: contents/ui/configDisplay.qml
+msgid "Minimal"
+msgstr "Mínimo"
+
+#: contents/ui/configDisplay.qml
+msgid "Minimal uses neutral icons and thin meters in the Plasma accent color. Quota warnings keep their warning colors."
+msgstr "O estilo mínimo usa ícones neutros e indicadores finos na cor de destaque do Plasma. Os alertas de cota mantêm suas cores de aviso."
+
+#: contents/ui/configDisplay.qml
+msgid "Use minimal preset"
+msgstr "Usar a predefinição mínima"
+
+#: contents/ui/configDisplay.qml
+msgid "The preset enables provider meters and hides provider names, usage text and credits in the panel."
+msgstr "A predefinição ativa os indicadores dos provedores e oculta seus nomes, o texto de uso e os créditos no painel."

@@ -35,6 +35,8 @@ KCM.SimpleKCM {
     property bool cfg_showProviderChangelogsDefault: false
     property alias cfg_showProviderInPanel: showProviderCheck.checked
     property bool cfg_showProviderInPanelDefault: true
+    property string cfg_panelStyle: "standard"
+    property string cfg_panelStyleDefault: "standard"
     property alias cfg_showPercentInPanel: showPercentCheck.checked
     property bool cfg_showPercentInPanelDefault: true
     property alias cfg_showMultiProviderInPanel: showMultiProviderCheck.checked
@@ -118,6 +120,14 @@ KCM.SimpleKCM {
 
     function setPanelVisibilityRule(elementID, patch) {
         cfg_panelVisibilityRules = PanelRules.updatedRules(cfg_panelVisibilityRules, elementID, patch)
+    }
+
+    function applyMinimalPanelPreset() {
+        cfg_panelStyle = "minimal"
+        cfg_showProviderInPanel = false
+        cfg_showPercentInPanel = false
+        cfg_showCreditsInPanel = false
+        cfg_showMultiProviderInPanel = true
     }
 
     function revealFocusedOrderButton(upButton, downButton) {
@@ -534,6 +544,44 @@ KCM.SimpleKCM {
         Kirigami.Separator {
             Kirigami.FormData.label: i18n("Panel")
             Kirigami.FormData.isSection: true
+        }
+
+        Controls.ComboBox {
+            id: panelStyleCombo
+            objectName: "panelStyleCombo"
+            Kirigami.FormData.label: i18n("Panel style:")
+            textRole: "text"
+            valueRole: "value"
+            model: [
+                {text: i18n("Standard"), value: "standard"},
+                {text: i18n("Minimal"), value: "minimal"}
+            ]
+            currentIndex: page.cfg_panelStyle === "minimal" ? 1 : 0
+            onActivated: function(index) { page.cfg_panelStyle = valueAt(index) }
+        }
+
+        Components.PlainControlsLabel {
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            text: i18n("Minimal uses neutral icons and thin meters in the Plasma accent color. Quota warnings keep their warning colors.")
+            font: Kirigami.Theme.smallFont
+            wrapMode: Text.WordWrap
+        }
+
+        Components.PlainButton {
+            objectName: "minimalPanelPresetButton"
+            plainText: i18n("Use minimal preset")
+            onClicked: page.applyMinimalPanelPreset()
+        }
+
+        Components.PlainControlsLabel {
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            text: i18n("The preset enables provider meters and hides provider names, usage text and credits in the panel.")
+            font: Kirigami.Theme.smallFont
+            wrapMode: Text.WordWrap
         }
 
         Controls.CheckBox {

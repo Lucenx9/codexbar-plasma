@@ -2335,3 +2335,23 @@ msgstr "Voraussichtlich jetzt aufgebraucht"
 #: contents/ui/main.qml
 msgid "Runs out in %1"
 msgstr "Voraussichtlich in %1 aufgebraucht"
+
+#: contents/ui/configDisplay.qml
+msgid "Panel style:"
+msgstr "Leistenstil:"
+
+#: contents/ui/configDisplay.qml
+msgid "Minimal"
+msgstr "Minimal"
+
+#: contents/ui/configDisplay.qml
+msgid "Minimal uses neutral icons and thin meters in the Plasma accent color. Quota warnings keep their warning colors."
+msgstr "Der minimale Stil verwendet neutrale Symbole und dünne Anzeigen in der Akzentfarbe von Plasma. Kontingentwarnungen behalten ihre Warnfarben."
+
+#: contents/ui/configDisplay.qml
+msgid "Use minimal preset"
+msgstr "Minimale Voreinstellung verwenden"
+
+#: contents/ui/configDisplay.qml
+msgid "The preset enables provider meters and hides provider names, usage text and credits in the panel."
+msgstr "Die Voreinstellung aktiviert Anbieteranzeigen und blendet Anbieternamen, Nutzungstext und Guthaben in der Leiste aus."

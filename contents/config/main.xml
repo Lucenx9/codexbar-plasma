@@ -139,6 +139,10 @@
       <label>Show the provider name in the panel.</label>
       <default>true</default>
     </entry>
+    <entry name="panelStyle" type="String">
+      <label>Panel appearance: standard or minimal.</label>
+      <default>standard</default>
+    </entry>
     <entry name="showPercentInPanel" type="Bool">
       <label>Show the selected usage text in the panel.</label>
       <default>true</default>

@@ -12,6 +12,8 @@ Item {
     property bool prepared: false
     property int localizationStep: 0
     property var panelUsageSnapshot
+    property var displaySettingsPage
+    readonly property bool panelAppearanceScenario: scenario === "panel-standard" || scenario === "panel-minimal"
 
     Loader {
         id: settingsPreview
@@ -24,19 +26,19 @@ Item {
         id: panelPreview
         parent: capture.applet.fullRepresentationItem
         anchors.centerIn: parent
-        active: capture.scenario === "panel-rules"
+        active: capture.scenario === "panel-rules" || capture.panelAppearanceScenario
         z: 100
         sourceComponent: Rectangle {
             width: Math.max(240, panel.compactItem ? panel.compactItem.implicitWidth + 48 : 240)
             height: 84
-            color: Kirigami.Theme.backgroundColor
+            color: panel.compactItem ? panel.compactItem.Kirigami.Theme.backgroundColor : Kirigami.Theme.backgroundColor
             Loader {
                 id: panel
                 readonly property Item compactItem: item as Item
                 sourceComponent: capture.applet.compactRepresentation
                 anchors.centerIn: parent
                 width: compactItem ? compactItem.implicitWidth : 0
-                height: 40
+                height: capture.panelAppearanceScenario ? 44 : 40
             }
         }
     }
@@ -44,6 +46,38 @@ Item {
     function verifyScenario(condition, message) {
         if (!condition)
             throw new Error("SMOKE_FAILED: " + message);
+    }
+
+    function preparePanelAppearance() {
+        var config = applet.Plasmoid.configuration;
+        panelUsageSnapshot = applet.providers;
+        verifyScenario(config.panelStyle === "standard", "existing installations must retain standard appearance");
+        var component = Qt.createComponent(Qt.resolvedUrl("configDisplay.qml"));
+        verifyScenario(component.status === Component.Ready, component.errorString());
+        displaySettingsPage = component.createObject(capture, {
+            cfg_commandPath: applet.commandPath,
+            cfg_panelQuotaLane: "secondary",
+            cfg_providerOrder: "claude,codex",
+            cfg_panelVisibilityRules: '{"text":{"condition":"usageAtLeast","usedPercent":50}}'
+        });
+        var page = displaySettingsPage;
+        verifyScenario(page !== null, "display settings did not load");
+        var oldRules = page.cfg_panelVisibilityRules;
+        page.applyMinimalPanelPreset();
+        verifyScenario(page.cfg_panelStyle === "minimal" && page.cfg_showMultiProviderInPanel
+            && !page.cfg_showProviderInPanel && !page.cfg_showPercentInPanel && !page.cfg_showCreditsInPanel,
+            "minimal preset did not configure its panel elements");
+        verifyScenario(page.cfg_panelQuotaLane === "secondary" && page.cfg_providerOrder === "claude,codex"
+            && page.cfg_panelVisibilityRules === oldRules, "preset changed quota, order or visibility rules");
+        verifyScenario(config.panelStyle === "standard", "settings took effect before Apply");
+        config.panelStyle = scenario === "panel-minimal" ? page.cfg_panelStyle : "standard";
+        config.showMultiProviderInPanel = page.cfg_showMultiProviderInPanel;
+        config.showProviderInPanel = page.cfg_showProviderInPanel;
+        config.showPercentInPanel = page.cfg_showPercentInPanel;
+        config.showCreditsInPanel = page.cfg_showCreditsInPanel;
+        page.destroy();
+        displaySettingsPage = null;
+        component.destroy();
     }
 
     function preparePanelScenario() {
@@ -214,6 +248,12 @@ Item {
             verifyScenario(applet.providers === panelUsageSnapshot, "panel settings reloaded usage");
             return panelPreview.item !== null && applet.compactProviders().length === 2;
         }
+        if (panelAppearanceScenario) {
+            verifyScenario(applet.providers === panelUsageSnapshot, "panel preset reloaded usage");
+            verifyScenario(applet.minimalPanel === (scenario === "panel-minimal"), "panel style did not reach the renderer");
+            verifyScenario(applet.compactText() === "", "minimal preset left panel text visible");
+            return panelPreview.item !== null && applet.compactProviders().length === 2;
+        }
         if (scenario === "long-text")
             return applet.selectedProviderID === "codex" && !applet.accountLoadingForProvider("codex") && applet.accountOptionsForProvider("codex").length === 2 && codex.account.length > 50;
         if (scenario.indexOf("project-") === 0) {
@@ -276,6 +316,8 @@ Item {
                     capture.verifyEmptyPanelRules();
                 } else if (capture.scenario === "panel-rules") {
                     capture.preparePanelScenario();
+                } else if (capture.panelAppearanceScenario) {
+                    capture.preparePanelAppearance();
                 } else if (capture.scenario === "long-text") {
                     capture.applet.openProviderFromPanel("codex");
                     capture.applet.loadAccounts("codex");
@@ -328,7 +370,8 @@ Item {
                 console.error("SMOKE_FAILED: scenario changed before capture");
                 return;
             }
-            var popup = capture.scenario === "panel-rules" ? panelPreview.item : capture.applet.fullRepresentationItem;
+            var popup = capture.scenario === "panel-rules" || capture.panelAppearanceScenario
+                ? panelPreview.item : capture.applet.fullRepresentationItem;
             console.log("SMOKE_CAPTURE_START:" + capture.scenario);
             var accepted = popup.grabToImage(function (result) {
                 if (result.saveToFile(capture.imagePath))
