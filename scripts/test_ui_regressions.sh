@@ -376,12 +376,12 @@ def assert_form_sections(text, filename, labels):
 assert_form_sections(
     general_text,
     "configGeneral.qml",
-    ("Command", "Refresh", "Usage", "Notifications", "Updates"),
+    ("Connection", "Usage history", "Quota warnings", "Notifications", "Updates", "Defaults"),
 )
 assert_form_sections(
     display_text,
     "configDisplay.qml",
-    ("Panel", "Usage details", "Overview"),
+    ("Usage details", "Panel", "Panel visibility", "Popup"),
 )
 
 for runtime_cfg in (

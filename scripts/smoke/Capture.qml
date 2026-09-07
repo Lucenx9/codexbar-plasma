@@ -15,9 +15,23 @@ Item {
     property var panelUsageSnapshot
     property var displaySettingsPage
     property var providerSettingsPage
+    readonly property bool settingsScenario: scenario.indexOf("settings-") === 0
     readonly property bool panelAppearanceScenario: scenario === "panel-standard" || scenario === "panel-minimal"
         || scenario === "panel-minimal-single"
     readonly property int expectedProviderCount: scenario === "panel-minimal-single" ? 1 : 2
+
+    Loader {
+        id: configurationPreview
+        parent: capture.applet.fullRepresentationItem
+        active: capture.settingsScenario
+        visible: active
+        z: 100
+        sourceComponent: SettingsPreview {
+            applet: capture.applet
+            pageSource: ({"settings-general": "configGeneral.qml", "settings-display": "configDisplay.qml",
+                "settings-advanced": "configAdvanced.qml", "settings-debug": "configDebug.qml"})[capture.scenario]
+        }
+    }
 
     Loader {
         id: settingsPreview
@@ -231,6 +245,10 @@ Item {
     }
 
     function scenarioReady() {
+        if (settingsScenario) {
+            var preview = configurationPreview.item as SettingsPreview;
+            return preview !== null && preview.ready;
+        }
         if (scenario === "provider-settings") {
             var page = providerSettingsPage;
             if (!page || page.loading || page.providers.length !== 5)
@@ -495,7 +513,8 @@ Item {
                 var next = capture.findItem(capture.applet.fullRepresentationItem, "nextTabsButton");
                 capture.verifyScenario(next !== null && !next.visible, "scroll controls appear when tabs fit");
             }
-            var popup = capture.scenario === "panel-rules" || capture.panelAppearanceScenario
+            var popup = capture.settingsScenario ? configurationPreview.item
+                : capture.scenario === "panel-rules" || capture.panelAppearanceScenario
                 ? panelPreview.item : (capture.scenario === "provider-settings"
                     ? providerSettingsPreview.item : capture.applet.fullRepresentationItem);
             console.log("SMOKE_CAPTURE_START:" + capture.scenario);

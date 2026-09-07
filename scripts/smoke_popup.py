@@ -88,6 +88,7 @@ def stage_applet(work, scenario, image_path):
 
     ui = package / "contents/ui"
     shutil.copyfile(ROOT / "scripts/smoke/Capture.qml", ui / "SmokeCapture.qml")
+    shutil.copyfile(ROOT / "scripts/smoke/SettingsPreview.qml", ui / "SettingsPreview.qml")
     main_path = ui / "main.qml"
     main = main_path.read_text().rstrip()
     if not main.endswith("}"):
