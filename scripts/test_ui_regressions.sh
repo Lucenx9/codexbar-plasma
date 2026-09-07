@@ -1388,7 +1388,7 @@ for scroll_fragment in (
     "acceptedDevices: PointerDevice.Mouse",
     "function ensureVisible(item)",
     "function focusAdjacentTab(item, forward)",
-    "function scrollBy(delta)",
+    "function scrollBy(delta, immediate)",
 ):
     if scroll_fragment not in provider_tabs_flickable_body:
         raise AssertionError(
@@ -1445,20 +1445,36 @@ if "tab.tabStrip.focusAdjacentTab(tab" not in global_tab_text:
 if "tab.tabStrip.ensureVisible(tab)" not in global_tab_text:
     raise AssertionError("a focused global tab must be scrolled into view")
 
-for fade_id, fade_direction in (
-    ("providerTabsLeftFade", "-providerTabsFlickable.tabPageStep"),
-    ("providerTabsRightFade", "providerTabsFlickable.tabPageStep"),
+for button_id, direction in (
+    ("previousTabsButton", "-providerTabsFlickable.tabPageStep"),
+    ("nextTabsButton", "providerTabsFlickable.tabPageStep"),
 ):
-    fade_body = id_block(main_text, fade_id)
-    for fade_fragment in (
-        "Accessible.role: Accessible.Button",
-        "cursorShape: Qt.PointingHandCursor",
-        f"onClicked: providerTabsFlickable.scrollBy({fade_direction})",
+    button_body = applet.id_block(button_id)
+    for fragment in (
+        "visible: providerTabsBar.tabsOverflow",
+        "Accessible.name: text",
+        "display: PlasmaComponents.AbstractButton.IconOnly",
+        f"onClicked: providerTabsFlickable.scrollBy({direction}, visualFocus)",
+        "delay: Kirigami.Units.toolTipDelay",
     ):
-        if fade_fragment not in fade_body:
-            raise AssertionError(
-                f"{fade_id} must be a clickable scroll affordance; missing {fade_fragment!r}"
-            )
+        if fragment not in button_body:
+            raise AssertionError(f"{button_id} must remain a native accessible scroll control: {fragment}")
+# Native controls stay outside the viewport; their space is reserved at both
+# edges, even when the corresponding direction is disabled at an endpoint.
+for fragment in (
+    "? previousTabsButton.width + Kirigami.Units.smallSpacing",
+    "? nextTabsButton.width + Kirigami.Units.smallSpacing",
+    "scrollTo(target, true)",
+    "onMovementStarted: providerTabsScroll.stop()",
+):
+    if fragment not in provider_tabs_flickable_body:
+        raise AssertionError(f"tab navigation must preserve visible content and direct focus: {fragment}")
+
+providers = Surface("providers", root)
+providers.require("ProviderList.filteredProviders(providers, filterText, filterScope)",
+                  "provider filters use the pure local projection")
+providers.require("maximumLength: 256", "bound provider search input")
+providers.require("helpfulAction: clearProviderFiltersAction", "empty provider results offer recovery")
 
 if "Kirigami.Theme.highlightedTextColor" in provider_tabs_body:
     raise AssertionError("provider tabs must not depend on a heavy solid-highlight selected state")

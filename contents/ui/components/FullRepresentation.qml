@@ -58,6 +58,10 @@ Item {
         Item {
             id: providerTabsBar
 
+            // Compare against the full strip, not the narrower scroll viewport:
+            // reserving button space must not make overflow self-sustaining.
+            readonly property bool tabsOverflow: providerTabs.implicitWidth > width - Kirigami.Units.smallSpacing
+
             visible: applet.providers.length > 0 || applet.spendAvailable || applet.sessionsAvailable
             Layout.fillWidth: true
             Layout.preferredHeight: Kirigami.Units.gridUnit * 2.35
@@ -74,6 +78,7 @@ Item {
 
             Flickable {
                 id: providerTabsFlickable
+                objectName: "providerTabsFlickable"
 
                 // The selected provider tab, so geometry changes can bring it
                 // back into view without every delegate registering itself.
@@ -81,15 +86,19 @@ Item {
                 readonly property real tabPageStep: Math.max(Kirigami.Units.gridUnit * 4, width * 0.6)
                 readonly property real tabWheelStep: Kirigami.Units.gridUnit * 5
 
-                function scrollTo(position) {
+                function scrollTo(position, immediate) {
                     var bounded = TabStripGeometry.boundedPosition(position, contentWidth, width)
                     providerTabsScroll.stop()
+                    if (immediate || Kirigami.Units.shortDuration <= 0) {
+                        contentX = bounded
+                        return
+                    }
                     providerTabsScroll.to = bounded
                     providerTabsScroll.start()
                 }
 
-                function scrollBy(delta) {
-                    scrollTo(contentX + delta)
+                function scrollBy(delta, immediate) {
+                    scrollTo(contentX + delta, immediate)
                 }
 
                 // Tabs come from three different delegates, so walk the parent
@@ -106,6 +115,7 @@ Item {
                 }
 
                 function ensureVisible(item) {
+                    providerTabsScroll.stop()
                     if (!interactive || !item || item.width <= 0 || !containsTab(item)) {
                         return
                     }
@@ -115,10 +125,12 @@ Item {
                         contentX,
                         width,
                         Kirigami.Units.gridUnit)
-                    // null means the tab is already on screen; scrolling anyway
-                    // would restart the animation on every selection report.
+                    // Keep an already-visible tab in place instead of aligning
+                    // it again on every focus or selection report.
                     if (target !== null) {
-                        scrollTo(target)
+                        // Focus, selection and resize are direct navigation.
+                        // A focused tab must be visible before its next keypress.
+                        scrollTo(target, true)
                     }
                 }
 
@@ -154,12 +166,17 @@ Item {
 
                 anchors.fill: parent
                 anchors.margins: Kirigami.Units.smallSpacing / 2
+                anchors.leftMargin: providerTabsBar.tabsOverflow
+                    ? previousTabsButton.width + Kirigami.Units.smallSpacing : Kirigami.Units.smallSpacing / 2
+                anchors.rightMargin: providerTabsBar.tabsOverflow
+                    ? nextTabsButton.width + Kirigami.Units.smallSpacing : Kirigami.Units.smallSpacing / 2
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
                 contentWidth: providerTabs.implicitWidth
                 contentHeight: height
                 interactive: contentWidth > width
 
+                onMovementStarted: providerTabsScroll.stop()
                 onWidthChanged: Qt.callLater(providerTabsFlickable.revealSelectedTab)
                 onContentWidthChanged: Qt.callLater(providerTabsFlickable.revealSelectedTab)
 
@@ -168,7 +185,7 @@ Item {
 
                     target: providerTabsFlickable
                     property: "contentX"
-                    duration: Kirigami.Units.longDuration
+                    duration: Kirigami.Units.shortDuration
                     easing.type: Easing.OutCubic
                 }
 
@@ -594,101 +611,51 @@ Item {
                 }
             }
 
-            // The fades double as buttons: scrolling the strip otherwise
-            // depends on gestures a plain mouse cannot produce, and nothing
-            // on screen says the tabs continue past the edge.
-            Rectangle {
-                id: providerTabsLeftFade
+            PlasmaComponents.ToolButton {
+                id: previousTabsButton
+                objectName: "previousTabsButton"
 
                 anchors.left: parent.left
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                width: Kirigami.Units.gridUnit * 1.5
-                visible: opacity > 0
-                opacity: providerTabsFlickable.interactive && providerTabsFlickable.contentX > 0 ? 1 : 0
-                gradient: Gradient {
-                    orientation: Gradient.Horizontal
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.leftMargin: Kirigami.Units.smallSpacing / 2
+                width: height
+                height: parent.height - Kirigami.Units.smallSpacing
+                visible: providerTabsBar.tabsOverflow
+                enabled: providerTabsFlickable.contentX > 0
+                icon.name: "go-previous-symbolic"
+                text: i18n("Show previous tabs")
+                display: PlasmaComponents.AbstractButton.IconOnly
+                Accessible.name: text
+                onClicked: providerTabsFlickable.scrollBy(-providerTabsFlickable.tabPageStep, visualFocus)
 
-                    GradientStop { position: 0; color: Kirigami.Theme.backgroundColor }
-                    GradientStop { position: 1; color: applet.withAlpha(Kirigami.Theme.backgroundColor, 0) }
-                }
-
-                Accessible.role: Accessible.Button
-                Accessible.name: i18n("Show previous tabs")
-                Accessible.onPressAction: providerTabsFlickable.scrollBy(-providerTabsFlickable.tabPageStep)
-
-                Kirigami.Icon {
-                    anchors.centerIn: parent
-                    width: Kirigami.Units.iconSizes.small
-                    height: width
-                    source: "go-previous-symbolic"
-                    isMask: true
-                    color: providerTabsLeftFadeMouse.containsMouse
-                        ? applet.readableAccentColor(Kirigami.Theme.highlightColor, Kirigami.Theme.backgroundColor)
-                        : applet.withAlpha(Kirigami.Theme.textColor, 0.72)
-                }
-
-                MouseArea {
-                    id: providerTabsLeftFadeMouse
-
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: providerTabsFlickable.scrollBy(-providerTabsFlickable.tabPageStep)
-                }
-
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: Kirigami.Units.shortDuration
-                    }
+                PlainToolTip {
+                    plainText: previousTabsButton.text
+                    visible: previousTabsButton.hovered
+                    delay: Kirigami.Units.toolTipDelay
                 }
             }
 
-            Rectangle {
-                id: providerTabsRightFade
+            PlasmaComponents.ToolButton {
+                id: nextTabsButton
+                objectName: "nextTabsButton"
 
                 anchors.right: parent.right
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                width: Kirigami.Units.gridUnit * 1.5
-                visible: opacity > 0
-                opacity: providerTabsFlickable.interactive
-                    && providerTabsFlickable.contentX < providerTabsFlickable.contentWidth - providerTabsFlickable.width - 1 ? 1 : 0
-                gradient: Gradient {
-                    orientation: Gradient.Horizontal
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.rightMargin: Kirigami.Units.smallSpacing / 2
+                width: height
+                height: parent.height - Kirigami.Units.smallSpacing
+                visible: providerTabsBar.tabsOverflow
+                enabled: providerTabsFlickable.contentX < providerTabsFlickable.contentWidth - providerTabsFlickable.width - 1
+                icon.name: "go-next-symbolic"
+                text: i18n("Show more tabs")
+                display: PlasmaComponents.AbstractButton.IconOnly
+                Accessible.name: text
+                onClicked: providerTabsFlickable.scrollBy(providerTabsFlickable.tabPageStep, visualFocus)
 
-                    GradientStop { position: 0; color: applet.withAlpha(Kirigami.Theme.backgroundColor, 0) }
-                    GradientStop { position: 1; color: Kirigami.Theme.backgroundColor }
-                }
-
-                Accessible.role: Accessible.Button
-                Accessible.name: i18n("Show more tabs")
-                Accessible.onPressAction: providerTabsFlickable.scrollBy(providerTabsFlickable.tabPageStep)
-
-                Kirigami.Icon {
-                    anchors.centerIn: parent
-                    width: Kirigami.Units.iconSizes.small
-                    height: width
-                    source: "go-next-symbolic"
-                    isMask: true
-                    color: providerTabsRightFadeMouse.containsMouse
-                        ? applet.readableAccentColor(Kirigami.Theme.highlightColor, Kirigami.Theme.backgroundColor)
-                        : applet.withAlpha(Kirigami.Theme.textColor, 0.72)
-                }
-
-                MouseArea {
-                    id: providerTabsRightFadeMouse
-
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: providerTabsFlickable.scrollBy(providerTabsFlickable.tabPageStep)
-                }
-
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: Kirigami.Units.shortDuration
-                    }
+                PlainToolTip {
+                    plainText: nextTabsButton.text
+                    visible: nextTabsButton.hovered
+                    delay: Kirigami.Units.toolTipDelay
                 }
             }
         }

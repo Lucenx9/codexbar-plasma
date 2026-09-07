@@ -15,6 +15,7 @@ import "SafeText.js" as SafeText
 import "ThemeContrast.js" as ThemeContrast
 import "config/ProviderConfigProtocol.js" as ProviderConfigProtocol
 import "config/ProviderDescriptor.js" as ProviderDescriptor
+import "config/ProviderList.js" as ProviderList
 
 KCM.SimpleKCM {
     id: page
@@ -53,6 +54,7 @@ KCM.SimpleKCM {
 
     property var providers: []
     property string filterText: ""
+    readonly property string filterScope: ["all", "enabled", "disabled"][providerFilterBar.currentIndex] || "all"
     property bool loading: false
     property string errorText: ""
     property string statusText: ""
@@ -77,12 +79,12 @@ KCM.SimpleKCM {
     property var providerDiagnosticLoading: ({})
     property string selectedProviderID: ""
 
-    readonly property var visibleProviders: filterProviders(providers, filterText)
+    readonly property var visibleProviders: ProviderList.filteredProviders(providers, filterText, filterScope)
     readonly property var providerSettingsGroups: ProviderOrder.settingsGroups(
         visibleProviders, cfg_providerOrder)
     readonly property var visibleEnabledProviders: providerSettingsGroups.enabled
     readonly property var visibleDisabledProviders: providerSettingsGroups.disabled
-    readonly property int enabledCount: countEnabled(providers)
+    readonly property int enabledCount: ProviderList.filteredProviders(providers, "", "enabled").length
     readonly property var selectedProvider: providerByID(selectedProviderID)
 
     // Qt.callLater coalesces this with the reload the cfg_commandPathChanged
@@ -720,30 +722,10 @@ KCM.SimpleKCM {
         pendingDesired = desired
     }
 
-    function filterProviders(list, filter) {
-        var needle = String(filter || "").trim().toLowerCase()
-        if (needle.length === 0) {
-            return list
-        }
-        var result = []
-        for (var i = 0; i < list.length; i++) {
-            var item = list[i]
-            if (String(item.displayName).toLowerCase().indexOf(needle) !== -1
-                    || String(item.provider).toLowerCase().indexOf(needle) !== -1) {
-                result.push(item)
-            }
-        }
-        return result
-    }
-
-    function countEnabled(list) {
-        var count = 0
-        for (var i = 0; i < list.length; i++) {
-            if (list[i].enabled) {
-                count++
-            }
-        }
-        return count
+    function clearProviderFilters() {
+        providerFilterBar.setCurrentIndex(0)
+        searchField.clear()
+        searchField.forceActiveFocus(Qt.ShortcutFocusReason)
     }
 
     function copyObject(item) {
@@ -1265,6 +1247,13 @@ KCM.SimpleKCM {
         }
     }
 
+    Kirigami.Action {
+        id: clearProviderFiltersAction
+        text: i18n("Clear filters")
+        icon.name: "edit-clear"
+        onTriggered: page.clearProviderFilters()
+    }
+
     // Unlike FormLayout, a plain ColumnLayout does not reveal focused controls
     // in its enclosing ScrollablePage. Keep provider rows and their switches visible.
     function revealFocusedProviderControl() {
@@ -1299,8 +1288,11 @@ KCM.SimpleKCM {
 
             Kirigami.SearchField {
                 id: searchField
+                objectName: "providerSearchField"
                 Layout.fillWidth: true
                 placeholderText: i18n("Search providers...")
+                maximumLength: 256
+                Accessible.name: placeholderText
                 onTextChanged: page.filterText = text
             }
 
@@ -1321,6 +1313,27 @@ KCM.SimpleKCM {
                 }
 
                 onClicked: page.reload()
+            }
+        }
+
+        Controls.TabBar {
+            id: providerFilterBar
+            objectName: "providerFilterBar"
+
+            Layout.fillWidth: true
+            Layout.leftMargin: Kirigami.Units.smallSpacing
+            Layout.rightMargin: Kirigami.Units.smallSpacing
+            visible: page.providers.length > 0
+            currentIndex: 0
+
+            Controls.TabButton {
+                text: i18n("All providers")
+            }
+            Controls.TabButton {
+                text: i18n("Enabled")
+            }
+            Controls.TabButton {
+                text: i18n("Disabled")
             }
         }
 
@@ -1813,7 +1826,9 @@ KCM.SimpleKCM {
             }
 
             Components.PlainControlsLabel {
-                text: i18np("%1 provider enabled", "%1 providers enabled", page.enabledCount)
+                text: page.filterText.trim().length > 0 || page.filterScope !== "all"
+                    ? i18np("%1 matching provider", "%1 matching providers", page.visibleProviders.length)
+                    : i18np("%1 provider enabled", "%1 providers enabled", page.enabledCount)
                 font: Kirigami.Theme.smallFont
                 opacity: page.secondaryTextOpacity
                 elide: Text.ElideRight
@@ -1835,7 +1850,8 @@ KCM.SimpleKCM {
             visible: page.providers.length > 0 && page.visibleProviders.length === 0
             icon.name: "search"
             plainText: i18n("No matching providers")
-            plainExplanation: i18n("No provider matches \"%1\".", page.filterText)
+            plainExplanation: i18n("Try another search or choose a different filter.")
+            helpfulAction: clearProviderFiltersAction
         }
 
         Components.PlainControlsLabel {

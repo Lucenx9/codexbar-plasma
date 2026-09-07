@@ -130,6 +130,8 @@ Panel and popup:
 - Auto-select highest-usage provider for the compact panel and provider detail
   focus.
 - Overview tab with per-provider usage summary and quick switching.
+- Overflowing popup tabs have separate scroll buttons and immediate keyboard
+  focus reveal, so navigation never covers provider labels.
 - Global **Usage & Spend** tab with a Cost/Tokens selector, a 7/30/90-day range
   selector, interactive daily chart, activity heatmap, and provider totals that
   keep different currencies separate.
@@ -146,6 +148,8 @@ Panel and popup:
 
 Providers and accounts:
 
+- Search providers by name or ID and filter All, Enabled, or Disabled locally.
+  Clear filters restores the list without changing selection or provider settings.
 - Provider enable/disable and setup actions write CodexBar configuration
   immediately; Apply and Cancel cover widget settings only.
 - Account discovery and selection through `codexbar usage --all-accounts`.
@@ -300,6 +304,8 @@ each scenario, captures the view, and closes the preview automatically:
 | Scenario | Captured state |
 | --- | --- |
 | `normal` | Overview with synthetic Codex and Claude quotas. |
+| `tabs-overflow` | Ten providers, with scroll-button geometry, immediate focus reveal, and endpoint states checked. |
+| `provider-settings` | Enabled-only settings list, after checking combined search/filter behavior and selection isolation. |
 | `loading` | Initial loading while the fixture CLI waits. |
 | `partial-error` | Claude's error view while healthy Codex data remains available. |
 | `long-text` | Codex with long account and workspace labels, two accounts, and doubled body text. |
@@ -343,11 +349,13 @@ state before using Qt's
 [`grabToImage`](https://doc.qt.io/qt-6/qml-qtquick-item.html#grabToImage-method).
 The `panel-rules` scenario exercises quota selection, visibility conditions,
 checkboxes, and clock changes in the real applet, then captures its compact
-representation. Other screenshots contain only the popup, with its theme
-background. QML errors,
+representation. The `tabs-overflow` scenario walks the tab focus chain and
+checks immediate reveal. The `provider-settings` scenario captures the real
+settings page after exercising local filters. Popup captures include their
+theme background. QML errors,
 missing captures, early exits, and timeouts fail the command. The screenshots
 still need visual review: this is not a pixel-comparison test, and it does not
-exercise panel placement, keyboard navigation, or the real CLI. Synthetic
+exercise panel placement, key-event dispatch, or the real CLI. Synthetic
 payloads cover a small subset of the repository's CLI 0.56.2 contract; dates
 are relative to the run time. Typography uses Noto Sans and the Breeze icons.
 

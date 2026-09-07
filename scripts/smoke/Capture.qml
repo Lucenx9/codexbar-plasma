@@ -10,9 +10,11 @@ Item {
     required property string scenario
     required property string imagePath
     property bool prepared: false
+    property bool navigationVerified: false
     property int localizationStep: 0
     property var panelUsageSnapshot
     property var displaySettingsPage
+    property var providerSettingsPage
     readonly property bool panelAppearanceScenario: scenario === "panel-standard" || scenario === "panel-minimal"
         || scenario === "panel-minimal-single"
     readonly property int expectedProviderCount: scenario === "panel-minimal-single" ? 1 : 2
@@ -41,6 +43,27 @@ Item {
                 anchors.centerIn: parent
                 width: compactItem ? compactItem.implicitWidth : 0
                 height: capture.panelAppearanceScenario ? 44 : 40
+            }
+        }
+    }
+
+    Loader {
+        id: providerSettingsPreview
+        parent: capture.applet.fullRepresentationItem
+        anchors.fill: parent
+        active: capture.scenario === "provider-settings"
+        visible: active
+        z: 100
+        sourceComponent: Rectangle {
+            color: Kirigami.Theme.backgroundColor
+            Loader {
+                id: settingsPageLoader
+                anchors.fill: parent
+                source: "configProviders.qml"
+                onLoaded: {
+                    capture.providerSettingsPage = item;
+                    item.cfg_commandPath = capture.applet.commandPath;
+                }
             }
         }
     }
@@ -179,7 +202,69 @@ Item {
         color: Kirigami.Theme.backgroundColor
     }
 
+    function verifyTabNavigation() {
+        var popup = applet.fullRepresentationItem;
+        var strip = findItem(popup, "providerTabsFlickable");
+        var previous = findItem(popup, "previousTabsButton");
+        var next = findItem(popup, "nextTabsButton");
+        verifyScenario(strip && previous && next, "tab navigation controls missing");
+        verifyScenario(previous.visible && next.visible, "overflow controls are hidden");
+        verifyScenario(previous.x + previous.width <= strip.x
+            && next.x >= strip.x + strip.width, "scroll controls overlap tabs");
+        verifyScenario(!previous.enabled && next.enabled, "incorrect controls at start of strip");
+        var focus = strip.selectedTab.nextItemInFocusChain(true);
+        var visited = 0;
+        while (strip.containsTab(focus) && visited < 20) {
+            focus.forceActiveFocus(Qt.TabFocusReason);
+            var position = focus.mapToItem(strip, 0, 0);
+            verifyScenario(position.x >= -1 && position.x + focus.width <= strip.width + 1,
+                "keyboard focus was not revealed immediately");
+            visited++;
+            focus = focus.nextItemInFocusChain(true);
+        }
+        verifyScenario(visited === 13, "not every global and provider tab is keyboard reachable");
+        verifyScenario(previous.enabled && !next.enabled, "incorrect controls at end of strip");
+        applet.selectedProviderID = "example-7";
+        applet.selectGlobalView("overview");
+        verifyScenario(strip.contentX === 0, "selection was not revealed immediately");
+        navigationVerified = true;
+    }
+
     function scenarioReady() {
+        if (scenario === "provider-settings") {
+            var page = providerSettingsPage;
+            if (!page || page.loading || page.providers.length !== 5)
+                return false;
+            if (!navigationVerified) {
+                var bar = findItem(page, "providerFilterBar");
+                var search = findItem(page, "providerSearchField");
+                var serial = page.commandRunSerial;
+                var selected = page.selectedProviderID;
+                bar.setCurrentIndex(1);
+                verifyScenario(page.visibleProviders.length === 2, "enabled provider filter failed");
+                bar.setCurrentIndex(2);
+                verifyScenario(page.visibleProviders.length === 3, "disabled provider filter failed");
+                search.text = "missing-provider";
+                verifyScenario(page.visibleProviders.length === 0, "empty provider search failed");
+                page.clearProviderFilters();
+                verifyScenario(page.visibleProviders.length === 5 && page.selectedProviderID === selected
+                    && page.commandRunSerial === serial, "filters changed provider selection or executed a command");
+                bar.setCurrentIndex(1);
+                navigationVerified = true;
+            }
+            return true;
+        }
+        if (scenario === "tabs-overflow") {
+            if (!prepared || applet.providers.length !== 10)
+                return false;
+            var strip = findItem(applet.fullRepresentationItem, "providerTabsFlickable");
+            var next = findItem(applet.fullRepresentationItem, "nextTabsButton");
+            if (!strip || !strip.interactive || !next || !next.visible)
+                return false;
+            if (!navigationVerified)
+                verifyTabNavigation();
+            return true;
+        }
         if (scenario === "loading")
             return applet.loading && applet.providers.length === 0;
         if (applet.loading || applet.costLoading || applet.providers.length !== expectedProviderCount)
@@ -338,6 +423,16 @@ Item {
                     return;
                 if (capture.scenario === "loading") {
                     capture.verifyEmptyPanelRules();
+                } else if (capture.scenario === "tabs-overflow") {
+                    var providers = capture.applet.providers.slice();
+                    for (var i = 0; i < 8; i++) {
+                        var provider = Object.assign({}, providers[0]);
+                        provider.provider = "example-" + i;
+                        provider.title = "Example " + (i + 1);
+                        providers.push(provider);
+                    }
+                    capture.applet.providers = providers;
+                    capture.applet.selectGlobalView("overview");
                 } else if (capture.scenario === "panel-rules") {
                     capture.preparePanelScenario();
                 } else if (capture.panelAppearanceScenario) {
@@ -394,8 +489,13 @@ Item {
                 console.error("SMOKE_FAILED: scenario changed before capture");
                 return;
             }
+            if (capture.scenario === "normal") {
+                var next = capture.findItem(capture.applet.fullRepresentationItem, "nextTabsButton");
+                capture.verifyScenario(next !== null && !next.visible, "scroll controls appear when tabs fit");
+            }
             var popup = capture.scenario === "panel-rules" || capture.panelAppearanceScenario
-                ? panelPreview.item : capture.applet.fullRepresentationItem;
+                ? panelPreview.item : (capture.scenario === "provider-settings"
+                    ? providerSettingsPreview.item : capture.applet.fullRepresentationItem);
             console.log("SMOKE_CAPTURE_START:" + capture.scenario);
             var accepted = popup.grabToImage(function (result) {
                 if (result.saveToFile(capture.imagePath))
