@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
 
@@ -16,9 +17,12 @@ Item {
     property var displaySettingsPage
     property var providerSettingsPage
     readonly property bool settingsScenario: scenario.indexOf("settings-") === 0
+    readonly property bool readmePanelScenario: scenario.indexOf("readme-panel-") === 0
+    readonly property bool standardPanelScenario: scenario === "panel-standard" || scenario === "readme-panel-standard"
     readonly property bool panelAppearanceScenario: scenario === "panel-standard" || scenario === "panel-minimal"
-        || scenario === "panel-minimal-single"
-    readonly property int expectedProviderCount: scenario === "panel-minimal-single" ? 1 : 2
+        || scenario === "panel-minimal-single" || readmePanelScenario
+    readonly property bool readmeScenario: scenario.indexOf("readme-") === 0
+    readonly property int expectedProviderCount: scenario === "panel-minimal-single" ? 1 : (readmeScenario ? 3 : 2)
 
     Loader {
         id: configurationPreview
@@ -130,7 +134,7 @@ Item {
         verifyScenario(page.cfg_panelQuotaLane === "secondary" && page.cfg_providerOrder === "claude,codex"
             && page.cfg_panelVisibilityRules === oldRules, "preset changed quota, order or visibility rules");
         verifyScenario(config.panelStyle === "standard", "settings took effect before Apply");
-        config.panelStyle = scenario === "panel-standard" ? "standard" : page.cfg_panelStyle;
+        config.panelStyle = standardPanelScenario ? "standard" : page.cfg_panelStyle;
         config.showMultiProviderInPanel = page.cfg_showMultiProviderInPanel;
         config.showProviderInPanel = page.cfg_showProviderInPanel;
         config.showPercentInPanel = page.cfg_showPercentInPanel;
@@ -266,6 +270,17 @@ Item {
     }
 
     function scenarioReady() {
+        if (readmeScenario && !readmePanelScenario) {
+            if (!prepared || applet.loading || applet.costLoading || applet.providers.length !== 3)
+                return false;
+            if (scenario === "readme-sessions")
+                return applet.sessionsSelected && !applet.sessionsLoading && applet.sessions.length === 4;
+            if (scenario === "readme-spend")
+                return applet.spendSelected && applet.spendProviderCosts().length === 2;
+            if (scenario === "readme-codex")
+                return applet.selectedProviderID === "codex" && !!applet.tokenCosts.codex;
+            return applet.overviewSelected;
+        }
         if (settingsScenario) {
             var preview = configurationPreview.item as SettingsPreview;
             if (preview === null || !preview.ready)
@@ -319,10 +334,10 @@ Item {
         if (!codex || codex.rows.length !== 2 || codex.error.length > 0)
             return false;
         if (panelAppearanceScenario) {
-            if (expectedProviderCount === 2 && (!claude || claude.error.length > 0 || claude.rows.length !== 2))
+            if (expectedProviderCount >= 2 && (!claude || claude.error.length > 0 || claude.rows.length !== 2))
                 return false;
             verifyScenario(applet.providers === panelUsageSnapshot, "panel preset reloaded usage");
-            verifyScenario(applet.minimalPanel === (scenario !== "panel-standard"), "panel style did not reach the renderer");
+            verifyScenario(applet.minimalPanel === !standardPanelScenario, "panel style did not reach the renderer");
             verifyScenario(applet.compactText() === "", "minimal preset left panel text visible");
             return panelPreview.item !== null && applet.compactProviders().length === expectedProviderCount;
         }
@@ -468,7 +483,17 @@ Item {
                 if (capture.scenario !== "loading"
                         && (capture.applet.loading || capture.applet.providers.length !== capture.expectedProviderCount))
                     return;
-                if (capture.scenario === "loading") {
+                if (capture.readmePanelScenario) {
+                    capture.preparePanelAppearance();
+                } else if (capture.readmeScenario) {
+                    popup.Window.window.width = 640;
+                    popup.Window.window.height = capture.scenario === "readme-overview"
+                        || capture.scenario === "readme-sessions" ? 400 : 660;
+                    if (capture.scenario === "readme-codex")
+                        capture.applet.openProviderFromPanel("codex");
+                    else
+                        capture.applet.selectGlobalView(capture.scenario.substring("readme-".length));
+                } else if (capture.scenario === "loading") {
                     capture.verifyEmptyPanelRules();
                 } else if (capture.scenario === "tabs-overflow") {
                     var providers = capture.applet.providers.slice();

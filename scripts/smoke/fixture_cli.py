@@ -12,6 +12,8 @@ SCENARIOS = ("normal", "tabs-overflow", "provider-settings", "provider-header", 
              "project-costs", "project-tokens", "project-range", "project-long-text",
              "localization-it", "localization-fr", "localization-de", "localization-es", "localization-pt_BR")
 SCENARIOS += ("settings-general", "settings-display", "settings-advanced", "settings-debug")
+SCENARIOS += ("readme-overview", "readme-spend", "readme-sessions", "readme-codex")
+SCENARIOS += ("readme-panel-standard", "readme-panel-minimal")
 
 
 def usage(provider, scenario, now):
@@ -34,6 +36,11 @@ def usage(provider, scenario, now):
                           "resetsAt": (now + timedelta(days=4)).isoformat()},
         },
     }
+    if scenario.startswith("readme-"):
+        snapshot["account"] = "team@example.com"
+        snapshot["usage"]["primary"]["usedPercent"] = {"codex": 43, "claude": 68, "gemini": 24}[provider]
+        snapshot["usage"]["secondary"]["usedPercent"] = {"codex": 28, "claude": 36, "gemini": 12}[provider]
+        snapshot["usage"]["primary"]["resetsAt"] = (now + timedelta(hours=2, minutes=35)).isoformat()
     if scenario.startswith("provider-header"):
         snapshot["status"] = {"indicator": "minor", "description": "Synthetic service degradation"}
     if scenario == "legacy-dashboard":
@@ -53,6 +60,25 @@ def usage(provider, scenario, now):
     return snapshot
 
 
+def readme_cost(provider, days, now):
+    """Varied synthetic history with totals derived from the displayed days."""
+    cents = (96, 142, 185, 128, 164, 24, 8, 116, 172, 208, 154, 192, 36, 12,
+             148, 186, 224, 178, 216, 48, 16, 168, 212, 246, 198, 232, 64, 24, 188, 218)
+    daily = []
+    for index in range(days):
+        amount = cents[(len(cents) - days + index) % len(cents)]
+        if provider == "claude":
+            amount = amount * 3 // 4
+        daily.append({"date": (now - timedelta(days=days - index - 1)).date().isoformat(),
+                      "totalCost": amount / 100, "totalTokens": amount * 420})
+    total_cost = round(sum(day["totalCost"] for day in daily), 2)
+    total_tokens = sum(day["totalTokens"] for day in daily)
+    return {"provider": provider, "updatedAt": now.isoformat(), "historyDays": days,
+            "currencyCode": "USD", "sessionCostUSD": daily[-1]["totalCost"],
+            "sessionTokens": daily[-1]["totalTokens"],
+            "totals": {"totalCost": total_cost, "totalTokens": total_tokens}, "daily": daily}
+
+
 def response(args, scenario, now):
     """Only the read commands used by the applet are supported."""
     if args == ["config", "providers", "--descriptors", "--format", "json", "--json-only"]:
@@ -61,11 +87,22 @@ def response(args, scenario, now):
         return "CodexBar 0.56.2 (synthetic smoke fixture)"
     if args == ["config", "providers", "--format", "json", "--json-only"]:
         providers = ("codex",) if scenario == "panel-minimal-single" else ("codex", "claude")
+        if scenario.startswith("readme-"):
+            providers += ("gemini",)
         rows = [{"provider": key, "enabled": True} for key in providers]
         if scenario == "provider-settings":
             rows.extend({"provider": key, "enabled": False} for key in ("gemini", "cursor", "openrouter"))
         return rows
     if args == ["sessions", "--json-v2"]:
+        if scenario.startswith("readme-"):
+            return {"sessions": [
+                {"provider": provider, "projectName": project, "state": state,
+                 "source": source, "lastActivityAt": (now - timedelta(minutes=age)).isoformat()}
+                for provider, project, state, source, age in (
+                    ("codex", "CodexBar Plasma", "active", "desktopApp", 0),
+                    ("claude", "Design system", "active", "cli", 2),
+                    ("codex", "Documentation", "idle", "ide", 18),
+                    ("claude", "Release checks", "idle", "cli", 42))]}
         return {"sessions": [{"provider": "codex", "projectName": "Example project",
                               "state": "active", "source": "desktopApp", "lastActivityAt": now.isoformat()},
                              {"provider": "claude", "projectName": "Another project",
@@ -73,6 +110,8 @@ def response(args, scenario, now):
     if (args[:5] == ["cost", "--format", "json", "--json-only", "--days"]
             and len(args) == 6 and args[5] in ("7", "30", "90")):
         days = int(args[5])
+        if scenario.startswith("readme-"):
+            return [readme_cost(provider, days, now) for provider in ("codex", "claude")]
         factor = 0.5 if days == 7 else 1
         snapshot = {"provider": "codex", "updatedAt": now.isoformat(), "historyDays": days,
                  "currencyCode": "USD", "sessionCostUSD": 1.25, "sessionTokens": 12000,
@@ -93,7 +132,7 @@ def response(args, scenario, now):
             if scenario == "project-long-text":
                 snapshot["projects"][0]["name"] = "Example project with a long display name for the engineering and documentation team"
         return [snapshot]
-    for provider in ("codex", "claude"):
+    for provider in (("codex", "claude", "gemini") if scenario.startswith("readme-") else ("codex", "claude")):
         prefix = ["usage", "--provider", provider]
         if args == prefix + ["--format", "json", "--json-only"]:
             return [usage(provider, scenario, now)]

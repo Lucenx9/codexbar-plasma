@@ -2,6 +2,8 @@
 """Run the real applet in plasmawindowed with isolated synthetic CLI data."""
 
 import argparse
+import configparser
+import io
 import json
 import os
 from pathlib import Path
@@ -103,6 +105,18 @@ def stage_applet(work, scenario, image_path):
         f"[General]\nfont=Noto Sans,{size},-1,5,50,0,0,0,0,0\n"
         f"smallestReadableFont=Noto Sans,{size - 2},-1,5,50,0,0,0,0,0\n"
         "[Icons]\nTheme=breeze\n")
+    if scenario.startswith("readme-"):
+        palette = configparser.ConfigParser()
+        palette.optionxform = str
+        if not palette.read("/usr/share/color-schemes/BreezeDark.colors"):
+            raise RuntimeError("README captures require the Breeze Dark color scheme")
+        for section in list(palette.sections()):
+            if not section.startswith(("Colors:", "ColorEffects:")):
+                palette.remove_section(section)
+        colors = io.StringIO()
+        palette.write(colors)
+        with (work / "config/kdeglobals").open("a") as config_file:
+            config_file.write("\n" + colors.getvalue())
 
 
 def stop_preview(process):

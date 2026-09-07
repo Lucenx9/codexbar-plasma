@@ -8,16 +8,21 @@ This repository contains only the Plasma applet. Provider logic,
 authentication, configuration, quota parsing, and JSON output come from the
 `codexbar` CLI.
 
-![CodexBar Plasma overview](docs/codexbar-plasma-overview.png)
+| Standard panel | Minimal panel |
+| --- | --- |
+| [![Colored provider icons and usage meters in the Standard panel](docs/codexbar-plasma-panel-standard.png)](docs/codexbar-plasma-panel-standard.png) | [![Neutral provider icons and thin accent-colored usage meters in the Minimal panel](docs/codexbar-plasma-panel-minimal.png)](docs/codexbar-plasma-panel-minimal.png) |
 
-![Usage and spend dashboard](docs/codexbar-plasma-usage-spend.png)
+The same Codex, Claude, and Gemini usage in both styles. Choose the appearance
+in **Display → Panel**; these examples show provider meters with panel text hidden.
 
-![Local agent sessions](docs/codexbar-plasma-sessions.png)
+| Provider overview | Local sessions |
+| --- | --- |
+| [![Overview with Codex, Claude, and Gemini usage](docs/codexbar-plasma-overview.png)](docs/codexbar-plasma-overview.png) | [![Active and idle local agent sessions](docs/codexbar-plasma-sessions.png)](docs/codexbar-plasma-sessions.png) |
+| **Usage & Spend** | **Provider details** |
+| [![Thirty days of spending and activity across providers](docs/codexbar-plasma-usage-spend.png)](docs/codexbar-plasma-usage-spend.png) | [![Codex quotas, reset windows, and daily cost history](docs/codexbar-plasma-codex.png)](docs/codexbar-plasma-codex.png) |
 
-![Codex provider detail](docs/codexbar-plasma-codex.png)
-
-Screenshots show version 0.2.30 with synthetic demo accounts, usage, spend, and session data; no
-personal account data is included. They use one Plasma theme and accent color.
+Click a screenshot to view it at full size. These captures show version 0.2.34
+in Breeze Dark with synthetic accounts, usage, spend, and session data.
 The widget follows the user's Plasma theme for text, surfaces, selection, and
 status colors; provider accent colors stay stable for recognition.
 
@@ -326,7 +331,8 @@ make smoke
 ```
 
 This requires Python 3, GNU gettext, `plasmawindowed`, `dbus-run-session`, and the Plasma,
-Kirigami, and KDE desktop control QML modules. The localized scenarios also use
+Kirigami, and KDE desktop control QML modules. README captures also require the
+Breeze Dark color scheme. The localized scenarios use
 the UTF-8 locales listed in the translation guide; CI generates them during
 setup. The runner opens a temporary applet for
 each scenario, captures the view, and closes the preview automatically:
@@ -334,6 +340,8 @@ each scenario, captures the view, and closes the preview automatically:
 | Scenario | Captured state |
 | --- | --- |
 | `normal` | Overview with synthetic Codex and Claude quotas. |
+| `readme-overview`, `readme-spend`, `readme-sessions`, `readme-codex` | README gallery in Breeze Dark, with three providers, varied 30-day history, and four local sessions. |
+| `readme-panel-standard`, `readme-panel-minimal` | Standard and Minimal panel icons and usage meters, with identical three-provider data in Breeze Dark. |
 | `tabs-overflow` | Ten providers, with scroll-button geometry, immediate focus reveal, and endpoint states checked. |
 | `provider-settings` | Enabled-only settings list, after checking combined search/filter behavior and selection isolation. |
 | `provider-header`, `provider-header-large` | Provider identity and incident badge at normal and doubled body text sizes. |
@@ -358,6 +366,7 @@ Select one scenario or choose a new artifact directory:
 make smoke SMOKE_ARGS='--scenario long-text'
 python3 scripts/smoke_popup.py --scenario normal --output /tmp/codexbar-preview
 python3 scripts/smoke_popup.py --scenario panel-minimal --renderer opengl
+python3 scripts/smoke_popup.py --scenario readme-overview --renderer opengl --output /tmp/codexbar-readme
 ```
 
 Use `--renderer opengl` on a graphical session with OpenGL for accurate provider
