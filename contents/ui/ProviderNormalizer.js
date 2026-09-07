@@ -745,7 +745,9 @@ function normalizeCostDaily(items, currency, days, updatedAt) {
         if (!isFinite(tokens)) {
             tokens = sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens)
         }
-        if (!isFinite(cost) && !isFinite(tokens) && !isFinite(inputTokens) && !isFinite(outputTokens)) {
+        if (!isFinite(cost) && !isFinite(tokens)
+                && !isFinite(inputTokens) && !isFinite(outputTokens)
+                && !isFinite(cacheReadTokens) && !isFinite(cacheCreationTokens)) {
             var blockedDate = parsedCalendarDateKey(label)
             if (blockedDate) {
                 blockedDateKeys[blockedDate.key] = true
