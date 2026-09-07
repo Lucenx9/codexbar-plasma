@@ -125,6 +125,28 @@ class SmokePopupTests(unittest.TestCase):
         self.assertEqual(month["projects"][3]["totalCost"], 0)
         self.assertNotIn("projects", response(command + ["30"], "normal", now)[0])
 
+    def test_readme_history_covers_the_range_with_consistent_totals(self):
+        now = datetime(2026, 9, 1, tzinfo=timezone.utc)
+        command = ["cost", "--format", "json", "--json-only", "--days"]
+        month = response(command + ["30"], "readme-spend", now)
+        for days in (7, 30, 90):
+            snapshots = response(command + [str(days)], "readme-spend", now)
+            self.assertEqual([item["provider"] for item in snapshots], ["codex", "claude"])
+            for snapshot, month_snapshot in zip(snapshots, month):
+                with self.subTest(days=days, provider=snapshot["provider"]):
+                    daily = snapshot["daily"]
+                    self.assertEqual(len({day["date"] for day in daily}), days)
+                    self.assertEqual(daily[-1]["date"], now.date().isoformat())
+                    self.assertGreater(len({day["totalCost"] for day in daily}), 1)
+                    self.assertAlmostEqual(snapshot["totals"]["totalCost"],
+                                           sum(day["totalCost"] for day in daily))
+                    self.assertEqual(snapshot["totals"]["totalTokens"],
+                                     sum(day["totalTokens"] for day in daily))
+                    self.assertEqual(snapshot["sessionCostUSD"], daily[-1]["totalCost"])
+                    self.assertEqual(snapshot["sessionTokens"], daily[-1]["totalTokens"])
+                    shared_days = min(days, 30)
+                    self.assertEqual(daily[-shared_days:], month_snapshot["daily"][-shared_days:])
+
     def test_qml_failure_wins_even_if_capture_marker_is_present(self):
         for error in ("TypeError: synthetic failure",
                       "QJSValue::call() failed: cannot call function with argument created in a different engine"):

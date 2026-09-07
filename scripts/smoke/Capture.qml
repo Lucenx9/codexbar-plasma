@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
 
@@ -18,7 +19,8 @@ Item {
     readonly property bool settingsScenario: scenario.indexOf("settings-") === 0
     readonly property bool panelAppearanceScenario: scenario === "panel-standard" || scenario === "panel-minimal"
         || scenario === "panel-minimal-single"
-    readonly property int expectedProviderCount: scenario === "panel-minimal-single" ? 1 : 2
+    readonly property bool readmeScenario: scenario.indexOf("readme-") === 0
+    readonly property int expectedProviderCount: scenario === "panel-minimal-single" ? 1 : (readmeScenario ? 3 : 2)
 
     Loader {
         id: configurationPreview
@@ -266,6 +268,17 @@ Item {
     }
 
     function scenarioReady() {
+        if (readmeScenario) {
+            if (!prepared || applet.loading || applet.costLoading || applet.providers.length !== 3)
+                return false;
+            if (scenario === "readme-sessions")
+                return applet.sessionsSelected && !applet.sessionsLoading && applet.sessions.length === 4;
+            if (scenario === "readme-spend")
+                return applet.spendSelected && applet.spendProviderCosts().length === 2;
+            if (scenario === "readme-codex")
+                return applet.selectedProviderID === "codex" && !!applet.tokenCosts.codex;
+            return applet.overviewSelected;
+        }
         if (settingsScenario) {
             var preview = configurationPreview.item as SettingsPreview;
             if (preview === null || !preview.ready)
@@ -468,7 +481,15 @@ Item {
                 if (capture.scenario !== "loading"
                         && (capture.applet.loading || capture.applet.providers.length !== capture.expectedProviderCount))
                     return;
-                if (capture.scenario === "loading") {
+                if (capture.readmeScenario) {
+                    popup.Window.window.width = 640;
+                    popup.Window.window.height = capture.scenario === "readme-overview"
+                        || capture.scenario === "readme-sessions" ? 400 : 660;
+                    if (capture.scenario === "readme-codex")
+                        capture.applet.openProviderFromPanel("codex");
+                    else
+                        capture.applet.selectGlobalView(capture.scenario.substring("readme-".length));
+                } else if (capture.scenario === "loading") {
                     capture.verifyEmptyPanelRules();
                 } else if (capture.scenario === "tabs-overflow") {
                     var providers = capture.applet.providers.slice();
