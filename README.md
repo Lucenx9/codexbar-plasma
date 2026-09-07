@@ -349,11 +349,13 @@ state before using Qt's
 [`grabToImage`](https://doc.qt.io/qt-6/qml-qtquick-item.html#grabToImage-method).
 The `panel-rules` scenario exercises quota selection, visibility conditions,
 checkboxes, and clock changes in the real applet, then captures its compact
-representation. Other screenshots contain only the popup, with its theme
-background. QML errors,
+representation. The `tabs-overflow` scenario walks the tab focus chain and
+checks immediate reveal. The `provider-settings` scenario captures the real
+settings page after exercising local filters. Popup captures include their
+theme background. QML errors,
 missing captures, early exits, and timeouts fail the command. The screenshots
 still need visual review: this is not a pixel-comparison test, and it does not
-exercise panel placement, keyboard navigation, or the real CLI. Synthetic
+exercise panel placement, key-event dispatch, or the real CLI. Synthetic
 payloads cover a small subset of the repository's CLI 0.56.2 contract; dates
 are relative to the run time. Typography uses Noto Sans and the Breeze icons.
 
