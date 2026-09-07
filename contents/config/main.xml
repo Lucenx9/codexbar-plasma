@@ -137,7 +137,7 @@
     </entry>
     <entry name="showProviderInPanel" type="Bool">
       <label>Show the provider name in the panel.</label>
-      <default>true</default>
+      <default>false</default>
     </entry>
     <entry name="panelStyle" type="String">
       <label>Panel appearance: standard or minimal.</label>
@@ -145,11 +145,11 @@
     </entry>
     <entry name="showPercentInPanel" type="Bool">
       <label>Show the selected usage text in the panel.</label>
-      <default>true</default>
+      <default>false</default>
     </entry>
     <entry name="showMultiProviderInPanel" type="Bool">
-      <label>Show multi-provider meters in the panel.</label>
-      <default>false</default>
+      <label>Show provider meters in the panel.</label>
+      <default>true</default>
     </entry>
     <entry name="panelElementOrder" type="String">
       <label>Ordered panel element identifiers.</label>

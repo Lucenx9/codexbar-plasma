@@ -14,6 +14,7 @@ SCENARIOS = ("normal", "tabs-overflow", "provider-settings", "provider-header", 
 SCENARIOS += ("settings-general", "settings-display", "settings-advanced", "settings-debug")
 SCENARIOS += ("readme-overview", "readme-spend", "readme-sessions", "readme-codex")
 SCENARIOS += ("readme-panel-standard", "readme-panel-minimal")
+SCENARIOS += ("panel-default", "panel-default-single")
 
 
 def usage(provider, scenario, now):
@@ -86,7 +87,7 @@ def response(args, scenario, now):
     if args == ["--version"]:
         return "CodexBar 0.56.2 (synthetic smoke fixture)"
     if args == ["config", "providers", "--format", "json", "--json-only"]:
-        providers = ("codex",) if scenario == "panel-minimal-single" else ("codex", "claude")
+        providers = ("codex",) if scenario in ("panel-minimal-single", "panel-default-single") else ("codex", "claude")
         if scenario.startswith("readme-"):
             providers += ("gemini",)
         rows = [{"provider": key, "enabled": True} for key in providers]

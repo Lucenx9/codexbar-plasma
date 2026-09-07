@@ -74,13 +74,13 @@ KCM.SimpleKCM {
     property bool cfg_showProviderChangelogs
     property bool cfg_showProviderChangelogsDefault: false
     property bool cfg_showProviderInPanel
-    property bool cfg_showProviderInPanelDefault: true
+    property bool cfg_showProviderInPanelDefault: false
     property string cfg_panelStyle
     property string cfg_panelStyleDefault: "standard"
     property bool cfg_showPercentInPanel
-    property bool cfg_showPercentInPanelDefault: true
+    property bool cfg_showPercentInPanelDefault: false
     property bool cfg_showMultiProviderInPanel
-    property bool cfg_showMultiProviderInPanelDefault: false
+    property bool cfg_showMultiProviderInPanelDefault: true
     property string cfg_panelElementOrder
     property string cfg_panelElementOrderDefault: "identity,status,text,meters"
     property string cfg_panelQuotaLane

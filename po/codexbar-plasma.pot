@@ -545,7 +545,7 @@ msgid "Show credits in panel"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
-msgid "Show multi-provider meters in panel"
+msgid "Show provider meters in panel"
 msgstr ""
 
 #: contents/ui/configDisplay.qml

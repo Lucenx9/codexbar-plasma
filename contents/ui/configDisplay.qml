@@ -34,13 +34,13 @@ KCM.SimpleKCM {
     property alias cfg_showProviderChangelogs: showProviderChangelogsCheck.checked
     property bool cfg_showProviderChangelogsDefault: false
     property alias cfg_showProviderInPanel: showProviderCheck.checked
-    property bool cfg_showProviderInPanelDefault: true
+    property bool cfg_showProviderInPanelDefault: false
     property string cfg_panelStyle: "standard"
     property string cfg_panelStyleDefault: "standard"
     property alias cfg_showPercentInPanel: showPercentCheck.checked
-    property bool cfg_showPercentInPanelDefault: true
+    property bool cfg_showPercentInPanelDefault: false
     property alias cfg_showMultiProviderInPanel: showMultiProviderCheck.checked
-    property bool cfg_showMultiProviderInPanelDefault: false
+    property bool cfg_showMultiProviderInPanelDefault: true
     property string cfg_panelElementOrder: "identity,status,text,meters"
     property string cfg_panelElementOrderDefault: "identity,status,text,meters"
     property string cfg_panelQuotaLane: "auto"
@@ -519,7 +519,7 @@ KCM.SimpleKCM {
         Controls.CheckBox {
             id: showMultiProviderCheck
             Layout.fillWidth: true
-            text: i18n("Show multi-provider meters in panel")
+            text: i18n("Show provider meters in panel")
         }
 
         Controls.CheckBox {
