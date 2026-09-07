@@ -2362,3 +2362,19 @@ msgid "%1 matching provider"
 msgid_plural "%1 matching providers"
 msgstr[0] "%1 provider corrispondente"
 msgstr[1] "%1 provider corrispondenti"
+
+#: contents/ui/configGeneral.qml
+msgid "Connection"
+msgstr "Connessione"
+
+#: contents/ui/configGeneral.qml
+msgid "Usage history"
+msgstr "Cronologia di utilizzo"
+
+#: contents/ui/configGeneral.qml
+msgid "Quota warnings"
+msgstr "Avvisi sulle quote"
+
+#: contents/ui/configDisplay.qml
+msgid "Panel visibility"
+msgstr "Visibilità del pannello"

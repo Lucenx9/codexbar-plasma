@@ -36,7 +36,7 @@ KCM.SimpleKCM {
     property bool cfg_includeStatus
     property bool cfg_includeStatusDefault: false
     property bool cfg_usageBarsShowUsed
-    property bool cfg_usageBarsShowUsedDefault: false
+    property bool cfg_usageBarsShowUsedDefault: true
     property bool cfg_showProviderChangelogs
     property bool cfg_showProviderChangelogsDefault: false
     property bool cfg_showProviderInPanel
@@ -1858,7 +1858,7 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             Layout.leftMargin: Kirigami.Units.smallSpacing
             Layout.rightMargin: Kirigami.Units.smallSpacing
-            visible: page.visibleEnabledProviders.length > 0
+            visible: page.filterScope === "all" && page.visibleEnabledProviders.length > 0
             text: i18n("Enabled")
             font.weight: Font.DemiBold
         }
@@ -1883,7 +1883,7 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             Layout.leftMargin: Kirigami.Units.smallSpacing
             Layout.rightMargin: Kirigami.Units.smallSpacing
-            visible: page.visibleDisabledProviders.length > 0
+            visible: page.filterScope === "all" && page.visibleDisabledProviders.length > 0
             text: i18n("Disabled")
             font.weight: Font.DemiBold
         }

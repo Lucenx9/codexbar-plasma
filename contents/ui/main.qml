@@ -58,7 +58,7 @@ PlasmoidItem {
     // Resolved once: a .pragma library module cannot reach Qt.locale().
     readonly property var costNumberFormat: CostPresentation.numberFormat(
         Qt.locale().groupSeparator, Qt.locale().decimalPoint)
-    property bool usageBarsShowUsed: Plasmoid.configuration.usageBarsShowUsed === true
+    property bool usageBarsShowUsed: Plasmoid.configuration.usageBarsShowUsed !== false
     property bool showQuotaWarningMarkers: Plasmoid.configuration.showQuotaWarningMarkers !== false
     readonly property int quotaWarningPercent: QuotaThresholds.warningPercent(
         Plasmoid.configuration.quotaWarningPercent)
@@ -71,7 +71,7 @@ PlasmoidItem {
     property bool notifyStatusIncidents: Plasmoid.configuration.notifyStatusIncidents !== false
     property bool notifyQuotaWarnings: Plasmoid.configuration.notifyQuotaWarnings !== false
     property bool notifyPredictivePaceWarnings: Plasmoid.configuration.notifyPredictivePaceWarnings === true
-    property bool notifyLimitResets: Plasmoid.configuration.notifyLimitResets !== false
+    property bool notifyLimitResets: Plasmoid.configuration.notifyLimitResets === true
     property bool updateChecksEnabled: Plasmoid.configuration.updateChecksEnabled !== false
     property bool updateNotificationsEnabled: Plasmoid.configuration.updateNotificationsEnabled !== false
     property bool autoUpdateEnabled: Plasmoid.configuration.autoUpdateEnabled === true

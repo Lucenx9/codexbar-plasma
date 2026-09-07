@@ -20,7 +20,7 @@ KCM.SimpleKCM {
     property string cfg_commandPath
     property string cfg_commandPathDefault: "codexbar"
     property alias cfg_usageBarsShowUsed: usageBarsShowUsedCheck.checked
-    property bool cfg_usageBarsShowUsedDefault: false
+    property bool cfg_usageBarsShowUsedDefault: true
     property alias cfg_showQuotaWarningMarkers: showQuotaWarningMarkersCheck.checked
     property bool cfg_showQuotaWarningMarkersDefault: true
     property string cfg_menuBarDisplayMode: "percent"
@@ -433,112 +433,26 @@ KCM.SimpleKCM {
 
     Kirigami.FormLayout {
         Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Popup")
+            Kirigami.FormData.label: i18n("Usage details")
             Kirigami.FormData.isSection: true
         }
 
         Controls.CheckBox {
-            id: showPopupTabLabelsCheck
+            id: usageBarsShowUsedCheck
             Layout.fillWidth: true
-            text: i18n("Show text labels in the tab bar")
+            text: i18n("Show usage as percent used")
         }
 
-        ColumnLayout {
-            Kirigami.FormData.label: i18n("Provider order:")
-            Kirigami.FormData.labelAlignment: Qt.AlignTop
+        Controls.CheckBox {
+            id: resetTimesShowAbsoluteCheck
             Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            spacing: Kirigami.Units.smallSpacing / 2
+            text: i18n("Show reset times as clock time")
+        }
 
-            Components.PlainControlsLabel {
-                Layout.fillWidth: true
-                visible: page.providerRosterLoading
-                text: i18n("Loading providers...")
-                opacity: 0.7
-            }
-
-            Components.PlainControlsLabel {
-                Layout.fillWidth: true
-                visible: !page.providerRosterLoading
-                    && page.orderedEnabledProviderRoster.length === 0
-                    && page.providerRosterError.length === 0
-                text: i18n("No enabled providers available.")
-                opacity: 0.7
-                wrapMode: Text.WordWrap
-            }
-
-            Components.PlainInlineMessage {
-                Layout.fillWidth: true
-                type: Kirigami.MessageType.Error
-                plainText: page.providerRosterError
-                visible: page.providerRosterError.length > 0
-            }
-
-            Repeater {
-                id: providerOrderRepeater
-
-                model: page.orderedEnabledProviderRoster
-
-                delegate: RowLayout {
-                    required property var modelData
-                    required property int index
-                    readonly property string orderKey: modelData.provider
-                    readonly property Item upButton: providerMoveUp
-                    readonly property Item downButton: providerMoveDown
-                    // The layout may place a rebuilt row after focus is restored.
-                    onYChanged: page.revealFocusedOrderButton(upButton, downButton)
-
-                    Layout.fillWidth: true
-                    spacing: Kirigami.Units.smallSpacing
-
-                    Kirigami.Icon {
-                        source: page.providerIconSource(modelData.provider)
-                        fallback: "view-statistics"
-                        isMask: true
-                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                    }
-
-                    Components.PlainControlsLabel {
-                        text: modelData.displayName
-                        Layout.fillWidth: true
-                        elide: Text.ElideRight
-                    }
-
-                    Controls.ToolButton {
-                        id: providerMoveUp
-
-                        icon.name: "go-up"
-                        enabled: index > 0
-                        Accessible.name: i18n("Move %1 up", modelData.displayName)
-
-                        Components.PlainToolTip {
-                            plainText: providerMoveUp.Accessible.name
-                            visible: providerMoveUp.hovered
-                            delay: Kirigami.Units.toolTipDelay
-                        }
-
-                        onClicked: page.moveProvider(index, -1, visualFocus)
-                    }
-
-                    Controls.ToolButton {
-                        id: providerMoveDown
-
-                        icon.name: "go-down"
-                        enabled: index < page.orderedEnabledProviderRoster.length - 1
-                        Accessible.name: i18n("Move %1 down", modelData.displayName)
-
-                        Components.PlainToolTip {
-                            plainText: providerMoveDown.Accessible.name
-                            visible: providerMoveDown.hovered
-                            delay: Kirigami.Units.toolTipDelay
-                        }
-
-                        onClicked: page.moveProvider(index, 1, visualFocus)
-                    }
-                }
-            }
+        Controls.CheckBox {
+            id: showQuotaWarningMarkersCheck
+            Layout.fillWidth: true
+            text: i18n("Show quota warnings on usage meters")
         }
 
         Kirigami.Separator {
@@ -597,15 +511,15 @@ KCM.SimpleKCM {
         }
 
         Controls.CheckBox {
-            id: showMultiProviderCheck
-            Layout.fillWidth: true
-            text: i18n("Show multi-provider meters in panel")
-        }
-
-        Controls.CheckBox {
             id: showCreditsCheck
             Layout.fillWidth: true
             text: i18n("Show credits in panel")
+        }
+
+        Controls.CheckBox {
+            id: showMultiProviderCheck
+            Layout.fillWidth: true
+            text: i18n("Show multi-provider meters in panel")
         }
 
         Controls.CheckBox {
@@ -704,36 +618,6 @@ KCM.SimpleKCM {
             wrapMode: Text.WordWrap
         }
 
-        Components.PanelRuleEditor {
-            configPage: page
-            elementID: "text"
-            Kirigami.FormData.label: i18n("Show panel text:")
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            enabled: showProviderCheck.checked || showPercentCheck.checked || showCreditsCheck.checked
-        }
-
-        Components.PanelRuleEditor {
-            configPage: page
-            elementID: "meters"
-            Kirigami.FormData.label: i18n("Show each meter:")
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            enabled: showMultiProviderCheck.checked
-        }
-
-        Components.PlainControlsLabel {
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: i18n("Conditions use the quota shown by each element. The text condition also applies to the provider name and credits. Missing data does not satisfy a condition.")
-            font: Kirigami.Theme.smallFont
-            opacity: 0.7
-            wrapMode: Text.WordWrap
-        }
-
         ColumnLayout {
             Kirigami.FormData.label: i18n("Element order:")
             Kirigami.FormData.labelAlignment: Qt.AlignTop
@@ -760,7 +644,7 @@ KCM.SimpleKCM {
 
                     Components.PlainControlsLabel {
                         text: i18n("%1.", index + 1)
-                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                        Layout.minimumWidth: Math.max(implicitWidth, Kirigami.Units.iconSizes.small)
                         opacity: 0.7
                     }
 
@@ -808,26 +692,49 @@ KCM.SimpleKCM {
         }
 
         Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Usage details")
+            Kirigami.FormData.label: i18n("Panel visibility")
+            Kirigami.FormData.isSection: true
+        }
+
+        Components.PanelRuleEditor {
+            configPage: page
+            elementID: "text"
+            Kirigami.FormData.label: i18n("Show panel text:")
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            enabled: showProviderCheck.checked || showPercentCheck.checked || showCreditsCheck.checked
+        }
+
+        Components.PanelRuleEditor {
+            configPage: page
+            elementID: "meters"
+            Kirigami.FormData.label: i18n("Show each meter:")
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            enabled: showMultiProviderCheck.checked
+        }
+
+        Components.PlainControlsLabel {
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            text: i18n("Conditions use the quota shown by each element. The text condition also applies to the provider name and credits. Missing data does not satisfy a condition.")
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+            wrapMode: Text.WordWrap
+        }
+
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Popup")
             Kirigami.FormData.isSection: true
         }
 
         Controls.CheckBox {
-            id: usageBarsShowUsedCheck
+            id: showPopupTabLabelsCheck
             Layout.fillWidth: true
-            text: i18n("Show usage as percent used")
-        }
-
-        Controls.CheckBox {
-            id: showQuotaWarningMarkersCheck
-            Layout.fillWidth: true
-            text: i18n("Show quota warnings on usage meters")
-        }
-
-        Controls.CheckBox {
-            id: resetTimesShowAbsoluteCheck
-            Layout.fillWidth: true
-            text: i18n("Show reset times as clock time")
+            text: i18n("Show text labels in the tab bar")
         }
 
         Controls.CheckBox {
@@ -836,9 +743,102 @@ KCM.SimpleKCM {
             text: i18n("Show provider changelog links")
         }
 
-        Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Overview")
-            Kirigami.FormData.isSection: true
+        ColumnLayout {
+            Kirigami.FormData.label: i18n("Provider order:")
+            Kirigami.FormData.labelAlignment: Qt.AlignTop
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            spacing: Kirigami.Units.smallSpacing / 2
+
+            Components.PlainControlsLabel {
+                Layout.fillWidth: true
+                visible: page.providerRosterLoading
+                text: i18n("Loading providers...")
+                opacity: 0.7
+            }
+
+            Components.PlainControlsLabel {
+                Layout.fillWidth: true
+                visible: !page.providerRosterLoading
+                    && page.orderedEnabledProviderRoster.length === 0
+                    && page.providerRosterError.length === 0
+                text: i18n("No enabled providers available.")
+                opacity: 0.7
+                wrapMode: Text.WordWrap
+            }
+
+            Components.PlainInlineMessage {
+                Layout.fillWidth: true
+                type: Kirigami.MessageType.Error
+                plainText: page.providerRosterError
+                visible: page.providerRosterError.length > 0
+            }
+
+            Repeater {
+                id: providerOrderRepeater
+
+                model: page.orderedEnabledProviderRoster
+
+                delegate: RowLayout {
+                    required property var modelData
+                    required property int index
+                    readonly property string orderKey: modelData.provider
+                    readonly property Item upButton: providerMoveUp
+                    readonly property Item downButton: providerMoveDown
+                    // The layout may place a rebuilt row after focus is restored.
+                    onYChanged: page.revealFocusedOrderButton(upButton, downButton)
+
+                    Layout.fillWidth: true
+                    spacing: Kirigami.Units.smallSpacing
+
+                    Kirigami.Icon {
+                        source: page.providerIconSource(modelData.provider)
+                        fallback: "view-statistics"
+                        isMask: true
+                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                    }
+
+                    Components.PlainControlsLabel {
+                        text: modelData.displayName
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                    }
+
+                    Controls.ToolButton {
+                        id: providerMoveUp
+
+                        icon.name: "go-up"
+                        enabled: index > 0
+                        Accessible.name: i18n("Move %1 up", modelData.displayName)
+
+                        Components.PlainToolTip {
+                            plainText: providerMoveUp.Accessible.name
+                            visible: providerMoveUp.hovered
+                            delay: Kirigami.Units.toolTipDelay
+                        }
+
+                        onClicked: page.moveProvider(index, -1, visualFocus)
+                    }
+
+                    Controls.ToolButton {
+                        id: providerMoveDown
+
+                        icon.name: "go-down"
+                        enabled: index < page.orderedEnabledProviderRoster.length - 1
+                        Accessible.name: i18n("Move %1 down", modelData.displayName)
+
+                        Components.PlainToolTip {
+                            plainText: providerMoveDown.Accessible.name
+                            visible: providerMoveDown.hovered
+                            delay: Kirigami.Units.toolTipDelay
+                        }
+
+                        onClicked: page.moveProvider(index, 1, visualFocus)
+                    }
+                }
+            }
         }
 
         ColumnLayout {

@@ -34,7 +34,7 @@ KCM.SimpleKCM {
     property alias cfg_notifyPredictivePaceWarnings: notifyPredictivePaceWarningsCheck.checked
     property bool cfg_notifyPredictivePaceWarningsDefault: false
     property alias cfg_notifyLimitResets: notifyLimitResetsCheck.checked
-    property bool cfg_notifyLimitResetsDefault: true
+    property bool cfg_notifyLimitResetsDefault: false
     property alias cfg_quotaWarningPercent: quotaWarningPercentSpin.value
     property int cfg_quotaWarningPercentDefault: 80
     property alias cfg_quotaCriticalPercent: quotaCriticalPercentSpin.value
@@ -56,7 +56,7 @@ KCM.SimpleKCM {
     property string cfg_source
     property string cfg_sourceDefault: ""
     property bool cfg_usageBarsShowUsed
-    property bool cfg_usageBarsShowUsedDefault: false
+    property bool cfg_usageBarsShowUsedDefault: true
     property bool cfg_showQuotaWarningMarkers
     property bool cfg_showQuotaWarningMarkersDefault: true
     property string cfg_menuBarDisplayMode
@@ -273,7 +273,7 @@ KCM.SimpleKCM {
         // Bound supporting text below so its implicit width cannot force the
         // whole form into narrow mode or push content past the viewport.
         Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Command")
+            Kirigami.FormData.label: i18n("Connection")
             Kirigami.FormData.isSection: true
         }
 
@@ -298,11 +298,6 @@ KCM.SimpleKCM {
                 enabled: page.cfg_commandPath.trim() !== (page.cfg_commandPathDefault || "codexbar")
                 onClicked: page.cfg_commandPath = page.cfg_commandPathDefault || "codexbar"
             }
-        }
-
-        Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Refresh")
-            Kirigami.FormData.isSection: true
         }
 
         Controls.ComboBox {
@@ -361,7 +356,7 @@ KCM.SimpleKCM {
         }
 
         Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Usage")
+            Kirigami.FormData.label: i18n("Usage history")
             Kirigami.FormData.isSection: true
         }
 
@@ -398,58 +393,8 @@ KCM.SimpleKCM {
         }
 
         Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Notifications")
+            Kirigami.FormData.label: i18n("Quota warnings")
             Kirigami.FormData.isSection: true
-        }
-
-        Controls.CheckBox {
-            id: enableNotificationsCheck
-            Layout.fillWidth: true
-            text: i18n("Enable Plasma notifications")
-        }
-
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: Kirigami.Units.smallSpacing
-
-            Controls.CheckBox {
-                id: notifyStatusIncidentsCheck
-                Layout.fillWidth: true
-                Layout.leftMargin: Kirigami.Units.gridUnit
-                text: i18n("Notify status incidents")
-                enabled: enableNotificationsCheck.checked && includeStatusCheck.checked
-            }
-
-            Controls.CheckBox {
-                id: notifyQuotaWarningsCheck
-                Layout.fillWidth: true
-                Layout.leftMargin: Kirigami.Units.gridUnit
-                text: i18n("Notify quota warnings")
-                enabled: enableNotificationsCheck.checked
-            }
-
-            Controls.CheckBox {
-                id: notifyPredictivePaceWarningsCheck
-                Layout.fillWidth: true
-                Layout.leftMargin: Kirigami.Units.gridUnit
-                text: i18n("Notify predicted quota exhaustion")
-                enabled: enableNotificationsCheck.checked
-
-                Components.PlainToolTip {
-                    parent: notifyPredictivePaceWarningsCheck
-                    plainText: i18n("Uses the pace forecast reported by codexbar.")
-                    visible: notifyPredictivePaceWarningsCheck.hovered
-                    delay: Kirigami.Units.toolTipDelay
-                }
-            }
-
-            Controls.CheckBox {
-                id: notifyLimitResetsCheck
-                Layout.fillWidth: true
-                Layout.leftMargin: Kirigami.Units.gridUnit
-                text: i18n("Notify limit resets")
-                enabled: enableNotificationsCheck.checked
-            }
         }
 
         Controls.SpinBox {
@@ -497,6 +442,61 @@ KCM.SimpleKCM {
         }
 
         Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Notifications")
+            Kirigami.FormData.isSection: true
+        }
+
+        Controls.CheckBox {
+            id: enableNotificationsCheck
+            Layout.fillWidth: true
+            text: i18n("Enable Plasma notifications")
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: Kirigami.Units.smallSpacing
+
+            Controls.CheckBox {
+                id: notifyQuotaWarningsCheck
+                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.gridUnit
+                text: i18n("Notify quota warnings")
+                enabled: enableNotificationsCheck.checked
+            }
+
+            Controls.CheckBox {
+                id: notifyPredictivePaceWarningsCheck
+                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.gridUnit
+                text: i18n("Notify predicted quota exhaustion")
+                enabled: enableNotificationsCheck.checked
+
+                Components.PlainToolTip {
+                    parent: notifyPredictivePaceWarningsCheck
+                    plainText: i18n("Uses the pace forecast reported by codexbar.")
+                    visible: notifyPredictivePaceWarningsCheck.hovered
+                    delay: Kirigami.Units.toolTipDelay
+                }
+            }
+
+            Controls.CheckBox {
+                id: notifyLimitResetsCheck
+                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.gridUnit
+                text: i18n("Notify limit resets")
+                enabled: enableNotificationsCheck.checked
+            }
+
+            Controls.CheckBox {
+                id: notifyStatusIncidentsCheck
+                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.gridUnit
+                text: i18n("Notify status incidents")
+                enabled: enableNotificationsCheck.checked && includeStatusCheck.checked
+            }
+        }
+
+        Kirigami.Separator {
             Kirigami.FormData.label: i18n("Updates")
             Kirigami.FormData.isSection: true
         }
@@ -505,6 +505,23 @@ KCM.SimpleKCM {
             id: updateChecksEnabledCheck
             Layout.fillWidth: true
             text: i18n("Check for widget updates")
+        }
+
+        Controls.SpinBox {
+            id: autoUpdateIntervalHoursSpin
+            Kirigami.FormData.label: i18n("Check every:")
+            from: 1
+            to: 168
+            editable: true
+            enabled: updateChecksEnabledCheck.checked
+            textFromValue: function(value, locale) {
+                return i18np("%1 hour", "%1 hours", value)
+            }
+            valueFromText: function(text, locale) {
+                var match = text.match(/\d+/)
+                return match ? parseInt(match[0], 10) : 24
+            }
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 10
         }
 
         ColumnLayout {
@@ -526,23 +543,6 @@ KCM.SimpleKCM {
                 text: i18n("Install widget updates automatically")
                 enabled: updateChecksEnabledCheck.checked
             }
-        }
-
-        Controls.SpinBox {
-            id: autoUpdateIntervalHoursSpin
-            Kirigami.FormData.label: i18n("Check every:")
-            from: 1
-            to: 168
-            editable: true
-            enabled: updateChecksEnabledCheck.checked
-            textFromValue: function(value, locale) {
-                return i18np("%1 hour", "%1 hours", value)
-            }
-            valueFromText: function(text, locale) {
-                var match = text.match(/\d+/)
-                return match ? parseInt(match[0], 10) : 24
-            }
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 10
         }
 
         Components.PlainControlsLabel {

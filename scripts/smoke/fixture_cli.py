@@ -11,6 +11,7 @@ from datetime import datetime, timedelta, timezone
 SCENARIOS = ("normal", "tabs-overflow", "provider-settings", "provider-header", "provider-header-large", "loading", "partial-error", "long-text", "panel-rules", "panel-standard", "panel-minimal", "panel-minimal-single", "legacy-dashboard",
              "project-costs", "project-tokens", "project-range", "project-long-text",
              "localization-it", "localization-fr", "localization-de", "localization-es", "localization-pt_BR")
+SCENARIOS += ("settings-general", "settings-display", "settings-advanced", "settings-debug")
 
 
 def usage(provider, scenario, now):
