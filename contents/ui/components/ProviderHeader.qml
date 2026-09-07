@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
+import "../ThemeContrast.js" as ThemeContrast
 
 RowLayout {
     id: providerHeaderRow
@@ -70,8 +71,9 @@ RowLayout {
 
                 visible: providerHeaderRow.providerData
                     && providerHeaderRow.providerData.hasIncident
-                Layout.preferredWidth: providerStatusBadgeLabel.implicitWidth + Kirigami.Units.smallSpacing * 1.5
-                Layout.preferredHeight: Kirigami.Units.gridUnit * 1.25
+                Layout.preferredWidth: providerStatusBadgeLabel.implicitWidth + Kirigami.Units.smallSpacing * 2
+                Layout.preferredHeight: Math.max(Kirigami.Units.gridUnit * 1.25,
+                    providerStatusBadgeLabel.implicitHeight + Kirigami.Units.smallSpacing)
                 radius: height / 2
                 color: providerHeaderRow.providerData
                     ? providerHeaderRow.applet.statusBadgeColor(providerHeaderRow.providerData.statusSeverity)
@@ -84,7 +86,7 @@ RowLayout {
                     text: providerHeaderRow.providerData
                         ? providerHeaderRow.applet.statusBadgeText(providerHeaderRow.providerData.statusSeverity)
                         : ""
-                    color: providerHeaderRow.applet.contrastTextColor(providerStatusBadge.color)
+                    color: ThemeContrast.readableTextColor(Kirigami.Theme.textColor, providerStatusBadge.color)
                     font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                     font.weight: Font.DemiBold
                 }
@@ -102,6 +104,7 @@ RowLayout {
             PlainPlasmaLabel {
                 id: providerAccountLabel
 
+                Layout.alignment: Qt.AlignBaseline
                 visible: providerHeaderRow.hasAccount
                 text: providerHeaderRow.providerData ? providerHeaderRow.providerData.account : ""
                 opacity: providerHeaderRow.applet.secondaryTextOpacity
@@ -113,6 +116,7 @@ RowLayout {
             PlainPlasmaLabel {
                 id: providerPlanLabel
 
+                Layout.alignment: Qt.AlignBaseline
                 visible: providerHeaderRow.hasPlan
                 text: providerHeaderRow.providerData ? providerHeaderRow.providerData.planText : ""
                 font: Kirigami.Theme.smallFont

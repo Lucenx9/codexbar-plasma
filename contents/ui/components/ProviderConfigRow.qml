@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
+import "../ThemeContrast.js" as ThemeContrast
 
 Controls.ItemDelegate {
     id: providerRow
@@ -17,16 +18,14 @@ Controls.ItemDelegate {
     down: false
     highlighted: providerData.provider === configPage.selectedProviderID
     onClicked: configPage.selectedProviderID = providerData.provider
-    readonly property color selectedForeground: contrastTextColor(Kirigami.Theme.highlightColor)
-    readonly property color selectedSecondaryForeground: withAlpha(selectedForeground, 0.72)
+    readonly property color selectedForeground: ThemeContrast.readableTextColor(
+        Kirigami.Theme.highlightedTextColor, Kirigami.Theme.highlightColor)
+    readonly property color selectedSecondaryForeground: ThemeContrast.readableTextColor(
+        ThemeContrast.interpolateColor(Kirigami.Theme.highlightColor, selectedForeground,
+            configPage.secondaryTextOpacity), Kirigami.Theme.highlightColor)
 
     function withAlpha(color, alpha) {
         return Qt.rgba(color.r, color.g, color.b, alpha)
-    }
-
-    function contrastTextColor(color) {
-        var luminance = (0.2126 * color.r) + (0.7152 * color.g) + (0.0722 * color.b)
-        return luminance > 0.62 ? Qt.rgba(0.08, 0.08, 0.1, 1) : Qt.rgba(1, 1, 1, 1)
     }
 
     contentItem: RowLayout {
@@ -47,10 +46,11 @@ Controls.ItemDelegate {
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 0
+            spacing: Kirigami.Units.smallSpacing / 2
 
             PlainControlsLabel {
                 text: providerRow.providerData.displayName
+                font.weight: Font.DemiBold
                 elide: Text.ElideRight
                 color: providerRow.highlighted ? providerRow.selectedForeground : Kirigami.Theme.textColor
                 Layout.fillWidth: true
@@ -61,7 +61,8 @@ Controls.ItemDelegate {
                     ? i18n("%1 - CodexBar default", providerRow.providerData.provider)
                     : providerRow.providerData.provider
                 elide: Text.ElideRight
-                color: providerRow.highlighted ? providerRow.selectedSecondaryForeground : providerRow.withAlpha(Kirigami.Theme.textColor, 0.6)
+                color: providerRow.highlighted ? providerRow.selectedSecondaryForeground
+                    : providerRow.withAlpha(Kirigami.Theme.textColor, providerRow.configPage.secondaryTextOpacity)
                 font: Kirigami.Theme.smallFont
                 Layout.fillWidth: true
             }

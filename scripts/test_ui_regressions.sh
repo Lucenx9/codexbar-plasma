@@ -1933,8 +1933,8 @@ for action_fragment in (
         raise AssertionError(f"providerActionRows must expose {action_fragment} for grouped menu actions")
 
 for selected_row_fragment in (
-    "readonly property color selectedForeground",
-    "readonly property color selectedSecondaryForeground",
+    "readonly property color selectedForeground: ThemeContrast.readableTextColor(",
+    "readonly property color selectedSecondaryForeground: ThemeContrast.readableTextColor(",
     "? providerRow.selectedForeground",
     "? providerRow.selectedSecondaryForeground",
 ):
@@ -1943,6 +1943,9 @@ for selected_row_fragment in (
             "ProviderConfigRow selected state must set explicit contrast-aware "
             f"text colors; missing {selected_row_fragment!r}"
         )
+
+if "ThemeContrast.readableTextColor(" not in applet.id_block("providerStatusBadgeLabel"):
+    raise AssertionError("provider incident badge text must use the shared text contrast rule")
 
 advanced_override_body = id_block(advanced_text, "advancedOverrideExplanation")
 for explanation_fragment in (

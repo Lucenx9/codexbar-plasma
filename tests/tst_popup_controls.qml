@@ -54,7 +54,7 @@ TestCase {
             return "left";
         }
         function statusBadgeText() {
-            return "";
+            return "Issue";
         }
         function statusBadgeColor() {
             return "red";
@@ -228,6 +228,39 @@ TestCase {
         applet.lastUpdatedText = "Updated 12:05";
         tryCompare(timestamp, "visible", true);
         compare(timestamp.text, "Updated 12:05");
+    }
+
+    function test_headerMetadataSharesABaseline() {
+        var header = createControl("ProviderHeader", {
+            applet: applet, providerData: provider, width: 540
+        });
+        if (!header)
+            return;
+        var account = findText(header, provider.account);
+        var plan = findText(header, provider.planText);
+        account.font.pixelSize = 30;
+        plan.font.pixelSize = 18;
+        tryVerify(function () {
+            return Math.abs(account.mapToItem(header, 0, account.baselineOffset).y
+                - plan.mapToItem(header, 0, plan.baselineOffset).y) < 1;
+        });
+    }
+
+    function test_incidentBadgeGrowsWithItsText() {
+        var header = createControl("ProviderHeader", {
+            applet: applet, width: 540,
+            providerData: {provider: "codex", title: "Codex", account: "", planText: "",
+                hasIncident: true, statusSeverity: "minor"}
+        });
+        if (!header)
+            return;
+        var label = findText(header, "Issue");
+        verify(label !== null && label.visible);
+        label.font.pixelSize = 40;
+        tryVerify(function () {
+            return label.parent.height > label.implicitHeight
+                && label.y > 0 && label.y + label.height < label.parent.height;
+        });
     }
 
     function test_headerIdentityAppearsAfterDataAndPopupBecomeVisible() {
