@@ -40,6 +40,12 @@ function maximumContrastColor(background) {
         : light
 }
 
+function readableTextColor(preferred, background) {
+    return contrastRatio(preferred, background) >= 4.5
+        ? preferred
+        : maximumContrastColor(background)
+}
+
 function readableAccentColor(accent, background, themeTextColor) {
     if (contrastRatio(accent, background) >= minimumNonTextContrastRatio) {
         return accent

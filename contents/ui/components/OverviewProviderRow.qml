@@ -57,7 +57,9 @@ Rectangle {
 
         anchors.fill: parent
         anchors.margins: Kirigami.Units.largeSpacing
-        spacing: Kirigami.Units.largeSpacing
+        anchors.leftMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+        anchors.rightMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+        spacing: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
 
         Rectangle {
             id: overviewProviderIdentitySurface
@@ -108,6 +110,7 @@ Rectangle {
             PlainPlasmaLabel {
                 visible: overviewRow.detail.length > 0
                 text: overviewRow.detail
+                font: Kirigami.Theme.smallFont
                 opacity: overviewRow.applet.secondaryTextOpacity
                 Layout.fillWidth: true
                 elide: Text.ElideMiddle

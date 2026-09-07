@@ -364,6 +364,8 @@ Item {
         }
         if (scenario === "long-text")
             return applet.selectedProviderID === "codex" && !applet.accountLoadingForProvider("codex") && applet.accountOptionsForProvider("codex").length === 2 && codex.account.length > 50;
+        if (scenario.indexOf("provider-header") === 0)
+            return applet.selectedProviderID === "codex" && codex.hasIncident;
         if (scenario.indexOf("project-") === 0) {
             if (!applet.spendSelected || !applet.tokenCosts.codex)
                 return false;
@@ -440,7 +442,7 @@ Item {
                 } else if (capture.scenario === "long-text") {
                     capture.applet.openProviderFromPanel("codex");
                     capture.applet.loadAccounts("codex");
-                } else if (capture.scenario === "legacy-dashboard") {
+                } else if (capture.scenario === "legacy-dashboard" || capture.scenario.indexOf("provider-header") === 0) {
                     capture.applet.openProviderFromPanel("codex");
                 } else if (capture.scenario.indexOf("project-") === 0) {
                     if (capture.applet.costLoading || !capture.applet.tokenCosts.codex)

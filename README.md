@@ -306,6 +306,7 @@ each scenario, captures the view, and closes the preview automatically:
 | `normal` | Overview with synthetic Codex and Claude quotas. |
 | `tabs-overflow` | Ten providers, with scroll-button geometry, immediate focus reveal, and endpoint states checked. |
 | `provider-settings` | Enabled-only settings list, after checking combined search/filter behavior and selection isolation. |
+| `provider-header`, `provider-header-large` | Provider identity and incident badge at normal and doubled body text sizes. |
 | `loading` | Initial loading while the fixture CLI waits. |
 | `partial-error` | Claude's error view while healthy Codex data remains available. |
 | `long-text` | Codex with long account and workspace labels, two accounts, and doubled body text. |

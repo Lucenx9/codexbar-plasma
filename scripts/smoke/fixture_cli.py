@@ -8,7 +8,7 @@ import sys
 import time
 from datetime import datetime, timedelta, timezone
 
-SCENARIOS = ("normal", "tabs-overflow", "provider-settings", "loading", "partial-error", "long-text", "panel-rules", "panel-standard", "panel-minimal", "panel-minimal-single", "legacy-dashboard",
+SCENARIOS = ("normal", "tabs-overflow", "provider-settings", "provider-header", "provider-header-large", "loading", "partial-error", "long-text", "panel-rules", "panel-standard", "panel-minimal", "panel-minimal-single", "legacy-dashboard",
              "project-costs", "project-tokens", "project-range", "project-long-text",
              "localization-it", "localization-fr", "localization-de", "localization-es", "localization-pt_BR")
 
@@ -33,6 +33,8 @@ def usage(provider, scenario, now):
                           "resetsAt": (now + timedelta(days=4)).isoformat()},
         },
     }
+    if scenario.startswith("provider-header"):
+        snapshot["status"] = {"indicator": "minor", "description": "Synthetic service degradation"}
     if scenario == "legacy-dashboard":
         snapshot["openaiDashboard"] = {
             "creditsRemaining": 0,
