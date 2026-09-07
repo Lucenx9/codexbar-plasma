@@ -3,8 +3,34 @@
 The applet ships Italian (`it`), French (`fr`), German (`de`), Spanish (`es`),
 and Brazilian Portuguese (`pt_BR`).
 It follows Plasma's language preferences and uses English when no matching
-catalog exists. CLI-provided labels and provider names are outside the applet's
-translation catalog.
+catalog exists. Known session states and sources, and structured pace forecasts,
+use the applet's translation catalog. Provider names remain unchanged.
+
+## CLI text and localization
+
+The CLI 0.56.2 JSON contracts provide the inputs for these translations:
+
+- [`AgentSession`](https://github.com/steipete/CodexBar/blob/v0.56.2/Sources/CodexBarCore/AgentSession.swift)
+  defines `active`/`idle` states and `cli`, `desktopApp`, `ide`, and `unknown`
+  sources. The widget also translates its existing `running` and `working`
+  compatibility values. Unknown future values retain their display text.
+- [`CLIRenderer.pacePayload`](https://github.com/steipete/CodexBar/blob/v0.56.2/Sources/CodexBarCLI/CLIRenderer.swift)
+  emits `stage`, `deltaPercent`, `expectedUsedPercent`, `willLastToReset`, and
+  `etaSeconds`. `PacePresentation.js` validates these fields and returns semantic
+  parts; `main.qml` translates them. The widget does not parse the English
+  `summary` or recalculate the CLI forecast. A summary-only payload retains its
+  bounded, redacted text as a compatibility fallback.
+
+Free-form incident descriptions, provider detail titles/rows/chart labels,
+extra-window titles, reset-description fallbacks, and CLI error messages can
+still appear in English. Translating them reliably needs official CLI message
+identifiers with typed arguments, or a documented locale-aware output contract.
+Do not translate arbitrary provider text by matching English phrases. The CLI's
+prose-only pace headroom hint also needs a structured presentation field before
+the widget can localize it; it is not appended to the structured pace summary.
+
+In Italian, settings use "Diagnostica" and "Finestra a comparsa". Technical
+terms such as "provider", "account", and "token" remain unchanged.
 
 Install GNU gettext and Python 3 before running the commands below. Run them
 from the repository root.
@@ -62,8 +88,9 @@ for the other catalogs. Install or generate the corresponding UTF-8 locale first
 The CI container generates all five locales.
 
 The preview uses isolated settings and a private D-Bus session. It checks
-translated popup and settings text, checks singular and plural forms, and saves
-a screenshot. It does not change your desktop language or installed widget.
+translated overview and settings text, singular and plural forms, a provider's
+pace summary, and session state/source labels. It saves a screenshot of the
+Sessions tab. It does not change your desktop language or installed widget.
 Review the screenshots for clipped labels and awkward wrapping.
 
 ## Add a language

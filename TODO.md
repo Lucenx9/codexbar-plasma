@@ -114,6 +114,11 @@ replace a host CLI.
   are included. Packaging compiles the package-local Plasma domain; checks cover
   catalog completeness, placeholders, and plurals. The popup smoke tests verify
   all five languages. See `docs/translations.md` to contribute another language.
+  Known session states/sources and structured CLI pace forecasts are localized.
+  Free-form provider details, incident descriptions, reset/error text, and the
+  prose-only pace headroom hint need official CLI localization identifiers or
+  structured presentation fields. Keep unknown values and summary-only legacy
+  forecasts as bounded text fallbacks; do not parse English prose in QML.
 - Predictive pace warnings are opt-in and consume the CLI `pace` forecast; they
   silently prime the current state and notify only on a new projected
   exhaustion. Consider reset-imminent notifications only if they remain quiet,

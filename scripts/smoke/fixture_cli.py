@@ -42,6 +42,11 @@ def usage(provider, scenario, now):
         if provider == "claude":
             snapshot["usage"]["details"] = [{"title": "Generic details",
                                              "rows": [{"label": "Requests", "value": "7"}]}]
+    if scenario.startswith("localization-"):
+        snapshot["pace"] = {"primary": {"stage": "ahead", "deltaPercent": 13,
+                                        "expectedUsedPercent": 30, "willLastToReset": False,
+                                        "etaSeconds": 3600,
+                                        "summary": "13% in deficit | Expected 30% used | Runs out in 1h"}}
     return snapshot
 
 
@@ -53,7 +58,9 @@ def response(args, scenario, now):
         return [{"provider": key, "enabled": True} for key in ("codex", "claude")]
     if args == ["sessions", "--json-v2"]:
         return {"sessions": [{"provider": "codex", "projectName": "Example project",
-                              "state": "working", "lastActivityAt": now.isoformat()}]}
+                              "state": "active", "source": "desktopApp", "lastActivityAt": now.isoformat()},
+                             {"provider": "claude", "projectName": "Another project",
+                              "state": "idle", "source": "cli", "lastActivityAt": now.isoformat()}]}
     if (args[:5] == ["cost", "--format", "json", "--json-only", "--days"]
             and len(args) == 6 and args[5] in ("7", "30", "90")):
         days = int(args[5])

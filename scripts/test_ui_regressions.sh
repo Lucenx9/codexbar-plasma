@@ -183,6 +183,13 @@ from qml_surfaces import Surface
 # specifically, so read the surface as one text. Extracting the popup into a
 # component keeps these assertions meaningful instead of silently unhooking them.
 applet = Surface("applet", root)
+applet.require("text: view.applet.sessionStateText(modelData.state)", "session states must use localized labels")
+applet.require("details.push(sessionSourceText(item.source))", "session sources must use localized labels")
+applet.require("pace: paceSummaryText(pace)", "usage rows must localize structured pace fields")
+applet.require_definition_where_used("sessionStateText")
+applet.require_definition_where_used("sessionSourceText")
+applet.require_definition_where_used("paceSummaryText")
+applet.reject("view.applet.capitalize(modelData.state)", "session states must not bypass translations")
 main_text = applet.text
 providers_surface = Surface("providers", root)
 providers_surface_text = providers_surface.text

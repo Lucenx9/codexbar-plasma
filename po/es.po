@@ -2272,3 +2272,59 @@ msgstr "%1 % %2, consumo demasiado alto"
 #: contents/ui/main.qml
 msgid "Widget updater response exceeded the supported size."
 msgstr "La respuesta del actualizador del widget supera el tamaño admitido."
+
+#: contents/ui/main.qml
+msgid "Active"
+msgstr "Activa"
+
+#: contents/ui/main.qml
+msgid "Idle"
+msgstr "Inactiva"
+
+#: contents/ui/main.qml
+msgid "Running"
+msgstr "En ejecución"
+
+#: contents/ui/main.qml
+msgid "Working"
+msgstr "Trabajando"
+
+#: contents/ui/main.qml
+msgid "Command line"
+msgstr "Línea de comandos"
+
+#: contents/ui/main.qml
+msgid "Desktop app"
+msgstr "Aplicación de escritorio"
+
+#: contents/ui/main.qml
+msgid "IDE"
+msgstr "IDE"
+
+#: contents/ui/main.qml
+msgid "On pace"
+msgstr "Ritmo previsto"
+
+#: contents/ui/main.qml
+msgid "%1% in deficit"
+msgstr "%1% por encima de lo previsto"
+
+#: contents/ui/main.qml
+msgid "%1% in reserve"
+msgstr "%1% de reserva"
+
+#: contents/ui/main.qml
+msgid "Expected %1% used"
+msgstr "Uso previsto: %1%"
+
+#: contents/ui/main.qml
+msgid "Lasts until reset"
+msgstr "Suficiente hasta el reinicio"
+
+#: contents/ui/main.qml
+msgid "Runs out now"
+msgstr "Agotamiento previsto ahora"
+
+#: contents/ui/main.qml
+msgid "Runs out in %1"
+msgstr "Agotamiento previsto en %1"

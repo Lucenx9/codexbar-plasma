@@ -258,9 +258,7 @@ ColumnLayout {
                             Layout.alignment: Qt.AlignTop
 
                             PlainPlasmaLabel {
-                                text: modelData.state.length > 0
-                                    ? view.applet.capitalize(modelData.state)
-                                    : i18n("Unknown")
+                                text: view.applet.sessionStateText(modelData.state)
                                 color: sessionCard.activeSession
                                     ? sessionCard.accent
                                     : Kirigami.Theme.textColor
