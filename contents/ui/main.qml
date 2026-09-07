@@ -7,6 +7,7 @@ import "components" as Components
 import "Guards.js" as Guards
 import "NotificationMemo.js" as NotificationMemo
 import "NotificationPlanner.js" as NotificationPlanner
+import "PacePresentation.js" as PacePresentation
 import "PanelDisplay.js" as PanelDisplay
 import "PanelElements.js" as PanelElements
 import "PanelRules.js" as PanelRules
@@ -1315,9 +1316,42 @@ PlasmoidItem {
             details.push(item.host)
         }
         if (item.source.length > 0) {
-            details.push(item.source)
+            details.push(sessionSourceText(item.source))
         }
         return details.join(" - ")
+    }
+
+    function sessionStateText(state) {
+        switch (state) {
+        case "active":
+            return i18n("Active")
+        case "idle":
+            return i18n("Idle")
+        case "running":
+            return i18n("Running")
+        case "working":
+            return i18n("Working")
+        case "":
+        case "unknown":
+            return i18n("Unknown")
+        default:
+            return capitalize(state)
+        }
+    }
+
+    function sessionSourceText(source) {
+        switch (source) {
+        case "cli":
+            return i18n("Command line")
+        case "desktopApp":
+            return i18n("Desktop app")
+        case "ide":
+            return i18n("IDE")
+        case "unknown":
+            return i18n("Unknown")
+        default:
+            return source
+        }
     }
 
     function sessionActivityText(item, nowMs) {
@@ -1935,7 +1969,7 @@ PlasmoidItem {
                 128),
             resetDescription: Normalizer.boundedDisplayText(window.resetDescription || "", 500),
             reset: Normalizer.boundedDisplayText(resetText(window, false), 500),
-            pace: Normalizer.boundedDisplayText(pace && pace.summary ? pace.summary : "", 500)
+            pace: paceSummaryText(pace)
         }
         rows.push(row)
         return row
@@ -2403,6 +2437,39 @@ PlasmoidItem {
 
     function paceWarningActive(row) {
         return row && row.paceOnTop === false && Number(row.paceEtaSeconds) > 0
+    }
+
+    function paceSummaryText(pace) {
+        var parts = PacePresentation.summaryParts(pace)
+        var labels = []
+        for (var i = 0; i < parts.length; i++) {
+            var part = parts[i]
+            switch (part.kind) {
+            case "onTrack":
+                labels.push(i18n("On pace"))
+                break
+            case "deficit":
+                labels.push(i18n("%1% in deficit", part.percent))
+                break
+            case "reserve":
+                labels.push(i18n("%1% in reserve", part.percent))
+                break
+            case "expected":
+                labels.push(i18n("Expected %1% used", part.percent))
+                break
+            case "lasts":
+                labels.push(i18n("Lasts until reset"))
+                break
+            case "runsOut":
+                labels.push(part.seconds === 0 ? i18n("Runs out now")
+                    : i18n("Runs out in %1", paceEtaText(part.seconds)))
+                break
+            case "fallback":
+                labels.push(part.text)
+                break
+            }
+        }
+        return labels.join(" | ")
     }
 
     function paceEtaText(seconds) {

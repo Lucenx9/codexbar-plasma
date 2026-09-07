@@ -10,6 +10,7 @@ Item {
     required property string scenario
     required property string imagePath
     property bool prepared: false
+    property int localizationStep: 0
     property var panelUsageSnapshot
 
     Loader {
@@ -158,7 +159,42 @@ Item {
                 return false;
             verifyScenario(hasText(settingsPreview.item, i18n("Fetch provider service status")),
                 "translated settings label missing");
-            return applet.overviewSelected;
+            var sessionLabels = {
+                it: ["Attiva", "Inattiva", "Applicazione desktop", "Riga di comando"],
+                fr: ["Active", "Inactive", "Application de bureau", "Ligne de commande"],
+                de: ["Aktiv", "Inaktiv", "Desktop-Anwendung", "Befehlszeile"],
+                es: ["Activa", "Inactiva", "Aplicación de escritorio", "Línea de comandos"],
+                pt_BR: ["Ativa", "Inativa", "Aplicativo de desktop", "Linha de comando"]
+            }[language];
+            if (localizationStep === 0) {
+                if (!applet.overviewSelected)
+                    return false;
+                applet.openProviderFromPanel("codex");
+                localizationStep = 1;
+                return false;
+            }
+            if (localizationStep === 1) {
+                if (applet.selectedProviderID !== "codex")
+                    return false;
+                var expectedPace = i18n("%1% in deficit", 13) + " | "
+                    + i18n("Expected %1% used", 30) + " | "
+                    + i18n("Runs out in %1", expected[2]);
+                verifyScenario(codex.rows[0].pace === expectedPace, "pace summary did not translate");
+                if (!hasText(applet.fullRepresentationItem, expectedPace))
+                    return false;
+                applet.selectGlobalView("sessions");
+                localizationStep = 2;
+                return false;
+            }
+            if (!applet.sessionsSelected || applet.sessionsLoading || applet.sessions.length !== 2)
+                return false;
+            for (var labelIndex = 0; labelIndex < 2; labelIndex++) {
+                if (!hasText(applet.fullRepresentationItem, sessionLabels[labelIndex]))
+                    return false;
+            }
+            verifyScenario(applet.sessionSourceText("desktopApp") === sessionLabels[2], "desktop source did not translate");
+            verifyScenario(applet.sessionSourceText("cli") === sessionLabels[3], "command line source did not translate");
+            return true;
         }
         if (scenario === "legacy-dashboard") {
             if (applet.selectedProviderID !== "codex")

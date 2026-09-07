@@ -318,10 +318,6 @@ msgstr ""
 msgid "Copy session details"
 msgstr ""
 
-#: contents/ui/components/SessionsView.qml contents/ui/main.qml
-msgid "Unknown"
-msgstr ""
-
 #: contents/ui/components/SpendView.qml
 msgid "7 days"
 msgstr ""
@@ -1475,6 +1471,38 @@ msgid "Untitled session"
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "Active"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Idle"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Running"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Working"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Unknown"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Command line"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Desktop app"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "IDE"
+msgstr ""
+
+#: contents/ui/main.qml
 msgid "Just now"
 msgstr ""
 
@@ -1894,6 +1922,37 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Maint."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "On pace"
+msgstr ""
+
+#: contents/ui/main.qml scripts/smoke/Capture.qml
+#, kde-format
+msgid "%1% in deficit"
+msgstr ""
+
+#: contents/ui/main.qml
+#, kde-format
+msgid "%1% in reserve"
+msgstr ""
+
+#: contents/ui/main.qml scripts/smoke/Capture.qml
+#, kde-format
+msgid "Expected %1% used"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Lasts until reset"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Runs out now"
+msgstr ""
+
+#: contents/ui/main.qml scripts/smoke/Capture.qml
+msgid "Runs out in %1"
 msgstr ""
 
 #: contents/ui/main.qml
