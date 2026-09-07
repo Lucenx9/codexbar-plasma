@@ -28,7 +28,7 @@ QML_ERRORS = re.compile(
 )
 
 
-def preview_environment(work, scenario):
+def preview_environment(work, scenario, renderer="software"):
     # Do not inherit CLI credentials, config overrides, Qt import paths, or the
     # desktop session bus. Keep only access to the existing display socket.
     env = {key: os.environ[key] for key in
@@ -41,6 +41,10 @@ def preview_environment(work, scenario):
                CODEXBAR_SMOKE_SCENARIO=scenario, QT_QUICK_BACKEND="software",
                QT_FORCE_STDERR_LOGGING="1", XDG_CURRENT_DESKTOP="KDE",
                QT_QPA_PLATFORMTHEME="kde", QT_QUICK_CONTROLS_STYLE="org.kde.desktop")
+    if renderer == "opengl":
+        # Kirigami's icon masking needs the scene graph to render its colors.
+        env.pop("QT_QUICK_BACKEND")
+        env["QSG_RHI_BACKEND"] = "opengl"
     if scenario.startswith("localization-"):
         language = scenario.removeprefix("localization-")
         env.update(LANG=LOCALES[language], LC_ALL=LOCALES[language], LANGUAGE=language)
@@ -146,6 +150,8 @@ def main():
     parser.add_argument("--scenario", choices=("all",) + SCENARIOS, default="all")
     parser.add_argument("--output", type=Path, help="New artifact directory; default: dist/smoke/run-*")
     parser.add_argument("--timeout", type=int, default=30, help="Seconds per scenario, 1–120")
+    parser.add_argument("--renderer", choices=("software", "opengl"), default="software",
+                        help="Use opengl for visual review of masked provider icons")
     args = parser.parse_args()
     if not 1 <= args.timeout <= 120:
         parser.error("--timeout must be between 1 and 120")
@@ -170,7 +176,7 @@ def main():
         try:
             with tempfile.TemporaryDirectory(prefix="codexbar-smoke-") as temporary:
                 work = Path(temporary)
-                env = preview_environment(work, scenario)
+                env = preview_environment(work, scenario, args.renderer)
                 image_path = output / (scenario + ".png")
                 stage_applet(work, scenario, image_path)
                 command = [shutil.which("dbus-run-session"), "--", shutil.which("plasmawindowed"), APPLET_ID]

@@ -81,6 +81,7 @@ PlasmoidItem {
     property bool showPopupTabLabels: Plasmoid.configuration.showPopupTabLabels !== false
     property string providerOrderRaw: Plasmoid.configuration.providerOrder || ""
     property string panelElementOrderRaw: Plasmoid.configuration.panelElementOrder || ""
+    readonly property bool minimalPanel: Plasmoid.configuration.panelStyle === "minimal"
     readonly property string panelQuotaLane: PanelDisplay.safeLane(Plasmoid.configuration.panelQuotaLane)
     readonly property var panelVisibilityRules: PanelRules.normalizedRules(Plasmoid.configuration.panelVisibilityRules)
     property bool resetTimesShowAbsolute: Plasmoid.configuration.resetTimesShowAbsolute === true
@@ -3730,7 +3731,7 @@ PlasmoidItem {
     }
 
     function compactProviders() {
-        if (!providers || providers.length <= 1
+        if (!providers || (!minimalPanel && providers.length <= 1)
                 || Plasmoid.configuration.showMultiProviderInPanel !== true) {
             return []
         }

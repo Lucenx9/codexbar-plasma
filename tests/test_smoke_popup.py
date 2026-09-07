@@ -17,6 +17,18 @@ from smoke.fixture_cli import response, usage
 
 
 class SmokePopupTests(unittest.TestCase):
+    def test_opengl_preview_does_not_inherit_the_host_renderer(self):
+        for renderer in ("software", "opengl"):
+            with self.subTest(renderer=renderer), tempfile.TemporaryDirectory() as temporary:
+                with patch.dict(os.environ, {"QT_QUICK_BACKEND": "host", "QSG_RHI_BACKEND": "host"}):
+                    env = smoke.preview_environment(Path(temporary), "panel-minimal", renderer)
+                if renderer == "opengl":
+                    self.assertNotIn("QT_QUICK_BACKEND", env)
+                    self.assertEqual(env["QSG_RHI_BACKEND"], "opengl")
+                else:
+                    self.assertEqual(env["QT_QUICK_BACKEND"], "software")
+                    self.assertNotIn("QSG_RHI_BACKEND", env)
+
     def test_environment_drops_host_config_credentials_and_session_bus(self):
         with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, {
             "CODEXBAR_CONFIG": "/host/config.json", "XDG_DATA_HOME": "/host/data",

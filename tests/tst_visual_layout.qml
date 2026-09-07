@@ -15,6 +15,8 @@ TestCase {
     QtObject {
         id: applet
         property bool verticalFormFactor: false
+        property bool minimalPanel: false
+        property bool quotaWarning: false
         property bool loading: false
         property bool expanded: false
         property string openedProvider: ""
@@ -134,7 +136,10 @@ TestCase {
             return row.value;
         }
         function quotaMeterColor(item, accent) {
-            return accent;
+            return quotaWarning ? Qt.rgba(1, 0.5, 0, 1) : accent;
+        }
+        function quotaSeverity() {
+            return quotaWarning ? "major" : "";
         }
         function withAlpha(c, a) {
             return Qt.rgba(c.r, c.g, c.b, a);
@@ -188,6 +193,50 @@ TestCase {
             holders[i].destroy();
     }
 
+    function init() {
+        applet.minimalPanel = false;
+        applet.quotaWarning = false;
+        applet.verticalFormFactor = false;
+    }
+
+    function test_minimalPanelAppearance_data() {
+        return [
+            {tag: "small", extent: 32},
+            {tag: "normal", extent: 44},
+            {tag: "large", extent: 60}
+        ];
+    }
+
+    function test_minimalPanelAppearance(data) {
+        var panel = createControl("CompactRepresentation", {applet: applet, height: data.extent});
+        if (!panel)
+            return;
+        wait(0);
+        var standardBarHeight = panel.meterBarHeight;
+        var standardIconSize = panel.meterIconSize;
+        var icon = findItem(panel, item => item.objectName === "panelProviderIcon");
+        var track = findItem(panel, item => item.objectName === "panelMeterTrack");
+        var fill = findItem(panel, item => item.objectName === "panelMeterFill");
+        verify(icon !== null && track !== null && fill !== null);
+        var brandColor = icon.color.toString();
+        applet.minimalPanel = true;
+        tryCompare(panel, "minimalStyle", true);
+        verify(panel.meterBarHeight <= standardBarHeight);
+        verify(panel.meterIconSize <= 22);
+        verify(panel.meterWidth >= 36);
+        verify(icon.isMask);
+        verify(icon.color.toString() !== brandColor);
+        tryVerify(() => track.width <= panel.meterWidth);
+        // Presentation must still defer to the same semantic warning color.
+        applet.quotaWarning = true;
+        tryCompare(fill, "color", Qt.rgba(1, 0.5, 0, 1));
+        verify(icon.color.toString() !== fill.color.toString());
+        applet.minimalPanel = false;
+        tryCompare(panel, "meterBarHeight", standardBarHeight);
+        compare(panel.meterIconSize, standardIconSize);
+        compare(icon.color.toString(), brandColor);
+    }
+
     function findItem(item, predicate) {
         if (predicate(item))
             return item;
@@ -198,6 +247,26 @@ TestCase {
                 return found;
         }
         return null;
+    }
+
+    function test_emptyQuotaRetainsWarningColor_data() {
+        return [{tag: "standard", minimal: false}, {tag: "minimal", minimal: true}];
+    }
+
+    function test_emptyQuotaRetainsWarningColor(data) {
+        applet.minimalPanel = data.minimal;
+        applet.quotaWarning = true;
+        var panel = createControl("CompactRepresentation", {applet: applet, height: 44});
+        if (!panel)
+            return;
+        wait(0);
+        var meter = findItem(panel, item => item.modelData && item.modelData.provider === "claude");
+        verify(meter !== null);
+        var track = findItem(meter, item => item.objectName === "panelMeterTrack");
+        var fill = findItem(meter, item => item.objectName === "panelMeterFill");
+        verify(track !== null && fill !== null);
+        tryCompare(fill, "width", 0);
+        compare(track.color, Qt.rgba(1, 0.5, 0, 0.28));
     }
 
     function test_sessionFeedbackKeepsHeadingAtTop_data() {
@@ -359,7 +428,29 @@ TestCase {
         compare(applet.providerEnabled, true);
     }
 
-    function test_providerMetersSupportKeyboardAndPointer() {
+    function test_providerMetersSupportKeyboardAndPointer_data() {
+        return [{tag: "standard", minimal: false}, {tag: "minimal", minimal: true}];
+    }
+
+    function test_minimalVerticalPanelKeepsIdentityAndIncident() {
+        applet.minimalPanel = true;
+        applet.verticalFormFactor = true;
+        var panel = createControl("CompactRepresentation", {applet: applet, height: 44});
+        if (!panel)
+            return;
+        wait(0);
+        compare(panel.width, panel.compactExtent);
+        verify(panel.showPrimaryIdentity);
+        var dot = findItem(panel, item => item.visible && item.color !== undefined
+            && item.color.toString() === "#ff8000");
+        verify(dot !== null);
+        compare(dot.width, dot.height);
+        var meter = findItem(panel, item => item.activeFocusOnTab && typeof item.activate === "function");
+        verify(meter === null || !meter.visible);
+    }
+
+    function test_providerMetersSupportKeyboardAndPointer(data) {
+        applet.minimalPanel = data.minimal;
         applet.openedProvider = "";
         applet.expanded = false;
         var panel = createControl("CompactRepresentation", {

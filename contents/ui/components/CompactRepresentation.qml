@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
+import "../ThemeContrast.js" as ThemeContrast
 
 Item {
     id: compactRoot
@@ -8,6 +9,9 @@ Item {
     required property var applet
 
     readonly property bool verticalPanel: applet.verticalFormFactor
+    readonly property bool minimalStyle: applet.minimalPanel === true
+    readonly property color themeAccent: ThemeContrast.readableAccentColor(
+        Kirigami.Theme.highlightColor, Kirigami.Theme.backgroundColor, Kirigami.Theme.textColor)
     readonly property bool hasProviderMeters: applet.compactProviders().length > 0
     readonly property var incidentProvider: applet.primaryIncidentProvider()
     readonly property string primaryText: applet.compactText()
@@ -17,11 +21,16 @@ Item {
     // Panel meters scale with the panel thickness instead of using fixed pixel
     // sizes, which rendered them nearly unreadable on normal panels.
     readonly property int meterContentHeight: Math.max(0, height - Kirigami.Units.smallSpacing * 2)
-    readonly property int meterSpacing: Math.max(1, Math.round(Kirigami.Units.smallSpacing / 2))
-    readonly property int meterBarHeight: Math.max(3, Math.round(meterContentHeight * 0.2))
-    readonly property int meterIconSize: Math.max(9, meterContentHeight - meterBarHeight - meterSpacing)
-    readonly property int meterWidth: Math.max(Kirigami.Units.gridUnit * 1.6,
-        meterIconSize + Kirigami.Units.smallSpacing)
+    readonly property int meterSpacing: minimalStyle ? Kirigami.Units.smallSpacing
+        : Math.max(1, Math.round(Kirigami.Units.smallSpacing / 2))
+    readonly property int meterBarHeight: minimalStyle ? Math.max(2, Math.round(Kirigami.Units.smallSpacing * 0.75))
+        : Math.max(3, Math.round(meterContentHeight * 0.2))
+    readonly property int meterIconSize: Math.max(9, Math.min(
+        minimalStyle ? Kirigami.Units.iconSizes.smallMedium : Infinity,
+        meterContentHeight - meterBarHeight - meterSpacing))
+    readonly property int meterWidth: minimalStyle ? Math.max(Kirigami.Units.gridUnit * 2,
+        meterIconSize + Kirigami.Units.smallSpacing * 2)
+        : Math.max(Kirigami.Units.gridUnit * 1.6, meterIconSize + Kirigami.Units.smallSpacing)
     readonly property int maximumCompactWidth: Kirigami.Units.gridUnit * 18
     readonly property int desiredWidth: verticalPanel
         ? compactExtent
@@ -52,7 +61,7 @@ Item {
 
         visible: false
         text: compactRoot.primaryText
-        font.bold: true
+        font.bold: !compactRoot.minimalStyle
     }
 
     RowLayout {
@@ -128,8 +137,8 @@ Item {
                 anchors.fill: parent
                 source: compactRoot.applet.loading ? "view-refresh" : compactRoot.applet.providerIconSource(parent.compactProvider)
                 fallback: "view-statistics"
-                isMask: !compactRoot.applet.loading && compactRoot.applet.providerIconIsMask(parent.compactProvider)
-                color: compactRoot.applet.loading
+                isMask: !compactRoot.applet.loading && (compactRoot.minimalStyle || compactRoot.applet.providerIconIsMask(parent.compactProvider))
+                color: compactRoot.applet.loading || compactRoot.minimalStyle
                     ? Kirigami.Theme.textColor
                     : compactRoot.applet.providerReadableColor(parent.compactProvider, Kirigami.Theme.backgroundColor)
 
@@ -216,7 +225,7 @@ Item {
             visible: !compactRoot.verticalPanel && compactRoot.primaryText.length > 0
             text: compactRoot.primaryText
             elide: Text.ElideRight
-            font.bold: true
+            font.bold: !compactRoot.minimalStyle
             // The loader stretches this label to the full row height, so the
             // default top alignment would sit the text above the centred
             // provider icon beside it.
@@ -240,7 +249,7 @@ Item {
                     required property var modelData
                     readonly property var quotaRow: compactRoot.applet.panelDisplayRow(modelData, "percent")
                     readonly property real meter: quotaRow ? compactRoot.applet.displayPercent(quotaRow) : -1
-                    readonly property color accent: compactRoot.applet.providerReadableColor(
+                    readonly property color accent: compactRoot.minimalStyle ? compactRoot.themeAccent : compactRoot.applet.providerReadableColor(
                         modelData.provider,
                         Kirigami.Theme.backgroundColor)
                     // The panel is the surface a user reads without opening
@@ -249,6 +258,10 @@ Item {
                     readonly property color meterColor: compactRoot.applet.quotaMeterColor(
                         quotaRow,
                         accent)
+                    // An exhausted remaining quota has no fill, so its track
+                    // must still carry the warning color.
+                    readonly property bool neutralTrack: compactRoot.minimalStyle
+                        && compactRoot.applet.quotaSeverity(quotaRow).length === 0
 
                     function activate() {
                         compactRoot.applet.openProviderFromPanel(compactMeter.modelData.provider)
@@ -289,23 +302,30 @@ Item {
                         spacing: compactRoot.meterSpacing
 
                         Kirigami.Icon {
+                            objectName: "panelProviderIcon"
                             source: compactRoot.applet.providerIconSource(compactMeter.modelData.provider)
                             fallback: "view-statistics"
-                            isMask: compactRoot.applet.providerIconIsMask(compactMeter.modelData.provider)
-                            color: compactMeter.accent
+                            isMask: compactRoot.minimalStyle || compactRoot.applet.providerIconIsMask(compactMeter.modelData.provider)
+                            color: compactRoot.minimalStyle ? Kirigami.Theme.textColor : compactMeter.accent
                             Layout.alignment: Qt.AlignHCenter
                             Layout.preferredWidth: compactRoot.meterIconSize
                             Layout.preferredHeight: compactRoot.meterIconSize
                         }
 
                         Rectangle {
-                            Layout.fillWidth: true
+                            objectName: "panelMeterTrack"
+                            Layout.fillWidth: !compactRoot.minimalStyle
+                            Layout.alignment: Qt.AlignHCenter
+                            Layout.preferredWidth: compactRoot.minimalStyle
+                                ? compactRoot.meterIconSize + Kirigami.Units.smallSpacing : compactRoot.meterWidth
                             Layout.preferredHeight: compactRoot.meterBarHeight
                             radius: height / 2
-                            color: compactRoot.applet.withAlpha(compactMeter.meterColor, 0.28)
+                            color: compactRoot.applet.withAlpha(compactMeter.neutralTrack
+                                ? Kirigami.Theme.textColor : compactMeter.meterColor, compactMeter.neutralTrack ? 0.18 : 0.28)
                             clip: true
 
                             Rectangle {
+                                objectName: "panelMeterFill"
                                 visible: compactMeter.meter >= 0
                                 width: compactMeter.meter <= 0
                                     ? 0

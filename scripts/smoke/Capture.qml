@@ -12,6 +12,10 @@ Item {
     property bool prepared: false
     property int localizationStep: 0
     property var panelUsageSnapshot
+    property var displaySettingsPage
+    readonly property bool panelAppearanceScenario: scenario === "panel-standard" || scenario === "panel-minimal"
+        || scenario === "panel-minimal-single"
+    readonly property int expectedProviderCount: scenario === "panel-minimal-single" ? 1 : 2
 
     Loader {
         id: settingsPreview
@@ -24,19 +28,19 @@ Item {
         id: panelPreview
         parent: capture.applet.fullRepresentationItem
         anchors.centerIn: parent
-        active: capture.scenario === "panel-rules"
+        active: capture.scenario === "panel-rules" || capture.panelAppearanceScenario
         z: 100
         sourceComponent: Rectangle {
             width: Math.max(240, panel.compactItem ? panel.compactItem.implicitWidth + 48 : 240)
             height: 84
-            color: Kirigami.Theme.backgroundColor
+            color: panel.compactItem ? panel.compactItem.Kirigami.Theme.backgroundColor : Kirigami.Theme.backgroundColor
             Loader {
                 id: panel
                 readonly property Item compactItem: item as Item
                 sourceComponent: capture.applet.compactRepresentation
                 anchors.centerIn: parent
                 width: compactItem ? compactItem.implicitWidth : 0
-                height: 40
+                height: capture.panelAppearanceScenario ? 44 : 40
             }
         }
     }
@@ -44,6 +48,55 @@ Item {
     function verifyScenario(condition, message) {
         if (!condition)
             throw new Error("SMOKE_FAILED: " + message);
+    }
+
+    function preparePanelAppearance() {
+        var config = applet.Plasmoid.configuration;
+        panelUsageSnapshot = applet.providers;
+        verifyScenario(config.panelStyle === "standard", "existing installations must retain standard appearance");
+        var component = Qt.createComponent(Qt.resolvedUrl("configDisplay.qml"));
+        verifyScenario(component.status === Component.Ready, component.errorString());
+        displaySettingsPage = component.createObject(capture, {
+            cfg_commandPath: applet.commandPath,
+            cfg_panelQuotaLane: "secondary",
+            cfg_providerOrder: "claude,codex",
+            cfg_panelVisibilityRules: '{"text":{"condition":"usageAtLeast","usedPercent":50}}'
+        });
+        var page = displaySettingsPage;
+        verifyScenario(page !== null, "display settings did not load");
+        var oldRules = page.cfg_panelVisibilityRules;
+        page.applyMinimalPanelPreset();
+        verifyScenario(page.cfg_panelStyle === "minimal" && page.cfg_showMultiProviderInPanel
+            && !page.cfg_showProviderInPanel && !page.cfg_showPercentInPanel && !page.cfg_showCreditsInPanel,
+            "minimal preset did not configure its panel elements");
+        verifyScenario(page.cfg_panelQuotaLane === "secondary" && page.cfg_providerOrder === "claude,codex"
+            && page.cfg_panelVisibilityRules === oldRules, "preset changed quota, order or visibility rules");
+        verifyScenario(config.panelStyle === "standard", "settings took effect before Apply");
+        config.panelStyle = scenario === "panel-standard" ? "standard" : page.cfg_panelStyle;
+        config.showMultiProviderInPanel = page.cfg_showMultiProviderInPanel;
+        config.showProviderInPanel = page.cfg_showProviderInPanel;
+        config.showPercentInPanel = page.cfg_showPercentInPanel;
+        config.showCreditsInPanel = page.cfg_showCreditsInPanel;
+        page.destroy();
+        displaySettingsPage = null;
+        component.destroy();
+        if (scenario === "panel-minimal-single") {
+            verifyScenario(applet.compactProviders().length === 1, "minimal preset hid the single-provider quota");
+            config.panelStyle = "unknown";
+            verifyScenario(!applet.minimalPanel && applet.compactProviders().length === 0,
+                "unknown style did not preserve Standard single-provider behavior");
+            config.panelStyle = "minimal";
+            config.showMultiProviderInPanel = false;
+            verifyScenario(applet.compactProviders().length === 0, "single-provider meter ignored visibility checkbox");
+            config.showMultiProviderInPanel = true;
+            config.panelQuotaLane = "tertiary";
+            verifyScenario(applet.compactProviders().length === 0, "single-provider meter ignored missing quota");
+            config.panelQuotaLane = "auto";
+            config.panelVisibilityRules = '{"meters":{"condition":"usageAtLeast","usedPercent":100}}';
+            verifyScenario(applet.compactProviders().length === 0, "single-provider meter ignored visibility rules");
+            config.panelVisibilityRules = "{}";
+            verifyScenario(applet.compactProviders().length === 1, "single-provider meter did not recover");
+        }
     }
 
     function preparePanelScenario() {
@@ -129,11 +182,21 @@ Item {
     function scenarioReady() {
         if (scenario === "loading")
             return applet.loading && applet.providers.length === 0;
-        if (applet.loading || applet.costLoading || applet.providers.length !== 2)
+        if (applet.loading || applet.costLoading || applet.providers.length !== expectedProviderCount)
             return false;
         var codex = applet.providers[applet.providerIndexForID("codex")];
         var claude = applet.providers[applet.providerIndexForID("claude")];
-        if (!codex || !claude || codex.rows.length !== 2 || codex.error.length > 0)
+        if (!codex || codex.rows.length !== 2 || codex.error.length > 0)
+            return false;
+        if (panelAppearanceScenario) {
+            if (expectedProviderCount === 2 && (!claude || claude.error.length > 0 || claude.rows.length !== 2))
+                return false;
+            verifyScenario(applet.providers === panelUsageSnapshot, "panel preset reloaded usage");
+            verifyScenario(applet.minimalPanel === (scenario !== "panel-standard"), "panel style did not reach the renderer");
+            verifyScenario(applet.compactText() === "", "minimal preset left panel text visible");
+            return panelPreview.item !== null && applet.compactProviders().length === expectedProviderCount;
+        }
+        if (!claude)
             return false;
         if (scenario === "partial-error")
             return applet.selectedProviderID === "claude" && claude.error.indexOf("Synthetic provider timeout") >= 0;
@@ -270,12 +333,15 @@ Item {
                 return;
             if (!capture.prepared) {
                 capture.applet.expanded = true;
-                if (capture.scenario !== "loading" && (capture.applet.loading || capture.applet.providers.length !== 2))
+                if (capture.scenario !== "loading"
+                        && (capture.applet.loading || capture.applet.providers.length !== capture.expectedProviderCount))
                     return;
                 if (capture.scenario === "loading") {
                     capture.verifyEmptyPanelRules();
                 } else if (capture.scenario === "panel-rules") {
                     capture.preparePanelScenario();
+                } else if (capture.panelAppearanceScenario) {
+                    capture.preparePanelAppearance();
                 } else if (capture.scenario === "long-text") {
                     capture.applet.openProviderFromPanel("codex");
                     capture.applet.loadAccounts("codex");
@@ -328,7 +394,8 @@ Item {
                 console.error("SMOKE_FAILED: scenario changed before capture");
                 return;
             }
-            var popup = capture.scenario === "panel-rules" ? panelPreview.item : capture.applet.fullRepresentationItem;
+            var popup = capture.scenario === "panel-rules" || capture.panelAppearanceScenario
+                ? panelPreview.item : capture.applet.fullRepresentationItem;
             console.log("SMOKE_CAPTURE_START:" + capture.scenario);
             var accepted = popup.grabToImage(function (result) {
                 if (result.saveToFile(capture.imagePath))

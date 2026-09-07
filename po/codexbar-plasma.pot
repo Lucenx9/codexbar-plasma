@@ -519,6 +519,34 @@ msgid "Panel"
 msgstr ""
 
 #: contents/ui/configDisplay.qml
+msgid "Panel style:"
+msgstr ""
+
+#: contents/ui/configDisplay.qml contents/ui/main.qml
+msgid "Standard"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Minimal"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid ""
+"Minimal uses neutral icons and thin meters in the Plasma accent color. Quota "
+"warnings keep their warning colors."
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid "Use minimal preset"
+msgstr ""
+
+#: contents/ui/configDisplay.qml
+msgid ""
+"The preset enables provider meters and hides provider names, usage text and "
+"credits in the panel."
+msgstr ""
+
+#: contents/ui/configDisplay.qml
 msgid "Show provider name in panel"
 msgstr ""
 
@@ -1697,10 +1725,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Total"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Standard"
 msgstr ""
 
 #: contents/ui/main.qml
