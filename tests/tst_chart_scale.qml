@@ -93,4 +93,29 @@ TestCase {
         }), 0)
         compare(ChartScale.pointValue(null), 0)
     }
+
+    function test_malformedDomainsDegradeToZeroInsteadOfNaN() {
+        compare(ChartScale.domain(null).minimum, 0)
+        compare(ChartScale.domain(undefined).maximum, 0)
+        compare(ChartScale.domain("invalid").minimum, 0)
+        compare(ChartScale.fraction(5, null), 0)
+        compare(ChartScale.fraction(5, { minimum: Number.NaN, maximum: Number.NaN }), 0)
+        compare(ChartScale.fraction(Number.NaN, ChartScale.domain([{ value: 9 }])), 0)
+        compare(ChartScale.fraction("invalid", ChartScale.domain([{ value: 9 }])), 0)
+        verify(isFinite(ChartScale.barGeometry(100, 5, null).baseline))
+    }
+
+    function test_degenerateSpansAndLengthsStayFinite() {
+        compare(ChartScale.fraction(1, { minimum: 1, maximum: 1 }), 0)
+        compare(ChartScale.fraction(0, { minimum: 0, maximum: 0 }), 0)
+        verify(!isNaN(ChartScale.fraction(1, { minimum: 1, maximum: 1 })))
+        compare(ChartScale.domain({ length: Infinity }).maximum, 0)
+        compare(ChartScale.domain({ length: -1 }).maximum, 0)
+        compare(ChartScale.domain({ length: 1.5 }).maximum, 0)
+        var huge = ChartScale.domain({ length: 1000000000000 })
+        compare(huge.minimum, 0)
+        compare(huge.maximum, 0)
+        compare(ChartScale.barGeometry(100, Number.NaN, ChartScale.domain([{ value: 9 }])).height, 1)
+        compare(ChartScale.barGeometry(100, "invalid", ChartScale.domain([{ value: 9 }])).height, 1)
+    }
 }

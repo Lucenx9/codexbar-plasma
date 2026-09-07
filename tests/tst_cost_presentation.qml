@@ -923,5 +923,32 @@ TestCase {
         verify(!CostPresentation.historyStillBuilding([{ historyCoverageEstablished: true }]))
         verify(!CostPresentation.historyStillBuilding([{}]))
         verify(!CostPresentation.historyStillBuilding([]))
+        verify(!CostPresentation.historyStillBuilding([null, "stale", 42]))
+    }
+
+    function test_malformedSnapshotsDegradeInsteadOfThrowing() {
+        var points = CostPresentation.spendDailyPoints(fmt, [
+            null,
+            { daily: null, totals: {} },
+            { daily: { length: 1000000000000 }, totals: {} },
+            { daily: [null, 42, "Mon", { label: "Mon", cost: 2, tokens: 10, currency: "USD" }], totals: {} }
+        ], false)
+        compare(points.length, 1)
+        compare(points[0].label, "Mon")
+
+        var rows = CostPresentation.projectRows([
+            null,
+            { provider: "codex", projects: null },
+            { provider: "codex", projects: { rows: [0, 1, null, { label: "Kept", cost: 3, tokens: 30, currency: "USD" }] } }
+        ], false)
+        compare(rows.rows.length, 1)
+        compare(rows.rows[0].label, "Kept")
+        verify(!rows.truncated)
+
+        var totals = CostPresentation.spendTotals([{ totals: { tokens: "100", currency: "USD" } }])
+        compare(totals.tokens, 0)
+        compare(CostPresentation.spendTotals([null, { totals: { cost: 2, tokens: 40, currency: "USD" } }]).tokens, 40)
+        verify(!CostPresentation.historyStillBuilding([null]))
+        compare(CostPresentation.spendCurrency([null]), "USD")
     }
 }
