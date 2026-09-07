@@ -189,6 +189,8 @@ Item {
         if (!codex || codex.rows.length !== 2 || codex.error.length > 0)
             return false;
         if (panelAppearanceScenario) {
+            if (expectedProviderCount === 2 && (!claude || claude.error.length > 0 || claude.rows.length !== 2))
+                return false;
             verifyScenario(applet.providers === panelUsageSnapshot, "panel preset reloaded usage");
             verifyScenario(applet.minimalPanel === (scenario !== "panel-standard"), "panel style did not reach the renderer");
             verifyScenario(applet.compactText() === "", "minimal preset left panel text visible");
