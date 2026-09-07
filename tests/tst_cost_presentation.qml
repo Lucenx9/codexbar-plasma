@@ -930,6 +930,7 @@ TestCase {
         var points = CostPresentation.spendDailyPoints(fmt, [
             null,
             { daily: null, totals: {} },
+            { daily: { length: 1000000000000 }, totals: {} },
             { daily: [null, 42, "Mon", { label: "Mon", cost: 2, tokens: 10, currency: "USD" }], totals: {} }
         ], false)
         compare(points.length, 1)
@@ -942,6 +943,7 @@ TestCase {
         ], false)
         compare(rows.rows.length, 1)
         compare(rows.rows[0].label, "Kept")
+        verify(!rows.truncated)
 
         var totals = CostPresentation.spendTotals([{ totals: { tokens: "100", currency: "USD" } }])
         compare(totals.tokens, 0)

@@ -498,7 +498,11 @@ function projectRows(costs, showsTokens) {
             result.truncated = result.truncated || projects.rows.length > 0
             continue
         }
-        var rows = projects.rows.slice(0, maximumProjectRows)
+        // The slice bounds the inspected payload before filtering, so the
+        // truncation check below can tell limit-driven omissions apart from
+        // malformed rows that were never displayable.
+        var inspectedRows = projects.rows.slice(0, maximumProjectRows)
+        var rows = inspectedRows
             .filter(function(row) { return row && typeof row === "object" && !Array.isArray(row) })
         rows.sort(function(a, b) {
             var aHasValue = hasMetricValue(a, showsTokens)
@@ -522,7 +526,9 @@ function projectRows(costs, showsTokens) {
                 valueMode: trust ? trust.valueMode : "plain"
             })
         }
-        result.truncated = result.truncated || j < projects.rows.length
+        result.truncated = result.truncated
+            || projects.rows.length > inspectedRows.length
+            || j < rows.length
     }
     return result
 }
@@ -541,8 +547,7 @@ function spendCurrency(costs) {
                 return totalsCurrency
             }
         }
-        var daily = snapshot && snapshot.daily && typeof snapshot.daily.length === "number"
-            ? snapshot.daily : []
+        var daily = snapshot && Array.isArray(snapshot.daily) ? snapshot.daily : []
         for (var j = 0; j < daily.length; j++) {
             if (!hasMetricValue(daily[j], false)) {
                 continue
@@ -561,8 +566,7 @@ function spendCurrency(costs) {
         if (fallbackCurrency.length > 0) {
             return fallbackCurrency
         }
-        var fallbackDaily = fallbackSnapshot && fallbackSnapshot.daily
-            && typeof fallbackSnapshot.daily.length === "number" ? fallbackSnapshot.daily : []
+        var fallbackDaily = fallbackSnapshot && Array.isArray(fallbackSnapshot.daily) ? fallbackSnapshot.daily : []
         if (fallbackDaily.length > 0) {
             var firstDaily = fallbackDaily[0]
             var firstCurrency = firstDaily && typeof firstDaily === "object"
@@ -592,8 +596,7 @@ function spendHasMixedCostCurrencies(costs) {
                 && boundedText(totals.currency || currency, 12) !== currency) {
             return true
         }
-        var daily = snapshot && snapshot.daily && typeof snapshot.daily.length === "number"
-            ? snapshot.daily : []
+        var daily = snapshot && Array.isArray(snapshot.daily) ? snapshot.daily : []
         for (var j = 0; j < daily.length; j++) {
             if (hasMetricValue(daily[j], false)
                     && boundedText(daily[j].currency || "USD", 12) !== currency) {
@@ -897,7 +900,7 @@ function spendDailyPoints(fmt, costs, showsTokens) {
     var currency = spendCurrency(items)
     for (var i = 0; i < items.length; i++) {
         var snapshot = items[i]
-        var daily = snapshot && snapshot.daily && typeof snapshot.daily.length === "number" ? snapshot.daily : []
+        var daily = snapshot && Array.isArray(snapshot.daily) ? snapshot.daily : []
         for (var j = 0; j < daily.length; j++) {
             var point = daily[j]
             if (!point || typeof point !== "object" || Array.isArray(point)) {
