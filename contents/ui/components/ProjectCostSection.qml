@@ -19,7 +19,7 @@ ColumnLayout {
         if (!CostPresentation.hasMetricValue(row, applet.costHistoryShowsTokens)) {
             return applet.costHistoryShowsTokens ? i18n("Tokens unavailable") : i18n("Cost unavailable");
         }
-        return applet.costHistoryShowsTokens ? i18n("%1 tokens", applet.tokenCountString(row.tokens)) : applet.qualifiedCostValue(applet.amountString(row.cost, row.currency), row.valueMode);
+        return applet.costHistoryShowsTokens ? applet.usageCountText(row.tokens, "tokens") : applet.qualifiedCostValue(applet.amountString(row.cost, row.currency), row.valueMode);
     }
 
     PlainPlasmaLabel {

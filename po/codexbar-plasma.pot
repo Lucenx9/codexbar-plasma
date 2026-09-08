@@ -36,7 +36,7 @@ msgstr ""
 #: contents/ui/components/CompactRepresentation.qml
 #: contents/ui/components/InteractiveChart.qml
 #: contents/ui/components/SpendView.qml contents/ui/configProviders.qml
-#: contents/ui/main.qml
+#: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "%1: %2"
 msgstr ""
 
@@ -323,11 +323,6 @@ msgstr ""
 #: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
 #: scripts/smoke/Capture.qml
 msgid "Tokens unavailable"
-msgstr ""
-
-#: contents/ui/components/ProjectCostSection.qml
-#: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
-msgid "%1 tokens"
 msgstr ""
 
 #: contents/ui/components/ProjectCostSection.qml
@@ -1772,14 +1767,6 @@ msgid "%1 total"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "%1 subtotal - %2 tokens"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 total - %2 tokens"
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "Total tokens"
 msgstr ""
 
@@ -1870,14 +1857,6 @@ msgstr ""
 #: contents/ui/main.qml
 #, kde-format
 msgid "%1%"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 requests"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 points"
 msgstr ""
 
 #: contents/ui/main.qml
@@ -2402,11 +2381,33 @@ msgid "%1 (approximate)"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "%1 - %2 tokens"
+msgid "%1 token"
+msgid_plural "%1 tokens"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/main.qml
+msgid "%1 tokens"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "%1: %2 - %3 tokens"
+msgid "%1 request"
+msgid_plural "%1 requests"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/main.qml
+msgid "%1 requests"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 point"
+msgid_plural "%1 points"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/main.qml
+msgid "%1 points"
 msgstr ""
 
 #: contents/ui/main.qml

@@ -17,24 +17,33 @@ from qml_surfaces import Surface
 
 
 class LocalizedCliLabelTests(unittest.TestCase):
-    def test_session_and_pace_adapters_use_each_catalog(self):
+    def test_session_pace_and_count_adapters_use_each_catalog(self):
         applet = Surface("applet", ROOT)
         signatures = {"sessionStateText": "state", "sessionSourceText": "source",
                       "sessionSubtitle": "item", "capitalize": "value",
-                      "paceSummaryText": "pace", "paceEtaText": "seconds"}
+                      "paceSummaryText": "pace", "paceEtaText": "seconds",
+                      "usageCountText": "value, unit",
+                      "dashboardPartText": "part"}
         adapters = "\n".join(f"function {name}({args}) {{ {applet.function_body(name)} }}"
                              for name, args in signatures.items())
         expected = {
             "it": ["Attiva", "Inattiva", "In esecuzione", "Al lavoro", "Applicazione desktop",
                    "Riga di comando", "13% oltre il previsto | Utilizzo previsto: 30% | Esaurimento previsto tra 1 ora"],
             "fr": ["Active", "Inactive", "En cours", "Au travail", "Application de bureau",
-                   "Ligne de commande", "13% au-delà du prévu | Utilisation prévue : 30% | Épuisement prévu dans 1 heure"],
+                   "Ligne de commande", "13 % au-delà des prévisions | Utilisation prévue : 30 % | Épuisement prévu dans 1 heure"],
             "de": ["Aktiv", "Inaktiv", "Wird ausgeführt", "In Bearbeitung", "Desktop-Anwendung",
                    "Befehlszeile", "13% über dem Soll | Erwarteter Verbrauch: 30% | Voraussichtlich in 1 Stunde aufgebraucht"],
             "es": ["Activa", "Inactiva", "En ejecución", "Trabajando", "Aplicación de escritorio",
-                   "Línea de comandos", "13% por encima de lo previsto | Uso previsto: 30% | Agotamiento previsto en 1 hora"],
+                   "Línea de comandos", "13 % por encima de lo previsto | Uso previsto: 30 % | Agotamiento previsto en 1 hora"],
             "pt_BR": ["Ativa", "Inativa", "Em execução", "Trabalhando", "Aplicativo de desktop",
                       "Linha de comando", "13% acima do previsto | Uso previsto: 30% | Esgotamento previsto em 1 hora"],
+        }
+        count_labels = {
+            "it": [["token", "token"], ["richiesta", "richieste"], ["punto", "punti"]],
+            "fr": [["jeton", "jetons"], ["requête", "requêtes"], ["point", "points"]],
+            "de": [["Token", "Tokens"], ["Anfrage", "Anfragen"], ["Punkt", "Punkte"]],
+            "es": [["token", "tokens"], ["solicitud", "solicitudes"], ["punto", "puntos"]],
+            "pt_BR": [["token", "tokens"], ["requisição", "requisições"], ["ponto", "pontos"]],
         }
         with tempfile.TemporaryDirectory(prefix="codexbar-localized-labels-") as temporary:
             directory = Path(temporary)
@@ -45,16 +54,25 @@ class LocalizedCliLabelTests(unittest.TestCase):
                                               languages=[language])
                 messages = {key: value for key, value in catalog._catalog.items() if isinstance(key, str)}
                 messages["%1 hour"] = catalog.ngettext("%1 hour", "%1 hours", 1)
-                cases.append({"tag": language, "messages": messages, "labels": labels})
+                plural_messages = {
+                    "%1 " + unit: {count: catalog.ngettext("%1 " + unit, "%1 " + unit + "s", count)
+                                  for count in (0, 1, 2, 50, 999)}
+                    for unit in ("token", "request", "point")
+                }
+                cases.append({"tag": language, "messages": messages, "labels": labels,
+                              "plurals": plural_messages, "counts": count_labels[language],
+                              "singularZero": language in ("fr", "pt_BR")})
             # The real Plasma/KI18n domain lookup is covered by the graphical
             # smoke scenario. Here only that lookup is replaced with GNU gettext.
             qml = '''import QtQuick
 import QtTest
 import PACE_PATH as PacePresentation
 import PRIVACY_PATH as PrivacyPresentation
+import COST_PATH as CostPresentation
 TestCase {
     name: "LocalizedCliLabels"
     property var messages: ({})
+    property var pluralMessages: ({})
     property bool privacyMode: false
     function i18n(source) {
         var text = messages[source] || source;
@@ -62,12 +80,35 @@ TestCase {
             text = text.replace("%" + i, String(arguments[i]));
         return text;
     }
-    function i18np(one, many, count) { return i18n(count === 1 ? one : many, count); }
+    function i18np(one, many, count) {
+        if (pluralMessages[one])
+            return pluralMessages[one][count].replace("%1", String(count));
+        return i18n(count === 1 ? one : many, count);
+    }
     ADAPTERS
     function test_labels_data() { return CASES; }
     function test_labels(row) {
         privacyMode = false;
         messages = row.messages;
+        pluralMessages = row.plurals;
+        var units = ["tokens", "requests", "points"];
+        for (var u = 0; u < units.length; u++) {
+            var singular = row.counts[u][0];
+            var plural = row.counts[u][1];
+            compare(usageCountText(0, units[u]), "0 " + (row.singularZero ? singular : plural));
+            compare(usageCountText(1, units[u]), "1 " + singular);
+            compare(usageCountText(2, units[u]), "2 " + plural);
+            compare(usageCountText(50, units[u]), "50 " + plural);
+            compare(usageCountText(999, units[u]), "999 " + plural);
+            compare(usageCountText(1.4, units[u]), "1 " + singular);
+            compare(usageCountText(1.6, units[u]), "2 " + plural);
+            compare(usageCountText(999.6, units[u]), "1K " + plural);
+            compare(usageCountText(1000000000, units[u]), "1B " + plural);
+            compare(usageCountText(4294967297, units[u]), "4.3B " + plural);
+            compare(usageCountText(NaN, units[u]), "- " + plural);
+            compare(dashboardPartText({kind: units[u], value: 1}), "1 " + singular);
+        }
+        compare(dashboardPartText({kind: "text", value: "Future label"}), "Future label");
         var states = ["active", "idle", "running", "working"];
         for (var i = 0; i < states.length; i++)
             compare(sessionStateText(states[i]), row.labels[i]);
@@ -99,6 +140,7 @@ TestCase {
             fixture = directory / "tst_labels.qml"
             fixture.write_text(qml.replace("PACE_PATH", json.dumps((ROOT / "contents/ui/PacePresentation.js").as_uri()))
                                .replace("PRIVACY_PATH", json.dumps((ROOT / "contents/ui/PrivacyPresentation.js").as_uri()))
+                               .replace("COST_PATH", json.dumps((ROOT / "contents/ui/CostPresentation.js").as_uri()))
                                .replace("ADAPTERS", adapters).replace("CASES", json.dumps(cases)), encoding="utf-8")
             result = subprocess.run(
                 [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],

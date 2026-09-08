@@ -34,6 +34,12 @@ in GitHub Issues.
 
 In Italian, settings use "Diagnostica" and "Finestra a comparsa". Technical
 terms such as "provider", "account", and "token" remain unchanged.
+Spanish instructions use the formal address consistently. Brazilian Portuguese
+uses "Padrão" for the Standard panel style.
+
+Translate labels against their displayed values. "Code review remaining" labels
+a remaining quota percentage, and "Included plan" labels usage included in a
+plan. Neither describes a count of reviews or a separate included subscription.
 
 Install GNU gettext and Python 3 before running the commands below. Run them
 from the repository root.
@@ -59,6 +65,10 @@ to the QML that gives the message its context.
 - Keep every `%1`, `%2`, and other numbered argument. You may reorder them.
 - Translate every plural form, including short duration labels. Keep the
   language's `Plural-Forms` header accurate.
+- Integer token, request, and point counts use plural messages. The separate
+  `%1 tokens`, `%1 requests`, and `%1 points` entries format compact counts such
+  as `1K` and `4.3B`. Keep those abbreviations in the numbered argument; do not
+  treat the leading `1` as a singular count.
 - Keep CodexBar, provider brands, command names, paths, and URLs unchanged.
 - Use short labels for the panel and tabs. Check longer text in the popup.
 - Resolve fuzzy entries and translate empty entries before submitting.
@@ -92,8 +102,10 @@ The CI container generates all five locales.
 
 The preview uses isolated settings and a private D-Bus session. It checks
 translated overview and settings text, singular and plural forms, a provider's
-pace summary, and session state/source labels. It saves a screenshot of the
-Sessions tab. It does not change your desktop language or installed widget.
+pace summary, and session state/source labels. Count checks cover zero, one,
+multiple items, compact values above the integer range, and cost summaries.
+It saves a screenshot of the Sessions tab. It does not change your desktop
+language or installed widget.
 Review the screenshots for clipped labels and awkward wrapping.
 
 ## Add a language

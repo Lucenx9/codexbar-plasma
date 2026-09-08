@@ -97,6 +97,8 @@ Provider-specific editable settings depend on the official CLI contract.
   most once per hour; the **Usage & Spend** refresh button starts one immediately.
 - Token breakdowns, model summaries, recent daily spend, cost history bars, and
   average cost per 1M tokens, with a configurable cost history window.
+- Token, request, and point counts use the current language's singular and
+  plural forms. Large counts retain compact notation such as `1K` and `4.3B`.
 - Cost totals qualified as estimated, partial, or approximate from the CLI's
   bounded pricing coverage and provenance metadata.
 - Project cost and token totals in **Usage & Spend**, ranked within each provider
