@@ -2409,3 +2409,15 @@ msgstr "Aucun détail par modèle pour ce jour."
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Model breakdown is partial."
 msgstr "Le détail par modèle est partiel."
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "No model breakdown for this period."
+msgstr "Aucune répartition par modèle pour cette période."
+
+#: contents/ui/main.qml
+msgid "%1 total"
+msgstr "%1 au total"
+
+#: contents/ui/main.qml
+msgid "%1 subtotal"
+msgstr "%1 de sous-total"

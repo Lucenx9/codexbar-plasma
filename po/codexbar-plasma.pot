@@ -203,7 +203,8 @@ msgid "Cost unavailable"
 msgstr ""
 
 #: contents/ui/components/ProjectCostSection.qml
-#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
+#: scripts/smoke/Capture.qml
 msgid "Tokens unavailable"
 msgstr ""
 
@@ -313,6 +314,10 @@ msgstr ""
 
 #: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
 msgid "No model breakdown for this day."
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
+msgid "No model breakdown for this period."
 msgstr ""
 
 #: contents/ui/components/ProviderCostSection.qml
@@ -1617,6 +1622,14 @@ msgstr[1] ""
 
 #: contents/ui/main.qml
 msgid "Latest"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "%1 subtotal"
+msgstr ""
+
+#: contents/ui/main.qml scripts/smoke/Capture.qml
+msgid "%1 total"
 msgstr ""
 
 #: contents/ui/main.qml

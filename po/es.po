@@ -2411,3 +2411,15 @@ msgstr "No hay desglose por modelo para este día."
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Model breakdown is partial."
 msgstr "El desglose por modelo es parcial."
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "No model breakdown for this period."
+msgstr "No hay desglose por modelo para este período."
+
+#: contents/ui/main.qml
+msgid "%1 total"
+msgstr "%1 en total"
+
+#: contents/ui/main.qml
+msgid "%1 subtotal"
+msgstr "%1 de subtotal"

@@ -14,7 +14,7 @@ ColumnLayout {
     property bool detailsExpanded: false
     property var daySelectionMemo: ({ points: [], index: -1 })
     readonly property bool costHistoryShowsTokens: applet.costHistoryShowsTokens
-    readonly property string selectionScope: providerData ? JSON.stringify([providerData.provider, providerData.account,
+    readonly property string selectionScope: providerData ? JSON.stringify([providerData.provider, applet.accountLabel(providerData),
         tokenCost ? tokenCost.historyDays : 0]) : ""
     readonly property var selectedDay: CostPresentation.selectedCostDay(tokenCost ? tokenCost.daily : [], chartPoints, costChart.selectedIndex)
     readonly property bool hasVisibleDetails: detailsExpanded || selectedDay !== null
@@ -238,7 +238,8 @@ ColumnLayout {
 
         readonly property var detailData: tokenCostSection.selectedDay ? {
             totals: tokenCostSection.selectedDay,
-            models: tokenCostSection.selectedDay.models
+            models: tokenCostSection.selectedDay.models,
+            modelsTruncated: tokenCostSection.selectedDay.modelsTruncated
         } : tokenCostSection.tokenCost
         readonly property var breakdownRows: applet.costBreakdownRows(detailData)
         readonly property var modelRows: applet.costModelRows(detailData)
@@ -278,14 +279,17 @@ ColumnLayout {
         }
 
         PlainPlasmaLabel {
-            visible: tokenCostSection.selectedDay !== null && costDrillDownSection.modelRows.length === 0
-            text: i18n("No model breakdown for this day.")
+            objectName: "costModelsEmptyNotice"
+            visible: costDrillDownSection.modelRows.length === 0
+            text: tokenCostSection.selectedDay !== null ? i18n("No model breakdown for this day.")
+                : i18n("No model breakdown for this period.")
             Layout.fillWidth: true
             wrapMode: Text.Wrap
         }
 
         PlainPlasmaLabel {
-            visible: tokenCostSection.selectedDay !== null && tokenCostSection.selectedDay.modelsTruncated === true
+            objectName: "costModelsPartialNotice"
+            visible: costDrillDownSection.detailData !== null && costDrillDownSection.detailData.modelsTruncated === true
             text: i18n("Model breakdown is partial.")
             Layout.fillWidth: true
             wrapMode: Text.Wrap

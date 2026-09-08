@@ -62,3 +62,6 @@ Python tests, no skips. Packaging and isolated package install/upgrade passed.
 Both `popup-cost-details` and `popup-cost-tokens` smoke scenarios passed with
 new refresh, reordering, removed-day, cached-account, and range regressions.
 The identical-refresh regression failed on the previous implementation.
+
+The [imported agent review follow-up](agent-review-follow-up.md) records the
+token-availability, period-model coverage, and account-identity fixes.

@@ -16,6 +16,7 @@ SCENARIOS += ("readme-overview", "readme-spend", "readme-sessions", "readme-code
 SCENARIOS += ("readme-panel-standard", "readme-panel-minimal")
 SCENARIOS += ("panel-default", "panel-default-single")
 SCENARIOS += ("popup-cost-details", "popup-cost-tokens")
+SCENARIOS += ("popup-cost-missing-tokens", "popup-cost-partial-models")
 
 
 def usage(provider, scenario, now):
@@ -130,6 +131,19 @@ def response(args, scenario, now):
                         model.pop("cost")
                 snapshot.pop("sessionCostUSD")
                 snapshot["totals"].pop("totalCost")
+            elif scenario == "popup-cost-missing-tokens":
+                for day in daily:
+                    day.pop("totalTokens")
+                    day.pop("modelBreakdowns", None)
+                snapshot.pop("sessionTokens")
+                snapshot["totals"].pop("totalTokens")
+                snapshot["daily"] = [daily[-1]]
+                snapshot["totals"]["totalCost"] = daily[-1]["totalCost"]
+            elif scenario == "popup-cost-partial-models":
+                daily[-1]["modelBreakdowns"] = [
+                    {"modelName": f"Example model {index}", "cost": 0.01, "totalTokens": 1000}
+                    for index in range(7)
+                ]
             return [snapshot]
         factor = 0.5 if days == 7 else 1
         snapshot = {"provider": "codex", "updatedAt": now.isoformat(), "historyDays": days,

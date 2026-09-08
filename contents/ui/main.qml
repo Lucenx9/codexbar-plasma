@@ -1406,7 +1406,9 @@ PlasmoidItem {
             trust: trust
         }])
         var valueMode = trustSummary ? trustSummary.valueMode : "plain"
-        var todayTokens = Normalizer.strictFiniteNumber(item.sessionTokens)
+        var today = Normalizer.normalizeProviderCostTotals(
+            providerID, null, item.sessionCostUSD, item.sessionTokens, currency)
+        var modelSummary = Normalizer.normalizeCostModels(item.daily, currency, historyDays, item.updatedAt)
         return {
             provider: providerID,
             historyDays: historyDays,
@@ -1415,11 +1417,7 @@ PlasmoidItem {
             trust: trust,
             valueMode: valueMode,
             windowLabel: windowLabel,
-            today: {
-                cost: Normalizer.normalizeProviderCostAmount(providerID, item.sessionCostUSD),
-                tokens: isFinite(todayTokens) ? Math.max(0, todayTokens) : null,
-                currency: currency
-            },
+            today: today,
             title: i18n("Cost"),
             // Top-level coverage/provenance describes the requested history
             // window, not the independently emitted current-session figure.
@@ -1433,7 +1431,8 @@ PlasmoidItem {
             hintLine: tokenCostHint(providerID),
             totals: totals,
             projects: Normalizer.normalizeCostProjects(item.projects, currency),
-            models: Normalizer.normalizeCostModels(item.daily, currency, historyDays, item.updatedAt),
+            models: modelSummary.rows,
+            modelsTruncated: modelSummary.truncated,
             daily: Normalizer.normalizeCostDaily(item.daily, currency, historyDays, item.updatedAt)
         }
     }
@@ -1516,13 +1515,18 @@ PlasmoidItem {
             return ""
         }
         var numericCost = Normalizer.strictFiniteNumber(totals.cost)
+        var hasTokens = CostPresentation.hasMetricValue(totals, true)
         if (!isFinite(numericCost)) {
-            return i18n("%1 tokens", CostPresentation.tokenCountString(totals.tokens))
+            return hasTokens ? i18n("%1 tokens", CostPresentation.tokenCountString(totals.tokens))
+                : i18n("Tokens unavailable")
         }
         var trustSummary = CostPresentation.costTrustSummary(costs)
         var costValue = qualifiedCostValue(
             CostPresentation.amountString(costNumberFormat, numericCost, totals.currency),
             trustSummary ? trustSummary.valueMode : "plain")
+        if (!hasTokens) {
+            return totals.hasMixedCostCurrencies ? i18n("%1 subtotal", costValue) : i18n("%1 total", costValue)
+        }
         return totals.hasMixedCostCurrencies
             ? i18n("%1 subtotal - %2 tokens",
                 costValue,

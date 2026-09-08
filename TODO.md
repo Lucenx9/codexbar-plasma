@@ -54,7 +54,8 @@ replace a host CLI.
   Today and the selected period appear side by side; history, period models,
   and projects expand on demand. Cost errors and trust notices stay visible.
   Chart inspection uses the existing `cost.daily[].modelBreakdowns` payload,
-  retaining at most six model rows per day and reporting truncation. Missing
+  retaining at most six model rows per day and reporting truncation. Period
+  models also report truncation and show an explicit empty state. Missing
   amounts remain unknown, and missing daily models never fall back to period
   totals. Selecting a day or metric must not fetch data. Standard/Fast totals
   remain **blocked on an official CLI contract**; no service tier is inferred.

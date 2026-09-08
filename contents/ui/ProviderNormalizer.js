@@ -424,18 +424,19 @@ function normalizeSessions(payload) {
     return nextSessions
 }
 
-// NaN when no part is usable, so the caller can tell "no token data at all" from
-// a genuine zero and fall back to the emitted total instead.
+// NaN when no nonnegative part is usable; an explicitly measured zero stays zero.
 function sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens) {
     var total = 0
+    var hasObservedPart = false
     var values = [inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens]
     for (var i = 0; i < values.length; i++) {
         var value = strictFiniteNumber(values[i])
-        if (isFinite(value) && value > 0) {
+        if (isFinite(value) && value >= 0) {
+            hasObservedPart = true
             total += value
         }
     }
-    return total > 0 ? total : Number.NaN
+    return hasObservedPart ? total : Number.NaN
 }
 
 function boundedHistoryDays(days) {
@@ -513,6 +514,7 @@ function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys) {
     var firstTimestampMs = window.firstTimestampMs
     var byDate = ({})
     var hasObservedCost = false
+    var hasObservedTokens = false
     for (var i = 0; i < rows.length; i++) {
         var parsed = parsedCalendarDateKey(rows[i].label)
         if (!parsed) {
@@ -533,6 +535,9 @@ function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys) {
         hasObservedCost = hasObservedCost
             || (typeof rows[i].cost === "number"
                 && isFinite(rows[i].cost))
+        hasObservedTokens = hasObservedTokens
+            || (typeof rows[i].tokens === "number"
+                && isFinite(rows[i].tokens))
     }
 
     var result = []
@@ -549,10 +554,12 @@ function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys) {
             result.push(byDate[key])
             observedInRange = true
         } else {
+            // Omitted calendar days mean no recorded activity only for metrics
+            // observed in this snapshot. An unavailable metric stays unknown.
             result.push({
                 label: key,
                 cost: hasObservedCost ? 0 : null,
-                tokens: 0,
+                tokens: hasObservedTokens ? 0 : null,
                 inputTokens: 0,
                 outputTokens: 0,
                 cacheReadTokens: 0,
@@ -745,13 +752,12 @@ function normalizeCostDaily(items, currency, days, updatedAt) {
         var cacheReadTokens = strictFiniteNumber(item.cacheReadTokens)
         var cacheCreationTokens = firstStrictFiniteNumber(
             item.cacheCreationTokens, item.cacheWriteTokens)
-        var hasTokenParts = isFinite(inputTokens) || isFinite(outputTokens)
-            || isFinite(cacheReadTokens) || isFinite(cacheCreationTokens)
+        var hasTokenParts = (isFinite(inputTokens) && inputTokens >= 0)
+            || (isFinite(outputTokens) && outputTokens >= 0)
+            || (isFinite(cacheReadTokens) && cacheReadTokens >= 0)
+            || (isFinite(cacheCreationTokens) && cacheCreationTokens >= 0)
         if (!isFinite(tokens)) {
             tokens = sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens)
-            if (isNaN(tokens) && hasTokenParts) {
-                tokens = 0
-            }
         }
         if (!isFinite(cost) && !isFinite(tokens) && !hasTokenParts) {
             var blockedDate = parsedCalendarDateKey(label)
@@ -797,7 +803,7 @@ function normalizeCostTotals(totals, fallbackCost, fallbackTokens, currency) {
     }
     return {
         cost: isFinite(cost) ? Math.max(0, cost) : null,
-        tokens: isFinite(tokens) ? Math.max(0, tokens) : 0,
+        tokens: isFinite(tokens) ? Math.max(0, tokens) : null,
         inputTokens: isFinite(inputTokens) ? Math.max(0, inputTokens) : 0,
         outputTokens: isFinite(outputTokens) ? Math.max(0, outputTokens) : 0,
         cacheReadTokens: isFinite(cacheReadTokens) ? Math.max(0, cacheReadTokens) : 0,
@@ -824,7 +830,7 @@ function normalizeProviderCostTotals(providerID, totals, fallbackCost,
 
 function normalizeCostModels(items, currency, days, updatedAt) {
     if (!items || !Array.isArray(items)) {
-        return []
+        return { rows: [], truncated: false }
     }
 
     // Match the daily history's whole-day budget, including the legacy tail.
@@ -854,7 +860,7 @@ function normalizeCostModels(items, currency, days, updatedAt) {
         }
         modelDays.unshift(item)
     }
-    return costModelSummary(modelDays, currency).rows
+    return costModelSummary(modelDays, currency)
 }
 
 function costModelSummary(modelDays, currency) {
@@ -931,7 +937,10 @@ function costModelSummary(modelDays, currency) {
         }
         var aTokens = a.tokens === null ? 0 : a.tokens
         var bTokens = b.tokens === null ? 0 : b.tokens
-        return bTokens === aTokens ? 0 : (bTokens > aTokens ? 1 : -1)
+        if (bTokens !== aTokens) {
+            return bTokens > aTokens ? 1 : -1
+        }
+        return a.label === b.label ? 0 : (a.label < b.label ? -1 : 1)
     })
     return {
         rows: rows.slice(0, maximumCostModelRows),

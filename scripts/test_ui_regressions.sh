@@ -681,6 +681,9 @@ if "points: tokenCostSection.chartPoints" not in token_cost_section_body \
     )
 
 normalize_token_cost_body = function_body(main_text, "normalizeTokenCost")
+for fragment in ("today: today", "models: modelSummary.rows", "modelsTruncated: modelSummary.truncated"):
+    if fragment not in normalize_token_cost_body:
+        raise AssertionError(f"normalized cost summaries must preserve availability and coverage: {fragment!r}")
 for ranged_cost_fragment in (
     "costHistoryWindowLabel(item, historyDays)",
     "historyDays: historyDays",
@@ -1771,6 +1774,7 @@ for fragment in (
     "onSelectedIndexChanged: tokenCostSection.rememberDaySelection()",
     "CostPresentation.costDayIndexAfterRefresh(",
     "onCostHistoryShowsTokensChanged: clearDaySelection()",
+    "applet.accountLabel(providerData)",
     "applet.setCostHistoryMetric(valueAt(index))",
 ):
     if fragment not in token_cost_section_body:
@@ -1926,6 +1930,13 @@ if "providerUpdatedLabel" in applet.id_block("providerMetaRow"):
     raise AssertionError("account identity and the update timestamp must have separate lines")
 
 cost_drill_down_body = id_block(main_text, "costDrillDownSection")
+for fragment in (
+    'i18n("No model breakdown for this period.")',
+    "costDrillDownSection.detailData.modelsTruncated === true",
+    "modelsTruncated: tokenCostSection.selectedDay.modelsTruncated",
+):
+    if fragment not in cost_drill_down_body:
+        raise AssertionError(f"period and day details must expose missing or partial models: {fragment!r}")
 if "readonly property real metricValueColumnWidth: Kirigami.Units.gridUnit * 9" not in cost_drill_down_body:
     raise AssertionError("costDrillDownSection must define a stable value column width")
 if 'i18n("Cost details")' not in cost_drill_down_body or 'i18n("Details for %1", tokenCostSection.selectedDay.label)' not in cost_drill_down_body:

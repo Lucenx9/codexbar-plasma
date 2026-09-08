@@ -1003,13 +1003,15 @@ function spendTotals(costs) {
     var totalCost = 0
     var totalTokens = 0
     var hasCost = false
+    var hasTokens = false
     for (var i = 0; i < items.length; i++) {
         var snapshot = items[i]
         var totals = snapshot && typeof snapshot === "object" && snapshot.totals
             ? snapshot.totals : ({})
-        var tokenValue = typeof totals.tokens === "number" && isFinite(totals.tokens)
-            ? totals.tokens : 0
-        totalTokens += Math.max(0, tokenValue)
+        if (hasMetricValue(totals, true)) {
+            totalTokens += Math.max(0, totals.tokens)
+            hasTokens = true
+        }
         if (!costMatchesSpendCurrency(items[i], currency)
                 || !hasMetricValue(totals, false)) {
             continue
@@ -1019,7 +1021,7 @@ function spendTotals(costs) {
     }
     return {
         cost: hasCost ? totalCost : null,
-        tokens: totalTokens,
+        tokens: hasTokens && isFinite(totalTokens) ? totalTokens : null,
         currency: currency,
         hasMixedCostCurrencies: spendHasMixedCostCurrencies(items)
     }

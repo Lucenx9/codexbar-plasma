@@ -670,6 +670,18 @@ TestCase {
         compare(totals.currency, "USD")
     }
 
+    function test_spendTotalsKeepUnknownTokensWithoutDroppingCost() {
+        var costs = [{ totals: { cost: 3, tokens: null, currency: "USD" } }]
+        compare(CostPresentation.spendTotals(costs).tokens, null)
+        compare(CostPresentation.spendTotals(costs).cost, 3)
+        costs.push({ totals: { cost: 2, tokens: 0, currency: "USD" } })
+        compare(CostPresentation.spendTotals(costs).tokens, 0)
+        compare(CostPresentation.spendTotals(costs).cost, 5)
+        costs[0].totals.tokens = 1e308
+        costs[1].totals.tokens = 1e308
+        compare(CostPresentation.spendTotals(costs).tokens, null)
+    }
+
     function test_spendTotalsAreNullWithNoSnapshots() {
         compare(CostPresentation.spendTotals([]), null)
         compare(CostPresentation.spendTotals(null), null)
@@ -1018,7 +1030,7 @@ TestCase {
         verify(!rows.truncated)
 
         var totals = CostPresentation.spendTotals([{ totals: { tokens: "100", currency: "USD" } }])
-        compare(totals.tokens, 0)
+        compare(totals.tokens, null)
         compare(CostPresentation.spendTotals([null, { totals: { cost: 2, tokens: 40, currency: "USD" } }]).tokens, 40)
         verify(!CostPresentation.historyStillBuilding([null]))
         compare(CostPresentation.spendCurrency([null]), "USD")
