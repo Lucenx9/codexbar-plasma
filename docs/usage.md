@@ -9,16 +9,23 @@ work and upstream contract requirements.
 
 ## Panel and popup
 
-- Colored Standard icons with usage meters by default, for one or multiple
-  providers. Provider names and percentage text can be enabled in **Panel**.
-- Optional **Minimal** panel style in **Panel** uses neutral provider
-  icons, thin meters in the Plasma accent color, and wider click targets.
-  **Use minimal preset** also enables provider meters, including with a single
+- Standard shows a small colored provider icon beside quota capsules. Minimal
+  uses the same geometry with monochrome icons and capsules in the Plasma text
+  color. Warning and critical colors remain independent for each quota.
+- Automatic panel meters show the primary quota above the secondary quota when
+  both have percentages. A single available quota is centered vertically;
+  absent quotas are omitted, while measured zero remains an empty track. If
+  neither primary nor secondary has a percentage, the existing automatic
+  preference supplies one available fallback quota.
+- Provider meters work in horizontal and vertical panels. Names, usage text,
+  and credit text remain horizontal-only. Click a provider's icon or capsules,
+  or activate it with the keyboard, to open its detail tab. Tooltips and
+  accessible descriptions identify the displayed quotas and their values.
+- **Use minimal preset** enables provider meters, including with a single
   provider, and hides panel names, usage text and credits. The style selector
-  changes appearance alone, so custom visibility settings remain available.
-  Quota and service warnings retain their
-  semantic colors. Existing installations keep the Standard style; neither option
-  changes the desktop theme, panel geometry, provider selection or popup.
+  changes appearance alone. Existing installations keep their style, explicit
+  quota choice, and visibility settings. Automatic meters gain the second quota
+  without a new setting or additional CLI calls.
 - Provider tabs with usage bars, reset windows, account identity, status, and
   credits.
 - A plain credit balance has no allowance denominator and stays meter-free.
@@ -28,12 +35,15 @@ work and upstream contract requirements.
   and a run-out forecast that shows the predicted duration only while the CLI
   expects the quota to run out before its reset.
 - Choose the automatic, primary, secondary, or tertiary quota for panel text and
-  meters in **Panel** settings. Missing quotas are omitted; popup tabs keep
-  their automatic quota selection.
+  meters in **Panel** settings. An explicit primary, secondary, or tertiary
+  choice shows one capsule. Automatic text and popup tabs retain their existing
+  quota preference; automatic capsules use the pair described above.
 - Set independent visibility conditions for the full panel text and each
   provider meter: always, minimum percent used, reset within a chosen number of
-  minutes, or forecast exhaustion before reset. Conditions use the displayed
-  quota, respect the existing visibility checkboxes, and need no extra CLI calls.
+  minutes, or forecast exhaustion before reset. A provider meter stays visible
+  when either displayed quota meets its
+  condition; both capsules remain together. Text uses its own displayed quota.
+  Conditions respect existing visibility checkboxes and need no extra CLI calls.
   Missing data does not satisfy a condition. Reset conditions update each minute;
   the provider icon remains available when all conditional elements are hidden.
 - Auto-select highest-usage provider for the compact panel and provider detail
@@ -168,10 +178,10 @@ and 95% critical thresholds. Reset notifications are off until enabled.
 | Quota display | Percent used; warning markers on; thresholds at 80% and 95% used |
 | Plasma notifications | On; quota warnings on; predicted exhaustion and limit-reset notices off |
 | Widget updates | Check and notify every 24 hours; automatic installation off |
-| Panel appearance | Standard style with colored provider icons and usage meters, including a single provider |
+| Panel appearance | Standard style with colored provider icons and automatic quota capsules, including a single provider |
 | Extra panel content | Provider names, usage text and credit balances off |
 | Panel element order | Identity, service status, usage text, meters, respecting visibility settings |
-| Panel quota and visibility | Automatic quota selection; text and enabled meters always visible |
+| Panel quota and visibility | Automatic quota pair for meters and automatic text quota; enabled elements always visible |
 | Provider selection | Keep the selected provider; automatic highest-usage selection off |
 | Popup navigation | Tab text labels on; provider order from the CLI |
 | Overview | First three enabled providers automatically |

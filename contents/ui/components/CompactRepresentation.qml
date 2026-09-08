@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
-import "../ThemeContrast.js" as ThemeContrast
 
 Item {
     id: compactRoot
@@ -12,42 +11,48 @@ Item {
 
     readonly property bool verticalPanel: applet.verticalFormFactor
     readonly property bool minimalStyle: applet.minimalPanel === true
-    readonly property color themeAccent: ThemeContrast.readableAccentColor(
-        Kirigami.Theme.highlightColor, Kirigami.Theme.backgroundColor, Kirigami.Theme.textColor)
-    readonly property bool hasProviderMeters: applet.compactProviders().length > 0
+    readonly property var meterProviders: applet.compactProviders()
+    readonly property bool hasProviderMeters: meterProviders.length > 0
     readonly property var incidentProvider: applet.providerPresentation(applet.primaryIncidentProvider())
     readonly property string primaryText: applet.compactText()
-    readonly property bool showPrimaryIdentity: verticalPanel || !hasProviderMeters || primaryText.length > 0
+    readonly property bool showPrimaryIdentity: !hasProviderMeters || (!verticalPanel && primaryText.length > 0)
     readonly property int compactExtent: Kirigami.Units.iconSizes.smallMedium
         + Kirigami.Units.smallSpacing * 2
-    // Panel meters scale with the panel thickness instead of using fixed pixel
-    // sizes, which rendered them nearly unreadable on normal panels.
     readonly property int meterContentHeight: Math.max(0, height - Kirigami.Units.smallSpacing * 2)
-    readonly property int meterSpacing: minimalStyle ? Kirigami.Units.smallSpacing
-        : Math.max(1, Math.round(Kirigami.Units.smallSpacing / 2))
-    readonly property int meterBarHeight: minimalStyle ? Math.max(2, Math.round(Kirigami.Units.smallSpacing * 0.75))
-        : Math.max(3, Math.round(meterContentHeight * 0.2))
-    readonly property int meterIconSize: Math.max(9, Math.min(
-        minimalStyle ? Kirigami.Units.iconSizes.smallMedium : Infinity,
-        meterContentHeight - meterBarHeight - meterSpacing))
-    readonly property int meterWidth: minimalStyle ? Math.max(Kirigami.Units.gridUnit * 2,
-        meterIconSize + Kirigami.Units.smallSpacing * 2)
-        : Math.max(Kirigami.Units.gridUnit * 1.6, meterIconSize + Kirigami.Units.smallSpacing)
+    readonly property int meterIconSize: Math.min(Kirigami.Units.iconSizes.small,
+        Math.max(12, verticalPanel ? width / 3 : meterContentHeight))
+    readonly property int meterSpacing: Kirigami.Units.smallSpacing
+    readonly property int meterBarHeight: Math.max(3, Math.min(6,
+        Math.round((verticalPanel ? compactExtent : meterContentHeight) / 4)))
+    readonly property int meterBarWidth: verticalPanel
+        ? Math.max(8, Math.min(Kirigami.Units.iconSizes.smallMedium + meterSpacing,
+            width - meterIconSize - meterSpacing * 3))
+        : Kirigami.Units.iconSizes.smallMedium + meterSpacing
+    readonly property int meterWidth: meterIconSize + meterSpacing + meterBarWidth
+        + (verticalPanel ? 0 : meterSpacing)
+    readonly property int meterHeight: Math.max(compactExtent, meterBarHeight * 2 + meterSpacing * 3)
+    readonly property int metersExtent: meterProviders.length * meterHeight
+        + Math.max(0, meterProviders.length - 1) * meterSpacing
     readonly property int maximumCompactWidth: Kirigami.Units.gridUnit * 18
     readonly property int desiredWidth: verticalPanel
-        ? compactExtent
-        : Math.min(
-            maximumCompactWidth,
-            Math.max(Kirigami.Units.gridUnit * 4.8,
-                compactRow.implicitWidth + Kirigami.Units.smallSpacing * 2))
+        ? Kirigami.Units.iconSizes.small + Kirigami.Units.iconSizes.smallMedium + meterSpacing * 4
+        : Math.min(maximumCompactWidth, Math.max(Kirigami.Units.gridUnit * 4.8,
+            compactRow.implicitWidth + Kirigami.Units.smallSpacing * 2))
+    readonly property int desiredHeight: verticalPanel
+        ? Math.ceil(compactRow.implicitHeight + Kirigami.Units.smallSpacing * 2)
+        : compactExtent
 
-    Layout.minimumWidth: desiredWidth
+    Layout.minimumWidth: verticalPanel
+        ? (hasProviderMeters ? Kirigami.Units.iconSizes.small * 2 : compactExtent) : desiredWidth
     Layout.preferredWidth: desiredWidth
-    Layout.maximumWidth: desiredWidth
-    Layout.maximumHeight: Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.smallSpacing * 2
+    Layout.maximumWidth: verticalPanel ? Infinity : desiredWidth
+    Layout.fillWidth: verticalPanel
+    Layout.minimumHeight: verticalPanel ? desiredHeight : 0
+    Layout.preferredHeight: desiredHeight
+    Layout.maximumHeight: verticalPanel ? desiredHeight : Infinity
 
     implicitWidth: desiredWidth
-    implicitHeight: Layout.maximumHeight
+    implicitHeight: desiredHeight
     clip: true
 
     MouseArea {
@@ -68,8 +73,11 @@ Item {
         font.bold: !compactRoot.minimalStyle
     }
 
-    RowLayout {
+    GridLayout {
         id: compactRow
+
+        columns: compactRoot.verticalPanel ? 1 : -1
+        rows: compactRoot.verticalPanel ? -1 : 1
 
         // The applet keeps a minimum panel width, so a short content set (meters
         // without panel text) leaves spare room. Centre the row instead of
@@ -77,8 +85,10 @@ Item {
         anchors.centerIn: parent
         width: Math.max(0, Math.min(compactRoot.width - Kirigami.Units.smallSpacing * 2,
             implicitWidth))
-        height: Math.max(0, compactRoot.height - Kirigami.Units.smallSpacing * 2)
-        spacing: Kirigami.Units.smallSpacing
+        height: compactRoot.verticalPanel ? implicitHeight
+            : Math.max(0, compactRoot.height - Kirigami.Units.smallSpacing * 2)
+        rowSpacing: Kirigami.Units.smallSpacing
+        columnSpacing: Kirigami.Units.smallSpacing
 
         Repeater {
             model: compactRoot.applet.panelElementOrder()
@@ -92,12 +102,12 @@ Item {
                 readonly property bool elementVisible: modelData === "identity"
                     ? compactRoot.showPrimaryIdentity
                     : (modelData === "status"
-                    ? (!compactRoot.verticalPanel
+                    ? ((!compactRoot.verticalPanel || compactRoot.hasProviderMeters)
                         && compactRoot.incidentProvider !== null
                         && compactRoot.incidentProvider.hasIncident)
                     : (modelData === "text"
                     ? (!compactRoot.verticalPanel && compactRoot.primaryText.length > 0)
-                    : (!compactRoot.verticalPanel && compactRoot.applet.compactProviders().length > 0)))
+                    : compactRoot.hasProviderMeters))
 
                 sourceComponent: modelData === "identity"
                     ? identityElement
@@ -113,11 +123,15 @@ Item {
                     : (modelData === "status"
                     ? Kirigami.Units.smallSpacing * 1.5
                     : (modelData === "meters"
-                    ? compactRoot.applet.compactProviders().length * compactRoot.meterWidth
-                        + Math.max(0, compactRoot.applet.compactProviders().length - 1) * Kirigami.Units.smallSpacing
+                    ? (compactRoot.verticalPanel ? compactRoot.meterWidth
+                        : compactRoot.meterProviders.length * compactRoot.meterWidth
+                            + Math.max(0, compactRoot.meterProviders.length - 1) * Kirigami.Units.smallSpacing)
                     : Math.max(Kirigami.Units.gridUnit * 2,
                         Math.ceil(compactTextMeasurer.implicitWidth)))))
-                Layout.preferredHeight: compactRow.height
+                Layout.preferredHeight: compactRoot.verticalPanel
+                    ? (modelData === "meters" ? compactRoot.metersExtent
+                        : (modelData === "status" ? Kirigami.Units.smallSpacing * 1.5 : compactRoot.compactExtent))
+                    : compactRow.height
                 Layout.alignment: Qt.AlignVCenter
             }
         }
@@ -148,7 +162,7 @@ Item {
 
                 RotationAnimator {
                     target: compactIdentityIcon
-                    running: compactRoot.applet.loading
+                    running: compactRoot.animationsEnabled && compactRoot.applet.loading && Kirigami.Units.longDuration > 0
                     from: 0
                     to: 360
                     duration: 1250
@@ -184,7 +198,7 @@ Item {
         Item {
             id: compactStatusBadge
 
-            visible: !compactRoot.verticalPanel
+            visible: (!compactRoot.verticalPanel || compactRoot.hasProviderMeters)
                 && compactRoot.incidentProvider !== null
                 && compactRoot.incidentProvider.hasIncident
             implicitWidth: Kirigami.Units.smallSpacing * 1.5
@@ -241,32 +255,22 @@ Item {
     Component {
         id: metersElement
 
-        RowLayout {
-            visible: !compactRoot.verticalPanel && compactRoot.applet.compactProviders().length > 0
-            spacing: Kirigami.Units.smallSpacing
+        GridLayout {
+            columns: compactRoot.verticalPanel ? 1 : -1
+            rows: compactRoot.verticalPanel ? -1 : 1
+            rowSpacing: compactRoot.meterSpacing
+            columnSpacing: compactRoot.meterSpacing
 
             Repeater {
-                model: compactRoot.applet.compactProviders()
+                model: compactRoot.meterProviders
 
                 delegate: Item {
                     id: compactMeter
 
                     required property var modelData
-                    readonly property var quotaRow: compactRoot.applet.panelDisplayRow(modelData, "percent")
-                    readonly property real meter: quotaRow ? compactRoot.applet.displayPercent(quotaRow) : -1
-                    readonly property color accent: compactRoot.minimalStyle ? compactRoot.themeAccent : compactRoot.applet.providerReadableColor(
-                        modelData.provider,
-                        Kirigami.Theme.backgroundColor)
-                    // The panel is the surface a user reads without opening
-                    // anything, so it carries the same quota level as the popup
-                    // meters instead of staying provider-coloured at 99% used.
-                    readonly property color meterColor: compactRoot.applet.quotaMeterColor(
-                        quotaRow,
-                        accent)
-                    // An exhausted remaining quota has no fill, so its track
-                    // must still carry the warning color.
-                    readonly property bool neutralTrack: compactRoot.minimalStyle
-                        && compactRoot.applet.quotaSeverity(quotaRow).length === 0
+                    readonly property var quotaRows: compactRoot.applet.panelMeterRows(modelData)
+                    readonly property color accent: compactRoot.minimalStyle ? Kirigami.Theme.textColor
+                        : compactRoot.applet.providerReadableColor(modelData.provider, Kirigami.Theme.backgroundColor)
 
                     function activate() {
                         if (!compactRoot.interactive) {
@@ -276,11 +280,12 @@ Item {
                     }
 
                     Layout.preferredWidth: compactRoot.meterWidth
-                    Layout.preferredHeight: compactRow.height
+                    Layout.preferredHeight: compactRoot.verticalPanel ? compactRoot.meterHeight : compactRow.height
                     activeFocusOnTab: compactRoot.interactive
 
                     Accessible.role: compactRoot.interactive ? Accessible.Button : Accessible.Graphic
                     Accessible.name: compactRoot.interactive ? i18n("Open %1", modelData.title) : modelData.title
+                    Accessible.description: compactRoot.applet.panelMeterDescription(modelData)
                     Accessible.ignored: !compactRoot.interactive
                     Accessible.onPressAction: compactMeter.activate()
 
@@ -298,6 +303,13 @@ Item {
 
                     Rectangle {
                         anchors.fill: parent
+                        radius: Kirigami.Units.smallSpacing
+                        color: compactRoot.applet.withAlpha(Kirigami.Theme.textColor,
+                            compactMeterMouse.pressed ? 0.14 : (compactMeterMouse.containsMouse ? 0.07 : 0))
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
                         visible: compactMeter.activeFocus
                         radius: Kirigami.Units.smallSpacing
                         color: "transparent"
@@ -305,9 +317,8 @@ Item {
                         border.color: Kirigami.Theme.focusColor
                     }
 
-                    ColumnLayout {
+                    RowLayout {
                         anchors.centerIn: parent
-                        width: parent.width
                         spacing: compactRoot.meterSpacing
 
                         Kirigami.Icon {
@@ -315,46 +326,43 @@ Item {
                             source: compactRoot.applet.providerIconSource(compactMeter.modelData.provider)
                             fallback: "view-statistics"
                             isMask: compactRoot.minimalStyle || compactRoot.applet.providerIconIsMask(compactMeter.modelData.provider)
-                            color: compactRoot.minimalStyle ? Kirigami.Theme.textColor : compactMeter.accent
-                            Layout.alignment: Qt.AlignHCenter
+                            color: compactMeter.accent
+                            Layout.alignment: Qt.AlignVCenter
                             Layout.preferredWidth: compactRoot.meterIconSize
                             Layout.preferredHeight: compactRoot.meterIconSize
                         }
 
-                        Rectangle {
-                            objectName: "panelMeterTrack"
-                            Layout.fillWidth: !compactRoot.minimalStyle
-                            Layout.alignment: Qt.AlignHCenter
-                            Layout.preferredWidth: compactRoot.minimalStyle
-                                ? compactRoot.meterIconSize + Kirigami.Units.smallSpacing : compactRoot.meterWidth
-                            Layout.preferredHeight: compactRoot.meterBarHeight
-                            radius: height / 2
-                            color: compactRoot.applet.withAlpha(compactMeter.neutralTrack
-                                ? Kirigami.Theme.textColor : compactMeter.meterColor, compactMeter.neutralTrack ? 0.18 : 0.28)
-                            clip: true
+                        ColumnLayout {
+                            spacing: compactRoot.meterSpacing
+                            Layout.alignment: Qt.AlignVCenter
 
-                            Rectangle {
-                                objectName: "panelMeterFill"
-                                visible: compactMeter.meter >= 0
-                                width: compactMeter.meter <= 0
-                                    ? 0
-                                    : Math.max(parent.height, parent.width * Math.max(0, Math.min(100, compactMeter.meter)) / 100)
-                                height: parent.height
-                                radius: parent.radius
-                                color: compactMeter.meterColor
+                            Repeater {
+                                model: compactMeter.quotaRows
 
-                                Behavior on color {
-                                    enabled: compactRoot.animationsEnabled
-                                    ColorAnimation {
-                                        duration: Kirigami.Units.longDuration
-                                    }
-                                }
+                                delegate: Rectangle {
+                                    id: quotaCapsule
+                                    required property var modelData
+                                    readonly property real meter: compactRoot.applet.displayPercent(modelData)
+                                    readonly property color meterColor: compactRoot.applet.quotaMeterColor(modelData, compactMeter.accent)
+                                    readonly property bool warning: compactRoot.applet.quotaSeverity(modelData).length > 0
 
-                                Behavior on width {
-                                    enabled: compactRoot.animationsEnabled
-                                    NumberAnimation {
-                                        duration: Kirigami.Units.longDuration
-                                        easing.type: Easing.OutCubic
+                                    objectName: "panelMeterTrack"
+                                    Layout.preferredWidth: compactRoot.meterBarWidth
+                                    Layout.preferredHeight: compactRoot.meterBarHeight
+                                    radius: height / 2
+                                    // The track remains identifiable at zero, including an
+                                    // exhausted quota when displaying the remaining amount.
+                                    color: compactRoot.applet.withAlpha(meterColor, warning ? 0.32 : 0.18)
+                                    border.width: warning || meter === 0 ? 1 : 0
+                                    border.color: compactRoot.applet.withAlpha(meterColor, warning ? 0.9 : 0.45)
+                                    clip: true
+
+                                    Rectangle {
+                                        objectName: "panelMeterFill"
+                                        width: parent.width * Math.max(0, Math.min(100, quotaCapsule.meter)) / 100
+                                        height: parent.height
+                                        radius: Math.min(height / 2, width / 2)
+                                        color: quotaCapsule.meterColor
                                     }
                                 }
                             }

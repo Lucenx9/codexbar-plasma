@@ -127,4 +127,29 @@ TestCase {
         compare(PanelDisplay.remainingSeconds(30, 160000, 100000), 30);
         compare(PanelDisplay.remainingSeconds("30", 100000, 110000), 0);
     }
+    function test_meterRowsKeepLaneOrderAndIgnoreAutomaticTextPreference() {
+        var primary = usageRow({lane: "primary", hasPercent: true, usedPercent: 0, leftPercent: 100});
+        var secondary = usageRow({lane: "secondary", hasPercent: true, usedPercent: 99, leftPercent: 1});
+        var tertiary = usageRow({lane: "tertiary", hasPercent: true, usedPercent: 50, leftPercent: 50});
+        var rows = [tertiary, secondary, primary];
+        compare(PanelDisplay.meterRows(rows, "auto"), [primary, secondary]);
+        compare(PanelDisplay.meterRows(rows, "secondary"), [secondary]);
+        compare(PanelDisplay.meterRows(rows, "tertiary"), [tertiary]);
+        compare(PanelDisplay.meterRows([tertiary]), [tertiary]);
+        compare(PanelDisplay.meterRows([secondary]), [secondary]);
+        compare(PanelDisplay.meterRows([primary]), [primary]);
+        compare(rows, [tertiary, secondary, primary]);
+    }
+
+    function test_meterRowsDoNotInventMissingQuotasOrDuplicateLanes() {
+        var zero = usageRow({lane: "secondary", hasPercent: true, usedPercent: 0, leftPercent: 100});
+        var invalid = usageRow({lane: "primary", hasPercent: true, usedPercent: NaN, leftPercent: 50});
+        compare(PanelDisplay.meterRows([null, invalid, zero, zero]), [zero]);
+        compare(PanelDisplay.meterRows([zero], "primary"), []);
+        compare(PanelDisplay.meterRows([invalid]), []);
+        compare(PanelDisplay.meterRows(null), []);
+        compare(PanelDisplay.meterRows({primary: zero}), []);
+        compare(PanelDisplay.meterRows([usageRow({lane: "primary", hasPercent: true, usedPercent: "50", leftPercent: 50})]), []);
+    }
+
 }

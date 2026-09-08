@@ -83,6 +83,26 @@ function rowForMode(rows, value, laneValue) {
     return null;
 }
 
+// Meter positions follow named lanes, not the provider's text preference or
+// current consumption. Providers without those lanes keep their single fallback.
+function meterRows(rows, laneValue) {
+    var lane = safeLane(laneValue);
+    if (lane !== "auto") {
+        var selected = rowForMode(rows, percentMode, lane);
+        return selected ? [selected] : [];
+    }
+    var result = [];
+    var primary = rowForMode(rows, percentMode, "primary");
+    var secondary = rowForMode(rows, percentMode, "secondary");
+    if (primary) result.push(primary);
+    if (secondary) result.push(secondary);
+    if (result.length === 0) {
+        var fallback = rowForMode(rows, percentMode);
+        if (fallback) result.push(fallback);
+    }
+    return result;
+}
+
 // Forecast ETA is a duration observed with one usage snapshot, not an absolute
 // timestamp. Advance it from that observation without triggering another CLI run.
 function remainingSeconds(durationSeconds, observedAtMs, nowMs) {

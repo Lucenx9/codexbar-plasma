@@ -138,7 +138,8 @@ These are unresolved Linux candidates, not confirmed missing features.
   Plasma currently reads `remaining` without it. Reproduce failed reads,
   confirmed zero, and cap-only data safely, then classify and specify the
   normalization change. [Source evidence](docs/research/2026-09-09-macos-parity-0.57.0.md#source-observed-contract-change-requiring-output-verification).
-- [ ] Compare exhausted automatic-quota selection with the exact 0.56.6 cases.
+- [ ] Compare exhausted automatic text/popup quota selection with the exact
+  0.56.6 cases. Automatic panel capsules already show primary and secondary.
   Keep direct lane choices and independent quota pools. Accept a change only
   after reproducing a useful difference with existing Linux fields.
   [Comparison](docs/research/2026-09-09-macos-parity-0.57.0.md#review-automatic-exhausted-quota-selection).
@@ -159,7 +160,8 @@ These are unresolved Linux candidates, not confirmed missing features.
 ## Scope and completed behavior
 
 The [usage guide](docs/usage.md) describes implemented Plasma behavior, including
-panel composition, settings preview/privacy, local sessions, notifications, and
+panel composition with automatic dual-quota capsules and vertical provider meters,
+settings preview/privacy, local sessions, notifications, and
 interactive cost/token charts. Claude 0.57.0 `--breakdown` is text-only; existing
 JSON daily/model views already consume its underlying data.
 

@@ -571,10 +571,8 @@ msgid "Auto-select highest-usage provider"
 msgstr "Sélectionner automatiquement le fournisseur le plus utilisé"
 
 #: contents/ui/configPanel.qml
-msgid "Usage text and provider meters are available only in horizontal panels."
-msgstr ""
-"Le texte d'utilisation et les jauges des fournisseurs ne sont disponibles "
-"que dans les panneaux horizontaux."
+msgid "Usage text is available only in horizontal panels. Provider meters also work in vertical panels."
+msgstr "Le texte d’utilisation est disponible uniquement dans les panneaux horizontaux. Les jauges des fournisseurs fonctionnent aussi dans les panneaux verticaux."
 
 #: contents/ui/configPanel.qml
 msgid "Panel quota:"
@@ -597,12 +595,8 @@ msgid "Tertiary"
 msgstr "Tertiaire"
 
 #: contents/ui/configPanel.qml
-msgid ""
-"Uses the provider's primary, secondary or tertiary quota for panel text and "
-"meters. Unavailable quotas are omitted."
-msgstr ""
-"Utilise le quota principal, secondaire ou tertiaire du fournisseur pour le "
-"texte et les jauges du panneau. Les quotas indisponibles sont omis."
+msgid "Automatic meters show primary and secondary quotas. Choose a quota to show one capsule. Unavailable quotas are omitted."
+msgstr "Les jauges automatiques affichent les quotas principal et secondaire. Choisissez un quota pour afficher une seule capsule. Les quotas indisponibles sont omis."
 
 #: contents/ui/configPanel.qml
 msgid "Panel text:"
@@ -662,14 +656,8 @@ msgid "Show each meter:"
 msgstr "Afficher chaque jauge :"
 
 #: contents/ui/configPanel.qml
-msgid ""
-"Conditions use the quota shown by each element. The text condition also "
-"applies to the provider name and credits. Missing data does not satisfy a "
-"condition."
-msgstr ""
-"Les conditions utilisent le quota affiché par chaque élément. La condition "
-"du texte s'applique aussi au nom du fournisseur et aux crédits. Les données "
-"manquantes ne satisfont pas une condition."
+msgid "A provider meter appears when either displayed quota matches its condition. The text condition also applies to the provider name and credits. Missing data does not satisfy a condition."
+msgstr "Une jauge de fournisseur apparaît lorsque l’un des quotas affichés remplit sa condition. La condition du texte s’applique aussi au nom du fournisseur et aux crédits. Les données manquantes ne remplissent aucune condition."
 
 #: contents/ui/configPanel.qml
 msgid "Element order:"
@@ -2298,10 +2286,8 @@ msgid "Minimal"
 msgstr "Minimal"
 
 #: contents/ui/configPanel.qml
-msgid ""
-"Minimal uses neutral icons and thin meters in the Plasma accent color. Quota "
-"warnings keep their warning colors."
-msgstr "Le style minimal utilise des icônes neutres et des jauges fines dans la couleur d'accentuation de Plasma. Les alertes de quota conservent leurs couleurs d'avertissement."
+msgid "Minimal uses monochrome icons and capsule meters. Quota warnings keep their warning colors."
+msgstr "Minimal utilise des icônes et des jauges en capsule monochromes. Les alertes de quota conservent leurs couleurs."
 
 #: contents/ui/configPanel.qml
 msgid "Use minimal preset"

@@ -93,6 +93,13 @@ def stage_applet(work, scenario, image_path):
     shutil.copyfile(ROOT / "scripts/smoke/SettingsPreview.qml", ui / "SettingsPreview.qml")
     main_path = ui / "main.qml"
     main = main_path.read_text().rstrip()
+    if scenario.startswith("panel-vertical"):
+        # plasmawindowed has no panel containment. Supply its form-factor input
+        # while exercising the unchanged compact renderer and applet adapters.
+        expression = "Plasmoid.formFactor === PlasmaCore.Types.Vertical"
+        if expression not in main:
+            raise RuntimeError("Missing vertical panel adapter")
+        main = main.replace(expression, "true")
     if not main.endswith("}"):
         raise RuntimeError("Cannot attach capture to the applet root")
     main_path.write_text(main[:-1] + "\n    SmokeCapture {\n        applet: root\n"

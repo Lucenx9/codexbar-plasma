@@ -154,7 +154,7 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: i18n("Minimal uses neutral icons and thin meters in the Plasma accent color. Quota warnings keep their warning colors.")
+            text: i18n("Minimal uses monochrome icons and capsule meters. Quota warnings keep their warning colors.")
             font: Kirigami.Theme.smallFont
             wrapMode: Text.WordWrap
         }
@@ -208,7 +208,7 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: i18n("Usage text and provider meters are available only in horizontal panels.")
+            text: i18n("Usage text is available only in horizontal panels. Provider meters also work in vertical panels.")
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             wrapMode: Text.WordWrap
@@ -237,7 +237,7 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: i18n("Uses the provider's primary, secondary or tertiary quota for panel text and meters. Unavailable quotas are omitted.")
+            text: i18n("Automatic meters show primary and secondary quotas. Choose a quota to show one capsule. Unavailable quotas are omitted.")
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             wrapMode: Text.WordWrap
@@ -396,7 +396,7 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: i18n("Conditions use the quota shown by each element. The text condition also applies to the provider name and credits. Missing data does not satisfy a condition.")
+            text: i18n("A provider meter appears when either displayed quota matches its condition. The text condition also applies to the provider name and credits. Missing data does not satisfy a condition.")
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             wrapMode: Text.WordWrap

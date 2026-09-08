@@ -29,9 +29,12 @@ Item {
     readonly property bool settingsScenario: scenario.indexOf("settings-") === 0
     readonly property bool panelDefaultsScenario: scenario === "panel-default" || scenario === "panel-default-single"
     readonly property bool readmePanelScenario: scenario.indexOf("readme-panel-") === 0
+    readonly property bool verticalPanelScenario: scenario.indexOf("panel-vertical") === 0
+    readonly property bool capsulePanelScenario: verticalPanelScenario || scenario === "panel-small" || scenario === "panel-dual-edge"
     readonly property bool standardPanelScenario: scenario === "panel-standard" || scenario === "readme-panel-standard"
+        || scenario === "panel-vertical" || scenario === "panel-small" || scenario === "panel-dual-edge"
     readonly property bool panelAppearanceScenario: scenario === "panel-standard" || scenario === "panel-minimal"
-        || scenario === "panel-minimal-single" || readmePanelScenario
+        || scenario === "panel-minimal-single" || readmePanelScenario || capsulePanelScenario
     readonly property bool readmeScenario: scenario.indexOf("readme-") === 0
     readonly property int expectedProviderCount: scenario === "panel-minimal-single" || scenario === "panel-default-single"
         ? 1 : (readmeScenario ? 3 : 2)
@@ -64,8 +67,8 @@ Item {
         active: capture.scenario === "panel-rules" || capture.panelAppearanceScenario || capture.panelDefaultsScenario
         z: 100
         sourceComponent: Rectangle {
-            width: Math.max(240, panel.compactItem ? panel.compactItem.implicitWidth + 48 : 240)
-            height: 84
+            width: capture.verticalPanelScenario ? 84 : Math.max(240, panel.compactItem ? panel.compactItem.implicitWidth + 48 : 240)
+            height: capture.verticalPanelScenario ? Math.max(160, panel.height + 48) : 84
             color: panel.compactItem ? panel.compactItem.Kirigami.Theme.backgroundColor : Kirigami.Theme.backgroundColor
             Loader {
                 id: panel
@@ -73,8 +76,10 @@ Item {
                 sourceComponent: capture.applet.compactRepresentation
                 onLoaded: capture.compactPanelItem = item
                 anchors.centerIn: parent
-                width: compactItem ? compactItem.implicitWidth : 0
-                height: capture.panelAppearanceScenario || capture.panelDefaultsScenario ? 44 : 40
+                width: capture.verticalPanelScenario ? 44 : (compactItem ? compactItem.implicitWidth : 0)
+                height: capture.verticalPanelScenario ? (compactItem ? compactItem.implicitHeight : 0)
+                    : (capture.scenario === "panel-small" ? 24
+                        : (capture.panelAppearanceScenario || capture.panelDefaultsScenario ? 44 : 40))
             }
         }
     }
@@ -197,6 +202,7 @@ Item {
             && page.cfg_panelVisibilityRules === oldRules, "preset changed quota or visibility rules");
         verifyScenario(config.panelStyle === "standard", "settings took effect before Apply");
         config.panelStyle = standardPanelScenario ? "standard" : page.cfg_panelStyle;
+        if (scenario === "panel-dual-edge") config.usageBarsShowUsed = false;
         config.showMultiProviderInPanel = page.cfg_showMultiProviderInPanel;
         config.showProviderInPanel = page.cfg_showProviderInPanel;
         config.showPercentInPanel = page.cfg_showPercentInPanel;
@@ -221,6 +227,34 @@ Item {
             config.panelVisibilityRules = "{}";
             verifyScenario(applet.compactProviders().length === 1, "single-provider meter did not recover");
         }
+    }
+
+    function namedItems(item, name) {
+        var found = item.objectName === name ? [item] : [];
+        var children = item.children || [];
+        for (var i = 0; i < children.length; i++)
+            found = found.concat(namedItems(children[i], name));
+        return found;
+    }
+
+    function verifyCapsulePanel() {
+        var panel = compactPanelItem;
+        var tracks = namedItems(panel, "panelMeterTrack");
+        var expected = scenario === "panel-dual-edge" ? 3 : expectedProviderCount * 2;
+        verifyScenario(tracks.length === expected, "automatic capsules lost a quota or invented a missing one");
+        for (var i = 0; i < tracks.length; i++) {
+            var track = tracks[i];
+            var origin = track.mapToItem(panel, 0, 0);
+            var end = track.mapToItem(panel, track.width, track.height);
+            verifyScenario(track.width > 0 && track.height >= 3 && origin.x >= 0 && origin.y >= 0
+                && end.x <= panel.width + 1 && end.y <= panel.height + 1, "capsule is clipped by the panel");
+        }
+        if (scenario === "panel-dual-edge") {
+            var fills = namedItems(panel, "panelMeterFill");
+            verifyScenario(fills[1].width === 0 && tracks[1].border.width > 0,
+                "exhausted remaining quota lost its warning track");
+        }
+        verifyScenario(applet.providers === panelUsageSnapshot, "panel appearance refetched or mutated usage");
     }
 
     function preparePanelScenario() {
@@ -1178,6 +1212,7 @@ Item {
                 var next = capture.findItem(capture.applet.fullRepresentationItem, "nextTabsButton");
                 capture.verifyScenario(next !== null && !next.visible, "scroll controls appear when tabs fit");
             }
+            if (capture.panelAppearanceScenario) capture.verifyCapsulePanel();
             var popup = capture.settingsScenario ? configurationPreview.item
                 : capture.scenario === "panel-rules" || capture.panelAppearanceScenario || capture.panelDefaultsScenario
                 ? panelPreview.item : (capture.scenario === "provider-settings"

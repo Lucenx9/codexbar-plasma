@@ -73,8 +73,8 @@ function model(options, scenarioValue, nowMs) {
         textRow: textRow,
         textVisible: PanelRules.matches(rules.text, textRow, clockMs),
         meterProviders: settings.showMeters === false ? [] : providers.filter(function (provider) {
-            var row = PanelDisplay.rowForMode(provider.rows, "percent", lane);
-            return row !== null && PanelRules.matches(rules.meters, row, clockMs);
+            var rows = PanelDisplay.meterRows(provider.rows, lane);
+            return PanelRules.matchesAny(rules.meters, rows, clockMs);
         }),
         incidentProvider: scenario === "incident" ? providers.filter(function (provider) {
             return provider.hasIncident;

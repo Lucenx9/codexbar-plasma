@@ -84,8 +84,9 @@ Extraction must hide complexity, not merely reduce line count.
 - Sessions normalize display fields only. Discard `cwd`, `transcriptPath`, IDs,
   and PIDs; never render, open, or follow them. Remote/SSH host focus is a
   macOS-only non-goal.
-- `PanelRules.js` evaluates the displayed quota without effects. Direct missing
-  quotas stay omitted; `runOut` depends on `paceWarningActive`. Panel visibility,
+- `PanelRules.js` evaluates displayed quotas without effects. Automatic capsules
+  use `PanelDisplay.meterRows` in primary/secondary order, and either displayed
+  quota can satisfy the provider meter condition. Direct missing quotas stay omitted; `runOut` depends on `paceWarningActive`. Panel visibility,
   order, and metric settings preserve the minute clock and icon fallback and
   must not fetch data or change notification state.
 - Privacy projects display records without changing cached snapshots or account
@@ -248,6 +249,10 @@ state before using Qt's
 QML errors, missing captures, early exits, and timeouts fail the command.
 Screenshots still need visual review: this is not a pixel-comparison test and
 does not exercise panel placement, key-event dispatch, or the real CLI.
+Panel scenarios verify capsule count and clipping at small sizes, including
+zero and absent quotas. `panel-vertical` and `panel-vertical-minimal` supply the
+vertical form-factor input because `plasmawindowed` has no panel containment.
+QtTests additionally exercise pointer/keyboard activation and resizing.
 Synthetic payloads cover a subset of the CLI 0.56.2 contract; fixture dates
 are relative to run time. Typography uses Noto Sans and Breeze icons.
 
