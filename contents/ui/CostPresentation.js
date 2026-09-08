@@ -67,6 +67,11 @@ function groupedDecimalString(fmt, value, digits) {
     if (!isFinite(numeric)) {
         return "-"
     }
+    // Number.toFixed returns exponential notation past 1e21, which has no
+    // fixed-point digits to group ("1e+21" would gain a bogus separator).
+    if (Math.abs(numeric) >= 1e21) {
+        return String(Math.abs(numeric))
+    }
     var f = fmt && typeof fmt === "object" ? fmt : numberFormat()
     var groupSep = typeof f.group === "string" ? f.group : ","
     var decPoint = typeof f.decimal === "string" ? f.decimal : "."
@@ -110,6 +115,29 @@ function scaledTokenCount(value) {
         return Number(value).toFixed(0)
     }
     return Number(value).toFixed(1).replace(/\.0$/, "")
+}
+
+// Credit balances are plain counts: a whole balance keeps no fractional part,
+// while a fractional one keeps a single digit. Rounding can carry a fractional
+// value across the whole boundary ("99.95" -> "100.0"), so the fractional digit
+// drops when the rounded figure is whole instead of choosing the precision
+// from the unrounded value.
+function formatCount(fmt, value) {
+    var numeric = Number(value)
+    if (!isFinite(numeric)) {
+        return "-"
+    }
+    var magnitude = Math.abs(numeric)
+    var digits = magnitude >= 100 || magnitude === Math.round(magnitude) ? 0 : 1
+    var text = groupedDecimalString(fmt, magnitude, digits)
+    if (digits === 1) {
+        var f = fmt && typeof fmt === "object" ? fmt : numberFormat()
+        var decPoint = typeof f.decimal === "string" ? f.decimal : "."
+        if (text.slice(-(decPoint.length + 1)) === decPoint + "0") {
+            text = text.slice(0, -(decPoint.length + 1))
+        }
+    }
+    return (numeric < 0 ? "-" : "") + text
 }
 
 function tokenCountString(tokens) {

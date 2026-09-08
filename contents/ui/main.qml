@@ -3993,13 +3993,7 @@ PlasmoidItem {
     // a hardcoded decimal mark. A whole balance keeps no fractional part, so a
     // depleted account reads as "0" rather than "0.0".
     function formatNumber(value) {
-        var numeric = Number(value)
-        if (!isFinite(numeric)) {
-            return "-"
-        }
-        var magnitude = Math.abs(numeric)
-        var digits = magnitude >= 100 || magnitude === Math.round(magnitude) ? 0 : 1
-        return (numeric < 0 ? "-" : "") + groupedDecimalString(magnitude, digits)
+        return CostPresentation.formatCount(costNumberFormat, value)
     }
 
     Plasma5Support.DataSource {

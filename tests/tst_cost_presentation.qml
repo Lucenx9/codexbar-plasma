@@ -224,6 +224,43 @@ TestCase {
         compare(CostPresentation.amountString(fmt, 12, "   "), "12.00")
     }
 
+    // Number.toFixed returns exponential notation past 1e21, which has no
+    // fixed-point digits to group: without the guard "1e+21" gained a bogus
+    // separator ("1e,+21").
+    function test_groupedDecimalStringKeepsHugeMagnitudesReadable() {
+        compare(CostPresentation.groupedDecimalString(fmt, 1e21, 2), "1e+21")
+        compare(CostPresentation.groupedDecimalString(fmt, -1e21, 2), "1e+21")
+        compare(CostPresentation.groupedDecimalString(fmt, 1.5e21, 2), "1.5e+21")
+        compare(CostPresentation.amountString(fmt, 1e21, "USD"), "$1e+21")
+        compare(CostPresentation.amountString(fmt, -1e21, "USD"), "-$1e+21")
+    }
+
+    // Credit balances print as bare counts: whole balances keep no fractional
+    // part. Rounding can carry a fractional balance across the whole boundary
+    // (99.95 -> "100.0"), so the fractional digit drops when the rounded
+    // figure is whole.
+    function test_formatCountDropsTheFractionalDigitAfterRoundingUp() {
+        compare(CostPresentation.formatCount(fmt, 0), "0")
+        compare(CostPresentation.formatCount(fmt, 100), "100")
+        compare(CostPresentation.formatCount(fmt, 99.95), "100")
+        compare(CostPresentation.formatCount(fmt, 2.95), "3")
+        compare(CostPresentation.formatCount(fmt, -99.95), "-100")
+        compare(CostPresentation.formatCount(fmt, 99.94), "99.9")
+        compare(CostPresentation.formatCount(fmt, 199.99), "200")
+        compare(CostPresentation.formatCount(fmt, 1234.5), "1,235")
+        compare(CostPresentation.formatCount(fmt, 12.5), "12.5")
+        compare(CostPresentation.formatCount(fmt, "abc"), "-")
+        compare(CostPresentation.formatCount(fmt, Number.NaN), "-")
+        compare(CostPresentation.formatCount(fmt, undefined), "-")
+        // Number(null) coerces to 0, as the delegated main.qml helper did.
+        compare(CostPresentation.formatCount(fmt, null), "0")
+        var italian = CostPresentation.numberFormat(".", ",")
+        compare(CostPresentation.formatCount(italian, 99.95), "100")
+        compare(CostPresentation.formatCount(italian, 99.94), "99,9")
+        compare(CostPresentation.formatCount(italian, 1234.5), "1.235")
+        compare(CostPresentation.formatCount(null, 12.5), "12.5")
+    }
+
     function test_tokenCountStringScalesAndDropsTrailingZero() {
         compare(CostPresentation.tokenCountString(999), "999")
         compare(CostPresentation.tokenCountString(1000), "1K")
