@@ -82,13 +82,17 @@ if ! awk '
 fi
 
 CHECK_JOB="$(workflow_job_block check)"
-SMOKE_JOB="$(workflow_job_block smoke)"
+SMOKE_JOB="$(workflow_job_block smoke-runtime)"
+SMOKE_GATE="$(workflow_job_block smoke)"
 RELEASE_JOB="$(workflow_job_block release)"
 require_text "check job" "$CHECK_JOB" "contents: read"
 require_text "check job" "$CHECK_JOB" "persist-credentials: false"
 reject_text "check job" "$CHECK_JOB" "contents: write"
 require_text "smoke job" "$SMOKE_JOB" "persist-credentials: false"
 reject_text "smoke job" "$SMOKE_JOB" "contents: write"
+require_text "smoke gate" "$SMOKE_GATE" "if: always()"
+require_text "smoke gate" "$SMOKE_GATE" "needs: [scope, smoke-runtime]"
+require_text "smoke gate" "$SMOKE_GATE" "python3 scripts/ci_scope.py --gate"
 require_text "release job" "$RELEASE_JOB" "if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')"
 require_text "release job" "$RELEASE_JOB" "needs: [check, smoke]"
 require_text "release job" "$RELEASE_JOB" "contents: write"
@@ -98,7 +102,7 @@ require_text "release job" "$RELEASE_JOB" "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
 require_text "release job" "$RELEASE_JOB" "jq -r '.KPlugin.Version // empty' metadata.json"
 # shellcheck disable=SC2016 # Match the literal shell expression in the workflow.
 require_text "release job" "$RELEASE_JOB" '"v${metadata_version}" != "$GITHUB_REF_NAME"'
-for job in check smoke release; do
+for job in check smoke-runtime release; do
   require_text "$job job" "$(workflow_job_block "$job")" "image: invent-registry.kde.org/neon/docker-images/plasma@sha256:"
 done
 if sed -n 's/^[[:space:]]*image: //p' "$WORKFLOW" | grep -Evq '^invent-registry\.kde\.org/neon/docker-images/plasma@sha256:[0-9a-f]{64}$'; then

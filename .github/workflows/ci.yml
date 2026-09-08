@@ -11,6 +11,11 @@ on:
     tags: ['v*']
   pull_request:
 
+# Only superseded PR runs are cancelled. Each main push and release keeps its run.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
@@ -22,6 +27,21 @@ env:
   QML_TEST_REQUIRE_NO_SKIPS: '1'
 
 jobs:
+  scope:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run_smoke: ${{ steps.scope.outputs.run_smoke }}
+    steps:
+      - name: Checkout comparison history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Select smoke coverage
+        id: scope
+        run: python3 scripts/ci_scope.py
+
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -51,7 +71,9 @@ jobs:
       - name: make package
         run: make package
 
-  smoke:
+  smoke-runtime:
+    needs: scope
+    if: needs.scope.outputs.run_smoke == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     container:
@@ -82,6 +104,23 @@ jobs:
           path: dist/smoke/ci
           if-no-files-found: warn
           retention-days: 7
+
+  smoke:
+    if: always()
+    needs: [scope, smoke-runtime]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout smoke result validator
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Report required smoke result
+        env:
+          SCOPE_RESULT: ${{ needs.scope.result }}
+          RUN_SMOKE: ${{ needs.scope.outputs.run_smoke }}
+          RUNTIME_RESULT: ${{ needs.smoke-runtime.result }}
+        run: python3 scripts/ci_scope.py --gate
 
   release:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
