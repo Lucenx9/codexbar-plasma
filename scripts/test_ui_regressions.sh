@@ -1721,7 +1721,7 @@ if re.search(r"implicitHeight:\s*Kirigami\.Units\.gridUnit\s*\*\s*\d", full_repr
     )
 
 format_number_body = function_body(main_text, "formatNumber")
-if "groupedDecimalString(" not in format_number_body:
+if "groupedDecimalString(" not in format_number_body and "CostPresentation.formatCount(" not in format_number_body:
     raise AssertionError(
         "formatNumber must route through groupedDecimalString so credit balances "
         "carry group separators and the locale decimal mark like every other "
@@ -1730,6 +1730,20 @@ if "groupedDecimalString(" not in format_number_body:
 if "toFixed(" in format_number_body:
     raise AssertionError(
         "formatNumber must not format digits itself again; toFixed hardcodes the "
+        "decimal mark and prints a whole balance as '0.0'"
+    )
+# The delegated count formatter keeps the same routing contract: locale-aware
+# grouping, never hardcoded digits.
+format_count_body = function_body(cost_presentation_text, "formatCount")
+if "groupedDecimalString(" not in format_count_body:
+    raise AssertionError(
+        "formatCount must route through groupedDecimalString so credit balances "
+        "carry group separators and the locale decimal mark like every other "
+        "figure in the popup"
+    )
+if "toFixed(" in format_count_body:
+    raise AssertionError(
+        "formatCount must not format digits itself again; toFixed hardcodes the "
         "decimal mark and prints a whole balance as '0.0'"
     )
 for usage_metadata_id in ("usagePaceLabel", "usageResetLabel"):

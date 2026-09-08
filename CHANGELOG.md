@@ -30,6 +30,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Credit balances that round up to a whole number no longer keep a trailing
+  ".0" (99.95 credits read as "100"), and huge magnitudes no longer gain a
+  bogus group separator.
 - Token, request, and point counts now use singular and plural forms in usage
   and cost summaries, while large counts keep their compact notation.
 - Corrected quota and plan labels, login actions, and settings wording across
