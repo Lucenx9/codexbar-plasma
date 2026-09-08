@@ -27,7 +27,9 @@ None
 
 <!-- List updated guides, examples, or screenshots. If none are affected, explain
 why the final behavior, setup, and contributor workflow still match the docs.
-Reconcile related issue progress; TODO.md is only a link to the work tracker. -->
+Reconcile TODO.md with delivered Linux/Plasma parity and CLI blockers. For an
+upstream release review, state the exact macOS/CLI versions and evidence; for
+other changes, update affected entries or explain why TODO is unaffected. -->
 
 - ...
 - Changelog: updated Unreleased, or explain why the change has no user-visible impact.
@@ -38,7 +40,7 @@ Reconcile related issue progress; TODO.md is only a link to the work tracker. --
 List each command or manual check and its result. Run `make check` before opening
 the pull request. If a check failed, was skipped, or was unavailable, say why.
 Summarize the dependent updates checked under docs/development.md#repository-maintenance
-and identify any unresolved inconsistency and its tracking issue.
+and identify any unresolved inconsistency and its TODO entry or tracking issue.
 After the latest push, record its commit and final CI results with run links.
 Keep this section current after fixes; pending checks mean delivery is pending.
 -->

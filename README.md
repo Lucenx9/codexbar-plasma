@@ -41,14 +41,14 @@ accent colors stay consistent across themes.
 Provider authentication and data support come from the CLI. The widget includes
 fallback metadata for all 69 providers in the official CodexBar 0.49.1 registry,
 rechecked against CLI 0.56.2. Available metrics and setup actions vary by provider.
-The proposed generic provider-settings descriptor is not available in CLI 0.56.2;
+The proposed generic provider-settings descriptor is not available in CLI 0.57.0;
 its additional editors remain unavailable.
 
 <!-- Web links to guides also work in the installed package, which omits those files. -->
 See the [usage and settings guide](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md)
 for options and defaults, the [documentation index](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/README.md)
-for verified CLI evidence, and [open issues](https://github.com/Lucenx9/codexbar-plasma/issues)
-for remaining work.
+for verified CLI evidence, and [Linux parity TODO](https://github.com/Lucenx9/codexbar-plasma/blob/main/TODO.md)
+for remaining Linux/Plasma work.
 
 ## Requirements
 
@@ -149,7 +149,7 @@ codexbar cost --format json --json-only
 The widget can display only data the CLI returns. Cost availability varies by
 provider; missing dollar amounts do not mean zero spend. If a feature is absent,
 check the [usage guide](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md)
-and [open issues](https://github.com/Lucenx9/codexbar-plasma/issues).
+and [Linux parity TODO](https://github.com/Lucenx9/codexbar-plasma/blob/main/TODO.md).
 
 ### Notifications do not appear
 

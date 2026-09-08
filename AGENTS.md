@@ -13,9 +13,9 @@ Here, plugin, widget, plasmoid, and applet all mean the Plasma frontend.
   contracts belong in the upstream `codexbar` CLI. Use supported CLI commands;
   never hand-edit its config JSON or add provider scraping/auth logic to QML.
 - Confirm data and actions in the released official Linux CLI before designing
-  UI around them. If the contract is missing, record the requirement in a
-  [repository issue](https://github.com/Lucenx9/codexbar-plasma/issues) and stop
-  that part at the frontend boundary.
+  UI around them. If the contract is missing, record the requirement in
+  [TODO.md](TODO.md) with the verified CLI version and stop that part at the
+  frontend boundary.
 - Prefer generic CLI-described fields and actions. Unknown providers and optional
   fields must degrade gracefully; static provider metadata is a tested fallback.
 
@@ -29,9 +29,13 @@ relevant sections; ordinary links here are on-demand reading, not bulk imports.
   schema, and nearest regression check before editing.
 - For feature behavior, provider changes, CLI contracts, or macOS parity, read
   the relevant [usage guide](docs/usage.md), contract/evidence links in the
-  [documentation index](docs/README.md), and related GitHub issues. Issues own
-  work status; maintained guides own behavior and decisions. [TODO.md](TODO.md)
-  is only an entry point, never a second status inventory.
+  [documentation index](docs/README.md), and [TODO.md](TODO.md). TODO owns the
+  remaining Linux/Plasma parity work; maintained guides own supported behavior.
+  Read linked issues for discussion, not a second parity inventory.
+- For a new official CodexBar release or a parity review, follow
+  [upstream release maintenance](docs/development.md#upstream-release-maintenance).
+  Update TODO without a user reminder, including releases since its last review.
+  Track only useful Linux/Plasma equivalents and their official CLI blockers.
 - For documentation changes, read the [documentation index](docs/README.md).
   For agent instructions, also read
   [instruction maintenance](docs/development.md#maintaining-agent-instructions).
@@ -138,9 +142,10 @@ or **macOS-only/non-goal**. Screenshots and Swift models are not CLI contracts.
 - For user-visible changes, update `CHANGELOG.md` under `Unreleased` in the same
   change. For release preparation or release tooling changes, follow
   [changelog and releases](docs/development.md#changelog-and-releases).
-- Own documentation and issue maintenance as part of every change, without a
-  user reminder. Before editing, identify affected guides and existing issues.
-  Before handoff, reconcile them with the final diff and completion criteria.
+- Own documentation and TODO maintenance as part of every change, without a
+  user reminder. Before editing, identify affected guides, TODO entries, and
+  related issues. Before handoff, reconcile them with the final diff. Remove
+  completed TODO work in the implementing PR; retain any unresolved scope.
   Follow [the maintenance workflow](docs/development.md#documentation-and-work-tracking),
   including for authorized direct commits to main. State documentation impact
   in the PR or commit body; use closing keywords only for fully completed work.

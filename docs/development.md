@@ -3,8 +3,8 @@
 Read the relevant sections before changing QML, JavaScript, configuration,
 tests, packaging, or runtime behavior. [AGENTS.md](../AGENTS.md) defines project
 boundaries and required checks. The [usage guide](usage.md) describes supported
-behavior; [GitHub Issues](https://github.com/Lucenx9/codexbar-plasma/issues) owns
-work status. All code paths below are relative to the repository root.
+behavior; [TODO.md](../TODO.md) owns remaining Linux/Plasma parity work. All code
+paths below are relative to the repository root.
 
 ## Work from a checkout
 
@@ -374,7 +374,7 @@ Group entries under Added, Changed, Deprecated, Removed, Fixed, or Security;
 include only categories with entries. Group related commits into one useful
 entry. Internal refactors, tests, and routine instruction edits need no entry
 unless they affect users or contributors' supported workflows; explain that
-decision in the PR or direct commit body. Issues continue to own future work.
+decision in the PR or direct commit body. TODO owns future Linux parity work.
 
 Before an authorized release:
 
@@ -407,7 +407,8 @@ in the same change, without waiting for the user to name each file.
 
 Before editing, trace the affected behavior through its callers, configuration,
 tests and fixtures, scripts, CI workflows, packaging and metadata, translations,
-documentation and examples, and related issues. Inspect the relevant files;
+documentation and examples, TODO entries, and related issues. Inspect the
+relevant files;
 filename searches alone do not establish whether a dependency is affected.
 
 Before delivery, review the final diff and search for old names, paths, commands,
@@ -418,66 +419,115 @@ preserve compatibility requirements and pinned historical evidence.
 
 Fix stale material discovered during the task when the correction is clear,
 safe, and within scope. If it needs a separate decision, external contract, or
-substantial unrelated work, record the evidence and remaining work in an existing
-or new issue under the publication rules in AGENTS.md. Report the exact blocker
-when issue publication is not authorized. Complete independent work and make any
-unresolved inconsistency explicit at handoff.
+substantial unrelated work, record the evidence and remaining work in TODO for
+Linux parity, or an existing/new issue for other work under the publication rules
+in AGENTS.md. Report the exact blocker when issue publication is not authorized.
+Complete independent work and make any unresolved inconsistency explicit at
+handoff.
 
 Completion requires consistent affected files, the applicable checks below, and
-accurate issue status after delivery. Passing tests alone does not establish
-consistency. In the PR verification section or direct commit body, summarize the
+accurate TODO and related issue status after delivery. Passing tests alone does
+not establish consistency. In the PR verification section or direct commit body, summarize the
 dependent updates and any unresolved gaps. Version and dependency changes need
 compatibility evidence; bump versions only as part of their actual update or
 release workflow. A date change alone is not maintenance.
 
 ## Documentation and work tracking
 
-These steps cover documentation and issues within
-[repository maintenance](#repository-maintenance), including direct commits
-authorized by the user. Do not wait for a separate documentation request.
+[TODO.md](../TODO.md) is the current list of useful Linux/Plasma gaps relative
+to the official macOS app. Keep implementable work separate from official CLI
+blockers and explicitly unverified candidates. Guides describe supported
+behavior. Issues can hold bug reports and discussion; a parity issue is a
+reference, not a second checklist to maintain. Existing issue links preserve
+context, and their migration alone does not complete the feature.
 
-1. Before editing, inspect the relevant current guides, pinned contract evidence,
-   and existing issues. Search before creating a work item. Each issue needs an
-   intended result, acceptance criteria, and any blocker with an exact version
-   or source. A migration or an older audit is not a fresh CLI verification.
-2. Reconcile the final diff with documentation. Update setup and requirements in
-   README, behavior/defaults in the usage guide, and contributor workflows here.
-   Keep technical contracts in their existing focused guides. Update affected
-   examples and screenshots, remove obsolete claims, and maintain the docs index.
-   For each changed behavior, identify its guide or explain why none is affected.
+For every repository change, including authorized direct commits:
+
+1. Read the relevant guides, TODO entries, pinned evidence, and linked discussion.
+   Compare the requested behavior with current code and its tests.
+2. Reconcile the final diff with those references. Update README for setup and
+   requirements, the usage guide for behavior/defaults, and this guide for
+   contributor workflows. Keep contracts in focused guides and maintain the
+   docs index. Remove completed TODO entries in the implementing PR; retain
+   remaining scope when delivery is partial. A documentation-only gap review
+   does not count as implementation.
 3. Run `make check` and applicable example/package checks. Inspect documented
-   commands against their implementation. Mechanical checks catch broken paths,
-   indexing, and budgets; the agent must also review whether the prose is true.
-   Record documentation impact and verification in the PR. For a direct commit,
-   record them in its body and reconcile issue status after the push.
-4. Use `Closes #123` in a PR description or direct commit message only when every
-   acceptance criterion is met. For partial work, use `Refs #123` and update the
-   issue's remaining work and blockers. Confirm closure after delivery; creating
-   an issue or documenting a gap does not complete it. TODO.md remains a small
-   entry point without copied issue status or checkboxes.
+   commands against their implementation. Review prose for accuracy as well as
+   broken paths. Record documentation and TODO impact in the PR or direct
+   commit body, including why no update is needed when they are unaffected.
+4. Reconcile related issues after authorized delivery. Use `Closes #123` only
+   when all acceptance criteria are met. For partial work use `Refs #123`.
+   Keep implementation status in TODO; do not create an issue for every gap.
 
-Keep proposal status visible inside the document: proposed, implemented, or
-superseded, with the exact verified contract and a tracker link where relevant.
-Examples in a proposal must be identified as proposed commands. Dated audits
-retain their original findings; add a successor link when a new audit replaces
-them. Link current behavior separately so historical recommendations are not
-mistaken for unfinished tasks.
-
-During a new official CLI audit, recheck `blocked-upstream` issues against that
-release. During release preparation, check setup, requirements, defaults, and
-changed features against current guides. Record actual checks rather than
-updating a date to imply verification. Keep task status in GitHub Issues and
-update the canonical explanation rather than copying it into several documents.
+Keep proposal status visible inside each contract document, with exact verified
+versions. Dated audits retain their findings; a successor names the evidence it
+replaces. Current guides describe delivered behavior. During widget release
+preparation, verify setup, requirements, defaults, and changed features against
+those guides and TODO. Updating a date alone is not maintenance.
 
 This follows [Google's documentation practices](https://google.github.io/styleguide/docguide/best_practices.html)
 and [docs as code](https://www.writethedocs.org/guide/docs-as-code/).
 [GitHub's closing-keyword rules](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue)
-apply when the change reaches the default branch. Projects are optional views
-of issues; this repository does not require a separate manually maintained board.
+apply when a change reaches the default branch.
+
+## Upstream release maintenance
+
+On every new stable official CodexBar release, the agent updates TODO without
+waiting for a user reminder. Apply the same process during an explicit parity
+review. The daily agent monitor detects releases; these repository instructions
+define the review. Instructions alone do not schedule execution.
+
+1. Read TODO from the current default branch and check for an existing parity
+   update PR. Read the official [release history](https://github.com/steipete/CodexBar/releases)
+   through the newest stable release, including every release since the last
+   reviewed version. Record exact tags/commits and dates. Ignore prereleases
+   unless the user requests them. If nothing changed and no verification is
+   pending, finish without a commit or notification.
+2. Compare Linux-relevant changes with current Plasma code, schema, tests, and
+   existing guides. Include fixes and changed contracts, not only new features.
+   Recheck carried-forward blockers against official Linux CLI changes. Compare
+   TODO with unresolved findings in pinned audits and linked issues too; a prior
+   tracker migration may be incomplete. Retain unresolved older gaps even when
+   release notes do not mention them.
+3. Classify each gap as implementable with the official Linux CLI, blocked on a
+   named official contract, or excluded as macOS-only/not useful on Plasma.
+   Keep only the first two in the actionable inventory. An unverified candidate
+   stays in a separate verification section until there is enough evidence.
+   For a blocker, state the missing field/action and the version last verified.
+   A Swift view model or source declaration alone does not prove emitted Linux
+   output. Keep auth, config parsing, provider fetching, and upstream edits out
+   of the frontend task.
+4. Probe changed contracts with a checksum-verified official Linux release asset
+   in an isolated temporary account and cache, using synthetic inputs. Keep
+   host credentials and provider files inaccessible, pass no credential
+   environment, and do not replace the installed CLI. If an asset, tool, or
+   account-free reproduction is unavailable, record the exact limitation. Keep
+   the release reviewed separate from the last verified CLI contract, and never
+   advance a full-audit baseline on the strength of a partial probe.
+5. Update TODO in the same PR: add new gaps with evidence and a concrete done
+   condition, remove already implemented ones, and revise resolved blockers.
+   Keep TODO short enough to scan; link substantial reusable evidence in a
+   dated research note and index it. Leave completed behavior in the guides and
+   Git history. Preserve historical evidence, and update maintained claims that
+   the new evidence supersedes.
+6. Review the diff, run required checks, and open or update one Conventional
+   Commit PR for the review. Follow its latest CI through completion under
+   [delivery and CI](#delivery-and-ci). A scheduled review authorizes the TODO
+   and documentation PR, not feature implementation or automatic merge.
+   Reuse an existing update PR and report only a new release, meaningful result,
+   failure, or required user action. Retry unresolved verification on later runs
+   without opening duplicate PRs or repeating unchanged notifications.
+
+A missed scheduled run must catch up from TODO's recorded version. A failed
+fetch leaves that version unchanged. Report incomplete release coverage
+explicitly and keep the last fully reviewed release as the next run's starting
+point. For a partially verified contract, retain its earlier verified version.
+The monitor runs through the local Codex scheduler; it needs this machine and
+Codex available. Check the saved automation when changing its cadence or scope.
 
 ## Maintaining agent instructions
 
-Keep permanent rules in AGENTS.md and work status in GitHub Issues. Add a rule for
+Keep permanent rules in AGENTS.md and Linux parity status in TODO. Add a rule for
 an observed failure or repeated friction. Put task-specific details in the
 relevant section of this guide and add a root pointer stating when to read it.
 Maintain links and the [documentation index](README.md) in the same change.

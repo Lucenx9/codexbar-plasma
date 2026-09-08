@@ -4,8 +4,8 @@ See the [README](../README.md#install) for installation and first setup. This
 guide covers display options, provider setup, history, notifications, and
 defaults. Available data and actions depend on the selected official CLI.
 The [documentation index](README.md) links the full CLI 0.56.2 audit and later
-scoped evidence. [GitHub Issues](https://github.com/Lucenx9/codexbar-plasma/issues)
-tracks remaining work and upstream contract requirements.
+scoped evidence. [TODO.md](../TODO.md) tracks remaining Linux/Plasma parity
+work and upstream contract requirements.
 
 ## Panel and popup
 
