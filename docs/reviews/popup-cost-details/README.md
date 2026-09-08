@@ -49,3 +49,16 @@ Validation used the repository's pinned KDE neon CI image: strict `make check`
 install/upgrade. All 36 popup smoke scenarios passed; the three affected
 scenarios passed again after the hover refinement. The runtime harness checks
 QML errors and isolates the preview from the host desktop and real accounts.
+
+The review follow-up preserves a pinned day across background refreshes and
+remaps it by date when chart positions change. A missing or ambiguous date
+clears the pin. Provider, account, and history range changes clear both the pin
+and expanded details, even when they reuse the same cached cost data. Metric
+changes clear the pin while preserving explicitly expanded period details.
+The chart's index clamp cannot replace the saved day during reconciliation.
+
+Follow-up validation: strict `make check` passed with 752 Qt checks and 29
+Python tests, no skips. Packaging and isolated package install/upgrade passed.
+Both `popup-cost-details` and `popup-cost-tokens` smoke scenarios passed with
+new refresh, reordering, removed-day, cached-account, and range regressions.
+The identical-refresh regression failed on the previous implementation.

@@ -297,6 +297,33 @@ function selectedCostDay(daily, points, activeIndex) {
     return daily[sourceIndex] || null
 }
 
+function uniqueCostDayIndex(points, label) {
+    var found = -1
+    for (var i = 0; i < points.length; i++) {
+        if (points[i] && points[i].label === label) {
+            if (found !== -1) {
+                return -1
+            }
+            found = i
+        }
+    }
+    return found
+}
+
+function costDayIndexAfterRefresh(previousPoints, selectedIndex, points) {
+    if (!Array.isArray(previousPoints) || !Array.isArray(points)
+            || typeof selectedIndex !== "number" || selectedIndex !== Math.floor(selectedIndex)
+            || selectedIndex < 0 || selectedIndex >= previousPoints.length) {
+        return -1
+    }
+    var previous = previousPoints[selectedIndex]
+    if (!previous || typeof previous.label !== "string" || previous.label.length === 0
+            || uniqueCostDayIndex(previousPoints, previous.label) !== selectedIndex) {
+        return -1
+    }
+    return uniqueCostDayIndex(points, previous.label)
+}
+
 // The newest plotted point, as a label and an already-formatted value. Returns
 // null when there is nothing to summarise; the caller joins the two words.
 function sparklineSummary(fmt, points, showsTokens) {

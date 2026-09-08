@@ -12,11 +12,18 @@ ColumnLayout {
     required property var providerData
     property bool presentationVisible: false
     property bool detailsExpanded: false
-    readonly property string selectionScope: providerData ? providerData.provider + "|" + providerData.account + "|" + (tokenCost ? tokenCost.historyDays : 0) : ""
+    property var daySelectionMemo: ({ points: [], index: -1 })
+    readonly property bool costHistoryShowsTokens: applet.costHistoryShowsTokens
+    readonly property string selectionScope: providerData ? JSON.stringify([providerData.provider, providerData.account,
+        tokenCost ? tokenCost.historyDays : 0]) : ""
     readonly property var selectedDay: CostPresentation.selectedCostDay(tokenCost ? tokenCost.daily : [], chartPoints, costChart.selectedIndex)
     readonly property bool hasVisibleDetails: detailsExpanded || selectedDay !== null
 
-    onSelectionScopeChanged: detailsExpanded = false
+    onSelectionScopeChanged: {
+        detailsExpanded = false;
+        clearDaySelection();
+    }
+    onCostHistoryShowsTokensChanged: clearDaySelection()
 
     function amountText(amounts, mode) {
         return CostPresentation.hasMetricValue(amounts, false) ? applet.qualifiedCostValue(applet.amountString(amounts.cost, amounts.currency), mode) : i18n("Cost unavailable");
@@ -33,7 +40,24 @@ ColumnLayout {
     }
 
     function clearDaySelection() {
+        if (!costChart)
+            return;
+        daySelectionMemo = { points: costChart.points, index: -1 };
         costChart.selectedIndex = -1;
+        costChart.hoveredIndex = -1;
+    }
+
+    function rememberDaySelection() {
+        // Ignore the chart's index clamp while a new points array is awaiting reconciliation.
+        if (daySelectionMemo.points === costChart.points)
+            daySelectionMemo = { points: costChart.points, index: costChart.selectedIndex };
+    }
+
+    function reconcileDaySelection() {
+        var points = costChart.points;
+        var index = CostPresentation.costDayIndexAfterRefresh(daySelectionMemo.points, daySelectionMemo.index, points);
+        daySelectionMemo = { points: points, index: index };
+        costChart.selectedIndex = index;
         costChart.hoveredIndex = -1;
     }
 
@@ -76,7 +100,7 @@ ColumnLayout {
                     value: "tokens"
                 }
             ]
-            currentIndex: tokenCostSection.applet.costHistoryShowsTokens ? 1 : 0
+            currentIndex: tokenCostSection.costHistoryShowsTokens ? 1 : 0
             Accessible.name: i18n("History metric")
             onActivated: function (index) {
                 tokenCostSection.applet.setCostHistoryMetric(valueAt(index));
@@ -154,7 +178,8 @@ ColumnLayout {
     Components.InteractiveChart {
         id: costChart
         objectName: "providerCostChart"
-        onPointsChanged: tokenCostSection.clearDaySelection()
+        onPointsChanged: tokenCostSection.reconcileDaySelection()
+        onSelectedIndexChanged: tokenCostSection.rememberDaySelection()
         readonly property var tokenCost: tokenCostSection.tokenCost
         readonly property var providerData: tokenCostSection.providerData
 
@@ -163,7 +188,7 @@ ColumnLayout {
         points: tokenCostSection.chartPoints
         accent: applet.providerReadableColor(providerData ? providerData.provider : "")
         kind: "bar"
-        accessibleTitle: applet.costHistoryShowsTokens ? i18n("Daily token history") : i18n("Daily cost history")
+        accessibleTitle: tokenCostSection.costHistoryShowsTokens ? i18n("Daily token history") : i18n("Daily cost history")
         Layout.topMargin: Kirigami.Units.smallSpacing / 2
     }
 

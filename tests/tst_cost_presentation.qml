@@ -5,6 +5,37 @@ import "../contents/ui/CostPresentation.js" as CostPresentation
 TestCase {
     name: "CostPresentation"
 
+    function test_costDayIndexAfterRefresh_data() {
+        var first = { label: "2026-09-01", sourceIndex: 0 }
+        var second = { label: "2026-09-02", sourceIndex: 1 }
+        return [
+            { tag: "same-days-new-objects", previous: [first, second], index: 1,
+                next: [{ label: first.label }, { label: second.label }], expected: 1 },
+            { tag: "day-moved", previous: [first, second], index: 1,
+                next: [second, first], expected: 0 },
+            { tag: "earlier-day-removed", previous: [first, second], index: 1,
+                next: [second], expected: 0 },
+            { tag: "selected-day-removed", previous: [first, second], index: 0,
+                next: [second], expected: -1 },
+            { tag: "no-selection", previous: [first], index: -1, next: [first], expected: -1 },
+            { tag: "empty-refresh", previous: [first], index: 0, next: [], expected: -1 },
+            { tag: "missing-date", previous: [{}], index: 0, next: [{}], expected: -1 },
+            { tag: "duplicate-date", previous: [first], index: 0, next: [first, first], expected: -1 },
+            { tag: "ambiguous-old-date", previous: [first, first], index: 0, next: [first], expected: -1 },
+            { tag: "invalid-index", previous: [first], index: 0.5, next: [first], expected: -1 },
+            { tag: "string-index", previous: [first], index: "0", next: [first], expected: -1 },
+            { tag: "out-of-range", previous: [first], index: 1, next: [first], expected: -1 },
+            { tag: "missing-old-points", previous: null, index: 0, next: [first], expected: -1 },
+            { tag: "missing-new-points", previous: [first], index: 0, next: null, expected: -1 },
+            { tag: "null-point", previous: [null], index: 0, next: [first], expected: -1 },
+            { tag: "non-text-date", previous: [{ label: 1 }], index: 0, next: [{ label: 1 }], expected: -1 }
+        ]
+    }
+
+    function test_costDayIndexAfterRefresh(data) {
+        compare(CostPresentation.costDayIndexAfterRefresh(data.previous, data.index, data.next), data.expected)
+    }
+
     function test_selectedCostDayUsesSourceRowAfterUnavailableAmountsAreSkipped() {
         var daily = [
             { label: "2026-09-01", cost: null, tokens: 3, models: [{label: "First"}] },

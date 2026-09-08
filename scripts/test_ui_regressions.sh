@@ -1767,11 +1767,16 @@ for fragment in (
     "property bool detailsExpanded: false",
     "CostPresentation.selectedCostDay(",
     "chartPoints, costChart.selectedIndex)",
-    "onPointsChanged: tokenCostSection.clearDaySelection()",
+    "onPointsChanged: tokenCostSection.reconcileDaySelection()",
+    "onSelectedIndexChanged: tokenCostSection.rememberDaySelection()",
+    "CostPresentation.costDayIndexAfterRefresh(",
+    "onCostHistoryShowsTokensChanged: clearDaySelection()",
     "applet.setCostHistoryMetric(valueAt(index))",
 ):
     if fragment not in token_cost_section_body:
         raise AssertionError(f"provider cost selection is missing {fragment!r}")
+if not re.search(r"onSelectionScopeChanged:\s*\{\s*detailsExpanded = false;\s*clearDaySelection\(\);", token_cost_section_body):
+    raise AssertionError("provider cost scope changes must clear expanded details and the pinned day")
 for collapsed_id in ("costDrillDownSection", "costHistoryChartSection"):
     if "Components.CostTrustNotice" in applet.id_block(collapsed_id):
         raise AssertionError("cost trust notices must remain outside collapsed details")

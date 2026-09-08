@@ -14,6 +14,9 @@ Item {
     property bool navigationVerified: false
     property int costDetailsStep: 0
     property var costSnapshot: null
+    property var costSelectionProviderMemo: null
+    property var costSelectionPointsMemo: null
+    property string costSelectionDayMemo: ""
     property int localizationStep: 0
     property var panelUsageSnapshot
     property var compactPanelItem
@@ -334,6 +337,8 @@ Item {
         var toggle = findItem(section, "costDetailsToggle");
         if (!section || !chart || !details || !toggle || !section.tokenCost)
             return false;
+        if (costDetailsStep >= 8)
+            return verifyCostSelectionRefresh(section, chart, details);
         if (costDetailsStep === 0) {
             verifyScenario(!details.visible && !section.detailsExpanded, "provider details must start collapsed");
             chart.hoveredIndex = 0;
@@ -390,6 +395,12 @@ Item {
         if (costDetailsStep === 6) {
             verifyScenario(section.detailsExpanded && details.visible && details.modelRows.length === 3,
                 "expanded period details must retain all period models");
+            var originalMetricIndex = applet.costHistoryShowsTokens ? 1 : 0;
+            var metricCombo = findItem(section, "providerCostMetricCombo");
+            metricCombo.activated(1 - originalMetricIndex);
+            verifyScenario(section.detailsExpanded && details.visible,
+                "metric change collapsed explicitly expanded period details");
+            metricCombo.activated(originalMetricIndex);
             toggle.clicked();
             chart.moveSelection(-1);
             costDetailsStep = 7;
@@ -401,7 +412,89 @@ Item {
             "selected model amounts differ from the daily contract");
         verifyScenario(applet.tokenCosts === costSnapshot && !applet.costLoading,
             "day selection or expansion reloaded cost history");
-        return true;
+        costDetailsStep = 8;
+        return false;
+    }
+
+    function replaceCostSelectionProvider(providerData) {
+        applet.providers = applet.providers.map(function(item) {
+            return item.provider === providerData.provider ? providerData : item;
+        });
+    }
+
+    function verifyCostSelectionRefresh(section, chart, details) {
+        verifyScenario(applet.tokenCosts === costSnapshot && !applet.costLoading,
+            "selection reconciliation fetched cost data");
+        var next;
+        switch (costDetailsStep) {
+        case 8:
+            costSelectionProviderMemo = section.providerData;
+            costSelectionDayMemo = section.selectedDay.label;
+            replaceCostSelectionProvider(JSON.parse(JSON.stringify(section.providerData)));
+            break;
+        case 9:
+            verifyScenario(details.visible && section.selectedDay.label === costSelectionDayMemo,
+                "identical background refresh cleared the pinned day");
+            next = JSON.parse(JSON.stringify(section.providerData));
+            next.tokenCost.daily = [next.tokenCost.daily[next.tokenCost.daily.length - 1], next.tokenCost.daily[0]];
+            next.tokenCost.daily[0].tokens++;
+            replaceCostSelectionProvider(next);
+            break;
+        case 10:
+            verifyScenario(details.visible && chart.selectedIndex === 0
+                && section.selectedDay.label === costSelectionDayMemo,
+                "shrinking history lost the pinned day or clamped to another day");
+            verifyScenario(section.selectedDay.tokens === costSelectionProviderMemo.tokenCost.daily[
+                costSelectionProviderMemo.tokenCost.daily.length - 1].tokens + 1,
+                "pinned details retained stale amounts after refresh");
+            next = JSON.parse(JSON.stringify(costSelectionProviderMemo));
+            replaceCostSelectionProvider(next);
+            break;
+        case 11:
+            verifyScenario(details.visible && chart.selectedIndex === chart.points.length - 1
+                && section.selectedDay.label === costSelectionDayMemo,
+                "reordered history replaced the pinned day");
+            next = JSON.parse(JSON.stringify(section.providerData));
+            next.tokenCost.daily.pop();
+            replaceCostSelectionProvider(next);
+            break;
+        case 12:
+            verifyScenario(section.selectedDay === null && chart.selectedIndex === -1 && !details.visible,
+                "a day outside the new window remained pinned");
+            replaceCostSelectionProvider(costSelectionProviderMemo);
+            chart.moveSelection(-1);
+            section.detailsExpanded = true;
+            chart.hoveredIndex = 0;
+            costSelectionPointsMemo = chart.points;
+            next = applet.copyObject(section.providerData);
+            next.account = "another-synthetic-account";
+            replaceCostSelectionProvider(next);
+            break;
+        case 13:
+            verifyScenario(chart.points === costSelectionPointsMemo && chart.selectedIndex === -1
+                && chart.hoveredIndex === -1 && section.selectedDay === null
+                && !section.detailsExpanded && !details.visible,
+                "account change retained details for the same cached cost snapshot");
+            replaceCostSelectionProvider(costSelectionProviderMemo);
+            chart.moveSelection(-1);
+            next = JSON.parse(JSON.stringify(section.providerData));
+            next.tokenCost.historyDays = 7;
+            replaceCostSelectionProvider(next);
+            break;
+        case 14:
+            verifyScenario(section.selectedDay === null && chart.selectedIndex === -1 && !details.visible,
+                "history range change retained the previous selection");
+            replaceCostSelectionProvider(costSelectionProviderMemo);
+            chart.moveSelection(-1);
+            break;
+        default:
+            verifyScenario(details.visible && section.selectedDay.label === costSelectionDayMemo
+                && details.modelRows[0].label === "Example reasoning model",
+                "selection did not recover after scope changes");
+            return true;
+        }
+        costDetailsStep++;
+        return false;
     }
 
     function scenarioReady() {
