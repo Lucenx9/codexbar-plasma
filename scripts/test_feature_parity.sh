@@ -24,7 +24,6 @@ SPEND_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/SpendView.qml"
 USAGE_DETAILS_JS="${ROOT_DIR}/contents/ui/UsageDetails.js"
 README_MD="${ROOT_DIR}/README.md"
 TODO_MD="${ROOT_DIR}/TODO.md"
-AGENTS_MD="${ROOT_DIR}/AGENTS.md"
 CONFIG_XML="${ROOT_DIR}/contents/config/main.xml"
 CONFIG_QML="${ROOT_DIR}/contents/config/config.qml"
 MAKEFILE="${ROOT_DIR}/Makefile"
@@ -697,7 +696,6 @@ require_in_file "$TODO_MD" "all 69 provider IDs"
 # shellcheck disable=SC2016 # Match the literal Markdown code span.
 require_in_file "$README_MD" '`usage.details` contract'
 require_in_file "$README_MD" "all 69 providers"
-require_in_file "$AGENTS_MD" "69 provider IDs released in CodexBar v0.49.1"
 require_in_file "$README_MD" "systemctl --user restart plasma-plasmashell.service"
 require_in_file "$README_MD" "codexbar usage --provider codex --all-accounts --format json --json-only"
 

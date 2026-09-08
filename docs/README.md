@@ -6,6 +6,9 @@ Every file under `docs/` is listed below so new material has an explicit purpose
 
 ## Maintained references
 
+- [Development](development.md): QML ownership, regression checks, runtime
+  verification, and maintenance of agent instructions. Read before code or
+  tooling changes; feature status remains in TODO.
 - [Provider settings descriptor](cli-provider-settings-descriptor.md): proposed
   upstream CLI contract for generic settings. It is not a shipped contract.
 - [Cost history](cost-history.md): daily model data, selection behavior, and

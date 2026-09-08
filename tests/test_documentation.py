@@ -20,6 +20,12 @@ def local_links(document):
 
 
 class DocumentationTests(unittest.TestCase):
+    def test_root_agent_instructions_fit_repository_budget(self):
+        self.assertLessEqual(
+            (ROOT / "AGENTS.md").stat().st_size, 16 * 1024,
+            "Keep AGENTS.md within 16 KiB; move task-specific detail behind conditional document links.",
+        )
+
     def test_every_documentation_file_is_indexed(self):
         index = DOCS / "README.md"
         indexed = {path for path in local_links(index) if path.is_relative_to(DOCS)}
