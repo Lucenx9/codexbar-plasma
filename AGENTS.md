@@ -112,6 +112,20 @@ Use this order when sources disagree:
 - When a parity decision changes, update `TODO.md` and the mirror below in the
   same change so future agents do not revive a rejected port or obsolete gap.
 
+## Documentation hygiene
+
+- Keep maintained guides, CLI contracts, and lasting decisions in `docs/`.
+  List every document and image in `docs/README.md` with its purpose.
+- Write temporary screenshots, logs, probe output, plans, and agent review
+  reports to ignored `dist/review/` or the OS temp directory. Summarize results
+  in the PR; promote only reusable findings into maintained documentation.
+- When replacing documentation, remove obsolete files and update their links.
+  Preserve pinned CLI evidence and unresolved decisions; completed review
+  histories and old captures remain recoverable through Git history.
+- Before committing docs, run the documentation tests included in `make check`.
+  They reject unindexed files, retired artifact directories, and broken local
+  Markdown links. Keep current README screenshots synthetic.
+
 ## CLI and data safety
 
 - Treat CLI stdout, stderr, descriptors, cached payloads, labels, URLs, and

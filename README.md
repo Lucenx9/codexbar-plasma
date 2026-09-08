@@ -487,6 +487,10 @@ docs/
 scripts/
 ```
 
+See the [documentation index](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/README.md) for maintained guides, CLI
+evidence, and product screenshots. Temporary review artifacts belong in
+ignored `dist/review/` or the OS temp directory.
+
 Provider support stays upstream in CodexBar. When the Plasma frontend needs new
 data, add it to the CLI JSON contract first instead of scraping or editing
 CodexBar config files directly from QML.
