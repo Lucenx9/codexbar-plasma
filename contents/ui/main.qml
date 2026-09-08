@@ -3516,6 +3516,19 @@ PlasmoidItem {
         return PanelDisplay.rowForMode(switcherCandidateRows(item), mode, panelQuotaLane)
     }
 
+    function panelMeterRows(item) {
+        return PanelDisplay.meterRows(switcherCandidateRows(item), panelQuotaLane)
+    }
+
+    function panelMeterDescription(item) {
+        return panelMeterRows(item).map(function(row) {
+            var text = i18n("%1: %2% %3", row.label, Math.round(displayPercent(row)),
+                usageBarsShowUsed ? i18n("used") : i18n("left"))
+            var reset = resetTextForRow(row)
+            return reset.length > 0 ? i18n("%1 - %2", text, reset) : text
+        }).join(". ")
+    }
+
     function switcherMetricRow(item) {
         // Popup tabs retain their automatic quota independently of panel settings.
         return PanelDisplay.rowForMode(switcherCandidateRows(item), "percent")
@@ -3853,8 +3866,8 @@ PlasmoidItem {
 
         var result = []
         for (var i = 0; i < providers.length && result.length < 4; i++) {
-            var row = panelDisplayRow(providers[i], "percent")
-            if (row && PanelRules.matches(panelVisibilityRules.meters, row, panelClockMs)) {
+            var rows = panelMeterRows(providers[i])
+            if (PanelRules.matchesAny(panelVisibilityRules.meters, rows, panelClockMs)) {
                 result.push(providerPresentation(providers[i]))
             }
         }
@@ -3895,14 +3908,12 @@ PlasmoidItem {
             if (!item) {
                 continue
             }
-            // Vertical panels collapse to a bare icon, so the tooltip is the only
-            // incident surface there; never drop status just because usage exists.
+            // Keep incidents in the tooltip even when quota meters are available.
             var incident = item.hasIncident && item.status.length > 0 ? item.status : ""
-            var row = panelDisplayRow(item, "percent")
-            var percent = row ? displayPercent(row) : -1
+            var description = panelMeterDescription(item)
             var line = ""
-            if (percent >= 0) {
-                line = i18n("%1: %2% %3", item.title, Math.round(percent), percentSuffix())
+            if (description.length > 0) {
+                line = i18n("%1: %2", item.title, description)
                 if (incident.length > 0) {
                     line = i18n("%1 - %2", line, incident)
                 }

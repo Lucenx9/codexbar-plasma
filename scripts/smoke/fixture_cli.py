@@ -15,6 +15,7 @@ SCENARIOS += ("settings-general", "settings-panel", "settings-popup", "settings-
 SCENARIOS += ("readme-overview", "readme-spend", "readme-sessions", "readme-codex")
 SCENARIOS += ("readme-panel-standard", "readme-panel-minimal")
 SCENARIOS += ("panel-default", "panel-default-single")
+SCENARIOS += ("panel-vertical", "panel-vertical-minimal", "panel-small", "panel-dual-edge")
 SCENARIOS += ("popup-cost-details", "popup-cost-tokens")
 SCENARIOS += ("popup-cost-missing-tokens", "popup-cost-partial-models")
 SCENARIOS += ("popup-content", "refresh-on-open", "privacy-provider", "privacy-spend", "privacy-sessions")
@@ -46,6 +47,11 @@ def usage(provider, scenario, now):
         snapshot["usage"]["primary"]["usedPercent"] = {"codex": 43, "claude": 68, "gemini": 24}[provider]
         snapshot["usage"]["secondary"]["usedPercent"] = {"codex": 28, "claude": 36, "gemini": 12}[provider]
         snapshot["usage"]["primary"]["resetsAt"] = (now + timedelta(hours=2, minutes=35)).isoformat()
+    if scenario == "panel-dual-edge":
+        if provider == "codex":
+            snapshot["usage"]["secondary"]["usedPercent"] = 100
+        else:
+            del snapshot["usage"]["secondary"]
     if scenario.startswith("provider-header"):
         snapshot["status"] = {"indicator": "minor", "description": "Synthetic service degradation"}
     if scenario == "legacy-dashboard":

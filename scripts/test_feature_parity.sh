@@ -636,7 +636,7 @@ require_in_surface applet "PanelDisplay.safeLane(Plasmoid.configuration.panelQuo
 require_in_surface applet "PanelRules.normalizedRules(Plasmoid.configuration.panelVisibilityRules)"
 require_in_surface applet "PanelDisplay.rowForMode(switcherCandidateRows(item), mode, panelQuotaLane)"
 require_in_surface applet "PanelRules.matches(panelVisibilityRules.text, row, panelClockMs)"
-require_in_surface applet "PanelRules.matches(panelVisibilityRules.meters, row, panelClockMs)"
+require_in_surface applet "PanelRules.matchesAny(panelVisibilityRules.meters, rows, panelClockMs)"
 require_in_surface panel "property string cfg_panelQuotaLane"
 require_in_surface panel "property string cfg_panelVisibilityRules"
 require_in_surface panel "PanelRules.updatedRules(cfg_panelVisibilityRules, elementID, patch)"

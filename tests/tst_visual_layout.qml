@@ -17,6 +17,9 @@ TestCase {
         property bool verticalFormFactor: false
         property bool minimalPanel: false
         property bool quotaWarning: false
+        property bool dualQuota: true
+        property real firstQuota: 57
+        property bool secondaryWarning: false
         property bool loading: false
         property bool expanded: false
         property bool privacyMode: false
@@ -100,7 +103,7 @@ TestCase {
                 {
                     provider: "codex",
                     title: "Codex",
-                    value: 57
+                    value: firstQuota
                 },
                 {
                     provider: "claude",
@@ -143,14 +146,20 @@ TestCase {
         function panelDisplayRow(item, mode) {
             return item;
         }
+        function panelMeterRows(item) {
+            return dualQuota ? [item, {value: 70}] : [item];
+        }
+        function panelMeterDescription(item) {
+            return "Primary: " + item.value + "% used. Secondary: 70% used";
+        }
         function displayPercent(row) {
             return row.value;
         }
         function quotaMeterColor(item, accent) {
-            return quotaWarning ? Qt.rgba(1, 0.5, 0, 1) : accent;
+            return quotaWarning || (secondaryWarning && item.value === 70) ? Qt.rgba(1, 0.5, 0, 1) : accent;
         }
-        function quotaSeverity() {
-            return quotaWarning ? "major" : "";
+        function quotaSeverity(item) {
+            return quotaWarning || (secondaryWarning && item.value === 70) ? "major" : "";
         }
         function withAlpha(c, a) {
             return Qt.rgba(c.r, c.g, c.b, a);
@@ -205,6 +214,9 @@ TestCase {
     }
 
     function init() {
+        applet.dualQuota = true;
+        applet.firstQuota = 57;
+        applet.secondaryWarning = false;
         applet.minimalPanel = false;
         applet.quotaWarning = false;
         applet.verticalFormFactor = false;
@@ -232,7 +244,7 @@ TestCase {
         var brandColor = icon.color.toString();
         applet.minimalPanel = true;
         tryCompare(panel, "minimalStyle", true);
-        verify(panel.meterBarHeight <= standardBarHeight);
+        compare(panel.meterBarHeight, standardBarHeight);
         verify(panel.meterIconSize <= 22);
         verify(panel.meterWidth >= 36);
         verify(icon.isMask);
@@ -277,7 +289,37 @@ TestCase {
         var fill = findItem(meter, item => item.objectName === "panelMeterFill");
         verify(track !== null && fill !== null);
         tryCompare(fill, "width", 0);
-        compare(track.color, Qt.rgba(1, 0.5, 0, 0.28));
+        compare(track.color, Qt.rgba(1, 0.5, 0, 0.32));
+    }
+
+    function test_capsulesKeepGeometryAndAccurateSmallFills() {
+        var panel = createControl("CompactRepresentation", {applet: applet, height: 32});
+        if (!panel) return;
+        wait(0);
+        var meter = findItem(panel, item => item.modelData && item.modelData.provider === "codex");
+        var icon = findItem(meter, item => item.objectName === "panelProviderIcon");
+        var track = findItem(meter, item => item.objectName === "panelMeterTrack");
+        var fill = findItem(track, item => item.objectName === "panelMeterFill");
+        verify(icon.mapToItem(meter, icon.width, 0).x < track.mapToItem(meter, 0, 0).x);
+        verify(Math.abs(fill.width / track.width - 0.57) < 0.01);
+        applet.firstQuota = 1;
+        wait(0);
+        meter = findItem(panel, item => item.modelData && item.modelData.provider === "codex");
+        track = findItem(meter, item => item.objectName === "panelMeterTrack");
+        fill = findItem(track, item => item.objectName === "panelMeterFill");
+        tryVerify(() => Math.abs(fill.width / track.width - 0.01) < 0.001);
+        applet.secondaryWarning = true;
+        wait(0);
+        verify(fill.color.toString() !== "#ff8000");
+        var warning = findItem(meter, item => item.objectName === "panelMeterFill" && item.color.toString() === "#ff8000");
+        verify(warning !== null);
+        var width = panel.width;
+        applet.dualQuota = false;
+        wait(0);
+        compare(panel.width, width);
+        track = findItem(meter, item => item.objectName === "panelMeterTrack");
+        tryVerify(() => Math.abs(track.mapToItem(meter, 0, track.height / 2).y - meter.height / 2) < 1);
+        verify(meter.Accessible.description.indexOf("Primary") >= 0);
     }
 
     function test_sessionFeedbackKeepsHeadingAtTop_data() {
@@ -443,21 +485,28 @@ TestCase {
         return [{tag: "standard", minimal: false}, {tag: "minimal", minimal: true}];
     }
 
-    function test_minimalVerticalPanelKeepsIdentityAndIncident() {
+    function test_minimalVerticalPanelKeepsMetersAndIncident_data() {
+        return [{tag: "small", extent: 32}, {tag: "normal", extent: 44}, {tag: "wide", extent: 60}];
+    }
+
+    function test_minimalVerticalPanelKeepsMetersAndIncident(data) {
         applet.minimalPanel = true;
         applet.verticalFormFactor = true;
-        var panel = createControl("CompactRepresentation", {applet: applet, height: 44});
+        var panel = createControl("CompactRepresentation", {applet: applet, width: data.extent});
         if (!panel)
             return;
         wait(0);
-        compare(panel.width, panel.compactExtent);
-        verify(panel.showPrimaryIdentity);
+        verify(panel.height > 44);
+        verify(!panel.showPrimaryIdentity);
         var dot = findItem(panel, item => item.visible && item.color !== undefined
             && item.color.toString() === "#ff8000");
         verify(dot !== null);
         compare(dot.width, dot.height);
         var meter = findItem(panel, item => item.activeFocusOnTab && typeof item.activate === "function");
-        verify(meter === null || !meter.visible);
+        verify(meter !== null && meter.visible);
+        var track = findItem(meter, item => item.objectName === "panelMeterTrack");
+        verify(track.width > 0);
+        verify(track.mapToItem(panel, track.width, 0).x <= panel.width);
     }
 
     function test_providerMetersSupportKeyboardAndPointer(data) {

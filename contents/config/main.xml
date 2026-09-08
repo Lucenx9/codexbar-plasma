@@ -176,7 +176,7 @@
       <default>identity,status,text,meters</default>
     </entry>
     <entry name="panelQuotaLane" type="String">
-      <label>Quota shown in panel text and meters: auto, primary, secondary, or tertiary.</label>
+      <label>Panel quota: auto shows primary and secondary meters with automatic text; explicit lanes show one quota.</label>
       <default>auto</default>
     </entry>
     <entry name="panelVisibilityRules" type="String">

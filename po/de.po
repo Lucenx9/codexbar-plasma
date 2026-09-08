@@ -572,10 +572,8 @@ msgid "Auto-select highest-usage provider"
 msgstr "Anbieter mit höchster Nutzung automatisch auswählen"
 
 #: contents/ui/configPanel.qml
-msgid "Usage text and provider meters are available only in horizontal panels."
-msgstr ""
-"Nutzungstext und Anbieteranzeigen sind nur in waagerechten Kontrollleisten "
-"verfügbar."
+msgid "Usage text is available only in horizontal panels. Provider meters also work in vertical panels."
+msgstr "Nutzungstext ist nur in horizontalen Kontrollleisten verfügbar. Anbieteranzeigen funktionieren auch in vertikalen Kontrollleisten."
 
 #: contents/ui/configPanel.qml
 msgid "Panel quota:"
@@ -598,13 +596,8 @@ msgid "Tertiary"
 msgstr "Tertiär"
 
 #: contents/ui/configPanel.qml
-msgid ""
-"Uses the provider's primary, secondary or tertiary quota for panel text and "
-"meters. Unavailable quotas are omitted."
-msgstr ""
-"Verwendet das primäre, sekundäre oder tertiäre Kontingent des Anbieters für "
-"Text und Anzeigen in der Kontrollleiste. Nicht verfügbare Kontingente werden "
-"ausgelassen."
+msgid "Automatic meters show primary and secondary quotas. Choose a quota to show one capsule. Unavailable quotas are omitted."
+msgstr "Automatische Anzeigen zeigen das primäre und sekundäre Kontingent. Wählen Sie ein Kontingent für eine einzelne Kapsel. Nicht verfügbare Kontingente werden ausgelassen."
 
 #: contents/ui/configPanel.qml
 msgid "Panel text:"
@@ -665,14 +658,8 @@ msgid "Show each meter:"
 msgstr "Jede Anzeige einblenden:"
 
 #: contents/ui/configPanel.qml
-msgid ""
-"Conditions use the quota shown by each element. The text condition also "
-"applies to the provider name and credits. Missing data does not satisfy a "
-"condition."
-msgstr ""
-"Die Bedingungen beziehen sich auf das Kontingent des jeweiligen Elements. "
-"Die Textbedingung gilt auch für Anbietername und Guthaben. Fehlende Daten "
-"erfüllen keine Bedingung."
+msgid "A provider meter appears when either displayed quota matches its condition. The text condition also applies to the provider name and credits. Missing data does not satisfy a condition."
+msgstr "Eine Anbieteranzeige erscheint, wenn eines der angezeigten Kontingente die Bedingung erfüllt. Die Textbedingung gilt auch für den Anbieternamen und das Guthaben. Fehlende Daten erfüllen keine Bedingung."
 
 #: contents/ui/configPanel.qml
 msgid "Element order:"
@@ -2308,10 +2295,8 @@ msgid "Minimal"
 msgstr "Minimal"
 
 #: contents/ui/configPanel.qml
-msgid ""
-"Minimal uses neutral icons and thin meters in the Plasma accent color. Quota "
-"warnings keep their warning colors."
-msgstr "Der minimale Stil verwendet neutrale Symbole und dünne Anzeigen in der Akzentfarbe von Plasma. Kontingentwarnungen behalten ihre Warnfarben."
+msgid "Minimal uses monochrome icons and capsule meters. Quota warnings keep their warning colors."
+msgstr "Minimal verwendet monochrome Symbole und Kapselfüllstände. Kontingentwarnungen behalten ihre Warnfarben."
 
 #: contents/ui/configPanel.qml
 msgid "Use minimal preset"

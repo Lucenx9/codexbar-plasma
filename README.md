@@ -9,10 +9,11 @@ authentication. This repository contains the Linux Plasma widget only.
 
 | Standard panel | Minimal panel |
 | --- | --- |
-| [![Colored provider icons and usage meters in the Standard panel](docs/codexbar-plasma-panel-standard.png)](docs/codexbar-plasma-panel-standard.png) | [![Neutral provider icons and thin accent-colored usage meters in the Minimal panel](docs/codexbar-plasma-panel-minimal.png)](docs/codexbar-plasma-panel-minimal.png) |
+| [![Colored provider icons and dual quota capsules in the Standard panel](docs/codexbar-plasma-panel-standard.png)](docs/codexbar-plasma-panel-standard.png) | [![Monochrome provider icons and dual quota capsules in the Minimal panel](docs/codexbar-plasma-panel-minimal.png)](docs/codexbar-plasma-panel-minimal.png) |
 
-The same Codex, Claude, and Gemini usage in both styles. Choose the appearance
-in **Panel** settings. These examples show meters with panel text hidden.
+The same Codex, Claude, and Gemini usage in both styles. Small provider icons
+sit beside primary and secondary quota capsules. Choose the appearance in
+**Panel** settings. These examples show meters with panel text hidden.
 
 | Provider overview | Local sessions |
 | --- | --- |
@@ -20,15 +21,16 @@ in **Panel** settings. These examples show meters with panel text hidden.
 | **Usage & Spend** | **Provider details** |
 | [![Thirty days of spending and activity across providers](docs/codexbar-plasma-usage-spend.png)](docs/codexbar-plasma-usage-spend.png) | [![Codex quotas, reset windows, and daily cost history](docs/codexbar-plasma-codex.png)](docs/codexbar-plasma-codex.png) |
 
-Click an image for full size. Captures show version 0.2.34 in Breeze Dark with
-synthetic accounts and data. The widget follows your Plasma theme; provider
+Click an image for full size. Panel captures show the upcoming capsule design;
+popup captures show version 0.2.34. All use Breeze Dark with synthetic data. The widget follows your Plasma theme; provider
 accent colors stay consistent across themes.
 
 ## Features
 
 - Quota meters, reset windows, account selection, and provider status in the panel
   and popup, with configurable quota warnings and Plasma notifications.
-- Standard and Minimal panel styles, selectable quota windows, conditional text
+- Standard and Minimal panel styles with up to two quota capsules per provider,
+  horizontal and vertical meters, selectable quota windows, conditional text
   and meters, and a live settings preview.
 - **Usage & Spend** with cost/token charts, a 7/30/90-day range, an activity
   heatmap, and provider, model, and project breakdowns when the CLI supplies them.

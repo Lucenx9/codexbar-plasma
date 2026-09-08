@@ -17,6 +17,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Panel meters place a small provider icon beside primary and secondary quota
+  capsules, with matching geometry in colored Standard and monochrome Minimal.
+  Meters now work in vertical panels. Explicit quota choices still show one
+  capsule; visibility conditions accept either displayed quota. Tooltip and
+  accessibility descriptions report both quotas and resets.
+
 - Linux parity work is maintained in TODO.md, with agent review of each stable
   upstream release and updates in the PR that implements a feature.
 - Reorganized installation and troubleshooting instructions, with dedicated

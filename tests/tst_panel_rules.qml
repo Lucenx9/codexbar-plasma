@@ -176,4 +176,17 @@ TestCase {
             usedPercent: 100
         }, 0));
     }
+    function test_eitherDisplayedQuotaCanKeepTheProviderVisible() {
+        var primary = {hasPercent: true, usedPercent: 10};
+        var secondary = {hasPercent: true, usedPercent: 95};
+        var rule = {condition: "usageAtLeast", usedPercent: 90};
+        verify(PanelRules.matchesAny(rule, [primary, secondary], 0));
+        verify(!PanelRules.matchesAny(rule, [primary], 0));
+        verify(!PanelRules.matchesAny({condition: "always"}, [], 0));
+        verify(!PanelRules.matchesAny(rule, null, 0));
+        verify(!PanelRules.matchesAny(rule, [null, {hasPercent: false, usedPercent: 100}], 0));
+        verify(PanelRules.matchesAny({condition: "runOut"}, [primary,
+            {paceOnTop: false, paceEtaSeconds: 600}], 0));
+    }
+
 }

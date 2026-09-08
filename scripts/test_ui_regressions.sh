@@ -1153,12 +1153,13 @@ for mouse_id in ("compactStatusMouse", "heatmapMouse"):
         raise AssertionError(f"{mouse_id} must not consume clicks")
 for vertical_fragment in (
     "readonly property bool verticalPanel: applet.verticalFormFactor",
-    "verticalPanel || !hasProviderMeters",
+    "!hasProviderMeters || (!verticalPanel && primaryText.length > 0)",
+    "columns: compactRoot.verticalPanel ? 1 : -1",
     "!compactRoot.verticalPanel",
 ):
     if vertical_fragment not in compact_representation_text:
         raise AssertionError(
-            "CompactRepresentation must collapse to an icon in vertical panels; "
+            "CompactRepresentation must show vertical meters with an icon fallback; "
             f"missing {vertical_fragment!r}"
         )
 
@@ -1257,7 +1258,7 @@ for panel_selection_fragment in (
         )
 if "readonly property int meterContentHeight: Math.max(0, height" not in compact_representation_text:
     raise AssertionError("panel meter geometry must derive from the compact representation height")
-if "compactRoot.applet.compactProviders().length * compactRoot.meterWidth" not in compact_representation_text:
+if "compactRoot.meterProviders.length * compactRoot.meterWidth" not in compact_representation_text:
     raise AssertionError("the meters element must reserve panel width from the shared meter width")
 
 vertical_status_badge_body = id_block(compact_representation_text, "compactVerticalStatusBadge")
@@ -1276,7 +1277,7 @@ for vertical_badge_fragment in (
 
 horizontal_status_badge_body = id_block(compact_representation_text, "compactStatusBadge")
 for horizontal_badge_fragment in (
-    "visible: !compactRoot.verticalPanel",
+    "visible: (!compactRoot.verticalPanel || compactRoot.hasProviderMeters)",
     "compactRoot.incidentProvider.hasIncident",
     "statusBadgeColor(compactRoot.incidentProvider.statusSeverity)",
     "border.width: 1",

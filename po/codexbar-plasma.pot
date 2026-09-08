@@ -273,16 +273,28 @@ msgid_plural "%1d"
 msgstr[0] ""
 msgstr[1] ""
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
-msgid "%1: %2% %3"
-msgstr ""
-
 #: contents/ui/components/PanelSettingsPreview.qml
 msgid "Service incident"
 msgstr ""
 
 #: contents/ui/components/PanelSettingsPreview.qml contents/ui/configPanel.qml
 msgid "Provider icon"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/configPanel.qml
+msgid "Primary"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/configPanel.qml
+msgid "Secondary"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/configPanel.qml
+msgid "Tertiary"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+msgid "%1: %2% %3"
 msgstr ""
 
 #: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
@@ -820,8 +832,8 @@ msgstr ""
 
 #: contents/ui/configPanel.qml
 msgid ""
-"Minimal uses neutral icons and thin meters in the Plasma accent color. Quota "
-"warnings keep their warning colors."
+"Minimal uses monochrome icons and capsule meters. Quota warnings keep their "
+"warning colors."
 msgstr ""
 
 #: contents/ui/configPanel.qml
@@ -855,7 +867,9 @@ msgid "Auto-select highest-usage provider"
 msgstr ""
 
 #: contents/ui/configPanel.qml
-msgid "Usage text and provider meters are available only in horizontal panels."
+msgid ""
+"Usage text is available only in horizontal panels. Provider meters also work "
+"in vertical panels."
 msgstr ""
 
 #: contents/ui/configPanel.qml
@@ -867,21 +881,9 @@ msgid "Automatic"
 msgstr ""
 
 #: contents/ui/configPanel.qml
-msgid "Primary"
-msgstr ""
-
-#: contents/ui/configPanel.qml
-msgid "Secondary"
-msgstr ""
-
-#: contents/ui/configPanel.qml
-msgid "Tertiary"
-msgstr ""
-
-#: contents/ui/configPanel.qml
 msgid ""
-"Uses the provider's primary, secondary or tertiary quota for panel text and "
-"meters. Unavailable quotas are omitted."
+"Automatic meters show primary and secondary quotas. Choose a quota to show "
+"one capsule. Unavailable quotas are omitted."
 msgstr ""
 
 #: contents/ui/configPanel.qml
@@ -958,9 +960,9 @@ msgstr ""
 
 #: contents/ui/configPanel.qml
 msgid ""
-"Conditions use the quota shown by each element. The text condition also "
-"applies to the provider name and credits. Missing data does not satisfy a "
-"condition."
+"A provider meter appears when either displayed quota matches its condition. "
+"The text condition also applies to the provider name and credits. Missing "
+"data does not satisfy a condition."
 msgstr ""
 
 #: contents/ui/configPopup.qml contents/ui/configProviders.qml

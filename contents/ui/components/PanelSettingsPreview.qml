@@ -89,8 +89,7 @@ ColumnLayout {
         }
         for (var i = 0; i < previewModel.meterProviders.length; i++) {
             var provider = previewModel.meterProviders[i];
-            var row = previewApplet.panelDisplayRow(provider, "percent");
-            parts.push(i18n("%1: %2% %3", provider.title, Math.round(previewApplet.displayPercent(row)), usageBarsShowUsed ? i18n("used") : i18n("left")));
+            parts.push(provider.title + ": " + previewApplet.panelMeterDescription(provider));
         }
         if (previewModel.incidentProvider) {
             parts.push(i18n("Service incident"));
@@ -141,6 +140,17 @@ ColumnLayout {
         }
         function panelDisplayRow(provider, mode) {
             return PanelDisplay.rowForMode(provider ? provider.rows : [], mode, preview.previewModel.lane);
+        }
+        function panelMeterRows(provider) {
+            return PanelDisplay.meterRows(provider ? provider.rows : [], preview.previewModel.lane);
+        }
+        function panelMeterDescription(provider) {
+            return panelMeterRows(provider).map(function(row) {
+                var label = row.lane === "primary" ? i18n("Primary")
+                    : (row.lane === "secondary" ? i18n("Secondary") : i18n("Tertiary"));
+                return i18n("%1: %2% %3", label, Math.round(displayPercent(row)),
+                    preview.usageBarsShowUsed ? i18n("used") : i18n("left"));
+            }).join(". ");
         }
         function compactText() {
             if (!preview.previewModel.textVisible) {

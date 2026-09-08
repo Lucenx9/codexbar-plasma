@@ -80,3 +80,9 @@ function matches(value, row, nowMs) {
     var remainingMs = Date.parse(row.resetsAt) - nowMs;
     return isFinite(remainingMs) && remainingMs > 0 && remainingMs <= rule.resetMinutes * 60000;
 }
+
+function matchesAny(value, rows, nowMs) {
+    return Array.isArray(rows) && rows.some(function(row) {
+        return matches(value, row, nowMs);
+    });
+}
