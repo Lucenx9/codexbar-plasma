@@ -10,11 +10,12 @@ ColumnLayout {
 
     required property var applet
     required property var providerData
+    property string accountSelectionKey: applet.accountLabel(providerData)
     property bool presentationVisible: false
     property bool detailsExpanded: false
     property var daySelectionMemo: ({ points: [], index: -1 })
     readonly property bool costHistoryShowsTokens: applet.costHistoryShowsTokens
-    readonly property string selectionScope: providerData ? JSON.stringify([providerData.provider, applet.accountLabel(providerData),
+    readonly property string selectionScope: providerData ? JSON.stringify([providerData.provider, accountSelectionKey,
         tokenCost ? tokenCost.historyDays : 0]) : ""
     readonly property var selectedDay: CostPresentation.selectedCostDay(tokenCost ? tokenCost.daily : [], chartPoints, costChart.selectedIndex)
     readonly property bool hasVisibleDetails: detailsExpanded || selectedDay !== null
@@ -64,7 +65,7 @@ ColumnLayout {
     readonly property var tokenCost: tokenCostSection.providerData ? tokenCostSection.providerData.tokenCost : null
     readonly property var chartPoints: tokenCost ? applet.costChartPoints(tokenCost.daily) : []
     readonly property var costTrustSummary: CostPresentation.costTrustSummary(tokenCost ? [tokenCost] : [])
-    readonly property string costErrorText: applet.costErrorText
+    readonly property string costErrorText: applet.privateErrorText(applet.costErrorText)
     readonly property bool supportsLocalCost: tokenCostSection.providerData && applet.tokenCostHint(tokenCostSection.providerData.provider).length > 0
 
     visible: tokenCostSection.tokenCost ? true : tokenCostSection.supportsLocalCost && tokenCostSection.costErrorText.length > 0

@@ -17,15 +17,14 @@ TestCase {
     }
 
     function test_selectionPresetAndDefaultsStaySynchronized() {
-        var component = Qt.createComponent("../contents/ui/configDisplay.qml");
+        var component = Qt.createComponent("../contents/ui/configPanel.qml");
         if (component.status === Component.Error && /module "org\.kde\.[^"]+" is not installed/.test(component.errorString())) {
             skip("Panel settings checks need the optional KDE QML modules");
             return;
         }
         compare(component.status, Component.Ready, component.errorString());
+        failOnWarning(/.*/);
         var page = createTemporaryObject(component, testCase, {
-            // Opening the page may list providers; never invoke a real CLI.
-            cfg_commandPath: "/usr/bin/true",
             width: 600,
             height: 900,
             cfg_showProviderInPanel: true,
@@ -33,7 +32,6 @@ TestCase {
             cfg_showCreditsInPanel: true,
             cfg_showMultiProviderInPanel: false,
             cfg_panelQuotaLane: "secondary",
-            cfg_providerOrder: "claude,codex",
             cfg_panelElementOrder: "meters,status,text,identity",
             cfg_panelVisibilityRules: '{"meters":{"condition":"usageAtLeast","usedPercent":70}}'
         });
@@ -50,7 +48,6 @@ TestCase {
         tryCompare(combo, "currentIndex", 1);
         verify(!page.cfg_showProviderInPanel && !page.cfg_showPercentInPanel && !page.cfg_showCreditsInPanel && page.cfg_showMultiProviderInPanel);
         compare(page.cfg_panelQuotaLane, "secondary");
-        compare(page.cfg_providerOrder, "claude,codex");
         compare(page.cfg_panelElementOrder, "meters,status,text,identity");
         compare(page.cfg_panelVisibilityRules, '{"meters":{"condition":"usageAtLeast","usedPercent":70}}');
         page.cfg_panelStyle = page.cfg_panelStyleDefault;

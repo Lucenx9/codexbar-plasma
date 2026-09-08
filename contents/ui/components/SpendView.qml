@@ -161,8 +161,8 @@ ColumnLayout {
     Components.PlainInlineMessage {
         visible: view.applet.costErrorText.length > 0
         plainText: view.providerCosts.length > 0
-            ? i18n("Some local history is unavailable: %1", view.applet.costErrorText)
-            : i18n("Local history is unavailable: %1", view.applet.costErrorText)
+            ? i18n("Some local history is unavailable: %1", view.applet.privateErrorText(view.applet.costErrorText))
+            : i18n("Local history is unavailable: %1", view.applet.privateErrorText(view.applet.costErrorText))
         type: Kirigami.MessageType.Warning
         Layout.fillWidth: true
     }
@@ -388,7 +388,7 @@ ColumnLayout {
                         }
 
                         PlainPlasmaLabel {
-                            text: view.applet.providerTitle(modelData.provider)
+                            text: view.applet.providerDisplayTitle(modelData.provider)
                             font.weight: Font.DemiBold
                             Layout.fillWidth: true
                             elide: Text.ElideRight

@@ -109,7 +109,7 @@ KCM.SimpleKCM {
         disconnectCommandsByKind("version")
         fireworksSingleKeySetupSupported = false
         if (commandPath.length === 0) {
-            errorText = i18n("Set the codexbar command path in the General page.")
+            errorText = i18n("Set the codexbar command path in Diagnostics.")
             providers = []
             loading = false
             return

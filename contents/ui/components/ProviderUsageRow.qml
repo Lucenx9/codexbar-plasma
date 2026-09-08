@@ -9,6 +9,7 @@ ColumnLayout {
     required property var providerData
     required property var modelData
     readonly property var rowData: modelData
+    readonly property bool showPace: applet.showPopupPace !== false
 
     readonly property color accent: applet.providerReadableColor(
         providerData ? providerData.provider : "",
@@ -82,7 +83,8 @@ ColumnLayout {
         }
 
         Rectangle {
-            visible: usageRow.markerPercent > 0 && usageRow.markerPercent < 100
+            objectName: "usagePaceMarker"
+            visible: usageRow.showPace && usageRow.markerPercent > 0 && usageRow.markerPercent < 100
             x: Math.max(0, Math.min(parent.width - width, parent.width * usageRow.markerPercent / 100 - width / 2))
             y: usageRow.meterMarkerInset
             width: usageRow.meterMarkerWidth
@@ -115,15 +117,16 @@ ColumnLayout {
     }
 
     RowLayout {
-        visible: usageRow.rowData.pace.length > 0
+        visible: (usageRow.showPace && usageRow.rowData.pace.length > 0)
             || usageRow.resetText.length > 0
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
 
         PlainPlasmaLabel {
             id: usagePaceLabel
+            objectName: "usagePaceLabel"
 
-            visible: usageRow.rowData.pace.length > 0
+            visible: usageRow.showPace && usageRow.rowData.pace.length > 0
             text: usageRow.rowData.pace
             font: Kirigami.Theme.smallFont
             opacity: usageRow.applet.secondaryTextOpacity

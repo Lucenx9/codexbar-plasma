@@ -13,7 +13,7 @@ authentication, configuration, quota parsing, and JSON output come from the
 | [![Colored provider icons and usage meters in the Standard panel](docs/codexbar-plasma-panel-standard.png)](docs/codexbar-plasma-panel-standard.png) | [![Neutral provider icons and thin accent-colored usage meters in the Minimal panel](docs/codexbar-plasma-panel-minimal.png)](docs/codexbar-plasma-panel-minimal.png) |
 
 The same Codex, Claude, and Gemini usage in both styles. Choose the appearance
-in **Display → Panel**; these examples show provider meters with panel text hidden.
+in **Panel**; these examples show provider meters with panel text hidden.
 
 | Provider overview | Local sessions |
 | --- | --- |
@@ -110,8 +110,8 @@ provider-defined detail rows and bounded bar/line charts.
 Panel and popup:
 
 - Colored Standard icons with usage meters by default, for one or multiple
-  providers. Provider names and percentage text can be enabled in **Display**.
-- Optional **Minimal** panel style in **Display → Panel** uses neutral provider
+  providers. Provider names and percentage text can be enabled in **Panel**.
+- Optional **Minimal** panel style in **Panel** uses neutral provider
   icons, thin meters in the Plasma accent color, and wider click targets.
   **Use minimal preset** also enables provider meters, including with a single
   provider, and hides panel names,
@@ -125,7 +125,7 @@ Panel and popup:
   and a run-out forecast that shows the predicted duration only while the CLI
   expects the quota to run out before its reset.
 - Choose the automatic, primary, secondary, or tertiary quota for panel text and
-  meters in **Display** settings. Missing quotas are omitted; popup tabs keep
+  meters in **Panel** settings. Missing quotas are omitted; popup tabs keep
   their automatic quota selection.
 - Set independent visibility conditions for the full panel text and each
   provider meter: always, minimum percent used, reset within a chosen number of
@@ -209,8 +209,23 @@ Status and notifications:
 
 Settings:
 
-- Split settings pages for general refresh/notification controls, display,
-  advanced provider overrides, and redacted CLI diagnostics.
+- Six settings pages: **General**, **Providers**, **Panel**, **Popup**,
+  **Notifications**, and **Diagnostics**. CLI path and provider/source overrides
+  sit beside redacted diagnostics; quota thresholds sit beside their alerts.
+- A live **Panel** preview uses example data and the actual panel renderer.
+  Try normal usage, near-limit usage, a service incident, or missing data before
+  applying changes. The preview never fetches usage or changes saved settings.
+- Optional **General → Hide personal information** hides account, organization, project,
+  model and session names in the widget, its tooltips and new notifications.
+  Free-form provider details are omitted; session copy actions are disabled.
+  Stored data, existing clipboard contents and already-delivered notifications
+  are unchanged. Provider setup and Diagnostics remain administrative surfaces.
+- Optional **General → Refresh when opening the popup** refreshes stale quotas
+  using the selected refresh interval, or five minutes with periodic refresh off.
+  It does not scan local cost history; failed attempts use the same cooldown.
+- **Popup** independently controls pace text/markers, credits/reset credits, and
+  additional provider details/billing dashboards. These are visible by default;
+  changing them does not refetch data or change panel metrics or alerts.
 - A global, cancelable **Restore all defaults** action for user-facing widget
   settings; provider accounts and CodexBar CLI configuration are left intact.
 - Usage refresh choices: no periodic refresh, 1 min, 2 min, 5 min, 15 min, or a
@@ -230,6 +245,8 @@ and 95% critical thresholds. Reset notifications are off until enabled.
 | --- | --- |
 | Command and provider source | `codexbar` from PATH; no provider or source override |
 | Usage refresh | Every 5 minutes |
+| Refresh on popup opening / privacy mode | Off |
+| Popup pace, credits and additional details | Shown |
 | Provider service status | Off; incident notifications become active when status fetching is enabled |
 | Local usage and spend history | On, 30 days, cost metric |
 | Quota display | Percent used; warning markers on; thresholds at 80% and 95% used |
@@ -352,14 +369,17 @@ each scenario, captures the view, and closes the preview automatically:
 | `tabs-overflow` | Ten providers, with scroll-button geometry, immediate focus reveal, and endpoint states checked. |
 | `provider-settings` | Enabled-only settings list, after checking combined search/filter behavior and selection isolation. |
 | `provider-header`, `provider-header-large` | Provider identity and incident badge at normal and doubled body text sizes. |
-| `settings-general`, `settings-display` | Complete General and Display forms with pending defaults and synthetic provider data. |
-| `settings-advanced`, `settings-debug` | Advanced overrides and idle diagnostics, without running diagnostic commands. |
+| `settings-general`, `settings-panel` | General defaults and the live Panel preview, including pending settings, scenarios and effect isolation. |
+| `settings-popup`, `settings-notifications`, `settings-diagnostics` | Popup options, thresholds/alerts and idle diagnostics with synthetic data. |
+| `popup-content` | Hide and restore pace, credits and provider details without fetching or changing notifications. |
+| `refresh-on-open` | Default/fresh openings stay idle; an opt-in stale opening refreshes usage only. |
+| `privacy-provider`, `privacy-spend`, `privacy-sessions` | Hide synthetic identities across views while retaining metrics, account keys and snapshots; session copying is disabled. |
 | `loading` | Initial loading while the fixture CLI waits. |
 | `partial-error` | Claude's error view while healthy Codex data remains available. |
 | `long-text` | Codex with long account and workspace labels, two accounts, and doubled body text. |
 | `panel-rules` | Compact panel with secondary quotas after checking conditional visibility and defaults. |
 | `panel-default`, `panel-default-single` | Fresh Standard defaults with two providers or one, preserving explicit text/meter preferences and the icon fallback. |
-| `panel-standard`, `panel-minimal` | Same synthetic provider meters in both styles, with the real Display preset and configuration isolation checked. |
+| `panel-standard`, `panel-minimal` | Same synthetic provider meters in both styles, with the real Panel preset and configuration isolation checked. |
 | `panel-minimal-single` | Minimal with one provider, including meter visibility, missing quotas, and Standard fallback. |
 | `legacy-dashboard` | Legacy dashboard zeroes and formatted rows, with generic details taking precedence when present. |
 | `project-costs` | Project estimates, an explicit zero, and an unavailable cost in Usage & Spend. |

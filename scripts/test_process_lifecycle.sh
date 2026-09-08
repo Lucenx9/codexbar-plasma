@@ -51,20 +51,21 @@ require_in_surface providers "page.expireConfigCommands(Date.now())"
 require_in_surface providers "Component.onCompleted: Qt.callLater(reload)"
 require_in_surface providers "onCfg_commandPathChanged: handleCommandPathChanged()"
 
-require_in_surface display "readonly property int providerRosterCommandTimeoutMs: 60000"
-require_in_surface display 'import "CommandLedger.js" as CommandLedger'
-reject_in_surface display "function commandWithRunNonce(command)"
-require_in_surface display "Component.onCompleted: Qt.callLater(loadProviderRoster)"
-require_in_surface display "onCfg_commandPathChanged: Qt.callLater(loadProviderRoster)"
-require_in_surface display "function expireProviderRosterCommands(nowMs)"
-require_in_surface display "id: providerRosterCommandTimeoutTimer"
-require_in_surface display "page.expireProviderRosterCommands(Date.now())"
+require_in_surface popup "readonly property int providerRosterCommandTimeoutMs: 60000"
+require_in_surface popup 'import "CommandLedger.js" as CommandLedger'
+reject_in_surface popup "function commandWithRunNonce(command)"
+require_in_surface popup "Component.onCompleted: Qt.callLater(loadProviderRoster)"
+require_in_surface popup "onCfg_commandPathChanged: Qt.callLater(loadProviderRoster)"
+require_in_surface popup "function expireProviderRosterCommands(nowMs)"
+require_in_surface popup "id: providerRosterCommandTimeoutTimer"
+require_in_surface popup "page.expireProviderRosterCommands(Date.now())"
 
-require_in_surface debug "readonly property int diagnosticCommandTimeoutMs: 60000"
-require_in_surface debug "function commandWithRunNonce(command)"
-require_in_surface debug "function handleDiagnosticTimeout()"
-require_in_surface debug "id: diagnosticCommandTimeoutTimer"
-require_in_surface debug "page.handleDiagnosticTimeout()"
+require_in_surface diagnostics "readonly property int diagnosticCommandTimeoutMs: 60000"
+require_in_surface diagnostics "function commandWithRunNonce(command)"
+require_in_surface diagnostics "function handleDiagnosticTimeout()"
+require_in_surface diagnostics "id: diagnosticCommandTimeoutTimer"
+require_in_surface diagnostics "page.handleDiagnosticTimeout()"
+require_in_surface diagnostics "onCommandPathChanged:"
 
 reject_in_surface applet "retiredUsageCommands"
 reject_in_surface applet "pendingAccountCommandStartedAt"
@@ -91,8 +92,8 @@ from qml_surfaces import Surface
 
 applet = Surface("applet", root)
 providers = Surface("providers", root)
-display = Surface("display", root)
-debug = Surface("debug", root)
+popup = Surface("popup", root)
+diagnostics = Surface("diagnostics", root)
 
 
 def require_all(body, fragments, reason):
@@ -685,7 +686,7 @@ require_all(
 )
 
 require_all(
-    display.function_body("loadProviderRoster"),
+    popup.function_body("loadProviderRoster"),
     (
         "CommandLedger.withRunNonce(command, commandRunSerial)",
         "CommandLedger.descriptor(",
@@ -695,7 +696,7 @@ require_all(
 )
 
 require_all(
-    display.function_body("expireProviderRosterCommands"),
+    popup.function_body("expireProviderRosterCommands"),
     (
         "CommandLedger.expired(providerRosterCommands, nowMs)",
         "providerRosterSource.disconnectSource(sourceName)",
@@ -706,7 +707,7 @@ require_all(
 )
 
 require_all(
-    display.function_body("disconnectProviderRosterCommands"),
+    popup.function_body("disconnectProviderRosterCommands"),
     (
         "CommandLedger.sourcesOfKind(",
         'providerRosterCommands, "enabledProviderRoster"',
@@ -716,13 +717,13 @@ require_all(
 )
 
 require_all(
-    display.function_body("hasPendingProviderRosterCommands"),
+    popup.function_body("hasPendingProviderRosterCommands"),
     ('CommandLedger.hasKind(providerRosterCommands, "enabledProviderRoster")',),
     "provider roster loading state must read the shared ledger",
 )
 
 require_all(
-    display.function_body("handleProviderRosterData"),
+    popup.function_body("handleProviderRosterData"),
     (
         "CommandLedger.find(providerRosterCommands, sourceName)",
         "CommandLedger.closed(providerRosterCommands, sourceName)",
@@ -731,15 +732,21 @@ require_all(
 )
 
 require_all(
-    debug.function_body("runCommand"),
-    ("commandWithRunNonce(command)", "diagnosticCommandTimeoutTimer.restart()"),
-    "debug commands need nonce and timeout",
+    diagnostics.handler_body("onCommandPathChanged"),
+    ("finishDiagnosticCommand(activeCommand)", 'diagnosticOutput = ""', 'diagnosticError = ""'),
+    "editing the command path must discard pending diagnostics from the old CLI",
 )
 
 require_all(
-    debug.function_body("handleDiagnosticTimeout"),
+    diagnostics.function_body("runCommand"),
+    ("commandWithRunNonce(command)", "diagnosticCommandTimeoutTimer.restart()"),
+    "diagnostics commands need nonce and timeout",
+)
+
+require_all(
+    diagnostics.function_body("handleDiagnosticTimeout"),
     ("finishDiagnosticCommand(activeCommand)", "Diagnostic command timed out. Try again."),
-    "debug timeout cleanup is incomplete",
+    "diagnostics timeout cleanup is incomplete",
 )
 
 require_all(

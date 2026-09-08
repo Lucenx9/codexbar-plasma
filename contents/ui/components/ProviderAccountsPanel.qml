@@ -74,7 +74,8 @@ ColumnLayout {
                 id: accountButton
 
                 required property var modelData
-                readonly property string label: accountsPanel.applet.accountLabel(modelData)
+                required property int index
+                readonly property string label: accountsPanel.applet.accountDisplayLabel(modelData, index)
                 readonly property string subtitle: accountsPanel.applet.accountSubtitle(modelData)
                 readonly property bool accountSelected: accountsPanel.applet.accountIsSelected(modelData, accountsPanel.providerData)
                 readonly property string fullLabel: subtitle.length > 0 ? label + " · " + subtitle : label
@@ -104,7 +105,7 @@ ColumnLayout {
                 }
 
                 onClicked: {
-                    accountsPanel.applet.selectAccount(modelData.provider, label)
+                    accountsPanel.applet.selectAccount(modelData.provider, accountsPanel.applet.accountLabel(modelData))
                     checked = Qt.binding(function() { return accountSelected })
                 }
             }

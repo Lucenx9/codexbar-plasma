@@ -4,7 +4,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 . "${ROOT_DIR}/scripts/lib/qml_surfaces.sh"
 GENERAL_QML="${ROOT_DIR}/contents/ui/configGeneral.qml"
-ADVANCED_QML="${ROOT_DIR}/contents/ui/configAdvanced.qml"
+DIAGNOSTICS_QML="${ROOT_DIR}/contents/ui/configDiagnostics.qml"
+NOTIFICATIONS_QML="${ROOT_DIR}/contents/ui/configNotifications.qml"
 README_MD="${ROOT_DIR}/README.md"
 
 require_in_file() {
@@ -46,14 +47,14 @@ require_block_fragment "$GENERAL_QML" "id: lastUpdateCheckLabel" "Layout.fillWid
 require_block_fragment "$GENERAL_QML" "id: lastUpdateCheckLabel" "wrapMode: Text.WordWrap"
 require_block_fragment "$GENERAL_QML" "id: lastUpdateStatusLabel" "Layout.fillWidth: true"
 require_block_fragment "$GENERAL_QML" "id: lastUpdateStatusLabel" "wrapMode: Text.WordWrap"
-require_block_fragment "$GENERAL_QML" "id: usePathCommandButton" 'text: i18n("Use PATH")'
-require_block_fragment "$GENERAL_QML" "id: usePathCommandButton" 'enabled: page.cfg_commandPath.trim() !== (page.cfg_commandPathDefault || "codexbar")'
-require_block_fragment "$GENERAL_QML" "id: usePathCommandButton" 'page.cfg_commandPath = page.cfg_commandPathDefault || "codexbar"'
+require_block_fragment "$DIAGNOSTICS_QML" "id: usePathCommandButton" 'text: i18n("Use PATH")'
+require_block_fragment "$DIAGNOSTICS_QML" "id: usePathCommandButton" 'enabled: page.cfg_commandPath.trim() !== (page.cfg_commandPathDefault || "codexbar")'
+require_block_fragment "$DIAGNOSTICS_QML" "id: usePathCommandButton" 'page.cfg_commandPath = page.cfg_commandPathDefault || "codexbar"'
 # A user edit severs the SpinBox value binding, so it must re-install the
 # binding like every other interactive settings control; otherwise runtime
 # costHistoryDays writes from the Usage & Spend tab stop reaching the spin.
 require_block_fragment "$GENERAL_QML" "id: costHistoryDaysSpin" "value = Qt.binding(function() { return page.cfg_costHistoryDays })"
-require_block_fragment "$GENERAL_QML" "id: notifyStatusIncidentsCheck" "enabled: enableNotificationsCheck.checked && includeStatusCheck.checked"
+require_block_fragment "$NOTIFICATIONS_QML" "id: notifyStatusIncidentsCheck" "enabled: enableNotificationsCheck.checked && page.includeStatus"
 
 require_in_file "$README_MD" "command -v codexbar"
 reject_in_file "$README_MD" "yay -S codexbar-cli"
@@ -86,7 +87,7 @@ require_in_surface general "ConfigValueSync.afterUserEdit("
 require_in_surface general "ConfigValueSync.afterSave("
 reject_in_surface general "cfg_costHistoryDays: Plasmoid.configuration.costHistoryDays"
 reject_in_surface general "cfg_costHistoryMetric: Plasmoid.configuration.costHistoryMetric"
-require_in_file "$ADVANCED_QML" "id: advancedOverrideExplanation"
+require_in_file "$DIAGNOSTICS_QML" "id: advancedOverrideExplanation"
 
 python3 - "$ROOT_DIR" <<'PY'
 import re
@@ -96,9 +97,9 @@ from pathlib import Path
 root = Path(sys.argv[1])
 main_qml = root / "contents/ui/main.qml"
 general_qml = root / "contents/ui/configGeneral.qml"
-display_qml = root / "contents/ui/configDisplay.qml"
+popup_qml = root / "contents/ui/configPopup.qml"
 providers_qml = root / "contents/ui/configProviders.qml"
-advanced_qml = root / "contents/ui/configAdvanced.qml"
+diagnostics_qml = root / "contents/ui/configDiagnostics.qml"
 config_xml = root / "contents/config/main.xml"
 theme_contrast_js = root / "contents/ui/ThemeContrast.js"
 cost_presentation_js = root / "contents/ui/CostPresentation.js"
@@ -208,33 +209,37 @@ for focus_fragment in (
 ):
     if focus_fragment not in focused_provider_control_body:
         raise AssertionError("provider focus scrolling must be scoped to the page content")
-debug_surface = Surface("debug", root)
+diagnostics_surface = Surface("diagnostics", root)
 general_surface = Surface("general", root)
 general_text = general_surface.text
-display_surface = Surface("display", root)
-display_text = display_surface.text
-display_surface.require_definition_where_used("restoreOrderFocus")
-display_surface.require_definition_where_used("revealFocusedOrderButton")
-display_surface.require(
-    "onYChanged: page.revealFocusedOrderButton(upButton, downButton)",
-    "reordered rows must reveal focused buttons after layout placement")
-reveal_order_focus_body = display_surface.function_body("revealFocusedOrderButton")
-for focus_fragment in ("upButton.activeFocus", "downButton.activeFocus",
-                       "page.ensureVisible(button, position.x - button.x, position.y - button.y)"):
-    if focus_fragment not in reveal_order_focus_body:
-        raise AssertionError("reorder scrolling must follow only the focused button")
-for move_function, repeater in (("moveProvider", "providerOrderRepeater"),
-                                ("movePanelElement", "panelOrderRepeater")):
-    move_body = display_surface.function_body(move_function)
+popup_surface = Surface("popup", root)
+popup_text = popup_surface.text
+panel_surface = Surface("panel", root)
+notifications_surface = Surface("notifications", root)
+for order_surface, move_function, repeater in (
+    (popup_surface, "moveProvider", "providerOrderRepeater"),
+    (panel_surface, "movePanelElement", "panelOrderRepeater"),
+):
+    order_surface.require_definition_where_used("restoreOrderFocus")
+    order_surface.require_definition_where_used("revealFocusedOrderButton")
+    order_surface.require(
+        "onYChanged: page.revealFocusedOrderButton(upButton, downButton)",
+        "reordered rows must reveal focused buttons after layout placement")
+    reveal_order_focus_body = order_surface.function_body("revealFocusedOrderButton")
+    for focus_fragment in ("upButton.activeFocus", "downButton.activeFocus",
+                           "page.ensureVisible(button, position.x - button.x, position.y - button.y)"):
+        if focus_fragment not in reveal_order_focus_body:
+            raise AssertionError("reorder scrolling must follow only the focused button")
+    move_body = order_surface.function_body(move_function)
     if f"Qt.callLater(restoreOrderFocus, {repeater}, key, delta)" not in move_body:
         raise AssertionError("keyboard reorder must restore focus after delegates are replaced")
-restore_order_focus_body = display_surface.function_body("restoreOrderFocus")
-for focus_fragment in ("row.orderKey === key", "!button.enabled",
-                       "button.forceActiveFocus(Qt.TabFocusReason)"):
-    if focus_fragment not in restore_order_focus_body:
-        raise AssertionError("reorder focus must follow identity and use an enabled button")
+    restore_order_focus_body = order_surface.function_body("restoreOrderFocus")
+    for focus_fragment in ("row.orderKey === key", "!button.enabled",
+                           "button.forceActiveFocus(Qt.TabFocusReason)"):
+        if focus_fragment not in restore_order_focus_body:
+            raise AssertionError("reorder focus must follow identity and use an enabled button")
 providers_text = providers_qml.read_text(encoding="utf-8")
-advanced_text = advanced_qml.read_text(encoding="utf-8")
+diagnostics_text = diagnostics_qml.read_text(encoding="utf-8")
 config_text = config_xml.read_text(encoding="utf-8")
 theme_contrast_text = theme_contrast_js.read_text(encoding="utf-8")
 cost_presentation_text = cost_presentation_js.read_text(encoding="utf-8")
@@ -310,9 +315,11 @@ qml_default_pattern = re.compile(
 )
 for settings_page_text, settings_page_name in (
     (general_text, "configGeneral.qml"),
-    (display_text, "configDisplay.qml"),
+    (popup_text, "configPopup.qml"),
+    (panel_surface.text, "configPanel.qml"),
+    (notifications_surface.text, "configNotifications.qml"),
     (providers_text, "configProviders.qml"),
-    (advanced_text, "configAdvanced.qml"),
+    (diagnostics_text, "configDiagnostics.qml"),
 ):
     for default_key, literal in qml_default_pattern.findall(settings_page_text):
         if default_key not in xml_defaults:
@@ -376,13 +383,28 @@ def assert_form_sections(text, filename, labels):
 assert_form_sections(
     general_text,
     "configGeneral.qml",
-    ("Connection", "Usage history", "Quota warnings", "Notifications", "Updates", "Defaults"),
+    ("Refresh", "Privacy", "Usage history", "Updates", "Defaults"),
 )
 assert_form_sections(
-    display_text,
-    "configDisplay.qml",
-    ("Usage details", "Panel", "Panel visibility", "Popup"),
+    popup_text,
+    "configPopup.qml",
+    ("Usage details", "Popup"),
 )
+
+assert_form_sections(panel_surface.text, "configPanel.qml", ("Panel", "Panel visibility"))
+assert_form_sections(notifications_surface.text, "configNotifications.qml", ("Quota warnings", "Notifications"))
+assert_form_sections(diagnostics_text, "configDiagnostics.qml", ("Connection", "Advanced provider override"))
+
+# Presentation pages must not acquire provider processes or claim configuration
+# owned by an unrelated page when Plasma saves its cfg_* creation properties.
+for forbidden in ("Plasma5Support.DataSource", "connectSource(", "cfg_commandPath", "cfg_providerOrder"):
+    panel_surface.reject(forbidden, "Panel settings and preview must remain local")
+for key, control in (("privacyMode", "privacyModeCheck"), ("refreshOnOpen", "refreshOnOpenCheck")):
+    general_surface.require(f"property alias cfg_{key}: {control}.checked", "General must expose the pending setting")
+for key in ("showPopupPace", "showPopupCredits", "showPopupProviderDetails"):
+    popup_surface.require(f"property alias cfg_{key}: {key}Check.checked", "Popup content must stay configurable")
+panel_surface.require("Components.PanelSettingsPreview {", "Panel must preview pending settings")
+panel_surface.require("configPage: page", "Preview must use the actual pending config")
 
 for runtime_cfg in (
     "cfg_autoUpdateLastCheck",
@@ -405,7 +427,7 @@ for live_config_fragment in (
             f"missing {live_config_fragment!r}"
         )
 
-command_path_row_body = general_surface.id_block("commandPathRow")
+command_path_row_body = diagnostics_surface.id_block("commandPathRow")
 command_path_row_layout = command_path_row_body.split("Controls.TextField {", 1)[0]
 if "Layout.maximumWidth: Kirigami.Units.gridUnit * 24" not in command_path_row_layout:
     raise AssertionError(
@@ -609,15 +631,15 @@ for stale_account_fragment in (
             f"refresh; found {stale_account_fragment!r}"
         )
 
-provider_roster_load_body = display_surface.function_body("loadProviderRoster")
+provider_roster_load_body = popup_surface.function_body("loadProviderRoster")
 if "disconnectProviderRosterCommands()" not in provider_roster_load_body:
     raise AssertionError(
         "loadProviderRoster must invalidate older provider roster commands "
         "before connecting a replacement"
     )
-display_surface.require(
+popup_surface.require(
     "function disconnectProviderRosterCommands()",
-    "Display must define provider roster command retirement",
+    "Popup must define provider roster command retirement",
 )
 
 provider_index_body = function_body(main_text, "providerIndexForID")
@@ -909,7 +931,7 @@ assert_dismissible_message_restores_visibility(
     providers_surface, "providerStatusMessage", "page.statusText"
 )
 assert_dismissible_message_restores_visibility(
-    debug_surface, "diagnosticErrorMessage", "page.diagnosticError"
+    diagnostics_surface, "diagnosticErrorMessage", "page.diagnosticError"
 )
 
 accounts_body = function_body(main_text, "parseProviderAccountsOutput")
@@ -1169,10 +1191,10 @@ for provider_click_fragment in (
     "id: compactMeterMouse",
     "anchors.fill: parent",
     "function activate()",
-    "activeFocusOnTab: true",
+    "activeFocusOnTab: compactRoot.interactive",
     "visible: compactMeter.activeFocus",
-    "Accessible.role: Accessible.Button",
-    "Accessible.name: i18n(\"Open %1\", modelData.title)",
+    "Accessible.role: compactRoot.interactive ? Accessible.Button : Accessible.Graphic",
+    "Accessible.name: compactRoot.interactive ? i18n(\"Open %1\", modelData.title) : modelData.title",
     "Accessible.onPressAction: compactMeter.activate()",
     "Keys.onPressed:",
     "case Qt.Key_Space:",
@@ -1186,6 +1208,16 @@ for provider_click_fragment in (
             "and open its matching provider tab; "
             f"missing {provider_click_fragment!r}"
         )
+if "property bool interactive: true" not in compact_representation_text:
+    raise AssertionError("the live panel must keep interaction enabled by default")
+if "if (!compactRoot.interactive)" not in function_body(compact_meter_body, "activate"):
+    raise AssertionError("preview meters must not dispatch provider selection")
+for mouse_id in ("compactMeterMouse", "compactStatusMouse"):
+    if "enabled: compactRoot.interactive" not in id_block(compact_representation_text, mouse_id):
+        raise AssertionError("preview meter and status pointer input must be disabled")
+root_pointer_body = id_block(compact_representation_text, "compactBackgroundMouse")
+if "enabled: compactRoot.interactive" not in root_pointer_body:
+    raise AssertionError("the compact background must not open a popup in preview mode")
 if "forceActiveFocus(Qt.MouseFocusReason)" in compact_meter_body:
     raise AssertionError(
         "a mouse click on a panel meter must not leave the keyboard focus ring active"
@@ -1278,17 +1310,17 @@ for display_fragment in (
     'model: page.orderedEnabledProviderRoster',
     'ProviderOrder.movedOrder(',
 ):
-    display_surface.require(display_fragment, "Display must expose popup tab customization")
-overview_provider_selection_body = display_surface.id_block("overviewProviderSelection")
+    popup_surface.require(display_fragment, "Popup must expose tab customization")
+overview_provider_selection_body = popup_surface.id_block("overviewProviderSelection")
 if 'model: page.orderedEnabledProviderRoster' not in overview_provider_selection_body:
     raise AssertionError(
-        "Display must show the saved provider order in the Overview selection"
+        "Popup must show the saved provider order in the Overview selection"
     )
 for overview_order_function in (
     "resolvedOverviewProviderIDs",
     "toggleOverviewProvider",
 ):
-    if "orderedEnabledProviderRoster" not in display_surface.function_body(overview_order_function):
+    if "orderedEnabledProviderRoster" not in popup_surface.function_body(overview_order_function):
         raise AssertionError(
             f"{overview_order_function} must use the saved provider order"
         )
@@ -1572,7 +1604,7 @@ for full_height_marker in ("height: usageBar.height\n", "y: 0\n"):
 credits_section_body = id_block(full_representation_text, "creditsSection")
 for credit_limit_fragment in (
     "readonly property var creditLimit:",
-    "applet.selectedProviderData.codexCreditLimit",
+    "applet.presentedProviderData.codexCreditLimit",
     "applet.codexCreditLimitUsageRow(",
     "model: creditsSection.creditLimitRow ? [creditsSection.creditLimitRow] : []",
     "delegate: Components.ProviderUsageRow",
@@ -1583,8 +1615,8 @@ for credit_limit_fragment in (
             f"without adding a meter to plain balances; missing {credit_limit_fragment!r}"
         )
 if not re.search(
-    r"visible:\s*applet\.selectedProviderData\s*"
-    r"&&\s*applet\.selectedProviderData\.credits\s*!==\s*null",
+    r"visible:\s*applet\.presentedProviderData\s*"
+    r"&&\s*applet\.presentedProviderData\.credits\s*!==\s*null",
     credits_section_body,
 ):
     raise AssertionError(
@@ -1898,9 +1930,9 @@ for filler_owner_source, filler_owner_text in (
         )
 
 provider_status_body = id_block(main_text, "providerStatusMessage")
-if "applet.selectedProviderData.hasIncident" not in provider_status_body:
+if "applet.presentedProviderData.hasIncident" not in provider_status_body:
     raise AssertionError("healthy provider status must not occupy a permanent inline banner")
-if "applet.statusMessageType(applet.selectedProviderData.statusSeverity)" not in provider_status_body:
+if "applet.statusMessageType(applet.presentedProviderData.statusSeverity)" not in provider_status_body:
     raise AssertionError("incident banners must reflect the provider status severity")
 status_message_type_body = function_body(main_text, "statusMessageType")
 for semantic_type in ("Kirigami.MessageType.Error", "Kirigami.MessageType.Warning"):
@@ -1987,7 +2019,7 @@ for selected_row_fragment in (
 if "ThemeContrast.readableTextColor(" not in applet.id_block("providerStatusBadgeLabel"):
     raise AssertionError("provider incident badge text must use the shared text contrast rule")
 
-advanced_override_body = id_block(advanced_text, "advancedOverrideExplanation")
+advanced_override_body = id_block(diagnostics_text, "advancedOverrideExplanation")
 for explanation_fragment in (
     "Layout.fillWidth: true",
     "Layout.preferredWidth: Kirigami.Units.gridUnit * 18",
@@ -2001,9 +2033,9 @@ for explanation_fragment in (
         )
 if "Kirigami.FormData.label:" in advanced_override_body:
     raise AssertionError("Advanced override guidance must not masquerade as a field label")
-if 'Kirigami.FormData.label: i18n("Advanced provider override")' not in advanced_text:
-    raise AssertionError("Advanced settings must retain the provider override section title")
-if "Kirigami.FormData.isSection: true" not in advanced_text:
+if 'Kirigami.FormData.label: i18n("Advanced provider override")' not in diagnostics_text:
+    raise AssertionError("Diagnostics must retain the provider override section title")
+if "Kirigami.FormData.isSection: true" not in diagnostics_text:
     raise AssertionError("Advanced provider override must use the shared Kirigami section hierarchy")
 
 provider_cli_toggle_body = id_block(providers_text, "providerCliCommandsToggle")
@@ -2034,7 +2066,7 @@ if "delegate: Components.ProviderConfigRow" in settings_details:
 if "!visible && providerSettingsToggle.checked" not in settings_details:
     raise AssertionError("Collapsing provider settings must not dismiss a diagnostic error")
 
-display_surface.reject('source: "handle-sort"',
+popup_surface.reject('source: "handle-sort"',
     "Arrow-based ordering must not advertise unsupported dragging")
 
 provider_list_heading_body = id_block(providers_text, "providerListHeading")
@@ -2550,7 +2582,7 @@ for cost_loading_fragment in (
 if ('readonly property bool costLoading: CommandLedger.hasKind(activeCommandDescriptors, "cost")'
         not in main_text):
     raise AssertionError("cost loading state must follow the active cost command lifecycle")
-if "required property int index" not in display_text:
+if "required property int index" not in popup_text:
     raise AssertionError("the panel element editor delegate must explicitly receive its model index")
 for localized_pair_source, localized_pair_text in (
     ("InteractiveChart.qml", interactive_chart_text),

@@ -11,12 +11,14 @@ from datetime import datetime, timedelta, timezone
 SCENARIOS = ("normal", "tabs-overflow", "provider-settings", "provider-header", "provider-header-large", "loading", "partial-error", "long-text", "panel-rules", "panel-standard", "panel-minimal", "panel-minimal-single", "legacy-dashboard",
              "project-costs", "project-tokens", "project-range", "project-long-text",
              "localization-it", "localization-fr", "localization-de", "localization-es", "localization-pt_BR")
-SCENARIOS += ("settings-general", "settings-display", "settings-advanced", "settings-debug")
+SCENARIOS += ("settings-general", "settings-panel", "settings-popup", "settings-notifications", "settings-diagnostics")
 SCENARIOS += ("readme-overview", "readme-spend", "readme-sessions", "readme-codex")
 SCENARIOS += ("readme-panel-standard", "readme-panel-minimal")
 SCENARIOS += ("panel-default", "panel-default-single")
 SCENARIOS += ("popup-cost-details", "popup-cost-tokens")
 SCENARIOS += ("popup-cost-missing-tokens", "popup-cost-partial-models")
+SCENARIOS += ("popup-content", "refresh-on-open", "privacy-provider", "privacy-spend", "privacy-sessions")
+SCENARIOS += ("privacy-cost-details",)
 
 
 def usage(provider, scenario, now):
@@ -55,7 +57,11 @@ def usage(provider, scenario, now):
         if provider == "claude":
             snapshot["usage"]["details"] = [{"title": "Generic details",
                                              "rows": [{"label": "Requests", "value": "7"}]}]
-    if scenario.startswith("localization-"):
+    if scenario == "popup-content":
+        snapshot["credits"] = {"remaining": 125}
+        snapshot["usage"]["details"] = [{"title": "Generic details",
+                                          "rows": [{"label": "Requests", "value": "7"}]}]
+    if scenario.startswith("localization-") or scenario == "popup-content":
         snapshot["pace"] = {"primary": {"stage": "ahead", "deltaPercent": 13,
                                         "expectedUsedPercent": 30, "willLastToReset": False,
                                         "etaSeconds": 3600,
@@ -115,8 +121,10 @@ def response(args, scenario, now):
         days = int(args[5])
         if scenario.startswith("readme-"):
             return [readme_cost(provider, days, now) for provider in ("codex", "claude")]
-        if scenario.startswith("popup-cost-"):
+        if scenario.startswith("popup-cost-") or scenario == "privacy-cost-details":
             snapshot = readme_cost("codex", days, now)
+            if scenario == "privacy-cost-details":
+                snapshot["provenance"] = "listPriceEstimate"
             daily = snapshot["daily"]
             daily[0]["modelBreakdowns"] = [{"modelName": "Earlier model", "cost": daily[0]["totalCost"],
                                              "totalTokens": daily[0]["totalTokens"]}]
@@ -139,7 +147,7 @@ def response(args, scenario, now):
                 snapshot["totals"].pop("totalTokens")
                 snapshot["daily"] = [daily[-1]]
                 snapshot["totals"]["totalCost"] = daily[-1]["totalCost"]
-            elif scenario == "popup-cost-partial-models":
+            elif scenario in ("popup-cost-partial-models", "privacy-cost-details"):
                 daily[-1]["modelBreakdowns"] = [
                     {"modelName": f"Example model {index}", "cost": 0.01, "totalTokens": 1000}
                     for index in range(7)
@@ -152,7 +160,7 @@ def response(args, scenario, now):
                  "daily": [{"date": (now - timedelta(days=6 - i)).date().isoformat(),
                             "totalCost": 1.25 * factor, "totalTokens": 12000 * factor}
                            for i in range(7)]}
-        if scenario.startswith("project-"):
+        if scenario.startswith("project-") or scenario.startswith("privacy-"):
             snapshot["projects"] = [
                 {"name": "CodexBar Plasma", "totalCost": 5.5 * factor, "totalTokens": 24000 * factor},
                 {"name": "Documentation site", "totalCost": 3.25 * factor, "totalTokens": 55000 * factor},

@@ -51,9 +51,11 @@ class LocalizedCliLabelTests(unittest.TestCase):
             qml = '''import QtQuick
 import QtTest
 import PACE_PATH as PacePresentation
+import PRIVACY_PATH as PrivacyPresentation
 TestCase {
     name: "LocalizedCliLabels"
     property var messages: ({})
+    property bool privacyMode: false
     function i18n(source) {
         var text = messages[source] || source;
         for (var i = 1; i < arguments.length; i++)
@@ -64,6 +66,7 @@ TestCase {
     ADAPTERS
     function test_labels_data() { return CASES; }
     function test_labels(row) {
+        privacyMode = false;
         messages = row.messages;
         var states = ["active", "idle", "running", "working"];
         for (var i = 0; i < states.length; i++)
@@ -86,11 +89,16 @@ TestCase {
         compare(paceSummaryText({willLastToReset: false, etaSeconds: 0}), i18n("Runs out now"));
         compare(paceSummaryText({summary: "Legacy forecast"}), "Legacy forecast");
         compare(paceSummaryText(null), "");
+        privacyMode = true;
+        compare(sessionStateText("futureState"), i18n("Unknown"));
+        compare(sessionSourceText("futureSource"), i18n("Unknown"));
+        compare(sessionSubtitle({provider: "", host: "workstation", source: "desktopApp"}), row.labels[4]);
     }
 }
 '''
             fixture = directory / "tst_labels.qml"
             fixture.write_text(qml.replace("PACE_PATH", json.dumps((ROOT / "contents/ui/PacePresentation.js").as_uri()))
+                               .replace("PRIVACY_PATH", json.dumps((ROOT / "contents/ui/PrivacyPresentation.js").as_uri()))
                                .replace("ADAPTERS", adapters).replace("CASES", json.dumps(cases)), encoding="utf-8")
             result = subprocess.run(
                 [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
