@@ -1169,14 +1169,16 @@ PlasmoidItem {
 
     function parseProviderAccountsOutput(sourceName, descriptor, stdoutText, stderrText) {
         var providerID = descriptor ? providerMapKey(descriptor.providerID) : ""
+        var commandIsCurrent = accountCommandIsCurrent(descriptor)
         finishUsageCommandSource(sourceName)
         if (providerID.length === 0) {
             return
         }
 
-        // Validate before any visible side effect: a stale reply must leave
-        // the loading indicator untouched so the live command still owns it.
-        if (!accountCommandIsCurrent(descriptor)) {
+        // Capture validity before closing the ledger entry. A stale command that
+        // still reached this handler owns the loading flag and must release it.
+        if (!commandIsCurrent) {
+            setAccountLoading(providerID, false)
             return
         }
         setAccountLoading(providerID, false)
