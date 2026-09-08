@@ -28,6 +28,7 @@ why the final behavior, setup, and contributor workflow still match the docs.
 Reconcile related issue progress; TODO.md is only a link to the work tracker. -->
 
 - ...
+- Changelog: updated Unreleased, or explain why the change has no user-visible impact.
 
 ## Verification
 

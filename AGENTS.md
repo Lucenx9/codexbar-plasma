@@ -127,6 +127,9 @@ or **macOS-only/non-goal**. Screenshots and Swift models are not CLI contracts.
 
 ## Documentation hygiene
 
+- For user-visible changes, update `CHANGELOG.md` under `Unreleased` in the same
+  change. For release preparation or release tooling changes, follow
+  [changelog and releases](docs/development.md#changelog-and-releases).
 - Own documentation and issue maintenance as part of every change, without a
   user reminder. Before editing, identify affected guides and existing issues.
   Before handoff, reconcile them with the final diff and completion criteria.

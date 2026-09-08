@@ -9,6 +9,8 @@ the guides describe supported behavior. Agents maintain both through the
 
 ## Maintained references
 
+- [Changelog](../CHANGELOG.md): notable widget changes by version and unreleased
+  changes. Future GitHub release notes come from this file.
 - [Usage and settings](usage.md): panel and popup options, provider setup,
   cost history, notifications, and widget defaults.
 - [Development](development.md): QML ownership, regression checks, runtime

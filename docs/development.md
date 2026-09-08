@@ -291,6 +291,45 @@ If a KDE Store channel is introduced, use its KNewStuff/Discover update path for
 that channel. WidgetKit, Sparkle, Keychain/Full Disk Access UI, and macOS app
 implementation code remain outside this standalone Plasma repository.
 
+## Changelog and releases
+
+[CHANGELOG.md](../CHANGELOG.md) is the source of notable widget changes and
+future GitHub release notes. It follows
+[Keep a Changelog](https://keepachangelog.com/en/2.0.0/). History starts at 0.2.35,
+using its published notes; earlier releases remain linked on GitHub.
+
+For every user-visible change, the agent adds or revises an `Unreleased` entry
+in the same commit. Describe the observable result and any upgrade action.
+Group entries under Added, Changed, Deprecated, Removed, Fixed, or Security;
+include only categories with entries. Group related commits into one useful
+entry. Internal refactors, tests, and routine instruction edits need no entry
+unless they affect users or contributors' supported workflows; explain that
+decision in the PR or direct commit body. Issues continue to own future work.
+
+Before an authorized release:
+
+1. Compare the diff since the last release with `Unreleased`, including direct
+   commits to main. Correct omissions and remove claims that have not shipped.
+2. Move the entries into `## X.Y.Z - YYYY-MM-DD`, leaving an empty
+   `## Unreleased` first. Use the release date, keep versions newest first, and
+   set `KPlugin.Version` in `metadata.json` to that same version. Add a full-diff
+   link with absolute GitHub URLs so it works in both the package and release.
+3. Run `make check`, `make package`, and
+   `python3 scripts/changelog.py --tag vX.Y.Z`. Review the extracted notes before
+   committing and pushing the matching tag. Tag publication needs authorization.
+
+`make check` validates headings, categories, dates, ordering, and the newest
+version against metadata. The tag workflow also requires an empty `Unreleased`
+section and an exact tag match. It extracts the version's body into ignored
+`dist/release-notes.md` and publishes it through the release action's
+[`body_path`](https://github.com/softprops/action-gh-release#external-release-notes).
+The archive includes the changelog. Keep published sections historical; prepare
+new changes under `Unreleased` and correct factual errors explicitly. Existing
+GitHub releases are not rewritten when this workflow is introduced.
+
+These checks validate structure and release consistency. The agent must still
+compare the final change with the entries to catch missing or misleading notes.
+
 ## Repository maintenance
 
 The agent owns repository consistency in every task. Include dependent updates

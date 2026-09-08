@@ -118,6 +118,12 @@ jobs:
             exit 1
           fi
 
+      - name: Prepare release notes from changelog
+        shell: bash
+        run: |
+          mkdir -p dist
+          python3 scripts/changelog.py --tag "$GITHUB_REF_NAME" > dist/release-notes.md
+
       - name: make package
         run: make package
 
@@ -130,4 +136,5 @@ jobs:
           files: |
             dist/codexbar-plasma.plasmoid
             dist/codexbar-plasma.plasmoid.sha256
-          generate_release_notes: true
+          body_path: dist/release-notes.md
+          generate_release_notes: false

@@ -1,6 +1,6 @@
 .PHONY: check smoke install restart package translations compile-translations update
 
-PACKAGE_FILES := metadata.json contents docs/codexbar-plasma-overview.png docs/codexbar-plasma-codex.png docs/codexbar-plasma-usage-spend.png docs/codexbar-plasma-sessions.png docs/codexbar-plasma-panel-standard.png docs/codexbar-plasma-panel-minimal.png scripts/update-widget.sh LICENSE NOTICE.md README.md
+PACKAGE_FILES := metadata.json contents docs/codexbar-plasma-overview.png docs/codexbar-plasma-codex.png docs/codexbar-plasma-usage-spend.png docs/codexbar-plasma-sessions.png docs/codexbar-plasma-panel-standard.png docs/codexbar-plasma-panel-minimal.png scripts/update-widget.sh LICENSE NOTICE.md README.md CHANGELOG.md
 
 # Override on distros where Qt6 ships QML modules elsewhere (e.g. Debian/Ubuntu
 # multiarch: make check QML_IMPORT_DIR=/usr/lib/x86_64-linux-gnu/qt6/qml).
@@ -14,6 +14,7 @@ QML_IMPORT_DIR ?= $(or $(wildcard /usr/lib/qt6/qml),$(wildcard /usr/lib/$(DEB_HO
 # test_qml_hardening.sh cannot hide missing Plasma modules.
 QMLLINT_FLAGS ?= --unqualified disable
 check:
+	python3 scripts/changelog.py
 	scripts/test_shellcheck.sh
 	scripts/test_feature_parity.sh
 	scripts/test_refresh_nonce.sh

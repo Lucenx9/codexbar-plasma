@@ -97,6 +97,8 @@ when you upgrade.
 
 ## Update
 
+Read the [changelog](CHANGELOG.md) for changes and upgrade notes by version.
+
 To upgrade a release installation, download the new `.plasmoid` and run:
 
 ```sh
