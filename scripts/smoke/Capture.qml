@@ -148,18 +148,19 @@ Item {
         config.showProviderInPanel = true;
         config.showPercentInPanel = true;
         config.showMultiProviderInPanel = false;
-        verifyScenario(applet.compactText().indexOf("%") >= 0
-            && applet.compactText().indexOf(applet.selectedCompactProvider().title) >= 0
+        var selectedProvider = applet.selectedCompactProvider();
+        verifyScenario(selectedProvider && applet.compactText().indexOf("%") >= 0
+            && applet.compactText().indexOf(selectedProvider.title) >= 0
             && applet.compactProviders().length === 0,
             "explicit text and meter preferences must override the defaults");
         config.showProviderInPanel = false;
         config.showPercentInPanel = false;
-        verifyScenario(applet.compactText() === "" && compactPanelItem.showPrimaryIdentity
+        verifyScenario(compactPanelItem && applet.compactText() === "" && compactPanelItem.showPrimaryIdentity
             && compactPanelItem.implicitWidth > 0,
             "hiding panel text and meters lost the icon fallback");
         config.showMultiProviderInPanel = true;
         config.panelQuotaLane = "tertiary";
-        verifyScenario(applet.compactProviders().length === 0 && compactPanelItem.showPrimaryIdentity,
+        verifyScenario(compactPanelItem && applet.compactProviders().length === 0 && compactPanelItem.showPrimaryIdentity,
             "missing quotas lost the icon fallback");
         config.panelQuotaLane = "auto";
         verifyScenario(applet.providers === panelUsageSnapshot, "panel defaults reloaded usage");
@@ -397,6 +398,8 @@ Item {
             return panelPreview.item !== null && applet.compactProviders().length === expectedProviderCount;
         }
         if (panelDefaultsScenario) {
+            if (prepared)
+                verifyScenario(applet.providers === panelUsageSnapshot, "panel defaults reloaded usage");
             return prepared && panelPreview.item !== null && applet.compactText() === ""
                 && applet.compactProviders().length === expectedProviderCount;
         }
@@ -543,7 +546,8 @@ Item {
                         && (capture.applet.loading || capture.applet.providers.length !== capture.expectedProviderCount))
                     return;
                 if (capture.panelDefaultsScenario) {
-                    if (capture.applet.costLoading || panelPreview.item === null)
+                    if (capture.applet.costLoading || panelPreview.item === null || capture.compactPanelItem === null
+                            || capture.compactPanelItem === undefined)
                         return;
                     capture.verifyPanelDefaults();
                 } else if (capture.readmePanelScenario) {
