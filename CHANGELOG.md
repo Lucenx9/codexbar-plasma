@@ -17,6 +17,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Linux parity work is maintained in TODO.md, with agent review of each stable
+  upstream release and updates in the PR that implements a feature.
 - Reorganized installation and troubleshooting instructions, with dedicated
   guides for settings, cost history, and development.
 - Contributor delivery uses pull requests with required check and smoke jobs.

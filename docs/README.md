@@ -3,11 +3,14 @@
 The repository keeps maintained documentation and current product screenshots.
 The documentation policy is in [AGENTS.md](../AGENTS.md#documentation-hygiene).
 Every file under `docs/` is listed below so new material has an explicit purpose.
-Open work lives in [GitHub Issues](https://github.com/Lucenx9/codexbar-plasma/issues);
-the guides describe supported behavior. Agents maintain both through the
+[TODO.md](../TODO.md) tracks remaining Linux/Plasma parity with the official
+macOS app; the guides describe supported behavior. Agents maintain both through the
 [documentation workflow](development.md#documentation-and-work-tracking).
 
 ## Maintained references
+
+- [Linux parity TODO](../TODO.md): open Plasma work, official CLI blockers, and
+  the last reviewed upstream release. Agents update it with each release.
 
 - [Changelog](../CHANGELOG.md): notable widget changes by version and unreleased
   changes. Future GitHub release notes come from this file.
@@ -25,6 +28,8 @@ the guides describe supported behavior. Agents maintain both through the
   verified official Linux contracts at that comparison date. The
   [usage guide](usage.md) describes current Plasma behavior; later scoped checks
   in the cost and settings documents do not replace this full audit.
+- [0.57.0 release review](research/2026-09-09-macos-parity-0.57.0.md): Linux-relevant
+  changes since 0.56.2, current Plasma gaps, and scoped official CLI probes.
 - [Settings decisions](research/2026-09-08-settings-experience.md): Plasma
   settings, privacy, refresh behavior, and the macOS 0.56.8 comparison.
 
@@ -33,7 +38,8 @@ the guides describe supported behavior. Agents maintain both through the
 These small reports preserve version-specific evidence used by later audits.
 They are historical comparisons, not current feature plans. Preserve their
 original findings; a new audit names the report it supersedes and its exact
-versions. Completed recommendations are tracked in issues and current guides.
+versions. Current guides describe implemented recommendations; TODO lists
+remaining Linux work.
 
 - [0.49.1](research/2026-08-10-macos-parity-progress.md)
 - [0.49.6](research/2026-08-15-macos-parity-0.49.6.md)

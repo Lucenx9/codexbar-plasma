@@ -3,9 +3,11 @@
 Status: **Proposed, not shipped**. The last full contract verification used the
 checksum-verified official Linux CLI 0.56.2 on 2026-09-01. It rejects
 `config providers --descriptors` and has no generic `config set` or `config action`.
-See the [pinned audit](research/2026-09-01-macos-parity-0.56.2.md).
-Track [settings delivery](https://github.com/Lucenx9/codexbar-plasma/issues/167) and
-[onboarding actions](https://github.com/Lucenx9/codexbar-plasma/issues/168) in GitHub Issues.
+See the [pinned audit](research/2026-09-01-macos-parity-0.56.2.md). The scoped
+[0.57.0 probes](research/2026-09-09-macos-parity-0.57.0.md#scoped-official-linux-probes)
+confirm descriptor absence and the unchanged generic-command gap.
+Track [settings delivery](../TODO.md#provider-settings) and
+[onboarding actions](../TODO.md#provider-onboarding) in TODO.
 All command examples and payloads below describe the proposed contract.
 
 This document defines the CLI contract Plasma needs before it can render real

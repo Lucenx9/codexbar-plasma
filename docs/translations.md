@@ -29,8 +29,8 @@ Do not translate arbitrary provider text by matching English phrases. The CLI's
 prose-only pace headroom hint also needs a structured presentation field before
 the widget can localize it; it is not appended to the structured pace summary.
 
-Track the remaining [structured CLI localization work](https://github.com/Lucenx9/codexbar-plasma/issues/174)
-in GitHub Issues.
+Track the remaining [structured CLI localization work](../TODO.md#structured-localization)
+in TODO.
 
 In Italian, settings use "Diagnostica" and "Finestra a comparsa". Technical
 terms such as "provider", "account", and "token" remain unchanged.

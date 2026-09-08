@@ -61,11 +61,14 @@ empty snapshot uses zero dollar totals despite costs being unavailable, so
 `normalizeProviderCostTotals` masks that provider sentinel until an official
 availability field exists. Token charts remain usable while cost totals and
 cost-mode charts stay unavailable. Cursor cost is rejected by that Linux release;
-neither case authorizes provider fetching or source parsing in QML.
+neither case authorizes provider fetching or source parsing in QML. The scoped
+[0.57.0 probes](research/2026-09-09-macos-parity-0.57.0.md#scoped-official-linux-probes)
+confirm Cursor is still rejected; they do not retest established-empty
+Antigravity history.
 
-Track [explicit cost availability](https://github.com/Lucenx9/codexbar-plasma/issues/173),
-[Cursor Linux cost](https://github.com/Lucenx9/codexbar-plasma/issues/171), and
-[service-tier totals](https://github.com/Lucenx9/codexbar-plasma/issues/172) in the issue tracker.
+Track [explicit cost availability](../TODO.md#cost-availability),
+[Cursor Linux cost](../TODO.md#cursor-cost), and
+[service-tier totals](../TODO.md#service-tier-totals) in TODO.
 
 ## Pinned CLI evidence
 
