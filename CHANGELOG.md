@@ -21,6 +21,7 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   guides for settings, cost history, and development.
 - Contributor delivery uses pull requests with required check and smoke jobs.
   Agents follow CI through completion after pushes and authorized merges.
+- Pull request titles follow Conventional Commits and are checked automatically.
 
 ## 0.2.35 - 2026-09-08
 

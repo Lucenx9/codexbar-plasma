@@ -1,0 +1,35 @@
+name: PR title
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: pr-title-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  pr-title:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Validate Conventional Commit title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          import sys
+
+          pattern = r"(?:feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(?:\([a-zA-Z0-9][a-zA-Z0-9_./-]*\))?!?: [^\s].*"
+          title = os.environ["PR_TITLE"]
+          if not re.fullmatch(pattern, title) or title != title.strip():
+              print("Use type(scope): description, with optional scope and breaking-change !.")
+              print("Allowed types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert.")
+              sys.exit(1)
+          print("PR title follows Conventional Commits.")
+          PY

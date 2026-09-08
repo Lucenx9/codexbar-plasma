@@ -1,6 +1,8 @@
 <!--
 Complete every section before opening the pull request. Replace all placeholder
 text, review the final diff, and keep this body current when the diff changes.
+Use a Conventional Commit title, such as fix(accounts): release stale requests.
+The scope is optional; choose the type for the final change.
 
 Never include secrets, credentials, real account data, or unredacted CLI output.
 -->
