@@ -177,6 +177,12 @@ Providers and accounts:
 Costs and history:
 
 - Local cost drill-down when the CLI exposes cost data.
+- A compact provider summary compares today with the selected period. Expand
+  details for period models, history, and projects; cost warnings remain visible.
+- Click a day in the provider chart or select it with the keyboard to see that
+  day's model costs and tokens. Hover previews stay inside the chart, keeping
+  the layout steady. The cost/token selector reuses the loaded data.
+  Missing model breakdowns and truncated lists are identified explicitly.
 - Local-history scans run independently from quota refreshes, automatically at
   most once per hour; the **Usage & Spend** refresh button starts one immediately.
 - Token breakdowns, model summaries, recent daily spend, cost history bars, and
@@ -358,6 +364,7 @@ each scenario, captures the view, and closes the preview automatically:
 | `legacy-dashboard` | Legacy dashboard zeroes and formatted rows, with generic details taking precedence when present. |
 | `project-costs` | Project estimates, an explicit zero, and an unavailable cost in Usage & Spend. |
 | `project-tokens` | Switching to tokens reorders projects without reloading history. |
+| `popup-cost-details`, `popup-cost-tokens` | Compact provider summary, daily versus period models, absent model data, expansion, and metric changes without reloading history. |
 | `project-range` | Switching to 7 days removes the old range before the new project totals arrive. |
 | `project-long-text` | Project names wrap with doubled body text. |
 | `localization-it`, `localization-fr`, `localization-de`, `localization-es`, `localization-pt_BR` | Translated overview, with catalog loading, plural forms, and a settings label checked in each language. |

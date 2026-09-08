@@ -15,6 +15,8 @@ SCENARIOS += ("settings-general", "settings-display", "settings-advanced", "sett
 SCENARIOS += ("readme-overview", "readme-spend", "readme-sessions", "readme-codex")
 SCENARIOS += ("readme-panel-standard", "readme-panel-minimal")
 SCENARIOS += ("panel-default", "panel-default-single")
+SCENARIOS += ("popup-cost-details", "popup-cost-tokens")
+SCENARIOS += ("popup-cost-missing-tokens", "popup-cost-partial-models")
 
 
 def usage(provider, scenario, now):
@@ -113,6 +115,36 @@ def response(args, scenario, now):
         days = int(args[5])
         if scenario.startswith("readme-"):
             return [readme_cost(provider, days, now) for provider in ("codex", "claude")]
+        if scenario.startswith("popup-cost-"):
+            snapshot = readme_cost("codex", days, now)
+            daily = snapshot["daily"]
+            daily[0]["modelBreakdowns"] = [{"modelName": "Earlier model", "cost": daily[0]["totalCost"],
+                                             "totalTokens": daily[0]["totalTokens"]}]
+            daily[-1]["modelBreakdowns"] = [
+                {"modelName": "Example reasoning model", "cost": 1.4, "totalTokens": 50000},
+                {"modelName": "Example coding model", "cost": 0.78, "totalTokens": 41560},
+            ]
+            if scenario == "popup-cost-tokens":
+                for day in daily:
+                    day.pop("totalCost")
+                    for model in day.get("modelBreakdowns", []):
+                        model.pop("cost")
+                snapshot.pop("sessionCostUSD")
+                snapshot["totals"].pop("totalCost")
+            elif scenario == "popup-cost-missing-tokens":
+                for day in daily:
+                    day.pop("totalTokens")
+                    day.pop("modelBreakdowns", None)
+                snapshot.pop("sessionTokens")
+                snapshot["totals"].pop("totalTokens")
+                snapshot["daily"] = [daily[-1]]
+                snapshot["totals"]["totalCost"] = daily[-1]["totalCost"]
+            elif scenario == "popup-cost-partial-models":
+                daily[-1]["modelBreakdowns"] = [
+                    {"modelName": f"Example model {index}", "cost": 0.01, "totalTokens": 1000}
+                    for index in range(7)
+                ]
+            return [snapshot]
         factor = 0.5 if days == 7 else 1
         snapshot = {"provider": "codex", "updatedAt": now.isoformat(), "historyDays": days,
                  "currencyCode": "USD", "sessionCostUSD": 1.25, "sessionTokens": 12000,

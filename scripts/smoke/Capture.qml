@@ -12,6 +12,11 @@ Item {
     required property string imagePath
     property bool prepared: false
     property bool navigationVerified: false
+    property int costDetailsStep: 0
+    property var costSnapshot: null
+    property var costSelectionProviderMemo: null
+    property var costSelectionPointsMemo: null
+    property string costSelectionDayMemo: ""
     property int localizationStep: 0
     property var panelUsageSnapshot
     property var compactPanelItem
@@ -325,6 +330,272 @@ Item {
         navigationVerified = true;
     }
 
+    function verifyCostDetails() {
+        var section = findItem(applet.fullRepresentationItem, "providerLocalCostSection");
+        var chart = findItem(section, "providerCostChart");
+        var details = findItem(section, "costDrillDownSection");
+        var toggle = findItem(section, "costDetailsToggle");
+        if (!section || !chart || !details || !toggle)
+            return false;
+        if (costDetailsStep >= 8)
+            return verifyCostSelectionRefresh(section, chart, details);
+        if (!section.tokenCost)
+            return false;
+        if (costDetailsStep === 0) {
+            verifyScenario(!details.visible && !section.detailsExpanded, "provider details must start collapsed");
+            chart.hoveredIndex = 0;
+            costSnapshot = applet.tokenCosts;
+            var metric = findItem(section, "providerCostMetricCombo");
+            metric.activated(1);
+            costDetailsStep = 1;
+            return false;
+        }
+        if (costDetailsStep === 1) {
+            verifyScenario(applet.costHistoryShowsTokens && applet.tokenCosts === costSnapshot && !applet.costLoading,
+                "provider metric switch must reuse the same payload");
+            chart.hoveredIndex = 0;
+            verifyScenario(!details.visible && section.selectedDay === null, "hover must not expand the popup");
+            chart.hoveredIndex = -1;
+            chart.moveSelection(1);
+            costDetailsStep = 2;
+            return false;
+        }
+        if (costDetailsStep === 2) {
+            verifyScenario(details.visible && details.modelRows.length === 1
+                && details.modelRows[0].label === "Earlier model", "first day leaked period models");
+            chart.hoveredIndex = chart.points.length - 1;
+            verifyScenario(details.modelRows[0].label === "Earlier model", "hover replaced the selected day");
+            chart.hoveredIndex = -1;
+            chart.moveSelection(1);
+            costDetailsStep = 3;
+            return false;
+        }
+        if (costDetailsStep === 3) {
+            verifyScenario(section.selectedDay !== null && details.modelRows.length === 0,
+                "missing daily models must not fall back to the period");
+            verifyScenario(hasText(details, i18n("No model breakdown for this day.")), "missing model notice absent");
+            findItem(section, "providerCostMetricCombo").activated(0);
+            costDetailsStep = 4;
+            return false;
+        }
+        if (costDetailsStep === 4) {
+            verifyScenario(section.selectedDay === null && !details.visible, "metric change kept a stale day");
+            if (scenario === "popup-cost-tokens") {
+                verifyScenario(chart.points.length === 0, "token-only data became a cost chart");
+                verifyScenario(hasText(section, i18n("Cost unavailable")), "missing cost became a zero");
+                findItem(section, "providerCostMetricCombo").activated(1);
+                costDetailsStep = 5;
+                return false;
+            }
+            costDetailsStep = 5;
+        }
+        if (costDetailsStep === 5) {
+            toggle.clicked();
+            costDetailsStep = 6;
+            return false;
+        }
+        if (costDetailsStep === 6) {
+            verifyScenario(section.detailsExpanded && details.visible && details.modelRows.length === 3,
+                "expanded period details must retain all period models");
+            var originalMetricIndex = applet.costHistoryShowsTokens ? 1 : 0;
+            var metricCombo = findItem(section, "providerCostMetricCombo");
+            metricCombo.activated(1 - originalMetricIndex);
+            verifyScenario(section.detailsExpanded && details.visible,
+                "metric change collapsed explicitly expanded period details");
+            metricCombo.activated(originalMetricIndex);
+            toggle.clicked();
+            chart.moveSelection(-1);
+            costDetailsStep = 7;
+            return false;
+        }
+        verifyScenario(details.visible && details.modelRows.length === 2
+            && details.modelRows[0].label === "Example reasoning model", "latest day model selection failed");
+        verifyScenario(details.modelRows[0].value === (scenario === "popup-cost-tokens" ? "50K tokens" : "$1.40 · 50K tokens"),
+            "selected model amounts differ from the daily contract");
+        verifyScenario(applet.tokenCosts === costSnapshot && !applet.costLoading,
+            "day selection or expansion reloaded cost history");
+        costDetailsStep = 8;
+        return false;
+    }
+
+    function replaceCostSelectionProvider(providerData) {
+        applet.providers = applet.providers.map(function(item) {
+            return item.provider === providerData.provider ? providerData : item;
+        });
+    }
+
+    function verifyCostSelectionRefresh(section, chart, details) {
+        if (costDetailsStep === 15) {
+            if (applet.costLoading || !section.tokenCost)
+                return false;
+        } else {
+            verifyScenario(applet.tokenCosts === costSnapshot && !applet.costLoading,
+                "selection reconciliation fetched cost data");
+        }
+        var next;
+        switch (costDetailsStep) {
+        case 8:
+            costSelectionProviderMemo = section.providerData;
+            costSelectionDayMemo = section.selectedDay.label;
+            replaceCostSelectionProvider(JSON.parse(JSON.stringify(section.providerData)));
+            break;
+        case 9:
+            verifyScenario(details.visible && section.selectedDay.label === costSelectionDayMemo,
+                "identical background refresh cleared the pinned day");
+            next = JSON.parse(JSON.stringify(section.providerData));
+            next.tokenCost.daily = [next.tokenCost.daily[next.tokenCost.daily.length - 1], next.tokenCost.daily[0]];
+            verifyScenario(typeof next.tokenCost.daily[0].tokens === "number"
+                && isFinite(next.tokenCost.daily[0].tokens), "refresh fixture must have a measured token count");
+            next.tokenCost.daily[0].tokens++;
+            replaceCostSelectionProvider(next);
+            break;
+        case 10:
+            verifyScenario(details.visible && chart.selectedIndex === 0
+                && section.selectedDay.label === costSelectionDayMemo,
+                "shrinking history lost the pinned day or clamped to another day");
+            verifyScenario(section.selectedDay.tokens === costSelectionProviderMemo.tokenCost.daily[
+                costSelectionProviderMemo.tokenCost.daily.length - 1].tokens + 1,
+                "pinned details retained stale amounts after refresh");
+            next = JSON.parse(JSON.stringify(costSelectionProviderMemo));
+            replaceCostSelectionProvider(next);
+            break;
+        case 11:
+            verifyScenario(details.visible && chart.selectedIndex === chart.points.length - 1
+                && section.selectedDay.label === costSelectionDayMemo,
+                "reordered history replaced the pinned day");
+            next = JSON.parse(JSON.stringify(section.providerData));
+            next.tokenCost.daily.pop();
+            replaceCostSelectionProvider(next);
+            break;
+        case 12:
+            verifyScenario(section.selectedDay === null && chart.selectedIndex === -1 && !details.visible,
+                "a day outside the new window remained pinned");
+            replaceCostSelectionProvider(costSelectionProviderMemo);
+            chart.moveSelection(-1);
+            section.detailsExpanded = true;
+            chart.hoveredIndex = 0;
+            costSelectionPointsMemo = chart.points;
+            next = applet.copyObject(section.providerData);
+            next.account = "another-synthetic-account";
+            replaceCostSelectionProvider(next);
+            break;
+        case 13:
+            verifyScenario(chart.points === costSelectionPointsMemo && chart.selectedIndex === -1
+                && chart.hoveredIndex === -1 && section.selectedDay === null
+                && !section.detailsExpanded && !details.visible,
+                "account change retained details for the same cached cost snapshot");
+            replaceCostSelectionProvider(costSelectionProviderMemo);
+            next = applet.copyObject(section.providerData);
+            next.account = "";
+            next.organization = "First synthetic organization";
+            replaceCostSelectionProvider(next);
+            chart.moveSelection(-1);
+            verifyScenario(section.selectedDay !== null, "organization account fixture must pin a day");
+            next = applet.copyObject(next);
+            next.organization = "Second synthetic organization";
+            replaceCostSelectionProvider(next);
+            break;
+        case 14:
+            verifyScenario(chart.points === costSelectionPointsMemo && section.selectedDay === null
+                && chart.selectedIndex === -1 && !details.visible,
+                "organization-based account change retained the pinned day");
+            replaceCostSelectionProvider(costSelectionProviderMemo);
+            chart.moveSelection(-1);
+            applet.setCostHistoryDays(7);
+            applet.applyTokenCosts();
+            verifyScenario(applet.tokenCosts === costSnapshot && section.tokenCost === null && section.selectedDay === null
+                && chart.selectedIndex === -1 && !details.visible,
+                "requested range change retained the previous cached payload or selection");
+            applet.setCostHistoryDays(30);
+            break;
+        case 15:
+            verifyScenario(section.selectedDay === null && !details.visible,
+                "range refresh restored the previous pin");
+            costSnapshot = applet.tokenCosts;
+            chart.moveSelection(-1);
+            break;
+        default:
+            verifyScenario(details.visible && section.selectedDay.label === costSelectionDayMemo
+                && details.modelRows[0].label === "Example reasoning model",
+                "selection did not recover after scope changes");
+            return true;
+        }
+        costDetailsStep++;
+        return false;
+    }
+
+    function verifyCostCoverage() {
+        var section = findItem(applet.fullRepresentationItem, "providerLocalCostSection");
+        var chart = findItem(section, "providerCostChart");
+        var details = findItem(section, "costDrillDownSection");
+        var empty = findItem(section, "costModelsEmptyNotice");
+        var partial = findItem(section, "costModelsPartialNotice");
+        if (!section || !section.tokenCost || !chart || !details || !empty || !partial)
+            return false;
+        if (costDetailsStep === 0) {
+            costSnapshot = applet.tokenCosts;
+            findItem(section, "costDetailsToggle").clicked();
+            costDetailsStep++;
+            return false;
+        }
+        verifyScenario(applet.tokenCosts === costSnapshot && !applet.costLoading,
+            "cost coverage inspection fetched data");
+        if (costDetailsStep === 5) {
+            verifyScenario(section.selectedDay === null && details.visible
+                && (scenario === "popup-cost-missing-tokens"
+                    ? empty.visible && empty.text === i18n("No model breakdown for this period.")
+                    : partial.visible), "period model notices did not recover after day inspection");
+            return true;
+        }
+        if (scenario === "popup-cost-missing-tokens") {
+            verifyScenario(section.tokenCost.today.tokens === null && section.tokenCost.totals.tokens === null,
+                "missing summary tokens became zero");
+            verifyScenario(hasText(section, i18n("Tokens unavailable")), "missing token notice absent");
+            verifyScenario(applet.spendTotalLine() === i18n("%1 total", applet.amountString(
+                section.tokenCost.totals.cost, section.tokenCost.totals.currency)),
+                "aggregate spend summary fabricated a token count");
+            for (var i = 0; i < section.tokenCost.daily.length; i++)
+                verifyScenario(section.tokenCost.daily[i].tokens === null, "gap filling invented token counts");
+            if (costDetailsStep === 1) {
+                verifyScenario(empty.visible && empty.text === i18n("No model breakdown for this period.")
+                    && !partial.visible, "missing period models must have an explicit empty state");
+                findItem(section, "providerCostMetricCombo").activated(1);
+            } else if (costDetailsStep === 2) {
+                verifyScenario(chart.points.length === 0, "missing token history became a zero-valued chart");
+                findItem(section, "providerCostMetricCombo").activated(0);
+            } else if (costDetailsStep === 3) {
+                chart.selectedIndex = chart.points.length - 1;
+            } else {
+                verifyScenario(section.selectedDay.tokens === null && empty.visible
+                    && empty.text === i18n("No model breakdown for this day.") && !partial.visible,
+                    "missing day models or tokens lost their unknown state");
+                section.clearDaySelection();
+                costDetailsStep = 5;
+                return false;
+            }
+        } else {
+            if (costDetailsStep === 1) {
+                verifyScenario(section.tokenCost.modelsTruncated === true
+                    && details.modelRows.length === 6 && partial.visible && !empty.visible,
+                    "period model cap hid its truncation notice");
+                chart.moveSelection(1);
+            } else if (costDetailsStep === 2) {
+                verifyScenario(section.selectedDay !== null && details.modelRows.length === 1
+                    && !partial.visible, "complete day inherited period truncation");
+                chart.selectedIndex = chart.points.length - 1;
+            } else {
+                verifyScenario(section.selectedDay.modelsTruncated === true
+                    && details.modelRows.length === 6 && partial.visible && !empty.visible,
+                    "daily model cap hid its truncation notice");
+                section.clearDaySelection();
+                costDetailsStep = 5;
+                return false;
+            }
+        }
+        costDetailsStep++;
+        return false;
+    }
+
     function scenarioReady() {
         if (readmeScenario && !readmePanelScenario) {
             if (!prepared || applet.loading || applet.costLoading || applet.providers.length !== 3)
@@ -409,6 +680,10 @@ Item {
             return applet.selectedProviderID === "claude" && claude.error.indexOf("Synthetic provider timeout") >= 0;
         if (claude.error.length > 0 || claude.rows.length !== 2)
             return false;
+        if (scenario === "popup-cost-missing-tokens" || scenario === "popup-cost-partial-models")
+            return verifyCostCoverage();
+        if (scenario.indexOf("popup-cost-") === 0)
+            return applet.selectedProviderID === "codex" && verifyCostDetails();
         if (scenario.indexOf("localization-") === 0) {
             var language = scenario.substring("localization-".length);
             var expected = {
@@ -579,6 +854,12 @@ Item {
                 } else if (capture.scenario === "long-text") {
                     capture.applet.openProviderFromPanel("codex");
                     capture.applet.loadAccounts("codex");
+                } else if (capture.scenario.indexOf("popup-cost-") === 0) {
+                    if (capture.applet.costLoading || !capture.applet.tokenCosts.codex)
+                        return;
+                    popup.Window.window.width = 640;
+                    popup.Window.window.height = 880;
+                    capture.applet.openProviderFromPanel("codex");
                 } else if (capture.scenario === "legacy-dashboard" || capture.scenario.indexOf("provider-header") === 0) {
                     capture.applet.openProviderFromPanel("codex");
                 } else if (capture.scenario.indexOf("project-") === 0) {

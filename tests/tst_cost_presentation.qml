@@ -5,6 +5,78 @@ import "../contents/ui/CostPresentation.js" as CostPresentation
 TestCase {
     name: "CostPresentation"
 
+    function test_costDayIndexAfterRefresh_data() {
+        var first = { label: "2026-09-01", sourceIndex: 0 }
+        var second = { label: "2026-09-02", sourceIndex: 1 }
+        return [
+            { tag: "same-days-new-objects", previous: [first, second], index: 1,
+                next: [{ label: first.label }, { label: second.label }], expected: 1 },
+            { tag: "day-moved", previous: [first, second], index: 1,
+                next: [second, first], expected: 0 },
+            { tag: "earlier-day-removed", previous: [first, second], index: 1,
+                next: [second], expected: 0 },
+            { tag: "selected-day-removed", previous: [first, second], index: 0,
+                next: [second], expected: -1 },
+            { tag: "no-selection", previous: [first], index: -1, next: [first], expected: -1 },
+            { tag: "empty-refresh", previous: [first], index: 0, next: [], expected: -1 },
+            { tag: "missing-date", previous: [{}], index: 0, next: [{}], expected: -1 },
+            { tag: "duplicate-date", previous: [first], index: 0, next: [first, first], expected: -1 },
+            { tag: "ambiguous-old-date", previous: [first, first], index: 0, next: [first], expected: -1 },
+            { tag: "invalid-index", previous: [first], index: 0.5, next: [first], expected: -1 },
+            { tag: "string-index", previous: [first], index: "0", next: [first], expected: -1 },
+            { tag: "out-of-range", previous: [first], index: 1, next: [first], expected: -1 },
+            { tag: "missing-old-points", previous: null, index: 0, next: [first], expected: -1 },
+            { tag: "missing-new-points", previous: [first], index: 0, next: null, expected: -1 },
+            { tag: "null-point", previous: [null], index: 0, next: [first], expected: -1 },
+            { tag: "non-text-date", previous: [{ label: 1 }], index: 0, next: [{ label: 1 }], expected: -1 }
+        ]
+    }
+
+    function test_costDayIndexAfterRefresh(data) {
+        compare(CostPresentation.costDayIndexAfterRefresh(data.previous, data.index, data.next), data.expected)
+    }
+
+    function test_selectedCostDayUsesSourceRowAfterUnavailableAmountsAreSkipped() {
+        var daily = [
+            { label: "2026-09-01", cost: null, tokens: 3, models: [{label: "First"}] },
+            { label: "2026-09-02", cost: 0, tokens: 7, models: [{label: "Second"}] }
+        ]
+        var costPoints = CostPresentation.chartPoints(fmt, daily, false)
+        compare(costPoints.length, 1)
+        compare(CostPresentation.selectedCostDay(daily, costPoints, 0), daily[1])
+        var tokenPoints = CostPresentation.chartPoints(fmt, daily, true)
+        compare(CostPresentation.selectedCostDay(daily, tokenPoints, 0), daily[0])
+        compare(CostPresentation.selectedCostDay(daily, tokenPoints, 1), daily[1])
+        compare(CostPresentation.selectedCostDay(daily, costPoints, -1), null)
+        compare(CostPresentation.selectedCostDay([], costPoints, 0), null)
+        compare(CostPresentation.selectedCostDay(daily, [{ sourceIndex: "1" }], 0), null)
+        compare(CostPresentation.selectedCostDay(daily, [{ sourceIndex: 0.5 }], 0), null)
+        compare(CostPresentation.selectedCostDay(daily, costPoints, 0.5), null)
+        compare(CostPresentation.selectedCostDay(daily, null, 0), null)
+    }
+
+    function test_amountSummaryPreservesAvailableMetrics() {
+        var fmt = CostPresentation.numberFormat(",", ".")
+        var tokensText = function(tokens) { return tokens + " tokens" }
+        compare(CostPresentation.amountSummary(fmt, { cost: null, tokens: 5 }, tokensText), "5 tokens")
+        compare(CostPresentation.amountSummary(fmt, { cost: 0, tokens: null, currency: "USD" }, tokensText), "$0.00")
+        compare(CostPresentation.amountSummary(fmt, { cost: 0, tokens: 0, currency: "USD" }, tokensText), "$0.00 · 0 tokens")
+        compare(CostPresentation.amountSummary(fmt, null, tokensText), "-")
+    }
+
+    function test_modelRowsDistinguishZeroFromMissingAmounts() {
+        var rows = CostPresentation.modelRows(fmt, { models: [
+            { label: "Free", cost: 0, tokens: 2, currency: "USD" },
+            { label: "Unpriced", cost: null, tokens: 2, currency: "USD" },
+            { label: "Unknown tokens", cost: 1, tokens: null, currency: "USD" },
+            { label: "Unknown", cost: null, tokens: null, currency: "USD" }
+        ] }, null)
+        compare(rows[0].value, "$0.00 · 2")
+        compare(rows[1].value, "2")
+        compare(rows[2].value, "$1.00")
+        compare(rows[3].value, "-")
+    }
+
     function test_projectRowsFollowProviderOrderAndSelectedMetric() {
         var costs = [{ provider: "codex", projects: { rows: [
             { label: "Token heavy", cost: 1, tokens: 9000, currency: "USD" },
@@ -598,6 +670,18 @@ TestCase {
         compare(totals.currency, "USD")
     }
 
+    function test_spendTotalsKeepUnknownTokensWithoutDroppingCost() {
+        var costs = [{ totals: { cost: 3, tokens: null, currency: "USD" } }]
+        compare(CostPresentation.spendTotals(costs).tokens, null)
+        compare(CostPresentation.spendTotals(costs).cost, 3)
+        costs.push({ totals: { cost: 2, tokens: 0, currency: "USD" } })
+        compare(CostPresentation.spendTotals(costs).tokens, 0)
+        compare(CostPresentation.spendTotals(costs).cost, 5)
+        costs[0].totals.tokens = 1e308
+        costs[1].totals.tokens = 1e308
+        compare(CostPresentation.spendTotals(costs).tokens, null)
+    }
+
     function test_spendTotalsAreNullWithNoSnapshots() {
         compare(CostPresentation.spendTotals([]), null)
         compare(CostPresentation.spendTotals(null), null)
@@ -946,7 +1030,7 @@ TestCase {
         verify(!rows.truncated)
 
         var totals = CostPresentation.spendTotals([{ totals: { tokens: "100", currency: "USD" } }])
-        compare(totals.tokens, 0)
+        compare(totals.tokens, null)
         compare(CostPresentation.spendTotals([null, { totals: { cost: 2, tokens: 40, currency: "USD" } }]).tokens, 40)
         verify(!CostPresentation.historyStillBuilding([null]))
         compare(CostPresentation.spendCurrency([null]), "USD")

@@ -1,0 +1,51 @@
+{
+  "provider": "codex",
+  "historyDays": 7,
+  "currencyCode": "USD",
+  "daily": [
+    {
+      "cacheReadTokens": 200,
+      "date": "2026-09-07",
+      "inputTokens": 1000,
+      "modelBreakdowns": [
+        {
+          "cost": 0.002835,
+          "modelName": "gpt-5.2-codex",
+          "totalTokens": 1100
+        }
+      ],
+      "modelsUsed": [
+        "gpt-5.2-codex"
+      ],
+      "outputTokens": 100,
+      "reasoningTokens": 10,
+      "totalCost": 0.002835,
+      "totalTokens": 1100
+    },
+    {
+      "cacheReadTokens": 1500,
+      "date": "2026-09-08",
+      "inputTokens": 5000,
+      "modelBreakdowns": [
+        {
+          "cost": 0.005625,
+          "modelName": "gpt-5.1-codex",
+          "totalTokens": 3300
+        },
+        {
+          "cost": 0.0055125,
+          "modelName": "gpt-5.2-codex",
+          "totalTokens": 2200
+        }
+      ],
+      "modelsUsed": [
+        "gpt-5.1-codex",
+        "gpt-5.2-codex"
+      ],
+      "outputTokens": 500,
+      "reasoningTokens": 20,
+      "totalCost": 0.0111375,
+      "totalTokens": 5500
+    }
+  ]
+}

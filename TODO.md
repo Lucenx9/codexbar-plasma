@@ -50,6 +50,15 @@ replace a host CLI.
   selector drives the range chart, the heatmap, and the per-provider bars from
   one `cost` payload, so it must never add a CLI call. `historyCoverageIsEstablished`
   drives the "still collecting" note; a missing flag means established.
+- Popup cost summary and per-day models are **Plasma-native and implemented**.
+  Today and the selected period appear side by side; history, period models,
+  and projects expand on demand. Cost errors and trust notices stay visible.
+  Chart inspection uses the existing `cost.daily[].modelBreakdowns` payload,
+  retaining at most six model rows per day and reporting truncation. Period
+  models also report truncation and show an explicit empty state. Missing
+  amounts remain unknown, and missing daily models never fall back to period
+  totals. Selecting a day or metric must not fetch data. Standard/Fast totals
+  remain **blocked on an official CLI contract**; no service tier is inferred.
 - Cost truthfulness: CLI 0.56.2 retains the `coverage` counters and
   `provenance` normalized behind a bounded trust boundary. Provider and global
   cost amounts are qualified as estimated, partial, or approximate, and share

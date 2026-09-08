@@ -25,6 +25,7 @@ TestCase {
         compare(Normalizer.maximumSessions, 128)
         compare(Normalizer.maximumCostHistoryPoints, 365)
         compare(Normalizer.maximumModelBreakdownsPerDay, 128)
+        compare(Normalizer.maximumCostModelRows, 6)
     }
 
     // --- object-key guards --------------------------------------------------
@@ -1008,6 +1009,34 @@ TestCase {
         compare(rows[0].tokens, 250)
     }
 
+    function test_costHistoryPreservesUnknownTokensWithoutLosingMeasuredCost() {
+        var rows = Normalizer.normalizeCostDaily([
+            { date: "2026-08-27", totalCost: 2 },
+            { date: "2026-08-28", totalCost: 3, totalTokens: 0 }
+        ], "USD", 3, "2026-08-29")
+        compare(rows[0].cost, 2)
+        compare(rows[0].tokens, null)
+        compare(rows[1].tokens, 0)
+        compare(rows[2].tokens, 0)
+        compare(rows[2].models, [])
+    }
+
+    function test_costHistoryRejectsMalformedTokenTotalsWithoutInventingZero() {
+        var invalidTokens = [undefined, null, false, true, "", "unknown", {}, [], Infinity]
+        for (var i = 0; i < invalidTokens.length; i++) {
+            var rows = Normalizer.normalizeCostDaily([
+                { totalCost: 2, totalTokens: invalidTokens[i], tokens: invalidTokens[i] }
+            ], "USD", 1)
+            compare(rows[0].cost, 2)
+            compare(rows[0].tokens, null)
+        }
+        var overflow = Normalizer.normalizeCostDaily([
+            { totalCost: 2, inputTokens: 1e308, outputTokens: 1e308 }
+        ], "USD", 1)
+        compare(overflow[0].cost, 2)
+        compare(overflow[0].tokens, null)
+    }
+
     function test_costHistoryPreservesZeroTokenParts_data() {
         return [
             { tag: "input", field: "inputTokens", value: 0 },
@@ -1222,6 +1251,302 @@ TestCase {
         compare(Normalizer.normalizeCostDaily("2026-08-01", "USD", 30).length, 0)
     }
 
+    function test_dailyCostModelsStayWithTheirOwnDayAndPreservePeriodTotals() {
+        var items = [
+            { date: "2026-08-28", totalCost: 4, totalTokens: 40, modelBreakdowns: [
+                { modelName: "shared", cost: 1, totalTokens: 10 },
+                { modelName: "shared", cost: 3, totalTokens: 30 }
+            ] },
+            { date: "2026-08-29", totalCost: 5, totalTokens: 50,
+                modelBreakdowns: [{ modelName: "shared", cost: 5, totalTokens: 50 }] }
+        ]
+        var daily = Normalizer.normalizeCostDaily(items, "EUR", 2, "2026-08-29")
+        compare(daily[0].models, [{ label: "shared", cost: 4, tokens: 40, currency: "EUR" }])
+        compare(daily[1].models, [{ label: "shared", cost: 5, tokens: 50, currency: "EUR" }])
+        compare(daily[0].modelsTruncated, false)
+        compare(daily[1].modelsTruncated, false)
+        compare(Normalizer.normalizeCostModels(items, "EUR", 2, "2026-08-29").rows,
+            [{ label: "shared", cost: 9, tokens: 90, currency: "EUR" }])
+        daily[0].models[0].cost = 99
+        compare(daily[1].models[0].cost, 5)
+        compare(items[0].modelBreakdowns[0].cost, 1)
+    }
+
+    function test_dailyCostModelsPreserveUnknownZeroAndLegacyAmounts() {
+        var daily = Normalizer.normalizeCostDaily([{ totalTokens: 40, modelBreakdowns: [
+            { modelName: "token-only", cost: null, totalTokens: 20 },
+            { modelName: "zero", cost: 0, totalTokens: 0 },
+            { model: "alias", cost: null, totalCost: "3", totalTokens: false, tokens: "4" },
+            { modelName: "negative", cost: -2, totalTokens: -1 }
+        ] }], "USD", 1)
+        var models = daily[0].models
+        compare(models.slice(0, 2), [
+            { label: "alias", cost: 3, tokens: 4, currency: "USD" },
+            { label: "token-only", cost: null, tokens: 20, currency: "USD" }
+        ])
+        var zeroModels = models.slice(2).sort(function(a, b) { return a.label.localeCompare(b.label) })
+        compare(zeroModels, [
+            { label: "negative", cost: 0, tokens: 0, currency: "USD" },
+            { label: "zero", cost: 0, tokens: 0, currency: "USD" }
+        ])
+    }
+
+    function test_dailyCostModelsRejectMalformedRecordsAndInheritedFields() {
+        function InheritedModel() { this.cost = 1 }
+        InheritedModel.prototype.modelName = "inherited-name"
+        function InheritedAmount() { this.modelName = "inherited-cost" }
+        InheritedAmount.prototype.cost = 2
+        var arrayRecord = []
+        arrayRecord.modelName = "array-record"
+        arrayRecord.cost = 3
+        var daily = Normalizer.normalizeCostDaily([{ totalCost: 1, modelBreakdowns: [
+            null, "string-record", 3, true, arrayRecord, new InheritedModel(), new InheritedAmount(),
+            { modelName: 7, cost: 2 },
+            { modelName: true, cost: 2 },
+            { modelName: { nested: "name" }, cost: 2 },
+            { modelName: "coercive", cost: false, totalTokens: true },
+            { modelName: "__proto__", cost: 2 },
+            { modelName: "constructor", cost: 2 },
+            { modelName: "prototype", cost: 2 },
+            { modelName: "healthy", cost: 1 }
+        ] }], "USD", 1)
+        compare(daily[0].models, [{ label: "healthy", cost: 1, tokens: null, currency: "USD" }])
+        compare(daily[0].modelsTruncated, false)
+        compare(({}).polluted, undefined)
+    }
+
+    function test_dailyCostModelsRetainOnlyBoundedRedactedDisplayFields() {
+        var daily = Normalizer.normalizeCostDaily([{ totalCost: 6, modelBreakdowns: [
+            { modelName: "Authorization: Bearer synthetic-model-secret", cost: 3,
+                source: { path: "/private/source", apiKey: "private-key" },
+                path: "/private/model", standardCostUSD: 2, priorityCostUSD: 1 },
+            { modelName: new Array(300).join("x"), cost: 2 },
+            { modelName: "<b>literal model</b>", cost: 1 }
+        ] }], "USD", 1)
+        var models = daily[0].models
+        compare(models[0].label, "Authorization: [redacted]")
+        compare(models[1].label.length, 120)
+        compare(models[2].label, "<b>literal model</b>")
+        for (var i = 0; i < models.length; i++) {
+            compare(Object.keys(models[i]).sort().join(","), "cost,currency,label,tokens")
+        }
+        var encoded = JSON.stringify(daily)
+        verify(encoded.indexOf("synthetic-model-secret") === -1)
+        verify(encoded.indexOf("/private/") === -1)
+        verify(encoded.indexOf("private-key") === -1)
+    }
+
+    function test_dailyCostModelsReportInspectionTruncationBeforeFiltering() {
+        var breakdowns = new Array(Normalizer.maximumModelBreakdownsPerDay + 1)
+        breakdowns[0] = { modelName: "first", cost: 1 }
+        breakdowns[Normalizer.maximumModelBreakdownsPerDay - 1] = { modelName: "last", cost: 2 }
+        Object.defineProperty(breakdowns, String(Normalizer.maximumModelBreakdownsPerDay), {
+            configurable: true,
+            get: function() { fail("Model inspection exceeded its bound") }
+        })
+        var daily = Normalizer.normalizeCostDaily([{ totalCost: 3, modelBreakdowns: breakdowns }], "USD", 1)
+        compare(daily[0].models.length, 2)
+        compare(daily[0].models[0].label, "last")
+        compare(daily[0].modelsTruncated, true)
+        breakdowns.length = Normalizer.maximumModelBreakdownsPerDay
+        daily = Normalizer.normalizeCostDaily([{ totalCost: 3, modelBreakdowns: breakdowns }], "USD", 1)
+        compare(daily[0].modelsTruncated, false)
+    }
+
+    function test_dailyCostModelDisplayCapDoesNotTruncatePeriodAggregation() {
+        var breakdowns = []
+        for (var i = 0; i < 7; i++) {
+            breakdowns.push({ modelName: "model-" + i, cost: 7 - i })
+        }
+        var items = [
+            { date: "2026-08-28", totalCost: 28, modelBreakdowns: breakdowns },
+            { date: "2026-08-29", totalCost: 100,
+                modelBreakdowns: [{ modelName: "model-6", cost: 100 }] }
+        ]
+        var daily = Normalizer.normalizeCostDaily(items, "USD", 2, "2026-08-29")
+        compare(daily[0].models.length, 6)
+        compare(daily[0].models[5].label, "model-5")
+        compare(daily[0].modelsTruncated, true)
+        compare(daily[1].modelsTruncated, false)
+        var period = Normalizer.normalizeCostModels(items, "USD", 2, "2026-08-29").rows
+        compare(period.length, 6)
+        compare(period[0].label, "model-6")
+        compare(period[0].cost, 101)
+    }
+
+    function test_dailyCostModelsAggregateDuplicatesBeforeApplyingDisplayCap() {
+        var breakdowns = []
+        for (var i = 0; i < 10; i++) {
+            breakdowns.push({ modelName: "same", cost: 1 })
+        }
+        var daily = Normalizer.normalizeCostDaily([{ totalCost: 10, modelBreakdowns: breakdowns }], "USD", 1)
+        compare(daily[0].models.length, 1)
+        compare(daily[0].models[0].cost, 10)
+        compare(daily[0].modelsTruncated, false)
+    }
+
+    function test_dailyCostModelsPreserveAbsentTokensAndAggregateOnlyObservedCounts() {
+        var items = [
+            { totalCost: 3, modelBreakdowns: [
+                { modelName: "cost-only", cost: 2 },
+                { modelName: "mixed", cost: 1 }
+            ] },
+            { totalCost: 3, modelBreakdowns: [
+                { modelName: "cost-only", cost: 2, totalTokens: null },
+                { modelName: "mixed", cost: 1, totalTokens: 0 }
+            ] }
+        ]
+        var daily = Normalizer.normalizeCostDaily(items, "USD", 2)
+        compare(daily[0].models, [
+            { label: "cost-only", cost: 2, tokens: null, currency: "USD" },
+            { label: "mixed", cost: 1, tokens: null, currency: "USD" }
+        ])
+        compare(daily[1].models[1].tokens, 0)
+        compare(Normalizer.normalizeCostModels(items, "USD", 2).rows, [
+            { label: "cost-only", cost: 4, tokens: null, currency: "USD" },
+            { label: "mixed", cost: 2, tokens: 0, currency: "USD" }
+        ])
+        items.push({ modelBreakdowns: [{ modelName: "mixed", cost: 1, totalTokens: 7 }] })
+        var period = Normalizer.normalizeCostModels(items, "USD", 3).rows
+        compare(period[1].label, "mixed")
+        compare(period[1].tokens, 7)
+    }
+
+    function test_dailyCostModelOverflowKeepsTheCompanionMetricAndStaysUnknown() {
+        var breakdowns = []
+        for (var i = 0; i < 3; i++) {
+            breakdowns.push({ modelName: "cost-overflow", cost: i < 2 ? 1e308 : 1, totalTokens: 2 })
+            breakdowns.push({ modelName: "token-overflow", cost: 2, totalTokens: i < 2 ? 1e308 : 1 })
+        }
+        var item = { totalCost: 6, totalTokens: 6, modelBreakdowns: breakdowns }
+        var dailyModels = Normalizer.normalizeCostDaily([item], "USD", 1)[0].models
+        compare(dailyModels, [
+            { label: "token-overflow", cost: 6, tokens: null, currency: "USD" },
+            { label: "cost-overflow", cost: null, tokens: 6, currency: "USD" }
+        ])
+        compare(Normalizer.normalizeCostModels([item], "USD", 1).rows, dailyModels)
+        var period = Normalizer.normalizeCostModels([
+            { modelBreakdowns: [{ modelName: "same", cost: 1e308, totalTokens: 1 }] },
+            { modelBreakdowns: [{ modelName: "same", cost: 1e308, totalTokens: 2 }] }
+        ], "USD", 2).rows
+        compare(period, [{ label: "same", cost: null, tokens: 3, currency: "USD" }])
+    }
+
+    function test_dailyCostModelsDoNotPopulateGapsOrReviveInvalidDays() {
+        var daily = Normalizer.normalizeCostDaily([
+            { date: "2026-08-20", totalCost: 9, modelBreakdowns: [{ modelName: "old", cost: 9 }] },
+            { date: "2026-08-28", totalCost: 2, modelBreakdowns: [{ modelName: "current", cost: 2 }] }
+        ], "USD", 2, "2026-08-29")
+        compare(daily[0].models[0].label, "current")
+        compare(daily[1].label, "2026-08-29")
+        compare(daily[1].models, [])
+        compare(daily[1].modelsTruncated, false)
+        compare(Normalizer.normalizeCostDaily([
+            { date: "2026-08-29", totalCost: null, modelBreakdowns: [{ modelName: "orphan", cost: 2 }] }
+        ], "USD", 1, "2026-08-29"), [])
+    }
+
+    function test_dailyCostModelsIgnoreMalformedContainers() {
+        var containers = [undefined, null, "models", {}, { "0": { modelName: "fake", cost: 2 }, length: 1 }]
+        for (var i = 0; i < containers.length; i++) {
+            var daily = Normalizer.normalizeCostDaily([{ totalCost: 1, modelBreakdowns: containers[i] }], "USD", 1)
+            compare(daily[0].models, [])
+            compare(daily[0].modelsTruncated, false)
+        }
+    }
+
+    function test_costTotalsPreserveUnknownAndMeasuredTokenCounts_data() {
+        return [
+            { tag: "absent", totals: { totalCost: 2 }, expected: null },
+            { tag: "null", totals: { totalCost: 2, totalTokens: null }, expected: null },
+            { tag: "boolean", totals: { totalCost: 2, totalTokens: false }, expected: null },
+            { tag: "invalid", totals: { totalCost: 2, totalTokens: "unknown" }, expected: null },
+            { tag: "zero-total", totals: { totalCost: 2, totalTokens: 0 }, expected: 0 },
+            { tag: "zero-part", totals: { totalCost: 2, inputTokens: 0 }, expected: 0 },
+            { tag: "negative-only-parts", totals: { totalCost: 2, inputTokens: -3 }, expected: null },
+            { tag: "overflowing-parts", totals: { totalCost: 2, inputTokens: 1e308, outputTokens: 1e308 }, expected: null }
+        ]
+    }
+
+    function test_costTotalsPreserveUnknownAndMeasuredTokenCounts(data) {
+        var totals = Normalizer.normalizeCostTotals(data.totals, undefined, undefined, "USD")
+        compare(totals.tokens, data.expected)
+        compare(totals.cost, 2)
+    }
+
+    function test_costDailyRejectsNegativeOnlyPartsAndKeepsMeasuredZero() {
+        var rows = Normalizer.normalizeCostDaily([
+            { date: "2026-09-01", inputTokens: -3 },
+            { date: "2026-09-02", totalCost: 2, inputTokens: -3 },
+            { date: "2026-09-03", inputTokens: 0 }
+        ], "USD", 3)
+        compare(rows.length, 2)
+        compare(rows[0].tokens, null)
+        compare(rows[1].tokens, 0)
+    }
+
+    function test_costDailyRetainsUnknownOverflowAndObservedParts() {
+        var rows = Normalizer.normalizeCostDaily([
+            { date: "2026-09-01", inputTokens: 1e308, outputTokens: 1e308 }
+        ], "USD", 1)
+        compare(rows.length, 1)
+        compare(rows[0].cost, null)
+        compare(rows[0].tokens, null)
+        compare(rows[0].inputTokens, 1e308)
+    }
+
+    function test_costModelsRejectNonTextNames() {
+        var summary = Normalizer.normalizeCostModels([{ modelBreakdowns: [
+            { modelName: 123, cost: 1 },
+            { model: 123, cost: 1 },
+            { modelName: "123", cost: 2 }
+        ] }], "USD", 1)
+        compare(summary.rows, [{ label: "123", cost: 2, tokens: null, currency: "USD" }])
+    }
+
+    function test_costGapFillingRequiresAnObservedMetric() {
+        var rows = Normalizer.normalizeCostDaily([
+            { date: "2026-09-02", totalCost: 2 }
+        ], "USD", 3, "2026-09-03")
+        compare(rows.length, 3)
+        for (var i = 0; i < rows.length; i++) {
+            compare(rows[i].tokens, null)
+        }
+        compare(rows[0].cost, 0)
+        var tokenRows = Normalizer.normalizeCostDaily([
+            { date: "2026-09-02", totalTokens: 0 }
+        ], "USD", 3, "2026-09-03")
+        for (var j = 0; j < tokenRows.length; j++) {
+            compare(tokenRows[j].tokens, 0)
+            compare(tokenRows[j].cost, null)
+        }
+    }
+
+    function test_periodCostModelsRetainDisplayAndInspectionTruncation() {
+        var breakdowns = []
+        for (var i = 0; i < 7; i++) {
+            breakdowns.push({ modelName: "model-" + i, cost: 7 - i })
+        }
+        var summary = Normalizer.normalizeCostModels([{ modelBreakdowns: breakdowns }], "USD", 30)
+        compare(summary.rows.length, 6)
+        compare(summary.truncated, true)
+        breakdowns.pop()
+        compare(Normalizer.normalizeCostModels([{ modelBreakdowns: breakdowns }], "USD", 30).truncated, false)
+        breakdowns.length = Normalizer.maximumModelBreakdownsPerDay + 1
+        compare(Normalizer.normalizeCostModels([{ modelBreakdowns: breakdowns }], "USD", 30).truncated, true)
+        compare(Normalizer.normalizeCostModels([], "USD", 30), { rows: [], truncated: false })
+    }
+
+    function test_costModelTiesHaveStableLabelOrder() {
+        var items = [{ modelBreakdowns: [
+            { modelName: "Zulu", cost: 2, totalTokens: 20 },
+            { modelName: "Alpha", cost: 2, totalTokens: 20 }
+        ] }]
+        var first = Normalizer.normalizeCostModels(items, "USD", 30)
+        items[0].modelBreakdowns.reverse()
+        compare(Normalizer.normalizeCostModels(items, "USD", 30), first)
+    }
+
     function test_costTotalsPreferEmittedTotalsAndFallBackToTheWindow() {
         var emitted = Normalizer.normalizeCostTotals(
             { totalCost: 12.5, totalTokens: 900 }, 99, 99, "EUR")
@@ -1268,7 +1593,7 @@ TestCase {
         var totals = Normalizer.normalizeCostTotals(
             { totalCost: -5, totalTokens: "lots", inputTokens: "x" }, undefined, undefined, "USD")
         compare(totals.cost, 0)
-        compare(totals.tokens, 0)
+        compare(totals.tokens, null)
         compare(totals.inputTokens, 0)
     }
 
@@ -1304,7 +1629,8 @@ TestCase {
 
     function test_sumTokenPartsReportsNaNWhenNothingIsUsable() {
         verify(isNaN(Normalizer.sumTokenParts(undefined, null, "x", NaN)))
-        verify(isNaN(Normalizer.sumTokenParts(0, 0, 0, 0)))
+        compare(Normalizer.sumTokenParts(0, 0, 0, 0), 0)
+        verify(isNaN(Normalizer.sumTokenParts(-3, undefined, undefined, undefined)))
         compare(Normalizer.sumTokenParts(1, 2, 3, 4), 10)
     }
 
@@ -1315,7 +1641,7 @@ TestCase {
                 { modelName: "gpt-5", cost: 2, totalTokens: 20 },
                 { model: "sonnet", totalCost: 5, tokens: 1 }
             ] }
-        ], "USD", 30)
+        ], "USD", 30).rows
 
         compare(rows.length, 2)
         compare(rows[0].label, "sonnet")
@@ -1344,7 +1670,7 @@ TestCase {
                 modelBreakdowns: [{ modelName: "future", cost: 200, totalTokens: 2000 }] }
         ]
         var daily = Normalizer.normalizeCostDaily(items, "USD", 7, data.updatedAt)
-        var models = Normalizer.normalizeCostModels(items, "USD", 7, data.updatedAt)
+        var models = Normalizer.normalizeCostModels(items, "USD", 7, data.updatedAt).rows
 
         compare(daily.length, 7)
         compare(models.length, 1)
@@ -1362,7 +1688,7 @@ TestCase {
             { dayKey: "2026-08-20", modelBreakdowns: [{ modelName: "old", cost: 100 }] },
             { date: "2026-08-30", modelBreakdowns: [{ modelName: "current", cost: 3 }] }
         ]
-        var rows = Normalizer.normalizeCostModels(items, "USD", 2, "2026-08-30")
+        var rows = Normalizer.normalizeCostModels(items, "USD", 2, "2026-08-30").rows
 
         compare(rows.length, 1)
         compare(rows[0].label, "current")
@@ -1372,7 +1698,7 @@ TestCase {
     function test_costModelsDoNotReuseDatesOutsideAnEmptyWindow() {
         var rows = Normalizer.normalizeCostModels([
             { date: "2026-08-20", modelBreakdowns: [{ modelName: "old", cost: 100 }] }
-        ], "USD", 7, "2026-08-30")
+        ], "USD", 7, "2026-08-30").rows
 
         compare(rows.length, 0)
     }
@@ -1393,7 +1719,7 @@ TestCase {
                 modelBreakdowns: [{ modelName: "model-" + i, cost: i + 1 }]
             })
         }
-        var rows = Normalizer.normalizeCostModels(items, "USD", 2, data.updatedAt)
+        var rows = Normalizer.normalizeCostModels(items, "USD", 2, data.updatedAt).rows
 
         compare(rows.length, 2)
         compare(rows[0].label, "model-2")
@@ -1412,7 +1738,7 @@ TestCase {
             date: "2026-08-30",
             modelBreakdowns: [{ modelName: "inspected", cost: 1 }]
         })
-        var rows = Normalizer.normalizeCostModels(items, "USD", 2, "2026-08-30")
+        var rows = Normalizer.normalizeCostModels(items, "USD", 2, "2026-08-30").rows
 
         compare(rows.length, 1)
         compare(rows[0].label, "inspected")
@@ -1426,7 +1752,7 @@ TestCase {
                 modelBreakdowns: [{ modelName: "current", cost: 1 }]
             })
         }
-        var rows = Normalizer.normalizeCostModels(items, "USD", 2, "2026-08-30")
+        var rows = Normalizer.normalizeCostModels(items, "USD", 2, "2026-08-30").rows
 
         compare(rows.length, 1)
         compare(rows[0].cost, 2)
@@ -1437,7 +1763,7 @@ TestCase {
             modelName: "gemini-2.5-pro",
             cost: null,
             totalTokens: 198
-        }] }], "USD", 30)
+        }] }], "USD", 30).rows
 
         compare(rows.length, 1)
         compare(rows[0].cost, null)
@@ -1450,7 +1776,7 @@ TestCase {
             { modelName: "boolean-tokens", cost: false, totalTokens: true },
             { modelName: "valid-aliases", cost: null, totalCost: 3,
                 totalTokens: false, tokens: 4 }
-        ] }], "USD", 30)
+        ] }], "USD", 30).rows
 
         compare(rows.length, 1)
         compare(rows[0].label, "valid-aliases")
@@ -1465,7 +1791,7 @@ TestCase {
                 + '{"modelName":"constructor","cost":9},'
                 + '{"modelName":"prototype","cost":9},'
                 + '{"modelName":"gpt-5","cost":1}]') }
-        ], "USD", 30)
+        ], "USD", 30).rows
 
         compare(rows.length, 1)
         compare(rows[0].label, "gpt-5")
@@ -1477,7 +1803,7 @@ TestCase {
         // that a bare `byName[name]` lookup would have swallowed.
         var rows = Normalizer.normalizeCostModels([
             { modelBreakdowns: [{ modelName: "toString", cost: 4 }] }
-        ], "USD", 30)
+        ], "USD", 30).rows
         compare(rows.length, 1)
         compare(rows[0].label, "toString")
         compare(rows[0].cost, 4)
@@ -1488,7 +1814,7 @@ TestCase {
         for (var i = 0; i < Normalizer.maximumModelBreakdownsPerDay + 40; i++) {
             breakdowns.push({ modelName: "model-" + i, cost: i + 1 })
         }
-        var rows = Normalizer.normalizeCostModels([{ modelBreakdowns: breakdowns }], "USD", 30)
+        var rows = Normalizer.normalizeCostModels([{ modelBreakdowns: breakdowns }], "USD", 30).rows
         compare(rows.length, 6)
         // The most expensive surviving model is the last one inside the per-day
         // breakdown bound, not the most expensive one in the payload.
@@ -1496,14 +1822,14 @@ TestCase {
     }
 
     function test_costModelsIgnoreMalformedBreakdownContainers() {
-        compare(Normalizer.normalizeCostModels(null, "USD", 30).length, 0)
-        compare(Normalizer.normalizeCostModels("daily", "USD", 30).length, 0)
+        compare(Normalizer.normalizeCostModels(null, "USD", 30).rows.length, 0)
+        compare(Normalizer.normalizeCostModels("daily", "USD", 30).rows.length, 0)
         compare(Normalizer.normalizeCostModels([
             null,
             { modelBreakdowns: "gpt-5" },
             { modelBreakdowns: { "0": { modelName: "gpt-5", cost: 1 } } },
             { modelBreakdowns: [{ modelName: "gpt-5" }] }
-        ], "USD", 30).length, 0)
+        ], "USD", 30).rows.length, 0)
     }
 
     function test_costModelsFloorFractionalDayBounds() {
@@ -1515,11 +1841,11 @@ TestCase {
             { modelBreakdowns: [{ modelName: "mid", cost: 2 }] },
             { modelBreakdowns: [{ modelName: "new", cost: 3 }] }
         ]
-        var rows = Normalizer.normalizeCostModels(items, "USD", 2.5)
+        var rows = Normalizer.normalizeCostModels(items, "USD", 2.5).rows
         compare(rows.length, 2)
         compare(rows[0].label, "new")
         compare(rows[1].label, "mid")
-        var singleDay = Normalizer.normalizeCostModels(items, "USD", 0.5)
+        var singleDay = Normalizer.normalizeCostModels(items, "USD", 0.5).rows
         compare(singleDay.length, 1)
         compare(singleDay[0].label, "new")
     }
