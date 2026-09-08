@@ -398,6 +398,8 @@ Item {
             return panelPreview.item !== null && applet.compactProviders().length === expectedProviderCount;
         }
         if (panelDefaultsScenario) {
+            if (prepared)
+                verifyScenario(applet.providers === panelUsageSnapshot, "panel defaults reloaded usage");
             return prepared && panelPreview.item !== null && applet.compactText() === ""
                 && applet.compactProviders().length === expectedProviderCount;
         }
