@@ -184,6 +184,18 @@ QML_TEST_REQUIRE_NO_SKIPS=1 make check QMLLINT_FLAGS='--import warning --unquali
 
 CI also runs smoke scenarios under Xvfb and retains screenshots and logs as
 workflow artifacts. Release publication requires both check and smoke jobs.
+The `check` job always runs `make check` and `make package`. A lightweight
+`scope` job compares the tested PR merge tree with its base parent, or the full
+before/after range for a push to `main`. Only changes limited to the editorial
+Markdown allowlist in `scripts/ci_scope.py` omit the `smoke-runtime` job.
+Images, translations, code, tests, packaging, CI files, unknown paths, missing
+history, and empty diffs keep graphical coverage. Tags always run it.
+
+The required `smoke` job reports either successful graphical tests or an explicit
+documentation-only omission in its summary. It fails if scope detection fails,
+the runtime result is missing, or required smoke tests fail or are cancelled.
+The workflow itself has no path filter, so required checks still report a result.
+This follows [GitHub's required-check guidance](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks).
 
 ## Popup smoke tests
 
@@ -332,6 +344,10 @@ The agent owns delivery through these completion criteria:
    need diagnosis. Report an external blocker with the run link and failing job.
    Treat unexpected skips, cancelled runs, and missing required checks as
    unresolved. The release job is intentionally skipped on non-tag runs.
+   A documentation-only `smoke-runtime` omission is expected only when the
+   required `smoke` job confirms it. Superseded PR runs may be cancelled by
+   concurrency; follow the replacement run for the latest commit. Main pushes
+   and release runs are not cancelled when a newer run starts.
 3. For a PR-only request, finish when the current PR checks pass and the PR body
    records their results. Report it as ready for review, not merged. Merge only
    when authorized; check the current head and base again before merging.

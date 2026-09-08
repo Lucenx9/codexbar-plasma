@@ -22,6 +22,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Contributor delivery uses pull requests with required check and smoke jobs.
   Agents follow CI through completion after pushes and authorized merges.
 - Pull request titles follow Conventional Commits and are checked automatically.
+- CI cancels superseded PR runs and omits graphical smoke tests for changes
+  limited to editorial Markdown. Checks and packaging still run; releases keep
+  full graphical coverage.
 
 ### Fixed
 
