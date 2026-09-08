@@ -5,6 +5,31 @@ tests, packaging, or runtime behavior. [AGENTS.md](../AGENTS.md) defines project
 boundaries and required checks. [TODO.md](../TODO.md) owns current feature and
 parity decisions. All code paths below are relative to the repository root.
 
+## Work from a checkout
+
+Install `make`, Python 3, GNU gettext, and the Plasma runtime requirements in
+[the README](../README.md#requirements). The check suite also needs Qt 6 QML
+lint/test tools, ShellCheck, `xmllint`, and `jq`. The pinned
+[CI workflow](../.github/workflows/ci.yml) lists the complete test environment;
+package names vary by distribution.
+
+```sh
+git clone https://github.com/Lucenx9/codexbar-plasma.git
+cd codexbar-plasma
+make check
+make install
+```
+
+`make install` builds and installs the curated `.plasmoid` archive. Tests and
+agent instructions are not installed. Reload Plasma after installing changed
+QML, using the [runtime instructions](#runtime-verification).
+For an existing checkout, `./install.sh` builds, installs, and restarts Plasma.
+
+From this checkout, `make update` installs the latest immutable GitHub release
+using the bundled helper. It does not pull Git changes or install local edits.
+For those, use `make install` or `./install.sh`. Release-package users can use
+[the widget's update settings](../README.md#update) without a checkout.
+
 ## Ownership and implementation
 
 - `contents/ui/main.qml` owns applet processes, refresh/account coordination,
@@ -111,6 +136,78 @@ Read its output for tool failures and skips. CI uses the pinned Plasma image in
 QtTests configured to reject skips. A local machine missing QML modules may
 provide less coverage; report what actually ran.
 
+`make check` disables unqualified-name warnings because Plasma injects helpers
+such as `i18n()` as context properties. It validates AppStream metadata when
+`kpackagetool6` is available and reports a skip otherwise. On older local Plasma
+packages without QML type metadata, import/type coverage may be partial; CI
+supplies the metadata. To require CI's strict checks locally:
+
+```sh
+QML_TEST_REQUIRE_NO_SKIPS=1 make check QMLLINT_FLAGS='--import warning --unqualified disable'
+```
+
+CI also runs smoke scenarios under Xvfb and retains screenshots and logs as
+workflow artifacts. Release publication requires both check and smoke jobs.
+
+## Popup smoke tests
+
+Run the popup smoke test from a graphical Plasma 6 session:
+
+```sh
+make smoke
+```
+
+This requires Python 3, GNU gettext, `plasmawindowed`, `dbus-run-session`, and
+the Plasma, Kirigami, and KDE desktop control QML modules. README captures also
+require the Breeze Dark color scheme. Localized scenarios use the UTF-8 locales
+in the [translation guide](translations.md); CI generates them during setup.
+The runner opens a temporary applet for each scenario, captures it, and closes
+it automatically. List the available scenarios with:
+
+```sh
+python3 scripts/smoke_popup.py --help
+```
+
+Select one scenario or choose a new artifact directory:
+
+```sh
+make smoke SMOKE_ARGS='--scenario long-text'
+python3 scripts/smoke_popup.py --scenario normal --output /tmp/codexbar-preview
+python3 scripts/smoke_popup.py --scenario panel-minimal --renderer opengl
+python3 scripts/smoke_popup.py --scenario readme-overview --renderer opengl --output /tmp/codexbar-readme
+```
+
+Use `--renderer opengl` on a graphical session with OpenGL for accurate provider
+icon colors. The default software renderer checks layout and behavior, but does
+not render Kirigami's icon color masking. Qt documents the software renderer's
+[effect limitations](https://doc.qt.io/qt-6/qtquick-visualcanvas-adaptations-software.html).
+
+The command prints the artifact directory, defaulting to `dist/smoke/run-*`.
+Each scenario produces a PNG and a process log; `results.json` records pass or
+failure. Existing output directories are never overwritten. The timeout is
+30 seconds per scenario and can be changed with `--timeout 60`.
+
+The runner copies the current applet into temporary XDG directories under a
+separate applet ID and uses a private D-Bus session. It sets a synthetic CLI
+path and disables updates and notifications before QML starts. It does not
+install a package, use real provider accounts, change the installed widget's
+settings, or restart Plasma. Temporary files and preview processes are removed
+on completion, timeout, or interruption.
+
+The capture component selects the real popup views and waits for the expected
+state before using Qt's
+[`grabToImage`](https://doc.qt.io/qt-6/qml-qtquick-item.html#grabToImage-method).
+QML errors, missing captures, early exits, and timeouts fail the command.
+Screenshots still need visual review: this is not a pixel-comparison test and
+does not exercise panel placement, key-event dispatch, or the real CLI.
+Synthetic payloads cover a subset of the CLI 0.56.2 contract; fixture dates
+are relative to run time. Typography uses Noto Sans and Breeze icons.
+
+`make check` covers the runner's portable isolation and failure-handling tests
+and lints the capture QML.
+`make smoke` additionally requires the graphical environment and reports a
+failure rather than silently skipping when that environment is unavailable.
+
 ## Runtime verification
 
 After extracting components/delegates, install or upgrade the widget and inspect
@@ -129,7 +226,7 @@ For a panel smoke check when plasma-sdk is installed:
 plasmoidviewer -a "$PWD" -l topedge -f horizontal
 ```
 
-Use `plasmawindowed app.codexbar` for an installed-widget check.
+Use `plasmawindowed app.codexbar.plasma` for an installed-widget check.
 Restarting/replacing `plasmashell` is a final runtime check, not the edit loop.
 Use `qmlprofiler` only after reproducing a performance problem, and keep traces
 in ignored `dist/review/` or the OS temp directory.
@@ -145,9 +242,15 @@ codexbar usage --provider codex --status --format json --json-only
 codexbar usage --provider codex --all-accounts --format json --json-only
 codexbar cost --format json --json-only
 codexbar config providers --format json --json-only
+codexbar sessions --json-v2
 ```
 
 For packaging changes, run `make package` after `make check`.
+Packaging needs Python 3 and GNU gettext. It compiles `po/*.po` to
+`contents/locale/<language>/LC_MESSAGES/plasma_applet_app.codexbar.plasma.mo`
+and includes the catalogs in the archive. Generated `.mo` files stay out of Git.
+For string extraction and catalog updates, follow [Translations](translations.md).
+
 The `PACKAGE_FILES` list in the Makefile defines the archive contents, including
 README screenshots. Publishing the resulting `dist/codexbar-plasma.plasmoid`
 in a GitHub Release requires user authorization.

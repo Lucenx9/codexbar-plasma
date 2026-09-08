@@ -6,6 +6,8 @@ Every file under `docs/` is listed below so new material has an explicit purpose
 
 ## Maintained references
 
+- [Usage and settings](usage.md): panel and popup options, provider setup,
+  cost history, notifications, and widget defaults.
 - [Development](development.md): QML ownership, regression checks, runtime
   verification, and maintenance of agent instructions. Read before code or
   tooling changes; feature status remains in TODO.
