@@ -546,7 +546,8 @@ Item {
                         && (capture.applet.loading || capture.applet.providers.length !== capture.expectedProviderCount))
                     return;
                 if (capture.panelDefaultsScenario) {
-                    if (capture.applet.costLoading || panelPreview.item === null)
+                    if (capture.applet.costLoading || panelPreview.item === null || capture.compactPanelItem === null
+                            || capture.compactPanelItem === undefined)
                         return;
                     capture.verifyPanelDefaults();
                 } else if (capture.readmePanelScenario) {
