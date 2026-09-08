@@ -110,6 +110,9 @@ or **macOS-only/non-goal**. Screenshots and Swift models are not CLI contracts.
   branch protections. Follow [delivery and CI](docs/development.md#delivery-and-ci)
   after every push and authorized merge. Own the checks through their final
   result, fix in-scope failures, and report the verified commit and any blocker.
+- Use Conventional Commits for every PR title: `type(scope): description`, with
+  scope optional. Choose the type for the final change, such as `fix`, `feat`,
+  `docs`, or `ci`; follow [the title rules](docs/development.md#delivery-and-ci).
 - Own consistency across the repository, without user reminders. For every
   change, follow [repository maintenance](docs/development.md#repository-maintenance)
   before editing and before delivery. A task is complete only when affected

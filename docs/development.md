@@ -297,8 +297,19 @@ Use a `codex/` branch and a PR for repository changes. Direct pushes require an
 explicit exception for the current task. A request to push directly does not
 authorize weakening protection rules or bypassing failed checks.
 
-The default branch rules require a PR and successful GitHub Actions `check` and
-`smoke` jobs, tested against the current base branch. The rules also prevent
+Every PR title follows [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/):
+`type(scope): description`, with an optional scope and an
+optional `!` before the colon for breaking changes. Allowed types are `feat`,
+`fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, and
+`revert`. Use a short description of the final change, for example
+`fix(accounts): release stale requests` or `docs: clarify installation`.
+Keep the title current when scope changes, and retain that format for the squash
+commit. The `pr-title` check validates new and edited titles; title edits run
+this small workflow without rerunning the full widget suite.
+
+The default branch rules require a PR and successful GitHub Actions `check`,
+`smoke`, and `pr-title` jobs, tested against the current base branch. The rules
+also prevent
 deletion and force pushes. Copilot review remains enabled; no additional human
 approval count is required. The maintainer can merge their own PR once its
 checks pass. Inspect the effective rules with:
