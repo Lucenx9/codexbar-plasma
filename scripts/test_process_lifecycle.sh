@@ -25,6 +25,7 @@ require_in_surface applet "interval: 0"
 require_in_surface applet "root.finishUsageCommandSource(sourceName)"
 require_in_surface applet 'import "ProviderFallbackQueue.js" as ProviderFallbackQueue'
 require_in_surface applet 'import "ProviderRosterCache.js" as ProviderRosterCache'
+require_in_surface applet 'import "AccountRequests.js" as AccountRequests'
 require_in_surface applet 'import "SessionRefreshPolicy.js" as SessionRefreshPolicy'
 require_in_surface applet "property var providerFallbackState: null"
 require_in_surface applet "readonly property int accountCommandTimeoutMs: 60000"
@@ -72,6 +73,8 @@ reject_in_surface applet "pendingAccountCommandStartedAt"
 reject_in_surface applet "pendingAccountCommands"
 reject_in_surface applet "accountCommandTimeoutTimer"
 reject_in_surface applet "hasPendingAccountCommands"
+reject_in_surface applet "property var accountLoading:"
+reject_in_surface applet "setAccountLoading("
 reject_in_surface applet "expirePendingAccountCommands"
 reject_in_surface applet "function retireUsageCommandSource(sourceName)"
 reject_in_surface applet "interval: root.refreshIntervalSec > 0 ? root.refreshIntervalSec * 1000 : 0"
@@ -137,6 +140,7 @@ for retire_kind_fragment in ("CommandLedger.sourcesOfKind(activeCommandDescripto
 require_all(
     applet.function_body("loadAccounts"),
     (
+        "accountLoadingForProvider(normalizedProviderID)",
         "buildCommandDescriptor(",
         '"account", normalizedProviderID, accountCommandTimeoutMs)',
         "descriptor.commandSignature = command",
@@ -145,25 +149,26 @@ require_all(
     "account loads must enter the shared deadline ledger",
 )
 
-require_all(
-    applet.function_body("parseProviderAccountsOutput"),
-    (
-        "descriptor.providerID",
-        "finishUsageCommandSource(sourceName)",
-        "accountCommandIsCurrent(descriptor)",
-    ),
-    "normal account completion must reject stale context",
-)
-
+# Behavioral ownership and context cases live in tst_account_requests.qml.
+# Keep only the QML seam and effect ordering here: decide while registered,
+# disconnect completed requests, then parse only accepted payloads.
 require_ordered(
     applet.function_body("parseProviderAccountsOutput"),
     (
-        "accountCommandIsCurrent(descriptor)",
+        "AccountRequests.completion(activeCommandDescriptors, sourceName,",
+        "buildProviderAccountsCommand(descriptor.providerID)",
+        "if (!decision)",
         "finishUsageCommandSource(sourceName)",
-        "if (!commandIsCurrent)",
-        "setAccountLoading(providerID, false)",
+        "if (!decision.acceptsPayload)",
+        "JSON.parse(trimmed)",
     ),
-    "a completed stale account command must validate first and then release its loading indicator",
+    "account replies must decide before disconnecting and gate payload parsing on acceptance",
+)
+
+require_all(
+    applet.function_body("accountLoadingForProvider"),
+    ("AccountRequests.isLoading(activeCommandDescriptors, key)",),
+    "account loading must derive from the shared ledger, including completion and timeout cleanup",
 )
 
 require_all(
@@ -171,9 +176,10 @@ require_all(
     (
         'CommandLedger.sourcesOfKind(activeCommandDescriptors, "account")',
         "CommandLedger.find(activeCommandDescriptors, sourceName)",
-        "accountCommandIsCurrent(descriptor)",
+        "AccountRequests.completion(activeCommandDescriptors, sourceName,",
+        "buildProviderAccountsCommand(descriptor.providerID)",
+        "if (decision && !decision.acceptsPayload)",
         "finishUsageCommandSource(sourceName)",
-        "setAccountLoading(staleProviderID, false)",
     ),
     "stale account cleanup is incomplete",
 )
@@ -237,11 +243,10 @@ require_all(
     timeout_body[account_timeout_start:account_timeout_end],
     (
         "finishUsageCommandSource(sourceName)",
-        "setAccountLoading(descriptor.providerID, false)",
         "setAccountError(",
         "descriptor.providerID",
     ),
-    "account timeout must close the shared ledger entry and clear its loading state",
+    "account timeout must close the shared ledger entry and report the scoped error",
 )
 fallback_timeout_start = timeout_body.find('case "providerFallback":')
 fallback_timeout_end = timeout_body.find('case "notification":', fallback_timeout_start)
