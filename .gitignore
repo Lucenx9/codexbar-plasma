@@ -3,6 +3,11 @@
 *.zip
 build/
 dist/
+# Historical work artifacts belong in dist/review/ or the OS temp directory.
+/docs/review/
+/docs/reviews/
+/docs/settings/
+/docs/superpowers/
 .cache/
 # scripts/lib/qml_surfaces.py is imported by the static checks, so Python writes
 # bytecode next to it.

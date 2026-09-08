@@ -39,16 +39,28 @@ This PR does not turn the dormant descriptor proposal into a shipped contract.
 iCloud, Keychain/Full Disk Access and Sparkle are **macOS-only/non-goals**; Plasma
 keeps its existing update integration.
 
-Visual review uses synthetic fixtures only. The captures use Plasma's native
-controls with the OpenGL renderer:
+## Configuration lifecycle
 
-| Surface | Before | After |
-| --- | --- | --- |
-| General | [Original form](../settings/2026-09-08/before-settings-general.png) | [Focused form](../settings/2026-09-08/settings-general.png) |
-| Panel | [Combined Display form](../settings/2026-09-08/before-settings-display.png) | [Live preview and panel options](../settings/2026-09-08/settings-panel.png) |
-| Popup | Shared the Display form | [Content and provider options](../settings/2026-09-08/settings-popup.png) |
-| Notifications | Shared the General form | [Thresholds and alerts](../settings/2026-09-08/settings-notifications.png) |
-| Diagnostics | Separate connection/override/debug pages | [One diagnostics page](../settings/2026-09-08/settings-diagnostics.png) |
-| Privacy | Identities always visible | [Anonymous account picker](../settings/2026-09-08/privacy-provider.png) |
+The settings review checked Plasma's native configuration dialog in the supported
+KDE neon image, package `plasma-workspace` version
+`4:6.7.4-0zneon+24.04+noble+release+build94`. Its `pushReplace` replaces the
+current page, and opening the next page supplies applied `cfg_*` values from
+`Plasmoid.configuration`. Switching with unsaved changes prompts
+Apply/Discard/Cancel. The pages do not share an unsaved transaction.
 
-The PR verification section records the executed tests.
+The Panel preview and Notifications page therefore read applied values from
+other pages. General retains pending defaults so Restore all defaults can update
+dependent controls before Apply. A shared cross-page pending store would model
+a different lifecycle.
+
+Privacy keeps Cursor's bounded numeric included-plan percentage available for
+quota selection while hiding free-form billing text. Provider action menus use
+raw capabilities with local labels, since removing URLs from that input would
+remove valid actions. Display records and account command keys remain separate.
+
+## Historical verification
+
+The [PR #162 verification](https://github.com/Lucenx9/codexbar-plasma/pull/162)
+records executed tests. The synthetic OpenGL
+[captures and review notes](https://github.com/Lucenx9/codexbar-plasma/tree/92679f99ce5d5479f4f87edde051fff91e30b91f/docs/settings/2026-09-08)
+remain available in Git history.
