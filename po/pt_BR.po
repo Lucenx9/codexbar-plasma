@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: codexbar-plasma\n"
 "Report-Msgid-Bugs-To: https://github.com/Lucenx9/codexbar-plasma/issues\n"
-"PO-Revision-Date: 2026-09-06 00:00+0200\n"
+"PO-Revision-Date: 2026-09-08 00:00+0200\n"
 "Last-Translator: CodexBar Plasma contributors\n"
 "Language-Team: Brazilian Portuguese\n"
 "Language: pt_BR\n"
@@ -25,7 +25,7 @@ msgstr "Provedores"
 #: contents/ui/components/CompactRepresentation.qml
 #: contents/ui/components/InteractiveChart.qml
 #: contents/ui/components/SpendView.qml contents/ui/configProviders.qml
-#: contents/ui/main.qml
+#: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "%1: %2"
 msgstr "%1: %2"
 
@@ -132,7 +132,8 @@ msgid "%1 - %2"
 msgstr "%1 - %2"
 
 #: contents/ui/components/FullRepresentation.qml
-#: contents/ui/components/ProviderHeader.qml contents/ui/main.qml
+#: contents/ui/components/ProviderHeader.qml contents/ui/configGeneral.qml
+#: contents/ui/main.qml
 msgid "Refresh"
 msgstr "Atualizar"
 
@@ -171,6 +172,7 @@ msgstr "Histórico diário de tokens"
 msgid "Daily cost history"
 msgstr "Histórico diário de custos"
 
+#: contents/ui/components/PanelSettingsPreview.qml
 #: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/SpendView.qml contents/ui/configGeneral.qml
 #: contents/ui/main.qml
@@ -247,12 +249,12 @@ msgid "Cost unavailable"
 msgstr "Custo indisponível"
 
 #: contents/ui/components/ProjectCostSection.qml
-#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
+#: scripts/smoke/Capture.qml
 msgid "Tokens unavailable"
 msgstr "Tokens indisponíveis"
 
-#: contents/ui/components/ProjectCostSection.qml
-#: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
+#: contents/ui/main.qml
 msgid "%1 tokens"
 msgstr "%1 tokens"
 
@@ -854,6 +856,7 @@ msgstr "Instalar automaticamente as atualizações do widget"
 msgid "Check every:"
 msgstr "Verificar a cada:"
 
+#: contents/ui/components/PanelSettingsPreview.qml
 #: contents/ui/configGeneral.qml contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "%1 hour"
 msgid_plural "%1 hours"
@@ -1553,14 +1556,6 @@ msgid "Latest"
 msgstr "Mais recente"
 
 #: contents/ui/main.qml
-msgid "%1 subtotal - %2 tokens"
-msgstr "Subtotal de %1 - %2 tokens"
-
-#: contents/ui/main.qml
-msgid "%1 total - %2 tokens"
-msgstr "Total de %1 - %2 tokens"
-
-#: contents/ui/main.qml
 msgid "Total tokens"
 msgstr "Total de tokens"
 
@@ -1711,7 +1706,7 @@ msgstr "Total"
 
 #: contents/ui/configPanel.qml contents/ui/main.qml
 msgid "Standard"
-msgstr "Standard"
+msgstr "Padrão"
 
 #: contents/ui/main.qml
 msgid "Requests"
@@ -1883,7 +1878,7 @@ msgid_plural "%1h"
 msgstr[0] "%1h"
 msgstr[1] "%1h"
 
-#: contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
 msgid "%1h %2m"
 msgstr "%1h %2m"
 
@@ -1894,7 +1889,7 @@ msgid_plural "%1d"
 msgstr[0] "%1d"
 msgstr[1] "%1d"
 
-#: contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
 msgid "%1d %2h"
 msgstr "%1d %2h"
 
@@ -2157,14 +2152,6 @@ msgid "%1 (approximate)"
 msgstr "%1 (aproximado)"
 
 #: contents/ui/main.qml
-msgid "%1 - %2 tokens"
-msgstr "%1 - %2 tokens"
-
-#: contents/ui/main.qml
-msgid "%1: %2 - %3 tokens"
-msgstr "%1: %2 - %3 tokens"
-
-#: contents/ui/main.qml
 msgid ""
 "Local Antigravity history includes token totals. Dollar costs are "
 "unavailable."
@@ -2183,7 +2170,7 @@ msgstr "Estimado a partir dos registros locais do Claude."
 
 #: contents/ui/main.qml
 msgid "Included plan"
-msgstr "Plano incluído"
+msgstr "Incluído no plano"
 
 #: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
 msgid "left"
@@ -2373,17 +2360,17 @@ msgstr "Nenhum detalhamento por modelo para este dia."
 msgid "Model breakdown is partial."
 msgstr "O detalhamento por modelo está incompleto."
 
-#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
 msgid "No model breakdown for this period."
 msgstr "Nenhum detalhamento por modelo para este período."
 
-#: contents/ui/main.qml
+#: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "%1 total"
-msgstr "%1 no total"
+msgstr "Total de %1"
 
 #: contents/ui/main.qml
 msgid "%1 subtotal"
-msgstr "%1 de subtotal"
+msgstr "Subtotal de %1"
 
 #: contents/config/config.qml
 msgid "Diagnostics"
@@ -2472,7 +2459,7 @@ msgstr "Mostrar detalhes e gráficos dos provedores"
 msgid "Session %1"
 msgstr "Sessão %1"
 
-#: contents/ui/main.qml
+#: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "Details hidden by privacy mode."
 msgstr "Detalhes ocultos pelo modo de privacidade."
 
@@ -2507,3 +2494,21 @@ msgstr "Provedor para diagnóstico:"
 #: contents/ui/configPopup.qml
 msgid "Show credits and reset credits"
 msgstr "Mostrar créditos e créditos de redefinição"
+
+#: contents/ui/main.qml
+msgid "%1 token"
+msgid_plural "%1 tokens"
+msgstr[0] "%1 token"
+msgstr[1] "%1 tokens"
+
+#: contents/ui/main.qml
+msgid "%1 request"
+msgid_plural "%1 requests"
+msgstr[0] "%1 requisição"
+msgstr[1] "%1 requisições"
+
+#: contents/ui/main.qml
+msgid "%1 point"
+msgid_plural "%1 points"
+msgstr[0] "%1 ponto"
+msgstr[1] "%1 pontos"

@@ -127,6 +127,9 @@ Extraction must hide complexity, not merely reduce line count.
   language-server diagnostics do not replace `make check`.
 
 For translation/catalog changes, follow [Translations](translations.md).
+The checks validate catalog coverage and arguments, then exercise the QML
+session, pace, and count adapters against all compiled catalogs. Localized smoke
+scenarios also verify these adapters through Plasma's actual translation domain.
 When changing provider identity, check keys, CLI aliases, title, color,
 docs/dashboard/login URLs, icon assets, and `scripts/test_provider_icons.sh`.
 Repeat this comparison during official CLI release audits. The pinned 0.56.2

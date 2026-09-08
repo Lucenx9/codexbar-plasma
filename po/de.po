@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: codexbar-plasma\n"
 "Report-Msgid-Bugs-To: https://github.com/Lucenx9/codexbar-plasma/issues\n"
-"PO-Revision-Date: 2026-09-06 00:00+0200\n"
+"PO-Revision-Date: 2026-09-08 00:00+0200\n"
 "Last-Translator: CodexBar Plasma contributors\n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -25,7 +25,7 @@ msgstr "Anbieter"
 #: contents/ui/components/CompactRepresentation.qml
 #: contents/ui/components/InteractiveChart.qml
 #: contents/ui/components/SpendView.qml contents/ui/configProviders.qml
-#: contents/ui/main.qml
+#: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "%1: %2"
 msgstr "%1: %2"
 
@@ -136,7 +136,8 @@ msgid "%1 - %2"
 msgstr "%1 - %2"
 
 #: contents/ui/components/FullRepresentation.qml
-#: contents/ui/components/ProviderHeader.qml contents/ui/main.qml
+#: contents/ui/components/ProviderHeader.qml contents/ui/configGeneral.qml
+#: contents/ui/main.qml
 msgid "Refresh"
 msgstr "Aktualisieren"
 
@@ -175,6 +176,7 @@ msgstr "Täglicher Tokenverlauf"
 msgid "Daily cost history"
 msgstr "Täglicher Kostenverlauf"
 
+#: contents/ui/components/PanelSettingsPreview.qml
 #: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/SpendView.qml contents/ui/configGeneral.qml
 #: contents/ui/main.qml
@@ -251,12 +253,12 @@ msgid "Cost unavailable"
 msgstr "Kosten nicht verfügbar"
 
 #: contents/ui/components/ProjectCostSection.qml
-#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
+#: scripts/smoke/Capture.qml
 msgid "Tokens unavailable"
 msgstr "Tokens nicht verfügbar"
 
-#: contents/ui/components/ProjectCostSection.qml
-#: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
+#: contents/ui/main.qml
 msgid "%1 tokens"
 msgstr "%1 Tokens"
 
@@ -515,7 +517,7 @@ msgstr "codexbar hat keine Anbieterdaten zurückgegeben."
 
 #: contents/ui/configPopup.qml contents/ui/configProviders.qml
 msgid "Could not parse codexbar provider JSON: %1"
-msgstr "Die Anbieter-JSON von codexbar konnte nicht gelesen werden: %1"
+msgstr "Die Anbieter-JSON-Daten von codexbar konnten nicht gelesen werden: %1"
 
 #: contents/config/config.qml contents/ui/configPopup.qml
 msgid "Popup"
@@ -862,6 +864,7 @@ msgstr "Miniprogramm automatisch aktualisieren"
 msgid "Check every:"
 msgstr "Prüfen alle:"
 
+#: contents/ui/components/PanelSettingsPreview.qml
 #: contents/ui/configGeneral.qml contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "%1 hour"
 msgid_plural "%1 hours"
@@ -962,7 +965,7 @@ msgstr "Konto"
 
 #: contents/ui/configProviders.qml
 msgid "Login"
-msgstr "Anmeldung"
+msgstr "Anmelden"
 
 #: contents/ui/configProviders.qml
 msgid "Provider id"
@@ -1484,7 +1487,7 @@ msgstr "codexbar hat keine Kontodaten zurückgegeben."
 
 #: contents/ui/main.qml
 msgid "Could not parse codexbar account JSON: %1"
-msgstr "Die Konto-JSON von codexbar konnte nicht gelesen werden: %1"
+msgstr "Die Konto-JSON-Daten von codexbar konnten nicht gelesen werden: %1"
 
 #: contents/ui/main.qml
 msgid "codexbar cost did not return JSON."
@@ -1559,14 +1562,6 @@ msgid "Latest"
 msgstr "Zuletzt"
 
 #: contents/ui/main.qml
-msgid "%1 subtotal - %2 tokens"
-msgstr "%1 Zwischensumme - %2 Tokens"
-
-#: contents/ui/main.qml
-msgid "%1 total - %2 tokens"
-msgstr "%1 gesamt - %2 Tokens"
-
-#: contents/ui/main.qml
 msgid "Total tokens"
 msgstr "Tokens insgesamt"
 
@@ -1616,7 +1611,7 @@ msgstr "Z.ai"
 
 #: contents/ui/main.qml
 msgid "Code review remaining"
-msgstr "Verbleibende Code-Reviews"
+msgstr "Verbleibendes Code-Review-Kontingent"
 
 #: contents/ui/main.qml
 msgid "Credits remaining"
@@ -1889,7 +1884,7 @@ msgid_plural "%1h"
 msgstr[0] "%1 Std."
 msgstr[1] "%1 Std."
 
-#: contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
 msgid "%1h %2m"
 msgstr "%1 Std. %2 min"
 
@@ -1900,7 +1895,7 @@ msgid_plural "%1d"
 msgstr[0] "%1 T."
 msgstr[1] "%1 T."
 
-#: contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
 msgid "%1d %2h"
 msgstr "%1 T. %2 Std."
 
@@ -1910,7 +1905,7 @@ msgstr "Teilausfall"
 
 #: contents/ui/main.qml
 msgid "Major outage"
-msgstr "Größerer Ausfall"
+msgstr "Schwerer Ausfall"
 
 #: contents/ui/main.qml
 msgid "Critical issue"
@@ -2177,14 +2172,6 @@ msgid "%1 (approximate)"
 msgstr "%1 (ungefähr)"
 
 #: contents/ui/main.qml
-msgid "%1 - %2 tokens"
-msgstr "%1 - %2 Tokens"
-
-#: contents/ui/main.qml
-msgid "%1: %2 - %3 tokens"
-msgstr "%1: %2 - %3 Tokens"
-
-#: contents/ui/main.qml
 msgid ""
 "Local Antigravity history includes token totals. Dollar costs are "
 "unavailable."
@@ -2394,11 +2381,11 @@ msgstr "Keine Modelldetails für diesen Tag."
 msgid "Model breakdown is partial."
 msgstr "Die Modelldetails sind unvollständig."
 
-#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
 msgid "No model breakdown for this period."
 msgstr "Keine Modellaufschlüsselung für diesen Zeitraum."
 
-#: contents/ui/main.qml
+#: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "%1 total"
 msgstr "%1 gesamt"
 
@@ -2470,7 +2457,7 @@ msgstr "Blendet Kontoidentitäten sowie Projekt- und Sitzungsnamen in der Kontro
 msgid ""
 "Restore every widget setting. Provider accounts and CodexBar CLI "
 "configuration are not changed."
-msgstr "Setzt alle Einstellungen des Widgets zurück. Anbieterkonten und die Konfiguration der CodexBar-CLI bleiben unverändert."
+msgstr "Setzt alle Einstellungen des Miniprogramms zurück. Anbieterkonten und die Konfiguration der CodexBar-CLI bleiben unverändert."
 
 #: contents/ui/configNotifications.qml
 msgid ""
@@ -2493,7 +2480,7 @@ msgstr "Anbieterdetails und Diagramme anzeigen"
 msgid "Session %1"
 msgstr "Sitzung %1"
 
-#: contents/ui/main.qml
+#: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "Details hidden by privacy mode."
 msgstr "Details durch den Datenschutzmodus ausgeblendet."
 
@@ -2528,3 +2515,21 @@ msgstr "Anbieter für Diagnose:"
 #: contents/ui/configPopup.qml
 msgid "Show credits and reset credits"
 msgstr "Guthaben und Reset-Guthaben anzeigen"
+
+#: contents/ui/main.qml
+msgid "%1 token"
+msgid_plural "%1 tokens"
+msgstr[0] "%1 Token"
+msgstr[1] "%1 Tokens"
+
+#: contents/ui/main.qml
+msgid "%1 request"
+msgid_plural "%1 requests"
+msgstr[0] "%1 Anfrage"
+msgstr[1] "%1 Anfragen"
+
+#: contents/ui/main.qml
+msgid "%1 point"
+msgid_plural "%1 points"
+msgstr[0] "%1 Punkt"
+msgstr[1] "%1 Punkte"
