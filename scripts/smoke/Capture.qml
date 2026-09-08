@@ -675,7 +675,7 @@ Item {
             return false;
         var values = [item.text, item.plainText, item.Accessible.name];
         for (var value of values) {
-            if (typeof value === "string" && /demo@example|Example team|Example project|Another project|Documentation site|Unpriced experiment/.test(value))
+            if (typeof value === "string" && /demo@example|Example team|Example project|Another project|Documentation site|Unpriced experiment|Example model|Earlier model/.test(value))
                 return true;
         }
         for (var child of item.children) {
@@ -704,6 +704,15 @@ Item {
                 "private account labels changed default account selection");
             verifyScenario(applet.accountLabel(options[0]) === "demo@example.com",
                 "privacy mode changed the account command key");
+            var cursor = JSON.parse(JSON.stringify(applet.selectedProviderData));
+            cursor.provider = "cursor";
+            cursor.rows[0].usedPercent = 100;
+            cursor.rows[0].leftPercent = 0;
+            cursor.providerCost = {percentUsed: 32, spendLine: "Example team billing"};
+            var privateCursor = applet.providerPresentation(cursor);
+            verifyScenario(applet.panelDisplayRow(privateCursor, "percent").usedPercent === 32
+                && applet.switcherMetricRow(privateCursor).usedPercent === 32,
+                "privacy changed Cursor's included-plan quota fallback");
         }
         if (scenario === "privacy-sessions") {
             var sessionView = findItem(applet.fullRepresentationItem, "sessionsView");
@@ -712,7 +721,61 @@ Item {
             verifyScenario(sessionView.copiedValueKey === "", "private session allowed copying");
         }
         verifyScenario(!containsPrivateText(applet.fullRepresentationItem), "private text remains visible");
+        if (scenario === "privacy-cost-details")
+            return verifyPrivateCostDetails();
         return true;
+    }
+
+    function verifyPrivateCostDetails() {
+        var section = findItem(applet.fullRepresentationItem, "providerLocalCostSection");
+        var chart = findItem(section, "providerCostChart");
+        var details = findItem(section, "costDrillDownSection");
+        if (!section || !section.tokenCost || !chart || !details)
+            return false;
+        verifyScenario(section.tokenCost.windowLabel === applet.costHistoryWindowLabel(section.tokenCost, 30)
+            && section.tokenCost.valueMode === "estimated", "privacy lost the cost period or estimation qualifier");
+        verifyScenario(applet.tokenCosts === settingsCostSnapshot, "private drill-down changed cost snapshots");
+        if (settingsBehaviorStep === 0) {
+            costSelectionProviderMemo = applet.selectedProviderData;
+            findItem(section, "costDetailsToggle").clicked();
+            verifyScenario(details.modelRows.length === 6 && details.modelRows[0].label === "Model 1"
+                && findItem(section, "costModelsPartialNotice").visible,
+                "private period models lost amounts, anonymity or truncation");
+            chart.moveSelection(-1);
+        } else if (settingsBehaviorStep === 1) {
+            verifyScenario(section.selectedDay !== null && details.modelRows.length === 6
+                && details.modelRows[0].label === "Model 1"
+                && findItem(section, "costModelsPartialNotice").visible,
+                "private daily models lost amounts, anonymity or truncation");
+            findItem(section, "providerCostMetricCombo").activated(1);
+        } else if (settingsBehaviorStep === 2) {
+            verifyScenario(section.selectedDay === null, "private metric switch retained its day pin");
+            chart.moveSelection(-1);
+            var next = JSON.parse(JSON.stringify(applet.selectedProviderData));
+            next.account = "";
+            next.organization = "Example team A";
+            replaceCostSelectionProvider(next);
+        } else if (settingsBehaviorStep === 3) {
+            verifyScenario(section.selectedDay === null, "private account switch retained its day pin");
+            chart.moveSelection(-1);
+            var nextOrganization = JSON.parse(JSON.stringify(applet.selectedProviderData));
+            nextOrganization.organization = "Example team B";
+            replaceCostSelectionProvider(nextOrganization);
+        } else if (settingsBehaviorStep === 4) {
+            verifyScenario(section.selectedDay === null, "private organization switch retained its day pin");
+            replaceCostSelectionProvider(costSelectionProviderMemo);
+        } else {
+            chart.selectedIndex = chart.points.length - 1;
+            applet.costErrorText = "demo@example.com private cost error";
+            verifyScenario(section.costErrorText === i18n("Details hidden by privacy mode."),
+                "private cost error was exposed");
+            findItem(applet.fullRepresentationItem, "providerScroll").contentItem.contentY = section.y;
+            return true;
+        }
+        // Source identity changes above simulate an account switch, not a CLI refresh.
+        settingsProviderSnapshot = applet.providers;
+        settingsBehaviorStep++;
+        return false;
     }
 
     function verifyRefreshOnOpen() {
@@ -1025,9 +1088,14 @@ Item {
                     capture.settingsProviderSnapshot = capture.applet.providers;
                     capture.settingsCostSnapshot = capture.applet.tokenCosts;
                     capture.applet.Plasmoid.configuration.privacyMode = true;
-                    if (capture.scenario === "privacy-provider") {
+                    if (capture.scenario === "privacy-provider" || capture.scenario === "privacy-cost-details") {
                         capture.applet.openProviderFromPanel("codex");
-                        capture.applet.loadAccounts("codex");
+                        if (capture.scenario === "privacy-provider") {
+                            capture.applet.loadAccounts("codex");
+                        } else {
+                            popup.Window.window.width = 640;
+                            popup.Window.window.height = 880;
+                        }
                     } else {
                         capture.applet.selectGlobalView(capture.scenario.substring("privacy-".length));
                     }

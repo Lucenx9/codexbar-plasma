@@ -226,6 +226,22 @@ msgid_plural "%1 minutes"
 msgstr[0] ""
 msgstr[1] ""
 
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/configGeneral.qml contents/ui/main.qml scripts/smoke/Capture.qml
+msgid "%1 hour"
+msgid_plural "%1 hours"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/SpendView.qml contents/ui/configGeneral.qml
+#: contents/ui/main.qml
+msgid "%1 day"
+msgid_plural "%1 days"
+msgstr[0] ""
+msgstr[1] ""
+
 #: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
 msgid "Resets %1"
 msgstr ""
@@ -237,10 +253,18 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+msgid "%1h %2m"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
 msgid "%1h"
 msgid_plural "%1h"
 msgstr[0] ""
 msgstr[1] ""
+
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+msgid "%1d %2h"
+msgstr ""
 
 #: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
 #, kde-format
@@ -376,14 +400,6 @@ msgstr ""
 #: contents/ui/components/SpendView.qml
 msgid "Daily token history"
 msgstr ""
-
-#: contents/ui/components/ProviderCostSection.qml
-#: contents/ui/components/SpendView.qml contents/ui/configGeneral.qml
-#: contents/ui/main.qml
-msgid "%1 day"
-msgid_plural "%1 days"
-msgstr[0] ""
-msgstr[1] ""
 
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Hide details"
@@ -700,12 +716,6 @@ msgstr ""
 #: contents/ui/configGeneral.qml
 msgid "Check every:"
 msgstr ""
-
-#: contents/ui/configGeneral.qml contents/ui/main.qml scripts/smoke/Capture.qml
-msgid "%1 hour"
-msgid_plural "%1 hours"
-msgstr[0] ""
-msgstr[1] ""
 
 #: contents/ui/configGeneral.qml
 msgid "Notify when a widget update is available"
@@ -1874,7 +1884,7 @@ msgstr ""
 msgid "%1 (%2)"
 msgstr ""
 
-#: contents/ui/main.qml
+#: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "Details hidden by privacy mode."
 msgstr ""
 
@@ -2098,14 +2108,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "now"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1h %2m"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1d %2h"
 msgstr ""
 
 #: contents/ui/main.qml

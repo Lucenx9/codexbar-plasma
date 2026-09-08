@@ -1215,7 +1215,7 @@ if "if (!compactRoot.interactive)" not in function_body(compact_meter_body, "act
 for mouse_id in ("compactMeterMouse", "compactStatusMouse"):
     if "enabled: compactRoot.interactive" not in id_block(compact_representation_text, mouse_id):
         raise AssertionError("preview meter and status pointer input must be disabled")
-root_pointer_body = compact_representation_text.split("MouseArea {", 1)[1].split("}", 1)[0]
+root_pointer_body = id_block(compact_representation_text, "compactBackgroundMouse")
 if "enabled: compactRoot.interactive" not in root_pointer_body:
     raise AssertionError("the compact background must not open a popup in preview mode")
 if "forceActiveFocus(Qt.MouseFocusReason)" in compact_meter_body:

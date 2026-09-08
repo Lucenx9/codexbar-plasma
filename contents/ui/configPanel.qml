@@ -8,6 +8,7 @@ import "components" as Components
 import "PanelDisplay.js" as PanelDisplay
 import "PanelElements.js" as PanelElements
 import "PanelRules.js" as PanelRules
+import "QuotaThresholds.js" as QuotaThresholds
 
 KCM.SimpleKCM {
     id: page
@@ -122,8 +123,8 @@ KCM.SimpleKCM {
             usageBarsShowUsed: page.usageBarsShowUsed
             resetTimesShowAbsolute: page.presentationConfig.resetTimesShowAbsolute === true
             showQuotaWarningMarkers: page.presentationConfig.showQuotaWarningMarkers !== false
-            quotaWarningPercent: page.presentationConfig.quotaWarningPercent === undefined ? 80 : page.presentationConfig.quotaWarningPercent
-            quotaCriticalPercent: page.presentationConfig.quotaCriticalPercent === undefined ? 95 : page.presentationConfig.quotaCriticalPercent
+            quotaWarningPercent: QuotaThresholds.warningPercent(page.presentationConfig.quotaWarningPercent)
+            quotaCriticalPercent: QuotaThresholds.criticalPercent(quotaWarningPercent, page.presentationConfig.quotaCriticalPercent)
             providerOrder: page.presentationConfig.providerOrder || ""
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24

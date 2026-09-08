@@ -1833,14 +1833,22 @@ PlasmoidItem {
         result.sessionLine = costLine(i18n("Today"), result.today.cost,
             result.today.tokens, result.today.currency)
         var trust = CostPresentation.costTrustSummary([result])
-        result.monthLine = costLine(costHistoryWindowLabel(result, result.historyDays),
+        result.valueMode = trust ? trust.valueMode : "plain"
+        result.windowLabel = costHistoryWindowLabel(result, result.historyDays)
+        result.monthLine = costLine(result.windowLabel,
             result.totals.cost, result.totals.tokens, result.totals.currency,
-            trust ? trust.valueMode : "plain")
+            result.valueMode)
         result.windowValueLine = costValueLine(result.totals.cost, result.totals.tokens,
-            result.totals.currency, trust ? trust.valueMode : "plain")
+            result.totals.currency, result.valueMode)
         result.hintLine = tokenCostHint(result.provider)
         for (var i = 0; i < result.models.length; i++) {
             result.models[i].label = i18n("Model %1", i + 1)
+        }
+        for (var dayIndex = 0; dayIndex < result.daily.length; dayIndex++) {
+            var dayModels = result.daily[dayIndex].models
+            for (var modelIndex = 0; modelIndex < dayModels.length; modelIndex++) {
+                dayModels[modelIndex].label = i18n("Model %1", modelIndex + 1)
+            }
         }
         for (var j = 0; j < result.projects.rows.length; j++) {
             result.projects.rows[j].label = i18n("Project %1", j + 1)
@@ -3235,6 +3243,8 @@ PlasmoidItem {
             return []
         }
 
+        // This menu uses raw provider capabilities and account presence only.
+        // Titles are local literals; never render identity or provider prose here.
         var rows = []
         rows.push({
             title: accountLoadingForProvider(item.provider) ? i18n("Loading accounts...") : i18n("Accounts..."),

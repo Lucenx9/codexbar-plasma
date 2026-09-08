@@ -51,6 +51,7 @@ Item {
     clip: true
 
     MouseArea {
+        id: compactBackgroundMouse
         anchors.fill: parent
         enabled: compactRoot.interactive
         cursorShape: Qt.PointingHandCursor

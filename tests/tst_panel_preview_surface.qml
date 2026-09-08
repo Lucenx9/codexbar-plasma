@@ -125,4 +125,27 @@ TestCase {
         compare(renderer.incidentProvider.status, "Service incident");
         compare(settings.cfg_panelVisibilityRules, '{"text":{"condition":"usageAtLeast","usedPercent":80},"meters":{"condition":"usageAtLeast","usedPercent":80}}');
     }
+
+    function test_runOutRequiresAForecastAndDurationsUseWholeUnits() {
+        var settings = createTemporaryObject(settingsComponent, testCase, {
+            cfg_showPercentInPanel: true, cfg_menuBarDisplayMode: "runOut"
+        });
+        var preview = createPreview(settings);
+        if (!preview) return;
+        var renderer = findChild(preview, "panelPreviewRenderer");
+        compare(renderer.primaryText, "");
+        preview.scenario = "incident";
+        compare(renderer.primaryText, "");
+        preview.scenario = "nearLimit";
+        compare(renderer.primaryText, "20 minutes");
+        compare(preview.metricText({paceOnTop: true, paceEtaSeconds: 120}), "");
+        compare(preview.metricText({paceOnTop: false, paceEtaSeconds: 0}), "");
+        compare(preview.metricText({paceOnTop: false, paceEtaSeconds: 90}), "2 minutes");
+        compare(preview.metricText({paceOnTop: false, paceEtaSeconds: 7200}), "2 hours");
+        compare(preview.metricText({paceOnTop: false, paceEtaSeconds: 172800}), "2 days");
+        settings.cfg_menuBarDisplayMode = "resetTime";
+        compare(preview.metricText({resetMinutes: 1.5}), "Resets 2 min");
+        compare(preview.metricText({resetMinutes: 90}), "Resets 1h 30m");
+        compare(preview.metricText({resetMinutes: 1500}), "Resets 1d 1h");
+    }
 }

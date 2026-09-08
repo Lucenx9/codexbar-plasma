@@ -14,8 +14,8 @@ ColumnLayout {
     property bool usageBarsShowUsed: true
     property bool resetTimesShowAbsolute: false
     property bool showQuotaWarningMarkers: true
-    property int quotaWarningPercent: 80
-    property int quotaCriticalPercent: 95
+    property int quotaWarningPercent: QuotaThresholds.defaultWarningPercent
+    property int quotaCriticalPercent: QuotaThresholds.defaultCriticalPercent
     property string providerOrder: ""
     property string scenario: "normal"
     readonly property real clockMs: Date.now()
@@ -48,18 +48,34 @@ ColumnLayout {
         case "both":
             return i18n("%1 - %2", percent, paceText);
         case "runOut":
-            return i18np("%1 minute", "%1 minutes", row.paceEtaSeconds / 60);
+            if (!PanelDisplay.rowHasRunOut(row)) {
+                return "";
+            }
+            var minutes = Math.max(1, Math.round(row.paceEtaSeconds / 60));
+            if (minutes < 60) {
+                return i18np("%1 minute", "%1 minutes", minutes);
+            }
+            var hours = Math.max(1, Math.round(minutes / 60));
+            return hours < 48 ? i18np("%1 hour", "%1 hours", hours)
+                : i18np("%1 day", "%1 days", Math.max(1, Math.round(hours / 24)));
         case "resetTime":
             if (resetTimesShowAbsolute) {
                 return i18n("Resets %1", Qt.formatDateTime(new Date(row.resetsAt), "ddd HH:mm"));
             }
-            if (row.resetMinutes < 60) {
-                return i18n("Resets %1", i18np("%1 min", "%1 min", row.resetMinutes));
+            var resetMinutes = Math.max(1, Math.round(row.resetMinutes));
+            if (resetMinutes < 60) {
+                return i18n("Resets %1", i18np("%1 min", "%1 min", resetMinutes));
             }
-            if (row.resetMinutes < 1440) {
-                return i18n("Resets %1", i18np("%1h", "%1h", row.resetMinutes / 60));
+            var resetHours = Math.floor(resetMinutes / 60);
+            var restMinutes = resetMinutes % 60;
+            if (resetHours < 24) {
+                return i18n("Resets %1", restMinutes > 0 ? i18n("%1h %2m", resetHours, restMinutes)
+                    : i18np("%1h", "%1h", resetHours));
             }
-            return i18n("Resets %1", i18np("%1d", "%1d", row.resetMinutes / 1440));
+            var resetDays = Math.floor(resetHours / 24);
+            var restHours = resetHours % 24;
+            return i18n("Resets %1", restHours > 0 ? i18n("%1d %2h", resetDays, restHours)
+                : i18np("%1d", "%1d", resetDays));
         default:
             return percent;
         }

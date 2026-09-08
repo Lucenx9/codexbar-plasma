@@ -33,6 +33,7 @@ function shouldRefresh(observation) {
     if (validTimestamp(current.lastCompletedAtMs)) {
         lastActivityAtMs = Math.max(lastActivityAtMs, current.lastCompletedAtMs)
     }
+    // Refresh after a clock rollback rather than waiting for wall time to catch up.
     return lastActivityAtMs < 0 || current.nowMs < lastActivityAtMs
         || current.nowMs - lastActivityAtMs >= staleAfterMs(current.refreshIntervalSeconds)
 }

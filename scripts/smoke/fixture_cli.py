@@ -18,6 +18,7 @@ SCENARIOS += ("panel-default", "panel-default-single")
 SCENARIOS += ("popup-cost-details", "popup-cost-tokens")
 SCENARIOS += ("popup-cost-missing-tokens", "popup-cost-partial-models")
 SCENARIOS += ("popup-content", "refresh-on-open", "privacy-provider", "privacy-spend", "privacy-sessions")
+SCENARIOS += ("privacy-cost-details",)
 
 
 def usage(provider, scenario, now):
@@ -120,8 +121,10 @@ def response(args, scenario, now):
         days = int(args[5])
         if scenario.startswith("readme-"):
             return [readme_cost(provider, days, now) for provider in ("codex", "claude")]
-        if scenario.startswith("popup-cost-"):
+        if scenario.startswith("popup-cost-") or scenario == "privacy-cost-details":
             snapshot = readme_cost("codex", days, now)
+            if scenario == "privacy-cost-details":
+                snapshot["provenance"] = "listPriceEstimate"
             daily = snapshot["daily"]
             daily[0]["modelBreakdowns"] = [{"modelName": "Earlier model", "cost": daily[0]["totalCost"],
                                              "totalTokens": daily[0]["totalTokens"]}]
@@ -144,7 +147,7 @@ def response(args, scenario, now):
                 snapshot["totals"].pop("totalTokens")
                 snapshot["daily"] = [daily[-1]]
                 snapshot["totals"]["totalCost"] = daily[-1]["totalCost"]
-            elif scenario == "popup-cost-partial-models":
+            elif scenario in ("popup-cost-partial-models", "privacy-cost-details"):
                 daily[-1]["modelBreakdowns"] = [
                     {"modelName": f"Example model {index}", "cost": 0.01, "totalTokens": 1000}
                     for index in range(7)

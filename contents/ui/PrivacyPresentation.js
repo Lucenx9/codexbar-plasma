@@ -64,10 +64,10 @@ function amounts(value) {
     return {
         cost: hasCurrency ? numeric(value, "cost", null) : null,
         tokens: numeric(value, "tokens", null),
-        inputTokens: numeric(value, "inputTokens", 0),
-        outputTokens: numeric(value, "outputTokens", 0),
-        cacheReadTokens: numeric(value, "cacheReadTokens", 0),
-        cacheCreationTokens: numeric(value, "cacheCreationTokens", 0),
+        inputTokens: numeric(value, "inputTokens", null),
+        outputTokens: numeric(value, "outputTokens", null),
+        cacheReadTokens: numeric(value, "cacheReadTokens", null),
+        cacheCreationTokens: numeric(value, "cacheCreationTokens", null),
         currency: hasCurrency ? currency : ""
     }
 }
@@ -89,6 +89,22 @@ function resetCredits(value) {
         ? { title: value.title, line: value.line } : null
 }
 
+function providerCost(value) {
+    var percent = numeric(value, "percentUsed", NaN)
+    return isFinite(percent) && percent >= 0
+        ? { percentUsed: Math.min(100, percent) } : null
+}
+
+function modelAmounts(snapshot) {
+    var models = field(snapshot, "models", [])
+    var result = { rows: [], truncated: field(snapshot, "modelsTruncated", false) === true
+        || (Array.isArray(models) && models.length > 6) }
+    for (var i = 0; Array.isArray(models) && i < Math.min(models.length, 6); i++) {
+        result.rows.push(amounts(models[i]))
+    }
+    return result
+}
+
 function cost(snapshot, enabled) {
     if (!enabled) {
         return snapshot
@@ -96,6 +112,7 @@ function cost(snapshot, enabled) {
     if (!Normalizer.isCliRecord(snapshot)) {
         return null
     }
+    var models = modelAmounts(snapshot)
     var result = {
         provider: field(snapshot, "provider", ""),
         historyDays: Math.max(1, Math.min(365, Math.floor(numeric(snapshot, "historyDays", 30)))),
@@ -104,7 +121,8 @@ function cost(snapshot, enabled) {
         totals: amounts(field(snapshot, "totals", null)),
         today: amounts(field(snapshot, "today", null)),
         daily: [],
-        models: [],
+        models: models.rows,
+        modelsTruncated: models.truncated,
         projects: { rows: [], truncated: false }
     }
     var daily = field(snapshot, "daily", [])
@@ -112,11 +130,10 @@ function cost(snapshot, enabled) {
         var day = amounts(daily[i])
         var label = field(daily[i], "label", "")
         day.label = typeof label === "string" && /^\d{4}-\d{2}-\d{2}$/.test(label) ? label : ""
+        var dayModels = modelAmounts(daily[i])
+        day.models = dayModels.rows
+        day.modelsTruncated = dayModels.truncated
         result.daily.push(day)
-    }
-    var models = field(snapshot, "models", [])
-    for (var j = 0; Array.isArray(models) && j < Math.min(models.length, 6); j++) {
-        result.models.push(amounts(models[j]))
     }
     var projects = field(snapshot, "projects", null)
     var projectRows = field(projects, "rows", [])
@@ -163,7 +180,8 @@ function provider(snapshot, enabled, labels) {
         account: hasText(snapshot, "account") ? labels.account : "",
         organization: "", loginMethod: "", source: "", version: "", planText: "",
         rows: presentedRows, primaryRow: primaryRow,
-        providerDetails: [], usageDashboard: null, providerCost: null,
+        providerDetails: [], usageDashboard: null,
+        providerCost: providerCost(field(snapshot, "providerCost", null)),
         resetCredits: resetCredits(field(snapshot, "resetCredits", null)),
         tokenCost: cost(field(snapshot, "tokenCost", null), true),
         codexCreditLimit: privateCredit,

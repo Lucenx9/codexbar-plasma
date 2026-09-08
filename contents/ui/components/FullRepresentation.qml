@@ -988,7 +988,8 @@ Item {
                         id: providerCostSection
                         objectName: "providerCostSection"
 
-                        readonly property var providerCost: applet.presentedProviderData ? applet.presentedProviderData.providerCost : null
+                        readonly property var providerCost: !applet.privacyMode && applet.presentedProviderData
+                            ? applet.presentedProviderData.providerCost : null
                         readonly property color accent: applet.providerReadableColor(applet.presentedProviderData ? applet.presentedProviderData.provider : "")
 
                         visible: applet.showPopupProviderDetails && providerCostSection.providerCost ? true : false

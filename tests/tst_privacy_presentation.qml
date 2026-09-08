@@ -53,7 +53,7 @@ TestCase {
         compare(result.error, "Details hidden")
         compare(result.providerDetails, [])
         compare(result.usageDashboard, null)
-        compare(result.providerCost, null)
+        compare(result.providerCost, { percentUsed: 40 })
         compare(result.primaryRow, result.rows[0])
         compare(result.rows[0].usedPercent, 42)
         compare(result.rows[0].paceEtaSeconds, 7200)
@@ -181,5 +181,45 @@ TestCase {
         compare(Privacy.errorText("private@example.test failed", true, "Details hidden"), "Details hidden")
         compare(Privacy.errorText("", true, "Details hidden"), "")
         compare(Privacy.errorText("private@example.test failed", false, "Details hidden"), "private@example.test failed")
+    }
+
+    function test_providerCostKeepsOnlyTheBoundedQuotaFallback() {
+        var values = [null, undefined, "40", -1, NaN, Infinity, false]
+        for (var i = 0; i < values.length; i++) {
+            compare(Privacy.provider({ providerCost: { percentUsed: values[i] } }, true, labels()).providerCost, null)
+        }
+        var inherited = Object.create({ percentUsed: 40 })
+        compare(Privacy.provider({ providerCost: inherited }, true, labels()).providerCost, null)
+        for (var percent of [0, 40, 100, 120]) {
+            var source = { providerCost: { percentUsed: percent, title: "confidential", spendLine: "confidential" } }
+            compare(Privacy.provider(source, true, labels()).providerCost, { percentUsed: Math.min(100, percent) })
+            compare(source.providerCost.percentUsed, percent)
+        }
+    }
+
+    function test_dailyAndPeriodModelsKeepAmountsAndIndependentCoverage() {
+        var source = cost()
+        source.modelsTruncated = true
+        source.daily[0].models = source.models
+        var before = JSON.stringify(source)
+        var result = Privacy.cost(source, true)
+        compare(result.modelsTruncated, true)
+        compare(result.daily[0].modelsTruncated, false)
+        compare(result.daily[0].models[0].tokens, 100)
+        compare(result.daily[0].models[0].cost, 0)
+        verify(JSON.stringify(result).indexOf("confidential") === -1)
+        compare(JSON.stringify(source), before)
+        source.daily[0].modelsTruncated = true
+        compare(Privacy.cost(source, true).daily[0].modelsTruncated, true)
+        while (source.daily[0].models.length < 9) source.daily[0].models.push(source.models[0])
+        result = Privacy.cost(source, true)
+        compare(result.daily[0].models.length, 6)
+        verify(result.daily[0].modelsTruncated)
+        result = Privacy.cost({ daily: [{ models: [] }, {}] }, true)
+        compare(result.daily[0].models, [])
+        compare(result.daily[0].modelsTruncated, false)
+        compare(result.daily[1].models, [])
+        compare(result.totals.tokens, null)
+        compare(result.totals.inputTokens, null)
     }
 }

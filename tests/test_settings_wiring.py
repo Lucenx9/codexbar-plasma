@@ -37,6 +37,14 @@ class SettingsWiringTests(unittest.TestCase):
         self.assertLess(body.index("view.applet.privacyMode"), body.index("clipboardBuffer.text ="))
         applet.require("copyEnabled: !view.applet.privacyMode", "private sessions must hide copy actions")
 
+    def test_private_costs_keep_raw_account_selection_separate_from_display_data(self):
+        applet = Surface("applet")
+        applet.require("providerData: applet.presentedProviderData", "costs must use the private display projection")
+        applet.require("accountSelectionKey: applet.accountLabel(applet.selectedProviderData)",
+                       "a private account placeholder must not become a selection key")
+        self.assertIn("!applet.privacyMode", applet.id_block("providerCostSection"))
+        applet.require("applet.privateErrorText(applet.costErrorText)", "cost errors must respect privacy")
+
     def test_optional_sections_keep_their_visibility_in_the_popup(self):
         applet = Surface("applet")
         for name, option in (("creditsSection", "showPopupCredits"),
