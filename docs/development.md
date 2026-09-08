@@ -1,0 +1,190 @@
+# Development
+
+Read the relevant sections before changing QML, JavaScript, configuration,
+tests, packaging, or runtime behavior. [AGENTS.md](../AGENTS.md) defines project
+boundaries and required checks. [TODO.md](../TODO.md) owns current feature and
+parity decisions. All code paths below are relative to the repository root.
+
+## Ownership and implementation
+
+- `contents/ui/main.qml` owns applet processes, refresh/account coordination,
+  selected state, configuration updates, and external effects. Its adapters
+  supply the panel and popup.
+- `contents/ui/components/CompactRepresentation.qml` renders the panel;
+  `FullRepresentation.qml` in the same directory renders the popup. Components
+  are presentation-only and receive normalized data plus an explicit parent API
+  such as `applet` or `configPage`.
+- `contents/ui/configProviders.qml` owns provider setup processes, prompts,
+  configuration writes, and effects. Its pure protocol and command-planning
+  modules live in `contents/ui/config/`.
+- Pure applet modules live in `contents/ui/*.js`; their public interfaces have
+  direct tests in `tests/tst_*.qml`. Configuration is declared in
+  `contents/config/main.xml` and bound through `cfg_*` in config pages and
+  `Plasmoid.configuration` at runtime.
+
+Before changing behavior, identify its owning QML page, config entry, CLI input,
+external effects, and cheapest behavioral test. Read the existing implementation
+and tests. Preserve compatibility and unexpected behavior until evidence or the
+request shows it should change.
+
+When multiple pages consume one CLI envelope, share the bounded record/envelope
+contract and keep page-specific projections separate. Avoid both duplicate raw
+parsing and one lossy result that erases different UI semantics. For a new CLI
+field, update normalization, rendering, relevant checks, and TODO when behavior
+changes.
+
+Use names that identify provider, source, account, window, or unit when ambiguous.
+`build*`, `format*`, `provider*Url`, `*Rows`, and `*Text` helpers stay pure;
+`refresh*`, `load*`, `parse*`, `select*`, `set*`, and `process*` may mutate state.
+Put non-obvious lifecycle state in names such as `connected*`, `pending*`,
+`*Memo`, `*Revision`, and `*Initialized`, and update it beside its effect.
+Comments explain a workaround or contract, rather than restating assignments.
+
+For repeated JavaScript in delegates, timers, or callbacks, use named helpers.
+For repeated or bulky UI blocks, use small presentation-only components.
+Extraction must hide complexity, not merely reduce line count.
+
+## QML conventions
+
+- Use `PlasmaComponents` for panel/popup controls and Kirigami/Qt Quick Controls
+  in settings. Use `ContainmentItem` only for containment/panel/desktop code,
+  not this applet's root.
+- Keep `metadata.json`, `contents/ui`, `contents/config/main.xml`, and
+  `contents/config/config.qml` in the standard package layout.
+- Use checkboxes for booleans, spinboxes/sliders for numbers, text fields for
+  short strings, and a combobox for more than three choices.
+- Give visual children a size through layouts, anchors, implicit sizes, or
+  explicit compact dimensions. Items otherwise default to 0x0.
+- Use layout minimum/preferred sizes, implicit dimensions, and `Kirigami.Units`
+  instead of panel-size magic numbers. Use anchors/layouts rather than bindings
+  to sibling geometry.
+- Prefer declarative bindings. Move repeated or expensive calculations into
+  helpers or cached properties. Avoid heavy JavaScript in delegates, compact
+  rendering, timers, and DataSource callbacks; profile before optimizing.
+- Keep delegates stable. Add clipping, shaders, or nested layouts only for a
+  visible need.
+- External Repeater/view delegate components must declare
+  `required property var modelData` inside the component. An alias assignment
+  from the parent does not establish the delegate's scope; `qmllint` may miss
+  the resulting runtime error.
+- Use `qmlformat` for new files or a dedicated formatting change, then inspect
+  the diff. Existing files have no formatter baseline, so preserve formatting
+  during unrelated work.
+- Keep `qmlls` in the editor. Machine-specific `.qmlls.ini` files stay out of Git;
+  language-server diagnostics do not replace `make check`.
+
+For translation/catalog changes, follow [Translations](translations.md).
+When changing provider identity, check keys, CLI aliases, title, color,
+docs/dashboard/login URLs, icon assets, and `scripts/test_provider_icons.sh`.
+
+## Regression checks
+
+Use direct adversarial QtTests for pure public behavior. Assert QML wiring,
+effect ownership, and lifecycle ordering statically. Use runtime checks where
+static checks cannot establish the behavior. Avoid assertions on private helper
+names or body decomposition when public behavior is already covered.
+
+`scripts/lib/qml_surfaces.py` defines QML/JS file groups for the Makefile,
+hardening checks, and translation extraction. Existing globs cover new files;
+add a glob only for a new directory. `scripts/test_qml_hardening.sh` rejects
+uncovered QML/JS files.
+
+- Use `require_in_surface` / `reject_in_surface` in shell, or `Surface.require`,
+  `Surface.function_body`, and `Surface.id_block` in Python, for rules applying
+  to the whole applet or config page. Moving code between files then preserves
+  the check. Use `*_in_file` only for actual per-file contracts, such as safe
+  icon fallback in each delegate.
+- Use `require_definition_where_used` or
+  `Surface.require_definition_where_used` for shared unqualified helpers.
+  A declaration in another QML/JS file does not satisfy the caller's scope.
+  These helpers also check the page root when components call `applet.foo(...)`.
+  A plain search for `function foo(` anywhere in a group can miss broken callers.
+- Local bindings for `hasOwnKey`, `isUnsafeObjectKey`, `copyObject`, and
+  `shellQuote` delegate to `contents/ui/Guards.js`. Share the implementation
+  through that `.pragma library` module, including in config pages.
+  `tests/tst_guards.qml` covers behavior; `scripts/test_security_regressions.sh`
+  rejects implementations duplicated elsewhere.
+
+Run the relevant check during iteration, then the required `make check` gate.
+Read its output for tool failures and skips. CI uses the pinned Plasma image in
+[the workflow](../.github/workflows/ci.yml), with explicit import warnings and
+QtTests configured to reject skips. A local machine missing QML modules may
+provide less coverage; report what actually ran.
+
+## Runtime verification
+
+After extracting components/delegates, install or upgrade the widget and inspect
+recent logs for `ReferenceError`, `TypeError`, and `SyntaxError`:
+
+```sh
+./install.sh
+journalctl --user -u plasma-plasmashell.service --since '2 minutes ago' --no-pager \
+  | rg -n 'app\.codexbar|CodexBar|ReferenceError|TypeError|SyntaxError|file://.*/app.codexbar'
+```
+
+Ignore unrelated widget logs unless they mention `app.codexbar`.
+For a panel smoke check when plasma-sdk is installed:
+
+```sh
+plasmoidviewer -a "$PWD" -l topedge -f horizontal
+```
+
+Use `plasmawindowed app.codexbar` for an installed-widget check.
+Restarting/replacing `plasmashell` is a final runtime check, not the edit loop.
+Use `qmlprofiler` only after reproducing a performance problem, and keep traces
+in ignored `dist/review/` or the OS temp directory.
+
+## CLI probes and packaging
+
+The widget expects a working `codexbar`. Probe the selected official version
+when investigating a contract; keep raw account output out of logs and commits.
+
+```sh
+codexbar usage --format json --json-only
+codexbar usage --provider codex --status --format json --json-only
+codexbar usage --provider codex --all-accounts --format json --json-only
+codexbar cost --format json --json-only
+codexbar config providers --format json --json-only
+```
+
+For packaging changes, run `make package` after `make check`.
+The `PACKAGE_FILES` list in the Makefile defines the archive contents, including
+README screenshots. Publishing the resulting `dist/codexbar-plasma.plasmoid`
+in a GitHub Release requires user authorization.
+
+## Maintaining agent instructions
+
+Keep permanent rules in AGENTS.md and feature status in TODO.md. Add a rule for
+an observed failure or repeated friction. Put task-specific details in the
+relevant section of this guide and add a root pointer stating when to read it.
+Maintain links and the [documentation index](README.md) in the same change.
+
+The repository enforces a 16 KiB AGENTS.md budget, with a working target below
+200 lines. These are local maintenance choices. Codex's default budget is
+32 KiB across discovered project instructions, so leave room for other files.
+See [Codex discovery](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
+
+OpenAI describes using a short instruction file as an index into maintained
+docs. This motivates our conditional pointers, rather than a duplicate feature
+inventory. See [OpenAI's engineering experience](https://openai.com/index/harness-engineering/).
+
+Keep `CLAUDE.md` as the single `@AGENTS.md` import. Imports load their full
+contents; adding imports for every guide would restore the context cost.
+Anthropic recommends concise instructions, generally under 200 lines, rather
+than imposing that as a loading limit. See [Claude memory](https://code.claude.com/docs/en/memory#write-effective-instructions).
+
+Keep `.github/copilot-instructions.md` limited to review guidance and consistent
+with AGENTS.md. GitHub assigns that file higher precedence than AGENTS.md;
+repository prose cannot reverse product precedence. See
+[GitHub instruction precedence](https://docs.github.com/en/copilot/concepts/prompting/response-customization#precedence-of-custom-instructions).
+
+## QML references
+
+- [KDE package setup](https://develop.kde.org/docs/plasma/widget/setup/)
+- [Widget properties](https://develop.kde.org/docs/plasma/widget/properties/)
+- [Configuration](https://develop.kde.org/docs/plasma/widget/configuration/)
+- [Testing](https://develop.kde.org/docs/plasma/widget/testing/)
+- [KF6 porting](https://develop.kde.org/docs/plasma/widget/porting_kf6/)
+- [Plasma QML API](https://develop.kde.org/docs/plasma/widget/plasma-qml-api/)
+- [Qt QML practices](https://doc.qt.io/qt-6/qtquick-bestpractices.html)
+- [Qt Quick performance](https://doc.qt.io/qt-6/qtquick-performance.html)

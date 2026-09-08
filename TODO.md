@@ -1,6 +1,11 @@
 # TODO
 
-Parity baseline: `docs/research/2026-09-01-macos-parity-0.56.2.md`, pinned to
+This is the current feature and parity inventory. Update the relevant entry
+when behavior or a CLI boundary changes; keep historical evidence in its pinned
+audit rather than mirroring this inventory in agent instructions.
+
+Parity baseline:
+[CLI 0.56.2 audit](docs/research/2026-09-01-macos-parity-0.56.2.md), pinned to
 upstream v0.56.2 and probed with the checksum-verified official Linux CLI
 0.56.2 release asset. The audit compared the verified v0.55.0 and v0.56.2
 binaries in isolated accounts. The provider catalog and the `config providers`,
@@ -62,9 +67,12 @@ replace a host CLI.
 - Cost truthfulness: CLI 0.56.2 retains the `coverage` counters and
   `provenance` normalized behind a bounded trust boundary. Provider and global
   cost amounts are qualified as estimated, partial, or approximate, and share
-  one semantic notice decision; older payloads remain quiet. Usage & Spend now
-  shows project totals from CLI 0.56.2 `cost.projects`, with the existing range
-  and metric selectors. `normalizeCostProjects` retains only bounded names and
+  one semantic notice decision; older payloads remain quiet. Keep pricing
+  coverage separate from `historyCoverageIsEstablished`. Normalize trust data
+  through `ProviderNormalizer.normalizeCostTrustMetadata` and summarize it with
+  `CostPresentation.costTrustSummary`; never expose raw provenance values in QML.
+  Usage & Spend now shows project totals from CLI 0.56.2 `cost.projects`, with
+  the existing range and metric selectors. `normalizeCostProjects` retains only bounded names and
   optional amounts, discarding paths and nested source records. The list keeps
   provider currencies separate, preserves unknown amounts and duplicate names,
   and signals truncation at 128 inspected projects per provider or 128 displayed
@@ -83,13 +91,15 @@ replace a host CLI.
   a call site; `limitResetArmThreshold` is a separate reset-detection knob and
   is deliberately not tied to the warning step. Changing a threshold resets the
   threshold-derived notification memo but keeps the provider status baseline: a
-  settings change is not a status transition. That decision lives in
-  `contents/ui/NotificationMemo.js` and is covered by
-  `tests/tst_notification_memo.qml`; keep it there rather than reinlining it in
-  `main.qml`.
+  settings change is not a status transition. `main.qml` resets the opaque memo
+  through `contents/ui/NotificationPlanner.js`; its internal
+  `contents/ui/NotificationMemo.js` preserves the provider status baseline.
+  Keep these decisions in pure modules, covered by
+  `tests/tst_notification_planner.qml` and `tests/tst_notification_memo.qml`.
 - Local Agent Sessions are consumed through `codexbar sessions --json-v2` in a
   bounded, refreshable global tab. Only safe display fields are normalized;
-  `cwd`, `transcriptPath`, IDs, and PIDs are neither retained nor rendered.
+  `cwd`, `transcriptPath`, IDs, and PIDs must never be retained, rendered, opened,
+  or followed.
   Remote/SSH host focus stays macOS-only.
 - Existing detail and cost charts now support hover, click selection, and
   keyboard inspection. The global Usage & Spend tab adds 7/30/90-day cost
