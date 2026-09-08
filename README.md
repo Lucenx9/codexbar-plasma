@@ -46,8 +46,9 @@ its additional editors remain unavailable.
 
 <!-- Web links to guides also work in the installed package, which omits those files. -->
 See the [usage and settings guide](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md)
-for options and defaults, and [current CLI support and gaps](https://github.com/Lucenx9/codexbar-plasma/blob/main/TODO.md)
-for the verified compatibility baseline.
+for options and defaults, the [documentation index](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/README.md)
+for verified CLI evidence, and [open issues](https://github.com/Lucenx9/codexbar-plasma/issues)
+for remaining work.
 
 ## Requirements
 
@@ -145,7 +146,8 @@ codexbar cost --format json --json-only
 
 The widget can display only data the CLI returns. Cost availability varies by
 provider; missing dollar amounts do not mean zero spend. If a feature is absent,
-check the [known CLI gaps](https://github.com/Lucenx9/codexbar-plasma/blob/main/TODO.md).
+check the [usage guide](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md)
+and [open issues](https://github.com/Lucenx9/codexbar-plasma/issues).
 
 ### Notifications do not appear
 

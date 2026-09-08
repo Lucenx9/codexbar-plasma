@@ -16,9 +16,18 @@ Keep the pull request focused on one purpose.
 
 ## Related issue
 
-<!-- Use "Closes #123" when merging should close an issue. Otherwise write "None". -->
+<!-- Use "Closes #123" only when all acceptance criteria are met. Use "Refs #123"
+for partial work or a dependency. Otherwise write "None". -->
 
 None
+
+## Documentation impact
+
+<!-- List updated guides, examples, or screenshots. If none are affected, explain
+why the final behavior, setup, and contributor workflow still match the docs.
+Reconcile related issue progress; TODO.md is only a link to the work tracker. -->
+
+- ...
 
 ## Verification
 

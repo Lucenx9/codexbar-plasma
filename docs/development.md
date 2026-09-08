@@ -2,8 +2,9 @@
 
 Read the relevant sections before changing QML, JavaScript, configuration,
 tests, packaging, or runtime behavior. [AGENTS.md](../AGENTS.md) defines project
-boundaries and required checks. [TODO.md](../TODO.md) owns current feature and
-parity decisions. All code paths below are relative to the repository root.
+boundaries and required checks. The [usage guide](usage.md) describes supported
+behavior; [GitHub Issues](https://github.com/Lucenx9/codexbar-plasma/issues) owns
+work status. All code paths below are relative to the repository root.
 
 ## Work from a checkout
 
@@ -55,8 +56,8 @@ request shows it should change.
 When multiple pages consume one CLI envelope, share the bounded record/envelope
 contract and keep page-specific projections separate. Avoid both duplicate raw
 parsing and one lossy result that erases different UI semantics. For a new CLI
-field, update normalization, rendering, relevant checks, and TODO when behavior
-changes.
+field, update normalization, rendering, relevant checks, and affected guides.
+Reconcile the linked issue against its acceptance criteria.
 
 Use names that identify provider, source, account, window, or unit when ambiguous.
 `build*`, `format*`, `provider*Url`, `*Rows`, and `*Text` helpers stay pure;
@@ -68,6 +69,33 @@ Comments explain a workaround or contract, rather than restating assignments.
 For repeated JavaScript in delegates, timers, or callbacks, use named helpers.
 For repeated or bulky UI blocks, use small presentation-only components.
 Extraction must hide complexity, not merely reduce line count.
+
+## Behavioral contracts to preserve
+
+- Quota thresholds come from `QuotaThresholds.js`, shared by notifications and
+  usage-bar markers. `limitResetArmThreshold` detects limit resets separately;
+  it is not a warning threshold. `main.qml` resets opaque notification state
+  through `NotificationPlanner.js`; its internal `NotificationMemo.js` preserves
+  provider status baselines. Settings changes must not announce an ongoing
+  incident again or swallow an incident arriving during refresh. Keep these
+  decisions pure and covered by `tests/tst_notification_planner.qml` and
+  `tests/tst_notification_memo.qml`. Predictive warnings prime silently and fire
+  on a new projected-exhaustion transition.
+- Sessions normalize display fields only. Discard `cwd`, `transcriptPath`, IDs,
+  and PIDs; never render, open, or follow them. Remote/SSH host focus is a
+  macOS-only non-goal.
+- `PanelRules.js` evaluates the displayed quota without effects. Direct missing
+  quotas stay omitted; `runOut` depends on `paceWarningActive`. Panel visibility,
+  order, and metric settings preserve the minute clock and icon fallback and
+  must not fetch data or change notification state.
+- Privacy projects display records without changing cached snapshots or account
+  command keys. Preserve config keys and pending defaults across all settings
+  pages. `PopupRefreshPolicy.js` handles freshness and failed-attempt cooldown,
+  including in-flight/queued work; opening the popup must not start cost scans.
+  See the [settings decision record](research/2026-09-08-settings-experience.md).
+- Validate `credits.codexCreditLimit` as finite non-negative amounts, clamped
+  percentages, and bounded reset metadata. Its denominator belongs only to that
+  nested record, never to a plain `usage.credits` balance.
 
 ## QML conventions
 
@@ -101,6 +129,11 @@ Extraction must hide complexity, not merely reduce line count.
 For translation/catalog changes, follow [Translations](translations.md).
 When changing provider identity, check keys, CLI aliases, title, color,
 docs/dashboard/login URLs, icon assets, and `scripts/test_provider_icons.sh`.
+Repeat this comparison during official CLI release audits. The pinned 0.56.2
+audit found the same 69 IDs as 0.55.0; the OpenRouter fallback already uses
+`https://openrouter.ai/activity`. Treat the catalog as fallback presentation data
+and use the [dated evidence](research/2026-09-01-macos-parity-0.56.2.md), not an
+assumed current upstream count.
 
 ## Regression checks
 
@@ -254,10 +287,57 @@ For string extraction and catalog updates, follow [Translations](translations.md
 The `PACKAGE_FILES` list in the Makefile defines the archive contents, including
 README screenshots. Publishing the resulting `dist/codexbar-plasma.plasmoid`
 in a GitHub Release requires user authorization.
+If a KDE Store channel is introduced, use its KNewStuff/Discover update path for
+that channel. WidgetKit, Sparkle, Keychain/Full Disk Access UI, and macOS app
+implementation code remain outside this standalone Plasma repository.
+
+## Documentation and work tracking
+
+The agent owns these steps as part of the change, including direct commits
+authorized by the user. Do not wait for a separate documentation request.
+
+1. Before editing, inspect the relevant current guides, pinned contract evidence,
+   and existing issues. Search before creating a work item. Each issue needs an
+   intended result, acceptance criteria, and any blocker with an exact version
+   or source. A migration or an older audit is not a fresh CLI verification.
+2. Reconcile the final diff with documentation. Update setup and requirements in
+   README, behavior/defaults in the usage guide, and contributor workflows here.
+   Keep technical contracts in their existing focused guides. Update affected
+   examples and screenshots, remove obsolete claims, and maintain the docs index.
+   For each changed behavior, identify its guide or explain why none is affected.
+3. Run `make check` and applicable example/package checks. Inspect documented
+   commands against their implementation. Mechanical checks catch broken paths,
+   indexing, and budgets; the agent must also review whether the prose is true.
+   Record documentation impact and verification in the PR. For a direct commit,
+   record them in its body and reconcile issue status after the push.
+4. Use `Closes #123` in a PR description or direct commit message only when every
+   acceptance criterion is met. For partial work, use `Refs #123` and update the
+   issue's remaining work and blockers. Confirm closure after delivery; creating
+   an issue or documenting a gap does not complete it. TODO.md remains a small
+   entry point without copied issue status or checkboxes.
+
+Keep proposal status visible inside the document: proposed, implemented, or
+superseded, with the exact verified contract and a tracker link where relevant.
+Examples in a proposal must be identified as proposed commands. Dated audits
+retain their original findings; add a successor link when a new audit replaces
+them. Link current behavior separately so historical recommendations are not
+mistaken for unfinished tasks.
+
+During a new official CLI audit, recheck `blocked-upstream` issues against that
+release. During release preparation, check setup, requirements, defaults, and
+changed features against current guides. Record actual checks rather than
+updating a date to imply verification. Keep task status in GitHub Issues and
+update the canonical explanation rather than copying it into several documents.
+
+This follows [Google's documentation practices](https://google.github.io/styleguide/docguide/best_practices.html)
+and [docs as code](https://www.writethedocs.org/guide/docs-as-code/).
+[GitHub's closing-keyword rules](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue)
+apply when the change reaches the default branch. Projects are optional views
+of issues; this repository does not require a separate manually maintained board.
 
 ## Maintaining agent instructions
 
-Keep permanent rules in AGENTS.md and feature status in TODO.md. Add a rule for
+Keep permanent rules in AGENTS.md and work status in GitHub Issues. Add a rule for
 an observed failure or repeated friction. Put task-specific details in the
 relevant section of this guide and add a root pointer stating when to read it.
 Maintain links and the [documentation index](README.md) in the same change.

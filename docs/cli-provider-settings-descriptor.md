@@ -1,12 +1,21 @@
 # CLI provider settings descriptor
 
+Status: **Proposed, not shipped**. The last full contract verification used the
+checksum-verified official Linux CLI 0.56.2 on 2026-09-01. It rejects
+`config providers --descriptors` and has no generic `config set` or `config action`.
+See the [pinned audit](research/2026-09-01-macos-parity-0.56.2.md).
+Track [settings delivery](https://github.com/Lucenx9/codexbar-plasma/issues/167) and
+[onboarding actions](https://github.com/Lucenx9/codexbar-plasma/issues/168) in GitHub Issues.
+All command examples and payloads below describe the proposed contract.
+
 This document defines the CLI contract Plasma needs before it can render real
 provider settings or onboarding flows without duplicating macOS Swift logic in
 QML.
 
 The Plasma widget consumes this contract when the upstream `codexbar` CLI
-exposes it. If a descriptor is absent or unsupported, Plasma keeps showing the
-redacted diagnostics and CLI command hints fallback.
+exposes it. If a descriptor is absent or unsupported, Plasma keeps enable/disable,
+supported single-key setup, docs/dashboard/login links, redacted diagnostics, and
+CLI command hints available.
 
 ## Command
 

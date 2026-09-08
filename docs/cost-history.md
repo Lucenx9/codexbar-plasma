@@ -36,6 +36,37 @@ clear the pin but preserve explicitly expanded period details. Period efficiency
 stays in the period view, available through All days; it is not shown as a daily
 figure. A single measurable day remains selectable to inspect its models.
 
+## History, trust, and project totals
+
+`costHistoryMetric` selects cost or tokens across charts from the same loaded
+payload; the selected metric also controls bar scaling. Metric and day selection
+must not add CLI calls. `historyCoverageIsEstablished` controls the collecting
+history notice; a missing flag counts as established for legacy payloads.
+
+`ProviderNormalizer.normalizeCostTrustMetadata` bounds `coverage` and `provenance`.
+`CostPresentation.costTrustSummary` qualifies provider and global amounts with
+one shared notice. Missing legacy metadata stays quiet. Keep pricing coverage
+separate from history collection coverage and never expose raw provenance in QML.
+
+`normalizeCostProjects` retains bounded names and optional amounts, discarding
+paths and nested source records. Preserve unknown amounts and duplicate names;
+keep provider currencies separate. Signal truncation at 128 inspected projects
+per provider or 128 displayed rows overall. Project rows never contribute to
+provider or global totals. The [usage guide](usage.md#costs-and-history) describes
+the range/metric controls and expandable presentation.
+
+Official CLI 0.56.2 emits Antigravity token-only history through the generic cost
+envelope. Absent costs stay absent in daily/model normalization. Its established
+empty snapshot uses zero dollar totals despite costs being unavailable, so
+`normalizeProviderCostTotals` masks that provider sentinel until an official
+availability field exists. Token charts remain usable while cost totals and
+cost-mode charts stay unavailable. Cursor cost is rejected by that Linux release;
+neither case authorizes provider fetching or source parsing in QML.
+
+Track [explicit cost availability](https://github.com/Lucenx9/codexbar-plasma/issues/173),
+[Cursor Linux cost](https://github.com/Lucenx9/codexbar-plasma/issues/171), and
+[service-tier totals](https://github.com/Lucenx9/codexbar-plasma/issues/172) in the issue tracker.
+
 ## Pinned CLI evidence
 
 The scoped implementation used official CodexBar v0.56.8, commit

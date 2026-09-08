@@ -20,6 +20,15 @@ def local_links(document):
 
 
 class DocumentationTests(unittest.TestCase):
+    def test_todo_remains_a_work_tracker_entrypoint(self):
+        todo = (ROOT / "TODO.md").read_text()
+        self.assertLessEqual(
+            len(todo.encode("utf-8")), 2048,
+            "Keep TODO.md within 2 KiB; work status belongs in GitHub Issues.",
+        )
+        self.assertIn("https://github.com/Lucenx9/codexbar-plasma/issues", todo)
+        self.assertNotRegex(todo, r"(?m)^\s*[-*]\s+\[[ xX]\]", "Keep task checkboxes in issues.")
+
     def test_root_agent_instructions_fit_repository_budget(self):
         self.assertLessEqual(
             (ROOT / "AGENTS.md").stat().st_size, 16 * 1024,

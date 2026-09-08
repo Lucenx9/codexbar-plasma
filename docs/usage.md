@@ -2,8 +2,10 @@
 
 See the [README](../README.md#install) for installation and first setup. This
 guide covers display options, provider setup, history, notifications, and
-defaults. Available data and actions depend on the selected official CLI;
-[TODO.md](../TODO.md) records the verified contracts and remaining gaps.
+defaults. Available data and actions depend on the selected official CLI.
+The [documentation index](README.md) links the full CLI 0.56.2 audit and later
+scoped evidence. [GitHub Issues](https://github.com/Lucenx9/codexbar-plasma/issues)
+tracks remaining work and upstream contract requirements.
 
 ## Panel and popup
 
@@ -19,6 +21,9 @@ defaults. Available data and actions depend on the selected official CLI;
   changes the desktop theme, panel geometry, provider selection or popup.
 - Provider tabs with usage bars, reset windows, account identity, status, and
   credits.
+- A plain credit balance has no allowance denominator and stays meter-free.
+  A monthly Codex credit meter appears only when the CLI provides the validated
+  `credits.codexCreditLimit` record. Its limit never applies to a plain balance.
 - Panel text modes for percent used or left, pace, usage plus pace, reset time,
   and a run-out forecast that shows the predicted duration only while the CLI
   expects the quota to run out before its reset.
@@ -52,6 +57,8 @@ defaults. Available data and actions depend on the selected official CLI;
 
 ## Providers and accounts
 
+Provider-specific editable settings depend on the official CLI contract.
+
 - Search providers by name or ID and filter All, Enabled, or Disabled locally.
   Clear filters restores the list without changing selection or provider settings.
 - Provider enable/disable and setup actions write CodexBar configuration
@@ -75,6 +82,11 @@ defaults. Available data and actions depend on the selected official CLI;
 ## Costs and history
 
 - Local cost drill-down when the CLI exposes cost data.
+- In the verified CLI 0.56.2 contract, Antigravity supplies token-only local
+  history; its dollar amounts remain unavailable. Cursor local or dashboard
+  cost is rejected by the Linux CLI. Other provider fields, including Kiro
+  overage, z.ai BigModel CN balance, and Cursor Grok Bot usage, use the existing
+  generic detail, provider-cost, and extra-window paths.
 - A compact provider summary compares today with the selected period. Expand
   details for period models, history, and projects; cost warnings remain visible.
 - Click a day in the provider chart or select it with the keyboard to see that
@@ -96,6 +108,10 @@ defaults. Available data and actions depend on the selected official CLI;
   notice suppresses the same meaning for that provider or the aggregate Spend
   view across refreshes and popup reopenings; a materially different warning is
   shown again.
+
+See [Cost history](cost-history.md) for data bounds, selection rules, and
+evidence. Dashboard extras and additional history views require official CLI
+fields; track proposed extensions in the issue tracker.
 
 ## Status and notifications
 

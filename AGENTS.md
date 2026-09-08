@@ -13,8 +13,9 @@ Here, plugin, widget, plasmoid, and applet all mean the Plasma frontend.
   contracts belong in the upstream `codexbar` CLI. Use supported CLI commands;
   never hand-edit its config JSON or add provider scraping/auth logic to QML.
 - Confirm data and actions in the released official Linux CLI before designing
-  UI around them. If the contract is missing, record the upstream requirement in
-  [TODO.md](TODO.md) and stop that part at the frontend boundary.
+  UI around them. If the contract is missing, record the requirement in a
+  [repository issue](https://github.com/Lucenx9/codexbar-plasma/issues) and stop
+  that part at the frontend boundary.
 - Prefer generic CLI-described fields and actions. Unknown providers and optional
   fields must degrade gracefully; static provider metadata is a tested fallback.
 
@@ -27,9 +28,10 @@ relevant sections; ordinary links here are on-demand reading, not bulk imports.
   [Development](docs/development.md). Then read the owning implementation, config
   schema, and nearest regression check before editing.
 - For feature behavior, provider changes, CLI contracts, or macOS parity, read
-  the relevant entries in [TODO.md](TODO.md) and their linked evidence. TODO is
-  the sole current parity inventory. Update it when a decision changes; preserve
-  unresolved gaps and implemented behavior rather than creating another mirror.
+  the relevant [usage guide](docs/usage.md), contract/evidence links in the
+  [documentation index](docs/README.md), and related GitHub issues. Issues own
+  work status; maintained guides own behavior and decisions. [TODO.md](TODO.md)
+  is only an entry point, never a second status inventory.
 - For documentation changes, read the [documentation index](docs/README.md).
   For agent instructions, also read
   [instruction maintenance](docs/development.md#maintaining-agent-instructions).
@@ -120,6 +122,12 @@ or **macOS-only/non-goal**. Screenshots and Swift models are not CLI contracts.
 
 ## Documentation hygiene
 
+- Own documentation and issue maintenance as part of every change, without a
+  user reminder. Before editing, identify affected guides and existing issues.
+  Before handoff, reconcile them with the final diff and completion criteria.
+  Follow [the maintenance workflow](docs/development.md#documentation-and-work-tracking),
+  including for authorized direct commits to main. State documentation impact
+  in the PR or commit body; use closing keywords only for fully completed work.
 - When changing installation, updates, or requirements, update [README.md](README.md)
   in the same change. For user-visible behavior or defaults, update the affected
   [usage guide](docs/usage.md) sections and any affected README summaries or
