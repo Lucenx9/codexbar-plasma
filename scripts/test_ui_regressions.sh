@@ -742,7 +742,7 @@ for cost_number_function in ("costValueLine", "costLine"):
 spend_total_body = function_body(main_text, "spendTotalLine")
 for token_only_total_fragment in (
     "Normalizer.strictFiniteNumber(totals.cost)",
-    'i18n("%1 tokens", CostPresentation.tokenCountString(totals.tokens))',
+    'usageCountText(totals.tokens, "tokens")',
 ):
     if token_only_total_fragment not in spend_total_body:
         raise AssertionError(
@@ -2622,7 +2622,7 @@ if "windowValueLine: costValueLine(" not in main_text:
 for mixed_currency_fragment in (
     "CostPresentation.spendHasMixedCostCurrencies(providerCosts)",
     "The cost subtotal and charts use %1.",
-    'i18n("%1 subtotal - %2 tokens"',
+    'i18n("%1 subtotal", costValue)',
 ):
     if mixed_currency_fragment not in main_text:
         raise AssertionError(

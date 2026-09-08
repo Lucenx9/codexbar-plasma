@@ -31,12 +31,12 @@ ColumnLayout {
     }
 
     function tokensText(amounts) {
-        return CostPresentation.hasMetricValue(amounts, true) ? i18n("%1 tokens", applet.tokenCountString(amounts.tokens)) : i18n("Tokens unavailable");
+        return CostPresentation.hasMetricValue(amounts, true) ? applet.usageCountText(amounts.tokens, "tokens") : i18n("Tokens unavailable");
     }
 
     function daySummaryText() {
         return CostPresentation.amountSummary(applet.costNumberFormat, selectedDay, function (tokens) {
-            return i18n("%1 tokens", applet.tokenCountString(tokens));
+            return applet.usageCountText(tokens, "tokens");
         });
     }
 

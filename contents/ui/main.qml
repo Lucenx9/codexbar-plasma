@@ -1541,7 +1541,7 @@ PlasmoidItem {
         var numericCost = Normalizer.strictFiniteNumber(totals.cost)
         var hasTokens = CostPresentation.hasMetricValue(totals, true)
         if (!isFinite(numericCost)) {
-            return hasTokens ? i18n("%1 tokens", CostPresentation.tokenCountString(totals.tokens))
+            return hasTokens ? usageCountText(totals.tokens, "tokens")
                 : i18n("Tokens unavailable")
         }
         var trustSummary = CostPresentation.costTrustSummary(costs)
@@ -1551,13 +1551,9 @@ PlasmoidItem {
         if (!hasTokens) {
             return totals.hasMixedCostCurrencies ? i18n("%1 subtotal", costValue) : i18n("%1 total", costValue)
         }
-        return totals.hasMixedCostCurrencies
-            ? i18n("%1 subtotal - %2 tokens",
-                costValue,
-                CostPresentation.tokenCountString(totals.tokens))
-            : i18n("%1 total - %2 tokens",
-                costValue,
-                CostPresentation.tokenCountString(totals.tokens))
+        var totalText = totals.hasMixedCostCurrencies
+            ? i18n("%1 subtotal", costValue) : i18n("%1 total", costValue)
+        return i18n("%1 - %2", totalText, usageCountText(totals.tokens, "tokens"))
     }
 
     function updateCostTrustNoticeState(scope, summary, shouldDismiss) {
@@ -1600,7 +1596,7 @@ PlasmoidItem {
 
     function costModelRows(tokenCost) {
         return CostPresentation.modelRows(costNumberFormat, tokenCost, function(tokens) {
-            return i18n("%1 tokens", CostPresentation.tokenCountString(Number(tokens)))
+            return usageCountText(tokens, "tokens")
         })
     }
 
@@ -1685,11 +1681,9 @@ PlasmoidItem {
         case "currency":
             return amountString(part.value, part.currency)
         case "tokens":
-            return i18n("%1 tokens", tokenCountString(part.value))
         case "requests":
-            return i18n("%1 requests", tokenCountString(part.value))
         case "points":
-            return i18n("%1 points", tokenCountString(part.value))
+            return usageCountText(part.value, part.kind)
         default:
             return tokenCountString(part.value)
         }
@@ -3397,7 +3391,7 @@ PlasmoidItem {
             costValue = qualifiedCostValue(costValue, valueMode)
         }
         if (isFinite(numericTokens)) {
-            return i18n("%1 - %2 tokens", costValue, tokenCountString(numericTokens))
+            return i18n("%1 - %2", costValue, usageCountText(numericTokens, "tokens"))
         }
         return costValue
     }
@@ -3411,13 +3405,32 @@ PlasmoidItem {
             costValue = qualifiedCostValue(costValue, valueMode)
         }
         if (isFinite(numericTokens)) {
-            return i18n("%1: %2 - %3 tokens", label, costValue, tokenCountString(numericTokens))
+            return i18n("%1: %2", label,
+                i18n("%1 - %2", costValue, usageCountText(numericTokens, "tokens")))
         }
         return i18n("%1: %2", label, costValue)
     }
 
     function tokenCountString(tokens) {
         return CostPresentation.tokenCountString(tokens)
+    }
+
+    function usageCountText(value, unit) {
+        var text = CostPresentation.tokenCountString(value)
+        var count = Number(text)
+        // Compact counts such as 1K keep their own translation. Only the small
+        // displayed integers go through KI18n's integer plural argument.
+        var exact = isFinite(count)
+        switch (unit) {
+        case "tokens":
+            return exact ? i18np("%1 token", "%1 tokens", count) : i18n("%1 tokens", text)
+        case "requests":
+            return exact ? i18np("%1 request", "%1 requests", count) : i18n("%1 requests", text)
+        case "points":
+            return exact ? i18np("%1 point", "%1 points", count) : i18n("%1 points", text)
+        default:
+            return text
+        }
     }
 
     function tokenCostHint(providerID) {

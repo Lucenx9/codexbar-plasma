@@ -919,6 +919,32 @@ Item {
             verifyScenario(i18np("%1 hour", "%1 hours", 2) === expected[3], "plural translation failed");
             if (language === "pt_BR")
                 verifyScenario(i18np("%1 hour", "%1 hours", 0) === "0 hora", "Brazilian Portuguese zero form failed");
+            var countLabels = {
+                it: [["token", "token"], ["richiesta", "richieste"], ["punto", "punti"]],
+                fr: [["jeton", "jetons"], ["requête", "requêtes"], ["point", "points"]],
+                de: [["Token", "Tokens"], ["Anfrage", "Anfragen"], ["Punkt", "Punkte"]],
+                es: [["token", "tokens"], ["solicitud", "solicitudes"], ["punto", "puntos"]],
+                pt_BR: [["token", "tokens"], ["requisição", "requisições"], ["ponto", "pontos"]]
+            }[language];
+            var countUnits = ["tokens", "requests", "points"];
+            for (var unitIndex = 0; unitIndex < countUnits.length; unitIndex++) {
+                var singular = countLabels[unitIndex][0];
+                var plural = countLabels[unitIndex][1];
+                var unit = countUnits[unitIndex];
+                verifyScenario(applet.usageCountText(0, unit) === "0 "
+                    + (language === "fr" || language === "pt_BR" ? singular : plural), "zero count translation failed");
+                verifyScenario(applet.dashboardPartText({kind: unit, value: 1}) === "1 " + singular,
+                    "singular dashboard count translation failed");
+                verifyScenario(applet.usageCountText(2, unit) === "2 " + plural, "plural count translation failed");
+                verifyScenario(applet.usageCountText(1000, unit) === "1K " + plural, "compact count translation failed");
+                verifyScenario(applet.usageCountText(4294967297, unit) === "4.3B " + plural,
+                    "large count overflowed the plural argument");
+            }
+            var oneToken = "1 " + countLabels[0][0];
+            verifyScenario(applet.costValueLine(1, 1, "USD") === applet.amountString(1, "USD") + " - " + oneToken,
+                "cost summary lost the singular token count");
+            verifyScenario(applet.costLine("Example", 1, 1, "USD") === i18n("%1: %2", "Example",
+                applet.amountString(1, "USD") + " - " + oneToken), "labeled cost summary lost the singular token count");
             verifyScenario(hasText(applet.fullRepresentationItem, expected[0]), "translated popup label missing");
             if (settingsPreview.status !== Loader.Ready)
                 return false;

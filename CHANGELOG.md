@@ -23,6 +23,14 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   Agents follow CI through completion after pushes and authorized merges.
 - Pull request titles follow Conventional Commits and are checked automatically.
 
+### Fixed
+
+- Token, request, and point counts now use singular and plural forms in usage
+  and cost summaries, while large counts keep their compact notation.
+- Corrected quota and plan labels, login actions, and settings wording across
+  the five translations. The Brazilian Portuguese panel style is now translated,
+  and French and Spanish pace percentages use consistent spacing.
+
 ## 0.2.35 - 2026-09-08
 
 ### Added
