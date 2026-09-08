@@ -159,9 +159,11 @@ require_ordered(
     applet.function_body("parseProviderAccountsOutput"),
     (
         "accountCommandIsCurrent(descriptor)",
+        "finishUsageCommandSource(sourceName)",
+        "if (!commandIsCurrent)",
         "setAccountLoading(providerID, false)",
     ),
-    "a stale account reply must be validated before it touches the loading indicator",
+    "a completed stale account command must validate first and then release its loading indicator",
 )
 
 require_all(
