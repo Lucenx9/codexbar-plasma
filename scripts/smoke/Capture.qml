@@ -909,7 +909,8 @@ Item {
         if (!codex || codex.rows.length !== 2 || codex.error.length > 0)
             return false;
         if (panelAppearanceScenario) {
-            if (expectedProviderCount >= 2 && (!claude || claude.error.length > 0 || claude.rows.length !== 2))
+            var expectedClaudeRows = scenario === "panel-dual-edge" ? 1 : 2;
+            if (expectedProviderCount >= 2 && (!claude || claude.error.length > 0 || claude.rows.length !== expectedClaudeRows))
                 return false;
             verifyScenario(applet.providers === panelUsageSnapshot, "panel preset reloaded usage");
             verifyScenario(applet.minimalPanel === !standardPanelScenario, "panel style did not reach the renderer");
