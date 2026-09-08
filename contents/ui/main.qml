@@ -13,6 +13,7 @@ import "PanelElements.js" as PanelElements
 import "PanelRules.js" as PanelRules
 import "PopupSelection.js" as PopupSelection
 import "CommandLedger.js" as CommandLedger
+import "AccountRequests.js" as AccountRequests
 import "CostRefreshPolicy.js" as CostRefreshPolicy
 import "CostPresentation.js" as CostPresentation
 import "ProviderFallbackQueue.js" as ProviderFallbackQueue
@@ -159,7 +160,6 @@ PlasmoidItem {
     property var selectedAccounts: ({})
     property var accountOptions: ({})
     property var accountErrors: ({})
-    property var accountLoading: ({})
     readonly property int accountCommandTimeoutMs: 60000
     readonly property int notificationCommandTimeoutMs: 10000
     property var notificationMemo: ({})
@@ -1056,7 +1056,6 @@ PlasmoidItem {
         }
 
         setAccountError(normalizedProviderID, "")
-        setAccountLoading(normalizedProviderID, true)
         var connectedCommand = commandWithRunNonce(command)
         var descriptor = buildCommandDescriptor(
             "account", normalizedProviderID, accountCommandTimeoutMs)
@@ -1064,29 +1063,15 @@ PlasmoidItem {
         connectUsageCommand(connectedCommand, descriptor)
     }
 
-    function accountCommandIsCurrent(descriptor) {
-        return descriptor
-            && descriptor.commandSignature === buildProviderAccountsCommand(descriptor.providerID)
-    }
-
     function retireStaleAccountCommands() {
         var sourceNames = CommandLedger.sourcesOfKind(activeCommandDescriptors, "account")
-        var staleProviders = ({})
         for (var i = 0; i < sourceNames.length; i++) {
             var sourceName = sourceNames[i]
             var descriptor = CommandLedger.find(activeCommandDescriptors, sourceName)
-            if (accountCommandIsCurrent(descriptor)) {
-                continue
-            }
-            var providerID = descriptor ? providerMapKey(descriptor.providerID) : ""
-            finishUsageCommandSource(sourceName)
-            if (providerID.length > 0) {
-                staleProviders[providerID] = true
-            }
-        }
-        for (var staleProviderID in staleProviders) {
-            if (hasOwnKey(staleProviders, staleProviderID)) {
-                setAccountLoading(staleProviderID, false)
+            var decision = AccountRequests.completion(activeCommandDescriptors, sourceName,
+                buildProviderAccountsCommand(descriptor.providerID))
+            if (decision && !decision.acceptsPayload) {
+                finishUsageCommandSource(sourceName)
             }
         }
     }
@@ -1147,7 +1132,6 @@ PlasmoidItem {
             return
         case "account":
             finishUsageCommandSource(sourceName)
-            setAccountLoading(descriptor.providerID, false)
             setAccountError(
                 descriptor.providerID,
                 i18n("Loading accounts timed out. Try again."))
@@ -1168,20 +1152,19 @@ PlasmoidItem {
     }
 
     function parseProviderAccountsOutput(sourceName, descriptor, stdoutText, stderrText) {
-        var providerID = descriptor ? providerMapKey(descriptor.providerID) : ""
-        var commandIsCurrent = accountCommandIsCurrent(descriptor)
+        var decision = AccountRequests.completion(activeCommandDescriptors, sourceName,
+            descriptor ? buildProviderAccountsCommand(descriptor.providerID) : "")
+        if (!decision) {
+            return
+        }
         finishUsageCommandSource(sourceName)
+        if (!decision.acceptsPayload) {
+            return
+        }
+        var providerID = providerMapKey(decision.providerID)
         if (providerID.length === 0) {
             return
         }
-
-        // Capture validity before closing the ledger entry. A stale command that
-        // still reached this handler owns the loading flag and must release it.
-        if (!commandIsCurrent) {
-            setAccountLoading(providerID, false)
-            return
-        }
-        setAccountLoading(providerID, false)
 
         var trimmed = stdoutText.trim()
         if (trimmed.length === 0) {
@@ -1775,7 +1758,7 @@ PlasmoidItem {
 
     function accountLoadingForProvider(providerID) {
         var key = providerMapKey(providerID)
-        return key.length > 0 && accountLoading[key] === true
+        return key.length > 0 && AccountRequests.isLoading(activeCommandDescriptors, key)
     }
 
     function setAccountOptions(providerID, options) {
@@ -1801,20 +1784,6 @@ PlasmoidItem {
             delete next[key]
         }
         accountErrors = next
-    }
-
-    function setAccountLoading(providerID, value) {
-        var next = copyObject(accountLoading)
-        var key = providerMapKey(providerID)
-        if (key.length === 0) {
-            return
-        }
-        if (value) {
-            next[key] = true
-        } else {
-            delete next[key]
-        }
-        accountLoading = next
     }
 
     function privateErrorText(text) {
