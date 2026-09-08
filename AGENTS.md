@@ -120,6 +120,12 @@ or **macOS-only/non-goal**. Screenshots and Swift models are not CLI contracts.
 
 ## Documentation hygiene
 
+- When changing installation, updates, or requirements, update [README.md](README.md)
+  in the same change. For user-visible behavior or defaults, update the affected
+  [usage guide](docs/usage.md) sections and any affected README summaries or
+  screenshots. For build, test, or contributor workflow changes, update
+  [Development](docs/development.md). Check documented commands and examples
+  against the implementation before marking the change complete.
 - Keep maintained guides, CLI contracts, and lasting decisions in `docs/`.
   List every document and image in [docs/README.md](docs/README.md) with its purpose.
 - Put temporary screenshots, logs, probe output, plans, and agent review reports
