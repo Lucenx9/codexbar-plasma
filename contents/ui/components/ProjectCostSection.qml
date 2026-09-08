@@ -71,7 +71,7 @@ ColumnLayout {
             }
 
             PlainPlasmaLabel {
-                text: section.applet.providerTitle(modelData.provider)
+                text: section.applet.providerDisplayTitle(modelData.provider)
                 opacity: section.applet.secondaryTextOpacity
                 font: Kirigami.Theme.smallFont
                 Layout.fillWidth: true

@@ -51,13 +51,18 @@ SURFACES: dict[str, tuple[str, ...]] = {
         "contents/ui/config/*.qml",
         "contents/ui/config/*.js",
     ),
-    "display": ("contents/ui/configDisplay.qml",),
-    "debug": ("contents/ui/configDebug.qml",),
+    "panel": (
+        "contents/ui/configPanel.qml",
+        "contents/ui/components/PanelSettingsPreview.qml",
+        "contents/ui/PanelPreview.js",
+    ),
+    "popup": ("contents/ui/configPopup.qml",),
+    "notifications": ("contents/ui/configNotifications.qml",),
+    "diagnostics": ("contents/ui/configDiagnostics.qml",),
     "general": (
         "contents/ui/configGeneral.qml",
         "contents/ui/general/*.js",
     ),
-    "advanced": ("contents/ui/configAdvanced.qml",),
     # Everything qmllint, the hardening check, and gettext extraction must see.
     "all": (
         "contents/config/config.qml",
@@ -76,6 +81,16 @@ SURFACES: dict[str, tuple[str, ...]] = {
 }
 
 
+# Config-only presentation adapters implement a synthetic applet API. Keep them
+# outside the runtime surface so lifecycle guards inspect the actual applet.
+SURFACE_EXCLUSIONS: dict[str, tuple[str, ...]] = {
+    "applet": (
+        "contents/ui/components/PanelSettingsPreview.qml",
+        "contents/ui/PanelPreview.js",
+    ),
+}
+
+
 def repo_root() -> Path:
     return Path(__file__).resolve().parent.parent.parent
 
@@ -85,6 +100,7 @@ def surface_files(name: str, root: Path | None = None) -> list[Path]:
     if name not in SURFACES:
         raise KeyError(f"unknown QML surface: {name} (have: {', '.join(sorted(SURFACES))})")
     root = root or repo_root()
+    excluded = {root / path for path in SURFACE_EXCLUSIONS.get(name, ())}
     seen: dict[Path, None] = {}
     for pattern in SURFACES[name]:
         if any(char in pattern for char in "*?["):
@@ -93,7 +109,8 @@ def surface_files(name: str, root: Path | None = None) -> list[Path]:
             candidate = root / pattern
             matches = [candidate] if candidate.exists() else []
         for match in matches:
-            seen.setdefault(match, None)
+            if match not in excluded:
+                seen.setdefault(match, None)
     files = list(seen)
     if not files:
         raise AssertionError(f"QML surface {name} resolved to no files")

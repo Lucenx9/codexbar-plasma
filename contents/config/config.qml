@@ -12,18 +12,23 @@ ConfigModel {
         source: "configProviders.qml"
     }
     ConfigCategory {
-        name: i18n("Display")
+        name: i18n("Panel")
         icon: "preferences-desktop-display"
-        source: "configDisplay.qml"
+        source: "configPanel.qml"
     }
     ConfigCategory {
-        name: i18n("Advanced")
-        icon: "configure"
-        source: "configAdvanced.qml"
+        name: i18n("Popup")
+        icon: "view-list-details"
+        source: "configPopup.qml"
     }
     ConfigCategory {
-        name: i18n("Debug")
+        name: i18n("Notifications")
+        icon: "preferences-desktop-notification"
+        source: "configNotifications.qml"
+    }
+    ConfigCategory {
+        name: i18n("Diagnostics")
         icon: "utilities-terminal"
-        source: "configDebug.qml"
+        source: "configDiagnostics.qml"
     }
 }

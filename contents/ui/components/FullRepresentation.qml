@@ -414,7 +414,7 @@ Item {
                     }
 
                     Repeater {
-                        model: applet.providers
+                        model: applet.presentedProviders
 
                         delegate: Rectangle {
                             id: providerTab
@@ -668,7 +668,7 @@ Item {
             id: globalErrorMessage
 
             visible: applet.providerUsageFeedbackVisible && applet.errorText.length > 0
-            plainText: applet.errorText
+            plainText: applet.privateErrorText(applet.errorText)
             type: Kirigami.MessageType.Error
             Layout.fillWidth: true
         }
@@ -810,7 +810,7 @@ Item {
                     }
 
                     Repeater {
-                        model: applet.overviewProviderItems
+                        model: applet.presentedOverviewProviders
 
                         delegate: Components.OverviewProviderRow {
                             applet: fullRoot.applet
@@ -828,14 +828,14 @@ Item {
         }
 
         ColumnLayout {
-            visible: applet.selectedProviderData !== null
+            visible: applet.presentedProviderData !== null
             Layout.fillWidth: true
             Layout.fillHeight: true
             spacing: Kirigami.Units.largeSpacing
 
             Components.ProviderHeader {
                 applet: fullRoot.applet
-                providerData: applet.selectedProviderData
+                providerData: applet.presentedProviderData
             }
 
             Components.ProviderAccountsPanel {
@@ -846,13 +846,13 @@ Item {
             Components.PlainInlineMessage {
                 id: providerStatusMessage
 
-                visible: applet.selectedProviderData
-                    && applet.selectedProviderData.hasIncident
-                    && applet.selectedProviderData.status
-                    && applet.selectedProviderData.status.length > 0
-                plainText: applet.selectedProviderData ? applet.selectedProviderData.status : ""
-                type: applet.selectedProviderData
-                    ? applet.statusMessageType(applet.selectedProviderData.statusSeverity)
+                visible: applet.presentedProviderData
+                    && applet.presentedProviderData.hasIncident
+                    && applet.presentedProviderData.status
+                    && applet.presentedProviderData.status.length > 0
+                plainText: applet.presentedProviderData ? applet.presentedProviderData.status : ""
+                type: applet.presentedProviderData
+                    ? applet.statusMessageType(applet.presentedProviderData.statusSeverity)
                     : Kirigami.MessageType.Information
                 Layout.fillWidth: true
             }
@@ -860,10 +860,10 @@ Item {
             Components.PlainInlineMessage {
                 id: providerErrorMessage
 
-                visible: applet.selectedProviderData
-                    && applet.selectedProviderData.error
-                    && applet.selectedProviderData.error.length > 0
-                plainText: applet.selectedProviderData ? applet.selectedProviderData.error : ""
+                visible: applet.presentedProviderData
+                    && applet.presentedProviderData.error
+                    && applet.presentedProviderData.error.length > 0
+                plainText: applet.presentedProviderData ? applet.presentedProviderData.error : ""
                 type: Kirigami.MessageType.Error
                 Layout.fillWidth: true
             }
@@ -887,8 +887,8 @@ Item {
                     PlainPlaceholderMessage {
                         id: providerPlaceholderMessage
 
-                        visible: applet.providerPlaceholderText(applet.selectedProviderData).length > 0
-                        plainText: applet.providerPlaceholderText(applet.selectedProviderData)
+                        visible: applet.providerPlaceholderText(applet.presentedProviderData).length > 0
+                        plainText: applet.providerPlaceholderText(applet.presentedProviderData)
                         icon.name: "view-statistics-symbolic"
                         type: Kirigami.PlaceholderMessage.Type.Informational
                         Layout.fillWidth: true
@@ -896,30 +896,31 @@ Item {
                     }
 
                     Repeater {
-                        model: applet.selectedProviderData ? applet.selectedProviderData.rows : []
+                        model: applet.presentedProviderData ? applet.presentedProviderData.rows : []
 
                         delegate: Components.ProviderUsageRow {
                             applet: fullRoot.applet
-                            providerData: applet.selectedProviderData
+                            providerData: applet.presentedProviderData
                         }
                     }
 
                     Kirigami.Separator {
-                        visible: applet.hasAdditionalSections(applet.selectedProviderData)
+                        visible: applet.hasAdditionalSections(applet.presentedProviderData)
                         Layout.fillWidth: true
                     }
 
                     ColumnLayout {
                         id: creditsSection
+                        objectName: "creditsSection"
 
-                        readonly property var creditLimit: applet.selectedProviderData
-                            ? applet.selectedProviderData.codexCreditLimit
+                        readonly property var creditLimit: applet.presentedProviderData
+                            ? applet.presentedProviderData.codexCreditLimit
                             : null
                         readonly property var creditLimitRow: applet.codexCreditLimitUsageRow(
                             creditsSection.creditLimit)
 
-                        visible: applet.selectedProviderData
-                            && (applet.selectedProviderData.credits !== null
+                        visible: applet.showPopupCredits && applet.presentedProviderData
+                            && (applet.presentedProviderData.credits !== null
                                 || creditsSection.creditLimit !== null)
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing / 1.5
@@ -936,18 +937,18 @@ Item {
 
                             delegate: Components.ProviderUsageRow {
                                 applet: fullRoot.applet
-                                providerData: applet.selectedProviderData
+                                providerData: applet.presentedProviderData
                             }
                         }
 
                         RowLayout {
-                            visible: applet.selectedProviderData
-                                && applet.selectedProviderData.credits !== null
+                            visible: applet.presentedProviderData
+                                && applet.presentedProviderData.credits !== null
                             Layout.fillWidth: true
                             spacing: Kirigami.Units.smallSpacing
 
                             PlainPlasmaLabel {
-                                text: i18n("Remaining: %1", applet.selectedProviderData ? applet.formatNumber(applet.selectedProviderData.credits) : "")
+                                text: i18n("Remaining: %1", applet.presentedProviderData ? applet.formatNumber(applet.presentedProviderData.credits) : "")
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
                             }
@@ -956,10 +957,11 @@ Item {
 
                     ColumnLayout {
                         id: resetCreditsSection
+                        objectName: "resetCreditsSection"
 
-                        readonly property var resetCredits: applet.selectedProviderData ? applet.selectedProviderData.resetCredits : null
+                        readonly property var resetCredits: applet.presentedProviderData ? applet.presentedProviderData.resetCredits : null
 
-                        visible: resetCreditsSection.resetCredits ? true : false
+                        visible: applet.showPopupCredits && resetCreditsSection.resetCredits ? true : false
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing / 1.5
 
@@ -984,11 +986,12 @@ Item {
 
                     ColumnLayout {
                         id: providerCostSection
+                        objectName: "providerCostSection"
 
-                        readonly property var providerCost: applet.selectedProviderData ? applet.selectedProviderData.providerCost : null
-                        readonly property color accent: applet.providerReadableColor(applet.selectedProviderData ? applet.selectedProviderData.provider : "")
+                        readonly property var providerCost: applet.presentedProviderData ? applet.presentedProviderData.providerCost : null
+                        readonly property color accent: applet.providerReadableColor(applet.presentedProviderData ? applet.presentedProviderData.provider : "")
 
-                        visible: providerCostSection.providerCost ? true : false
+                        visible: applet.showPopupProviderDetails && providerCostSection.providerCost ? true : false
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing / 1.5
 
@@ -1058,12 +1061,13 @@ Item {
 
                     ColumnLayout {
                         id: providerDetailsSection
+                        objectName: "providerDetailsSection"
 
-                        readonly property var details: applet.selectedProviderData
-                            ? applet.selectedProviderData.providerDetails || []
+                        readonly property var details: applet.presentedProviderData
+                            ? applet.presentedProviderData.providerDetails || []
                             : []
 
-                        visible: details.length > 0
+                        visible: applet.showPopupProviderDetails && details.length > 0
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing
 
@@ -1076,7 +1080,7 @@ Item {
 
                             delegate: Components.ProviderDetailSection {
                                 applet: fullRoot.applet
-                                providerData: applet.selectedProviderData
+                                providerData: applet.presentedProviderData
                             }
                         }
                     }
@@ -1085,11 +1089,11 @@ Item {
                         id: usageDashboardSection
                         objectName: "usageDashboardSection"
 
-                        readonly property var dashboard: applet.selectedProviderData ? applet.selectedProviderData.usageDashboard : null
+                        readonly property var dashboard: applet.presentedProviderData ? applet.presentedProviderData.usageDashboard : null
                         readonly property var kpis: dashboard ? dashboard.kpis : []
                         readonly property var rows: dashboard ? dashboard.rows : []
 
-                        visible: kpis.length > 0 || rows.length > 0
+                        visible: applet.showPopupProviderDetails && (kpis.length > 0 || rows.length > 0)
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing / 1.5
 
@@ -1172,12 +1176,13 @@ Item {
 
                     Components.ProviderCostSection {
                         applet: fullRoot.applet
-                        providerData: applet.selectedProviderData
+                        providerData: applet.presentedProviderData
+                        accountSelectionKey: applet.accountLabel(applet.selectedProviderData)
                         presentationVisible: fullRoot.visible && !applet.globalViewSelected
                     }
 
                     ColumnLayout {
-                        visible: applet.selectedProviderData !== null
+                        visible: applet.presentedProviderData !== null
                         Layout.fillWidth: true
                         spacing: 0
 
@@ -1188,7 +1193,7 @@ Item {
                         Repeater {
                             id: providerActionRows
 
-                            model: applet.selectedProviderData ? applet.actionRows(applet.selectedProviderData) : []
+                            model: applet.presentedProviderData ? applet.actionRows(applet.selectedProviderData) : []
 
                             delegate: ColumnLayout {
                                 required property var modelData

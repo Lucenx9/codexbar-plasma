@@ -19,10 +19,12 @@ TestCase {
         property bool quotaWarning: false
         property bool loading: false
         property bool expanded: false
+        property bool privacyMode: false
         property string openedProvider: ""
         property real secondaryTextOpacity: 0.7
         property real valueTextOpacity: 0.85
         property var sessions: []
+        readonly property var presentedSessions: sessions
         property bool sessionsLoading: false
         property string sessionsLastUpdatedText: ""
         property string sessionsErrorText: "Loading sessions timed out. Try again."
@@ -66,6 +68,15 @@ TestCase {
         }
         function accountLabel(item) {
             return item.account;
+        }
+        function accountDisplayLabel(item, index) {
+            return accountLabel(item);
+        }
+        function providerPresentation(item) {
+            return item;
+        }
+        function privateErrorText(text) {
+            return text;
         }
         function accountSubtitle(item) {
             return item.subtitle;

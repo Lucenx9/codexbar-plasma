@@ -17,6 +17,26 @@
       <label>Optional CodexBar provider source override.</label>
       <default></default>
     </entry>
+    <entry name="refreshOnOpen" type="Bool">
+      <label>Refresh quota data when opening the popup.</label>
+      <default>false</default>
+    </entry>
+    <entry name="privacyMode" type="Bool">
+      <label>Hide personal information in the widget.</label>
+      <default>false</default>
+    </entry>
+    <entry name="showPopupPace" type="Bool">
+      <label>Show pace forecasts in the popup.</label>
+      <default>true</default>
+    </entry>
+    <entry name="showPopupCredits" type="Bool">
+      <label>Show credits and extra usage in the popup.</label>
+      <default>true</default>
+    </entry>
+    <entry name="showPopupProviderDetails" type="Bool">
+      <label>Show provider detail rows and charts in the popup.</label>
+      <default>true</default>
+    </entry>
     <entry name="refreshInterval" type="Int">
       <label>Refresh interval in seconds.</label>
       <default>300</default>

@@ -12,6 +12,7 @@ RowLayout {
     property real textOpacity: 1
     property int pixelSize: 0
     property bool copied: false
+    property bool copyEnabled: true
     // Owners reveal the action on row hover; keyboard focus and the copied
     // confirmation still force it visible so it stays reachable without a mouse.
     property bool copyRevealed: true
@@ -36,6 +37,9 @@ RowLayout {
 
     PlasmaComponents.ToolButton {
         id: copyButton
+
+        visible: valueRow.copyEnabled
+        enabled: valueRow.copyEnabled
 
         icon.name: valueRow.copied ? "checkmark" : "edit-copy"
         icon.width: Kirigami.Units.iconSizes.small

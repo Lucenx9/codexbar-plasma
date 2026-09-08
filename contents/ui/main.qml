@@ -17,12 +17,14 @@ import "CostRefreshPolicy.js" as CostRefreshPolicy
 import "CostPresentation.js" as CostPresentation
 import "ProviderFallbackQueue.js" as ProviderFallbackQueue
 import "ProviderIdentity.js" as ProviderIdentity
+import "PrivacyPresentation.js" as PrivacyPresentation
 import "ProviderNormalizer.js" as Normalizer
 import "ProviderOrder.js" as ProviderOrder
 import "ProviderRosterCache.js" as ProviderRosterCache
 import "QuotaThresholds.js" as QuotaThresholds
 import "SafeText.js" as SafeText
 import "SessionRefreshPolicy.js" as SessionRefreshPolicy
+import "PopupRefreshPolicy.js" as PopupRefreshPolicy
 import "ThemeContrast.js" as ThemeContrast
 import "UsageDetails.js" as UsageDetails
 import "LegacyUsageDashboard.js" as LegacyUsageDashboard
@@ -49,6 +51,17 @@ PlasmoidItem {
     property string source: (Plasmoid.configuration.source || "").trim()
     property int refreshIntervalSec: isFinite(Number(Plasmoid.configuration.refreshInterval)) ? Math.max(0, Number(Plasmoid.configuration.refreshInterval)) : 300
     property bool includeStatus: Plasmoid.configuration.includeStatus
+    property bool refreshOnOpen: Plasmoid.configuration.refreshOnOpen === true
+    property bool showPopupPace: Plasmoid.configuration.showPopupPace !== false
+    property bool showPopupCredits: Plasmoid.configuration.showPopupCredits !== false
+    property bool showPopupProviderDetails: Plasmoid.configuration.showPopupProviderDetails !== false
+    property bool privacyMode: Plasmoid.configuration.privacyMode === true
+    readonly property var presentedProviders: providerPresentations(providers)
+    readonly property var presentedOverviewProviders: providerPresentations(overviewProviderItems)
+    readonly property var presentedSessions: sessions.map(function(item) {
+        return PrivacyPresentation.session(item, privacyMode)
+    })
+    readonly property var presentedProviderData: providerPresentation(selectedProviderData)
     property bool costUsageEnabled: Plasmoid.configuration.costUsageEnabled !== false
     property int costHistoryDays: isFinite(Number(Plasmoid.configuration.costHistoryDays)) ? Math.max(1, Math.min(365, Number(Plasmoid.configuration.costHistoryDays))) : 30
     // The cost payload already carries per-day tokens next to per-day cost, so
@@ -100,6 +113,8 @@ PlasmoidItem {
     // enrichment must not restart that countdown.
     property double panelClockMs: Date.now()
     property double usageSnapshotReceivedAtMs: panelClockMs
+    property double usageLastRefreshAttemptAtMs: -1
+    property double usageLastCompletedAtMs: -1
     readonly property int panelClockIntervalMs: 60000
     property string commandSource: buildCommand()
     property string providerConfigCommandSource: buildProviderConfigCommand()
@@ -233,6 +248,7 @@ PlasmoidItem {
     }
     onExpandedChanged: {
         if (root.expanded) {
+            Qt.callLater(refreshUsageOnOpen)
             Qt.callLater(refreshSessionsIfStale)
         } else {
             scheduleSessionsRefreshCheck()
@@ -616,6 +632,7 @@ PlasmoidItem {
             return
         }
 
+        usageLastRefreshAttemptAtMs = Date.now()
         loading = true
         errorText = ""
         if (canUseProviderFallback()) {
@@ -629,8 +646,25 @@ PlasmoidItem {
 
     function markUsageSnapshotReceived() {
         var nowMs = Date.now()
+        usageLastCompletedAtMs = nowMs
         usageSnapshotReceivedAtMs = nowMs
         panelClockMs = nowMs
+    }
+
+    function refreshUsageOnOpen() {
+        if (PopupRefreshPolicy.shouldRefresh({
+            enabled: refreshOnOpen,
+            visible: expanded,
+            loading: loading,
+            scheduled: usageRefreshScheduled,
+            commandSource: commandSource,
+            lastAttemptAtMs: usageLastRefreshAttemptAtMs,
+            lastCompletedAtMs: usageLastCompletedAtMs,
+            nowMs: Date.now(),
+            refreshIntervalSeconds: refreshIntervalSec
+        })) {
+            refreshNow(false)
+        }
     }
 
     function retireUsageCommands() {
@@ -1296,7 +1330,10 @@ PlasmoidItem {
         sessionsLastUpdatedText = i18n("Updated %1", Qt.formatDateTime(new Date(), "hh:mm"))
     }
 
-    function sessionTitle(item) {
+    function sessionTitle(item, index) {
+        if (privacyMode) {
+            return i18n("Session %1", (index >= 0 ? index : 0) + 1)
+        }
         if (!item) {
             return i18n("Untitled session")
         }
@@ -1306,12 +1343,13 @@ PlasmoidItem {
     }
 
     function sessionSubtitle(item) {
+        item = PrivacyPresentation.session(item, privacyMode)
         if (!item) {
             return ""
         }
         var details = []
         if (item.provider.length > 0) {
-            details.push(providerTitle(item.provider))
+            details.push(providerDisplayTitle(item.provider))
         }
         if (item.host.length > 0) {
             details.push(item.host)
@@ -1336,7 +1374,7 @@ PlasmoidItem {
         case "unknown":
             return i18n("Unknown")
         default:
-            return capitalize(state)
+            return privacyMode ? i18n("Unknown") : capitalize(state)
         }
     }
 
@@ -1351,7 +1389,7 @@ PlasmoidItem {
         case "unknown":
             return i18n("Unknown")
         default:
-            return source
+            return privacyMode ? i18n("Unknown") : source
         }
     }
 
@@ -1491,9 +1529,10 @@ PlasmoidItem {
     }
 
     function spendProviderCosts() {
-        return CostPresentation.spendSnapshots(tokenCosts, costHistoryDays, function(providerID) {
+        var snapshots = CostPresentation.spendSnapshots(tokenCosts, costHistoryDays, function(providerID) {
             return providerTitle(providerID)
         })
+        return snapshots.map(function(item) { return root.costPresentation(item) })
     }
 
     function presentedSpendProviderCosts(costs) {
@@ -1729,7 +1768,7 @@ PlasmoidItem {
         if (key.length === 0) {
             return ""
         }
-        return accountErrors[key] ? String(accountErrors[key]) : ""
+        return privateErrorText(accountErrors[key] ? String(accountErrors[key]) : "")
     }
 
     function accountLoadingForProvider(providerID) {
@@ -1776,12 +1815,68 @@ PlasmoidItem {
         accountLoading = next
     }
 
+    function privateErrorText(text) {
+        return PrivacyPresentation.errorText(text, privacyMode,
+            i18n("Details hidden by privacy mode."))
+    }
+
+    function accountDisplayLabel(item, index) {
+        return privacyMode ? i18n("Account %1", index + 1) : accountLabel(item)
+    }
+
+    function costPresentation(item) {
+        var result = PrivacyPresentation.cost(item, privacyMode)
+        if (!privacyMode || !result) {
+            return result
+        }
+        result.title = i18n("Cost")
+        result.sessionLine = costLine(i18n("Today"), result.today.cost,
+            result.today.tokens, result.today.currency)
+        var trust = CostPresentation.costTrustSummary([result])
+        result.monthLine = costLine(costHistoryWindowLabel(result, result.historyDays),
+            result.totals.cost, result.totals.tokens, result.totals.currency,
+            trust ? trust.valueMode : "plain")
+        result.windowValueLine = costValueLine(result.totals.cost, result.totals.tokens,
+            result.totals.currency, trust ? trust.valueMode : "plain")
+        result.hintLine = tokenCostHint(result.provider)
+        for (var i = 0; i < result.models.length; i++) {
+            result.models[i].label = i18n("Model %1", i + 1)
+        }
+        for (var j = 0; j < result.projects.rows.length; j++) {
+            result.projects.rows[j].label = i18n("Project %1", j + 1)
+        }
+        return result
+    }
+
+    function providerPresentations(items) {
+        return items.map(function(item) { return root.providerPresentation(item) })
+    }
+
+    function providerPresentation(item) {
+        if (!privacyMode || !item) {
+            return item
+        }
+        var result = PrivacyPresentation.provider(item, true, {
+            title: providerDisplayTitle(item.provider),
+            account: i18n("Account hidden"),
+            status: statusBadgeText(item.statusSeverity),
+            error: i18n("Details hidden by privacy mode."),
+            placeholder: i18n("No usage yet"),
+            usage: i18n("Usage"),
+            rowLabels: (item.rows || []).map(function(row) {
+                return root.rateWindowLabel(item.provider, row.lane)
+            })
+        })
+        result.tokenCost = costPresentation(item.tokenCost)
+        return result
+    }
+
     function accountLabel(item) {
         return Normalizer.accountLabel(item)
     }
 
     function accountSubtitle(item) {
-        if (!item) {
+        if (privacyMode || !item) {
             return ""
         }
         var parts = []
@@ -1803,7 +1898,11 @@ PlasmoidItem {
         if (selected.length > 0) {
             return label === selected
         }
-        return currentItem && currentItem.provider === option.provider && label === accountLabel(currentItem)
+        // A presented snapshot may replace the account label with a placeholder.
+        // Selection always compares against the original account identity.
+        var currentIndex = currentItem ? providerIndexForID(currentItem.provider) : -1
+        var accountItem = currentIndex >= 0 ? providers[currentIndex] : currentItem
+        return accountItem && accountItem.provider === option.provider && label === accountLabel(accountItem)
     }
 
     function selectAccount(providerID, accountLabel) {
@@ -2256,6 +2355,7 @@ PlasmoidItem {
     }
 
     function usageResetText(row) {
+        row = PrivacyPresentation.quota(row, privacyMode, "")
         if (!row) {
             return ""
         }
@@ -2664,8 +2764,8 @@ PlasmoidItem {
     }
 
     function sendPlasmaNotification(title, body, urgency) {
-        var cleanTitle = String(title || "CodexBar").trim()
-        var cleanBody = String(body || "").trim()
+        var cleanTitle = privacyMode ? "CodexBar" : String(title || "CodexBar").trim()
+        var cleanBody = privacyMode ? i18n("Usage or status changed. Open CodexBar for details.") : String(body || "").trim()
         var cleanUrgency = String(urgency || "normal").trim()
         if (cleanTitle.length === 0) {
             cleanTitle = "CodexBar"
@@ -2974,9 +3074,13 @@ PlasmoidItem {
         return ProviderIdentity.providerCliArgument(value)
     }
 
-    function providerTitle(value, displayName) {
+    function providerDisplayTitle(value) {
+        return providerTitle(value, "", privacyMode)
+    }
+
+    function providerTitle(value, displayName, privateTitle) {
         var key = providerKey(value)
-        var preferred = String(displayName || "").trim()
+        var preferred = privateTitle === true ? "" : String(displayName || "").trim()
         if (preferred.length > 0) {
             return preferred
         }
@@ -3059,6 +3163,9 @@ PlasmoidItem {
             return names[key]
         }
 
+        if (privateTitle === true) {
+            return i18n("Provider")
+        }
         var words = String(key).replace(/[_-]/g, " ").split(" ")
         for (var i = 0; i < words.length; i++) {
             if (words[i].length > 0) {
@@ -3246,7 +3353,10 @@ PlasmoidItem {
     }
 
     function hasAdditionalSections(item) {
-        return item && (item.credits !== null || item.resetCredits || item.usageDashboard || item.providerCost || item.tokenCost) ? true : false
+        return item && ((showPopupCredits && (item.credits !== null || item.codexCreditLimit || item.resetCredits))
+            || (showPopupProviderDetails && (item.usageDashboard || item.providerCost
+                || (item.providerDetails && item.providerDetails.length > 0)))
+            || item.tokenCost) ? true : false
     }
 
     function capitalize(value) {
@@ -3751,14 +3861,14 @@ PlasmoidItem {
         for (var i = 0; i < providers.length && result.length < 4; i++) {
             var row = panelDisplayRow(providers[i], "percent")
             if (row && PanelRules.matches(panelVisibilityRules.meters, row, panelClockMs)) {
-                result.push(providers[i])
+                result.push(providerPresentation(providers[i]))
             }
         }
         return result
     }
 
     function compactText() {
-        var item = selectedCompactProvider()
+        var item = providerPresentation(selectedCompactProvider())
         var row = panelDisplayRow(item, menuBarDisplayMode)
         if (!PanelRules.matches(panelVisibilityRules.text, row, panelClockMs)) {
             return ""
@@ -3787,7 +3897,7 @@ PlasmoidItem {
     function panelToolTipText() {
         var lines = []
         for (var i = 0; i < providers.length && lines.length < 6; i++) {
-            var item = providers[i]
+            var item = providerPresentation(providers[i])
             if (!item) {
                 continue
             }
@@ -3813,7 +3923,7 @@ PlasmoidItem {
             lines.push(i18n("Refreshing usage..."))
         }
         if (lines.length === 0 && errorText.length > 0) {
-            return Normalizer.boundedDisplayText(errorText, 500)
+            return privateErrorText(Normalizer.boundedDisplayText(errorText, 500))
         }
         return lines.join("\n")
     }

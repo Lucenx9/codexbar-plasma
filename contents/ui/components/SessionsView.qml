@@ -7,6 +7,7 @@ import "." as Components
 
 ColumnLayout {
     id: view
+    objectName: "sessionsView"
 
     required property var applet
     property string copiedValueKey: ""
@@ -26,7 +27,7 @@ ColumnLayout {
     }
 
     function copySessionValue(text, valueKey) {
-        if (text.length === 0) {
+        if (view.applet.privacyMode || text.length === 0) {
             return
         }
         clipboardBuffer.text = text
@@ -43,6 +44,11 @@ ColumnLayout {
     // attributing it to a different card.
     Connections {
         target: view.applet
+
+        function onPrivacyModeChanged() {
+            view.copiedValueKey = ""
+            clipboardBuffer.text = ""
+        }
 
         function onSessionsChanged() {
             view.copiedValueKey = ""
@@ -108,7 +114,7 @@ ColumnLayout {
 
     Components.PlainInlineMessage {
         visible: view.applet.sessionsErrorText.length > 0
-        plainText: view.applet.sessionsErrorText
+        plainText: view.applet.privateErrorText(view.applet.sessionsErrorText)
         type: Kirigami.MessageType.Error
         Layout.fillWidth: true
     }
@@ -162,7 +168,7 @@ ColumnLayout {
             spacing: Kirigami.Units.smallSpacing
 
             Repeater {
-                model: view.applet.sessions
+                model: view.applet.presentedSessions
 
                 delegate: Rectangle {
                     id: sessionCard
@@ -189,7 +195,7 @@ ColumnLayout {
                     border.color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.07)
 
                     Accessible.role: Accessible.ListItem
-                    Accessible.name: view.applet.sessionTitle(modelData)
+                    Accessible.name: view.applet.sessionTitle(modelData, index)
                     Accessible.description: subtitle
 
                     HoverHandler {
@@ -220,9 +226,10 @@ ColumnLayout {
                             CopyableValue {
                                 id: sessionTitleValue
 
-                                text: view.applet.sessionTitle(modelData)
+                                text: view.applet.sessionTitle(modelData, index)
                                 fontWeight: Font.DemiBold
                                 copyAccessibleName: i18n("Copy session name")
+                                copyEnabled: !view.applet.privacyMode
                                 copyRevealed: sessionCardHover.hovered
                                 copied: view.copiedValueKey === sessionCard.titleCopyKey
                                 onCopyRequested: function(text) {
@@ -232,7 +239,7 @@ ColumnLayout {
 
                             PlainPlasmaLabel {
                                 visible: modelData.sessionName.length > 0
-                                    && modelData.sessionName !== view.applet.sessionTitle(modelData)
+                                    && modelData.sessionName !== view.applet.sessionTitle(modelData, index)
                                 text: modelData.sessionName
                                 opacity: view.applet.valueTextOpacity
                                 Layout.fillWidth: true
@@ -245,6 +252,7 @@ ColumnLayout {
                                 textOpacity: view.applet.secondaryTextOpacity
                                 pixelSize: Kirigami.Theme.smallFont.pixelSize
                                 copyAccessibleName: i18n("Copy session details")
+                                copyEnabled: !view.applet.privacyMode
                                 copyRevealed: sessionCardHover.hovered
                                 copied: view.copiedValueKey === sessionCard.detailsCopyKey
                                 onCopyRequested: function(text) {

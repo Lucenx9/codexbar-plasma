@@ -22,6 +22,10 @@ Item {
     property var compactPanelItem
     property var displaySettingsPage
     property var providerSettingsPage
+    property int settingsBehaviorStep: 0
+    property int settingsCommandSerial: 0
+    property var settingsCostSnapshot
+    property var settingsProviderSnapshot
     readonly property bool settingsScenario: scenario.indexOf("settings-") === 0
     readonly property bool panelDefaultsScenario: scenario === "panel-default" || scenario === "panel-default-single"
     readonly property bool readmePanelScenario: scenario.indexOf("readme-panel-") === 0
@@ -40,8 +44,9 @@ Item {
         z: 100
         sourceComponent: SettingsPreview {
             applet: capture.applet
-            pageSource: ({"settings-general": "configGeneral.qml", "settings-display": "configDisplay.qml",
-                "settings-advanced": "configAdvanced.qml", "settings-debug": "configDebug.qml"})[capture.scenario]
+            pageSource: ({"settings-general": "configGeneral.qml", "settings-panel": "configPanel.qml",
+                "settings-popup": "configPopup.qml", "settings-notifications": "configNotifications.qml",
+                "settings-diagnostics": "configDiagnostics.qml"})[capture.scenario]
         }
     }
 
@@ -175,23 +180,21 @@ Item {
         var config = applet.Plasmoid.configuration;
         panelUsageSnapshot = applet.providers;
         verifyScenario(config.panelStyle === "standard", "existing installations must retain standard appearance");
-        var component = Qt.createComponent(Qt.resolvedUrl("configDisplay.qml"));
+        var component = Qt.createComponent(Qt.resolvedUrl("configPanel.qml"));
         verifyScenario(component.status === Component.Ready, component.errorString());
         displaySettingsPage = component.createObject(capture, {
-            cfg_commandPath: applet.commandPath,
             cfg_panelQuotaLane: "secondary",
-            cfg_providerOrder: "claude,codex",
             cfg_panelVisibilityRules: '{"text":{"condition":"usageAtLeast","usedPercent":50}}'
         });
         var page = displaySettingsPage;
-        verifyScenario(page !== null, "display settings did not load");
+        verifyScenario(page !== null, "panel settings did not load");
         var oldRules = page.cfg_panelVisibilityRules;
         page.applyMinimalPanelPreset();
         verifyScenario(page.cfg_panelStyle === "minimal" && page.cfg_showMultiProviderInPanel
             && !page.cfg_showProviderInPanel && !page.cfg_showPercentInPanel && !page.cfg_showCreditsInPanel,
             "minimal preset did not configure its panel elements");
-        verifyScenario(page.cfg_panelQuotaLane === "secondary" && page.cfg_providerOrder === "claude,codex"
-            && page.cfg_panelVisibilityRules === oldRules, "preset changed quota, order or visibility rules");
+        verifyScenario(page.cfg_panelQuotaLane === "secondary"
+            && page.cfg_panelVisibilityRules === oldRules, "preset changed quota or visibility rules");
         verifyScenario(config.panelStyle === "standard", "settings took effect before Apply");
         config.panelStyle = standardPanelScenario ? "standard" : page.cfg_panelStyle;
         config.showMultiProviderInPanel = page.cfg_showMultiProviderInPanel;
@@ -596,6 +599,150 @@ Item {
         return false;
     }
 
+    function verifySettingsPanelPreview(page) {
+        var preview = findItem(page, "panelSettingsPreview");
+        var renderer = findItem(page, "panelPreviewRenderer");
+        verifyScenario(preview && renderer, "panel settings preview missing");
+        var snapshots = applet.providers;
+        var serial = applet.commandRunSerial;
+        var liveStyle = applet.Plasmoid.configuration.panelStyle;
+        page.cfg_showPercentInPanel = true;
+        page.cfg_showProviderInPanel = true;
+        page.cfg_panelElementOrder = "meters,text,identity,status";
+        verifyScenario(renderer.primaryText.indexOf("42%") >= 0
+            && renderer.applet.panelElementOrder()[0] === "meters", "preview ignored pending text or order");
+        page.cfg_panelStyle = "minimal";
+        verifyScenario(renderer.minimalStyle && !renderer.animationsEnabled && !renderer.interactive,
+            "preview did not apply pending style immediately");
+        preview.scenario = "nearLimit";
+        verifyScenario(renderer.primaryText.indexOf("98%") >= 0, "near-limit preview did not update");
+        page.cfg_panelVisibilityRules = '{"meters":{"condition":"usageAtLeast","usedPercent":95}}';
+        verifyScenario(renderer.applet.compactProviders().length === 1, "preview ignored conditional meters");
+        preview.scenario = "missing";
+        verifyScenario(renderer.applet.compactProviders().length === 0 && renderer.implicitWidth > 0,
+            "no-data preview lost icon fallback");
+        preview.scenario = "incident";
+        verifyScenario(renderer.incidentProvider !== null, "incident preview lost service status");
+        page.cfg_panelVisibilityRules = "{}";
+        page.cfg_panelStyle = "standard";
+        page.cfg_panelElementOrder = "identity,status,text,meters";
+        preview.scenario = "normal";
+        verifyScenario(applet.Plasmoid.configuration.panelStyle === liveStyle
+            && !applet.Plasmoid.configuration.showPercentInPanel
+            && applet.providers === snapshots && applet.commandRunSerial === serial,
+            "pending preview changed live settings or executed a command");
+    }
+
+    function verifyPopupContent() {
+        var popup = applet.fullRepresentationItem;
+        var config = applet.Plasmoid.configuration;
+        var pace = findItem(popup, "usagePaceLabel");
+        var marker = findItem(popup, "usagePaceMarker");
+        var credits = findItem(popup, "creditsSection");
+        var details = findItem(popup, "providerDetailsSection");
+        if (!pace || !marker || !credits || !details)
+            return false;
+        if (!navigationVerified) {
+            verifyScenario(pace.visible && marker.visible && credits.visible && details.visible,
+                "optional content changed default visibility");
+            var providers = applet.providers;
+            var costs = applet.tokenCosts;
+            var memo = applet.notificationMemo;
+            var serial = applet.commandRunSerial;
+            config.showPopupPace = false;
+            config.showPopupCredits = false;
+            config.showPopupProviderDetails = false;
+            verifyScenario(!pace.visible && !marker.visible && !credits.visible && !details.visible,
+                "popup content switches left a section visible");
+            verifyScenario(applet.providers === providers && applet.tokenCosts === costs
+                && applet.notificationMemo === memo && applet.commandRunSerial === serial,
+                "popup content switches changed data, notifications or commands");
+            config.showPopupPace = true;
+            config.showPopupCredits = true;
+            config.showPopupProviderDetails = true;
+            verifyScenario(pace.visible && marker.visible && credits.visible && details.visible,
+                "popup content did not return without fetching");
+            config.showPopupPace = false;
+            config.showPopupCredits = false;
+            config.showPopupProviderDetails = false;
+            navigationVerified = true;
+        }
+        return !pace.visible && !credits.visible && !details.visible;
+    }
+
+    function containsPrivateText(item) {
+        if (!item || item.visible === false)
+            return false;
+        var values = [item.text, item.plainText, item.Accessible.name];
+        for (var value of values) {
+            if (typeof value === "string" && /demo@example|Example team|Example project|Another project|Documentation site|Unpriced experiment/.test(value))
+                return true;
+        }
+        for (var child of item.children) {
+            if (containsPrivateText(child))
+                return true;
+        }
+        return false;
+    }
+
+    function verifyPrivacy() {
+        if (!applet.privacyMode)
+            return false;
+        if (scenario === "privacy-provider" && (applet.accountLoadingForProvider("codex")
+                || applet.accountOptionsForProvider("codex").length !== 2))
+            return false;
+        if (scenario === "privacy-sessions" && (applet.sessionsLoading || applet.sessions.length !== 2))
+            return false;
+        verifyScenario(applet.providers === settingsProviderSnapshot && applet.tokenCosts === settingsCostSnapshot,
+            "privacy mode mutated source snapshots");
+        verifyScenario(applet.panelToolTipText().indexOf("demo@example.com") < 0,
+            "panel tooltip exposes account in privacy mode");
+        if (scenario === "privacy-provider") {
+            var options = applet.accountOptionsForProvider("codex");
+            verifyScenario(applet.accountDisplayLabel(options[0], 0) === "Account 1"
+                && applet.accountIsSelected(options[0], applet.presentedProviderData),
+                "private account labels changed default account selection");
+            verifyScenario(applet.accountLabel(options[0]) === "demo@example.com",
+                "privacy mode changed the account command key");
+        }
+        if (scenario === "privacy-sessions") {
+            var sessionView = findItem(applet.fullRepresentationItem, "sessionsView");
+            verifyScenario(sessionView !== null, "sessions view is missing");
+            sessionView.copySessionValue("demo@example.com", "privacy-test");
+            verifyScenario(sessionView.copiedValueKey === "", "private session allowed copying");
+        }
+        verifyScenario(!containsPrivateText(applet.fullRepresentationItem), "private text remains visible");
+        return true;
+    }
+
+    function verifyRefreshOnOpen() {
+        var config = applet.Plasmoid.configuration;
+        if (settingsBehaviorStep === 0) {
+            settingsCommandSerial = applet.commandRunSerial;
+            settingsCostSnapshot = applet.tokenCosts;
+            applet.usageLastRefreshAttemptAtMs = Date.now() - 300001;
+            applet.usageLastCompletedAtMs = Date.now() - 300001;
+            applet.refreshUsageOnOpen();
+            verifyScenario(applet.commandRunSerial === settingsCommandSerial, "default popup opening refreshed usage");
+            config.refreshOnOpen = true;
+            applet.usageLastCompletedAtMs = Date.now();
+            applet.refreshUsageOnOpen();
+            verifyScenario(applet.commandRunSerial === settingsCommandSerial, "fresh popup opening refreshed usage");
+            applet.usageLastCompletedAtMs = Date.now() - 300001;
+            applet.expanded = false;
+            applet.expanded = true;
+            settingsBehaviorStep = 1;
+            return false;
+        }
+        if (applet.loading || applet.commandRunSerial === settingsCommandSerial)
+            return false;
+        var serial = applet.commandRunSerial;
+        applet.refreshUsageOnOpen();
+        verifyScenario(applet.commandRunSerial === serial && applet.tokenCosts === settingsCostSnapshot,
+            "reopening fresh popup fetched usage or local history");
+        return true;
+    }
+
     function scenarioReady() {
         if (readmeScenario && !readmePanelScenario) {
             if (!prepared || applet.loading || applet.costLoading || applet.providers.length !== 3)
@@ -614,6 +761,10 @@ Item {
                 return false;
             if (scenario === "settings-general" && !navigationVerified) {
                 verifyGeneralDefaults(preview.page);
+                navigationVerified = true;
+            }
+            if (scenario === "settings-panel" && !navigationVerified) {
+                verifySettingsPanelPreview(preview.page);
                 navigationVerified = true;
             }
             return true;
@@ -684,6 +835,12 @@ Item {
             return verifyCostCoverage();
         if (scenario.indexOf("popup-cost-") === 0)
             return applet.selectedProviderID === "codex" && verifyCostDetails();
+        if (scenario === "popup-content")
+            return verifyPopupContent();
+        if (scenario === "refresh-on-open")
+            return verifyRefreshOnOpen();
+        if (scenario.indexOf("privacy-") === 0)
+            return verifyPrivacy();
         if (scenario.indexOf("localization-") === 0) {
             var language = scenario.substring("localization-".length);
             var expected = {
@@ -860,6 +1017,20 @@ Item {
                     popup.Window.window.width = 640;
                     popup.Window.window.height = 880;
                     capture.applet.openProviderFromPanel("codex");
+                } else if (capture.scenario === "popup-content") {
+                    capture.applet.openProviderFromPanel("codex");
+                } else if (capture.scenario.indexOf("privacy-") === 0) {
+                    if (capture.applet.costLoading || !capture.applet.tokenCosts.codex)
+                        return;
+                    capture.settingsProviderSnapshot = capture.applet.providers;
+                    capture.settingsCostSnapshot = capture.applet.tokenCosts;
+                    capture.applet.Plasmoid.configuration.privacyMode = true;
+                    if (capture.scenario === "privacy-provider") {
+                        capture.applet.openProviderFromPanel("codex");
+                        capture.applet.loadAccounts("codex");
+                    } else {
+                        capture.applet.selectGlobalView(capture.scenario.substring("privacy-".length));
+                    }
                 } else if (capture.scenario === "legacy-dashboard" || capture.scenario.indexOf("provider-header") === 0) {
                     capture.applet.openProviderFromPanel("codex");
                 } else if (capture.scenario.indexOf("project-") === 0) {

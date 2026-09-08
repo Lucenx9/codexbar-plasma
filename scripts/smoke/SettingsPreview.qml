@@ -19,9 +19,9 @@ Rectangle {
         anchors.fill: parent
 
         Component.onCompleted: {
-            var properties = preview.pageSource === "configAdvanced.qml" ? {} : {
+            var properties = preview.pageSource === "configPopup.qml" || preview.pageSource === "configDiagnostics.qml" ? {
                 cfg_commandPath: preview.applet.commandPath
-            };
+            } : {};
             setSource(Qt.resolvedUrl(preview.pageSource), properties);
         }
         onLoaded: {
@@ -31,7 +31,7 @@ Rectangle {
             }
             // General only edits a pending text field; other pages keep the
             // synthetic executable supplied before Component.onCompleted.
-            if (preview.pageSource === "configGeneral.qml")
+            if (preview.pageSource === "configDiagnostics.qml")
                 item.cfg_commandPath = "codexbar";
         }
     }

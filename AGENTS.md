@@ -324,6 +324,22 @@ replace a host CLI.
   checkboxes, icon fallback, and minute clock working; changing these preferences
   must not fetch usage or alter notifications. The weekly reserve token remains
   open.
+- Settings preview, organization, privacy, refresh-on-open and optional popup
+  content are **Plasma-native and implemented**. General, Providers, Panel,
+  Popup, Notifications and Diagnostics preserve existing config keys and the
+  global pending defaults action. The Panel preview uses the actual compact
+  renderer with synthetic data and no external effects. `privacyMode` projects
+  display records without altering cached snapshots or account command keys;
+  it hides identity/free-form text in widget views, tooltips and new notifications
+  and disables session copying. Provider setup and Diagnostics are outside that
+  display mode; already-copied text and delivered notifications are unchanged.
+  `refreshOnOpen` consults `PopupRefreshPolicy.js`, respects in-flight/queued
+  refreshes, and uses the configured interval (five minutes in manual-only mode)
+  for both freshness and failed-attempt cooldown. It never starts cost scans.
+  `showPopupPace`, `showPopupCredits` and `showPopupProviderDetails` only control
+  popup visibility; they do not change panel metrics, notifications or data.
+  See `docs/research/2026-09-08-settings-experience.md` for the macOS 0.56.8
+  screenshot comparison and the remaining CLI/macOS boundaries.
 - Italian, French, German, Spanish, and Brazilian Portuguese catalogs are included.
   Packaging compiles the package-local Plasma domain; checks cover catalog
   completeness, placeholders, and plurals. Popup smoke tests verify all five

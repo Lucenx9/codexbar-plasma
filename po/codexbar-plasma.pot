@@ -17,16 +17,20 @@ msgstr ""
 msgid "Providers"
 msgstr ""
 
-#: contents/config/config.qml
-msgid "Display"
+#: contents/config/config.qml contents/ui/configPanel.qml
+msgid "Panel"
+msgstr ""
+
+#: contents/config/config.qml contents/ui/configPopup.qml
+msgid "Popup"
+msgstr ""
+
+#: contents/config/config.qml contents/ui/configNotifications.qml
+msgid "Notifications"
 msgstr ""
 
 #: contents/config/config.qml
-msgid "Advanced"
-msgstr ""
-
-#: contents/config/config.qml
-msgid "Debug"
+msgid "Diagnostics"
 msgstr ""
 
 #: contents/ui/components/CompactRepresentation.qml
@@ -123,12 +127,14 @@ msgid "No provider data."
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/PanelSettingsPreview.qml
 #: contents/ui/components/SessionsView.qml contents/ui/main.qml
 msgid "%1 - %2"
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
-#: contents/ui/components/ProviderHeader.qml contents/ui/main.qml
+#: contents/ui/components/ProviderHeader.qml contents/ui/configGeneral.qml
+#: contents/ui/main.qml
 msgid "Refresh"
 msgstr ""
 
@@ -153,6 +159,7 @@ msgid "Use the arrow keys to inspect chart points"
 msgstr ""
 
 #: contents/ui/components/OverviewProviderRow.qml
+#: contents/ui/components/PanelSettingsPreview.qml
 #: contents/ui/components/ProviderUsageRow.qml contents/ui/main.qml
 msgid "%1% %2"
 msgstr ""
@@ -195,6 +202,92 @@ msgstr ""
 
 #: contents/ui/components/PanelRuleEditor.qml
 msgid "min"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+msgid "left"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+msgid "used"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+msgid "%1% %2 at pace"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+msgid "%1% %2, behind pace"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+msgid "%1 minute"
+msgid_plural "%1 minutes"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+msgid "Resets %1"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+msgid "%1 min"
+msgid_plural "%1 min"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+msgid "%1h"
+msgid_plural "%1h"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#, kde-format
+msgid "%1d"
+msgid_plural "%1d"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+msgid "%1: %2% %3"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml
+msgid "Service incident"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/configPanel.qml
+msgid "Provider icon"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#, kde-format
+msgid "%1cr"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml
+msgid "Panel preview"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml
+msgid "Normal"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml
+msgid "Near limit"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml
+msgid "No data"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml
+msgid "Preview scenario"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml
+msgid "Example data. Panel changes appear here before you apply them."
 msgstr ""
 
 #: contents/ui/components/ProjectCostSection.qml
@@ -427,323 +520,85 @@ msgstr ""
 msgid "Activity heatmap"
 msgstr ""
 
-#: contents/ui/configAdvanced.qml
+#: contents/ui/configDiagnostics.qml
+msgid "Set the codexbar command path above."
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "Diagnostic command timed out. Try again."
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "No diagnostic output."
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
+msgid "codexbar exited with code %1"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "Connection"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "Command path:"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "Use PATH"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
 msgid "Advanced provider override"
 msgstr ""
 
-#: contents/ui/configAdvanced.qml
+#: contents/ui/configDiagnostics.qml
 msgid ""
 "These options pin the widget to one provider or one source. Leave them blank "
 "to follow the providers enabled on the Providers page."
 msgstr ""
 
-#: contents/ui/configAdvanced.qml contents/ui/configDebug.qml
+#: contents/ui/configDiagnostics.qml
 msgid "Provider:"
 msgstr ""
 
-#: contents/ui/configAdvanced.qml
+#: contents/ui/configDiagnostics.qml
 msgid "Provider id (blank = all enabled)"
 msgstr ""
 
-#: contents/ui/configAdvanced.qml
+#: contents/ui/configDiagnostics.qml
 msgid "Source:"
 msgstr ""
 
-#: contents/ui/configAdvanced.qml
+#: contents/ui/configDiagnostics.qml
 msgid "Provider default (blank)"
 msgstr ""
 
-#: contents/ui/configDebug.qml contents/ui/configDisplay.qml
-#: contents/ui/configProviders.qml
-msgid "Set the codexbar command path in the General page."
-msgstr ""
-
-#: contents/ui/configDebug.qml
-msgid "Diagnostic command timed out. Try again."
-msgstr ""
-
-#: contents/ui/configDebug.qml
-msgid "No diagnostic output."
-msgstr ""
-
-#: contents/ui/configDebug.qml contents/ui/configProviders.qml
-msgid "codexbar exited with code %1"
-msgstr ""
-
-#: contents/ui/configDebug.qml
+#: contents/ui/configDiagnostics.qml
 msgid ""
 "Run redacted CodexBar CLI diagnostics from Plasma. The diagnostic command "
 "omits raw tokens, cookies, auth headers, emails, account IDs, org IDs, raw "
 "responses, and billing-history records."
 msgstr ""
 
-#: contents/ui/configDebug.qml
+#: contents/ui/configDiagnostics.qml
+msgid "Diagnostic provider:"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
 msgid "all"
 msgstr ""
 
-#: contents/ui/configDebug.qml
+#: contents/ui/configDiagnostics.qml
 msgid "Run redacted diagnostics"
 msgstr ""
 
-#: contents/ui/configDebug.qml
+#: contents/ui/configDiagnostics.qml
 msgid "List providers"
 msgstr ""
 
-#: contents/ui/configDebug.qml
+#: contents/ui/configDiagnostics.qml
 msgid "Diagnostic output appears here."
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Provider icon"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Service status"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Usage text"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Provider meters"
-msgstr ""
-
-#: contents/ui/configDisplay.qml contents/ui/configProviders.qml
-msgid "Loading providers timed out. Try again."
-msgstr ""
-
-#: contents/ui/configDisplay.qml contents/ui/configProviders.qml
-#: contents/ui/main.qml
-msgid "codexbar did not return provider data."
-msgstr ""
-
-#: contents/ui/configDisplay.qml contents/ui/configProviders.qml
-msgid "Could not parse codexbar provider JSON: %1"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Usage details"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Show usage as percent used"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Show reset times as clock time"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Show quota warnings on usage meters"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Panel"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Panel style:"
-msgstr ""
-
-#: contents/ui/configDisplay.qml contents/ui/main.qml
-msgid "Standard"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Minimal"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid ""
-"Minimal uses neutral icons and thin meters in the Plasma accent color. Quota "
-"warnings keep their warning colors."
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Use minimal preset"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid ""
-"The preset enables provider meters and hides provider names, usage text and "
-"credits in the panel."
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Show provider name in panel"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Show usage text in panel"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Show credits in panel"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Show provider meters in panel"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Auto-select highest-usage provider"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Usage text and provider meters are available only in horizontal panels."
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Panel quota:"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Automatic"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Primary"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Secondary"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Tertiary"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid ""
-"Uses the provider's primary, secondary or tertiary quota for panel text and "
-"meters. Unavailable quotas are omitted."
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Panel text:"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Percent used"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Percent left"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Pace"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Shows the expected used or left percentage at this point in the window."
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Usage and pace"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Shows current usage alongside the expected used or left percentage."
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Reset time"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Appears when the provider supplies a reset time."
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Run-out forecast"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Appears only when the quota is forecast to run out before reset."
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Element order:"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "%1."
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Move %1 up"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Move %1 down"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Panel visibility"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Show panel text:"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Show each meter:"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid ""
-"Conditions use the quota shown by each element. The text condition also "
-"applies to the provider name and credits. Missing data does not satisfy a "
-"condition."
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Popup"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Show text labels in the tab bar"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Show provider changelog links"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Provider order:"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Loading providers..."
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "No enabled providers available."
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Overview providers:"
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Choose up to %1 provider"
-msgid_plural "Choose up to %1 providers"
-msgstr[0] ""
-msgstr[1] ""
-
-#: contents/ui/configDisplay.qml
-msgid "No enabled providers available for Overview."
-msgstr ""
-
-#: contents/ui/configDisplay.qml
-msgid "Use first %1 providers automatically"
-msgstr ""
-
-#: contents/ui/configDisplay.qml contents/ui/configProviders.qml
-#: contents/ui/main.qml
-msgid "codexbar response exceeded the supported size."
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -752,18 +607,6 @@ msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid "Last checked: %1"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Connection"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Command path:"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Use PATH"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -802,12 +645,36 @@ msgstr ""
 msgid "%1 s"
 msgstr ""
 
+#: contents/ui/configGeneral.qml
+msgid "Refresh when opening the popup"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"Refreshes quota data when needed, including when periodic refresh is "
+"disabled."
+msgstr ""
+
 #: contents/ui/configGeneral.qml scripts/smoke/Capture.qml
 msgid "Fetch provider service status"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid "Required for status incident notifications."
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Privacy"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Hide personal information"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"Hides account identities and project or session names in the panel, popup "
+"and tooltips. Saved data is unchanged."
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -820,55 +687,6 @@ msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid "History window:"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Quota warnings"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Quota warning at:"
-msgstr ""
-
-#: contents/ui/configGeneral.qml contents/ui/main.qml
-#, kde-format
-msgid "%1% used"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Quota critical at:"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Thresholds also set warning colors and markers on usage meters."
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Notifications"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Enable Plasma notifications"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Notify quota warnings"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Notify predicted quota exhaustion"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Uses the pace forecast reported by codexbar."
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Notify limit resets"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "Notify status incidents"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -907,8 +725,8 @@ msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid ""
-"Restore every user-facing setting from General, Display, and Advanced. "
-"Provider accounts and CodexBar CLI configuration are not changed."
+"Restore every widget setting. Provider accounts and CodexBar CLI "
+"configuration are not changed."
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -919,6 +737,313 @@ msgstr ""
 msgid ""
 "Default values are ready. Select Apply or OK to save them, or Cancel to keep "
 "the current settings."
+msgstr ""
+
+#: contents/ui/configNotifications.qml
+msgid "Quota warnings"
+msgstr ""
+
+#: contents/ui/configNotifications.qml
+msgid "Quota warning at:"
+msgstr ""
+
+#: contents/ui/configNotifications.qml contents/ui/main.qml
+#, kde-format
+msgid "%1% used"
+msgstr ""
+
+#: contents/ui/configNotifications.qml
+msgid "Quota critical at:"
+msgstr ""
+
+#: contents/ui/configNotifications.qml
+msgid "Thresholds also set warning colors and markers on usage meters."
+msgstr ""
+
+#: contents/ui/configNotifications.qml
+msgid "Enable Plasma notifications"
+msgstr ""
+
+#: contents/ui/configNotifications.qml
+msgid "Notify quota warnings"
+msgstr ""
+
+#: contents/ui/configNotifications.qml
+msgid "Notify predicted quota exhaustion"
+msgstr ""
+
+#: contents/ui/configNotifications.qml
+msgid "Uses the pace forecast reported by codexbar."
+msgstr ""
+
+#: contents/ui/configNotifications.qml
+msgid "Notify limit resets"
+msgstr ""
+
+#: contents/ui/configNotifications.qml
+msgid "Notify status incidents"
+msgstr ""
+
+#: contents/ui/configNotifications.qml
+msgid ""
+"Enable provider service status in General to receive incident notifications."
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Service status"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Usage text"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Provider meters"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Panel style:"
+msgstr ""
+
+#: contents/ui/configPanel.qml contents/ui/main.qml
+msgid "Standard"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Minimal"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid ""
+"Minimal uses neutral icons and thin meters in the Plasma accent color. Quota "
+"warnings keep their warning colors."
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Use minimal preset"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid ""
+"The preset enables provider meters and hides provider names, usage text and "
+"credits in the panel."
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Show provider name in panel"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Show usage text in panel"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Show credits in panel"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Show provider meters in panel"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Auto-select highest-usage provider"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Usage text and provider meters are available only in horizontal panels."
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Panel quota:"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Automatic"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Primary"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Secondary"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Tertiary"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid ""
+"Uses the provider's primary, secondary or tertiary quota for panel text and "
+"meters. Unavailable quotas are omitted."
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Panel text:"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Percent used"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Percent left"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Pace"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Shows the expected used or left percentage at this point in the window."
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Usage and pace"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Shows current usage alongside the expected used or left percentage."
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Reset time"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Appears when the provider supplies a reset time."
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Run-out forecast"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Appears only when the quota is forecast to run out before reset."
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Element order:"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "%1."
+msgstr ""
+
+#: contents/ui/configPanel.qml contents/ui/configPopup.qml
+msgid "Move %1 up"
+msgstr ""
+
+#: contents/ui/configPanel.qml contents/ui/configPopup.qml
+msgid "Move %1 down"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Panel visibility"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Show panel text:"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Show each meter:"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid ""
+"Conditions use the quota shown by each element. The text condition also "
+"applies to the provider name and credits. Missing data does not satisfy a "
+"condition."
+msgstr ""
+
+#: contents/ui/configPopup.qml contents/ui/configProviders.qml
+msgid "Set the codexbar command path in Diagnostics."
+msgstr ""
+
+#: contents/ui/configPopup.qml contents/ui/configProviders.qml
+msgid "Loading providers timed out. Try again."
+msgstr ""
+
+#: contents/ui/configPopup.qml contents/ui/configProviders.qml
+#: contents/ui/main.qml
+msgid "codexbar did not return provider data."
+msgstr ""
+
+#: contents/ui/configPopup.qml contents/ui/configProviders.qml
+msgid "Could not parse codexbar provider JSON: %1"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Usage details"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Show usage as percent used"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Show reset times as clock time"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Show quota warnings on usage meters"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Show pace forecasts"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Show credits and reset credits"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Show provider details and charts"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Show text labels in the tab bar"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Show provider changelog links"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Provider order:"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Loading providers..."
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "No enabled providers available."
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Overview providers:"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Choose up to %1 provider"
+msgid_plural "Choose up to %1 providers"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/configPopup.qml
+msgid "No enabled providers available for Overview."
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Use first %1 providers automatically"
+msgstr ""
+
+#: contents/ui/configPopup.qml contents/ui/configProviders.qml
+#: contents/ui/main.qml
+msgid "codexbar response exceeded the supported size."
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -1553,6 +1678,10 @@ msgid "codexbar sessions returned an unsupported JSON payload."
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "Session %1"
+msgstr ""
+
+#: contents/ui/main.qml
 msgid "Untitled session"
 msgstr ""
 
@@ -1746,15 +1875,39 @@ msgid "%1 (%2)"
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "Details hidden by privacy mode."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Account %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Model %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Project %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Account hidden"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "No usage yet"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Usage"
+msgstr ""
+
+#: contents/ui/main.qml
 msgid "Extra"
 msgstr ""
 
 #: contents/ui/main.qml
 msgid "Limits not available"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "No usage yet"
 msgstr ""
 
 #: contents/ui/main.qml
@@ -1898,10 +2051,6 @@ msgid "Opus"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Usage"
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "Extra usage"
 msgstr ""
 
@@ -1952,27 +2101,8 @@ msgid "now"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "%1 min"
-msgid_plural "%1 min"
-msgstr[0] ""
-msgstr[1] ""
-
-#: contents/ui/main.qml
-msgid "%1h"
-msgid_plural "%1h"
-msgstr[0] ""
-msgstr[1] ""
-
-#: contents/ui/main.qml
 msgid "%1h %2m"
 msgstr ""
-
-#: contents/ui/main.qml
-#, kde-format
-msgid "%1d"
-msgid_plural "%1d"
-msgstr[0] ""
-msgstr[1] ""
 
 #: contents/ui/main.qml
 msgid "%1d %2h"
@@ -2046,12 +2176,6 @@ msgid "Runs out in %1"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "%1 minute"
-msgid_plural "%1 minutes"
-msgstr[0] ""
-msgstr[1] ""
-
-#: contents/ui/main.qml
 msgid "%1 status issue"
 msgstr ""
 
@@ -2081,6 +2205,10 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "%1 is back to %2% used"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Usage or status changed. Open CodexBar for details."
 msgstr ""
 
 #: contents/ui/main.qml
@@ -2212,6 +2340,10 @@ msgid "A widget update was installed. %1"
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "Provider"
+msgstr ""
+
+#: contents/ui/main.qml
 msgid "Accounts..."
 msgstr ""
 
@@ -2294,18 +2426,6 @@ msgid "Included plan"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "left"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "used"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Resets %1"
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "%1 provider"
 msgid_plural "%1 providers"
 msgstr[0] ""
@@ -2316,24 +2436,7 @@ msgid "Loading"
 msgstr ""
 
 #: contents/ui/main.qml
-#, kde-format
-msgid "%1cr"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1: %2% %3"
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "Refreshing usage..."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1% %2 at pace"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1% %2, behind pace"
 msgstr ""
 
 #: contents/ui/main.qml

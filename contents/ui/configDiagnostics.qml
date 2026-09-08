@@ -11,8 +11,13 @@ import "SafeText.js" as SafeText
 KCM.SimpleKCM {
     id: page
 
-    property string cfg_commandPath
+    property alias cfg_commandPath: commandPathField.text
     property string cfg_commandPathDefault: "codexbar"
+
+    property alias cfg_provider: providerField.text
+    property string cfg_providerDefault: ""
+    property alias cfg_source: sourceField.text
+    property string cfg_sourceDefault: ""
 
     readonly property string commandPath: (cfg_commandPath || "codexbar").trim()
     property bool diagnosticRunning: false
@@ -21,6 +26,14 @@ KCM.SimpleKCM {
     property string activeCommand: ""
     property int commandRunSerial: 0
     readonly property int diagnosticCommandTimeoutMs: 60000
+
+    onCommandPathChanged: {
+        if (activeCommand.length > 0) {
+            finishDiagnosticCommand(activeCommand)
+        }
+        diagnosticOutput = ""
+        diagnosticError = ""
+    }
 
     function shellQuote(value) {
         return Guards.shellQuote(value)
@@ -42,7 +55,7 @@ KCM.SimpleKCM {
 
     function runCommand(command) {
         if (commandPath.length === 0) {
-            diagnosticError = i18n("Set the codexbar command path in the General page.")
+            diagnosticError = i18n("Set the codexbar command path above.")
             return
         }
         if (activeCommand.length > 0) {
@@ -124,6 +137,68 @@ KCM.SimpleKCM {
         width: parent.width
         spacing: Kirigami.Units.smallSpacing
 
+        Kirigami.FormLayout {
+            Layout.fillWidth: true
+
+            Kirigami.Separator {
+                Kirigami.FormData.label: i18n("Connection")
+                Kirigami.FormData.isSection: true
+            }
+            RowLayout {
+                id: commandPathRow
+
+                Kirigami.FormData.label: i18n("Command path:")
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                // FormLayout can stretch nested layouts as the KCM grows, so cap
+                // this row to keep its trailing action inside the viewport.
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+
+                Controls.TextField {
+                    id: commandPathField
+                    Layout.fillWidth: true
+                    placeholderText: "codexbar"
+                }
+
+                Controls.Button {
+                    id: usePathCommandButton
+                    text: i18n("Use PATH")
+                    enabled: page.cfg_commandPath.trim() !== (page.cfg_commandPathDefault || "codexbar")
+                    onClicked: page.cfg_commandPath = page.cfg_commandPathDefault || "codexbar"
+                }
+            }
+
+            Kirigami.Separator {
+                Kirigami.FormData.label: i18n("Advanced provider override")
+                Kirigami.FormData.isSection: true
+            }
+
+            Components.PlainControlsLabel {
+                id: advancedOverrideExplanation
+
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 18
+                text: i18n("These options pin the widget to one provider or one source. Leave them blank to follow the providers enabled on the Providers page.")
+                font: Kirigami.Theme.smallFont
+                opacity: 0.72
+                wrapMode: Text.WordWrap
+            }
+
+            Controls.TextField {
+                id: providerField
+                Kirigami.FormData.label: i18n("Provider:")
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+                placeholderText: i18n("Provider id (blank = all enabled)")
+            }
+
+            Controls.TextField {
+                id: sourceField
+                Kirigami.FormData.label: i18n("Source:")
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+                placeholderText: i18n("Provider default (blank)")
+            }
+        }
+
         Components.PlainControlsLabel {
             Layout.fillWidth: true
             text: i18n("Run redacted CodexBar CLI diagnostics from Plasma. The diagnostic command omits raw tokens, cookies, auth headers, emails, account IDs, org IDs, raw responses, and billing-history records.")
@@ -138,7 +213,7 @@ KCM.SimpleKCM {
             Components.PlainControlsLabel {
                 id: diagnosticProviderLabel
 
-                text: i18n("Provider:")
+                text: i18n("Diagnostic provider:")
             }
 
             Controls.TextField {

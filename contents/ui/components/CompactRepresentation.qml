@@ -7,13 +7,15 @@ Item {
     id: compactRoot
 
     required property var applet
+    property bool animationsEnabled: true
+    property bool interactive: true
 
     readonly property bool verticalPanel: applet.verticalFormFactor
     readonly property bool minimalStyle: applet.minimalPanel === true
     readonly property color themeAccent: ThemeContrast.readableAccentColor(
         Kirigami.Theme.highlightColor, Kirigami.Theme.backgroundColor, Kirigami.Theme.textColor)
     readonly property bool hasProviderMeters: applet.compactProviders().length > 0
-    readonly property var incidentProvider: applet.primaryIncidentProvider()
+    readonly property var incidentProvider: applet.providerPresentation(applet.primaryIncidentProvider())
     readonly property string primaryText: applet.compactText()
     readonly property bool showPrimaryIdentity: verticalPanel || !hasProviderMeters || primaryText.length > 0
     readonly property int compactExtent: Kirigami.Units.iconSizes.smallMedium
@@ -50,6 +52,7 @@ Item {
 
     MouseArea {
         anchors.fill: parent
+        enabled: compactRoot.interactive
         cursorShape: Qt.PointingHandCursor
         onClicked: compactRoot.applet.expanded = !compactRoot.applet.expanded
     }
@@ -210,6 +213,7 @@ Item {
                     id: compactStatusMouse
 
                     anchors.fill: parent
+                    enabled: compactRoot.interactive
                     hoverEnabled: true
                     // A binding avoids Qt rejecting a bare zero enum literal.
                     acceptedButtons: (0)
@@ -264,15 +268,19 @@ Item {
                         && compactRoot.applet.quotaSeverity(quotaRow).length === 0
 
                     function activate() {
+                        if (!compactRoot.interactive) {
+                            return
+                        }
                         compactRoot.applet.openProviderFromPanel(compactMeter.modelData.provider)
                     }
 
                     Layout.preferredWidth: compactRoot.meterWidth
                     Layout.preferredHeight: compactRow.height
-                    activeFocusOnTab: true
+                    activeFocusOnTab: compactRoot.interactive
 
-                    Accessible.role: Accessible.Button
-                    Accessible.name: i18n("Open %1", modelData.title)
+                    Accessible.role: compactRoot.interactive ? Accessible.Button : Accessible.Graphic
+                    Accessible.name: compactRoot.interactive ? i18n("Open %1", modelData.title) : modelData.title
+                    Accessible.ignored: !compactRoot.interactive
                     Accessible.onPressAction: compactMeter.activate()
 
                     Keys.onPressed: function(event) {
@@ -335,12 +343,14 @@ Item {
                                 color: compactMeter.meterColor
 
                                 Behavior on color {
+                                    enabled: compactRoot.animationsEnabled
                                     ColorAnimation {
                                         duration: Kirigami.Units.longDuration
                                     }
                                 }
 
                                 Behavior on width {
+                                    enabled: compactRoot.animationsEnabled
                                     NumberAnimation {
                                         duration: Kirigami.Units.longDuration
                                         easing.type: Easing.OutCubic
@@ -354,6 +364,7 @@ Item {
                         id: compactMeterMouse
 
                         anchors.fill: parent
+                        enabled: compactRoot.interactive
                         z: 1
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor

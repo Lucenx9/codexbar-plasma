@@ -11,12 +11,22 @@ import "general/ConfigValueSync.js" as ConfigValueSync
 KCM.SimpleKCM {
     id: page
 
-    property alias cfg_commandPath: commandPathField.text
+    property string cfg_commandPath
     // cfg_*Default mirrors the schema default in contents/config/main.xml. The
     // Plasma config dialog injects only cfg_<key>, never defaults, so these
     // initializers are the only source for the restore-defaults action;
     // scripts/test_ui_regressions.sh checks them against main.xml for drift.
     property string cfg_commandPathDefault: "codexbar"
+    property alias cfg_refreshOnOpen: refreshOnOpenCheck.checked
+    property bool cfg_refreshOnOpenDefault: false
+    property alias cfg_privacyMode: privacyModeCheck.checked
+    property bool cfg_privacyModeDefault: false
+    property bool cfg_showPopupPace
+    property bool cfg_showPopupPaceDefault: true
+    property bool cfg_showPopupCredits
+    property bool cfg_showPopupCreditsDefault: true
+    property bool cfg_showPopupProviderDetails
+    property bool cfg_showPopupProviderDetailsDefault: true
     property alias cfg_refreshInterval: refreshIntervalSpin.value
     property int cfg_refreshIntervalDefault: 300
     property alias cfg_includeStatus: includeStatusCheck.checked
@@ -25,19 +35,19 @@ KCM.SimpleKCM {
     property bool cfg_costUsageEnabledDefault: true
     property int cfg_costHistoryDays: 30
     property int cfg_costHistoryDaysDefault: 30
-    property alias cfg_enableNotifications: enableNotificationsCheck.checked
+    property bool cfg_enableNotifications
     property bool cfg_enableNotificationsDefault: true
-    property alias cfg_notifyStatusIncidents: notifyStatusIncidentsCheck.checked
+    property bool cfg_notifyStatusIncidents
     property bool cfg_notifyStatusIncidentsDefault: true
-    property alias cfg_notifyQuotaWarnings: notifyQuotaWarningsCheck.checked
+    property bool cfg_notifyQuotaWarnings
     property bool cfg_notifyQuotaWarningsDefault: true
-    property alias cfg_notifyPredictivePaceWarnings: notifyPredictivePaceWarningsCheck.checked
+    property bool cfg_notifyPredictivePaceWarnings
     property bool cfg_notifyPredictivePaceWarningsDefault: false
-    property alias cfg_notifyLimitResets: notifyLimitResetsCheck.checked
+    property bool cfg_notifyLimitResets
     property bool cfg_notifyLimitResetsDefault: false
-    property alias cfg_quotaWarningPercent: quotaWarningPercentSpin.value
+    property int cfg_quotaWarningPercent
     property int cfg_quotaWarningPercentDefault: 80
-    property alias cfg_quotaCriticalPercent: quotaCriticalPercentSpin.value
+    property int cfg_quotaCriticalPercent
     property int cfg_quotaCriticalPercentDefault: 95
     property alias cfg_updateChecksEnabled: updateChecksEnabledCheck.checked
     property bool cfg_updateChecksEnabledDefault: true
@@ -49,7 +59,7 @@ KCM.SimpleKCM {
     property int cfg_autoUpdateIntervalHoursDefault: 24
 
     // Plasma saves the cfg_* properties declared by the current page. Keep the
-    // user-facing Display and Advanced values here as well so one global reset
+    // user-facing values from every page here as well so one global reset
     // remains pending until Apply/OK instead of writing configuration directly.
     property string cfg_provider
     property string cfg_providerDefault: ""
@@ -181,6 +191,11 @@ KCM.SimpleKCM {
             [cfg_commandPath, cfg_commandPathDefault],
             [cfg_provider, cfg_providerDefault],
             [cfg_source, cfg_sourceDefault],
+            [cfg_refreshOnOpen, cfg_refreshOnOpenDefault],
+            [cfg_privacyMode, cfg_privacyModeDefault],
+            [cfg_showPopupPace, cfg_showPopupPaceDefault],
+            [cfg_showPopupCredits, cfg_showPopupCreditsDefault],
+            [cfg_showPopupProviderDetails, cfg_showPopupProviderDetailsDefault],
             [cfg_refreshInterval, cfg_refreshIntervalDefault],
             [cfg_includeStatus, cfg_includeStatusDefault],
             [cfg_costUsageEnabled, cfg_costUsageEnabledDefault],
@@ -227,6 +242,11 @@ KCM.SimpleKCM {
         cfg_commandPath = cfg_commandPathDefault
         cfg_provider = cfg_providerDefault
         cfg_source = cfg_sourceDefault
+        cfg_refreshOnOpen = cfg_refreshOnOpenDefault
+        cfg_privacyMode = cfg_privacyModeDefault
+        cfg_showPopupPace = cfg_showPopupPaceDefault
+        cfg_showPopupCredits = cfg_showPopupCreditsDefault
+        cfg_showPopupProviderDetails = cfg_showPopupProviderDetailsDefault
         cfg_refreshInterval = cfg_refreshIntervalDefault
         cfg_includeStatus = cfg_includeStatusDefault
         cfg_costUsageEnabled = cfg_costUsageEnabledDefault
@@ -273,31 +293,8 @@ KCM.SimpleKCM {
         // Bound supporting text below so its implicit width cannot force the
         // whole form into narrow mode or push content past the viewport.
         Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Connection")
+            Kirigami.FormData.label: i18n("Refresh")
             Kirigami.FormData.isSection: true
-        }
-
-        RowLayout {
-            id: commandPathRow
-
-            Kirigami.FormData.label: i18n("Command path:")
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            // FormLayout can stretch nested layouts as the KCM grows, so cap
-            // this row to keep its trailing action inside the viewport.
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-
-            Controls.TextField {
-                id: commandPathField
-                Layout.fillWidth: true
-                placeholderText: "codexbar"
-            }
-
-            Controls.Button {
-                id: usePathCommandButton
-                text: i18n("Use PATH")
-                enabled: page.cfg_commandPath.trim() !== (page.cfg_commandPathDefault || "codexbar")
-                onClicked: page.cfg_commandPath = page.cfg_commandPathDefault || "codexbar"
-            }
         }
 
         Controls.ComboBox {
@@ -341,6 +338,22 @@ KCM.SimpleKCM {
         }
 
         Controls.CheckBox {
+            id: refreshOnOpenCheck
+            objectName: "refreshOnOpenCheck"
+            Layout.fillWidth: true
+            text: i18n("Refresh when opening the popup")
+        }
+
+        Components.PlainControlsLabel {
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            text: i18n("Refreshes quota data when needed, including when periodic refresh is disabled.")
+            font: Kirigami.Theme.smallFont
+            wrapMode: Text.WordWrap
+        }
+
+        Controls.CheckBox {
             id: includeStatusCheck
             Layout.fillWidth: true
             text: i18n("Fetch provider service status")
@@ -352,6 +365,27 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            wrapMode: Text.WordWrap
+        }
+
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Privacy")
+            Kirigami.FormData.isSection: true
+        }
+
+        Controls.CheckBox {
+            id: privacyModeCheck
+            objectName: "privacyModeCheck"
+            Layout.fillWidth: true
+            text: i18n("Hide personal information")
+        }
+
+        Components.PlainControlsLabel {
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            text: i18n("Hides account identities and project or session names in the panel, popup and tooltips. Saved data is unchanged.")
+            font: Kirigami.Theme.smallFont
             wrapMode: Text.WordWrap
         }
 
@@ -393,110 +427,6 @@ KCM.SimpleKCM {
         }
 
         Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Quota warnings")
-            Kirigami.FormData.isSection: true
-        }
-
-        Controls.SpinBox {
-            id: quotaWarningPercentSpin
-            Kirigami.FormData.label: i18n("Quota warning at:")
-            from: 1
-            to: 99
-            editable: true
-            textFromValue: function(value, locale) {
-                return i18n("%1% used", value)
-            }
-            valueFromText: function(text, locale) {
-                var match = text.match(/\d+/)
-                return match ? parseInt(match[0], 10) : 80
-            }
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 10
-        }
-
-        Controls.SpinBox {
-            id: quotaCriticalPercentSpin
-            Kirigami.FormData.label: i18n("Quota critical at:")
-            // Keeping the floor on the warning value makes the "critical is never
-            // below warning" rule visible here instead of only correcting it at
-            // runtime, where the widget would silently ignore the entered number.
-            from: quotaWarningPercentSpin.value
-            to: 100
-            editable: true
-            textFromValue: function(value, locale) {
-                return i18n("%1% used", value)
-            }
-            valueFromText: function(text, locale) {
-                var match = text.match(/\d+/)
-                return match ? parseInt(match[0], 10) : 95
-            }
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 10
-        }
-
-        Components.PlainControlsLabel {
-            text: i18n("Thresholds also set warning colors and markers on usage meters.")
-            opacity: 0.7
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            wrapMode: Text.WordWrap
-        }
-
-        Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Notifications")
-            Kirigami.FormData.isSection: true
-        }
-
-        Controls.CheckBox {
-            id: enableNotificationsCheck
-            Layout.fillWidth: true
-            text: i18n("Enable Plasma notifications")
-        }
-
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: Kirigami.Units.smallSpacing
-
-            Controls.CheckBox {
-                id: notifyQuotaWarningsCheck
-                Layout.fillWidth: true
-                Layout.leftMargin: Kirigami.Units.gridUnit
-                text: i18n("Notify quota warnings")
-                enabled: enableNotificationsCheck.checked
-            }
-
-            Controls.CheckBox {
-                id: notifyPredictivePaceWarningsCheck
-                Layout.fillWidth: true
-                Layout.leftMargin: Kirigami.Units.gridUnit
-                text: i18n("Notify predicted quota exhaustion")
-                enabled: enableNotificationsCheck.checked
-
-                Components.PlainToolTip {
-                    parent: notifyPredictivePaceWarningsCheck
-                    plainText: i18n("Uses the pace forecast reported by codexbar.")
-                    visible: notifyPredictivePaceWarningsCheck.hovered
-                    delay: Kirigami.Units.toolTipDelay
-                }
-            }
-
-            Controls.CheckBox {
-                id: notifyLimitResetsCheck
-                Layout.fillWidth: true
-                Layout.leftMargin: Kirigami.Units.gridUnit
-                text: i18n("Notify limit resets")
-                enabled: enableNotificationsCheck.checked
-            }
-
-            Controls.CheckBox {
-                id: notifyStatusIncidentsCheck
-                Layout.fillWidth: true
-                Layout.leftMargin: Kirigami.Units.gridUnit
-                text: i18n("Notify status incidents")
-                enabled: enableNotificationsCheck.checked && includeStatusCheck.checked
-            }
-        }
-
-        Kirigami.Separator {
             Kirigami.FormData.label: i18n("Updates")
             Kirigami.FormData.isSection: true
         }
@@ -533,7 +463,7 @@ KCM.SimpleKCM {
                 Layout.fillWidth: true
                 Layout.leftMargin: Kirigami.Units.gridUnit
                 text: i18n("Notify when a widget update is available")
-                enabled: updateChecksEnabledCheck.checked && enableNotificationsCheck.checked
+                enabled: updateChecksEnabledCheck.checked && page.cfg_enableNotifications
             }
 
             Controls.CheckBox {
@@ -584,7 +514,7 @@ KCM.SimpleKCM {
         }
 
         Components.PlainControlsLabel {
-            text: i18n("Restore every user-facing setting from General, Display, and Advanced. Provider accounts and CodexBar CLI configuration are not changed.")
+            text: i18n("Restore every widget setting. Provider accounts and CodexBar CLI configuration are not changed.")
             opacity: 0.7
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24

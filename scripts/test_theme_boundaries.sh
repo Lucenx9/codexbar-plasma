@@ -9,6 +9,7 @@ require_in_surface applet "function providerColor(value)"
 require_in_surface applet "function providerReadableColor(value, background)"
 require_in_surface providers "function providerColor(value)"
 require_in_surface providers "function providerReadableColor(value, background)"
+require_in_surface panel "function providerColor(value)"
 require_in_surface applet 'import "ThemeContrast.js" as ThemeContrast'
 require_in_surface providers 'import "ThemeContrast.js" as ThemeContrast'
 require_in_file "$THEME_CONTRAST_JS" "var minimumNonTextContrastRatio = 3"
@@ -28,10 +29,10 @@ sys.path.insert(0, str(root / "scripts/lib"))
 from qml_surfaces import Surface, surface_files
 
 # Raw colors are allowed only inside theme-derivation helpers, and only in the
-# runtime and provider-config surfaces. Deriving that from the manifest means a
+# runtime, provider-config, and panel-preview surfaces. Deriving that from the manifest means a
 # component that takes over part of the popup gets checked rather than silently
 # exempted, which is what the old `contents/ui/*.qml` glob did.
-allowed_files = set(surface_files("applet", root)) | set(surface_files("providers", root))
+allowed_files = set().union(*(surface_files(name, root) for name in ("applet", "providers", "panel")))
 patterns = [
     re.compile(r"Qt\.rgba\("),
     re.compile(r"#[0-9A-Fa-f]{3,8}"),
@@ -49,10 +50,19 @@ xai notion
 """.split()
 
 def current_function(text, index):
-    function_name = ""
     for match in re.finditer(r"\n    function ([A-Za-z0-9_]+)\(", text[:index]):
-        function_name = match.group(1)
-    return function_name
+        brace = text.find("{", match.end())
+        depth = 0
+        for cursor in range(brace, len(text)):
+            if text[cursor] == "{":
+                depth += 1
+            elif text[cursor] == "}":
+                depth -= 1
+                if depth == 0:
+                    if brace <= index < cursor:
+                        return match.group(1)
+                    break
+    return ""
 
 def allowed_qml(path, text, index):
     return (
@@ -91,8 +101,8 @@ if missing:
     print(f"missing provider brand color in ProviderIdentity.js: {joined}", file=sys.stderr)
     sys.exit(1)
 
-# Both surfaces must read that one table instead of growing a local palette.
-for surface_name in ("applet", "providers"):
+# Every surface must read that one table instead of growing a local palette.
+for surface_name in ("applet", "providers", "panel"):
     body = Surface(surface_name, root).function_body("providerColor")
     if "ProviderIdentity.providerBrandColorChannels(value)" not in body:
         print(
