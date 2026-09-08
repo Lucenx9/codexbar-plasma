@@ -37,6 +37,8 @@ List each command or manual check and its result. Run `make check` before openin
 the pull request. If a check failed, was skipped, or was unavailable, say why.
 Summarize the dependent updates checked under docs/development.md#repository-maintenance
 and identify any unresolved inconsistency and its tracking issue.
+After the latest push, record its commit and final CI results with run links.
+Keep this section current after fixes; pending checks mean delivery is pending.
 -->
 
 - `make check`: ...

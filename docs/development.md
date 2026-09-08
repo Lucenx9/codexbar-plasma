@@ -291,6 +291,46 @@ If a KDE Store channel is introduced, use its KNewStuff/Discover update path for
 that channel. WidgetKit, Sparkle, Keychain/Full Disk Access UI, and macOS app
 implementation code remain outside this standalone Plasma repository.
 
+## Delivery and CI
+
+Use a `codex/` branch and a PR for repository changes. Direct pushes require an
+explicit exception for the current task. A request to push directly does not
+authorize weakening protection rules or bypassing failed checks.
+
+The default branch rules require a PR and successful GitHub Actions `check` and
+`smoke` jobs, tested against the current base branch. The rules also prevent
+deletion and force pushes. Copilot review remains enabled; no additional human
+approval count is required. The maintainer can merge their own PR once its
+checks pass. Inspect the effective rules with:
+
+```sh
+gh api repos/Lucenx9/codexbar-plasma/rules/branches/main
+```
+
+The agent owns delivery through these completion criteria:
+
+1. After each push, identify the exact commit and its GitHub runs. Follow the
+   required checks and other applicable CI runs until they finish. Queued or
+   running checks are pending, not a completed delivery. Results for an older
+   commit do not validate a newer push.
+2. Inspect failed jobs and fix failures caused by the change. Rerun a job only
+   when evidence supports a transient infrastructure failure; repeated failures
+   need diagnosis. Report an external blocker with the run link and failing job.
+   Treat unexpected skips, cancelled runs, and missing required checks as
+   unresolved. The release job is intentionally skipped on non-tag runs.
+3. For a PR-only request, finish when the current PR checks pass and the PR body
+   records their results. Report it as ready for review, not merged. Merge only
+   when authorized; check the current head and base again before merging.
+4. After an authorized merge or direct push, follow the runs for the resulting
+   `main` commit too. Reconcile related issues and report the commit, final CI
+   outcome, and any remaining blocker. Fix a post-merge failure through a PR
+   unless the user explicitly authorizes another delivery route.
+
+Keep progress updates brief while waiting. If the session is interrupted, leave
+the exact commit, run links, and remaining checks in the handoff so work can
+resume without treating pending CI as success. A recurring automation is needed
+only when the user asks for monitoring beyond the active task.
+
 ## Changelog and releases
 
 [CHANGELOG.md](../CHANGELOG.md) is the source of notable widget changes and

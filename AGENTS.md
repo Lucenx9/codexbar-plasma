@@ -105,6 +105,11 @@ or **macOS-only/non-goal**. Screenshots and Swift models are not CLI contracts.
 
 ## Verification and delivery
 
+- Deliver changes through a PR by default. A direct push is an exception only
+  when explicitly requested for the current task; it does not authorize bypassing
+  branch protections. Follow [delivery and CI](docs/development.md#delivery-and-ci)
+  after every push and authorized merge. Own the checks through their final
+  result, fix in-scope failures, and report the verified commit and any blocker.
 - Own consistency across the repository, without user reminders. For every
   change, follow [repository maintenance](docs/development.md#repository-maintenance)
   before editing and before delivery. A task is complete only when affected

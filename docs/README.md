@@ -14,8 +14,8 @@ the guides describe supported behavior. Agents maintain both through the
 - [Usage and settings](usage.md): panel and popup options, provider setup,
   cost history, notifications, and widget defaults.
 - [Development](development.md): QML ownership, regression checks, runtime
-  verification, repository maintenance, and agent instructions. Read before code
-  or tooling changes.
+  verification, PR delivery and CI follow-up, repository maintenance, and agent
+  instructions. Read before code or tooling changes.
 - [Provider settings descriptor](cli-provider-settings-descriptor.md): proposed
   upstream CLI contract for generic settings. It is not a shipped contract.
 - [Cost history](cost-history.md): daily model data, selection behavior, and
