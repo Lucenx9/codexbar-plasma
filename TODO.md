@@ -56,7 +56,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 ### Rich usage and credit allowances
 
-- [ ] Consume generic billing summaries, richer model/request/token usage,
+- [ ] Consume generic billing/pricing details, richer model/request/token usage,
   credit allowances, and unknown-usage windows with reset metadata. These gaps
   were verified at 0.56.2; authenticated 0.57.0 cases remain unverified.
   Existing generic details/charts work. Done when each additional section has
@@ -66,9 +66,9 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 ### History and forecasts
 
-- [ ] Display credit history, plan-utilization history, and session-equivalent
-  forecasts when official history/forecast fields supply units and missing-data
-  semantics. Last verified at 0.56.2. Done when supported histories have bounded
+- [ ] Display credit history, plan-utilization history, hourly activity, and
+  session-equivalent forecasts when official history/forecast fields supply units
+  and missing-data semantics. Last verified at 0.56.2. Done when supported histories have bounded
   normalization and views; retain any remaining types here. Never reconstruct
   history or session conversion rates from a current snapshot.
   [Prior discussion #170](https://github.com/Lucenx9/codexbar-plasma/issues/170).
@@ -108,6 +108,17 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   supported fields use catalogs with placeholder/plural checks and bounded
   unknown-value fallbacks. [Translation guide](docs/translations.md);
   [prior discussion #174](https://github.com/Lucenx9/codexbar-plasma/issues/174).
+
+### Display currency
+
+- [ ] Offer display-currency selection and conversion through an official Linux
+  contract. The 0.56.2 audit records no display-currency setter or descriptor;
+  the scoped 0.57.0 config probes still expose neither. Plasma currently
+  displays the CLI-emitted currency. Done when released settings and converted
+  amounts define currency, rate provenance, and unavailable-conversion behavior,
+  with tested Plasma selection/display. Keep conversion and exchange-rate
+  acquisition in the CLI and preserve separate currencies until then.
+  [Pinned blocker](docs/research/2026-09-01-macos-parity-0.56.2.md#blocked-on-an-official-linux-cli-contract).
 
 ### Automatic balance text
 

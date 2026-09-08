@@ -164,6 +164,17 @@ No authenticated usage, credit validity, account switching, provider balance
 units, or nonempty history was exercised in these probes. Those limitations
 remain explicit in TODO; this is not a replacement for the full 0.56.2 audit.
 
+## Carried-forward blockers
+
+The [0.56.2 blocked-contract inventory](2026-09-01-macos-parity-0.56.2.md#blocked-on-an-official-linux-cli-contract)
+also names display-currency selection/conversion and hourly activity. Those
+items were absent from the intervening issue migration and remain open in TODO.
+The scoped 0.57.0 config probes expose no display-currency setter or descriptor.
+Plasma displays emitted currencies; it has no display-currency setting or local
+exchange-rate conversion. Hourly activity still needs a verified generic history
+payload; daily cost rows are not hourly evidence. The older audit remains the
+contract baseline for unprobed history cases.
+
 ## Excluded from the Linux backlog
 
 WidgetKit margins, Sparkle updates, AppKit menu positions/highlighting, Keychain

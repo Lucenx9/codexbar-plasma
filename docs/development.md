@@ -485,8 +485,10 @@ define the review. Instructions alone do not schedule execution.
    pending, finish without a commit or notification.
 2. Compare Linux-relevant changes with current Plasma code, schema, tests, and
    existing guides. Include fixes and changed contracts, not only new features.
-   Recheck carried-forward blockers against official Linux CLI changes. Retain
-   unresolved older gaps even when release notes do not mention them.
+   Recheck carried-forward blockers against official Linux CLI changes. Compare
+   TODO with unresolved findings in pinned audits and linked issues too; a prior
+   tracker migration may be incomplete. Retain unresolved older gaps even when
+   release notes do not mention them.
 3. Classify each gap as implementable with the official Linux CLI, blocked on a
    named official contract, or excluded as macOS-only/not useful on Plasma.
    Keep only the first two in the actionable inventory. An unverified candidate
