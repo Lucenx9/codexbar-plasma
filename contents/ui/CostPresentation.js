@@ -273,11 +273,28 @@ function chartPoints(fmt, points, showsTokens) {
         var value = Math.max(0, metricValue(point, showsTokens))
         result.push({
             label: boundedText(point.label, 120),
+            sourceIndex: i,
             value: value,
             displayValue: metricText(fmt, value, point.currency, showsTokens)
         })
     }
     return result
+}
+
+// Chart points omit unavailable amounts. Their index is not a daily-row index.
+function selectedCostDay(daily, points, activeIndex) {
+    if (!Array.isArray(daily) || !Array.isArray(points)
+            || typeof activeIndex !== "number" || activeIndex !== Math.floor(activeIndex)
+            || activeIndex < 0 || activeIndex >= points.length) {
+        return null
+    }
+    var point = points[activeIndex]
+    var sourceIndex = point && point.sourceIndex
+    if (typeof sourceIndex !== "number" || sourceIndex !== Math.floor(sourceIndex)
+            || sourceIndex < 0 || sourceIndex >= daily.length) {
+        return null
+    }
+    return daily[sourceIndex] || null
 }
 
 // The newest plotted point, as a label and an already-formatted value. Returns
@@ -340,6 +357,18 @@ function breakdownRows(entries) {
     return rows
 }
 
+// Missing amounts stay absent; measured zeroes remain visible.
+function amountSummary(fmt, amounts, tokensTextFor) {
+    var values = []
+    if (hasMetricValue(amounts, false)) {
+        values.push(amountString(fmt, amounts.cost, amounts.currency))
+    }
+    if (hasMetricValue(amounts, true)) {
+        values.push(tokensTextFor ? tokensTextFor(amounts.tokens) : tokenCountString(amounts.tokens))
+    }
+    return values.length > 0 ? values.join(" · ") : "-"
+}
+
 // `tokensTextFor(tokens)` lets the caller word the token half of each summary.
 function modelRows(fmt, tokenCost, tokensTextFor) {
     var rows = []
@@ -350,8 +379,7 @@ function modelRows(fmt, tokenCost, tokensTextFor) {
         var item = tokenCost.models[i]
         rows.push({
             label: item.label,
-            value: tokenSummary(fmt, item.cost, item.tokens, item.currency,
-                tokensTextFor ? tokensTextFor(item.tokens) : "")
+            value: amountSummary(fmt, item, tokensTextFor)
         })
     }
     return rows

@@ -675,7 +675,7 @@ if "Cost unavailable: %1" not in token_cost_section_body:
 if "supportsLocalCost" not in token_cost_section_body:
     raise AssertionError("tokenCostSection must scope global cost errors to supported providers")
 if "points: tokenCostSection.chartPoints" not in token_cost_section_body \
-        or token_cost_section_body.count("tokenCostSection.chartPoints.length > 1") < 2:
+        or token_cost_section_body.count("tokenCostSection.chartPoints.length > 0") < 2:
     raise AssertionError(
         "provider cost charts must use the points available for the selected metric"
     )
@@ -1743,14 +1743,38 @@ if "Components.InteractiveChart" not in main_text or "applet.costChartPoints(" n
     raise AssertionError("the provider cost sparkline must use the interactive shared chart")
 
 for summary_id, summary_fragment in (
-    ("costSessionSummaryLabel", "font.weight: Font.DemiBold"),
-    ("costMonthSummaryLabel", "font: Kirigami.Theme.smallFont"),
     ("costSparklineSummaryLabel", "font: Kirigami.Theme.smallFont"),
     ("costSparklineRangeLabel", "font: Kirigami.Theme.smallFont"),
 ):
     summary_body = id_block(main_text, summary_id)
     if summary_fragment not in summary_body:
         raise AssertionError(f"{summary_id} must preserve the intended cost hierarchy")
+
+cost_summary_body = applet.id_block("costSummaryGrid")
+for fragment in (
+    "columns: 2",
+    "amounts: tokenCostSection.tokenCost.today",
+    "amounts: tokenCostSection.tokenCost.totals",
+    "tokenCostSection.amountText(modelData.amounts, modelData.valueMode)",
+    "tokenCostSection.tokensText(modelData.amounts)",
+    "Layout.fillWidth: true",
+    "wrapMode: Text.Wrap",
+):
+    if fragment not in cost_summary_body:
+        raise AssertionError(f"compact cost summary is missing {fragment!r}")
+
+for fragment in (
+    "property bool detailsExpanded: false",
+    "CostPresentation.selectedCostDay(",
+    "chartPoints, costChart.selectedIndex)",
+    "onPointsChanged: tokenCostSection.clearDaySelection()",
+    "applet.setCostHistoryMetric(valueAt(index))",
+):
+    if fragment not in token_cost_section_body:
+        raise AssertionError(f"provider cost selection is missing {fragment!r}")
+for collapsed_id in ("costDrillDownSection", "costHistoryChartSection"):
+    if "Components.CostTrustNotice" in applet.id_block(collapsed_id):
+        raise AssertionError("cost trust notices must remain outside collapsed details")
 
 cost_history_header_body = id_block(main_text, "costHistoryHeaderRow")
 if "costHistoryChartSection.averageLine" not in cost_history_header_body:
@@ -1899,7 +1923,7 @@ if "providerUpdatedLabel" in applet.id_block("providerMetaRow"):
 cost_drill_down_body = id_block(main_text, "costDrillDownSection")
 if "readonly property real metricValueColumnWidth: Kirigami.Units.gridUnit * 9" not in cost_drill_down_body:
     raise AssertionError("costDrillDownSection must define a stable value column width")
-if 'text: i18n("Cost details")' not in cost_drill_down_body:
+if 'i18n("Cost details")' not in cost_drill_down_body or 'i18n("Details for %1", tokenCostSection.selectedDay.label)' not in cost_drill_down_body:
     raise AssertionError("costDrillDownSection must use a plain, user-facing title")
 for value_label in ("costBreakdownValueLabel", "costModelValueLabel"):
     value_label_body = id_block(main_text, value_label)
@@ -2568,7 +2592,7 @@ for empty_metric_fragment in (
             f"missing {empty_metric_fragment!r}"
         )
 for trust_owner_source, trust_owner_text in (
-    ("FullRepresentation.qml", full_representation_text),
+    ("ProviderCostSection.qml", token_cost_section_body),
     ("SpendView.qml", spend_view_text),
 ):
     if "Components.CostTrustNotice" not in trust_owner_text:
@@ -2628,14 +2652,16 @@ for non_atomic_notice_fragment in (
         )
 for provider_notice_fragment in (
     'noticeScope: "provider:" +',
-    "stateOwner: fullRoot.applet",
-    "presentationVisible: fullRoot.visible && !applet.globalViewSelected",
+    "stateOwner: tokenCostSection.applet",
+    "presentationVisible: tokenCostSection.presentationVisible",
 ):
-    if provider_notice_fragment not in full_representation_text:
+    if provider_notice_fragment not in token_cost_section_body:
         raise AssertionError(
             "provider cost notices must use a persistent provider scope and visible context; "
             f"missing {provider_notice_fragment!r}"
         )
+if "presentationVisible: fullRoot.visible && !applet.globalViewSelected" not in full_representation_text:
+    raise AssertionError("the provider cost section must receive the popup visibility context")
 for spend_notice_fragment in (
     'noticeScope: "spend"',
     "stateOwner: view.applet",

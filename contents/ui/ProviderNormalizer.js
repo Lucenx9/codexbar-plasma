@@ -32,6 +32,7 @@ var maximumSessions = 128
 var maximumCostHistoryPoints = 365
 var maximumCostHistoryScanItems = 2048
 var maximumModelBreakdownsPerDay = 128
+var maximumCostModelRows = 6
 // Coverage counters are metadata, not allocation sizes, but bounding them keeps
 // later aggregation inside an exact and intentionally small numeric domain.
 var maximumCostCoverageCount = 1000000000
@@ -556,7 +557,9 @@ function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys) {
                 outputTokens: 0,
                 cacheReadTokens: 0,
                 cacheCreationTokens: 0,
-                currency: safeCurrency
+                currency: safeCurrency,
+                models: [],
+                modelsTruncated: false
             })
         }
     }
@@ -742,27 +745,33 @@ function normalizeCostDaily(items, currency, days, updatedAt) {
         var cacheReadTokens = strictFiniteNumber(item.cacheReadTokens)
         var cacheCreationTokens = firstStrictFiniteNumber(
             item.cacheCreationTokens, item.cacheWriteTokens)
+        var hasTokenParts = isFinite(inputTokens) || isFinite(outputTokens)
+            || isFinite(cacheReadTokens) || isFinite(cacheCreationTokens)
         if (!isFinite(tokens)) {
             tokens = sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens)
+            if (isNaN(tokens) && hasTokenParts) {
+                tokens = 0
+            }
         }
-        if (!isFinite(cost) && !isFinite(tokens)
-                && !isFinite(inputTokens) && !isFinite(outputTokens)
-                && !isFinite(cacheReadTokens) && !isFinite(cacheCreationTokens)) {
+        if (!isFinite(cost) && !isFinite(tokens) && !hasTokenParts) {
             var blockedDate = parsedCalendarDateKey(label)
             if (blockedDate) {
                 blockedDateKeys[blockedDate.key] = true
             }
             continue
         }
+        var modelSummary = costModelSummary([item], currency)
         result.unshift({
             label: label,
             cost: isFinite(cost) ? Math.max(0, cost) : null,
-            tokens: isFinite(tokens) ? Math.max(0, tokens) : 0,
+            tokens: isFinite(tokens) ? Math.max(0, tokens) : null,
             inputTokens: isFinite(inputTokens) ? Math.max(0, inputTokens) : 0,
             outputTokens: isFinite(outputTokens) ? Math.max(0, outputTokens) : 0,
             cacheReadTokens: isFinite(cacheReadTokens) ? Math.max(0, cacheReadTokens) : 0,
             cacheCreationTokens: isFinite(cacheCreationTokens) ? Math.max(0, cacheCreationTokens) : 0,
-            currency: boundedDisplayText(currency || "USD", 12)
+            currency: boundedDisplayText(currency || "USD", 12),
+            models: modelSummary.rows,
+            modelsTruncated: modelSummary.truncated
         })
     }
     // Inspect beyond the display limit: earlier records may contain valid or
@@ -814,7 +823,6 @@ function normalizeProviderCostTotals(providerID, totals, fallbackCost,
 }
 
 function normalizeCostModels(items, currency, days, updatedAt) {
-    var byName = ({})
     if (!items || !Array.isArray(items)) {
         return []
     }
@@ -846,20 +854,39 @@ function normalizeCostModels(items, currency, days, updatedAt) {
         }
         modelDays.unshift(item)
     }
+    return costModelSummary(modelDays, currency).rows
+}
+
+function costModelSummary(modelDays, currency) {
+    var byName = ({})
+    var truncated = false
     for (var i = 0; i < modelDays.length; i++) {
-        var breakdowns = Array.isArray(modelDays[i].modelBreakdowns)
+        var breakdowns = hasOwnKey(modelDays[i], "modelBreakdowns")
+                && Array.isArray(modelDays[i].modelBreakdowns)
             ? modelDays[i].modelBreakdowns
             : []
         var breakdownLimit = Math.min(breakdowns.length, maximumModelBreakdownsPerDay)
+        truncated = truncated || breakdowns.length > breakdownLimit
         for (var j = 0; j < breakdownLimit; j++) {
-            var breakdown = breakdowns[j] || ({})
-            var name = boundedDisplayText(breakdown.modelName || breakdown.model || "", 120)
+            var breakdown = breakdowns[j]
+            if (!isCliRecord(breakdown)) {
+                continue
+            }
+            var rawName = hasOwnKey(breakdown, "modelName") ? breakdown.modelName : ""
+            if ((typeof rawName !== "string" || rawName.length === 0)
+                    && hasOwnKey(breakdown, "model")) {
+                rawName = breakdown.model
+            }
+            var name = typeof rawName === "string" ? boundedDisplayText(rawName, 120) : ""
             if (name.length === 0 || isUnsafeObjectKey(name)) {
                 continue
             }
-            var cost = firstStrictFiniteNumber(breakdown.cost, breakdown.totalCost)
+            var cost = firstStrictFiniteNumber(
+                hasOwnKey(breakdown, "cost") ? breakdown.cost : undefined,
+                hasOwnKey(breakdown, "totalCost") ? breakdown.totalCost : undefined)
             var tokens = firstStrictFiniteNumber(
-                breakdown.totalTokens, breakdown.tokens)
+                hasOwnKey(breakdown, "totalTokens") ? breakdown.totalTokens : undefined,
+                hasOwnKey(breakdown, "tokens") ? breakdown.tokens : undefined)
             if (!isFinite(cost) && !isFinite(tokens)) {
                 continue
             }
@@ -867,16 +894,23 @@ function normalizeCostModels(items, currency, days, updatedAt) {
                 byName[name] = {
                     label: name,
                     cost: null,
-                    tokens: 0,
-                    currency: boundedDisplayText(currency || "USD", 12)
+                    tokens: null,
+                    currency: boundedDisplayText(currency || "USD", 12),
+                    costOverflow: false,
+                    tokensOverflow: false
                 }
             }
-            if (isFinite(cost)) {
-                byName[name].cost = (byName[name].cost === null
-                    ? 0 : byName[name].cost) + Math.max(0, cost)
+            var aggregate = byName[name]
+            // Later finite rows must not revive an overflowed sum as a partial total.
+            if (isFinite(cost) && !aggregate.costOverflow) {
+                var totalCost = (aggregate.cost === null ? 0 : aggregate.cost) + Math.max(0, cost)
+                aggregate.costOverflow = !isFinite(totalCost)
+                aggregate.cost = aggregate.costOverflow ? null : totalCost
             }
-            if (isFinite(tokens)) {
-                byName[name].tokens += Math.max(0, tokens)
+            if (isFinite(tokens) && !aggregate.tokensOverflow) {
+                var totalTokens = (aggregate.tokens === null ? 0 : aggregate.tokens) + Math.max(0, tokens)
+                aggregate.tokensOverflow = !isFinite(totalTokens)
+                aggregate.tokens = aggregate.tokensOverflow ? null : totalTokens
             }
         }
     }
@@ -886,15 +920,21 @@ function normalizeCostModels(items, currency, days, updatedAt) {
         if (!hasOwnKey(byName, modelName)) {
             continue
         }
-        rows.push(byName[modelName])
+        var model = byName[modelName]
+        rows.push({ label: model.label, cost: model.cost, tokens: model.tokens, currency: model.currency })
     }
     rows.sort(function(a, b) {
         var aCost = a.cost === null ? 0 : a.cost
         var bCost = b.cost === null ? 0 : b.cost
         if (bCost !== aCost) {
-            return bCost - aCost
+            return bCost > aCost ? 1 : -1
         }
-        return b.tokens - a.tokens
+        var aTokens = a.tokens === null ? 0 : a.tokens
+        var bTokens = b.tokens === null ? 0 : b.tokens
+        return bTokens === aTokens ? 0 : (bTokens > aTokens ? 1 : -1)
     })
-    return rows.slice(0, 6)
+    return {
+        rows: rows.slice(0, maximumCostModelRows),
+        truncated: truncated || rows.length > maximumCostModelRows
+    }
 }

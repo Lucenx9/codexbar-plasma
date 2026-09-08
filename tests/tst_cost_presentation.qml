@@ -5,6 +5,47 @@ import "../contents/ui/CostPresentation.js" as CostPresentation
 TestCase {
     name: "CostPresentation"
 
+    function test_selectedCostDayUsesSourceRowAfterUnavailableAmountsAreSkipped() {
+        var daily = [
+            { label: "2026-09-01", cost: null, tokens: 3, models: [{label: "First"}] },
+            { label: "2026-09-02", cost: 0, tokens: 7, models: [{label: "Second"}] }
+        ]
+        var costPoints = CostPresentation.chartPoints(fmt, daily, false)
+        compare(costPoints.length, 1)
+        compare(CostPresentation.selectedCostDay(daily, costPoints, 0), daily[1])
+        var tokenPoints = CostPresentation.chartPoints(fmt, daily, true)
+        compare(CostPresentation.selectedCostDay(daily, tokenPoints, 0), daily[0])
+        compare(CostPresentation.selectedCostDay(daily, tokenPoints, 1), daily[1])
+        compare(CostPresentation.selectedCostDay(daily, costPoints, -1), null)
+        compare(CostPresentation.selectedCostDay([], costPoints, 0), null)
+        compare(CostPresentation.selectedCostDay(daily, [{ sourceIndex: "1" }], 0), null)
+        compare(CostPresentation.selectedCostDay(daily, [{ sourceIndex: 0.5 }], 0), null)
+        compare(CostPresentation.selectedCostDay(daily, costPoints, 0.5), null)
+        compare(CostPresentation.selectedCostDay(daily, null, 0), null)
+    }
+
+    function test_amountSummaryPreservesAvailableMetrics() {
+        var fmt = CostPresentation.numberFormat(",", ".")
+        var tokensText = function(tokens) { return tokens + " tokens" }
+        compare(CostPresentation.amountSummary(fmt, { cost: null, tokens: 5 }, tokensText), "5 tokens")
+        compare(CostPresentation.amountSummary(fmt, { cost: 0, tokens: null, currency: "USD" }, tokensText), "$0.00")
+        compare(CostPresentation.amountSummary(fmt, { cost: 0, tokens: 0, currency: "USD" }, tokensText), "$0.00 · 0 tokens")
+        compare(CostPresentation.amountSummary(fmt, null, tokensText), "-")
+    }
+
+    function test_modelRowsDistinguishZeroFromMissingAmounts() {
+        var rows = CostPresentation.modelRows(fmt, { models: [
+            { label: "Free", cost: 0, tokens: 2, currency: "USD" },
+            { label: "Unpriced", cost: null, tokens: 2, currency: "USD" },
+            { label: "Unknown tokens", cost: 1, tokens: null, currency: "USD" },
+            { label: "Unknown", cost: null, tokens: null, currency: "USD" }
+        ] }, null)
+        compare(rows[0].value, "$0.00 · 2")
+        compare(rows[1].value, "2")
+        compare(rows[2].value, "$1.00")
+        compare(rows[3].value, "-")
+    }
+
     function test_projectRowsFollowProviderOrderAndSelectedMetric() {
         var costs = [{ provider: "codex", projects: { rows: [
             { label: "Token heavy", cost: 1, tokens: 9000, currency: "USD" },

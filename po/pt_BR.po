@@ -107,8 +107,7 @@ msgstr "Não foi possível verificar a origem do total exibido para o intervalo.
 msgid "%1 %2"
 msgstr "%1 %2"
 
-#: contents/ui/components/FullRepresentation.qml contents/ui/configDisplay.qml
-#: scripts/smoke/Capture.qml
+#: contents/ui/components/FullRepresentation.qml scripts/smoke/Capture.qml
 msgid "Overview"
 msgstr "Visão geral"
 
@@ -144,8 +143,7 @@ msgid "%1 - %2"
 msgstr "%1 - %2"
 
 #: contents/ui/components/FullRepresentation.qml
-#: contents/ui/components/ProviderHeader.qml contents/ui/configGeneral.qml
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderHeader.qml contents/ui/main.qml
 msgid "Refresh"
 msgstr "Atualizar"
 
@@ -165,26 +163,26 @@ msgstr "Restante: %1"
 msgid "Usage dashboard"
 msgstr "Painel de uso"
 
-#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/SpendView.qml contents/ui/main.qml
 msgid "Cost"
 msgstr "Custo"
 
-#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/ProviderCostSection.qml
 msgid "Cost unavailable: %1"
 msgstr "Custo indisponível: %1"
 
-#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/SpendView.qml
 msgid "Daily token history"
 msgstr "Histórico diário de tokens"
 
-#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/SpendView.qml
 msgid "Daily cost history"
 msgstr "Histórico diário de custos"
 
-#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/SpendView.qml contents/ui/configGeneral.qml
 #: contents/ui/main.qml
 msgid "%1 day"
@@ -192,15 +190,15 @@ msgid_plural "%1 days"
 msgstr[0] "%1 dia"
 msgstr[1] "%1 dias"
 
-#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/ProviderCostSection.qml
 msgid "Cost history"
 msgstr "Histórico de custos"
 
-#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/ProviderCostSection.qml
 msgid "Cost details"
 msgstr "Detalhes dos custos"
 
-#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/ProviderCostSection.qml
 msgid "Models"
 msgstr "Modelos"
 
@@ -254,14 +252,17 @@ msgid "min"
 msgstr "min"
 
 #: contents/ui/components/ProjectCostSection.qml
+#: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
 msgid "Cost unavailable"
 msgstr "Custo indisponível"
 
 #: contents/ui/components/ProjectCostSection.qml
+#: contents/ui/components/ProviderCostSection.qml
 msgid "Tokens unavailable"
 msgstr "Tokens indisponíveis"
 
-#: contents/ui/components/ProjectCostSection.qml contents/ui/main.qml
+#: contents/ui/components/ProjectCostSection.qml
+#: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
 msgid "%1 tokens"
 msgstr "%1 tokens"
 
@@ -338,7 +339,7 @@ msgstr "Copiar nome da sessão"
 msgid "Copy session details"
 msgstr "Copiar detalhes da sessão"
 
-#: contents/ui/components/SessionsView.qml contents/ui/main.qml
+#: contents/ui/main.qml
 msgid "Unknown"
 msgstr "Desconhecido"
 
@@ -354,6 +355,7 @@ msgstr "30 dias"
 msgid "90 days"
 msgstr "90 dias"
 
+#: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/SpendView.qml contents/ui/main.qml
 msgid "Tokens"
 msgstr "Tokens"
@@ -366,6 +368,7 @@ msgstr "Atualizar histórico local"
 msgid "History"
 msgstr "Histórico"
 
+#: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/SpendView.qml
 msgid "History metric"
 msgstr "Métrica do histórico"
@@ -517,6 +520,7 @@ msgid "Loading providers timed out. Try again."
 msgstr "O carregamento dos provedores excedeu o tempo limite. Tente novamente."
 
 #: contents/ui/configDisplay.qml contents/ui/configProviders.qml
+#: contents/ui/main.qml
 msgid "codexbar did not return provider data."
 msgstr "O codexbar não retornou dados dos provedores."
 
@@ -790,7 +794,7 @@ msgstr "Obter o status dos serviços dos provedores"
 msgid "Required for status incident notifications."
 msgstr "Necessário para as notificações de incidentes nos serviços."
 
-#: contents/ui/configGeneral.qml contents/ui/main.qml
+#: contents/ui/main.qml
 msgid "Usage"
 msgstr "Uso"
 
@@ -1561,7 +1565,7 @@ msgid_plural "%1 days ago"
 msgstr[0] "Há %1 dia"
 msgstr[1] "Há %1 dias"
 
-#: contents/ui/main.qml
+#: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
 msgid "Today"
 msgstr "Hoje"
 
@@ -1736,7 +1740,7 @@ msgstr "Premium"
 msgid "Total"
 msgstr "Total"
 
-#: contents/ui/main.qml
+#: contents/ui/configDisplay.qml contents/ui/main.qml
 msgid "Standard"
 msgstr "Standard"
 
@@ -2291,7 +2295,7 @@ msgstr "IDE"
 msgid "On pace"
 msgstr "No ritmo previsto"
 
-#: contents/ui/main.qml
+#: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "%1% in deficit"
 msgstr "%1% acima do previsto"
 
@@ -2299,7 +2303,7 @@ msgstr "%1% acima do previsto"
 msgid "%1% in reserve"
 msgstr "%1% de reserva"
 
-#: contents/ui/main.qml
+#: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "Expected %1% used"
 msgstr "Uso previsto: %1%"
 
@@ -2311,7 +2315,7 @@ msgstr "Suficiente até a redefinição"
 msgid "Runs out now"
 msgstr "Esgotamento previsto agora"
 
-#: contents/ui/main.qml
+#: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "Runs out in %1"
 msgstr "Esgotamento previsto em %1"
 
@@ -2369,3 +2373,27 @@ msgstr "Avisos de cota"
 #: contents/ui/configDisplay.qml
 msgid "Panel visibility"
 msgstr "Visibilidade do painel"
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Hide details"
+msgstr "Ocultar detalhes"
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Show details"
+msgstr "Mostrar detalhes"
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Details for %1"
+msgstr "Detalhes de %1"
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "All days"
+msgstr "Todos os dias"
+
+#: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
+msgid "No model breakdown for this day."
+msgstr "Nenhum detalhamento por modelo para este dia."
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Model breakdown is partial."
+msgstr "O detalhamento por modelo está incompleto."

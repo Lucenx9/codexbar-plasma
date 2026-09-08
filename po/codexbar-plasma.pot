@@ -148,45 +148,6 @@ msgstr ""
 msgid "Usage dashboard"
 msgstr ""
 
-#: contents/ui/components/FullRepresentation.qml
-#: contents/ui/components/SpendView.qml contents/ui/main.qml
-msgid "Cost"
-msgstr ""
-
-#: contents/ui/components/FullRepresentation.qml
-msgid "Cost unavailable: %1"
-msgstr ""
-
-#: contents/ui/components/FullRepresentation.qml
-#: contents/ui/components/SpendView.qml
-msgid "Daily token history"
-msgstr ""
-
-#: contents/ui/components/FullRepresentation.qml
-#: contents/ui/components/SpendView.qml
-msgid "Daily cost history"
-msgstr ""
-
-#: contents/ui/components/FullRepresentation.qml
-#: contents/ui/components/SpendView.qml contents/ui/configGeneral.qml
-#: contents/ui/main.qml
-msgid "%1 day"
-msgid_plural "%1 days"
-msgstr[0] ""
-msgstr[1] ""
-
-#: contents/ui/components/FullRepresentation.qml
-msgid "Cost history"
-msgstr ""
-
-#: contents/ui/components/FullRepresentation.qml
-msgid "Cost details"
-msgstr ""
-
-#: contents/ui/components/FullRepresentation.qml
-msgid "Models"
-msgstr ""
-
 #: contents/ui/components/InteractiveChart.qml
 msgid "Use the arrow keys to inspect chart points"
 msgstr ""
@@ -237,14 +198,17 @@ msgid "min"
 msgstr ""
 
 #: contents/ui/components/ProjectCostSection.qml
+#: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
 msgid "Cost unavailable"
 msgstr ""
 
 #: contents/ui/components/ProjectCostSection.qml
+#: contents/ui/components/ProviderCostSection.qml
 msgid "Tokens unavailable"
 msgstr ""
 
-#: contents/ui/components/ProjectCostSection.qml contents/ui/main.qml
+#: contents/ui/components/ProjectCostSection.qml
+#: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
 msgid "%1 tokens"
 msgstr ""
 
@@ -284,6 +248,83 @@ msgstr ""
 
 #: contents/ui/components/ProviderConfigRow.qml
 msgid "Enable %1"
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/SpendView.qml contents/ui/main.qml
+msgid "Cost"
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/SpendView.qml contents/ui/main.qml
+msgid "Tokens"
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/SpendView.qml
+msgid "History metric"
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Cost unavailable: %1"
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
+msgid "Today"
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/SpendView.qml
+msgid "Daily cost history"
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/SpendView.qml
+msgid "Daily token history"
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/SpendView.qml contents/ui/configGeneral.qml
+#: contents/ui/main.qml
+msgid "%1 day"
+msgid_plural "%1 days"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Hide details"
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Show details"
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Cost details"
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Details for %1"
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "All days"
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
+msgid "No model breakdown for this day."
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Model breakdown is partial."
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Models"
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Cost history"
 msgstr ""
 
 #: contents/ui/components/ProviderDetailSection.qml
@@ -328,20 +369,12 @@ msgstr ""
 msgid "90 days"
 msgstr ""
 
-#: contents/ui/components/SpendView.qml contents/ui/main.qml
-msgid "Tokens"
-msgstr ""
-
 #: contents/ui/components/SpendView.qml
 msgid "Refresh local history"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
 msgid "History"
-msgstr ""
-
-#: contents/ui/components/SpendView.qml
-msgid "History metric"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
@@ -1571,10 +1604,6 @@ msgid "%1 day ago"
 msgid_plural "%1 days ago"
 msgstr[0] ""
 msgstr[1] ""
-
-#: contents/ui/main.qml
-msgid "Today"
-msgstr ""
 
 #: contents/ui/main.qml
 msgid "Last 30 days"

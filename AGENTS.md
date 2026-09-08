@@ -283,6 +283,14 @@ replace a host CLI.
   same `cost` payload; never add a CLI call for the metric, and keep the bar
   scale reading the selected metric. `historyCoverageIsEstablished` drives the
   "still collecting" note, and a missing flag counts as established.
+- Popup cost summary and per-day models are **Plasma-native and implemented**.
+  Today and the selected period appear side by side; history, period models,
+  and projects expand on demand. Cost errors and trust notices stay visible.
+  Chart inspection uses the existing `cost.daily[].modelBreakdowns` payload,
+  retaining at most six model rows per day and reporting truncation. Missing
+  amounts remain unknown, and missing daily models never fall back to period
+  totals. Selecting a day or metric must not fetch data. Standard/Fast totals
+  remain **blocked on an official CLI contract**; no service tier is inferred.
 - CLI 0.56.2 cost `coverage` counters and `provenance` are normalized by
   `ProviderNormalizer.normalizeCostTrustMetadata`; provider and global totals
   use `CostPresentation.costTrustSummary` to qualify estimated, partial, or

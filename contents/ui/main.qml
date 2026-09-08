@@ -1406,12 +1406,20 @@ PlasmoidItem {
             trust: trust
         }])
         var valueMode = trustSummary ? trustSummary.valueMode : "plain"
+        var todayTokens = Normalizer.strictFiniteNumber(item.sessionTokens)
         return {
             provider: providerID,
             historyDays: historyDays,
             // Older payloads omit the flag; absent means "do not warn".
             historyCoverageEstablished: item.historyCoverageIsEstablished !== false,
             trust: trust,
+            valueMode: valueMode,
+            windowLabel: windowLabel,
+            today: {
+                cost: Normalizer.normalizeProviderCostAmount(providerID, item.sessionCostUSD),
+                tokens: isFinite(todayTokens) ? Math.max(0, todayTokens) : null,
+                currency: currency
+            },
             title: i18n("Cost"),
             // Top-level coverage/provenance describes the requested history
             // window, not the independently emitted current-session figure.
