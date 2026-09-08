@@ -34,6 +34,8 @@ Reconcile related issue progress; TODO.md is only a link to the work tracker. --
 <!--
 List each command or manual check and its result. Run `make check` before opening
 the pull request. If a check failed, was skipped, or was unavailable, say why.
+Summarize the dependent updates checked under docs/development.md#repository-maintenance
+and identify any unresolved inconsistency and its tracking issue.
 -->
 
 - `make check`: ...

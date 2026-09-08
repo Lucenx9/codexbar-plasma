@@ -105,6 +105,11 @@ or **macOS-only/non-goal**. Screenshots and Swift models are not CLI contracts.
 
 ## Verification and delivery
 
+- Own consistency across the repository, without user reminders. For every
+  change, follow [repository maintenance](docs/development.md#repository-maintenance)
+  before editing and before delivery. A task is complete only when affected
+  code, configuration, tests, tooling, translations, metadata, documentation,
+  and work tracking agree with the delivered behavior.
 - Run the narrowest relevant check while iterating, then `make check` before
   handing off any repository change. It includes QML lint/QtTests, ShellCheck,
   Python/static checks, and AppStream metadata validation.

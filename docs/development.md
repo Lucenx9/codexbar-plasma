@@ -291,9 +291,40 @@ If a KDE Store channel is introduced, use its KNewStuff/Discover update path for
 that channel. WidgetKit, Sparkle, Keychain/Full Disk Access UI, and macOS app
 implementation code remain outside this standalone Plasma repository.
 
+## Repository maintenance
+
+The agent owns repository consistency in every task. Include dependent updates
+in the same change, without waiting for the user to name each file.
+
+Before editing, trace the affected behavior through its callers, configuration,
+tests and fixtures, scripts, CI workflows, packaging and metadata, translations,
+documentation and examples, and related issues. Inspect the relevant files;
+filename searches alone do not establish whether a dependency is affected.
+
+Before delivery, review the final diff and search for old names, paths, commands,
+defaults, and claims affected by the change. Update each dependent reference or
+confirm that it remains valid. Regenerate affected tracked outputs through their
+existing generators. Remove obsolete references when replacing an interface;
+preserve compatibility requirements and pinned historical evidence.
+
+Fix stale material discovered during the task when the correction is clear,
+safe, and within scope. If it needs a separate decision, external contract, or
+substantial unrelated work, record the evidence and remaining work in an existing
+or new issue under the publication rules in AGENTS.md. Report the exact blocker
+when issue publication is not authorized. Complete independent work and make any
+unresolved inconsistency explicit at handoff.
+
+Completion requires consistent affected files, the applicable checks below, and
+accurate issue status after delivery. Passing tests alone does not establish
+consistency. In the PR verification section or direct commit body, summarize the
+dependent updates and any unresolved gaps. Version and dependency changes need
+compatibility evidence; bump versions only as part of their actual update or
+release workflow. A date change alone is not maintenance.
+
 ## Documentation and work tracking
 
-The agent owns these steps as part of the change, including direct commits
+These steps cover documentation and issues within
+[repository maintenance](#repository-maintenance), including direct commits
 authorized by the user. Do not wait for a separate documentation request.
 
 1. Before editing, inspect the relevant current guides, pinned contract evidence,
