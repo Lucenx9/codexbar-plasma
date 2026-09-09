@@ -2293,12 +2293,17 @@ if unprimed_index < 0 or worsened_index < 0 or unprimed_index > worsened_index:
 select_account_body = function_body(main_text, "selectAccount")
 pending_index = select_account_body.find("setNotificationProviderRefreshPending(key, true)")
 snapshot_index = select_account_body.find("replaceProviderSnapshot(key, options[i])")
-refresh_index = select_account_body.find("Qt.callLater(refreshNow)", snapshot_index)
+refresh_index = select_account_body.find("scheduleUsageRefresh()", snapshot_index)
 return_index = select_account_body.find("return", snapshot_index)
 if pending_index < 0 or snapshot_index < 0 or pending_index > snapshot_index:
     raise AssertionError("selectAccount must suppress cached snapshots until fresh usage data arrives")
 if refresh_index < 0 or return_index < 0 or refresh_index > return_index:
     raise AssertionError("selectAccount must schedule a fresh usage request before returning a cached snapshot")
+if "Qt.callLater(refreshNow)" in select_account_body:
+    raise AssertionError(
+        "selectAccount must schedule refreshes through scheduleUsageRefresh; a direct callLater(refreshNow) "
+        "double-starts the usage command when the selectedAccounts write already changed commandSource"
+    )
 for caller in ("parseOutput", "finishProviderFallback"):
     if "commitUsageSnapshot(nextProviders)" not in function_body(main_text, caller):
         raise AssertionError(f"{caller} must commit usage through the shared cache boundary")

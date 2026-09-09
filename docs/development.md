@@ -199,6 +199,11 @@ Read its output for tool failures and skips. CI uses the pinned Plasma image in
 QtTests configured to reject skips. A local machine missing QML modules may
 provide less coverage; report what actually ran.
 
+`tests/test_account_refresh.py` runs the production account-selection functions
+and command binding in Qt's event loop. It counts refresh requests for cached
+and uncached accounts in single-provider and aggregate modes; CLI effects are
+replaced by observations at the refresh boundary.
+
 `make check` disables unqualified-name warnings because Plasma injects helpers
 such as `i18n()` as context properties. It validates AppStream metadata when
 `kpackagetool6` is available and reports a skip otherwise. On older local Plasma

@@ -76,6 +76,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Corrected quota and plan labels, login actions, and settings wording across
   the five translations. The Brazilian Portuguese panel style is now translated,
   and French and Spanish pace percentages use consistent spacing.
+- Switching the account of the configured provider no longer starts a usage
+  command twice in a row, discarding the first run immediately.
+- Provider settings descriptors whose schema version is not exactly the
+  supported number stay unsupported instead of being accepted through type
+  coercion, and malformed quota-threshold inputs keep their documented
+  fallbacks instead of collapsing to a 1% warning for every provider.
 
 ## 0.2.35 - 2026-09-08
 
