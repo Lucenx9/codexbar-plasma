@@ -21,9 +21,10 @@ sit beside primary and secondary quota capsules. Choose the appearance in
 | **Usage & Spend** | **Provider details** |
 | [![Thirty days of spending and activity across providers](docs/codexbar-plasma-usage-spend.png)](docs/codexbar-plasma-usage-spend.png) | [![Codex quotas, reset windows, and daily cost history](docs/codexbar-plasma-codex.png)](docs/codexbar-plasma-codex.png) |
 
-Click an image for full size. Panel captures show the upcoming capsule design;
-popup captures show version 0.2.34. All use Breeze Dark with synthetic data. The widget follows your Plasma theme; provider
-accent colors stay consistent across themes.
+Click an image for full size. Panel captures show the capsule design released in
+0.2.36; popup captures show version 0.2.34. All use Breeze Dark with synthetic
+data. The widget follows your Plasma theme; provider accent colors stay
+consistent across themes.
 
 ## Features
 

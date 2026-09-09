@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.36 - 2026-09-09
+
 ### Added
 
 - Last-known quota recovery after failed refreshes and Plasma restarts, with
@@ -28,13 +30,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Default panel order groups optional text with the selected provider's capsules,
   using one logo. Hidden or unavailable meters retain a separate text identity;
   custom element orders keep their independent positions.
-
 - Panel meters place a small provider icon beside primary and secondary quota
   capsules, with matching geometry in colored Standard and monochrome Minimal.
   Meters now work in vertical panels. Explicit quota choices still show one
   capsule; visibility conditions accept either displayed quota. Tooltip and
   accessibility descriptions report both quotas and resets.
-
 - Linux parity work is maintained in TODO.md, with agent review of each stable
   upstream release and updates in the PR that implements a feature.
 - Reorganized installation and troubleshooting instructions, with dedicated
@@ -75,7 +75,6 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   for grouped text.
 - The settings preview now renders quota capsules from its synthetic data after
   QML converts provider records for delegates.
-
 - Credit balances that round up to a whole number no longer keep a trailing
   ".0" (99.95 credits read as "100"), and huge magnitudes no longer gain a
   bogus group separator.
@@ -90,6 +89,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   supported number stay unsupported instead of being accepted through type
   coercion, and malformed quota-threshold inputs keep their documented
   fallbacks instead of collapsing to a 1% warning for every provider.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.35...v0.2.36)
 
 ## 0.2.35 - 2026-09-08
 
