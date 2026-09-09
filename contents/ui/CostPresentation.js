@@ -77,12 +77,15 @@ function groupedDecimalString(fmt, value, digits) {
     var decPoint = typeof f.decimal === "string" ? f.decimal : "."
     var parts = Math.abs(numeric).toFixed(digits).split(".")
     var whole = parts[0]
-    var grouped = ""
-    for (var i = 0; i < whole.length; i++) {
-        if (i > 0 && (whole.length - i) % 3 === 0) {
-            grouped += groupSep
+    var len = whole.length
+    var grouped = whole
+    if (len > 3) {
+        var firstLen = len % 3 || 3
+        var chunks = [whole.slice(0, firstLen)]
+        for (var i = firstLen; i < len; i += 3) {
+            chunks.push(whole.slice(i, i + 3))
         }
-        grouped += whole.charAt(i)
+        grouped = chunks.join(groupSep)
     }
     return parts.length > 1 ? grouped + decPoint + parts[1] : grouped
 }
