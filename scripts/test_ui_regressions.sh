@@ -392,7 +392,7 @@ assert_form_sections(
     ("Usage details", "Popup"),
 )
 
-assert_form_sections(panel_surface.text, "configPanel.qml", ("Panel", "Panel visibility"))
+assert_form_sections(panel_surface.text, "configPanel.qml", ("Appearance", "Contents", "Panel visibility"))
 assert_form_sections(notifications_surface.text, "configNotifications.qml", ("Quota warnings", "Notifications"))
 assert_form_sections(diagnostics_text, "configDiagnostics.qml", ("Connection", "Advanced provider override"))
 
@@ -1157,7 +1157,7 @@ for mouse_id in ("compactStatusMouse", "heatmapMouse"):
         raise AssertionError(f"{mouse_id} must not consume clicks")
 for vertical_fragment in (
     "readonly property bool verticalPanel: applet.verticalFormFactor",
-    "!hasProviderMeters || (!verticalPanel && primaryText.length > 0)",
+    "!hasProviderMeters\n        || (!verticalPanel && primaryText.length > 0 && !inlinePrimaryText)",
     "columns: compactRoot.verticalPanel ? 1 : -1",
     "!compactRoot.verticalPanel",
 ):

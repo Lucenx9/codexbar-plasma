@@ -64,3 +64,40 @@ The [PR #162 verification](https://github.com/Lucenx9/codexbar-plasma/pull/162)
 records executed tests. The synthetic OpenGL
 [captures and review notes](https://github.com/Lucenx9/codexbar-plasma/tree/92679f99ce5d5479f4f87edde051fff91e30b91f/docs/settings/2026-09-08)
 remain available in Git history.
+
+## Panel disclosure refinement
+
+The follow-up against Plasma `d09e5b6` keeps the six-page structure and existing
+configuration keys. Appearance and meters remain visible. Additional information
+holds provider name, usage text and format, credits, and the monochrome preset.
+The closed summary lists enabled information. Text format appears only when usage
+text is enabled. A separate collapsed section contains quota,
+order, visibility conditions, and automatic provider selection. Its summary
+identifies effective non-default choices without discarding hidden preferences.
+The section is named "Quota, order and visibility" so its contents are predictable.
+
+This follows [KDE's progressive disclosure guidance](https://develop.kde.org/hig/powerful_when_needed/)
+and [input-control guidance](https://develop.kde.org/hig/getting_input/).
+Standard and Minimal use native radio buttons with descriptions. The existing
+preset still selects monochrome styling, enables meters, and hides text; its
+new label states those effects. Controls respond immediately, and expanding the
+section introduces no animation or configuration write.
+
+The live preview resolves a Repeater provider back to its synthetic source before
+selecting quota rows. Qt can expose nested delegate arrays as sequence wrappers;
+those must not make the pure array-based quota selector omit real preview data.
+This changes no CLI parsing or live provider normalization.
+
+With the default element order, the selected provider's optional text follows its
+capsules inside the same clickable group. This removes the repeated provider logo
+seen at `6addadd`. Other providers retain their icon and capsules. A custom order
+preserves independently positioned elements; if the selected meter is filtered
+out, unavailable, or leaves no grouped-text width, standalone text keeps its identity. Both styles share the
+layout and preserve quota warnings, keyboard activation, and bounded text width.
+
+The element-order layout has a plain Item boundary. FormLayout reads its cached
+implicit dimensions instead of querying the dynamic layout's attached minimum
+sizes while Repeater delegates are rebuilt. A debugger reproduced a Qt 6.11.1
+crash in `QQuickLayout::effectiveSizePolicy_helper` during layout polish without
+this boundary; repeated advanced-settings captures pass with it. Keyboard focus
+and row geometry remain covered by the native settings test.

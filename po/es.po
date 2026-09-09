@@ -553,28 +553,8 @@ msgid "Panel"
 msgstr "Panel"
 
 #: contents/ui/configPanel.qml
-msgid "Show provider name in panel"
-msgstr "Mostrar el nombre del proveedor en el panel"
-
-#: contents/ui/configPanel.qml
-msgid "Show usage text in panel"
-msgstr "Mostrar el texto de uso en el panel"
-
-#: contents/ui/configPanel.qml
-msgid "Show provider meters in panel"
-msgstr "Mostrar indicadores de proveedores en el panel"
-
-#: contents/ui/configPanel.qml
-msgid "Show credits in panel"
-msgstr "Mostrar los créditos en el panel"
-
-#: contents/ui/configPanel.qml
 msgid "Auto-select highest-usage provider"
 msgstr "Seleccionar automáticamente el proveedor con mayor uso"
-
-#: contents/ui/configPanel.qml
-msgid "Usage text is available only in horizontal panels. Provider meters also work in vertical panels."
-msgstr "El texto de uso solo está disponible en paneles horizontales. Los indicadores de proveedores también funcionan en paneles verticales."
 
 #: contents/ui/configPanel.qml
 msgid "Panel quota:"
@@ -599,10 +579,6 @@ msgstr "Terciaria"
 #: contents/ui/configPanel.qml
 msgid "Automatic meters show primary and secondary quotas. Choose a quota to show one capsule. Unavailable quotas are omitted."
 msgstr "Los indicadores automáticos muestran las cuotas primaria y secundaria. Elija una cuota para mostrar una sola cápsula. Se omiten las cuotas no disponibles."
-
-#: contents/ui/configPanel.qml
-msgid "Panel text:"
-msgstr "Texto del panel:"
 
 #: contents/ui/configPanel.qml
 msgid "Percent used"
@@ -2288,20 +2264,6 @@ msgstr "Estilo del panel:"
 msgid "Minimal"
 msgstr "Mínimo"
 
-#: contents/ui/configPanel.qml
-msgid "Minimal uses monochrome icons and capsule meters. Quota warnings keep their warning colors."
-msgstr "Minimal usa iconos e indicadores en forma de cápsula monocromáticos. Los avisos de cuota conservan sus colores."
-
-#: contents/ui/configPanel.qml
-msgid "Use minimal preset"
-msgstr "Usar el preajuste mínimo"
-
-#: contents/ui/configPanel.qml
-msgid ""
-"The preset enables provider meters and hides provider names, usage text and "
-"credits in the panel."
-msgstr "El preajuste activa los indicadores de proveedores y oculta sus nombres, el texto de uso y los créditos en el panel."
-
 #: contents/ui/configProviders.qml
 msgid "All providers"
 msgstr "Todos los proveedores"
@@ -2529,3 +2491,86 @@ msgstr "Último uso conocido, hace %1"
 #: contents/ui/main.qml
 msgid "Cached usage has expired. Refresh to try again."
 msgstr "Los datos de uso guardados han caducado. Actualice para volver a intentarlo."
+
+#: contents/ui/configPanel.qml
+msgid "Quota: %1"
+msgstr "Cuota: %1"
+
+#: contents/ui/configPanel.qml
+msgid "Custom element order"
+msgstr "Orden de elementos personalizado"
+
+#: contents/ui/configPanel.qml
+msgid "%1 visibility rule"
+msgid_plural "%1 visibility rules"
+msgstr[0] "%1 regla de visibilidad"
+msgstr[1] "%1 reglas de visibilidad"
+
+#: contents/ui/configPanel.qml
+msgid "Highest-usage provider selected automatically"
+msgstr "Selección automática del proveedor con mayor uso"
+
+#: contents/ui/configPanel.qml
+msgid "Automatic quotas, default order, no conditions"
+msgstr "Cuotas automáticas, orden predeterminado, sin condiciones"
+
+#: contents/ui/configPanel.qml
+msgid "Appearance"
+msgstr "Aspecto"
+
+#: contents/ui/configPanel.qml
+msgid "Colored provider icons"
+msgstr "Iconos de proveedores en color"
+
+#: contents/ui/configPanel.qml
+msgid "Monochrome provider icons"
+msgstr "Iconos de proveedores monocromáticos"
+
+#: contents/ui/configPanel.qml
+msgid "Quota capsules keep their warning colors in both styles."
+msgstr "Los indicadores de cuota conservan sus colores de advertencia en ambos estilos."
+
+#: contents/ui/configPanel.qml
+msgid "Contents"
+msgstr "Contenido"
+
+#: contents/ui/configPanel.qml
+msgid "Use monochrome icons and meters only"
+msgstr "Usar solo iconos monocromáticos e indicadores"
+
+#: contents/ui/configPanel.qml
+msgid "Quota, order and visibility"
+msgstr "Cuota, orden y visibilidad"
+
+#: contents/ui/configPanel.qml
+msgid "Collapse options. %1"
+msgstr "Contraer opciones. %1"
+
+#: contents/ui/configPanel.qml
+msgid "Expand options. %1"
+msgstr "Expandir opciones. %1"
+
+
+#: contents/ui/configPanel.qml
+msgid "Provider name"
+msgstr "Nombre del proveedor"
+
+#: contents/ui/configPanel.qml
+msgid "Provider name, usage text and credits are hidden"
+msgstr "Nombre del proveedor, texto de uso y créditos ocultos"
+
+#: contents/ui/configPanel.qml
+msgid "Additional information"
+msgstr "Información adicional"
+
+#: contents/ui/configPanel.qml
+msgid "For the selected provider, in horizontal panels."
+msgstr "Para el proveedor seleccionado, en paneles horizontales."
+
+#: contents/ui/configPanel.qml
+msgid "Text format:"
+msgstr "Formato del texto:"
+
+#: contents/ui/configPanel.qml
+msgid "The default order groups text with its provider's meters. Custom orders place them separately."
+msgstr "El orden predeterminado agrupa el texto con los indicadores de su proveedor. Los órdenes personalizados los colocan por separado."

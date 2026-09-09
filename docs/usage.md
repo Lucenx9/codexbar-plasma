@@ -18,10 +18,19 @@ work and upstream contract requirements.
   neither primary nor secondary has a percentage, the existing automatic
   preference supplies one available fallback quota.
 - Provider meters work in horizontal and vertical panels. Names, usage text,
-  and credit text remain horizontal-only. Click a provider's icon or capsules,
+  and credit text remain horizontal-only. Click a provider's icon, capsules, or grouped text,
   or activate it with the keyboard, to open its detail tab. Tooltips and
   accessible descriptions identify the displayed quotas and their values.
-- **Use minimal preset** enables provider meters, including with a single
+- With the default element order, optional text sits after the selected
+  provider's capsules in one group, with a single logo. The other providers keep
+  their own icon and capsules. If that provider's meters are hidden or unavailable,
+  or leave no room for grouped text, its text keeps a separate identity. Custom element orders retain independent
+  identity, status, text, and meter positions. Long text is elided to fit the panel.
+
+  ![Optional usage text beside its provider’s quota capsules](codexbar-plasma-panel-information.png)
+
+- **Use monochrome icons and meters only** in **Additional information** selects
+  Minimal and enables provider meters, including with a single
   provider, and hides panel names, usage text and credits. The style selector
   changes appearance alone. Existing installations keep their style, explicit
   quota choice, and visibility settings. Automatic meters gain the second quota
@@ -35,7 +44,7 @@ work and upstream contract requirements.
   and a run-out forecast that shows the predicted duration only while the CLI
   expects the quota to run out before its reset.
 - Choose the automatic, primary, secondary, or tertiary quota for panel text and
-  meters in **Panel** settings. An explicit primary, secondary, or tertiary
+  meters in **Panel → Quota, order and visibility**. An explicit primary, secondary, or tertiary
   choice shows one capsule. Automatic text and popup tabs retain their existing
   quota preference; automatic capsules use the pair described above.
 - Set independent visibility conditions for the full panel text and each
@@ -177,6 +186,17 @@ fields; track proposed extensions in the issue tracker.
 - Six settings pages: **General**, **Providers**, **Panel**, **Popup**,
   **Notifications**, and **Diagnostics**. CLI path and provider/source overrides
   sit beside redacted diagnostics; quota thresholds sit beside their alerts.
+- **Panel** starts with the preview, side-by-side Standard/Minimal choices, and
+  provider meters. **Additional information** contains the selected provider's
+  name, usage text, credit balance, and the monochrome preset. Its closed summary
+  lists enabled information. Text format appears only when usage text is enabled;
+  hiding controls preserves their selected values. These additions work in
+  horizontal panels; meters also work in vertical panels.
+- **Quota, order and visibility** expands the quota selector, element order,
+  visibility conditions, and automatic provider selection. It starts collapsed
+  whenever the page opens. Its summary lists non-default quota/order choices,
+  configured conditions, and automatic selection even while collapsed. Opening
+  or closing it never changes saved or pending preferences.
 - A live **Panel** preview uses example data and the actual panel renderer.
   Try normal usage, near-limit usage, a service incident, or missing data before
   applying changes. The preview never fetches usage or changes saved settings.
@@ -219,7 +239,7 @@ and 95% critical thresholds. Reset notifications are off until enabled.
 | Widget updates | Check and notify every 24 hours; automatic installation off |
 | Panel appearance | Standard style with colored provider icons and automatic quota capsules, including a single provider |
 | Extra panel content | Provider names, usage text and credit balances off |
-| Panel element order | Identity, service status, usage text, meters, respecting visibility settings |
+| Panel element order | Default grouping of selected text with its meters; custom orders retain separate elements |
 | Panel quota and visibility | Automatic quota pair for meters and automatic text quota; enabled elements always visible |
 | Provider selection | Keep the selected provider; automatic highest-usage selection off |
 | Popup navigation | Tab text labels on; provider order from the CLI |

@@ -37,6 +37,36 @@ KCM.SimpleKCM {
     readonly property var presentationConfig: Plasmoid.configuration || ({})
     readonly property bool usageBarsShowUsed: presentationConfig.usageBarsShowUsed !== false
 
+    property bool additionalExpanded: false
+    readonly property string additionalSummary: {
+        var parts = []
+        if (cfg_showProviderInPanel) parts.push(i18n("Provider name"))
+        if (cfg_showPercentInPanel) parts.push(displayModeCombo.currentText)
+        if (cfg_showCreditsInPanel) parts.push(i18n("Credits"))
+        return parts.length > 0 ? parts.join(" · ") : i18n("Provider name, usage text and credits are hidden")
+    }
+
+    property bool advancedExpanded: false
+    readonly property string advancedSummary: {
+        var parts = []
+        if (PanelDisplay.safeLane(cfg_panelQuotaLane) !== "auto") {
+            parts.push(i18n("Quota: %1", panelQuotaCombo.currentText))
+        }
+        if (PanelElements.normalizedOrder(cfg_panelElementOrder).join(",") !== PanelElements.defaultOrder.join(",")) {
+            parts.push(i18n("Custom element order"))
+        }
+        var ruleCount = (panelVisibilityRules.text.condition !== "always" ? 1 : 0)
+            + (panelVisibilityRules.meters.condition !== "always" ? 1 : 0)
+        if (ruleCount > 0) {
+            parts.push(i18np("%1 visibility rule", "%1 visibility rules", ruleCount))
+        }
+        if (cfg_autoSelectProvider) {
+            parts.push(i18n("Highest-usage provider selected automatically"))
+        }
+        return parts.length > 0 ? parts.join(" · ")
+            : i18n("Automatic quotas, default order, no conditions")
+    }
+
     function displayModeIndex(value) {
         for (var i = 0; i < displayModeCombo.model.length; i++) {
             if (displayModeCombo.model[i].value === value) {
@@ -132,275 +162,411 @@ KCM.SimpleKCM {
         }
 
         Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Panel")
+            Kirigami.FormData.label: i18n("Appearance")
             Kirigami.FormData.isSection: true
         }
 
-        Controls.ComboBox {
-            id: panelStyleCombo
-            objectName: "panelStyleCombo"
+        Controls.ButtonGroup {
+            buttons: [standardStyleButton, minimalStyleButton]
+        }
+
+        GridLayout {
             Kirigami.FormData.label: i18n("Panel style:")
-            textRole: "text"
-            valueRole: "value"
-            model: [
-                {text: i18n("Standard"), value: "standard"},
-                {text: i18n("Minimal"), value: "minimal"}
-            ]
-            currentIndex: page.cfg_panelStyle === "minimal" ? 1 : 0
-            onActivated: function(index) { page.cfg_panelStyle = valueAt(index) }
+            Kirigami.FormData.labelAlignment: Qt.AlignTop
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            columns: width >= Kirigami.Units.gridUnit * 20 ? 2 : 1
+            columnSpacing: Kirigami.Units.largeSpacing
+            rowSpacing: Kirigami.Units.smallSpacing
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 0
+
+                Controls.RadioButton {
+                    id: standardStyleButton
+                    objectName: "panelStandardStyle"
+                    text: i18n("Standard")
+                    checked: page.cfg_panelStyle !== "minimal"
+                    Accessible.description: i18n("Colored provider icons")
+                    onClicked: page.cfg_panelStyle = "standard"
+                    Keys.onRightPressed: {
+                        page.cfg_panelStyle = "minimal"
+                        minimalStyleButton.forceActiveFocus(Qt.TabFocusReason)
+                    }
+                    Keys.onDownPressed: {
+                        page.cfg_panelStyle = "minimal"
+                        minimalStyleButton.forceActiveFocus(Qt.TabFocusReason)
+                    }
+                }
+                Components.PlainControlsLabel {
+                    Layout.fillWidth: true
+                    text: i18n("Colored provider icons")
+                    font: Kirigami.Theme.smallFont
+                    wrapMode: Text.WordWrap
+                }
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 0
+
+                Controls.RadioButton {
+                    id: minimalStyleButton
+                    objectName: "panelMinimalStyle"
+                    text: i18n("Minimal")
+                    checked: page.cfg_panelStyle === "minimal"
+                    Accessible.description: i18n("Monochrome provider icons")
+                    onClicked: page.cfg_panelStyle = "minimal"
+                    Keys.onLeftPressed: {
+                        page.cfg_panelStyle = "standard"
+                        standardStyleButton.forceActiveFocus(Qt.TabFocusReason)
+                    }
+                    Keys.onUpPressed: {
+                        page.cfg_panelStyle = "standard"
+                        standardStyleButton.forceActiveFocus(Qt.TabFocusReason)
+                    }
+                }
+                Components.PlainControlsLabel {
+                    Layout.fillWidth: true
+                    text: i18n("Monochrome provider icons")
+                    font: Kirigami.Theme.smallFont
+                    wrapMode: Text.WordWrap
+                }
+            }
         }
 
         Components.PlainControlsLabel {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: i18n("Minimal uses monochrome icons and capsule meters. Quota warnings keep their warning colors.")
+            text: i18n("Quota capsules keep their warning colors in both styles.")
             font: Kirigami.Theme.smallFont
             wrapMode: Text.WordWrap
         }
 
-        Components.PlainButton {
-            objectName: "minimalPanelPresetButton"
-            plainText: i18n("Use minimal preset")
-            onClicked: page.applyMinimalPanelPreset()
-        }
-
-        Components.PlainControlsLabel {
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: i18n("The preset enables provider meters and hides provider names, usage text and credits in the panel.")
-            font: Kirigami.Theme.smallFont
-            wrapMode: Text.WordWrap
-        }
-
-        Controls.CheckBox {
-            id: showProviderCheck
-            Layout.fillWidth: true
-            text: i18n("Show provider name in panel")
-        }
-
-        Controls.CheckBox {
-            id: showPercentCheck
-            Layout.fillWidth: true
-            text: i18n("Show usage text in panel")
-        }
-
-        Controls.CheckBox {
-            id: showCreditsCheck
-            Layout.fillWidth: true
-            text: i18n("Show credits in panel")
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Contents")
+            Kirigami.FormData.isSection: true
         }
 
         Controls.CheckBox {
             id: showMultiProviderCheck
             Layout.fillWidth: true
-            text: i18n("Show provider meters in panel")
+            text: i18n("Provider meters")
         }
 
-        Controls.CheckBox {
-            id: autoSelectProviderCheck
-            Layout.fillWidth: true
-            text: i18n("Auto-select highest-usage provider")
-        }
-
-        Components.PlainControlsLabel {
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: i18n("Usage text is available only in horizontal panels. Provider meters also work in vertical panels.")
-            font: Kirigami.Theme.smallFont
-            opacity: 0.7
-            wrapMode: Text.WordWrap
-        }
-
-        Controls.ComboBox {
-            id: panelQuotaCombo
-            objectName: "panelQuotaCombo"
-            Kirigami.FormData.label: i18n("Panel quota:")
-            textRole: "text"
-            valueRole: "value"
-            model: [
-                {text: i18n("Automatic"), value: "auto"},
-                {text: i18n("Primary"), value: "primary"},
-                {text: i18n("Secondary"), value: "secondary"},
-                {text: i18n("Tertiary"), value: "tertiary"}
-            ]
-            currentIndex: ["auto", "primary", "secondary", "tertiary"].indexOf(PanelDisplay.safeLane(page.cfg_panelQuotaLane))
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 12
-            enabled: showProviderCheck.checked || showPercentCheck.checked
-                || showCreditsCheck.checked || showMultiProviderCheck.checked
-            onActivated: function(index) { page.cfg_panelQuotaLane = valueAt(index) }
+        Components.PlainButton {
+            objectName: "panelAdditionalButton"
+            plainText: i18n("Additional information")
+            icon.name: page.additionalExpanded ? "arrow-down" : (LayoutMirroring.enabled ? "arrow-left" : "arrow-right")
+            checkable: true
+            checked: page.additionalExpanded
+            onToggled: page.additionalExpanded = checked
+            Accessible.description: page.additionalExpanded
+                ? i18n("Collapse options. %1", page.additionalSummary)
+                : i18n("Expand options. %1", page.additionalSummary)
         }
 
         Components.PlainControlsLabel {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: i18n("Automatic meters show primary and secondary quotas. Choose a quota to show one capsule. Unavailable quotas are omitted.")
+            text: page.additionalSummary
+            visible: !page.additionalExpanded
             font: Kirigami.Theme.smallFont
-            opacity: 0.7
             wrapMode: Text.WordWrap
         }
 
-        Controls.ComboBox {
-            id: displayModeCombo
-            Kirigami.FormData.label: i18n("Panel text:")
-            textRole: "text"
-            valueRole: "value"
-            model: [
-                {
-                    text: page.usageBarsShowUsed
-                        ? i18n("Percent used")
-                        : i18n("Percent left"),
-                    value: PanelDisplay.percentMode,
-                    description: ""
-                },
-                {
-                    text: i18n("Pace"), value: PanelDisplay.paceMode,
-                    description: i18n("Shows the expected used or left percentage at this point in the window.")
-                },
-                {
-                    text: i18n("Usage and pace"), value: PanelDisplay.bothMode,
-                    description: i18n("Shows current usage alongside the expected used or left percentage.")
-                },
-                {
-                    text: i18n("Reset time"), value: PanelDisplay.resetTimeMode,
-                    description: i18n("Appears when the provider supplies a reset time.")
-                },
-                {
-                    text: i18n("Run-out forecast"), value: PanelDisplay.runOutMode,
-                    description: i18n("Appears only when the quota is forecast to run out before reset.")
-                }
-            ]
-            enabled: showPercentCheck.checked
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 12
-            onModelChanged: currentIndex = page.displayModeIndex(page.cfg_menuBarDisplayMode)
-            Component.onCompleted: currentIndex = page.displayModeIndex(page.cfg_menuBarDisplayMode)
-            onActivated: page.cfg_menuBarDisplayMode = currentValue
-        }
-
-        Components.PlainControlsLabel {
-            id: displayModeDescription
-
+        Kirigami.FormLayout {
+            objectName: "panelAdditionalOptions"
+            wideMode: false
             Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: displayModeCombo.currentIndex >= 0
-                ? displayModeCombo.model[displayModeCombo.currentIndex].description : ""
-            visible: showPercentCheck.checked && text.length > 0
-            font: Kirigami.Theme.smallFont
-            opacity: 0.7
-            wrapMode: Text.WordWrap
-        }
+            visible: page.additionalExpanded
 
-        ColumnLayout {
-            Kirigami.FormData.label: i18n("Element order:")
-            Kirigami.FormData.labelAlignment: Qt.AlignTop
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            spacing: Kirigami.Units.smallSpacing / 2
+            Components.PlainControlsLabel {
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                text: i18n("For the selected provider, in horizontal panels.")
+                font: Kirigami.Theme.smallFont
+                wrapMode: Text.WordWrap
+            }
 
-            Repeater {
-                id: panelOrderRepeater
+            Controls.CheckBox {
+                id: showProviderCheck
+                Layout.fillWidth: true
+                text: i18n("Provider name")
+            }
 
-                model: PanelElements.normalizedOrder(page.cfg_panelElementOrder)
+            Controls.CheckBox {
+                id: showPercentCheck
+                objectName: "panelUsageTextCheck"
+                Layout.fillWidth: true
+                text: i18n("Usage text")
+            }
 
-                delegate: RowLayout {
-                    required property var modelData
-                    required property int index
-                    readonly property string orderKey: modelData
-                    readonly property Item upButton: panelMoveUp
-                    readonly property Item downButton: panelMoveDown
-                    onYChanged: page.revealFocusedOrderButton(upButton, downButton)
-
-                    Layout.fillWidth: true
-                    spacing: Kirigami.Units.smallSpacing
-
-                    Components.PlainControlsLabel {
-                        text: i18n("%1.", index + 1)
-                        Layout.minimumWidth: Math.max(implicitWidth, Kirigami.Units.iconSizes.small)
-                        opacity: 0.7
+            Controls.ComboBox {
+                id: displayModeCombo
+                objectName: "panelTextMode"
+                visible: showPercentCheck.checked
+                Kirigami.FormData.label: i18n("Text format:")
+                textRole: "text"
+                valueRole: "value"
+                model: [
+                    {
+                        text: page.usageBarsShowUsed
+                            ? i18n("Percent used")
+                            : i18n("Percent left"),
+                        value: PanelDisplay.percentMode,
+                        description: ""
+                    },
+                    {
+                        text: i18n("Pace"), value: PanelDisplay.paceMode,
+                        description: i18n("Shows the expected used or left percentage at this point in the window.")
+                    },
+                    {
+                        text: i18n("Usage and pace"), value: PanelDisplay.bothMode,
+                        description: i18n("Shows current usage alongside the expected used or left percentage.")
+                    },
+                    {
+                        text: i18n("Reset time"), value: PanelDisplay.resetTimeMode,
+                        description: i18n("Appears when the provider supplies a reset time.")
+                    },
+                    {
+                        text: i18n("Run-out forecast"), value: PanelDisplay.runOutMode,
+                        description: i18n("Appears only when the quota is forecast to run out before reset.")
                     }
+                ]
+                enabled: showPercentCheck.checked
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 12
+                onModelChanged: currentIndex = page.displayModeIndex(page.cfg_menuBarDisplayMode)
+                Component.onCompleted: currentIndex = page.displayModeIndex(page.cfg_menuBarDisplayMode)
+                onActivated: page.cfg_menuBarDisplayMode = currentValue
+            }
 
-                    Components.PlainControlsLabel {
-                        text: page.panelElementTitle(modelData)
-                        Layout.fillWidth: true
-                        elide: Text.ElideRight
-                    }
+            Components.PlainControlsLabel {
+                id: displayModeDescription
 
-                    Controls.ToolButton {
-                        id: panelMoveUp
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                text: displayModeCombo.currentIndex >= 0
+                    ? displayModeCombo.model[displayModeCombo.currentIndex].description : ""
+                visible: showPercentCheck.checked && text.length > 0
+                font: Kirigami.Theme.smallFont
+                opacity: 0.7
+                wrapMode: Text.WordWrap
+            }
 
-                        icon.name: "go-up"
-                        enabled: index > 0
-                        Accessible.name: i18n("Move %1 up", page.panelElementTitle(modelData))
+            Controls.CheckBox {
+                id: showCreditsCheck
+                Layout.fillWidth: true
+                text: i18n("Credits")
+            }
 
-                        Components.PlainToolTip {
-                            parent: panelMoveUp
-                            plainText: panelMoveUp.Accessible.name
-                            visible: panelMoveUp.hovered
-                            delay: Kirigami.Units.toolTipDelay
-                        }
-
-                        onClicked: page.movePanelElement(index, -1, visualFocus)
-                    }
-
-                    Controls.ToolButton {
-                        id: panelMoveDown
-
-                        icon.name: "go-down"
-                        enabled: index < PanelElements.defaultOrder.length - 1
-                        Accessible.name: i18n("Move %1 down", page.panelElementTitle(modelData))
-
-                        Components.PlainToolTip {
-                            parent: panelMoveDown
-                            plainText: panelMoveDown.Accessible.name
-                            visible: panelMoveDown.hovered
-                            delay: Kirigami.Units.toolTipDelay
-                        }
-
-                        onClicked: page.movePanelElement(index, 1, visualFocus)
-                    }
-                }
+            Components.PlainButton {
+                objectName: "minimalPanelPresetButton"
+                plainText: i18n("Use monochrome icons and meters only")
+                onClicked: page.applyMinimalPanelPreset()
             }
         }
 
         Kirigami.Separator {
-            Kirigami.FormData.label: i18n("Panel visibility")
             Kirigami.FormData.isSection: true
         }
 
-        Components.PanelRuleEditor {
-            configPage: page
-            elementID: "text"
-            Kirigami.FormData.label: i18n("Show panel text:")
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            enabled: showProviderCheck.checked || showPercentCheck.checked || showCreditsCheck.checked
-        }
-
-        Components.PanelRuleEditor {
-            configPage: page
-            elementID: "meters"
-            Kirigami.FormData.label: i18n("Show each meter:")
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            enabled: showMultiProviderCheck.checked
+        Components.PlainButton {
+            id: advancedButton
+            objectName: "panelAdvancedButton"
+            plainText: i18n("Quota, order and visibility")
+            icon.name: page.advancedExpanded ? "arrow-down" : (LayoutMirroring.enabled ? "arrow-left" : "arrow-right")
+            checkable: true
+            checked: page.advancedExpanded
+            onToggled: page.advancedExpanded = checked
+            Accessible.description: page.advancedExpanded
+                ? i18n("Collapse options. %1", page.advancedSummary)
+                : i18n("Expand options. %1", page.advancedSummary)
         }
 
         Components.PlainControlsLabel {
+            objectName: "panelAdvancedSummary"
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: i18n("A provider meter appears when either displayed quota matches its condition. The text condition also applies to the provider name and credits. Missing data does not satisfy a condition.")
+            text: page.advancedSummary
             font: Kirigami.Theme.smallFont
-            opacity: 0.7
             wrapMode: Text.WordWrap
         }
 
+        Kirigami.FormLayout {
+            objectName: "panelAdvancedOptions"
+            Kirigami.FormData.isSection: true
+            Layout.fillWidth: true
+            visible: page.advancedExpanded
+
+            Controls.ComboBox {
+                id: panelQuotaCombo
+                objectName: "panelQuotaCombo"
+                Kirigami.FormData.label: i18n("Panel quota:")
+                textRole: "text"
+                valueRole: "value"
+                model: [
+                    {text: i18n("Automatic"), value: "auto"},
+                    {text: i18n("Primary"), value: "primary"},
+                    {text: i18n("Secondary"), value: "secondary"},
+                    {text: i18n("Tertiary"), value: "tertiary"}
+                ]
+                currentIndex: ["auto", "primary", "secondary", "tertiary"].indexOf(PanelDisplay.safeLane(page.cfg_panelQuotaLane))
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 12
+                enabled: showProviderCheck.checked || showPercentCheck.checked
+                    || showCreditsCheck.checked || showMultiProviderCheck.checked
+                onActivated: function(index) { page.cfg_panelQuotaLane = valueAt(index) }
+            }
+
+            Components.PlainControlsLabel {
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                text: i18n("Automatic meters show primary and secondary quotas. Choose a quota to show one capsule. Unavailable quotas are omitted.")
+                font: Kirigami.Theme.smallFont
+                opacity: 0.7
+                wrapMode: Text.WordWrap
+            }
+
+            Item {
+                Kirigami.FormData.label: i18n("Element order:")
+                Kirigami.FormData.labelAlignment: Qt.AlignTop
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                // Keep FormLayout from querying a rebuilding Repeater layout's
+                // attached size hints during Qt's layout polish.
+                implicitWidth: panelOrderLayout.implicitWidth
+                implicitHeight: panelOrderLayout.implicitHeight
+
+                ColumnLayout {
+                    id: panelOrderLayout
+                    objectName: "panelOrderLayout"
+                    width: parent.width
+                    spacing: Kirigami.Units.smallSpacing / 2
+
+                    Repeater {
+                        id: panelOrderRepeater
+
+                        model: PanelElements.normalizedOrder(page.cfg_panelElementOrder)
+
+                        delegate: RowLayout {
+                            required property var modelData
+                            required property int index
+                            readonly property string orderKey: modelData
+                            readonly property Item upButton: panelMoveUp
+                            readonly property Item downButton: panelMoveDown
+                            onYChanged: page.revealFocusedOrderButton(upButton, downButton)
+
+                            Layout.fillWidth: true
+                            spacing: Kirigami.Units.smallSpacing
+
+                            Components.PlainControlsLabel {
+                                text: i18n("%1.", index + 1)
+                                Layout.minimumWidth: Math.max(implicitWidth, Kirigami.Units.iconSizes.small)
+                                opacity: 0.7
+                            }
+
+                            Components.PlainControlsLabel {
+                                text: page.panelElementTitle(modelData)
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                            }
+
+                            Controls.ToolButton {
+                                id: panelMoveUp
+
+                                icon.name: "go-up"
+                                enabled: index > 0
+                                Accessible.name: i18n("Move %1 up", page.panelElementTitle(modelData))
+
+                                Components.PlainToolTip {
+                                    parent: panelMoveUp
+                                    plainText: panelMoveUp.Accessible.name
+                                    visible: panelMoveUp.hovered
+                                    delay: Kirigami.Units.toolTipDelay
+                                }
+
+                                onClicked: page.movePanelElement(index, -1, visualFocus)
+                            }
+
+                            Controls.ToolButton {
+                                id: panelMoveDown
+
+                                icon.name: "go-down"
+                                enabled: index < PanelElements.defaultOrder.length - 1
+                                Accessible.name: i18n("Move %1 down", page.panelElementTitle(modelData))
+
+                                Components.PlainToolTip {
+                                    parent: panelMoveDown
+                                    plainText: panelMoveDown.Accessible.name
+                                    visible: panelMoveDown.hovered
+                                    delay: Kirigami.Units.toolTipDelay
+                                }
+
+                                onClicked: page.movePanelElement(index, 1, visualFocus)
+                            }
+                        }
+                    }
+                }
+            }
+
+            Components.PlainControlsLabel {
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                text: i18n("The default order groups text with its provider's meters. Custom orders place them separately.")
+                font: Kirigami.Theme.smallFont
+                wrapMode: Text.WordWrap
+            }
+
+            Kirigami.Separator {
+                Kirigami.FormData.label: i18n("Panel visibility")
+                Kirigami.FormData.isSection: true
+            }
+
+            Components.PanelRuleEditor {
+                configPage: page
+                elementID: "text"
+                Kirigami.FormData.label: i18n("Show panel text:")
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                enabled: showProviderCheck.checked || showPercentCheck.checked || showCreditsCheck.checked
+            }
+
+            Components.PanelRuleEditor {
+                configPage: page
+                elementID: "meters"
+                Kirigami.FormData.label: i18n("Show each meter:")
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                enabled: showMultiProviderCheck.checked
+            }
+
+            Components.PlainControlsLabel {
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                text: i18n("A provider meter appears when either displayed quota matches its condition. The text condition also applies to the provider name and credits. Missing data does not satisfy a condition.")
+                font: Kirigami.Theme.smallFont
+                opacity: 0.7
+                wrapMode: Text.WordWrap
+            }
+
+            Controls.CheckBox {
+                id: autoSelectProviderCheck
+                Layout.fillWidth: true
+                text: i18n("Auto-select highest-usage provider")
+            }
+        }
     }
 }

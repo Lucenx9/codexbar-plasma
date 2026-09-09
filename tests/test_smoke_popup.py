@@ -169,10 +169,12 @@ class SmokePopupTests(unittest.TestCase):
                     smoke.run_preview(command, {}, work, work / "preview.log", "normal", 2)
 
     def test_early_exit_cannot_be_reported_as_a_pass(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            work = Path(temporary)
-            with self.assertRaisesRegex(RuntimeError, "exited before capture"):
-                smoke.run_preview([sys.executable, "-c", "pass"], {}, work, work / "preview.log", "normal", 2)
+        for code in (0, 17):
+            with self.subTest(code=code), tempfile.TemporaryDirectory() as temporary:
+                work = Path(temporary)
+                with self.assertRaisesRegex(RuntimeError, rf"exited before capture \(exit code {code}\)"):
+                    smoke.run_preview([sys.executable, "-c", f"raise SystemExit({code})"],
+                                      {}, work, work / "preview.log", "normal", 2)
 
     def test_timeout_stops_delayed_child_processes(self):
         with tempfile.TemporaryDirectory() as temporary:
