@@ -196,7 +196,7 @@ for function_name in ("buildProviderAccountsCommand", "buildProviderUsageCommand
 
 # The deadline scan moved into CommandLedger.js. Assert that main.qml still
 # hands every overdue command to the timeout handler, and that the scan itself
-# keeps comparing against the recorded deadline.
+# keeps comparing against the recorded deadline with a clock that fails closed.
 require_all(
     applet.function_body("expireCommands"),
     ("CommandLedger.expired(activeCommandDescriptors, nowMs)", "handleCommandTimeout("),
@@ -204,7 +204,7 @@ require_all(
 )
 require_all(
     applet.function_body("expired"),
-    ("Number(entry.deadlineMs)", "nowMs < deadline"),
+    ("Number(entry.deadlineMs)", "Number(nowMs)", "isFinite(now)", "now < deadline"),
     "the ledger deadline scan is incomplete",
 )
 require_all(

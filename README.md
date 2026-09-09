@@ -32,7 +32,8 @@ consistent across themes.
   and popup, with configurable quota warnings and Plasma notifications.
 - Standard and Minimal panel styles with up to two quota capsules per provider,
   horizontal and vertical meters, selectable quota windows, conditional text
-  and meters, and a live settings preview. Optional text sits beside the selected
+  and meters, and a live settings preview that stays visible while scrolling.
+  Optional text sits beside the selected
   provider's capsules with the default order. Panel settings keep appearance and
   meters visible; additional information and quota/order/visibility options expand
   when needed.

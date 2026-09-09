@@ -7,11 +7,13 @@ Rectangle {
 
     required property var applet
     required property string pageSource
+    property int viewportHeight: 0
     readonly property var page: pageLoader.item
     readonly property bool ready: page !== null && (typeof page.providerRosterLoading === "undefined" || !page.providerRosterLoading)
 
     width: 840
-    height: Math.max(600, Math.min(6000, page ? page.flickable.contentHeight + 40 : 600))
+    height: viewportHeight > 0 ? viewportHeight : Math.max(600, Math.min(6000,
+        page ? page.flickable.contentHeight + (page.header ? page.header.height : 0) + 40 : 600))
     color: Kirigami.Theme.backgroundColor
 
     Loader {

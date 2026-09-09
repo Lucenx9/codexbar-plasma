@@ -17,14 +17,16 @@ Item {
     readonly property var incidentProvider: applet.providerPresentation(applet.primaryIncidentProvider())
     readonly property string primaryText: applet.compactText()
     readonly property var selectedProvider: applet.selectedCompactProvider()
-    // A custom order retains the independently positioned identity and text.
+    readonly property bool selectedProviderHasMeter: selectedProvider !== null && selectedProvider !== undefined
+        && meterProviders.some(function(provider) { return provider.provider === selectedProvider.provider })
+    // Independent text still needs its identity when several meters are shown.
     readonly property bool inlinePrimaryText: !verticalPanel && primaryText.length > 0
         && inlineTextWidth > 0
         && applet.panelElementOrder().join(",") === PanelElements.defaultOrder.join(",")
-        && selectedProvider !== null && selectedProvider !== undefined
-        && meterProviders.some(function(provider) { return provider.provider === selectedProvider.provider })
+        && selectedProviderHasMeter
     readonly property bool showPrimaryIdentity: !hasProviderMeters
-        || (!verticalPanel && primaryText.length > 0 && !inlinePrimaryText)
+        || (!verticalPanel && primaryText.length > 0 && !inlinePrimaryText
+            && (meterProviders.length > 1 || !selectedProviderHasMeter))
     readonly property int compactExtent: Kirigami.Units.iconSizes.smallMedium
         + Kirigami.Units.smallSpacing * 2
     readonly property int meterContentHeight: Math.max(0, height - Kirigami.Units.smallSpacing * 2)
@@ -164,6 +166,7 @@ Item {
 
             Kirigami.Icon {
                 id: compactIdentityIcon
+                objectName: "panelIdentityIcon"
 
                 anchors.fill: parent
                 source: compactRoot.applet.loading ? "view-refresh" : compactRoot.applet.providerIconSource(parent.compactProvider)

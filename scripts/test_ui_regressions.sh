@@ -109,6 +109,7 @@ provider_config_row_qml = root / "contents/ui/components/ProviderConfigRow.qml"
 provider_usage_row_qml = root / "contents/ui/components/ProviderUsageRow.qml"
 overview_provider_row_qml = root / "contents/ui/components/OverviewProviderRow.qml"
 provider_detail_section_qml = root / "contents/ui/components/ProviderDetailSection.qml"
+provider_cost_section_qml = root / "contents/ui/components/ProviderCostSection.qml"
 compact_representation_qml = root / "contents/ui/components/CompactRepresentation.qml"
 global_tab_qml = root / "contents/ui/components/GlobalTab.qml"
 interactive_chart_qml = root / "contents/ui/components/InteractiveChart.qml"
@@ -249,6 +250,7 @@ provider_config_row_text = provider_config_row_qml.read_text(encoding="utf-8")
 provider_usage_row_text = provider_usage_row_qml.read_text(encoding="utf-8")
 overview_provider_row_text = overview_provider_row_qml.read_text(encoding="utf-8")
 provider_detail_section_text = provider_detail_section_qml.read_text(encoding="utf-8")
+provider_cost_section_text = provider_cost_section_qml.read_text(encoding="utf-8")
 compact_representation_text = compact_representation_qml.read_text(encoding="utf-8")
 global_tab_text = global_tab_qml.read_text(encoding="utf-8")
 interactive_chart_text = interactive_chart_qml.read_text(encoding="utf-8")
@@ -1156,7 +1158,6 @@ for mouse_id in ("compactStatusMouse", "heatmapMouse"):
         raise AssertionError(f"{mouse_id} must not consume clicks")
 for vertical_fragment in (
     "readonly property bool verticalPanel: applet.verticalFormFactor",
-    "!hasProviderMeters\n        || (!verticalPanel && primaryText.length > 0 && !inlinePrimaryText)",
     "columns: compactRoot.verticalPanel ? 1 : -1",
     "!compactRoot.verticalPanel",
 ):
@@ -2617,6 +2618,15 @@ if "elementLoader.implicitWidth" in compact_representation_text:
     raise AssertionError("compact panel text measurement must not feed back through its Loader width")
 if "rangeCombo.valueAt(index)" not in spend_view_text:
     raise AssertionError("the cost range selector must use the activated option instead of stale currentValue")
+for metric_combo_source, metric_combo_text in (
+    ("SpendView.qml", spend_view_text),
+    ("ProviderCostSection.qml", provider_cost_section_text),
+):
+    if "currentIndex = Qt.binding(function" not in metric_combo_text:
+        raise AssertionError(
+            f"{metric_combo_source} must restore the metric combo's currentIndex "
+            "binding after an interactive pick severs it"
+        )
 if "view.applet.refreshCost(true)" not in spend_view_text:
     raise AssertionError("the cost refresh button must explicitly bypass the automatic hourly throttle")
 for cost_loading_fragment in (

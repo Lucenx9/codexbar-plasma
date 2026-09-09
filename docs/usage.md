@@ -24,8 +24,10 @@ work and upstream contract requirements.
 - With the default element order, optional text sits after the selected
   provider's capsules in one group, with a single logo. The other providers keep
   their own icon and capsules. If that provider's meters are hidden or unavailable,
-  or leave no room for grouped text, its text keeps a separate identity. Custom element orders retain independent
-  identity, status, text, and meter positions. Long text is elided to fit the panel.
+  its text keeps a separate identity. Custom element orders retain separate
+  text and meter positions. Separate text keeps its identifying icon among
+  multiple meters; a single selected provider meter does not repeat the icon.
+  Long text is elided to fit the panel.
 
   ![Optional usage text beside its provider’s quota capsules](codexbar-plasma-panel-information.png)
 
@@ -211,7 +213,9 @@ fields; track proposed extensions in the issue tracker.
   or closing it never changes saved or pending preferences.
 - A live **Panel** preview uses example data and the actual panel renderer.
   Try normal usage, near-limit usage, a service incident, or missing data before
-  applying changes. The preview never fetches usage or changes saved settings.
+  applying changes. It stays above the scrolling options, including quota,
+  order, and visibility controls. The preview never fetches usage or changes
+  saved settings.
 - Optional **General → Hide personal information** hides account, organization, project,
   model and session names in the widget, its tooltips and new notifications.
   Free-form provider details are omitted; session copy actions are disabled.

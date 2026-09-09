@@ -155,9 +155,17 @@ KCM.SimpleKCM {
         }
     }
 
-    Kirigami.FormLayout {
+    header: Item {
+        implicitHeight: panelPreview.implicitHeight + Kirigami.Units.smallSpacing * 2
+
         Components.PanelSettingsPreview {
+            id: panelPreview
             objectName: "panelSettingsPreview"
+            anchors.top: parent.top
+            anchors.topMargin: Kirigami.Units.smallSpacing
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: Math.max(0, Math.min(parent.width - Kirigami.Units.largeSpacing * 2,
+                Kirigami.Units.gridUnit * 24))
             configPage: page
             usageBarsShowUsed: page.usageBarsShowUsed
             resetTimesShowAbsolute: page.presentationConfig.resetTimesShowAbsolute === true
@@ -165,11 +173,10 @@ KCM.SimpleKCM {
             quotaWarningPercent: QuotaThresholds.warningPercent(page.presentationConfig.quotaWarningPercent)
             quotaCriticalPercent: QuotaThresholds.criticalPercent(quotaWarningPercent, page.presentationConfig.quotaCriticalPercent)
             providerOrder: page.presentationConfig.providerOrder || ""
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
         }
+    }
 
+    Kirigami.FormLayout {
         Kirigami.Separator {
             Kirigami.FormData.label: i18n("Appearance")
             Kirigami.FormData.isSection: true
