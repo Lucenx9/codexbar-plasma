@@ -1084,7 +1084,10 @@ PlasmoidItem {
 
         // The ledger entry is closed above, so an unexpected parse failure
         // would strand a fallback queue slot until the whole run retires.
-        // Every path below must end in a queue completion.
+        // The guard only selects the item; the slot is completed exactly once
+        // outside it, so a throwing completion can never be retried against
+        // already-advanced queue state.
+        var completedItem = null
         try {
             var normalizedItems = []
             var trimmed = stdoutText.trim()
@@ -1126,13 +1129,13 @@ PlasmoidItem {
             }
 
             var semanticItems = Normalizer.dedupeProviderSnapshots(normalizedItems)
-            completeProviderFallbackSlot(sourceName,
-                semanticItems.length > 0 ? semanticItems[0] : null)
+            completedItem = semanticItems.length > 0 ? semanticItems[0] : null
         } catch (error) {
-            completeProviderFallbackSlot(sourceName, normalizeProvider(providerErrorPayload(
+            completedItem = normalizeProvider(providerErrorPayload(
                 providerID,
-                i18n("Could not parse codexbar JSON: %1", error.message))))
+                i18n("Could not parse codexbar JSON: %1", error.message)))
         }
+        completeProviderFallbackSlot(sourceName, completedItem)
     }
 
     function finishProviderFallback(orderedItems) {

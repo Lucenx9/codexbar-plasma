@@ -347,19 +347,23 @@ require_all(
     fallback_parse_body,
     (
         "Normalizer.dedupeProviderSnapshots(normalizedItems)",
-        "completeProviderFallbackSlot(",
-        "semanticItems.length > 0 ? semanticItems[0] : null",
+        "var completedItem = null",
+        "completeProviderFallbackSlot(sourceName, completedItem)",
         "codexbar did not return provider data.",
     ),
     "fallback replies must cross the pure queue interface",
 )
+if fallback_parse_body.count("completeProviderFallbackSlot(") != 1:
+    raise AssertionError(
+        "the fallback slot must be completed exactly once, outside the parse guard"
+    )
 require_all(
     fallback_parse_body[fallback_parse_body.rfind("} catch (error) {"):],
     (
         "providerErrorPayload(",
-        "completeProviderFallbackSlot(",
+        "completedItem =",
     ),
-    "an unexpected fallback parse failure must complete its queue slot",
+    "an unexpected fallback parse failure must still yield its scoped error item",
 )
 require_all(
     applet.function_body("applyProviderFallbackTransition"),
