@@ -12,6 +12,8 @@ Item {
     required property string imagePath
     property bool prepared: false
     property bool navigationVerified: false
+    property bool cacheRestart: false
+    property double cacheSavedAtMs: 0
     property int costDetailsStep: 0
     property var costSnapshot: null
     property var costSelectionProviderMemo: null
@@ -841,6 +843,158 @@ Item {
     }
 
     function scenarioReady() {
+        if (scenario === "usage-cache-restart") {
+            if (applet.providers.length !== 2)
+                return false;
+            if (cacheRestart) {
+                verifyScenario(applet.providers.every(function(item) {
+                    return item.usageStale === true && item.account === "" && item.rows.length === 2;
+                }), "restarted process did not restore redacted stale quotas");
+                verifyScenario(applet.loading && applet.usageLastCompletedAtMs < 0,
+                    "restored cache was counted as a successful refresh");
+                return true;
+            }
+            if (applet.loading || !Plasmoid.configuration.usageCache)
+                return false;
+            if (!cacheSavedAtMs)
+                cacheSavedAtMs = Date.now();
+            // Allow Plasma's deferred KConfig sync to reach disk before exiting.
+            return Date.now() - cacheSavedAtMs > 6000;
+        }
+        if (scenario === "usage-retention") {
+            if (navigationVerified)
+                return true;
+            if (applet.loading || applet.costLoading || applet.providers.length !== 2)
+                return false;
+            var previous = applet.providers;
+            var measuredAt = previous[0].lastGoodAtMs;
+            applet.parseOutput("{", "Synthetic malformed response");
+            verifyScenario(applet.providers.length === 2 && applet.providers[0].rows.length === 2,
+                "a malformed refresh erased the last valid quotas");
+            verifyScenario(applet.providers[0].usageStale && applet.providers[0].lastGoodAtMs === measuredAt,
+                "a failed refresh changed the measurement time");
+            verifyScenario(applet.notificationObservations().every(function(item) { return item.pending; }),
+                "retained usage is eligible for notifications");
+            verifyScenario(applet.panelToolTipText().indexOf("Last known usage") >= 0,
+                "panel tooltip presents retained usage as current");
+            var emptyMeter = applet.normalizeProvider({provider: "codex"});
+            emptyMeter.usageStale = true;
+            emptyMeter.lastGoodAtMs = measuredAt;
+            verifyScenario(applet.panelMeterDescription(emptyMeter) === applet.lastGoodUsageText(emptyMeter),
+                "missing retained quota adds an orphan separator to its accessible description");
+            var statusFailure = applet.providerErrorPayload("codex", "Synthetic account failure");
+            statusFailure.status = {indicator: "major", incidentId: "synthetic-incident", description: "Synthetic outage"};
+            applet.setNotificationProviderRefreshPending("codex", true);
+            applet.commitUsageSnapshot([applet.normalizeProvider(statusFailure), previous[1]]);
+            var statusObservation = applet.notificationObservations()[0];
+            verifyScenario(applet.providers[0].usageStale && applet.providers[0].rows.length === 2
+                && applet.providers[0].hasIncident && statusObservation.statusKnown
+                && statusObservation.statusActive && !statusObservation.pending && statusObservation.rows.length === 0,
+                "retained quotas hid a fresh incident or supplied stale notification evidence");
+            statusFailure.status = {indicator: "none", description: "Operational"};
+            applet.commitUsageSnapshot([applet.normalizeProvider(statusFailure), previous[1]]);
+            statusObservation = applet.notificationObservations()[0];
+            verifyScenario(applet.providers[0].usageStale && !applet.providers[0].hasIncident
+                && statusObservation.statusKnown && !statusObservation.statusActive && !statusObservation.pending,
+                "a fresh incident resolution was lost during quota failure");
+            applet.expireStaleUsage(measuredAt + 24 * 60 * 60 * 1000 + 1);
+            verifyScenario(applet.providers[0].rows.length === 0 && applet.providers[0].statusKnown
+                && applet.providers[0].status === "Operational", "quota expiry erased fresh service status");
+            applet.commitUsageSnapshot(previous);
+            applet.parseOutput("null", "");
+            verifyScenario(applet.providers[0].rows.length === 2, "invalid envelope erased quotas");
+            verifyScenario(applet.notificationObservations().every(function(item) { return item.pending; }),
+                "retained service status was promoted to a fresh observation");
+            var sourceName = applet.commandWithRunNonce("synthetic timeout");
+            var descriptor = applet.buildCommandDescriptor("providerConfig", "");
+            var descriptors = {};
+            descriptors[sourceName] = descriptor;
+            applet.activeCommandDescriptors = descriptors;
+            applet.handleCommandTimeout(sourceName, descriptor);
+            verifyScenario(applet.providers[0].rows.length === 2, "timeout erased quotas");
+            applet.finishProviderFallback([previous[0],
+                applet.normalizeProvider(applet.providerErrorPayload("claude", "Synthetic provider timeout"))]);
+            verifyScenario(!applet.providers[0].usageStale && applet.providers[1].usageStale,
+                "partial refresh did not distinguish current and retained providers");
+            applet.commitUsageSnapshot(previous);
+            verifyScenario(applet.providers.every(function(item) { return !item.usageStale && !item.error; }),
+                "successful refresh did not clear stale state");
+            var saved = Plasmoid.configuration.usageCache;
+            verifyScenario(saved.length > 0 && saved.indexOf("demo@example.com") < 0
+                && saved.indexOf("Example team") < 0 && saved.indexOf("pace") < 0,
+                "persisted cache is missing or contains identity/forecast data");
+            var oldCache = JSON.parse(saved);
+            oldCache.snapshots[0].windows.primary.usedPercent = 9;
+            var configStamp = applet.providerConfigStamp;
+            for (var initialCache of ["", "{broken", JSON.stringify(oldCache)]) {
+                applet.providerConfigStamp = "";
+                Plasmoid.configuration.usageCache = initialCache;
+                applet.providers = [];
+                applet.commitUsageSnapshot(previous);
+                verifyScenario(Plasmoid.configuration.usageCache === initialCache,
+                    "usage overwrote saved quotas before the configuration context was known");
+                applet.handleProviderConfigWatch(configStamp);
+                verifyScenario(Plasmoid.configuration.usageCache.length > 0
+                    && JSON.parse(Plasmoid.configuration.usageCache).snapshots[0].windows.primary.usedPercent
+                        === previous[0].rows[0].usedPercent,
+                    "late checksum did not persist the first successful refresh or left an older cache");
+            }
+            applet.providerConfigStamp = "";
+            Plasmoid.configuration.usageCache = saved;
+            applet.providers = [];
+            applet.commitUsageSnapshot([previous[0],
+                applet.normalizeProvider(applet.providerErrorPayload("claude", "Early failure"))]);
+            applet.handleProviderConfigWatch(configStamp);
+            verifyScenario(!applet.providers[0].usageStale && applet.providers[1].usageStale
+                && JSON.parse(Plasmoid.configuration.usageCache).snapshots.length === 2,
+                "late checksum failed to merge and save partial success with retained quotas");
+            applet.providers = [];
+            applet.restoreUsageCache();
+            verifyScenario(applet.providers.length === 2 && applet.providers[0].account === ""
+                && applet.providers[0].usageStale && applet.providers[0].lastGoodAtMs === measuredAt,
+                "cache restoration lost quotas, freshness, or redaction");
+            applet.providers = [applet.normalizeProvider(applet.providerErrorPayload("codex", "Early failure")), previous[1]];
+            applet.restoreUsageCache();
+            verifyScenario(applet.providers[0].usageStale && applet.providers[0].rows.length === 2
+                && !applet.providers[1].usageStale, "late checksum discarded early failures or replaced healthy data");
+            var healthy = applet.providers[1];
+            applet.expireStaleUsage(measuredAt + 24 * 60 * 60 * 1000 + 1);
+            verifyScenario(applet.providers[0].rows.length === 0 && applet.providers[0].error === "Early failure"
+                && applet.providers[1] === healthy && applet.lastUpdatedText === "",
+                "in-memory expiry kept old quotas, lost the error, or replaced healthy usage");
+            verifyScenario(applet.providerUsageTimestamp(applet.providers[0]) === "",
+                "an expired provider displays another provider's update time");
+            applet.providers = [];
+            Plasmoid.configuration.usageCache = saved;
+            applet.restoreUsageCache();
+            applet.expireStaleUsage(Math.max(applet.providers[0].lastGoodAtMs, applet.providers[1].lastGoodAtMs)
+                + 24 * 60 * 60 * 1000 + 1);
+            verifyScenario(applet.providers.every(function(item) { return item.rows.length === 0 && item.error.length > 0; })
+                && Plasmoid.configuration.usageCache === "", "expired restart data survived in memory or on disk");
+            applet.commitUsageSnapshot(previous);
+            applet.selectedProviderID = "codex";
+            applet.selectionInitialized = true;
+            applet.invalidateUsageData("codex");
+            verifyScenario(applet.providers.length === 2 && applet.providers[0].rows.length === 0
+                && applet.providers[1].rows.length === 2 && applet.selectedProviderID === "codex"
+                && Plasmoid.configuration.usageCache === "", "account invalidation reused quotas or moved selection");
+            applet.providers = [];
+            Plasmoid.configuration.usageCache = saved;
+            applet.providerConfigStamp = "changed configuration";
+            applet.restoreUsageCache();
+            verifyScenario(applet.providers.length === 0 && Plasmoid.configuration.usageCache === "",
+                "changed configuration restored another scope's usage");
+            applet.commitUsageSnapshot(previous);
+            applet.startProviderFallbackForProviders([]);
+            verifyScenario(applet.providers.length === 0 && Plasmoid.configuration.usageCache === "",
+                "disabling every provider retained cached quotas");
+            applet.commitUsageSnapshot(previous);
+            applet.failUsageRefresh("Synthetic network failure. Try again.");
+            applet.selectedProviderID = "codex";
+            applet.selectionInitialized = true;
+            navigationVerified = true;
+            return true;
+        }
         if (readmeScenario && !readmePanelScenario) {
             if (!prepared || applet.loading || applet.costLoading || applet.providers.length !== 3)
                 return false;
@@ -1099,6 +1253,7 @@ Item {
             if (!capture.prepared) {
                 capture.applet.expanded = true;
                 if (capture.scenario !== "loading"
+                        && !(capture.scenario === "usage-cache-restart" && capture.cacheRestart)
                         && (capture.applet.loading || capture.applet.providers.length !== capture.expectedProviderCount))
                     return;
                 if (capture.panelDefaultsScenario) {

@@ -668,6 +668,7 @@ Item {
             id: globalErrorMessage
 
             visible: applet.providerUsageFeedbackVisible && applet.errorText.length > 0
+                && (!applet.selectedProviderData || applet.selectedProviderData.error !== applet.errorText)
             plainText: applet.privateErrorText(applet.errorText)
             type: Kirigami.MessageType.Error
             Layout.fillWidth: true

@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Last-known quota recovery after failed refreshes and Plasma restarts, with
+  explicit freshness labels, a 24-hour retention limit, and a redacted persistent
+  cache.
 - A versioned changelog, included in the widget package and used as the source
   for future GitHub release notes.
 

@@ -13,10 +13,22 @@ import xml.etree.ElementTree as ET
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import smoke_popup as smoke
+from smoke import fixture_cli
 from smoke.fixture_cli import response, usage
 
 
 class SmokePopupTests(unittest.TestCase):
+    def test_restart_fixture_cannot_respond_before_the_longest_preview_deadline(self):
+        for scenario in ("loading", "usage-cache-restart"):
+            with self.subTest(scenario=scenario), patch.dict(os.environ, {
+                "CODEXBAR_SMOKE_SCENARIO": scenario, "CODEXBAR_SMOKE_RESTART": "1"
+            }), patch.object(sys, "argv", ["codexbar", "usage", "--provider", "codex",
+                                          "--format", "json", "--json-only"]), \
+                    patch.object(fixture_cli.time, "sleep") as sleep, patch("builtins.print") as output:
+                fixture_cli.main()
+                self.assertGreater(sleep.call_args.args[0], smoke.MAX_SCENARIO_TIMEOUT_SECONDS)
+                output.assert_called_once()
+
     def test_opengl_preview_does_not_inherit_the_host_renderer(self):
         for renderer in ("software", "opengl"):
             with self.subTest(renderer=renderer), tempfile.TemporaryDirectory() as temporary:

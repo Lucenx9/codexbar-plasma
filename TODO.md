@@ -147,7 +147,10 @@ These are unresolved Linux candidates, not confirmed missing features.
   changes: same-email workspaces, measurement timestamps, and transient
   multi-account failures. Compare official Linux records with Plasma account
   selection/cache tests before classifying a gap; retain CLI ownership of
-  credential matching and recovery. [Release coverage](docs/research/2026-09-09-macos-parity-0.57.0.md#release-coverage).
+  credential matching and recovery. Generic failed-refresh retention and redacted
+  quota restoration are implemented; account identity and credential recovery
+  cases still need the named official CLI probes.
+  [Release coverage](docs/research/2026-09-09-macos-parity-0.57.0.md#release-coverage).
 - [ ] Evaluate the weekly reserve indicator against a pinned macOS behavior and
   an official Linux field. Record accept/reject and, if accepted, a concrete
   display contract. Existing quota lanes and run-out forecasts are implemented.

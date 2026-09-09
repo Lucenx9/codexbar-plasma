@@ -47,6 +47,32 @@ For those, use `make install` or `./install.sh`. Release-package users can use
   direct tests in `tests/tst_*.qml`. Configuration is declared in
   `contents/config/main.xml` and bound through `cfg_*` in config pages and
   `Plasmoid.configuration` at runtime.
+- `UsageCache.js` reconciles failed usage snapshots and projects a bounded quota
+  cache. `main.qml` owns context invalidation, configuration reads/writes, and
+  stale notification suppression. Its minute timer expires retained measurements
+  even when automatic refresh is disabled. Persisted records never bypass
+  normalization.
+
+The quota cache adapts the bounded stale reuse and background refresh patterns in
+[RFC 5861](https://www.rfc-editor.org/rfc/rfc5861.html); this is a local application
+policy, not an HTTP cache implementation. Failed retries preserve the original
+measurement time. The 24-hour retention limit applies in memory and on restore.
+The context fingerprint isolates CLI/configuration/account selections; it is not
+an integrity check or encryption. Cached JSON remains untrusted and is rebuilt
+from allowlisted, bounded fields, following
+[OWASP input validation guidance](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html).
+Omitting identities, credentials, paths, and provider prose follows
+[OWASP's data minimization guidance](https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html#minimize-the-storage-of-sensitive-information).
+Persistence uses Plasma's existing configuration mapping; the restart smoke test
+allows its deferred save to complete before starting the second process.
+The first configuration-checksum callback also saves any successful usage that
+arrived before it, so startup persistence does not depend on a later refresh.
+The restarted fixture delays CLI responses beyond the runner's maximum allowed
+scenario duration, proving that the second process displays persisted quotas.
+Quota freshness and service-status evidence are independent: retained rows never
+reach the notification planner, while a status record from the current response
+still can. Retaining or expiring quotas must preserve that current status; a
+later response without status marks the retained incident as unknown to the planner.
 
 Before changing behavior, identify its owning QML page, config entry, CLI input,
 external effects, and cheapest behavioral test. Read the existing implementation
@@ -253,6 +279,10 @@ Panel scenarios verify capsule count and clipping at small sizes, including
 zero and absent quotas. `panel-vertical` and `panel-vertical-minimal` supply the
 vertical form-factor input because `plasmawindowed` has no panel containment.
 QtTests additionally exercise pointer/keyboard activation and resizing.
+`usage-retention` exercises failed/partial refreshes, recovery, notification
+suppression, and cache invalidation. `usage-cache-restart` launches two separate
+widget processes with the same isolated settings and delays the second CLI
+refresh to verify startup restoration from disk.
 Synthetic payloads cover a subset of the CLI 0.56.2 contract; fixture dates
 are relative to run time. Typography uses Noto Sans and Breeze icons.
 

@@ -130,12 +130,14 @@ RowLayout {
         PlainPlasmaLabel {
             id: providerUpdatedLabel
 
-            visible: providerHeaderRow.applet.lastUpdatedText.length > 0
-            text: providerHeaderRow.applet.lastUpdatedText
+            visible: text.length > 0
+            text: providerHeaderRow.providerData
+                ? providerHeaderRow.applet.providerUsageTimestamp(providerHeaderRow.providerData)
+                : providerHeaderRow.applet.lastUpdatedText
             font: Kirigami.Theme.smallFont
             opacity: providerHeaderRow.applet.secondaryTextOpacity
             Layout.fillWidth: true
-            elide: Text.ElideRight
+            wrapMode: Text.WordWrap
         }
     }
 

@@ -2512,3 +2512,20 @@ msgid "%1 point"
 msgid_plural "%1 points"
 msgstr[0] "%1 punto"
 msgstr[1] "%1 puntos"
+
+#: contents/ui/main.qml
+msgid "Showing last known usage"
+msgstr "Se muestra el último uso conocido"
+
+#: contents/ui/main.qml
+msgid "Last known usage, just now"
+msgstr "Último uso conocido, hace un momento"
+
+#: contents/ui/main.qml
+#, kde-format
+msgid "Last known usage, %1 ago"
+msgstr "Último uso conocido, hace %1"
+
+#: contents/ui/main.qml
+msgid "Cached usage has expired. Refresh to try again."
+msgstr "Los datos de uso guardados han caducado. Actualice para volver a intentarlo."

@@ -320,6 +320,7 @@ Item {
                     RowLayout {
                         anchors.centerIn: parent
                         spacing: compactRoot.meterSpacing
+                        opacity: compactMeter.modelData.usageStale === true ? 0.55 : 1
 
                         Kirigami.Icon {
                             objectName: "panelProviderIcon"

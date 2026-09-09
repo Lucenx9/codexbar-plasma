@@ -20,6 +20,8 @@ SCENARIOS += ("popup-cost-details", "popup-cost-tokens")
 SCENARIOS += ("popup-cost-missing-tokens", "popup-cost-partial-models")
 SCENARIOS += ("popup-content", "refresh-on-open", "privacy-provider", "privacy-spend", "privacy-sessions")
 SCENARIOS += ("privacy-cost-details",)
+SCENARIOS += ("usage-retention", "usage-cache-restart")
+MAX_SCENARIO_TIMEOUT_SECONDS = 120
 
 
 def usage(provider, scenario, now):
@@ -196,9 +198,12 @@ def main():
     if scenario not in SCENARIOS:
         raise ValueError("SMOKE_FAILED: missing or unknown fixture scenario")
     result = response(sys.argv[1:], scenario, datetime.now(timezone.utc))
-    if scenario == "loading":
-        # The runner kills the whole preview process group after capture/timeout.
-        time.sleep(300)
+    if scenario == "loading" or (
+        scenario == "usage-cache-restart" and os.environ.get("CODEXBAR_SMOKE_RESTART") == "1"
+    ):
+        # Keep responses blocked for every allowed preview duration; the runner
+        # kills the process group after capturing the loading/restored state.
+        time.sleep(MAX_SCENARIO_TIMEOUT_SECONDS + 1)
     print(result if isinstance(result, str) else json.dumps(result))
 
 

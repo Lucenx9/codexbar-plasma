@@ -455,7 +455,7 @@ require_in_surface applet 'mode === "runOut"'
 require_in_surface applet "if (!paceWarningActive(row)) {"
 require_in_surface applet "PanelDisplay.remainingSeconds("
 require_in_surface applet "id: panelClockTimer"
-require_in_surface applet "onTriggered: root.panelClockMs = Date.now()"
+require_in_surface applet "root.panelClockMs = Date.now()"
 require_in_file "$PANEL_QML" "value: PanelDisplay.runOutMode"
 require_in_surface applet "function resetText(window, absolute)"
 require_in_surface applet "function usageResetText(row)"

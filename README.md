@@ -97,6 +97,12 @@ New widgets refresh quotas every five minutes and show percent **used**. Warning
 and critical thresholds default to 80% and 95%. Existing settings are preserved
 when you upgrade.
 
+Failed refreshes retain quotas measured within the last 24 hours and identify
+them as last known.
+A redacted cache restores recent quotas after a Plasma restart while the CLI
+refreshes. See [data freshness](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#data-freshness)
+for its limits.
+
 ## Update
 
 Read the [changelog](CHANGELOG.md) for changes and upgrade notes by version.
