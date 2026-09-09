@@ -30,7 +30,7 @@ function reconcile(previous, incoming, nowMs) {
     return incoming.map(function(item) {
         var next = Guards.copyObject(item)
         var old = byProvider[item.provider]
-        if (item.error.length > 0 && hasQuota(old) && old.lastGoodAtMs > 0
+        if (item.error.length > 0 && hasQuota(old) && recent(old.lastGoodAtMs, nowMs)
                 && (!item.account || item.account === old.account)) {
             next = Guards.copyObject(old)
             next.error = item.error
@@ -63,6 +63,12 @@ function validContext(value) {
 function recent(value, nowMs) {
     return typeof value === "number" && isFinite(value) && value > 0
         && value <= nowMs && nowMs - value <= maximumAgeMs
+}
+
+function expiredProviderIDs(items, nowMs) {
+    return items.filter(function(item) {
+        return item.usageStale === true && !recent(item.lastGoodAtMs, nowMs)
+    }).map(function(item) { return item.provider })
 }
 
 function windowRecord(value) {

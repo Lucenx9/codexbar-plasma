@@ -2302,6 +2302,10 @@ if refresh_index < 0 or return_index < 0 or refresh_index > return_index:
 for caller in ("parseOutput", "finishProviderFallback"):
     if "commitUsageSnapshot(nextProviders)" not in function_body(main_text, caller):
         raise AssertionError(f"{caller} must commit usage through the shared cache boundary")
+panel_clock_body = id_block(main_text, "panelClockTimer")
+for fragment in ("root.panelClockMs = Date.now()", "root.expireStaleUsage(root.panelClockMs)"):
+    if fragment not in panel_clock_body:
+        raise AssertionError("the panel clock must update time and expire usage even without automatic refresh")
 for fresh_function in ("commitUsageSnapshot",):
     fresh_body = function_body(main_text, fresh_function)
     fresh_index = fresh_body.find("markNotificationProvidersFresh(nextProviders)")

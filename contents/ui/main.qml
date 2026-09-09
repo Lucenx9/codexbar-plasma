@@ -686,15 +686,22 @@ PlasmoidItem {
     }
 
     function restoreUsageCache() {
-        var restored = UsageCache.decode(Plasmoid.configuration.usageCache,
-            usageCacheContext(), Date.now())
-        if (restored.length === 0) {
-            Plasmoid.configuration.usageCache = ""
+        var context = usageCacheContext()
+        if (context.length === 0) {
             return
         }
-        // The checksum read can finish after usage. Keep successful results;
-        // an early failed response may still need the saved quotas.
-        if (providers.length > 0 && providers.every(function(item) { return item.error.length === 0 })) {
+        var nowMs = Date.now()
+        // Usage can finish before the first checksum. Save those successful
+        // results now, including when no usable cache existed at startup.
+        if (providers.length > 0 && providers.every(function(item) {
+                return item.usageStale !== true && item.error.length === 0
+            })) {
+            Plasmoid.configuration.usageCache = UsageCache.encode(providers, context, nowMs)
+            return
+        }
+        var restored = UsageCache.decode(Plasmoid.configuration.usageCache, context, nowMs)
+        if (restored.length === 0) {
+            Plasmoid.configuration.usageCache = UsageCache.encode(providers, context, nowMs)
             return
         }
         var cachedProviders = restored.map(function(payload) {
@@ -704,7 +711,8 @@ PlasmoidItem {
             return item
         })
         providers = ProviderOrder.orderedItems(providers.length > 0
-            ? UsageCache.reconcile(cachedProviders, providers, Date.now()) : cachedProviders, providerOrderRaw)
+            ? UsageCache.reconcile(cachedProviders, providers, nowMs) : cachedProviders, providerOrderRaw)
+        Plasmoid.configuration.usageCache = UsageCache.encode(providers, context, nowMs)
         lastUpdatedText = i18n("Showing last known usage")
     }
 
@@ -712,13 +720,14 @@ PlasmoidItem {
         var nowMs = Date.now()
         var nextProviders = UsageCache.reconcile(providers, items, nowMs)
         markNotificationProvidersFresh(nextProviders)
-        if (nextProviders.some(function(item) { return !item.usageStale && item.error.length === 0 })) {
+        var hasFreshUsage = nextProviders.some(function(item) { return !item.usageStale && item.error.length === 0 })
+        if (hasFreshUsage) {
             markUsageSnapshotReceived()
         }
         providers = nextProviders
         lastUpdatedText = nextProviders.some(function(item) { return item.usageStale === true })
             ? i18n("Showing last known usage")
-            : i18n("Updated %1", Qt.formatDateTime(new Date(nowMs), "hh:mm"))
+            : hasFreshUsage ? i18n("Updated %1", Qt.formatDateTime(new Date(nowMs), "hh:mm")) : ""
         var context = usageCacheContext()
         if (context.length > 0) {
             Plasmoid.configuration.usageCache = UsageCache.encode(nextProviders, context, nowMs)
@@ -726,16 +735,36 @@ PlasmoidItem {
     }
 
     function failUsageRefresh(message) {
+        var nowMs = Date.now()
         var failures = providers.map(function(item) {
             return root.normalizeProvider(root.providerErrorPayload(item.provider, message))
         })
-        providers = UsageCache.reconcile(providers, failures, Date.now())
-        if (providers.some(function(item) { return item.usageStale === true })) {
-            lastUpdatedText = i18n("Showing last known usage")
+        providers = UsageCache.reconcile(providers, failures, nowMs)
+        lastUpdatedText = providers.some(function(item) { return item.usageStale === true })
+            ? i18n("Showing last known usage") : ""
+        var context = usageCacheContext()
+        if (context.length > 0) {
+            Plasmoid.configuration.usageCache = UsageCache.encode(providers, context, nowMs)
         }
-        panelClockMs = Date.now()
+        panelClockMs = nowMs
         errorText = message
         loading = false
+    }
+
+    function expireStaleUsage(nowMs) {
+        var expired = UsageCache.expiredProviderIDs(providers, nowMs)
+        if (expired.length === 0) {
+            return
+        }
+        providers = providers.map(function(item) {
+            return expired.indexOf(item.provider) < 0 ? item
+                : root.normalizeProvider(root.providerErrorPayload(item.provider,
+                    item.error || i18n("Cached usage has expired. Refresh to try again.")))
+        })
+        if (!providers.some(function(item) { return item.usageStale === true })) {
+            lastUpdatedText = ""
+        }
+        Plasmoid.configuration.usageCache = UsageCache.encode(providers, usageCacheContext(), nowMs)
     }
 
     function lastGoodUsageText(item) {
@@ -745,6 +774,9 @@ PlasmoidItem {
     }
 
     function providerUsageTimestamp(item) {
+        if (!item || !(item.lastGoodAtMs > 0)) {
+            return ""
+        }
         return item.usageStale === true ? lastGoodUsageText(item)
             : i18n("Updated %1", Qt.formatDateTime(new Date(item.lastGoodAtMs), "hh:mm"))
     }
@@ -4173,7 +4205,10 @@ PlasmoidItem {
         repeat: true
         running: root.providers.length > 0
         triggeredOnStart: false
-        onTriggered: root.panelClockMs = Date.now()
+        onTriggered: {
+            root.panelClockMs = Date.now()
+            root.expireStaleUsage(root.panelClockMs)
+        }
     }
 
     Timer {

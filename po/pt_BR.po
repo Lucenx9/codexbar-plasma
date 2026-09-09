@@ -2511,3 +2511,7 @@ msgstr "Último dado válido, agora mesmo"
 #, kde-format
 msgid "Last known usage, %1 ago"
 msgstr "Último dado válido, há %1"
+
+#: contents/ui/main.qml
+msgid "Cached usage has expired. Refresh to try again."
+msgstr "Os dados de uso em cache expiraram. Atualize para tentar novamente."

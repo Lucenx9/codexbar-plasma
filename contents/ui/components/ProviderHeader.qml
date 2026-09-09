@@ -131,7 +131,7 @@ RowLayout {
             id: providerUpdatedLabel
 
             visible: text.length > 0
-            text: providerHeaderRow.providerData && providerHeaderRow.providerData.lastGoodAtMs > 0
+            text: providerHeaderRow.providerData
                 ? providerHeaderRow.applet.providerUsageTimestamp(providerHeaderRow.providerData)
                 : providerHeaderRow.applet.lastUpdatedText
             font: Kirigami.Theme.smallFont

@@ -72,7 +72,10 @@ shows **Last known usage** with the age of its measurement in the popup and pane
 tooltip; its panel icon and capsules are dimmed. Errors remain visible. A partial
 refresh updates healthy providers independently, and a successful refresh removes
 the retained-data indication. Retained data never generates quota, pace, reset,
-or status notifications, and its run-out forecasts are suppressed.
+or status notifications, and its run-out forecasts are suppressed. Failed
+refreshes stop reusing measurements older than 24 hours. The existing minute
+timer also removes expired retained data when automatic refresh is disabled;
+the error remains visible and healthy providers are unaffected.
 
 The widget automatically saves a small quota cache in its Plasma configuration.
 After a restart it verifies the CLI configuration fingerprint before restoring
@@ -85,7 +88,9 @@ configuration fingerprint. It contains no account identities, credentials,
 provider prose, cost history, session data, or paths. Entries older than 24 hours,
 future-dated entries, corrupt records, and unsupported cache versions are ignored.
 Additional provider details remain available in memory during a failed refresh,
-but are not restored from disk. A missing measurement timestamp uses receipt time.
+but expire with the quotas and are not restored from disk. A missing measurement
+timestamp uses receipt time. The 24-hour limit is a widget policy, not a guarantee
+that a retained quota remains accurate throughout that period.
 
 Changing the CLI path, provider/source override, provider configuration, or selected
 account invalidates the affected retained data and the disk cache. Disabling all

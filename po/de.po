@@ -2531,3 +2531,7 @@ msgstr "Letzte bekannte Nutzung, gerade eben"
 #, kde-format
 msgid "Last known usage, %1 ago"
 msgstr "Letzte bekannte Nutzung, vor %1"
+
+#: contents/ui/main.qml
+msgid "Cached usage has expired. Refresh to try again."
+msgstr "Die zwischengespeicherten Nutzungsdaten sind abgelaufen. Zum erneuten Versuch aktualisieren."

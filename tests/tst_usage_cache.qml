@@ -86,6 +86,24 @@ TestCase {
         compare(Cache.reconcile([], [failed("codex")], nowMs)[0].rows.length, 0);
     }
 
+    function test_failuresStopReusingExpiredMeasurements() {
+        var previous = fresh();
+        var deadline = previous[0].lastGoodAtMs + Cache.maximumAgeMs;
+        var stale = Cache.reconcile(previous, [failed("codex")], deadline);
+        verify(stale[0].usageStale);
+        compare(Cache.expiredProviderIDs(stale, deadline), []);
+        compare(Cache.expiredProviderIDs(stale, deadline + 1), ["codex"]);
+        compare(Cache.expiredProviderIDs(stale, previous[0].lastGoodAtMs - 1), ["codex"]);
+        compare(Cache.expiredProviderIDs(previous, deadline + 1), []);
+        for (var items of [previous, stale]) {
+            var expired = Cache.reconcile(items, [failed("codex")], deadline + 1)[0];
+            compare(expired.rows.length, 0);
+            compare(expired.lastGoodAtMs, 0);
+            verify(!expired.usageStale);
+            compare(expired.error, "Synthetic failure");
+        }
+    }
+
     function test_failedPayloadWithQuotasCannotReplaceLastSuccess() {
         var incoming = snapshot("codex", 0);
         incoming.error = "Synthetic failure";

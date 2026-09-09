@@ -1613,6 +1613,10 @@ msgid "Updated %1"
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "Cached usage has expired. Refresh to try again."
+msgstr ""
+
+#: contents/ui/main.qml
 msgid "Last known usage, just now"
 msgstr ""
 

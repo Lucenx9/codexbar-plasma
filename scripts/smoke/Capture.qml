@@ -897,6 +897,31 @@ Item {
             verifyScenario(saved.length > 0 && saved.indexOf("demo@example.com") < 0
                 && saved.indexOf("Example team") < 0 && saved.indexOf("pace") < 0,
                 "persisted cache is missing or contains identity/forecast data");
+            var oldCache = JSON.parse(saved);
+            oldCache.snapshots[0].windows.primary.usedPercent = 9;
+            var configStamp = applet.providerConfigStamp;
+            for (var initialCache of ["", "{broken", JSON.stringify(oldCache)]) {
+                applet.providerConfigStamp = "";
+                Plasmoid.configuration.usageCache = initialCache;
+                applet.providers = [];
+                applet.commitUsageSnapshot(previous);
+                verifyScenario(Plasmoid.configuration.usageCache === initialCache,
+                    "usage overwrote saved quotas before the configuration context was known");
+                applet.handleProviderConfigWatch(configStamp);
+                verifyScenario(Plasmoid.configuration.usageCache.length > 0
+                    && JSON.parse(Plasmoid.configuration.usageCache).snapshots[0].windows.primary.usedPercent
+                        === previous[0].rows[0].usedPercent,
+                    "late checksum did not persist the first successful refresh or left an older cache");
+            }
+            applet.providerConfigStamp = "";
+            Plasmoid.configuration.usageCache = saved;
+            applet.providers = [];
+            applet.commitUsageSnapshot([previous[0],
+                applet.normalizeProvider(applet.providerErrorPayload("claude", "Early failure"))]);
+            applet.handleProviderConfigWatch(configStamp);
+            verifyScenario(!applet.providers[0].usageStale && applet.providers[1].usageStale
+                && JSON.parse(Plasmoid.configuration.usageCache).snapshots.length === 2,
+                "late checksum failed to merge and save partial success with retained quotas");
             applet.providers = [];
             applet.restoreUsageCache();
             verifyScenario(applet.providers.length === 2 && applet.providers[0].account === ""
@@ -906,6 +931,21 @@ Item {
             applet.restoreUsageCache();
             verifyScenario(applet.providers[0].usageStale && applet.providers[0].rows.length === 2
                 && !applet.providers[1].usageStale, "late checksum discarded early failures or replaced healthy data");
+            var healthy = applet.providers[1];
+            applet.expireStaleUsage(measuredAt + 24 * 60 * 60 * 1000 + 1);
+            verifyScenario(applet.providers[0].rows.length === 0 && applet.providers[0].error === "Early failure"
+                && applet.providers[1] === healthy && applet.lastUpdatedText === "",
+                "in-memory expiry kept old quotas, lost the error, or replaced healthy usage");
+            verifyScenario(applet.providerUsageTimestamp(applet.providers[0]) === "",
+                "an expired provider displays another provider's update time");
+            applet.providers = [];
+            Plasmoid.configuration.usageCache = saved;
+            applet.restoreUsageCache();
+            applet.expireStaleUsage(Math.max(applet.providers[0].lastGoodAtMs, applet.providers[1].lastGoodAtMs)
+                + 24 * 60 * 60 * 1000 + 1);
+            verifyScenario(applet.providers.every(function(item) { return item.rows.length === 0 && item.error.length > 0; })
+                && Plasmoid.configuration.usageCache === "", "expired restart data survived in memory or on disk");
+            applet.commitUsageSnapshot(previous);
             applet.selectedProviderID = "codex";
             applet.selectionInitialized = true;
             applet.invalidateUsageData("codex");

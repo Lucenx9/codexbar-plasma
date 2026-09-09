@@ -24,6 +24,7 @@ TestCase {
 
         property bool loading: false
         property string lastUpdatedText: "Updated 12:00"
+        property string providerUpdatedText: "Provider updated 11:55"
         property real secondaryTextOpacity: 0.7
         property real roundedSurfaceRadius: 8
         property real nestedSurfaceRadius: 4
@@ -31,6 +32,9 @@ TestCase {
 
         function providerColor() {
             return Qt.rgba(0.2, 0.6, 0.7, 1);
+        }
+        function providerUsageTimestamp(item) {
+            return item && item.lastGoodAtMs > 0 ? providerUpdatedText : "";
         }
         function providerReadableColor() {
             return providerColor();
@@ -93,6 +97,7 @@ TestCase {
         actionSpy.signalName = "";
         actionSpy.clear();
         applet.lastUpdatedText = "Updated 12:00";
+        applet.providerUpdatedText = "Provider updated 11:55";
     }
 
     function cleanupTestCase() {
@@ -216,18 +221,22 @@ TestCase {
     }
 
     function test_headerTimestampRequiresAnObservedUpdate() {
+        var measured = Object.assign({}, provider, {lastGoodAtMs: 1});
         var header = createControl("ProviderHeader", {
-            applet: applet, providerData: provider, width: 540
+            applet: applet, providerData: measured, width: 540
         });
         if (!header)
             return;
-        var timestamp = findText(header, applet.lastUpdatedText);
+        var timestamp = findText(header, applet.providerUpdatedText);
         verify(timestamp !== null);
-        applet.lastUpdatedText = "";
+        applet.lastUpdatedText = "Another provider updated 12:05";
+        compare(timestamp.text, "Provider updated 11:55");
+        header.providerData = provider;
         tryCompare(timestamp, "visible", false);
-        applet.lastUpdatedText = "Updated 12:05";
+        header.providerData = measured;
+        applet.providerUpdatedText = "Last known usage, 8 minutes ago";
         tryCompare(timestamp, "visible", true);
-        compare(timestamp.text, "Updated 12:05");
+        compare(timestamp.text, "Last known usage, 8 minutes ago");
     }
 
     function test_headerMetadataSharesABaseline() {

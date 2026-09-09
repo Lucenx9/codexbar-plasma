@@ -49,7 +49,24 @@ For those, use `make install` or `./install.sh`. Release-package users can use
   `Plasmoid.configuration` at runtime.
 - `UsageCache.js` reconciles failed usage snapshots and projects a bounded quota
   cache. `main.qml` owns context invalidation, configuration reads/writes, and
-  stale notification suppression. Persisted records never bypass normalization.
+  stale notification suppression. Its minute timer expires retained measurements
+  even when automatic refresh is disabled. Persisted records never bypass
+  normalization.
+
+The quota cache adapts the bounded stale reuse and background refresh patterns in
+[RFC 5861](https://www.rfc-editor.org/rfc/rfc5861.html); this is a local application
+policy, not an HTTP cache implementation. Failed retries preserve the original
+measurement time. The 24-hour retention limit applies in memory and on restore.
+The context fingerprint isolates CLI/configuration/account selections; it is not
+an integrity check or encryption. Cached JSON remains untrusted and is rebuilt
+from allowlisted, bounded fields, following
+[OWASP input validation guidance](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html).
+Omitting identities, credentials, paths, and provider prose follows
+[OWASP's data minimization guidance](https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html#minimize-the-storage-of-sensitive-information).
+Persistence uses Plasma's existing configuration mapping; the restart smoke test
+allows its deferred save to complete before starting the second process.
+The first configuration-checksum callback also saves any successful usage that
+arrived before it, so startup persistence does not depend on a later refresh.
 
 Before changing behavior, identify its owning QML page, config entry, CLI input,
 external effects, and cheapest behavioral test. Read the existing implementation
