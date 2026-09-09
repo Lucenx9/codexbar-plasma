@@ -1157,7 +1157,7 @@ for mouse_id in ("compactStatusMouse", "heatmapMouse"):
         raise AssertionError(f"{mouse_id} must not consume clicks")
 for vertical_fragment in (
     "readonly property bool verticalPanel: applet.verticalFormFactor",
-    "!hasProviderMeters || (!verticalPanel && primaryText.length > 0)",
+    "!hasProviderMeters\n        || (!verticalPanel && primaryText.length > 0 && !inlinePrimaryText)",
     "columns: compactRoot.verticalPanel ? 1 : -1",
     "!compactRoot.verticalPanel",
 ):

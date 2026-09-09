@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
+import "../PanelElements.js" as PanelElements
 
 Item {
     id: compactRoot
@@ -15,7 +16,14 @@ Item {
     readonly property bool hasProviderMeters: meterProviders.length > 0
     readonly property var incidentProvider: applet.providerPresentation(applet.primaryIncidentProvider())
     readonly property string primaryText: applet.compactText()
-    readonly property bool showPrimaryIdentity: !hasProviderMeters || (!verticalPanel && primaryText.length > 0)
+    readonly property var selectedProvider: applet.selectedCompactProvider()
+    // A custom order retains the independently positioned identity and text.
+    readonly property bool inlinePrimaryText: !verticalPanel && primaryText.length > 0
+        && applet.panelElementOrder().join(",") === PanelElements.defaultOrder.join(",")
+        && selectedProvider !== null && selectedProvider !== undefined
+        && meterProviders.some(function(provider) { return provider.provider === selectedProvider.provider })
+    readonly property bool showPrimaryIdentity: !hasProviderMeters
+        || (!verticalPanel && primaryText.length > 0 && !inlinePrimaryText)
     readonly property int compactExtent: Kirigami.Units.iconSizes.smallMedium
         + Kirigami.Units.smallSpacing * 2
     readonly property int meterContentHeight: Math.max(0, height - Kirigami.Units.smallSpacing * 2)
@@ -34,6 +42,10 @@ Item {
     readonly property int metersExtent: meterProviders.length * meterHeight
         + Math.max(0, meterProviders.length - 1) * meterSpacing
     readonly property int maximumCompactWidth: Kirigami.Units.gridUnit * 18
+    readonly property int inlineTextWidth: inlinePrimaryText
+        ? Math.min(Math.ceil(compactTextMeasurer.implicitWidth), Math.max(0,
+            maximumCompactWidth - meterProviders.length * (meterWidth + meterSpacing)
+                - Kirigami.Units.smallSpacing * 5)) : 0
     readonly property int desiredWidth: verticalPanel
         ? Kirigami.Units.iconSizes.small + Kirigami.Units.iconSizes.smallMedium + meterSpacing * 4
         : Math.min(maximumCompactWidth, Math.max(Kirigami.Units.gridUnit * 4.8,
@@ -106,7 +118,7 @@ Item {
                         && compactRoot.incidentProvider !== null
                         && compactRoot.incidentProvider.hasIncident)
                     : (modelData === "text"
-                    ? (!compactRoot.verticalPanel && compactRoot.primaryText.length > 0)
+                    ? (!compactRoot.verticalPanel && compactRoot.primaryText.length > 0 && !compactRoot.inlinePrimaryText)
                     : compactRoot.hasProviderMeters))
 
                 sourceComponent: modelData === "identity"
@@ -125,6 +137,7 @@ Item {
                     : (modelData === "meters"
                     ? (compactRoot.verticalPanel ? compactRoot.meterWidth
                         : compactRoot.meterProviders.length * compactRoot.meterWidth
+                            + (compactRoot.inlinePrimaryText ? compactRoot.inlineTextWidth + compactRoot.meterSpacing : 0)
                             + Math.max(0, compactRoot.meterProviders.length - 1) * Kirigami.Units.smallSpacing)
                     : Math.max(Kirigami.Units.gridUnit * 2,
                         Math.ceil(compactTextMeasurer.implicitWidth)))))
@@ -241,6 +254,7 @@ Item {
         id: textElement
 
         PlainPlasmaLabel {
+            objectName: "panelStandaloneText"
             visible: !compactRoot.verticalPanel && compactRoot.primaryText.length > 0
             text: compactRoot.primaryText
             elide: Text.ElideRight
@@ -268,6 +282,8 @@ Item {
                     id: compactMeter
 
                     required property var modelData
+                    readonly property bool showsPrimaryText: compactRoot.inlinePrimaryText
+                        && modelData.provider === compactRoot.selectedProvider.provider
                     readonly property var quotaRows: compactRoot.applet.panelMeterRows(modelData)
                     readonly property color accent: compactRoot.minimalStyle ? Kirigami.Theme.textColor
                         : compactRoot.applet.providerReadableColor(modelData.provider, Kirigami.Theme.backgroundColor)
@@ -280,12 +296,14 @@ Item {
                     }
 
                     Layout.preferredWidth: compactRoot.meterWidth
+                        + (showsPrimaryText ? compactRoot.inlineTextWidth + compactRoot.meterSpacing : 0)
                     Layout.preferredHeight: compactRoot.verticalPanel ? compactRoot.meterHeight : compactRow.height
                     activeFocusOnTab: compactRoot.interactive
 
                     Accessible.role: compactRoot.interactive ? Accessible.Button : Accessible.Graphic
                     Accessible.name: compactRoot.interactive ? i18n("Open %1", modelData.title) : modelData.title
                     Accessible.description: compactRoot.applet.panelMeterDescription(modelData)
+                        + (showsPrimaryText ? ". " + compactRoot.primaryText : "")
                     Accessible.ignored: !compactRoot.interactive
                     Accessible.onPressAction: compactMeter.activate()
 
@@ -367,6 +385,17 @@ Item {
                                     }
                                 }
                             }
+                        }
+
+                        PlainPlasmaLabel {
+                            objectName: "panelProviderText"
+                            visible: compactMeter.showsPrimaryText
+                            text: visible ? compactRoot.primaryText : ""
+                            Layout.preferredWidth: compactRoot.inlineTextWidth
+                            Layout.maximumWidth: compactRoot.inlineTextWidth
+                            Layout.alignment: Qt.AlignVCenter
+                            elide: Text.ElideRight
+                            font.bold: !compactRoot.minimalStyle
                         }
                     }
 

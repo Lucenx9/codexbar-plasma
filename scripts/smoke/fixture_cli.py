@@ -11,9 +11,10 @@ from datetime import datetime, timedelta, timezone
 SCENARIOS = ("normal", "tabs-overflow", "provider-settings", "provider-header", "provider-header-large", "loading", "partial-error", "long-text", "panel-rules", "panel-standard", "panel-minimal", "panel-minimal-single", "legacy-dashboard",
              "project-costs", "project-tokens", "project-range", "project-long-text",
              "localization-it", "localization-fr", "localization-de", "localization-es", "localization-pt_BR")
-SCENARIOS += ("settings-general", "settings-panel", "settings-panel-advanced", "settings-panel-narrow", "settings-popup", "settings-notifications", "settings-diagnostics")
+SCENARIOS += ("settings-general", "settings-panel", "settings-panel-information", "settings-panel-advanced", "settings-panel-narrow", "settings-popup", "settings-notifications", "settings-diagnostics")
 SCENARIOS += ("readme-overview", "readme-spend", "readme-sessions", "readme-codex")
 SCENARIOS += ("readme-panel-standard", "readme-panel-minimal")
+SCENARIOS += ("panel-information", "panel-information-minimal", "panel-information-single")
 SCENARIOS += ("panel-default", "panel-default-single")
 SCENARIOS += ("panel-vertical", "panel-vertical-minimal", "panel-small", "panel-dual-edge")
 SCENARIOS += ("popup-cost-details", "popup-cost-tokens")
@@ -103,7 +104,7 @@ def response(args, scenario, now):
     if args == ["--version"]:
         return "CodexBar 0.56.2 (synthetic smoke fixture)"
     if args == ["config", "providers", "--format", "json", "--json-only"]:
-        providers = ("codex",) if scenario in ("panel-minimal-single", "panel-default-single") else ("codex", "claude")
+        providers = ("codex",) if scenario in ("panel-minimal-single", "panel-default-single", "panel-information-single") else ("codex", "claude")
         if scenario.startswith("readme-"):
             providers += ("gemini",)
         rows = [{"provider": key, "enabled": True} for key in providers]

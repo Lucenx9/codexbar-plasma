@@ -142,7 +142,8 @@ msgstr ""
 msgid "No overview data available."
 msgstr ""
 
-#: contents/ui/components/FullRepresentation.qml contents/ui/main.qml
+#: contents/ui/components/FullRepresentation.qml contents/ui/configPanel.qml
+#: contents/ui/main.qml
 msgid "Credits"
 msgstr ""
 
@@ -807,6 +808,14 @@ msgid ""
 msgstr ""
 
 #: contents/ui/configPanel.qml
+msgid "Provider name"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Provider name, usage text and credits are hidden"
+msgstr ""
+
+#: contents/ui/configPanel.qml
 msgid "Quota: %1"
 msgstr ""
 
@@ -873,15 +882,23 @@ msgid "Contents"
 msgstr ""
 
 #: contents/ui/configPanel.qml
-msgid "Show provider name in panel"
+msgid "Additional information"
 msgstr ""
 
 #: contents/ui/configPanel.qml
-msgid "Show usage text in panel"
+msgid "Collapse options. %1"
 msgstr ""
 
 #: contents/ui/configPanel.qml
-msgid "Panel text:"
+msgid "Expand options. %1"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "For the selected provider, in horizontal panels."
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Text format:"
 msgstr ""
 
 #: contents/ui/configPanel.qml
@@ -925,33 +942,11 @@ msgid "Appears only when the quota is forecast to run out before reset."
 msgstr ""
 
 #: contents/ui/configPanel.qml
-msgid "Show credits in panel"
-msgstr ""
-
-#: contents/ui/configPanel.qml
-msgid "Show provider meters in panel"
-msgstr ""
-
-#: contents/ui/configPanel.qml
-msgid ""
-"Usage text is available only in horizontal panels. Provider meters also work "
-"in vertical panels."
-msgstr ""
-
-#: contents/ui/configPanel.qml
 msgid "Use monochrome icons and meters only"
 msgstr ""
 
 #: contents/ui/configPanel.qml
 msgid "Quota, order and visibility"
-msgstr ""
-
-#: contents/ui/configPanel.qml
-msgid "Collapse options. %1"
-msgstr ""
-
-#: contents/ui/configPanel.qml
-msgid "Expand options. %1"
 msgstr ""
 
 #: contents/ui/configPanel.qml
@@ -982,6 +977,12 @@ msgstr ""
 
 #: contents/ui/configPanel.qml contents/ui/configPopup.qml
 msgid "Move %1 down"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid ""
+"The default order groups text with its provider's meters. Custom orders "
+"place them separately."
 msgstr ""
 
 #: contents/ui/configPanel.qml

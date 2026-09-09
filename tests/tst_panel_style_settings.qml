@@ -87,6 +87,8 @@ TestCase {
         var quota = findChild(page, "panelQuotaCombo");
         var text = findChild(page, "panelTextMode");
         var textCheck = findChild(page, "panelUsageTextCheck");
+        var additional = findChild(page, "panelAdditionalButton");
+        verify(!page.additionalExpanded && !textCheck.visible);
         verify(!options.visible && !quota.visible && !text.visible);
         var saved = storedValues(page);
         button.forceActiveFocus();
@@ -96,6 +98,10 @@ TestCase {
         verify(!page.advancedExpanded && !options.visible && !quota.visible);
         compare(storedValues(page), saved);
         verify(button.activeFocus);
+        additional.forceActiveFocus();
+        keyClick(Qt.Key_Space);
+        verify(page.additionalExpanded && textCheck.visible);
+        compare(storedValues(page), saved);
         textCheck.forceActiveFocus();
         keyClick(Qt.Key_Space);
         verify(text.visible);
@@ -103,6 +109,15 @@ TestCase {
         keyClick(Qt.Key_Space);
         verify(!text.visible);
         compare(storedValues(page), saved);
+        additional.forceActiveFocus();
+        keyClick(Qt.Key_Space);
+        verify(!textCheck.visible && additional.activeFocus);
+        page.cfg_showProviderInPanel = true;
+        page.cfg_showPercentInPanel = true;
+        page.cfg_showCreditsInPanel = true;
+        verify(page.additionalSummary.indexOf("Provider name") >= 0);
+        verify(page.additionalSummary.indexOf("Reset time") >= 0);
+        verify(page.additionalSummary.indexOf("Credits") >= 0);
         // Hidden controls remain bound when Plasma restores defaults.
         page.cfg_panelQuotaLane = page.cfg_panelQuotaLaneDefault;
         page.cfg_menuBarDisplayMode = page.cfg_menuBarDisplayModeDefault;

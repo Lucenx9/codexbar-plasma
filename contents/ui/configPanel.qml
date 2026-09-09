@@ -37,6 +37,15 @@ KCM.SimpleKCM {
     readonly property var presentationConfig: Plasmoid.configuration || ({})
     readonly property bool usageBarsShowUsed: presentationConfig.usageBarsShowUsed !== false
 
+    property bool additionalExpanded: false
+    readonly property string additionalSummary: {
+        var parts = []
+        if (cfg_showProviderInPanel) parts.push(i18n("Provider name"))
+        if (cfg_showPercentInPanel) parts.push(displayModeCombo.currentText)
+        if (cfg_showCreditsInPanel) parts.push(i18n("Credits"))
+        return parts.length > 0 ? parts.join(" · ") : i18n("Provider name, usage text and credits are hidden")
+    }
+
     property bool advancedExpanded: false
     readonly property string advancedSummary: {
         var parts = []
@@ -243,97 +252,125 @@ KCM.SimpleKCM {
         }
 
         Controls.CheckBox {
-            id: showProviderCheck
-            Layout.fillWidth: true
-            text: i18n("Show provider name in panel")
-        }
-
-        Controls.CheckBox {
-            id: showPercentCheck
-            objectName: "panelUsageTextCheck"
-            Layout.fillWidth: true
-            text: i18n("Show usage text in panel")
-        }
-
-        Controls.ComboBox {
-            id: displayModeCombo
-            objectName: "panelTextMode"
-            visible: showPercentCheck.checked
-            Kirigami.FormData.label: i18n("Panel text:")
-            textRole: "text"
-            valueRole: "value"
-            model: [
-                {
-                    text: page.usageBarsShowUsed
-                        ? i18n("Percent used")
-                        : i18n("Percent left"),
-                    value: PanelDisplay.percentMode,
-                    description: ""
-                },
-                {
-                    text: i18n("Pace"), value: PanelDisplay.paceMode,
-                    description: i18n("Shows the expected used or left percentage at this point in the window.")
-                },
-                {
-                    text: i18n("Usage and pace"), value: PanelDisplay.bothMode,
-                    description: i18n("Shows current usage alongside the expected used or left percentage.")
-                },
-                {
-                    text: i18n("Reset time"), value: PanelDisplay.resetTimeMode,
-                    description: i18n("Appears when the provider supplies a reset time.")
-                },
-                {
-                    text: i18n("Run-out forecast"), value: PanelDisplay.runOutMode,
-                    description: i18n("Appears only when the quota is forecast to run out before reset.")
-                }
-            ]
-            enabled: showPercentCheck.checked
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 12
-            onModelChanged: currentIndex = page.displayModeIndex(page.cfg_menuBarDisplayMode)
-            Component.onCompleted: currentIndex = page.displayModeIndex(page.cfg_menuBarDisplayMode)
-            onActivated: page.cfg_menuBarDisplayMode = currentValue
-        }
-
-        Components.PlainControlsLabel {
-            id: displayModeDescription
-
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: displayModeCombo.currentIndex >= 0
-                ? displayModeCombo.model[displayModeCombo.currentIndex].description : ""
-            visible: showPercentCheck.checked && text.length > 0
-            font: Kirigami.Theme.smallFont
-            opacity: 0.7
-            wrapMode: Text.WordWrap
-        }
-
-        Controls.CheckBox {
-            id: showCreditsCheck
-            Layout.fillWidth: true
-            text: i18n("Show credits in panel")
-        }
-
-        Controls.CheckBox {
             id: showMultiProviderCheck
             Layout.fillWidth: true
-            text: i18n("Show provider meters in panel")
-        }
-
-        Components.PlainControlsLabel {
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: i18n("Usage text is available only in horizontal panels. Provider meters also work in vertical panels.")
-            font: Kirigami.Theme.smallFont
-            opacity: 0.7
-            wrapMode: Text.WordWrap
+            text: i18n("Provider meters")
         }
 
         Components.PlainButton {
-            objectName: "minimalPanelPresetButton"
-            plainText: i18n("Use monochrome icons and meters only")
-            onClicked: page.applyMinimalPanelPreset()
+            objectName: "panelAdditionalButton"
+            plainText: i18n("Additional information")
+            icon.name: page.additionalExpanded ? "arrow-down" : (LayoutMirroring.enabled ? "arrow-left" : "arrow-right")
+            checkable: true
+            checked: page.additionalExpanded
+            onToggled: page.additionalExpanded = checked
+            Accessible.description: page.additionalExpanded
+                ? i18n("Collapse options. %1", page.additionalSummary)
+                : i18n("Expand options. %1", page.additionalSummary)
+        }
+
+        Components.PlainControlsLabel {
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            text: page.additionalSummary
+            visible: !page.additionalExpanded
+            font: Kirigami.Theme.smallFont
+            wrapMode: Text.WordWrap
+        }
+
+        Kirigami.FormLayout {
+            objectName: "panelAdditionalOptions"
+            wideMode: false
+            Layout.fillWidth: true
+            visible: page.additionalExpanded
+
+            Components.PlainControlsLabel {
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                text: i18n("For the selected provider, in horizontal panels.")
+                font: Kirigami.Theme.smallFont
+                wrapMode: Text.WordWrap
+            }
+
+            Controls.CheckBox {
+                id: showProviderCheck
+                Layout.fillWidth: true
+                text: i18n("Provider name")
+            }
+
+            Controls.CheckBox {
+                id: showPercentCheck
+                objectName: "panelUsageTextCheck"
+                Layout.fillWidth: true
+                text: i18n("Usage text")
+            }
+
+            Controls.ComboBox {
+                id: displayModeCombo
+                objectName: "panelTextMode"
+                visible: showPercentCheck.checked
+                Kirigami.FormData.label: i18n("Text format:")
+                textRole: "text"
+                valueRole: "value"
+                model: [
+                    {
+                        text: page.usageBarsShowUsed
+                            ? i18n("Percent used")
+                            : i18n("Percent left"),
+                        value: PanelDisplay.percentMode,
+                        description: ""
+                    },
+                    {
+                        text: i18n("Pace"), value: PanelDisplay.paceMode,
+                        description: i18n("Shows the expected used or left percentage at this point in the window.")
+                    },
+                    {
+                        text: i18n("Usage and pace"), value: PanelDisplay.bothMode,
+                        description: i18n("Shows current usage alongside the expected used or left percentage.")
+                    },
+                    {
+                        text: i18n("Reset time"), value: PanelDisplay.resetTimeMode,
+                        description: i18n("Appears when the provider supplies a reset time.")
+                    },
+                    {
+                        text: i18n("Run-out forecast"), value: PanelDisplay.runOutMode,
+                        description: i18n("Appears only when the quota is forecast to run out before reset.")
+                    }
+                ]
+                enabled: showPercentCheck.checked
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 12
+                onModelChanged: currentIndex = page.displayModeIndex(page.cfg_menuBarDisplayMode)
+                Component.onCompleted: currentIndex = page.displayModeIndex(page.cfg_menuBarDisplayMode)
+                onActivated: page.cfg_menuBarDisplayMode = currentValue
+            }
+
+            Components.PlainControlsLabel {
+                id: displayModeDescription
+
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                text: displayModeCombo.currentIndex >= 0
+                    ? displayModeCombo.model[displayModeCombo.currentIndex].description : ""
+                visible: showPercentCheck.checked && text.length > 0
+                font: Kirigami.Theme.smallFont
+                opacity: 0.7
+                wrapMode: Text.WordWrap
+            }
+
+            Controls.CheckBox {
+                id: showCreditsCheck
+                Layout.fillWidth: true
+                text: i18n("Credits")
+            }
+
+            Components.PlainButton {
+                objectName: "minimalPanelPresetButton"
+                plainText: i18n("Use monochrome icons and meters only")
+                onClicked: page.applyMinimalPanelPreset()
+            }
         }
 
         Kirigami.Separator {
@@ -469,6 +506,15 @@ KCM.SimpleKCM {
                         }
                     }
                 }
+            }
+
+            Components.PlainControlsLabel {
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                text: i18n("The default order groups text with its provider's meters. Custom orders place them separately.")
+                font: Kirigami.Theme.smallFont
+                wrapMode: Text.WordWrap
             }
 
             Kirigami.Separator {

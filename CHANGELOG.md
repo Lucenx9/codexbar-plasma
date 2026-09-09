@@ -20,10 +20,14 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
-- Panel settings group appearance and contents first, show text formatting only
-  when enabled, and put quota, order, conditions, and automatic provider selection
-  in an expandable section with a customization summary. Standard and Minimal
-  are side by side; the monochrome icons-and-meters preset has an explicit label.
+- Panel settings start with appearance and meters. Additional information holds
+  provider name, usage text and format, credits, and the monochrome preset.
+  Quota, order, conditions, and automatic selection have their own expandable
+  section. Closed summaries reflect enabled information and custom choices.
+  Standard and Minimal are side by side.
+- Default panel order groups optional text with the selected provider's capsules,
+  using one logo. Hidden or unavailable meters retain a separate text identity;
+  custom element orders keep their independent positions.
 
 - Panel meters place a small provider icon beside primary and secondary quota
   capsules, with matching geometry in colored Standard and monochrome Minimal.

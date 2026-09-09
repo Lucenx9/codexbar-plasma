@@ -551,28 +551,8 @@ msgid "Panel"
 msgstr "Pannello"
 
 #: contents/ui/configPanel.qml
-msgid "Show provider name in panel"
-msgstr "Mostra il nome del provider nel pannello"
-
-#: contents/ui/configPanel.qml
-msgid "Show usage text in panel"
-msgstr "Mostra il testo sull'utilizzo nel pannello"
-
-#: contents/ui/configPanel.qml
-msgid "Show provider meters in panel"
-msgstr "Mostra gli indicatori dei provider nel pannello"
-
-#: contents/ui/configPanel.qml
-msgid "Show credits in panel"
-msgstr "Mostra i crediti nel pannello"
-
-#: contents/ui/configPanel.qml
 msgid "Auto-select highest-usage provider"
 msgstr "Seleziona automaticamente il provider con l'utilizzo più alto"
-
-#: contents/ui/configPanel.qml
-msgid "Usage text is available only in horizontal panels. Provider meters also work in vertical panels."
-msgstr "Il testo di utilizzo è disponibile solo nei pannelli orizzontali. Gli indicatori dei provider funzionano anche nei pannelli verticali."
 
 #: contents/ui/configPanel.qml
 msgid "Panel quota:"
@@ -597,10 +577,6 @@ msgstr "Terziaria"
 #: contents/ui/configPanel.qml
 msgid "Automatic meters show primary and secondary quotas. Choose a quota to show one capsule. Unavailable quotas are omitted."
 msgstr "Gli indicatori automatici mostrano le quote primaria e secondaria. Scegli una quota per mostrare una sola capsula. Le quote non disponibili vengono omesse."
-
-#: contents/ui/configPanel.qml
-msgid "Panel text:"
-msgstr "Testo nel pannello:"
 
 #: contents/ui/configPanel.qml
 msgid "Percent used"
@@ -2567,3 +2543,28 @@ msgstr "Comprimi le opzioni. %1"
 #: contents/ui/configPanel.qml
 msgid "Expand options. %1"
 msgstr "Espandi le opzioni. %1"
+
+
+#: contents/ui/configPanel.qml
+msgid "Provider name"
+msgstr "Nome del provider"
+
+#: contents/ui/configPanel.qml
+msgid "Provider name, usage text and credits are hidden"
+msgstr "Nome del provider, testo di utilizzo e crediti nascosti"
+
+#: contents/ui/configPanel.qml
+msgid "Additional information"
+msgstr "Informazioni aggiuntive"
+
+#: contents/ui/configPanel.qml
+msgid "For the selected provider, in horizontal panels."
+msgstr "Per il provider selezionato, nei pannelli orizzontali."
+
+#: contents/ui/configPanel.qml
+msgid "Text format:"
+msgstr "Formato del testo:"
+
+#: contents/ui/configPanel.qml
+msgid "The default order groups text with its provider's meters. Custom orders place them separately."
+msgstr "L’ordine predefinito raggruppa il testo con gli indicatori del suo provider. Gli ordini personalizzati li posizionano separatamente."

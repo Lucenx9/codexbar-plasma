@@ -279,10 +279,14 @@ Panel scenarios verify capsule count and clipping at small sizes, including
 zero and absent quotas. `panel-vertical` and `panel-vertical-minimal` supply the
 vertical form-factor input because `plasmawindowed` has no panel containment.
 QtTests additionally exercise pointer/keyboard activation and resizing.
-`settings-panel`, `settings-panel-advanced`, and `settings-panel-narrow` verify
-pending preview changes, collapsed/expanded controls, rendered quota capsules,
-and a 420-pixel layout with larger text. QtTests exercise style selection,
-disclosure, retained hidden values, and defaults through keyboard input.
+`settings-panel`, `settings-panel-information`, `settings-panel-advanced`, and
+`settings-panel-narrow` verify pending preview changes, collapsed/expanded controls,
+rendered quota capsules, and a 420-pixel layout with larger text and all additional
+information enabled. `panel-information`, `panel-information-minimal`, and
+`panel-information-single` capture grouped text at a 24-pixel panel height, including
+selection of the second provider. QtTests exercise style selection, disclosure,
+retained hidden values, defaults, custom order and filtered-meter fallbacks,
+long-text bounds, and activation through both text and meters.
 `usage-retention` exercises failed/partial refreshes, recovery, notification
 suppression, and cache invalidation. `usage-cache-restart` launches two separate
 widget processes with the same isolated settings and delays the second CLI

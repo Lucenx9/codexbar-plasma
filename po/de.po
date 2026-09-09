@@ -552,28 +552,8 @@ msgid "Panel"
 msgstr "Kontrollleiste"
 
 #: contents/ui/configPanel.qml
-msgid "Show provider name in panel"
-msgstr "Anbieternamen in der Kontrollleiste anzeigen"
-
-#: contents/ui/configPanel.qml
-msgid "Show usage text in panel"
-msgstr "Nutzungstext in der Kontrollleiste anzeigen"
-
-#: contents/ui/configPanel.qml
-msgid "Show provider meters in panel"
-msgstr "Anbieteranzeigen in der Kontrollleiste einblenden"
-
-#: contents/ui/configPanel.qml
-msgid "Show credits in panel"
-msgstr "Guthaben in der Kontrollleiste anzeigen"
-
-#: contents/ui/configPanel.qml
 msgid "Auto-select highest-usage provider"
 msgstr "Anbieter mit höchster Nutzung automatisch auswählen"
-
-#: contents/ui/configPanel.qml
-msgid "Usage text is available only in horizontal panels. Provider meters also work in vertical panels."
-msgstr "Nutzungstext ist nur in horizontalen Kontrollleisten verfügbar. Anbieteranzeigen funktionieren auch in vertikalen Kontrollleisten."
 
 #: contents/ui/configPanel.qml
 msgid "Panel quota:"
@@ -598,10 +578,6 @@ msgstr "Tertiär"
 #: contents/ui/configPanel.qml
 msgid "Automatic meters show primary and secondary quotas. Choose a quota to show one capsule. Unavailable quotas are omitted."
 msgstr "Automatische Anzeigen zeigen das primäre und sekundäre Kontingent. Wählen Sie ein Kontingent für eine einzelne Kapsel. Nicht verfügbare Kontingente werden ausgelassen."
-
-#: contents/ui/configPanel.qml
-msgid "Panel text:"
-msgstr "Leistentext:"
 
 #: contents/ui/configPanel.qml
 msgid "Percent used"
@@ -2579,3 +2555,28 @@ msgstr "Optionen einklappen. %1"
 #: contents/ui/configPanel.qml
 msgid "Expand options. %1"
 msgstr "Optionen ausklappen. %1"
+
+
+#: contents/ui/configPanel.qml
+msgid "Provider name"
+msgstr "Anbietername"
+
+#: contents/ui/configPanel.qml
+msgid "Provider name, usage text and credits are hidden"
+msgstr "Anbietername, Nutzungstext und Guthaben sind ausgeblendet"
+
+#: contents/ui/configPanel.qml
+msgid "Additional information"
+msgstr "Zusätzliche Informationen"
+
+#: contents/ui/configPanel.qml
+msgid "For the selected provider, in horizontal panels."
+msgstr "Für den ausgewählten Anbieter in horizontalen Kontrollleisten."
+
+#: contents/ui/configPanel.qml
+msgid "Text format:"
+msgstr "Textformat:"
+
+#: contents/ui/configPanel.qml
+msgid "The default order groups text with its provider's meters. Custom orders place them separately."
+msgstr "Die Standardreihenfolge gruppiert den Text mit den Anzeigen seines Anbieters. Benutzerdefinierte Reihenfolgen platzieren sie getrennt."

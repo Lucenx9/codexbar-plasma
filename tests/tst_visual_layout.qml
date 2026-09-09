@@ -114,7 +114,7 @@ TestCase {
         }
         function selectedCompactProvider() {
             return {
-                provider: "codex"
+                provider: selectedProviderID
             };
         }
         function primaryIncidentProvider() {
@@ -220,6 +220,7 @@ TestCase {
         applet.minimalPanel = false;
         applet.quotaWarning = false;
         applet.verticalFormFactor = false;
+        applet.selectedProviderID = "codex";
     }
 
     function test_minimalPanelAppearance_data() {
@@ -270,6 +271,42 @@ TestCase {
                 return found;
         }
         return null;
+    }
+
+    function test_selectedTextStaysWithItsMeterAndFits_data() {
+        return [
+            {tag: "standard-small", minimal: false, extent: 24},
+            {tag: "minimal-small", minimal: true, extent: 24},
+            {tag: "standard", minimal: false, extent: 44},
+            {tag: "minimal", minimal: true, extent: 44}
+        ];
+    }
+
+    function test_selectedTextStaysWithItsMeterAndFits(data) {
+        applet.minimalPanel = data.minimal;
+        var panel = createControl("CompactRepresentation", {applet: applet, height: data.extent});
+        if (!panel) return;
+        verify(panel.inlinePrimaryText && !panel.showPrimaryIdentity);
+        for (var id of ["codex", "claude"]) {
+            applet.selectedProviderID = id;
+            wait(0);
+            var meter = findItem(panel, item => item.modelData && item.modelData.provider === id);
+            var label = findItem(meter, item => item.objectName === "panelProviderText");
+            var track = findItem(meter, item => item.objectName === "panelMeterTrack");
+            verify(label.visible && label.width > 0);
+            tryVerify(() => track.mapToItem(panel, track.width, 0).x < label.mapToItem(panel, 0, 0).x, 1000,
+                JSON.stringify({id: id, track: track.mapToItem(panel, track.width, 0), text: label.mapToItem(panel, 0, 0), width: label.width}));
+            verify(label.mapToItem(panel, label.width, 0).x <= panel.width);
+            verify(label.mapToItem(panel, 0, 0).y >= 0);
+            verify(label.mapToItem(panel, 0, label.height).y <= panel.height);
+            verify(meter.Accessible.description.indexOf(applet.compactText()) >= 0);
+            applet.openedProvider = "";
+            mouseClick(label, label.width / 2, label.height / 2);
+            compare(applet.openedProvider, id);
+        }
+        applet.verticalFormFactor = true;
+        tryCompare(panel, "inlinePrimaryText", false);
+        verify(!panel.showPrimaryIdentity);
     }
 
     function test_emptyQuotaRetainsWarningColor_data() {

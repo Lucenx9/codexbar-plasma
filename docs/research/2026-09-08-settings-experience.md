@@ -68,8 +68,10 @@ remain available in Git history.
 ## Panel disclosure refinement
 
 The follow-up against Plasma `d09e5b6` keeps the six-page structure and existing
-configuration keys. Appearance and content choices remain visible; text format
-appears only when usage text is enabled. A collapsed section contains quota,
+configuration keys. Appearance and meters remain visible. Additional information
+holds provider name, usage text and format, credits, and the monochrome preset.
+The closed summary lists enabled information. Text format appears only when usage
+text is enabled. A separate collapsed section contains quota,
 order, visibility conditions, and automatic provider selection. Its summary
 identifies effective non-default choices without discarding hidden preferences.
 The section is named "Quota, order and visibility" so its contents are predictable.
@@ -85,3 +87,10 @@ The live preview resolves a Repeater provider back to its synthetic source befor
 selecting quota rows. Qt can expose nested delegate arrays as sequence wrappers;
 those must not make the pure array-based quota selector omit real preview data.
 This changes no CLI parsing or live provider normalization.
+
+With the default element order, the selected provider's optional text follows its
+capsules inside the same clickable group. This removes the repeated provider logo
+seen at `6addadd`. Other providers retain their icon and capsules. A custom order
+preserves independently positioned elements; if the selected meter is filtered
+out or unavailable, standalone text keeps its identity. Both styles share the
+layout and preserve quota warnings, keyboard activation, and bounded text width.
