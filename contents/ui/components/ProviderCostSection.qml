@@ -105,6 +105,12 @@ ColumnLayout {
             Accessible.name: i18n("History metric")
             onActivated: function (index) {
                 tokenCostSection.applet.setCostHistoryMetric(valueAt(index));
+                // The interactive pick severs the currentIndex binding; restore
+                // it so the combo keeps tracking settings changes made outside
+                // this section.
+                currentIndex = Qt.binding(function () {
+                    return tokenCostSection.costHistoryShowsTokens ? 1 : 0;
+                });
             }
         }
     }

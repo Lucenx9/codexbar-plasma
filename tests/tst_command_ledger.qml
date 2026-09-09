@@ -200,6 +200,16 @@ TestCase {
         compare(CommandLedger.expired(commands, 9999999).length, 0)
     }
 
+    // The clock fails closed like descriptor(): an unusable nowMs normalizes to
+    // zero instead of making every comparison false and expiring the ledger.
+    function test_expiredSkipsEverythingOnAnUnusableClock() {
+        var commands = CommandLedger.opened(({}), "a", entry("usage", "", 100))
+        compare(CommandLedger.expired(commands, Number.NaN).length, 0)
+        compare(CommandLedger.expired(commands, undefined).length, 0)
+        compare(CommandLedger.expired(commands, "abc").length, 0)
+        compare(CommandLedger.expired(commands, -1).length, 0)
+    }
+
     function test_expiredIsEmptyForAnEmptyLedger() {
         compare(CommandLedger.expired(({}), 1000).length, 0)
     }

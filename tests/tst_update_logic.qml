@@ -56,8 +56,10 @@ TestCase {
         compare(UpdateLogic.nextUpdateCheckDelay(true, future, 12, nowMs, 60000), 60000)
     }
 
+    // A NaN clock must not poison the delay the way every other unusable input
+    // is funneled to the minimum.
     function test_unusableClockSchedulesTheMinimumDelay() {
-        var recent = new Date(nowMs - 11 * 60 * 60 * 1000).toISOString()
+        var recent = new Date(nowMs - 60 * 60 * 1000).toISOString()
         compare(UpdateLogic.nextUpdateCheckDelay(true, recent, 12, Number.NaN, 60000), 60000)
         compare(UpdateLogic.nextUpdateCheckDelay(true, recent, 12, undefined, 60000), 60000)
     }

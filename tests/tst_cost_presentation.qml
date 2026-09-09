@@ -320,6 +320,15 @@ TestCase {
         compare(CostPresentation.peakPoint([dailyPoint("", 5, 900)], false).label, "")
     }
 
+    // Null entries carry no data: the peak skips them like uniqueCostDayIndex
+    // does, and breakdown rows never read a token count from one.
+    function test_peakPointAndBreakdownRowsSkipNullEntries() {
+        compare(CostPresentation.peakPoint([null, dailyPoint("Mon", 5, 900)], false).label, "Mon")
+        compare(CostPresentation.peakPoint([null, null], false), null)
+        compare(CostPresentation.breakdownRows([null, { label: "ok", tokens: 5 }]).length, 1)
+        compare(CostPresentation.breakdownRows([null]).length, 0)
+    }
+
     function test_averageDailyValueDividesByEveryPlottedDay() {
         var points = [dailyPoint("Mon", 3, 0), dailyPoint("Tue", 0, 0), dailyPoint("Wed", 6, 0)]
         compare(CostPresentation.averageDailyValue(points, false).value, 3)

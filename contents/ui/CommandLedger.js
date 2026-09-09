@@ -158,7 +158,14 @@ function hasDeadlines(commands) {
     return false
 }
 
+// Like descriptor() the clock fails closed: a NaN or negative nowMs normalizes
+// to zero so a broken clock keeps every deadline in the future instead of
+// reporting the whole ledger overdue.
 function expired(commands, nowMs) {
+    var now = Number(nowMs)
+    if (!isFinite(now) || now < 0) {
+        now = 0
+    }
     var overdue = []
     for (var sourceName in commands) {
         if (!hasOwnKey(commands, sourceName)) {
@@ -166,7 +173,7 @@ function expired(commands, nowMs) {
         }
         var entry = commands[sourceName]
         var deadline = entry ? Number(entry.deadlineMs) : 0
-        if (!isFinite(deadline) || deadline <= 0 || nowMs < deadline) {
+        if (!isFinite(deadline) || deadline <= 0 || now < deadline) {
             continue
         }
         overdue.push({ sourceName: sourceName, descriptor: entry })
