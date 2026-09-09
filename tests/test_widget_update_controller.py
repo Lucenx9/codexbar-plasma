@@ -24,6 +24,13 @@ TestCase {
     SignalSpy { id: available; target: subject; signalName: "updateAvailable" }
     SignalSpy { id: installed; target: subject; signalName: "updateInstalled" }
 
+    function initTestCase() {
+        var probe = Qt.createComponent("CONTROLLER_URL");
+        if (probe.status === Component.Error && /module "org\\.kde\\.[^"]+" is not installed/.test(probe.errorString())) {
+            skip("WidgetUpdateController needs the optional KDE QML modules");
+            return;
+        }
+    }
     function init() {
         subject = null;
         recorded.clear();
@@ -178,9 +185,14 @@ fi
                 [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
                 env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
                 capture_output=True, text=True, timeout=95)
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            output = result.stdout + result.stderr
+            if os.environ.get("QML_TEST_REQUIRE_NO_SKIPS") == "1" and "SKIP" in output:
+                self.fail("QML tests were skipped; the CI environment must provide the KDE QML modules.")
+            if "SKIP" in output:
+                self.skipTest("WidgetUpdateController needs the optional KDE QML modules")
+            self.assertEqual(result.returncode, 0, output)
             # Plasma destroys the timed-out QProcess when its source disconnects.
-            warnings = [line for line in (result.stdout + result.stderr).splitlines()
+            warnings = [line for line in output.splitlines()
                         if "QWARN" in line and not (
                             "test_timeoutCancelsRequestAndNextRunSucceeds()" in line
                             and 'QProcess: Destroyed while process ("/bin/sh") is still running.' in line)]
