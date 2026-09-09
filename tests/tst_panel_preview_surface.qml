@@ -68,6 +68,7 @@ TestCase {
         settings.cfg_showProviderInPanel = true;
         settings.cfg_showPercentInPanel = true;
         tryCompare(renderer, "primaryText", "Codex 42% used");
+        verify(renderer.inlinePrimaryText && !renderer.showPrimaryIdentity);
         settings.cfg_panelStyle = "minimal";
         tryCompare(renderer, "minimalStyle", true);
         settings.cfg_panelQuotaLane = "secondary";
@@ -78,14 +79,37 @@ TestCase {
         tryCompare(renderer, "primaryText", "Codex 73% left 125cr");
         settings.cfg_autoSelectProvider = true;
         tryCompare(renderer, "primaryText", "Claude 39% left");
+        verify(renderer.inlinePrimaryText && !renderer.showPrimaryIdentity);
         settings.cfg_panelElementOrder = "text,meters,identity,status";
         compare(renderer.applet.panelElementOrder(), ["text", "meters", "identity", "status"]);
+        verify(!renderer.inlinePrimaryText && renderer.showPrimaryIdentity);
         settings.cfg_showMultiProviderInPanel = false;
         tryCompare(renderer, "hasProviderMeters", false);
         mouseClick(renderer);
         compare(settings.cfg_panelQuotaLane, "secondary");
         compare(settings.cfg_showMultiProviderInPanel, false);
         verify(renderer.width > 0 && renderer.height > 0);
+    }
+
+    function test_textKeepsItsIdentityWhenSelectedMeterIsFilteredOut() {
+        var settings = createTemporaryObject(settingsComponent, testCase, {
+            cfg_showPercentInPanel: true,
+            cfg_panelVisibilityRules: '{"meters":{"condition":"usageAtLeast","usedPercent":50}}'
+        });
+        var preview = createPreview(settings);
+        if (!preview) return;
+        var renderer = findChild(preview, "panelPreviewRenderer");
+        compare(renderer.primaryText, "42% used");
+        compare(renderer.meterProviders.length, 1);
+        compare(renderer.meterProviders[0].provider, "claude");
+        verify(!renderer.inlinePrimaryText && renderer.showPrimaryIdentity);
+        settings.cfg_panelVisibilityRules = '{}';
+        tryCompare(renderer, "inlinePrimaryText", true);
+        verify(!renderer.showPrimaryIdentity);
+        settings.cfg_panelVisibilityRules = '{"text":{"condition":"usageAtLeast","usedPercent":80}}';
+        tryCompare(renderer, "primaryText", "");
+        verify(!renderer.inlinePrimaryText && !renderer.showPrimaryIdentity);
+        verify(renderer.hasProviderMeters);
     }
 
     function test_scenarioControlsUpdateRulesMetricsAndMissingData() {

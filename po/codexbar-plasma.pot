@@ -17,7 +17,7 @@ msgstr ""
 msgid "Providers"
 msgstr ""
 
-#: contents/config/config.qml contents/ui/configPanel.qml
+#: contents/config/config.qml
 msgid "Panel"
 msgstr ""
 
@@ -142,7 +142,8 @@ msgstr ""
 msgid "No overview data available."
 msgstr ""
 
-#: contents/ui/components/FullRepresentation.qml contents/ui/main.qml
+#: contents/ui/components/FullRepresentation.qml contents/ui/configPanel.qml
+#: contents/ui/main.qml
 msgid "Credits"
 msgstr ""
 
@@ -807,6 +808,36 @@ msgid ""
 msgstr ""
 
 #: contents/ui/configPanel.qml
+msgid "Provider name"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Provider name, usage text and credits are hidden"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Quota: %1"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Custom element order"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "%1 visibility rule"
+msgid_plural "%1 visibility rules"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/configPanel.qml
+msgid "Highest-usage provider selected automatically"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Automatic quotas, default order, no conditions"
+msgstr ""
+
+#: contents/ui/configPanel.qml
 msgid "Service status"
 msgstr ""
 
@@ -819,6 +850,10 @@ msgid "Provider meters"
 msgstr ""
 
 #: contents/ui/configPanel.qml
+msgid "Appearance"
+msgstr ""
+
+#: contents/ui/configPanel.qml
 msgid "Panel style:"
 msgstr ""
 
@@ -827,67 +862,43 @@ msgid "Standard"
 msgstr ""
 
 #: contents/ui/configPanel.qml
+msgid "Colored provider icons"
+msgstr ""
+
+#: contents/ui/configPanel.qml
 msgid "Minimal"
 msgstr ""
 
 #: contents/ui/configPanel.qml
-msgid ""
-"Minimal uses monochrome icons and capsule meters. Quota warnings keep their "
-"warning colors."
+msgid "Monochrome provider icons"
 msgstr ""
 
 #: contents/ui/configPanel.qml
-msgid "Use minimal preset"
+msgid "Quota capsules keep their warning colors in both styles."
 msgstr ""
 
 #: contents/ui/configPanel.qml
-msgid ""
-"The preset enables provider meters and hides provider names, usage text and "
-"credits in the panel."
+msgid "Contents"
 msgstr ""
 
 #: contents/ui/configPanel.qml
-msgid "Show provider name in panel"
+msgid "Additional information"
 msgstr ""
 
 #: contents/ui/configPanel.qml
-msgid "Show usage text in panel"
+msgid "Collapse options. %1"
 msgstr ""
 
 #: contents/ui/configPanel.qml
-msgid "Show credits in panel"
+msgid "Expand options. %1"
 msgstr ""
 
 #: contents/ui/configPanel.qml
-msgid "Show provider meters in panel"
+msgid "For the selected provider, in horizontal panels."
 msgstr ""
 
 #: contents/ui/configPanel.qml
-msgid "Auto-select highest-usage provider"
-msgstr ""
-
-#: contents/ui/configPanel.qml
-msgid ""
-"Usage text is available only in horizontal panels. Provider meters also work "
-"in vertical panels."
-msgstr ""
-
-#: contents/ui/configPanel.qml
-msgid "Panel quota:"
-msgstr ""
-
-#: contents/ui/configPanel.qml
-msgid "Automatic"
-msgstr ""
-
-#: contents/ui/configPanel.qml
-msgid ""
-"Automatic meters show primary and secondary quotas. Choose a quota to show "
-"one capsule. Unavailable quotas are omitted."
-msgstr ""
-
-#: contents/ui/configPanel.qml
-msgid "Panel text:"
+msgid "Text format:"
 msgstr ""
 
 #: contents/ui/configPanel.qml
@@ -931,6 +942,28 @@ msgid "Appears only when the quota is forecast to run out before reset."
 msgstr ""
 
 #: contents/ui/configPanel.qml
+msgid "Use monochrome icons and meters only"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Quota, order and visibility"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Panel quota:"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Automatic"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid ""
+"Automatic meters show primary and secondary quotas. Choose a quota to show "
+"one capsule. Unavailable quotas are omitted."
+msgstr ""
+
+#: contents/ui/configPanel.qml
 msgid "Element order:"
 msgstr ""
 
@@ -944,6 +977,12 @@ msgstr ""
 
 #: contents/ui/configPanel.qml contents/ui/configPopup.qml
 msgid "Move %1 down"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid ""
+"The default order groups text with its provider's meters. Custom orders "
+"place them separately."
 msgstr ""
 
 #: contents/ui/configPanel.qml
@@ -963,6 +1002,10 @@ msgid ""
 "A provider meter appears when either displayed quota matches its condition. "
 "The text condition also applies to the provider name and credits. Missing "
 "data does not satisfy a condition."
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Auto-select highest-usage provider"
 msgstr ""
 
 #: contents/ui/configPopup.qml contents/ui/configProviders.qml

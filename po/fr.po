@@ -551,28 +551,8 @@ msgid "Panel"
 msgstr "Panneau"
 
 #: contents/ui/configPanel.qml
-msgid "Show provider name in panel"
-msgstr "Afficher le nom du fournisseur dans le panneau"
-
-#: contents/ui/configPanel.qml
-msgid "Show usage text in panel"
-msgstr "Afficher le texte d'utilisation dans le panneau"
-
-#: contents/ui/configPanel.qml
-msgid "Show provider meters in panel"
-msgstr "Afficher les jauges des fournisseurs dans le panneau"
-
-#: contents/ui/configPanel.qml
-msgid "Show credits in panel"
-msgstr "Afficher les crédits dans le panneau"
-
-#: contents/ui/configPanel.qml
 msgid "Auto-select highest-usage provider"
 msgstr "Sélectionner automatiquement le fournisseur le plus utilisé"
-
-#: contents/ui/configPanel.qml
-msgid "Usage text is available only in horizontal panels. Provider meters also work in vertical panels."
-msgstr "Le texte d’utilisation est disponible uniquement dans les panneaux horizontaux. Les jauges des fournisseurs fonctionnent aussi dans les panneaux verticaux."
 
 #: contents/ui/configPanel.qml
 msgid "Panel quota:"
@@ -597,10 +577,6 @@ msgstr "Tertiaire"
 #: contents/ui/configPanel.qml
 msgid "Automatic meters show primary and secondary quotas. Choose a quota to show one capsule. Unavailable quotas are omitted."
 msgstr "Les jauges automatiques affichent les quotas principal et secondaire. Choisissez un quota pour afficher une seule capsule. Les quotas indisponibles sont omis."
-
-#: contents/ui/configPanel.qml
-msgid "Panel text:"
-msgstr "Texte du panneau :"
 
 #: contents/ui/configPanel.qml
 msgid "Percent used"
@@ -2285,20 +2261,6 @@ msgstr "Style du panneau :"
 msgid "Minimal"
 msgstr "Minimal"
 
-#: contents/ui/configPanel.qml
-msgid "Minimal uses monochrome icons and capsule meters. Quota warnings keep their warning colors."
-msgstr "Minimal utilise des icônes et des jauges en capsule monochromes. Les alertes de quota conservent leurs couleurs."
-
-#: contents/ui/configPanel.qml
-msgid "Use minimal preset"
-msgstr "Utiliser le préréglage minimal"
-
-#: contents/ui/configPanel.qml
-msgid ""
-"The preset enables provider meters and hides provider names, usage text and "
-"credits in the panel."
-msgstr "Le préréglage active les jauges des fournisseurs et masque leurs noms, le texte d'utilisation et les crédits dans le panneau."
-
 #: contents/ui/configProviders.qml
 msgid "All providers"
 msgstr "Tous les fournisseurs"
@@ -2526,3 +2488,86 @@ msgstr "Dernières données valides, il y a %1"
 #: contents/ui/main.qml
 msgid "Cached usage has expired. Refresh to try again."
 msgstr "Les données d’utilisation en cache ont expiré. Actualisez pour réessayer."
+
+#: contents/ui/configPanel.qml
+msgid "Quota: %1"
+msgstr "Quota : %1"
+
+#: contents/ui/configPanel.qml
+msgid "Custom element order"
+msgstr "Ordre des éléments personnalisé"
+
+#: contents/ui/configPanel.qml
+msgid "%1 visibility rule"
+msgid_plural "%1 visibility rules"
+msgstr[0] "%1 règle de visibilité"
+msgstr[1] "%1 règles de visibilité"
+
+#: contents/ui/configPanel.qml
+msgid "Highest-usage provider selected automatically"
+msgstr "Sélection automatique du fournisseur le plus utilisé"
+
+#: contents/ui/configPanel.qml
+msgid "Automatic quotas, default order, no conditions"
+msgstr "Quotas automatiques, ordre par défaut, aucune condition"
+
+#: contents/ui/configPanel.qml
+msgid "Appearance"
+msgstr "Apparence"
+
+#: contents/ui/configPanel.qml
+msgid "Colored provider icons"
+msgstr "Icônes des fournisseurs en couleur"
+
+#: contents/ui/configPanel.qml
+msgid "Monochrome provider icons"
+msgstr "Icônes des fournisseurs monochromes"
+
+#: contents/ui/configPanel.qml
+msgid "Quota capsules keep their warning colors in both styles."
+msgstr "Les indicateurs de quota conservent leurs couleurs d’avertissement dans les deux styles."
+
+#: contents/ui/configPanel.qml
+msgid "Contents"
+msgstr "Contenu"
+
+#: contents/ui/configPanel.qml
+msgid "Use monochrome icons and meters only"
+msgstr "Utiliser uniquement les icônes monochromes et les indicateurs"
+
+#: contents/ui/configPanel.qml
+msgid "Quota, order and visibility"
+msgstr "Quota, ordre et visibilité"
+
+#: contents/ui/configPanel.qml
+msgid "Collapse options. %1"
+msgstr "Réduire les options. %1"
+
+#: contents/ui/configPanel.qml
+msgid "Expand options. %1"
+msgstr "Développer les options. %1"
+
+
+#: contents/ui/configPanel.qml
+msgid "Provider name"
+msgstr "Nom du fournisseur"
+
+#: contents/ui/configPanel.qml
+msgid "Provider name, usage text and credits are hidden"
+msgstr "Nom du fournisseur, texte d’utilisation et crédits masqués"
+
+#: contents/ui/configPanel.qml
+msgid "Additional information"
+msgstr "Informations supplémentaires"
+
+#: contents/ui/configPanel.qml
+msgid "For the selected provider, in horizontal panels."
+msgstr "Pour le fournisseur sélectionné, dans les panneaux horizontaux."
+
+#: contents/ui/configPanel.qml
+msgid "Text format:"
+msgstr "Format du texte :"
+
+#: contents/ui/configPanel.qml
+msgid "The default order groups text with its provider's meters. Custom orders place them separately."
+msgstr "L’ordre par défaut regroupe le texte avec les indicateurs de son fournisseur. Les ordres personnalisés les placent séparément."
