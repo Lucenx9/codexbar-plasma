@@ -39,6 +39,15 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Last-known quota handling: unknown service status no longer keeps showing
+  the previous outage, extra-lane quotas survive restarts, expired quotas
+  keep no measurement instead of undefined state, the restore banner only
+  shows when data is actually stale, per-provider resets keep healthy
+  providers' disk cache, empty usage results keep CLI error detail, stale
+  supplement sections are hidden until revalidated, measurements older than
+  24 hours no longer stamp as fresh, overview rows keep account/status
+  context beside the last-known note, and long update timestamps ellipsize
+  on one line.
 - Credit balances that round up to a whole number no longer keep a trailing
   ".0" (99.95 credits read as "100"), and huge magnitudes no longer gain a
   bogus group separator.

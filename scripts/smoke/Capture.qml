@@ -962,7 +962,8 @@ Item {
             verifyScenario(applet.providers[0].rows.length === 0 && applet.providers[0].error === "Early failure"
                 && applet.providers[1] === healthy && applet.lastUpdatedText === "",
                 "in-memory expiry kept old quotas, lost the error, or replaced healthy usage");
-            verifyScenario(applet.providerUsageTimestamp(applet.providers[0]) === "",
+            verifyScenario(applet.providerUsageTimestamp(applet.providers[0]) === ""
+                && applet.providers[0].lastGoodAtMs === 0 && applet.providers[0].usageStale === false,
                 "an expired provider displays another provider's update time");
             applet.providers = [];
             Plasmoid.configuration.usageCache = saved;
@@ -977,7 +978,9 @@ Item {
             applet.invalidateUsageData("codex");
             verifyScenario(applet.providers.length === 2 && applet.providers[0].rows.length === 0
                 && applet.providers[1].rows.length === 2 && applet.selectedProviderID === "codex"
-                && Plasmoid.configuration.usageCache === "", "account invalidation reused quotas or moved selection");
+                && JSON.parse(Plasmoid.configuration.usageCache).snapshots.length === 1
+                && JSON.parse(Plasmoid.configuration.usageCache).snapshots[0].provider === "claude",
+                "account invalidation reused quotas, moved selection, or dropped healthy cache");
             applet.providers = [];
             Plasmoid.configuration.usageCache = saved;
             applet.providerConfigStamp = "changed configuration";

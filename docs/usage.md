@@ -75,7 +75,8 @@ the retained-data indication. Retained data never generates quota, pace, reset,
 or status notifications, and its run-out forecasts are suppressed. If a failed
 quota response includes newly fetched service status, that status still updates
 and can trigger incident notifications independently of the retained quotas. Failed
-refreshes stop reusing measurements older than 24 hours. The existing minute
+refreshes stop reusing measurements older than 24 hours, and a measurement
+older than 24 hours never stamps a new snapshot as fresh. The existing minute
 timer also removes expired retained data when automatic refresh is disabled;
 the error remains visible and healthy providers are unaffected.
 
@@ -85,18 +86,20 @@ the cache, then refreshes in the background. Restored quotas are always marked
 last known, even if they were saved recently. A cache is not a successful refresh.
 
 The disk cache is limited to 64 KiB of UTF-8 on both save and restore. It holds
-at most 64 providers and only their primary, secondary, and
-tertiary percentages, reset timestamps, measurement timestamps, and an opaque
+at most 64 providers and only their primary, secondary,
+tertiary, and extra percentages, reset timestamps, measurement timestamps, and an opaque
 configuration fingerprint. It contains no account identities, credentials,
 provider prose, cost history, session data, or paths. Entries older than 24 hours,
 future-dated entries, corrupt records, and unsupported cache versions are ignored.
-Additional provider details remain available in memory during a failed refresh,
-but expire with the quotas and are not restored from disk. A missing measurement
+Supplemental sections (cost, credits, detail views, token costs) are hidden
+while requests fail and are not restored from disk; only the retained quotas
+carry the last-known indication. A missing measurement
 timestamp uses receipt time. The 24-hour limit is a widget policy, not a guarantee
 that a retained quota remains accurate throughout that period.
 
 Changing the CLI path, provider/source override, provider configuration, or selected
-account invalidates the affected retained data and the disk cache. Disabling all
+account invalidates the affected retained data. A per-provider reset keeps
+healthy providers' disk cache; a full reset clears it. Disabling all
 providers clears the cached quotas. A confirmed successful response without a
 quota removes its previous value; measured zero remains zero. Privacy mode hides
 identities as usual and keeps the last-known indication visible.

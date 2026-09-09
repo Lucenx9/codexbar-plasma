@@ -129,7 +129,13 @@ TestCase {
         compare(previous[0].status, "Private incident");
         var unavailable = Cache.reconcile([retained], [failed("codex")], nowMs)[0];
         verify(!unavailable.statusKnown);
-        compare(unavailable.status, retained.status);
+        // An unknown status must not keep showing the previous outage:
+        // badges gate on hasIncident alone.
+        compare(unavailable.status, "");
+        compare(unavailable.statusSeverity, "");
+        compare(unavailable.statusIncidentKey, "");
+        verify(!unavailable.hasIncident);
+        compare(unavailable.statusUrl, "");
         var expired = Cache.withCurrentStatus(failed("codex"), retained);
         verify(expired.statusKnown && expired.hasIncident);
         compare(expired.rows.length, 0);
@@ -142,6 +148,66 @@ TestCase {
         compare(recovered.status, "Operational");
         compare(recovered.statusSeverity, "");
         compare(recovered.statusIncidentKey, "");
+    }
+
+    function test_extraLaneQuotasSurviveRestart() {
+        var extra = {
+            lane: "extra",
+            label: "Sensitive extra",
+            hasPercent: true,
+            usedPercent: 90,
+            leftPercent: 10,
+            resetsAt: "2026-09-09T14:00:00Z",
+            paceKnown: false,
+            paceEtaSeconds: 0,
+            pace: ""
+        };
+        var item = snapshot("codex", 72);
+        item.rows.push(extra);
+        var encoded = Cache.encode(Cache.reconcile([], [item], nowMs), context, nowMs);
+        verify(encoded.length > 0);
+        var result = Cache.decode(encoded, context, nowMs);
+        compare(result.length, 1);
+        compare(result[0].usage.extra.usedPercent, 90);
+        compare(result[0].usage.primary.usedPercent, 72);
+        var extraOnly = snapshot("claude", 28);
+        extraOnly.rows = [extra];
+        var extraEncoded = Cache.encode(Cache.reconcile([], [extraOnly], nowMs), context, nowMs);
+        verify(extraEncoded.length > 0);
+        compare(Cache.decode(extraEncoded, context, nowMs)[0].usage.extra.usedPercent, 90);
+        for (var secret of ["Sensitive extra"])
+            verify(extraEncoded.indexOf(secret) < 0, secret);
+    }
+
+    function test_staleRetentionDropsSupplementalSections() {
+        var item = snapshot("codex", 72);
+        item.providerCost = { percentUsed: 32 };
+        item.codexCreditLimit = { title: "t", used: 1, limit: 2, remaining: 1, usedPercent: 50, leftPercent: 50, resetsAt: "" };
+        item.providerDetails = [{ title: "t", rows: [] }];
+        var previous = Cache.reconcile([], [item], nowMs);
+        var retained = Cache.reconcile(previous, [failed("codex")], nowMs)[0];
+        verify(retained.usageStale);
+        compare(retained.rows[0].usedPercent, 72);
+        compare(retained.providerDetails.length, 0);
+        verify(retained.usageDashboard === null);
+        verify(retained.providerCost === null);
+        verify(retained.resetCredits === null);
+        verify(retained.tokenCost === null);
+        verify(retained.codexCreditLimit === null);
+        verify(retained.credits === null);
+    }
+
+    function test_ancientMeasurementCannotStampFresh() {
+        var item = snapshot("codex", 72);
+        item.updatedAt = "2026-09-07T11:00:00Z";
+        var result = Cache.reconcile([], [item], nowMs)[0];
+        verify(result.usageStale);
+        compare(result.lastGoodAtMs, Date.parse("2026-09-07T11:00:00Z"));
+        var missing = snapshot("claude", 28);
+        missing.updatedAt = "";
+        var fallback = Cache.reconcile([], [missing], nowMs)[0];
+        verify(!fallback.usageStale);
+        compare(fallback.lastGoodAtMs, nowMs);
     }
 
     function test_redactedRoundTripAndContextIsolation() {

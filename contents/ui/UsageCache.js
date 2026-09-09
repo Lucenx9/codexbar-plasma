@@ -5,7 +5,7 @@
 var maximumAgeMs = 24 * 60 * 60 * 1000
 var maximumEntries = 64
 var maximumBytes = 65536
-var lanes = ["primary", "secondary", "tertiary"]
+var lanes = ["primary", "secondary", "tertiary", "extra"]
 
 function timestamp(value) {
     var parsed = typeof value === "string" ? Date.parse(value) : NaN
@@ -25,6 +25,14 @@ function withCurrentStatus(snapshot, source) {
         ["status", "statusSeverity", "statusIncidentKey", "hasIncident", "statusUrl"].forEach(function(key) {
             next[key] = source[key]
         })
+    } else {
+        // Badges gate on hasIncident alone, so an unknown status must not
+        // keep showing the previous outage as if it were current.
+        next.status = ""
+        next.statusSeverity = ""
+        next.statusIncidentKey = ""
+        next.hasIncident = false
+        next.statusUrl = ""
     }
     return next
 }
@@ -42,6 +50,16 @@ function reconcile(previous, incoming, nowMs) {
             next = withCurrentStatus(old, item)
             next.error = item.error
             next.usageStale = true
+            // Supplemental sections cannot be revalidated while requests
+            // fail; showing them beside retained quotas would present
+            // outdated cost/credit/detail state as if it were current.
+            next.providerDetails = []
+            next.usageDashboard = null
+            next.providerCost = null
+            next.resetCredits = null
+            next.tokenCost = null
+            next.codexCreditLimit = null
+            next.credits = null
             // Forecasts are live estimates. Retained measurements cannot support
             // an updated run-out prediction while requests are failing.
             next.rows = old.rows.map(function(row) {
@@ -55,9 +73,23 @@ function reconcile(previous, incoming, nowMs) {
             next.primaryRow = next.rows.filter(function(row) { return row.lane === "primary" })[0] || null
         } else {
             var measuredAt = timestamp(item.updatedAt)
-            next.lastGoodAtMs = item.error.length === 0
-                ? (isFinite(measuredAt) && measuredAt <= nowMs ? measuredAt : nowMs) : 0
-            next.usageStale = false
+            if (item.error.length === 0 && isFinite(measuredAt) && measuredAt <= nowMs
+                    && nowMs - measuredAt <= maximumAgeMs) {
+                next.lastGoodAtMs = measuredAt
+                next.usageStale = false
+            } else if (item.error.length === 0 && !isFinite(measuredAt)) {
+                next.lastGoodAtMs = nowMs
+                next.usageStale = false
+            } else if (item.error.length === 0) {
+                // A measurement older than the retention window cannot back
+                // a fresh snapshot (e.g. a days-old cached account option
+                // applied via replaceProviderSnapshot); keep it stale.
+                next.lastGoodAtMs = measuredAt
+                next.usageStale = true
+            } else {
+                next.lastGoodAtMs = 0
+                next.usageStale = false
+            }
         }
         return next
     })
