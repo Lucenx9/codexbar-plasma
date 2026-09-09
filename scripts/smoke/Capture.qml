@@ -998,6 +998,24 @@ Item {
             verifyScenario(applet.providers[0].usageStale && applet.providers[0].tokenCost === null,
                 "account selection attached token costs to an ancient measurement");
             applet.commitUsageSnapshot(previous);
+            for (var creditBalance of [0, 12]) {
+                var oldCreditTime = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
+                var creditOnly = applet.normalizeProvider({provider: "codex",
+                    credits: {remaining: creditBalance, updatedAt: oldCreditTime}});
+                verifyScenario(creditOnly.updatedAt === oldCreditTime && creditOnly.rows.length === 0,
+                    "credits-only fixture did not use the supplemental timestamp");
+                applet.commitUsageSnapshot([creditOnly, previous[1]]);
+                verifyScenario(!applet.providers[0].usageStale && applet.providers[0].credits === creditBalance
+                    && applet.providers[0].rows.length === 0 && applet.providers[0].error === ""
+                    && applet.lastUpdatedText.indexOf("Showing last known usage") < 0,
+                    "a successful credits-only response entered quota retention or lost its balance");
+                applet.expireStaleUsage(Date.now() + 60000);
+                verifyScenario(applet.providers[0].credits === creditBalance && applet.providers[0].error === ""
+                    && JSON.parse(Plasmoid.configuration.usageCache).snapshots.length === 1
+                    && JSON.parse(Plasmoid.configuration.usageCache).snapshots[0].provider === "claude",
+                    "quota expiry erased current credits or cached a provider without measured quotas");
+            }
+            applet.commitUsageSnapshot(previous);
             var saved = Plasmoid.configuration.usageCache;
             verifyScenario(saved.length > 0 && saved.indexOf("demo@example.com") < 0
                 && saved.indexOf("Example team") < 0 && saved.indexOf("pace") < 0,

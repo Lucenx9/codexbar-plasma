@@ -67,11 +67,12 @@ function reconcile(previous, incoming, nowMs) {
                     && nowMs - measuredAt <= maximumAgeMs) {
                 next.lastGoodAtMs = measuredAt
                 next.usageStale = false
-            } else if (item.error.length === 0 && (!isFinite(measuredAt) || measuredAt > nowMs)) {
+            } else if (item.error.length === 0
+                    && (!hasQuota(next) || !isFinite(measuredAt) || measuredAt > nowMs)) {
                 next.lastGoodAtMs = nowMs
                 next.usageStale = false
             } else if (item.error.length === 0) {
-                // A measurement older than the retention window cannot back
+                // A quota measurement older than the retention window cannot back
                 // a fresh snapshot (e.g. a days-old cached account option
                 // applied via replaceProviderSnapshot); keep it stale.
                 next.lastGoodAtMs = measuredAt

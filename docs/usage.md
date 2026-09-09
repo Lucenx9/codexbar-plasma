@@ -84,10 +84,12 @@ the retained-data indication. Retained data never generates quota, pace, reset,
 or status notifications, and its run-out forecasts are suppressed. If a failed
 quota response includes newly fetched service status, that status still updates
 and can trigger incident notifications independently of the retained quotas. Failed
-refreshes stop reusing measurements older than 24 hours, and a measurement
+refreshes stop reusing measurements older than 24 hours, and a quota measurement
 older than 24 hours never stamps a new snapshot as fresh. The existing minute
 timer also removes expired retained data when automatic refresh is disabled;
-the error remains visible and healthy providers are unaffected.
+the error remains visible and healthy providers are unaffected. Successful
+responses without measured quotas keep their valid credits or details even when
+their supplemental timestamp is old; they do not enter quota retention or expiry.
 
 The widget automatically saves a small quota cache in its Plasma configuration.
 After a restart it verifies the CLI configuration fingerprint before restoring

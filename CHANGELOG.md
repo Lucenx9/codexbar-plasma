@@ -48,6 +48,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Successful responses without measured quotas keep valid credits and details
+  even when their supplemental timestamp is older than the quota-cache limit.
+  They no longer show a last-known banner or turn into cache-expired errors.
 - Last-known quota handling: unknown service status no longer keeps showing
   the previous outage, extra-lane quotas survive restarts, expired quotas
   keep no measurement instead of undefined state, the restore banner only

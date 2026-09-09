@@ -234,11 +234,46 @@ TestCase {
         verify(result.tokenCost === null);
         compare(result.providerDetails, []);
         compare(item.tokenCost.totals.cost, 12);
+        var measuredZero = snapshot("codex", 0);
+        measuredZero.updatedAt = item.updatedAt;
+        var oldZero = Cache.reconcile([], [measuredZero], nowMs)[0];
+        verify(oldZero.usageStale);
+        compare(oldZero.rows[0].usedPercent, 0);
         var missing = snapshot("claude", 28);
         missing.updatedAt = "";
         var fallback = Cache.reconcile([], [missing], nowMs)[0];
         verify(!fallback.usageStale);
         compare(fallback.lastGoodAtMs, nowMs);
+    }
+
+    function test_oldTimestampWithoutMeasuredQuotas_data() {
+        return [
+            { tag: "empty", rows: [], credits: null, details: [] },
+            { tag: "credits", rows: [], credits: 12, details: [] },
+            { tag: "zero-credits", rows: [], credits: 0, details: [] },
+            { tag: "unknown-quota", rows: [{lane: "primary", hasPercent: false}], credits: null,
+                details: [{title: "Current details", rows: []}] }
+        ];
+    }
+
+    function test_oldTimestampWithoutMeasuredQuotas(data) {
+        var incoming = snapshot("codex", 72);
+        incoming.updatedAt = "2026-09-07T11:00:00Z";
+        incoming.rows = data.rows;
+        incoming.primaryRow = data.rows[0] || null;
+        incoming.credits = data.credits;
+        incoming.providerDetails = data.details;
+        for (var previous of [[], fresh(), Cache.reconcile(fresh(), [failed("codex")], nowMs)]) {
+            var result = Cache.reconcile(previous, [incoming], nowMs);
+            verify(!result[0].usageStale);
+            compare(result[0].lastGoodAtMs, nowMs);
+            compare(result[0].rows, data.rows);
+            compare(result[0].credits, data.credits);
+            compare(result[0].providerDetails, data.details);
+            compare(result[0].error, "");
+            compare(Cache.expiredProviderIDs(result, nowMs + 60000), []);
+            compare(Cache.encode(result, context, nowMs), "");
+        }
     }
 
     function test_futureLiveMeasurementsUseReceiptTime() {
