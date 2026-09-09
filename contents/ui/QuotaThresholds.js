@@ -7,11 +7,8 @@ var maximumWarningPercent = 99
 var defaultWarningPercent = 80
 var defaultCriticalPercent = 95
 
-// Plasmoid.configuration returns whatever is on disk, and Number(null) is 0
-// rather than NaN, so an unset or corrupted entry would silently become a
-// 1% threshold that fires on every provider. Treat every non-number as absent:
-// Number(" ") and Number([]) are also 0, and Number(Infinity) survives the
-// clamp as the maximum, so only finite numbers pass.
+// Coercing null, whitespace, or arrays to zero would produce a 1% warning.
+// Treat non-numeric and non-finite helper inputs as absent before clamping.
 function numericPercent(value) {
     if (typeof value !== "number" || !isFinite(value)) {
         return Number.NaN
