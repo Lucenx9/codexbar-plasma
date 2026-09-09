@@ -67,6 +67,8 @@ Persistence uses Plasma's existing configuration mapping; the restart smoke test
 allows its deferred save to complete before starting the second process.
 The first configuration-checksum callback also saves any successful usage that
 arrived before it, so startup persistence does not depend on a later refresh.
+The restarted fixture delays CLI responses beyond the runner's maximum allowed
+scenario duration, proving that the second process displays persisted quotas.
 
 Before changing behavior, identify its owning QML page, config entry, CLI input,
 external effects, and cheapest behavioral test. Read the existing implementation

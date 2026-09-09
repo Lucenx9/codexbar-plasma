@@ -192,4 +192,16 @@ TestCase {
         verify(encoded.length < Cache.maximumBytes);
         compare(Cache.decode(encoded, context, nowMs).length, Cache.maximumEntries);
     }
+
+    function test_byteLimitAppliesBeforeSavingAndCountsUtf8OnRead() {
+        var oversized = snapshot(Array(Cache.maximumBytes + 1).join("x"), 72);
+        compare(Cache.encode(Cache.reconcile([], [oversized], nowMs), context, nowMs), "");
+        var cache = JSON.parse(Cache.encode(fresh(), context, nowMs));
+        cache.ignored = Array(Cache.maximumBytes / 2).join("界");
+        var raw = JSON.stringify(cache);
+        verify(raw.length < Cache.maximumBytes);
+        compare(Cache.decode(raw, context, nowMs).length, 0);
+        var unicode = Cache.reconcile([], [snapshot("future-界", 72)], nowMs);
+        compare(Cache.decode(Cache.encode(unicode, context, nowMs), context, nowMs)[0].provider, "future-界");
+    }
 }

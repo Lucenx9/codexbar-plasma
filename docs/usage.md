@@ -82,7 +82,8 @@ After a restart it verifies the CLI configuration fingerprint before restoring
 the cache, then refreshes in the background. Restored quotas are always marked
 last known, even if they were saved recently. A cache is not a successful refresh.
 
-The disk cache holds at most 64 providers and only their primary, secondary, and
+The disk cache is limited to 64 KiB of UTF-8 on both save and restore. It holds
+at most 64 providers and only their primary, secondary, and
 tertiary percentages, reset timestamps, measurement timestamps, and an opaque
 configuration fingerprint. It contains no account identities, credentials,
 provider prose, cost history, session data, or paths. Entries older than 24 hours,

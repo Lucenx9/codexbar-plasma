@@ -7,10 +7,6 @@ var maximumEntries = 64
 var maximumBytes = 65536
 var lanes = ["primary", "secondary", "tertiary"]
 
-function record(value) {
-    return Normalizer.isCliRecord(value)
-}
-
 function timestamp(value) {
     var parsed = typeof value === "string" ? Date.parse(value) : NaN
     return isFinite(parsed) && parsed > 0 ? parsed : NaN
@@ -60,6 +56,17 @@ function validContext(value) {
     return typeof value === "string" && /^[a-f0-9]{32}$/.test(value)
 }
 
+function withinByteLimit(value) {
+    if (typeof value !== "string" || value.length > maximumBytes) {
+        return false
+    }
+    try {
+        return encodeURIComponent(value).replace(/%[0-9A-F]{2}/g, "x").length <= maximumBytes
+    } catch (error) {
+        return false
+    }
+}
+
 function recent(value, nowMs) {
     return typeof value === "number" && isFinite(value) && value > 0
         && value <= nowMs && nowMs - value <= maximumAgeMs
@@ -72,7 +79,7 @@ function expiredProviderIDs(items, nowMs) {
 }
 
 function windowRecord(value) {
-    if (!record(value) || typeof value.usedPercent !== "number"
+    if (!Normalizer.isCliRecord(value) || typeof value.usedPercent !== "number"
             || !isFinite(value.usedPercent) || value.usedPercent < 0 || value.usedPercent > 100) {
         return null
     }
@@ -109,13 +116,14 @@ function encode(items, context, nowMs) {
     if (snapshots.length === 0) {
         return ""
     }
-    return JSON.stringify({ version: 1, context: context, snapshots: snapshots })
+    var serialized = JSON.stringify({ version: 1, context: context, snapshots: snapshots })
+    return withinByteLimit(serialized) ? serialized : ""
 }
 
 // Persisted data is untrusted. Rebuild only the quota contract that QML already
 // knows how to normalize, never restore arbitrary provider view models or prose.
 function decode(raw, context, nowMs) {
-    if (typeof raw !== "string" || raw.length > maximumBytes || !validContext(context)) {
+    if (!withinByteLimit(raw) || !validContext(context)) {
         return []
     }
     var cache
@@ -124,7 +132,7 @@ function decode(raw, context, nowMs) {
     } catch (error) {
         return []
     }
-    if (!record(cache) || cache.version !== 1 || cache.context !== context
+    if (!Normalizer.isCliRecord(cache) || cache.version !== 1 || cache.context !== context
             || !Array.isArray(cache.snapshots) || cache.snapshots.length > maximumEntries) {
         return []
     }
@@ -132,10 +140,10 @@ function decode(raw, context, nowMs) {
     var seen = ({})
     for (var i = 0; i < cache.snapshots.length; i++) {
         var item = cache.snapshots[i]
-        if (!record(item) || typeof item.provider !== "string"
+        if (!Normalizer.isCliRecord(item) || typeof item.provider !== "string"
                 || Normalizer.normalizedProviderID(item.provider) !== item.provider
                 || item.provider.length === 0 || Guards.hasOwnKey(seen, item.provider)
-                || !recent(item.measuredAt, nowMs) || !record(item.windows)) {
+                || !recent(item.measuredAt, nowMs) || !Normalizer.isCliRecord(item.windows)) {
             continue
         }
         var usage = { updatedAt: new Date(item.measuredAt).toISOString() }

@@ -16,7 +16,7 @@ import tempfile
 import time
 import xml.etree.ElementTree as ET
 
-from smoke.fixture_cli import SCENARIOS
+from smoke.fixture_cli import MAX_SCENARIO_TIMEOUT_SECONDS, SCENARIOS
 from compile_translations import compile_catalogs
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -172,12 +172,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--scenario", choices=("all",) + SCENARIOS, default="all")
     parser.add_argument("--output", type=Path, help="New artifact directory; default: dist/smoke/run-*")
-    parser.add_argument("--timeout", type=int, default=30, help="Seconds per scenario, 1–120")
+    parser.add_argument("--timeout", type=int, default=30,
+                        help=f"Seconds per scenario, 1–{MAX_SCENARIO_TIMEOUT_SECONDS}")
     parser.add_argument("--renderer", choices=("software", "opengl"), default="software",
                         help="Use opengl for visual review of masked provider icons")
     args = parser.parse_args()
-    if not 1 <= args.timeout <= 120:
-        parser.error("--timeout must be between 1 and 120")
+    if not 1 <= args.timeout <= MAX_SCENARIO_TIMEOUT_SECONDS:
+        parser.error(f"--timeout must be between 1 and {MAX_SCENARIO_TIMEOUT_SECONDS}")
     if not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"):
         parser.error("A graphical Plasma session is required (DISPLAY or WAYLAND_DISPLAY).")
     for tool in ("plasmawindowed", "dbus-run-session"):
