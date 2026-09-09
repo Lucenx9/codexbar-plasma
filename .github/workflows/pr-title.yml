@@ -25,7 +25,7 @@ jobs:
           import re
           import sys
 
-          pattern = r"(?:feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(?:\([a-zA-Z0-9][a-zA-Z0-9_./-]*\))?!?: [^\s].*"
+          pattern = r"(?:⚡\s*)?(?:feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(?:\([a-zA-Z0-9][a-zA-Z0-9_./-]*\))?!?: [^\s].*|⚡ .*"
           title = os.environ["PR_TITLE"]
           if not re.fullmatch(pattern, title) or title != title.strip():
               print("Use type(scope): description, with optional scope and breaking-change !.")
