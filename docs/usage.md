@@ -21,7 +21,7 @@ work and upstream contract requirements.
   and credit text remain horizontal-only. Click a provider's icon or capsules,
   or activate it with the keyboard, to open its detail tab. Tooltips and
   accessible descriptions identify the displayed quotas and their values.
-- **Use minimal preset** enables provider meters, including with a single
+- **Use monochrome icons and meters only** selects Minimal and enables provider meters, including with a single
   provider, and hides panel names, usage text and credits. The style selector
   changes appearance alone. Existing installations keep their style, explicit
   quota choice, and visibility settings. Automatic meters gain the second quota
@@ -35,7 +35,7 @@ work and upstream contract requirements.
   and a run-out forecast that shows the predicted duration only while the CLI
   expects the quota to run out before its reset.
 - Choose the automatic, primary, secondary, or tertiary quota for panel text and
-  meters in **Panel** settings. An explicit primary, secondary, or tertiary
+  meters in **Panel → Quota, order and visibility**. An explicit primary, secondary, or tertiary
   choice shows one capsule. Automatic text and popup tabs retain their existing
   quota preference; automatic capsules use the pair described above.
 - Set independent visibility conditions for the full panel text and each
@@ -174,6 +174,14 @@ fields; track proposed extensions in the issue tracker.
 - Six settings pages: **General**, **Providers**, **Panel**, **Popup**,
   **Notifications**, and **Diagnostics**. CLI path and provider/source overrides
   sit beside redacted diagnostics; quota thresholds sit beside their alerts.
+- **Panel** starts with the preview, side-by-side Standard/Minimal choices, and
+  content checkboxes. The text-format selector appears when usage text is enabled;
+  hiding it preserves the selected format.
+- **Quota, order and visibility** expands the quota selector, element order,
+  visibility conditions, and automatic provider selection. It starts collapsed
+  whenever the page opens. Its summary lists non-default quota/order choices,
+  configured conditions, and automatic selection even while collapsed. Opening
+  or closing it never changes saved or pending preferences.
 - A live **Panel** preview uses example data and the actual panel renderer.
   Try normal usage, near-limit usage, a service incident, or missing data before
   applying changes. The preview never fetches usage or changes saved settings.

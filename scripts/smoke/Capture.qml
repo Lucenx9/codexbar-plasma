@@ -49,7 +49,9 @@ Item {
         z: 100
         sourceComponent: SettingsPreview {
             applet: capture.applet
+            width: capture.scenario === "settings-panel-narrow" ? 420 : 840
             pageSource: ({"settings-general": "configGeneral.qml", "settings-panel": "configPanel.qml",
+                "settings-panel-advanced": "configPanel.qml", "settings-panel-narrow": "configPanel.qml",
                 "settings-popup": "configPopup.qml", "settings-notifications": "configNotifications.qml",
                 "settings-diagnostics": "configDiagnostics.qml"})[capture.scenario]
         }
@@ -639,6 +641,11 @@ Item {
         var preview = findItem(page, "panelSettingsPreview");
         var renderer = findItem(page, "panelPreviewRenderer");
         verifyScenario(preview && renderer, "panel settings preview missing");
+        var disclosure = findItem(page, "panelAdvancedButton");
+        var options = findItem(page, "panelAdvancedOptions");
+        var textMode = findItem(page, "panelTextMode");
+        verifyScenario(disclosure && options && textMode && !options.visible && !textMode.visible,
+            "panel details or text format are visible by default");
         var snapshots = applet.providers;
         var serial = applet.commandRunSerial;
         var liveStyle = applet.Plasmoid.configuration.panelStyle;
@@ -663,6 +670,18 @@ Item {
         page.cfg_panelStyle = "standard";
         page.cfg_panelElementOrder = "identity,status,text,meters";
         preview.scenario = "normal";
+        page.cfg_showPercentInPanel = false;
+        page.cfg_showProviderInPanel = false;
+        page.advancedExpanded = true;
+        verifyScenario(options.visible && !textMode.visible, "disclosure did not reveal only its own options");
+        page.cfg_panelQuotaLane = "secondary";
+        page.cfg_panelVisibilityRules = '{"meters":{"condition":"usageAtLeast","usedPercent":70}}';
+        var summary = page.advancedSummary;
+        page.advancedExpanded = false;
+        verifyScenario(!options.visible && page.advancedSummary === summary
+            && page.cfg_panelQuotaLane === "secondary", "collapsing details reset a pending setting");
+        page.cfg_panelQuotaLane = "auto";
+        page.cfg_panelVisibilityRules = "{}";
         verifyScenario(applet.Plasmoid.configuration.panelStyle === liveStyle
             && !applet.Plasmoid.configuration.showPercentInPanel
             && applet.providers === snapshots && applet.commandRunSerial === serial,
@@ -1014,9 +1033,31 @@ Item {
                 verifyGeneralDefaults(preview.page);
                 navigationVerified = true;
             }
-            if (scenario === "settings-panel" && !navigationVerified) {
+            if (scenario.indexOf("settings-panel") === 0 && !navigationVerified) {
                 verifySettingsPanelPreview(preview.page);
+                if (scenario === "settings-panel-advanced") {
+                    preview.page.advancedExpanded = true;
+                    preview.page.cfg_panelQuotaLane = "secondary";
+                    preview.page.cfg_panelVisibilityRules = '{"meters":{"condition":"usageAtLeast","usedPercent":70}}';
+                    preview.page.cfg_showPercentInPanel = true;
+                    findItem(preview.page, "panelSettingsPreview").scenario = "nearLimit";
+                } else if (scenario === "settings-panel-narrow") {
+                    preview.page.font.pointSize *= 1.3;
+                }
                 navigationVerified = true;
+                return false;
+            }
+            if (scenario.indexOf("settings-panel") === 0) {
+                var tracks = namedItems(preview.page, "panelMeterTrack");
+                var renderer = findItem(preview.page, "panelPreviewRenderer");
+                var expectedTracks = scenario === "settings-panel-advanced" ? 2 : 4;
+                verifyScenario(tracks.length === expectedTracks, "settings preview lost its quota capsules");
+                for (var i = 0; i < tracks.length; i++) {
+                    var end = tracks[i].mapToItem(renderer, tracks[i].width, tracks[i].height);
+                    verifyScenario(tracks[i].width > 0 && tracks[i].height >= 3
+                        && end.x <= renderer.width + 1 && end.y <= renderer.height + 1,
+                        "settings preview clipped a quota capsule");
+                }
             }
             return true;
         }

@@ -392,7 +392,7 @@ assert_form_sections(
     ("Usage details", "Popup"),
 )
 
-assert_form_sections(panel_surface.text, "configPanel.qml", ("Panel", "Panel visibility"))
+assert_form_sections(panel_surface.text, "configPanel.qml", ("Appearance", "Contents", "Panel visibility"))
 assert_form_sections(notifications_surface.text, "configNotifications.qml", ("Quota warnings", "Notifications"))
 assert_form_sections(diagnostics_text, "configDiagnostics.qml", ("Connection", "Advanced provider override"))
 

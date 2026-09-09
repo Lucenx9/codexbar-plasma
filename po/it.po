@@ -2282,20 +2282,6 @@ msgstr "Stile del pannello:"
 msgid "Minimal"
 msgstr "Minimale"
 
-#: contents/ui/configPanel.qml
-msgid "Minimal uses monochrome icons and capsule meters. Quota warnings keep their warning colors."
-msgstr "Minimal usa icone e indicatori a capsula monocromatici. Gli avvisi di quota mantengono i propri colori."
-
-#: contents/ui/configPanel.qml
-msgid "Use minimal preset"
-msgstr "Usa la preimpostazione minimale"
-
-#: contents/ui/configPanel.qml
-msgid ""
-"The preset enables provider meters and hides provider names, usage text and "
-"credits in the panel."
-msgstr "La preimpostazione abilita gli indicatori dei provider e nasconde nomi dei provider, testo di utilizzo e crediti nel pannello."
-
 #: contents/ui/configProviders.qml
 msgid "All providers"
 msgstr "Tutti i provider"
@@ -2523,3 +2509,61 @@ msgstr "Ultimo dato valido, %1 fa"
 #: contents/ui/main.qml
 msgid "Cached usage has expired. Refresh to try again."
 msgstr "I dati di utilizzo salvati sono scaduti. Aggiorna per riprovare."
+
+#: contents/ui/configPanel.qml
+msgid "Quota: %1"
+msgstr "Quota: %1"
+
+#: contents/ui/configPanel.qml
+msgid "Custom element order"
+msgstr "Ordine degli elementi personalizzato"
+
+#: contents/ui/configPanel.qml
+msgid "%1 visibility rule"
+msgid_plural "%1 visibility rules"
+msgstr[0] "%1 regola di visibilità"
+msgstr[1] "%1 regole di visibilità"
+
+#: contents/ui/configPanel.qml
+msgid "Highest-usage provider selected automatically"
+msgstr "Selezione automatica del provider più utilizzato"
+
+#: contents/ui/configPanel.qml
+msgid "Automatic quotas, default order, no conditions"
+msgstr "Quote automatiche, ordine predefinito, nessuna condizione"
+
+#: contents/ui/configPanel.qml
+msgid "Appearance"
+msgstr "Aspetto"
+
+#: contents/ui/configPanel.qml
+msgid "Colored provider icons"
+msgstr "Icone dei provider a colori"
+
+#: contents/ui/configPanel.qml
+msgid "Monochrome provider icons"
+msgstr "Icone dei provider monocromatiche"
+
+#: contents/ui/configPanel.qml
+msgid "Quota capsules keep their warning colors in both styles."
+msgstr "Gli indicatori delle quote mantengono i colori di avviso in entrambi gli stili."
+
+#: contents/ui/configPanel.qml
+msgid "Contents"
+msgstr "Contenuti"
+
+#: contents/ui/configPanel.qml
+msgid "Use monochrome icons and meters only"
+msgstr "Usa solo icone monocromatiche e indicatori"
+
+#: contents/ui/configPanel.qml
+msgid "Quota, order and visibility"
+msgstr "Quota, ordine e visibilità"
+
+#: contents/ui/configPanel.qml
+msgid "Collapse options. %1"
+msgstr "Comprimi le opzioni. %1"
+
+#: contents/ui/configPanel.qml
+msgid "Expand options. %1"
+msgstr "Espandi le opzioni. %1"

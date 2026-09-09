@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 SCENARIOS = ("normal", "tabs-overflow", "provider-settings", "provider-header", "provider-header-large", "loading", "partial-error", "long-text", "panel-rules", "panel-standard", "panel-minimal", "panel-minimal-single", "legacy-dashboard",
              "project-costs", "project-tokens", "project-range", "project-long-text",
              "localization-it", "localization-fr", "localization-de", "localization-es", "localization-pt_BR")
-SCENARIOS += ("settings-general", "settings-panel", "settings-popup", "settings-notifications", "settings-diagnostics")
+SCENARIOS += ("settings-general", "settings-panel", "settings-panel-advanced", "settings-panel-narrow", "settings-popup", "settings-notifications", "settings-diagnostics")
 SCENARIOS += ("readme-overview", "readme-spend", "readme-sessions", "readme-codex")
 SCENARIOS += ("readme-panel-standard", "readme-panel-minimal")
 SCENARIOS += ("panel-default", "panel-default-single")

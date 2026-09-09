@@ -31,7 +31,8 @@ accent colors stay consistent across themes.
   and popup, with configurable quota warnings and Plasma notifications.
 - Standard and Minimal panel styles with up to two quota capsules per provider,
   horizontal and vertical meters, selectable quota windows, conditional text
-  and meters, and a live settings preview.
+  and meters, and a live settings preview. Panel settings keep appearance and
+  contents visible, with quota, order, and visibility rules in an expandable section.
 - **Usage & Spend** with cost/token charts, a 7/30/90-day range, an activity
   heatmap, and provider, model, and project breakdowns when the CLI supplies them.
 - A local **Sessions** tab. Transcript paths and working directories are never

@@ -64,3 +64,24 @@ The [PR #162 verification](https://github.com/Lucenx9/codexbar-plasma/pull/162)
 records executed tests. The synthetic OpenGL
 [captures and review notes](https://github.com/Lucenx9/codexbar-plasma/tree/92679f99ce5d5479f4f87edde051fff91e30b91f/docs/settings/2026-09-08)
 remain available in Git history.
+
+## Panel disclosure refinement
+
+The follow-up against Plasma `d09e5b6` keeps the six-page structure and existing
+configuration keys. Appearance and content choices remain visible; text format
+appears only when usage text is enabled. A collapsed section contains quota,
+order, visibility conditions, and automatic provider selection. Its summary
+identifies effective non-default choices without discarding hidden preferences.
+The section is named "Quota, order and visibility" so its contents are predictable.
+
+This follows [KDE's progressive disclosure guidance](https://develop.kde.org/hig/powerful_when_needed/)
+and [input-control guidance](https://develop.kde.org/hig/getting_input/).
+Standard and Minimal use native radio buttons with descriptions. The existing
+preset still selects monochrome styling, enables meters, and hides text; its
+new label states those effects. Controls respond immediately, and expanding the
+section introduces no animation or configuration write.
+
+The live preview resolves a Repeater provider back to its synthetic source before
+selecting quota rows. Qt can expose nested delegate arrays as sequence wrappers;
+those must not make the pure array-based quota selector omit real preview data.
+This changes no CLI parsing or live provider normalization.

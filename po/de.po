@@ -2294,20 +2294,6 @@ msgstr "Leistenstil:"
 msgid "Minimal"
 msgstr "Minimal"
 
-#: contents/ui/configPanel.qml
-msgid "Minimal uses monochrome icons and capsule meters. Quota warnings keep their warning colors."
-msgstr "Minimal verwendet monochrome Symbole und Kapselfüllstände. Kontingentwarnungen behalten ihre Warnfarben."
-
-#: contents/ui/configPanel.qml
-msgid "Use minimal preset"
-msgstr "Minimale Voreinstellung verwenden"
-
-#: contents/ui/configPanel.qml
-msgid ""
-"The preset enables provider meters and hides provider names, usage text and "
-"credits in the panel."
-msgstr "Die Voreinstellung aktiviert Anbieteranzeigen und blendet Anbieternamen, Nutzungstext und Guthaben in der Leiste aus."
-
 #: contents/ui/configProviders.qml
 msgid "All providers"
 msgstr "Alle Anbieter"
@@ -2535,3 +2521,61 @@ msgstr "Letzte bekannte Nutzung, vor %1"
 #: contents/ui/main.qml
 msgid "Cached usage has expired. Refresh to try again."
 msgstr "Die zwischengespeicherten Nutzungsdaten sind abgelaufen. Zum erneuten Versuch aktualisieren."
+
+#: contents/ui/configPanel.qml
+msgid "Quota: %1"
+msgstr "Kontingent: %1"
+
+#: contents/ui/configPanel.qml
+msgid "Custom element order"
+msgstr "Benutzerdefinierte Elementreihenfolge"
+
+#: contents/ui/configPanel.qml
+msgid "%1 visibility rule"
+msgid_plural "%1 visibility rules"
+msgstr[0] "%1 Sichtbarkeitsregel"
+msgstr[1] "%1 Sichtbarkeitsregeln"
+
+#: contents/ui/configPanel.qml
+msgid "Highest-usage provider selected automatically"
+msgstr "Automatische Auswahl des Anbieters mit der höchsten Auslastung"
+
+#: contents/ui/configPanel.qml
+msgid "Automatic quotas, default order, no conditions"
+msgstr "Automatische Kontingente, Standardreihenfolge, keine Bedingungen"
+
+#: contents/ui/configPanel.qml
+msgid "Appearance"
+msgstr "Erscheinungsbild"
+
+#: contents/ui/configPanel.qml
+msgid "Colored provider icons"
+msgstr "Farbige Anbietersymbole"
+
+#: contents/ui/configPanel.qml
+msgid "Monochrome provider icons"
+msgstr "Einfarbige Anbietersymbole"
+
+#: contents/ui/configPanel.qml
+msgid "Quota capsules keep their warning colors in both styles."
+msgstr "Kontingentanzeigen behalten ihre Warnfarben in beiden Stilen."
+
+#: contents/ui/configPanel.qml
+msgid "Contents"
+msgstr "Inhalt"
+
+#: contents/ui/configPanel.qml
+msgid "Use monochrome icons and meters only"
+msgstr "Nur einfarbige Symbole und Anzeigen verwenden"
+
+#: contents/ui/configPanel.qml
+msgid "Quota, order and visibility"
+msgstr "Kontingent, Reihenfolge und Sichtbarkeit"
+
+#: contents/ui/configPanel.qml
+msgid "Collapse options. %1"
+msgstr "Optionen einklappen. %1"
+
+#: contents/ui/configPanel.qml
+msgid "Expand options. %1"
+msgstr "Optionen ausklappen. %1"

@@ -20,6 +20,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Panel settings group appearance and contents first, show text formatting only
+  when enabled, and put quota, order, conditions, and automatic provider selection
+  in an expandable section with a customization summary. Standard and Minimal
+  are side by side; the monochrome icons-and-meters preset has an explicit label.
+
 - Panel meters place a small provider icon beside primary and secondary quota
   capsules, with matching geometry in colored Standard and monochrome Minimal.
   Meters now work in vertical panels. Explicit quota choices still show one
@@ -38,6 +43,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   full graphical coverage.
 
 ### Fixed
+
+- The settings preview now renders quota capsules from its synthetic data after
+  QML converts provider records for delegates.
 
 - Credit balances that round up to a whole number no longer keep a trailing
   ".0" (99.95 credits read as "100"), and huge magnitudes no longer gain a
