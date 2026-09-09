@@ -132,26 +132,6 @@ TestCase {
         compare(CommandLedger.sourcesOfKind(commands, "sessions").length, 0)
     }
 
-    function test_entriesOfKindReturnsSourceNamesAndDescriptorsInOnePass() {
-        var commands = CommandLedger.opened(({}), "a", entry("account", "codex", 10))
-        commands = CommandLedger.opened(commands, "b", entry("account", "claude", 20))
-        commands = CommandLedger.opened(commands, "c", entry("cost", "", 30))
-
-        var entries = CommandLedger.entriesOfKind(commands, "account")
-        compare(entries.length, 2)
-        compare(entries[0].sourceName, "a")
-        compare(entries[0].descriptor.providerID, "codex")
-        compare(entries[1].sourceName, "b")
-        compare(entries[1].descriptor.providerID, "claude")
-
-        var costEntries = CommandLedger.entriesOfKind(commands, "cost")
-        compare(costEntries.length, 1)
-        compare(costEntries[0].sourceName, "c")
-
-        var missingEntries = CommandLedger.entriesOfKind(commands, "sessions")
-        compare(missingEntries.length, 0)
-    }
-
     // costLoading and sessionsLoading read this, so it has to follow the ledger
     // rather than a separate flag that can drift out of step.
     function test_hasKindTracksWhatIsActuallyRunning() {
@@ -159,6 +139,25 @@ TestCase {
         compare(CommandLedger.hasKind(commands, "cost"), true)
         compare(CommandLedger.hasKind(CommandLedger.closed(commands, "a"), "cost"), false)
         compare(CommandLedger.hasKind(({}), "cost"), false)
+    }
+
+    function test_hasKindIgnoresInheritedAndEmptyDescriptors() {
+        var commands = Object.create({ inherited: entry("cost", "", 10) })
+        commands.empty = null
+        commands.usage = entry("usage", "", 10)
+        compare(CommandLedger.hasKind(commands, "cost"), false)
+        compare(CommandLedger.hasKind(commands, "usage"), true)
+
+        commands.cost = entry("cost", "", 20)
+        compare(CommandLedger.hasKind(commands, "cost"), true)
+    }
+
+    function test_hasKindPreservesExactKindMatching() {
+        var commands = { numeric: { kind: 42 }, missing: {} }
+        compare(CommandLedger.hasKind(commands, "42"), true)
+        compare(CommandLedger.hasKind(commands, 42), false)
+        compare(CommandLedger.hasKind(commands, ""), true)
+        compare(CommandLedger.hasKind(commands, undefined), false)
     }
 
     function test_hasAnyKindCanIgnoreIndependentCostWork() {

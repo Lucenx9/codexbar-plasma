@@ -174,9 +174,10 @@ require_all(
 require_all(
     applet.function_body("retireStaleAccountCommands"),
     (
-        'CommandLedger.entriesOfKind(activeCommandDescriptors, "account")',
+        'CommandLedger.sourcesOfKind(activeCommandDescriptors, "account")',
+        "CommandLedger.find(activeCommandDescriptors, sourceName)",
         "AccountRequests.completion(activeCommandDescriptors, sourceName,",
-        'buildProviderAccountsCommand(descriptor ? descriptor.providerID : "")',
+        "buildProviderAccountsCommand(descriptor.providerID)",
         "if (decision && !decision.acceptsPayload)",
         "finishUsageCommandSource(sourceName)",
     ),
