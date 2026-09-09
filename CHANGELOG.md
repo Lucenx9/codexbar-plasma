@@ -48,6 +48,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Panel settings keep text and controls in place while the page opens, including
+  when the scrollbar disappears or collapsed sections finish sizing.
 - Restored cached provider quotas are retained across partial early refreshes
   during startup, preventing premature eviction of unrefreshed providers.
 - Primary incident selection, tooltips, and status banners ignore providers with

@@ -21,7 +21,8 @@ if [[ "${QML_TEST_REQUIRE_NO_SKIPS:-0}" == 1 ]] && grep -q '^SKIP[[:space:]]' "$
 fi
 
 # Plasma KCMs use the desktop controls style, whose native buttons do not have
-# a QML content item. Exercise that label path as well as the default test style.
+# a QML content item and whose scrollbars reserve layout space. Exercise both
+# paths as well as the default test style.
 QT_PATHS_TOOL="${QT_PATHS_TOOL:-$(dirname "$QMLTESTRUNNER")/qtpaths}"
 if [[ -x "$QT_PATHS_TOOL" ]] \
     && [[ -f "$("$QT_PATHS_TOOL" --query QT_INSTALL_QML)/org/kde/desktop/qmldir" ]]; then
@@ -29,10 +30,13 @@ if [[ -x "$QT_PATHS_TOOL" ]] \
     QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
     "$QMLTESTRUNNER" -input "$ROOT_DIR/tests/tst_plain_text_controls.qml" \
     PlainTextControls::test_buttonUsesActiveStyleLabelPath
+  QT_QUICK_CONTROLS_STYLE=org.kde.desktop QT_QPA_PLATFORMTHEME=kde \
+    QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+    "$QMLTESTRUNNER" -input "$ROOT_DIR/tests/tst_panel_settings_geometry.qml"
 else
   if [[ "${QML_TEST_REQUIRE_NO_SKIPS:-0}" == 1 ]]; then
-    echo "org.kde.desktop is required for the desktop-style button test." >&2
+    echo "org.kde.desktop is required for the desktop-style checks." >&2
     exit 1
   fi
-  echo "org.kde.desktop is unavailable; desktop-style button test skipped."
+  echo "org.kde.desktop is unavailable; desktop-style checks skipped."
 fi

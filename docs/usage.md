@@ -198,7 +198,8 @@ fields; track proposed extensions in the issue tracker.
   **Notifications**, and **Diagnostics**. CLI path and provider/source overrides
   sit beside redacted diagnostics; quota thresholds sit beside their alerts.
 - **Panel** starts with the preview, side-by-side Standard/Minimal choices, and
-  provider meters. **Additional information** contains the selected provider's
+  provider meters. Text and controls keep their horizontal position as the page
+  opens. **Additional information** contains the selected provider's
   name, usage text, credit balance, and the monochrome preset. Its closed summary
   lists enabled information. Text format appears only when usage text is enabled;
   hiding controls preserves their selected values. These additions work in
