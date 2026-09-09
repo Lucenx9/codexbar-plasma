@@ -101,3 +101,19 @@ sizes while Repeater delegates are rebuilt. A debugger reproduced a Qt 6.11.1
 crash in `QQuickLayout::effectiveSizePolicy_helper` during layout polish without
 this boundary; repeated advanced-settings captures pass with it. Keyboard focus
 and row geometry remain covered by the native settings test.
+
+Panel opening geometry was traced on Plasma 6.7.4 with Kirigami and the KDE
+desktop controls style 6.29.0, using Qt 6.11.1. At a 600-by-500 page size, initial
+overflow briefly reserved a scrollbar gutter and then released it, shifting
+centered controls right by 7 pixels. The hidden advanced form subsequently
+increased its implicit width, shifting them left by 4 pixels. FormLayout's width
+hints include hidden children.
+
+The Panel page now reserves the themed vertical scrollbar width on its mirrored
+edge, using the ScrollView's public padding and
+[attached scrollbar](https://doc.qt.io/qt-6/qml-qtquick-controls-scrollview.html#scroll-bars)
+properties. The scrollbar keeps its normal visibility and interaction behavior.
+Collapsed forms contribute zero maximum width while retaining their controls
+and configuration bindings. No delay or movement animation is introduced.
+Frame-based tests cover opening geometry and keyboard disclosure with usable
+scrolling in both layout directions.

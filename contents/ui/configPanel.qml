@@ -13,6 +13,15 @@ import "QuotaThresholds.js" as QuotaThresholds
 KCM.SimpleKCM {
     id: page
 
+    readonly property Controls.ScrollView scrollView: contentItem as Controls.ScrollView
+
+    // Reserve the themed scrollbar width even when initial overflow disappears.
+    Binding {
+        target: page.scrollView
+        property: page.mirrored ? "leftPadding" : "rightPadding"
+        value: page.scrollView.Controls.ScrollBar.vertical.implicitWidth
+    }
+
     property string cfg_menuBarDisplayMode: "percent"
     property string cfg_menuBarDisplayModeDefault: "percent"
     property alias cfg_showProviderInPanel: showProviderCheck.checked
@@ -283,6 +292,7 @@ KCM.SimpleKCM {
             objectName: "panelAdditionalOptions"
             wideMode: false
             Layout.fillWidth: true
+            Layout.maximumWidth: page.additionalExpanded ? Infinity : 0
             visible: page.additionalExpanded
 
             Components.PlainControlsLabel {
@@ -404,6 +414,8 @@ KCM.SimpleKCM {
             objectName: "panelAdvancedOptions"
             Kirigami.FormData.isSection: true
             Layout.fillWidth: true
+            // FormLayout includes hidden children's implicit widths in its hints.
+            Layout.maximumWidth: page.advancedExpanded ? Infinity : 0
             visible: page.advancedExpanded
 
             Controls.ComboBox {

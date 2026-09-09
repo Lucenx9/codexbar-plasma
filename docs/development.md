@@ -153,12 +153,13 @@ Extraction must hide complexity, not merely reduce line count.
 - Give visual children a size through layouts, anchors, implicit sizes, or
   explicit compact dimensions. Items otherwise default to 0x0.
 - Use layout minimum/preferred sizes, implicit dimensions, and `Kirigami.Units`
-  instead of panel-size magic numbers. Use anchors/layouts rather than bindings
-  to sibling geometry.
+  instead of panel-size magic numbers. Prefer anchors/layouts over bindings to
+  sibling geometry, except inside the plain-`Item` boundary described below.
 - Keep layout size hints independent of the geometry the layout computes.
   Use fixed preferred-size ratios for proportional columns. For width-dependent
-  text caps, let a plain `Item` own the child geometry and expose implicit sizes
-  independent of its assigned width. See [Qt's layout guidance](https://doc.qt.io/qt-6/qtquicklayouts-overview.html#size-constraints).
+  text caps, a plain `Item` may size children from its own and sibling widths.
+  Keep those bindings out of layout size hints, and expose implicit sizes
+  independent of the `Item`'s assigned width. See [Qt's layout guidance](https://doc.qt.io/qt-6/qtquicklayouts-overview.html#size-constraints).
 - Prefer declarative bindings. Move repeated or expensive calculations into
   helpers or cached properties. Avoid heavy JavaScript in delegates, compact
   rendering, timers, and DataSource callbacks; profile before optimizing.
@@ -235,6 +236,17 @@ substitute is the script URL; it neither contacts GitHub nor installs a release.
 The module's interface is settings, `checkNow()`, read-only runtime status, and
 result signals. The script URL is a local executable dependency, not a widget
 setting. Internal request state and timers remain inside the module.
+
+`tests/tst_panel_settings_geometry.qml` records control positions after rendered
+frames while the real Panel page initializes. It covers narrow/wide windows,
+larger text, right-to-left layout, and scrolling through expanded options.
+It requests redraws during observation, requires multiple rendered frames, and
+compares both coordinates. Direction changes also check that the opposite
+padding is restored.
+The QML runner repeats it with the KDE desktop controls style because its
+scrollbar reserves viewport width, unlike the default overlay style.
+Every runner invocation applies the strict no-skips check;
+`tests/test_qml_runner.py` verifies skip and failure propagation across styles.
 
 `make check` disables unqualified-name warnings because Plasma injects helpers
 such as `i18n()` as context properties. It validates AppStream metadata when
