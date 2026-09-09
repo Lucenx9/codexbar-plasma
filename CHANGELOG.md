@@ -39,6 +39,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Restored cached provider quotas are retained across partial early refreshes
+  during startup, preventing premature eviction of unrefreshed providers.
+- Primary incident selection, tooltips, and status banners ignore providers with
+  unknown or inactive status, preventing stale outages from masking active incidents.
 - Credit balances that round up to a whole number no longer keep a trailing
   ".0" (99.95 credits read as "100"), and huge magnitudes no longer gain a
   bogus group separator.

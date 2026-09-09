@@ -63,6 +63,37 @@ function reconcile(previous, incoming, nowMs) {
     })
 }
 
+// Restores cached provider snapshots during widget initialization, merging any
+// cached providers missing from live results while keeping live data fresh.
+function restore(cached, live, nowMs) {
+    if (!Array.isArray(cached) || cached.length === 0) {
+        return Array.isArray(live) ? live : []
+    }
+    if (!Array.isArray(live) || live.length === 0) {
+        return cached.map(function(item) {
+            var copy = Guards.copyObject(item)
+            copy.usageStale = true
+            return copy
+        })
+    }
+    var reconciled = reconcile(cached, live, nowMs)
+    var seen = ({})
+    reconciled.forEach(function(item) {
+        seen[item.provider] = true
+    })
+    var result = reconciled.slice()
+    for (var i = 0; i < cached.length; i++) {
+        var item = cached[i]
+        if (!Guards.hasOwnKey(seen, item.provider)) {
+            seen[item.provider] = true
+            var staleItem = Guards.copyObject(item)
+            staleItem.usageStale = true
+            result.push(staleItem)
+        }
+    }
+    return result
+}
+
 function validContext(value) {
     return typeof value === "string" && /^[a-f0-9]{32}$/.test(value)
 }

@@ -71,6 +71,7 @@ RowLayout {
 
                 visible: providerHeaderRow.providerData
                     && providerHeaderRow.providerData.hasIncident
+                    && providerHeaderRow.providerData.statusKnown !== false
                 Layout.preferredWidth: providerStatusBadgeLabel.implicitWidth + Kirigami.Units.smallSpacing * 2
                 Layout.preferredHeight: Math.max(Kirigami.Units.gridUnit * 1.25,
                     providerStatusBadgeLabel.implicitHeight + Kirigami.Units.smallSpacing)

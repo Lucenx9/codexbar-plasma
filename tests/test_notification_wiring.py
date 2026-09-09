@@ -17,7 +17,7 @@ FUNCTIONS = (
     "markNotificationProvidersFresh", "notificationProviderRefreshPending",
     "notificationScopeKey", "notificationObservationRows", "notificationObservations",
     "quotaNotificationLevel", "paceWarningActive", "notificationPlannerOptions",
-    "applyTokenCosts", "providerTokenCost",
+    "applyTokenCosts", "providerTokenCost", "primaryIncidentProvider",
 )
 
 QML = '''import QtQuick
@@ -164,6 +164,45 @@ TestCase {
         var escalated = observe("observe", healthy.nextMemo);
         compare(escalated.intents.length, 1);
         compare(escalated.intents[0].kind, "quota");
+    }
+    function test_primaryIncidentProviderIgnoresUnknownOrInactiveStatus() {
+        providers = [
+            {
+                provider: "codex",
+                statusKnown: false,
+                hasIncident: true,
+                statusSeverity: "critical"
+            },
+            {
+                provider: "claude",
+                statusKnown: true,
+                hasIncident: true,
+                statusSeverity: "major"
+            }
+        ];
+        var best = primaryIncidentProvider();
+        verify(best !== null);
+        compare(best.provider, "claude");
+
+        providers = [
+            {
+                provider: "codex",
+                statusKnown: false,
+                hasIncident: true,
+                statusSeverity: "critical"
+            }
+        ];
+        compare(primaryIncidentProvider(), null);
+
+        providers = [
+            {
+                provider: "codex",
+                statusKnown: true,
+                hasIncident: false,
+                statusSeverity: "unknown"
+            }
+        ];
+        compare(primaryIncidentProvider(), null);
     }
 }
 '''

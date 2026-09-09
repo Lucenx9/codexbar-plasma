@@ -144,6 +144,42 @@ TestCase {
         compare(recovered.statusIncidentKey, "");
     }
 
+    function test_restoreRetainsMissingCachedProvidersAcrossPartialRefresh() {
+        var previous = fresh();
+        // Live refresh returned only codex (e.g. single-provider refresh or early startup response)
+        var liveFresh = [snapshot("codex", 85)];
+        var restored = Cache.restore(previous, liveFresh, nowMs);
+        compare(restored.length, 2);
+        compare(restored[0].provider, "codex");
+        compare(restored[0].rows[0].usedPercent, 85);
+        verify(!restored[0].usageStale);
+        compare(restored[1].provider, "claude");
+        compare(restored[1].rows[0].usedPercent, 28);
+        verify(restored[1].usageStale);
+
+        // When live has a failed provider and missing provider
+        var liveFailed = [failed("codex")];
+        var restoredFailed = Cache.restore(previous, liveFailed, nowMs);
+        compare(restoredFailed.length, 2);
+        compare(restoredFailed[0].provider, "codex");
+        compare(restoredFailed[0].rows[0].usedPercent, 72);
+        verify(restoredFailed[0].usageStale);
+        compare(restoredFailed[1].provider, "claude");
+        compare(restoredFailed[1].rows[0].usedPercent, 28);
+        verify(restoredFailed[1].usageStale);
+
+        // When live is empty, cached items are restored as stale
+        var restoredEmpty = Cache.restore(previous, [], nowMs);
+        compare(restoredEmpty.length, 2);
+        compare(restoredEmpty[0].provider, "codex");
+        verify(restoredEmpty[0].usageStale);
+        compare(restoredEmpty[1].provider, "claude");
+        verify(restoredEmpty[1].usageStale);
+
+        // When cached is empty, live items are returned intact
+        compare(Cache.restore([], liveFresh, nowMs), liveFresh);
+    }
+
     function test_redactedRoundTripAndContextIsolation() {
         var encoded = Cache.encode(fresh(), context, nowMs);
         for (var secret of ["secret@", "Sensitive", "Private", "Bearer", "/private", "credits", "account"])
