@@ -791,8 +791,8 @@ require_all(
         "UpdateLogic.updateCompletionDecision(",
         "pendingAutomaticUpdateCheck = completionDecision.pendingAutomaticCheck",
         "completionDecision.startAutomaticCheck",
-        "Qt.callLater(function() { root.checkForWidgetUpdate(true) })",
-        "Plasmoid.configuration.autoUpdateLastCheck = completedAt",
+        "lifecycle.checkForWidgetUpdate(true)",
+        "controller.checkSucceeded(completedAt)",
         "scheduleNextUpdateCheck(completedAt)",
         "scheduleUpdateRetry()",
     ),
@@ -847,7 +847,7 @@ if "autoUpdateEnabled" in applet.function_body("handleUpdateData"):
 
 require_all(
     applet.id_block("updateCheckTimer"),
-    ("repeat: false", "running: false", "root.handleUpdateCheckTimer()"),
+    ("repeat: false", "running: false", "lifecycle.handleUpdateCheckTimer()"),
     "update timer must remain single-shot",
 )
 
@@ -861,9 +861,39 @@ if "payload" in apply_update_body:
     raise AssertionError("the update effect adapter must not inspect raw updater payloads")
 
 applet.require(
-    "onAutoUpdateIntervalHoursChanged: scheduleNextUpdateCheck()",
+    "lifecycle.scheduleNextUpdateCheck()",
     "changing the update interval must rearm the scheduler",
 )
+updater_path = root / "contents/ui/controllers/WidgetUpdateController.qml"
+updater_text = updater_path.read_text()
+main_text = (root / "contents/ui/main.qml").read_text()
+for forbidden in ("Plasmoid.configuration", "required property var applet", "root."):
+    if forbidden in updater_text:
+        raise AssertionError(f"the updater must own its lifecycle without the applet root: {forbidden}")
+for forbidden in ("id: updateSource", "id: updateCheckTimer", "id: updateCommandTimeoutTimer",
+                  "connectedUpdateCommandSource", "function handleUpdateData("):
+    if forbidden in main_text:
+        raise AssertionError(f"main must not retain updater lifecycle state: {forbidden}")
+require_all(updater_text, (
+    'Qt.resolvedUrl("../../../scripts/update-widget.sh")',
+    "CommandLedger.withRunNonce(buildUpdateCommand(installMode), commandRunSerial)",
+    "if (sourceName !== connectedUpdateCommandSource)",
+    "SafeText.cliJsonText(rawStdoutText)",
+    "controller.statusRecorded(updateStatusText, updateErrorText)",
+    "controller.updateAvailable(intent.version, intent.assetUrl)",
+    "controller.updateInstalled(intent.version)",
+), "the updater must preserve its packaged script, request identity, validation, and events")
+require_all(main_text, (
+    "Controllers.WidgetUpdateController {",
+    "onStatusRecorded: function(statusText, errorText)",
+    "Plasmoid.configuration.widgetUpdateLastStatus = statusText",
+    "Plasmoid.configuration.widgetUpdateLastError = errorText",
+    "onCheckSucceeded: function(timestamp)",
+    "Plasmoid.configuration.autoUpdateLastCheck = timestamp",
+    "root.notifyAvailableUpdate(version, assetUrl)",
+    "root.notifyInstalledUpdate(version)",
+), "main must persist updater results and retain notification delivery")
+
 PY
 
 echo "KDE plasmoid process lifecycle checks passed."

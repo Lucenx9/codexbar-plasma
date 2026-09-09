@@ -4,6 +4,7 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
 import "components" as Components
+import "controllers" as Controllers
 import "Guards.js" as Guards
 import "NotificationMemo.js" as NotificationMemo
 import "NotificationPlanner.js" as NotificationPlanner
@@ -30,7 +31,6 @@ import "PopupRefreshPolicy.js" as PopupRefreshPolicy
 import "ThemeContrast.js" as ThemeContrast
 import "UsageDetails.js" as UsageDetails
 import "LegacyUsageDashboard.js" as LegacyUsageDashboard
-import "UpdateLogic.js" as UpdateLogic
 
 PlasmoidItem {
     id: root
@@ -87,11 +87,7 @@ PlasmoidItem {
     property bool notifyQuotaWarnings: Plasmoid.configuration.notifyQuotaWarnings !== false
     property bool notifyPredictivePaceWarnings: Plasmoid.configuration.notifyPredictivePaceWarnings === true
     property bool notifyLimitResets: Plasmoid.configuration.notifyLimitResets === true
-    property bool updateChecksEnabled: Plasmoid.configuration.updateChecksEnabled !== false
     property bool updateNotificationsEnabled: Plasmoid.configuration.updateNotificationsEnabled !== false
-    property bool autoUpdateEnabled: Plasmoid.configuration.autoUpdateEnabled === true
-    property int autoUpdateIntervalHours: isFinite(Number(Plasmoid.configuration.autoUpdateIntervalHours)) ? Math.max(1, Math.min(168, Number(Plasmoid.configuration.autoUpdateIntervalHours))) : 24
-    property string autoUpdateLastCheck: Plasmoid.configuration.autoUpdateLastCheck || ""
     property string menuBarDisplayMode: safeMenuBarDisplayMode(Plasmoid.configuration.menuBarDisplayMode)
     property bool showPopupTabLabels: Plasmoid.configuration.showPopupTabLabels !== false
     property string providerOrderRaw: Plasmoid.configuration.providerOrder || ""
@@ -169,18 +165,6 @@ PlasmoidItem {
     property var notificationMemo: ({})
     property var notificationRefreshPending: ({})
     property bool notificationsPrimed: false
-    property string connectedUpdateCommandSource: ""
-    property bool connectedUpdateInstallMode: false
-    property bool pendingAutomaticUpdateCheck: false
-    readonly property int widgetUpdateCheckTimeoutMs: 60000
-    readonly property int widgetAutoUpdateTimeoutMs: 600000
-    readonly property int widgetUpdateMinimumTimerDelayMs: 60000
-    readonly property int widgetUpdateRetryBaseDelayMs: 300000
-    readonly property int widgetUpdateRetryMaximumDelayMs: 21600000
-    property int consecutiveUpdateFailures: 0
-    property bool updateRetryPending: false
-    property string updateStatusText: boundedWidgetUpdateText(Plasmoid.configuration.widgetUpdateLastStatus)
-    property string updateErrorText: boundedWidgetUpdateText(Plasmoid.configuration.widgetUpdateLastError)
     property string lastNotifiedUpdateVersion: Plasmoid.configuration.lastNotifiedUpdateVersion || ""
     readonly property bool verticalFormFactor: Plasmoid.formFactor === PlasmaCore.Types.Vertical
     readonly property var overviewProviderItems: overviewProviders()
@@ -282,23 +266,6 @@ PlasmoidItem {
     onQuotaWarningPercentChanged: resetNotificationMemo()
     onQuotaCriticalPercentChanged: resetNotificationMemo()
     onNotifyLimitResetsChanged: resetNotificationMemo()
-    onUpdateChecksEnabledChanged: {
-        if (updateChecksEnabled) {
-            Qt.callLater(function() { root.checkForWidgetUpdate(true) })
-        } else {
-            updateRetryPending = false
-            pendingAutomaticUpdateCheck = false
-            updateCheckTimer.stop()
-        }
-    }
-    onAutoUpdateIntervalHoursChanged: scheduleNextUpdateCheck()
-    onAutoUpdateEnabledChanged: {
-        if (updateChecksEnabled && autoUpdateEnabled) {
-            Qt.callLater(function() { root.checkForWidgetUpdate(true) })
-        } else {
-            pendingAutomaticUpdateCheck = false
-        }
-    }
     onProvidersChanged: {
         if (providers.length === 0) {
             updateSelectedProvider()
@@ -317,10 +284,6 @@ PlasmoidItem {
         }
         refreshNow(false)
         refreshCost(false)
-        if (updateChecksEnabled) {
-            scheduleNextUpdateCheck()
-            Qt.callLater(checkForWidgetUpdate)
-        }
     }
 
     function buildCommand() {
@@ -502,10 +465,6 @@ PlasmoidItem {
             return 0
         }
         return Math.max(0, Math.min(2147480000, Math.floor(revision)))
-    }
-
-    function boundedWidgetUpdateText(value) {
-        return Normalizer.boundedDisplayText(value, 500)
     }
 
     function boundedCliMessage(value) {
@@ -2893,253 +2852,6 @@ PlasmoidItem {
         connectNotificationCommand(commandWithRunNonce(":; " + command))
     }
 
-    function updateScriptPath() {
-        var url = Qt.resolvedUrl("../../scripts/update-widget.sh").toString()
-        if (url.indexOf("file://") === 0) {
-            return decodeURIComponent(url.substring(7))
-        }
-        return decodeURIComponent(url)
-    }
-
-    function buildUpdateCommand(installMode) {
-        var scriptPath = updateScriptPath()
-        var mode = installMode ? " --install" : " --check"
-        var updateCommand = "if [ -x " + shellQuote(scriptPath) + " ]; then "
-            + shellQuote(scriptPath) + mode
-            + "; else printf '%s\\n' " + shellQuote(missingUpdateScriptJson()) + "; fi"
-        return "sh -c " + shellQuote(updateCommand)
-    }
-
-    function missingUpdateScriptJson() {
-        return JSON.stringify({
-            status: "error",
-            errorCode: "missing_updater",
-            message: i18n("Widget updater script is missing from the installed package.")
-        })
-    }
-
-    function widgetUpdateErrorText(errorCode, errorDetail) {
-        var detail = boundedCliMessage(errorDetail)
-        switch (String(errorCode || "")) {
-        case "missing_updater":
-            return i18n("Widget updater script is missing from the installed package.")
-        case "missing_tool":
-            return detail.length > 0
-                ? i18n("Widget updater is missing the required tool: %1", detail)
-                : i18n("Widget updater is missing a required tool.")
-        case "local_metadata_invalid":
-            return i18n("The installed widget metadata is invalid.")
-        case "release_fetch_failed":
-            return i18n("Could not fetch widget release metadata from GitHub.")
-        case "release_metadata_invalid":
-            return i18n("Widget release metadata is invalid.")
-        case "release_not_immutable":
-            return i18n("The available widget release is not immutable.")
-        case "release_download_failed":
-            return i18n("Could not download the widget release.")
-        case "release_integrity_failed":
-            return i18n("Widget release integrity verification failed.")
-        case "package_invalid":
-            return i18n("The widget package does not match the release.")
-        case "package_install_failed":
-            return i18n("The widget package could not be installed.")
-        case "invalid_invocation":
-            return i18n("The widget updater command is invalid.")
-        default:
-            return i18n("Widget update check failed.")
-        }
-    }
-
-    function updateCheckDue(forceCheck) {
-        return UpdateLogic.updateCheckDue(
-            updateChecksEnabled,
-            autoUpdateLastCheck,
-            autoUpdateIntervalHours,
-            Date.now(),
-            forceCheck === true)
-    }
-
-    function checkForWidgetUpdate(forceCheck) {
-        var requestDecision = UpdateLogic.updateRequestDecision(
-            connectedUpdateCommandSource.length > 0,
-            connectedUpdateInstallMode,
-            pendingAutomaticUpdateCheck,
-            autoUpdateEnabled)
-        pendingAutomaticUpdateCheck = requestDecision.pendingAutomaticCheck
-        if (!requestDecision.startNow) {
-            return
-        }
-        if (!updateCheckDue(forceCheck)) {
-            scheduleNextUpdateCheck()
-            return
-        }
-        var installMode = requestDecision.installMode
-        updateCheckTimer.stop()
-        setWidgetUpdateState(i18n("Checking for widget updates..."), "", false)
-        connectedUpdateInstallMode = installMode
-        connectedUpdateCommandSource = commandWithRunNonce(buildUpdateCommand(installMode))
-        updateSource.connectSource(connectedUpdateCommandSource)
-        updateCommandTimeoutTimer.interval = installMode
-            ? widgetAutoUpdateTimeoutMs
-            : widgetUpdateCheckTimeoutMs
-        updateCommandTimeoutTimer.restart()
-    }
-
-    function scheduleNextUpdateCheck(lastCheckOverride) {
-        updateCheckTimer.stop()
-        updateRetryPending = false
-        if (!updateChecksEnabled || connectedUpdateCommandSource.length > 0) {
-            return
-        }
-        var lastCheck = lastCheckOverride === undefined ? autoUpdateLastCheck : lastCheckOverride
-        updateCheckTimer.interval = UpdateLogic.nextUpdateCheckDelay(
-            updateChecksEnabled,
-            lastCheck,
-            autoUpdateIntervalHours,
-            Date.now(),
-            widgetUpdateMinimumTimerDelayMs)
-        updateCheckTimer.restart()
-    }
-
-    function scheduleUpdateRetry() {
-        updateCheckTimer.stop()
-        updateRetryPending = false
-        if (!updateChecksEnabled || connectedUpdateCommandSource.length > 0) {
-            return
-        }
-        updateCheckTimer.interval = UpdateLogic.updateRetryDelay(
-            consecutiveUpdateFailures,
-            widgetUpdateRetryBaseDelayMs,
-            widgetUpdateRetryMaximumDelayMs)
-        updateRetryPending = true
-        updateCheckTimer.restart()
-    }
-
-    function handleUpdateCheckTimer() {
-        var forceCheck = updateRetryPending
-        updateRetryPending = false
-        checkForWidgetUpdate(forceCheck)
-    }
-
-    function finishUpdateCommand(sourceName, successfulCheck) {
-        updateCommandTimeoutTimer.stop()
-        updateSource.disconnectSource(sourceName)
-        connectedUpdateCommandSource = ""
-        connectedUpdateInstallMode = false
-        var completionDecision = UpdateLogic.updateCompletionDecision(
-            pendingAutomaticUpdateCheck,
-            updateChecksEnabled,
-            autoUpdateEnabled)
-        pendingAutomaticUpdateCheck = completionDecision.pendingAutomaticCheck
-        var completedAt = ""
-        if (successfulCheck === true) {
-            consecutiveUpdateFailures = 0
-            completedAt = new Date().toISOString()
-            Plasmoid.configuration.autoUpdateLastCheck = completedAt
-        } else {
-            consecutiveUpdateFailures = Math.min(31, consecutiveUpdateFailures + 1)
-        }
-        if (completionDecision.startAutomaticCheck) {
-            Qt.callLater(function() { root.checkForWidgetUpdate(true) })
-            return
-        }
-        if (successfulCheck !== true) {
-            scheduleUpdateRetry()
-            return
-        }
-        scheduleNextUpdateCheck(completedAt)
-    }
-
-    function handleUpdateCommandTimeout() {
-        if (connectedUpdateCommandSource.length === 0) {
-            return
-        }
-        var sourceName = connectedUpdateCommandSource
-        finishUpdateCommand(sourceName, false)
-        setWidgetUpdateState(
-            i18n("Widget update failed."),
-            i18n("Widget update operation timed out."))
-    }
-
-    function setWidgetUpdateState(statusText, errorText, persistState) {
-        updateStatusText = boundedWidgetUpdateText(statusText)
-        updateErrorText = boundedWidgetUpdateText(errorText)
-        if (persistState === false) {
-            return
-        }
-        Plasmoid.configuration.widgetUpdateLastStatus = updateStatusText
-        Plasmoid.configuration.widgetUpdateLastError = updateErrorText
-    }
-
-    function handleUpdateData(sourceName, stdoutText, stderrText) {
-        if (sourceName !== connectedUpdateCommandSource) {
-            return
-        }
-        var installMode = connectedUpdateInstallMode
-
-        var trimmed = stdoutText.trim()
-        if (trimmed.length === 0) {
-            finishUpdateCommand(sourceName, false)
-            setWidgetUpdateState(
-                i18n("Widget update check failed."),
-                stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("Widget update check returned no data."))
-            return
-        }
-
-        var payload
-        try {
-            payload = JSON.parse(trimmed)
-        } catch (error) {
-            finishUpdateCommand(sourceName, false)
-            setWidgetUpdateState(
-                i18n("Widget update check failed."),
-                i18n("Could not parse widget update JSON: %1", error.message))
-            return
-        }
-
-        var resultIntent = UpdateLogic.resultIntent(payload, installMode)
-        applyUpdateResultIntent(resultIntent)
-        finishUpdateCommand(sourceName, resultIntent.successful)
-    }
-
-    function applyUpdateResultIntent(intent) {
-        switch (intent.kind) {
-        case "error":
-            setWidgetUpdateState(
-                i18n("Widget update check failed."),
-                widgetUpdateErrorText(intent.errorCode, intent.errorDetail))
-            return
-        case "available":
-            var availableStatus = intent.version.length > 0
-                ? i18n("Widget update %1 is available.", intent.version)
-                : i18n("A widget update is available.")
-            setWidgetUpdateState(availableStatus, "")
-            if (intent.notificationKind === "available") {
-                notifyAvailableUpdate(intent.version, intent.assetUrl)
-            }
-            return
-        case "installed":
-            var restartText = i18n("Restart Plasma to apply the new widget version.")
-            setWidgetUpdateState(intent.version.length > 0
-                ? i18n("Widget update %1 installed. %2", intent.version, restartText)
-                : i18n("Widget update installed. %1", restartText), "")
-            if (intent.notificationKind === "installed") {
-                notifyInstalledUpdate(intent.version)
-            }
-            return
-        case "current":
-            setWidgetUpdateState(i18n("Widget is up to date."), "")
-            return
-        case "skipped":
-            setWidgetUpdateState(i18n("Widget update skipped."), "")
-            return
-        }
-
-        setWidgetUpdateState(
-            i18n("Widget update check failed."),
-            i18n("Unknown widget update status: %1", intent.status))
-    }
-
     function notifyAvailableUpdate(version, url) {
         if (!enableNotifications || !updateNotificationsEnabled) {
             return
@@ -4282,39 +3994,6 @@ PlasmoidItem {
         }
     }
 
-    Timer {
-        id: updateCheckTimer
-
-        repeat: false
-        running: false
-        triggeredOnStart: false
-        onTriggered: root.handleUpdateCheckTimer()
-    }
-
-    Timer {
-        id: updateCommandTimeoutTimer
-
-        repeat: false
-        onTriggered: root.handleUpdateCommandTimeout()
-    }
-
-    Plasma5Support.DataSource {
-        id: updateSource
-
-        engine: "executable"
-
-        onNewData: function(sourceName, data) {
-            var rawStdoutText = data && data["stdout"] ? data["stdout"] : ""
-            var stdoutText = SafeText.cliJsonText(rawStdoutText)
-            var stderrText = data && data["stderr"] ? data["stderr"] : ""
-            if (stdoutText === null) {
-                stdoutText = ""
-                stderrText = i18n("Widget updater response exceeded the supported size.")
-            }
-            root.handleUpdateData(sourceName, stdoutText, stderrText)
-        }
-    }
-
     Plasma5Support.DataSource {
         id: notificationSource
 
@@ -4326,6 +4005,28 @@ PlasmoidItem {
                 return
             }
             root.finishNotificationCommandSource(sourceName)
+        }
+    }
+
+    Controllers.WidgetUpdateController {
+        updateChecksEnabled: Plasmoid.configuration.updateChecksEnabled !== false
+        autoUpdateEnabled: Plasmoid.configuration.autoUpdateEnabled === true
+        autoUpdateIntervalHours: isFinite(Number(Plasmoid.configuration.autoUpdateIntervalHours))
+            ? Math.max(1, Math.min(168, Number(Plasmoid.configuration.autoUpdateIntervalHours))) : 24
+        autoUpdateLastCheck: Plasmoid.configuration.autoUpdateLastCheck || ""
+
+        onStatusRecorded: function(statusText, errorText) {
+            Plasmoid.configuration.widgetUpdateLastStatus = statusText
+            Plasmoid.configuration.widgetUpdateLastError = errorText
+        }
+        onCheckSucceeded: function(timestamp) {
+            Plasmoid.configuration.autoUpdateLastCheck = timestamp
+        }
+        onUpdateAvailable: function(version, assetUrl) {
+            root.notifyAvailableUpdate(version, assetUrl)
+        }
+        onUpdateInstalled: function(version) {
+            root.notifyInstalledUpdate(version)
         }
     }
 
