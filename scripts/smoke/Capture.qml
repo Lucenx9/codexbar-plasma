@@ -877,6 +877,11 @@ Item {
                 "retained usage is eligible for notifications");
             verifyScenario(applet.panelToolTipText().indexOf("Last known usage") >= 0,
                 "panel tooltip presents retained usage as current");
+            var emptyMeter = applet.normalizeProvider({provider: "codex"});
+            emptyMeter.usageStale = true;
+            emptyMeter.lastGoodAtMs = measuredAt;
+            verifyScenario(applet.panelMeterDescription(emptyMeter) === applet.lastGoodUsageText(emptyMeter),
+                "missing retained quota adds an orphan separator to its accessible description");
             var statusFailure = applet.providerErrorPayload("codex", "Synthetic account failure");
             statusFailure.status = {indicator: "major", incidentId: "synthetic-incident", description: "Synthetic outage"};
             applet.setNotificationProviderRefreshPending("codex", true);

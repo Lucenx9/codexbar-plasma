@@ -3649,8 +3649,11 @@ PlasmoidItem {
             var reset = resetTextForRow(row)
             return reset.length > 0 ? i18n("%1 - %2", text, reset) : text
         }).join(". ")
-        return item && item.usageStale === true
-            ? i18n("%1 - %2", description, lastGoodUsageText(item)) : description
+        if (!item || item.usageStale !== true) {
+            return description
+        }
+        var lastKnown = lastGoodUsageText(item)
+        return description.length > 0 ? i18n("%1 - %2", description, lastKnown) : lastKnown
     }
 
     function switcherMetricRow(item) {

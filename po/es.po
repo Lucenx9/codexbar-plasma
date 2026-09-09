@@ -2515,16 +2515,16 @@ msgstr[1] "%1 puntos"
 
 #: contents/ui/main.qml
 msgid "Showing last known usage"
-msgstr "Se muestran los últimos datos válidos"
+msgstr "Se muestra el último uso conocido"
 
 #: contents/ui/main.qml
 msgid "Last known usage, just now"
-msgstr "Último dato válido, hace un momento"
+msgstr "Último uso conocido, hace un momento"
 
 #: contents/ui/main.qml
 #, kde-format
 msgid "Last known usage, %1 ago"
-msgstr "Último dato válido, hace %1"
+msgstr "Último uso conocido, hace %1"
 
 #: contents/ui/main.qml
 msgid "Cached usage has expired. Refresh to try again."
