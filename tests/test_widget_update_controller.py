@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -25,6 +26,11 @@ TestCase {
     SignalSpy { id: installed; target: subject; signalName: "updateInstalled" }
 
     function init() {
+        var probe = Qt.createComponent("CONTROLLER_URL");
+        if (probe.status === Component.Error && /module "org\\.kde\\.[^"]+" is not installed/.test(probe.errorString())) {
+            skip("WidgetUpdateController needs the optional KDE QML modules");
+            return;
+        }
         subject = null;
         recorded.clear();
         succeeded.clear();
@@ -178,13 +184,54 @@ fi
                 [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
                 env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
                 capture_output=True, text=True, timeout=95)
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            output = result.stdout + result.stderr
+            self.assertEqual(result.returncode, 0, output)
+            if os.environ.get("QML_TEST_REQUIRE_NO_SKIPS") == "1" and "SKIP" in output:
+                self.fail("QML tests were skipped; the CI environment must provide the KDE QML modules.")
+            if "SKIP" in output:
+                self.skipTest("WidgetUpdateController needs the optional KDE QML modules")
             # Plasma destroys the timed-out QProcess when its source disconnects.
-            warnings = [line for line in (result.stdout + result.stderr).splitlines()
+            warnings = [line for line in output.splitlines()
                         if "QWARN" in line and not (
                             "test_timeoutCancelsRequestAndNextRunSucceeds()" in line
                             and 'QProcess: Destroyed while process ("/bin/sh") is still running.' in line)]
             self.assertEqual(warnings, [])
+
+
+class WidgetUpdateControllerRunnerTests(unittest.TestCase):
+    def run_fixture_result(self, returncode, output, strict):
+        result = unittest.TestResult()
+        case = WidgetUpdateControllerTests("test_production_lifecycle_with_synthetic_updater")
+        completed = subprocess.CompletedProcess(["qmltestrunner"], returncode, output, "")
+        with mock.patch.dict(os.environ, {"QML_TEST_REQUIRE_NO_SKIPS": "1" if strict else "0"}):
+            with mock.patch.object(subprocess, "run", return_value=completed):
+                case.run(result)
+        self.assertEqual(result.errors, [])
+        return result
+
+    def test_runner_failure_with_skip_is_never_hidden(self):
+        for strict in (False, True):
+            with self.subTest(strict=strict):
+                result = self.run_fixture_result(7, "SKIP   : optional module unavailable\n", strict)
+                self.assertEqual(len(result.failures), 1)
+                self.assertEqual(result.skipped, [])
+                self.assertIn("7 != 0", result.failures[0][1])
+
+    def test_successful_optional_module_skip_is_reported(self):
+        result = self.run_fixture_result(0, "SKIP   : optional module unavailable\n", False)
+        self.assertEqual(result.failures, [])
+        self.assertEqual(len(result.skipped), 1)
+
+    def test_strict_mode_rejects_successful_runner_skips(self):
+        result = self.run_fixture_result(0, "SKIP   : optional module unavailable\n", True)
+        self.assertEqual(len(result.failures), 1)
+        self.assertEqual(result.skipped, [])
+        self.assertIn("QML tests were skipped", result.failures[0][1])
+
+    def test_successful_runner_passes(self):
+        result = self.run_fixture_result(0, "PASS   : synthetic fixture\n", True)
+        self.assertTrue(result.wasSuccessful())
+        self.assertEqual(result.skipped, [])
 
 
 if __name__ == "__main__":
