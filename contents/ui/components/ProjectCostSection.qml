@@ -52,7 +52,8 @@ ColumnLayout {
                 PlainPlasmaLabel {
                     text: modelData.label
                     Layout.fillWidth: true
-                    Layout.preferredWidth: section.width * 0.55
+                    // Preferred sizes express the ratio without depending on layout geometry.
+                    Layout.preferredWidth: 55
                     Layout.minimumWidth: 0
                     Layout.alignment: Qt.AlignTop
                     wrapMode: Text.Wrap
@@ -62,7 +63,7 @@ ColumnLayout {
                     text: section.valueText(modelData)
                     opacity: section.applet.valueTextOpacity
                     Layout.fillWidth: true
-                    Layout.preferredWidth: section.width * 0.45
+                    Layout.preferredWidth: 45
                     Layout.minimumWidth: 0
                     Layout.alignment: Qt.AlignTop
                     horizontalAlignment: Text.AlignRight

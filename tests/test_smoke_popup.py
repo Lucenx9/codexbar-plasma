@@ -161,6 +161,7 @@ class SmokePopupTests(unittest.TestCase):
 
     def test_qml_failure_wins_even_if_capture_marker_is_present(self):
         for error in ("TypeError: synthetic failure",
+                      "QML ProjectCostSection: Qt Quick Layouts: Detected recursive rearrange. Aborting after two iterations.",
                       "QJSValue::call() failed: cannot call function with argument created in a different engine"):
             with self.subTest(error=error), tempfile.TemporaryDirectory() as temporary:
                 work = Path(temporary)

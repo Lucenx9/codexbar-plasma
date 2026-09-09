@@ -30,23 +30,33 @@ ColumnLayout {
     Repeater {
         model: detailSection.sectionData.rows
 
-        delegate: RowLayout {
+        delegate: Item {
+            id: detailRow
+
             required property var modelData
 
             Layout.fillWidth: true
-            spacing: Kirigami.Units.smallSpacing
+            implicitWidth: detailLabel.implicitWidth + Kirigami.Units.smallSpacing + detailValues.implicitWidth
+            implicitHeight: Math.max(detailLabel.implicitHeight, detailValues.implicitHeight)
 
             PlainPlasmaLabel {
+                id: detailLabel
+
                 text: modelData.label
                 opacity: detailSection.applet.secondaryTextOpacity
-                Layout.fillWidth: true
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                width: Math.max(0, parent.width - detailValues.width - Kirigami.Units.smallSpacing)
                 elide: Text.ElideRight
             }
 
             ColumnLayout {
-                Layout.fillWidth: true
-                Layout.minimumWidth: 0
-                Layout.maximumWidth: detailSection.width / 2
+                id: detailValues
+
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                // The plain Item owns geometry; width-dependent layout hints recurse.
+                width: Math.min(implicitWidth, detailRow.width / 2)
                 spacing: 0
 
                 PlainPlasmaLabel {
@@ -75,28 +85,40 @@ ColumnLayout {
         }
     }
 
-    RowLayout {
+    Item {
+        id: chartHeading
+
         visible: detailSection.chartData
             && (detailSection.chartData.title.length > 0 || detailSection.chartData.unit.length > 0)
         Layout.fillWidth: true
-        spacing: Kirigami.Units.smallSpacing
+        implicitWidth: chartTitle.implicitWidth + Kirigami.Units.smallSpacing + chartUnit.implicitWidth
+        implicitHeight: Math.max(chartTitle.implicitHeight, chartUnit.implicitHeight)
 
         PlainPlasmaLabel {
+            id: chartTitle
+
             text: detailSection.chartData ? detailSection.chartData.title : ""
             opacity: detailSection.applet.secondaryTextOpacity
             font.weight: Font.DemiBold
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
-            Layout.fillWidth: true
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            width: Math.max(0, parent.width - chartUnit.width
+                - (chartUnit.visible ? Kirigami.Units.smallSpacing : 0))
             elide: Text.ElideRight
         }
 
         PlainPlasmaLabel {
+            id: chartUnit
+
             visible: detailSection.chartData && detailSection.chartData.unit.length > 0
             text: detailSection.chartData ? detailSection.chartData.unit : ""
             opacity: detailSection.applet.secondaryTextOpacity
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             horizontalAlignment: Text.AlignRight
-            Layout.maximumWidth: detailSection.width / 2
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            width: Math.min(implicitWidth, chartHeading.width / 2)
             elide: Text.ElideRight
         }
     }

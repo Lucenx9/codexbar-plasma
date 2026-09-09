@@ -24,6 +24,7 @@ TestCase {
         property bool loading: false
         property bool expanded: false
         property bool privacyMode: false
+        property bool costHistoryShowsTokens: false
         property string openedProvider: ""
         property real secondaryTextOpacity: 0.7
         property real valueTextOpacity: 0.85
@@ -81,6 +82,18 @@ TestCase {
         }
         function privateErrorText(text) {
             return text;
+        }
+        function amountString(value, currency) {
+            return currency + " " + value;
+        }
+        function qualifiedCostValue(value) {
+            return value;
+        }
+        function usageCountText(value) {
+            return String(value);
+        }
+        function providerDisplayTitle(providerID) {
+            return providerID;
         }
         function accountSubtitle(item) {
             return item.subtitle;
@@ -196,7 +209,7 @@ TestCase {
         }
     }
 
-    function createControl(type, properties) {
+    function createControl(type, properties, parent) {
         var holder;
         try {
             holder = Qt.createQmlObject('import QtQuick; import "../contents/ui/components" as Components; QtObject { property Component control: Component { Components.' + type + ' { function i18n(text) { return text } function i18np(one, many, count) { return count === 1 ? one : many } } } }', testCase, Qt.resolvedUrl("VisualLayoutTest.qml"));
@@ -208,7 +221,7 @@ TestCase {
             throw error;
         }
         holders.push(holder);
-        return createTemporaryObject(holder.control, testCase, properties);
+        return createTemporaryObject(holder.control, parent || testCase, properties);
     }
 
     function cleanupTestCase() {
@@ -224,6 +237,7 @@ TestCase {
         applet.minimalPanel = false;
         applet.quotaWarning = false;
         applet.verticalFormFactor = false;
+        applet.costHistoryShowsTokens = false;
         applet.selectedProviderID = "codex";
     }
 
@@ -654,6 +668,7 @@ TestCase {
     }
 
     function test_providerDetailValuesStayWithinPopup(data) {
+        failOnWarning(/Qt Quick Layouts: Detected recursive rearrange/);
         var longValue = "LongModelName".repeat(10).slice(0, 120);
         var rawSection = {
             title: "Details",
@@ -665,15 +680,18 @@ TestCase {
         else if (data.field.length > 0)
             rawSection.rows[0][data.field] = longValue;
         var section = UsageDetails.normalizeSections([rawSection])[0];
+        var layout = createTemporaryQmlObject(
+            'import QtQuick; import QtQuick.Layouts; ColumnLayout {}',
+            testCase, String(Qt.resolvedUrl("ProviderDetailBoundsTest.qml")));
+        layout.width = data.width;
         var view = createControl("ProviderDetailSection", {
             applet: applet,
             providerData: { provider: "codex" },
-            modelData: section,
-            width: data.width
-        });
+            modelData: section
+        }, layout);
         if (!view)
             return;
-        wait(0);
+        tryCompare(view, "width", data.width);
         var expectedTexts = [section.rows[0].label, section.rows[0].value,
             section.rows[0].secondaryValue, section.chart.title, section.chart.unit];
         for (var i = 0; i < expectedTexts.length; i++) {
@@ -689,6 +707,70 @@ TestCase {
             if (expectedText !== longValue)
                 verify(label.width + 1 >= label.implicitWidth,
                     "A long value hides its short label");
+        }
+    }
+
+    function test_providerDetailNestedLayoutDoesNotRearrangeRecursively() {
+        failOnWarning(/Qt Quick Layouts: Detected recursive rearrange/);
+        var layout = createTemporaryQmlObject(
+            'import QtQuick; import QtQuick.Layouts; ColumnLayout { width: 540 }',
+            testCase, String(Qt.resolvedUrl("ProviderDetailLayoutTest.qml")));
+        var section = UsageDetails.normalizeSections([{
+            title: "Details",
+            rows: [{ label: "Model", value: "A long model value", secondaryValue: "Included" }],
+            chart: { kind: "line", title: "Daily usage", unit: "tokens", points: [] }
+        }])[0];
+        var view = createControl("ProviderDetailSection", {
+            applet: applet,
+            providerData: { provider: "codex" },
+            modelData: section
+        }, layout);
+        if (!view)
+            return;
+        tryCompare(view, "width", layout.width);
+        layout.width = 240;
+        tryCompare(view, "width", layout.width);
+        layout.width = 540;
+        tryCompare(view, "width", layout.width);
+    }
+
+    function test_projectCostsNestedLayoutDoesNotRearrangeRecursively_data() {
+        return [{tag: "costs", tokens: false}, {tag: "tokens", tokens: true}];
+    }
+
+    function test_projectCostsNestedLayoutDoesNotRearrangeRecursively(data) {
+        failOnWarning(/Qt Quick Layouts: Detected recursive rearrange/);
+        applet.costHistoryShowsTokens = data.tokens;
+        var layout = createTemporaryQmlObject(
+            'import QtQuick; import QtQuick.Layouts; ColumnLayout { width: 540 }',
+            testCase, String(Qt.resolvedUrl("ProjectCostLayoutTest.qml")));
+        var view = createControl("ProjectCostSection", {
+            applet: applet,
+            providerCosts: []
+        }, layout);
+        if (!view)
+            return;
+        // Assign after creation to preserve JS arrays across the component boundary.
+        var projectLabel = "A project with a long display name ".repeat(4).slice(0, 120);
+        view.providerCosts = [{
+            provider: "codex",
+            projects: {
+                rows: [{label: projectLabel, cost: 12.34, tokens: 5678, currency: "USD"}],
+                truncated: false
+            }
+        }];
+        compare(view.projectData.rows.length, 1);
+        var label = findItem(view, item => item.text === projectLabel);
+        var value = findItem(view, item => item.text === view.valueText(view.projectData.rows[0]));
+        verify(label !== null && value !== null);
+        for (var width of [540, 240, 540]) {
+            layout.width = width;
+            tryCompare(view, "width", width);
+            verify(waitForPolish(layout));
+            verify(label.width > 0 && value.width > 0);
+            verify(label.mapToItem(view, label.width, 0).x <= value.mapToItem(view, 0, 0).x);
+            verify(value.mapToItem(view, value.width, 0).x <= width + 1);
+            verify(Math.abs(label.width / (label.width + value.width) - 0.55) < 0.01);
         }
     }
 }
