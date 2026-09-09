@@ -92,5 +92,12 @@ With the default element order, the selected provider's optional text follows it
 capsules inside the same clickable group. This removes the repeated provider logo
 seen at `6addadd`. Other providers retain their icon and capsules. A custom order
 preserves independently positioned elements; if the selected meter is filtered
-out or unavailable, standalone text keeps its identity. Both styles share the
+out, unavailable, or leaves no grouped-text width, standalone text keeps its identity. Both styles share the
 layout and preserve quota warnings, keyboard activation, and bounded text width.
+
+The element-order layout has a plain Item boundary. FormLayout reads its cached
+implicit dimensions instead of querying the dynamic layout's attached minimum
+sizes while Repeater delegates are rebuilt. A debugger reproduced a Qt 6.11.1
+crash in `QQuickLayout::effectiveSizePolicy_helper` during layout polish without
+this boundary; repeated advanced-settings captures pass with it. Keyboard focus
+and row geometry remain covered by the native settings test.

@@ -286,7 +286,11 @@ information enabled. `panel-information`, `panel-information-minimal`, and
 `panel-information-single` capture grouped text at a 24-pixel panel height, including
 selection of the second provider. QtTests exercise style selection, disclosure,
 retained hidden values, defaults, custom order and filtered-meter fallbacks,
-long-text bounds, and activation through both text and meters.
+long-text bounds, exhausted grouped-text width, reordering after disclosure,
+and activation through both text and meters. The live adapter limits meters to
+four; a renderer stress test exceeds that limit to verify the zero-width guard
+independently of theme dimensions. Early preview exits report the process exit
+code in addition to the log path.
 `usage-retention` exercises failed/partial refreshes, recovery, notification
 suppression, and cache invalidation. `usage-cache-restart` launches two separate
 widget processes with the same isolated settings and delays the second CLI

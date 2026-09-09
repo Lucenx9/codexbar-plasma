@@ -158,7 +158,7 @@ def run_preview(command, env, work, log_path, scenario, timeout):
                 if marker in output:
                     break
                 if process.poll() is not None:
-                    raise RuntimeError("Preview exited before capture; see " + str(log_path))
+                    raise RuntimeError(f"Preview exited before capture (exit code {process.returncode}); see {log_path}")
                 time.sleep(0.1)
             else:
                 raise RuntimeError("Timed out waiting for the scenario; see " + str(log_path))

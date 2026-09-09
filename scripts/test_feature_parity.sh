@@ -600,14 +600,14 @@ require_in_file "$MAKEFILE" "QMLLINT_FLAGS ?= --unqualified disable"
 require_in_file "$MAKEFILE" "update:"
 reject_in_file "$MAKEFILE" "contents/ui/configAbout.qml"
 
-require_in_file "$PANEL_QML" "Text format:"
-require_in_file "$PANEL_QML" "Provider name"
-require_in_file "$PANEL_QML" "Usage text"
+require_in_file "$PANEL_QML" 'Kirigami.FormData.label: i18n("Text format:")'
+require_in_file "$PANEL_QML" 'text: i18n("Provider name")'
+require_in_file "$PANEL_QML" 'text: i18n("Usage text")'
 require_in_file "$PANEL_QML" "enabled: showPercentCheck.checked"
 require_in_file "$POPUP_QML" "Show usage as percent used"
 require_in_file "$POPUP_QML" "Show quota warnings on usage meters"
 require_in_file "$POPUP_QML" "Show reset times as clock time"
-require_in_file "$PANEL_QML" "Provider meters"
+require_in_file "$PANEL_QML" 'text: i18n("Provider meters")'
 require_in_file "$PANEL_QML" "Element order:"
 require_in_file "$PANEL_QML" "PanelElements.movedOrder("
 require_in_file "$PANEL_QML" "Auto-select highest-usage provider"

@@ -435,74 +435,84 @@ KCM.SimpleKCM {
                 wrapMode: Text.WordWrap
             }
 
-            ColumnLayout {
+            Item {
                 Kirigami.FormData.label: i18n("Element order:")
                 Kirigami.FormData.labelAlignment: Qt.AlignTop
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 24
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-                spacing: Kirigami.Units.smallSpacing / 2
+                // Keep FormLayout from querying a rebuilding Repeater layout's
+                // attached size hints during Qt's layout polish.
+                implicitWidth: panelOrderLayout.implicitWidth
+                implicitHeight: panelOrderLayout.implicitHeight
 
-                Repeater {
-                    id: panelOrderRepeater
+                ColumnLayout {
+                    id: panelOrderLayout
+                    objectName: "panelOrderLayout"
+                    width: parent.width
+                    spacing: Kirigami.Units.smallSpacing / 2
 
-                    model: PanelElements.normalizedOrder(page.cfg_panelElementOrder)
+                    Repeater {
+                        id: panelOrderRepeater
 
-                    delegate: RowLayout {
-                        required property var modelData
-                        required property int index
-                        readonly property string orderKey: modelData
-                        readonly property Item upButton: panelMoveUp
-                        readonly property Item downButton: panelMoveDown
-                        onYChanged: page.revealFocusedOrderButton(upButton, downButton)
+                        model: PanelElements.normalizedOrder(page.cfg_panelElementOrder)
 
-                        Layout.fillWidth: true
-                        spacing: Kirigami.Units.smallSpacing
+                        delegate: RowLayout {
+                            required property var modelData
+                            required property int index
+                            readonly property string orderKey: modelData
+                            readonly property Item upButton: panelMoveUp
+                            readonly property Item downButton: panelMoveDown
+                            onYChanged: page.revealFocusedOrderButton(upButton, downButton)
 
-                        Components.PlainControlsLabel {
-                            text: i18n("%1.", index + 1)
-                            Layout.minimumWidth: Math.max(implicitWidth, Kirigami.Units.iconSizes.small)
-                            opacity: 0.7
-                        }
-
-                        Components.PlainControlsLabel {
-                            text: page.panelElementTitle(modelData)
                             Layout.fillWidth: true
-                            elide: Text.ElideRight
-                        }
+                            spacing: Kirigami.Units.smallSpacing
 
-                        Controls.ToolButton {
-                            id: panelMoveUp
-
-                            icon.name: "go-up"
-                            enabled: index > 0
-                            Accessible.name: i18n("Move %1 up", page.panelElementTitle(modelData))
-
-                            Components.PlainToolTip {
-                                parent: panelMoveUp
-                                plainText: panelMoveUp.Accessible.name
-                                visible: panelMoveUp.hovered
-                                delay: Kirigami.Units.toolTipDelay
+                            Components.PlainControlsLabel {
+                                text: i18n("%1.", index + 1)
+                                Layout.minimumWidth: Math.max(implicitWidth, Kirigami.Units.iconSizes.small)
+                                opacity: 0.7
                             }
 
-                            onClicked: page.movePanelElement(index, -1, visualFocus)
-                        }
-
-                        Controls.ToolButton {
-                            id: panelMoveDown
-
-                            icon.name: "go-down"
-                            enabled: index < PanelElements.defaultOrder.length - 1
-                            Accessible.name: i18n("Move %1 down", page.panelElementTitle(modelData))
-
-                            Components.PlainToolTip {
-                                parent: panelMoveDown
-                                plainText: panelMoveDown.Accessible.name
-                                visible: panelMoveDown.hovered
-                                delay: Kirigami.Units.toolTipDelay
+                            Components.PlainControlsLabel {
+                                text: page.panelElementTitle(modelData)
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
                             }
 
-                            onClicked: page.movePanelElement(index, 1, visualFocus)
+                            Controls.ToolButton {
+                                id: panelMoveUp
+
+                                icon.name: "go-up"
+                                enabled: index > 0
+                                Accessible.name: i18n("Move %1 up", page.panelElementTitle(modelData))
+
+                                Components.PlainToolTip {
+                                    parent: panelMoveUp
+                                    plainText: panelMoveUp.Accessible.name
+                                    visible: panelMoveUp.hovered
+                                    delay: Kirigami.Units.toolTipDelay
+                                }
+
+                                onClicked: page.movePanelElement(index, -1, visualFocus)
+                            }
+
+                            Controls.ToolButton {
+                                id: panelMoveDown
+
+                                icon.name: "go-down"
+                                enabled: index < PanelElements.defaultOrder.length - 1
+                                Accessible.name: i18n("Move %1 down", page.panelElementTitle(modelData))
+
+                                Components.PlainToolTip {
+                                    parent: panelMoveDown
+                                    plainText: panelMoveDown.Accessible.name
+                                    visible: panelMoveDown.hovered
+                                    delay: Kirigami.Units.toolTipDelay
+                                }
+
+                                onClicked: page.movePanelElement(index, 1, visualFocus)
+                            }
                         }
                     }
                 }

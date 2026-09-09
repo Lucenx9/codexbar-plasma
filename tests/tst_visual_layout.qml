@@ -18,6 +18,7 @@ TestCase {
         property bool minimalPanel: false
         property bool quotaWarning: false
         property bool dualQuota: true
+        property int meterCount: 2
         property real firstQuota: 57
         property bool secondaryWarning: false
         property bool loading: false
@@ -110,7 +111,9 @@ TestCase {
                     title: "Claude",
                     value: 0
                 }
-            ];
+            ].concat(Array.from({length: Math.max(0, meterCount - 2)}, (_, index) => ({
+                provider: "example-" + index, title: "Example " + index, value: 25
+            })));
         }
         function selectedCompactProvider() {
             return {
@@ -215,6 +218,7 @@ TestCase {
 
     function init() {
         applet.dualQuota = true;
+        applet.meterCount = 2;
         applet.firstQuota = 57;
         applet.secondaryWarning = false;
         applet.minimalPanel = false;
@@ -307,6 +311,27 @@ TestCase {
         applet.verticalFormFactor = true;
         tryCompare(panel, "inlinePrimaryText", false);
         verify(!panel.showPrimaryIdentity);
+    }
+
+    function test_crowdedMeterRowsRetainStandaloneText() {
+        var panel = createControl("CompactRepresentation", {applet: applet, height: 44});
+        if (!panel) return;
+        verify(panel.inlinePrimaryText);
+        // The live adapter caps meters at four. Stress the renderer's zero-width
+        // boundary independently of that cap and the active theme's dimensions.
+        applet.meterCount = Math.ceil(panel.maximumCompactWidth / panel.meterWidth) + 1;
+        tryCompare(panel, "inlinePrimaryText", false);
+        compare(panel.inlineTextWidth, 0);
+        verify(panel.showPrimaryIdentity);
+        var label = findItem(panel, item => item.objectName === "panelStandaloneText");
+        tryVerify(() => label.visible && label.width > 0);
+        compare(label.text, applet.compactText());
+        verify(label.mapToItem(panel, 0, 0).x >= 0);
+        verify(label.mapToItem(panel, label.width, 0).x <= panel.width);
+        applet.meterCount = 2;
+        tryCompare(panel, "inlinePrimaryText", true);
+        verify(!panel.showPrimaryIdentity);
+        tryVerify(() => !label.visible);
     }
 
     function test_emptyQuotaRetainsWarningColor_data() {

@@ -19,6 +19,7 @@ Item {
     readonly property var selectedProvider: applet.selectedCompactProvider()
     // A custom order retains the independently positioned identity and text.
     readonly property bool inlinePrimaryText: !verticalPanel && primaryText.length > 0
+        && inlineTextWidth > 0
         && applet.panelElementOrder().join(",") === PanelElements.defaultOrder.join(",")
         && selectedProvider !== null && selectedProvider !== undefined
         && meterProviders.some(function(provider) { return provider.provider === selectedProvider.provider })
@@ -42,10 +43,9 @@ Item {
     readonly property int metersExtent: meterProviders.length * meterHeight
         + Math.max(0, meterProviders.length - 1) * meterSpacing
     readonly property int maximumCompactWidth: Kirigami.Units.gridUnit * 18
-    readonly property int inlineTextWidth: inlinePrimaryText
-        ? Math.min(Math.ceil(compactTextMeasurer.implicitWidth), Math.max(0,
+    readonly property int inlineTextWidth: Math.min(Math.ceil(compactTextMeasurer.implicitWidth), Math.max(0,
             maximumCompactWidth - meterProviders.length * (meterWidth + meterSpacing)
-                - Kirigami.Units.smallSpacing * 5)) : 0
+                - Kirigami.Units.smallSpacing * 5))
     readonly property int desiredWidth: verticalPanel
         ? Kirigami.Units.iconSizes.small + Kirigami.Units.iconSizes.smallMedium + meterSpacing * 4
         : Math.min(maximumCompactWidth, Math.max(Kirigami.Units.gridUnit * 4.8,

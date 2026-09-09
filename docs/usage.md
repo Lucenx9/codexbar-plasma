@@ -24,7 +24,7 @@ work and upstream contract requirements.
 - With the default element order, optional text sits after the selected
   provider's capsules in one group, with a single logo. The other providers keep
   their own icon and capsules. If that provider's meters are hidden or unavailable,
-  its text keeps a separate identity. Custom element orders retain independent
+  or leave no room for grouped text, its text keeps a separate identity. Custom element orders retain independent
   identity, status, text, and meter positions. Long text is elided to fit the panel.
 
   ![Optional usage text beside its provider’s quota capsules](codexbar-plasma-panel-information.png)

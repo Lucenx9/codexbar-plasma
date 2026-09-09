@@ -48,6 +48,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Panel settings no longer query a rebuilding element-order layout's attached
+  size hints, avoiding a Qt layout crash when expanding and reordering controls.
+- Panel text falls back to a separate label if meters exhaust the width available
+  for grouped text.
 - The settings preview now renders quota capsules from its synthetic data after
   QML converts provider records for delegates.
 

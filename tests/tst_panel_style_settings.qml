@@ -128,6 +128,29 @@ TestCase {
         compare(text.currentValue, "percent");
     }
 
+    function test_reorderingKeepsLayoutAndKeyboardFocusAfterDisclosure() {
+        var page = createPage();
+        if (!page) return;
+        var layout = findChild(page, "panelOrderLayout");
+        for (var i = 0; i < 3; i++) {
+            page.advancedExpanded = false;
+            page.cfg_panelElementOrder = "meters,text,identity,status";
+            page.cfg_panelElementOrder = page.cfg_panelElementOrderDefault;
+            page.advancedExpanded = true;
+            page.movePanelElement(0, 1, true);
+            tryCompare(page, "cfg_panelElementOrder", "status,identity,text,meters");
+            tryVerify(function() {
+                var rows = layout.children.filter(item => item.orderKey !== undefined);
+                var identity = rows.find(item => item.orderKey === "identity");
+                return rows.length === 4 && identity && identity.downButton.activeFocus
+                    && layout.height > 0 && rows.every(item => item.width > 0 && item.height > 0
+                        && item.y + item.height <= layout.height + 1);
+            });
+            keyClick(Qt.Key_Space);
+            tryCompare(page, "cfg_panelElementOrder", "status,text,identity,meters");
+        }
+    }
+
     function test_closedSummaryReflectsEffectiveCustomizations() {
         var page = createPage();
         if (!page) return;
