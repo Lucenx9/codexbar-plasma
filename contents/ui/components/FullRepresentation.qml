@@ -963,7 +963,7 @@ Item {
 
                         readonly property var resetCredits: applet.presentedProviderData ? applet.presentedProviderData.resetCredits : null
 
-                        visible: applet.showPopupCredits && resetCreditsSection.resetCredits ? true : false
+                        visible: applet.showPopupCredits && resetCreditsSection.resetCredits
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing / 1.5
 
@@ -994,7 +994,7 @@ Item {
                             ? applet.presentedProviderData.providerCost : null
                         readonly property color accent: applet.providerReadableColor(applet.presentedProviderData ? applet.presentedProviderData.provider : "")
 
-                        visible: applet.showPopupProviderDetails && providerCostSection.providerCost ? true : false
+                        visible: applet.showPopupProviderDetails && providerCostSection.providerCost
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing / 1.5
 
@@ -1010,7 +1010,7 @@ Item {
                         }
 
                         Rectangle {
-                            visible: providerCostSection.providerCost && providerCostSection.providerCost.percentUsed >= 0 ? true : false
+                            visible: providerCostSection.providerCost && providerCostSection.providerCost.percentUsed >= 0
                             Layout.fillWidth: true
                             Layout.preferredHeight: applet.meterTrackHeight
                             radius: height / 2
@@ -1045,7 +1045,7 @@ Item {
                             }
 
                             PlainPlasmaLabel {
-                                visible: providerCostSection.providerCost && providerCostSection.providerCost.percentLine.length > 0 ? true : false
+                                visible: providerCostSection.providerCost && providerCostSection.providerCost.percentLine.length > 0
                                 text: providerCostSection.providerCost ? providerCostSection.providerCost.percentLine : ""
                                 opacity: applet.secondaryTextOpacity
                                 horizontalAlignment: Text.AlignRight
@@ -1054,7 +1054,7 @@ Item {
                         }
 
                         PlainPlasmaLabel {
-                            visible: providerCostSection.providerCost && providerCostSection.providerCost.personalSpendLine.length > 0 ? true : false
+                            visible: providerCostSection.providerCost && providerCostSection.providerCost.personalSpendLine.length > 0
                             text: providerCostSection.providerCost ? providerCostSection.providerCost.personalSpendLine : ""
                             opacity: applet.secondaryTextOpacity
                             Layout.fillWidth: true
