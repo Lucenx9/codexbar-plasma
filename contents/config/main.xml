@@ -5,6 +5,10 @@
       https://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
   <kcfgfile name=""/>
   <group name="General">
+    <entry name="usageCache" type="String">
+      <label>Redacted last-known quota cache for the current configuration.</label>
+      <default></default>
+    </entry>
     <entry name="commandPath" type="String">
       <label>Path to the codexbar command.</label>
       <default>codexbar</default>

@@ -17,7 +17,8 @@ Rectangle {
     readonly property bool hasUsage: usageRow && usageRow.hasPercent
     readonly property real shownPercent: hasUsage ? applet.displayPercent(usageRow) : -1
     readonly property string resetText: usageRow ? applet.resetLabel(applet.usageResetText(usageRow)) : ""
-    readonly property string detail: applet.overviewDetailText(providerData)
+    readonly property string detail: providerData.usageStale === true
+        ? applet.lastGoodUsageText(providerData) : applet.overviewDetailText(providerData)
     readonly property bool keyboardFocusVisible: overviewRowFocus.visualFocus
 
     signal selected(var providerData)

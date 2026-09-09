@@ -22,6 +22,7 @@ import "PrivacyPresentation.js" as PrivacyPresentation
 import "ProviderNormalizer.js" as Normalizer
 import "ProviderOrder.js" as ProviderOrder
 import "ProviderRosterCache.js" as ProviderRosterCache
+import "UsageCache.js" as UsageCache
 import "QuotaThresholds.js" as QuotaThresholds
 import "SafeText.js" as SafeText
 import "SessionRefreshPolicy.js" as SessionRefreshPolicy
@@ -108,6 +109,9 @@ PlasmoidItem {
     property var providerDisplayNames: ({})
     property string errorText: ""
     property string lastUpdatedText: ""
+    property bool usageLifecycleInitialized: false
+    readonly property string usageIdentityContext: JSON.stringify([
+        commandPath, provider, source, providerConfigRevision])
     property bool loading: false
     // Reset labels and run-out durations keep moving even when automatic CLI
     // refresh is disabled. The usage timestamp anchors forecast durations; cost
@@ -216,6 +220,7 @@ PlasmoidItem {
     // two scales apart is what makes the primary meters read as primary.
     readonly property real compactMeterTrackHeight: Math.round(Kirigami.Units.gridUnit * 0.28)
 
+    onUsageIdentityContextChanged: invalidateUsageData()
     onCommandSourceChanged: scheduleUsageRefresh()
     onProviderOrderRawChanged: providers = ProviderOrder.orderedItems(
         providers, providerOrderRaw)
@@ -305,6 +310,7 @@ PlasmoidItem {
     }
 
     Component.onCompleted: {
+        usageLifecycleInitialized = true
         costLifecycleInitialized = true
         if (providerConfigWatchCommand.length > 0) {
             providerConfigWatcher.connectSource(providerConfigWatchCommand)
@@ -627,8 +633,7 @@ PlasmoidItem {
         retireStaleAccountCommands()
 
         if (commandSource.length === 0) {
-            loading = false
-            errorText = i18n("Set the codexbar command path in widget settings.")
+            failUsageRefresh(i18n("Set the codexbar command path in widget settings."))
             return
         }
 
@@ -649,6 +654,99 @@ PlasmoidItem {
         usageLastCompletedAtMs = nowMs
         usageSnapshotReceivedAtMs = nowMs
         panelClockMs = nowMs
+    }
+
+    function usageCacheContext() {
+        if (providerConfigStamp.length === 0 || commandSource.length === 0) {
+            return ""
+        }
+        var accounts = Object.keys(selectedAccounts).sort().map(function(key) {
+            return [key, root.selectedAccounts[key]]
+        })
+        return Qt.md5(JSON.stringify([usageIdentityContext, accounts, providerConfigStamp]))
+    }
+
+    function invalidateUsageData(providerID) {
+        if (!usageLifecycleInitialized) {
+            return
+        }
+        retireUsageCommands()
+        Plasmoid.configuration.usageCache = ""
+        providers = providerID ? providers.map(function(item) {
+            return item.provider === providerID ? root.normalizeProvider({ provider: providerID }) : item
+        }) : []
+        if (!providerID) {
+            retireUsageCommandKind("account")
+            accountOptions = ({})
+            accountErrors = ({})
+        }
+        usageLastCompletedAtMs = -1
+        lastUpdatedText = ""
+        loading = false
+    }
+
+    function restoreUsageCache() {
+        var restored = UsageCache.decode(Plasmoid.configuration.usageCache,
+            usageCacheContext(), Date.now())
+        if (restored.length === 0) {
+            Plasmoid.configuration.usageCache = ""
+            return
+        }
+        // The checksum read can finish after usage. Keep successful results;
+        // an early failed response may still need the saved quotas.
+        if (providers.length > 0 && providers.every(function(item) { return item.error.length === 0 })) {
+            return
+        }
+        var cachedProviders = restored.map(function(payload) {
+            var item = root.normalizeProvider(payload)
+            item.lastGoodAtMs = Date.parse(payload.usage.updatedAt)
+            item.usageStale = true
+            return item
+        })
+        providers = ProviderOrder.orderedItems(providers.length > 0
+            ? UsageCache.reconcile(cachedProviders, providers, Date.now()) : cachedProviders, providerOrderRaw)
+        lastUpdatedText = i18n("Showing last known usage")
+    }
+
+    function commitUsageSnapshot(items) {
+        var nowMs = Date.now()
+        var nextProviders = UsageCache.reconcile(providers, items, nowMs)
+        markNotificationProvidersFresh(nextProviders)
+        if (nextProviders.some(function(item) { return !item.usageStale && item.error.length === 0 })) {
+            markUsageSnapshotReceived()
+        }
+        providers = nextProviders
+        lastUpdatedText = nextProviders.some(function(item) { return item.usageStale === true })
+            ? i18n("Showing last known usage")
+            : i18n("Updated %1", Qt.formatDateTime(new Date(nowMs), "hh:mm"))
+        var context = usageCacheContext()
+        if (context.length > 0) {
+            Plasmoid.configuration.usageCache = UsageCache.encode(nextProviders, context, nowMs)
+        }
+    }
+
+    function failUsageRefresh(message) {
+        var failures = providers.map(function(item) {
+            return root.normalizeProvider(root.providerErrorPayload(item.provider, message))
+        })
+        providers = UsageCache.reconcile(providers, failures, Date.now())
+        if (providers.some(function(item) { return item.usageStale === true })) {
+            lastUpdatedText = i18n("Showing last known usage")
+        }
+        panelClockMs = Date.now()
+        errorText = message
+        loading = false
+    }
+
+    function lastGoodUsageText(item) {
+        var ageSeconds = Math.max(0, (panelClockMs - item.lastGoodAtMs) / 1000)
+        return ageSeconds < 60 ? i18n("Last known usage, just now")
+            : i18n("Last known usage, %1 ago", paceEtaText(ageSeconds))
+    }
+
+    function providerUsageTimestamp(item) {
+        return item.usageStale === true ? lastGoodUsageText(item)
+            : i18n("Updated %1", Qt.formatDateTime(new Date(item.lastGoodAtMs), "hh:mm"))
     }
 
     function refreshUsageOnOpen() {
@@ -684,6 +782,7 @@ PlasmoidItem {
         if (providerConfigStamp.length === 0) {
             providerConfigStamp = stamp
             invalidateProviderRosterCache()
+            restoreUsageCache()
             return
         }
         if (stamp === providerConfigStamp) {
@@ -691,6 +790,7 @@ PlasmoidItem {
         }
         providerConfigStamp = stamp
         invalidateProviderRosterCache()
+        invalidateUsageData()
         scheduleUsageRefresh()
     }
 
@@ -789,9 +889,7 @@ PlasmoidItem {
                 startProviderFallback()
                 return
             }
-            providers = []
-            errorText = stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("codexbar did not return JSON.")
-            loading = false
+            failUsageRefresh(stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("codexbar did not return JSON."))
             return
         }
 
@@ -799,9 +897,7 @@ PlasmoidItem {
         try {
             payload = JSON.parse(trimmed)
         } catch (error) {
-            providers = []
-            errorText = i18n("Could not parse codexbar JSON: %1", error.message)
-            loading = false
+            failUsageRefresh(i18n("Could not parse codexbar JSON: %1", error.message))
             return
         }
 
@@ -819,11 +915,12 @@ PlasmoidItem {
             Normalizer.dedupeProviderSnapshots(nextProviders),
             providerOrderRaw)
 
-        markNotificationProvidersFresh(nextProviders)
-        markUsageSnapshotReceived()
-        providers = nextProviders
-        errorText = nextProviders.length === 0 ? boundedCliMessage(stderrText) : ""
-        lastUpdatedText = i18n("Updated %1", Qt.formatDateTime(new Date(), "hh:mm"))
+        if (nextProviders.length === 0) {
+            failUsageRefresh(i18n("codexbar did not return provider data."))
+            return
+        }
+        commitUsageSnapshot(nextProviders)
+        errorText = ""
         loading = false
     }
 
@@ -858,9 +955,7 @@ PlasmoidItem {
         }
 
         if (providerConfigCommandSource.length === 0) {
-            providers = []
-            errorText = i18n("codexbar did not return JSON.")
-            loading = false
+            failUsageRefresh(i18n("codexbar did not return JSON."))
             return
         }
 
@@ -883,9 +978,7 @@ PlasmoidItem {
         }
         var trimmed = stdoutText.trim()
         if (trimmed.length === 0) {
-            providers = []
-            errorText = stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("Could not load CodexBar provider configuration.")
-            loading = false
+            failUsageRefresh(stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("Could not load CodexBar provider configuration."))
             return
         }
 
@@ -893,17 +986,13 @@ PlasmoidItem {
         try {
             payload = JSON.parse(trimmed)
         } catch (error) {
-            providers = []
-            errorText = i18n("Could not parse CodexBar provider configuration: %1", error.message)
-            loading = false
+            failUsageRefresh(i18n("Could not parse CodexBar provider configuration: %1", error.message))
             return
         }
 
         var entries = Normalizer.normalizeProviderConfigEntries(payload)
         if (entries === null) {
-            providers = []
-            errorText = i18n("Could not load CodexBar provider configuration.")
-            loading = false
+            failUsageRefresh(i18n("Could not load CodexBar provider configuration."))
             return
         }
         providerDisplayNames = entries.displayNames
@@ -938,7 +1027,7 @@ PlasmoidItem {
         })
         if (transition.finished) {
             providerFallbackState = null
-            providers = []
+            invalidateUsageData()
             errorText = i18n("No enabled CodexBar providers.")
             loading = false
             return
@@ -1021,11 +1110,8 @@ PlasmoidItem {
             Normalizer.dedupeProviderSnapshots(nextProviders),
             providerOrderRaw)
 
-        markNotificationProvidersFresh(nextProviders)
-        markUsageSnapshotReceived()
-        providers = nextProviders
+        commitUsageSnapshot(nextProviders)
         errorText = nextProviders.length === 0 ? i18n("codexbar did not return JSON.") : ""
-        lastUpdatedText = i18n("Updated %1", Qt.formatDateTime(new Date(), "hh:mm"))
         loading = false
         providerFallbackState = null
         applyTokenCosts()
@@ -1109,9 +1195,7 @@ PlasmoidItem {
                 startProviderFallback()
                 return
             }
-            providers = []
-            loading = false
-            errorText = i18n("Loading usage timed out. Try again.")
+            failUsageRefresh(i18n("Loading usage timed out. Try again."))
             return
         case "cost":
             finishUsageCommandSource(sourceName)
@@ -1126,9 +1210,7 @@ PlasmoidItem {
             return
         case "providerConfig":
             finishUsageCommandSource(sourceName)
-            providers = []
-            loading = false
-            errorText = i18n("Loading provider configuration timed out. Try again.")
+            failUsageRefresh(i18n("Loading provider configuration timed out. Try again."))
             return
         case "account":
             finishUsageCommandSource(sourceName)
@@ -1890,6 +1972,7 @@ PlasmoidItem {
         } else {
             delete next[key]
         }
+        invalidateUsageData(key)
         selectedAccounts = next
         setNotificationProviderRefreshPending(key, true)
 
@@ -1909,13 +1992,16 @@ PlasmoidItem {
         if (key.length === 0) {
             return
         }
-        var replacement = copyObject(snapshot)
+        var replacement = UsageCache.reconcile([], [snapshot], Date.now())[0]
         replacement.tokenCost = providerTokenCost(key)
         var nextProviders = []
         for (var i = 0; i < providers.length; i++) {
             nextProviders.push(providers[i].provider === key ? replacement : providers[i])
         }
-        providers = nextProviders
+        if (!nextProviders.some(function(item) { return item.provider === key })) {
+            nextProviders.push(replacement)
+        }
+        providers = ProviderOrder.orderedItems(nextProviders, providerOrderRaw)
     }
 
     function normalizeProvider(item) {
@@ -2493,7 +2579,7 @@ PlasmoidItem {
         var nextPending = copyObject(notificationRefreshPending)
         for (var i = 0; i < items.length; i++) {
             var item = items[i]
-            if (!item) {
+            if (!item || item.usageStale === true) {
                 continue
             }
             var providerID = providerMapKey(item.provider)
@@ -2627,7 +2713,7 @@ PlasmoidItem {
                 providerID: providerMapKey(item.provider),
                 scopeID: notificationScopeKey(item),
                 pending: NotificationPlanner.observationPending(
-                    notificationProviderRefreshPending(item.provider),
+                    item.usageStale === true || notificationProviderRefreshPending(item.provider),
                     String(item.error || "").length > 0,
                     item.statusKnown === true,
                     rows.length),
@@ -3521,12 +3607,14 @@ PlasmoidItem {
     }
 
     function panelMeterDescription(item) {
-        return panelMeterRows(item).map(function(row) {
+        var description = panelMeterRows(item).map(function(row) {
             var text = i18n("%1: %2% %3", row.label, Math.round(displayPercent(row)),
                 usageBarsShowUsed ? i18n("used") : i18n("left"))
             var reset = resetTextForRow(row)
             return reset.length > 0 ? i18n("%1 - %2", text, reset) : text
         }).join(". ")
+        return item && item.usageStale === true
+            ? i18n("%1 - %2", description, lastGoodUsageText(item)) : description
     }
 
     function switcherMetricRow(item) {

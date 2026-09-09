@@ -103,6 +103,7 @@ def stage_applet(work, scenario, image_path):
     if not main.endswith("}"):
         raise RuntimeError("Cannot attach capture to the applet root")
     main_path.write_text(main[:-1] + "\n    SmokeCapture {\n        applet: root\n"
+                        + "        cacheRestart: false\n"
                         + "        scenario: " + json.dumps(scenario) + "\n"
                         + "        imagePath: " + json.dumps(str(image_path)) + "\n    }\n}\n")
     # Stable default typography; long-text exercises the same doubled text size
@@ -203,6 +204,13 @@ def main():
                 stage_applet(work, scenario, image_path)
                 command = [shutil.which("dbus-run-session"), "--", shutil.which("plasmawindowed"), APPLET_ID]
                 run_preview(command, env, work, output / (scenario + ".log"), scenario, args.timeout)
+                if scenario == "usage-cache-restart":
+                    shutil.copyfile(image_path, output / (scenario + "-before.png"))
+                    main_path = work / "data/plasma/plasmoids" / APPLET_ID / "contents/ui/main.qml"
+                    main_path.write_text(main_path.read_text().replace("cacheRestart: false", "cacheRestart: true"))
+                    env["CODEXBAR_SMOKE_RESTART"] = "1"
+                    image_path.unlink()
+                    run_preview(command, env, work, output / (scenario + "-restarted.log"), scenario, args.timeout)
                 if not image_path.is_file() or image_path.read_bytes()[:8] != b"\x89PNG\r\n\x1a\n":
                     raise RuntimeError("Missing or invalid screenshot")
             results.append({"scenario": scenario, "passed": True})

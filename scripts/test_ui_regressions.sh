@@ -259,6 +259,7 @@ full_representation_text = full_representation_qml.read_text(encoding="utf-8")
 cost_trust_notice_text = cost_trust_notice_qml.read_text(encoding="utf-8")
 
 internal_config_keys = {
+    "usageCache",
     "autoUpdateLastCheck",
     "widgetUpdateLastStatus",
     "widgetUpdateLastError",
@@ -814,10 +815,13 @@ if not re.search(
 if not re.search(r"return\s+false\s*$", selected_overrides_body):
     raise AssertionError("hasSelectedAccountOverrides must return false when no override exists")
 empty_command_index = refresh_body.find("if (commandSource.length === 0)")
-loading_false_index = refresh_body.find("loading = false", empty_command_index)
+loading_false_index = refresh_body.find("failUsageRefresh(", empty_command_index)
 empty_return_index = refresh_body.find("return", empty_command_index)
 if empty_command_index < 0 or loading_false_index < 0 or loading_false_index > empty_return_index:
     raise AssertionError("refreshNow must clear loading before returning for an empty command")
+
+if "loading = false" not in function_body(main_text, "failUsageRefresh"):
+    raise AssertionError("failed usage refreshes must finish loading")
 
 provider_token_cost_body = function_body(main_text, "providerTokenCost")
 if "tokenCosts[key]" not in provider_token_cost_body:
@@ -830,7 +834,7 @@ if (
 if "onCostHistoryDaysChanged: applyTokenCosts()" not in main_text:
     raise AssertionError("changing the cost history range must reproject provider details")
 replace_snapshot_body = function_body(main_text, "replaceProviderSnapshot")
-for snapshot_fragment in ("copyObject(snapshot)", "providerTokenCost(key)", "replacement"):
+for snapshot_fragment in ("UsageCache.reconcile([], [snapshot], Date.now())", "providerTokenCost(key)", "replacement"):
     if snapshot_fragment not in replace_snapshot_body:
         raise AssertionError(
             "replaceProviderSnapshot must preserve current token-cost state; "
@@ -2295,7 +2299,10 @@ if pending_index < 0 or snapshot_index < 0 or pending_index > snapshot_index:
     raise AssertionError("selectAccount must suppress cached snapshots until fresh usage data arrives")
 if refresh_index < 0 or return_index < 0 or refresh_index > return_index:
     raise AssertionError("selectAccount must schedule a fresh usage request before returning a cached snapshot")
-for fresh_function in ("parseOutput", "finishProviderFallback"):
+for caller in ("parseOutput", "finishProviderFallback"):
+    if "commitUsageSnapshot(nextProviders)" not in function_body(main_text, caller):
+        raise AssertionError(f"{caller} must commit usage through the shared cache boundary")
+for fresh_function in ("commitUsageSnapshot",):
     fresh_body = function_body(main_text, fresh_function)
     fresh_index = fresh_body.find("markNotificationProvidersFresh(nextProviders)")
     received_index = fresh_body.find("markUsageSnapshotReceived()")

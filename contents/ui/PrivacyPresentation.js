@@ -192,6 +192,8 @@ function provider(snapshot, enabled, labels) {
         hasIncident: field(snapshot, "hasIncident", false) === true,
         error: errorText(field(snapshot, "error", ""), true, labels.error),
         placeholder: hasText(snapshot, "placeholder") ? labels.placeholder : "",
+        usageStale: field(snapshot, "usageStale", false) === true,
+        lastGoodAtMs: numeric(snapshot, "lastGoodAtMs", 0),
         updatedAt: timestamp(field(snapshot, "updatedAt", ""))
     }
 }

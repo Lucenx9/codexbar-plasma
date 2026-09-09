@@ -65,6 +65,34 @@ work and upstream contract requirements.
   including labeled rows, secondary values, and keyboard/pointer-inspectable
   bar/line charts.
 
+## Data freshness
+
+Failed usage refreshes keep the last valid quotas visible. Each retained provider
+shows **Last known usage** with the age of its measurement in the popup and panel
+tooltip; its panel icon and capsules are dimmed. Errors remain visible. A partial
+refresh updates healthy providers independently, and a successful refresh removes
+the retained-data indication. Retained data never generates quota, pace, reset,
+or status notifications, and its run-out forecasts are suppressed.
+
+The widget automatically saves a small quota cache in its Plasma configuration.
+After a restart it verifies the CLI configuration fingerprint before restoring
+the cache, then refreshes in the background. Restored quotas are always marked
+last known, even if they were saved recently. A cache is not a successful refresh.
+
+The disk cache holds at most 64 providers and only their primary, secondary, and
+tertiary percentages, reset timestamps, measurement timestamps, and an opaque
+configuration fingerprint. It contains no account identities, credentials,
+provider prose, cost history, session data, or paths. Entries older than 24 hours,
+future-dated entries, corrupt records, and unsupported cache versions are ignored.
+Additional provider details remain available in memory during a failed refresh,
+but are not restored from disk. A missing measurement timestamp uses receipt time.
+
+Changing the CLI path, provider/source override, provider configuration, or selected
+account invalidates the affected retained data and the disk cache. Disabling all
+providers clears the cached quotas. A confirmed successful response without a
+quota removes its previous value; measured zero remains zero. Privacy mode hides
+identities as usual and keeps the last-known indication visible.
+
 ## Providers and accounts
 
 Provider-specific editable settings depend on the official CLI contract.

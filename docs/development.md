@@ -47,6 +47,9 @@ For those, use `make install` or `./install.sh`. Release-package users can use
   direct tests in `tests/tst_*.qml`. Configuration is declared in
   `contents/config/main.xml` and bound through `cfg_*` in config pages and
   `Plasmoid.configuration` at runtime.
+- `UsageCache.js` reconciles failed usage snapshots and projects a bounded quota
+  cache. `main.qml` owns context invalidation, configuration reads/writes, and
+  stale notification suppression. Persisted records never bypass normalization.
 
 Before changing behavior, identify its owning QML page, config entry, CLI input,
 external effects, and cheapest behavioral test. Read the existing implementation
@@ -253,6 +256,10 @@ Panel scenarios verify capsule count and clipping at small sizes, including
 zero and absent quotas. `panel-vertical` and `panel-vertical-minimal` supply the
 vertical form-factor input because `plasmawindowed` has no panel containment.
 QtTests additionally exercise pointer/keyboard activation and resizing.
+`usage-retention` exercises failed/partial refreshes, recovery, notification
+suppression, and cache invalidation. `usage-cache-restart` launches two separate
+widget processes with the same isolated settings and delays the second CLI
+refresh to verify startup restoration from disk.
 Synthetic payloads cover a subset of the CLI 0.56.2 contract; fixture dates
 are relative to run time. Typography uses Noto Sans and Breeze icons.
 

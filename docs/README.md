@@ -15,7 +15,7 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
 - [Changelog](../CHANGELOG.md): notable widget changes by version and unreleased
   changes. Future GitHub release notes come from this file.
 - [Usage and settings](usage.md): panel and popup options, provider setup,
-  cost history, notifications, and widget defaults.
+  data freshness and quota cache limits, cost history, notifications, and widget defaults.
 - [Development](development.md): QML ownership, regression checks, runtime
   verification, PR delivery and CI follow-up, repository maintenance, and agent
   instructions. Read before code or tooling changes.

@@ -2509,3 +2509,16 @@ msgid "%1 point"
 msgid_plural "%1 points"
 msgstr[0] "%1 point"
 msgstr[1] "%1 points"
+
+#: contents/ui/main.qml
+msgid "Showing last known usage"
+msgstr "Affichage des dernières données valides"
+
+#: contents/ui/main.qml
+msgid "Last known usage, just now"
+msgstr "Dernières données valides, à l’instant"
+
+#: contents/ui/main.qml
+#, kde-format
+msgid "Last known usage, %1 ago"
+msgstr "Dernières données valides, il y a %1"
