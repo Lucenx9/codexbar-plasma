@@ -49,9 +49,9 @@ remaining Linux work.
 
 ## Product screenshots
 
-These synthetic captures appear in the project README and the widget package.
-Replace the relevant image when the product changes instead of adding dated
-before/after copies.
+These synthetic captures appear in the project README or usage guide. The README
+captures are also included in the widget package. Replace the relevant image
+when the product changes instead of adding dated before/after copies.
 
 - [Overview](codexbar-plasma-overview.png)
 - [Provider details](codexbar-plasma-codex.png)
