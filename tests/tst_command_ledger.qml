@@ -132,6 +132,26 @@ TestCase {
         compare(CommandLedger.sourcesOfKind(commands, "sessions").length, 0)
     }
 
+    function test_entriesOfKindReturnsSourceNamesAndDescriptorsInOnePass() {
+        var commands = CommandLedger.opened(({}), "a", entry("account", "codex", 10))
+        commands = CommandLedger.opened(commands, "b", entry("account", "claude", 20))
+        commands = CommandLedger.opened(commands, "c", entry("cost", "", 30))
+
+        var entries = CommandLedger.entriesOfKind(commands, "account")
+        compare(entries.length, 2)
+        compare(entries[0].sourceName, "a")
+        compare(entries[0].descriptor.providerID, "codex")
+        compare(entries[1].sourceName, "b")
+        compare(entries[1].descriptor.providerID, "claude")
+
+        var costEntries = CommandLedger.entriesOfKind(commands, "cost")
+        compare(costEntries.length, 1)
+        compare(costEntries[0].sourceName, "c")
+
+        var missingEntries = CommandLedger.entriesOfKind(commands, "sessions")
+        compare(missingEntries.length, 0)
+    }
+
     // costLoading and sessionsLoading read this, so it has to follow the ledger
     // rather than a separate flag that can drift out of step.
     function test_hasKindTracksWhatIsActuallyRunning() {

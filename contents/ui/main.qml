@@ -1182,12 +1182,13 @@ PlasmoidItem {
     }
 
     function retireStaleAccountCommands() {
-        var sourceNames = CommandLedger.sourcesOfKind(activeCommandDescriptors, "account")
-        for (var i = 0; i < sourceNames.length; i++) {
-            var sourceName = sourceNames[i]
-            var descriptor = CommandLedger.find(activeCommandDescriptors, sourceName)
+        var entries = CommandLedger.entriesOfKind(activeCommandDescriptors, "account")
+        for (var i = 0; i < entries.length; i++) {
+            var entry = entries[i]
+            var sourceName = entry.sourceName
+            var descriptor = entry.descriptor
             var decision = AccountRequests.completion(activeCommandDescriptors, sourceName,
-                buildProviderAccountsCommand(descriptor.providerID))
+                buildProviderAccountsCommand(descriptor ? descriptor.providerID : ""))
             if (decision && !decision.acceptsPayload) {
                 finishUsageCommandSource(sourceName)
             }

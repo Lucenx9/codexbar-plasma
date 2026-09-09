@@ -5,10 +5,10 @@
 // completion, timeout or retirement releases only that request's loading state.
 // QML owns command construction, registration, disconnection and payload effects.
 function isLoading(commands, providerID) {
-    var sources = CommandLedger.sourcesOfKind(commands, "account")
-    for (var i = 0; i < sources.length; i++) {
-        var descriptor = CommandLedger.find(commands, sources[i])
-        if (descriptor.providerID === providerID) {
+    var entries = CommandLedger.entriesOfKind(commands, "account")
+    for (var i = 0; i < entries.length; i++) {
+        var descriptor = entries[i].descriptor
+        if (descriptor && descriptor.providerID === providerID) {
             return true
         }
     }
