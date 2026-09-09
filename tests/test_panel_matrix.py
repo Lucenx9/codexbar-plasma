@@ -40,12 +40,16 @@ class PanelMatrixTests(unittest.TestCase):
 
     def test_validation_rejects_in_bounds_but_missing_or_duplicated_content(self):
         record = {"id": "minimal-1111", "width": 200, "height": 32,
+                  "provider": "codex",
                   "text": "Codex 43% used 125cr", "case": {"vertical": False},
-                  "parts": [{"name": name, "x": 0, "y": 0, "width": 20, "height": 6}
-                            for name in ("panelMeterTrack", "panelMeterTrack", "panelProviderText")]}
+                  "parts": [{"name": name, "text": "Codex 43% used 125cr", "x": 0, "y": 0, "width": 20, "height": 6}
+                            for name in ("panelProviderIcon", "panelMeterTrack", "panelMeterTrack", "panelProviderText")]}
         matrix.validate_record(record, 1)
         mutations = [lambda row: row.update(text="Codex 43% used"),
+                     lambda row: row.update(provider="claude"),
                      lambda row: row["parts"].pop(0),
+                     lambda row: row["parts"].pop(1),
+                     lambda row: row["parts"][-1].update(text="wrong visible text"),
                      lambda row: row["parts"].append(copy.deepcopy(row["parts"][-1])),
                      lambda row: row["parts"][0].update(x=-10),
                      lambda row: row["parts"][0].update(width=250),
@@ -55,6 +59,20 @@ class PanelMatrixTests(unittest.TestCase):
             mutate(broken)
             with self.assertRaises(RuntimeError):
                 matrix.validate_record(broken, 1)
+
+    def test_icon_only_case_cannot_pass_with_a_blank_capture(self):
+        record = {"id": "minimal-0000", "width": 100, "height": 32,
+                  "provider": "codex", "text": "", "case": {"vertical": False}, "parts": []}
+        with self.assertRaisesRegex(RuntimeError, "provider icon"):
+            matrix.validate_record(record, 1)
+
+    def test_selected_provider_cases_reject_the_first_providers_values(self):
+        for case_id, text in (("credits-unavailable", "125cr"), ("order-text-only", "43% used")):
+            record = {"id": case_id, "width": 200, "height": 32,
+                      "provider": "claude", "text": text, "case": {"vertical": False, "selected": "claude"},
+                      "parts": [{"name": "panelStandaloneText", "text": text, "x": 0, "y": 0, "width": 50, "height": 18}]}
+            with self.assertRaisesRegex(RuntimeError, "selected-provider content"):
+                matrix.validate_record(record, 3)
 
 
 if __name__ == "__main__":

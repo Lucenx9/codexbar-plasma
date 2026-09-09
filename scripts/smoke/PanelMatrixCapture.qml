@@ -16,6 +16,7 @@ Item {
     property int caseIndex: -1
     property var snapshot: []
     property var currentCase: ({})
+    property var compactPanelItem
 
     Rectangle {
         id: canvas
@@ -27,11 +28,14 @@ Item {
 
         Loader {
             id: panel
+
+            readonly property Item compactItem: item as Item
             anchors.centerIn: parent
             sourceComponent: capture.applet.compactRepresentation
-            width: capture.currentCase.vertical ? capture.currentCase.extent : (item ? item.implicitWidth : 0)
-            height: capture.currentCase.vertical ? (item ? item.implicitHeight : 0) : (capture.currentCase.extent || 32)
+            width: capture.currentCase.vertical ? capture.currentCase.extent : (compactItem ? compactItem.implicitWidth : 0)
+            height: capture.currentCase.vertical ? (compactItem ? compactItem.implicitHeight : 0) : (capture.currentCase.extent || 32)
             onLoaded: {
+                capture.compactPanelItem = item;
                 item.animationsEnabled = false;
                 item.interactive = false;
             }
@@ -69,7 +73,7 @@ Item {
     function visibleParts(item, result) {
         if (!item.visible)
             return;
-        if (["panelProviderText", "panelStandaloneText", "panelProviderIcon", "panelMeterTrack"].indexOf(item.objectName) >= 0) {
+        if (["panelProviderText", "panelStandaloneText", "panelProviderIcon", "panelIdentityIcon", "panelMeterTrack"].indexOf(item.objectName) >= 0) {
             var position = item.mapToItem(panel.item, 0, 0);
             result.push({
                 name: item.objectName,
@@ -112,8 +116,9 @@ Item {
                 width: panel.width,
                 height: panel.height,
                 text: capture.applet.compactText(),
-                inline: panel.item.inlinePrimaryText,
-                identity: panel.item.showPrimaryIdentity,
+                provider: capture.applet.selectedCompactProvider().provider,
+                inline: capture.compactPanelItem.inlinePrimaryText,
+                identity: capture.compactPanelItem.showPrimaryIdentity,
                 parts: parts
             };
             console.log("PANEL_MATRIX_RESULT:" + JSON.stringify(result));

@@ -166,6 +166,7 @@ Item {
 
             Kirigami.Icon {
                 id: compactIdentityIcon
+                objectName: "panelIdentityIcon"
 
                 anchors.fill: parent
                 source: compactRoot.applet.loading ? "view-refresh" : compactRoot.applet.providerIconSource(parent.compactProvider)

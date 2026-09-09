@@ -58,9 +58,9 @@ def matrix_cases(vertical=False):
     for target in ("text", "meters"):
         add("hidden-" + target, all_text | {"panelVisibilityRules": json.dumps({
             target: {"condition": "usageAtLeast", "usedPercent": 100}})})
-    add("credits-unavailable", {"showCreditsInPanel": True}, selected="claude")
+    add("credits-unavailable", {"showCreditsInPanel": True, "autoSelectProvider": True}, selected="claude")
     add("order-text-only", {"showPercentInPanel": True,
-        "panelElementOrder": "identity,text,status,meters"}, selected="claude")
+        "panelElementOrder": "identity,text,status,meters", "autoSelectProvider": True}, selected="claude")
     return cases
 
 
@@ -83,11 +83,22 @@ def validate_record(record, count):
     """Check visible geometry and the independent, fixed base-fixture contract."""
     if record["width"] <= 0 or record["height"] <= 0:
         raise RuntimeError("Empty panel: " + record["id"])
+    if record["provider"] != record["case"].get("selected", "codex"):
+        raise RuntimeError("Wrong selected provider: " + record["id"])
     for part in record["parts"]:
         if (part["width"] <= 0 or part["height"] <= 0 or part["x"] < -1 or part["y"] < -1
                 or part["x"] + part["width"] > record["width"] + 1
                 or part["y"] + part["height"] > record["height"] + 1):
             raise RuntimeError("Clipped panel element: " + record["id"] + ": " + part["name"])
+    labels = [part for part in record["parts"] if part["name"] in ("panelProviderText", "panelStandaloneText")]
+    if len(labels) != (1 if record["text"] and not record["case"]["vertical"] else 0):
+        raise RuntimeError("Missing or duplicated panel text: " + record["id"])
+    if any(label["text"] != record["text"] for label in labels):
+        raise RuntimeError("Rendered text differs from panel text: " + record["id"])
+    if record["id"] in ("credits-unavailable", "order-text-only"):
+        expected = "" if record["id"] == "credits-unavailable" else "72% used"
+        if record["text"] != expected:
+            raise RuntimeError("Incorrect selected-provider content: " + record["id"])
     flags = re.fullmatch(r"(?:standard|minimal)-([01]{4})", record["id"])
     if not flags:
         return
@@ -97,11 +108,11 @@ def validate_record(record, count):
     if record["text"] != expected:
         raise RuntimeError("Content mismatch: " + record["id"])
     tracks = [part for part in record["parts"] if part["name"] == "panelMeterTrack"]
-    labels = [part for part in record["parts"] if part["name"] in ("panelProviderText", "panelStandaloneText")]
+    icons = [part for part in record["parts"] if part["name"] in ("panelProviderIcon", "panelIdentityIcon")]
     if len(tracks) != (count * 2 if meters else 0):
         raise RuntimeError("Missing or unexpected quota capsule: " + record["id"])
-    if len(labels) != (1 if expected and not record["case"]["vertical"] else 0):
-        raise RuntimeError("Missing or duplicated panel text: " + record["id"])
+    if len(icons) != (count if meters else 1):
+        raise RuntimeError("Missing or duplicated provider icon: " + record["id"])
 
 
 def capture_batch(output, theme, count, vertical):
