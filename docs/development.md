@@ -155,6 +155,10 @@ Extraction must hide complexity, not merely reduce line count.
 - Use layout minimum/preferred sizes, implicit dimensions, and `Kirigami.Units`
   instead of panel-size magic numbers. Use anchors/layouts rather than bindings
   to sibling geometry.
+- Keep layout size hints independent of the geometry the layout computes.
+  Use fixed preferred-size ratios for proportional columns. For width-dependent
+  text caps, let a plain `Item` own the child geometry and expose implicit sizes
+  independent of its assigned width. See [Qt's layout guidance](https://doc.qt.io/qt-6/qtquicklayouts-overview.html#size-constraints).
 - Prefer declarative bindings. Move repeated or expensive calculations into
   helpers or cached properties. Avoid heavy JavaScript in delegates, compact
   rendering, timers, and DataSource callbacks; profile before optimizing.
@@ -305,7 +309,9 @@ on completion, timeout, or interruption.
 The capture component selects the real popup views and waits for the expected
 state before using Qt's
 [`grabToImage`](https://doc.qt.io/qt-6/qml-qtquick-item.html#grabToImage-method).
-QML errors, missing captures, early exits, and timeouts fail the command.
+QML errors, recursive layout warnings, missing captures, early exits, and timeouts
+fail the command. Nested-layout QtTests also use `failOnWarning` and exercise
+provider details and project rows at narrow and normal popup widths.
 Screenshots still need visual review: this is not a pixel-comparison test and
 does not exercise panel placement, key-event dispatch, or the real CLI.
 Panel scenarios verify capsule count and clipping at small sizes, including
@@ -344,16 +350,27 @@ failure rather than silently skipping when that environment is unavailable.
 
 ## Runtime verification
 
-After extracting components/delegates, install or upgrade the widget and inspect
-recent logs for `ReferenceError`, `TypeError`, and `SyntaxError`:
+After extracting components/delegates or changing their sizing, install or
+upgrade the widget and inspect recent logs for QML errors and recursive layouts:
 
 ```sh
 ./install.sh
 journalctl --user -u plasma-plasmashell.service --since '2 minutes ago' --no-pager \
-  | rg -n 'app\.codexbar|CodexBar|ReferenceError|TypeError|SyntaxError|file://.*/app.codexbar'
+  | rg -n 'app\.codexbar|CodexBar|ReferenceError|TypeError|SyntaxError|Detected recursive rearrange|file://.*/app.codexbar'
 ```
 
 Ignore unrelated widget logs unless they mention `app.codexbar`.
+The Plasma 6.7.4 configuration loader passes every configuration key to each
+settings page. On the verified KF 6.29 / Qt 6.11.2 stack, this includes defaults
+and produces `Setting initial properties failed` for `cfg_*` properties absent
+from that page. Check the named key against the page's ownership before treating
+this warning as a failed page. Keep default initializers aligned with
+`contents/config/main.xml` for loaders that do not inject them.
+Do not add dummy `cfg_*` properties to silence these warnings: Plasma saves
+declared properties on Apply, which can overwrite unrelated or runtime-owned
+state. The ownership checks in `scripts/test_ui_regressions.sh` protect this
+boundary. See KDE's [configuration contract](https://develop.kde.org/docs/plasma/widget/configuration/).
+
 For a panel smoke check when plasma-sdk is installed:
 
 ```sh

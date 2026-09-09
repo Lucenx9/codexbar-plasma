@@ -294,10 +294,9 @@ for config_key in sorted(resettable_config_keys):
     if expected_pair not in defaults_check_body:
         raise AssertionError(f"global defaults button state must account for {config_key}")
 
-# The Plasma config dialog injects only cfg_<key>, never defaults, so the
-# cfg_*Default initializers are the restore-defaults source of truth. They must
-# keep mirroring contents/config/main.xml: an initializer matching every schema
-# default and no initializer contradicting it.
+# Config loaders differ in which cfg_*Default properties they inject. Keep the
+# initializers as a portable fallback matching contents/config/main.xml: an
+# initializer matching every schema default and no initializer contradicting it.
 xml_entry_pattern = re.compile(r'<entry name="([^"]+)" type="(\w+)">(.*?)</entry>', re.S)
 xml_defaults = {}
 for entry_name, entry_type, entry_body in xml_entry_pattern.findall(config_text):

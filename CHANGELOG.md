@@ -48,6 +48,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Provider details and project costs no longer trigger recursive Qt layout
+  warnings when opened or resized. Long values stay within the popup.
 - Restored cached provider quotas are retained across partial early refreshes
   during startup, preventing premature eviction of unrefreshed providers.
 - Primary incident selection, tooltips, and status banners ignore providers with

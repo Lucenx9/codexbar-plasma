@@ -26,7 +26,8 @@ LOCALES = {"it": "it_IT.UTF-8", "fr": "fr_FR.UTF-8", "de": "de_DE.UTF-8", "es": 
 QML_ERRORS = re.compile(
     r"ReferenceError|TypeError|SyntaxError|RangeError|SMOKE_FAILED|"
     r"is not a type|is not installed|Error loading QML|"
-    r"Cannot assign|Unable to assign|Binding loop detected|QJSValue::call\(\) failed", re.IGNORECASE
+    r"Cannot assign|Unable to assign|Binding loop detected|Detected recursive rearrange|"
+    r"QJSValue::call\(\) failed", re.IGNORECASE
 )
 
 
