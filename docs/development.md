@@ -36,6 +36,17 @@ For those, use `make install` or `./install.sh`. Release-package users can use
 - `contents/ui/main.qml` owns applet processes, refresh/account coordination,
   selected state, configuration updates, and external effects. Its adapters
   supply the panel and popup.
+- `contents/ui/controllers/WidgetUpdateController.qml` owns the widget updater's
+  executable source, per-request nonce, captured install mode, timeout, queued
+  install request, and retry/interval timers. It receives update settings and
+  the last successful check timestamp. Its `checkNow()` entry point still
+  respects disabled checks. Enabled startup still forces a check even with a
+  recent saved timestamp, preserving the previous startup behavior.
+  `main.qml` persists its status and successful-check
+  signals and delivers its available/installed notifications, preserving the
+  existing privacy and notification-deduplication rules. The module never reads
+  the applet root or writes configuration. `UpdateLogic.js` keeps the pure
+  scheduling and result decisions shared with settings.
 - `contents/ui/components/CompactRepresentation.qml` renders the panel;
   `FullRepresentation.qml` in the same directory renders the popup. Components
   are presentation-only and receive normalized data plus an explicit parent API
@@ -209,6 +220,17 @@ provide less coverage; report what actually ran.
 and command binding in Qt's event loop. It counts refresh requests for cached
 and uncached accounts in single-provider and aggregate modes; CLI effects are
 replaced by observations at the refresh boundary.
+
+`tests/test_widget_update_controller.py` instantiates the production updater
+module and runs temporary executable fixtures through Plasma's real DataSource.
+It checks overlapping requests, setting changes during a check, captured install
+mode, invalid results, and cancellation at the production 60-second timeout
+followed by a successful new request. Static checks preserve the stale-source
+guard for any callback delivered after retirement. This adds about one minute to `make check`. Its only
+substitute is the script URL; it neither contacts GitHub nor installs a release.
+The module's interface is settings, `checkNow()`, read-only runtime status, and
+result signals. The script URL is a local executable dependency, not a widget
+setting. Internal request state and timers remain inside the module.
 
 `make check` disables unqualified-name warnings because Plasma injects helpers
 such as `i18n()` as context properties. It validates AppStream metadata when
