@@ -400,6 +400,9 @@ function breakdownRows(entries) {
         return rows
     }
     for (var i = 0; i < entries.length; i++) {
+        if (!entries[i]) {
+            continue
+        }
         var value = Number(entries[i].tokens)
         if (!isFinite(value) || value <= 0) {
             continue
@@ -481,6 +484,9 @@ function peakPoint(points, showsTokens) {
     }
     var peak = null
     for (var i = 0; i < points.length; i++) {
+        if (!points[i]) {
+            continue
+        }
         var magnitude = metricValue(points[i], showsTokens)
         if (!peak || magnitude > peak.magnitude) {
             peak = {
