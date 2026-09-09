@@ -713,8 +713,9 @@ PlasmoidItem {
         }
         providers = ProviderOrder.orderedItems(merged, providerOrderRaw)
         Plasmoid.configuration.usageCache = UsageCache.encode(providers, context, nowMs)
-        lastUpdatedText = providers.some(function(item) { return item.usageStale === true })
-            ? i18n("Showing last known usage") : ""
+        if (providers.some(function(item) { return item.usageStale === true })) {
+            lastUpdatedText = i18n("Showing last known usage")
+        }
     }
 
     function commitUsageSnapshot(items) {

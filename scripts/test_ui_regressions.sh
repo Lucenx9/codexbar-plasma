@@ -1951,6 +1951,16 @@ for filler_owner_source, filler_owner_text in (
 provider_status_body = id_block(main_text, "providerStatusMessage")
 if "applet.presentedProviderData.hasIncident" not in provider_status_body:
     raise AssertionError("healthy provider status must not occupy a permanent inline banner")
+for block_id, source, data in (
+    ("providerStatusMessage", main_text, "applet.presentedProviderData"),
+    ("providerStatusBadge", provider_header_text, "providerHeaderRow.providerData"),
+):
+    visible = re.search(r"visible:\s*([^\n]*(?:\n\s*&&[^\n]*)*)", id_block(source, block_id))
+    if not visible or not re.search(
+        rf"{re.escape(data)}\.hasIncident\s*&&\s*{re.escape(data)}\.statusKnown\s*!==\s*false",
+        visible.group(1),
+    ):
+        raise AssertionError(f"{block_id} must hide inactive and unknown provider status")
 if "applet.statusMessageType(applet.presentedProviderData.statusSeverity)" not in provider_status_body:
     raise AssertionError("incident banners must reflect the provider status severity")
 status_message_type_body = function_body(main_text, "statusMessageType")
@@ -2307,6 +2317,16 @@ if "Qt.callLater(refreshNow)" in select_account_body:
 for caller in ("parseOutput", "finishProviderFallback"):
     if "commitUsageSnapshot(nextProviders)" not in function_body(main_text, caller):
         raise AssertionError(f"{caller} must commit usage through the shared cache boundary")
+restore_body = function_body(main_text, "restoreUsageCache")
+restore_steps = [restore_body.find(fragment) for fragment in (
+    "UsageCache.decode(", "root.normalizeProvider(payload)", "item.tokenCost = null",
+    "UsageCache.restore(cachedProviders, providers, nowMs)",
+    "providers = ProviderOrder.orderedItems(merged, providerOrderRaw)",
+)]
+if min(restore_steps) < 0 or restore_steps != sorted(restore_steps):
+    raise AssertionError("startup cache restore must merge normalized, redacted quotas with early live results")
+if "providers.every(" in restore_body:
+    raise AssertionError("a successful partial startup refresh must not bypass cached-provider restoration")
 panel_clock_body = id_block(main_text, "panelClockTimer")
 for fragment in ("root.panelClockMs = Date.now()", "root.expireStaleUsage(root.panelClockMs)"):
     if fragment not in panel_clock_body:
@@ -2810,6 +2830,8 @@ if "bumpProviderConfigRevision()" not in descriptor_action_result_body:
     raise AssertionError("successful descriptor actions must invalidate the main applet snapshot")
 
 tooltip_body = function_body(main_text, "panelToolTipText")
+if not re.search(r"var incident = item\.hasIncident\s*&&\s*item\.statusKnown !== false\s*&&", tooltip_body):
+    raise AssertionError("panel tooltips must exclude inactive and unknown incidents")
 if "boundedDisplayText(errorText" not in tooltip_body:
     raise AssertionError("the panel tooltip must bound global CLI error text")
 if 'i18n("%1 - %2", line, incident)' not in tooltip_body:

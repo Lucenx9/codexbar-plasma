@@ -185,6 +185,28 @@ TestCase {
 
         // When cached is empty, live items are returned intact
         compare(Cache.restore([], liveFresh, nowMs), liveFresh);
+
+        var persisted = Cache.decode(Cache.encode(restored, context, nowMs), context, nowMs);
+        compare(persisted.length, 2);
+        compare(persisted[0].usage.primary.usedPercent, 85);
+        compare(persisted[1].usage.primary.usedPercent, 28);
+        compare(restored[1].lastGoodAtMs, previous[1].lastGoodAtMs);
+        verify(!previous[1].usageStale);
+    }
+
+    function test_restoreKeepsSuccessfulEmptyUsageAuthoritative() {
+        var empty = failed("codex");
+        empty.error = "";
+        var restored = Cache.restore(fresh(), [empty, snapshot("claude", 0)], nowMs);
+        compare(restored.length, 2);
+        compare(restored[0].rows, []);
+        verify(!restored[0].usageStale);
+        compare(restored[1].rows[0].usedPercent, 0);
+        verify(!restored[1].usageStale);
+        var persisted = Cache.decode(Cache.encode(restored, context, nowMs), context, nowMs);
+        compare(persisted.length, 1);
+        compare(persisted[0].provider, "claude");
+        compare(persisted[0].usage.primary.usedPercent, 0);
     }
 
     function test_extraLaneQuotasSurviveRestart() {

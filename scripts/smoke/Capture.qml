@@ -1028,6 +1028,7 @@ Item {
                 Plasmoid.configuration.usageCache = initialCache;
                 applet.providers = [];
                 applet.commitUsageSnapshot(previous);
+                var earlyUpdateLabel = applet.lastUpdatedText;
                 verifyScenario(Plasmoid.configuration.usageCache === initialCache,
                     "usage overwrote saved quotas before the configuration context was known");
                 applet.handleProviderConfigWatch(configStamp);
@@ -1035,7 +1036,21 @@ Item {
                     && JSON.parse(Plasmoid.configuration.usageCache).snapshots[0].windows.primary.usedPercent
                         === previous[0].rows[0].usedPercent,
                     "late checksum did not persist the first successful refresh or left an older cache");
+                verifyScenario(applet.lastUpdatedText === earlyUpdateLabel,
+                    "late checksum erased the successful early refresh label");
             }
+            applet.providerConfigStamp = "";
+            Plasmoid.configuration.usageCache = saved;
+            applet.providers = [];
+            applet.commitUsageSnapshot([previous[0]]);
+            applet.handleProviderConfigWatch(configStamp);
+            verifyScenario(applet.providers.length === 2 && !applet.providers[0].usageStale
+                && applet.providers[1].usageStale && applet.providers[1].rows.length > 0
+                && applet.providers[1].lastGoodAtMs === previous[1].lastGoodAtMs
+                && JSON.parse(Plasmoid.configuration.usageCache).snapshots.length === 2,
+                "partial early refresh evicted an unrefreshed provider from memory or disk cache");
+            verifyScenario(applet.lastUpdatedText === i18n("Showing last known usage"),
+                "partial early refresh did not mark the restored provider as last known");
             applet.providerConfigStamp = "";
             Plasmoid.configuration.usageCache = saved;
             applet.providers = [];
