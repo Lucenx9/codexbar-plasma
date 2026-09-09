@@ -181,6 +181,8 @@ def response(args, scenario, now):
                 project["sources"] = [{"path": "/private/synthetic-source-path"}]
             if scenario == "project-long-text":
                 snapshot["projects"][0]["name"] = "Example project with a long display name for the engineering and documentation team"
+        if scenario == "usage-retention":
+            return [snapshot, {**snapshot, "provider": "claude"}]
         return [snapshot]
     for provider in (("codex", "claude", "gemini") if scenario.startswith("readme-") else ("codex", "claude")):
         prefix = ["usage", "--provider", provider]

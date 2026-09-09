@@ -903,6 +903,30 @@ Item {
                 return false;
             var previous = applet.providers;
             var measuredAt = previous[0].lastGoodAtMs;
+            for (var includePrimary of [true, false]) {
+                var extraPayload = {provider: "codex", usage: {
+                    updatedAt: new Date(measuredAt).toISOString(),
+                    extraRateWindows: [
+                        {title: "Private extra A", window: {usedPercent: 90}},
+                        {title: "Private extra B", window: {usedPercent: 0}}
+                    ]
+                }};
+                if (includePrimary)
+                    extraPayload.usage.primary = {usedPercent: 72};
+                applet.commitUsageSnapshot([applet.normalizeProvider(extraPayload)]);
+                for (var restart = 0; restart < 2; restart++) {
+                    applet.providers = [];
+                    applet.restoreUsageCache();
+                    var extraRows = applet.providers[0].rows.filter(function(row) { return row.lane === "extra"; });
+                    verifyScenario(extraRows.length === 2 && extraRows[0].usedPercent === 90
+                        && extraRows[1].usedPercent === 0 && applet.providers[0].usageStale
+                        && applet.providers[0].rows.length === (includePrimary ? 3 : 2),
+                        "cache restoration lost extra-only, multiple, or measured-zero quota windows");
+                    verifyScenario(Plasmoid.configuration.usageCache.indexOf("Private extra") < 0,
+                        "extra quota cache persisted provider prose");
+                }
+            }
+            applet.commitUsageSnapshot(previous);
             applet.parseOutput("{", "Synthetic malformed response");
             verifyScenario(applet.providers.length === 2 && applet.providers[0].rows.length === 2,
                 "a malformed refresh erased the last valid quotas");
@@ -951,9 +975,29 @@ Item {
                 applet.normalizeProvider(applet.providerErrorPayload("claude", "Synthetic provider timeout"))]);
             verifyScenario(!applet.providers[0].usageStale && applet.providers[1].usageStale,
                 "partial refresh did not distinguish current and retained providers");
+            verifyScenario(applet.providerTokenCost("codex") !== null && applet.providerTokenCost("claude") !== null,
+                "retention fixture needs cost snapshots for both providers");
+            verifyScenario(applet.providers[0].tokenCost !== null && applet.providers[1].tokenCost === null,
+                "provider fallback reattached token costs to retained usage");
+            applet.parseCostOutput("{", "Synthetic cost failure", applet.costHistoryDays);
+            verifyScenario(applet.providers[1].tokenCost === null,
+                "cost refresh reattached token costs to retained usage");
+            var retainedHistoryDays = applet.costHistoryDays;
+            applet.setCostHistoryDays(7);
+            applet.setCostHistoryDays(retainedHistoryDays);
+            verifyScenario(applet.providers[0].tokenCost !== null && applet.providers[1].tokenCost === null,
+                "range selection reattached token costs to retained usage");
             applet.commitUsageSnapshot(previous);
             verifyScenario(applet.providers.every(function(item) { return !item.usageStale && !item.error; }),
                 "successful refresh did not clear stale state");
+            verifyScenario(applet.providers.every(function(item) { return item.tokenCost !== null; }),
+                "successful usage refresh did not restore token costs");
+            var ancientAccount = applet.copyObject(previous[0]);
+            ancientAccount.updatedAt = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
+            applet.replaceProviderSnapshot("codex", ancientAccount);
+            verifyScenario(applet.providers[0].usageStale && applet.providers[0].tokenCost === null,
+                "account selection attached token costs to an ancient measurement");
+            applet.commitUsageSnapshot(previous);
             var saved = Plasmoid.configuration.usageCache;
             verifyScenario(saved.length > 0 && saved.indexOf("demo@example.com") < 0
                 && saved.indexOf("Example team") < 0 && saved.indexOf("pace") < 0,
@@ -988,6 +1032,8 @@ Item {
             verifyScenario(applet.providers.length === 2 && applet.providers[0].account === ""
                 && applet.providers[0].usageStale && applet.providers[0].lastGoodAtMs === measuredAt,
                 "cache restoration lost quotas, freshness, or redaction");
+            verifyScenario(applet.providers.every(function(item) { return item.tokenCost === null; }),
+                "cache restoration attached token costs to retained quotas");
             applet.providers = [applet.normalizeProvider(applet.providerErrorPayload("codex", "Early failure")), previous[1]];
             applet.restoreUsageCache();
             verifyScenario(applet.providers[0].usageStale && applet.providers[0].rows.length === 2

@@ -5,7 +5,7 @@
 var maximumAgeMs = 24 * 60 * 60 * 1000
 var maximumEntries = 64
 var maximumBytes = 65536
-var lanes = ["primary", "secondary", "tertiary", "extra"]
+var lanes = ["primary", "secondary", "tertiary"]
 
 function timestamp(value) {
     var parsed = typeof value === "string" ? Date.parse(value) : NaN
@@ -50,16 +50,6 @@ function reconcile(previous, incoming, nowMs) {
             next = withCurrentStatus(old, item)
             next.error = item.error
             next.usageStale = true
-            // Supplemental sections cannot be revalidated while requests
-            // fail; showing them beside retained quotas would present
-            // outdated cost/credit/detail state as if it were current.
-            next.providerDetails = []
-            next.usageDashboard = null
-            next.providerCost = null
-            next.resetCredits = null
-            next.tokenCost = null
-            next.codexCreditLimit = null
-            next.credits = null
             // Forecasts are live estimates. Retained measurements cannot support
             // an updated run-out prediction while requests are failing.
             next.rows = old.rows.map(function(row) {
@@ -77,7 +67,7 @@ function reconcile(previous, incoming, nowMs) {
                     && nowMs - measuredAt <= maximumAgeMs) {
                 next.lastGoodAtMs = measuredAt
                 next.usageStale = false
-            } else if (item.error.length === 0 && !isFinite(measuredAt)) {
+            } else if (item.error.length === 0 && (!isFinite(measuredAt) || measuredAt > nowMs)) {
                 next.lastGoodAtMs = nowMs
                 next.usageStale = false
             } else if (item.error.length === 0) {
@@ -90,6 +80,15 @@ function reconcile(previous, incoming, nowMs) {
                 next.lastGoodAtMs = 0
                 next.usageStale = false
             }
+        }
+        if (next.usageStale) {
+            next.providerDetails = []
+            next.usageDashboard = null
+            next.providerCost = null
+            next.resetCredits = null
+            next.tokenCost = null
+            next.codexCreditLimit = null
+            next.credits = null
         }
         return next
     })
@@ -144,14 +143,22 @@ function encode(items, context, nowMs) {
             continue
         }
         var windows = ({})
+        var extras = []
         item.rows.forEach(function(row) {
-            if (lanes.indexOf(row.lane) >= 0 && row.hasPercent === true) {
+            if (row.hasPercent === true) {
                 var window = windowRecord(row)
                 if (window) {
-                    windows[row.lane] = window
+                    if (lanes.indexOf(row.lane) >= 0) {
+                        windows[row.lane] = window
+                    } else if (row.lane === "extra" && extras.length < Normalizer.maximumExtraRateWindows) {
+                        extras.push({ window: window })
+                    }
                 }
             }
         })
+        if (extras.length > 0) {
+            windows.extraRateWindows = extras
+        }
         if (Object.keys(windows).length > 0) {
             snapshots.push({ provider: item.provider, measuredAt: item.lastGoodAtMs, windows: windows })
         }
@@ -198,6 +205,18 @@ function decode(raw, context, nowMs) {
                 usage[lane] = window
                 count++
             }
+        }
+        var extras = Array.isArray(item.windows.extraRateWindows) ? item.windows.extraRateWindows : []
+        var restoredExtras = []
+        for (var k = 0; k < Math.min(extras.length, Normalizer.maximumExtraRateWindows); k++) {
+            var extraWindow = Normalizer.isCliRecord(extras[k]) ? windowRecord(extras[k].window) : null
+            if (extraWindow) {
+                restoredExtras.push({ window: extraWindow })
+            }
+        }
+        if (restoredExtras.length > 0) {
+            usage.extraRateWindows = restoredExtras
+            count += restoredExtras.length
         }
         if (count > 0) {
             seen[item.provider] = true

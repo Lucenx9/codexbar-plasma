@@ -96,14 +96,16 @@ last known, even if they were saved recently. A cache is not a successful refres
 
 The disk cache is limited to 64 KiB of UTF-8 on both save and restore. It holds
 at most 64 providers and only their primary, secondary,
-tertiary, and extra percentages, reset timestamps, measurement timestamps, and an opaque
+tertiary, and up to 24 extra quota windows per provider, with only percentages,
+reset timestamps, measurement timestamps, and an opaque
 configuration fingerprint. It contains no account identities, credentials,
 provider prose, cost history, session data, or paths. Entries older than 24 hours,
 future-dated entries, corrupt records, and unsupported cache versions are ignored.
 Supplemental sections (cost, credits, detail views, token costs) are hidden
-while requests fail and are not restored from disk; only the retained quotas
-carry the last-known indication. A missing measurement
-timestamp uses receipt time. The 24-hour limit is a widget policy, not a guarantee
+while usage is stale, including after cost refreshes and history-range changes,
+and are not restored from disk; only the retained quotas carry the last-known
+indication. A missing or future live measurement timestamp uses receipt time;
+future timestamps in persisted records are rejected. The 24-hour limit is a widget policy, not a guarantee
 that a retained quota remains accurate throughout that period.
 
 Changing the CLI path, provider/source override, provider configuration, or selected

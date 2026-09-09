@@ -54,7 +54,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   shows when data is actually stale, per-provider resets keep healthy
   providers' disk cache, empty usage results keep CLI error detail, stale
   supplement sections are hidden until revalidated, measurements older than
-  24 hours no longer stamp as fresh, overview rows keep account/status
+  24 hours no longer stamp as fresh, future live timestamps use receipt time,
+  overview rows keep account/status
   context beside the last-known note, and long update timestamps ellipsize
   on one line.
 - Panel settings no longer query a rebuilding element-order layout's attached

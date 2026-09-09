@@ -715,6 +715,7 @@ PlasmoidItem {
             var item = root.normalizeProvider(payload)
             item.lastGoodAtMs = Date.parse(payload.usage.updatedAt)
             item.usageStale = true
+            item.tokenCost = null
             return item
         })
         providers = ProviderOrder.orderedItems(providers.length > 0
@@ -1851,7 +1852,7 @@ PlasmoidItem {
         var nextProviders = []
         for (var i = 0; i < providers.length; i++) {
             var item = copyObject(providers[i])
-            item.tokenCost = providerTokenCost(item.provider)
+            item.tokenCost = item.usageStale === true ? null : providerTokenCost(item.provider)
             nextProviders.push(item)
         }
         providers = nextProviders
@@ -2043,7 +2044,7 @@ PlasmoidItem {
             return
         }
         var replacement = UsageCache.reconcile([], [snapshot], Date.now())[0]
-        replacement.tokenCost = providerTokenCost(key)
+        replacement.tokenCost = replacement.usageStale === true ? null : providerTokenCost(key)
         var nextProviders = []
         for (var i = 0; i < providers.length; i++) {
             nextProviders.push(providers[i].provider === key ? replacement : providers[i])
