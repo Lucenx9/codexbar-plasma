@@ -2012,11 +2012,15 @@ PlasmoidItem {
         for (var i = 0; i < options.length; i++) {
             if (root.accountLabel(options[i]) === label) {
                 replaceProviderSnapshot(key, options[i])
-                Qt.callLater(refreshNow)
+                scheduleUsageRefresh()
                 return
             }
         }
-        Qt.callLater(refreshNow)
+        // scheduleUsageRefresh coalesces with the onCommandSourceChanged trigger
+        // that the selectedAccounts write above fires in single-provider mode;
+        // a direct callLater(refreshNow) would start one CLI run and immediately
+        // retire it in favour of a second.
+        scheduleUsageRefresh()
     }
 
     function replaceProviderSnapshot(providerID, snapshot) {

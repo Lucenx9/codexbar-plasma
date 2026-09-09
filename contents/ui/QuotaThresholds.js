@@ -9,12 +9,14 @@ var defaultCriticalPercent = 95
 
 // Plasmoid.configuration returns whatever is on disk, and Number(null) is 0
 // rather than NaN, so an unset or corrupted entry would silently become a
-// 1% threshold that fires on every provider. Treat every non-number as absent.
+// 1% threshold that fires on every provider. Treat every non-number as absent:
+// Number(" ") and Number([]) are also 0, and Number(Infinity) survives the
+// clamp as the maximum, so only finite numbers pass.
 function numericPercent(value) {
-    if (value === null || value === undefined || value === "" || typeof value === "boolean") {
+    if (typeof value !== "number" || !isFinite(value)) {
         return Number.NaN
     }
-    return Number(value)
+    return value
 }
 
 function boundedPercent(value, fallback, minimum, maximum) {
