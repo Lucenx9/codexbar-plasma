@@ -29,16 +29,18 @@ Item {
     property var settingsCostSnapshot
     property var settingsProviderSnapshot
     readonly property bool settingsScenario: scenario.indexOf("settings-") === 0
+    readonly property bool panelInformationScenario: scenario.indexOf("panel-information") === 0
     readonly property bool panelDefaultsScenario: scenario === "panel-default" || scenario === "panel-default-single"
     readonly property bool readmePanelScenario: scenario.indexOf("readme-panel-") === 0
     readonly property bool verticalPanelScenario: scenario.indexOf("panel-vertical") === 0
     readonly property bool capsulePanelScenario: verticalPanelScenario || scenario === "panel-small" || scenario === "panel-dual-edge"
     readonly property bool standardPanelScenario: scenario === "panel-standard" || scenario === "readme-panel-standard"
         || scenario === "panel-vertical" || scenario === "panel-small" || scenario === "panel-dual-edge"
+        || scenario === "panel-information" || scenario === "panel-information-single"
     readonly property bool panelAppearanceScenario: scenario === "panel-standard" || scenario === "panel-minimal"
-        || scenario === "panel-minimal-single" || readmePanelScenario || capsulePanelScenario
+        || scenario === "panel-minimal-single" || readmePanelScenario || capsulePanelScenario || panelInformationScenario
     readonly property bool readmeScenario: scenario.indexOf("readme-") === 0
-    readonly property int expectedProviderCount: scenario === "panel-minimal-single" || scenario === "panel-default-single"
+    readonly property int expectedProviderCount: scenario === "panel-information-single" || scenario === "panel-minimal-single" || scenario === "panel-default-single"
         ? 1 : (readmeScenario ? 3 : 2)
 
     Loader {
@@ -49,7 +51,10 @@ Item {
         z: 100
         sourceComponent: SettingsPreview {
             applet: capture.applet
+            width: capture.scenario === "settings-panel-narrow" ? 420 : 840
             pageSource: ({"settings-general": "configGeneral.qml", "settings-panel": "configPanel.qml",
+                "settings-panel-advanced": "configPanel.qml", "settings-panel-narrow": "configPanel.qml",
+                "settings-panel-information": "configPanel.qml",
                 "settings-popup": "configPopup.qml", "settings-notifications": "configNotifications.qml",
                 "settings-diagnostics": "configDiagnostics.qml"})[capture.scenario]
         }
@@ -80,7 +85,7 @@ Item {
                 anchors.centerIn: parent
                 width: capture.verticalPanelScenario ? 44 : (compactItem ? compactItem.implicitWidth : 0)
                 height: capture.verticalPanelScenario ? (compactItem ? compactItem.implicitHeight : 0)
-                    : (capture.scenario === "panel-small" ? 24
+                    : (capture.scenario === "panel-small" || capture.panelInformationScenario ? 24
                         : (capture.panelAppearanceScenario || capture.panelDefaultsScenario ? 44 : 40))
             }
         }
@@ -209,6 +214,10 @@ Item {
         config.showProviderInPanel = page.cfg_showProviderInPanel;
         config.showPercentInPanel = page.cfg_showPercentInPanel;
         config.showCreditsInPanel = page.cfg_showCreditsInPanel;
+        if (panelInformationScenario) {
+            config.showPercentInPanel = true;
+            applet.openProviderFromPanel(scenario === "panel-information-minimal" ? "claude" : "codex");
+        }
         page.destroy();
         displaySettingsPage = null;
         component.destroy();
@@ -639,6 +648,13 @@ Item {
         var preview = findItem(page, "panelSettingsPreview");
         var renderer = findItem(page, "panelPreviewRenderer");
         verifyScenario(preview && renderer, "panel settings preview missing");
+        var disclosure = findItem(page, "panelAdvancedButton");
+        var options = findItem(page, "panelAdvancedOptions");
+        var textMode = findItem(page, "panelTextMode");
+        var additional = findItem(page, "panelAdditionalOptions");
+        verifyScenario(additional && !additional.visible, "additional information is visible by default");
+        verifyScenario(disclosure && options && textMode && !options.visible && !textMode.visible,
+            "panel details or text format are visible by default");
         var snapshots = applet.providers;
         var serial = applet.commandRunSerial;
         var liveStyle = applet.Plasmoid.configuration.panelStyle;
@@ -663,6 +679,25 @@ Item {
         page.cfg_panelStyle = "standard";
         page.cfg_panelElementOrder = "identity,status,text,meters";
         preview.scenario = "normal";
+        verifyScenario(renderer.inlinePrimaryText && !renderer.showPrimaryIdentity,
+            "selected text has a duplicate provider identity");
+        page.additionalExpanded = true;
+        verifyScenario(additional.visible && textMode.visible, "additional information did not expose the text format");
+        page.additionalExpanded = false;
+        verifyScenario(!textMode.visible && page.cfg_showPercentInPanel,
+            "collapsing additional information changed the panel content");
+        page.cfg_showPercentInPanel = false;
+        page.cfg_showProviderInPanel = false;
+        page.advancedExpanded = true;
+        verifyScenario(options.visible && !textMode.visible, "disclosure did not reveal only its own options");
+        page.cfg_panelQuotaLane = "secondary";
+        page.cfg_panelVisibilityRules = '{"meters":{"condition":"usageAtLeast","usedPercent":70}}';
+        var summary = page.advancedSummary;
+        page.advancedExpanded = false;
+        verifyScenario(!options.visible && page.advancedSummary === summary
+            && page.cfg_panelQuotaLane === "secondary", "collapsing details reset a pending setting");
+        page.cfg_panelQuotaLane = "auto";
+        page.cfg_panelVisibilityRules = "{}";
         verifyScenario(applet.Plasmoid.configuration.panelStyle === liveStyle
             && !applet.Plasmoid.configuration.showPercentInPanel
             && applet.providers === snapshots && applet.commandRunSerial === serial,
@@ -868,6 +903,30 @@ Item {
                 return false;
             var previous = applet.providers;
             var measuredAt = previous[0].lastGoodAtMs;
+            for (var includePrimary of [true, false]) {
+                var extraPayload = {provider: "codex", usage: {
+                    updatedAt: new Date(measuredAt).toISOString(),
+                    extraRateWindows: [
+                        {title: "Private extra A", window: {usedPercent: 90}},
+                        {title: "Private extra B", window: {usedPercent: 0}}
+                    ]
+                }};
+                if (includePrimary)
+                    extraPayload.usage.primary = {usedPercent: 72};
+                applet.commitUsageSnapshot([applet.normalizeProvider(extraPayload)]);
+                for (var restart = 0; restart < 2; restart++) {
+                    applet.providers = [];
+                    applet.restoreUsageCache();
+                    var extraRows = applet.providers[0].rows.filter(function(row) { return row.lane === "extra"; });
+                    verifyScenario(extraRows.length === 2 && extraRows[0].usedPercent === 90
+                        && extraRows[1].usedPercent === 0 && applet.providers[0].usageStale
+                        && applet.providers[0].rows.length === (includePrimary ? 3 : 2),
+                        "cache restoration lost extra-only, multiple, or measured-zero quota windows");
+                    verifyScenario(Plasmoid.configuration.usageCache.indexOf("Private extra") < 0,
+                        "extra quota cache persisted provider prose");
+                }
+            }
+            applet.commitUsageSnapshot(previous);
             applet.parseOutput("{", "Synthetic malformed response");
             verifyScenario(applet.providers.length === 2 && applet.providers[0].rows.length === 2,
                 "a malformed refresh erased the last valid quotas");
@@ -916,9 +975,47 @@ Item {
                 applet.normalizeProvider(applet.providerErrorPayload("claude", "Synthetic provider timeout"))]);
             verifyScenario(!applet.providers[0].usageStale && applet.providers[1].usageStale,
                 "partial refresh did not distinguish current and retained providers");
+            verifyScenario(applet.providerTokenCost("codex") !== null && applet.providerTokenCost("claude") !== null,
+                "retention fixture needs cost snapshots for both providers");
+            verifyScenario(applet.providers[0].tokenCost !== null && applet.providers[1].tokenCost === null,
+                "provider fallback reattached token costs to retained usage");
+            applet.parseCostOutput("{", "Synthetic cost failure", applet.costHistoryDays);
+            verifyScenario(applet.providers[1].tokenCost === null,
+                "cost refresh reattached token costs to retained usage");
+            var retainedHistoryDays = applet.costHistoryDays;
+            applet.setCostHistoryDays(7);
+            applet.setCostHistoryDays(retainedHistoryDays);
+            verifyScenario(applet.providers[0].tokenCost !== null && applet.providers[1].tokenCost === null,
+                "range selection reattached token costs to retained usage");
             applet.commitUsageSnapshot(previous);
             verifyScenario(applet.providers.every(function(item) { return !item.usageStale && !item.error; }),
                 "successful refresh did not clear stale state");
+            verifyScenario(applet.providers.every(function(item) { return item.tokenCost !== null; }),
+                "successful usage refresh did not restore token costs");
+            var ancientAccount = applet.copyObject(previous[0]);
+            ancientAccount.updatedAt = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
+            applet.replaceProviderSnapshot("codex", ancientAccount);
+            verifyScenario(applet.providers[0].usageStale && applet.providers[0].tokenCost === null,
+                "account selection attached token costs to an ancient measurement");
+            applet.commitUsageSnapshot(previous);
+            for (var creditBalance of [0, 12]) {
+                var oldCreditTime = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
+                var creditOnly = applet.normalizeProvider({provider: "codex",
+                    credits: {remaining: creditBalance, updatedAt: oldCreditTime}});
+                verifyScenario(creditOnly.updatedAt === oldCreditTime && creditOnly.rows.length === 0,
+                    "credits-only fixture did not use the supplemental timestamp");
+                applet.commitUsageSnapshot([creditOnly, previous[1]]);
+                verifyScenario(!applet.providers[0].usageStale && applet.providers[0].credits === creditBalance
+                    && applet.providers[0].rows.length === 0 && applet.providers[0].error === ""
+                    && applet.lastUpdatedText.indexOf("Showing last known usage") < 0,
+                    "a successful credits-only response entered quota retention or lost its balance");
+                applet.expireStaleUsage(Date.now() + 60000);
+                verifyScenario(applet.providers[0].credits === creditBalance && applet.providers[0].error === ""
+                    && JSON.parse(Plasmoid.configuration.usageCache).snapshots.length === 1
+                    && JSON.parse(Plasmoid.configuration.usageCache).snapshots[0].provider === "claude",
+                    "quota expiry erased current credits or cached a provider without measured quotas");
+            }
+            applet.commitUsageSnapshot(previous);
             var saved = Plasmoid.configuration.usageCache;
             verifyScenario(saved.length > 0 && saved.indexOf("demo@example.com") < 0
                 && saved.indexOf("Example team") < 0 && saved.indexOf("pace") < 0,
@@ -953,6 +1050,8 @@ Item {
             verifyScenario(applet.providers.length === 2 && applet.providers[0].account === ""
                 && applet.providers[0].usageStale && applet.providers[0].lastGoodAtMs === measuredAt,
                 "cache restoration lost quotas, freshness, or redaction");
+            verifyScenario(applet.providers.every(function(item) { return item.tokenCost === null; }),
+                "cache restoration attached token costs to retained quotas");
             applet.providers = [applet.normalizeProvider(applet.providerErrorPayload("codex", "Early failure")), previous[1]];
             applet.restoreUsageCache();
             verifyScenario(applet.providers[0].usageStale && applet.providers[0].rows.length === 2
@@ -962,7 +1061,8 @@ Item {
             verifyScenario(applet.providers[0].rows.length === 0 && applet.providers[0].error === "Early failure"
                 && applet.providers[1] === healthy && applet.lastUpdatedText === "",
                 "in-memory expiry kept old quotas, lost the error, or replaced healthy usage");
-            verifyScenario(applet.providerUsageTimestamp(applet.providers[0]) === "",
+            verifyScenario(applet.providerUsageTimestamp(applet.providers[0]) === ""
+                && applet.providers[0].lastGoodAtMs === 0 && applet.providers[0].usageStale === false,
                 "an expired provider displays another provider's update time");
             applet.providers = [];
             Plasmoid.configuration.usageCache = saved;
@@ -977,7 +1077,9 @@ Item {
             applet.invalidateUsageData("codex");
             verifyScenario(applet.providers.length === 2 && applet.providers[0].rows.length === 0
                 && applet.providers[1].rows.length === 2 && applet.selectedProviderID === "codex"
-                && Plasmoid.configuration.usageCache === "", "account invalidation reused quotas or moved selection");
+                && JSON.parse(Plasmoid.configuration.usageCache).snapshots.length === 1
+                && JSON.parse(Plasmoid.configuration.usageCache).snapshots[0].provider === "claude",
+                "account invalidation reused quotas, moved selection, or dropped healthy cache");
             applet.providers = [];
             Plasmoid.configuration.usageCache = saved;
             applet.providerConfigStamp = "changed configuration";
@@ -1014,9 +1116,46 @@ Item {
                 verifyGeneralDefaults(preview.page);
                 navigationVerified = true;
             }
-            if (scenario === "settings-panel" && !navigationVerified) {
+            if (scenario.indexOf("settings-panel") === 0 && !navigationVerified) {
                 verifySettingsPanelPreview(preview.page);
+                if (scenario === "settings-panel-advanced") {
+                    preview.page.advancedExpanded = true;
+                    preview.page.cfg_panelQuotaLane = "secondary";
+                    preview.page.cfg_panelVisibilityRules = '{"meters":{"condition":"usageAtLeast","usedPercent":70}}';
+                    preview.page.cfg_showPercentInPanel = true;
+                    findItem(preview.page, "panelSettingsPreview").scenario = "nearLimit";
+                } else if (scenario === "settings-panel-narrow") {
+                    preview.page.font.pointSize *= 1.3;
+                    preview.page.additionalExpanded = true;
+                    preview.page.cfg_showProviderInPanel = true;
+                    preview.page.cfg_showPercentInPanel = true;
+                    preview.page.cfg_showCreditsInPanel = true;
+                } else if (scenario === "settings-panel-information") {
+                    preview.page.additionalExpanded = true;
+                    preview.page.cfg_showPercentInPanel = true;
+                }
                 navigationVerified = true;
+                return false;
+            }
+            if (scenario.indexOf("settings-panel") === 0) {
+                var tracks = namedItems(preview.page, "panelMeterTrack");
+                var renderer = findItem(preview.page, "panelPreviewRenderer");
+                var expectedTracks = scenario === "settings-panel-advanced" ? 2 : 4;
+                verifyScenario(tracks.length === expectedTracks, "settings preview lost its quota capsules");
+                for (var i = 0; i < tracks.length; i++) {
+                    var end = tracks[i].mapToItem(renderer, tracks[i].width, tracks[i].height);
+                    verifyScenario(tracks[i].width > 0 && tracks[i].height >= 3
+                        && end.x <= renderer.width + 1 && end.y <= renderer.height + 1,
+                        "settings preview clipped a quota capsule");
+                }
+                var labels = namedItems(preview.page, "panelProviderText").filter(function(item) { return item.visible; });
+                if (preview.page.cfg_showPercentInPanel) {
+                    verifyScenario(renderer.inlinePrimaryText && !renderer.showPrimaryIdentity && labels.length === 1,
+                        "settings preview did not group selected text with its meter");
+                    var label = labels[0];
+                    verifyScenario(label.width > 0 && label.mapToItem(renderer, label.width, 0).x <= renderer.width + 1,
+                        "settings preview clipped the selected provider text");
+                }
             }
             return true;
         }
@@ -1068,7 +1207,17 @@ Item {
                 return false;
             verifyScenario(applet.providers === panelUsageSnapshot, "panel preset reloaded usage");
             verifyScenario(applet.minimalPanel === !standardPanelScenario, "panel style did not reach the renderer");
-            verifyScenario(applet.compactText() === "", "minimal preset left panel text visible");
+            if (panelInformationScenario) {
+                if (!compactPanelItem) return false;
+                var labels = namedItems(compactPanelItem, "panelProviderText").filter(function(item) { return item.visible; });
+                verifyScenario(compactPanelItem.inlinePrimaryText && !compactPanelItem.showPrimaryIdentity && labels.length === 1,
+                    "selected panel text duplicated or lost its provider identity");
+                verifyScenario(labels[0].text === applet.compactText() && labels[0].width > 0,
+                    "selected panel text is missing");
+                verifyCapsulePanel();
+            } else {
+                verifyScenario(applet.compactText() === "", "minimal preset left panel text visible");
+            }
             return panelPreview.item !== null && applet.compactProviders().length === expectedProviderCount;
         }
         if (panelDefaultsScenario) {

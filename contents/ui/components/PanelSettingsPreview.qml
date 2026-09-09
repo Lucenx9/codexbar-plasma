@@ -142,7 +142,11 @@ ColumnLayout {
             return PanelDisplay.rowForMode(provider ? provider.rows : [], mode, preview.previewModel.lane);
         }
         function panelMeterRows(provider) {
-            return PanelDisplay.meterRows(provider ? provider.rows : [], preview.previewModel.lane);
+            // Repeater wraps nested arrays as Qt sequences. Use the original fixture rows.
+            var source = preview.previewModel.providers.find(function(item) {
+                return provider && item.provider === provider.provider;
+            });
+            return PanelDisplay.meterRows(source ? source.rows : [], preview.previewModel.lane);
         }
         function panelMeterDescription(provider) {
             return panelMeterRows(provider).map(function(row) {

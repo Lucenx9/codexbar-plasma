@@ -138,7 +138,8 @@ RowLayout {
             font: Kirigami.Theme.smallFont
             opacity: providerHeaderRow.applet.secondaryTextOpacity
             Layout.fillWidth: true
-            wrapMode: Text.WordWrap
+            elide: Text.ElideRight
+            maximumLineCount: 1
         }
     }
 

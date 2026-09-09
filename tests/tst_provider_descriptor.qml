@@ -56,7 +56,17 @@ TestCase {
     }
 
     function test_unknownOrMissingSchemaIsInert() {
-        var inputs = [null, undefined, {}, { schemaVersion: 2 }, { schemaVersion: "invalid" }]
+        var inputs = [
+            null,
+            undefined,
+            {},
+            { schemaVersion: 2 },
+            { schemaVersion: "invalid" },
+            { schemaVersion: true },
+            { schemaVersion: "1" },
+            { schemaVersion: [1] },
+            { schemaVersion: 1.5 }
+        ]
         for (var i = 0; i < inputs.length; i++) {
             var normalized = ProviderDescriptor.normalize(inputs[i])
             compare(normalized.schemaVersion, 0)

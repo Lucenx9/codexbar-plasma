@@ -19,7 +19,10 @@ function emptyDescriptor() {
 }
 
 function normalize(raw, fallbackFieldTitle) {
-    if (!raw || Number(raw.schemaVersion) !== 1) {
+    // Strict comparison on purpose: this is the trust boundary that decides
+    // whether descriptor commands are exposed at all, so a payload whose
+    // schemaVersion merely coerces to 1 (true, "1", [1]) stays unsupported.
+    if (!raw || raw.schemaVersion !== 1) {
         return emptyDescriptor()
     }
 
