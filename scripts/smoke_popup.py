@@ -209,7 +209,10 @@ def main():
                 if scenario == "usage-cache-restart":
                     shutil.copyfile(image_path, output / (scenario + "-before.png"))
                     main_path = work / "data/plasma/plasmoids" / APPLET_ID / "contents/ui/main.qml"
-                    main_path.write_text(main_path.read_text().replace("cacheRestart: false", "cacheRestart: true"))
+                    staged_main = main_path.read_text()
+                    if staged_main.count("cacheRestart: false") != 1:
+                        raise RuntimeError("usage-cache-restart fixture lost its staged marker")
+                    main_path.write_text(staged_main.replace("cacheRestart: false", "cacheRestart: true"))
                     env["CODEXBAR_SMOKE_RESTART"] = "1"
                     image_path.unlink()
                     run_preview(command, env, work, output / (scenario + "-restarted.log"), scenario, args.timeout)

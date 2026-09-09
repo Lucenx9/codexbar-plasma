@@ -79,7 +79,7 @@ function nextUpdateCheckDelay(updateChecksEnabled, lastCheck, intervalHours, now
     }
 
     var now = Number(nowMs)
-    if (now < parsedLastCheckMs) {
+    if (!isFinite(now) || now < parsedLastCheckMs) {
         return minimum
     }
     var remainingMs = parsedLastCheckMs + intervalMs - now

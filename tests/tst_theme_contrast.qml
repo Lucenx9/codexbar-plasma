@@ -79,4 +79,13 @@ TestCase {
             background,
             Qt.rgba(0.51, 0.51, 0.51, 1))
     }
+
+    function test_unusableChannelsAndProgressStayFinite() {
+        verify(ThemeContrast.linearColorChannel(undefined) === 0)
+        verify(ThemeContrast.linearColorChannel(Number.NaN) === 0)
+        var start = Qt.rgba(0, 0, 0, 1)
+        var end = Qt.rgba(1, 1, 1, 1)
+        var unusable = ThemeContrast.interpolateColor(start, end, Number.NaN)
+        compare(unusable, start)
+    }
 }

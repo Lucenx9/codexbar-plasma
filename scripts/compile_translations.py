@@ -85,8 +85,10 @@ def compile_catalogs(output, root=ROOT, applet_id=None):
             if catalog.info().get("language") != language:
                 raise ValueError(f"{source.name}: Language header must match its filename")
             validate_placeholders(compiled, catalog, source.name)
-        if output.exists():
+        if output.is_dir() and not output.is_symlink():
             shutil.rmtree(output)
+        elif output.exists() or output.is_symlink():
+            output.unlink()
         staged.rename(output)
     return [source.stem for source in catalogs]
 

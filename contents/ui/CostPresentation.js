@@ -70,7 +70,7 @@ function groupedDecimalString(fmt, value, digits) {
     // Number.toFixed returns exponential notation past 1e21, which has no
     // fixed-point digits to group ("1e+21" would gain a bogus separator).
     if (Math.abs(numeric) >= 1e21) {
-        return String(Math.abs(numeric))
+        return String(numeric)
     }
     var f = fmt && typeof fmt === "object" ? fmt : numberFormat()
     var groupSep = typeof f.group === "string" ? f.group : ","
@@ -253,8 +253,10 @@ function chartLineY(height, fraction, inset) {
 }
 
 function paintRoundedTopBar(context, x, baseline, width, height, radius) {
-    var safeWidth = Math.max(0, width)
-    var safeHeight = Math.max(0, height)
+    var numericWidth = Number(width)
+    var safeWidth = isFinite(numericWidth) ? Math.max(0, numericWidth) : 0
+    var numericHeight = Number(height)
+    var safeHeight = isFinite(numericHeight) ? Math.max(0, numericHeight) : 0
     var top = baseline - safeHeight
     var corner = Math.max(0, Math.min(radius, safeWidth / 2, safeHeight))
 
@@ -400,12 +402,16 @@ function breakdownRows(entries) {
         return rows
     }
     for (var i = 0; i < entries.length; i++) {
-        var value = Number(entries[i].tokens)
+        var entry = entries[i]
+        if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+            continue
+        }
+        var value = Number(entry.tokens)
         if (!isFinite(value) || value <= 0) {
             continue
         }
         rows.push({
-            label: entries[i].label,
+            label: entry.label,
             value: tokenCountString(value)
         })
     }
@@ -432,6 +438,9 @@ function modelRows(fmt, tokenCost, tokensTextFor) {
     }
     for (var i = 0; i < tokenCost.models.length; i++) {
         var item = tokenCost.models[i]
+        if (!item || typeof item !== "object" || Array.isArray(item)) {
+            continue
+        }
         rows.push({
             label: item.label,
             value: amountSummary(fmt, item, tokensTextFor)
@@ -481,12 +490,16 @@ function peakPoint(points, showsTokens) {
     }
     var peak = null
     for (var i = 0; i < points.length; i++) {
-        var magnitude = metricValue(points[i], showsTokens)
+        var point = points[i]
+        if (!point || typeof point !== "object" || Array.isArray(point)) {
+            continue
+        }
+        var magnitude = metricValue(point, showsTokens)
         if (!peak || magnitude > peak.magnitude) {
             peak = {
-                label: points[i].label && points[i].label.length > 0 ? points[i].label : "",
+                label: point.label && point.label.length > 0 ? point.label : "",
                 magnitude: magnitude,
-                currency: points[i].currency || "USD"
+                currency: point.currency || "USD"
             }
         }
     }

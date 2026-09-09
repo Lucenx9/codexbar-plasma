@@ -44,6 +44,9 @@ KCM.SimpleKCM {
                 var match = text.match(/\d+/)
                 return match ? parseInt(match[0], 10) : 80
             }
+            onValueChanged: if (quotaCriticalPercentSpin.value < value) {
+                quotaCriticalPercentSpin.value = value
+            }
             Layout.preferredWidth: Kirigami.Units.gridUnit * 10
         }
 

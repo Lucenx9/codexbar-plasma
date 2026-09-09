@@ -327,6 +327,10 @@ ColumnLayout {
                                     ? Math.max(0, Math.min(1, Number(modelData.value) / view.heatmapMaximum))
                                     : 0
 
+                                Accessible.role: Accessible.Graphic
+                                Accessible.name: modelData.label
+                                Accessible.description: modelData.displayValue
+
                                 width: heatmapGrid.cellSize
                                 height: heatmapGrid.cellSize
                                 radius: Kirigami.Units.cornerRadius / 2

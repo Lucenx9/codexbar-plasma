@@ -118,6 +118,7 @@ Rectangle {
     }
 
     PlainToolTip {
+        parent: tabMouse
         visible: !tab.showLabel && tabMouse.containsMouse
         plainText: tab.title
     }

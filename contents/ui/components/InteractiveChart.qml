@@ -18,7 +18,7 @@ ColumnLayout {
     property int selectedIndex: -1
     property int hoveredIndex: -1
     readonly property int activeIndex: hoveredIndex >= 0 ? hoveredIndex : selectedIndex
-    readonly property bool hasActivePoint: activeIndex >= 0 && activeIndex < points.length
+    readonly property bool hasActivePoint: points && activeIndex >= 0 && activeIndex < points.length
     readonly property var valueDomain: ChartScale.domain(points)
     readonly property real lineMarkerInset: 3.5
 
@@ -49,7 +49,7 @@ ColumnLayout {
     }
 
     function indexAt(positionX) {
-        if (points.length === 0 || plot.width <= 0) {
+        if (!points || points.length === 0 || plot.width <= 0) {
             return -1
         }
         if (kind === "line" && points.length > 1) {
@@ -61,7 +61,7 @@ ColumnLayout {
     }
 
     function moveSelection(delta) {
-        if (points.length === 0) {
+        if (!points || points.length === 0) {
             return
         }
         var next = selectedIndex >= 0 ? selectedIndex + delta : (delta < 0 ? points.length - 1 : 0)
@@ -138,11 +138,11 @@ ColumnLayout {
                 event.accepted = true
                 break
             case Qt.Key_Home:
-                chart.selectedIndex = chart.points.length > 0 ? 0 : -1
+                chart.selectedIndex = chart.points && chart.points.length > 0 ? 0 : -1
                 event.accepted = true
                 break
             case Qt.Key_End:
-                chart.selectedIndex = chart.points.length - 1
+                chart.selectedIndex = chart.points ? chart.points.length - 1 : -1
                 event.accepted = true
                 break
             default:
@@ -154,7 +154,7 @@ ColumnLayout {
         onPaint: {
             var context = getContext("2d")
             context.clearRect(0, 0, width, height)
-            if (width <= 0 || height <= 0) {
+            if (width <= 0 || height <= 0 || !chart.points) {
                 return
             }
 
@@ -241,12 +241,12 @@ ColumnLayout {
     }
 
     RowLayout {
-        visible: chart.points.length > 0
+        visible: chart.points && chart.points.length > 0
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
 
         PlainPlasmaLabel {
-            text: chart.points.length > 0 ? chart.pointLabel(chart.points[0]) : ""
+            text: chart.points && chart.points.length > 0 ? chart.pointLabel(chart.points[0]) : ""
             opacity: chart.applet.secondaryTextOpacity
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             Layout.fillWidth: true
@@ -254,7 +254,7 @@ ColumnLayout {
         }
 
         PlainPlasmaLabel {
-            text: chart.points.length > 1 ? chart.pointLabel(chart.points[chart.points.length - 1]) : ""
+            text: chart.points && chart.points.length > 1 ? chart.pointLabel(chart.points[chart.points.length - 1]) : ""
             opacity: chart.applet.secondaryTextOpacity
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             horizontalAlignment: Text.AlignRight

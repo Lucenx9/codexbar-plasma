@@ -82,13 +82,20 @@ def main():
                 raise ValueError("event must be an object")
             required, message = select_smoke(os.environ["GITHUB_EVENT_NAME"],
                                              os.environ["GITHUB_REF"], event)
+            github_output = os.environ["GITHUB_OUTPUT"]
+            github_summary = os.environ["GITHUB_STEP_SUMMARY"]
         except (OSError, ValueError, KeyError):
             required, message = True, "Event data unavailable; running smoke tests."
-        with open(os.environ["GITHUB_OUTPUT"], "a") as output:
-            output.write(f"run_smoke={str(required).lower()}\n")
+            github_output = os.environ.get("GITHUB_OUTPUT", "")
+            github_summary = os.environ.get("GITHUB_STEP_SUMMARY", "")
+        if github_output:
+            with open(github_output, "a") as output:
+                output.write(f"run_smoke={str(required).lower()}\n")
     print(message)
-    with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
-        summary.write(message + "\n")
+    github_summary = os.environ.get("GITHUB_STEP_SUMMARY", "")
+    if github_summary:
+        with open(github_summary, "a") as summary:
+            summary.write(message + "\n")
 
 
 if __name__ == "__main__":

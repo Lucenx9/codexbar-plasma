@@ -38,15 +38,19 @@ patterns = [
     re.compile(r"#[0-9A-Fa-f]{3,8}"),
     re.compile(r'"(?:black|white)"'),
 ]
+# Brand coverage follows the shared table in ProviderIdentity.js, which also
+# carries fork-only compatibility entries (crossmodel, kimik2) alongside the
+# official registry. The check below fails on any required color missing from
+# that table, so this list must stay in sync with it.
 required_provider_colors = """
 codex openai azureopenai claude clinepass cursor opencode opencodego alibaba
-alibabatokenplan qwencloud factory gemini antigravity copilot devin zai minimax
-manus kimi kilo kiro vertexai augment jetbrains kimik2 moonshot amp
+alibabatokenplan qwencloud factory fireworks gemini antigravity copilot devin zai minimax
+manus kimi kilo kiro vertexai augment jetbrains kimik2 crossmodel moonshot amp
 t3chat ollama synthetic warp openrouter elevenlabs windsurf zed
 perplexity mimo doubao abacus mistral deepseek codebuff crof venice
-commandcode stepfun bedrock grok groq llmproxy litellm deepgram poe
-chutes sakana deepinfra neuralwatt longcat sub2api zenmux aiand zoommate
-xai notion
+commandcode qoder stepfun bedrock grok groq llmproxy litellm deepgram poe
+chutes clawrouter sakana deepinfra neuralwatt longcat sub2api zenmux aiand zoommate
+wayfinder xai notion ibmbob
 """.split()
 
 def current_function(text, index):

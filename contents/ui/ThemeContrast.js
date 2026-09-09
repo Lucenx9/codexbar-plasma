@@ -3,7 +3,8 @@
 var minimumNonTextContrastRatio = 3
 
 function linearColorChannel(channel) {
-    var value = Math.max(0, Math.min(1, Number(channel)))
+    var numeric = Number(channel)
+    var value = isFinite(numeric) ? Math.max(0, Math.min(1, numeric)) : 0
     return value <= 0.04045
         ? value / 12.92
         : Math.pow((value + 0.055) / 1.055, 2.4)
@@ -24,7 +25,8 @@ function contrastRatio(foreground, background) {
 }
 
 function interpolateColor(start, end, progress) {
-    var amount = Math.max(0, Math.min(1, Number(progress)))
+    var numeric = Number(progress)
+    var amount = isFinite(numeric) ? Math.max(0, Math.min(1, numeric)) : 0
     return Qt.rgba(
         start.r + ((end.r - start.r) * amount),
         start.g + ((end.g - start.g) * amount),

@@ -56,6 +56,12 @@ TestCase {
         compare(UpdateLogic.nextUpdateCheckDelay(true, future, 12, nowMs, 60000), 60000)
     }
 
+    function test_unusableClockSchedulesTheMinimumDelay() {
+        var recent = new Date(nowMs - 11 * 60 * 60 * 1000).toISOString()
+        compare(UpdateLogic.nextUpdateCheckDelay(true, recent, 12, Number.NaN, 60000), 60000)
+        compare(UpdateLogic.nextUpdateCheckDelay(true, recent, 12, undefined, 60000), 60000)
+    }
+
     function test_nextDelayIsZeroWhenChecksAreDisabled() {
         compare(UpdateLogic.nextUpdateCheckDelay(false, "", 12, nowMs, 60000), 0)
     }

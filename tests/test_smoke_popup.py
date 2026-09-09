@@ -26,6 +26,7 @@ class SmokePopupTests(unittest.TestCase):
                                           "--format", "json", "--json-only"]), \
                     patch.object(fixture_cli.time, "sleep") as sleep, patch("builtins.print") as output:
                 fixture_cli.main()
+                self.assertIsNotNone(sleep.call_args)
                 self.assertGreater(sleep.call_args.args[0], smoke.MAX_SCENARIO_TIMEOUT_SECONDS)
                 output.assert_called_once()
 

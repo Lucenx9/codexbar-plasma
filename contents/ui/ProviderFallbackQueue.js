@@ -47,19 +47,23 @@ function normalizedRequests(requests, maximumRequests) {
                 || !Guards.hasOwnKey(item, "sourceName")
                 || !Guards.hasOwnKey(item, "providerID")
                 || typeof item.sourceName !== "string"
-                || typeof item.providerID !== "string"
-                || item.sourceName.trim().length === 0
-                || item.providerID.trim().length === 0
-                || Guards.isUnsafeObjectKey(item.providerID)
-                || seenSources.indexOf(item.sourceName) !== -1
-                || seenProviders.indexOf(item.providerID) !== -1) {
+                || typeof item.providerID !== "string") {
             continue
         }
-        seenSources.push(item.sourceName)
-        seenProviders.push(item.providerID)
+        var sourceName = item.sourceName.trim()
+        var providerID = item.providerID.trim()
+        if (sourceName.length === 0
+                || providerID.length === 0
+                || Guards.isUnsafeObjectKey(providerID)
+                || seenSources.indexOf(sourceName) !== -1
+                || seenProviders.indexOf(providerID) !== -1) {
+            continue
+        }
+        seenSources.push(sourceName)
+        seenProviders.push(providerID)
         validRequests.push({
-            sourceName: item.sourceName,
-            providerID: item.providerID
+            sourceName: sourceName,
+            providerID: providerID
         })
     }
     return validRequests

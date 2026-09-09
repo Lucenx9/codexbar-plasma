@@ -229,8 +229,9 @@ TestCase {
     // separator ("1e,+21").
     function test_groupedDecimalStringKeepsHugeMagnitudesReadable() {
         compare(CostPresentation.groupedDecimalString(fmt, 1e21, 2), "1e+21")
-        compare(CostPresentation.groupedDecimalString(fmt, -1e21, 2), "1e+21")
+        compare(CostPresentation.groupedDecimalString(fmt, -1e21, 2), "-1e+21")
         compare(CostPresentation.groupedDecimalString(fmt, 1.5e21, 2), "1.5e+21")
+        compare(CostPresentation.groupedDecimalString(fmt, -1.5e21, 2), "-1.5e+21")
         compare(CostPresentation.amountString(fmt, 1e21, "USD"), "$1e+21")
         compare(CostPresentation.amountString(fmt, -1e21, "USD"), "-$1e+21")
     }
@@ -311,6 +312,8 @@ TestCase {
         compare(CostPresentation.peakPoint([dailyPoint("Mon", 0, 0)], false), null)
         compare(CostPresentation.peakPoint([], false), null)
         compare(CostPresentation.peakPoint(null, false), null)
+        compare(CostPresentation.peakPoint([null, "invalid", 42], false), null)
+        compare(CostPresentation.peakPoint([null, dailyPoint("Tue", 4, 0)], false).label, "Tue")
     }
 
     function test_peakPointLeavesAnEmptyLabelForTheCallerToWord() {
@@ -417,7 +420,10 @@ TestCase {
             { label: "Total", tokens: 1500 },
             { label: "Input", tokens: 0 },
             { label: "Output", tokens: undefined },
-            { label: "Cache", tokens: "abc" }
+            { label: "Cache", tokens: "abc" },
+            null,
+            "invalid",
+            42
         ])
         compare(rows.length, 1)
         compare(rows[0].label, "Total")
@@ -522,6 +528,7 @@ TestCase {
     function test_modelRowsSurviveNonArrayInputs() {
         compare(CostPresentation.modelRows(fmt, null, null).length, 0)
         compare(CostPresentation.modelRows(fmt, { models: "invalid" }, null).length, 0)
+        compare(CostPresentation.modelRows(fmt, { models: [null, "invalid", 42] }, null).length, 0)
     }
 
     function test_chartPointsAndSparklineMaxSurviveNonArrayInputs() {
