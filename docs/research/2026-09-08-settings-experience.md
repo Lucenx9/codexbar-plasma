@@ -91,9 +91,20 @@ This changes no CLI parsing or live provider normalization.
 With the default element order, the selected provider's optional text follows its
 capsules inside the same clickable group. This removes the repeated provider logo
 seen at `6addadd`. Other providers retain their icon and capsules. A custom order
-preserves independently positioned elements; if the selected meter is filtered
-out, unavailable, or leaves no grouped-text width, standalone text keeps its identity. Both styles share the
+preserves independently positioned text and meters. The configuration matrix
+review against `d223cc6` found that custom orders repeated the icon even with
+only one provider meter. That redundant icon is now omitted. Separate text
+keeps its identity among multiple meters or when the selected provider's meter
+is filtered out or unavailable. Both styles share the
 layout and preserve quota warnings, keyboard activation, and bounded text width.
+
+The same review moved the preview into
+[SimpleKCM's supported header](https://api.kde.org/qml-org-kde-kcmutils-simplekcm.html).
+The preview remains visible while the options scroll, including with larger
+text and right-to-left layouts. It uses the existing synthetic model and pending
+settings; this introduces no configuration key or effect. The
+[repeatable matrix](../development.md#panel-configuration-matrix) separates
+automated content/geometry checks from visual approval of the captures.
 
 The element-order layout has a plain Item boundary. FormLayout reads its cached
 implicit dimensions instead of querying the dynamic layout's attached minimum
