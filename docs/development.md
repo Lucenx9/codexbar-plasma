@@ -233,6 +233,9 @@ mode, invalid results, and cancellation at the production 60-second timeout
 followed by a successful new request. Static checks preserve the stale-source
 guard for any callback delivered after retirement. This adds about one minute to `make check`. Its only
 substitute is the script URL; it neither contacts GitHub nor installs a release.
+Missing optional KDE QML modules produce an explicit local test skip;
+`QML_TEST_REQUIRE_NO_SKIPS=1` rejects that skip in CI. A runner failure remains
+a failure even if its output also contains a skip.
 The module's interface is settings, `checkNow()`, read-only runtime status, and
 result signals. The script URL is a local executable dependency, not a widget
 setting. Internal request state and timers remain inside the module.
