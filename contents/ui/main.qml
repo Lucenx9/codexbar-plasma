@@ -671,10 +671,17 @@ PlasmoidItem {
             return
         }
         retireUsageCommands()
-        Plasmoid.configuration.usageCache = ""
         providers = providerID ? providers.map(function(item) {
             return item.provider === providerID ? root.normalizeProvider({ provider: providerID }) : item
         }) : []
+        // A single-provider reset must not discard healthy providers'
+        // persisted quotas; rewrite the disk cache from what remains.
+        var context = usageCacheContext()
+        if (context.length > 0) {
+            Plasmoid.configuration.usageCache = UsageCache.encode(providers, context, Date.now())
+        } else if (!providerID) {
+            Plasmoid.configuration.usageCache = ""
+        }
         if (!providerID) {
             retireUsageCommandKind("account")
             accountOptions = ({})
@@ -708,12 +715,14 @@ PlasmoidItem {
             var item = root.normalizeProvider(payload)
             item.lastGoodAtMs = Date.parse(payload.usage.updatedAt)
             item.usageStale = true
+            item.tokenCost = null
             return item
         })
         providers = ProviderOrder.orderedItems(providers.length > 0
             ? UsageCache.reconcile(cachedProviders, providers, nowMs) : cachedProviders, providerOrderRaw)
         Plasmoid.configuration.usageCache = UsageCache.encode(providers, context, nowMs)
-        lastUpdatedText = i18n("Showing last known usage")
+        lastUpdatedText = providers.some(function(item) { return item.usageStale === true })
+            ? i18n("Showing last known usage") : ""
     }
 
     function commitUsageSnapshot(items) {
@@ -757,14 +766,24 @@ PlasmoidItem {
             return
         }
         providers = providers.map(function(item) {
-            return expired.indexOf(item.provider) < 0 ? item
-                : UsageCache.withCurrentStatus(root.normalizeProvider(root.providerErrorPayload(item.provider,
-                    item.error || i18n("Cached usage has expired. Refresh to try again."))), item)
+            if (expired.indexOf(item.provider) < 0) {
+                return item
+            }
+            var replacement = UsageCache.withCurrentStatus(root.normalizeProvider(root.providerErrorPayload(item.provider,
+                item.error || i18n("Cached usage has expired. Refresh to try again."))), item)
+            // withCurrentStatus copies a fresh error snapshot, which carries
+            // no measurement contract; expired quotas keep no measurement.
+            replacement.lastGoodAtMs = 0
+            replacement.usageStale = false
+            return replacement
         })
         if (!providers.some(function(item) { return item.usageStale === true })) {
             lastUpdatedText = ""
         }
-        Plasmoid.configuration.usageCache = UsageCache.encode(providers, usageCacheContext(), nowMs)
+        var context = usageCacheContext()
+        if (context.length > 0) {
+            Plasmoid.configuration.usageCache = UsageCache.encode(providers, context, nowMs)
+        }
     }
 
     function lastGoodUsageText(item) {
@@ -948,7 +967,7 @@ PlasmoidItem {
             providerOrderRaw)
 
         if (nextProviders.length === 0) {
-            failUsageRefresh(i18n("codexbar did not return provider data."))
+            failUsageRefresh(stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("codexbar did not return provider data."))
             return
         }
         commitUsageSnapshot(nextProviders)
@@ -1833,7 +1852,7 @@ PlasmoidItem {
         var nextProviders = []
         for (var i = 0; i < providers.length; i++) {
             var item = copyObject(providers[i])
-            item.tokenCost = providerTokenCost(item.provider)
+            item.tokenCost = item.usageStale === true ? null : providerTokenCost(item.provider)
             nextProviders.push(item)
         }
         providers = nextProviders
@@ -2025,7 +2044,7 @@ PlasmoidItem {
             return
         }
         var replacement = UsageCache.reconcile([], [snapshot], Date.now())[0]
-        replacement.tokenCost = providerTokenCost(key)
+        replacement.tokenCost = replacement.usageStale === true ? null : providerTokenCost(key)
         var nextProviders = []
         for (var i = 0; i < providers.length; i++) {
             nextProviders.push(providers[i].provider === key ? replacement : providers[i])

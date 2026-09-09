@@ -48,6 +48,19 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Successful responses without measured quotas keep valid credits and details
+  even when their supplemental timestamp is older than the quota-cache limit.
+  They no longer show a last-known banner or turn into cache-expired errors.
+- Last-known quota handling: unknown service status no longer keeps showing
+  the previous outage, extra-lane quotas survive restarts, expired quotas
+  keep no measurement instead of undefined state, the restore banner only
+  shows when data is actually stale, per-provider resets keep healthy
+  providers' disk cache, empty usage results keep CLI error detail, stale
+  supplement sections are hidden until revalidated, measurements older than
+  24 hours no longer stamp as fresh, future live timestamps use receipt time,
+  overview rows keep account/status
+  context beside the last-known note, and long update timestamps ellipsize
+  on one line.
 - Panel settings no longer query a rebuilding element-order layout's attached
   size hints, avoiding a Qt layout crash when expanding and reordering controls.
 - Panel text falls back to a separate label if meters exhaust the width available

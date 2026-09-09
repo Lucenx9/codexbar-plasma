@@ -1,6 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/UsageCache.js" as Cache
+import "../contents/ui/ProviderNormalizer.js" as Normalizer
 
 TestCase {
     name: "UsageCache"
@@ -129,7 +130,13 @@ TestCase {
         compare(previous[0].status, "Private incident");
         var unavailable = Cache.reconcile([retained], [failed("codex")], nowMs)[0];
         verify(!unavailable.statusKnown);
-        compare(unavailable.status, retained.status);
+        // An unknown status must not keep showing the previous outage:
+        // badges gate on hasIncident alone.
+        compare(unavailable.status, "");
+        compare(unavailable.statusSeverity, "");
+        compare(unavailable.statusIncidentKey, "");
+        verify(!unavailable.hasIncident);
+        compare(unavailable.statusUrl, "");
         var expired = Cache.withCurrentStatus(failed("codex"), retained);
         verify(expired.statusKnown && expired.hasIncident);
         compare(expired.rows.length, 0);
@@ -142,6 +149,148 @@ TestCase {
         compare(recovered.status, "Operational");
         compare(recovered.statusSeverity, "");
         compare(recovered.statusIncidentKey, "");
+    }
+
+    function test_extraLaneQuotasSurviveRestart() {
+        var extra = {
+            lane: "extra",
+            label: "Sensitive extra",
+            hasPercent: true,
+            usedPercent: 90,
+            leftPercent: 10,
+            resetsAt: "2026-09-09T14:00:00Z",
+            paceKnown: false,
+            paceEtaSeconds: 0,
+            pace: ""
+        };
+        var item = snapshot("codex", 72);
+        item.rows.push(extra, Object.assign({}, extra, { usedPercent: 0 }));
+        var encoded = Cache.encode(Cache.reconcile([], [item], nowMs), context, nowMs);
+        verify(encoded.length > 0);
+        var result = Cache.decode(encoded, context, nowMs);
+        compare(result.length, 1);
+        compare(result[0].usage.extraRateWindows.length, 2);
+        compare(result[0].usage.extraRateWindows[0].window.usedPercent, 90);
+        compare(result[0].usage.extraRateWindows[1].window.usedPercent, 0);
+        compare(result[0].usage.primary.usedPercent, 72);
+        var extraOnly = snapshot("claude", 28);
+        extraOnly.rows = [extra];
+        var extraEncoded = Cache.encode(Cache.reconcile([], [extraOnly], nowMs), context, nowMs);
+        verify(extraEncoded.length > 0);
+        compare(Cache.decode(extraEncoded, context, nowMs)[0].usage.extraRateWindows[0].window.usedPercent, 90);
+        for (var secret of ["Sensitive extra"])
+            verify(extraEncoded.indexOf(secret) < 0, secret);
+    }
+
+    function test_extraWindowsAreBoundedAndRebuiltWithoutProse() {
+        var item = snapshot("codex", 72);
+        var extra = Object.assign({}, item.rows[0], { lane: "extra" });
+        item.rows = Array(Normalizer.maximumExtraRateWindows + 3).fill(extra);
+        var encoded = Cache.encode(Cache.reconcile([], [item], nowMs), context, nowMs);
+        var cache = JSON.parse(encoded);
+        compare(cache.snapshots[0].windows.extraRateWindows.length, Normalizer.maximumExtraRateWindows);
+        cache.snapshots[0].windows.extraRateWindows = [null, [], {window: {usedPercent: "90"}},
+            {window: {usedPercent: 101}}, {title: "private title", id: "private id",
+                window: {usedPercent: 0, auth: "private auth"}}];
+        var decoded = Cache.decode(JSON.stringify(cache), context, nowMs);
+        compare(decoded[0].usage.extraRateWindows, [{window: {usedPercent: 0, resetsAt: ""}}]);
+        verify(JSON.stringify(decoded).indexOf("private") < 0);
+        cache.snapshots[0].windows.extraRateWindows = Array(Normalizer.maximumExtraRateWindows + 3)
+            .fill({window: {usedPercent: 90}});
+        compare(Cache.decode(JSON.stringify(cache), context, nowMs)[0].usage.extraRateWindows.length,
+            Normalizer.maximumExtraRateWindows);
+        for (var malformed of [null, {}, "invalid", [null, {window: {usedPercent: -1}}]]) {
+            cache.snapshots[0].windows.extraRateWindows = malformed;
+            compare(Cache.decode(JSON.stringify(cache), context, nowMs).length, 0);
+        }
+    }
+
+    function test_staleRetentionDropsSupplementalSections() {
+        var item = snapshot("codex", 72);
+        item.providerCost = { percentUsed: 32 };
+        item.codexCreditLimit = { title: "t", used: 1, limit: 2, remaining: 1, usedPercent: 50, leftPercent: 50, resetsAt: "" };
+        item.providerDetails = [{ title: "t", rows: [] }];
+        var previous = Cache.reconcile([], [item], nowMs);
+        var retained = Cache.reconcile(previous, [failed("codex")], nowMs)[0];
+        verify(retained.usageStale);
+        compare(retained.rows[0].usedPercent, 72);
+        compare(retained.providerDetails.length, 0);
+        verify(retained.usageDashboard === null);
+        verify(retained.providerCost === null);
+        verify(retained.resetCredits === null);
+        verify(retained.tokenCost === null);
+        verify(retained.codexCreditLimit === null);
+        verify(retained.credits === null);
+    }
+
+    function test_ancientMeasurementCannotStampFresh() {
+        var item = snapshot("codex", 72);
+        item.updatedAt = "2026-09-07T11:00:00Z";
+        item.tokenCost = { totals: { cost: 12 } };
+        item.providerDetails = [{ title: "Old details", rows: [] }];
+        var result = Cache.reconcile([], [item], nowMs)[0];
+        verify(result.usageStale);
+        compare(result.lastGoodAtMs, Date.parse("2026-09-07T11:00:00Z"));
+        verify(result.tokenCost === null);
+        compare(result.providerDetails, []);
+        compare(item.tokenCost.totals.cost, 12);
+        var measuredZero = snapshot("codex", 0);
+        measuredZero.updatedAt = item.updatedAt;
+        var oldZero = Cache.reconcile([], [measuredZero], nowMs)[0];
+        verify(oldZero.usageStale);
+        compare(oldZero.rows[0].usedPercent, 0);
+        var missing = snapshot("claude", 28);
+        missing.updatedAt = "";
+        var fallback = Cache.reconcile([], [missing], nowMs)[0];
+        verify(!fallback.usageStale);
+        compare(fallback.lastGoodAtMs, nowMs);
+    }
+
+    function test_oldTimestampWithoutMeasuredQuotas_data() {
+        return [
+            { tag: "empty", rows: [], credits: null, details: [] },
+            { tag: "credits", rows: [], credits: 12, details: [] },
+            { tag: "zero-credits", rows: [], credits: 0, details: [] },
+            { tag: "unknown-quota", rows: [{lane: "primary", hasPercent: false}], credits: null,
+                details: [{title: "Current details", rows: []}] }
+        ];
+    }
+
+    function test_oldTimestampWithoutMeasuredQuotas(data) {
+        var incoming = snapshot("codex", 72);
+        incoming.updatedAt = "2026-09-07T11:00:00Z";
+        incoming.rows = data.rows;
+        incoming.primaryRow = data.rows[0] || null;
+        incoming.credits = data.credits;
+        incoming.providerDetails = data.details;
+        for (var previous of [[], fresh(), Cache.reconcile(fresh(), [failed("codex")], nowMs)]) {
+            var result = Cache.reconcile(previous, [incoming], nowMs);
+            verify(!result[0].usageStale);
+            compare(result[0].lastGoodAtMs, nowMs);
+            compare(result[0].rows, data.rows);
+            compare(result[0].credits, data.credits);
+            compare(result[0].providerDetails, data.details);
+            compare(result[0].error, "");
+            compare(Cache.expiredProviderIDs(result, nowMs + 60000), []);
+            compare(Cache.encode(result, context, nowMs), "");
+        }
+    }
+
+    function test_futureLiveMeasurementsUseReceiptTime() {
+        for (var skew of [1, 60000, Cache.maximumAgeMs + 1]) {
+            var item = snapshot("codex", 72);
+            item.updatedAt = new Date(nowMs + skew).toISOString();
+            var result = Cache.reconcile([], [item], nowMs);
+            verify(!result[0].usageStale);
+            compare(result[0].lastGoodAtMs, nowMs);
+            compare(Cache.expiredProviderIDs(result, nowMs + 60000), []);
+            var retained = Cache.reconcile(result, [failed("codex")], nowMs + 60000);
+            verify(retained[0].usageStale);
+            compare(retained[0].lastGoodAtMs, nowMs);
+            compare(retained[0].rows[0].usedPercent, 72);
+            compare(Cache.decode(Cache.encode(result, context, nowMs), context, nowMs)[0].usage.updatedAt,
+                new Date(nowMs).toISOString());
+        }
     }
 
     function test_redactedRoundTripAndContextIsolation() {

@@ -127,6 +127,7 @@ msgid "No provider data."
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/OverviewProviderRow.qml
 #: contents/ui/components/PanelSettingsPreview.qml
 #: contents/ui/components/SessionsView.qml contents/ui/main.qml
 msgid "%1 - %2"

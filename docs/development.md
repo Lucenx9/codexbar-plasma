@@ -292,7 +292,13 @@ four; a renderer stress test exceeds that limit to verify the zero-width guard
 independently of theme dimensions. Early preview exits report the process exit
 code in addition to the log path.
 `usage-retention` exercises failed/partial refreshes, recovery, notification
-suppression, and cache invalidation. `usage-cache-restart` launches two separate
+suppression, and cache invalidation. It also verifies multiple extra windows
+through cache decode, QML normalization, and re-encoding, including extra-only
+and measured-zero quotas. Cost refreshes, range changes, account selection, and
+cache restore must keep token costs hidden for stale usage.
+Successful credits-only responses with old timestamps must preserve their
+balance, including zero, through the next quota-expiry check.
+`usage-cache-restart` launches two separate
 widget processes with the same isolated settings and delays the second CLI
 refresh to verify startup restoration from disk.
 Synthetic payloads cover a subset of the CLI 0.56.2 contract; fixture dates
