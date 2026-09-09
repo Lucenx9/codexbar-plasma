@@ -18,10 +18,19 @@ work and upstream contract requirements.
   neither primary nor secondary has a percentage, the existing automatic
   preference supplies one available fallback quota.
 - Provider meters work in horizontal and vertical panels. Names, usage text,
-  and credit text remain horizontal-only. Click a provider's icon or capsules,
+  and credit text remain horizontal-only. Click a provider's icon, capsules, or grouped text,
   or activate it with the keyboard, to open its detail tab. Tooltips and
   accessible descriptions identify the displayed quotas and their values.
-- **Use minimal preset** enables provider meters, including with a single
+- With the default element order, optional text sits after the selected
+  provider's capsules in one group, with a single logo. The other providers keep
+  their own icon and capsules. If that provider's meters are hidden or unavailable,
+  or leave no room for grouped text, its text keeps a separate identity. Custom element orders retain independent
+  identity, status, text, and meter positions. Long text is elided to fit the panel.
+
+  ![Optional usage text beside its provider’s quota capsules](codexbar-plasma-panel-information.png)
+
+- **Use monochrome icons and meters only** in **Additional information** selects
+  Minimal and enables provider meters, including with a single
   provider, and hides panel names, usage text and credits. The style selector
   changes appearance alone. Existing installations keep their style, explicit
   quota choice, and visibility settings. Automatic meters gain the second quota
@@ -35,7 +44,7 @@ work and upstream contract requirements.
   and a run-out forecast that shows the predicted duration only while the CLI
   expects the quota to run out before its reset.
 - Choose the automatic, primary, secondary, or tertiary quota for panel text and
-  meters in **Panel** settings. An explicit primary, secondary, or tertiary
+  meters in **Panel → Quota, order and visibility**. An explicit primary, secondary, or tertiary
   choice shows one capsule. Automatic text and popup tabs retain their existing
   quota preference; automatic capsules use the pair described above.
 - Set independent visibility conditions for the full panel text and each
@@ -75,28 +84,38 @@ the retained-data indication. Retained data never generates quota, pace, reset,
 or status notifications, and its run-out forecasts are suppressed. If a failed
 quota response includes newly fetched service status, that status still updates
 and can trigger incident notifications independently of the retained quotas. Failed
-refreshes stop reusing measurements older than 24 hours. The existing minute
+refreshes stop reusing measurements older than 24 hours, and a quota measurement
+older than 24 hours never stamps a new snapshot as fresh. The existing minute
 timer also removes expired retained data when automatic refresh is disabled;
-the error remains visible and healthy providers are unaffected.
+the error remains visible and healthy providers are unaffected. Successful
+responses without measured quotas keep their valid credits or details even when
+their supplemental timestamp is old; they do not enter quota retention or expiry.
 
 The widget automatically saves a small quota cache in its Plasma configuration.
 After a restart it verifies the CLI configuration fingerprint before restoring
 the cache, then refreshes in the background. Restored quotas are always marked
 last known, even if they were saved recently. A cache is not a successful refresh.
+If a partial refresh finishes before that verification, its results take
+precedence for the providers it returned. Other cached providers are restored
+as last known and included when the merged snapshot is saved.
 
 The disk cache is limited to 64 KiB of UTF-8 on both save and restore. It holds
-at most 64 providers and only their primary, secondary, and
-tertiary percentages, reset timestamps, measurement timestamps, and an opaque
+at most 64 providers and only their primary, secondary,
+tertiary, and up to 24 extra quota windows per provider, with only percentages,
+reset timestamps, measurement timestamps, and an opaque
 configuration fingerprint. It contains no account identities, credentials,
 provider prose, cost history, session data, or paths. Entries older than 24 hours,
 future-dated entries, corrupt records, and unsupported cache versions are ignored.
-Additional provider details remain available in memory during a failed refresh,
-but expire with the quotas and are not restored from disk. A missing measurement
-timestamp uses receipt time. The 24-hour limit is a widget policy, not a guarantee
+Supplemental sections (cost, credits, detail views, token costs) are hidden
+while usage is stale, including after cost refreshes and history-range changes,
+and are not restored from disk; only the retained quotas carry the last-known
+indication. A missing or future live measurement timestamp uses receipt time;
+future timestamps in persisted records are rejected. The 24-hour limit is a widget policy, not a guarantee
 that a retained quota remains accurate throughout that period.
 
 Changing the CLI path, provider/source override, provider configuration, or selected
-account invalidates the affected retained data and the disk cache. Disabling all
+account invalidates the affected retained data. A per-provider reset keeps
+healthy providers' disk cache; a full reset clears it. Disabling all
 providers clears the cached quotas. A confirmed successful response without a
 quota removes its previous value; measured zero remains zero. Privacy mode hides
 identities as usual and keeps the last-known indication visible.
@@ -164,6 +183,10 @@ fields; track proposed extensions in the issue tracker.
 ## Status and notifications
 
 - Provider status incident badge in the panel and provider detail view.
+  Incident selection, badges, banners, and tooltips ignore a provider whose
+  current status is unknown or has no active incident. When a refresh omits
+  status, a previously retained outage is hidden; this is not evidence of
+  recovery. Current status can still report an incident when quota fetching fails.
 - Optional quota warning markers on usage bars.
 - Optional Plasma notifications for provider status incidents, configurable
   quota crossings, predicted quota exhaustion from CLI pace data, and when a
@@ -174,6 +197,17 @@ fields; track proposed extensions in the issue tracker.
 - Six settings pages: **General**, **Providers**, **Panel**, **Popup**,
   **Notifications**, and **Diagnostics**. CLI path and provider/source overrides
   sit beside redacted diagnostics; quota thresholds sit beside their alerts.
+- **Panel** starts with the preview, side-by-side Standard/Minimal choices, and
+  provider meters. **Additional information** contains the selected provider's
+  name, usage text, credit balance, and the monochrome preset. Its closed summary
+  lists enabled information. Text format appears only when usage text is enabled;
+  hiding controls preserves their selected values. These additions work in
+  horizontal panels; meters also work in vertical panels.
+- **Quota, order and visibility** expands the quota selector, element order,
+  visibility conditions, and automatic provider selection. It starts collapsed
+  whenever the page opens. Its summary lists non-default quota/order choices,
+  configured conditions, and automatic selection even while collapsed. Opening
+  or closing it never changes saved or pending preferences.
 - A live **Panel** preview uses example data and the actual panel renderer.
   Try normal usage, near-limit usage, a service incident, or missing data before
   applying changes. The preview never fetches usage or changes saved settings.
@@ -216,7 +250,7 @@ and 95% critical thresholds. Reset notifications are off until enabled.
 | Widget updates | Check and notify every 24 hours; automatic installation off |
 | Panel appearance | Standard style with colored provider icons and automatic quota capsules, including a single provider |
 | Extra panel content | Provider names, usage text and credit balances off |
-| Panel element order | Identity, service status, usage text, meters, respecting visibility settings |
+| Panel element order | Default grouping of selected text with its meters; custom orders retain separate elements |
 | Panel quota and visibility | Automatic quota pair for meters and automatic text quota; enabled elements always visible |
 | Provider selection | Keep the selected provider; automatic highest-usage selection off |
 | Popup navigation | Tab text labels on; provider order from the CLI |

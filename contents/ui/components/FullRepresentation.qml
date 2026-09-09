@@ -849,6 +849,7 @@ Item {
 
                 visible: applet.presentedProviderData
                     && applet.presentedProviderData.hasIncident
+                    && applet.presentedProviderData.statusKnown !== false
                     && applet.presentedProviderData.status
                     && applet.presentedProviderData.status.length > 0
                 plainText: applet.presentedProviderData ? applet.presentedProviderData.status : ""

@@ -36,6 +36,17 @@ For those, use `make install` or `./install.sh`. Release-package users can use
 - `contents/ui/main.qml` owns applet processes, refresh/account coordination,
   selected state, configuration updates, and external effects. Its adapters
   supply the panel and popup.
+- `contents/ui/controllers/WidgetUpdateController.qml` owns the widget updater's
+  executable source, per-request nonce, captured install mode, timeout, queued
+  install request, and retry/interval timers. It receives update settings and
+  the last successful check timestamp. Its `checkNow()` entry point still
+  respects disabled checks. Enabled startup still forces a check even with a
+  recent saved timestamp, preserving the previous startup behavior.
+  `main.qml` persists its status and successful-check
+  signals and delivers its available/installed notifications, preserving the
+  existing privacy and notification-deduplication rules. The module never reads
+  the applet root or writes configuration. `UpdateLogic.js` keeps the pure
+  scheduling and result decisions shared with settings.
 - `contents/ui/components/CompactRepresentation.qml` renders the panel;
   `FullRepresentation.qml` in the same directory renders the popup. Components
   are presentation-only and receive normalized data plus an explicit parent API
@@ -67,12 +78,18 @@ Persistence uses Plasma's existing configuration mapping; the restart smoke test
 allows its deferred save to complete before starting the second process.
 The first configuration-checksum callback also saves any successful usage that
 arrived before it, so startup persistence does not depend on a later refresh.
+It merges normalized cached providers missing from that early response through
+`UsageCache.restore`, preserving live results and marking only restored quotas
+as stale. A completed early refresh keeps its update label when no stale quotas
+remain.
 The restarted fixture delays CLI responses beyond the runner's maximum allowed
 scenario duration, proving that the second process displays persisted quotas.
 Quota freshness and service-status evidence are independent: retained rows never
 reach the notification planner, while a status record from the current response
 still can. Retaining or expiring quotas must preserve that current status; a
 later response without status marks the retained incident as unknown to the planner.
+Incident selection, tooltips, and provider badges/banners also exclude unknown
+status instead of presenting a retained outage as current.
 
 Before changing behavior, identify its owning QML page, config entry, CLI input,
 external effects, and cheapest behavioral test. Read the existing implementation
@@ -199,6 +216,22 @@ Read its output for tool failures and skips. CI uses the pinned Plasma image in
 QtTests configured to reject skips. A local machine missing QML modules may
 provide less coverage; report what actually ran.
 
+`tests/test_account_refresh.py` runs the production account-selection functions
+and command binding in Qt's event loop. It counts refresh requests for cached
+and uncached accounts in single-provider and aggregate modes; CLI effects are
+replaced by observations at the refresh boundary.
+
+`tests/test_widget_update_controller.py` instantiates the production updater
+module and runs temporary executable fixtures through Plasma's real DataSource.
+It checks overlapping requests, setting changes during a check, captured install
+mode, invalid results, and cancellation at the production 60-second timeout
+followed by a successful new request. Static checks preserve the stale-source
+guard for any callback delivered after retirement. This adds about one minute to `make check`. Its only
+substitute is the script URL; it neither contacts GitHub nor installs a release.
+The module's interface is settings, `checkNow()`, read-only runtime status, and
+result signals. The script URL is a local executable dependency, not a widget
+setting. Internal request state and timers remain inside the module.
+
 `make check` disables unqualified-name warnings because Plasma injects helpers
 such as `i18n()` as context properties. It validates AppStream metadata when
 `kpackagetool6` is available and reports a skip otherwise. On older local Plasma
@@ -279,8 +312,26 @@ Panel scenarios verify capsule count and clipping at small sizes, including
 zero and absent quotas. `panel-vertical` and `panel-vertical-minimal` supply the
 vertical form-factor input because `plasmawindowed` has no panel containment.
 QtTests additionally exercise pointer/keyboard activation and resizing.
+`settings-panel`, `settings-panel-information`, `settings-panel-advanced`, and
+`settings-panel-narrow` verify pending preview changes, collapsed/expanded controls,
+rendered quota capsules, and a 420-pixel layout with larger text and all additional
+information enabled. `panel-information`, `panel-information-minimal`, and
+`panel-information-single` capture grouped text at a 24-pixel panel height, including
+selection of the second provider. QtTests exercise style selection, disclosure,
+retained hidden values, defaults, custom order and filtered-meter fallbacks,
+long-text bounds, exhausted grouped-text width, reordering after disclosure,
+and activation through both text and meters. The live adapter limits meters to
+four; a renderer stress test exceeds that limit to verify the zero-width guard
+independently of theme dimensions. Early preview exits report the process exit
+code in addition to the log path.
 `usage-retention` exercises failed/partial refreshes, recovery, notification
-suppression, and cache invalidation. `usage-cache-restart` launches two separate
+suppression, and cache invalidation. It also verifies multiple extra windows
+through cache decode, QML normalization, and re-encoding, including extra-only
+and measured-zero quotas. Cost refreshes, range changes, account selection, and
+cache restore must keep token costs hidden for stale usage.
+Successful credits-only responses with old timestamps must preserve their
+balance, including zero, through the next quota-expiry check.
+`usage-cache-restart` launches two separate
 widget processes with the same isolated settings and delays the second CLI
 refresh to verify startup restoration from disk.
 Synthetic payloads cover a subset of the CLI 0.56.2 contract; fixture dates

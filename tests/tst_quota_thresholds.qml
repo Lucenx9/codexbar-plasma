@@ -16,6 +16,20 @@ TestCase {
         compare(QuotaThresholds.criticalPercent(80, "abc"), 95)
     }
 
+    // A whitespace string or an empty array coerces to 0 through Number(), and
+    // Infinity clamps to the maximum, so each would corrupt the thresholds
+    // while looking almost numeric.
+    function test_rejectsCoercingAndNonFiniteValuesAsAbsent() {
+        compare(QuotaThresholds.warningPercent(" "), 80)
+        compare(QuotaThresholds.warningPercent([]), 80)
+        compare(QuotaThresholds.warningPercent(true), 80)
+        compare(QuotaThresholds.warningPercent(Infinity), 80)
+        compare(QuotaThresholds.criticalPercent(80, " "), 95)
+        compare(QuotaThresholds.criticalPercent(80, []), 95)
+        compare(QuotaThresholds.level(" ", 80, 95), "")
+        compare(QuotaThresholds.level(Infinity, 80, 95), "")
+    }
+
     function test_clampsOutOfRangePercentsIntoTheUsableBand() {
         compare(QuotaThresholds.warningPercent(0), 1)
         compare(QuotaThresholds.warningPercent(-40), 1)

@@ -30,8 +30,8 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   in the cost and settings documents do not replace this full audit.
 - [0.57.0 release review](research/2026-09-09-macos-parity-0.57.0.md): Linux-relevant
   changes since 0.56.2, current Plasma gaps, and scoped official CLI probes.
-- [Settings decisions](research/2026-09-08-settings-experience.md): Plasma
-  settings, privacy, refresh behavior, and the macOS 0.56.8 comparison.
+- [Settings decisions](research/2026-09-08-settings-experience.md): Panel disclosure and text grouping,
+  Plasma settings, privacy, refresh behavior, and the macOS 0.56.8 comparison.
 
 ## Earlier CLI evidence
 
@@ -59,6 +59,7 @@ before/after copies.
 - [Sessions](codexbar-plasma-sessions.png)
 - [Standard panel](codexbar-plasma-panel-standard.png): colored provider icons and dual quota capsules.
 - [Minimal panel](codexbar-plasma-panel-minimal.png): monochrome provider icons and dual quota capsules.
+- [Panel with usage text](codexbar-plasma-panel-information.png): selected-provider text grouped with its quota capsules.
 
 ## Historical work artifacts
 

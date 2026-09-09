@@ -71,6 +71,7 @@ RowLayout {
 
                 visible: providerHeaderRow.providerData
                     && providerHeaderRow.providerData.hasIncident
+                    && providerHeaderRow.providerData.statusKnown !== false
                 Layout.preferredWidth: providerStatusBadgeLabel.implicitWidth + Kirigami.Units.smallSpacing * 2
                 Layout.preferredHeight: Math.max(Kirigami.Units.gridUnit * 1.25,
                     providerStatusBadgeLabel.implicitHeight + Kirigami.Units.smallSpacing)
@@ -137,7 +138,8 @@ RowLayout {
             font: Kirigami.Theme.smallFont
             opacity: providerHeaderRow.applet.secondaryTextOpacity
             Layout.fillWidth: true
-            wrapMode: Text.WordWrap
+            elide: Text.ElideRight
+            maximumLineCount: 1
         }
     }
 

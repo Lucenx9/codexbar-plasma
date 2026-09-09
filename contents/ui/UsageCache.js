@@ -25,6 +25,14 @@ function withCurrentStatus(snapshot, source) {
         ["status", "statusSeverity", "statusIncidentKey", "hasIncident", "statusUrl"].forEach(function(key) {
             next[key] = source[key]
         })
+    } else {
+        // Badges gate on hasIncident alone, so an unknown status must not
+        // keep showing the previous outage as if it were current.
+        next.status = ""
+        next.statusSeverity = ""
+        next.statusIncidentKey = ""
+        next.hasIncident = false
+        next.statusUrl = ""
     }
     return next
 }
@@ -55,12 +63,67 @@ function reconcile(previous, incoming, nowMs) {
             next.primaryRow = next.rows.filter(function(row) { return row.lane === "primary" })[0] || null
         } else {
             var measuredAt = timestamp(item.updatedAt)
-            next.lastGoodAtMs = item.error.length === 0
-                ? (isFinite(measuredAt) && measuredAt <= nowMs ? measuredAt : nowMs) : 0
-            next.usageStale = false
+            if (item.error.length === 0 && isFinite(measuredAt) && measuredAt <= nowMs
+                    && nowMs - measuredAt <= maximumAgeMs) {
+                next.lastGoodAtMs = measuredAt
+                next.usageStale = false
+            } else if (item.error.length === 0
+                    && (!hasQuota(next) || !isFinite(measuredAt) || measuredAt > nowMs)) {
+                next.lastGoodAtMs = nowMs
+                next.usageStale = false
+            } else if (item.error.length === 0) {
+                // A quota measurement older than the retention window cannot back
+                // a fresh snapshot (e.g. a days-old cached account option
+                // applied via replaceProviderSnapshot); keep it stale.
+                next.lastGoodAtMs = measuredAt
+                next.usageStale = true
+            } else {
+                next.lastGoodAtMs = 0
+                next.usageStale = false
+            }
+        }
+        if (next.usageStale) {
+            next.providerDetails = []
+            next.usageDashboard = null
+            next.providerCost = null
+            next.resetCredits = null
+            next.tokenCost = null
+            next.codexCreditLimit = null
+            next.credits = null
         }
         return next
     })
+}
+
+// Restores cached provider snapshots during widget initialization, merging any
+// cached providers missing from live results while keeping live data fresh.
+function restore(cached, live, nowMs) {
+    if (!Array.isArray(cached) || cached.length === 0) {
+        return Array.isArray(live) ? live : []
+    }
+    if (!Array.isArray(live) || live.length === 0) {
+        return cached.map(function(item) {
+            var copy = Guards.copyObject(item)
+            copy.usageStale = true
+            return copy
+        })
+    }
+    var reconciled = reconcile(cached, live, nowMs)
+    var seen = ({})
+    reconciled.forEach(function(item) {
+        seen[item.provider] = true
+    })
+    var result = reconciled.slice()
+    for (var i = 0; i < cached.length; i++) {
+        var item = cached[i]
+        if (!Guards.hasOwnKey(seen, item.provider)) {
+            seen[item.provider] = true
+            var staleItem = Guards.copyObject(item)
+            staleItem.usageStale = true
+            result.push(staleItem)
+        }
+    }
+    return result
 }
 
 function validContext(value) {
@@ -112,14 +175,22 @@ function encode(items, context, nowMs) {
             continue
         }
         var windows = ({})
+        var extras = []
         item.rows.forEach(function(row) {
-            if (lanes.indexOf(row.lane) >= 0 && row.hasPercent === true) {
+            if (row.hasPercent === true) {
                 var window = windowRecord(row)
                 if (window) {
-                    windows[row.lane] = window
+                    if (lanes.indexOf(row.lane) >= 0) {
+                        windows[row.lane] = window
+                    } else if (row.lane === "extra" && extras.length < Normalizer.maximumExtraRateWindows) {
+                        extras.push({ window: window })
+                    }
                 }
             }
         })
+        if (extras.length > 0) {
+            windows.extraRateWindows = extras
+        }
         if (Object.keys(windows).length > 0) {
             snapshots.push({ provider: item.provider, measuredAt: item.lastGoodAtMs, windows: windows })
         }
@@ -166,6 +237,18 @@ function decode(raw, context, nowMs) {
                 usage[lane] = window
                 count++
             }
+        }
+        var extras = Array.isArray(item.windows.extraRateWindows) ? item.windows.extraRateWindows : []
+        var restoredExtras = []
+        for (var k = 0; k < Math.min(extras.length, Normalizer.maximumExtraRateWindows); k++) {
+            var extraWindow = Normalizer.isCliRecord(extras[k]) ? windowRecord(extras[k].window) : null
+            if (extraWindow) {
+                restoredExtras.push({ window: extraWindow })
+            }
+        }
+        if (restoredExtras.length > 0) {
+            usage.extraRateWindows = restoredExtras
+            count += restoredExtras.length
         }
         if (count > 0) {
             seen[item.provider] = true
