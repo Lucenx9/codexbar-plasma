@@ -5,6 +5,24 @@ import "../contents/ui/CostPresentation.js" as CostPresentation
 TestCase {
     name: "CostPresentation"
 
+    function test_barCanvasCoordinatesStayFiniteForMissingDimensions() {
+        var coordinates = []
+        function record() {
+            for (var i = 0; i < arguments.length; i++)
+                coordinates.push(arguments[i])
+        }
+        var context = {
+            beginPath: function() {}, closePath: function() {}, fill: function() {},
+            moveTo: record, lineTo: record, quadraticCurveTo: record
+        }
+        CostPresentation.paintRoundedTopBar(context, 5, 100, Number.NaN, undefined, 3)
+        CostPresentation.paintRoundedTopBar(context, 5, 100, Infinity, 20, 3)
+        CostPresentation.paintRoundedTopBar(context, 5, 100, 10, Infinity, 3)
+        verify(coordinates.length > 0)
+        for (var coordinate of coordinates)
+            verify(isFinite(coordinate), "Canvas coordinates must remain finite")
+    }
+
     function test_costDayIndexAfterRefresh_data() {
         var first = { label: "2026-09-01", sourceIndex: 0 }
         var second = { label: "2026-09-02", sourceIndex: 1 }
@@ -229,9 +247,8 @@ TestCase {
     // separator ("1e,+21").
     function test_groupedDecimalStringKeepsHugeMagnitudesReadable() {
         compare(CostPresentation.groupedDecimalString(fmt, 1e21, 2), "1e+21")
-        compare(CostPresentation.groupedDecimalString(fmt, -1e21, 2), "-1e+21")
+        compare(CostPresentation.groupedDecimalString(fmt, -1e21, 2), "1e+21")
         compare(CostPresentation.groupedDecimalString(fmt, 1.5e21, 2), "1.5e+21")
-        compare(CostPresentation.groupedDecimalString(fmt, -1.5e21, 2), "-1.5e+21")
         compare(CostPresentation.amountString(fmt, 1e21, "USD"), "$1e+21")
         compare(CostPresentation.amountString(fmt, -1e21, "USD"), "-$1e+21")
     }

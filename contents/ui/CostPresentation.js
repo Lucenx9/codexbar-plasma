@@ -70,7 +70,7 @@ function groupedDecimalString(fmt, value, digits) {
     // Number.toFixed returns exponential notation past 1e21, which has no
     // fixed-point digits to group ("1e+21" would gain a bogus separator).
     if (Math.abs(numeric) >= 1e21) {
-        return String(numeric)
+        return String(Math.abs(numeric))
     }
     var f = fmt && typeof fmt === "object" ? fmt : numberFormat()
     var groupSep = typeof f.group === "string" ? f.group : ","

@@ -18,26 +18,15 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   quota, order, and visibility options.
 - Avoid repeating the selected provider's icon with custom panel element
   orders when it is the only visible provider meter.
-- Cost formatting keeps the sign of huge negative magnitudes, skips malformed
-  breakdown/model/chart rows instead of crashing, and guards chart canvas bars
-  against non-finite dimensions.
-- Update scheduling falls back to the minimum delay when the clock value is
-  unusable instead of propagating NaN.
-- CLI JSON staging keeps scalar `0`/`false` values while still rejecting
-  oversized payloads, and theme contrast helpers stay finite on unusable
-  channel or progress inputs.
-- Provider fallback requests are trimmed before validation, so padded source
-  and provider names deduplicate and match completion correctly.
-- Interactive charts tolerate missing point data without crashing, and chart
-  tooltips are parented to their hover areas so they track visibility.
-- Tab overflow no longer flashes its buttons during zero-width initialization,
-  and the quota warning spin keeps the critical threshold at or above it.
-- Accessibility gaps closed: idle refresh spinners and decorative chevrons are
-  ignored by assistive tools, and heatmap cells expose label and value text.
-- Tooling robustness: install prechecks fail fast on missing commands, CI scope
-  tolerates missing GitHub environment files, translation staging handles
-  symlinks, the smoke-restart fixture verifies its marker, and the theme
-  boundary list matches the shared provider table.
+- Ignore malformed cost breakdown/model rows and keep chart dimensions finite.
+- Clear chart selection and hover state when point data disappears, allowing
+  keyboard navigation to recover when data returns.
+- Normalize provider fallback requests before deduplication and preserve scalar
+  zero/false CLI text values.
+- Keep theme calculations finite when inputs are unavailable.
+- Avoid tab overflow controls during initialization.
+- Anchor tab tooltips to their hover areas and improve accessibility labels for
+  heatmap cells and decorative controls.
 
 ## 0.2.36 - 2026-09-09
 

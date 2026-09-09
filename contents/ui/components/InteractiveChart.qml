@@ -18,7 +18,8 @@ ColumnLayout {
     property int selectedIndex: -1
     property int hoveredIndex: -1
     readonly property int activeIndex: hoveredIndex >= 0 ? hoveredIndex : selectedIndex
-    readonly property bool hasActivePoint: points && activeIndex >= 0 && activeIndex < points.length
+    readonly property int pointCount: points && typeof points.length === "number" ? points.length : 0
+    readonly property bool hasActivePoint: activeIndex >= 0 && activeIndex < pointCount
     readonly property var valueDomain: ChartScale.domain(points)
     readonly property real lineMarkerInset: 3.5
 
@@ -49,23 +50,23 @@ ColumnLayout {
     }
 
     function indexAt(positionX) {
-        if (!points || points.length === 0 || plot.width <= 0) {
+        if (pointCount === 0 || plot.width <= 0) {
             return -1
         }
-        if (kind === "line" && points.length > 1) {
+        if (kind === "line" && pointCount > 1) {
             return chart.applet.chartLineIndexAt(
-                plot.width, points.length, positionX, chart.lineMarkerInset)
+                plot.width, pointCount, positionX, chart.lineMarkerInset)
         }
-        return Math.max(0, Math.min(points.length - 1,
-            Math.floor(positionX * points.length / plot.width)))
+        return Math.max(0, Math.min(pointCount - 1,
+            Math.floor(positionX * pointCount / plot.width)))
     }
 
     function moveSelection(delta) {
-        if (!points || points.length === 0) {
+        if (pointCount === 0) {
             return
         }
-        var next = selectedIndex >= 0 ? selectedIndex + delta : (delta < 0 ? points.length - 1 : 0)
-        selectedIndex = Math.max(0, Math.min(points.length - 1, next))
+        var next = selectedIndex >= 0 ? selectedIndex + delta : (delta < 0 ? pointCount - 1 : 0)
+        selectedIndex = Math.max(0, Math.min(pointCount - 1, next))
         plot.requestPaint()
     }
 
@@ -112,11 +113,11 @@ ColumnLayout {
         Connections {
             target: chart
             function onPointsChanged() {
-                if (chart.selectedIndex >= chart.points.length) {
-                    chart.selectedIndex = chart.points.length - 1
+                if (chart.selectedIndex >= chart.pointCount) {
+                    chart.selectedIndex = chart.pointCount - 1
                 }
-                if (chart.hoveredIndex >= chart.points.length) {
-                    chart.hoveredIndex = chart.points.length - 1
+                if (chart.hoveredIndex >= chart.pointCount) {
+                    chart.hoveredIndex = chart.pointCount - 1
                 }
                 plot.requestPaint()
             }
@@ -138,11 +139,11 @@ ColumnLayout {
                 event.accepted = true
                 break
             case Qt.Key_Home:
-                chart.selectedIndex = chart.points && chart.points.length > 0 ? 0 : -1
+                chart.selectedIndex = chart.pointCount > 0 ? 0 : -1
                 event.accepted = true
                 break
             case Qt.Key_End:
-                chart.selectedIndex = chart.points ? chart.points.length - 1 : -1
+                chart.selectedIndex = chart.pointCount - 1
                 event.accepted = true
                 break
             default:
@@ -154,7 +155,7 @@ ColumnLayout {
         onPaint: {
             var context = getContext("2d")
             context.clearRect(0, 0, width, height)
-            if (width <= 0 || height <= 0 || !chart.points) {
+            if (width <= 0 || height <= 0 || chart.pointCount === 0) {
                 return
             }
 
@@ -165,7 +166,7 @@ ColumnLayout {
             }
             context.fillStyle = chart.applet.canvasColor(Kirigami.Theme.textColor, 0.12)
             context.fillRect(0, baseline, width, 1)
-            if (chart.points.length === 0 || chart.valueDomain.minimum === chart.valueDomain.maximum) {
+            if (chart.pointCount === 0 || chart.valueDomain.minimum === chart.valueDomain.maximum) {
                 return
             }
 
@@ -176,9 +177,9 @@ ColumnLayout {
                 context.lineCap = "round"
                 context.lineJoin = "round"
                 context.beginPath()
-                for (var lineIndex = 0; lineIndex < chart.points.length; lineIndex++) {
+                for (var lineIndex = 0; lineIndex < chart.pointCount; lineIndex++) {
                     var lineX = chart.applet.chartLineX(
-                        width, chart.points.length, lineIndex, chart.lineMarkerInset)
+                        width, chart.pointCount, lineIndex, chart.lineMarkerInset)
                     var lineY = chart.applet.chartLineY(height,
                         chart.chartFraction(chart.pointValue(chart.points[lineIndex])), chart.lineMarkerInset)
                     if (lineIndex === 0) {
@@ -188,9 +189,9 @@ ColumnLayout {
                     }
                 }
                 context.stroke()
-                for (var dotIndex = 0; dotIndex < chart.points.length; dotIndex++) {
+                for (var dotIndex = 0; dotIndex < chart.pointCount; dotIndex++) {
                     var dotX = chart.applet.chartLineX(
-                        width, chart.points.length, dotIndex, chart.lineMarkerInset)
+                        width, chart.pointCount, dotIndex, chart.lineMarkerInset)
                     var dotY = chart.applet.chartLineY(height,
                         chart.chartFraction(chart.pointValue(chart.points[dotIndex])), chart.lineMarkerInset)
                     context.beginPath()
@@ -202,10 +203,10 @@ ColumnLayout {
                 return
             }
 
-            var geometry = chart.applet.chartBarGeometry(width, chart.points.length)
+            var geometry = chart.applet.chartBarGeometry(width, chart.pointCount)
             var normalFill = chart.applet.buildChartBarGradient(context, chart.accent, baseline, 0.78, 0.36)
             var activeFill = chart.applet.buildChartBarGradient(context, chart.accent, baseline, 1, 0.7)
-            for (var barIndex = 0; barIndex < chart.points.length; barIndex++) {
+            for (var barIndex = 0; barIndex < chart.pointCount; barIndex++) {
                 var bar = ChartScale.barGeometry(height,
                     chart.pointValue(chart.points[barIndex]), chart.valueDomain)
                 context.save()
@@ -241,12 +242,12 @@ ColumnLayout {
     }
 
     RowLayout {
-        visible: chart.points && chart.points.length > 0
+        visible: chart.pointCount > 0
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
 
         PlainPlasmaLabel {
-            text: chart.points && chart.points.length > 0 ? chart.pointLabel(chart.points[0]) : ""
+            text: chart.pointCount > 0 ? chart.pointLabel(chart.points[0]) : ""
             opacity: chart.applet.secondaryTextOpacity
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             Layout.fillWidth: true
@@ -254,7 +255,7 @@ ColumnLayout {
         }
 
         PlainPlasmaLabel {
-            text: chart.points && chart.points.length > 1 ? chart.pointLabel(chart.points[chart.points.length - 1]) : ""
+            text: chart.pointCount > 1 ? chart.pointLabel(chart.points[chart.pointCount - 1]) : ""
             opacity: chart.applet.secondaryTextOpacity
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             horizontalAlignment: Text.AlignRight
