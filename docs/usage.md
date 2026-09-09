@@ -72,7 +72,9 @@ shows **Last known usage** with the age of its measurement in the popup and pane
 tooltip; its panel icon and capsules are dimmed. Errors remain visible. A partial
 refresh updates healthy providers independently, and a successful refresh removes
 the retained-data indication. Retained data never generates quota, pace, reset,
-or status notifications, and its run-out forecasts are suppressed. Failed
+or status notifications, and its run-out forecasts are suppressed. If a failed
+quota response includes newly fetched service status, that status still updates
+and can trigger incident notifications independently of the retained quotas. Failed
 refreshes stop reusing measurements older than 24 hours. The existing minute
 timer also removes expired retained data when automatic refresh is disabled;
 the error remains visible and healthy providers are unaffected.

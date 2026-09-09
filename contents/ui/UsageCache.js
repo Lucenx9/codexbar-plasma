@@ -18,6 +18,17 @@ function hasQuota(item) {
     })
 }
 
+function withCurrentStatus(snapshot, source) {
+    var next = Guards.copyObject(snapshot)
+    next.statusKnown = source ? source.statusKnown === true : false
+    if (next.statusKnown) {
+        ["status", "statusSeverity", "statusIncidentKey", "hasIncident", "statusUrl"].forEach(function(key) {
+            next[key] = source[key]
+        })
+    }
+    return next
+}
+
 // Inputs are normalized live snapshots. A successful empty usage result replaces
 // old quotas; only an explicit failure may reuse them in the same account scope.
 function reconcile(previous, incoming, nowMs) {
@@ -28,7 +39,7 @@ function reconcile(previous, incoming, nowMs) {
         var old = byProvider[item.provider]
         if (item.error.length > 0 && hasQuota(old) && recent(old.lastGoodAtMs, nowMs)
                 && (!item.account || item.account === old.account)) {
-            next = Guards.copyObject(old)
+            next = withCurrentStatus(old, item)
             next.error = item.error
             next.usageStale = true
             // Forecasts are live estimates. Retained measurements cannot support

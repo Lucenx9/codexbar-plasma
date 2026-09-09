@@ -877,8 +877,29 @@ Item {
                 "retained usage is eligible for notifications");
             verifyScenario(applet.panelToolTipText().indexOf("Last known usage") >= 0,
                 "panel tooltip presents retained usage as current");
+            var statusFailure = applet.providerErrorPayload("codex", "Synthetic account failure");
+            statusFailure.status = {indicator: "major", incidentId: "synthetic-incident", description: "Synthetic outage"};
+            applet.setNotificationProviderRefreshPending("codex", true);
+            applet.commitUsageSnapshot([applet.normalizeProvider(statusFailure), previous[1]]);
+            var statusObservation = applet.notificationObservations()[0];
+            verifyScenario(applet.providers[0].usageStale && applet.providers[0].rows.length === 2
+                && applet.providers[0].hasIncident && statusObservation.statusKnown
+                && statusObservation.statusActive && !statusObservation.pending && statusObservation.rows.length === 0,
+                "retained quotas hid a fresh incident or supplied stale notification evidence");
+            statusFailure.status = {indicator: "none", description: "Operational"};
+            applet.commitUsageSnapshot([applet.normalizeProvider(statusFailure), previous[1]]);
+            statusObservation = applet.notificationObservations()[0];
+            verifyScenario(applet.providers[0].usageStale && !applet.providers[0].hasIncident
+                && statusObservation.statusKnown && !statusObservation.statusActive && !statusObservation.pending,
+                "a fresh incident resolution was lost during quota failure");
+            applet.expireStaleUsage(measuredAt + 24 * 60 * 60 * 1000 + 1);
+            verifyScenario(applet.providers[0].rows.length === 0 && applet.providers[0].statusKnown
+                && applet.providers[0].status === "Operational", "quota expiry erased fresh service status");
+            applet.commitUsageSnapshot(previous);
             applet.parseOutput("null", "");
             verifyScenario(applet.providers[0].rows.length === 2, "invalid envelope erased quotas");
+            verifyScenario(applet.notificationObservations().every(function(item) { return item.pending; }),
+                "retained service status was promoted to a fresh observation");
             var sourceName = applet.commandWithRunNonce("synthetic timeout");
             var descriptor = applet.buildCommandDescriptor("providerConfig", "");
             var descriptors = {};

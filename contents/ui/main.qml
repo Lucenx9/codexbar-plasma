@@ -758,8 +758,8 @@ PlasmoidItem {
         }
         providers = providers.map(function(item) {
             return expired.indexOf(item.provider) < 0 ? item
-                : root.normalizeProvider(root.providerErrorPayload(item.provider,
-                    item.error || i18n("Cached usage has expired. Refresh to try again.")))
+                : UsageCache.withCurrentStatus(root.normalizeProvider(root.providerErrorPayload(item.provider,
+                    item.error || i18n("Cached usage has expired. Refresh to try again."))), item)
         })
         if (!providers.some(function(item) { return item.usageStale === true })) {
             lastUpdatedText = ""
@@ -2611,7 +2611,7 @@ PlasmoidItem {
         var nextPending = copyObject(notificationRefreshPending)
         for (var i = 0; i < items.length; i++) {
             var item = items[i]
-            if (!item || item.usageStale === true) {
+            if (!item || (item.usageStale === true && item.statusKnown !== true)) {
                 continue
             }
             var providerID = providerMapKey(item.provider)
@@ -2714,6 +2714,9 @@ PlasmoidItem {
     // and the rows to display. The pure planner receives only semantic
     // observations and returns ordered intents; it never sees i18n or effects.
     function notificationObservationRows(item) {
+        if (item && item.usageStale === true) {
+            return []
+        }
         var sourceRows = item && Array.isArray(item.rows) ? item.rows : []
         var result = []
         for (var i = 0; i < sourceRows.length; i++) {
@@ -2745,7 +2748,8 @@ PlasmoidItem {
                 providerID: providerMapKey(item.provider),
                 scopeID: notificationScopeKey(item),
                 pending: NotificationPlanner.observationPending(
-                    item.usageStale === true || notificationProviderRefreshPending(item.provider),
+                    (item.usageStale === true && item.statusKnown !== true)
+                        || notificationProviderRefreshPending(item.provider),
                     String(item.error || "").length > 0,
                     item.statusKnown === true,
                     rows.length),

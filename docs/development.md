@@ -69,6 +69,10 @@ The first configuration-checksum callback also saves any successful usage that
 arrived before it, so startup persistence does not depend on a later refresh.
 The restarted fixture delays CLI responses beyond the runner's maximum allowed
 scenario duration, proving that the second process displays persisted quotas.
+Quota freshness and service-status evidence are independent: retained rows never
+reach the notification planner, while a status record from the current response
+still can. Retaining or expiring quotas must preserve that current status; a
+later response without status marks the retained incident as unknown to the planner.
 
 Before changing behavior, identify its owning QML page, config entry, CLI input,
 external effects, and cheapest behavioral test. Read the existing implementation

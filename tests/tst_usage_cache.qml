@@ -112,6 +112,38 @@ TestCase {
         compare(result[0].rows[0].usedPercent, 72);
     }
 
+    function test_freshStatusSurvivesQuotaFailureAndExpiry() {
+        var previous = fresh();
+        var incoming = Object.assign(failed("codex"), {
+            statusKnown: true, status: "New outage", statusSeverity: "major",
+            statusIncidentKey: "incident-2", hasIncident: true,
+            statusUrl: "https://status.openai.com/"
+        });
+        var retained = Cache.reconcile(previous, [incoming], nowMs)[0];
+        verify(retained.usageStale && retained.statusKnown && retained.hasIncident);
+        compare(retained.rows[0].usedPercent, 72);
+        compare(retained.status, incoming.status);
+        compare(retained.statusSeverity, incoming.statusSeverity);
+        compare(retained.statusIncidentKey, incoming.statusIncidentKey);
+        compare(retained.statusUrl, incoming.statusUrl);
+        compare(previous[0].status, "Private incident");
+        var unavailable = Cache.reconcile([retained], [failed("codex")], nowMs)[0];
+        verify(!unavailable.statusKnown);
+        compare(unavailable.status, retained.status);
+        var expired = Cache.withCurrentStatus(failed("codex"), retained);
+        verify(expired.statusKnown && expired.hasIncident);
+        compare(expired.rows.length, 0);
+        incoming.hasIncident = false;
+        incoming.statusSeverity = "";
+        incoming.statusIncidentKey = "";
+        incoming.status = "Operational";
+        var recovered = Cache.reconcile([unavailable], [incoming], nowMs)[0];
+        verify(recovered.usageStale && recovered.statusKnown && !recovered.hasIncident);
+        compare(recovered.status, "Operational");
+        compare(recovered.statusSeverity, "");
+        compare(recovered.statusIncidentKey, "");
+    }
+
     function test_redactedRoundTripAndContextIsolation() {
         var encoded = Cache.encode(fresh(), context, nowMs);
         for (var secret of ["secret@", "Sensitive", "Private", "Bearer", "/private", "credits", "account"])
