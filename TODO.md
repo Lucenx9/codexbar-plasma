@@ -164,7 +164,8 @@ These are unresolved Linux candidates, not confirmed missing features.
 
 The [usage guide](docs/usage.md) describes implemented Plasma behavior, including
 panel composition with automatic dual-quota capsules and vertical provider meters,
-settings preview/privacy, local sessions, notifications, and
+settings preview/privacy, grouped panel text and expandable Panel options, local
+sessions, notifications, and
 interactive cost/token charts. Claude 0.57.0 `--breakdown` is text-only; existing
 JSON daily/model views already consume its underlying data.
 

@@ -17,8 +17,18 @@ Rectangle {
     readonly property bool hasUsage: usageRow && usageRow.hasPercent
     readonly property real shownPercent: hasUsage ? applet.displayPercent(usageRow) : -1
     readonly property string resetText: usageRow ? applet.resetLabel(applet.usageResetText(usageRow)) : ""
-    readonly property string detail: providerData.usageStale === true
-        ? applet.lastGoodUsageText(providerData) : applet.overviewDetailText(providerData)
+    readonly property string detail: {
+        var primary = applet.overviewDetailText(providerData)
+        if (providerData.usageStale !== true) {
+            return primary
+        }
+        var lastKnown = applet.lastGoodUsageText(providerData)
+        // A stale row must keep its account/status context; the freshness
+        // note augments the detail instead of replacing it.
+        return primary.length > 0 && lastKnown.length > 0
+            ? i18n("%1 - %2", primary, lastKnown)
+            : (lastKnown.length > 0 ? lastKnown : primary)
+    }
     readonly property bool keyboardFocusVisible: overviewRowFocus.visualFocus
 
     signal selected(var providerData)
