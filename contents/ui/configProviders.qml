@@ -71,6 +71,12 @@ KCM.SimpleKCM {
     readonly property int configCommandTimeoutMs: 60000
     readonly property int configSecretCommandTimeoutSeconds: 60
     readonly property int configSecretCommandKillAfterSeconds: 5
+    // An interactive prompt must not die while the user types, so it does not
+    // share the noninteractive deadline. A wedged kdialog would otherwise keep
+    // the provider's actions disabled until the page reopens, so the prompt
+    // still gets one long escape-hatch deadline. The bounded post-prompt CLI
+    // phase below applies once input closes.
+    readonly property int configSecretPromptTimeoutMs: 900000
     // Mirrors the popup de-emphasis step in main.qml. 0.7 is the lowest value
     // where Kirigami.Theme.textColor still clears WCAG AA 4.5:1 on Breeze Light.
     readonly property real secondaryTextOpacity: 0.7
@@ -224,7 +230,11 @@ KCM.SimpleKCM {
             shellQuote(configSecretCommandTimeoutSeconds),
             shellQuote(configSecretCommandKillAfterSeconds)
         ].join(" ")
-        runCommand(command, { kind: "setApiKey", provider: providerID })
+        runCommand(command, {
+            kind: "setApiKey",
+            provider: providerID,
+            timeoutMs: configSecretPromptTimeoutMs
+        })
     }
 
     function loadProviderSettings(providerID) {
@@ -317,6 +327,9 @@ KCM.SimpleKCM {
             setProviderDiagnosticLoading(descriptor.provider, false)
             setProviderDiagnosticError(descriptor.provider, i18n("Loading provider diagnostics timed out. Try again."))
         } else if (descriptor.kind === "toggle") {
+            markPending(descriptor.provider, false)
+            errorText = i18n("%1 command timed out. Try again.", displayNameForProvider(descriptor.provider))
+        } else if (descriptor.kind === "setApiKey") {
             markPending(descriptor.provider, false)
             errorText = i18n("%1 command timed out. Try again.", displayNameForProvider(descriptor.provider))
         } else if (descriptor.kind === "descriptorField" || descriptor.kind === "descriptorAction") {
@@ -955,7 +968,12 @@ KCM.SimpleKCM {
             "printf '%s' \"$value\" | " + boundedCommandLine
         ].join("; ")
         var command = ["sh", "-c", shellQuote(script), "_", shellQuote(prompt)].join(" ")
-        runCommand(command, { kind: "descriptorField", provider: providerID, fieldID: field.id })
+        runCommand(command, {
+            kind: "descriptorField",
+            provider: providerID,
+            fieldID: field.id,
+            timeoutMs: configSecretPromptTimeoutMs
+        })
     }
 
     function runDescriptorAction(providerID, action) {

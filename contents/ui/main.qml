@@ -120,6 +120,10 @@ PlasmoidItem {
     property string commandSource: buildCommand()
     property string providerConfigCommandSource: buildProviderConfigCommand()
     property string providerConfigWatchCommand: buildProviderConfigWatchCommand()
+    // The watch poll this instance currently follows. A reply under any other
+    // source name belongs to a retired command and must be disconnected, not
+    // left running on every interval tick.
+    property string connectedProviderConfigWatchCommand: ""
     property string providerConfigStamp: ""
     property var providerRosterCache: null
     property bool usageRefreshScheduled: false
@@ -206,6 +210,7 @@ PlasmoidItem {
 
     onUsageIdentityContextChanged: invalidateUsageData()
     onCommandSourceChanged: scheduleUsageRefresh()
+    onProviderConfigWatchCommandChanged: reconnectProviderConfigWatcher()
     onProviderOrderRawChanged: providers = ProviderOrder.orderedItems(
         providers, providerOrderRaw)
     onProviderConfigCommandSourceChanged: {
@@ -279,9 +284,7 @@ PlasmoidItem {
     Component.onCompleted: {
         usageLifecycleInitialized = true
         costLifecycleInitialized = true
-        if (providerConfigWatchCommand.length > 0) {
-            providerConfigWatcher.connectSource(providerConfigWatchCommand)
-        }
+        reconnectProviderConfigWatcher()
         refreshNow(false)
         refreshCost(false)
     }
@@ -777,6 +780,17 @@ PlasmoidItem {
         providerFallbackState = null
     }
 
+    function reconnectProviderConfigWatcher() {
+        if (connectedProviderConfigWatchCommand.length > 0
+                && connectedProviderConfigWatchCommand !== providerConfigWatchCommand) {
+            providerConfigWatcher.disconnectSource(connectedProviderConfigWatchCommand)
+        }
+        if (providerConfigWatchCommand.length > 0) {
+            providerConfigWatcher.connectSource(providerConfigWatchCommand)
+        }
+        connectedProviderConfigWatchCommand = providerConfigWatchCommand
+    }
+
     function handleProviderConfigWatch(stdoutText) {
         var stamp = stdoutText.trim()
         if (stamp.length === 0) {
@@ -1052,6 +1066,14 @@ PlasmoidItem {
         }
     }
 
+    function completeProviderFallbackSlot(sourceName, item) {
+        var transition = ProviderFallbackQueue.complete(providerFallbackState, {
+            sourceName: sourceName,
+            item: item
+        })
+        applyProviderFallbackTransition(transition)
+    }
+
     function parseProviderFallbackOutput(sourceName, providerID, stdoutText, stderrText) {
         providerID = normalizedProviderID(providerID)
         if (providerID.length === 0) {
@@ -1060,51 +1082,57 @@ PlasmoidItem {
         }
         finishUsageCommandSource(sourceName)
 
-        var normalizedItems = []
-        var trimmed = stdoutText.trim()
-        if (trimmed.length === 0) {
-            normalizedItems.push(normalizeProvider(providerErrorPayload(
-                providerID,
-                stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("codexbar did not return JSON."))))
-        } else {
-            var payload
-            var parsedWithoutRecords = false
-            try {
-                payload = JSON.parse(trimmed)
-                var items = Array.isArray(payload) ? payload : [payload]
-                var itemLimit = Math.min(items.length, maximumAccountSnapshots)
-                for (var i = 0; i < itemLimit; i++) {
-                    if (!isCliRecord(items[i])) {
-                        continue
+        // The ledger entry is closed above, so an unexpected parse failure
+        // would strand a fallback queue slot until the whole run retires.
+        // Every path below must end in a queue completion.
+        try {
+            var normalizedItems = []
+            var trimmed = stdoutText.trim()
+            if (trimmed.length === 0) {
+                normalizedItems.push(normalizeProvider(providerErrorPayload(
+                    providerID,
+                    stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("codexbar did not return JSON."))))
+            } else {
+                var payload
+                var parsedWithoutRecords = false
+                try {
+                    payload = JSON.parse(trimmed)
+                    var items = Array.isArray(payload) ? payload : [payload]
+                    var itemLimit = Math.min(items.length, maximumAccountSnapshots)
+                    for (var i = 0; i < itemLimit; i++) {
+                        if (!isCliRecord(items[i])) {
+                            continue
+                        }
+                        var providerItem = copyObject(items[i])
+                        // A provider-scoped command may only update the requested
+                        // provider, even if a malformed CLI payload claims another id.
+                        providerItem.provider = providerID
+                        normalizedItems.push(normalizeProvider(providerItem))
                     }
-                    var providerItem = copyObject(items[i])
-                    // A provider-scoped command may only update the requested
-                    // provider, even if a malformed CLI payload claims another id.
-                    providerItem.provider = providerID
-                    normalizedItems.push(normalizeProvider(providerItem))
+                    parsedWithoutRecords = normalizedItems.length === 0
+                } catch (error) {
+                    normalizedItems.push(normalizeProvider(providerErrorPayload(
+                        providerID,
+                        i18n("Could not parse codexbar JSON: %1", error.message))))
                 }
-                parsedWithoutRecords = normalizedItems.length === 0
-            } catch (error) {
-                normalizedItems.push(normalizeProvider(providerErrorPayload(
-                    providerID,
-                    i18n("Could not parse codexbar JSON: %1", error.message))))
+                if (parsedWithoutRecords) {
+                    // Valid JSON without CLI records (null, [], scalars) must
+                    // degrade to a scoped error row: a null item would silently
+                    // drop this provider from the roster while others stay healthy.
+                    normalizedItems.push(normalizeProvider(providerErrorPayload(
+                        providerID,
+                        i18n("codexbar did not return provider data."))))
+                }
             }
-            if (parsedWithoutRecords) {
-                // Valid JSON without CLI records (null, [], scalars) must
-                // degrade to a scoped error row: a null item would silently
-                // drop this provider from the roster while others stay healthy.
-                normalizedItems.push(normalizeProvider(providerErrorPayload(
-                    providerID,
-                    i18n("codexbar did not return provider data."))))
-            }
-        }
 
-        var semanticItems = Normalizer.dedupeProviderSnapshots(normalizedItems)
-        var transition = ProviderFallbackQueue.complete(providerFallbackState, {
-            sourceName: sourceName,
-            item: semanticItems.length > 0 ? semanticItems[0] : null
-        })
-        applyProviderFallbackTransition(transition)
+            var semanticItems = Normalizer.dedupeProviderSnapshots(normalizedItems)
+            completeProviderFallbackSlot(sourceName,
+                semanticItems.length > 0 ? semanticItems[0] : null)
+        } catch (error) {
+            completeProviderFallbackSlot(sourceName, normalizeProvider(providerErrorPayload(
+                providerID,
+                i18n("Could not parse codexbar JSON: %1", error.message))))
+        }
     }
 
     function finishProviderFallback(orderedItems) {
@@ -1257,51 +1285,52 @@ PlasmoidItem {
             return
         }
 
-        var payload
+        // The ledger entry is already closed, so an unexpected failure here
+        // must still release the account lane instead of leaving it loading
+        // until the page reopens.
         try {
-            payload = JSON.parse(trimmed)
+            var payload = JSON.parse(trimmed)
+
+            var items = Array.isArray(payload) ? payload : [payload]
+            var options = []
+            var message = ""
+            var sawMissingTokenAccountsError = false
+            var itemLimit = Math.min(items.length, maximumAccountSnapshots)
+            for (var i = 0; i < itemLimit; i++) {
+                var item = items[i]
+                if (!isCliRecord(item)) {
+                    continue
+                }
+                var accountItem = copyObject(item)
+                accountItem.provider = providerID
+                var normalized = normalizeProvider(accountItem)
+                if (normalized.error.length > 0 && accountLabel(normalized).length === 0) {
+                    if (Normalizer.isMissingTokenAccountsError(normalized.error)) {
+                        sawMissingTokenAccountsError = true
+                    } else {
+                        message = normalized.error
+                    }
+                    continue
+                }
+                options.push(normalized)
+            }
+
+            var dedupedOptions = Normalizer.dedupeAccountOptions(options)
+            var accountError = ""
+            if (dedupedOptions.length === 0) {
+                if (message.length > 0) {
+                    accountError = message
+                } else if (items.length > 0 && !sawMissingTokenAccountsError) {
+                    accountError = i18n("codexbar did not return account data.")
+                }
+            }
+            if (accountError.length === 0) {
+                setAccountOptions(providerID, dedupedOptions)
+            }
+            setAccountError(providerID, accountError)
         } catch (error) {
             setAccountError(providerID, i18n("Could not parse codexbar account JSON: %1", error.message))
-            return
         }
-
-        var items = Array.isArray(payload) ? payload : [payload]
-        var options = []
-        var message = ""
-        var sawMissingTokenAccountsError = false
-        var itemLimit = Math.min(items.length, maximumAccountSnapshots)
-        for (var i = 0; i < itemLimit; i++) {
-            var item = items[i]
-            if (!isCliRecord(item)) {
-                continue
-            }
-            var accountItem = copyObject(item)
-            accountItem.provider = providerID
-            var normalized = normalizeProvider(accountItem)
-            if (normalized.error.length > 0 && accountLabel(normalized).length === 0) {
-                if (Normalizer.isMissingTokenAccountsError(normalized.error)) {
-                    sawMissingTokenAccountsError = true
-                } else {
-                    message = normalized.error
-                }
-                continue
-            }
-            options.push(normalized)
-        }
-
-        var dedupedOptions = Normalizer.dedupeAccountOptions(options)
-        var accountError = ""
-        if (dedupedOptions.length === 0) {
-            if (message.length > 0) {
-                accountError = message
-            } else if (items.length > 0 && !sawMissingTokenAccountsError) {
-                accountError = i18n("codexbar did not return account data.")
-            }
-        }
-        if (accountError.length === 0) {
-            setAccountOptions(providerID, dedupedOptions)
-        }
-        setAccountError(providerID, accountError)
     }
 
     function parseCostOutput(stdoutText, stderrText, requestedHistoryDays) {
@@ -3986,7 +4015,8 @@ PlasmoidItem {
         interval: root.providerConfigWatchIntervalMs
 
         onNewData: function(sourceName, data) {
-            if (sourceName !== root.providerConfigWatchCommand) {
+            if (sourceName !== root.connectedProviderConfigWatchCommand) {
+                providerConfigWatcher.disconnectSource(sourceName)
                 return
             }
             var stdoutText = data && data["stdout"] ? data["stdout"] : ""

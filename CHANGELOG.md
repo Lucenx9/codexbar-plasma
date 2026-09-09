@@ -12,6 +12,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Recover provider actions when a secret prompt stops responding: a long
+  escape-hatch deadline now clears the stuck pending state instead of leaving
+  the provider disabled until the settings page reopens.
+- Complete provider fallback slots and account refreshes even when a malformed
+  reply fails late, instead of stalling that work until the next full refresh.
 - Keep the provider cost metric picker in sync with the shared cost and token
   history selection after picking an entry.
 - Keep the Panel settings preview visible while scrolling through content,
