@@ -141,6 +141,25 @@ TestCase {
         compare(CommandLedger.hasKind(({}), "cost"), false)
     }
 
+    function test_hasKindIgnoresInheritedAndEmptyDescriptors() {
+        var commands = Object.create({ inherited: entry("cost", "", 10) })
+        commands.empty = null
+        commands.usage = entry("usage", "", 10)
+        compare(CommandLedger.hasKind(commands, "cost"), false)
+        compare(CommandLedger.hasKind(commands, "usage"), true)
+
+        commands.cost = entry("cost", "", 20)
+        compare(CommandLedger.hasKind(commands, "cost"), true)
+    }
+
+    function test_hasKindPreservesExactKindMatching() {
+        var commands = { numeric: { kind: 42 }, missing: {} }
+        compare(CommandLedger.hasKind(commands, "42"), true)
+        compare(CommandLedger.hasKind(commands, 42), false)
+        compare(CommandLedger.hasKind(commands, ""), true)
+        compare(CommandLedger.hasKind(commands, undefined), false)
+    }
+
     function test_hasAnyKindCanIgnoreIndependentCostWork() {
         var refreshKinds = ["usage", "providerConfig", "sessions", "providerFallback"]
         var commands = CommandLedger.opened(({}), "cost", entry("cost", "", 10))

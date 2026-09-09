@@ -115,7 +115,16 @@ function sourcesOfKind(commands, kind) {
 }
 
 function hasKind(commands, kind) {
-    return sourcesOfKind(commands, kind).length > 0
+    for (var sourceName in commands) {
+        if (!hasOwnKey(commands, sourceName)) {
+            continue
+        }
+        var entry = commands[sourceName]
+        if (entry && String(entry.kind || "") === kind) {
+            return true
+        }
+    }
+    return false
 }
 
 function hasAnyKind(commands, kinds) {
