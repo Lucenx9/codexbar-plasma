@@ -67,12 +67,18 @@ Persistence uses Plasma's existing configuration mapping; the restart smoke test
 allows its deferred save to complete before starting the second process.
 The first configuration-checksum callback also saves any successful usage that
 arrived before it, so startup persistence does not depend on a later refresh.
+It merges normalized cached providers missing from that early response through
+`UsageCache.restore`, preserving live results and marking only restored quotas
+as stale. A completed early refresh keeps its update label when no stale quotas
+remain.
 The restarted fixture delays CLI responses beyond the runner's maximum allowed
 scenario duration, proving that the second process displays persisted quotas.
 Quota freshness and service-status evidence are independent: retained rows never
 reach the notification planner, while a status record from the current response
 still can. Retaining or expiring quotas must preserve that current status; a
 later response without status marks the retained incident as unknown to the planner.
+Incident selection, tooltips, and provider badges/banners also exclude unknown
+status instead of presenting a retained outage as current.
 
 Before changing behavior, identify its owning QML page, config entry, CLI input,
 external effects, and cheapest behavioral test. Read the existing implementation

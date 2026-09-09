@@ -48,6 +48,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Restored cached provider quotas are retained across partial early refreshes
+  during startup, preventing premature eviction of unrefreshed providers.
+- Primary incident selection, tooltips, and status banners ignore providers with
+  unknown or inactive status, preventing stale outages from masking active incidents.
 - Successful responses without measured quotas keep valid credits and details
   even when their supplemental timestamp is older than the quota-cache limit.
   They no longer show a last-known banner or turn into cache-expired errors.

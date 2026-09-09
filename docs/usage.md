@@ -95,6 +95,9 @@ The widget automatically saves a small quota cache in its Plasma configuration.
 After a restart it verifies the CLI configuration fingerprint before restoring
 the cache, then refreshes in the background. Restored quotas are always marked
 last known, even if they were saved recently. A cache is not a successful refresh.
+If a partial refresh finishes before that verification, its results take
+precedence for the providers it returned. Other cached providers are restored
+as last known and included when the merged snapshot is saved.
 
 The disk cache is limited to 64 KiB of UTF-8 on both save and restore. It holds
 at most 64 providers and only their primary, secondary,
@@ -180,6 +183,10 @@ fields; track proposed extensions in the issue tracker.
 ## Status and notifications
 
 - Provider status incident badge in the panel and provider detail view.
+  Incident selection, badges, banners, and tooltips ignore a provider whose
+  current status is unknown or has no active incident. When a refresh omits
+  status, a previously retained outage is hidden; this is not evidence of
+  recovery. Current status can still report an incident when quota fetching fails.
 - Optional quota warning markers on usage bars.
 - Optional Plasma notifications for provider status incidents, configurable
   quota crossings, predicted quota exhaustion from CLI pace data, and when a

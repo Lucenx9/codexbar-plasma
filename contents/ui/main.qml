@@ -698,19 +698,7 @@ PlasmoidItem {
             return
         }
         var nowMs = Date.now()
-        // Usage can finish before the first checksum. Save those successful
-        // results now, including when no usable cache existed at startup.
-        if (providers.length > 0 && providers.every(function(item) {
-                return item.usageStale !== true && item.error.length === 0
-            })) {
-            Plasmoid.configuration.usageCache = UsageCache.encode(providers, context, nowMs)
-            return
-        }
         var restored = UsageCache.decode(Plasmoid.configuration.usageCache, context, nowMs)
-        if (restored.length === 0) {
-            Plasmoid.configuration.usageCache = UsageCache.encode(providers, context, nowMs)
-            return
-        }
         var cachedProviders = restored.map(function(payload) {
             var item = root.normalizeProvider(payload)
             item.lastGoodAtMs = Date.parse(payload.usage.updatedAt)
@@ -718,11 +706,16 @@ PlasmoidItem {
             item.tokenCost = null
             return item
         })
-        providers = ProviderOrder.orderedItems(providers.length > 0
-            ? UsageCache.reconcile(cachedProviders, providers, nowMs) : cachedProviders, providerOrderRaw)
+        var merged = UsageCache.restore(cachedProviders, providers, nowMs)
+        if (merged.length === 0) {
+            Plasmoid.configuration.usageCache = UsageCache.encode(providers, context, nowMs)
+            return
+        }
+        providers = ProviderOrder.orderedItems(merged, providerOrderRaw)
         Plasmoid.configuration.usageCache = UsageCache.encode(providers, context, nowMs)
-        lastUpdatedText = providers.some(function(item) { return item.usageStale === true })
-            ? i18n("Showing last known usage") : ""
+        if (providers.some(function(item) { return item.usageStale === true })) {
+            lastUpdatedText = i18n("Showing last known usage")
+        }
     }
 
     function commitUsageSnapshot(items) {
@@ -2557,7 +2550,10 @@ PlasmoidItem {
         var bestRank = 0
         for (var i = 0; i < providers.length; i++) {
             var item = providers[i]
-            var rank = item && item.statusSeverity ? ranked[item.statusSeverity] || 0 : 0
+            if (!item || item.statusKnown === false || item.hasIncident !== true) {
+                continue
+            }
+            var rank = item.statusSeverity ? ranked[item.statusSeverity] || 0 : 0
             if (rank > bestRank) {
                 best = item
                 bestRank = rank
@@ -4059,7 +4055,7 @@ PlasmoidItem {
                 continue
             }
             // Keep incidents in the tooltip even when quota meters are available.
-            var incident = item.hasIncident && item.status.length > 0 ? item.status : ""
+            var incident = item.hasIncident && item.statusKnown !== false && item.status.length > 0 ? item.status : ""
             var description = panelMeterDescription(item)
             var line = ""
             if (description.length > 0) {
