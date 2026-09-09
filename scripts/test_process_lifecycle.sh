@@ -691,9 +691,35 @@ for function_name in ("setApiKey", "promptDescriptorSecret"):
             "timeout --kill-after",
             "configSecretCommandTimeoutSeconds",
             "configSecretCommandKillAfterSeconds",
+            "configSecretPromptDialogTimeoutSeconds",
+            "configSecretPromptDialogKillAfterSeconds",
         ),
-        f"interactive {function_name} must bound the post-prompt CLI phase",
+        f"interactive {function_name} must bound the dialog and the post-prompt CLI phase",
     )
+
+# The dialog process is a grandchild of the tracked source, so the ledger
+# deadline only kills the script shell and would orphan the dialog. Each prompt
+# must run kdialog under its own timeout just below the QML deadline.
+require_all(
+    providers.function_body("setApiKey"),
+    (
+        "timeout --kill-after=\\\"${7}s\\\" \\\"${6}s\\\" kdialog --password",
+        "shellQuote(configSecretPromptDialogTimeoutSeconds)",
+        "shellQuote(configSecretPromptDialogKillAfterSeconds)",
+    ),
+    "setApiKey must bound the kdialog phase below the ledger deadline",
+)
+require_ordered(
+    providers.function_body("promptDescriptorSecret"),
+    (
+        "var boundedDialogCommand = \"timeout --kill-after=\"",
+        "shellQuote(configSecretPromptDialogKillAfterSeconds + \"s\")",
+        "shellQuote(configSecretPromptDialogTimeoutSeconds + \"s\")",
+        "kdialog --password \\\"$1\\\"",
+        'value=$(" + boundedDialogCommand + ',
+    ),
+    "descriptor secret prompts must bound the dialog process below the ledger deadline",
+)
 
 if 'printf \'%s\' \\"$key\\" | timeout --kill-after=' not in providers.function_body("setApiKey"):
     raise AssertionError("setApiKey must pipe the secret to a bounded CLI process")

@@ -77,6 +77,12 @@ KCM.SimpleKCM {
     // still gets one long escape-hatch deadline. The bounded post-prompt CLI
     // phase below applies once input closes.
     readonly property int configSecretPromptTimeoutMs: 900000
+    // kdialog is a grandchild of the tracked source, so the ledger deadline
+    // only kills the script shell and would orphan the dialog. The dialog
+    // phase therefore runs under its own timeout, just under the deadline, so
+    // the script exits with a clean cancellation before the disconnect.
+    readonly property int configSecretPromptDialogTimeoutSeconds: 870
+    readonly property int configSecretPromptDialogKillAfterSeconds: 5
     // Mirrors the popup de-emphasis step in main.qml. 0.7 is the lowest value
     // where Kirigami.Theme.textColor still clears WCAG AA 4.5:1 on Breeze Light.
     readonly property real secondaryTextOpacity: 0.7
@@ -219,7 +225,7 @@ KCM.SimpleKCM {
         var script = [
             "if ! command -v kdialog >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"kdialog is required to prompt for API keys.\"}}'; exit 1; fi",
             "if ! command -v timeout >/dev/null 2>&1 || ! timeout --kill-after=1s 1s true >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"GNU timeout is required to save API keys safely.\"}}'; exit 1; fi",
-            "key=$(kdialog --password \"$1\" 2>/dev/null)",
+            "key=$(timeout --kill-after=\"${7}s\" \"${6}s\" kdialog --password \"$1\" 2>/dev/null)",
             "status=$?",
             "if [ \"$status\" -ne 0 ] || [ -z \"$key\" ]; then printf '%s\\n' '{\"cancelled\":true}'; exit 0; fi",
             "printf '%s' \"$key\" | timeout --kill-after=\"${5}s\" \"${4}s\" \"$2\" config set-api-key --provider \"$3\" --stdin --format json --json-only"
@@ -228,7 +234,9 @@ KCM.SimpleKCM {
             "sh", "-c", shellQuote(script), "_", shellQuote(prompt),
             shellQuote(commandPath), shellQuote(cliProviderID),
             shellQuote(configSecretCommandTimeoutSeconds),
-            shellQuote(configSecretCommandKillAfterSeconds)
+            shellQuote(configSecretCommandKillAfterSeconds),
+            shellQuote(configSecretPromptDialogTimeoutSeconds),
+            shellQuote(configSecretPromptDialogKillAfterSeconds)
         ].join(" ")
         runCommand(command, {
             kind: "setApiKey",
@@ -955,6 +963,10 @@ KCM.SimpleKCM {
         statusText = ""
         markFieldPending(providerID, field.id, true)
         var prompt = i18n("%1 for %2", field.title, displayNameForProvider(providerID))
+        var boundedDialogCommand = "timeout --kill-after="
+            + shellQuote(configSecretPromptDialogKillAfterSeconds + "s") + " "
+            + shellQuote(configSecretPromptDialogTimeoutSeconds + "s") + " "
+            + "kdialog --password \"$1\""
         var boundedCommandLine = "timeout --kill-after="
             + shellQuote(configSecretCommandKillAfterSeconds + "s") + " "
             + shellQuote(configSecretCommandTimeoutSeconds + "s") + " "
@@ -962,7 +974,7 @@ KCM.SimpleKCM {
         var script = [
             "if ! command -v kdialog >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"kdialog is required to prompt for secrets.\"}}'; exit 1; fi",
             "if ! command -v timeout >/dev/null 2>&1 || ! timeout --kill-after=1s 1s true >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"GNU timeout is required to save secrets safely.\"}}'; exit 1; fi",
-            "value=$(kdialog --password \"$1\" 2>/dev/null)",
+            "value=$(" + boundedDialogCommand + " 2>/dev/null)",
             "status=$?",
             "if [ \"$status\" -ne 0 ] || [ -z \"$value\" ]; then printf '%s\\n' '{\"cancelled\":true}'; exit 0; fi",
             "printf '%s' \"$value\" | " + boundedCommandLine

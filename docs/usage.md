@@ -131,7 +131,7 @@ Provider-specific editable settings depend on the official CLI contract.
 - Provider enable/disable and setup actions write CodexBar configuration
   immediately; Apply and Cancel cover widget settings only.
 - API key and secret prompts stay open while you type. A prompt left open for
-  15 minutes closes and reports a timeout; the provider's actions unlock and
+  about 15 minutes closes by itself, the provider's actions unlock again, and
   the prompt can be reopened.
 - Account discovery and selection through `codexbar usage --all-accounts`.
 - Provider docs, dashboards, login/account links, and redacted diagnostics.
