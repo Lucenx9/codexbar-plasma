@@ -12,6 +12,7 @@ SCENARIOS = ("normal", "tabs-overflow", "provider-settings", "provider-header", 
              "project-costs", "project-tokens", "project-range", "project-long-text",
              "localization-it", "localization-fr", "localization-de", "localization-es", "localization-pt_BR")
 SCENARIOS += ("settings-general", "settings-panel", "settings-panel-information", "settings-panel-advanced", "settings-panel-narrow", "settings-popup", "settings-notifications", "settings-diagnostics")
+SCENARIOS += ("settings-panel-scrolled",)
 SCENARIOS += ("readme-overview", "readme-spend", "readme-sessions", "readme-codex")
 SCENARIOS += ("readme-panel-standard", "readme-panel-minimal")
 SCENARIOS += ("panel-information", "panel-information-minimal", "panel-information-single")
@@ -23,6 +24,7 @@ SCENARIOS += ("popup-content", "refresh-on-open", "privacy-provider", "privacy-s
 SCENARIOS += ("privacy-cost-details",)
 SCENARIOS += ("usage-retention", "usage-cache-restart")
 MAX_SCENARIO_TIMEOUT_SECONDS = 120
+MATRIX_SCENARIOS = ("panel-matrix-one", "panel-matrix-three")
 
 
 def usage(provider, scenario, now):
@@ -45,6 +47,11 @@ def usage(provider, scenario, now):
                           "resetsAt": (now + timedelta(days=4)).isoformat()},
         },
     }
+    if scenario in MATRIX_SCENARIOS:
+        if provider == "codex":
+            snapshot["credits"] = {"remaining": 125}
+        snapshot["pace"] = {"primary": {"stage": "ahead", "deltaPercent": 13,
+            "expectedUsedPercent": 30, "willLastToReset": False, "etaSeconds": 3600}}
     if scenario.startswith("readme-"):
         snapshot["account"] = "team@example.com"
         snapshot["usage"]["primary"]["usedPercent"] = {"codex": 43, "claude": 68, "gemini": 24}[provider]
@@ -104,8 +111,8 @@ def response(args, scenario, now):
     if args == ["--version"]:
         return "CodexBar 0.56.2 (synthetic smoke fixture)"
     if args == ["config", "providers", "--format", "json", "--json-only"]:
-        providers = ("codex",) if scenario in ("panel-minimal-single", "panel-default-single", "panel-information-single") else ("codex", "claude")
-        if scenario.startswith("readme-"):
+        providers = ("codex",) if scenario in ("panel-minimal-single", "panel-default-single", "panel-information-single", "panel-matrix-one") else ("codex", "claude")
+        if scenario.startswith("readme-") or scenario == "panel-matrix-three":
             providers += ("gemini",)
         rows = [{"provider": key, "enabled": True} for key in providers]
         if scenario == "provider-settings":
@@ -184,7 +191,7 @@ def response(args, scenario, now):
         if scenario == "usage-retention":
             return [snapshot, {**snapshot, "provider": "claude"}]
         return [snapshot]
-    for provider in (("codex", "claude", "gemini") if scenario.startswith("readme-") else ("codex", "claude")):
+    for provider in (("codex", "claude", "gemini") if scenario.startswith("readme-") or scenario == "panel-matrix-three" else ("codex", "claude")):
         prefix = ["usage", "--provider", provider]
         if args == prefix + ["--format", "json", "--json-only"]:
             return [usage(provider, scenario, now)]
@@ -198,7 +205,7 @@ def response(args, scenario, now):
 
 def main():
     scenario = os.environ.get("CODEXBAR_SMOKE_SCENARIO")
-    if scenario not in SCENARIOS:
+    if scenario not in SCENARIOS + MATRIX_SCENARIOS:
         raise ValueError("SMOKE_FAILED: missing or unknown fixture scenario")
     result = response(sys.argv[1:], scenario, datetime.now(timezone.utc))
     if scenario == "loading" or (

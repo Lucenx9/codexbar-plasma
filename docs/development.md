@@ -360,6 +360,45 @@ and lints the capture QML.
 `make smoke` additionally requires the graphical environment and reports a
 failure rather than silently skipping when that environment is unavailable.
 
+## Panel configuration matrix
+
+Capture all 32 combinations of Standard/Minimal and the four content switches
+(provider name, usage text, credits, meters) with one and three providers in
+Breeze Light and Breeze Dark:
+
+```sh
+python3 scripts/panel_matrix.py --output dist/review/panel-matrix
+```
+
+Run it in a graphical Plasma session or prefix the command with `xvfb-run -a`.
+It requires the same tools as the popup smoke runner plus both Breeze color
+schemes. It always uses OpenGL so provider icon masks render their actual colors.
+The synthetic CLI, applet installation, configuration, and D-Bus session are
+isolated using the smoke runner. The installed widget and real credentials are
+not used. The temporary applet runs the production normalization, settings
+adapters, and compact renderer.
+
+The default run saves 336 captures: 128 base combinations plus targeted cases
+for all 24 element orders, five text formats, explicit quotas, visibility rules,
+missing data, long names, exhausted quotas, and 24/48/64-pixel panel heights.
+`--vertical` adds 128 captures covering the base combinations on vertical panels.
+Unavailable credits are tested with the three-provider fixture. Missing and
+exhausted quotas are synthetic normalized snapshots within the isolated applet.
+
+The runner rejects missing PNGs, clipped measured elements, and incorrect base
+text/capsule counts. `index.html` filters the gallery by theme/provider count/
+orientation and base cases; `results.json` records configuration, text, and
+geometry; `source.json` identifies the source digest and Git revision when
+available. Captures require human visual review: passing assertions does not
+establish typography or contrast quality. This is a bounded matrix, not every
+possible font, scale factor, translation, provider payload, or rule threshold.
+
+CI runs the horizontal matrix in `smoke-runtime` and uploads the `panel-matrix`
+artifact. The popup artifact also includes `settings-panel-scrolled`, which
+checks that the preview remains visible at the bottom of the expanded options.
+QtTests cover the corresponding identity fallback and fixed-preview behavior,
+including the KDE desktop controls style and right-to-left layout.
+
 ## Runtime verification
 
 After extracting components/delegates or changing their sizing, install or

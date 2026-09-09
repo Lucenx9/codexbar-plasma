@@ -177,10 +177,15 @@ TestCase {
         verify(bar.interactive);
         verify(bar.policy !== Controls.ScrollBar.AlwaysOff);
         var before = page.flickable.contentY;
+        var preview = findChild(page, "panelSettingsPreview");
+        var previewPosition = preview.mapToItem(page, 0, 0);
         bar.increase();
         tryVerify(function () {
             return page.flickable.contentY > before;
         });
+        compare(preview.mapToItem(page, 0, 0).y, previewPosition.y,
+            "The preview must stay visible while editing the options below it");
+        verify(previewPosition.y >= 0 && previewPosition.y + preview.height <= page.height);
         var position = bar.mapToItem(page, 0, 0);
         verify(bar.width > 0, "The visible scrollbar must have usable width");
         var center = position.x + bar.width / 2;

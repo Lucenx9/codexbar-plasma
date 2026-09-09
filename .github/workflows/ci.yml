@@ -105,6 +105,18 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+      - name: Capture panel content combinations with OpenGL
+        run: xvfb-run -a -s '-screen 0 1280x1024x24' python3 scripts/panel_matrix.py --output dist/smoke/panel-matrix
+
+      - name: Upload panel matrix gallery and measurements
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: panel-matrix
+          path: dist/smoke/panel-matrix
+          if-no-files-found: warn
+          retention-days: 7
+
   smoke:
     if: always()
     needs: [scope, smoke-runtime]

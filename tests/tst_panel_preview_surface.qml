@@ -112,6 +112,29 @@ TestCase {
         verify(renderer.hasProviderMeters);
     }
 
+    function test_customOrderKeepsOnlyTheIdentityNeededToIdentifyText() {
+        var settings = createTemporaryObject(settingsComponent, testCase, {
+            cfg_showProviderInPanel: true,
+            cfg_showPercentInPanel: true,
+            cfg_panelElementOrder: "identity,text,status,meters"
+        });
+        var preview = createPreview(settings);
+        if (!preview) return;
+        var renderer = findChild(preview, "panelPreviewRenderer");
+        verify(renderer.hasProviderMeters && !renderer.inlinePrimaryText);
+        verify(renderer.showPrimaryIdentity, "Independent text needs an identity among several meters");
+        settings.cfg_autoSelectProvider = true;
+        tryCompare(renderer, "primaryText", "Claude 58% used");
+        verify(renderer.showPrimaryIdentity);
+        settings.cfg_panelVisibilityRules = '{"meters":{"condition":"usageAtLeast","usedPercent":50}}';
+        tryCompare(renderer, "showPrimaryIdentity", false);
+        compare(renderer.meterProviders.length, 1);
+        verify(!renderer.showPrimaryIdentity);
+        settings.cfg_showMultiProviderInPanel = false;
+        tryCompare(renderer, "showPrimaryIdentity", true);
+        verify(renderer.primaryText.length > 0);
+    }
+
     function test_scenarioControlsUpdateRulesMetricsAndMissingData() {
         var settings = createTemporaryObject(settingsComponent, testCase, {
             cfg_showPercentInPanel: true,

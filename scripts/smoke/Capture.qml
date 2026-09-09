@@ -52,9 +52,11 @@ Item {
         sourceComponent: SettingsPreview {
             applet: capture.applet
             width: capture.scenario === "settings-panel-narrow" ? 420 : 840
+            viewportHeight: capture.scenario === "settings-panel-scrolled" ? 500 : 0
             pageSource: ({"settings-general": "configGeneral.qml", "settings-panel": "configPanel.qml",
                 "settings-panel-advanced": "configPanel.qml", "settings-panel-narrow": "configPanel.qml",
                 "settings-panel-information": "configPanel.qml",
+                "settings-panel-scrolled": "configPanel.qml",
                 "settings-popup": "configPopup.qml", "settings-notifications": "configNotifications.qml",
                 "settings-diagnostics": "configDiagnostics.qml"})[capture.scenario]
         }
@@ -1148,11 +1150,26 @@ Item {
                 } else if (scenario === "settings-panel-information") {
                     preview.page.additionalExpanded = true;
                     preview.page.cfg_showPercentInPanel = true;
+                } else if (scenario === "settings-panel-scrolled") {
+                    preview.page.additionalExpanded = true;
+                    preview.page.advancedExpanded = true;
+                    preview.page.cfg_showPercentInPanel = true;
                 }
                 navigationVerified = true;
                 return false;
             }
             if (scenario.indexOf("settings-panel") === 0) {
+                if (scenario === "settings-panel-scrolled") {
+                    var endY = preview.page.flickable.contentHeight - preview.page.flickable.height;
+                    if (preview.page.flickable.contentY < endY - 1) {
+                        preview.page.flickable.contentY = endY;
+                        return false;
+                    }
+                    var pinnedPreview = findItem(preview.page, "panelSettingsPreview");
+                    var previewTop = pinnedPreview.mapToItem(preview.page, 0, 0).y;
+                    verifyScenario(previewTop >= 0 && previewTop + pinnedPreview.height <= preview.page.height,
+                        "panel preview disappeared while scrolling the advanced options");
+                }
                 var tracks = namedItems(preview.page, "panelMeterTrack");
                 var renderer = findItem(preview.page, "panelPreviewRenderer");
                 var expectedTracks = scenario === "settings-panel-advanced" ? 2 : 4;

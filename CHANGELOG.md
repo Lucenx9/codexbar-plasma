@@ -10,6 +10,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Fixed
+
+- Keep the Panel settings preview visible while scrolling through content,
+  quota, order, and visibility options.
+- Avoid repeating the selected provider's icon with custom panel element
+  orders when it is the only visible provider meter.
+
 ## 0.2.36 - 2026-09-09
 
 ### Added
