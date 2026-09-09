@@ -51,5 +51,6 @@ Item {
         visible: refreshControl.busy
         running: visible
         Accessible.name: refreshControl.label
+        Accessible.ignored: !refreshControl.busy
     }
 }

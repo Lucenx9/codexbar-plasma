@@ -240,5 +240,9 @@ TestCase {
     function test_rejectsOversizedCliJsonBeforeParsing() {
         compare(SafeText.cliJsonText("{}"), "{}")
         compare(SafeText.cliJsonText("x".repeat(SafeText.maximumCliJsonLength + 1)), null)
+        compare(SafeText.cliJsonText(0), "0")
+        compare(SafeText.cliJsonText(false), "false")
+        compare(SafeText.cliJsonText(null), "")
+        compare(SafeText.cliJsonText(undefined), "")
     }
 }

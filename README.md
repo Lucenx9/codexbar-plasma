@@ -133,6 +133,8 @@ checks the applet ID and version before installation. A validation mismatch
 aborts the update.
 
 For a source checkout, see the [development update commands](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/development.md#work-from-a-checkout).
+The source-checkout helper `./install.sh` checks for `kpackagetool6` and
+`systemctl` before building, then installs the package and restarts Plasma.
 
 ## Troubleshooting
 

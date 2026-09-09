@@ -5,6 +5,24 @@ import "../contents/ui/CostPresentation.js" as CostPresentation
 TestCase {
     name: "CostPresentation"
 
+    function test_barCanvasCoordinatesStayFiniteForMissingDimensions() {
+        var coordinates = []
+        function record() {
+            for (var i = 0; i < arguments.length; i++)
+                coordinates.push(arguments[i])
+        }
+        var context = {
+            beginPath: function() {}, closePath: function() {}, fill: function() {},
+            moveTo: record, lineTo: record, quadraticCurveTo: record
+        }
+        CostPresentation.paintRoundedTopBar(context, 5, 100, Number.NaN, undefined, 3)
+        CostPresentation.paintRoundedTopBar(context, 5, 100, Infinity, 20, 3)
+        CostPresentation.paintRoundedTopBar(context, 5, 100, 10, Infinity, 3)
+        verify(coordinates.length > 0)
+        for (var coordinate of coordinates)
+            verify(isFinite(coordinate), "Canvas coordinates must remain finite")
+    }
+
     function test_costDayIndexAfterRefresh_data() {
         var first = { label: "2026-09-01", sourceIndex: 0 }
         var second = { label: "2026-09-02", sourceIndex: 1 }
@@ -311,6 +329,8 @@ TestCase {
         compare(CostPresentation.peakPoint([dailyPoint("Mon", 0, 0)], false), null)
         compare(CostPresentation.peakPoint([], false), null)
         compare(CostPresentation.peakPoint(null, false), null)
+        compare(CostPresentation.peakPoint([null, "invalid", 42], false), null)
+        compare(CostPresentation.peakPoint([null, dailyPoint("Tue", 4, 0)], false).label, "Tue")
     }
 
     function test_peakPointLeavesAnEmptyLabelForTheCallerToWord() {
@@ -426,7 +446,10 @@ TestCase {
             { label: "Total", tokens: 1500 },
             { label: "Input", tokens: 0 },
             { label: "Output", tokens: undefined },
-            { label: "Cache", tokens: "abc" }
+            { label: "Cache", tokens: "abc" },
+            null,
+            "invalid",
+            42
         ])
         compare(rows.length, 1)
         compare(rows[0].label, "Total")
@@ -531,6 +554,7 @@ TestCase {
     function test_modelRowsSurviveNonArrayInputs() {
         compare(CostPresentation.modelRows(fmt, null, null).length, 0)
         compare(CostPresentation.modelRows(fmt, { models: "invalid" }, null).length, 0)
+        compare(CostPresentation.modelRows(fmt, { models: [null, "invalid", 42] }, null).length, 0)
     }
 
     function test_chartPointsAndSparklineMaxSurviveNonArrayInputs() {

@@ -59,7 +59,9 @@ Item {
 
             // Compare against the full strip, not the narrower scroll viewport:
             // reserving button space must not make overflow self-sustaining.
-            readonly property bool tabsOverflow: providerTabs.implicitWidth > width - Kirigami.Units.smallSpacing
+            // A zero width during initialization must not flash the buttons.
+            readonly property bool tabsOverflow: width > 0
+                && providerTabs.implicitWidth > width - Kirigami.Units.smallSpacing
 
             visible: applet.providers.length > 0 || applet.spendAvailable || applet.sessionsAvailable
             Layout.fillWidth: true
@@ -317,6 +319,7 @@ Item {
                         }
 
                         PlainToolTip {
+                            parent: overviewTabMouse
                             visible: !applet.showPopupTabLabels && overviewTabMouse.containsMouse
                             plainText: i18n("Overview")
                         }
@@ -527,6 +530,7 @@ Item {
                             }
 
                             PlainToolTip {
+                                parent: providerTabMouse
                                 visible: !applet.showPopupTabLabels && providerTabMouse.containsMouse
                                 plainText: modelData.title
                             }

@@ -81,6 +81,21 @@ TestCase {
         compare(transition.orderedItems[2].account, "gemini-1")
     }
 
+    function test_beginTrimsSourceAndProviderNames() {
+        var transition = ProviderFallbackQueue.begin([
+            request("  source-codex  ", "  codex  "),
+            request("source-codex", "claude"),
+            request("source-claude", "codex")
+        ], {
+            maximumConcurrent: 8,
+            maximumSnapshots: 10
+        })
+
+        compare(transition.sourcesToStart.length, 1)
+        compare(transition.sourcesToStart[0].sourceName, "source-codex")
+        compare(transition.sourcesToStart[0].providerID, "codex")
+    }
+
     function test_beginDropsMalformedAndDuplicateRequests() {
         var transition = ProviderFallbackQueue.begin([
             null,

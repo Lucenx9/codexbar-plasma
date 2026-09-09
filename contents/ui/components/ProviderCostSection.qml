@@ -187,9 +187,6 @@ ColumnLayout {
         objectName: "providerCostChart"
         onPointsChanged: tokenCostSection.reconcileDaySelection()
         onSelectedIndexChanged: tokenCostSection.rememberDaySelection()
-        readonly property var tokenCost: tokenCostSection.tokenCost
-        readonly property var providerData: tokenCostSection.providerData
-
         visible: tokenCostSection.chartPoints.length > 0
         applet: tokenCostSection.applet
         points: tokenCostSection.chartPoints

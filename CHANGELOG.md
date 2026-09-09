@@ -18,6 +18,15 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   quota, order, and visibility options.
 - Avoid repeating the selected provider's icon with custom panel element
   orders when it is the only visible provider meter.
+- Ignore malformed cost breakdown/model rows and keep chart dimensions finite.
+- Clear chart selection and hover state when point data disappears, allowing
+  keyboard navigation to recover when data returns.
+- Normalize provider fallback requests before deduplication and preserve scalar
+  zero/false CLI text values.
+- Keep theme calculations finite when inputs are unavailable.
+- Avoid tab overflow controls during initialization.
+- Anchor tab tooltips to their hover areas and improve accessibility labels for
+  heatmap cells and decorative controls.
 
 ## 0.2.36 - 2026-09-09
 

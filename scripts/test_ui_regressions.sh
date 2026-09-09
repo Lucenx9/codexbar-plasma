@@ -1760,7 +1760,7 @@ if "chart.applet.paintRoundedTopBar(" not in interactive_chart_text:
     raise AssertionError("provider detail bar charts must use rounded top corners")
 for detail_chart_fragment in (
     "chart.applet.buildChartBarGradient(",
-    "chart.applet.chartBarGeometry(width, chart.points.length)",
+    "chart.applet.chartBarGeometry(width, chart.pointCount)",
     "ChartScale.barGeometry(height,",
 ):
     if detail_chart_fragment not in interactive_chart_text:
@@ -2597,7 +2597,7 @@ for chart_interaction_fragment in (
         )
 for stable_chart_fragment in (
     "readonly property bool hasActivePoint",
-    "if (chart.hoveredIndex >= chart.points.length)",
+    "if (chart.hoveredIndex >= chart.pointCount)",
 ):
     if stable_chart_fragment not in interactive_chart_text:
         raise AssertionError(

@@ -183,7 +183,9 @@ function stripLoaderDiagnostics(value, maximumLength) {
 }
 
 function cliJsonText(value) {
-    var text = typeof value === "string" ? value : String(value || "")
+    var text = typeof value === "string"
+        ? value
+        : (value === null || value === undefined ? "" : String(value))
     return text.length <= maximumCliJsonLength ? text : null
 }
 

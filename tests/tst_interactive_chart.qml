@@ -78,6 +78,44 @@ TestCase {
         compare(chart.chartFraction(9), 1)
     }
 
+    function test_missingPointsClearSelectionAndRecover_data() {
+        return [{ tag: "null", value: null }, { tag: "undefined", value: undefined }]
+    }
+
+    function test_missingPointsClearSelectionAndRecover(data) {
+        var chart = createChart({
+            applet: { secondaryTextOpacity: 0.7, canvasColor: function() { return "#000000" } },
+            width: 300,
+            points: [{ label: "Before", value: 0 }],
+            accent: "blue"
+        })
+        if (!chart)
+            return
+        failOnWarning(/.*/)
+        compare(chart.pointCount, 1)
+        chart.selectedIndex = 0
+        chart.hoveredIndex = 0
+        var plot = chart.nextItemInFocusChain(true)
+        verify(typeof plot.requestPaint === "function")
+        plot.forceActiveFocus(Qt.TabFocusReason)
+        chart.points = data.value
+        compare(chart.selectedIndex, -1)
+        compare(chart.hoveredIndex, -1)
+        compare(chart.hasActivePoint, false)
+        compare(chart.indexAt(10), -1)
+        for (var key of [Qt.Key_Left, Qt.Key_Right, Qt.Key_Home, Qt.Key_End]) {
+            keyClick(key)
+            compare(chart.selectedIndex, -1)
+        }
+        waitForRendering(plot)
+        chart.points = [{ label: "After", value: 0 }]
+        keyClick(Qt.Key_Home)
+        compare(chart.selectedIndex, 0)
+        compare(chart.hasActivePoint, true)
+        compare(chart.pointLabel(chart.points[chart.activeIndex]), "After")
+        waitForRendering(plot)
+    }
+
     function test_keyboardSelectionOverridesStationaryPointer_data() {
         return [
             { tag: "left", key: Qt.Key_Left, hovered: 2, selected: 0 },
