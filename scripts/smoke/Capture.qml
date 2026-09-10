@@ -856,10 +856,11 @@ Item {
         if (settingsBehaviorStep === 0) {
             settingsCommandSerial = applet.commandRunSerial;
             settingsCostSnapshot = applet.tokenCosts;
+            config.refreshOnOpen = false;
             applet.usageLastRefreshAttemptAtMs = Date.now() - 300001;
             applet.usageLastCompletedAtMs = Date.now() - 300001;
             applet.refreshUsageOnOpen();
-            verifyScenario(applet.commandRunSerial === settingsCommandSerial, "default popup opening refreshed usage");
+            verifyScenario(applet.commandRunSerial === settingsCommandSerial, "disabled popup opening refreshed usage");
             config.refreshOnOpen = true;
             applet.usageLastCompletedAtMs = Date.now();
             applet.refreshUsageOnOpen();

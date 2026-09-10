@@ -10,6 +10,16 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Changed
+
+- Refresh quotas when the popup opens by default, so a widget that was idle,
+  suspended, or running without periodic refresh no longer presents an old
+  measurement as current. Only quotas older than the refresh interval are
+  fetched, and failed attempts keep their cooldown, so reopening the popup does
+  not repeat the command. Existing widgets keep their stored choice; new widgets
+  and **General → Restore all defaults** get the new default, and the setting can
+  be turned off again in **General**.
+
 ### Fixed
 
 - Keep accounts that differ only by internal spacing separately selectable and

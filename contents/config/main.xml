@@ -23,7 +23,7 @@
     </entry>
     <entry name="refreshOnOpen" type="Bool">
       <label>Refresh quota data when opening the popup.</label>
-      <default>false</default>
+      <default>true</default>
     </entry>
     <entry name="privacyMode" type="Bool">
       <label>Hide personal information in the widget.</label>
