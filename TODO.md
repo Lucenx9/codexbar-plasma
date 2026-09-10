@@ -149,7 +149,10 @@ These are unresolved Linux candidates, not confirmed missing features.
   selection/cache tests before classifying a gap; retain CLI ownership of
   credential matching and recovery. Generic failed-refresh retention and redacted
   quota restoration are implemented; account identity and credential recovery
-  cases still need the named official CLI probes.
+  cases still need the named official CLI probes. Pinned on CLI 0.56.2: the
+  Claude usage payload carries no account identity fields
+  (`usage.identity` holds only `providerID`), so the frontend cannot show a
+  Claude account email.
   [Release coverage](docs/research/2026-09-09-macos-parity-0.57.0.md#release-coverage).
 - [ ] Evaluate the weekly reserve indicator against a pinned macOS behavior and
   an official Linux field. Record accept/reject and, if accepted, a concrete
