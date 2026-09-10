@@ -59,7 +59,10 @@ work and upstream contract requirements.
   the provider icon remains available when all conditional elements are hidden.
 - Auto-select highest-usage provider for the compact panel and provider detail
   focus.
-- Overview tab with per-provider usage summary and quick switching.
+- Overview tab with per-provider usage summary and quick switching. Each row's
+  detail line shows the account identity when the CLI provides one, and an
+  active service incident otherwise; an operational status or the provider's
+  own source name is never presented as identity.
 - Overflowing popup tabs have separate scroll buttons and immediate keyboard
   focus reveal, so navigation never covers provider labels.
 - Global **Usage & Spend** tab with a Cost/Tokens selector, a 7/30/90-day range
@@ -188,11 +191,15 @@ fields; track proposed extensions in the issue tracker.
 
 ## Status and notifications
 
-- Provider status incident badge in the panel and provider detail view.
-  Incident selection, badges, banners, and tooltips ignore a provider whose
-  current status is unknown or has no active incident. When a refresh omits
-  status, a previously retained outage is hidden; this is not evidence of
-  recovery. Current status can still report an incident when quota fetching fails.
+- Provider status incident badge in the panel and provider detail view. The
+  panel badge sits on the incident provider's own meter icon and follows
+  provider reordering; the standalone service-status panel element remains a
+  fallback when no meter can carry the badge, such as hidden meters or an
+  incident provider without meters. Incident selection, badges, banners, and
+  tooltips ignore a provider whose current status is unknown or has no active
+  incident. When a refresh omits status, a previously retained outage is
+  hidden; this is not evidence of recovery. Current status can still report an
+  incident when quota fetching fails.
 - Optional quota warning markers on usage bars.
 - Optional Plasma notifications for provider status incidents, configurable
   quota crossings, predicted quota exhaustion from CLI pace data, and when a

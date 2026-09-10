@@ -37,6 +37,7 @@ TestCase {
         property string selectedProviderID: "codex"
         property int providerToggleCount: 0
         property bool providerEnabled: false
+        property bool incidentOnMeter: true
         function isPending() {
             return false;
         }
@@ -117,7 +118,11 @@ TestCase {
                 {
                     provider: "codex",
                     title: "Codex",
-                    value: firstQuota
+                    value: firstQuota,
+                    hasIncident: incidentOnMeter,
+                    statusKnown: true,
+                    statusSeverity: "minor",
+                    status: "Degraded"
                 },
                 {
                     provider: "claude",
@@ -134,12 +139,13 @@ TestCase {
             };
         }
         function primaryIncidentProvider() {
-            return {
-                hasIncident: true,
-                statusSeverity: "minor",
-                title: "Codex",
-                status: "Degraded"
-            };
+            // "gemini" never carries a meter, so it exercises the standalone
+            // status element that must remain when no meter can badge it.
+            return incidentOnMeter
+                ? {provider: "codex", hasIncident: true, statusSeverity: "minor",
+                   statusKnown: true, title: "Codex", status: "Degraded"}
+                : {provider: "gemini", hasIncident: true, statusSeverity: "major",
+                   statusKnown: true, title: "Gemini", status: "Degraded"};
         }
         function providerIconSource() {
             return "view-statistics";
@@ -449,21 +455,55 @@ TestCase {
         }
     }
 
-    function test_statusDotStaysSquare_data() {
+    function test_incidentDotsStaySquareAndAttributed_data() {
         return [
             {
-                tag: "24px",
-                extent: 24
+                tag: "badge on the incident provider meter",
+                incidentOnMeter: true
             },
             {
-                tag: "32px",
-                extent: 32
-            },
-            {
-                tag: "48px",
-                extent: 48
+                tag: "standalone fallback without a meter",
+                incidentOnMeter: false
             }
         ];
+    }
+
+    function test_incidentDotsStaySquareAndAttributed(data) {
+        applet.incidentOnMeter = data.incidentOnMeter;
+        var panel = createControl("CompactRepresentation", {
+            applet: applet,
+            height: 32
+        });
+        if (!panel)
+            return;
+        wait(0);
+        var badge = findItem(panel, function (item) {
+            return item.visible && item.objectName === "panelIncidentBadge";
+        });
+        var dot = findItem(panel, function (item) {
+            return item.visible && item.objectName === "panelStatusDot";
+        });
+        if (data.incidentOnMeter) {
+            verify(badge !== null);
+            verify(dot === null);
+            verify(badge.width > 0);
+            compare(badge.width, badge.height);
+            var icon = findItem(panel, function (item) {
+                return item.visible && item.objectName === "panelProviderIcon";
+            });
+            verify(icon !== null);
+            var badgeCenter = badge.mapToItem(panel, badge.width / 2, badge.height / 2);
+            var iconTopLeft = icon.mapToItem(panel, 0, 0);
+            verify(badgeCenter.x >= iconTopLeft.x && badgeCenter.x <= iconTopLeft.x + icon.width);
+            verify(badgeCenter.y >= iconTopLeft.y && badgeCenter.y <= iconTopLeft.y + icon.height);
+        } else {
+            verify(badge === null);
+            verify(dot !== null);
+            verify(dot.width > 0);
+            compare(dot.width, dot.height);
+            var center = dot.mapToItem(panel, dot.width / 2, dot.height / 2);
+            verify(Math.abs(center.y - panel.height / 2) < 1);
+        }
     }
 
     function test_longAccountButtonsFitAndKeepFullAccessibleNames_data() {
@@ -507,24 +547,6 @@ TestCase {
         applet.selectedAccount = applet.accountItems[1].account;
         tryCompare(button, "checked", false);
         testCase.forceActiveFocus();
-    }
-
-    function test_statusDotStaysSquare(data) {
-        var panel = createControl("CompactRepresentation", {
-            applet: applet,
-            height: data.extent
-        });
-        if (!panel)
-            return;
-        wait(0);
-        var dot = findItem(panel, function (item) {
-            return item.visible && item.color !== undefined && item.color.toString() === "#ff8000";
-        });
-        verify(dot !== null);
-        verify(dot.width > 0);
-        compare(dot.width, dot.height);
-        var center = dot.mapToItem(panel, dot.width / 2, dot.height / 2);
-        verify(Math.abs(center.y - panel.height / 2) < 1);
     }
 
     function test_providerRowKeyboardSelectionDoesNotToggleEnablement() {

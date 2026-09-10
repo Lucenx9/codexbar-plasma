@@ -109,8 +109,11 @@ RowLayout {
                 visible: providerHeaderRow.hasAccount
                 text: providerHeaderRow.providerData ? providerHeaderRow.providerData.account : ""
                 opacity: providerHeaderRow.applet.secondaryTextOpacity
-                Layout.fillWidth: true
                 elide: Text.ElideMiddle
+                // The plan sits beside the account instead of drifting to the
+                // row's far end; the trailing filler keeps both left-aligned
+                // and lets the account elide first on narrow popups.
+                Layout.minimumWidth: 0
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 16
             }
 
@@ -124,7 +127,12 @@ RowLayout {
                 opacity: providerHeaderRow.applet.secondaryTextOpacity
                 horizontalAlignment: Text.AlignRight
                 elide: Text.ElideRight
+                Layout.minimumWidth: 0
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 5
+            }
+
+            Item {
+                Layout.fillWidth: true
             }
         }
 

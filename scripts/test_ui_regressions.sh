@@ -1268,14 +1268,17 @@ if "compactRoot.meterProviders.length * compactRoot.meterWidth" not in compact_r
 vertical_status_badge_body = id_block(compact_representation_text, "compactVerticalStatusBadge")
 for vertical_badge_fragment in (
     "visible: compactRoot.verticalPanel",
-    "compactRoot.incidentProvider.hasIncident",
-    "statusBadgeColor(compactRoot.incidentProvider.statusSeverity)",
+    "!compactRoot.hasProviderMeters",
+    "compactRoot.selectedProvider.hasIncident === true",
+    "compactRoot.selectedProvider.statusKnown !== false",
+    "statusBadgeColor(compactRoot.selectedProvider.statusSeverity)",
     "border.width: 1",
     "border.color: Kirigami.Theme.backgroundColor",
 ):
     if vertical_badge_fragment not in vertical_status_badge_body:
         raise AssertionError(
-            "collapsing to an icon must keep an at-a-glance incident marker; "
+            "without meters the identity icon may badge only its own provider's "
+            "incident, never another provider's outage; "
             f"missing {vertical_badge_fragment!r}"
         )
 
@@ -1283,14 +1286,44 @@ horizontal_status_badge_body = id_block(compact_representation_text, "compactSta
 for horizontal_badge_fragment in (
     "visible: (!compactRoot.verticalPanel || compactRoot.hasProviderMeters)",
     "compactRoot.incidentProvider.hasIncident",
+    "!compactRoot.incidentProviderHasMeterBadge",
     "statusBadgeColor(compactRoot.incidentProvider.statusSeverity)",
     "border.width: 1",
     "border.color: Kirigami.Theme.backgroundColor",
 ):
     if horizontal_badge_fragment not in horizontal_status_badge_body:
         raise AssertionError(
-            "horizontal status badge must keep a contrast contour against the panel; "
+            "the standalone status element is a fallback: when a meter can carry "
+            "the badge, the ambiguous floating dot must hide; "
             f"missing {horizontal_badge_fragment!r}"
+        )
+
+meter_incident_badge_body = id_block(compact_representation_text, "meterIncidentBadge")
+for meter_badge_fragment in (
+    "objectName: \"panelIncidentBadge\"",
+    "compactMeter.modelData.hasIncident === true",
+    "compactMeter.modelData.statusKnown !== false",
+    "statusBadgeColor(compactMeter.modelData.statusSeverity)",
+    "border.width: 1",
+    "border.color: Kirigami.Theme.backgroundColor",
+):
+    if meter_badge_fragment not in meter_incident_badge_body:
+        raise AssertionError(
+            "each provider meter must badge its own incident so reordering the "
+            "providers moves the outage marker with it; "
+            f"missing {meter_badge_fragment!r}"
+        )
+
+overview_detail_body = function_body(main_text, "overviewDetailText")
+for overview_detail_fragment in (
+    "item.hasIncident === true && item.statusKnown !== false",
+    "item.account && item.account.length > 0",
+):
+    if overview_detail_fragment not in overview_detail_body:
+        raise AssertionError(
+            "the overview detail line stands for account identity; only an active "
+            "incident may replace it, never an operational status; "
+            f"missing {overview_detail_fragment!r}"
         )
 
 for tooltip_fragment in (
