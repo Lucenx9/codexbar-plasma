@@ -226,6 +226,14 @@ and command binding in Qt's event loop. It counts refresh requests for cached
 and uncached accounts in single-provider and aggregate modes; CLI effects are
 replaced by observations at the refresh boundary.
 
+`tests/test_provider_config_watcher.py` delivers a cached reply synchronously
+during the production watcher connection, matching Plasma's shared-source
+behavior. It checks that the new poll stays connected and retired replies are
+ignored. `tests/test_secret_prompt_lifecycle.py` executes the generated secret
+prompt commands with synthetic dialog and CLI processes and shortened timeouts.
+It checks cancellation, process termination, late submission, and the total
+deadline needed to preserve the full save timeout.
+
 `tests/test_widget_update_controller.py` instantiates the production updater
 module and runs temporary executable fixtures through Plasma's real DataSource.
 It checks overlapping requests, setting changes during a check, captured install

@@ -130,6 +130,10 @@ Provider-specific editable settings depend on the official CLI contract.
   Clear filters restores the list without changing selection or provider settings.
 - Provider enable/disable and setup actions write CodexBar configuration
   immediately; Apply and Cancel cover widget settings only.
+- API key and secret prompts stay open while you type. A prompt left open for
+  about 15 minutes closes by itself, the provider's actions unlock again, and
+  the prompt can be reopened. Submitting near that limit still allows the full
+  one-minute save timeout, followed by up to five seconds to stop the command.
 - Account discovery and selection through `codexbar usage --all-accounts`.
 - Provider docs, dashboards, login/account links, and redacted diagnostics.
 - With the official CLI 0.56.2 verified by this repository, the Providers page

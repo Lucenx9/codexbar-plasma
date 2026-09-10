@@ -71,6 +71,15 @@ KCM.SimpleKCM {
     readonly property int configCommandTimeoutMs: 60000
     readonly property int configSecretCommandTimeoutSeconds: 60
     readonly property int configSecretCommandKillAfterSeconds: 5
+    // Bound kdialog itself because disconnecting its shell can orphan it.
+    // Keep a long input window separate from the short CLI timeout.
+    readonly property int configSecretPromptDialogTimeoutSeconds: 870
+    readonly property int configSecretPromptDialogKillAfterSeconds: 5
+    // A late submission still gets the full CLI timeout and kill grace.
+    // Allow five seconds for startup and result delivery before disconnecting.
+    readonly property int configSecretPromptTimeoutMs:
+        (configSecretPromptDialogTimeoutSeconds + configSecretPromptDialogKillAfterSeconds
+         + configSecretCommandTimeoutSeconds + configSecretCommandKillAfterSeconds) * 1000 + 5000
     // Mirrors the popup de-emphasis step in main.qml. 0.7 is the lowest value
     // where Kirigami.Theme.textColor still clears WCAG AA 4.5:1 on Breeze Light.
     readonly property real secondaryTextOpacity: 0.7
@@ -213,7 +222,7 @@ KCM.SimpleKCM {
         var script = [
             "if ! command -v kdialog >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"kdialog is required to prompt for API keys.\"}}'; exit 1; fi",
             "if ! command -v timeout >/dev/null 2>&1 || ! timeout --kill-after=1s 1s true >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"GNU timeout is required to save API keys safely.\"}}'; exit 1; fi",
-            "key=$(kdialog --password \"$1\" 2>/dev/null)",
+            "key=$(timeout --kill-after=\"${7}s\" \"${6}s\" kdialog --password \"$1\" 2>/dev/null)",
             "status=$?",
             "if [ \"$status\" -ne 0 ] || [ -z \"$key\" ]; then printf '%s\\n' '{\"cancelled\":true}'; exit 0; fi",
             "printf '%s' \"$key\" | timeout --kill-after=\"${5}s\" \"${4}s\" \"$2\" config set-api-key --provider \"$3\" --stdin --format json --json-only"
@@ -222,9 +231,15 @@ KCM.SimpleKCM {
             "sh", "-c", shellQuote(script), "_", shellQuote(prompt),
             shellQuote(commandPath), shellQuote(cliProviderID),
             shellQuote(configSecretCommandTimeoutSeconds),
-            shellQuote(configSecretCommandKillAfterSeconds)
+            shellQuote(configSecretCommandKillAfterSeconds),
+            shellQuote(configSecretPromptDialogTimeoutSeconds),
+            shellQuote(configSecretPromptDialogKillAfterSeconds)
         ].join(" ")
-        runCommand(command, { kind: "setApiKey", provider: providerID })
+        runCommand(command, {
+            kind: "setApiKey",
+            provider: providerID,
+            timeoutMs: configSecretPromptTimeoutMs
+        })
     }
 
     function loadProviderSettings(providerID) {
@@ -317,6 +332,9 @@ KCM.SimpleKCM {
             setProviderDiagnosticLoading(descriptor.provider, false)
             setProviderDiagnosticError(descriptor.provider, i18n("Loading provider diagnostics timed out. Try again."))
         } else if (descriptor.kind === "toggle") {
+            markPending(descriptor.provider, false)
+            errorText = i18n("%1 command timed out. Try again.", displayNameForProvider(descriptor.provider))
+        } else if (descriptor.kind === "setApiKey") {
             markPending(descriptor.provider, false)
             errorText = i18n("%1 command timed out. Try again.", displayNameForProvider(descriptor.provider))
         } else if (descriptor.kind === "descriptorField" || descriptor.kind === "descriptorAction") {
@@ -942,6 +960,10 @@ KCM.SimpleKCM {
         statusText = ""
         markFieldPending(providerID, field.id, true)
         var prompt = i18n("%1 for %2", field.title, displayNameForProvider(providerID))
+        var boundedDialogCommand = "timeout --kill-after="
+            + shellQuote(configSecretPromptDialogKillAfterSeconds + "s") + " "
+            + shellQuote(configSecretPromptDialogTimeoutSeconds + "s") + " "
+            + "kdialog --password \"$1\""
         var boundedCommandLine = "timeout --kill-after="
             + shellQuote(configSecretCommandKillAfterSeconds + "s") + " "
             + shellQuote(configSecretCommandTimeoutSeconds + "s") + " "
@@ -949,13 +971,18 @@ KCM.SimpleKCM {
         var script = [
             "if ! command -v kdialog >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"kdialog is required to prompt for secrets.\"}}'; exit 1; fi",
             "if ! command -v timeout >/dev/null 2>&1 || ! timeout --kill-after=1s 1s true >/dev/null 2>&1; then printf '%s\\n' '{\"error\":{\"message\":\"GNU timeout is required to save secrets safely.\"}}'; exit 1; fi",
-            "value=$(kdialog --password \"$1\" 2>/dev/null)",
+            "value=$(" + boundedDialogCommand + " 2>/dev/null)",
             "status=$?",
             "if [ \"$status\" -ne 0 ] || [ -z \"$value\" ]; then printf '%s\\n' '{\"cancelled\":true}'; exit 0; fi",
             "printf '%s' \"$value\" | " + boundedCommandLine
         ].join("; ")
         var command = ["sh", "-c", shellQuote(script), "_", shellQuote(prompt)].join(" ")
-        runCommand(command, { kind: "descriptorField", provider: providerID, fieldID: field.id })
+        runCommand(command, {
+            kind: "descriptorField",
+            provider: providerID,
+            fieldID: field.id,
+            timeoutMs: configSecretPromptTimeoutMs
+        })
     }
 
     function runDescriptorAction(providerID, action) {

@@ -36,6 +36,9 @@ require_in_surface applet "function finishNotificationCommandSource(sourceName)"
 require_in_surface applet "function refreshSessions()"
 require_in_surface applet "readonly property int providerConfigWatchIntervalMs: 60000"
 require_in_surface applet "interval: root.providerConfigWatchIntervalMs"
+require_in_surface applet 'property string connectedProviderConfigWatchCommand: ""'
+require_in_surface applet "function reconnectProviderConfigWatcher()"
+require_in_surface applet "onProviderConfigWatchCommandChanged: reconnectProviderConfigWatcher()"
 require_in_surface applet 'import "CostRefreshPolicy.js" as CostRefreshPolicy'
 require_in_surface applet "readonly property int costAutoRefreshIntervalMs: CostRefreshPolicy.automaticRefreshIntervalMs"
 require_in_surface applet "property double lastCostRefreshAttemptAt: -1"
@@ -45,6 +48,7 @@ require_in_surface applet "property bool connectedUpdateInstallMode: false"
 require_in_surface applet "property bool pendingAutomaticUpdateCheck: false"
 
 require_in_surface providers "readonly property int configCommandTimeoutMs: 60000"
+require_in_surface providers "readonly property int configSecretPromptTimeoutMs:"
 require_in_surface providers "readonly property int configSecretCommandTimeoutSeconds: 60"
 require_in_surface providers "readonly property int configSecretCommandKillAfterSeconds: 5"
 require_in_surface providers "id: configCommandTimeoutTimer"
@@ -163,6 +167,12 @@ require_ordered(
         "JSON.parse(trimmed)",
     ),
     "account replies must decide before disconnecting and gate payload parsing on acceptance",
+)
+accounts_parse_body = applet.function_body("parseProviderAccountsOutput")
+require_all(
+    accounts_parse_body[accounts_parse_body.rfind("} catch (error) {"):],
+    ("setAccountError(providerID,",),
+    "an unexpected account parse failure must report a scoped error",
 )
 
 require_all(
@@ -325,15 +335,35 @@ if "root.parseProviderAccountsOutput(sourceName, descriptor, stdoutText, stderrT
     raise AssertionError("account completion must consume the descriptor routed by the shared ledger")
 
 require_all(
-    applet.function_body("parseProviderFallbackOutput"),
+    applet.function_body("completeProviderFallbackSlot"),
+    (
+        "ProviderFallbackQueue.complete(",
+        "applyProviderFallbackTransition(transition)",
+    ),
+    "fallback slot completion must cross the pure queue interface",
+)
+fallback_parse_body = applet.function_body("parseProviderFallbackOutput")
+require_all(
+    fallback_parse_body,
     (
         "Normalizer.dedupeProviderSnapshots(normalizedItems)",
-        "ProviderFallbackQueue.complete(",
-        "item: semanticItems.length > 0 ? semanticItems[0] : null",
-        "applyProviderFallbackTransition(transition)",
+        "var completedItem = null",
+        "completeProviderFallbackSlot(sourceName, completedItem)",
         "codexbar did not return provider data.",
     ),
     "fallback replies must cross the pure queue interface",
+)
+if fallback_parse_body.count("completeProviderFallbackSlot(") != 1:
+    raise AssertionError(
+        "the fallback slot must be completed exactly once, outside the parse guard"
+    )
+require_all(
+    fallback_parse_body[fallback_parse_body.rfind("} catch (error) {"):],
+    (
+        "providerErrorPayload(",
+        "completedItem =",
+    ),
+    "an unexpected fallback parse failure must still yield its scoped error item",
 )
 require_all(
     applet.function_body("applyProviderFallbackTransition"),
@@ -528,6 +558,24 @@ require_ordered(
     ),
     "a changed provider config checksum must invalidate and refresh the roster",
 )
+require_ordered(
+    applet.function_body("reconnectProviderConfigWatcher"),
+    (
+        "providerConfigWatcher.disconnectSource(connectedProviderConfigWatchCommand)",
+        "connectedProviderConfigWatchCommand = providerConfigWatchCommand",
+        "providerConfigWatcher.connectSource(providerConfigWatchCommand)",
+    ),
+    "watcher reconnect must retire the old poll and register the new command before cached replies arrive",
+)
+require_all(
+    applet.id_block("providerConfigWatcher"),
+    (
+        "sourceName !== root.connectedProviderConfigWatchCommand",
+        "providerConfigWatcher.disconnectSource(sourceName)",
+        "root.handleProviderConfigWatch(stdoutText)",
+    ),
+    "watcher replies from a retired poll must be disconnected, never left polling",
+)
 
 cost_refresh_body = applet.function_body("refreshCost")
 require_all(
@@ -626,10 +674,15 @@ for function_name in ("runProviderListCommand", "setEnabled", "loadProviderSetti
     body = providers.function_body(function_name)
     if "timeoutMs: configCommandTimeoutMs" not in body:
         raise AssertionError(f"noninteractive {function_name} commands must be bounded")
+# Interactive prompts own one long escape-hatch deadline so a wedged kdialog
+# cannot disable a provider's actions until the page reopens. They must never
+# share the short noninteractive deadline, which would kill a live dialog.
 for function_name in ("setApiKey", "promptDescriptorSecret"):
     body = providers.function_body(function_name)
-    if "timeoutMs" in body:
-        raise AssertionError(f"interactive {function_name} commands must not expire while prompting")
+    if "timeoutMs: configCommandTimeoutMs" in body:
+        raise AssertionError(f"interactive {function_name} commands must not share the noninteractive deadline")
+    if "timeoutMs: configSecretPromptTimeoutMs" not in body:
+        raise AssertionError(f"interactive {function_name} commands must keep the long escape-hatch deadline")
     require_all(
         body,
         (
@@ -638,9 +691,35 @@ for function_name in ("setApiKey", "promptDescriptorSecret"):
             "timeout --kill-after",
             "configSecretCommandTimeoutSeconds",
             "configSecretCommandKillAfterSeconds",
+            "configSecretPromptDialogTimeoutSeconds",
+            "configSecretPromptDialogKillAfterSeconds",
         ),
-        f"interactive {function_name} must bound the post-prompt CLI phase",
+        f"interactive {function_name} must bound the dialog and the post-prompt CLI phase",
     )
+
+# The dialog process is a grandchild of the tracked source, so the ledger
+# deadline only kills the script shell and would orphan the dialog. Each prompt
+# must run kdialog under its own timeout just below the QML deadline.
+require_all(
+    providers.function_body("setApiKey"),
+    (
+        "timeout --kill-after=\\\"${7}s\\\" \\\"${6}s\\\" kdialog --password",
+        "shellQuote(configSecretPromptDialogTimeoutSeconds)",
+        "shellQuote(configSecretPromptDialogKillAfterSeconds)",
+    ),
+    "setApiKey must bound the kdialog phase below the ledger deadline",
+)
+require_ordered(
+    providers.function_body("promptDescriptorSecret"),
+    (
+        "var boundedDialogCommand = \"timeout --kill-after=\"",
+        "shellQuote(configSecretPromptDialogKillAfterSeconds + \"s\")",
+        "shellQuote(configSecretPromptDialogTimeoutSeconds + \"s\")",
+        "kdialog --password \\\"$1\\\"",
+        'value=$(" + boundedDialogCommand + ',
+    ),
+    "descriptor secret prompts must bound the dialog process below the ledger deadline",
+)
 
 if 'printf \'%s\' \\"$key\\" | timeout --kill-after=' not in providers.function_body("setApiKey"):
     raise AssertionError("setApiKey must pipe the secret to a bounded CLI process")
@@ -683,6 +762,7 @@ require_all(
         "descriptor.kind === \"list\"",
         "descriptor.kind === \"diagnose\"",
         "descriptor.kind === \"toggle\"",
+        "descriptor.kind === \"setApiKey\"",
         "descriptor.kind === \"descriptorField\"",
         "descriptor.kind === \"descriptorAction\"",
         "setProviderDiagnosticLoading",
