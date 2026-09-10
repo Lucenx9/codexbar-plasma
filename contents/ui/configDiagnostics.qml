@@ -101,9 +101,15 @@ KCM.SimpleKCM {
         }
         finishDiagnosticCommand(sourceName)
 
-        var stdoutText = data && data["stdout"] ? data["stdout"] : ""
+        var rawStdoutText = data && data["stdout"] ? data["stdout"] : ""
+        var stdoutText = SafeText.cliJsonText(rawStdoutText)
         var stderrText = data && data["stderr"] ? data["stderr"] : ""
         var exitCode = data && data["exit code"] !== undefined ? Number(data["exit code"]) : 0
+        if (stdoutText === null) {
+            stdoutText = ""
+            stderrText = i18n("codexbar response exceeded the supported size.")
+            exitCode = 1
+        }
         var safeOutput = SafeText.cliDiagnostic(stdoutText, SafeText.maximumDiagnosticLength)
         var safeError = SafeText.cliMessage(SafeText.stripLoaderDiagnostics(stderrText), SafeText.maximumCliMessageLength)
         diagnosticOutput = safeOutput.length > 0 ? safeOutput : i18n("No diagnostic output.")
@@ -223,6 +229,7 @@ KCM.SimpleKCM {
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 14
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 24
                 placeholderText: i18n("all")
+                maximumLength: 256
             }
 
             Item {
@@ -282,6 +289,7 @@ KCM.SimpleKCM {
             Controls.TextArea {
                 id: diagnosticOutputArea
                 readOnly: true
+                selectByMouse: true
                 wrapMode: TextEdit.NoWrap
                 text: page.diagnosticOutput
                 font.family: "monospace"

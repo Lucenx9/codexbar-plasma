@@ -837,6 +837,12 @@ require_all(
 )
 
 require_all(
+    diagnostics.function_body("handleDiagnosticData"),
+    ("SafeText.cliJsonText", "codexbar response exceeded the supported size."),
+    "diagnostics oversize cleanup is incomplete",
+)
+
+require_all(
     applet.function_body("scheduleNextUpdateCheck"),
     (
         "updateCheckTimer.stop()",

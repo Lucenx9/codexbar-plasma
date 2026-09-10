@@ -50,6 +50,8 @@ require_block_fragment "$GENERAL_QML" "id: lastUpdateStatusLabel" "wrapMode: Tex
 require_block_fragment "$DIAGNOSTICS_QML" "id: usePathCommandButton" 'text: i18n("Use PATH")'
 require_block_fragment "$DIAGNOSTICS_QML" "id: usePathCommandButton" 'enabled: page.cfg_commandPath.trim() !== (page.cfg_commandPathDefault || "codexbar")'
 require_block_fragment "$DIAGNOSTICS_QML" "id: usePathCommandButton" 'page.cfg_commandPath = page.cfg_commandPathDefault || "codexbar"'
+require_block_fragment "$DIAGNOSTICS_QML" "id: diagnosticProviderField" "maximumLength: 256"
+require_block_fragment "$DIAGNOSTICS_QML" "id: diagnosticOutputArea" "selectByMouse: true"
 # A user edit severs the SpinBox value binding, so it must re-install the
 # binding like every other interactive settings control; otherwise runtime
 # costHistoryDays writes from the Usage & Spend tab stop reaching the spin.
