@@ -113,6 +113,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   a partial final week no longer cuts a week-wide notch out of it, and ranges
   that fill a single week column hide the heatmap, which repeated the chart
   above it one day per row.
+- Reject oversized diagnostics responses with a clear error instead of
+  buffering them for display, matching the other CLI surfaces.
+- Allow mouse selection in the diagnostics output and bound the diagnostic
+  provider field, matching the provider settings inputs.
 
 ## 0.2.36 - 2026-09-09
 

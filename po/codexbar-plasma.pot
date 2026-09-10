@@ -553,6 +553,11 @@ msgstr ""
 msgid "Diagnostic command timed out. Try again."
 msgstr ""
 
+#: contents/ui/configDiagnostics.qml contents/ui/configPopup.qml
+#: contents/ui/configProviders.qml contents/ui/main.qml
+msgid "codexbar response exceeded the supported size."
+msgstr ""
+
 #: contents/ui/configDiagnostics.qml
 msgid "No diagnostic output."
 msgstr ""
@@ -1090,11 +1095,6 @@ msgstr ""
 
 #: contents/ui/configPopup.qml
 msgid "Use first %1 providers automatically"
-msgstr ""
-
-#: contents/ui/configPopup.qml contents/ui/configProviders.qml
-#: contents/ui/main.qml
-msgid "codexbar response exceeded the supported size."
 msgstr ""
 
 #: contents/ui/configProviders.qml
