@@ -16,6 +16,7 @@ QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/PanelProviders.js" as PanelProviders
 import "SOURCE_URL/PanelRules.js" as PanelRules
+import "SOURCE_URL/PanelTextFit.js" as PanelTextFit
 TestCase {
     name: "PanelSelectionText"
     QtObject {
@@ -29,7 +30,7 @@ TestCase {
         function providerPresentation(item) { return item; }
         function panelDisplayRow(item, mode) { return null; }
         function i18n(text) { return text; }
-        SOURCE_FUNCTION
+        SOURCE_FUNCTIONS
     }
     function test_emptyRosterText_data() {
         return [
@@ -56,10 +57,14 @@ class PanelSelectionTests(unittest.TestCase):
         main = ROOT / "contents/ui/main.qml"
         source = surface.texts[main]
         surface.texts = {main: source}
-        signature = re.search(r"function compactText\([^)]*\)", source).group(0)
-        function = signature + " {" + surface.function_body("compactText") + "}"
+        # The fallback lives in the segment builder now; compactText() only
+        # joins what survives, so the surface needs both halves.
+        functions = []
+        for name in ("compactTextSegments", "compactText"):
+            signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
+            functions.append(signature + " {" + surface.function_body(name) + "}")
         qml = QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
-        qml = qml.replace("SOURCE_FUNCTION", function)
+        qml = qml.replace("SOURCE_FUNCTIONS", "\n        ".join(functions))
         with tempfile.TemporaryDirectory(prefix="codexbar-panel-selection-") as temporary:
             fixture = Path(temporary) / "tst_panel_selection.qml"
             fixture.write_text(qml)

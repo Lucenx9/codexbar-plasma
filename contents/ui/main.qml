@@ -13,6 +13,7 @@ import "PanelDisplay.js" as PanelDisplay
 import "PanelElements.js" as PanelElements
 import "PanelProviders.js" as PanelProviders
 import "PanelRules.js" as PanelRules
+import "PanelTextFit.js" as PanelTextFit
 import "PopupSelection.js" as PopupSelection
 import "CommandLedger.js" as CommandLedger
 import "AccountRequests.js" as AccountRequests
@@ -3853,34 +3854,43 @@ PlasmoidItem {
         return result
     }
 
-    function compactText() {
+    // The panel label as separable segments. The compact renderer surrenders
+    // whole segments when the meter row leaves it too little room, so it needs
+    // them apart; every other caller joins them back through compactText().
+    function compactTextSegments() {
         var item = providerPresentation(selectedCompactProvider())
         var row = panelDisplayRow(item, menuBarDisplayMode)
         if (!PanelRules.matches(panelVisibilityRules.text, row, panelClockMs)) {
-            return ""
+            return []
         }
         if (!item) {
             if (PanelProviders.selectionActive(panelProviderIDsRaw)) {
-                return ""
+                return []
             }
-            return loading ? i18n("Loading") : "CodexBar"
+            // The standalone identity fallback names the widget itself, so it
+            // carries no droppable segment: it is the usage slot or nothing.
+            return [{ id: "usage", text: loading ? i18n("Loading") : "CodexBar" }]
         }
 
-        var parts = []
+        var segments = []
         if (Plasmoid.configuration.showProviderInPanel) {
-            parts.push(item.title)
+            segments.push({ id: "name", text: item.title })
         }
 
         var display = menuBarDisplayText(item)
         if (Plasmoid.configuration.showPercentInPanel && display.length > 0) {
-            parts.push(display)
+            segments.push({ id: "usage", text: display })
         }
 
         if (Plasmoid.configuration.showCreditsInPanel && item.credits !== null) {
-            parts.push(i18n("%1cr", formatNumber(item.credits)))
+            segments.push({ id: "credits", text: i18n("%1cr", formatNumber(item.credits)) })
         }
 
-        return parts.join(" ")
+        return segments
+    }
+
+    function compactText() {
+        return PanelTextFit.fullText(compactTextSegments())
     }
 
     function setHoveredPanelProvider(providerID) {

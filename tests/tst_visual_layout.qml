@@ -111,11 +111,25 @@ TestCase {
         }
         function refreshSessions() {
         }
+        property var panelOrder: ["identity", "status", "text", "meters"]
         function panelElementOrder() {
-            return ["identity", "status", "text", "meters"];
+            return panelOrder;
+        }
+        property string providerNameText: "A long provider name"
+        property string usageText: "57% remaining"
+        property string creditsText: ""
+        function compactTextSegments() {
+            var segments = [];
+            if (providerNameText.length > 0)
+                segments.push({id: "name", text: providerNameText});
+            if (usageText.length > 0)
+                segments.push({id: "usage", text: usageText});
+            if (creditsText.length > 0)
+                segments.push({id: "credits", text: creditsText});
+            return segments;
         }
         function compactText() {
-            return "A long provider name with 57% remaining";
+            return compactTextSegments().map(segment => segment.text).join(" ");
         }
         function usageProviders() {
             return [
@@ -279,6 +293,10 @@ TestCase {
         applet.incidentOnMeter = true;
         applet.metersHidden = false;
         applet.loading = false;
+        applet.panelOrder = ["identity", "status", "text", "meters"];
+        applet.providerNameText = "A long provider name";
+        applet.usageText = "57% remaining";
+        applet.creditsText = "";
     }
 
     function test_minimalPanelAppearance_data() {
@@ -379,13 +397,65 @@ TestCase {
         verify(panel.showPrimaryIdentity);
         var label = findItem(panel, item => item.objectName === "panelStandaloneText");
         tryVerify(() => label.visible && label.width > 0);
-        compare(label.text, applet.compactText());
+        // Nothing fits at this boundary, so the renderer keeps its last resort:
+        // the most important single segment, elided, never an empty label.
+        compare(label.text, panel.primaryText);
+        compare(label.text, applet.usageText);
+        // The surrendered segments stay available to assistive technology.
+        compare(label.Accessible.name, applet.compactText());
         verify(label.mapToItem(panel, 0, 0).x >= 0);
         verify(label.mapToItem(panel, label.width, 0).x <= panel.width);
         applet.meterCount = 2;
         tryCompare(panel, "inlinePrimaryText", true);
         verify(!panel.showPrimaryIdentity);
         tryVerify(() => !label.visible);
+    }
+
+    // The panel budget is fixed, so enabling every content switch on a crowded
+    // meter row asks for more width than the row has. Whole segments must be
+    // surrendered by priority: a rendered label that elides turns a complete
+    // value into a fragment that reads as a different one.
+    function test_crowdedPanelTextDropsSegmentsInsteadOfEliding_data() {
+        return [
+            {tag: "inline", order: ["identity", "status", "text", "meters"]},
+            {tag: "standalone", order: ["identity", "text", "status", "meters"]}
+        ];
+    }
+
+    function test_crowdedPanelTextDropsSegmentsInsteadOfEliding(data) {
+        applet.panelOrder = data.order;
+        applet.creditsText = "1,250cr";
+        var panel = createControl("CompactRepresentation", {applet: applet, height: 44});
+        if (!panel) return;
+
+        // Four meters is the cap the live adapter renders.
+        for (var count = 1; count <= 4; count++) {
+            applet.meterCount = count;
+            wait(0);
+            var label = findItem(panel, item => item.visible
+                && (item.objectName === "panelProviderText" || item.objectName === "panelStandaloneText"));
+            tryVerify(() => label && label.visible && label.width > 0, 1000, "count " + count);
+            var message = JSON.stringify({count: count, text: label.text, width: label.width,
+                compositions: panel.textCompositions, widths: panel.textCompositionWidths,
+                budget: panel.inlineTextBudget, standalone: panel.standaloneTextBudget,
+                panelWidth: panel.width, x0: label.mapToItem(panel, 0, 0).x,
+                x1: label.mapToItem(panel, label.width, 0).x, inline: panel.inlinePrimaryText});
+            // Eliding is the last resort, reached only when no composition fits.
+            tryVerify(() => !label.truncated
+                || panel.textCompositionIndex === panel.textCompositions.length - 1,
+                1000, "elided: " + message);
+            // Only whole segments are surrendered, and the usage figure is kept.
+            verify(panel.textCompositions.indexOf(label.text) >= 0, "composition: " + message);
+            verify(label.text.indexOf(applet.usageText) >= 0, "usage: " + message);
+            compare(label.Accessible.name, applet.compactText());
+            tryVerify(() => label.mapToItem(panel, label.width, 0).x <= panel.width,
+                1000, "fits: " + message);
+        }
+
+        // The full composition survives once the row leaves room for it again.
+        applet.providerNameText = "Codex";
+        applet.meterCount = 1;
+        tryCompare(panel, "primaryText", applet.compactText());
     }
 
     function test_emptyQuotaRetainsWarningColor_data() {

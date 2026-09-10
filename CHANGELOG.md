@@ -36,6 +36,18 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep every enabled **Panel → Additional information** item readable when
+  several providers fill the panel. The panel used to squeeze the provider
+  name, usage text, and credit balance into whatever the meter row left over
+  and cut the result short, so "Claude 82% used 125cr" arrived as
+  "Claude 82% u..." and a complete value became a fragment reading as a
+  different one. The panel now surrenders whole items instead, dropping the
+  provider name first because the icon beside it already identifies the
+  provider, then the credit balance, and keeping the usage text. The full text
+  stays in the panel tooltip and accessible names, and only a single remaining
+  item is ever elided. The panel also offers the text every pixel the row
+  actually leaves, instead of a flat allowance that hid content while space
+  was free.
 - Keep Popup and Notifications settings text and controls in place while the
   page opens. The themed scrollbar gutter stays reserved instead of appearing
   and then disappearing as the content settles, and the Popup overview section

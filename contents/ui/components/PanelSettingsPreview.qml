@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "../PanelDisplay.js" as PanelDisplay
 import "../PanelPreview.js" as PanelPreview
+import "../PanelTextFit.js" as PanelTextFit
 import "../ProviderIdentity.js" as ProviderIdentity
 import "../QuotaThresholds.js" as QuotaThresholds
 import "../ThemeContrast.js" as ThemeContrast
@@ -158,28 +159,32 @@ ColumnLayout {
                     preview.usageBarsShowUsed ? i18n("used") : i18n("left"));
             }).join(". ");
         }
-        function compactText() {
+        function compactTextSegments() {
             if (!preview.previewModel.textVisible) {
-                return "";
+                return [];
             }
             var provider = selectedCompactProvider();
             // An empty panel provider selection has no provider to describe;
             // the preview icon stands alone like the live icon fallback.
             if (!provider) {
-                return "";
+                return [];
             }
-            var parts = [];
+            var segments = [];
             if (preview.configPage.cfg_showProviderInPanel) {
-                parts.push(provider.title);
+                segments.push({ id: "name", text: provider.title });
             }
             var metric = preview.metricText(preview.previewModel.textRow);
             if (preview.configPage.cfg_showPercentInPanel && metric.length > 0) {
-                parts.push(metric);
+                segments.push({ id: "usage", text: metric });
             }
             if (preview.configPage.cfg_showCreditsInPanel && provider.credits !== null) {
-                parts.push(i18n("%1cr", provider.credits.toLocaleString(Qt.locale(), "f", 0)));
+                segments.push({ id: "credits",
+                    text: i18n("%1cr", provider.credits.toLocaleString(Qt.locale(), "f", 0)) });
             }
-            return parts.join(" ");
+            return segments;
+        }
+        function compactText() {
+            return PanelTextFit.fullText(compactTextSegments());
         }
         function displayPercent(row) {
             return preview.usageBarsShowUsed ? row.usedPercent : row.leftPercent;
