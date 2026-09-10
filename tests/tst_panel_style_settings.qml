@@ -229,7 +229,8 @@ TestCase {
     }
 
     function test_automaticSelectionsNormalizeProviderIDs() {
-        var page = createPage();
+        // This checks selection, without rendering an unbundled future icon.
+        var page = createPage({cfg_showMultiProviderInPanel: false});
         if (!page) return;
         var controller = findChild(page, "panelProviderRosterController");
         controller.enabledProviderRoster = [
