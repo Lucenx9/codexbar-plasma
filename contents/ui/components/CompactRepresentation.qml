@@ -15,10 +15,28 @@ Item {
     readonly property var meterProviders: applet.compactProviders()
     readonly property bool hasProviderMeters: meterProviders.length > 0
     readonly property var incidentProvider: applet.providerPresentation(applet.primaryIncidentProvider())
+    // The incident dot must sit on the incident provider's own icon. The
+    // standalone status element stays only when no rendered meter, and no
+    // vertical identity icon, can carry the badge.
+    readonly property bool incidentProviderHasMeterBadge: incidentProvider !== null
+        && meterProviders.some(function(provider) {
+            return provider.provider === incidentProvider.provider
+                && provider.hasIncident === true
+                && provider.statusKnown !== false
+        })
     readonly property string primaryText: applet.compactText()
     readonly property var selectedProvider: applet.selectedCompactProvider()
     readonly property bool selectedProviderHasMeter: selectedProvider !== null && selectedProvider !== undefined
         && meterProviders.some(function(provider) { return provider.provider === selectedProvider.provider })
+    // Without rendered meters in a vertical panel the identity icon is the only
+    // anchor, so it carries the badge only when the primary incident belongs to
+    // the selected provider. Any other incident keeps the standalone status
+    // element available so the outage never loses its marker.
+    readonly property bool identityCarriesIncidentBadge: verticalPanel
+        && !hasProviderMeters
+        && incidentProvider !== null
+        && selectedProvider !== null && selectedProvider !== undefined
+        && incidentProvider.provider === selectedProvider.provider
     // Independent text still needs its identity when several meters are shown.
     readonly property bool inlinePrimaryText: !verticalPanel && primaryText.length > 0
         && inlineTextWidth > 0
@@ -116,9 +134,11 @@ Item {
                 readonly property bool elementVisible: modelData === "identity"
                     ? compactRoot.showPrimaryIdentity
                     : (modelData === "status"
-                    ? ((!compactRoot.verticalPanel || compactRoot.hasProviderMeters)
+                    ? ((!compactRoot.verticalPanel || compactRoot.hasProviderMeters
+                            || !compactRoot.identityCarriesIncidentBadge)
                         && compactRoot.incidentProvider !== null
-                        && compactRoot.incidentProvider.hasIncident)
+                        && compactRoot.incidentProvider.hasIncident
+                        && !compactRoot.incidentProviderHasMeterBadge)
                     : (modelData === "text"
                     ? (!compactRoot.verticalPanel && compactRoot.primaryText.length > 0 && !compactRoot.inlinePrimaryText)
                     : compactRoot.hasProviderMeters))
@@ -188,18 +208,21 @@ Item {
 
                 Rectangle {
                     id: compactVerticalStatusBadge
+                    objectName: "panelIdentityBadge"
 
-                    visible: compactRoot.verticalPanel
+                    // Without meters this icon is the only anchor, so it may
+                    // carry the badge only for its own provider's incident.
+                    // Loading replaces the icon with a refresh spinner, so the
+                    // badge waits for the provider icon to come back.
+                    visible: compactRoot.identityCarriesIncidentBadge
                         && !compactRoot.applet.loading
-                        && compactRoot.incidentProvider !== null
-                        && compactRoot.incidentProvider.hasIncident
                     anchors.top: parent.top
                     anchors.right: parent.right
                     width: Math.round(Kirigami.Units.iconSizes.smallMedium / 3)
                     height: width
                     radius: width / 2
-                    color: compactRoot.incidentProvider
-                        ? compactRoot.applet.statusBadgeColor(compactRoot.incidentProvider.statusSeverity)
+                    color: compactRoot.selectedProvider
+                        ? compactRoot.applet.statusBadgeColor(compactRoot.selectedProvider.statusSeverity)
                         : "transparent"
                     border.width: 1
                     border.color: Kirigami.Theme.backgroundColor
@@ -214,15 +237,20 @@ Item {
         Item {
             id: compactStatusBadge
 
-            visible: (!compactRoot.verticalPanel || compactRoot.hasProviderMeters)
+            visible: (!compactRoot.verticalPanel || compactRoot.hasProviderMeters
+                    || !compactRoot.identityCarriesIncidentBadge)
                 && compactRoot.incidentProvider !== null
                 && compactRoot.incidentProvider.hasIncident
+                && !compactRoot.incidentProviderHasMeterBadge
             implicitWidth: Kirigami.Units.smallSpacing * 1.5
             implicitHeight: implicitWidth
 
             // The Loader gives this item the full panel row height. Keep the
             // status dot square inside it instead of stretching into a pill.
             Rectangle {
+                id: panelStatusDot
+                objectName: "panelStatusDot"
+
                 anchors.centerIn: parent
                 width: parent.implicitWidth
                 height: width
@@ -288,6 +316,10 @@ Item {
                     readonly property bool showsPrimaryText: compactRoot.inlinePrimaryText
                         && modelData.provider === compactRoot.selectedProvider.provider
                     readonly property var quotaRows: compactRoot.applet.panelMeterRows(modelData)
+                    readonly property string incidentText: modelData.hasIncident === true
+                        && modelData.statusKnown !== false
+                        && modelData.status
+                        ? modelData.status : ""
                     readonly property color accent: compactRoot.minimalStyle ? Kirigami.Theme.textColor
                         : compactRoot.applet.providerReadableColor(modelData.provider, Kirigami.Theme.backgroundColor)
 
@@ -306,6 +338,7 @@ Item {
                     Accessible.role: compactRoot.interactive ? Accessible.Button : Accessible.Graphic
                     Accessible.name: compactRoot.interactive ? i18n("Open %1", modelData.title) : modelData.title
                     Accessible.description: compactRoot.applet.panelMeterDescription(modelData)
+                        + (compactMeter.incidentText.length > 0 ? ". " + compactMeter.incidentText : "")
                         + (showsPrimaryText ? ". " + compactRoot.primaryText : "")
                     Accessible.ignored: !compactRoot.interactive
                     Accessible.onPressAction: compactMeter.activate()
@@ -358,6 +391,24 @@ Item {
                             Layout.alignment: Qt.AlignVCenter
                             Layout.preferredWidth: compactRoot.meterIconSize
                             Layout.preferredHeight: compactRoot.meterIconSize
+
+                            Rectangle {
+                                id: meterIncidentBadge
+                                objectName: "panelIncidentBadge"
+
+                                // Refreshes keep the rendered providers, so the
+                                // badge must not flicker away with loading.
+                                visible: compactMeter.modelData.hasIncident === true
+                                    && compactMeter.modelData.statusKnown !== false
+                                anchors.top: parent.top
+                                anchors.right: parent.right
+                                width: Math.max(4, Math.round(compactRoot.meterIconSize / 3))
+                                height: width
+                                radius: width / 2
+                                color: compactRoot.applet.statusBadgeColor(compactMeter.modelData.statusSeverity)
+                                border.width: 1
+                                border.color: Kirigami.Theme.backgroundColor
+                            }
                         }
 
                         ColumnLayout {
