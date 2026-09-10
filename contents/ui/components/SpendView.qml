@@ -274,7 +274,9 @@ ColumnLayout {
             }
 
             ColumnLayout {
-                visible: view.dailyPoints.length > 0
+                // One week column carries a single day per row, which repeats
+                // the chart above instead of showing a weekday pattern.
+                visible: view.dailyPoints.length > 7
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing / 2
 
@@ -290,7 +292,7 @@ ColumnLayout {
                 // width so the cells stay large enough to hover.
                 Item {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 7 * heatmapGrid.cellSize
+                    Layout.preferredHeight: 7 * heatmapGrid.cellHeight
                         + 6 * heatmapGrid.rowSpacing
                     clip: true
 
@@ -306,11 +308,17 @@ ColumnLayout {
                             (width + cellSpacing) / (minimumCellSize + cellSpacing)))
                         readonly property int columnCount: Math.max(1, Math.min(
                             fittingColumns, Math.ceil(view.dailyPoints.length / 7)))
-                        readonly property real cellSize: Math.max(minimumCellSize, Math.min(
-                            maximumCellSize,
-                            (width - cellSpacing * (columnCount - 1)) / columnCount))
-                        readonly property var cells: view.dailyPoints.slice(
-                            Math.max(0, view.dailyPoints.length - columnCount * 7))
+                        readonly property real availableCellWidth: Math.max(minimumCellSize,
+                            (width - cellSpacing * (columnCount - 1)) / columnCount)
+                        readonly property real cellHeight: Math.max(minimumCellSize, Math.min(
+                            maximumCellSize, availableCellWidth))
+                        // Cells stretch into the width a short range leaves
+                        // unused, bounded so they keep reading as heatmap cells
+                        // rather than bars competing with the chart above.
+                        readonly property real cellWidth: Math.min(
+                            availableCellWidth, cellHeight * 3)
+                        readonly property var cells: CostPresentation.spendHeatmapCells(
+                            view.dailyPoints, columnCount * 7)
 
                         width: parent.width
                         rows: 7
@@ -322,22 +330,32 @@ ColumnLayout {
                             model: heatmapGrid.cells
 
                             delegate: Rectangle {
+                                id: heatmapCell
+
                                 required property var modelData
 
-                                readonly property real fraction: view.heatmapMaximum > 0
-                                    ? Math.max(0, Math.min(1, Number(modelData.value) / view.heatmapMaximum))
+                                // Padding slots carry no day: they fill the
+                                // oldest corner of the block and stay out of
+                                // hover, the readout, and the reading order.
+                                readonly property bool measured: !!heatmapCell.modelData
+                                readonly property real fraction: heatmapCell.measured && view.heatmapMaximum > 0
+                                    ? Math.max(0, Math.min(1,
+                                        Number(heatmapCell.modelData.value) / view.heatmapMaximum))
                                     : 0
 
                                 Accessible.role: Accessible.Graphic
-                                Accessible.name: modelData.label
-                                Accessible.description: modelData.displayValue
+                                Accessible.ignored: !heatmapCell.measured
+                                Accessible.name: heatmapCell.measured ? heatmapCell.modelData.label : ""
+                                Accessible.description: heatmapCell.measured ? heatmapCell.modelData.displayValue : ""
 
-                                width: heatmapGrid.cellSize
-                                height: heatmapGrid.cellSize
+                                width: heatmapGrid.cellWidth
+                                height: heatmapGrid.cellHeight
                                 radius: Kirigami.Units.cornerRadius / 2
-                                color: view.applet.withAlpha(
-                                    Kirigami.Theme.highlightColor,
-                                    0.1 + fraction * 0.8)
+                                color: heatmapCell.measured
+                                    ? view.applet.withAlpha(
+                                        Kirigami.Theme.highlightColor,
+                                        0.1 + heatmapCell.fraction * 0.8)
+                                    : view.applet.withAlpha(Kirigami.Theme.textColor, 0.05)
 
                                 // The cell carries no border of its own and the
                                 // hover outline is a separate overlay. Fading a
@@ -358,6 +376,7 @@ ColumnLayout {
                                     border.width: 1
                                     border.color: view.applet.withAlpha(
                                         Kirigami.Theme.textColor, 0.4)
+                                    visible: heatmapCell.measured
                                     opacity: heatmapMouse.containsMouse ? 1 : 0
 
                                     Behavior on opacity {
@@ -372,8 +391,11 @@ ColumnLayout {
                                     // not a label for a control: scanning the
                                     // grid must not wait out a hover delay.
                                     delay: 0
-                                    visible: heatmapMouse.containsMouse
-                                    plainText: i18n("%1: %2", modelData.label, modelData.displayValue)
+                                    visible: heatmapMouse.containsMouse && heatmapCell.measured
+                                    plainText: heatmapCell.measured
+                                        ? i18n("%1: %2", heatmapCell.modelData.label,
+                                            heatmapCell.modelData.displayValue)
+                                        : ""
                                 }
 
                                 MouseArea {

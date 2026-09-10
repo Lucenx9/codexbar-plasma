@@ -107,6 +107,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Narrow the panel tooltip to the hovered provider meter, so hovering one
   panel icon reports only that provider's quotas instead of the whole roster.
   The full list remains when hovering elsewhere.
+- Lay the Usage & Spend activity heatmap out as a complete block instead of a
+  small patch of squares stranded beside an empty half of the tab. Its cells
+  now stretch into the width a short range leaves unused, the grid is padded so
+  a partial final week no longer cuts a week-wide notch out of it, and ranges
+  that fill a single week column hide the heatmap, which repeated the chart
+  above it one day per row.
 
 ## 0.2.36 - 2026-09-09
 

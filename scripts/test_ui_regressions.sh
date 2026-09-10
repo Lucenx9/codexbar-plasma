@@ -2761,14 +2761,44 @@ if "visible: view.dailyPoints.length > 1" in spend_view_text:
 for heatmap_range_fragment in (
     "Math.ceil(view.dailyPoints.length / 7)",
     "readonly property int fittingColumns",
-    "readonly property real cellSize",
-    "Layout.preferredHeight: 7 * heatmapGrid.cellSize",
+    "readonly property real cellHeight",
+    "Layout.preferredHeight: 7 * heatmapGrid.cellHeight",
     "+ 6 * heatmapGrid.rowSpacing",
 ):
     if heatmap_range_fragment not in spend_view_text:
         raise AssertionError(
             "the activity heatmap must follow the selected cost range and size cells "
             f"from the available width; missing {heatmap_range_fragment!r}"
+        )
+if "readonly property real cellWidth: Math.min(" not in spend_view_text:
+    raise AssertionError(
+        "the activity heatmap must stretch its cells into the width a short range leaves "
+        "unused instead of stranding a small patch beside an empty section"
+    )
+if "cellHeight * 3)" not in spend_view_text:
+    raise AssertionError(
+        "the stretched heatmap cells must stay bounded against their own height, so they keep "
+        "reading as heatmap cells instead of bars competing with the chart above"
+    )
+if "CostPresentation.spendHeatmapCells(" not in spend_view_text:
+    raise AssertionError(
+        "the activity heatmap must pad its grid through the shared cell layout, so a ragged "
+        "final column cannot cut a week-wide notch out of the block"
+    )
+if "visible: view.dailyPoints.length > 7" not in spend_view_text:
+    raise AssertionError(
+        "the activity heatmap must stay hidden for ranges that fill a single week column, "
+        "which repeat the chart above instead of showing a weekday pattern"
+    )
+for heatmap_padding_fragment in (
+    "readonly property bool measured: !!heatmapCell.modelData",
+    "Accessible.ignored: !heatmapCell.measured",
+    "visible: heatmapMouse.containsMouse && heatmapCell.measured",
+):
+    if heatmap_padding_fragment not in spend_view_text:
+        raise AssertionError(
+            "padded heatmap slots carry no day and must stay out of hover, the readout, and "
+            f"the reading order; missing {heatmap_padding_fragment!r}"
         )
 if "modelData.monthLine" in spend_view_text:
     raise AssertionError(
