@@ -946,6 +946,7 @@ Item {
                             level: 4
                             type: Kirigami.Heading.Type.Primary
                             Layout.fillWidth: true
+                            elide: Text.ElideRight
                         }
 
                         Repeater {
@@ -990,6 +991,7 @@ Item {
                             level: 4
                             type: Kirigami.Heading.Type.Primary
                             Layout.fillWidth: true
+                            elide: Text.ElideRight
                         }
 
                         PlainPlasmaLabel {
@@ -1021,6 +1023,7 @@ Item {
                             level: 4
                             type: Kirigami.Heading.Type.Primary
                             Layout.fillWidth: true
+                            elide: Text.ElideRight
                         }
 
                         Rectangle {

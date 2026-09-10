@@ -118,6 +118,7 @@ copyable_value_qml = root / "contents/ui/components/CopyableValue.qml"
 spend_view_qml = root / "contents/ui/components/SpendView.qml"
 full_representation_qml = root / "contents/ui/components/FullRepresentation.qml"
 cost_trust_notice_qml = root / "contents/ui/components/CostTrustNotice.qml"
+plain_tool_tip_qml = root / "contents/ui/components/PlainToolTip.qml"
 
 
 def function_body(text, name):
@@ -259,6 +260,7 @@ copyable_value_text = copyable_value_qml.read_text(encoding="utf-8")
 spend_view_text = spend_view_qml.read_text(encoding="utf-8")
 full_representation_text = full_representation_qml.read_text(encoding="utf-8")
 cost_trust_notice_text = cost_trust_notice_qml.read_text(encoding="utf-8")
+plain_tool_tip_text = plain_tool_tip_qml.read_text(encoding="utf-8")
 
 internal_config_keys = {
     "usageCache",
@@ -2916,6 +2918,60 @@ if "tab.applet.withAlpha(tab.accent, tab.selected ? 1 : 0)" not in global_tab_te
     )
 if "applet.withAlpha(overviewTab.accent," not in full_representation_text:
     raise AssertionError("the overview tab indicator must fade its accent alpha like the shared tab")
+if "Behavior on width" not in id_block(compact_representation_text, "quotaCapsule"):
+    raise AssertionError(
+        "the panel capsule fill must grow into a new reading like every popup meter"
+    )
+if "enabled: compactRoot.animationsEnabled" not in id_block(compact_representation_text, "quotaCapsule"):
+    raise AssertionError(
+        "the panel capsule fill animation must opt out where animations are disabled, so the "
+        "settings preview keeps rendering a static frame"
+    )
+if "delay: Kirigami.Units.toolTipDelay" not in plain_tool_tip_text:
+    raise AssertionError(
+        "PlainToolTip must default to the Plasma hover delay: Controls.ToolTip opens with no "
+        "delay of its own, so a pointer crossing the popup flashes every tooltip it passes"
+    )
+# Two tooltips confirm or read out state instead of labelling a control, and opt
+# out of that delay explicitly. Pin both, so the default cannot silently start
+# holding back feedback that has to be immediate.
+if "delay: 0" not in spend_view_text:
+    raise AssertionError(
+        "the heatmap cell readout must stay instant: it reports the cell under the pointer "
+        "while the pointer scans the grid"
+    )
+if "visible: copyButton.hovered && !valueRow.copied" not in copyable_value_text:
+    raise AssertionError(
+        "the copy button's hover label must hide while the copied confirmation is "
+        "shown, so feedback gets its own visibility transition"
+    )
+if "visible: valueRow.copied" not in copyable_value_text:
+    raise AssertionError(
+        "the copied confirmation must ride its own visibility transition: flipping delay "
+        "on an already-visible tooltip would not restart the pending hover delay"
+    )
+if "delay: 0" not in copyable_value_text:
+    raise AssertionError(
+        "the copied confirmation must appear at once and outlive no hover delay"
+    )
+
+# Popup and panel labels that fill the available width must truncate. A long
+# translation or a CLI-supplied title otherwise widens the row past the popup
+# instead of eliding, and the popup cannot grow to meet it.
+plain_label_component = re.compile(r"(?:Components\.)?Plain(?:PlasmaLabel|ControlsLabel|Heading)\s*\{")
+for component_path in sorted((root / "contents/ui/components").glob("*.qml")):
+    component_text = component_path.read_text(encoding="utf-8")
+    for match in plain_label_component.finditer(component_text):
+        body = Surface._match_braces(component_text, match.end() - 1)
+        if "Layout.fillWidth: true" not in body:
+            continue
+        if "elide" in body or "wrapMode" in body:
+            continue
+        line = component_text.count("\n", 0, match.start()) + 1
+        raise AssertionError(
+            f"{component_path.relative_to(root)}:{line}: a label that fills the width must "
+            "elide or wrap, so a long translation cannot push the row past the popup"
+        )
 
 normalize_provider_body = function_body(main_text, "normalizeProvider")
 if "statusKnown: status !== null" not in normalize_provider_body:

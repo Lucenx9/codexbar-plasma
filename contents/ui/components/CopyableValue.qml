@@ -51,8 +51,20 @@ RowLayout {
 
         PlainToolTip {
             parent: copyButton
-            plainText: valueRow.copied ? i18n("Copied") : valueRow.copyAccessibleName
-            visible: copyButton.hovered || valueRow.copied
+            // A hover label for the button; it keeps the shared delay.
+            visible: copyButton.hovered && !valueRow.copied
+            plainText: valueRow.copyAccessibleName
+        }
+
+        PlainToolTip {
+            parent: copyButton
+            // The copied confirmation is transient feedback for an action that
+            // already happened, so it rides its own visibility transition and
+            // stays immediate: flipping delay on an already-visible tooltip
+            // would not restart the pending hover delay.
+            delay: 0
+            visible: valueRow.copied
+            plainText: i18n("Copied")
         }
 
         onClicked: valueRow.copyRequested(valueRow.text)

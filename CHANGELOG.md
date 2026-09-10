@@ -80,6 +80,14 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   the label and value on every pointer entry and exit.
 - Fade the tab selection indicator with the tab background it sits under,
   instead of blinking the accent bar on every tab change.
+- Hold tooltips back for the standard Plasma hover delay instead of flashing
+  them the instant the pointer crosses a tab, a panel status dot, or a copy
+  button. The heatmap cell readout and the copied confirmation stay immediate.
+- Grow the panel capsule fill into a new reading, like every meter in the popup
+  already does. The settings preview keeps rendering a static frame.
+- Truncate popup section headings and labels that fill the available width, so
+  a long translation or a provider-supplied cost title can no longer push the
+  row wider than the popup.
 
 ## 0.2.36 - 2026-09-09
 
