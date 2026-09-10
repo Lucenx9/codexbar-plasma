@@ -2812,6 +2812,16 @@ if "sessionCardHover.hovered ? 0.075 : 0.035" not in sessions_view_text:
     raise AssertionError("session cards must confirm hover on the surface that reveals their copy actions")
 if "opacity: chart.hasActivePoint ? 1 : 0" not in interactive_chart_text:
     raise AssertionError("the chart readout must fade with the active point instead of blinking")
+if "onActiveIndexChanged: if (activeIndex >= 0 && activeIndex < pointCount)" not in interactive_chart_text:
+    raise AssertionError(
+        "the chart readout must retain the last inspected point across the fade-out, and must "
+        "bounds-check inline: hasActivePoint is still stale inside an activeIndex change handler"
+    )
+if "chart.hasActivePoint ? chart.pointLabel" in interactive_chart_text:
+    raise AssertionError(
+        "the chart readout text must not clear on hasActivePoint: that empties the row "
+        "on the same signal that starts the fade, so hover exit blinks instead of fading"
+    )
 if "tab.applet.withAlpha(tab.accent, tab.selected ? 1 : 0)" not in global_tab_text:
     raise AssertionError(
         "the tab selection indicator must fade the accent's alpha, not interpolate towards transparent"
