@@ -1197,7 +1197,8 @@ Item {
                     Components.ProviderCostSection {
                         applet: fullRoot.applet
                         providerData: applet.presentedProviderData
-                        accountSelectionKey: applet.accountLabel(applet.selectedProviderData)
+                        accountSelectionKey: applet.accountKey(applet.selectedProviderData)
+                        accountSelectionLabel: applet.accountLabel(applet.selectedProviderData)
                         presentationVisible: fullRoot.visible && !applet.globalViewSelected
                     }
 

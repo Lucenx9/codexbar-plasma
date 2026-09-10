@@ -255,6 +255,46 @@ TestCase {
         });
     }
 
+    function test_headerPlanStaysBesideElidedAccount_data() {
+        return [
+            {tag: "narrow", width: 240},
+            {tag: "popup", width: 540}
+        ];
+    }
+
+    function test_headerPlanStaysBesideElidedAccount(data) {
+        var longAccount = "engineering-with-an-unusually-long-account-name@example.com";
+        var header = createControl("ProviderHeader", {
+            applet: applet,
+            providerData: {
+                provider: "codex",
+                title: "Codex",
+                account: longAccount,
+                planText: "Pro",
+                hasIncident: false
+            },
+            width: data.width
+        });
+        if (!header)
+            return;
+        var account = findText(header, longAccount);
+        var plan = findText(header, "Pro");
+        verify(account !== null && plan !== null);
+        tryVerify(function () {
+            return account.width > 0 && plan.width > 0;
+        });
+        // The account never claims more width than its own text, so the plan
+        // cannot drift away from the email it qualifies.
+        verify(account.width <= account.implicitWidth + 1);
+        verify(plan.x - (account.x + account.width) <= 8);
+        // On a narrow popup the account yields first and both stay inside.
+        if (data.width < 300) {
+            verify(account.width < account.implicitWidth);
+        }
+        verify(account.mapToItem(header, account.width, 0).x <= header.width + 1);
+        verify(plan.mapToItem(header, plan.width, 0).x <= header.width + 1);
+    }
+
     function test_incidentBadgeGrowsWithItsText() {
         var header = createControl("ProviderHeader", {
             applet: applet, width: 540,

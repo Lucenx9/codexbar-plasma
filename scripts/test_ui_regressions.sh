@@ -688,10 +688,20 @@ if "Normalizer.costRecordHasError(item)" not in parse_cost_body:
     raise AssertionError("cost error records must use the shared envelope contract")
 if "Normalizer.mergeCostSnapshotsAfterPartialFailure(" not in parse_cost_body:
     raise AssertionError("partial cost errors must retain only explicitly failed providers")
+if "tokenCostsContext === costCommandSource" not in parse_cost_body:
+    raise AssertionError(
+        "a partial cost reply after a source change must not re-tag the previous "
+        "context's snapshots: only same-source failures may be retained"
+    )
 
 parse_usage_body = function_body(main_text, "parseOutput")
 if "Normalizer.dedupeProviderSnapshots(nextProviders)" not in parse_usage_body:
     raise AssertionError("direct usage payloads must not create duplicate provider tabs")
+if parse_usage_body.find("normalizedProviderID(items[i].provider)") < parse_usage_body.find("try {"):
+    raise AssertionError(
+        "parseOutput must screen the provider id inside the per-provider guard so a "
+        "throwing identity read drops only its own provider instead of the whole refresh"
+    )
 
 token_cost_section_body = id_block(main_text, "tokenCostSection")
 if "applet.costErrorText" not in token_cost_section_body:
@@ -967,8 +977,11 @@ if "message.length > 0 ? message : i18n(\"codexbar did not return account data.\
     raise AssertionError("parseProviderAccountsOutput must not fabricate an account error for JSON []")
 
 dedupe_accounts_body = function_body(main_text, "dedupeAccountOptions")
-if 'var key = "account:" + label' not in dedupe_accounts_body:
-    raise AssertionError("dedupeAccountOptions must namespace labels before object-map lookup")
+if "accountOptionKey(items[i])" not in dedupe_accounts_body:
+    raise AssertionError("dedupeAccountOptions must dedupe on the validated account identity, not the display label")
+account_option_key_body = function_body(main_text, "accountOptionKey")
+if '"key:" + key' not in account_option_key_body or '"label:" + label' not in account_option_key_body:
+    raise AssertionError("dedupeAccountOptions must namespace identities before object-map lookup")
 if "hasOwnKey(seen, key)" not in dedupe_accounts_body:
     raise AssertionError(
         "dedupeAccountOptions must use an own-property check so labels such as "
@@ -1269,30 +1282,78 @@ if "compactRoot.meterProviders.length * compactRoot.meterWidth" not in compact_r
 
 vertical_status_badge_body = id_block(compact_representation_text, "compactVerticalStatusBadge")
 for vertical_badge_fragment in (
-    "visible: compactRoot.verticalPanel",
-    "compactRoot.incidentProvider.hasIncident",
-    "statusBadgeColor(compactRoot.incidentProvider.statusSeverity)",
+    "objectName: \"panelIdentityBadge\"",
+    "visible: compactRoot.identityCarriesIncidentBadge",
+    "!compactRoot.applet.loading",
+    "statusBadgeColor(compactRoot.selectedProvider.statusSeverity)",
     "border.width: 1",
     "border.color: Kirigami.Theme.backgroundColor",
 ):
     if vertical_badge_fragment not in vertical_status_badge_body:
         raise AssertionError(
-            "collapsing to an icon must keep an at-a-glance incident marker; "
+            "without meters the identity icon may badge only its own provider's "
+            "incident, never another provider's outage; "
             f"missing {vertical_badge_fragment!r}"
+        )
+
+for vertical_anchor_fragment in (
+    "readonly property bool identityCarriesIncidentBadge: verticalPanel",
+    "!hasProviderMeters",
+    "incidentProvider !== null",
+    "incidentProvider.provider === selectedProvider.provider",
+):
+    if vertical_anchor_fragment not in compact_representation_text:
+        raise AssertionError(
+            "the identity badge anchor must be limited to the selected "
+            "provider's own incident so a foreign outage keeps the standalone "
+            f"fallback; missing {vertical_anchor_fragment!r}"
         )
 
 horizontal_status_badge_body = id_block(compact_representation_text, "compactStatusBadge")
 for horizontal_badge_fragment in (
-    "visible: (!compactRoot.verticalPanel || compactRoot.hasProviderMeters)",
+    "visible: (!compactRoot.verticalPanel || compactRoot.hasProviderMeters",
+    "|| !compactRoot.identityCarriesIncidentBadge)",
     "compactRoot.incidentProvider.hasIncident",
+    "!compactRoot.incidentProviderHasMeterBadge",
     "statusBadgeColor(compactRoot.incidentProvider.statusSeverity)",
     "border.width: 1",
     "border.color: Kirigami.Theme.backgroundColor",
 ):
     if horizontal_badge_fragment not in horizontal_status_badge_body:
         raise AssertionError(
-            "horizontal status badge must keep a contrast contour against the panel; "
+            "the standalone status element is a fallback: when a meter can carry "
+            "the badge, the ambiguous floating dot must hide; "
             f"missing {horizontal_badge_fragment!r}"
+        )
+
+meter_incident_badge_body = id_block(compact_representation_text, "meterIncidentBadge")
+for meter_badge_fragment in (
+    "objectName: \"panelIncidentBadge\"",
+    # Starting the predicate with the incident flags pins that a refresh
+    # (loading with retained providers) must not hide the meter badge.
+    "visible: compactMeter.modelData.hasIncident === true",
+    "compactMeter.modelData.statusKnown !== false",
+    "statusBadgeColor(compactMeter.modelData.statusSeverity)",
+    "border.width: 1",
+    "border.color: Kirigami.Theme.backgroundColor",
+):
+    if meter_badge_fragment not in meter_incident_badge_body:
+        raise AssertionError(
+            "each provider meter must badge its own incident so reordering the "
+            "providers moves the outage marker with it; "
+            f"missing {meter_badge_fragment!r}"
+        )
+
+overview_detail_body = function_body(main_text, "overviewDetailText")
+for overview_detail_fragment in (
+    "item.hasIncident === true && item.statusKnown !== false",
+    "item.account && item.account.length > 0",
+):
+    if overview_detail_fragment not in overview_detail_body:
+        raise AssertionError(
+            "the overview detail line stands for account identity; only an active "
+            "incident may replace it, never an operational status; "
+            f"missing {overview_detail_fragment!r}"
         )
 
 for tooltip_fragment in (
@@ -1828,6 +1889,9 @@ for fragment in (
     "onSelectedIndexChanged: tokenCostSection.rememberDaySelection()",
     "CostPresentation.costDayIndexAfterRefresh(",
     "onCostHistoryShowsTokensChanged: clearDaySelection()",
+    "applet.accountKey(providerData)",
+    "accountSelectionKey,",
+    "accountSelectionLabel,",
     "applet.accountLabel(providerData)",
     "applet.setCostHistoryMetric(valueAt(index))",
 ):
@@ -1981,8 +2045,19 @@ for placeholder_id in (
         raise AssertionError(f"{placeholder_id} must use the native informational empty state")
 
 provider_account_label_body = id_block(provider_header_text, "providerAccountLabel")
-if "Layout.maximumWidth: Kirigami.Units.gridUnit * 16" not in provider_account_label_body:
-    raise AssertionError("providerAccountLabel must cap long account text before the refresh edge")
+for account_label_fragment in (
+    # Filling with a cap at the label's own text lets the account elide on
+    # narrow popups while never stretching past the email it shows.
+    "Layout.fillWidth: true",
+    "Layout.maximumWidth: Math.min(implicitWidth,",
+    "Kirigami.Units.gridUnit * 16",
+):
+    if account_label_fragment not in provider_account_label_body:
+        raise AssertionError(
+            "providerAccountLabel must fill without outgrowing its text and "
+            f"cap long account text before the refresh edge; "
+            f"missing {account_label_fragment!r}"
+        )
 if "providerHeaderRow.width" in provider_account_label_body or "providerMetaRow.width" in provider_account_label_body:
     raise AssertionError("providerAccountLabel must not bind its width to the header layout width")
 
@@ -2128,7 +2203,7 @@ if ordered_provider_indexes != sorted(ordered_provider_indexes):
     raise AssertionError("Provider details, list boundary, heading, and rows must keep their visual order")
 
 notification_scope_body = function_body(main_text, "notificationScopeKey")
-for scope_fragment in ("providerMapKey(item.provider)", "selectedAccountForProvider", "accountLabel(item)", "JSON.stringify"):
+for scope_fragment in ("providerMapKey(item.provider)", "selectedAccountForProvider", "accountKey(item)", "JSON.stringify"):
     if scope_fragment not in notification_scope_body:
         raise AssertionError(
             "notificationScopeKey must include stable provider/account identity; "
@@ -2344,7 +2419,7 @@ for fresh_function in ("commitUsageSnapshot",):
     if received_index < 0 or received_index > providers_index:
         raise AssertionError(f"{fresh_function} must timestamp usage before publishing it")
 mark_fresh_body = function_body(main_text, "markNotificationProvidersFresh")
-selected_guard = "selectedAccount.length > 0 && accountLabel(item) !== selectedAccount"
+selected_guard = "selectedAccount.length > 0 && accountKey(item) !== selectedAccount"
 delete_pending_index = mark_fresh_body.find("delete nextPending[providerID]")
 if "item.error" in mark_fresh_body:
     raise AssertionError("usage errors must not discard fresh provider status before the planner classifies the evidence")
@@ -2353,7 +2428,7 @@ if "var selectedAccount = selectedAccountForProvider(providerID)" not in mark_fr
 if selected_guard not in mark_fresh_body or mark_fresh_body.find(selected_guard) > delete_pending_index:
     raise AssertionError("stale responses for a previous account must not clear notification suppression")
 if not re.search(
-    r"if\s*\(selectedAccount\.length\s*>\s*0\s*&&\s*accountLabel\(item\)\s*!==\s*selectedAccount\)\s*\{\s*continue\s*\}",
+    r"if\s*\(selectedAccount\.length\s*>\s*0\s*&&\s*accountKey\(item\)\s*!==\s*selectedAccount\)\s*\{\s*continue\s*\}",
     mark_fresh_body,
     re.S,
 ):

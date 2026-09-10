@@ -146,6 +146,10 @@ PlasmoidItem {
     readonly property int costAutoRefreshIntervalMs: CostRefreshPolicy.automaticRefreshIntervalMs
     property double lastCostRefreshAttemptAt: -1
     property var tokenCosts: ({})
+    // The cost command source that produced tokenCosts. Costs belong to the
+    // context that fetched them; a source change clears the map, and readers
+    // additionally refuse snapshots from any other source.
+    property string tokenCostsContext: ""
     property var costTrustNoticeStates: ({})
     property string costErrorText: ""
     property string sessionsCommandSource: buildSessionsCommand()
@@ -220,6 +224,14 @@ PlasmoidItem {
     onCostHistoryDaysChanged: applyTokenCosts()
     onCostCommandSourceChanged: {
         if (costLifecycleInitialized) {
+            // Retire live cost runs synchronously so a late reply from the
+            // previous source cannot reseed the map: the ledger drops retired
+            // replies before parsing. The map itself is retained and
+            // reprojected at once, because the source can settle after the
+            // range handler already ran; readers still refuse snapshots from
+            // any other source until the refetch lands.
+            retireUsageCommandKind("cost")
+            applyTokenCosts()
             Qt.callLater(function() { root.refreshCost(true) })
         }
     }
@@ -823,6 +835,7 @@ PlasmoidItem {
         if (action === CostRefreshPolicy.clearAction) {
             retireUsageCommandKind("cost")
             tokenCosts = ({})
+            tokenCostsContext = ""
             costErrorText = ""
             applyTokenCosts()
             return false
@@ -923,10 +936,18 @@ PlasmoidItem {
         var nextProviders = []
         var itemLimit = Math.min(items.length, maximumProviderSnapshots)
         for (var i = 0; i < itemLimit; i++) {
-            if (!isCliRecord(items[i]) || normalizedProviderID(items[i].provider).length === 0) {
+            // A malformed provider must not abort the whole refresh or leave
+            // loading set: skip it and keep the healthy providers. The id
+            // screen stays inside the guard so a throwing identity read drops
+            // only its own provider instead of stranding the whole run.
+            try {
+                if (!isCliRecord(items[i]) || normalizedProviderID(items[i].provider).length === 0) {
+                    continue
+                }
+                nextProviders.push(normalizeProvider(items[i]))
+            } catch (providerError) {
                 continue
             }
-            nextProviders.push(normalizeProvider(items[i]))
         }
 
         nextProviders = ProviderOrder.orderedItems(
@@ -1387,14 +1408,23 @@ PlasmoidItem {
         }
 
         if (hadCostRecordError) {
+            // A partial reply retains only failed providers from the same
+            // command source. After a source change the retained map still
+            // holds the previous context's snapshots, and merging them here
+            // would re-tag old costs with the new source.
+            var previousCosts = tokenCostsContext === costCommandSource
+                ? tokenCosts
+                : ({})
             tokenCosts = Normalizer.mergeCostSnapshotsAfterPartialFailure(
-                tokenCosts, nextCosts, failedCostProviderIDs)
+                previousCosts, nextCosts, failedCostProviderIDs)
+            tokenCostsContext = costCommandSource
             costErrorText = costMessage
             if (costErrorText.length === 0) {
                 costErrorText = i18n("Some cost data could not be refreshed.")
             }
         } else {
             tokenCosts = nextCosts
+            tokenCostsContext = costCommandSource
             costErrorText = ""
         }
         applyTokenCosts()
@@ -1631,6 +1661,12 @@ PlasmoidItem {
     }
 
     function spendProviderCosts() {
+        // The Usage & Spend tab reads the map directly, so it needs the same
+        // source check as the provider meters: never total the previous
+        // context's costs beside the new context's quotas.
+        if (tokenCostsContext !== costCommandSource) {
+            return []
+        }
         var snapshots = CostPresentation.spendSnapshots(tokenCosts, costHistoryDays, function(providerID) {
             return providerTitle(providerID)
         })
@@ -1822,6 +1858,11 @@ PlasmoidItem {
         if (key.length === 0) {
             return null
         }
+        // A snapshot that outruns a command-source change must never attach to
+        // the new context's providers, even if the history range still matches.
+        if (tokenCostsContext !== costCommandSource) {
+            return null
+        }
         var snapshot = tokenCosts[key] || null
         return CostPresentation.snapshotMatchesRange(snapshot, costHistoryDays)
             ? snapshot
@@ -1965,6 +2006,13 @@ PlasmoidItem {
         return Normalizer.accountLabel(item)
     }
 
+    // The stable `--account` identity. Display labels may collapse spacing
+    // that still distinguishes two accounts, so selection, matching, and the
+    // CLI argument compare keys, never labels.
+    function accountKey(item) {
+        return Normalizer.accountKey(item)
+    }
+
     function accountSubtitle(item) {
         if (privacyMode || !item) {
             return ""
@@ -1983,27 +2031,27 @@ PlasmoidItem {
         if (!option) {
             return false
         }
-        var label = accountLabel(option)
+        var identity = accountKey(option)
         var selected = selectedAccountForProvider(option.provider)
         if (selected.length > 0) {
-            return label === selected
+            return identity.length > 0 && identity === selected
         }
         // A presented snapshot may replace the account label with a placeholder.
         // Selection always compares against the original account identity.
         var currentIndex = currentItem ? providerIndexForID(currentItem.provider) : -1
         var accountItem = currentIndex >= 0 ? providers[currentIndex] : currentItem
-        return accountItem && accountItem.provider === option.provider && label === accountLabel(accountItem)
+        return accountItem && accountItem.provider === option.provider && identity.length > 0 && identity === accountKey(accountItem)
     }
 
-    function selectAccount(providerID, accountLabel) {
+    function selectAccount(providerID, accountIdentity) {
         var key = providerMapKey(providerID)
         if (key.length === 0) {
             return
         }
-        var label = String(accountLabel || "")
+        var identity = String(accountIdentity || "")
         var next = copyObject(selectedAccounts)
-        if (label.length > 0) {
-            next[key] = label
+        if (identity.length > 0) {
+            next[key] = identity
         } else {
             delete next[key]
         }
@@ -2013,7 +2061,7 @@ PlasmoidItem {
 
         var options = accountOptionsForProvider(key)
         for (var i = 0; i < options.length; i++) {
-            if (root.accountLabel(options[i]) === label) {
+            if (root.accountKey(options[i]) === identity) {
                 replaceProviderSnapshot(key, options[i])
                 scheduleUsageRefresh()
                 return
@@ -2076,6 +2124,15 @@ PlasmoidItem {
                 ? credits.codexCreditLimit
                 : null)
         var displayName = item.displayName || item.title || providerDisplayNames[providerID] || ""
+        // Identity fields are CLI-controlled and may carry structured values.
+        // A truthy object must not mask a valid fallback, so each candidate is
+        // validated before it wins; a non-string candidate never does.
+        var rawAccount = Normalizer.firstValidAccountIdentity(
+            [item.account, identity.accountEmail, usage.accountEmail])
+        var rawOrganization = Normalizer.firstValidAccountIdentity(
+            [identity.accountOrganization, usage.accountOrganization])
+        var rawLoginMethod = Normalizer.firstValidAccountIdentity(
+            [identity.loginMethod, usage.loginMethod])
         var providerDetails = UsageDetails.normalizeSections(usage.details)
         var providerUsageDashboard = providerDetails.length > 0 ? null : usageDashboard(usage, item)
         var hasSupplementalUsage = providerDetails.length > 0
@@ -2091,9 +2148,12 @@ PlasmoidItem {
             title: Normalizer.boundedDisplayText(providerTitle(providerID, displayName), 120),
             source: Normalizer.boundedDisplayText(item.source || "", 120),
             version: Normalizer.boundedDisplayText(item.version || "", 120),
-            account: Normalizer.boundedDisplayText(item.account || identity.accountEmail || usage.accountEmail || "", 256),
-            organization: Normalizer.boundedDisplayText(identity.accountOrganization || usage.accountOrganization || "", 256),
-            loginMethod: Normalizer.boundedDisplayText(identity.loginMethod || usage.loginMethod || "", 120),
+            account: Normalizer.boundedDisplayText(rawAccount, 256),
+            organization: Normalizer.boundedDisplayText(rawOrganization, 256),
+            loginMethod: Normalizer.boundedDisplayText(rawLoginMethod, 120),
+            // The `--account` identity keeps the original spacing: display text
+            // may collapse it, but selection and the CLI argument must not.
+            accountKey: Normalizer.accountKey({ account: rawAccount, organization: rawOrganization, loginMethod: rawLoginMethod }),
             rows: rows,
             primaryRow: primaryRow,
             providerDetails: providerDetails,
@@ -2467,8 +2527,10 @@ PlasmoidItem {
     }
 
     function statusText(status) {
-        var indicator = String(status.indicator || "")
-        var description = String(status.description || "").trim()
+        // Status fields are CLI-controlled: read them without coercing objects,
+        // whose missing toString would throw inside String().
+        var indicator = Normalizer.safeScalarText(status.indicator)
+        var description = Normalizer.safeScalarText(status.description).trim()
         if (indicator.length === 0 || indicator === "none") {
             return description
         }
@@ -2629,7 +2691,7 @@ PlasmoidItem {
                 continue
             }
             var selectedAccount = selectedAccountForProvider(providerID)
-            if (selectedAccount.length > 0 && accountLabel(item) !== selectedAccount) {
+            if (selectedAccount.length > 0 && accountKey(item) !== selectedAccount) {
                 continue
             }
             // A failed account refresh can still carry fresh provider status.
@@ -2645,7 +2707,7 @@ PlasmoidItem {
         }
         var providerID = providerMapKey(item.provider)
         var selectedAccount = selectedAccountForProvider(providerID)
-        var currentAccount = selectedAccount.length > 0 ? selectedAccount : accountLabel(item)
+        var currentAccount = selectedAccount.length > 0 ? selectedAccount : accountKey(item)
         return JSON.stringify([providerID, currentAccount])
     }
 
@@ -3542,7 +3604,10 @@ PlasmoidItem {
         if (item.account && item.account.length > 0) {
             return item.account
         }
-        if (item.status && item.status.length > 0) {
+        // Only an active incident may stand in for a missing account: an
+        // operational status is service state, not identity information.
+        if (item.hasIncident === true && item.statusKnown !== false
+                && item.status && item.status.length > 0) {
             return item.status
         }
         var placeholder = providerPlaceholderText(item)
@@ -3550,7 +3615,13 @@ PlasmoidItem {
             return placeholder
         }
         if (item.source && item.source.length > 0) {
-            return item.source
+            var source = String(item.source).trim().toLowerCase()
+            var providerID = String(item.provider || "").trim().toLowerCase()
+            var title = String(item.title || "").trim().toLowerCase()
+            // Repeating the provider's own name adds nothing under its title.
+            if (source !== providerID && source !== title) {
+                return item.source
+            }
         }
         return ""
     }

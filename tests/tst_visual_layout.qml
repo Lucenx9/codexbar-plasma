@@ -37,6 +37,8 @@ TestCase {
         property string selectedProviderID: "codex"
         property int providerToggleCount: 0
         property bool providerEnabled: false
+        property bool incidentOnMeter: true
+        property bool metersHidden: false
         function isPending() {
             return false;
         }
@@ -73,6 +75,9 @@ TestCase {
         }
         function accountLabel(item) {
             return item.account;
+        }
+        function accountKey(item) {
+            return item.accountKey || item.account;
         }
         function accountDisplayLabel(item, index) {
             return accountLabel(item);
@@ -112,12 +117,16 @@ TestCase {
         function compactText() {
             return "A long provider name with 57% remaining";
         }
-        function compactProviders() {
+        function usageProviders() {
             return [
                 {
                     provider: "codex",
                     title: "Codex",
-                    value: firstQuota
+                    value: firstQuota,
+                    hasIncident: incidentOnMeter,
+                    statusKnown: true,
+                    statusSeverity: "minor",
+                    status: "Degraded"
                 },
                 {
                     provider: "claude",
@@ -128,18 +137,29 @@ TestCase {
                 provider: "example-" + index, title: "Example " + index, value: 25
             })));
         }
+        function compactProviders() {
+            if (metersHidden) {
+                return [];
+            }
+            return usageProviders();
+        }
         function selectedCompactProvider() {
-            return {
-                provider: selectedProviderID
-            };
+            var providers = usageProviders();
+            for (var i = 0; i < providers.length; i++) {
+                if (providers[i].provider === selectedProviderID) {
+                    return providers[i];
+                }
+            }
+            return null;
         }
         function primaryIncidentProvider() {
-            return {
-                hasIncident: true,
-                statusSeverity: "minor",
-                title: "Codex",
-                status: "Degraded"
-            };
+            // "gemini" never carries a meter, so it exercises the standalone
+            // status element that must remain when no meter can badge it.
+            return incidentOnMeter
+                ? {provider: "codex", hasIncident: true, statusSeverity: "minor",
+                   statusKnown: true, title: "Codex", status: "Degraded"}
+                : {provider: "gemini", hasIncident: true, statusSeverity: "major",
+                   statusKnown: true, title: "Gemini", status: "Degraded"};
         }
         function providerIconSource() {
             return "view-statistics";
@@ -239,6 +259,9 @@ TestCase {
         applet.verticalFormFactor = false;
         applet.costHistoryShowsTokens = false;
         applet.selectedProviderID = "codex";
+        applet.incidentOnMeter = true;
+        applet.metersHidden = false;
+        applet.loading = false;
     }
 
     function test_minimalPanelAppearance_data() {
@@ -449,21 +472,103 @@ TestCase {
         }
     }
 
-    function test_statusDotStaysSquare_data() {
+    function test_incidentDotsStaySquareAndAttributed_data() {
         return [
             {
-                tag: "24px",
-                extent: 24
+                tag: "badge on the incident provider meter",
+                incidentOnMeter: true
             },
             {
-                tag: "32px",
-                extent: 32
+                tag: "standalone fallback without a meter",
+                incidentOnMeter: false
             },
             {
-                tag: "48px",
-                extent: 48
+                tag: "badge persists during a refresh",
+                incidentOnMeter: true,
+                loading: true
+            },
+            {
+                tag: "vertical identity badge carries its own provider",
+                incidentOnMeter: true,
+                vertical: true,
+                metersHidden: true
+            },
+            {
+                tag: "vertical standalone fallback for a foreign incident",
+                incidentOnMeter: false,
+                vertical: true,
+                metersHidden: true
             }
         ];
+    }
+
+    function test_incidentDotsStaySquareAndAttributed(data) {
+        applet.incidentOnMeter = data.incidentOnMeter;
+        applet.loading = data.loading === true;
+        applet.verticalFormFactor = data.vertical === true;
+        applet.metersHidden = data.metersHidden === true;
+        var panel = createControl("CompactRepresentation", data.vertical
+            ? {applet: applet, width: 44}
+            : {applet: applet, height: 32});
+        if (!panel)
+            return;
+        wait(0);
+        var badge = findItem(panel, function (item) {
+            return item.visible && item.objectName === "panelIncidentBadge";
+        });
+        var dot = findItem(panel, function (item) {
+            return item.visible && item.objectName === "panelStatusDot";
+        });
+        var identityBadge = findItem(panel, function (item) {
+            return item.visible && item.objectName === "panelIdentityBadge";
+        });
+        if (data.vertical) {
+            // Without meters the identity icon is the only anchor, and it may
+            // badge only its own provider's incident: a foreign incident keeps
+            // the standalone fallback so the outage never goes unmarked.
+            verify(badge === null);
+            if (data.incidentOnMeter) {
+                verify(identityBadge !== null);
+                verify(dot === null);
+                compare(identityBadge.width, identityBadge.height);
+                var identityIcon = findItem(panel, function (item) {
+                    return item.visible && item.objectName === "panelIdentityIcon";
+                });
+                verify(identityIcon !== null);
+                var badgeCenter = identityBadge.mapToItem(panel,
+                    identityBadge.width / 2, identityBadge.height / 2);
+                var iconTopLeft = identityIcon.mapToItem(panel, 0, 0);
+                verify(badgeCenter.x >= iconTopLeft.x && badgeCenter.x <= iconTopLeft.x + identityIcon.width);
+                verify(badgeCenter.y >= iconTopLeft.y && badgeCenter.y <= iconTopLeft.y + identityIcon.height);
+            } else {
+                verify(identityBadge === null);
+                verify(dot !== null);
+                compare(dot.width, dot.height);
+            }
+            return;
+        }
+        verify(identityBadge === null);
+        if (data.incidentOnMeter) {
+            verify(badge !== null);
+            verify(dot === null);
+            verify(badge.width > 0);
+            compare(badge.width, badge.height);
+            var icon = findItem(panel, function (item) {
+                return item.visible && item.objectName === "panelProviderIcon";
+            });
+            verify(icon !== null);
+            var badgeCenter = badge.mapToItem(panel, badge.width / 2, badge.height / 2);
+            var iconTopLeft = icon.mapToItem(panel, 0, 0);
+            verify(badgeCenter.x >= iconTopLeft.x && badgeCenter.x <= iconTopLeft.x + icon.width);
+            verify(badgeCenter.y >= iconTopLeft.y && badgeCenter.y <= iconTopLeft.y + icon.height);
+        } else {
+            verify(badge === null);
+            verify(dot !== null);
+            verify(dot.width > 0);
+            compare(dot.width, dot.height);
+            var center = dot.mapToItem(panel, dot.width / 2, dot.height / 2);
+            verify(Math.abs(center.y - panel.height / 2) < 1);
+        }
     }
 
     function test_longAccountButtonsFitAndKeepFullAccessibleNames_data() {
@@ -507,24 +612,6 @@ TestCase {
         applet.selectedAccount = applet.accountItems[1].account;
         tryCompare(button, "checked", false);
         testCase.forceActiveFocus();
-    }
-
-    function test_statusDotStaysSquare(data) {
-        var panel = createControl("CompactRepresentation", {
-            applet: applet,
-            height: data.extent
-        });
-        if (!panel)
-            return;
-        wait(0);
-        var dot = findItem(panel, function (item) {
-            return item.visible && item.color !== undefined && item.color.toString() === "#ff8000";
-        });
-        verify(dot !== null);
-        verify(dot.width > 0);
-        compare(dot.width, dot.height);
-        var center = dot.mapToItem(panel, dot.width / 2, dot.height / 2);
-        verify(Math.abs(center.y - panel.height / 2) < 1);
     }
 
     function test_providerRowKeyboardSelectionDoesNotToggleEnablement() {

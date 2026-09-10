@@ -12,6 +12,41 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep accounts that differ only by internal spacing separately selectable and
+  pass the unmodified name to `--account`, instead of collapsing one label onto
+  the other and requesting the wrong account.
+- Never show the previous executable's cost data beside the new quotas after
+  the command source changes, even when the cost refresh fails.
+- Survive malformed provider status fields and keep the healthy providers of
+  the same refresh, settling loading instead of leaving it active.
+- Revalidate carried account keys before use, so a blank or overlong stored
+  key falls back to the snapshot identity instead of reaching deduplication,
+  selection, or the `--account` argument.
+- Skip structured account identity fields when choosing the `--account`
+  identity, so a malformed value cannot mask a valid fallback from another
+  identity field.
+- Screen the provider id inside the per-provider guard during usage parsing,
+  so a failing identity read drops only its own provider instead of aborting
+  the whole refresh.
+- Retain failed providers after a partial cost reply only from the same
+  command source, so a source change cannot re-tag the previous executable's
+  costs with the new source.
+- Show the panel incident badge on the affected provider's own meter icon, so
+  reordering providers moves the outage marker with that provider instead of
+  leaving a dot beside whichever provider comes first. The badge stays visible
+  while a refresh runs. The standalone status dot remains only as a fallback
+  for incidents no meter can badge (meters hidden, or the incident provider
+  has no meters), and the vertical identity icon carries a badge only for its
+  own provider's incident; an incident on another provider keeps the
+  standalone fallback when meters are hidden.
+- Place the subscription label directly beside the account email in the
+  provider header, instead of letting it drift toward the middle of the popup,
+  and let the account elide first on narrow popups.
+- Stop presenting an "all systems operational" service status as the overview
+  account line. Providers whose CLI payload carries no account identity (such
+  as Claude on verified CLI 0.56.2) now show no substitute identity; an active
+  incident still appears, and the detail line no longer repeats the provider's
+  own name or source.
 - Recover provider actions when a secret prompt stops responding: the dialog
   closes after a long escape-hatch deadline and the stuck pending state clears,
   instead of leaving the provider disabled until the settings page reopens.

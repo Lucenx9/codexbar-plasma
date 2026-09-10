@@ -106,7 +106,7 @@ ColumnLayout {
                 }
 
                 onClicked: {
-                    accountsPanel.applet.selectAccount(modelData.provider, accountsPanel.applet.accountLabel(modelData))
+                    accountsPanel.applet.selectAccount(modelData.provider, accountsPanel.applet.accountKey(modelData))
                     checked = Qt.binding(function() { return accountSelected })
                 }
             }

@@ -40,8 +40,10 @@ class SettingsWiringTests(unittest.TestCase):
     def test_private_costs_keep_raw_account_selection_separate_from_display_data(self):
         applet = Surface("applet")
         applet.require("providerData: applet.presentedProviderData", "costs must use the private display projection")
-        applet.require("accountSelectionKey: applet.accountLabel(applet.selectedProviderData)",
+        applet.require("accountSelectionKey: applet.accountKey(applet.selectedProviderData)",
                        "a private account placeholder must not become a selection key")
+        applet.require("accountSelectionLabel: applet.accountLabel(applet.selectedProviderData)",
+                       "cost pins must follow the unprojected account label that privacy mode flattens")
         self.assertIn("!applet.privacyMode", applet.id_block("providerCostSection"))
         applet.require("applet.privateErrorText(applet.costErrorText)", "cost errors must respect privacy")
 
