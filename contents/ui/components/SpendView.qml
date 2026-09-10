@@ -340,6 +340,12 @@ ColumnLayout {
                                 border.width: heatmapMouse.containsMouse ? 1 : 0
                                 border.color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.4)
 
+                                Behavior on border.width {
+                                    NumberAnimation {
+                                        duration: Kirigami.Units.shortDuration
+                                    }
+                                }
+
                                 Components.PlainToolTip {
                                     visible: heatmapMouse.containsMouse
                                     plainText: i18n("%1: %2", modelData.label, modelData.displayValue)

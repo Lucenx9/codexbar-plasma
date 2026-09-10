@@ -35,6 +35,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Avoid tab overflow controls during initialization.
 - Anchor tab tooltips to their hover areas and improve accessibility labels for
   heatmap cells and decorative controls.
+- Animate the panel provider meter hover/press highlight and the Usage & Spend
+  heatmap cell hover border, matching the smooth transitions already used for
+  every other interactive surface in the popup.
 
 ## 0.2.36 - 2026-09-09
 
