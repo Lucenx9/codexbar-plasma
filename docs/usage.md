@@ -192,14 +192,17 @@ fields; track proposed extensions in the issue tracker.
 ## Status and notifications
 
 - Provider status incident badge in the panel and provider detail view. The
-  panel badge sits on the incident provider's own meter icon and follows
-  provider reordering; the standalone service-status panel element remains a
-  fallback when no meter can carry the badge, such as hidden meters or an
-  incident provider without meters. Incident selection, badges, banners, and
-  tooltips ignore a provider whose current status is unknown or has no active
-  incident. When a refresh omits status, a previously retained outage is
-  hidden; this is not evidence of recovery. Current status can still report an
-  incident when quota fetching fails.
+  panel badge sits on the incident provider's own meter icon, follows provider
+  reordering, and stays visible while a refresh runs. The standalone
+  service-status panel element remains a fallback when no meter can carry the
+  badge, such as hidden meters or an incident provider without meters. When
+  meters are hidden in a vertical panel, the identity icon carries a badge only
+  for its own provider's incident; an incident on another provider keeps the
+  standalone fallback. Incident selection, badges, banners, and tooltips ignore
+  a provider whose current status is unknown or has no active incident. When a
+  refresh omits status, a previously retained outage is hidden; this is not
+  evidence of recovery. Current status can still report an incident when quota
+  fetching fails.
 - Optional quota warning markers on usage bars.
 - Optional Plasma notifications for provider status incidents, configurable
   quota crossings, predicted quota exhaustion from CLI pace data, and when a

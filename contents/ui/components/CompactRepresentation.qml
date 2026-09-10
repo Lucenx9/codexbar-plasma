@@ -16,7 +16,8 @@ Item {
     readonly property bool hasProviderMeters: meterProviders.length > 0
     readonly property var incidentProvider: applet.providerPresentation(applet.primaryIncidentProvider())
     // The incident dot must sit on the incident provider's own icon. The
-    // standalone status element stays only when no meter can carry the badge.
+    // standalone status element stays only when no rendered meter, and no
+    // vertical identity icon, can carry the badge.
     readonly property bool incidentProviderHasMeterBadge: incidentProvider !== null
         && meterProviders.some(function(provider) {
             return provider.provider === incidentProvider.provider
@@ -27,6 +28,15 @@ Item {
     readonly property var selectedProvider: applet.selectedCompactProvider()
     readonly property bool selectedProviderHasMeter: selectedProvider !== null && selectedProvider !== undefined
         && meterProviders.some(function(provider) { return provider.provider === selectedProvider.provider })
+    // Without rendered meters in a vertical panel the identity icon is the only
+    // anchor, so it carries the badge only when the primary incident belongs to
+    // the selected provider. Any other incident keeps the standalone status
+    // element available so the outage never loses its marker.
+    readonly property bool identityCarriesIncidentBadge: verticalPanel
+        && !hasProviderMeters
+        && incidentProvider !== null
+        && selectedProvider !== null && selectedProvider !== undefined
+        && incidentProvider.provider === selectedProvider.provider
     // Independent text still needs its identity when several meters are shown.
     readonly property bool inlinePrimaryText: !verticalPanel && primaryText.length > 0
         && inlineTextWidth > 0
@@ -124,7 +134,8 @@ Item {
                 readonly property bool elementVisible: modelData === "identity"
                     ? compactRoot.showPrimaryIdentity
                     : (modelData === "status"
-                    ? ((!compactRoot.verticalPanel || compactRoot.hasProviderMeters)
+                    ? ((!compactRoot.verticalPanel || compactRoot.hasProviderMeters
+                            || !compactRoot.identityCarriesIncidentBadge)
                         && compactRoot.incidentProvider !== null
                         && compactRoot.incidentProvider.hasIncident
                         && !compactRoot.incidentProviderHasMeterBadge)
@@ -197,15 +208,14 @@ Item {
 
                 Rectangle {
                     id: compactVerticalStatusBadge
+                    objectName: "panelIdentityBadge"
 
                     // Without meters this icon is the only anchor, so it may
                     // carry the badge only for its own provider's incident.
-                    visible: compactRoot.verticalPanel
-                        && !compactRoot.hasProviderMeters
+                    // Loading replaces the icon with a refresh spinner, so the
+                    // badge waits for the provider icon to come back.
+                    visible: compactRoot.identityCarriesIncidentBadge
                         && !compactRoot.applet.loading
-                        && compactRoot.selectedProvider !== null
-                        && compactRoot.selectedProvider.hasIncident === true
-                        && compactRoot.selectedProvider.statusKnown !== false
                     anchors.top: parent.top
                     anchors.right: parent.right
                     width: Math.round(Kirigami.Units.iconSizes.smallMedium / 3)
@@ -227,7 +237,8 @@ Item {
         Item {
             id: compactStatusBadge
 
-            visible: (!compactRoot.verticalPanel || compactRoot.hasProviderMeters)
+            visible: (!compactRoot.verticalPanel || compactRoot.hasProviderMeters
+                    || !compactRoot.identityCarriesIncidentBadge)
                 && compactRoot.incidentProvider !== null
                 && compactRoot.incidentProvider.hasIncident
                 && !compactRoot.incidentProviderHasMeterBadge
@@ -385,8 +396,9 @@ Item {
                                 id: meterIncidentBadge
                                 objectName: "panelIncidentBadge"
 
-                                visible: !compactRoot.applet.loading
-                                    && compactMeter.modelData.hasIncident === true
+                                // Refreshes keep the rendered providers, so the
+                                // badge must not flicker away with loading.
+                                visible: compactMeter.modelData.hasIncident === true
                                     && compactMeter.modelData.statusKnown !== false
                                 anchors.top: parent.top
                                 anchors.right: parent.right

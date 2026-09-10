@@ -56,14 +56,17 @@ TestCase {
     }
 
     function test_unknown_incident_status_falls_through() {
+        // A nonempty status alone must not stand in for identity: the
+        // status-known predicate has to carry the rejection on its own, so
+        // the chain falls through to the foreign source instead.
         compare(overviewDetailText({
             provider: "claude",
             title: "Claude",
             hasIncident: true,
             statusKnown: false,
-            status: "",
-            source: "claude"
-        }), "");
+            status: "Major outage",
+            source: "oauth"
+        }), "oauth");
     }
 
     function test_placeholder_and_foreign_source_fallbacks_remain() {
@@ -80,10 +83,18 @@ TestCase {
     }
 
     function test_source_that_repeats_the_provider_is_suppressed() {
+        // Each repetition is matched independently: the source equals the
+        // title here but differs from the provider id.
         compare(overviewDetailText({
             provider: "claude",
-            title: "claude",
-            source: "Claude"
+            title: "Claude Team",
+            source: "Claude Team"
+        }), "");
+        // The source equals the provider id but differs from the title.
+        compare(overviewDetailText({
+            provider: "claude",
+            title: "Claude Team",
+            source: "claude"
         }), "");
         compare(overviewDetailText(null), "");
     }

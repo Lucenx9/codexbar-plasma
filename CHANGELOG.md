@@ -14,12 +14,15 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Show the panel incident badge on the affected provider's own meter icon, so
   reordering providers moves the outage marker with that provider instead of
-  leaving a dot beside whichever provider comes first. The standalone status
-  dot remains only as a fallback for incidents no meter can badge (meters
-  hidden, or the incident provider has no meters), and the vertical identity
-  icon carries a badge only for its own provider's incident.
+  leaving a dot beside whichever provider comes first. The badge stays visible
+  while a refresh runs. The standalone status dot remains only as a fallback
+  for incidents no meter can badge (meters hidden, or the incident provider
+  has no meters), and the vertical identity icon carries a badge only for its
+  own provider's incident; an incident on another provider keeps the
+  standalone fallback when meters are hidden.
 - Place the subscription label directly beside the account email in the
-  provider header, instead of letting it drift toward the middle of the popup.
+  provider header, instead of letting it drift toward the middle of the popup,
+  and let the account elide first on narrow popups.
 - Stop presenting an "all systems operational" service status as the overview
   account line. Providers whose CLI payload carries no account identity (such
   as Claude on verified CLI 0.56.2) now show no substitute identity; an active

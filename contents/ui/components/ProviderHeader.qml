@@ -111,10 +111,13 @@ RowLayout {
                 opacity: providerHeaderRow.applet.secondaryTextOpacity
                 elide: Text.ElideMiddle
                 // The plan sits beside the account instead of drifting to the
-                // row's far end; the trailing filler keeps both left-aligned
-                // and lets the account elide first on narrow popups.
+                // row's far end. The label never grows past its own text, so
+                // the trailing filler keeps both left-aligned, while filling
+                // lets the account elide first on narrow popups.
+                Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.maximumWidth: Kirigami.Units.gridUnit * 16
+                Layout.maximumWidth: Math.min(implicitWidth,
+                    Kirigami.Units.gridUnit * 16)
             }
 
             PlainPlasmaLabel {

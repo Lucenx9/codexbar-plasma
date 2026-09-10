@@ -1267,10 +1267,9 @@ if "compactRoot.meterProviders.length * compactRoot.meterWidth" not in compact_r
 
 vertical_status_badge_body = id_block(compact_representation_text, "compactVerticalStatusBadge")
 for vertical_badge_fragment in (
-    "visible: compactRoot.verticalPanel",
-    "!compactRoot.hasProviderMeters",
-    "compactRoot.selectedProvider.hasIncident === true",
-    "compactRoot.selectedProvider.statusKnown !== false",
+    "objectName: \"panelIdentityBadge\"",
+    "visible: compactRoot.identityCarriesIncidentBadge",
+    "!compactRoot.applet.loading",
     "statusBadgeColor(compactRoot.selectedProvider.statusSeverity)",
     "border.width: 1",
     "border.color: Kirigami.Theme.backgroundColor",
@@ -1282,9 +1281,23 @@ for vertical_badge_fragment in (
             f"missing {vertical_badge_fragment!r}"
         )
 
+for vertical_anchor_fragment in (
+    "readonly property bool identityCarriesIncidentBadge: verticalPanel",
+    "!hasProviderMeters",
+    "incidentProvider !== null",
+    "incidentProvider.provider === selectedProvider.provider",
+):
+    if vertical_anchor_fragment not in compact_representation_text:
+        raise AssertionError(
+            "the identity badge anchor must be limited to the selected "
+            "provider's own incident so a foreign outage keeps the standalone "
+            f"fallback; missing {vertical_anchor_fragment!r}"
+        )
+
 horizontal_status_badge_body = id_block(compact_representation_text, "compactStatusBadge")
 for horizontal_badge_fragment in (
-    "visible: (!compactRoot.verticalPanel || compactRoot.hasProviderMeters)",
+    "visible: (!compactRoot.verticalPanel || compactRoot.hasProviderMeters",
+    "|| !compactRoot.identityCarriesIncidentBadge)",
     "compactRoot.incidentProvider.hasIncident",
     "!compactRoot.incidentProviderHasMeterBadge",
     "statusBadgeColor(compactRoot.incidentProvider.statusSeverity)",
@@ -1301,7 +1314,9 @@ for horizontal_badge_fragment in (
 meter_incident_badge_body = id_block(compact_representation_text, "meterIncidentBadge")
 for meter_badge_fragment in (
     "objectName: \"panelIncidentBadge\"",
-    "compactMeter.modelData.hasIncident === true",
+    # Starting the predicate with the incident flags pins that a refresh
+    # (loading with retained providers) must not hide the meter badge.
+    "visible: compactMeter.modelData.hasIncident === true",
     "compactMeter.modelData.statusKnown !== false",
     "statusBadgeColor(compactMeter.modelData.statusSeverity)",
     "border.width: 1",
@@ -2012,8 +2027,19 @@ for placeholder_id in (
         raise AssertionError(f"{placeholder_id} must use the native informational empty state")
 
 provider_account_label_body = id_block(provider_header_text, "providerAccountLabel")
-if "Layout.maximumWidth: Kirigami.Units.gridUnit * 16" not in provider_account_label_body:
-    raise AssertionError("providerAccountLabel must cap long account text before the refresh edge")
+for account_label_fragment in (
+    # Filling with a cap at the label's own text lets the account elide on
+    # narrow popups while never stretching past the email it shows.
+    "Layout.fillWidth: true",
+    "Layout.maximumWidth: Math.min(implicitWidth,",
+    "Kirigami.Units.gridUnit * 16",
+):
+    if account_label_fragment not in provider_account_label_body:
+        raise AssertionError(
+            "providerAccountLabel must fill without outgrowing its text and "
+            f"cap long account text before the refresh edge; "
+            f"missing {account_label_fragment!r}"
+        )
 if "providerHeaderRow.width" in provider_account_label_body or "providerMetaRow.width" in provider_account_label_body:
     raise AssertionError("providerAccountLabel must not bind its width to the header layout width")
 

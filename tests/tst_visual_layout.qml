@@ -38,6 +38,7 @@ TestCase {
         property int providerToggleCount: 0
         property bool providerEnabled: false
         property bool incidentOnMeter: true
+        property bool metersHidden: false
         function isPending() {
             return false;
         }
@@ -113,7 +114,7 @@ TestCase {
         function compactText() {
             return "A long provider name with 57% remaining";
         }
-        function compactProviders() {
+        function usageProviders() {
             return [
                 {
                     provider: "codex",
@@ -133,10 +134,20 @@ TestCase {
                 provider: "example-" + index, title: "Example " + index, value: 25
             })));
         }
+        function compactProviders() {
+            if (metersHidden) {
+                return [];
+            }
+            return usageProviders();
+        }
         function selectedCompactProvider() {
-            return {
-                provider: selectedProviderID
-            };
+            var providers = usageProviders();
+            for (var i = 0; i < providers.length; i++) {
+                if (providers[i].provider === selectedProviderID) {
+                    return providers[i];
+                }
+            }
+            return null;
         }
         function primaryIncidentProvider() {
             // "gemini" never carries a meter, so it exercises the standalone
@@ -245,6 +256,9 @@ TestCase {
         applet.verticalFormFactor = false;
         applet.costHistoryShowsTokens = false;
         applet.selectedProviderID = "codex";
+        applet.incidentOnMeter = true;
+        applet.metersHidden = false;
+        applet.loading = false;
     }
 
     function test_minimalPanelAppearance_data() {
@@ -464,16 +478,35 @@ TestCase {
             {
                 tag: "standalone fallback without a meter",
                 incidentOnMeter: false
+            },
+            {
+                tag: "badge persists during a refresh",
+                incidentOnMeter: true,
+                loading: true
+            },
+            {
+                tag: "vertical identity badge carries its own provider",
+                incidentOnMeter: true,
+                vertical: true,
+                metersHidden: true
+            },
+            {
+                tag: "vertical standalone fallback for a foreign incident",
+                incidentOnMeter: false,
+                vertical: true,
+                metersHidden: true
             }
         ];
     }
 
     function test_incidentDotsStaySquareAndAttributed(data) {
         applet.incidentOnMeter = data.incidentOnMeter;
-        var panel = createControl("CompactRepresentation", {
-            applet: applet,
-            height: 32
-        });
+        applet.loading = data.loading === true;
+        applet.verticalFormFactor = data.vertical === true;
+        applet.metersHidden = data.metersHidden === true;
+        var panel = createControl("CompactRepresentation", data.vertical
+            ? {applet: applet, width: 44}
+            : {applet: applet, height: 32});
         if (!panel)
             return;
         wait(0);
@@ -483,6 +516,35 @@ TestCase {
         var dot = findItem(panel, function (item) {
             return item.visible && item.objectName === "panelStatusDot";
         });
+        var identityBadge = findItem(panel, function (item) {
+            return item.visible && item.objectName === "panelIdentityBadge";
+        });
+        if (data.vertical) {
+            // Without meters the identity icon is the only anchor, and it may
+            // badge only its own provider's incident: a foreign incident keeps
+            // the standalone fallback so the outage never goes unmarked.
+            verify(badge === null);
+            if (data.incidentOnMeter) {
+                verify(identityBadge !== null);
+                verify(dot === null);
+                compare(identityBadge.width, identityBadge.height);
+                var identityIcon = findItem(panel, function (item) {
+                    return item.visible && item.objectName === "panelIdentityIcon";
+                });
+                verify(identityIcon !== null);
+                var badgeCenter = identityBadge.mapToItem(panel,
+                    identityBadge.width / 2, identityBadge.height / 2);
+                var iconTopLeft = identityIcon.mapToItem(panel, 0, 0);
+                verify(badgeCenter.x >= iconTopLeft.x && badgeCenter.x <= iconTopLeft.x + identityIcon.width);
+                verify(badgeCenter.y >= iconTopLeft.y && badgeCenter.y <= iconTopLeft.y + identityIcon.height);
+            } else {
+                verify(identityBadge === null);
+                verify(dot !== null);
+                compare(dot.width, dot.height);
+            }
+            return;
+        }
+        verify(identityBadge === null);
         if (data.incidentOnMeter) {
             verify(badge !== null);
             verify(dot === null);
