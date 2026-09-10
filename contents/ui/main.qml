@@ -3860,6 +3860,9 @@ PlasmoidItem {
             return ""
         }
         if (!item) {
+            if (PanelProviders.selectionActive(panelProviderIDsRaw)) {
+                return ""
+            }
             return loading ? i18n("Loading") : "CodexBar"
         }
 

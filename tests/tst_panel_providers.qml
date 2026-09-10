@@ -54,6 +54,17 @@ TestCase {
         compare(PanelProviders.configuredProviderIDs(new Array(600).join("x")).length, 0);
     }
 
+    function test_manualSelectionCapsVisibleProvidersInRosterOrder() {
+        var providers = ["codex", "claude", "gemini", "cursor", "copilot"].map(function (id) {
+            return {provider: id};
+        });
+        compare(ids(PanelProviders.filteredItems(providers, "copilot,cursor,gemini,claude,codex")),
+            "codex,claude,gemini,cursor");
+        compare(PanelProviders.filteredItems(providers, "").length, 5);
+        compare(ids(PanelProviders.filteredItems(providers.slice(1), "codex,claude,gemini,cursor,copilot")),
+            "claude,gemini,cursor,copilot");
+    }
+
     function test_filterRejectsMalformedInput() {
         verify(PanelProviders.filteredItems(null, "codex").length === 0);
         compare(PanelProviders.filteredItems("codex", "codex").length, 0);

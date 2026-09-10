@@ -2,14 +2,14 @@ import QtQuick
 import org.kde.plasma.plasma5support as Plasma5Support
 import "../CommandLedger.js" as CommandLedger
 import "../Guards.js" as Guards
-import "../ProviderIdentity.js" as ProviderIdentity
-import "../ProviderOrder.js" as ProviderOrder
+import "../ProviderRoster.js" as ProviderRoster
 import "../SafeText.js" as SafeText
 
 // Owns the read-only enabled-provider roster for settings pages: one CLI
 // `config providers` list command per load, with nonce, timeout, and stale
-// reply retirement. Pages supply the command path and read `roster`,
-// `loading`, and `errorText`; they never touch the DataSource or the ledger.
+// reply retirement. Pages supply the command path and read
+// `enabledProviderRoster`, `providerRosterLoading`, and `providerRosterError`;
+// they never touch the DataSource or the ledger.
 // `active` gates loading so a collapsed section never spawns a CLI process.
 Item {
     id: controller
@@ -35,43 +35,9 @@ Item {
             Qt.callLater(loadProviderRoster)
         } else {
             disconnectProviderRosterCommands()
+            providerRosterLoading = false
+            providerRosterError = ""
         }
-    }
-
-    function boundedCliMessage(value) {
-        return SafeText.cliMessage(SafeText.stripLoaderDiagnostics(value), SafeText.maximumCliMessageLength)
-    }
-
-    function boundedProviderID(value) {
-        if (typeof value !== "string") {
-            return ""
-        }
-        var providerID = value.trim()
-        if (providerID.length === 0 || providerID.length > ProviderIdentity.maximumProviderIDLength) {
-            return ""
-        }
-        return ProviderIdentity.providerMapKey(providerID.toLowerCase()).length > 0 ? providerID : ""
-    }
-
-    function commandError(payload) {
-        if (!payload) {
-            return ""
-        }
-        var probe = Array.isArray(payload) ? (payload.length > 0 ? payload[0] : null) : payload
-        if (probe && probe.error && probe.error.message) {
-            return boundedCliMessage(probe.error.message)
-        }
-        return ""
-    }
-
-    function providerTitle(value) {
-        var words = String(value || "").replace(/[_-]/g, " ").split(" ")
-        for (var i = 0; i < words.length; i++) {
-            if (words[i].length > 0) {
-                words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1)
-            }
-        }
-        return words.join(" ")
     }
 
     function shellQuote(value) {
@@ -79,6 +45,9 @@ Item {
     }
 
     function loadProviderRoster() {
+        if (!active) {
+            return
+        }
         disconnectProviderRosterCommands()
         if (commandPath.length === 0) {
             enabledProviderRoster = []
@@ -147,51 +116,21 @@ Item {
         providerRosterCommands = CommandLedger.closed(providerRosterCommands, sourceName)
         providerRosterLoading = false
 
-        var trimmed = stdoutText.trim()
-        if (trimmed.length === 0) {
-            enabledProviderRoster = []
-            providerRosterError = stderrText.trim().length > 0
-                ? boundedCliMessage(stderrText)
-                : i18n("codexbar did not return provider data.")
-            return
+        var result = ProviderRoster.response(stdoutText, stderrText)
+        enabledProviderRoster = result.providers
+        switch (result.outcome) {
+        case "empty":
+            providerRosterError = i18n("codexbar did not return provider data.")
+            break
+        case "tooLarge":
+            providerRosterError = i18n("codexbar response exceeded the supported size.")
+            break
+        case "invalidJson":
+            providerRosterError = i18n("Could not parse codexbar provider JSON: %1", result.message)
+            break
+        default:
+            providerRosterError = result.message
         }
-
-        var payload
-        try {
-            payload = JSON.parse(trimmed)
-        } catch (error) {
-            enabledProviderRoster = []
-            providerRosterError = i18n("Could not parse codexbar provider JSON: %1", error.message)
-            return
-        }
-
-        var message = commandError(payload)
-        if (message.length > 0) {
-            enabledProviderRoster = []
-            providerRosterError = message
-            return
-        }
-
-        var items = Array.isArray(payload) ? payload : [payload]
-        var nextProviders = []
-        var itemLimit = Math.min(items.length, ProviderOrder.maximumProviderItems)
-        for (var i = 0; i < itemLimit; i++) {
-            var item = items[i]
-            if (!item || typeof item !== "object" || Array.isArray(item) || item.enabled !== true) {
-                continue
-            }
-            var providerID = boundedProviderID(item.provider)
-            if (providerID.length === 0) {
-                continue
-            }
-            var displayName = SafeText.boundedDisplayText(item.displayName, 120)
-            nextProviders.push({
-                provider: providerID,
-                displayName: displayName.length > 0 ? displayName : providerTitle(providerID)
-            })
-        }
-        enabledProviderRoster = nextProviders
-        providerRosterError = ""
     }
 
     Plasma5Support.DataSource {

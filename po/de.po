@@ -775,7 +775,7 @@ msgstr "Nach Aktualisierungen des Miniprogramms suchen"
 
 #: contents/ui/configGeneral.qml
 msgid "Check every:"
-msgstr "Prüfen alle:"
+msgstr "Prüfintervall:"
 
 #: contents/ui/configGeneral.qml
 msgid "Notify when a widget update is available"

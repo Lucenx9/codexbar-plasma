@@ -69,6 +69,12 @@ work and upstream contract requirements.
   back to the first chosen provider, or the highest-usage chosen provider with
   auto-select. The popup keeps listing every enabled provider, and quota
   fetching and notifications stay unchanged.
+  Clearing every checkbox hides provider text and meters while keeping the
+  widget icon available to open the full popup. This explicit empty selection
+  is saved as `__none__`; use **Use all enabled providers automatically** to
+  restore automatic selection. Disabled providers retain their saved selection
+  but do not occupy one of the four available slots. If more than four selected
+  providers become enabled again, the first four in provider order appear.
 - Overview tab with per-provider usage summary and quick switching. Each row's
   detail line shows the account identity when the CLI provides one, and an
   active service incident otherwise; an operational status or the provider's
@@ -242,7 +248,9 @@ fields; track proposed extensions in the issue tracker.
   Try normal usage, near-limit usage, a service incident, or missing data before
   applying changes. It stays above the scrolling options, including quota,
   order, and visibility controls. The preview never fetches usage or changes
-  saved settings.
+  saved settings. After **Panel providers** loads, the preview uses the enabled
+  provider names with synthetic measurements. Before that list is available,
+  it uses the fixed Codex and Claude examples.
 - Optional **General → Hide personal information** hides account, organization, project,
   model and session names in the widget, its tooltips and new notifications.
   Free-form provider details are omitted; session copy actions are disabled.

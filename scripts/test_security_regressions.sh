@@ -10,7 +10,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MAIN_QML="${ROOT_DIR}/contents/ui/main.qml"
 PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
 POPUP_QML="${ROOT_DIR}/contents/ui/configPopup.qml"
-ROSTER_CONTROLLER_QML="${ROOT_DIR}/contents/ui/controllers/ProviderRosterController.qml"
+ROSTER_JS="${ROOT_DIR}/contents/ui/ProviderRoster.js"
 DIAGNOSTICS_QML="${ROOT_DIR}/contents/ui/configDiagnostics.qml"
 SAFE_TEXT_JS="${ROOT_DIR}/contents/ui/SafeText.js"
 PLAIN_INLINE_MESSAGE_QML="${ROOT_DIR}/contents/ui/components/PlainInlineMessage.qml"
@@ -122,9 +122,8 @@ for qml_file in "$MAIN_QML" "$PROVIDERS_QML" "$POPUP_QML" "$DIAGNOSTICS_QML"; do
 done
 require_in_surface applet "SafeText.cliMessage"
 require_in_surface providers "SafeText.cliMessage"
-# The popup's roster load moved into the shared controller; its CLI messages
-# must stay bounded there.
-require_in_file "$ROSTER_CONTROLLER_QML" "SafeText.cliMessage"
+# The shared roster parser bounds and redacts CLI messages before QML display.
+require_in_file "$ROSTER_JS" "SafeText.cliMessage"
 require_in_file "$DIAGNOSTICS_QML" "SafeText.cliDiagnostic"
 require_in_file "$SAFE_TEXT_JS" "function redactCredentials(value, inspectionLimit)"
 require_in_file "$SAFE_TEXT_JS" "maximumDiagnosticLength = 65536"

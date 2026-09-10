@@ -36,6 +36,8 @@ TestCase {
             property bool cfg_showProviderInPanel: false
             property bool cfg_showPercentInPanel: false
             property bool cfg_showCreditsInPanel: false
+            property string cfg_panelProviderIDs: ""
+            property var orderedPanelProviderRoster: []
         }
     }
 
@@ -194,5 +196,25 @@ TestCase {
         compare(preview.metricText({resetMinutes: 1.5}), "Resets 2 min");
         compare(preview.metricText({resetMinutes: 90}), "Resets 1h 30m");
         compare(preview.metricText({resetMinutes: 1500}), "Resets 1d 1h");
+    }
+
+    function test_enabledGeminiSelectionAppearsWhenTheRosterLoads() {
+        var settings = createTemporaryObject(settingsComponent, testCase, {
+            cfg_panelProviderIDs: "gemini", cfg_showProviderInPanel: true, cfg_showPercentInPanel: true
+        });
+        var preview = createPreview(settings);
+        if (!preview) return;
+        var renderer = findChild(preview, "panelPreviewRenderer");
+        verify(!renderer.hasProviderMeters);
+        settings.orderedPanelProviderRoster = [{provider: "gemini", displayName: "Gemini"}];
+        tryCompare(renderer, "hasProviderMeters", true);
+        tryCompare(renderer, "primaryText", "Gemini 42% used");
+        compare(renderer.meterProviders[0].provider, "gemini");
+        settings.cfg_panelProviderIDs = "__none__";
+        tryCompare(renderer, "hasProviderMeters", false);
+        tryCompare(renderer, "primaryText", "");
+        settings.cfg_panelProviderIDs = "unknown";
+        verify(!renderer.hasProviderMeters);
+        compare(settings.orderedPanelProviderRoster[0].provider, "gemini");
     }
 }

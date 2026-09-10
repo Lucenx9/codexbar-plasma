@@ -47,6 +47,9 @@ function filteredItems(items, value) {
         var providerID = ProviderOrder.itemProviderID(source[j]);
         if (providerID.length > 0 && Guards.hasOwnKey(wanted, providerID)) {
             result.push(source[j]);
+            if (result.length >= maximumSelectableProviders) {
+                break;
+            }
         }
     }
     return result;

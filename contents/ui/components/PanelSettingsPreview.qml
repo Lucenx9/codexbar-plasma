@@ -28,6 +28,7 @@ ColumnLayout {
         showMeters: configPage.cfg_showMultiProviderInPanel,
         autoSelectProvider: configPage.cfg_autoSelectProvider,
         providerOrder: providerOrder,
+        providerRoster: configPage.orderedPanelProviderRoster,
         panelProviderFilter: configPage.cfg_panelProviderIDs || ""
     }, scenario, clockMs)
 

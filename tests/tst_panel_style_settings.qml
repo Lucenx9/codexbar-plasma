@@ -214,4 +214,17 @@ TestCase {
         page.cfg_panelProviderIDs = "";
         compare(page.providersSummary, "All enabled providers");
     }
+
+    function test_absentSelectionsDoNotBlockEnabledProviders() {
+        var page = createPage();
+        if (!page) return;
+        var controller = findChild(page, "panelProviderRosterController");
+        controller.enabledProviderRoster = [{provider: "copilot", displayName: "Copilot"}];
+        page.cfg_panelProviderIDs = "codex,claude,gemini,cursor";
+        compare(page.selectedPanelProviderCount(), 0);
+        page.togglePanelProvider("copilot", true);
+        verify(page.panelProviderSelected("copilot"));
+        compare(page.selectedPanelProviderCount(), 1);
+        verify(page.panelProviderSelected("codex"));
+    }
 }

@@ -155,7 +155,7 @@ KCM.SimpleKCM {
     }
 
     function selectedPanelProviderCount() {
-        return resolvedPanelProviderIDs().length
+        return PanelProviders.filteredItems(orderedPanelProviderRoster, cfg_panelProviderIDs).length
     }
 
     function togglePanelProvider(providerID, checked) {

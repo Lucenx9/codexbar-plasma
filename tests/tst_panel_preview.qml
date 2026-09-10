@@ -147,4 +147,48 @@ TestCase {
         verify(isFinite(preview.clockMs));
         compare(preview.meterProviders.length, 2);
     }
+
+    function test_enabledProviderMetadataUsesOnlySyntheticMeasurements() {
+        var preview = PanelPreview.model({
+            providerRoster: [{provider: "gemini", displayName: "Gemini", credits: 999,
+                rows: [{usedPercent: 99}], account: "private@example.test", hasIncident: true}],
+            panelProviderFilter: "gemini",
+            autoSelectProvider: true
+        }, "normal", nowMs);
+        compare(preview.selectedProvider.provider, "gemini");
+        compare(preview.selectedProvider.title, "Gemini");
+        compare(preview.textRow.usedPercent, 42);
+        compare(preview.selectedProvider.credits, null);
+        compare(preview.selectedProvider.account, undefined);
+        verify(!preview.selectedProvider.hasIncident);
+        compare(preview.meterProviders.length, 1);
+        compare(PanelPreview.model({providerRoster: [{provider: "gemini"}],
+            panelProviderFilter: "__none__"}, "normal", nowMs).selectedProvider, null);
+    }
+
+    function test_rosterFallbackDoesNotInventUnknownSelections() {
+        compare(PanelPreview.model({providerRoster: []}, "normal", nowMs).providers.length, 2);
+        var missing = PanelPreview.model({providerRoster: [], panelProviderFilter: "unknown"}, "normal", nowMs);
+        compare(missing.selectedProvider, null);
+        compare(missing.meterProviders.length, 0);
+        var available = PanelPreview.model({providerRoster: [{provider: "gemini"}],
+            panelProviderFilter: "codex"}, "normal", nowMs);
+        compare(available.selectedProvider, null);
+        compare(available.meterProviders.length, 0);
+    }
+
+    function test_metadataIsBoundedOrderedAndCapsVisibleMeters() {
+        var roster = [null, [], {provider: "constructor"}, {provider: "gemini", displayName: "x".repeat(200)},
+            {provider: "GEMINI"}, {provider: "codex", displayName: "Codex"}, {provider: "claude", displayName: "Claude"},
+            {provider: "cursor"}, {provider: "opencode"}];
+        var options = {providerRoster: roster, providerOrder: "opencode,cursor,claude,codex,gemini"};
+        var preview = PanelPreview.model(options, "normal", nowMs);
+        compare(preview.providers.length, 5);
+        compare(preview.selectedProvider.provider, "opencode");
+        verify(preview.providers[4].title.length <= 120);
+        compare(preview.meterProviders.map(function (provider) { return provider.provider; }),
+            ["opencode", "cursor", "claude", "codex"]);
+        options.autoSelectProvider = true;
+        compare(PanelPreview.model(options, "normal", nowMs).selectedProvider.provider, "claude");
+    }
 }
