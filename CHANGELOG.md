@@ -28,6 +28,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Screen the provider id inside the per-provider guard during usage parsing,
   so a failing identity read drops only its own provider instead of aborting
   the whole refresh.
+- Retain failed providers after a partial cost reply only from the same
+  command source, so a source change cannot re-tag the previous executable's
+  costs with the new source.
 - Recover provider actions when a secret prompt stops responding: the dialog
   closes after a long escape-hatch deadline and the stuck pending state clears,
   instead of leaving the provider disabled until the settings page reopens.

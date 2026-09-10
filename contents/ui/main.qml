@@ -1408,8 +1408,15 @@ PlasmoidItem {
         }
 
         if (hadCostRecordError) {
+            // A partial reply retains only failed providers from the same
+            // command source. After a source change the retained map still
+            // holds the previous context's snapshots, and merging them here
+            // would re-tag old costs with the new source.
+            var previousCosts = tokenCostsContext === costCommandSource
+                ? tokenCosts
+                : ({})
             tokenCosts = Normalizer.mergeCostSnapshotsAfterPartialFailure(
-                tokenCosts, nextCosts, failedCostProviderIDs)
+                previousCosts, nextCosts, failedCostProviderIDs)
             tokenCostsContext = costCommandSource
             costErrorText = costMessage
             if (costErrorText.length === 0) {

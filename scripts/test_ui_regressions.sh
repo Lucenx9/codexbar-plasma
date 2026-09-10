@@ -686,6 +686,11 @@ if "Normalizer.costRecordHasError(item)" not in parse_cost_body:
     raise AssertionError("cost error records must use the shared envelope contract")
 if "Normalizer.mergeCostSnapshotsAfterPartialFailure(" not in parse_cost_body:
     raise AssertionError("partial cost errors must retain only explicitly failed providers")
+if "tokenCostsContext === costCommandSource" not in parse_cost_body:
+    raise AssertionError(
+        "a partial cost reply after a source change must not re-tag the previous "
+        "context's snapshots: only same-source failures may be retained"
+    )
 
 parse_usage_body = function_body(main_text, "parseOutput")
 if "Normalizer.dedupeProviderSnapshots(nextProviders)" not in parse_usage_body:

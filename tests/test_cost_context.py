@@ -14,6 +14,7 @@ from qml_surfaces import Surface
 
 FUNCTIONS = (
     "buildCostCommand", "shellQuote", "copyObject", "providerMapKey",
+    "isCliRecord", "parseCostOutput",
     "providerTokenCost", "applyTokenCosts", "retireUsageCommandKind",
 )
 
@@ -36,6 +37,7 @@ TestCase {
             property bool costLifecycleInitialized: true
             property var tokenCosts: ({})
             property string tokenCostsContext: ""
+            property string costErrorText: ""
             property var activeCommandDescriptors: ({})
             property var providers: []
             property var finishedSources: []
@@ -45,6 +47,11 @@ TestCase {
             SOURCE_FUNCTIONS
             SOURCE_HANDLERS
 
+            function i18n(text) { return text; }
+            function boundedCliMessage(value) { return String(value); }
+            function normalizeTokenCost(item, requestedHistoryDays) {
+                return {provider: item.provider, historyDays: requestedHistoryDays};
+            }
             function finishUsageCommandSource(sourceName) {
                 finishedSources = finishedSources.concat(sourceName);
             }
@@ -121,6 +128,43 @@ TestCase {
         tryVerify(function() { return applet.refreshCalls.length > 0; });
         wait(0);
         compare(applet.refreshCalls, [true]);
+    }
+
+    function test_partialRefreshAfterSourceChangeDropsOldSnapshots() {
+        // A partial reply from the new source must retain only failed
+        // providers from the same source: merging the retained map would
+        // re-tag the previous executable's costs with the new source.
+        var applet = createTemporaryObject(harness, this, {});
+        verify(applet !== null);
+        wait(0);
+        var oldCosts = ({});
+        oldCosts[applet.providerMapKey("codex")] = {provider: "codex", historyDays: 30, total: 1};
+        oldCosts[applet.providerMapKey("claude")] = {provider: "claude", historyDays: 30, total: 2};
+        applet.tokenCosts = oldCosts;
+        applet.tokenCostsContext = applet.costCommandSource;
+        applet.commandPath = "codexbar-b";
+        var partial = JSON.stringify([
+            {provider: "codex"},
+            {provider: "claude", error: {message: "cost failed"}}
+        ]);
+        applet.parseCostOutput(partial, "", 30);
+        compare(applet.tokenCostsContext, applet.costCommandSource);
+        verify(applet.tokenCosts[applet.providerMapKey("codex")] !== undefined);
+        compare(applet.tokenCosts[applet.providerMapKey("codex")].historyDays, 30);
+        // The failed provider has no fresh snapshot and no same-source
+        // snapshot to retain, so it must stay absent instead of resurfacing
+        // the previous executable's costs.
+        verify(applet.tokenCosts[applet.providerMapKey("claude")] === undefined);
+        compare(applet.providerTokenCost("claude"), null);
+        // Control: the same partial reply in the producing context retains
+        // the failed provider from that context's map.
+        var sameCosts = ({});
+        sameCosts[applet.providerMapKey("claude")] = {provider: "claude", historyDays: 30, total: 9};
+        applet.tokenCosts = sameCosts;
+        applet.tokenCostsContext = applet.costCommandSource;
+        applet.parseCostOutput(partial, "", 30);
+        compare(applet.tokenCosts[applet.providerMapKey("claude")].total, 9);
+        compare(applet.providerTokenCost("claude").total, 9);
     }
 }
 '''
