@@ -1195,6 +1195,7 @@ Item {
                         applet: fullRoot.applet
                         providerData: applet.presentedProviderData
                         accountSelectionKey: applet.accountKey(applet.selectedProviderData)
+                        accountSelectionLabel: applet.accountLabel(applet.selectedProviderData)
                         presentationVisible: fullRoot.visible && !applet.globalViewSelected
                     }
 

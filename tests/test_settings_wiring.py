@@ -42,6 +42,8 @@ class SettingsWiringTests(unittest.TestCase):
         applet.require("providerData: applet.presentedProviderData", "costs must use the private display projection")
         applet.require("accountSelectionKey: applet.accountKey(applet.selectedProviderData)",
                        "a private account placeholder must not become a selection key")
+        applet.require("accountSelectionLabel: applet.accountLabel(applet.selectedProviderData)",
+                       "cost pins must follow the unprojected account label that privacy mode flattens")
         self.assertIn("!applet.privacyMode", applet.id_block("providerCostSection"))
         applet.require("applet.privateErrorText(applet.costErrorText)", "cost errors must respect privacy")
 

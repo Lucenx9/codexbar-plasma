@@ -1831,6 +1831,7 @@ for fragment in (
     "onCostHistoryShowsTokensChanged: clearDaySelection()",
     "applet.accountKey(providerData)",
     "accountSelectionKey,",
+    "accountSelectionLabel,",
     "applet.accountLabel(providerData)",
     "applet.setCostHistoryMetric(valueAt(index))",
 ):

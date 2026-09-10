@@ -11,16 +11,18 @@ ColumnLayout {
     required property var applet
     required property var providerData
     property string accountSelectionKey: applet.accountKey(providerData)
+    property string accountSelectionLabel: applet.accountLabel(providerData)
     property bool presentationVisible: false
     property bool detailsExpanded: false
     property var daySelectionMemo: ({ points: [], index: -1 })
     readonly property bool costHistoryShowsTokens: applet.costHistoryShowsTokens
-    // Pins belong to the shown account: the addressing identity and the
-    // presented label both participate, so a reselect under either spelling
-    // clears them. A key-only scope would miss label edits, and a label-only
-    // scope would miss spacing-distinct accounts that collapse to one label.
+    // Pins belong to the shown account: the addressing identity and the raw
+    // account label both participate, so a reselect under either spelling
+    // clears them. The label is read from the unprojected snapshot because
+    // privacy mode flattens it; the key additionally catches spacing-distinct
+    // accounts that collapse to one label.
     readonly property string selectionScope: providerData ? JSON.stringify([providerData.provider, accountSelectionKey,
-        applet.accountLabel(providerData), tokenCost ? tokenCost.historyDays : 0]) : ""
+        accountSelectionLabel, tokenCost ? tokenCost.historyDays : 0]) : ""
     readonly property var selectedDay: CostPresentation.selectedCostDay(tokenCost ? tokenCost.daily : [], chartPoints, costChart.selectedIndex)
     readonly property bool hasVisibleDetails: detailsExpanded || selectedDay !== null
 
