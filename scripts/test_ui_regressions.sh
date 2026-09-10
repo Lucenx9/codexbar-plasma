@@ -1246,6 +1246,17 @@ if "Controls.ToolTip" in compact_meter_body:
     raise AssertionError(
         "panel meters must rely on the plasmoid tooltip instead of stacking a second tooltip"
     )
+for meter_hover_fragment in (
+    "onContainsMouseChanged",
+    "compactRoot.applet.setHoveredPanelProvider(compactMeter.modelData.provider)",
+    "compactRoot.applet.clearHoveredPanelProvider(compactMeter.modelData.provider)",
+):
+    if meter_hover_fragment not in compact_meter_body:
+        raise AssertionError(
+            "hovering a panel provider meter must narrow the plasmoid tooltip "
+            "to that provider; "
+            f"missing {meter_hover_fragment!r}"
+        )
 
 compact_provider_body = applet.function_body("selectedCompactProvider")
 for compact_selection_fragment in (
@@ -1360,6 +1371,7 @@ for tooltip_fragment in (
     "toolTipMainText: Plasmoid.title",
     "toolTipSubText: panelToolTipText()",
     "toolTipTextFormat: Text.PlainText",
+    "function panelProviderToolTipText(",
     "function panelToolTipText()",
     "Plasmoid.formFactor === PlasmaCore.Types.Vertical",
 ):
@@ -3003,15 +3015,32 @@ descriptor_action_result_body = function_body(providers_text, "handleDescriptorA
 if "bumpProviderConfigRevision()" not in descriptor_action_result_body:
     raise AssertionError("successful descriptor actions must invalidate the main applet snapshot")
 
-tooltip_body = function_body(main_text, "panelToolTipText")
-if not re.search(r"var incident = item\.hasIncident\s*&&\s*item\.statusKnown !== false\s*&&", tooltip_body):
+provider_tooltip_body = function_body(main_text, "panelProviderToolTipText")
+if not re.search(r"var incident = presented\.hasIncident\s*&&\s*presented\.statusKnown !== false\s*&&", provider_tooltip_body):
     raise AssertionError("panel tooltips must exclude inactive and unknown incidents")
-if "boundedDisplayText(errorText" not in tooltip_body:
-    raise AssertionError("the panel tooltip must bound global CLI error text")
-if 'i18n("%1 - %2", line, incident)' not in tooltip_body:
+if 'i18n("%1 - %2", line, incident)' not in provider_tooltip_body:
     raise AssertionError(
         "the panel tooltip must report incidents even when the provider also reports usage"
     )
+for hover_helper in (
+    "property string hoveredPanelProviderID",
+    "function setHoveredPanelProvider(",
+    "function clearHoveredPanelProvider(",
+    "function hoveredPanelProvider(",
+    "function panelProviderToolTipText(",
+):
+    if hover_helper not in main_text:
+        raise AssertionError(
+            "the panel tooltip must track the hovered provider meter; "
+            f"missing {hover_helper!r}"
+        )
+tooltip_body = function_body(main_text, "panelToolTipText")
+if "hoveredPanelProvider()" not in tooltip_body:
+    raise AssertionError("hovering a panel meter must narrow the tooltip to that provider")
+if "panelProviderToolTipText(" not in tooltip_body:
+    raise AssertionError("the panel tooltip must reuse the per-provider tooltip line")
+if "boundedDisplayText(errorText" not in tooltip_body:
+    raise AssertionError("the panel tooltip must bound global CLI error text")
 menu_bar_display_body = function_body(main_text, "menuBarDisplayText")
 if "var row = panelDisplayRow(item, mode)" not in menu_bar_display_body:
     raise AssertionError("each panel text mode must select a row that supports its own data")

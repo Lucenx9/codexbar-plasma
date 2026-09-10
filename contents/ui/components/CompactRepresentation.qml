@@ -481,6 +481,20 @@ Item {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: compactMeter.activate()
+                        // The plasmoid tooltip narrows to the hovered meter, so
+                        // each panel icon reports only its own provider. Clearing
+                        // only the matching id keeps a fast move between two
+                        // meters from ending on an empty tooltip.
+                        onContainsMouseChanged: {
+                            if (!compactRoot.interactive) {
+                                return
+                            }
+                            if (containsMouse) {
+                                compactRoot.applet.setHoveredPanelProvider(compactMeter.modelData.provider)
+                            } else {
+                                compactRoot.applet.clearHoveredPanelProvider(compactMeter.modelData.provider)
+                            }
+                        }
                     }
                 }
             }

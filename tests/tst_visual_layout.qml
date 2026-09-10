@@ -203,6 +203,22 @@ TestCase {
         function openProviderFromPanel(id) {
             openedProvider = id;
         }
+        property string hoveredPanelProviderID: ""
+        function setHoveredPanelProvider(providerID) {
+            hoveredPanelProviderID = String(providerID || "");
+        }
+        function clearHoveredPanelProvider(providerID) {
+            var id = String(providerID || "");
+            if (hoveredPanelProviderID === id) {
+                hoveredPanelProviderID = "";
+            }
+        }
+        function panelProviderToolTipText(item) {
+            if (!item) {
+                return "";
+            }
+            return item.title + ": " + panelMeterDescription(item);
+        }
         function canvasColor(c, a) {
             return Qt.rgba(c.r, c.g, c.b, a).toString();
         }
@@ -250,6 +266,7 @@ TestCase {
     }
 
     function init() {
+        applet.hoveredPanelProviderID = "";
         applet.dualQuota = true;
         applet.meterCount = 2;
         applet.firstQuota = 57;
@@ -694,6 +711,32 @@ TestCase {
         mouseClick(meter, meter.width / 2, meter.height / 2);
         compare(applet.openedProvider, "codex");
         compare(applet.expanded, false);
+    }
+
+    function test_panelMeterHoverTracksPerProviderTooltip() {
+        applet.hoveredPanelProviderID = "";
+        var panel = createControl("CompactRepresentation", {
+            applet: applet,
+            height: 44
+        });
+        if (!panel)
+            return;
+        wait(0);
+        var codexMeter = findItem(panel, item => item.modelData && item.modelData.provider === "codex");
+        var claudeMeter = findItem(panel, item => item.modelData && item.modelData.provider === "claude");
+        verify(codexMeter !== null && claudeMeter !== null);
+        mouseMove(codexMeter, codexMeter.width / 2, codexMeter.height / 2);
+        tryCompare(applet, "hoveredPanelProviderID", "codex");
+        var codexTip = applet.panelProviderToolTipText(codexMeter.modelData);
+        verify(codexTip.indexOf("Codex") >= 0);
+        verify(codexTip.indexOf("Claude") < 0);
+        mouseMove(claudeMeter, claudeMeter.width / 2, claudeMeter.height / 2);
+        tryCompare(applet, "hoveredPanelProviderID", "claude");
+        var claudeTip = applet.panelProviderToolTipText(claudeMeter.modelData);
+        verify(claudeTip.indexOf("Claude") >= 0);
+        verify(claudeTip.indexOf("Codex") < 0);
+        mouseMove(testCase, 600, 220);
+        tryCompare(applet, "hoveredPanelProviderID", "");
     }
 
     function test_longChartReadoutFitsAndKeysInspectPoints() {
