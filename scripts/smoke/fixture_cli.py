@@ -24,7 +24,7 @@ SCENARIOS += ("popup-content", "refresh-on-open", "privacy-provider", "privacy-s
 SCENARIOS += ("privacy-cost-details",)
 SCENARIOS += ("usage-retention", "usage-cache-restart")
 MAX_SCENARIO_TIMEOUT_SECONDS = 120
-MATRIX_SCENARIOS = ("panel-matrix-one", "panel-matrix-three")
+MATRIX_SCENARIOS = ("panel-matrix-one", "panel-matrix-four")
 
 
 def usage(provider, scenario, now):
@@ -112,8 +112,10 @@ def response(args, scenario, now):
         return "CodexBar 0.56.2 (synthetic smoke fixture)"
     if args == ["config", "providers", "--format", "json", "--json-only"]:
         providers = ("codex",) if scenario in ("panel-minimal-single", "panel-default-single", "panel-information-single", "panel-matrix-one") else ("codex", "claude")
-        if scenario.startswith("readme-") or scenario == "panel-matrix-three":
+        if scenario.startswith("readme-"):
             providers += ("gemini",)
+        if scenario == "panel-matrix-four":
+            providers += ("gemini", "cursor")
         rows = [{"provider": key, "enabled": True} for key in providers]
         if scenario == "provider-settings":
             rows.extend({"provider": key, "enabled": False} for key in ("gemini", "cursor", "openrouter"))
@@ -191,7 +193,10 @@ def response(args, scenario, now):
         if scenario == "usage-retention":
             return [snapshot, {**snapshot, "provider": "claude"}]
         return [snapshot]
-    for provider in (("codex", "claude", "gemini") if scenario.startswith("readme-") or scenario == "panel-matrix-three" else ("codex", "claude")):
+    matrix_providers = ("codex", "claude", "gemini", "cursor")
+    for provider in (("codex", "claude", "gemini") if scenario.startswith("readme-")
+                     else matrix_providers if scenario == "panel-matrix-four"
+                     else ("codex", "claude")):
         prefix = ["usage", "--provider", provider]
         if args == prefix + ["--format", "json", "--json-only"]:
             return [usage(provider, scenario, now)]

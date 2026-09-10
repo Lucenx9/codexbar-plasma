@@ -29,7 +29,17 @@ work and upstream contract requirements.
   its text keeps a separate identity. Custom element orders retain separate
   text and meter positions. Separate text keeps its identifying icon among
   multiple meters; a single selected provider meter does not repeat the icon.
-  Long text is elided to fit the panel.
+- Panel width is bounded, so a crowded meter row can leave the optional text
+  less room than every enabled item needs. Whole items are dropped rather than
+  cut short, in a fixed order: the provider name first, because the icon beside
+  it already identifies the provider, then the credit balance, keeping the usage
+  text last. For a provider the widget has no icon for, the panel draws a
+  generic icon shared with every other such provider, so there the name is the
+  only identification and outlives the credit balance instead.
+- Nothing that is dropped becomes unreachable. Accessible names keep the whole
+  text, the panel tooltip reports each provider's quotas, incidents, and its
+  credit balance while panel credits are enabled, and the popup keeps every
+  detail. A single remaining item is elided only as a last resort.
 
   ![Optional usage text beside its provider’s quota capsules](codexbar-plasma-panel-information.png)
 
@@ -238,7 +248,9 @@ fields; track proposed extensions in the issue tracker.
   name, usage text, credit balance, and the monochrome preset. Its closed summary
   lists enabled information. Text format appears only when usage text is enabled;
   hiding controls preserves their selected values. These additions work in
-  horizontal panels; meters also work in vertical panels.
+  horizontal panels; meters also work in vertical panels. With several panel
+  providers the panel may not have room for all of them and drops the least
+  important first, as described above.
 - **Quota, order and visibility** expands the quota selector, element order,
   visibility conditions, and automatic provider selection. It starts collapsed
   whenever the page opens. Its summary lists non-default quota/order choices,

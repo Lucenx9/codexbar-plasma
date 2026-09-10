@@ -1377,12 +1377,24 @@ for vertical_anchor_fragment in (
             f"fallback; missing {vertical_anchor_fragment!r}"
         )
 
+# One rule, shared by the element loader, the badge itself, and the text width
+# budget that has to reserve the slot the badge occupies.
+for status_rule_fragment in (
+    "readonly property bool statusElementVisible: (!verticalPanel || hasProviderMeters",
+    "|| !identityCarriesIncidentBadge)",
+    "incidentProvider.hasIncident",
+    "!incidentProviderHasMeterBadge",
+):
+    if status_rule_fragment not in compact_representation_text:
+        raise AssertionError(
+            "the standalone status element is a fallback: when a meter can carry "
+            "the badge, the ambiguous floating dot must hide; missing "
+            f"{status_rule_fragment!r}"
+        )
+
 horizontal_status_badge_body = id_block(compact_representation_text, "compactStatusBadge")
 for horizontal_badge_fragment in (
-    "visible: (!compactRoot.verticalPanel || compactRoot.hasProviderMeters",
-    "|| !compactRoot.identityCarriesIncidentBadge)",
-    "compactRoot.incidentProvider.hasIncident",
-    "!compactRoot.incidentProviderHasMeterBadge",
+    "visible: compactRoot.statusElementVisible",
     "statusBadgeColor(compactRoot.incidentProvider.statusSeverity)",
     "border.width: 1",
     "border.color: Kirigami.Theme.backgroundColor",
@@ -2753,13 +2765,41 @@ for stable_chart_fragment in (
         )
 if "visible: chart.activeIndex" in interactive_chart_text:
     raise AssertionError("InteractiveChart must reserve readout space while pointer state changes")
-if (
-    "id: compactTextMeasurer" not in compact_representation_text
-    or "Math.ceil(compactTextMeasurer.implicitWidth)" not in compact_representation_text
-    or "maximumCompactWidth: Kirigami.Units.gridUnit * 18" not in compact_representation_text
+# Every candidate composition is measured on its own hidden label, outside the
+# layout: the chosen width must not feed back into the choice, and raw font
+# metrics disagree with shaped label widths by a fraction of a pixel, which is
+# enough for the renderer to elide a composition that was picked to fit.
+composition_measurers = (
+    "firstCompositionMeasurer", "secondCompositionMeasurer", "thirdCompositionMeasurer")
+for measurer in composition_measurers:
+    if (
+        f"id: {measurer}" not in compact_representation_text
+        or f"Math.ceil({measurer}.implicitWidth)" not in compact_representation_text
+    ):
+        raise AssertionError(
+            "compact panel text must round up an independent label measurement "
+            f"per candidate composition; missing {measurer!r}"
+        )
+if "maximumCompactWidth: Kirigami.Units.gridUnit * 18" not in compact_representation_text:
+    raise AssertionError("compact panel text must use a bounded wide cap")
+# Content the settings switched on is surrendered whole, never cut into a
+# fragment that reads as a different value.
+for fit_fragment in (
+    'import "../PanelTextFit.js" as PanelTextFit',
+    "PanelTextFit.compositions(applet.compactTextSegments())",
+    "PanelTextFit.fittedIndex(textCompositionWidths, inlineTextBudget)",
+    "PanelTextFit.fittedIndex(textCompositionWidths, standaloneTextBudget)",
+    "Accessible.name: compactRoot.fullText",
 ):
+    if fit_fragment not in compact_representation_text:
+        raise AssertionError(
+            "crowded panel text must surrender whole segments and keep the full "
+            f"composition for assistive technology; missing {fit_fragment!r}"
+        )
+if "applet.compactText()" in compact_representation_text:
     raise AssertionError(
-        "compact panel text must use a bounded wide cap and round independent measurement up"
+        "the compact renderer must compose panel text from segments so it can "
+        "surrender them, not consume one pre-joined string"
     )
 if "elementLoader.implicitWidth" in compact_representation_text:
     raise AssertionError("compact panel text measurement must not feed back through its Loader width")
@@ -3108,6 +3148,25 @@ if not re.search(r"var incident = presented\.hasIncident\s*&&\s*presented\.statu
 if 'i18n("%1 - %2", line, incident)' not in provider_tooltip_body:
     raise AssertionError(
         "the panel tooltip must report incidents even when the provider also reports usage"
+    )
+# A crowded panel surrenders the credit balance before the usage figure and no
+# meter carries it, so the tooltip is the pointer user's only way back to it.
+if ("Plasmoid.configuration.showCreditsInPanel" not in provider_tooltip_body
+        or 'i18n("%1cr"' not in provider_tooltip_body):
+    raise AssertionError(
+        "the panel tooltip must report the credit balance the panel can surrender"
+    )
+# The name leads the surrender order because the icon names the provider. That
+# fails for a provider outside the bundled icon and brand-color tables, which
+# render as one shared generic icon.
+compact_segments_body = function_body(main_text, "compactTextSegments")
+if "identifying: !providerIconIdentifies(" not in compact_segments_body:
+    raise AssertionError(
+        "the panel name segment must record whether the icon can identify the provider"
+    )
+if "providerBrandColorChannels" not in function_body(main_text, "providerIconIdentifies"):
+    raise AssertionError(
+        "icon identification must follow the bundled provider tables, not a guess"
     )
 for hover_helper in (
     "property string hoveredPanelProviderID",
