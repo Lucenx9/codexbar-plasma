@@ -42,6 +42,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   previously left the card surface unchanged.
 - Fade the chart readout in and out with the hovered point instead of blinking
   the label and value on every pointer entry and exit.
+- Fade the tab selection indicator with the tab background it sits under,
+  instead of blinking the accent bar on every tab change.
 
 ## 0.2.36 - 2026-09-09
 

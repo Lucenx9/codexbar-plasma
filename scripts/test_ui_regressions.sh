@@ -1571,10 +1571,11 @@ for stale_global_pointer_focus_fragment in ("focusAcquiredByPointer",):
 provider_tab_body = id_block(main_text, "providerTab")
 if (
     "color: providerTab.meter >= 0" not in provider_tab_body
-    or "providerTab.selected ? providerTab.accent : \"transparent\"" not in provider_tab_body
+    or "withAlpha(providerTab.accent," not in provider_tab_body
+    or "providerTab.selected ? 1 : 0" not in provider_tab_body
 ):
     raise AssertionError(
-        "providerTab must show the accent underline when selected for unmetered providers"
+        "providerTab must fade in the accent underline when selected for unmetered providers"
     )
 
 usage_percent_body = id_block(provider_usage_row_text, "usagePercentLabel")
@@ -2811,6 +2812,12 @@ if "sessionCardHover.hovered ? 0.075 : 0.035" not in sessions_view_text:
     raise AssertionError("session cards must confirm hover on the surface that reveals their copy actions")
 if "opacity: chart.hasActivePoint ? 1 : 0" not in interactive_chart_text:
     raise AssertionError("the chart readout must fade with the active point instead of blinking")
+if "tab.applet.withAlpha(tab.accent, tab.selected ? 1 : 0)" not in global_tab_text:
+    raise AssertionError(
+        "the tab selection indicator must fade the accent's alpha, not interpolate towards transparent"
+    )
+if "applet.withAlpha(overviewTab.accent," not in full_representation_text:
+    raise AssertionError("the overview tab indicator must fade its accent alpha like the shared tab")
 
 normalize_provider_body = function_body(main_text, "normalizeProvider")
 if "statusKnown: status !== null" not in normalize_provider_body:
