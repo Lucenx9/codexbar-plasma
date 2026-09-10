@@ -254,8 +254,13 @@ larger text, right-to-left layout, and scrolling through expanded options.
 It requests redraws during observation, requires multiple rendered frames, and
 compares both coordinates. Direction changes also check that the opposite
 padding is restored.
-The QML runner repeats it with the KDE desktop controls style because its
-scrollbar reserves viewport width, unlike the default overlay style.
+`tests/tst_popup_notifications_geometry.qml` applies the same frame-based
+opening check to the real Popup and Notifications pages, including the provider
+roster arriving after the Popup page opens and mirrored padding restoration on
+both pages. It also requires the viewport padding and, for the static
+Notifications content, the content height to stay constant across frames.
+The QML runner repeats both geometry files with the KDE desktop controls style
+because its scrollbar reserves viewport width, unlike the default overlay style.
 Every runner invocation applies the strict no-skips check;
 `tests/test_qml_runner.py` verifies skip and failure propagation across styles.
 

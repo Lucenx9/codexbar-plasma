@@ -9,6 +9,15 @@ import "components" as Components
 KCM.SimpleKCM {
     id: page
 
+    readonly property Controls.ScrollView scrollView: contentItem as Controls.ScrollView
+
+    // Reserve the themed scrollbar width even when initial overflow disappears.
+    Binding {
+        target: page.scrollView
+        property: page.mirrored ? "leftPadding" : "rightPadding"
+        value: page.scrollView.Controls.ScrollBar.vertical.implicitWidth
+    }
+
     property alias cfg_enableNotifications: enableNotificationsCheck.checked
     property bool cfg_enableNotificationsDefault: true
     property alias cfg_notifyStatusIncidents: notifyStatusIncidentsCheck.checked

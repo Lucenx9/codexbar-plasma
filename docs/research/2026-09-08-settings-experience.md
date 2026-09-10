@@ -128,3 +128,15 @@ Collapsed forms contribute zero maximum width while retaining their controls
 and configuration bindings. No delay or movement animation is introduced.
 Frame-based tests cover opening geometry and keyboard disclosure with usable
 scrolling in both layout directions.
+
+Popup and Notifications opening geometry was traced the same way on Plasma
+6.7.4 with the KDE desktop controls style, using Qt 6.11.2. At a 600-by-500
+page size, the Notifications page reserved the 19-pixel scrollbar gutter on its
+first paint and released it while settling, shrinking its content height from
+415 to 367 pixels and reflowing every wrapped paragraph. At 600-by-700, the
+Popup page released the same gutter while its provider roster settled, before
+the arriving roster grew the content again. Both pages now reserve the themed
+gutter like Panel, and the Popup overview section carries the same 24-grid
+width bound as its provider-order sibling. Frame-based tests cover opening
+geometry on both pages, roster arrival on Popup, and mirrored padding
+restoration.

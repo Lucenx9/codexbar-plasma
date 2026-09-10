@@ -216,6 +216,8 @@ fields; track proposed extensions in the issue tracker.
 - Six settings pages: **General**, **Providers**, **Panel**, **Popup**,
   **Notifications**, and **Diagnostics**. CLI path and provider/source overrides
   sit beside redacted diagnostics; quota thresholds sit beside their alerts.
+  **Popup** and **Notifications** keep their text and controls still while the
+  page opens, including while the Popup provider list arrives.
 - **Panel** starts with the preview, side-by-side Standard/Minimal choices, and
   provider meters. Text and controls keep their horizontal position as the page
   opens. **Additional information** contains the selected provider's
