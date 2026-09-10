@@ -512,6 +512,39 @@ TestCase {
         compare(Normalizer.accountKey({ account: "Work Team", accountKey: "Work  Team" }), "Work  Team")
     }
 
+    function test_accountKeyRevalidatesCarriedSnapshotKeys() {
+        // A whitespace-only or overlong carried key must not reach dedupe,
+        // selection, or the --account argument as-is.
+        var overlong = ""
+        for (var i = 0; i < Normalizer.maximumAccountIdentityLength + 1; i++) {
+            overlong += "a"
+        }
+        compare(Normalizer.accountKey({ account: "fallback@example.com", accountKey: "   " }),
+            "fallback@example.com")
+        compare(Normalizer.accountKey({ account: "fallback@example.com", accountKey: overlong }),
+            "fallback@example.com")
+        compare(Normalizer.accountKey({ accountKey: "   " }), "")
+        compare(Normalizer.accountKey({ accountKey: overlong }), "")
+        // Boundary lengths still pass through untouched, internal spacing kept.
+        var boundary = ""
+        for (var j = 0; j < Normalizer.maximumAccountIdentityLength; j++) {
+            boundary += "b"
+        }
+        compare(Normalizer.accountKey({ account: "fallback@example.com", accountKey: boundary }), boundary)
+    }
+
+    function test_firstValidAccountIdentitySkipsStructuredCandidates() {
+        compare(Normalizer.firstValidAccountIdentity(
+            [{ nested: "object" }, "fallback@example.com"]), "fallback@example.com")
+        compare(Normalizer.firstValidAccountIdentity(
+            [["nested"], 42, "  spaced@example.com  "]), "  spaced@example.com  ")
+        compare(Normalizer.firstValidAccountIdentity(
+            [{ nested: "object" }, ["nested"]]), "")
+        compare(Normalizer.firstValidAccountIdentity([]), "")
+        compare(Normalizer.firstValidAccountIdentity(null), "")
+        compare(Normalizer.firstValidAccountIdentity("fallback@example.com"), "")
+    }
+
     function test_dedupeAccountOptionsKeepsSpacingVariantsSeparate() {
         var options = [
             { provider: "codex", account: "Work Team", accountKey: "Work  Team" },

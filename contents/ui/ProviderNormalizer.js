@@ -353,13 +353,17 @@ function accountLabel(item) {
 // into selection or the `--account` argument, where two names that differ only
 // by collapsed characters still address different accounts. A normalized
 // snapshot already carries its validated key; recomputing it from the
-// collapsed display fields would lose the original spacing. Overlong or
-// non-string identities carry no key and stay display-only.
+// collapsed display fields would lose the original spacing, so a carried key
+// is reused once it passes the same blank and length checks as a fresh
+// candidate. Overlong or non-string identities carry no key and stay
+// display-only.
 function accountKey(item) {
     if (!isCliRecord(item)) {
         return ""
     }
-    if (typeof item.accountKey === "string" && item.accountKey.length > 0) {
+    if (typeof item.accountKey === "string"
+            && item.accountKey.trim().length > 0
+            && item.accountKey.length <= maximumAccountIdentityLength) {
         return item.accountKey
     }
     var candidates = [item.account, item.organization, item.loginMethod]
@@ -370,6 +374,23 @@ function accountKey(item) {
         var identity = candidates[i].trim()
         if (identity.length > 0 && identity.length <= maximumAccountIdentityLength) {
             return identity
+        }
+    }
+    return ""
+}
+
+// First candidate that survives the account-identity validation. A truthy but
+// structured value must not mask a valid fallback: `accountKey` skips
+// non-strings, so selecting `item.account || identity.accountEmail` directly
+// would keep an object and lose the fallback identity.
+function firstValidAccountIdentity(candidates) {
+    if (!Array.isArray(candidates)) {
+        return ""
+    }
+    for (var i = 0; i < candidates.length; i++) {
+        if (typeof candidates[i] === "string"
+                && accountKey({ account: candidates[i] }).length > 0) {
+            return candidates[i]
         }
     }
     return ""

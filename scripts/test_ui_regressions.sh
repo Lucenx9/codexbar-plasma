@@ -690,6 +690,11 @@ if "Normalizer.mergeCostSnapshotsAfterPartialFailure(" not in parse_cost_body:
 parse_usage_body = function_body(main_text, "parseOutput")
 if "Normalizer.dedupeProviderSnapshots(nextProviders)" not in parse_usage_body:
     raise AssertionError("direct usage payloads must not create duplicate provider tabs")
+if parse_usage_body.find("normalizedProviderID(items[i].provider)") < parse_usage_body.find("try {"):
+    raise AssertionError(
+        "parseOutput must screen the provider id inside the per-provider guard so a "
+        "throwing identity read drops only its own provider instead of the whole refresh"
+    )
 
 token_cost_section_body = id_block(main_text, "tokenCostSection")
 if "applet.costErrorText" not in token_cost_section_body:

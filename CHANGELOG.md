@@ -19,6 +19,15 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   the command source changes, even when the cost refresh fails.
 - Survive malformed provider status fields and keep the healthy providers of
   the same refresh, settling loading instead of leaving it active.
+- Revalidate carried account keys before use, so a blank or overlong stored
+  key falls back to the snapshot identity instead of reaching deduplication,
+  selection, or the `--account` argument.
+- Skip structured account identity fields when choosing the `--account`
+  identity, so a malformed value cannot mask a valid fallback from another
+  identity field.
+- Screen the provider id inside the per-provider guard during usage parsing,
+  so a failing identity read drops only its own provider instead of aborting
+  the whole refresh.
 - Recover provider actions when a secret prompt stops responding: the dialog
   closes after a long escape-hatch deadline and the stuck pending state clears,
   instead of leaving the provider disabled until the settings page reopens.

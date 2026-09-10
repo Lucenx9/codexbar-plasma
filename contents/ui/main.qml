@@ -936,12 +936,14 @@ PlasmoidItem {
         var nextProviders = []
         var itemLimit = Math.min(items.length, maximumProviderSnapshots)
         for (var i = 0; i < itemLimit; i++) {
-            if (!isCliRecord(items[i]) || normalizedProviderID(items[i].provider).length === 0) {
-                continue
-            }
             // A malformed provider must not abort the whole refresh or leave
-            // loading set: skip it and keep the healthy providers.
+            // loading set: skip it and keep the healthy providers. The id
+            // screen stays inside the guard so a throwing identity read drops
+            // only its own provider instead of stranding the whole run.
             try {
+                if (!isCliRecord(items[i]) || normalizedProviderID(items[i].provider).length === 0) {
+                    continue
+                }
                 nextProviders.push(normalizeProvider(items[i]))
             } catch (providerError) {
                 continue
@@ -2115,9 +2117,15 @@ PlasmoidItem {
                 ? credits.codexCreditLimit
                 : null)
         var displayName = item.displayName || item.title || providerDisplayNames[providerID] || ""
-        var rawAccount = item.account || identity.accountEmail || usage.accountEmail || ""
-        var rawOrganization = identity.accountOrganization || usage.accountOrganization || ""
-        var rawLoginMethod = identity.loginMethod || usage.loginMethod || ""
+        // Identity fields are CLI-controlled and may carry structured values.
+        // A truthy object must not mask a valid fallback, so each candidate is
+        // validated before it wins; a non-string candidate never does.
+        var rawAccount = Normalizer.firstValidAccountIdentity(
+            [item.account, identity.accountEmail, usage.accountEmail])
+        var rawOrganization = Normalizer.firstValidAccountIdentity(
+            [identity.accountOrganization, usage.accountOrganization])
+        var rawLoginMethod = Normalizer.firstValidAccountIdentity(
+            [identity.loginMethod, usage.loginMethod])
         var providerDetails = UsageDetails.normalizeSections(usage.details)
         var providerUsageDashboard = providerDetails.length > 0 ? null : usageDashboard(usage, item)
         var hasSupplementalUsage = providerDetails.length > 0
