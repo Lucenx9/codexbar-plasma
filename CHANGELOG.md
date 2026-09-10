@@ -44,10 +44,15 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   different one. The panel now surrenders whole items instead, dropping the
   provider name first because the icon beside it already identifies the
   provider, then the credit balance, and keeping the usage text. The full text
-  stays in the panel tooltip and accessible names, and only a single remaining
-  item is ever elided. The panel also offers the text every pixel the row
-  actually leaves, instead of a flat allowance that hid content while space
-  was free.
+  stays in accessible names, and only a single remaining item is ever elided.
+  For a provider the widget has no icon for, the panel draws a generic icon that
+  names no provider, so there the name outlives the credit balance instead. The
+  panel also offers the text every pixel the row actually leaves, instead of a
+  flat allowance that hid content while space was free.
+- Report the credit balance in the panel tooltip while panel credits are
+  enabled, so a crowded panel that had no room to draw it does not leave a
+  pointer user without it. No meter carries the balance, and the tooltip
+  previously reported only quotas and incidents.
 - Keep Popup and Notifications settings text and controls in place while the
   page opens. The themed scrollbar gutter stays reserved instead of appearing
   and then disappearing as the content settles, and the Popup overview section

@@ -171,7 +171,8 @@ ColumnLayout {
             }
             var segments = [];
             if (preview.configPage.cfg_showProviderInPanel) {
-                segments.push({ id: "name", text: provider.title });
+                segments.push({ id: "name", text: provider.title,
+                    identifying: ProviderIdentity.providerBrandColorChannels(provider.provider).length !== 3 });
             }
             var metric = preview.metricText(preview.previewModel.textRow);
             if (preview.configPage.cfg_showPercentInPanel && metric.length > 0) {

@@ -30,6 +30,40 @@ TestCase {
             ["43% used 125cr", "43% used"])
     }
 
+    // The name leads the drop order because the icon beside the label names the
+    // provider. A provider with no bundled icon renders as the same generic
+    // icon and theme highlight as every other one, so there the name is the
+    // panel's only identification and the balance goes first instead.
+    function test_anUnidentifiedProviderKeepsItsNameLonger() {
+        var identifying = [
+            {id: "name", text: "Codex", identifying: true},
+            {id: "usage", text: "43% used"},
+            {id: "credits", text: "125cr"}
+        ]
+        compare(PanelTextFit.segmentTexts(identifying),
+            ["Codex 43% used 125cr", "Codex 43% used", "43% used"])
+        compare(PanelTextFit.segmentTexts([
+            {id: "name", text: "Codex", identifying: true},
+            {id: "credits", text: "125cr"}]), ["Codex 125cr", "Codex"])
+        // The usage figure still outlives the name.
+        var compositions = PanelTextFit.compositions(identifying)
+        compare(compositions[compositions.length - 1][0].id, "usage")
+    }
+
+    function test_onlyAnExplicitFlagChangesTheOrder() {
+        for (var flag of [false, "true", 1, null, undefined]) {
+            compare(PanelTextFit.segmentTexts([
+                {id: "name", text: "Codex", identifying: flag},
+                {id: "usage", text: "43% used"},
+                {id: "credits", text: "125cr"}])[1], "43% used 125cr")
+        }
+        // The flag belongs to the name; it changes nothing on other segments.
+        compare(PanelTextFit.segmentTexts([
+            {id: "name", text: "Codex"},
+            {id: "usage", text: "43% used"},
+            {id: "credits", text: "125cr", identifying: true}])[1], "43% used 125cr")
+    }
+
     // A single enabled segment has nothing to surrender: the caller elides it
     // rather than letting an enabled segment vanish without a trace.
     function test_theLastSegmentIsNeverSurrendered() {

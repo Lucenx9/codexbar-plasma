@@ -33,8 +33,13 @@ work and upstream contract requirements.
   less room than every enabled item needs. Whole items are dropped rather than
   cut short, in a fixed order: the provider name first, because the icon beside
   it already identifies the provider, then the credit balance, keeping the usage
-  text last. The panel tooltip, the popup, and accessible names always keep the
-  full text, and a single remaining item is elided only as a last resort.
+  text last. For a provider the widget has no icon for, the panel draws a
+  generic icon shared with every other such provider, so there the name is the
+  only identification and outlives the credit balance instead.
+- Nothing that is dropped becomes unreachable. Accessible names keep the whole
+  text, the panel tooltip reports each provider's quotas, incidents, and its
+  credit balance while panel credits are enabled, and the popup keeps every
+  detail. A single remaining item is elided only as a last resort.
 
   ![Optional usage text beside its provider’s quota capsules](codexbar-plasma-panel-information.png)
 

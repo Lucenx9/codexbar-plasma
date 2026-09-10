@@ -20,6 +20,13 @@ var segmentIDs = ["name", "usage", "credits"];
 // Ascending importance: the first entry present is surrendered first.
 var dropOrder = ["name", "credits", "usage"];
 
+// The provider name leads that order only while the icon beside the label is
+// distinctive. A provider the widget has no bundled icon for renders as one
+// generic icon in the theme highlight, shared with every other such provider,
+// so its name is the only identification the panel has left. Callers mark the
+// name segment `identifying` in that case and it then outlives the balance.
+var identifyingNameDropOrder = ["credits", "name", "usage"];
+
 var maximumSegmentLength = 200;
 
 function normalizedSegments(value) {
@@ -41,9 +48,18 @@ function normalizedSegments(value) {
             continue;
         }
         seen[id] = true;
-        result.push({ id: id, text: text });
+        result.push({ id: id, text: text, identifying: entry.identifying === true });
     }
     return result;
+}
+
+function surrenderOrder(segments) {
+    for (var i = 0; i < segments.length; i++) {
+        if (segments[i].id === "name" && segments[i].identifying) {
+            return identifyingNameDropOrder;
+        }
+    }
+    return dropOrder;
 }
 
 // Progressively smaller compositions, widest first, each keeping the caller's
@@ -59,8 +75,9 @@ function compositions(value) {
 
     var result = [segments];
     var remaining = segments;
-    for (var i = 0; i < dropOrder.length && remaining.length > 1; i++) {
-        var dropped = dropOrder[i];
+    var order = surrenderOrder(segments);
+    for (var i = 0; i < order.length && remaining.length > 1; i++) {
+        var dropped = order[i];
         var next = remaining.filter(function(segment) {
             return segment.id !== dropped;
         });

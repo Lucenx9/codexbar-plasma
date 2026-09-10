@@ -3149,6 +3149,25 @@ if 'i18n("%1 - %2", line, incident)' not in provider_tooltip_body:
     raise AssertionError(
         "the panel tooltip must report incidents even when the provider also reports usage"
     )
+# A crowded panel surrenders the credit balance before the usage figure and no
+# meter carries it, so the tooltip is the pointer user's only way back to it.
+if ("Plasmoid.configuration.showCreditsInPanel" not in provider_tooltip_body
+        or 'i18n("%1cr"' not in provider_tooltip_body):
+    raise AssertionError(
+        "the panel tooltip must report the credit balance the panel can surrender"
+    )
+# The name leads the surrender order because the icon names the provider. That
+# fails for a provider outside the bundled icon and brand-color tables, which
+# render as one shared generic icon.
+compact_segments_body = function_body(main_text, "compactTextSegments")
+if "identifying: !providerIconIdentifies(" not in compact_segments_body:
+    raise AssertionError(
+        "the panel name segment must record whether the icon can identify the provider"
+    )
+if "providerBrandColorChannels" not in function_body(main_text, "providerIconIdentifies"):
+    raise AssertionError(
+        "icon identification must follow the bundled provider tables, not a guess"
+    )
 for hover_helper in (
     "property string hoveredPanelProviderID",
     "function setHoveredPanelProvider(",

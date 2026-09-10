@@ -3118,6 +3118,14 @@ PlasmoidItem {
         return true
     }
 
+    // Whether the rendered icon can stand in for the provider's name. Bundled
+    // icons and brand colors cover the same providers, so a provider outside
+    // that set falls back to one generic icon in the theme highlight and is
+    // indistinguishable from every other provider outside it.
+    function providerIconIdentifies(value) {
+        return ProviderIdentity.providerBrandColorChannels(value).length === 3
+    }
+
     function providerColor(value) {
         var channels = ProviderIdentity.providerBrandColorChannels(value)
         if (channels.length !== 3) {
@@ -3874,7 +3882,8 @@ PlasmoidItem {
 
         var segments = []
         if (Plasmoid.configuration.showProviderInPanel) {
-            segments.push({ id: "name", text: item.title })
+            segments.push({ id: "name", text: item.title,
+                identifying: !providerIconIdentifies(item.provider) })
         }
 
         var display = menuBarDisplayText(item)
@@ -3934,9 +3943,20 @@ PlasmoidItem {
         }
         // Keep incidents in the tooltip even when quota meters are available.
         var incident = presented.hasIncident && presented.statusKnown !== false && presented.status.length > 0 ? presented.status : ""
+        var details = []
         var description = panelMeterDescription(presented)
         if (description.length > 0) {
-            var line = i18n("%1: %2", presented.title, description)
+            details.push(description)
+        }
+        // A crowded panel surrenders the credit balance before the usage
+        // figure, and no meter carries it, so the tooltip is where a pointer
+        // user recovers what the panel had no room to draw.
+        if (Plasmoid.configuration.showCreditsInPanel && presented.credits !== null
+                && presented.credits !== undefined) {
+            details.push(i18n("%1cr", formatNumber(presented.credits)))
+        }
+        if (details.length > 0) {
+            var line = i18n("%1: %2", presented.title, details.join(". "))
             if (incident.length > 0) {
                 return i18n("%1 - %2", line, incident)
             }
