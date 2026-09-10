@@ -391,6 +391,19 @@ Item {
                                         height: parent.height
                                         radius: Math.min(height / 2, width / 2)
                                         color: quotaCapsule.meterColor
+
+                                        // Every popup meter grows into a new
+                                        // reading; this capsule jumped to it.
+                                        // The settings preview renders static
+                                        // frames, so it opts out.
+                                        Behavior on width {
+                                            enabled: compactRoot.animationsEnabled
+
+                                            NumberAnimation {
+                                                duration: Kirigami.Units.longDuration
+                                                easing.type: Easing.OutCubic
+                                            }
+                                        }
                                     }
                                 }
                             }

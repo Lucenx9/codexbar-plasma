@@ -377,7 +377,7 @@ TestCase {
         var track = findItem(meter, item => item.objectName === "panelMeterTrack");
         var fill = findItem(track, item => item.objectName === "panelMeterFill");
         verify(icon.mapToItem(meter, icon.width, 0).x < track.mapToItem(meter, 0, 0).x);
-        verify(Math.abs(fill.width / track.width - 0.57) < 0.01);
+        tryVerify(() => Math.abs(fill.width / track.width - 0.57) < 0.01);
         applet.firstQuota = 1;
         wait(0);
         meter = findItem(panel, item => item.modelData && item.modelData.provider === "codex");

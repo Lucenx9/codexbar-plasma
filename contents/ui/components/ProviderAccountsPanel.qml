@@ -28,6 +28,7 @@ ColumnLayout {
             text: i18n("Accounts")
             font.weight: Font.DemiBold
             Layout.fillWidth: true
+            elide: Text.ElideRight
         }
 
         PlasmaComponents.ToolButton {

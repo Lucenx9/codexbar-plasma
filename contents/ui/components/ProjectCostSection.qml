@@ -26,6 +26,7 @@ ColumnLayout {
         text: i18n("Projects")
         font.weight: Font.DemiBold
         Layout.fillWidth: true
+        elide: Text.ElideRight
     }
 
     PlainPlasmaLabel {

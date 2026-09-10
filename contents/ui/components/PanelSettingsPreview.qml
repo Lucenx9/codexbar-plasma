@@ -212,6 +212,7 @@ ColumnLayout {
             Layout.fillWidth: true
             text: i18n("Panel preview")
             font.bold: true
+            elide: Text.ElideRight
         }
 
         PlainComboBox {

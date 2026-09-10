@@ -282,6 +282,7 @@ ColumnLayout {
                     text: i18n("Activity heatmap")
                     font.weight: Font.DemiBold
                     Layout.fillWidth: true
+                    elide: Text.ElideRight
                 }
 
                 // The grid follows the selected range instead of a fixed
@@ -367,6 +368,10 @@ ColumnLayout {
                                 }
 
                                 Components.PlainToolTip {
+                                    // A readout for the cell under the pointer,
+                                    // not a label for a control: scanning the
+                                    // grid must not wait out a hover delay.
+                                    delay: 0
                                     visible: heatmapMouse.containsMouse
                                     plainText: i18n("%1: %2", modelData.label, modelData.displayValue)
                                 }
@@ -393,6 +398,7 @@ ColumnLayout {
                     text: i18n("Providers")
                     font.weight: Font.DemiBold
                     Layout.fillWidth: true
+                    elide: Text.ElideRight
                 }
 
                 Repeater {

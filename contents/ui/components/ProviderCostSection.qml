@@ -84,6 +84,7 @@ ColumnLayout {
             level: 4
             type: Kirigami.Heading.Type.Primary
             Layout.fillWidth: true
+            elide: Text.ElideRight
         }
 
         Components.PlainComboBox {
