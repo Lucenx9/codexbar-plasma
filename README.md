@@ -41,7 +41,7 @@ consistent across themes.
   heatmap, and provider, model, and project breakdowns when the CLI supplies them.
 - A local **Sessions** tab. Transcript paths and working directories are never
   displayed or opened.
-- Optional privacy mode, refresh on popup opening, and automatic widget updates.
+- Refresh on popup opening, plus optional privacy mode and automatic widget updates.
 - English plus Italian, French, German, Spanish, and Brazilian Portuguese,
   selected through your Plasma language preferences.
 
@@ -98,7 +98,8 @@ Distribution package names vary. Source builds additionally need `make`, Python
 Provider enable/disable and setup actions change the CLI configuration
 immediately. **Apply** and **Cancel** cover widget settings only.
 
-New widgets refresh quotas every five minutes and show percent **used**. Warning
+New widgets refresh quotas every five minutes, refresh again when you open the
+popup on quotas older than that interval, and show percent **used**. Warning
 and critical thresholds default to 80% and 95%. Existing settings are preserved
 when you upgrade.
 
