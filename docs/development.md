@@ -259,6 +259,16 @@ scrollbar reserves viewport width, unlike the default overlay style.
 Every runner invocation applies the strict no-skips check;
 `tests/test_qml_runner.py` verifies skip and failure propagation across styles.
 
+`tests/tst_settings_pages.qml` builds the real General and Notifications pages
+and asserts the behavior the static ownership checks cannot reach: the global
+defaults action leaves every resettable key at its schema default while its
+confirmation stays pending until `saveConfig()`, the editable interval and
+threshold fields keep their stored value when the typed text holds no number,
+and the critical threshold follows the warning floor. Both pages must therefore
+guard their applied-configuration reads, as Notifications already did, so a page
+built outside a plasmoid resolves those bindings instead of raising a TypeError
+that `failOnWarning` reports as a failure.
+
 `make check` disables unqualified-name warnings because Plasma injects helpers
 such as `i18n()` as context properties. It validates AppStream metadata when
 `kpackagetool6` is available and reports a skip otherwise. On older local Plasma
