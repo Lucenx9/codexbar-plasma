@@ -89,7 +89,8 @@ work and upstream contract requirements.
   working directories are never rendered or opened. The tab refreshes stale
   session data while it remains visible.
 - Overview providers can be limited to a chosen set of up to 3 providers, or
-  left automatic (the first 3 eligible providers).
+  left automatic (the first 3 eligible providers). The checkboxes recognize
+  provider aliases and mixed-case IDs, like the panel provider selection.
 - Usage dashboard summaries for provider payloads that expose API spend,
   request, token, model, or dashboard fields through the CLI.
 - Declarative provider detail sections from the CLI `usage.details` contract,

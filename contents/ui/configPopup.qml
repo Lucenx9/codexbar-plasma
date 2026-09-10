@@ -61,10 +61,6 @@ KCM.SimpleKCM {
         commandPath: page.commandPath
     }
 
-    function providerSelectionKey(providerID) {
-        return JSON.stringify(String(providerID || ""))
-    }
-
     function revealFocusedOrderButton(upButton, downButton) {
         var button = upButton && upButton.activeFocus ? upButton
             : (downButton && downButton.activeFocus ? downButton : null)
@@ -114,7 +110,11 @@ KCM.SimpleKCM {
 
         var automatic = []
         for (var i = 0; i < orderedEnabledProviderRoster.length; i++) {
-            automatic.push(orderedEnabledProviderRoster[i].provider)
+            var automaticID = ProviderOrder.normalizedProviderID(orderedEnabledProviderRoster[i].provider)
+            if (automaticID.length === 0 || automatic.indexOf(automaticID) !== -1) {
+                continue
+            }
+            automatic.push(automaticID)
             if (automatic.length >= maxOverviewProviders) {
                 break
             }
@@ -132,12 +132,11 @@ KCM.SimpleKCM {
         var result = []
         var seen = ({})
         for (var i = 0; i < parts.length; i++) {
-            var providerID = String(parts[i] || "").trim()
-            var selectionKey = providerSelectionKey(providerID)
-            if (providerID.length === 0 || Guards.hasOwnKey(seen, selectionKey)) {
+            var providerID = ProviderOrder.normalizedProviderID(parts[i])
+            if (providerID.length === 0 || Guards.hasOwnKey(seen, providerID)) {
                 continue
             }
-            seen[selectionKey] = true
+            seen[providerID] = true
             result.push(providerID)
             if (result.length >= maxOverviewProviders) {
                 break
@@ -151,30 +150,33 @@ KCM.SimpleKCM {
     }
 
     function overviewProviderSelected(providerID) {
-        return resolvedOverviewProviderIDs().indexOf(providerID) !== -1
+        return resolvedOverviewProviderIDs().indexOf(ProviderOrder.normalizedProviderID(providerID)) !== -1
     }
 
     function toggleOverviewProvider(providerID, checked) {
         var selected = resolvedOverviewProviderIDs()
         var selectedSet = ({})
         for (var i = 0; i < selected.length; i++) {
-            selectedSet[providerSelectionKey(selected[i])] = true
+            selectedSet[selected[i]] = true
         }
 
-        var providerKey = providerSelectionKey(providerID)
+        var key = ProviderOrder.normalizedProviderID(providerID)
+        if (key.length === 0) {
+            return
+        }
         if (checked) {
-            if (!selectedSet[providerKey] && selected.length >= maxOverviewProviders) {
+            if (!Guards.hasOwnKey(selectedSet, key) && selected.length >= maxOverviewProviders) {
                 return
             }
-            selectedSet[providerKey] = true
-        } else {
-            delete selectedSet[providerKey]
+            selectedSet[key] = true
+        } else if (Guards.hasOwnKey(selectedSet, key)) {
+            delete selectedSet[key]
         }
 
         var ordered = []
         for (var j = 0; j < orderedEnabledProviderRoster.length; j++) {
-            var candidate = orderedEnabledProviderRoster[j].provider
-            if (selectedSet[providerSelectionKey(candidate)] && ordered.indexOf(candidate) === -1) {
+            var candidate = ProviderOrder.normalizedProviderID(orderedEnabledProviderRoster[j].provider)
+            if (candidate.length > 0 && Guards.hasOwnKey(selectedSet, candidate) && ordered.indexOf(candidate) === -1) {
                 ordered.push(candidate)
                 if (ordered.length >= maxOverviewProviders) {
                     break
@@ -186,7 +188,7 @@ KCM.SimpleKCM {
         // drop it from the overview selection on the next toggle.
         for (var k = 0; k < selected.length && ordered.length < maxOverviewProviders; k++) {
             var prior = selected[k]
-            if (selectedSet[providerSelectionKey(prior)] && ordered.indexOf(prior) === -1) {
+            if (Guards.hasOwnKey(selectedSet, prior) && ordered.indexOf(prior) === -1) {
                 ordered.push(prior)
             }
         }

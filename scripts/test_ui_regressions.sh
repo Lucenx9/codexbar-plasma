@@ -1461,6 +1461,17 @@ for overview_order_function in (
         raise AssertionError(
             f"{overview_order_function} must use the saved provider order"
         )
+for overview_normalize_function in (
+    "resolvedOverviewProviderIDs",
+    "parseOverviewProviderIDs",
+    "overviewProviderSelected",
+    "toggleOverviewProvider",
+):
+    if "normalizedProviderID(" not in popup_surface.function_body(overview_normalize_function):
+        raise AssertionError(
+            f"{overview_normalize_function} must normalize provider IDs so "
+            "aliased providers match the runtime keys"
+        )
 for applet_fragment in (
     'property string providerOrderRaw:',
     'property bool showPopupTabLabels:',
