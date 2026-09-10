@@ -71,8 +71,18 @@ ColumnLayout {
     }
 
     RowLayout {
+        // The readout only carries text while a point is active. Fading keeps
+        // the row from blinking as the pointer enters and leaves the plot; the
+        // reserved height keeps the chart from shifting either way.
+        opacity: chart.hasActivePoint ? 1 : 0
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Kirigami.Units.shortDuration
+            }
+        }
 
         PlainPlasmaLabel {
             text: chart.hasActivePoint ? chart.pointLabel(chart.points[chart.activeIndex]) : ""

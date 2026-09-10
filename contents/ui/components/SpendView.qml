@@ -337,11 +337,12 @@ ColumnLayout {
                                 color: view.applet.withAlpha(
                                     Kirigami.Theme.highlightColor,
                                     0.1 + fraction * 0.8)
-                                border.width: heatmapMouse.containsMouse ? 1 : 0
-                                border.color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.4)
+                                border.width: 1
+                                border.color: view.applet.withAlpha(Kirigami.Theme.textColor,
+                                    heatmapMouse.containsMouse ? 0.4 : 0)
 
-                                Behavior on border.width {
-                                    NumberAnimation {
+                                Behavior on border.color {
+                                    ColorAnimation {
                                         duration: Kirigami.Units.shortDuration
                                     }
                                 }

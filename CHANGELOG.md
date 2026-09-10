@@ -38,6 +38,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Animate the panel provider meter hover/press highlight and the Usage & Spend
   heatmap cell hover border, matching the smooth transitions already used for
   every other interactive surface in the popup.
+- Confirm hover on session cards, which reveal copy actions on hover but
+  previously left the card surface unchanged.
+- Fade the chart readout in and out with the hovered point instead of blinking
+  the label and value on every pointer entry and exit.
 
 ## 0.2.36 - 2026-09-09
 

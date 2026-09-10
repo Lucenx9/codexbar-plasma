@@ -188,11 +188,20 @@ ColumnLayout {
                     Layout.fillWidth: true
                     Layout.preferredHeight: sessionRow.implicitHeight + Kirigami.Units.largeSpacing
                     radius: view.applet.nestedSurfaceRadius
-                    color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.035)
+                    // The card reveals its copy actions on hover, so the
+                    // surface confirms the hover the same way overview rows do.
+                    color: view.applet.withAlpha(Kirigami.Theme.textColor,
+                        sessionCardHover.hovered ? 0.075 : 0.035)
                     border.width: 1
                     // The state label already carries the accent, so the card
                     // keeps a neutral hairline: one carrier per signal.
                     border.color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.07)
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Kirigami.Units.shortDuration
+                        }
+                    }
 
                     Accessible.role: Accessible.ListItem
                     Accessible.name: view.applet.sessionTitle(modelData, index)
