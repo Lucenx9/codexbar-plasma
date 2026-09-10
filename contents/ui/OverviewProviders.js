@@ -62,7 +62,10 @@ function toggledSelection(orderedProviderIDs, selectedProviderIDs, providerID, c
     var selected = Array.isArray(selectedProviderIDs) ? selectedProviderIDs : [];
     var selectedSet = ({});
     for (var i = 0; i < selected.length; i++) {
-        selectedSet[selected[i]] = true;
+        var normalizedSelected = ProviderOrder.normalizedProviderID(selected[i]);
+        if (normalizedSelected.length > 0) {
+            selectedSet[normalizedSelected] = true;
+        }
     }
 
     var key = ProviderOrder.normalizedProviderID(providerID);
@@ -90,8 +93,8 @@ function toggledSelection(orderedProviderIDs, selectedProviderIDs, providerID, c
         }
     }
     for (var k = 0; k < selected.length && result.length < maximumOverviewProviders; k++) {
-        var prior = selected[k];
-        if (Guards.hasOwnKey(selectedSet, prior) && result.indexOf(prior) === -1) {
+        var prior = ProviderOrder.normalizedProviderID(selected[k]);
+        if (prior.length > 0 && Guards.hasOwnKey(selectedSet, prior) && result.indexOf(prior) === -1) {
             result.push(prior);
         }
     }

@@ -5,12 +5,6 @@ import "../contents/ui/OverviewProviders.js" as OverviewProviders
 TestCase {
     name: "OverviewProviders"
 
-    function ids(items) {
-        return items.map(function (item) {
-            return item.provider;
-        }).join(",");
-    }
-
     function test_emptySelectionIsInactiveAndKeepsAutomaticProviders() {
         verify(!OverviewProviders.selectionActive(""));
         verify(!OverviewProviders.selectionActive("   "));
@@ -80,6 +74,11 @@ TestCase {
         compare(next.join(","), "groq");
         next = OverviewProviders.toggledSelection(["groq"], ["groq"], "GROQCLOUD", false);
         compare(next.join(","), "");
+        // A stored raw spelling still toggles through its canonical ID.
+        next = OverviewProviders.toggledSelection(["groqcloud"], ["groqcloud"], "groqcloud", false);
+        compare(next.join(","), "");
+        next = OverviewProviders.toggledSelection(["groqcloud", "codex"], ["groqcloud"], "codex", true);
+        compare(next.join(","), "groq,codex");
 
         next = OverviewProviders.toggledSelection(["codex", "claude", "gemini", "cursor"], ["codex", "claude", "gemini"], "cursor", true);
         compare(next.join(","), "codex,claude,gemini");
@@ -102,6 +101,6 @@ TestCase {
     }
 
     function test_maximumMatchesTheOverviewLimit() {
-        verify(OverviewProviders.maximumOverviewProviders >= 1);
+        compare(OverviewProviders.maximumOverviewProviders, 3);
     }
 }

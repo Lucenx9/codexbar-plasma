@@ -3551,9 +3551,10 @@ PlasmoidItem {
         return result
     }
 
-    // The settings page stores raw CLI provider IDs (e.g. groqcloud,
-    // alibaba-coding-plan); parsing is shared with configPopup.qml through
-    // OverviewProviders so the checkboxes cannot drift from this selection.
+    // The settings page stores canonical provider IDs (legacy raw CLI
+    // spellings such as groqcloud still resolve); parsing is shared with
+    // configPopup.qml through OverviewProviders so the checkboxes cannot
+    // drift from this selection.
     function configuredOverviewProviderIDs() {
         return OverviewProviders.configuredProviderIDs(overviewProviderIDsRaw)
     }

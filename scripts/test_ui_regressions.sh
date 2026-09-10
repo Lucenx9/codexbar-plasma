@@ -626,9 +626,10 @@ if provider_publish_index < 0 or descriptor_supported_index < provider_publish_i
         "descriptor support must be confirmed only after a valid provider list is published"
     )
 
-# Overview selection is stored with the raw CLI provider IDs (e.g. groqcloud,
-# alibaba-coding-plan) but matched at runtime against providerKey-normalized
-# IDs (groq, alibaba). configuredOverviewProviderIDs must share parsing with
+# Overview selection stores canonical provider IDs (legacy raw CLI spellings,
+# e.g. groqcloud, alibaba-coding-plan, still resolve) matched at runtime
+# against providerKey-normalized IDs (groq, alibaba).
+# configuredOverviewProviderIDs must share parsing with
 # the settings page through OverviewProviders so the custom selection is not
 # silently ignored for aliased providers.
 overview_body = function_body(main_text, "configuredOverviewProviderIDs")

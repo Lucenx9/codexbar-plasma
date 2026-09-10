@@ -120,10 +120,6 @@ KCM.SimpleKCM {
         return OverviewProviders.configuredProviderIDs(value)
     }
 
-    function overviewProviderIDsText(providerIDs) {
-        return OverviewProviders.selectionText(providerIDs)
-    }
-
     function overviewProviderSelected(providerID) {
         return OverviewProviders.isSelected(resolvedOverviewProviderIDs(), providerID)
     }
