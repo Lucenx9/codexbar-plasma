@@ -55,6 +55,36 @@ TestCase {
         compare(PopupSelection.compactProviderIndex(false, -1, 1), 0)
     }
 
+    function test_compactPanelProviderWithoutSelectionKeepsCurrentBehavior() {
+        var providers = [{provider: "codex"}, {provider: "claude"}, {provider: "gemini"}];
+        compare(PopupSelection.compactPanelProvider(true, providers[2], providers, 1), providers[2]);
+        compare(PopupSelection.compactPanelProvider(true, null, providers, 1), providers[1]);
+        compare(PopupSelection.compactPanelProvider(false, providers[2], providers, 1), providers[0]);
+    }
+
+    function test_compactPanelProviderRestrictsToThePanelSelection() {
+        var providers = [{provider: "codex"}, {provider: "claude"}, {provider: "gemini"}];
+        var panel = [providers[0], providers[1]];
+
+        // A popup selection outside the panel falls back to the automatic
+        // panel provider instead of describing a hidden provider.
+        compare(PopupSelection.compactPanelProvider(true, providers[2], panel, 1), providers[1]);
+        compare(PopupSelection.compactPanelProvider(true, providers[1], panel, 0), providers[1]);
+        compare(PopupSelection.compactPanelProvider(false, providers[2], panel, 1), providers[0]);
+    }
+
+    function test_compactPanelProviderRejectsMalformedInput() {
+        compare(PopupSelection.compactPanelProvider(true, {provider: "codex"}, [], 0), null);
+        compare(PopupSelection.compactPanelProvider(true, {provider: "codex"}, null, 0), null);
+        compare(PopupSelection.compactPanelProvider(true, {provider: "codex"}, "codex", 0), null);
+        compare(PopupSelection.compactPanelProvider(false, null, [], Number.NaN), null);
+        // An out-of-range automatic index falls back to the first panel item.
+        var panel = [{provider: "codex"}];
+        compare(PopupSelection.compactPanelProvider(true, null, panel, 7), panel[0]);
+        compare(PopupSelection.compactPanelProvider(true, null, panel, -1), panel[0]);
+        compare(PopupSelection.compactPanelProvider(true, null, panel, "0"), panel[0]);
+    }
+
     function test_autoSelectionRepairsAnUnavailableGlobalView() {
         var current = state("", "spend", true)
         var next = PopupSelection.reconcile(current,

@@ -55,8 +55,13 @@ SURFACES: dict[str, tuple[str, ...]] = {
         "contents/ui/configPanel.qml",
         "contents/ui/components/PanelSettingsPreview.qml",
         "contents/ui/PanelPreview.js",
+        # Shared read-only roster loader; the page itself stays process-free.
+        "contents/ui/controllers/ProviderRosterController.qml",
     ),
-    "popup": ("contents/ui/configPopup.qml",),
+    "popup": (
+        "contents/ui/configPopup.qml",
+        "contents/ui/controllers/ProviderRosterController.qml",
+    ),
     "notifications": ("contents/ui/configNotifications.qml",),
     "diagnostics": ("contents/ui/configDiagnostics.qml",),
     "general": (

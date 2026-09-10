@@ -1,6 +1,7 @@
 .pragma library
 .import "PanelDisplay.js" as PanelDisplay
 .import "PanelElements.js" as PanelElements
+.import "PanelProviders.js" as PanelProviders
 .import "PanelRules.js" as PanelRules
 .import "ProviderOrder.js" as ProviderOrder
 
@@ -49,18 +50,19 @@ function model(options, scenarioValue, nowMs) {
     var scenario = scenarios.indexOf(scenarioValue) >= 0 ? scenarioValue : "normal";
     var clockMs = typeof nowMs === "number" && isFinite(nowMs) && Math.abs(nowMs) < 8000000000000000 ? nowMs : Date.UTC(2026, 0, 1, 12);
     var providers = ProviderOrder.orderedItems(providersForScenario(scenario, clockMs), settings.providerOrder);
-    var selected = providers[0];
+    var panelProviders = PanelProviders.filteredItems(providers, settings.panelProviderFilter);
+    var selected = panelProviders.length > 0 ? panelProviders[0] : null;
     if (settings.autoSelectProvider === true && scenario !== "missing") {
         // These fixture observations are ordered by their highest used quota.
         var highestProviderID = scenario === "nearLimit" ? "codex" : "claude";
-        selected = providers.filter(function (provider) {
+        selected = panelProviders.filter(function (provider) {
             return provider.provider === highestProviderID;
-        })[0];
+        })[0] || selected;
     }
     var lane = PanelDisplay.safeLane(settings.quotaLane);
     var mode = PanelDisplay.safeMode(settings.displayMode);
     var rules = PanelRules.normalizedRules(settings.visibilityRules);
-    var textRow = PanelDisplay.rowForMode(selected.rows, mode, lane);
+    var textRow = selected ? PanelDisplay.rowForMode(selected.rows, mode, lane) : null;
     return {
         scenario: scenario,
         clockMs: clockMs,
@@ -72,7 +74,7 @@ function model(options, scenarioValue, nowMs) {
         selectedProvider: selected,
         textRow: textRow,
         textVisible: PanelRules.matches(rules.text, textRow, clockMs),
-        meterProviders: settings.showMeters === false ? [] : providers.filter(function (provider) {
+        meterProviders: settings.showMeters === false ? [] : panelProviders.filter(function (provider) {
             var rows = PanelDisplay.meterRows(provider.rows, lane);
             return PanelRules.matchesAny(rules.meters, rows, clockMs);
         }),

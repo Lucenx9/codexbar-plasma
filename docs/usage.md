@@ -61,6 +61,14 @@ work and upstream contract requirements.
   the provider icon remains available when all conditional elements are hidden.
 - Auto-select highest-usage provider for the compact panel and provider detail
   focus.
+- Panel providers can be limited to a chosen set in **Panel → Panel
+  providers**. The choice lists the enabled providers in their saved order, is
+  limited to the four meters the panel can draw, and can also be left automatic
+  (every enabled provider). The panel meters, panel text, identity, and panel
+  tooltip follow the choice; a popup selection outside the chosen set falls
+  back to the first chosen provider, or the highest-usage chosen provider with
+  auto-select. The popup keeps listing every enabled provider, and quota
+  fetching and notifications stay unchanged.
 - Overview tab with per-provider usage summary and quick switching. Each row's
   detail line shows the account identity when the CLI provides one, and an
   active service incident otherwise; an operational status or the provider's

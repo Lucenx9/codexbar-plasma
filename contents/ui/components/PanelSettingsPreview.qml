@@ -27,7 +27,8 @@ ColumnLayout {
         displayMode: configPage.cfg_menuBarDisplayMode,
         showMeters: configPage.cfg_showMultiProviderInPanel,
         autoSelectProvider: configPage.cfg_autoSelectProvider,
-        providerOrder: providerOrder
+        providerOrder: providerOrder,
+        panelProviderFilter: configPage.cfg_panelProviderIDs || ""
     }, scenario, clockMs)
 
     objectName: "panelSettingsPreview"
@@ -161,6 +162,11 @@ ColumnLayout {
                 return "";
             }
             var provider = selectedCompactProvider();
+            // An empty panel provider selection has no provider to describe;
+            // the preview icon stands alone like the live icon fallback.
+            if (!provider) {
+                return "";
+            }
             var parts = [];
             if (preview.configPage.cfg_showProviderInPanel) {
                 parts.push(provider.title);

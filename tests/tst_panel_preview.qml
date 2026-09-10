@@ -97,6 +97,42 @@ TestCase {
         }, "missing", nowMs).selectedProvider.provider, "claude");
     }
 
+    function test_panelProviderSelectionFiltersMetersTextAndSelection() {
+        var claudeOnly = PanelPreview.model({
+            panelProviderFilter: "claude"
+        }, "normal", nowMs);
+        compare(claudeOnly.providers.length, 2);
+        compare(claudeOnly.meterProviders.length, 1);
+        compare(claudeOnly.meterProviders[0].provider, "claude");
+        compare(claudeOnly.selectedProvider.provider, "claude");
+
+        // The automatic highest-usage pick follows the panel selection: with
+        // claude filtered out, codex leads even though claude uses more.
+        var codexOnly = PanelPreview.model({
+            panelProviderFilter: "codex",
+            autoSelectProvider: true
+        }, "normal", nowMs);
+        compare(codexOnly.meterProviders.length, 1);
+        compare(codexOnly.selectedProvider.provider, "codex");
+
+        // An explicit empty selection renders no meter and no text provider.
+        var none = PanelPreview.model({
+            panelProviderFilter: "__none__"
+        }, "normal", nowMs);
+        compare(none.meterProviders.length, 0);
+        compare(none.selectedProvider, null);
+        compare(none.textRow, null);
+
+        // Unknown selections keep hiding meters instead of silently resetting
+        // the stored choice; the settings reset button stays available.
+        compare(PanelPreview.model({
+            panelProviderFilter: "unknown"
+        }, "normal", nowMs).meterProviders.length, 0);
+        compare(PanelPreview.model({
+            panelProviderFilter: 42
+        }, "normal", nowMs).meterProviders.length, 0);
+    }
+
     function test_invalidOptionsUseBoundedDefaults() {
         var preview = PanelPreview.model({
             quotaLane: "other",

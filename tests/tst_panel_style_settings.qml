@@ -174,4 +174,44 @@ TestCase {
         page.cfg_autoSelectProvider = false;
         compare(page.advancedSummary, baseline);
     }
+
+    function test_panelProviderSelectionStaysPendingAndFollowsRoster() {
+        var page = createPage();
+        if (!page) return;
+        // The roster loads only while the selection is expanded; these checks
+        // inject the roster directly so no CLI process is spawned here. The
+        // expansion gating itself is asserted by scripts/test_ui_regressions.sh.
+        var controller = findChild(page, "panelProviderRosterController");
+        verify(controller);
+        verify(!controller.active);
+        verify(!page.providersExpanded);
+        compare(page.providersSummary, "All enabled providers");
+
+        controller.enabledProviderRoster = [
+            {provider: "codex", displayName: "Codex"},
+            {provider: "claude", displayName: "Claude"}
+        ];
+        compare(page.orderedPanelProviderRoster.length, 2);
+        compare(page.resolvedPanelProviderIDs().join(","), "codex,claude");
+
+        // Toggling from the automatic set keeps the other automatic providers,
+        // matching the Overview selection behavior.
+        page.togglePanelProvider("claude", true);
+        compare(page.cfg_panelProviderIDs, "codex,claude");
+        compare(page.providersSummary, "2 providers selected");
+
+        // Toggles follow roster order and keep selected providers that are
+        // missing from the current roster.
+        page.cfg_panelProviderIDs = "claude,gemini";
+        page.togglePanelProvider("codex", true);
+        compare(page.cfg_panelProviderIDs, "codex,claude,gemini");
+        page.togglePanelProvider("claude", false);
+        compare(page.cfg_panelProviderIDs, "codex,gemini");
+        compare(page.providersSummary, "2 providers selected");
+
+        page.cfg_panelProviderIDs = "__none__";
+        compare(page.providersSummary, "No providers selected");
+        page.cfg_panelProviderIDs = "";
+        compare(page.providersSummary, "All enabled providers");
+    }
 }

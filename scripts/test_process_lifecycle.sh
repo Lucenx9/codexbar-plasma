@@ -57,13 +57,16 @@ require_in_surface providers "Component.onCompleted: Qt.callLater(reload)"
 require_in_surface providers "onCfg_commandPathChanged: handleCommandPathChanged()"
 
 require_in_surface popup "readonly property int providerRosterCommandTimeoutMs: 60000"
-require_in_surface popup 'import "CommandLedger.js" as CommandLedger'
+# The roster load lives in the shared controllers/ loader: its ledger import
+# carries the parent-directory prefix, and its lifecycle reacts to the
+# controller's own commandPath/active inputs instead of the page cfg keys.
+require_in_surface popup 'import "../CommandLedger.js" as CommandLedger'
 reject_in_surface popup "function commandWithRunNonce(command)"
-require_in_surface popup "Component.onCompleted: Qt.callLater(loadProviderRoster)"
-require_in_surface popup "onCfg_commandPathChanged: Qt.callLater(loadProviderRoster)"
+require_in_surface popup "Component.onCompleted: if (active) Qt.callLater(loadProviderRoster)"
+require_in_surface popup "onCommandPathChanged: if (active) Qt.callLater(loadProviderRoster)"
 require_in_surface popup "function expireProviderRosterCommands(nowMs)"
 require_in_surface popup "id: providerRosterCommandTimeoutTimer"
-require_in_surface popup "page.expireProviderRosterCommands(Date.now())"
+require_in_surface popup "controller.expireProviderRosterCommands(Date.now())"
 
 require_in_surface diagnostics "readonly property int diagnosticCommandTimeoutMs: 60000"
 require_in_surface diagnostics "function commandWithRunNonce(command)"

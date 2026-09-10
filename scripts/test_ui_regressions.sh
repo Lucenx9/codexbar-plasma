@@ -403,8 +403,41 @@ assert_form_sections(diagnostics_text, "configDiagnostics.qml", ("Connection", "
 
 # Presentation pages must not acquire provider processes or claim configuration
 # owned by an unrelated page when Plasma saves its cfg_* creation properties.
-for forbidden in ("Plasma5Support.DataSource", "connectSource(", "cfg_commandPath", "cfg_providerOrder"):
-    panel_surface.reject(forbidden, "Panel settings and preview must remain local")
+# The Panel page deliberately loads the read-only enabled roster through the
+# shared controller to offer the panel provider selection: the process stays in
+# the controller, gated on the selection being expanded, and the page reads the
+# command path and provider order at runtime instead of claiming their cfg keys.
+panel_page_text = (root / "contents/ui/configPanel.qml").read_text(encoding="utf-8")
+panel_preview_page_text = (root / "contents/ui/components/PanelSettingsPreview.qml").read_text(encoding="utf-8")
+for page_text, page_name in (
+    (panel_page_text, "configPanel.qml"),
+    (panel_preview_page_text, "PanelSettingsPreview.qml"),
+):
+    for forbidden_page_fragment in (
+        "Plasma5Support.DataSource",
+        "connectSource(",
+        "cfg_commandPath",
+        "cfg_providerOrder",
+    ):
+        if forbidden_page_fragment in page_text:
+            raise AssertionError(
+                f"{page_name} must stay process-free and not claim another page's "
+                f"configuration: unexpected {forbidden_page_fragment!r}"
+            )
+for controller_fragment in (
+    "Controllers.ProviderRosterController {",
+    "active: page.providersExpanded",
+    "presentationConfig.commandPath",
+):
+    if controller_fragment not in panel_page_text:
+        raise AssertionError(
+            f"configPanel.qml must load the roster through the gated shared controller; "
+            f"missing {controller_fragment!r}"
+        )
+panel_surface.require(
+    "function loadProviderRoster(",
+    "the shared roster controller must own the panel and popup roster loads",
+)
 for key, control in (("privacyMode", "privacyModeCheck"), ("refreshOnOpen", "refreshOnOpenCheck")):
     general_surface.require(f"property alias cfg_{key}: {control}.checked", "General must expose the pending setting")
 for key in ("showPopupPace", "showPopupCredits", "showPopupProviderDetails"):
@@ -1274,16 +1307,28 @@ compact_provider_body = applet.function_body("selectedCompactProvider")
 for compact_selection_fragment in (
     "providers.length === 0",
     "return null",
-    "? autoSelectedProviderIndex() : 0",
-    "PopupSelection.compactProviderIndex(",
-    "autoSelectProvider, selectedProviderIndex, automaticProviderIndex",
-    "return providers[index]",
+    "PopupSelection.compactPanelProvider(",
+    "panelProviderItems()",
+    "autoSelectedProviderIndex(panelItems)",
 ):
     if compact_selection_fragment not in compact_provider_body:
         raise AssertionError(
-            "compact provider selection must adapt the current roster and popup "
-            "selection through PopupSelection; "
+            "compact provider selection must adapt the panel-filtered roster and "
+            "popup selection through PopupSelection; "
             f"missing {compact_selection_fragment!r}"
+        )
+
+# The panel provider selection is presentation-only: meters, text, and the
+# tooltip roster narrow through the same pure filter, while fetching and
+# notifications keep the full provider list.
+compact_providers_body = applet.function_body("compactProviders")
+for panel_filter_fragment in (
+    "panelProviderItems()",
+    "PanelProviders.maximumSelectableProviders",
+):
+    if panel_filter_fragment not in compact_providers_body:
+        raise AssertionError(
+            f"compactProviders must apply the panel provider selection; missing {panel_filter_fragment!r}"
         )
 
 open_panel_provider_body = function_body(main_text, "openProviderFromPanel")
@@ -3086,6 +3131,10 @@ if "compactProviders()" not in hovered_provider_body:
 tooltip_body = function_body(main_text, "panelToolTipText")
 if "hoveredPanelProvider()" not in tooltip_body:
     raise AssertionError("hovering a panel meter must narrow the tooltip to that provider")
+if "panelProviderItems()" not in tooltip_body:
+    raise AssertionError(
+        "the panel tooltip fallback must list the panel provider selection, not the full roster"
+    )
 if "panelProviderToolTipText(" not in tooltip_body:
     raise AssertionError("the panel tooltip must reuse the per-provider tooltip line")
 if "boundedDisplayText(errorText" not in tooltip_body:

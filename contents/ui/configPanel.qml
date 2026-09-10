@@ -5,10 +5,14 @@ import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
 import "components" as Components
+import "controllers" as Controllers
 import "PanelDisplay.js" as PanelDisplay
 import "PanelElements.js" as PanelElements
+import "PanelProviders.js" as PanelProviders
 import "PanelRules.js" as PanelRules
+import "ProviderOrder.js" as ProviderOrder
 import "QuotaThresholds.js" as QuotaThresholds
+import "SafeText.js" as SafeText
 
 KCM.SimpleKCM {
     id: page
@@ -38,6 +42,8 @@ KCM.SimpleKCM {
     property string cfg_panelQuotaLaneDefault: "auto"
     property string cfg_panelVisibilityRules: "{}"
     property string cfg_panelVisibilityRulesDefault: "{}"
+    property string cfg_panelProviderIDs: ""
+    property string cfg_panelProviderIDsDefault: ""
     property alias cfg_autoSelectProvider: autoSelectProviderCheck.checked
     property bool cfg_autoSelectProviderDefault: false
     property alias cfg_showCreditsInPanel: showCreditsCheck.checked
@@ -45,6 +51,34 @@ KCM.SimpleKCM {
     readonly property var panelVisibilityRules: PanelRules.normalizedRules(cfg_panelVisibilityRules)
     readonly property var presentationConfig: Plasmoid.configuration || ({})
     readonly property bool usageBarsShowUsed: presentationConfig.usageBarsShowUsed !== false
+
+    // The panel provider selection needs the enabled roster, but this page
+    // stays process-free: the shared controller loads it only while the
+    // selection is expanded, reading the command path at runtime instead of
+    // claiming the Diagnostics-owned command-path key.
+    readonly property var orderedPanelProviderRoster: ProviderOrder.orderedItems(
+        panelProviderRosterController.enabledProviderRoster,
+        presentationConfig.providerOrder || "")
+    readonly property alias panelProviderRosterLoading: panelProviderRosterController.providerRosterLoading
+    readonly property alias panelProviderRosterError: panelProviderRosterController.providerRosterError
+
+    Controllers.ProviderRosterController {
+        id: panelProviderRosterController
+        objectName: "panelProviderRosterController"
+
+        commandPath: (page.presentationConfig.commandPath || "codexbar").trim()
+        active: page.providersExpanded
+    }
+
+    property bool providersExpanded: false
+    readonly property string providersSummary: {
+        if (!PanelProviders.selectionActive(cfg_panelProviderIDs)) {
+            return i18n("All enabled providers")
+        }
+        var count = PanelProviders.configuredProviderIDs(cfg_panelProviderIDs).length
+        return count === 0 ? i18n("No providers selected")
+            : i18np("%1 provider selected", "%1 providers selected", count)
+    }
 
     property bool additionalExpanded: false
     readonly property string additionalSummary: {
@@ -102,6 +136,35 @@ KCM.SimpleKCM {
 
     function setPanelVisibilityRule(elementID, patch) {
         cfg_panelVisibilityRules = PanelRules.updatedRules(cfg_panelVisibilityRules, elementID, patch)
+    }
+
+    function resolvedPanelProviderIDs() {
+        if (PanelProviders.selectionActive(cfg_panelProviderIDs)) {
+            return PanelProviders.configuredProviderIDs(cfg_panelProviderIDs)
+        }
+        var automatic = []
+        for (var i = 0; i < orderedPanelProviderRoster.length
+                && automatic.length < PanelProviders.maximumSelectableProviders; i++) {
+            automatic.push(orderedPanelProviderRoster[i].provider)
+        }
+        return automatic
+    }
+
+    function panelProviderSelected(providerID) {
+        return resolvedPanelProviderIDs().indexOf(ProviderOrder.normalizedProviderID(providerID)) !== -1
+    }
+
+    function selectedPanelProviderCount() {
+        return resolvedPanelProviderIDs().length
+    }
+
+    function togglePanelProvider(providerID, checked) {
+        var ordered = []
+        for (var i = 0; i < orderedPanelProviderRoster.length; i++) {
+            ordered.push(orderedPanelProviderRoster[i].provider)
+        }
+        cfg_panelProviderIDs = PanelProviders.selectionText(PanelProviders.toggledSelection(
+            ordered, resolvedPanelProviderIDs(), providerID, checked))
     }
 
     function applyMinimalPanelPreset() {
@@ -387,6 +450,99 @@ KCM.SimpleKCM {
                 objectName: "minimalPanelPresetButton"
                 plainText: i18n("Use monochrome icons and meters only")
                 onClicked: page.applyMinimalPanelPreset()
+            }
+        }
+
+        Components.PlainButton {
+            objectName: "panelProvidersButton"
+            plainText: i18n("Panel providers")
+            icon.name: page.providersExpanded ? "arrow-down" : (LayoutMirroring.enabled ? "arrow-left" : "arrow-right")
+            checkable: true
+            checked: page.providersExpanded
+            onToggled: page.providersExpanded = checked
+            Accessible.description: page.providersExpanded
+                ? i18n("Collapse options. %1", page.providersSummary)
+                : i18n("Expand options. %1", page.providersSummary)
+        }
+
+        Components.PlainControlsLabel {
+            objectName: "panelProvidersSummary"
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            text: page.providersSummary
+            visible: !page.providersExpanded
+            font: Kirigami.Theme.smallFont
+            wrapMode: Text.WordWrap
+        }
+
+        Kirigami.FormLayout {
+            objectName: "panelProviderSelection"
+            wideMode: false
+            Layout.fillWidth: true
+            Layout.maximumWidth: page.providersExpanded ? Infinity : 0
+            visible: page.providersExpanded
+
+            Components.PlainControlsLabel {
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                text: i18n("Choose the providers shown in the panel. The popup keeps every enabled provider.")
+                font: Kirigami.Theme.smallFont
+                wrapMode: Text.WordWrap
+            }
+
+            Components.PlainControlsLabel {
+                Layout.fillWidth: true
+                visible: page.panelProviderRosterLoading
+                text: i18n("Loading providers...")
+                opacity: 0.7
+            }
+
+            Components.PlainControlsLabel {
+                Layout.fillWidth: true
+                visible: !page.panelProviderRosterLoading
+                    && page.orderedPanelProviderRoster.length === 0
+                    && page.panelProviderRosterError.length === 0
+                text: i18n("No enabled providers available.")
+                opacity: 0.7
+                wrapMode: Text.WordWrap
+            }
+
+            Components.PlainInlineMessage {
+                Layout.fillWidth: true
+                type: Kirigami.MessageType.Error
+                plainText: page.panelProviderRosterError
+                visible: page.panelProviderRosterError.length > 0
+            }
+
+            Repeater {
+                model: page.orderedPanelProviderRoster
+
+                delegate: Controls.CheckBox {
+                    Layout.fillWidth: true
+                    required property var modelData
+
+                    readonly property bool selected: page.panelProviderSelected(modelData.provider)
+
+                    text: SafeText.plainTextAsRichText(modelData.displayName)
+                    Accessible.name: modelData.displayName
+                    checked: selected
+                    enabled: selected || page.selectedPanelProviderCount() < PanelProviders.maximumSelectableProviders
+                    onClicked: {
+                        page.togglePanelProvider(modelData.provider, checked)
+                        // Clicking severs the binding on `checked`; restore it so
+                        // the box reflects the actual selection, including the
+                        // preview of the automatic first providers.
+                        checked = Qt.binding(function() { return selected })
+                    }
+                }
+            }
+
+            Controls.Button {
+                text: i18n("Use all enabled providers automatically")
+                enabled: PanelProviders.selectionActive(page.cfg_panelProviderIDs)
+                onClicked: page.cfg_panelProviderIDs = ""
             }
         }
 
