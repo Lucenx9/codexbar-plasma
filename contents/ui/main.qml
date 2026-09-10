@@ -3886,6 +3886,16 @@ PlasmoidItem {
         if (id.length === 0 || !providers) {
             return null
         }
+        // Visibility rules can filter a hovered meter out of the rendered
+        // compactProviders() while its provider stays in providers, and its
+        // destroyed MouseArea delivers no reliable hover-exit for cleanup.
+        // Narrow the tooltip only while the meter is actually rendered.
+        var rendered = compactProviders().some(function(meter) {
+            return meter && meter.provider === id
+        })
+        if (!rendered) {
+            return null
+        }
         for (var i = 0; i < providers.length; i++) {
             if (providers[i] && providers[i].provider === id) {
                 return providers[i]

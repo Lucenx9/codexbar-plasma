@@ -737,6 +737,14 @@ TestCase {
         verify(claudeTip.indexOf("Codex") < 0);
         mouseMove(testCase, 600, 220);
         tryCompare(applet, "hoveredPanelProviderID", "");
+        // A meter filtered out of the rendered set while hovered must not
+        // keep the tooltip narrowed to it once its MouseArea is gone.
+        mouseMove(codexMeter, codexMeter.width / 2, codexMeter.height / 2);
+        tryCompare(applet, "hoveredPanelProviderID", "codex");
+        applet.metersHidden = true;
+        tryCompare(applet, "hoveredPanelProviderID", "");
+        applet.metersHidden = false;
+        tryCompare(applet, "hoveredPanelProviderID", "");
     }
 
     function test_longChartReadoutFitsAndKeysInspectPoints() {

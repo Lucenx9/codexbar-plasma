@@ -1257,6 +1257,16 @@ for meter_hover_fragment in (
             "to that provider; "
             f"missing {meter_hover_fragment!r}"
         )
+for meter_cleanup_fragment in (
+    "onMeterProvidersChanged",
+    "compactRoot.applet.clearHoveredPanelProvider(hovered)",
+):
+    if meter_cleanup_fragment not in compact_representation_text:
+        raise AssertionError(
+            "a hovered meter filtered out of the rendered set must clear its "
+            "stale hover instead of relying on a destroyed MouseArea; "
+            f"missing {meter_cleanup_fragment!r}"
+        )
 
 compact_provider_body = applet.function_body("selectedCompactProvider")
 for compact_selection_fragment in (
@@ -3034,6 +3044,13 @@ for hover_helper in (
             "the panel tooltip must track the hovered provider meter; "
             f"missing {hover_helper!r}"
         )
+hovered_provider_body = function_body(main_text, "hoveredPanelProvider")
+if "compactProviders()" not in hovered_provider_body:
+    raise AssertionError(
+        "the hovered provider lookup must stay limited to rendered meters, "
+        "since visibility rules can filter a meter out while its provider "
+        "remains in the roster"
+    )
 tooltip_body = function_body(main_text, "panelToolTipText")
 if "hoveredPanelProvider()" not in tooltip_body:
     raise AssertionError("hovering a panel meter must narrow the tooltip to that provider")
