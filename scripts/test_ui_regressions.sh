@@ -2806,8 +2806,16 @@ if "view.dailyPoints.length - 42" in spend_view_text:
     )
 if 'valueRow.copied ? "checkmark" : "edit-copy"' not in copyable_value_text:
     raise AssertionError("CopyableValue must provide immediate checkmark icon feedback when copied")
-if "heatmapMouse.containsMouse ? 0.4 : 0" not in spend_view_text:
-    raise AssertionError("SpendView activity heatmap cells must display hover highlight feedback")
+if "heatmapMouse.containsMouse ? 0.4 : 0" in spend_view_text:
+    raise AssertionError(
+        "the heatmap hover outline must not fade a border's own alpha: Qt treats a zero-alpha "
+        "pen as invalid and paints a zero-width border, snapping the cell fill out to the edge"
+    )
+if "opacity: heatmapMouse.containsMouse ? 1 : 0" not in spend_view_text:
+    raise AssertionError(
+        "SpendView activity heatmap cells must fade a dedicated hover outline overlay, so the "
+        "painted fill geometry never depends on hover"
+    )
 if "sessionCardHover.hovered ? 0.075 : 0.035" not in sessions_view_text:
     raise AssertionError("session cards must confirm hover on the surface that reveals their copy actions")
 if "opacity: chart.hasActivePoint ? 1 : 0" not in interactive_chart_text:

@@ -337,13 +337,32 @@ ColumnLayout {
                                 color: view.applet.withAlpha(
                                     Kirigami.Theme.highlightColor,
                                     0.1 + fraction * 0.8)
-                                border.width: 1
-                                border.color: view.applet.withAlpha(Kirigami.Theme.textColor,
-                                    heatmapMouse.containsMouse ? 0.4 : 0)
 
-                                Behavior on border.color {
-                                    ColorAnimation {
-                                        duration: Kirigami.Units.shortDuration
+                                // The cell carries no border of its own and the
+                                // hover outline is a separate overlay. Fading a
+                                // border's own alpha does not work: Qt treats a
+                                // zero-alpha pen as invalid and paints the
+                                // rectangle with a zero-width border, so the fill
+                                // snaps out to the cell edge the moment the
+                                // highlight leaves. Grabbing the rendered pixels
+                                // confirmed it: between alpha 0 and 0.01 an edge
+                                // pixel jumped straight from the fill colour to
+                                // the background. Fading this overlay's opacity
+                                // blends that pixel instead, leaving the cell's
+                                // painted geometry untouched.
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: parent.radius
+                                    color: "transparent"
+                                    border.width: 1
+                                    border.color: view.applet.withAlpha(
+                                        Kirigami.Theme.textColor, 0.4)
+                                    opacity: heatmapMouse.containsMouse ? 1 : 0
+
+                                    Behavior on opacity {
+                                        NumberAnimation {
+                                            duration: Kirigami.Units.shortDuration
+                                        }
                                     }
                                 }
 
