@@ -174,4 +174,80 @@ TestCase {
         page.cfg_autoSelectProvider = false;
         compare(page.advancedSummary, baseline);
     }
+
+    function test_panelProviderSelectionStaysPendingAndFollowsRoster() {
+        var page = createPage();
+        if (!page) return;
+        // The roster loads only while the selection is expanded; these checks
+        // inject the roster directly so no CLI process is spawned here. The
+        // expansion gating itself is asserted by scripts/test_ui_regressions.sh.
+        var controller = findChild(page, "panelProviderRosterController");
+        verify(controller);
+        verify(!controller.active);
+        verify(!page.providersExpanded);
+        compare(page.providersSummary, "All enabled providers");
+
+        controller.enabledProviderRoster = [
+            {provider: "codex", displayName: "Codex"},
+            {provider: "claude", displayName: "Claude"}
+        ];
+        compare(page.orderedPanelProviderRoster.length, 2);
+        compare(page.resolvedPanelProviderIDs().join(","), "codex,claude");
+
+        // Toggling from the automatic set keeps the other automatic providers,
+        // matching the Overview selection behavior.
+        page.togglePanelProvider("claude", true);
+        compare(page.cfg_panelProviderIDs, "codex,claude");
+        compare(page.providersSummary, "2 providers selected");
+
+        // Toggles follow roster order and keep selected providers that are
+        // missing from the current roster.
+        page.cfg_panelProviderIDs = "claude,gemini";
+        page.togglePanelProvider("codex", true);
+        compare(page.cfg_panelProviderIDs, "codex,claude,gemini");
+        page.togglePanelProvider("claude", false);
+        compare(page.cfg_panelProviderIDs, "codex,gemini");
+        compare(page.providersSummary, "2 providers selected");
+
+        page.cfg_panelProviderIDs = "__none__";
+        compare(page.providersSummary, "No providers selected");
+        page.cfg_panelProviderIDs = "";
+        compare(page.providersSummary, "All enabled providers");
+    }
+
+    function test_absentSelectionsDoNotBlockEnabledProviders() {
+        var page = createPage();
+        if (!page) return;
+        var controller = findChild(page, "panelProviderRosterController");
+        controller.enabledProviderRoster = [{provider: "copilot", displayName: "Copilot"}];
+        page.cfg_panelProviderIDs = "codex,claude,gemini,cursor";
+        compare(page.selectedPanelProviderCount(), 0);
+        page.togglePanelProvider("copilot", true);
+        verify(page.panelProviderSelected("copilot"));
+        compare(page.selectedPanelProviderCount(), 1);
+        verify(page.panelProviderSelected("codex"));
+    }
+
+    function test_automaticSelectionsNormalizeProviderIDs() {
+        // This checks selection, without rendering an unbundled future icon.
+        var page = createPage({cfg_showMultiProviderInPanel: false});
+        if (!page) return;
+        var controller = findChild(page, "panelProviderRosterController");
+        controller.enabledProviderRoster = [
+            {provider: "GROQCLOUD", displayName: "Groq"},
+            {provider: "Codex", displayName: "Codex"},
+            {provider: "Future-AI", displayName: "Future AI"},
+            {provider: "claude", displayName: "Claude"}
+        ];
+        compare(page.selectedPanelProviderCount(), 4);
+        compare(page.resolvedPanelProviderIDs().join(","), "groq,codex,future-ai,claude");
+        verify(page.panelProviderSelected("GROQCLOUD"));
+        verify(page.panelProviderSelected("Codex"));
+        verify(page.panelProviderSelected("Future-AI"));
+        compare(page.cfg_panelProviderIDs, "");
+        page.togglePanelProvider("GROQCLOUD", false);
+        compare(page.cfg_panelProviderIDs, "codex,future-ai,claude");
+        verify(!page.panelProviderSelected("groq"));
+        compare(page.selectedPanelProviderCount(), 3);
+    }
 }

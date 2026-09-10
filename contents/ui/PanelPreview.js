@@ -1,8 +1,10 @@
 .pragma library
 .import "PanelDisplay.js" as PanelDisplay
 .import "PanelElements.js" as PanelElements
+.import "PanelProviders.js" as PanelProviders
 .import "PanelRules.js" as PanelRules
 .import "ProviderOrder.js" as ProviderOrder
+.import "SafeText.js" as SafeText
 
 var scenarios = ["normal", "nearLimit", "incident", "missing"];
 
@@ -20,7 +22,7 @@ function quota(lane, usedPercent, pacePercent, resetMinutes, nearLimit, nowMs) {
     };
 }
 
-// Deliberately fixed examples: this module never accepts account or CLI data.
+// Quotas, credits, and incidents are fixed examples, never live observations.
 function providersForScenario(value, nowMs) {
     var nearLimit = value === "nearLimit";
     var missing = value === "missing";
@@ -44,23 +46,59 @@ function providersForScenario(value, nowMs) {
     ];
 }
 
+function scenarioProviders(scenario, nowMs, roster) {
+    var examples = providersForScenario(scenario, nowMs);
+    if (!Array.isArray(roster) || roster.length === 0) {
+        return examples;
+    }
+    var providers = [];
+    var seen = [];
+    for (var i = 0; i < Math.min(roster.length, ProviderOrder.maximumProviderItems); i++) {
+        var entry = roster[i];
+        if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+            continue;
+        }
+        var id = ProviderOrder.normalizedProviderID(entry.provider);
+        if (!id || seen.indexOf(id) >= 0) {
+            continue;
+        }
+        seen.push(id);
+        var sample = examples[id === "claude" ? 1 : 0];
+        var title = SafeText.boundedDisplayText(entry.displayName, 120);
+        providers.push({
+            provider: id,
+            title: title || id,
+            credits: id === "codex" ? sample.credits : null,
+            hasIncident: sample.hasIncident,
+            statusSeverity: sample.statusSeverity,
+            rows: sample.rows
+        });
+    }
+    return providers;
+}
+
 function model(options, scenarioValue, nowMs) {
     var settings = options || {};
     var scenario = scenarios.indexOf(scenarioValue) >= 0 ? scenarioValue : "normal";
     var clockMs = typeof nowMs === "number" && isFinite(nowMs) && Math.abs(nowMs) < 8000000000000000 ? nowMs : Date.UTC(2026, 0, 1, 12);
-    var providers = ProviderOrder.orderedItems(providersForScenario(scenario, clockMs), settings.providerOrder);
-    var selected = providers[0];
+    var providers = ProviderOrder.orderedItems(scenarioProviders(scenario, clockMs, settings.providerRoster), settings.providerOrder);
+    var panelProviders = PanelProviders.filteredItems(providers, settings.panelProviderFilter);
+    var selected = panelProviders.length > 0 ? panelProviders[0] : null;
     if (settings.autoSelectProvider === true && scenario !== "missing") {
-        // These fixture observations are ordered by their highest used quota.
-        var highestProviderID = scenario === "nearLimit" ? "codex" : "claude";
-        selected = providers.filter(function (provider) {
-            return provider.provider === highestProviderID;
-        })[0];
+        var highestUsage = -1;
+        for (var i = 0; i < panelProviders.length; i++) {
+            var provider = panelProviders[i];
+            var usage = Math.max.apply(null, provider.rows.map(function (row) { return row.usedPercent; }));
+            if (usage > highestUsage) {
+                highestUsage = usage;
+                selected = provider;
+            }
+        }
     }
     var lane = PanelDisplay.safeLane(settings.quotaLane);
     var mode = PanelDisplay.safeMode(settings.displayMode);
     var rules = PanelRules.normalizedRules(settings.visibilityRules);
-    var textRow = PanelDisplay.rowForMode(selected.rows, mode, lane);
+    var textRow = selected ? PanelDisplay.rowForMode(selected.rows, mode, lane) : null;
     return {
         scenario: scenario,
         clockMs: clockMs,
@@ -72,10 +110,10 @@ function model(options, scenarioValue, nowMs) {
         selectedProvider: selected,
         textRow: textRow,
         textVisible: PanelRules.matches(rules.text, textRow, clockMs),
-        meterProviders: settings.showMeters === false ? [] : providers.filter(function (provider) {
+        meterProviders: settings.showMeters === false ? [] : panelProviders.filter(function (provider) {
             var rows = PanelDisplay.meterRows(provider.rows, lane);
             return PanelRules.matchesAny(rules.meters, rows, clockMs);
-        }),
+        }).slice(0, PanelProviders.maximumSelectableProviders),
         incidentProvider: scenario === "incident" ? providers.filter(function (provider) {
             return provider.hasIncident;
         })[0] : null

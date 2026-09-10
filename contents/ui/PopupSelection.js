@@ -27,6 +27,27 @@ function compactProviderIndex(autoSelect, selectedProviderIndex, automaticProvid
     return selectedProviderIndex >= 0 ? selectedProviderIndex : automaticProviderIndex
 }
 
+// The provider that drives the panel text and identity. `panelItems` is the
+// roster already restricted to the configured panel selection; with no stored
+// selection it is the full roster and this reduces to compactProviderIndex.
+// A popup selection outside the panel set falls back to the automatic panel
+// provider, so panel text never describes a provider the panel does not show.
+function compactPanelProvider(autoSelect, selectedProvider, panelItems, automaticPanelIndex) {
+    if (!Array.isArray(panelItems) || panelItems.length === 0) {
+        return null
+    }
+    if (autoSelect !== true) {
+        return panelItems[0]
+    }
+    if (selectedProvider !== null && selectedProvider !== undefined
+            && panelItems.indexOf(selectedProvider) >= 0) {
+        return selectedProvider
+    }
+    var index = Math.floor(Number(automaticPanelIndex))
+    return isFinite(index) && index >= 0 && index < panelItems.length
+        ? panelItems[index] : panelItems[0]
+}
+
 function reconcile(current, options) {
     var providerID = String(current && current.providerID || "")
     var globalView = String(current && current.globalView || "overview")

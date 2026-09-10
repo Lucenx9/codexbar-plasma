@@ -54,6 +54,16 @@ For those, use `make install` or `./install.sh`. Release-package users can use
 - `contents/ui/configProviders.qml` owns provider setup processes, prompts,
   configuration writes, and effects. Its pure protocol and command-planning
   modules live in `contents/ui/config/`.
+- `contents/ui/controllers/ProviderRosterController.qml` owns the read-only
+  enabled-provider roster for settings pages: one bounded `config providers`
+  list command per load with nonce, timeout, and stale-reply retirement.
+  `configPopup.qml` loads it on page open; `configPanel.qml` gates it on its
+  provider-selection section being expanded and reads the command path and
+  provider order at runtime instead of claiming their `cfg_*` keys, so the page
+  itself stays process-free. Queued loads recheck activation before starting a
+  command, and deactivation clears loading and error state. `ProviderRoster.js`
+  projects the shared provider-list contract into bounded enabled identities
+  and semantic errors; QML owns localization and state updates.
 - Pure applet modules live in `contents/ui/*.js`; their public interfaces have
   direct tests in `tests/tst_*.qml`. Configuration is declared in
   `contents/config/main.xml` and bound through `cfg_*` in config pages and
@@ -132,6 +142,15 @@ Extraction must hide complexity, not merely reduce line count.
   quota can satisfy the provider meter condition. Direct missing quotas stay omitted; `runOut` depends on `paceWarningActive`. Panel visibility,
   order, and metric settings preserve the minute clock and icon fallback and
   must not fetch data or change notification state.
+- `PanelProviders.js` filters the panel-only provider selection without
+  effects. Meters, panel text, and the panel tooltip roster narrow through it;
+  the popup, fetching, and notifications keep the full roster. An empty stored
+  value means automatic (all enabled providers), `__none__` stores an explicit
+  empty selection, and unknown IDs keep hiding instead of resetting the choice.
+  Manual selections show at most four enabled providers in roster order. Saved
+  IDs absent from the enabled roster do not consume the settings selection limit.
+  An empty filtered roster suppresses panel text; automatic mode retains its
+  loading and no-data text fallback.
 - Privacy projects display records without changing cached snapshots or account
   command keys. Preserve config keys and pending defaults across all settings
   pages. `PopupRefreshPolicy.js` handles freshness and failed-attempt cooldown,

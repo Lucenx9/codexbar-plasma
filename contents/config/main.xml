@@ -187,6 +187,10 @@
       <label>Visibility conditions for panel text and individual provider meters.</label>
       <default>{}</default>
     </entry>
+    <entry name="panelProviderIDs" type="String">
+      <label>Comma-separated provider ids shown in the panel; empty shows every enabled provider.</label>
+      <default></default>
+    </entry>
     <entry name="autoSelectProvider" type="Bool">
       <label>Auto-select the highest-usage provider.</label>
       <default>false</default>

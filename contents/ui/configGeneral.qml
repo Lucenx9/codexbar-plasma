@@ -103,6 +103,8 @@ KCM.SimpleKCM {
     property bool cfg_autoSelectProviderDefault: false
     property string cfg_overviewProviderIDs
     property string cfg_overviewProviderIDsDefault: ""
+    property string cfg_panelProviderIDs
+    property string cfg_panelProviderIDsDefault: ""
     property bool cfg_showCreditsInPanel
     property bool cfg_showCreditsInPanelDefault: false
 
@@ -238,6 +240,7 @@ KCM.SimpleKCM {
             [cfg_panelVisibilityRules, cfg_panelVisibilityRulesDefault],
             [cfg_autoSelectProvider, cfg_autoSelectProviderDefault],
             [cfg_overviewProviderIDs, cfg_overviewProviderIDsDefault],
+            [cfg_panelProviderIDs, cfg_panelProviderIDsDefault],
             [cfg_showCreditsInPanel, cfg_showCreditsInPanelDefault]
         ]
         for (var i = 0; i < pairs.length; i++) {
@@ -289,6 +292,7 @@ KCM.SimpleKCM {
         cfg_panelVisibilityRules = cfg_panelVisibilityRulesDefault
         cfg_autoSelectProvider = cfg_autoSelectProviderDefault
         cfg_overviewProviderIDs = cfg_overviewProviderIDsDefault
+        cfg_panelProviderIDs = cfg_panelProviderIDsDefault
         cfg_showCreditsInPanel = cfg_showCreditsInPanelDefault
         defaultsActionRequested = true
     }

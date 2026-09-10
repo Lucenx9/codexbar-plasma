@@ -11,6 +11,7 @@ import "NotificationPlanner.js" as NotificationPlanner
 import "PacePresentation.js" as PacePresentation
 import "PanelDisplay.js" as PanelDisplay
 import "PanelElements.js" as PanelElements
+import "PanelProviders.js" as PanelProviders
 import "PanelRules.js" as PanelRules
 import "PopupSelection.js" as PopupSelection
 import "CommandLedger.js" as CommandLedger
@@ -91,6 +92,7 @@ PlasmoidItem {
     property string menuBarDisplayMode: safeMenuBarDisplayMode(Plasmoid.configuration.menuBarDisplayMode)
     property bool showPopupTabLabels: Plasmoid.configuration.showPopupTabLabels !== false
     property string providerOrderRaw: Plasmoid.configuration.providerOrder || ""
+    property string panelProviderIDsRaw: Plasmoid.configuration.panelProviderIDs || ""
     property string panelElementOrderRaw: Plasmoid.configuration.panelElementOrder || ""
     readonly property bool minimalPanel: Plasmoid.configuration.panelStyle === "minimal"
     readonly property string panelQuotaLane: PanelDisplay.safeLane(Plasmoid.configuration.panelQuotaLane)
@@ -3720,11 +3722,11 @@ PlasmoidItem {
         if (providers.length === 0) {
             return null
         }
-        var automaticProviderIndex = autoSelectProvider && selectedProviderIndex < 0
-            ? autoSelectedProviderIndex() : 0
-        var index = PopupSelection.compactProviderIndex(
-            autoSelectProvider, selectedProviderIndex, automaticProviderIndex)
-        return providers[index]
+        var panelItems = panelProviderItems()
+        var selected = selectedProviderIndex >= 0 ? providers[selectedProviderIndex] : null
+        return PopupSelection.compactPanelProvider(
+            autoSelectProvider, selected, panelItems,
+            autoSelectedProviderIndex(panelItems))
     }
 
     function globalViewAvailability() {
@@ -3754,7 +3756,7 @@ PlasmoidItem {
             ? providers[0].provider
             : ""
         var automaticProviderID = firstProviderID.length > 0
-            ? providers[autoSelectedProviderIndex()].provider
+            ? providers[autoSelectedProviderIndex(providers)].provider
             : ""
         var next = PopupSelection.reconcile({
             providerID: selectedProviderID,
@@ -3782,11 +3784,12 @@ PlasmoidItem {
         }
     }
 
-    function autoSelectedProviderIndex() {
+    function autoSelectedProviderIndex(items) {
+        var source = Array.isArray(items) ? items : providers
         var bestIndex = 0
         var bestScore = -1
-        for (var i = 0; i < providers.length; i++) {
-            var score = autoSelectScore(providers[i])
+        for (var i = 0; i < source.length; i++) {
+            var score = autoSelectScore(source[i])
             if (score > bestScore) {
                 bestScore = score
                 bestIndex = i
@@ -3828,16 +3831,23 @@ PlasmoidItem {
         return best
     }
 
+    // The panel-only provider selection. The popup, notifications, and every
+    // other surface keep the full roster; only compact rendering narrows here.
+    function panelProviderItems() {
+        return PanelProviders.filteredItems(providers, panelProviderIDsRaw)
+    }
+
     function compactProviders() {
         if (!providers || Plasmoid.configuration.showMultiProviderInPanel === false) {
             return []
         }
 
         var result = []
-        for (var i = 0; i < providers.length && result.length < 4; i++) {
-            var rows = panelMeterRows(providers[i])
+        var panelItems = panelProviderItems()
+        for (var i = 0; i < panelItems.length && result.length < PanelProviders.maximumSelectableProviders; i++) {
+            var rows = panelMeterRows(panelItems[i])
             if (PanelRules.matchesAny(panelVisibilityRules.meters, rows, panelClockMs)) {
-                result.push(providerPresentation(providers[i]))
+                result.push(providerPresentation(panelItems[i]))
             }
         }
         return result
@@ -3850,6 +3860,9 @@ PlasmoidItem {
             return ""
         }
         if (!item) {
+            if (PanelProviders.selectionActive(panelProviderIDsRaw)) {
+                return ""
+            }
             return loading ? i18n("Loading") : "CodexBar"
         }
 
@@ -3934,8 +3947,9 @@ PlasmoidItem {
             }
         }
         var lines = []
-        for (var i = 0; i < providers.length && lines.length < 6; i++) {
-            var line = panelProviderToolTipText(providers[i])
+        var roster = panelProviderItems()
+        for (var i = 0; i < roster.length && lines.length < 6; i++) {
+            var line = panelProviderToolTipText(roster[i])
             if (line.length > 0) {
                 lines.push(line)
             }

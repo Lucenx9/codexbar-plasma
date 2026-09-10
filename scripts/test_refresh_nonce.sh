@@ -43,7 +43,9 @@ reject_in_surface providers "existing[command] = descriptor"
 reject_in_surface providers "configSource.connectSource(command)"
 
 require_in_surface popup "property int commandRunSerial: 0"
-require_in_surface popup 'import "CommandLedger.js" as CommandLedger'
+# The roster load lives in the shared controllers/ loader, so its ledger
+# import carries the parent-directory prefix.
+require_in_surface popup 'import "../CommandLedger.js" as CommandLedger'
 reject_in_surface popup "function commandWithRunNonce(command)"
 require_in_surface popup "commandRunSerial += 1"
 require_in_surface popup "var sourceName = CommandLedger.withRunNonce(command, commandRunSerial)"

@@ -97,10 +97,18 @@ TestCase {
     // The creation-time roster load is asynchronous: commandRunSerial proves it
     // ran, and an empty ledger with loading settled proves its reply was
     // processed (and its process exited), so later manual roster states and
-    // page destruction cannot race a late CLI reply.
+    // page destruction cannot race a late CLI reply. The load lives in the
+    // shared roster controller, so drive it there, not through the page.
+    function rosterController(page) {
+        var controller = findChild(page, "providerRosterController");
+        verify(controller !== null, "providerRosterController");
+        return controller;
+    }
+
     function waitForRosterSettled(page) {
+        var controller = rosterController(page);
         tryVerify(function () {
-            return page.commandRunSerial > 0 && !page.providerRosterLoading && !page.hasPendingProviderRosterCommands();
+            return controller.commandRunSerial > 0 && !controller.providerRosterLoading && !controller.hasPendingProviderRosterCommands();
         });
     }
 
@@ -211,8 +219,9 @@ TestCase {
         // Let the creation-time roster load settle before driving states, so
         // no late CLI reply can rewrite the roster mid-observation.
         waitForRosterSettled(page);
-        page.providerRosterError = "";
-        page.providerRosterLoading = true;
+        var controller = rosterController(page);
+        controller.providerRosterError = "";
+        controller.providerRosterLoading = true;
         var names = ["showPopupPaceCheck", "showPopupCreditsCheck", "showPopupProviderDetailsCheck"];
         measuredItems = names.map(function (name) {
             var item = findChild(page, name);
@@ -220,7 +229,7 @@ TestCase {
             return item;
         });
         wait(500);
-        page.enabledProviderRoster = [
+        controller.enabledProviderRoster = [
             {
                 provider: "codex",
                 displayName: "Codex"
@@ -234,7 +243,7 @@ TestCase {
                 displayName: "Gemini"
             }
         ];
-        page.providerRosterLoading = false;
+        controller.providerRosterLoading = false;
         wait(700);
         measuredItems = [];
         verifyViewportStill(names, false);

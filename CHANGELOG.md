@@ -10,6 +10,20 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Added
+
+- Choose which providers appear in the panel through **Panel → Panel
+  providers**. The selection lists the enabled providers, follows the saved
+  provider order, and is limited to the four meters the panel can draw; the
+  panel text, meters, and tooltip follow it, while the popup keeps showing every
+  enabled provider. Leave the selection automatic to show all enabled
+  providers, as before. Clearing every checkbox keeps the widget icon without
+  provider text or meters. Disabled providers keep their saved selection without
+  blocking new choices; only the first four enabled selections appear.
+  Automatic checkboxes recognize provider aliases and mixed-case IDs.
+  The preview uses enabled provider names after the selection list loads, with
+  synthetic measurements for every provider.
+
 ### Changed
 
 - Refresh quotas when the popup opens by default, so a widget that was idle,

@@ -553,8 +553,8 @@ msgstr ""
 msgid "Diagnostic command timed out. Try again."
 msgstr ""
 
-#: contents/ui/configDiagnostics.qml contents/ui/configPopup.qml
-#: contents/ui/configProviders.qml contents/ui/main.qml
+#: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
+#: contents/ui/controllers/ProviderRosterController.qml contents/ui/main.qml
 msgid "codexbar response exceeded the supported size."
 msgstr ""
 
@@ -814,6 +814,20 @@ msgid ""
 msgstr ""
 
 #: contents/ui/configPanel.qml
+msgid "All enabled providers"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "No providers selected"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "%1 provider selected"
+msgid_plural "%1 providers selected"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/configPanel.qml
 msgid "Provider name"
 msgstr ""
 
@@ -952,6 +966,28 @@ msgid "Use monochrome icons and meters only"
 msgstr ""
 
 #: contents/ui/configPanel.qml
+msgid "Panel providers"
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid ""
+"Choose the providers shown in the panel. The popup keeps every enabled "
+"provider."
+msgstr ""
+
+#: contents/ui/configPanel.qml contents/ui/configPopup.qml
+msgid "Loading providers..."
+msgstr ""
+
+#: contents/ui/configPanel.qml contents/ui/configPopup.qml
+msgid "No enabled providers available."
+msgstr ""
+
+#: contents/ui/configPanel.qml
+msgid "Use all enabled providers automatically"
+msgstr ""
+
+#: contents/ui/configPanel.qml
 msgid "Quota, order and visibility"
 msgstr ""
 
@@ -1014,23 +1050,6 @@ msgstr ""
 msgid "Auto-select highest-usage provider"
 msgstr ""
 
-#: contents/ui/configPopup.qml contents/ui/configProviders.qml
-msgid "Set the codexbar command path in Diagnostics."
-msgstr ""
-
-#: contents/ui/configPopup.qml contents/ui/configProviders.qml
-msgid "Loading providers timed out. Try again."
-msgstr ""
-
-#: contents/ui/configPopup.qml contents/ui/configProviders.qml
-#: contents/ui/main.qml
-msgid "codexbar did not return provider data."
-msgstr ""
-
-#: contents/ui/configPopup.qml contents/ui/configProviders.qml
-msgid "Could not parse codexbar provider JSON: %1"
-msgstr ""
-
 #: contents/ui/configPopup.qml
 msgid "Usage details"
 msgstr ""
@@ -1072,14 +1091,6 @@ msgid "Provider order:"
 msgstr ""
 
 #: contents/ui/configPopup.qml
-msgid "Loading providers..."
-msgstr ""
-
-#: contents/ui/configPopup.qml
-msgid "No enabled providers available."
-msgstr ""
-
-#: contents/ui/configPopup.qml
 msgid "Overview providers:"
 msgstr ""
 
@@ -1098,6 +1109,11 @@ msgid "Use first %1 providers automatically"
 msgstr ""
 
 #: contents/ui/configProviders.qml
+#: contents/ui/controllers/ProviderRosterController.qml
+msgid "Set the codexbar command path in Diagnostics."
+msgstr ""
+
+#: contents/ui/configProviders.qml
 msgid "codexbar command failed."
 msgstr ""
 
@@ -1106,7 +1122,17 @@ msgid "codexbar command timed out. Try again."
 msgstr ""
 
 #: contents/ui/configProviders.qml
+#: contents/ui/controllers/ProviderRosterController.qml contents/ui/main.qml
+msgid "codexbar did not return provider data."
+msgstr ""
+
+#: contents/ui/configProviders.qml
 msgid "API key for %1"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+#: contents/ui/controllers/ProviderRosterController.qml
+msgid "Loading providers timed out. Try again."
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -1115,6 +1141,11 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "%1 command timed out. Try again."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+#: contents/ui/controllers/ProviderRosterController.qml
+msgid "Could not parse codexbar provider JSON: %1"
 msgstr ""
 
 #: contents/ui/configProviders.qml

@@ -40,6 +40,9 @@ uses "Padrão" for the Standard panel style.
 Translate labels against their displayed values. "Code review remaining" labels
 a remaining quota percentage, and "Included plan" labels usage included in a
 plan. Neither describes a count of reviews or a separate included subscription.
+The panel's "behind pace" message means the CLI predicts quota exhaustion before
+reset (`willLastToReset === false`). Translate it as excessive consumption, not
+as consumption below the expected pace.
 
 Install GNU gettext and Python 3 before running the commands below. Run them
 from the repository root.
