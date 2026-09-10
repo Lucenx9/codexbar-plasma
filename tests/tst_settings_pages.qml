@@ -45,7 +45,7 @@ TestCase {
             cfg_source: "cli",
             cfg_refreshInterval: 900,
             cfg_privacyMode: true,
-            cfg_refreshOnOpen: true,
+            cfg_refreshOnOpen: false,
             cfg_includeStatus: true,
             cfg_costUsageEnabled: false,
             cfg_costHistoryDays: 90,
@@ -74,7 +74,7 @@ TestCase {
         compare(page.cfg_source, "");
         compare(page.cfg_refreshInterval, 300);
         compare(page.cfg_privacyMode, false);
-        compare(page.cfg_refreshOnOpen, false);
+        compare(page.cfg_refreshOnOpen, true);
         compare(page.cfg_includeStatus, false);
         compare(page.cfg_costUsageEnabled, true);
         compare(page.cfg_costHistoryDays, 30);
