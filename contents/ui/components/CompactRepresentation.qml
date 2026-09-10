@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "../PanelElements.js" as PanelElements
+import "../PanelTextFit.js" as PanelTextFit
 
 Item {
     id: compactRoot
@@ -24,7 +25,57 @@ Item {
                 && provider.hasIncident === true
                 && provider.statusKnown !== false
         })
-    readonly property string primaryText: applet.compactText()
+    // Panel text competes with the meter row for a bounded width. Rather than
+    // eliding one composed string into a fragment, the renderer measures every
+    // composition PanelTextFit offers and shows the widest one that fits. The
+    // full composition stays in fullText for tooltips and accessible names.
+    readonly property var textCompositions: PanelTextFit.texts(
+        PanelTextFit.compositions(applet.compactTextSegments()))
+    readonly property var textCompositionWidths: [
+        Math.ceil(firstCompositionMeasurer.implicitWidth),
+        Math.ceil(secondCompositionMeasurer.implicitWidth),
+        Math.ceil(thirdCompositionMeasurer.implicitWidth)
+    ].slice(0, textCompositions.length)
+    readonly property string fullText: textCompositions.length > 0 ? textCompositions[0] : ""
+    // What the row spends before any text, so the budget offers the label every
+    // pixel the panel actually has. A flat allowance either surrenders segments
+    // that would have fitted or overruns the maximum and clips the row.
+    // Both slots are computed from the meter row alone: deriving them from the
+    // rendered text would feed the chosen composition back into its own budget.
+    readonly property int statusSlotWidth: statusElementVisible
+        ? Math.ceil(Kirigami.Units.smallSpacing * 1.5) + Kirigami.Units.smallSpacing : 0
+    readonly property int meterRowWidth: hasProviderMeters
+        ? meterProviders.length * meterWidth
+            + Math.max(0, meterProviders.length - 1) * Kirigami.Units.smallSpacing
+        : 0
+    // A superset of showPrimaryIdentity: reserving the icon slot while it turns
+    // out hidden costs the label a few pixels, never a clipped row.
+    readonly property bool standaloneIdentityVisible: !hasProviderMeters
+        || (!verticalPanel && (meterProviders.length > 1 || !selectedProviderHasMeter))
+    readonly property int textSlotOffset: Kirigami.Units.smallSpacing * 2
+        + statusSlotWidth + meterRowWidth
+    // Inline text sits inside the selected meter, one meter spacing after its
+    // capsules, so that gap always exists. The standalone element stands in its
+    // own layout cell and pays a gap per neighbour it actually has: the layout
+    // skips hidden elements, so hiding the meters removes that gap with them.
+    readonly property int inlineTextBudget: Math.max(0,
+        maximumCompactWidth - textSlotOffset - meterSpacing)
+    readonly property int standaloneTextBudget: Math.max(0,
+        maximumCompactWidth - textSlotOffset
+            - (hasProviderMeters ? Kirigami.Units.smallSpacing : 0)
+            - (standaloneIdentityVisible
+                ? Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.smallSpacing : 0))
+    readonly property int inlineTextIndex: PanelTextFit.fittedIndex(textCompositionWidths, inlineTextBudget)
+    readonly property int textCompositionIndex: inlinePrimaryText
+        ? inlineTextIndex
+        : PanelTextFit.fittedIndex(textCompositionWidths, standaloneTextBudget)
+    // The chosen index and the arrays it indexes are separate bindings, so a
+    // configuration change can re-evaluate one before the other and leave the
+    // index pointing past a list that has already shrunk. Read through these
+    // instead of indexing directly: an intermediate frame must fall back to no
+    // text, never assign undefined to the rendered width.
+    readonly property string primaryText: compositionText(textCompositionIndex)
+    readonly property int primaryTextWidth: compositionWidth(textCompositionIndex)
     readonly property var selectedProvider: applet.selectedCompactProvider()
     readonly property bool selectedProviderHasMeter: selectedProvider !== null && selectedProvider !== undefined
         && meterProviders.some(function(provider) { return provider.provider === selectedProvider.provider })
@@ -37,8 +88,13 @@ Item {
         && incidentProvider !== null
         && selectedProvider !== null && selectedProvider !== undefined
         && incidentProvider.provider === selectedProvider.provider
+    readonly property bool statusElementVisible: (!verticalPanel || hasProviderMeters
+            || !identityCarriesIncidentBadge)
+        && incidentProvider !== null
+        && incidentProvider.hasIncident
+        && !incidentProviderHasMeterBadge
     // Independent text still needs its identity when several meters are shown.
-    readonly property bool inlinePrimaryText: !verticalPanel && primaryText.length > 0
+    readonly property bool inlinePrimaryText: !verticalPanel && fullText.length > 0
         && inlineTextWidth > 0
         && applet.panelElementOrder().join(",") === PanelElements.defaultOrder.join(",")
         && selectedProviderHasMeter
@@ -63,9 +119,8 @@ Item {
     readonly property int metersExtent: meterProviders.length * meterHeight
         + Math.max(0, meterProviders.length - 1) * meterSpacing
     readonly property int maximumCompactWidth: Kirigami.Units.gridUnit * 18
-    readonly property int inlineTextWidth: Math.min(Math.ceil(compactTextMeasurer.implicitWidth), Math.max(0,
-            maximumCompactWidth - meterProviders.length * (meterWidth + meterSpacing)
-                - Kirigami.Units.smallSpacing * 5))
+    readonly property int inlineTextWidth: Math.min(compositionWidth(inlineTextIndex),
+        inlineTextBudget)
     readonly property int desiredWidth: verticalPanel
         ? Kirigami.Units.iconSizes.small + Kirigami.Units.iconSizes.smallMedium + meterSpacing * 4
         : Math.min(maximumCompactWidth, Math.max(Kirigami.Units.gridUnit * 4.8,
@@ -102,6 +157,16 @@ Item {
         }
     }
 
+    function compositionText(index) {
+        var text = textCompositions[index]
+        return typeof text === "string" ? text : ""
+    }
+
+    function compositionWidth(index) {
+        var width = textCompositionWidths[index]
+        return typeof width === "number" && isFinite(width) && width > 0 ? width : 0
+    }
+
     MouseArea {
         id: compactBackgroundMouse
         anchors.fill: parent
@@ -112,12 +177,34 @@ Item {
 
     // Measure outside the Loader so its layout-assigned width cannot feed back
     // into the label's preferred width and collapse the compact representation.
+    // Every candidate composition gets its own measurer, so choosing one cannot
+    // feed its own width back into the choice. There are at most three: the
+    // full composition and one per surrendered segment. These are the same
+    // label type the panel renders, because shaped label widths and raw font
+    // metrics disagree by a fraction of a pixel and a composition measured a
+    // pixel short is elided by the renderer that was asked to make it fit.
     PlainPlasmaLabel {
-        id: compactTextMeasurer
+        id: firstCompositionMeasurer
 
         visible: false
-        text: compactRoot.primaryText
         font.bold: !compactRoot.minimalStyle
+        text: compactRoot.textCompositions.length > 0 ? compactRoot.textCompositions[0] : ""
+    }
+
+    PlainPlasmaLabel {
+        id: secondCompositionMeasurer
+
+        visible: false
+        font.bold: !compactRoot.minimalStyle
+        text: compactRoot.textCompositions.length > 1 ? compactRoot.textCompositions[1] : ""
+    }
+
+    PlainPlasmaLabel {
+        id: thirdCompositionMeasurer
+
+        visible: false
+        font.bold: !compactRoot.minimalStyle
+        text: compactRoot.textCompositions.length > 2 ? compactRoot.textCompositions[2] : ""
     }
 
     GridLayout {
@@ -149,11 +236,7 @@ Item {
                 readonly property bool elementVisible: modelData === "identity"
                     ? compactRoot.showPrimaryIdentity
                     : (modelData === "status"
-                    ? ((!compactRoot.verticalPanel || compactRoot.hasProviderMeters
-                            || !compactRoot.identityCarriesIncidentBadge)
-                        && compactRoot.incidentProvider !== null
-                        && compactRoot.incidentProvider.hasIncident
-                        && !compactRoot.incidentProviderHasMeterBadge)
+                    ? compactRoot.statusElementVisible
                     : (modelData === "text"
                     ? (!compactRoot.verticalPanel && compactRoot.primaryText.length > 0 && !compactRoot.inlinePrimaryText)
                     : compactRoot.hasProviderMeters))
@@ -176,8 +259,7 @@ Item {
                         : compactRoot.meterProviders.length * compactRoot.meterWidth
                             + (compactRoot.inlinePrimaryText ? compactRoot.inlineTextWidth + compactRoot.meterSpacing : 0)
                             + Math.max(0, compactRoot.meterProviders.length - 1) * Kirigami.Units.smallSpacing)
-                    : Math.max(Kirigami.Units.gridUnit * 2,
-                        Math.ceil(compactTextMeasurer.implicitWidth)))))
+                    : Math.max(Kirigami.Units.gridUnit * 2, compactRoot.primaryTextWidth))))
                 Layout.preferredHeight: compactRoot.verticalPanel
                     ? (modelData === "meters" ? compactRoot.metersExtent
                         : (modelData === "status" ? Kirigami.Units.smallSpacing * 1.5 : compactRoot.compactExtent))
@@ -252,11 +334,7 @@ Item {
         Item {
             id: compactStatusBadge
 
-            visible: (!compactRoot.verticalPanel || compactRoot.hasProviderMeters
-                    || !compactRoot.identityCarriesIncidentBadge)
-                && compactRoot.incidentProvider !== null
-                && compactRoot.incidentProvider.hasIncident
-                && !compactRoot.incidentProviderHasMeterBadge
+            visible: compactRoot.statusElementVisible
             implicitWidth: Kirigami.Units.smallSpacing * 1.5
             implicitHeight: implicitWidth
 
@@ -303,6 +381,7 @@ Item {
             objectName: "panelStandaloneText"
             visible: !compactRoot.verticalPanel && compactRoot.primaryText.length > 0
             text: compactRoot.primaryText
+            Accessible.name: compactRoot.fullText
             elide: Text.ElideRight
             font.bold: !compactRoot.minimalStyle
             // The loader stretches this label to the full row height, so the
@@ -354,7 +433,7 @@ Item {
                     Accessible.name: compactRoot.interactive ? i18n("Open %1", modelData.title) : modelData.title
                     Accessible.description: compactRoot.applet.panelMeterDescription(modelData)
                         + (compactMeter.incidentText.length > 0 ? ". " + compactMeter.incidentText : "")
-                        + (showsPrimaryText ? ". " + compactRoot.primaryText : "")
+                        + (showsPrimaryText ? ". " + compactRoot.fullText : "")
                     Accessible.ignored: !compactRoot.interactive
                     Accessible.onPressAction: compactMeter.activate()
 
@@ -479,6 +558,9 @@ Item {
                             objectName: "panelProviderText"
                             visible: compactMeter.showsPrimaryText
                             text: visible ? compactRoot.primaryText : ""
+                            // Surrendered segments stay available to assistive
+                            // technology even when the panel has no room.
+                            Accessible.name: compactRoot.fullText
                             Layout.preferredWidth: compactRoot.inlineTextWidth
                             Layout.maximumWidth: compactRoot.inlineTextWidth
                             Layout.alignment: Qt.AlignVCenter

@@ -78,6 +78,7 @@ Item {
             result.push({
                 name: item.objectName,
                 text: item.text || "",
+                truncated: item.truncated === true,
                 x: position.x,
                 y: position.y,
                 width: item.width,
@@ -116,6 +117,8 @@ Item {
                 width: panel.width,
                 height: panel.height,
                 text: capture.applet.compactText(),
+                rendered: capture.compactPanelItem.primaryText,
+                compositions: capture.compactPanelItem.textCompositions,
                 provider: capture.applet.selectedCompactProvider().provider,
                 inline: capture.compactPanelItem.inlinePrimaryText,
                 identity: capture.compactPanelItem.showPrimaryIdentity,

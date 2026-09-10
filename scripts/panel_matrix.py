@@ -93,8 +93,19 @@ def validate_record(record, count):
     labels = [part for part in record["parts"] if part["name"] in ("panelProviderText", "panelStandaloneText")]
     if len(labels) != (1 if record["text"] and not record["case"]["vertical"] else 0):
         raise RuntimeError("Missing or duplicated panel text: " + record["id"])
-    if any(label["text"] != record["text"] for label in labels):
-        raise RuntimeError("Rendered text differs from panel text: " + record["id"])
+    if any(label["text"] != record["rendered"] for label in labels):
+        raise RuntimeError("Rendered text differs from the chosen composition: " + record["id"])
+    # A crowded meter row surrenders whole content segments. Eliding one into a
+    # fragment is the failure this check exists for, so the rendered label must
+    # be a composition the renderer offered, and it must not be cut short.
+    if labels and record["rendered"] not in record["compositions"]:
+        raise RuntimeError("Rendered text is not an offered composition: " + record["id"])
+    # Eliding is the last resort: a single remaining segment wider than the
+    # panel has nothing left to surrender. Eliding anything else means the
+    # renderer cut content short while a narrower composition would have fitted.
+    if any(label["truncated"] for label in labels) and record["rendered"] != record["compositions"][-1]:
+        raise RuntimeError("Elided panel text while a narrower composition fitted: "
+                           + record["id"] + ": " + record["rendered"])
     if record["id"] in ("credits-unavailable", "order-text-only"):
         expected = "" if record["id"] == "credits-unavailable" else "72% used"
         if record["text"] != expected:
@@ -122,7 +133,7 @@ def capture_batch(output, theme, count, vertical):
     cases = matrix_cases(vertical)
     if count == 1:
         cases = [case for case in cases if case.get("selected", "codex") == "codex"]
-    scenario = "panel-matrix-one" if count == 1 else "panel-matrix-three"
+    scenario = "panel-matrix-one" if count == 1 else "panel-matrix-four"
     with tempfile.TemporaryDirectory(prefix="codexbar-matrix-") as temporary:
         work = Path(temporary)
         env = smoke.preview_environment(work, scenario, "opengl")
@@ -209,7 +220,7 @@ def main():
     (output / "source.json").write_text(json.dumps(metadata, indent=2) + "\n")
     records = []
     for vertical in ((False, True) if args.vertical else (False,)):
-        for theme, count in itertools.product(("light", "dark"), (1, 3)):
+        for theme, count in itertools.product(("light", "dark"), (1, 4)):
             records.extend(capture_batch(output, theme, count, vertical))
             write_report(output, records)
             print(f"Captured {len(records)} cases: {output / 'index.html'}", flush=True)

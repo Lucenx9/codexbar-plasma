@@ -142,6 +142,14 @@ Extraction must hide complexity, not merely reduce line count.
   quota can satisfy the provider meter condition. Direct missing quotas stay omitted; `runOut` depends on `paceWarningActive`. Panel visibility,
   order, and metric settings preserve the minute clock and icon fallback and
   must not fetch data or change notification state.
+- `PanelTextFit.js` composes the optional panel text from the segments the
+  settings enable and offers progressively smaller compositions when the meter
+  row leaves too little room. The renderer measures each candidate on its own
+  hidden label and shows the widest that fits, so content is surrendered whole:
+  the provider name first, then credits, keeping the usage figure. The module
+  performs no measurement and no localization; QML supplies the segment text and
+  the measured widths, and keeps the full composition for tooltips and
+  accessible names.
 - `PanelProviders.js` filters the panel-only provider selection without
   effects. Meters, panel text, and the panel tooltip roster narrow through it;
   the popup, fetching, and notifications keep the full roster. An empty stored
@@ -415,7 +423,7 @@ failure rather than silently skipping when that environment is unavailable.
 ## Panel configuration matrix
 
 Capture all 32 combinations of Standard/Minimal and the four content switches
-(provider name, usage text, credits, meters) with one and three providers in
+(provider name, usage text, credits, meters) with one and four providers in
 Breeze Light and Breeze Dark:
 
 ```sh
@@ -434,11 +442,18 @@ The default run saves 336 captures: 128 base combinations plus targeted cases
 for all 24 element orders, five text formats, explicit quotas, visibility rules,
 missing data, long names, exhausted quotas, and 24/48/64-pixel panel heights.
 `--vertical` adds 128 captures covering the base combinations on vertical panels.
-Unavailable credits are tested with the three-provider fixture. Missing and
+Unavailable credits are tested with the four-provider fixture. Missing and
 exhausted quotas are synthetic normalized snapshots within the isolated applet.
 
-The runner rejects missing PNGs, clipped measured elements, and incorrect base
-text/capsule counts. `index.html` filters the gallery by theme/provider count/
+Four providers is the meter row the compact renderer caps at, so that batch is
+where panel content competes for width and items are surrendered.
+
+The runner rejects missing PNGs, clipped measured elements, incorrect base
+text/capsule counts, and rendered text that is not one of the compositions the
+renderer offered. It rejects an elided label only when a narrower composition
+would have fitted: the narrowest composition has nothing left to surrender, so
+eliding it is the documented last resort and passes.
+`index.html` filters the gallery by theme/provider count/
 orientation and base cases; `results.json` records configuration, text, and
 geometry; `source.json` identifies the source digest and Git revision when
 available. Captures require human visual review: passing assertions does not
