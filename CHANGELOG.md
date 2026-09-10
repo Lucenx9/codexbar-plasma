@@ -22,6 +22,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep the stored value in the editable settings fields for the custom refresh
+  interval, the update check interval, and both quota thresholds when the typed
+  text holds no number, instead of replacing a configured value with an
+  unrelated default. Clearing the custom interval field, or committing its
+  "No periodic refresh" text, no longer turns a disabled refresh into five
+  minutes.
 - Keep accounts that differ only by internal spacing separately selectable and
   pass the unmodified name to `--account`, instead of collapsing one label onto
   the other and requesting the wrong account.

@@ -33,6 +33,7 @@ KCM.SimpleKCM {
 
         Controls.SpinBox {
             id: quotaWarningPercentSpin
+            objectName: "quotaWarningPercentSpin"
             Kirigami.FormData.label: i18n("Quota warning at:")
             from: 1
             to: 99
@@ -40,15 +41,18 @@ KCM.SimpleKCM {
             textFromValue: function(value, locale) {
                 return i18n("%1% used", value)
             }
+            // Unparsable text keeps the current threshold. Substituting the
+            // schema default here would move a configured threshold silently.
             valueFromText: function(text, locale) {
                 var match = text.match(/\d+/)
-                return match ? parseInt(match[0], 10) : 80
+                return match ? parseInt(match[0], 10) : value
             }
             Layout.preferredWidth: Kirigami.Units.gridUnit * 10
         }
 
         Controls.SpinBox {
             id: quotaCriticalPercentSpin
+            objectName: "quotaCriticalPercentSpin"
             Kirigami.FormData.label: i18n("Quota critical at:")
             // Keeping the floor on the warning value makes the "critical is never
             // below warning" rule visible here instead of only correcting it at
@@ -61,7 +65,7 @@ KCM.SimpleKCM {
             }
             valueFromText: function(text, locale) {
                 var match = text.match(/\d+/)
-                return match ? parseInt(match[0], 10) : 95
+                return match ? parseInt(match[0], 10) : value
             }
             Layout.preferredWidth: Kirigami.Units.gridUnit * 10
         }
@@ -123,6 +127,7 @@ KCM.SimpleKCM {
 
             Controls.CheckBox {
                 id: notifyStatusIncidentsCheck
+                objectName: "notifyStatusIncidentsCheck"
                 Layout.fillWidth: true
                 Layout.leftMargin: Kirigami.Units.gridUnit
                 text: i18n("Notify status incidents")

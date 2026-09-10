@@ -12,9 +12,11 @@ KCM.SimpleKCM {
     id: page
 
     property string cfg_commandPath
-    // cfg_*Default mirrors the schema default in contents/config/main.xml. The
-    // Plasma config dialog injects only cfg_<key>, never defaults, so these
-    // initializers are the only source for the restore-defaults action;
+    // cfg_*Default mirrors the schema default in contents/config/main.xml.
+    // Plasma's configuration map also exposes a <key>Default entry, so the
+    // config dialog injects cfg_<key>Default over these initializers
+    // (plasma-workspace 6.7.4); they stay the portable fallback for loaders that
+    // do not, and the restore-defaults action reads them either way.
     // scripts/test_ui_regressions.sh checks them against main.xml for drift.
     property string cfg_commandPathDefault: "codexbar"
     property alias cfg_refreshOnOpen: refreshOnOpenCheck.checked
@@ -108,15 +110,23 @@ KCM.SimpleKCM {
     // Plasma supplies cfg_* values as creation-time properties, which replaces
     // bindings declared on them. Track runtime-owned values separately and
     // copy them into the pending KCM state only while the user has no edit.
-    readonly property int persistedCostHistoryDays: Plasmoid.configuration.costHistoryDays
-    readonly property string persistedCostHistoryMetric: Plasmoid.configuration.costHistoryMetric
+    // Each read stays guarded like the one on Notifications, so building the
+    // page without a plasmoid resolves to the schema default instead of raising
+    // a TypeError for every runtime-owned binding.
+    readonly property int persistedCostHistoryDays: Plasmoid.configuration
+        ? Plasmoid.configuration.costHistoryDays : cfg_costHistoryDaysDefault
+    readonly property string persistedCostHistoryMetric: Plasmoid.configuration
+        ? Plasmoid.configuration.costHistoryMetric : cfg_costHistoryMetricDefault
     property bool costHistoryDaysEditPending: false
     property bool costHistoryMetricEditPending: false
     readonly property bool defaultValuesPrepared: defaultsActionRequested
         && userSettingsAreDefault()
-    readonly property string autoUpdateLastCheck: Plasmoid.configuration.autoUpdateLastCheck || ""
-    readonly property string widgetUpdateLastStatus: Plasmoid.configuration.widgetUpdateLastStatus || ""
-    readonly property string widgetUpdateLastError: Plasmoid.configuration.widgetUpdateLastError || ""
+    readonly property string autoUpdateLastCheck: Plasmoid.configuration
+        ? Plasmoid.configuration.autoUpdateLastCheck || "" : ""
+    readonly property string widgetUpdateLastStatus: Plasmoid.configuration
+        ? Plasmoid.configuration.widgetUpdateLastStatus || "" : ""
+    readonly property string widgetUpdateLastError: Plasmoid.configuration
+        ? Plasmoid.configuration.widgetUpdateLastError || "" : ""
 
     Component.onCompleted: {
         syncCostHistoryDaysFromPersisted()
@@ -299,6 +309,7 @@ KCM.SimpleKCM {
 
         Controls.ComboBox {
             id: refreshPresetCombo
+            objectName: "refreshPresetCombo"
             Kirigami.FormData.label: i18n("Usage refresh:")
             textRole: "text"
             valueRole: "value"
@@ -321,6 +332,7 @@ KCM.SimpleKCM {
 
         Controls.SpinBox {
             id: refreshIntervalSpin
+            objectName: "refreshIntervalSpin"
             Kirigami.FormData.label: i18n("Custom interval:")
             from: 0
             to: 3600
@@ -330,9 +342,12 @@ KCM.SimpleKCM {
             textFromValue: function(value, locale) {
                 return value <= 0 ? i18n("No periodic refresh") : i18n("%1 s", value)
             }
+            // "No periodic refresh" and cleared text carry no digits. Keeping the
+            // current value leaves the stored interval alone instead of writing
+            // an unrelated preset over it.
             valueFromText: function(text, locale) {
                 var match = text.match(/\d+/)
-                return match ? parseInt(match[0], 10) : 300
+                return match ? parseInt(match[0], 10) : value
             }
             Layout.preferredWidth: Kirigami.Units.gridUnit * 12
         }
@@ -402,6 +417,7 @@ KCM.SimpleKCM {
 
         Controls.SpinBox {
             id: costHistoryDaysSpin
+            objectName: "costHistoryDaysSpin"
             Kirigami.FormData.label: i18n("History window:")
             from: 1
             to: 365
@@ -439,6 +455,7 @@ KCM.SimpleKCM {
 
         Controls.SpinBox {
             id: autoUpdateIntervalHoursSpin
+            objectName: "autoUpdateIntervalHoursSpin"
             Kirigami.FormData.label: i18n("Check every:")
             from: 1
             to: 168
@@ -449,7 +466,7 @@ KCM.SimpleKCM {
             }
             valueFromText: function(text, locale) {
                 var match = text.match(/\d+/)
-                return match ? parseInt(match[0], 10) : 24
+                return match ? parseInt(match[0], 10) : value
             }
             Layout.preferredWidth: Kirigami.Units.gridUnit * 10
         }
