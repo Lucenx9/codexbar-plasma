@@ -19,8 +19,10 @@ work and upstream contract requirements.
   preference supplies one available fallback quota.
 - Provider meters work in horizontal and vertical panels. Names, usage text,
   and credit text remain horizontal-only. Click a provider's icon, capsules, or grouped text,
-  or activate it with the keyboard, to open its detail tab. Tooltips and
-  accessible descriptions identify the displayed quotas and their values.
+  or activate it with the keyboard, to open its detail tab. Hovering one
+  provider's icon narrows the panel tooltip to that provider alone; hovering
+  elsewhere shows the whole roster. Accessible descriptions identify the
+  displayed quotas and their values.
 - With the default element order, optional text sits after the selected
   provider's capsules in one group, with a single logo. The other providers keep
   their own icon and capsules. If that provider's meters are hidden or unavailable,

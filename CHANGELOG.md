@@ -88,6 +88,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Truncate popup section headings and labels that fill the available width, so
   a long translation or a provider-supplied cost title can no longer push the
   row wider than the popup.
+- Narrow the panel tooltip to the hovered provider meter, so hovering one
+  panel icon reports only that provider's quotas instead of the whole roster.
+  The full list remains when hovering elsewhere.
 
 ## 0.2.36 - 2026-09-09
 

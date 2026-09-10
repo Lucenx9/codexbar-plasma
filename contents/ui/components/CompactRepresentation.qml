@@ -87,6 +87,21 @@ Item {
     implicitHeight: desiredHeight
     clip: true
 
+    // Visibility rules can filter a hovered meter out while its provider
+    // stays in the roster. Its destroyed MouseArea delivers no reliable
+    // hover-exit, so drop the stale hover here instead of letting the tooltip
+    // stay narrowed to a meter that is no longer rendered. The empty-string
+    // default keeps the settings preview (which has no hover state and never
+    // sets one outside interactive mode) a no-op.
+    onMeterProvidersChanged: {
+        var hovered = String(compactRoot.applet.hoveredPanelProviderID || "")
+        if (hovered.length > 0 && !meterProviders.some(function(meter) {
+                return meter && meter.provider === hovered
+            })) {
+            compactRoot.applet.clearHoveredPanelProvider(hovered)
+        }
+    }
+
     MouseArea {
         id: compactBackgroundMouse
         anchors.fill: parent
@@ -481,6 +496,20 @@ Item {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: compactMeter.activate()
+                        // The plasmoid tooltip narrows to the hovered meter, so
+                        // each panel icon reports only its own provider. Clearing
+                        // only the matching id keeps a fast move between two
+                        // meters from ending on an empty tooltip.
+                        onContainsMouseChanged: {
+                            if (!compactRoot.interactive) {
+                                return
+                            }
+                            if (containsMouse) {
+                                compactRoot.applet.setHoveredPanelProvider(compactMeter.modelData.provider)
+                            } else {
+                                compactRoot.applet.clearHoveredPanelProvider(compactMeter.modelData.provider)
+                            }
+                        }
                     }
                 }
             }

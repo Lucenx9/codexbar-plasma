@@ -163,6 +163,10 @@ PlasmoidItem {
     readonly property int maximumSessions: Normalizer.maximumSessions
     readonly property int sessionsCommandTimeoutMs: 60000
     property string selectedProviderID: ""
+    // Provider meter currently under the panel pointer. The plasmoid tooltip
+    // narrows to this provider while it is set, so hovering one panel icon
+    // reports only that provider instead of the whole roster.
+    property string hoveredPanelProviderID: ""
     property string selectedGlobalView: "overview"
     property bool selectionInitialized: false
     property var selectedAccounts: ({})
@@ -285,9 +289,13 @@ PlasmoidItem {
     onNotifyLimitResetsChanged: resetNotificationMemo()
     onProvidersChanged: {
         if (providers.length === 0) {
+            hoveredPanelProviderID = ""
             updateSelectedProvider()
             resetNotificationMemo()
             return
+        }
+        if (hoveredPanelProviderID.length > 0 && providerIndexForID(hoveredPanelProviderID) < 0) {
+            hoveredPanelProviderID = ""
         }
         updateSelectedProvider()
         Qt.callLater(processNotifications)
@@ -3862,25 +3870,72 @@ PlasmoidItem {
         return parts.join(" ")
     }
 
+    function setHoveredPanelProvider(providerID) {
+        hoveredPanelProviderID = String(providerID || "")
+    }
+
+    function clearHoveredPanelProvider(providerID) {
+        var id = String(providerID || "")
+        if (hoveredPanelProviderID === id) {
+            hoveredPanelProviderID = ""
+        }
+    }
+
+    function hoveredPanelProvider() {
+        var id = String(hoveredPanelProviderID || "")
+        if (id.length === 0 || !providers) {
+            return null
+        }
+        // Visibility rules can filter a hovered meter out of the rendered
+        // compactProviders() while its provider stays in providers, and its
+        // destroyed MouseArea delivers no reliable hover-exit for cleanup.
+        // Narrow the tooltip only while the meter is actually rendered.
+        var rendered = compactProviders().some(function(meter) {
+            return meter && meter.provider === id
+        })
+        if (!rendered) {
+            return null
+        }
+        for (var i = 0; i < providers.length; i++) {
+            if (providers[i] && providers[i].provider === id) {
+                return providers[i]
+            }
+        }
+        return null
+    }
+
+    function panelProviderToolTipText(item) {
+        var presented = providerPresentation(item)
+        if (!presented) {
+            return ""
+        }
+        // Keep incidents in the tooltip even when quota meters are available.
+        var incident = presented.hasIncident && presented.statusKnown !== false && presented.status.length > 0 ? presented.status : ""
+        var description = panelMeterDescription(presented)
+        if (description.length > 0) {
+            var line = i18n("%1: %2", presented.title, description)
+            if (incident.length > 0) {
+                return i18n("%1 - %2", line, incident)
+            }
+            return line
+        }
+        if (incident.length > 0) {
+            return i18n("%1: %2", presented.title, incident)
+        }
+        return ""
+    }
+
     function panelToolTipText() {
+        var hovered = hoveredPanelProvider()
+        if (hovered) {
+            var hoveredLine = panelProviderToolTipText(hovered)
+            if (hoveredLine.length > 0) {
+                return hoveredLine
+            }
+        }
         var lines = []
         for (var i = 0; i < providers.length && lines.length < 6; i++) {
-            var item = providerPresentation(providers[i])
-            if (!item) {
-                continue
-            }
-            // Keep incidents in the tooltip even when quota meters are available.
-            var incident = item.hasIncident && item.statusKnown !== false && item.status.length > 0 ? item.status : ""
-            var description = panelMeterDescription(item)
-            var line = ""
-            if (description.length > 0) {
-                line = i18n("%1: %2", item.title, description)
-                if (incident.length > 0) {
-                    line = i18n("%1 - %2", line, incident)
-                }
-            } else if (incident.length > 0) {
-                line = i18n("%1: %2", item.title, incident)
-            }
+            var line = panelProviderToolTipText(providers[i])
             if (line.length > 0) {
                 lines.push(line)
             }
