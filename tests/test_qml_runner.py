@@ -20,6 +20,7 @@ class QmlRunnerTests(unittest.TestCase):
 case "$*" in
   *tst_plain_text_controls.qml*) suite=label ;;
   *tst_panel_settings_geometry.qml*) suite=geometry ;;
+  *tst_popup_notifications_geometry.qml*) suite=settings-geometry ;;
   *) suite=bulk ;;
 esac
 if [ "$suite" = "$FAKE_SKIP_SUITE" ]; then
@@ -49,21 +50,21 @@ fi
         )
 
     def test_strict_mode_rejects_skips_in_every_invocation(self):
-        for suite in ("bulk", "label", "geometry"):
+        for suite in ("bulk", "label", "geometry", "settings-geometry"):
             with self.subTest(suite=suite):
                 result = self.run_checks(skipped=suite)
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn("QML tests were skipped", result.stderr)
 
     def test_optional_mode_allows_skips(self):
-        for suite in ("bulk", "label", "geometry"):
+        for suite in ("bulk", "label", "geometry", "settings-geometry"):
             with self.subTest(suite=suite):
                 result = self.run_checks(strict=False, skipped=suite)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertIn("SKIP", result.stdout)
 
     def test_runner_failures_propagate(self):
-        for suite in ("bulk", "label", "geometry"):
+        for suite in ("bulk", "label", "geometry", "settings-geometry"):
             with self.subTest(suite=suite):
                 result = self.run_checks(failed=suite)
                 self.assertNotEqual(result.returncode, 0)
