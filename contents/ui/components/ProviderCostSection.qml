@@ -15,8 +15,12 @@ ColumnLayout {
     property bool detailsExpanded: false
     property var daySelectionMemo: ({ points: [], index: -1 })
     readonly property bool costHistoryShowsTokens: applet.costHistoryShowsTokens
+    // Pins belong to the shown account: the addressing identity and the
+    // presented label both participate, so a reselect under either spelling
+    // clears them. A key-only scope would miss label edits, and a label-only
+    // scope would miss spacing-distinct accounts that collapse to one label.
     readonly property string selectionScope: providerData ? JSON.stringify([providerData.provider, accountSelectionKey,
-        tokenCost ? tokenCost.historyDays : 0]) : ""
+        applet.accountLabel(providerData), tokenCost ? tokenCost.historyDays : 0]) : ""
     readonly property var selectedDay: CostPresentation.selectedCostDay(tokenCost ? tokenCost.daily : [], chartPoints, costChart.selectedIndex)
     readonly property bool hasVisibleDetails: detailsExpanded || selectedDay !== null
 

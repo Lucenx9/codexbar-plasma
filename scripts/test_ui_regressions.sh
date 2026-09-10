@@ -1830,6 +1830,8 @@ for fragment in (
     "CostPresentation.costDayIndexAfterRefresh(",
     "onCostHistoryShowsTokensChanged: clearDaySelection()",
     "applet.accountKey(providerData)",
+    "accountSelectionKey,",
+    "applet.accountLabel(providerData)",
     "applet.setCostHistoryMetric(valueAt(index))",
 ):
     if fragment not in token_cost_section_body:
