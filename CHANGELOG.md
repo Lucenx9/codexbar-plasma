@@ -153,6 +153,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   buffering them for display, matching the other CLI surfaces.
 - Allow mouse selection in the diagnostics output and bound the diagnostic
   provider field, matching the provider settings inputs.
+- Recognize provider aliases and mixed-case IDs in the Overview provider
+  checkboxes, matching the runtime selection and the panel provider selection,
+  so a stored choice stays checked when the roster spells it differently.
 
 ## 0.2.36 - 2026-09-09
 

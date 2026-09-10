@@ -626,14 +626,16 @@ if provider_publish_index < 0 or descriptor_supported_index < provider_publish_i
         "descriptor support must be confirmed only after a valid provider list is published"
     )
 
-# Overview selection is stored with the raw CLI provider IDs (e.g. groqcloud,
-# alibaba-coding-plan) but matched at runtime against providerKey-normalized
-# IDs (groq, alibaba). configuredOverviewProviderIDs must validate and normalize on read so
-# the custom selection is not silently ignored for aliased providers.
+# Overview selection stores canonical provider IDs (legacy raw CLI spellings,
+# e.g. groqcloud, alibaba-coding-plan, still resolve) matched at runtime
+# against providerKey-normalized IDs (groq, alibaba).
+# configuredOverviewProviderIDs must share parsing with
+# the settings page through OverviewProviders so the custom selection is not
+# silently ignored for aliased providers.
 overview_body = function_body(main_text, "configuredOverviewProviderIDs")
-if "normalizedProviderID(" not in overview_body:
+if "OverviewProviders.configuredProviderIDs(" not in overview_body:
     raise AssertionError(
-        "configuredOverviewProviderIDs must normalize and validate provider IDs so "
+        "configuredOverviewProviderIDs must share parsing with the settings page so "
         "aliased providers match runtime keys"
     )
 
@@ -1465,13 +1467,30 @@ if 'model: page.orderedEnabledProviderRoster' not in overview_provider_selection
     raise AssertionError(
         "Popup must show the saved provider order in the Overview selection"
     )
+if "orderedEnabledProviderRoster" not in popup_surface.function_body("overviewRosterProviderIDs"):
+    raise AssertionError(
+        "overviewRosterProviderIDs must use the saved provider order"
+    )
 for overview_order_function in (
     "resolvedOverviewProviderIDs",
     "toggleOverviewProvider",
 ):
-    if "orderedEnabledProviderRoster" not in popup_surface.function_body(overview_order_function):
+    overview_order_body = popup_surface.function_body(overview_order_function)
+    if "orderedEnabledProviderRoster" not in overview_order_body \
+            and "overviewRosterProviderIDs()" not in overview_order_body:
         raise AssertionError(
             f"{overview_order_function} must use the saved provider order"
+        )
+for overview_delegate_function in (
+    "resolvedOverviewProviderIDs",
+    "parseOverviewProviderIDs",
+    "overviewProviderSelected",
+    "toggleOverviewProvider",
+):
+    if "OverviewProviders." not in popup_surface.function_body(overview_delegate_function):
+        raise AssertionError(
+            f"{overview_delegate_function} must delegate to OverviewProviders so "
+            "the checkboxes cannot drift from the runtime selection"
         )
 for applet_fragment in (
     'property string providerOrderRaw:',
