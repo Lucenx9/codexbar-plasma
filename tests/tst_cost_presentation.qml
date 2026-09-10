@@ -696,6 +696,39 @@ TestCase {
         compare(points[0].displayValue, "$2.00")
     }
 
+    function test_spendHeatmapCellsPadTheOldestCornerAndKeepTheNewestDayLast() {
+        var points = []
+        for (var day = 0; day < 30; day++) {
+            points.push({ label: "day-" + day, value: day, displayValue: "" })
+        }
+
+        var cells = CostPresentation.spendHeatmapCells(points, 35)
+        compare(cells.length, 35)
+        for (var padded = 0; padded < 5; padded++) {
+            compare(cells[padded], null)
+        }
+        compare(cells[5].label, "day-0")
+        compare(cells[34].label, "day-29")
+    }
+
+    function test_spendHeatmapCellsDropTheOldestDaysBeyondCapacity() {
+        var cells = CostPresentation.spendHeatmapCells([
+            { label: "a" }, { label: "b" }, { label: "c" }
+        ], 2)
+        compare(cells.length, 2)
+        compare(cells[0].label, "b")
+        compare(cells[1].label, "c")
+    }
+
+    function test_spendHeatmapCellsSurviveMissingAndNonsenseInput() {
+        compare(CostPresentation.spendHeatmapCells(undefined, 7).length, 7)
+        compare(CostPresentation.spendHeatmapCells("not an array", 2)[0], null)
+        compare(CostPresentation.spendHeatmapCells([{ label: "a" }], 0).length, 0)
+        compare(CostPresentation.spendHeatmapCells([{ label: "a" }], -4).length, 0)
+        compare(CostPresentation.spendHeatmapCells([{ label: "a" }], NaN).length, 0)
+        compare(CostPresentation.spendHeatmapCells([{ label: "a" }], 2.7).length, 2)
+    }
+
     function test_spendTotalsKeepAllCurrencyFreeTokens() {
         var totals = CostPresentation.spendTotals([
             { totals: { cost: 2, tokens: 100, currency: "USD" } },

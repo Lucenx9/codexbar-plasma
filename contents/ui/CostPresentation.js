@@ -1082,3 +1082,19 @@ function historyStillBuilding(costs) {
     }
     return false
 }
+
+// Lays the daily points out for the activity heatmap's fixed seven rows. The
+// newest day keeps the last slot, so every row stays one weekday, and the grid
+// is padded at the oldest end with `null` placeholders: a ragged final column
+// otherwise cuts a week-wide notch out of the block. Points beyond the
+// capacity are dropped, oldest first.
+function spendHeatmapCells(points, capacity) {
+    var items = Array.isArray(points) ? points : []
+    var slots = Math.max(0, Math.floor(Number(capacity) || 0))
+    var visible = items.slice(Math.max(0, items.length - slots))
+    var cells = []
+    for (var i = visible.length; i < slots; i++) {
+        cells.push(null)
+    }
+    return cells.concat(visible)
+}
