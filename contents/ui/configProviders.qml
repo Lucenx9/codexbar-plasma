@@ -292,10 +292,14 @@ KCM.SimpleKCM {
         var sourceName = CommandLedger.withRunNonce(command, commandRunSerial)
         var nextDescriptor = copyObject(descriptor)
         nextDescriptor.commandPathSignature = commandPath
+        // Fail closed like CommandLedger.descriptor: an entry without a usable
+        // deadline is skipped by hasTimedConfigCommands and expireConfigCommands,
+        // so it would hold its provider's pending state until the page reopens.
         var timeoutMs = Number(nextDescriptor.timeoutMs)
-        if (isFinite(timeoutMs) && timeoutMs > 0) {
-            nextDescriptor.deadlineMs = Date.now() + timeoutMs
+        if (!isFinite(timeoutMs) || timeoutMs <= 0) {
+            timeoutMs = configCommandTimeoutMs
         }
+        nextDescriptor.deadlineMs = Date.now() + timeoutMs
         commands = CommandLedger.opened(commands, sourceName, nextDescriptor)
         configSource.connectSource(sourceName)
     }
