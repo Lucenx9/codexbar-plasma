@@ -18,6 +18,7 @@ import "CommandLedger.js" as CommandLedger
 import "AccountRequests.js" as AccountRequests
 import "CostRefreshPolicy.js" as CostRefreshPolicy
 import "CostPresentation.js" as CostPresentation
+import "OverviewProviders.js" as OverviewProviders
 import "ProviderFallbackQueue.js" as ProviderFallbackQueue
 import "ProviderIdentity.js" as ProviderIdentity
 import "PrivacyPresentation.js" as PrivacyPresentation
@@ -3550,33 +3551,11 @@ PlasmoidItem {
         return result
     }
 
+    // The settings page stores raw CLI provider IDs (e.g. groqcloud,
+    // alibaba-coding-plan); parsing is shared with configPopup.qml through
+    // OverviewProviders so the checkboxes cannot drift from this selection.
     function configuredOverviewProviderIDs() {
-        var raw = String(overviewProviderIDsRaw || "").trim()
-        if (raw.length === 0 || raw === "__none__") {
-            return []
-        }
-        var parts = raw.split(",")
-        var result = []
-        var seen = ({})
-        for (var i = 0; i < parts.length; i++) {
-            var trimmed = String(parts[i] || "").trim()
-            if (trimmed.length === 0) {
-                continue
-            }
-            // The settings page stores raw CLI provider IDs (e.g. groqcloud,
-            // alibaba-coding-plan); normalize them to match the providerKey
-            // form used for eligible[k].provider at runtime.
-            var id = normalizedProviderID(trimmed)
-            if (id.length === 0 || hasOwnKey(seen, id)) {
-                continue
-            }
-            seen[id] = true
-            result.push(id)
-            if (result.length >= maxOverviewProviders) {
-                break
-            }
-        }
-        return result
+        return OverviewProviders.configuredProviderIDs(overviewProviderIDsRaw)
     }
 
     function providerIndex(item) {

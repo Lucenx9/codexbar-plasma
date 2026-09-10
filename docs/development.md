@@ -151,6 +151,13 @@ Extraction must hide complexity, not merely reduce line count.
   IDs absent from the enabled roster do not consume the settings selection limit.
   An empty filtered roster suppresses panel text; automatic mode retains its
   loading and no-data text fallback.
+- `OverviewProviders.js` owns the Overview-tab provider selection without
+  effects. An empty stored value means the first three eligible providers,
+  `__none__` stores an explicit empty selection, and aliases with mixed-case
+  IDs match canonically. Manual selections keep at most three IDs in roster
+  order, and absent IDs survive the next toggle. The settings page and the
+  runtime share its parsing so the checkboxes cannot drift from the applied
+  selection.
 - Privacy projects display records without changing cached snapshots or account
   command keys. Preserve config keys and pending defaults across all settings
   pages. `PopupRefreshPolicy.js` handles freshness and failed-attempt cooldown,

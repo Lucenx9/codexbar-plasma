@@ -5,7 +5,7 @@ import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import "components" as Components
 import "controllers" as Controllers
-import "Guards.js" as Guards
+import "OverviewProviders.js" as OverviewProviders
 import "ProviderIdentity.js" as ProviderIdentity
 import "ProviderOrder.js" as ProviderOrder
 import "SafeText.js" as SafeText
@@ -45,8 +45,8 @@ KCM.SimpleKCM {
     property string cfg_overviewProviderIDs: ""
     property string cfg_overviewProviderIDsDefault: ""
 
-    readonly property int maxOverviewProviders: 3
-    readonly property string overviewNoneValue: "__none__"
+    readonly property int maxOverviewProviders: OverviewProviders.maximumOverviewProviders
+    readonly property string overviewNoneValue: OverviewProviders.noneValue
     readonly property string commandPath: (cfg_commandPath || "codexbar").trim()
     readonly property alias enabledProviderRoster: providerRosterController.enabledProviderRoster
     readonly property alias providerRosterLoading: providerRosterController.providerRosterLoading
@@ -102,97 +102,35 @@ KCM.SimpleKCM {
         }
     }
 
-    function resolvedOverviewProviderIDs() {
-        var configured = parseOverviewProviderIDs(cfg_overviewProviderIDs)
-        if (String(cfg_overviewProviderIDs || "").trim().length > 0) {
-            return configured
-        }
-
-        var automatic = []
+    // Pure selection transitions live in OverviewProviders.js; these thin
+    // wrappers only adapt the roster and commit configuration writes.
+    function overviewRosterProviderIDs() {
+        var ordered = []
         for (var i = 0; i < orderedEnabledProviderRoster.length; i++) {
-            var automaticID = ProviderOrder.normalizedProviderID(orderedEnabledProviderRoster[i].provider)
-            if (automaticID.length === 0 || automatic.indexOf(automaticID) !== -1) {
-                continue
-            }
-            automatic.push(automaticID)
-            if (automatic.length >= maxOverviewProviders) {
-                break
-            }
+            ordered.push(orderedEnabledProviderRoster[i].provider)
         }
-        return automatic
+        return ordered
+    }
+
+    function resolvedOverviewProviderIDs() {
+        return OverviewProviders.resolvedProviderIDs(overviewRosterProviderIDs(), cfg_overviewProviderIDs)
     }
 
     function parseOverviewProviderIDs(value) {
-        var raw = String(value || "").trim()
-        if (raw.length === 0 || raw === overviewNoneValue) {
-            return []
-        }
-
-        var parts = raw.split(",")
-        var result = []
-        var seen = ({})
-        for (var i = 0; i < parts.length; i++) {
-            var providerID = ProviderOrder.normalizedProviderID(parts[i])
-            if (providerID.length === 0 || Guards.hasOwnKey(seen, providerID)) {
-                continue
-            }
-            seen[providerID] = true
-            result.push(providerID)
-            if (result.length >= maxOverviewProviders) {
-                break
-            }
-        }
-        return result
+        return OverviewProviders.configuredProviderIDs(value)
     }
 
     function overviewProviderIDsText(providerIDs) {
-        return providerIDs.length > 0 ? providerIDs.join(",") : overviewNoneValue
+        return OverviewProviders.selectionText(providerIDs)
     }
 
     function overviewProviderSelected(providerID) {
-        return resolvedOverviewProviderIDs().indexOf(ProviderOrder.normalizedProviderID(providerID)) !== -1
+        return OverviewProviders.isSelected(resolvedOverviewProviderIDs(), providerID)
     }
 
     function toggleOverviewProvider(providerID, checked) {
-        var selected = resolvedOverviewProviderIDs()
-        var selectedSet = ({})
-        for (var i = 0; i < selected.length; i++) {
-            selectedSet[selected[i]] = true
-        }
-
-        var key = ProviderOrder.normalizedProviderID(providerID)
-        if (key.length === 0) {
-            return
-        }
-        if (checked) {
-            if (!Guards.hasOwnKey(selectedSet, key) && selected.length >= maxOverviewProviders) {
-                return
-            }
-            selectedSet[key] = true
-        } else if (Guards.hasOwnKey(selectedSet, key)) {
-            delete selectedSet[key]
-        }
-
-        var ordered = []
-        for (var j = 0; j < orderedEnabledProviderRoster.length; j++) {
-            var candidate = ProviderOrder.normalizedProviderID(orderedEnabledProviderRoster[j].provider)
-            if (candidate.length > 0 && Guards.hasOwnKey(selectedSet, candidate) && ordered.indexOf(candidate) === -1) {
-                ordered.push(candidate)
-                if (ordered.length >= maxOverviewProviders) {
-                    break
-                }
-            }
-        }
-        // Preserve previously-selected providers that are no longer in the
-        // enabled list, so disabling a provider elsewhere does not silently
-        // drop it from the overview selection on the next toggle.
-        for (var k = 0; k < selected.length && ordered.length < maxOverviewProviders; k++) {
-            var prior = selected[k]
-            if (Guards.hasOwnKey(selectedSet, prior) && ordered.indexOf(prior) === -1) {
-                ordered.push(prior)
-            }
-        }
-        cfg_overviewProviderIDs = overviewProviderIDsText(ordered)
+        cfg_overviewProviderIDs = OverviewProviders.selectionText(OverviewProviders.toggledSelection(
+            overviewRosterProviderIDs(), resolvedOverviewProviderIDs(), providerID, checked))
     }
 
     function resetOverviewProvidersToAutomatic() {
