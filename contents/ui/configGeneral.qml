@@ -18,7 +18,7 @@ KCM.SimpleKCM {
     // scripts/test_ui_regressions.sh checks them against main.xml for drift.
     property string cfg_commandPathDefault: "codexbar"
     property alias cfg_refreshOnOpen: refreshOnOpenCheck.checked
-    property bool cfg_refreshOnOpenDefault: false
+    property bool cfg_refreshOnOpenDefault: true
     property alias cfg_privacyMode: privacyModeCheck.checked
     property bool cfg_privacyModeDefault: false
     property bool cfg_showPopupPace

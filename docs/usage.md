@@ -237,9 +237,11 @@ fields; track proposed extensions in the issue tracker.
   Free-form provider details are omitted; session copy actions are disabled.
   Stored data, existing clipboard contents and already-delivered notifications
   are unchanged. Provider setup and Diagnostics remain administrative surfaces.
-- Optional **General → Refresh when opening the popup** refreshes stale quotas
-  using the selected refresh interval, or five minutes with periodic refresh off.
-  It does not scan local cost history; failed attempts use the same cooldown.
+- **General → Refresh when opening the popup**, enabled by default, refreshes stale
+  quotas using the selected refresh interval, or five minutes with periodic refresh
+  off. Quotas newer than that window are reused, so opening the popup repeatedly
+  does not repeat the command. It does not scan local cost history; failed attempts
+  use the same cooldown. Turn it off to refresh only on the periodic interval.
 - **Popup** independently controls pace text/markers, credits/reset credits, and
   additional provider details/billing dashboards. These are visible by default;
   changing them does not refetch data or change panel metrics or alerts.
@@ -254,15 +256,18 @@ fields; track proposed extensions in the issue tracker.
 
 ## Default settings
 
-The defaults keep quota usage visible and reserve notifications for quota warnings
-and available updates. Percentages show **used** quota, matching the 80% warning
+The defaults keep quota usage visible and current, and reserve notifications for
+quota warnings and available updates. Opening the popup refreshes quotas that are
+already older than the refresh interval, so a resumed session does not present old
+measurements as current. Percentages show **used** quota, matching the 80% warning
 and 95% critical thresholds. Reset notifications are off until enabled.
 
 | Setting | Default |
 | --- | --- |
 | Command and provider source | `codexbar` from PATH; no provider or source override |
 | Usage refresh | Every 5 minutes |
-| Refresh on popup opening / privacy mode | Off |
+| Refresh on popup opening | On, only for quotas older than the refresh interval |
+| Privacy mode | Off |
 | Popup pace, credits and additional details | Shown |
 | Provider service status | Off; incident notifications become active when status fetching is enabled |
 | Local usage and spend history | On, 30 days, cost metric |
