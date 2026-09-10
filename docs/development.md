@@ -442,8 +442,10 @@ Four providers is the meter row the compact renderer caps at, so that batch is
 where panel content competes for width and items are surrendered.
 
 The runner rejects missing PNGs, clipped measured elements, incorrect base
-text/capsule counts, elided panel labels, and rendered text that is not one of
-the compositions the renderer offered.
+text/capsule counts, and rendered text that is not one of the compositions the
+renderer offered. It rejects an elided label only when a narrower composition
+would have fitted: the narrowest composition has nothing left to surrender, so
+eliding it is the documented last resort and passes.
 `index.html` filters the gallery by theme/provider count/
 orientation and base cases; `results.json` records configuration, text, and
 geometry; `source.json` identifies the source digest and Git revision when

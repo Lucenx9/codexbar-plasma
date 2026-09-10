@@ -458,6 +458,100 @@ TestCase {
         tryCompare(panel, "primaryText", applet.compactText());
     }
 
+    // Grows the usage segment until the full composition is as wide as the
+    // budget allows, so the next character would no longer fit.
+    function fillTextToBudget(panel, budget) {
+        var filler = "";
+        for (var i = 0; i < 200; i++) {
+            applet.usageText = filler + "W";
+            wait(0);
+            if (panel.textCompositionWidths[0] > budget) {
+                break;
+            }
+            filler = applet.usageText;
+        }
+        applet.usageText = filler;
+        wait(0);
+        return filler.length > 0;
+    }
+
+    // The budget stands in for the layout the panel has not built yet, so it
+    // has to agree with that layout in both directions. Reserving too little
+    // clips the row; reserving too much surrenders content while the space is
+    // free, which is the defect this whole path exists to prevent. The layout
+    // skips hidden elements, so each reserved gap must belong to a neighbour
+    // that is actually rendered.
+    function test_standaloneTextBudgetMatchesTheRenderedRow_data() {
+        return [
+            {tag: "meters hidden", metersHidden: true},
+            {tag: "meters shown", metersHidden: false}
+        ];
+    }
+
+    function test_standaloneTextBudgetMatchesTheRenderedRow(data) {
+        applet.metersHidden = data.metersHidden;
+        applet.panelOrder = ["identity", "text", "status", "meters"];
+        // Short fixed segments leave the usage segment room to grow into the
+        // budget; the point is the last pixel, not a long name.
+        applet.providerNameText = "Codex";
+        applet.creditsText = "9cr";
+        applet.usageText = "43% used";
+        var panel = createControl("CompactRepresentation", {applet: applet, height: 44});
+        if (!panel) return;
+        tryCompare(panel, "inlinePrimaryText", false);
+
+        // What the row spends on everything except the text, measured from the
+        // rendered layout rather than from the budget's own arithmetic. While
+        // the row is below the cap its width is the layout's own request, so
+        // the free space left for text follows without repeating the formula.
+        // The comparison retries because the row settles over several frames.
+        tryVerify(() => panel.desiredWidth < panel.maximumCompactWidth
+            && panel.primaryTextWidth > 0
+            && panel.primaryText === applet.compactText()
+            && panel.standaloneTextBudget
+                === panel.maximumCompactWidth - (panel.desiredWidth - panel.primaryTextWidth),
+            2000, "the standalone budget must equal the row's free space");
+
+        // The last pixel of that budget must also survive the real layout.
+        verify(fillTextToBudget(panel, panel.standaloneTextBudget));
+        var label = findItem(panel, item => item.visible && item.objectName === "panelStandaloneText");
+        tryVerify(() => label && label.visible && label.width > 0);
+        var message = JSON.stringify({text: label.text, width: label.width,
+            widths: panel.textCompositionWidths, budget: panel.standaloneTextBudget,
+            panelWidth: panel.width, maximum: panel.maximumCompactWidth});
+        // Reserved too much: a composition inside the budget was surrendered.
+        tryCompare(panel, "primaryText", applet.compactText(), 1000, "surrendered: " + message);
+        // Reserved too little: the row outgrew the panel and is being cut.
+        tryVerify(() => !label.truncated, 1000, "elided: " + message);
+        tryVerify(() => label.mapToItem(panel, label.width, 0).x <= panel.width,
+            1000, "clipped: " + message);
+    }
+
+    // The chosen composition index and the arrays it addresses are separate
+    // bindings. A configuration change re-evaluates them in either order, so an
+    // intermediate frame can index past a list that already shrank; the width
+    // it produces must stay an int, not undefined.
+    function test_staleCompositionIndexNeverYieldsUndefinedGeometry() {
+        var panel = createControl("CompactRepresentation", {applet: applet, height: 44});
+        if (!panel) return;
+        for (var index of [-1, 1.5, 99, NaN, undefined]) {
+            compare(panel.compositionText(index), "");
+            compare(panel.compositionWidth(index), 0);
+        }
+
+        applet.providerNameText = "";
+        applet.usageText = "";
+        applet.creditsText = "";
+        tryCompare(panel, "primaryText", "");
+        compare(panel.primaryTextWidth, 0);
+        compare(panel.inlineTextWidth, 0);
+        compare(panel.inlinePrimaryText, false);
+
+        applet.usageText = "57% remaining";
+        tryCompare(panel, "primaryText", "57% remaining");
+        verify(panel.primaryTextWidth > 0);
+    }
+
     function test_emptyQuotaRetainsWarningColor_data() {
         return [{tag: "standard", minimal: false}, {tag: "minimal", minimal: true}];
     }

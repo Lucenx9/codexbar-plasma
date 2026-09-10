@@ -55,21 +55,27 @@ Item {
     readonly property int textSlotOffset: Kirigami.Units.smallSpacing * 2
         + statusSlotWidth + meterRowWidth
     // Inline text sits inside the selected meter, one meter spacing after its
-    // capsules. The standalone element stands beside the identity icon instead.
+    // capsules, so that gap always exists. The standalone element stands in its
+    // own layout cell and pays a gap per neighbour it actually has: the layout
+    // skips hidden elements, so hiding the meters removes that gap with them.
     readonly property int inlineTextBudget: Math.max(0,
         maximumCompactWidth - textSlotOffset - meterSpacing)
     readonly property int standaloneTextBudget: Math.max(0,
-        maximumCompactWidth - textSlotOffset - Kirigami.Units.smallSpacing
+        maximumCompactWidth - textSlotOffset
+            - (hasProviderMeters ? Kirigami.Units.smallSpacing : 0)
             - (standaloneIdentityVisible
                 ? Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.smallSpacing : 0))
     readonly property int inlineTextIndex: PanelTextFit.fittedIndex(textCompositionWidths, inlineTextBudget)
     readonly property int textCompositionIndex: inlinePrimaryText
         ? inlineTextIndex
         : PanelTextFit.fittedIndex(textCompositionWidths, standaloneTextBudget)
-    readonly property string primaryText: textCompositionIndex >= 0
-        ? textCompositions[textCompositionIndex] : ""
-    readonly property int primaryTextWidth: textCompositionIndex >= 0
-        ? textCompositionWidths[textCompositionIndex] : 0
+    // The chosen index and the arrays it indexes are separate bindings, so a
+    // configuration change can re-evaluate one before the other and leave the
+    // index pointing past a list that has already shrunk. Read through these
+    // instead of indexing directly: an intermediate frame must fall back to no
+    // text, never assign undefined to the rendered width.
+    readonly property string primaryText: compositionText(textCompositionIndex)
+    readonly property int primaryTextWidth: compositionWidth(textCompositionIndex)
     readonly property var selectedProvider: applet.selectedCompactProvider()
     readonly property bool selectedProviderHasMeter: selectedProvider !== null && selectedProvider !== undefined
         && meterProviders.some(function(provider) { return provider.provider === selectedProvider.provider })
@@ -113,9 +119,8 @@ Item {
     readonly property int metersExtent: meterProviders.length * meterHeight
         + Math.max(0, meterProviders.length - 1) * meterSpacing
     readonly property int maximumCompactWidth: Kirigami.Units.gridUnit * 18
-    readonly property int inlineTextWidth: inlineTextIndex < 0
-        ? 0
-        : Math.min(textCompositionWidths[inlineTextIndex], inlineTextBudget)
+    readonly property int inlineTextWidth: Math.min(compositionWidth(inlineTextIndex),
+        inlineTextBudget)
     readonly property int desiredWidth: verticalPanel
         ? Kirigami.Units.iconSizes.small + Kirigami.Units.iconSizes.smallMedium + meterSpacing * 4
         : Math.min(maximumCompactWidth, Math.max(Kirigami.Units.gridUnit * 4.8,
@@ -150,6 +155,16 @@ Item {
             })) {
             compactRoot.applet.clearHoveredPanelProvider(hovered)
         }
+    }
+
+    function compositionText(index) {
+        var text = textCompositions[index]
+        return typeof text === "string" ? text : ""
+    }
+
+    function compositionWidth(index) {
+        var width = textCompositionWidths[index]
+        return typeof width === "number" && isFinite(width) && width > 0 ? width : 0
     }
 
     MouseArea {
