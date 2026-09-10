@@ -51,12 +51,20 @@ RowLayout {
 
         PlainToolTip {
             parent: copyButton
+            // A hover label for the button; it keeps the shared delay.
+            visible: copyButton.hovered && !valueRow.copied
+            plainText: valueRow.copyAccessibleName
+        }
+
+        PlainToolTip {
+            parent: copyButton
             // The copied confirmation is transient feedback for an action that
-            // already happened, so it appears at once; the hover label for the
-            // button keeps the shared delay.
-            delay: valueRow.copied ? 0 : Kirigami.Units.toolTipDelay
-            plainText: valueRow.copied ? i18n("Copied") : valueRow.copyAccessibleName
-            visible: copyButton.hovered || valueRow.copied
+            // already happened, so it rides its own visibility transition and
+            // stays immediate: flipping delay on an already-visible tooltip
+            // would not restart the pending hover delay.
+            delay: 0
+            visible: valueRow.copied
+            plainText: i18n("Copied")
         }
 
         onClicked: valueRow.copyRequested(valueRow.text)

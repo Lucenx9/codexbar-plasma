@@ -2865,10 +2865,19 @@ if "delay: 0" not in spend_view_text:
         "the heatmap cell readout must stay instant: it reports the cell under the pointer "
         "while the pointer scans the grid"
     )
-if "delay: valueRow.copied ? 0 : Kirigami.Units.toolTipDelay" not in copyable_value_text:
+if "visible: copyButton.hovered && !valueRow.copied" not in copyable_value_text:
     raise AssertionError(
-        "the copied confirmation must appear at once and outlive no hover delay, while the "
-        "copy button's own hover label keeps the shared delay"
+        "the copy button's hover label must hide while the copied confirmation is "
+        "shown, so feedback gets its own visibility transition"
+    )
+if "visible: valueRow.copied" not in copyable_value_text:
+    raise AssertionError(
+        "the copied confirmation must ride its own visibility transition: flipping delay "
+        "on an already-visible tooltip would not restart the pending hover delay"
+    )
+if "delay: 0" not in copyable_value_text:
+    raise AssertionError(
+        "the copied confirmation must appear at once and outlive no hover delay"
     )
 
 # Popup and panel labels that fill the available width must truncate. A long

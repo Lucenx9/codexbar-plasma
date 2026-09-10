@@ -152,7 +152,8 @@ require_in_surface panel "plainText: panelMoveUp.Accessible.name"
 require_in_surface panel "plainText: panelMoveDown.Accessible.name"
 require_in_surface providers "plainText: reloadProvidersButton.Accessible.name"
 require_in_surface notifications 'plainText: i18n("Uses the pace forecast reported by codexbar.")'
-require_in_file "$COPYABLE_VALUE_QML" 'plainText: valueRow.copied ? i18n("Copied") : valueRow.copyAccessibleName'
+require_in_file "$COPYABLE_VALUE_QML" 'plainText: valueRow.copyAccessibleName'
+require_in_file "$COPYABLE_VALUE_QML" 'plainText: i18n("Copied")'
 require_in_surface applet "parent: copyButton"
 require_in_surface panel "parent: panelMoveUp"
 require_in_surface panel "parent: panelMoveDown"
