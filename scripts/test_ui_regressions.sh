@@ -965,8 +965,11 @@ if "message.length > 0 ? message : i18n(\"codexbar did not return account data.\
     raise AssertionError("parseProviderAccountsOutput must not fabricate an account error for JSON []")
 
 dedupe_accounts_body = function_body(main_text, "dedupeAccountOptions")
-if 'var key = "account:" + label' not in dedupe_accounts_body:
-    raise AssertionError("dedupeAccountOptions must namespace labels before object-map lookup")
+if "accountOptionKey(items[i])" not in dedupe_accounts_body:
+    raise AssertionError("dedupeAccountOptions must dedupe on the validated account identity, not the display label")
+account_option_key_body = function_body(main_text, "accountOptionKey")
+if '"key:" + key' not in account_option_key_body or '"label:" + label' not in account_option_key_body:
+    raise AssertionError("dedupeAccountOptions must namespace identities before object-map lookup")
 if "hasOwnKey(seen, key)" not in dedupe_accounts_body:
     raise AssertionError(
         "dedupeAccountOptions must use an own-property check so labels such as "
@@ -1826,7 +1829,7 @@ for fragment in (
     "onSelectedIndexChanged: tokenCostSection.rememberDaySelection()",
     "CostPresentation.costDayIndexAfterRefresh(",
     "onCostHistoryShowsTokensChanged: clearDaySelection()",
-    "applet.accountLabel(providerData)",
+    "applet.accountKey(providerData)",
     "applet.setCostHistoryMetric(valueAt(index))",
 ):
     if fragment not in token_cost_section_body:
@@ -2126,7 +2129,7 @@ if ordered_provider_indexes != sorted(ordered_provider_indexes):
     raise AssertionError("Provider details, list boundary, heading, and rows must keep their visual order")
 
 notification_scope_body = function_body(main_text, "notificationScopeKey")
-for scope_fragment in ("providerMapKey(item.provider)", "selectedAccountForProvider", "accountLabel(item)", "JSON.stringify"):
+for scope_fragment in ("providerMapKey(item.provider)", "selectedAccountForProvider", "accountKey(item)", "JSON.stringify"):
     if scope_fragment not in notification_scope_body:
         raise AssertionError(
             "notificationScopeKey must include stable provider/account identity; "
@@ -2342,7 +2345,7 @@ for fresh_function in ("commitUsageSnapshot",):
     if received_index < 0 or received_index > providers_index:
         raise AssertionError(f"{fresh_function} must timestamp usage before publishing it")
 mark_fresh_body = function_body(main_text, "markNotificationProvidersFresh")
-selected_guard = "selectedAccount.length > 0 && accountLabel(item) !== selectedAccount"
+selected_guard = "selectedAccount.length > 0 && accountKey(item) !== selectedAccount"
 delete_pending_index = mark_fresh_body.find("delete nextPending[providerID]")
 if "item.error" in mark_fresh_body:
     raise AssertionError("usage errors must not discard fresh provider status before the planner classifies the evidence")
@@ -2351,7 +2354,7 @@ if "var selectedAccount = selectedAccountForProvider(providerID)" not in mark_fr
 if selected_guard not in mark_fresh_body or mark_fresh_body.find(selected_guard) > delete_pending_index:
     raise AssertionError("stale responses for a previous account must not clear notification suppression")
 if not re.search(
-    r"if\s*\(selectedAccount\.length\s*>\s*0\s*&&\s*accountLabel\(item\)\s*!==\s*selectedAccount\)\s*\{\s*continue\s*\}",
+    r"if\s*\(selectedAccount\.length\s*>\s*0\s*&&\s*accountKey\(item\)\s*!==\s*selectedAccount\)\s*\{\s*continue\s*\}",
     mark_fresh_body,
     re.S,
 ):

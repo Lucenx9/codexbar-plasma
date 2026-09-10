@@ -12,6 +12,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep accounts that differ only by internal spacing separately selectable and
+  pass the unmodified name to `--account`, instead of collapsing one label onto
+  the other and requesting the wrong account.
+- Never show the previous executable's cost data beside the new quotas after
+  the command source changes, even when the cost refresh fails.
+- Survive malformed provider status fields and keep the healthy providers of
+  the same refresh, settling loading instead of leaving it active.
 - Recover provider actions when a secret prompt stops responding: the dialog
   closes after a long escape-hatch deadline and the stuck pending state clears,
   instead of leaving the provider disabled until the settings page reopens.

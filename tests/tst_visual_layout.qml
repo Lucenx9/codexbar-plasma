@@ -74,6 +74,9 @@ TestCase {
         function accountLabel(item) {
             return item.account;
         }
+        function accountKey(item) {
+            return item.accountKey || item.account;
+        }
         function accountDisplayLabel(item, index) {
             return accountLabel(item);
         }

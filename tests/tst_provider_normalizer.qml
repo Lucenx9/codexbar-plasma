@@ -19,6 +19,7 @@ TestCase {
 
     function test_publishesTheDocumentedCollectionBounds() {
         compare(Normalizer.maximumProviderSnapshots, 256)
+        compare(Normalizer.maximumAccountIdentityLength, 256)
         compare(Normalizer.maximumAccountSnapshots, 128)
         compare(Normalizer.maximumCostSnapshots, 256)
         compare(Normalizer.maximumExtraRateWindows, 24)
@@ -423,6 +424,15 @@ TestCase {
         compare(Normalizer.statusSeverity(null), "")
     }
 
+    function test_statusSeverityRejectsStructuredIndicators() {
+        // Coercing these values runs a missing or hostile toString, which used
+        // to abort the whole usage refresh with a TypeError.
+        compare(Normalizer.statusSeverity({ indicator: { toString: null } }), "")
+        compare(Normalizer.statusSeverity({ indicator: ["major"] }), "")
+        compare(Normalizer.statusSeverity({ indicator: 42 }), "")
+        compare(Normalizer.statusSeverity({ indicator: null }), "")
+    }
+
     function test_readsTheIncidentKeyFromEveryContractSpelling() {
         compare(Normalizer.statusIncidentKey({ incidentId: "a1" }), "a1")
         compare(Normalizer.statusIncidentKey({ incident_id: "a2" }), "a2")
@@ -432,6 +442,13 @@ TestCase {
         compare(Normalizer.statusIncidentKey({ incident: {} }), "")
         compare(Normalizer.statusIncidentKey({}), "")
         compare(Normalizer.statusIncidentKey(null), "")
+    }
+
+    function test_statusIncidentKeyRejectsStructuredValues() {
+        compare(Normalizer.statusIncidentKey({ incidentId: { toString: null } }), "")
+        compare(Normalizer.statusIncidentKey({ incident: { id: { toString: null } } }), "")
+        compare(Normalizer.statusIncidentKey({ incidentId: ["a1"] }), "")
+        compare(Normalizer.statusIncidentKey({ incidentId: 0 }), "0")
     }
 
     function test_refusesToFollowAStatusUrlOffTheProviderHost() {
@@ -470,6 +487,41 @@ TestCase {
         var deduped = Normalizer.dedupeAccountOptions([{ account: { length: 3 } }, { account: "b@example.com" }])
         compare(deduped.length, 1)
         compare(deduped[0].account, "b@example.com")
+    }
+
+    function test_accountKeyValidatesWithoutRewritingTheIdentity() {
+        // Display text collapses "Work  Team" to "Work Team"; the key must keep
+        // the original spacing so selection still addresses the right account.
+        compare(Normalizer.accountKey({ account: "Work  Team" }), "Work  Team")
+        compare(Normalizer.accountKey({ account: "  padded@example.com  " }), "padded@example.com")
+        compare(Normalizer.accountKey({ account: "", organization: "Org  Name" }), "Org  Name")
+        compare(Normalizer.accountKey({ account: 42, organization: 7, loginMethod: "oauth" }), "oauth")
+        compare(Normalizer.accountKey({ account: { length: 3 }, organization: "Org" }), "Org")
+        compare(Normalizer.accountKey({ account: ["a@example.com"] }), "")
+        compare(Normalizer.accountKey(null), "")
+        var overlong = ""
+        for (var i = 0; i < Normalizer.maximumAccountIdentityLength + 1; i++) {
+            overlong += "a"
+        }
+        compare(Normalizer.accountKey({ account: overlong }), "")
+    }
+
+    function test_accountKeyPrefersTheValidatedSnapshotKey() {
+        // A normalized snapshot's display fields are already collapsed, so the
+        // stored key is the only copy of the original spacing.
+        compare(Normalizer.accountKey({ account: "Work Team", accountKey: "Work  Team" }), "Work  Team")
+    }
+
+    function test_dedupeAccountOptionsKeepsSpacingVariantsSeparate() {
+        var options = [
+            { provider: "codex", account: "Work Team", accountKey: "Work  Team" },
+            { provider: "codex", account: "Work Team", accountKey: "Work Team" },
+            { provider: "codex", account: "Work Team", accountKey: "Work Team" }
+        ]
+        var deduped = Normalizer.dedupeAccountOptions(options)
+        compare(deduped.length, 2)
+        compare(deduped[0].accountKey, "Work  Team")
+        compare(deduped[1].accountKey, "Work Team")
     }
 
     function test_dedupesAccountsWithoutLosingPrototypeNamedOnes() {

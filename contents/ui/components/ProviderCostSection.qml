@@ -10,7 +10,7 @@ ColumnLayout {
 
     required property var applet
     required property var providerData
-    property string accountSelectionKey: applet.accountLabel(providerData)
+    property string accountSelectionKey: applet.accountKey(providerData)
     property bool presentationVisible: false
     property bool detailsExpanded: false
     property var daySelectionMemo: ({ points: [], index: -1 })
