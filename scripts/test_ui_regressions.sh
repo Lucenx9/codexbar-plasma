@@ -2825,6 +2825,11 @@ if "onActiveIndexChanged: if (activeIndex >= 0 && activeIndex < pointCount)" not
         "the chart readout must retain the last inspected point across the fade-out, and must "
         "bounds-check inline: hasActivePoint is still stale inside an activeIndex change handler"
     )
+if interactive_chart_text.count("Accessible.ignored: !chart.hasActivePoint") != 2:
+    raise AssertionError(
+        "both retained chart readout labels must leave the accessibility tree when no point is "
+        "active: the text outlives the fade and a zero opacity does not hide it from a screen reader"
+    )
 if "chart.hasActivePoint ? chart.pointLabel" in interactive_chart_text:
     raise AssertionError(
         "the chart readout text must not clear on hasActivePoint: that empties the row "

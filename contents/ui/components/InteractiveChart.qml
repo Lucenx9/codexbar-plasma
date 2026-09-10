@@ -98,6 +98,11 @@ ColumnLayout {
 
         PlainPlasmaLabel {
             text: chart.readoutValid ? chart.pointLabel(chart.points[chart.readoutIndex]) : ""
+            // The retained text outlives the fade, and a zero opacity does not
+            // take an item out of the accessibility tree the way visibility
+            // would. Without this a screen reader could still announce the last
+            // point while the plot itself says to use the arrow keys.
+            Accessible.ignored: !chart.hasActivePoint
             opacity: chart.applet.secondaryTextOpacity
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             Layout.fillWidth: true
@@ -106,6 +111,7 @@ ColumnLayout {
 
         PlainPlasmaLabel {
             text: chart.readoutValid ? chart.pointDisplayValue(chart.points[chart.readoutIndex]) : ""
+            Accessible.ignored: !chart.hasActivePoint
             font.weight: Font.DemiBold
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             horizontalAlignment: Text.AlignRight
