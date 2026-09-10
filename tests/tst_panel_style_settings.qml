@@ -227,4 +227,26 @@ TestCase {
         compare(page.selectedPanelProviderCount(), 1);
         verify(page.panelProviderSelected("codex"));
     }
+
+    function test_automaticSelectionsNormalizeProviderIDs() {
+        var page = createPage();
+        if (!page) return;
+        var controller = findChild(page, "panelProviderRosterController");
+        controller.enabledProviderRoster = [
+            {provider: "GROQCLOUD", displayName: "Groq"},
+            {provider: "Codex", displayName: "Codex"},
+            {provider: "Future-AI", displayName: "Future AI"},
+            {provider: "claude", displayName: "Claude"}
+        ];
+        compare(page.selectedPanelProviderCount(), 4);
+        compare(page.resolvedPanelProviderIDs().join(","), "groq,codex,future-ai,claude");
+        verify(page.panelProviderSelected("GROQCLOUD"));
+        verify(page.panelProviderSelected("Codex"));
+        verify(page.panelProviderSelected("Future-AI"));
+        compare(page.cfg_panelProviderIDs, "");
+        page.togglePanelProvider("GROQCLOUD", false);
+        compare(page.cfg_panelProviderIDs, "codex,future-ai,claude");
+        verify(!page.panelProviderSelected("groq"));
+        compare(page.selectedPanelProviderCount(), 3);
+    }
 }

@@ -20,6 +20,7 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   providers, as before. Clearing every checkbox keeps the widget icon without
   provider text or meters. Disabled providers keep their saved selection without
   blocking new choices; only the first four enabled selections appear.
+  Automatic checkboxes recognize provider aliases and mixed-case IDs.
   The preview uses enabled provider names after the selection list loads, with
   synthetic measurements for every provider.
 

@@ -145,7 +145,7 @@ KCM.SimpleKCM {
         var automatic = []
         for (var i = 0; i < orderedPanelProviderRoster.length
                 && automatic.length < PanelProviders.maximumSelectableProviders; i++) {
-            automatic.push(orderedPanelProviderRoster[i].provider)
+            automatic.push(ProviderOrder.normalizedProviderID(orderedPanelProviderRoster[i].provider))
         }
         return automatic
     }
