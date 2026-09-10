@@ -16,13 +16,13 @@ TestCase {
             return null;
         }
         compare(component.status, Component.Ready, component.errorString());
-        failOnWarning(/.*/);
         var controller = createTemporaryObject(component, testCase, {active: false, commandPath: "/usr/bin/true"});
         verify(controller !== null);
         return controller;
     }
 
     function test_deactivationCancelsQueuedLoad() {
+        failOnWarning(/.*/);
         var controller = createController();
         if (!controller) return;
         controller.active = true;
@@ -35,6 +35,9 @@ TestCase {
     }
 
     function test_deactivationRetiresRepliesAndLoadingState() {
+        // Plasma can destroy the shell while this test intentionally cancels it.
+        // Keep every other warning fatal, including in the queued-load test.
+        failOnWarning(/^(?!QProcess: Destroyed while process \("\/bin\/sh"\) is still running\.$).*/);
         var controller = createController();
         if (!controller) return;
         controller.active = true;
