@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.37 - 2026-09-10
+
 ### Added
 
 - Choose which providers appear in the panel through **Panel → Panel
@@ -156,6 +158,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Recognize provider aliases and mixed-case IDs in the Overview provider
   checkboxes, matching the runtime selection and the panel provider selection,
   so a stored choice stays checked when the roster spells it differently.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.36...v0.2.37)
 
 ## 0.2.36 - 2026-09-09
 
