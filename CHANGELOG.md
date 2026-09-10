@@ -35,6 +35,16 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Avoid tab overflow controls during initialization.
 - Anchor tab tooltips to their hover areas and improve accessibility labels for
   heatmap cells and decorative controls.
+- Animate the panel provider meter hover/press highlight and the Usage & Spend
+  heatmap cell hover outline, matching the smooth transitions already used for
+  every other interactive surface in the popup. The heatmap outline is a
+  separate overlay, so the cell's painted fill never shifts on hover.
+- Confirm hover on session cards, which reveal copy actions on hover but
+  previously left the card surface unchanged.
+- Fade the chart readout in and out with the hovered point instead of blinking
+  the label and value on every pointer entry and exit.
+- Fade the tab selection indicator with the tab background it sits under,
+  instead of blinking the accent bar on every tab change.
 
 ## 0.2.36 - 2026-09-09
 

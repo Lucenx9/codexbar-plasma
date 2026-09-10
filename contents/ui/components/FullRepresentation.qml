@@ -375,7 +375,12 @@ Item {
                             anchors.bottomMargin: 2
                             height: 2
                             radius: height / 2
-                            color: overviewTab.selected ? overviewTab.accent : "transparent"
+                            color: applet.withAlpha(overviewTab.accent,
+                                overviewTab.selected ? 1 : 0)
+
+                            Behavior on color {
+                                ColorAnimation { duration: Kirigami.Units.shortDuration }
+                            }
                         }
                     }
 
@@ -589,8 +594,13 @@ Item {
                                 radius: height / 2
                                 color: providerTab.meter >= 0
                                     ? applet.withAlpha(Kirigami.Theme.textColor, 0.12)
-                                    : (providerTab.selected ? providerTab.accent : "transparent")
+                                    : applet.withAlpha(providerTab.accent,
+                                        providerTab.selected ? 1 : 0)
                                 clip: true
+
+                                Behavior on color {
+                                    ColorAnimation { duration: Kirigami.Units.shortDuration }
+                                }
 
                                 Rectangle {
                                     visible: providerTab.meter >= 0

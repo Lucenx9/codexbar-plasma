@@ -18,6 +18,12 @@ ColumnLayout {
     property int selectedIndex: -1
     property int hoveredIndex: -1
     readonly property int activeIndex: hoveredIndex >= 0 ? hoveredIndex : selectedIndex
+    // The readout holds the last inspected point so it survives the fade-out.
+    // Binding its text to hasActivePoint would empty the row on the same signal
+    // that starts the fade, leaving the common hover-exit path still blinking.
+    // Bounds are rechecked on read: a shorter points array may strand this.
+    property int readoutIndex: -1
+    readonly property bool readoutValid: readoutIndex >= 0 && readoutIndex < pointCount
     readonly property int pointCount: points && typeof points.length === "number" ? points.length : 0
     readonly property bool hasActivePoint: activeIndex >= 0 && activeIndex < pointCount
     readonly property var valueDomain: ChartScale.domain(points)
@@ -25,6 +31,13 @@ ColumnLayout {
 
     Layout.fillWidth: true
     spacing: Kirigami.Units.smallSpacing / 2
+
+    // Bounds are rechecked inline rather than through hasActivePoint: a
+    // binding that depends on activeIndex is still stale while this handler,
+    // fired by the same change, is running.
+    onActiveIndexChanged: if (activeIndex >= 0 && activeIndex < pointCount) {
+        readoutIndex = activeIndex
+    }
 
     function pointValue(point) {
         return ChartScale.pointValue(point)
@@ -71,11 +84,25 @@ ColumnLayout {
     }
 
     RowLayout {
+        // Fading keeps the row from blinking as the pointer enters and leaves
+        // the plot; the reserved height keeps the chart from shifting either way.
+        opacity: chart.hasActivePoint ? 1 : 0
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
 
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Kirigami.Units.shortDuration
+            }
+        }
+
         PlainPlasmaLabel {
-            text: chart.hasActivePoint ? chart.pointLabel(chart.points[chart.activeIndex]) : ""
+            text: chart.readoutValid ? chart.pointLabel(chart.points[chart.readoutIndex]) : ""
+            // The retained text outlives the fade, and a zero opacity does not
+            // take an item out of the accessibility tree the way visibility
+            // would. Without this a screen reader could still announce the last
+            // point while the plot itself says to use the arrow keys.
+            Accessible.ignored: !chart.hasActivePoint
             opacity: chart.applet.secondaryTextOpacity
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             Layout.fillWidth: true
@@ -83,7 +110,8 @@ ColumnLayout {
         }
 
         PlainPlasmaLabel {
-            text: chart.hasActivePoint ? chart.pointDisplayValue(chart.points[chart.activeIndex]) : ""
+            text: chart.readoutValid ? chart.pointDisplayValue(chart.points[chart.readoutIndex]) : ""
+            Accessible.ignored: !chart.hasActivePoint
             font.weight: Font.DemiBold
             font.pixelSize: Kirigami.Theme.smallFont.pixelSize
             horizontalAlignment: Text.AlignRight

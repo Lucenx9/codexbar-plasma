@@ -1571,10 +1571,11 @@ for stale_global_pointer_focus_fragment in ("focusAcquiredByPointer",):
 provider_tab_body = id_block(main_text, "providerTab")
 if (
     "color: providerTab.meter >= 0" not in provider_tab_body
-    or "providerTab.selected ? providerTab.accent : \"transparent\"" not in provider_tab_body
+    or "withAlpha(providerTab.accent," not in provider_tab_body
+    or "providerTab.selected ? 1 : 0" not in provider_tab_body
 ):
     raise AssertionError(
-        "providerTab must show the accent underline when selected for unmetered providers"
+        "providerTab must fade in the accent underline when selected for unmetered providers"
     )
 
 usage_percent_body = id_block(provider_usage_row_text, "usagePercentLabel")
@@ -2805,8 +2806,41 @@ if "view.dailyPoints.length - 42" in spend_view_text:
     )
 if 'valueRow.copied ? "checkmark" : "edit-copy"' not in copyable_value_text:
     raise AssertionError("CopyableValue must provide immediate checkmark icon feedback when copied")
-if "heatmapMouse.containsMouse ? 1 : 0" not in spend_view_text:
-    raise AssertionError("SpendView activity heatmap cells must display hover highlight feedback")
+if "heatmapMouse.containsMouse ? 0.4 : 0" in spend_view_text:
+    raise AssertionError(
+        "the heatmap hover outline must not fade a border's own alpha: Qt treats a zero-alpha "
+        "pen as invalid and paints a zero-width border, snapping the cell fill out to the edge"
+    )
+if "opacity: heatmapMouse.containsMouse ? 1 : 0" not in spend_view_text:
+    raise AssertionError(
+        "SpendView activity heatmap cells must fade a dedicated hover outline overlay, so the "
+        "painted fill geometry never depends on hover"
+    )
+if "sessionCardHover.hovered ? 0.075 : 0.035" not in sessions_view_text:
+    raise AssertionError("session cards must confirm hover on the surface that reveals their copy actions")
+if "opacity: chart.hasActivePoint ? 1 : 0" not in interactive_chart_text:
+    raise AssertionError("the chart readout must fade with the active point instead of blinking")
+if "onActiveIndexChanged: if (activeIndex >= 0 && activeIndex < pointCount)" not in interactive_chart_text:
+    raise AssertionError(
+        "the chart readout must retain the last inspected point across the fade-out, and must "
+        "bounds-check inline: hasActivePoint is still stale inside an activeIndex change handler"
+    )
+if interactive_chart_text.count("Accessible.ignored: !chart.hasActivePoint") != 2:
+    raise AssertionError(
+        "both retained chart readout labels must leave the accessibility tree when no point is "
+        "active: the text outlives the fade and a zero opacity does not hide it from a screen reader"
+    )
+if "chart.hasActivePoint ? chart.pointLabel" in interactive_chart_text:
+    raise AssertionError(
+        "the chart readout text must not clear on hasActivePoint: that empties the row "
+        "on the same signal that starts the fade, so hover exit blinks instead of fading"
+    )
+if "tab.applet.withAlpha(tab.accent, tab.selected ? 1 : 0)" not in global_tab_text:
+    raise AssertionError(
+        "the tab selection indicator must fade the accent's alpha, not interpolate towards transparent"
+    )
+if "applet.withAlpha(overviewTab.accent," not in full_representation_text:
+    raise AssertionError("the overview tab indicator must fade its accent alpha like the shared tab")
 
 normalize_provider_body = function_body(main_text, "normalizeProvider")
 if "statusKnown: status !== null" not in normalize_provider_body:

@@ -327,6 +327,12 @@ Item {
                         radius: Kirigami.Units.smallSpacing
                         color: compactRoot.applet.withAlpha(Kirigami.Theme.textColor,
                             compactMeterMouse.pressed ? 0.14 : (compactMeterMouse.containsMouse ? 0.07 : 0))
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Kirigami.Units.shortDuration
+                            }
+                        }
                     }
 
                     Rectangle {

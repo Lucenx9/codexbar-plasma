@@ -174,6 +174,12 @@ Rectangle {
         anchors.bottomMargin: 2
         height: 2
         radius: height / 2
-        color: tab.selected ? tab.accent : "transparent"
+        // Fading the accent's alpha keeps the hue fixed: interpolating towards
+        // "transparent" would drag the bar through a darker colour on the way out.
+        color: tab.applet.withAlpha(tab.accent, tab.selected ? 1 : 0)
+
+        Behavior on color {
+            ColorAnimation { duration: Kirigami.Units.shortDuration }
+        }
     }
 }
