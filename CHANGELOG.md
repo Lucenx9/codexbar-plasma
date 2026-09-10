@@ -15,8 +15,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Recover provider actions when a secret prompt stops responding: the dialog
   closes after a long escape-hatch deadline and the stuck pending state clears,
   instead of leaving the provider disabled until the settings page reopens.
-- Complete provider fallback slots and account refreshes even when a malformed
-  reply fails late, instead of stalling that work until the next full refresh.
+  Late submissions retain the full bounded save window.
+- Complete provider fallback slots when a malformed reply fails late, and
+  report account normalization failures as errors for the affected provider.
+- Keep provider configuration polling connected when another widget instance
+  has already cached a response for the same command.
 - Keep the provider cost metric picker in sync with the shared cost and token
   history selection after picking an entry.
 - Keep the Panel settings preview visible while scrolling through content,

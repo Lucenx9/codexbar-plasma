@@ -785,10 +785,11 @@ PlasmoidItem {
                 && connectedProviderConfigWatchCommand !== providerConfigWatchCommand) {
             providerConfigWatcher.disconnectSource(connectedProviderConfigWatchCommand)
         }
+        // Connecting to a shared source can synchronously deliver cached data.
+        connectedProviderConfigWatchCommand = providerConfigWatchCommand
         if (providerConfigWatchCommand.length > 0) {
             providerConfigWatcher.connectSource(providerConfigWatchCommand)
         }
-        connectedProviderConfigWatchCommand = providerConfigWatchCommand
     }
 
     function handleProviderConfigWatch(stdoutText) {
@@ -1288,9 +1289,8 @@ PlasmoidItem {
             return
         }
 
-        // The ledger entry is already closed, so an unexpected failure here
-        // must still release the account lane instead of leaving it loading
-        // until the page reopens.
+        // The ledger entry is already closed; still report a scoped error if
+        // normalization fails after JSON parsing.
         try {
             var payload = JSON.parse(trimmed)
 

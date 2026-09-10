@@ -71,18 +71,15 @@ KCM.SimpleKCM {
     readonly property int configCommandTimeoutMs: 60000
     readonly property int configSecretCommandTimeoutSeconds: 60
     readonly property int configSecretCommandKillAfterSeconds: 5
-    // An interactive prompt must not die while the user types, so it does not
-    // share the noninteractive deadline. A wedged kdialog would otherwise keep
-    // the provider's actions disabled until the page reopens, so the prompt
-    // still gets one long escape-hatch deadline. The bounded post-prompt CLI
-    // phase below applies once input closes.
-    readonly property int configSecretPromptTimeoutMs: 900000
-    // kdialog is a grandchild of the tracked source, so the ledger deadline
-    // only kills the script shell and would orphan the dialog. The dialog
-    // phase therefore runs under its own timeout, just under the deadline, so
-    // the script exits with a clean cancellation before the disconnect.
+    // Bound kdialog itself because disconnecting its shell can orphan it.
+    // Keep a long input window separate from the short CLI timeout.
     readonly property int configSecretPromptDialogTimeoutSeconds: 870
     readonly property int configSecretPromptDialogKillAfterSeconds: 5
+    // A late submission still gets the full CLI timeout and kill grace.
+    // Allow five seconds for startup and result delivery before disconnecting.
+    readonly property int configSecretPromptTimeoutMs:
+        (configSecretPromptDialogTimeoutSeconds + configSecretPromptDialogKillAfterSeconds
+         + configSecretCommandTimeoutSeconds + configSecretCommandKillAfterSeconds) * 1000 + 5000
     // Mirrors the popup de-emphasis step in main.qml. 0.7 is the lowest value
     // where Kirigami.Theme.textColor still clears WCAG AA 4.5:1 on Breeze Light.
     readonly property real secondaryTextOpacity: 0.7

@@ -48,7 +48,7 @@ require_in_surface applet "property bool connectedUpdateInstallMode: false"
 require_in_surface applet "property bool pendingAutomaticUpdateCheck: false"
 
 require_in_surface providers "readonly property int configCommandTimeoutMs: 60000"
-require_in_surface providers "readonly property int configSecretPromptTimeoutMs: 900000"
+require_in_surface providers "readonly property int configSecretPromptTimeoutMs:"
 require_in_surface providers "readonly property int configSecretCommandTimeoutSeconds: 60"
 require_in_surface providers "readonly property int configSecretCommandKillAfterSeconds: 5"
 require_in_surface providers "id: configCommandTimeoutTimer"
@@ -172,7 +172,7 @@ accounts_parse_body = applet.function_body("parseProviderAccountsOutput")
 require_all(
     accounts_parse_body[accounts_parse_body.rfind("} catch (error) {"):],
     ("setAccountError(providerID,",),
-    "an unexpected account parse failure must release the lane with a scoped error",
+    "an unexpected account parse failure must report a scoped error",
 )
 
 require_all(
@@ -558,14 +558,14 @@ require_ordered(
     ),
     "a changed provider config checksum must invalidate and refresh the roster",
 )
-require_all(
+require_ordered(
     applet.function_body("reconnectProviderConfigWatcher"),
     (
         "providerConfigWatcher.disconnectSource(connectedProviderConfigWatchCommand)",
-        "providerConfigWatcher.connectSource(providerConfigWatchCommand)",
         "connectedProviderConfigWatchCommand = providerConfigWatchCommand",
+        "providerConfigWatcher.connectSource(providerConfigWatchCommand)",
     ),
-    "watcher reconnect must retire the old poll before following the new command",
+    "watcher reconnect must retire the old poll and register the new command before cached replies arrive",
 )
 require_all(
     applet.id_block("providerConfigWatcher"),
