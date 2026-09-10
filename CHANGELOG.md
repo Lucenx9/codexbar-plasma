@@ -12,6 +12,25 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep accounts that differ only by internal spacing separately selectable and
+  pass the unmodified name to `--account`, instead of collapsing one label onto
+  the other and requesting the wrong account.
+- Never show the previous executable's cost data beside the new quotas after
+  the command source changes, even when the cost refresh fails.
+- Survive malformed provider status fields and keep the healthy providers of
+  the same refresh, settling loading instead of leaving it active.
+- Revalidate carried account keys before use, so a blank or overlong stored
+  key falls back to the snapshot identity instead of reaching deduplication,
+  selection, or the `--account` argument.
+- Skip structured account identity fields when choosing the `--account`
+  identity, so a malformed value cannot mask a valid fallback from another
+  identity field.
+- Screen the provider id inside the per-provider guard during usage parsing,
+  so a failing identity read drops only its own provider instead of aborting
+  the whole refresh.
+- Retain failed providers after a partial cost reply only from the same
+  command source, so a source change cannot re-tag the previous executable's
+  costs with the new source.
 - Show the panel incident badge on the affected provider's own meter icon, so
   reordering providers moves the outage marker with that provider instead of
   leaving a dot beside whichever provider comes first. The badge stays visible

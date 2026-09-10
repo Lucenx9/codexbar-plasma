@@ -13,7 +13,8 @@ sys.path.insert(0, str(ROOT / "scripts/lib"))
 from qml_surfaces import Surface
 
 FUNCTIONS = (
-    "copyObject", "providerMapKey", "accountLabel", "selectedAccountForProvider",
+    "copyObject", "providerMapKey", "accountLabel", "accountKey",
+    "selectedAccountForProvider",
     "markNotificationProvidersFresh", "notificationProviderRefreshPending",
     "notificationScopeKey", "notificationObservationRows", "notificationObservations",
     "quotaNotificationLevel", "paceWarningActive", "notificationPlannerOptions",
@@ -43,6 +44,8 @@ TestCase {
     property var providers: []
     property var tokenCosts: ({})
     property int costHistoryDays: 30
+    property string costCommandSource: "codexbar cost --format json --json-only --days 30"
+    property string tokenCostsContext: "codexbar cost --format json --json-only --days 30"
 
     SOURCE_FUNCTIONS
 

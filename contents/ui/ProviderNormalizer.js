@@ -25,6 +25,7 @@
 
 var maximumProviderSnapshots = 256
 var maximumAccountSnapshots = 128
+var maximumAccountIdentityLength = 256
 var maximumCostSnapshots = 256
 var maximumCostProjects = 128
 var maximumExtraRateWindows = 24
@@ -254,11 +255,24 @@ function rateWindowMetrics(window, pace, usageKnown) {
     }
 }
 
+// CLI-controlled text that must never throw while being read. Only genuine
+// scalars survive: coercing an object runs its toString, which a malformed
+// payload may have nulled, and would otherwise abort the whole refresh.
+function safeScalarText(value) {
+    if (typeof value === "string") {
+        return value
+    }
+    if (typeof value === "number" || typeof value === "boolean") {
+        return String(value)
+    }
+    return ""
+}
+
 function statusSeverity(status) {
     if (!status) {
         return ""
     }
-    var indicator = String(status.indicator || "").toLowerCase()
+    var indicator = safeScalarText(status.indicator).toLowerCase()
     switch (indicator) {
     case "minor":
     case "maintenance":
@@ -282,14 +296,15 @@ function statusIncidentKey(status) {
         "id"
     ]
     for (var i = 0; i < keys.length; i++) {
-        var value = status[keys[i]]
-        if (value !== null && value !== undefined && String(value).length > 0) {
-            return String(value)
+        var text = safeScalarText(status[keys[i]])
+        if (text.length > 0) {
+            return text
         }
     }
     var incident = status.incident || null
-    if (incident && incident.id !== null && incident.id !== undefined && String(incident.id).length > 0) {
-        return String(incident.id)
+    var incidentText = incident ? safeScalarText(incident.id) : ""
+    if (incidentText.length > 0) {
+        return incidentText
     }
     return ""
 }
@@ -333,6 +348,66 @@ function accountLabel(item) {
     return ""
 }
 
+// The `--account` identity: validated, never rewritten. Display text may
+// collapse whitespace, redact, and truncate, but none of that may feed back
+// into selection or the `--account` argument, where two names that differ only
+// by collapsed characters still address different accounts. A normalized
+// snapshot already carries its validated key; recomputing it from the
+// collapsed display fields would lose the original spacing, so a carried key
+// is reused once it passes the same blank and length checks as a fresh
+// candidate. Overlong or non-string identities carry no key and stay
+// display-only.
+function accountKey(item) {
+    if (!isCliRecord(item)) {
+        return ""
+    }
+    if (typeof item.accountKey === "string"
+            && item.accountKey.trim().length > 0
+            && item.accountKey.length <= maximumAccountIdentityLength) {
+        return item.accountKey
+    }
+    var candidates = [item.account, item.organization, item.loginMethod]
+    for (var i = 0; i < candidates.length; i++) {
+        if (typeof candidates[i] !== "string") {
+            continue
+        }
+        var identity = candidates[i].trim()
+        if (identity.length > 0 && identity.length <= maximumAccountIdentityLength) {
+            return identity
+        }
+    }
+    return ""
+}
+
+// First candidate that survives the account-identity validation. A truthy but
+// structured value must not mask a valid fallback: `accountKey` skips
+// non-strings, so selecting `item.account || identity.accountEmail` directly
+// would keep an object and lose the fallback identity.
+function firstValidAccountIdentity(candidates) {
+    if (!Array.isArray(candidates)) {
+        return ""
+    }
+    for (var i = 0; i < candidates.length; i++) {
+        if (typeof candidates[i] === "string"
+                && accountKey({ account: candidates[i] }).length > 0) {
+            return candidates[i]
+        }
+    }
+    return ""
+}
+
+function accountOptionKey(item) {
+    var key = accountKey(item)
+    if (key.length > 0) {
+        return "key:" + key
+    }
+    var label = accountLabel(item)
+    if (label.length === 0) {
+        return ""
+    }
+    return "label:" + label
+}
+
 function dedupeAccountOptions(items) {
     if (!Array.isArray(items)) {
         return []
@@ -341,9 +416,8 @@ function dedupeAccountOptions(items) {
     var result = []
     var itemLimit = Math.min(items.length, maximumAccountSnapshots)
     for (var i = 0; i < itemLimit; i++) {
-        var label = accountLabel(items[i])
-        var key = "account:" + label
-        if (label.length === 0 || hasOwnKey(seen, key)) {
+        var key = accountOptionKey(items[i])
+        if (key.length === 0 || hasOwnKey(seen, key)) {
             continue
         }
         seen[key] = true

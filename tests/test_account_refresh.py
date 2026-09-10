@@ -14,8 +14,8 @@ from qml_surfaces import Surface
 
 FUNCTIONS = (
     "buildCommand", "shellQuote", "copyObject", "providerMapKey", "accountLabel",
-    "selectedAccountForProvider", "accountOptionsForProvider", "selectAccount",
-    "scheduleUsageRefresh",
+    "accountKey", "selectedAccountForProvider", "accountOptionsForProvider",
+    "selectAccount", "scheduleUsageRefresh",
 )
 
 QML = '''import QtQuick
@@ -68,6 +68,28 @@ TestCase {
             {tag: "multi-uncached", provider: "", cached: false},
             {tag: "multi-cached", provider: "", cached: true}
         ];
+    }
+
+    function test_accountSelectionKeepsOriginalIdentifierSpacing() {
+        // "Work  Team" and "Work Team" collapse to one display label, but the
+        // stored selection and the --account argument must keep the original.
+        var identity = "Work  Team";
+        var snapshot = {provider: "codex", account: "Work Team", accountKey: identity};
+        var applet = createTemporaryObject(harness, this, {
+            provider: "codex",
+            accountOptions: ({codex: [snapshot]})
+        });
+        verify(applet !== null);
+        wait(0);
+        applet.refreshes = [];
+        applet.selectAccount("codex", identity);
+        compare(applet.selectedAccountForProvider("codex"), identity);
+        compare(applet.cachedSnapshot, snapshot);
+        tryVerify(function() { return applet.refreshes.length > 0; });
+        wait(0);
+        compare(applet.refreshes.length, 1);
+        compare(applet.refreshes[0].account, identity);
+        verify(applet.refreshes[0].command.indexOf("--account 'Work  Team'") !== -1);
     }
 
     function test_oneRefreshAfterAccountSelection(data) {
