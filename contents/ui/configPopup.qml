@@ -14,6 +14,15 @@ import "SafeText.js" as SafeText
 KCM.SimpleKCM {
     id: page
 
+    readonly property Controls.ScrollView scrollView: contentItem as Controls.ScrollView
+
+    // Reserve the themed scrollbar width even when initial overflow disappears.
+    Binding {
+        target: page.scrollView
+        property: page.mirrored ? "leftPadding" : "rightPadding"
+        value: page.scrollView.Controls.ScrollBar.vertical.implicitWidth
+    }
+
     property string cfg_commandPath
     property string cfg_commandPathDefault: "codexbar"
     property alias cfg_usageBarsShowUsed: usageBarsShowUsedCheck.checked
@@ -530,6 +539,8 @@ KCM.SimpleKCM {
             Kirigami.FormData.label: i18n("Overview providers:")
             Kirigami.FormData.labelAlignment: Qt.AlignTop
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             spacing: Kirigami.Units.smallSpacing
 
             Components.PlainControlsLabel {

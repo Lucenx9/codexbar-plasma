@@ -22,6 +22,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep Popup and Notifications settings text and controls in place while the
+  page opens. The themed scrollbar gutter stays reserved instead of appearing
+  and then disappearing as the content settles, and the Popup overview section
+  carries the same width bound as its provider-order sibling while the provider
+  list arrives.
 - Keep the stored value in the editable settings fields for the custom refresh
   interval, the update check interval, and both quota thresholds when the typed
   text holds no number, instead of replacing a configured value with an

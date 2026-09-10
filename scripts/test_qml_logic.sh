@@ -36,6 +36,9 @@ if [[ -x "$QT_PATHS_TOOL" ]] \
   QT_QUICK_CONTROLS_STYLE=org.kde.desktop QT_QPA_PLATFORMTHEME=kde \
     QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
     run_qml_tests -input "$ROOT_DIR/tests/tst_panel_settings_geometry.qml"
+  QT_QUICK_CONTROLS_STYLE=org.kde.desktop QT_QPA_PLATFORMTHEME=kde \
+    QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+    run_qml_tests -input "$ROOT_DIR/tests/tst_popup_notifications_geometry.qml"
 else
   if [[ "${QML_TEST_REQUIRE_NO_SKIPS:-0}" == 1 ]]; then
     echo "org.kde.desktop is required for the desktop-style checks." >&2
