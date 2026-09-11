@@ -2498,13 +2498,18 @@ for caller in ("parseOutput", "finishProviderFallback"):
 restore_body = function_body(main_text, "restoreUsageCache")
 restore_steps = [restore_body.find(fragment) for fragment in (
     "UsageCache.decode(", "root.normalizeProvider(payload)", "item.tokenCost = null",
-    "UsageCache.restore(cachedProviders, providers, nowMs)",
+    "UsageCache.restore(cachedProviders, providers, nowMs, selectedAccounts)",
     "providers = ProviderOrder.orderedItems(merged, providerOrderRaw)",
 )]
 if min(restore_steps) < 0 or restore_steps != sorted(restore_steps):
     raise AssertionError("startup cache restore must merge normalized, redacted quotas with early live results")
 if "providers.every(" in restore_body:
     raise AssertionError("a successful partial startup refresh must not bypass cached-provider restoration")
+if "UsageCache.reconcile(providers, items, nowMs)" not in function_body(main_text, "commitUsageSnapshot"):
+    raise AssertionError(
+        "the live refresh must reconcile without an account pin; only the fingerprinted cache restore may skip "
+        "the account-key comparison for a provider whose explicit selection it verified"
+    )
 panel_clock_body = id_block(main_text, "panelClockTimer")
 for fragment in ("root.panelClockMs = Date.now()", "root.expireStaleUsage(root.panelClockMs)"):
     if fragment not in panel_clock_body:
