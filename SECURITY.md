@@ -4,13 +4,16 @@
 
 This repository contains the KDE Plasma 6 widget. Report issues here when they
 affect the widget itself: its QML and JavaScript, the handling of `codexbar`
-output and configuration, the install, update, and packaging scripts, or the
-data the widget caches, logs, and displays.
+output and configuration, the install, update, and packaging scripts, the data
+the widget caches, logs, and displays, and the widget's own secret prompt and
+stdin handoff, including any exposure through command lines, logs, or the
+user interface.
 
-Provider authentication, credential storage, token handling, and quota APIs
-belong to the upstream [CodexBar CLI](https://github.com/steipete/CodexBar).
-Report those to that project. If you are unsure which side is affected, report
-it here and it will be routed.
+Provider authentication, credential storage, and quota APIs belong to the
+upstream [CodexBar CLI](https://github.com/steipete/CodexBar); report a flaw in
+how the CLI obtains, stores, or transmits credentials to that project. A leak
+caused by the widget's own handling of a secret stays in scope here. If you are
+unsure which side is affected, report it here and it will be routed.
 
 ## Supported versions
 
