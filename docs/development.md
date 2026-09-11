@@ -5,6 +5,10 @@ tests, packaging, or runtime behavior. [AGENTS.md](../AGENTS.md) defines project
 boundaries and required checks. The [usage guide](usage.md) describes supported
 behavior; [TODO.md](../TODO.md) owns remaining Linux/Plasma parity work. All code
 paths below are relative to the repository root.
+[CONTRIBUTING.md](../CONTRIBUTING.md) is the short entry point for outside
+contributors and points back here; [SECURITY.md](../SECURITY.md) owns
+vulnerability reports. Keep all three consistent when a contributor workflow
+changes.
 
 ## Work from a checkout
 
