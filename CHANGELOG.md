@@ -21,6 +21,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Preserve valid provider usage when the CLI supplies a malformed optional
   status URL, falling back to the provider's bundled status page instead of
   discarding its usage snapshot.
+- Keep the last known provider incident ID across active status replies that omit
+  it, including notification priming, so a replacement incident at the same
+  severity is still announced without repeating the original incident.
 
 ## 0.2.37 - 2026-09-10
 

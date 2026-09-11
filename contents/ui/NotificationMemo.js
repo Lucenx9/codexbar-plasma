@@ -118,6 +118,11 @@ function statusDecision(memo, providerID, value, severity) {
     var incidentChanged = previousIncidentKey.length > 0
         && currentIncidentKey.length > 0
         && previousIncidentKey !== currentIncidentKey
+    // An active status without its optional id is not a recovery. Retain the
+    // known identity while still recording the current severity.
+    if (currentIncidentKey.length === 0 && previousIncidentKey.length > 0) {
+        text = statusMemoValue(severityFromMemoValue(text), previousIncidentKey)
+    }
     return {
         notify: previousValue.length === 0 || worsened || incidentChanged,
         value: text
