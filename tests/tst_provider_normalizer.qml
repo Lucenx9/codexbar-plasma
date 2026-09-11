@@ -463,6 +463,10 @@ TestCase {
         compare(Normalizer.safeStatusUrl(fallback, "file:///etc/passwd"), fallback)
         compare(Normalizer.safeStatusUrl(fallback, ""), fallback)
         compare(Normalizer.safeStatusUrl(fallback, null), fallback)
+        // A structured URL must fall back instead of throwing on coercion,
+        // which would drop the provider's otherwise valid usage snapshot.
+        compare(Normalizer.safeStatusUrl(fallback, JSON.parse('{"toString":null}')), fallback)
+        compare(Normalizer.safeStatusUrl(fallback, ["https://status.openai.com/"]), fallback)
     }
 
     function test_offersNoStatusUrlWhenTheProviderShipsNoFallback() {

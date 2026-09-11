@@ -16,6 +16,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   restoration is delayed past a failed refresh.
 - A tiny negative credit balance that rounds to zero now reads as `0` instead
   of the negative-zero string `-0`.
+- Preserve valid provider usage when the CLI supplies a malformed optional
+  status URL, falling back to the provider's bundled status page instead of
+  discarding its usage snapshot.
 
 ## 0.2.37 - 2026-09-10
 
