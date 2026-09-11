@@ -39,6 +39,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Preserve valid provider quotas when the CLI supplies malformed optional
   reset metadata, ignoring the unusable reset value instead of discarding
   the provider snapshot.
+- Align reset countdown / timestamp text with pace metadata along the text
+  baseline in provider usage rows.
 
 ## 0.2.37 - 2026-09-10
 
