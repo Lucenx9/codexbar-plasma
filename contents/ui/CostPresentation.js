@@ -137,7 +137,9 @@ function formatCount(fmt, value) {
             text = text.slice(0, -(decPoint.length + 1))
         }
     }
-    return (numeric < 0 ? "-" : "") + text
+    // A tiny negative magnitude rounds to a displayed zero; its sign must not
+    // survive as the negative-zero string "-0".
+    return (numeric < 0 && text !== "0" ? "-" : "") + text
 }
 
 function tokenCountString(tokens) {
