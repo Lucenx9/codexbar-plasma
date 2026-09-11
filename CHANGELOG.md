@@ -10,6 +10,16 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Added
+
+- Refresh stale **Usage & Spend** history when revisiting the tab and when a
+  visible spend view stays open across midnight. The existing hourly cost
+  lifecycle still guards in-flight scans and failed-attempt cooldowns, cached
+  charts stay visible during refresh, and switching the cost/token metric or
+  inspecting a day still starts no scan.
+- Contribution guidelines, a security policy with private vulnerability
+  reporting, and issue forms for bug reports and feature requests.
+
 ### Fixed
 
 - Keep failed usage replies from borrowing another account's quota when distinct
@@ -29,6 +39,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Keep the last known provider incident ID across active status replies that omit
   it, including notification priming, so a replacement incident at the same
   severity is still announced without repeating the original incident.
+- Preserve valid provider quotas when the CLI supplies malformed optional
+  reset metadata, ignoring the unusable reset value instead of discarding
+  the provider snapshot.
 
 ## 0.2.37 - 2026-09-10
 
