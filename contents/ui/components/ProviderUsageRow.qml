@@ -130,6 +130,7 @@ ColumnLayout {
             text: usageRow.rowData.pace
             font: Kirigami.Theme.smallFont
             opacity: usageRow.applet.secondaryTextOpacity
+            Layout.alignment: Qt.AlignBaseline
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
         }
@@ -143,6 +144,7 @@ ColumnLayout {
             opacity: usageRow.applet.secondaryTextOpacity
             horizontalAlignment: Text.AlignRight
             elide: Text.ElideRight
+            Layout.alignment: Qt.AlignBaseline
             Layout.maximumWidth: Kirigami.Units.gridUnit * 14
         }
     }
