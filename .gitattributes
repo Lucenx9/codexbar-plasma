@@ -1,0 +1,6 @@
+# QML helpers are a QML dialect (`.pragma library` / `.import`) and not
+# standalone JavaScript/TypeScript for CodeQL. Without this, Linguist counts
+# them as JavaScript and GitHub's default CodeQL setup proposes
+# `javascript-typescript`, which then fails with "No JavaScript/TypeScript
+# code found" because the extractor cannot build them.
+contents/ui/**/*.js linguist-language=QML
