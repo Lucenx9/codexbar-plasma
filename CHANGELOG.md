@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Clear completed Sessions snapshots and update metadata when the configured CLI
+  command changes, so a failed or timed-out scan cannot display sessions from
+  the previous executable.
 - Keep the healthy accounts listed in the account picker when another account
   record in the same `codexbar` reply cannot be read.
 - Preserve newer retained usage and its last-known timestamp when startup cache

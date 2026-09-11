@@ -251,6 +251,12 @@ PlasmoidItem {
         if (retireUsageCommandKind("sessions") > 0) {
             sessionsLoading = false
         }
+        // A failed scan must not keep a snapshot from another executable.
+        sessions = []
+        sessionsErrorText = ""
+        sessionsLastUpdatedText = ""
+        sessionsLastCompletedAtMs = -1
+        sessionsLoadedCommandSource = ""
         if (expanded && sessionsSelected) {
             Qt.callLater(refreshSessionsIfStale)
         } else {
