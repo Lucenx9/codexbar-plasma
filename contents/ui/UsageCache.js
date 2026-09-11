@@ -68,17 +68,6 @@ function reconcile(previous, incoming, nowMs, pinnedAccounts) {
             next = withCurrentStatus(old, item)
             next.error = item.error
             next.usageStale = true
-            // Forecasts are live estimates. Retained measurements cannot support
-            // an updated run-out prediction while requests are failing.
-            next.rows = old.rows.map(function(row) {
-                var copy = Guards.copyObject(row)
-                copy.paceKnown = false
-                copy.pace = ""
-                copy.pacePercent = -1
-                copy.paceEtaSeconds = 0
-                return copy
-            })
-            next.primaryRow = next.rows.filter(function(row) { return row.lane === "primary" })[0] || null
         } else {
             var measuredAt = timestamp(item.updatedAt)
             if (item.error.length === 0 && isFinite(measuredAt) && measuredAt <= nowMs
@@ -101,6 +90,17 @@ function reconcile(previous, incoming, nowMs, pinnedAccounts) {
             }
         }
         if (next.usageStale) {
+            // Forecasts are live estimates. Stale measurements cannot support
+            // a current pace or run-out prediction.
+            next.rows = next.rows.map(function(row) {
+                var copy = Guards.copyObject(row)
+                copy.paceKnown = false
+                copy.pace = ""
+                copy.pacePercent = -1
+                copy.paceEtaSeconds = 0
+                return copy
+            })
+            next.primaryRow = next.rows.filter(function(row) { return row.lane === "primary" })[0] || null
             next.providerDetails = []
             next.usageDashboard = null
             next.providerCost = null
