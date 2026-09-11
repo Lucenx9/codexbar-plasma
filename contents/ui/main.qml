@@ -4154,7 +4154,7 @@ PlasmoidItem {
 
         interval: root.panelClockIntervalMs
         repeat: true
-        running: root.providers.length > 0
+        running: root.providers.length > 0 || (root.spendSelected && root.expanded)
         triggeredOnStart: false
         onTriggered: {
             // A visible spend view that stays open across midnight refreshes
