@@ -12,6 +12,10 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
 - [Linux parity TODO](../TODO.md): open Plasma work, official CLI blockers, and
   the last reviewed upstream release. Agents update it with each release.
 
+- [Contributing](../CONTRIBUTING.md): entry point for outside contributors,
+  covering where to report what, checkout setup, and pull request requirements.
+- [Security policy](../SECURITY.md): supported versions and private
+  vulnerability reporting for the widget.
 - [Changelog](../CHANGELOG.md): notable widget changes by version and unreleased
   changes. Future GitHub release notes come from this file.
 - [Usage and settings](usage.md): panel and popup options, provider setup,

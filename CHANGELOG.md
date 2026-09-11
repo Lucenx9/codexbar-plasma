@@ -17,6 +17,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   lifecycle still guards in-flight scans and failed-attempt cooldowns, cached
   charts stay visible during refresh, and switching the cost/token metric or
   inspecting a day still starts no scan.
+- Contribution guidelines, a security policy with private vulnerability
+  reporting, and issue forms for bug reports and feature requests.
 
 ### Fixed
 
