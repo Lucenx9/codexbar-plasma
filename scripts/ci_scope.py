@@ -11,6 +11,7 @@ import subprocess
 ROOT = Path(__file__).resolve().parents[1]
 EDITORIAL_FILES = {
     "AGENTS.md", "CLAUDE.md", "README.md", "TODO.md", "CHANGELOG.md", "NOTICE.md",
+    "CONTRIBUTING.md", "SECURITY.md",
     ".github/copilot-instructions.md", ".github/pull_request_template.md",
 }
 

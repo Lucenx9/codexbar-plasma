@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and usage help
+    url: https://github.com/Lucenx9/codexbar-plasma/discussions
+    about: Ask about setup, panel options, or provider data before filing a bug.
+  - name: CodexBar CLI problem
+    url: https://github.com/steipete/CodexBar/issues
+    about: Provider login, quota fetching, and config errors belong to the upstream CLI.
+  - name: Report a vulnerability
+    url: https://github.com/Lucenx9/codexbar-plasma/security/advisories/new
+    about: Report security issues privately instead of opening a public issue.
