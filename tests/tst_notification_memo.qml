@@ -101,6 +101,7 @@ TestCase {
     function test_carryDoesNotInventABaseline() {
         var next = ({})
         NotificationMemo.carryStatusMemo(({}), provider, next)
+        compare(next.hasOwnProperty(NotificationMemo.statusMemoKey(provider)), false)
         compare(next.hasOwnProperty(NotificationMemo.statusPrimedMemoKey(provider)), false)
     }
 
@@ -154,5 +155,29 @@ TestCase {
         verify(NotificationMemo.isStatusMemoKey("statusPrimed:claude"))
         verify(!NotificationMemo.isStatusMemoKey("quota:[\"claude\",\"acct\"]:0"))
         verify(!NotificationMemo.isStatusMemoKey("scope:[\"claude\",\"acct\"]"))
+    }
+
+    function test_incidentIdentitySurvivesAMissingKey_data() {
+        return [
+            { tag: "same-incident", nextKey: "inc-1", expected: false },
+            { tag: "replacement", nextKey: "inc-2", expected: true }
+        ]
+    }
+
+    function test_incidentIdentitySurvivesAMissingKey(data) {
+        var initial = primedMemo(incident("major", "inc-1"))
+        // A still-active incident without its optional id is not evidence that
+        // the previously identified incident ended.
+        var unavailable = observe(initial, incident("major", ""), "major")
+        compare(unavailable.notify, false)
+
+        var identified = observe(unavailable.memo, incident("major", data.nextKey), "major")
+        compare(identified.notify, data.expected)
+        var repeated = observe(identified.memo, incident("major", data.nextKey), "major")
+        compare(repeated.notify, false)
+
+        var cleared = observe(repeated.memo, "", "")
+        var recurring = observe(cleared.memo, incident("major", data.nextKey), "major")
+        compare(recurring.notify, true)
     }
 }

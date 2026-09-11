@@ -307,8 +307,10 @@ function transition(observations, previousMemo, options) {
         if ((!options || options.statusEnabled !== false) && item.statusKnown !== false) {
             var value = statusValue(item)
             if (mode === "prime") {
+                // Rebuild silently without erasing a temporarily missing id.
                 NotificationMemo.applyStatusDecision(nextMemo, item.providerID,
-                    ({ notify: false, value: value }))
+                    NotificationMemo.statusDecision(previousMemo, item.providerID,
+                        value, item.statusSeverity))
             } else {
                 var decision = NotificationMemo.statusDecision(
                     previousMemo,
