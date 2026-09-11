@@ -45,8 +45,10 @@ function reconcile(previous, incoming, nowMs) {
     return incoming.map(function(item) {
         var next = Guards.copyObject(item)
         var old = byProvider[item.provider]
+        var incomingAccountKey = Normalizer.accountKey(item)
         if (item.error.length > 0 && hasQuota(old) && recent(old.lastGoodAtMs, nowMs)
-                && (!item.account || item.account === old.account)) {
+                && (incomingAccountKey.length === 0
+                    || incomingAccountKey === Normalizer.accountKey(old))) {
             next = withCurrentStatus(old, item)
             next.error = item.error
             next.usageStale = true
