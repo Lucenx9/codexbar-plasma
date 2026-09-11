@@ -321,7 +321,7 @@ function httpsUrlHost(url) {
 function safeStatusUrl(fallbackStatusUrl, url) {
     var fallback = String(fallbackStatusUrl || "")
     var fallbackHost = httpsUrlHost(fallback)
-    var candidate = String(url || "").trim()
+    var candidate = typeof url === "string" ? url.trim() : ""
     var candidateHost = httpsUrlHost(candidate)
     if (fallbackHost.length === 0) {
         return ""
