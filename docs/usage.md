@@ -120,7 +120,9 @@ and can trigger incident notifications independently of the retained quotas. Fai
 refreshes stop reusing measurements older than 24 hours, and a quota measurement
 older than 24 hours never stamps a new snapshot as fresh. A failed refresh that
 reports a different account than the retained measurement does not reuse it; a
-failure that reports no account still does. The existing minute
+failure that reports no account still does. Restored cache entries hold no
+account, so an early failed refresh keeps them only for a provider whose
+explicit account selection the cache fingerprint already covers. The existing minute
 timer also removes expired retained data when automatic refresh is disabled;
 the error remains visible and healthy providers are unaffected. Successful
 responses without measured quotas keep their valid credits or details even when

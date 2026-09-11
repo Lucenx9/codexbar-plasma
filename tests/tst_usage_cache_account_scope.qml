@@ -47,10 +47,12 @@ TestCase {
         compare(incoming.rows.length, 0);
     }
 
-    function test_verifiedCacheRestoreKeepsIdentityFreeQuota() {
+    function test_pinnedCacheRestoreKeepsIdentityFreeQuota() {
         // encode() stores no identities, so a decoded entry always has an empty
-        // key. Its scope is the verified cache context, which already pins the
-        // selected account, and an identified early failure must not drop it.
+        // key. For a provider pinned to an explicit account the cache context
+        // already verified that scope, and an identified early failure must not
+        // drop its quota. Automatic accounts are not pinned: the CLI may hand
+        // them a different identity between sessions, so they keep the check.
         var cached = Cache.reconcile([], [{
             provider: "codex", account: "", accountKey: "",
             error: "", updatedAt: "", rows: [
@@ -61,14 +63,22 @@ TestCase {
             provider: "codex", account: "", accountKey: "Organization A",
             error: "Synthetic failure", updatedAt: "", rows: []
         };
-        var restored = Cache.restore(cached, [failure], nowMs + 60000);
-        compare(restored.length, 1);
-        compare(restored[0].rows.length, 1);
-        compare(restored[0].rows[0].usedPercent, 72);
-        compare(restored[0].lastGoodAtMs, nowMs);
-        verify(restored[0].usageStale);
-        compare(restored[0].error, "Synthetic failure");
-        // The live refresh path keeps rejecting the same mismatched identity.
+        var pinned = Cache.restore(cached, [failure], nowMs + 60000,
+            { codex: "Organization A" });
+        compare(pinned.length, 1);
+        compare(pinned[0].rows.length, 1);
+        compare(pinned[0].rows[0].usedPercent, 72);
+        compare(pinned[0].lastGoodAtMs, nowMs);
+        verify(pinned[0].usageStale);
+        compare(pinned[0].error, "Synthetic failure");
+        // Another provider's pin never covers this one.
+        compare(Cache.restore(cached, [failure], nowMs + 60000,
+            { claude: "Organization A" })[0].rows.length, 0);
+        compare(Cache.restore(cached, [failure], nowMs + 60000,
+            { codex: "" })[0].rows.length, 0);
+        compare(Cache.restore(cached, [failure], nowMs + 60000, ({}))[0].rows.length, 0);
+        compare(Cache.restore(cached, [failure], nowMs + 60000)[0].rows.length, 0);
+        // The live refresh path never receives a pin and keeps rejecting it.
         compare(Cache.reconcile(cached, [failure], nowMs + 60000)[0].rows.length, 0);
     }
 }

@@ -37,13 +37,24 @@ function withCurrentStatus(snapshot, source) {
     return next
 }
 
+// A provider is identity-pinned when the caller carries its explicit account
+// override, the same value the disk cache context fingerprints. An automatic or
+// default account is never pinned: the CLI can hand it a different identity
+// between sessions while that fingerprint stays unchanged.
+function pinnedProvider(pinnedAccounts, providerID) {
+    return Normalizer.isCliRecord(pinnedAccounts)
+        && Guards.hasOwnKey(pinnedAccounts, providerID)
+        && typeof pinnedAccounts[providerID] === "string"
+        && pinnedAccounts[providerID].length > 0
+}
+
 // Inputs are normalized live snapshots. A successful empty usage result replaces
 // old quotas; only an explicit failure may reuse them in the same account scope.
-// `scopeVerified` marks callers whose previous snapshots are already bound to the
-// current account scope, namely the disk cache behind its context fingerprint.
-// Those entries deliberately store no identity, so comparing keys there would
-// reject every identified account instead of telling two of them apart.
-function reconcile(previous, incoming, nowMs, scopeVerified) {
+// `pinnedAccounts` reaches this function from the verified disk-cache restore,
+// whose entries deliberately store no identity: for a pinned provider the key
+// comparison could only reject its own verified account instead of protecting
+// it, while every other provider keeps the comparison.
+function reconcile(previous, incoming, nowMs, pinnedAccounts) {
     var byProvider = ({})
     previous.forEach(function(item) { byProvider[item.provider] = item })
     return incoming.map(function(item) {
@@ -51,7 +62,8 @@ function reconcile(previous, incoming, nowMs, scopeVerified) {
         var old = byProvider[item.provider]
         var incomingAccountKey = Normalizer.accountKey(item)
         if (item.error.length > 0 && hasQuota(old) && recent(old.lastGoodAtMs, nowMs)
-                && (scopeVerified === true || incomingAccountKey.length === 0
+                && (pinnedProvider(pinnedAccounts, item.provider)
+                    || incomingAccountKey.length === 0
                     || incomingAccountKey === Normalizer.accountKey(old))) {
             next = withCurrentStatus(old, item)
             next.error = item.error
@@ -103,7 +115,7 @@ function reconcile(previous, incoming, nowMs, scopeVerified) {
 
 // Restores cached provider snapshots during widget initialization, merging any
 // cached providers missing from live results while keeping live data fresh.
-function restore(cached, live, nowMs) {
+function restore(cached, live, nowMs, pinnedAccounts) {
     if (!Array.isArray(cached) || cached.length === 0) {
         return Array.isArray(live) ? live : []
     }
@@ -114,7 +126,7 @@ function restore(cached, live, nowMs) {
             return copy
         })
     }
-    var reconciled = reconcile(cached, live, nowMs, true).map(function(item, index) {
+    var reconciled = reconcile(cached, live, nowMs, pinnedAccounts).map(function(item, index) {
         var current = live[index]
         // These measurements were already accepted by the live refresh path.
         return hasQuota(current) && recent(current.lastGoodAtMs, nowMs) ? current : item
