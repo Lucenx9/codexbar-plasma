@@ -2169,7 +2169,18 @@ PlasmoidItem {
             credits && hasOwnKey(credits, "codexCreditLimit")
                 ? credits.codexCreditLimit
                 : null)
-        var displayName = item.displayName || item.title || providerDisplayNames[providerID] || ""
+        var displayCandidates = [item.displayName, item.title, providerDisplayNames[providerID]]
+        // Optional display names are CLI-controlled and may carry structured
+        // values. A truthy object must not mask a valid fallback, so only
+        // truthy scalars win; anything else keeps searching.
+        var displayName = ""
+        for (var candidateIndex = 0; candidateIndex < displayCandidates.length; candidateIndex++) {
+            var candidate = displayCandidates[candidateIndex]
+            if ((typeof candidate === "string" || typeof candidate === "number" || typeof candidate === "boolean") && candidate) {
+                displayName = candidate
+                break
+            }
+        }
         // Identity fields are CLI-controlled and may carry structured values.
         // A truthy object must not mask a valid fallback, so each candidate is
         // validated before it wins; a non-string candidate never does.
@@ -3055,7 +3066,15 @@ PlasmoidItem {
 
     function providerTitle(value, displayName, privateTitle) {
         var key = providerKey(value)
-        var preferred = privateTitle === true ? "" : String(displayName || "").trim()
+        // Optional display names are CLI-controlled and may carry structured
+        // values: their primitive conversion throws and would discard the
+        // whole provider snapshot. Only truthy scalars reach String();
+        // anything else degrades to the bundled fallback, keeping the quota.
+        var rawDisplay = displayName || ""
+        if (typeof rawDisplay !== "string" && typeof rawDisplay !== "number" && typeof rawDisplay !== "boolean") {
+            rawDisplay = ""
+        }
+        var preferred = privateTitle === true ? "" : String(rawDisplay).trim()
         if (preferred.length > 0) {
             return preferred
         }
