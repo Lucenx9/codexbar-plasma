@@ -692,7 +692,7 @@ PlasmoidItem {
             item.tokenCost = null
             return item
         })
-        var merged = UsageCache.restore(cachedProviders, providers, nowMs)
+        var merged = UsageCache.restore(cachedProviders, providers, nowMs, selectedAccounts)
         if (merged.length === 0) {
             Plasmoid.configuration.usageCache = UsageCache.encode(providers, context, nowMs)
             return

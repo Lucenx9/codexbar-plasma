@@ -118,7 +118,11 @@ or status notifications, and its run-out forecasts are suppressed. If a failed
 quota response includes newly fetched service status, that status still updates
 and can trigger incident notifications independently of the retained quotas. Failed
 refreshes stop reusing measurements older than 24 hours, and a quota measurement
-older than 24 hours never stamps a new snapshot as fresh. The existing minute
+older than 24 hours never stamps a new snapshot as fresh. A failed refresh that
+reports a different account than the retained measurement does not reuse it; a
+failure that reports no account still does. Restored cache entries hold no
+account, so an early failed refresh keeps them only for a provider whose
+explicit account selection the cache fingerprint already covers. The existing minute
 timer also removes expired retained data when automatic refresh is disabled;
 the error remains visible and healthy providers are unaffected. Successful
 responses without measured quotas keep their valid credits or details even when
