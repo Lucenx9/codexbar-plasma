@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve newer retained usage and its last-known timestamp when startup cache
+  restoration is delayed past a failed refresh.
 - A tiny negative credit balance that rounds to zero now reads as `0` instead
   of the negative-zero string `-0`.
 

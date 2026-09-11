@@ -108,7 +108,11 @@ function restore(cached, live, nowMs) {
             return copy
         })
     }
-    var reconciled = reconcile(cached, live, nowMs)
+    var reconciled = reconcile(cached, live, nowMs).map(function(item, index) {
+        var current = live[index]
+        // These measurements were already accepted by the live refresh path.
+        return hasQuota(current) && recent(current.lastGoodAtMs, nowMs) ? current : item
+    })
     var seen = ({})
     reconciled.forEach(function(item) {
         seen[item.provider] = true
