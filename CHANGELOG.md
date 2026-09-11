@@ -14,7 +14,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Keep failed usage replies from borrowing another account's quota when distinct
   account keys share a display label or the account is identified only by its
-  organization. Failures without identity still retain the last known quota.
+  organization. Failures without identity still retain the last known quota,
+  and the verified startup cache still restores its own, since its entries
+  store no identity.
 - Keep the healthy accounts listed in the account picker when another account
   record in the same `codexbar` reply cannot be read.
 - Preserve newer retained usage and its last-known timestamp when startup cache

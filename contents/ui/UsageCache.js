@@ -39,7 +39,11 @@ function withCurrentStatus(snapshot, source) {
 
 // Inputs are normalized live snapshots. A successful empty usage result replaces
 // old quotas; only an explicit failure may reuse them in the same account scope.
-function reconcile(previous, incoming, nowMs) {
+// `scopeVerified` marks callers whose previous snapshots are already bound to the
+// current account scope, namely the disk cache behind its context fingerprint.
+// Those entries deliberately store no identity, so comparing keys there would
+// reject every identified account instead of telling two of them apart.
+function reconcile(previous, incoming, nowMs, scopeVerified) {
     var byProvider = ({})
     previous.forEach(function(item) { byProvider[item.provider] = item })
     return incoming.map(function(item) {
@@ -47,7 +51,7 @@ function reconcile(previous, incoming, nowMs) {
         var old = byProvider[item.provider]
         var incomingAccountKey = Normalizer.accountKey(item)
         if (item.error.length > 0 && hasQuota(old) && recent(old.lastGoodAtMs, nowMs)
-                && (incomingAccountKey.length === 0
+                && (scopeVerified === true || incomingAccountKey.length === 0
                     || incomingAccountKey === Normalizer.accountKey(old))) {
             next = withCurrentStatus(old, item)
             next.error = item.error
@@ -110,7 +114,7 @@ function restore(cached, live, nowMs) {
             return copy
         })
     }
-    var reconciled = reconcile(cached, live, nowMs).map(function(item, index) {
+    var reconciled = reconcile(cached, live, nowMs, true).map(function(item, index) {
         var current = live[index]
         // These measurements were already accepted by the live refresh path.
         return hasQuota(current) && recent(current.lastGoodAtMs, nowMs) ? current : item

@@ -46,4 +46,29 @@ TestCase {
         verify(!previous[0].usageStale);
         compare(incoming.rows.length, 0);
     }
+
+    function test_verifiedCacheRestoreKeepsIdentityFreeQuota() {
+        // encode() stores no identities, so a decoded entry always has an empty
+        // key. Its scope is the verified cache context, which already pins the
+        // selected account, and an identified early failure must not drop it.
+        var cached = Cache.reconcile([], [{
+            provider: "codex", account: "", accountKey: "",
+            error: "", updatedAt: "", rows: [
+                { lane: "primary", hasPercent: true, usedPercent: 72 }
+            ]
+        }], nowMs);
+        var failure = {
+            provider: "codex", account: "", accountKey: "Organization A",
+            error: "Synthetic failure", updatedAt: "", rows: []
+        };
+        var restored = Cache.restore(cached, [failure], nowMs + 60000);
+        compare(restored.length, 1);
+        compare(restored[0].rows.length, 1);
+        compare(restored[0].rows[0].usedPercent, 72);
+        compare(restored[0].lastGoodAtMs, nowMs);
+        verify(restored[0].usageStale);
+        compare(restored[0].error, "Synthetic failure");
+        // The live refresh path keeps rejecting the same mismatched identity.
+        compare(Cache.reconcile(cached, [failure], nowMs + 60000)[0].rows.length, 0);
+    }
 }
