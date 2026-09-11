@@ -3229,13 +3229,18 @@ run_out_text_body = function_body(main_text, "runOutTextForRow")
 if "PanelDisplay.remainingSeconds(" not in run_out_text_body:
     raise AssertionError("the run-out token must advance from the usage observation time")
 reset_text_body = function_body(main_text, "resetText")
-valid_reset_timestamp_index = reset_text_body.find("var date = new Date(window.resetsAt)")
+# Structured CLI values must never reach the date parser: their primitive
+# conversion throws and would discard the whole provider snapshot. The guard
+# narrows resetsAt to strings and numbers before parsing.
+hardened_guard_index = reset_text_body.find("typeof resetsAt")
+valid_reset_timestamp_index = reset_text_body.find("var date = new Date(resetsAt)")
 relative_countdown_index = reset_text_body.find(
     "var remainingMs = date.getTime() - panelClockMs"
 )
 last_description_index = reset_text_body.rfind("window.resetDescription")
 if not (
-    valid_reset_timestamp_index >= 0
+    hardened_guard_index >= 0
+    and valid_reset_timestamp_index > hardened_guard_index
     and relative_countdown_index > valid_reset_timestamp_index
     and last_description_index < valid_reset_timestamp_index
 ):

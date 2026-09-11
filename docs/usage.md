@@ -201,6 +201,10 @@ Provider-specific editable settings depend on the official CLI contract.
   Missing model breakdowns and truncated lists are identified explicitly.
 - Local-history scans run independently from quota refreshes, automatically at
   most once per hour; the **Usage & Spend** refresh button starts one immediately.
+  Revisiting **Usage & Spend** refreshes history that became stale since the last
+  scan, and a spend view left open across midnight refreshes once for the new day.
+  Switching the Cost/Tokens metric or inspecting a day reuses the loaded data and
+  starts no scan.
 - Token breakdowns, model summaries, recent daily spend, cost history bars, and
   average cost per 1M tokens, with a configurable cost history window.
 - Token, request, and point counts use the current language's singular and
@@ -277,7 +281,8 @@ fields; track proposed extensions in the issue tracker.
   quotas using the selected refresh interval, or five minutes with periodic refresh
   off. Quotas newer than that window are reused, so opening the popup repeatedly
   does not repeat the command. It does not scan local cost history; failed attempts
-  use the same cooldown. Turn it off to refresh only on the periodic interval.
+  use the same cooldown. The **Usage & Spend** tab refreshes its own stale history
+  when revisited and across midnight. Turn it off to refresh only on the periodic interval.
 - **Popup** independently controls pace text/markers, credits/reset credits, and
   additional provider details/billing dashboards. These are visible by default;
   changing them does not refetch data or change panel metrics or alerts.
