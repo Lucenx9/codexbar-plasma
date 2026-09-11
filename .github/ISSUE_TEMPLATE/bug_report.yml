@@ -1,0 +1,69 @@
+name: Bug report
+description: Report incorrect or broken behavior in the Plasma widget.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Provider login, quota fetching, and config errors belong to the
+        [CodexBar CLI](https://github.com/steipete/CodexBar/issues).
+        Report suspected vulnerabilities through the
+        [security policy](https://github.com/Lucenx9/codexbar-plasma/security/policy)
+        instead. Redact accounts, paths, and credentials in anything you paste.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened
+      description: Describe the actual behavior and how it differs from what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Add the widget to the panel with ...
+        2. Open ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: input
+    id: widget-version
+    attributes:
+      label: Widget version
+      description: Shown in the widget's About settings, or `metadata.json` in a checkout.
+      placeholder: "0.2.36"
+    validations:
+      required: true
+  - type: input
+    id: cli-version
+    attributes:
+      label: CodexBar CLI version
+      description: Output of `codexbar --version`.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Plasma version and distribution
+      placeholder: "Plasma 6.4.4, Qt 6.9.1, Fedora 42"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: |
+        QML errors from
+        `journalctl --user -u plasma-plasmashell.service --since '10 minutes ago' --no-pager`.
+        Include only CodexBar lines.
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues for this problem.
+          required: true
+        - label: The output and screenshots I attached contain no credentials or personal account data.
+          required: true

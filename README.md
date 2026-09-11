@@ -177,9 +177,12 @@ notify-send "CodexBar" "Notification test"
 
 ### Report a problem
 
-[Open a widget issue](https://github.com/Lucenx9/codexbar-plasma/issues/new) with
-reproduction steps, expected and actual behavior, your distribution, and the
-Plasma, widget, and CLI versions. For QML errors, inspect recent logs:
+[Open a widget issue](https://github.com/Lucenx9/codexbar-plasma/issues/new/choose)
+and complete the form: reproduction steps, expected and actual behavior, your
+distribution, and the Plasma, widget, and CLI versions. Report a suspected
+vulnerability privately through the
+[security policy](https://github.com/Lucenx9/codexbar-plasma/blob/main/SECURITY.md)
+instead of opening an issue. For QML errors, inspect recent logs:
 
 ```sh
 journalctl --user -u plasma-plasmashell.service --since '10 minutes ago' --no-pager
@@ -208,8 +211,9 @@ conventions. See the [documentation index](https://github.com/Lucenx9/codexbar-p
 for maintained references.
 
 Contributions to the Plasma widget are welcome through
-[pull requests](https://github.com/Lucenx9/codexbar-plasma/pulls). Include the
-verification results requested by the PR template. Provider logic and CLI
+[pull requests](https://github.com/Lucenx9/codexbar-plasma/pulls). Read
+[CONTRIBUTING.md](https://github.com/Lucenx9/codexbar-plasma/blob/main/CONTRIBUTING.md)
+first and include the verification results requested by the PR template. Provider logic and CLI
 contracts belong upstream. To add or improve a language, follow the
 [translation guide](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/translations.md).
 CLI-supplied free-form text retains its original language.
