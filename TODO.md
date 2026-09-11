@@ -8,12 +8,13 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.57.0](https://github.com/steipete/CodexBar/releases/tag/v0.57.0),
-  commit `45cda6084d6415795053624b80ca3f8c05026580`, checked 2026-09-09.
-- Coverage: release changes from 0.56.2 through 0.57.0 against Plasma
-  `3e818ae71dda1ccada2e8f8d662bb883c21d4da9`.
-  The [review](docs/research/2026-09-09-macos-parity-0.57.0.md) records the
-  intervening releases, source comparisons, and scoped Linux 0.57.0 probes.
+- Last release reviewed: [CodexBar 0.58.0](https://github.com/steipete/CodexBar/releases/tag/v0.58.0),
+  commit `88fa2f45fa1e7e04c3c96234ddf973ca947208db`, checked 2026-09-11.
+- Coverage: release changes from 0.57.0 through 0.58.0 against Plasma
+  `59cbc89b168c9cc665589a6856102275be929e9e`.
+  The [review](docs/research/2026-09-11-macos-parity-0.58.0.md) records the
+  release delta, source comparison, and scoped Linux 0.58.0 probes. No Linux
+  CLI payload code changed in the interval.
 - Full CLI baseline remains the [0.56.2 audit](docs/research/2026-09-01-macos-parity-0.56.2.md).
   Later probes verify only their named cases. Older blockers below retain their
   last verified version; source inspection is not authenticated output evidence.
@@ -28,6 +29,16 @@ Issues linked below preserve discussion; this file owns parity status.
   refreshes on return and across midnight without scans on metric/day selection.
   Evidence: [0.57.0 comparison](docs/research/2026-09-09-macos-parity-0.57.0.md#refresh-stale-spend-views-when-revisited).
 
+### Popup usage row visibility
+
+- [ ] Hide and restore individual popup usage rows per provider, mirroring the
+  macOS 0.58.0 visible-row choice as a Plasma-local display preference. Panel
+  rows already have visibility rules; popup provider cards expose only fixed
+  section toggles, and no CLI contract is required. Done when rows can be
+  hidden and restored without affecting fetching, alerts, or the panel, with
+  the choice persisted and previewed in settings.
+  Evidence: [0.58.0 comparison](docs/research/2026-09-11-macos-parity-0.58.0.md).
+
 ## Blocked on official Linux CLI contracts
 
 These are useful Linux features once the named contract exists. Do not fill
@@ -36,7 +47,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider settings
 
 - [ ] Enable generic settings and token-account editing through official
-  descriptors and writes. Linux 0.57.0 still rejects `config providers
+  descriptors and writes. Linux 0.58.0 still rejects `config providers
   --descriptors`; its provider records have no descriptor. Keep existing
   enable/disable, supported single-key setup, and link fallbacks working.
   The [proposal](docs/cli-provider-settings-descriptor.md) covers source mode,
@@ -49,7 +60,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.57.0 still has no
+  flow, CLI-auth setup, and token-account actions. Linux 0.58.0 still has no
   generic `config action` command. Done when supported actions expose validated
   prompts/results and handle cancellation, failure, and stale responses in
   Plasma. Preserve current key/link setup. [Prior discussion #168](https://github.com/Lucenx9/codexbar-plasma/issues/168).
@@ -58,7 +69,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 - [ ] Consume generic billing/pricing details, richer model/request/token usage,
   credit allowances, and unknown-usage windows with reset metadata. These gaps
-  were verified at 0.56.2; authenticated 0.57.0 cases remain unverified.
+  were verified at 0.56.2; authenticated cases remain unverified through 0.58.0.
   Existing generic details/charts work. Done when each additional section has
   bounded official fields and tests, with unknown amounts distinct from zero.
   Plain credit balances need their own allowance before gaining a meter; the
@@ -76,7 +87,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Cursor cost
 
 - [ ] Show Cursor cost history through the generic Linux `cost` path. Linux
-  0.57.0 still rejects Cursor and lists Antigravity, Claude, and Codex as supported.
+  0.58.0 still rejects Cursor and lists Antigravity, Claude, and Codex as supported.
   Done when a released Linux command emits supported cost data and Plasma tests
   cover its amounts, currencies, and trust metadata.
   [Prior discussion #171](https://github.com/Lucenx9/codexbar-plasma/issues/171).
@@ -94,16 +105,18 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 - [ ] Replace the Antigravity-specific unknown-cost fallback with explicit
   official availability metadata. At 0.56.2, established-empty history used zero
-  despite unavailable costs. The 0.57.0 fresh-history probe omits amounts, but
-  does not verify that established-empty case. Done when verified Linux fields
-  distinguish unavailable from measured zero, with old-payload compatibility and
+  despite unavailable costs. The 0.57.0 and 0.58.0 Antigravity fresh-history
+  probes omit cost totals, and the 0.58.0 Claude probe reports measured zeros;
+  neither verifies that established-empty case. Done when verified
+  Linux fields distinguish unavailable from measured zero, with old-payload compatibility and
   usable token charts. [Prior discussion #173](https://github.com/Lucenx9/codexbar-plasma/issues/173).
 
 ### Structured localization
 
 - [ ] Localize opaque provider/incident/error/reset text and pace headroom through
   official identifiers or typed fields. The remaining contract gap is carried
-  from 0.56.2; authenticated 0.57.0 output has not been exhaustively rechecked.
+  from 0.56.2; authenticated output has not been exhaustively rechecked through
+  0.58.0.
   Known states and structured pace forecasts already translate. Done when
   supported fields use catalogs with placeholder/plural checks and bounded
   unknown-value fallbacks. [Translation guide](docs/translations.md);
@@ -113,7 +126,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 - [ ] Offer display-currency selection and conversion through an official Linux
   contract. The 0.56.2 audit records no display-currency setter or descriptor;
-  the scoped 0.57.0 config probes still expose neither. Plasma currently
+  the scoped 0.57.0 and 0.58.0 config probes expose neither. Plasma currently
   displays the CLI-emitted currency. Done when released settings and converted
   amounts define currency, rate provenance, and unavailable-conversion behavior,
   with tested Plasma selection/display. Keep conversion and exchange-rate
