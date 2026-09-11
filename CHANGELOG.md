@@ -25,6 +25,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Clear completed Sessions snapshots and update metadata when the configured CLI
   command changes, so a failed or timed-out scan cannot display sessions from
   the previous executable.
+- Hide pace and run-out forecasts when an otherwise successful quota snapshot
+  is older than the 24-hour retention limit, while preserving its last-known
+  measurement and current service status.
 - Keep failed usage replies from borrowing another account's quota when distinct
   account keys share a display label or the account is identified only by its
   organization. Failures without identity still retain the last known quota,
