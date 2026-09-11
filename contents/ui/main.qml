@@ -2521,13 +2521,22 @@ PlasmoidItem {
     }
 
     function resetText(window, absolute) {
-        if (!window.resetsAt) {
+        // Optional reset metadata is CLI-controlled and may carry structured
+        // values: passing them to new Date() or String() throws inside
+        // ToPrimitive and would discard the whole provider snapshot. Only
+        // strings and numbers reach the date parser; anything else degrades
+        // to no reset, keeping the valid quota visible.
+        var resetsAt = window.resetsAt
+        if (typeof resetsAt !== "string" && typeof resetsAt !== "number") {
+            resetsAt = ""
+        }
+        if (!resetsAt) {
             return window.resetDescription && window.resetDescription.length > 0 ? window.resetDescription : ""
         }
 
-        var date = new Date(window.resetsAt)
+        var date = new Date(resetsAt)
         if (isNaN(date.getTime())) {
-            return String(window.resetsAt)
+            return String(resetsAt)
         }
 
         if (absolute === true) {
