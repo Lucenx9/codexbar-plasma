@@ -1033,7 +1033,9 @@ msgstr "Anbieter in der Leiste"
 msgid ""
 "Choose the providers shown in the panel. The popup keeps every enabled "
 "provider."
-msgstr "Wählen Sie die in der Leiste angezeigten Anbieter. Das Aufklappfenster zeigt weiterhin alle aktivierten Anbieter."
+msgstr ""
+"Wählen Sie die in der Leiste angezeigten Anbieter. Das Aufklappfenster zeigt "
+"weiterhin alle aktivierten Anbieter."
 
 #: contents/ui/configPanel.qml contents/ui/configPopup.qml
 msgid "Loading providers..."
@@ -1949,6 +1951,10 @@ msgstr "Zeitüberschreitung beim Laden der Konten. Erneut versuchen."
 #: contents/ui/main.qml
 msgid "codexbar did not return account data."
 msgstr "codexbar hat keine Kontodaten zurückgegeben."
+
+#: contents/ui/main.qml
+msgid "Could not read a codexbar account record: %1"
+msgstr "Ein codexbar-Kontodatensatz konnte nicht gelesen werden: %1"
 
 #: contents/ui/main.qml
 msgid "Could not parse codexbar account JSON: %1"

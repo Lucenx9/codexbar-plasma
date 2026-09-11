@@ -1337,9 +1337,19 @@ PlasmoidItem {
                 if (!isCliRecord(item)) {
                     continue
                 }
-                var accountItem = copyObject(item)
-                accountItem.provider = providerID
-                var normalized = normalizeProvider(accountItem)
+                var normalized = null
+                try {
+                    var accountItem = copyObject(item)
+                    accountItem.provider = providerID
+                    normalized = normalizeProvider(accountItem)
+                } catch (recordError) {
+                    // Contain the failure to its own record: a malformed
+                    // sibling must not discard the accounts parsed before or
+                    // after it.
+                    message = i18n("Could not read a codexbar account record: %1",
+                        boundedCliMessage(recordError.message))
+                    continue
+                }
                 if (normalized.error.length > 0 && accountLabel(normalized).length === 0) {
                     if (Normalizer.isMissingTokenAccountsError(normalized.error)) {
                         sawMissingTokenAccountsError = true

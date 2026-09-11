@@ -1852,6 +1852,10 @@ msgid "codexbar did not return account data."
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "Could not read a codexbar account record: %1"
+msgstr ""
+
+#: contents/ui/main.qml
 msgid "Could not parse codexbar account JSON: %1"
 msgstr ""
 
