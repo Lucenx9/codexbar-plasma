@@ -16,10 +16,12 @@ from ci_scope import ROOT, docs_only, select_smoke, smoke_result
 class ScopePolicyTests(unittest.TestCase):
     def test_editorial_allowlist(self):
         self.assertTrue(docs_only(["README.md", "docs/usage.md", "AGENTS.md",
+                                   "CONTRIBUTING.md", "SECURITY.md",
                                    ".github/pull_request_template.md"]))
         for path in ("contents/ui/main.qml", "po/it.po", "docs/overview.png",
                      "metadata.json", "Makefile", "scripts/ci_scope.py", "tests/test_ci_scope.py",
-                     ".github/workflows/ci.yml", "NEW.md", "docs/odd\nname.md"):
+                     ".github/workflows/ci.yml", ".github/ISSUE_TEMPLATE/bug_report.yml",
+                     "NEW.md", "docs/odd\nname.md"):
             with self.subTest(path=path):
                 self.assertFalse(docs_only(["README.md", path]))
         self.assertFalse(docs_only([]))

@@ -1,0 +1,35 @@
+name: Feature request
+description: Suggest a capability or improvement for the Plasma widget.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The widget can only show data and actions that the released Linux
+        `codexbar` CLI provides. Requests that need new provider logic or new
+        CLI output belong to [CodexBar](https://github.com/steipete/CodexBar/issues).
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What can you not do today, and in which situation?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the panel, popup, or settings behavior you want.
+    validations:
+      required: true
+  - type: textarea
+    id: cli-support
+    attributes:
+      label: CLI support
+      description: |
+        Which `codexbar` command and output would supply the data? Paste the
+        redacted command output if you have it, or say that it is unknown.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
