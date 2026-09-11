@@ -552,11 +552,21 @@ The default branch rules require a PR and successful GitHub Actions `check`,
 also prevent
 deletion and force pushes. Copilot review remains enabled; no additional human
 approval count is required. The maintainer can merge their own PR once its
-checks pass. Inspect the effective rules with:
+checks pass. Squash is the only allowed merge method, so the PR title becomes
+the commit subject, and merged branches are deleted automatically. Auto-merge
+is available for a PR that only waits on its checks. A separate ruleset blocks
+deletion and force updates of `v*` release tags. Inspect the effective rules
+with:
 
 ```sh
 gh api repos/Lucenx9/codexbar-plasma/rules/branches/main
+gh api repos/Lucenx9/codexbar-plasma/rulesets
 ```
+
+Workflow actions stay pinned by commit SHA; the repository requires SHA pinning,
+and [Dependabot](../.github/dependabot.yml) proposes one grouped update PR each
+month. Review the referenced release before merging such a PR, and keep the
+version comment beside each pinned SHA.
 
 The agent owns delivery through these completion criteria:
 
