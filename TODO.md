@@ -29,6 +29,16 @@ Issues linked below preserve discussion; this file owns parity status.
   refreshes on return and across midnight without scans on metric/day selection.
   Evidence: [0.57.0 comparison](docs/research/2026-09-09-macos-parity-0.57.0.md#refresh-stale-spend-views-when-revisited).
 
+### Popup usage row visibility
+
+- [ ] Hide and restore individual popup usage rows per provider, mirroring the
+  macOS 0.58.0 visible-row choice as a Plasma-local display preference. Panel
+  rows already have visibility rules; popup provider cards expose only fixed
+  section toggles, and no CLI contract is required. Done when rows can be
+  hidden and restored without affecting fetching, alerts, or the panel, with
+  the choice persisted and previewed in settings.
+  Evidence: [0.58.0 comparison](docs/research/2026-09-11-macos-parity-0.58.0.md).
+
 ## Blocked on official Linux CLI contracts
 
 These are useful Linux features once the named contract exists. Do not fill
@@ -95,8 +105,9 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 - [ ] Replace the Antigravity-specific unknown-cost fallback with explicit
   official availability metadata. At 0.56.2, established-empty history used zero
-  despite unavailable costs. The 0.57.0 and 0.58.0 fresh-history probes omit
-  amounts without verifying that established-empty case. Done when verified
+  despite unavailable costs. The 0.57.0 and 0.58.0 Antigravity fresh-history
+  probes omit cost totals, and the 0.58.0 Claude probe reports measured zeros;
+  neither verifies that established-empty case. Done when verified
   Linux fields distinguish unavailable from measured zero, with old-payload compatibility and
   usable token charts. [Prior discussion #173](https://github.com/Lucenx9/codexbar-plasma/issues/173).
 

@@ -20,7 +20,7 @@ date.
 
 | Release | Linux-relevant observations |
 | --- | --- |
-| [0.58.0](https://github.com/steipete/CodexBar/releases/tag/v0.58.0) | macOS daily spend ledger, chart hover details, visible-row selection, percent-window and reset-layout pickers, and account reset labels. No Linux CLI payload code changed. Cost scanner fixes benefit Linux output unchanged. |
+| [0.58.0](https://github.com/steipete/CodexBar/releases/tag/v0.58.0) | macOS daily spend ledger, chart hover details, visible-row selection, percent-window and reset-layout pickers, and account reset labels. No Linux CLI payload contract changed; cost scanner fixes can change reported values within the existing schema. |
 
 ## No Linux CLI payload changes
 
@@ -47,17 +47,24 @@ so it is not a Linux contract.
   computes `DailySummary` rows from existing snapshot optionals
   (`totalTokens`, `requestCount`, `totalCost`), a display calendar, and
   `historyCoverageIsEstablished`. Plasma already renders interactive daily
-  cost/token charts with explicit day selection from the same generic fields.
-  The unknown-versus-zero distinction remains presentation over existing data;
+  cost/token charts with explicit day selection. Its cost normalization in
+  [ProviderNormalizer.js](../../contents/ui/ProviderNormalizer.js) keeps only
+  cost and token metrics and drops a request-only day, and no nonempty Linux
+  output was probed for per-day request counts, so the request-count ledger
+  stays inside the existing richer-usage blocker in TODO. The
+  unknown-versus-zero distinction remains presentation over existing data;
   the unavailable-cost blocker in TODO still needs its established-empty CLI
   case verified.
 - **Chart hover details (#3413).** Plasma charts are already interactive with
   per-day detail on inspection. No new contract or work.
 - **Visible usage rows (#3196, #3182).** macOS hides menu-card rows per
-  provider through `hiddenUsageItemIDs`. Plasma already chooses visible panel
-  rows natively with panel visibility rules, ordering, the settings preview,
-  and Overview, all local to the widget. The new provider-config field is not
-  emitted to Linux consumers, so there is nothing to sync.
+  provider through `hiddenUsageItemIDs`. Plasma chooses visible panel rows
+  natively with panel visibility rules, ordering, the settings preview, and
+  Overview, but popup provider cards expose only fixed section toggles, so an
+  individual usage row cannot be hidden. The new provider-config field is not
+  emitted to Linux consumers, and the macOS preference is a local display
+  choice, so per-row popup visibility is implementable Plasma-locally; it is
+  tracked in TODO.
 - **Percent-window picker (#3124).**
   [`MenuBarPercentWindowPreference`](https://github.com/steipete/CodexBar/blob/88fa2f45fa1e7e04c3c96234ddf973ca947208db/Sources/CodexBar/MenuBarPercentWindowPreference.swift)
   rewrites the app-local menu-bar layout. Plasma exposes explicit per-provider
