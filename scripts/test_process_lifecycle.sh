@@ -606,6 +606,41 @@ require_all(
     "automatic cost scans must use their own hourly scheduler",
 )
 
+# Spend freshness reuses the hourly cost lifecycle: revisits and a visible
+# midnight crossing refresh through refreshCost(false), never forcing a scan.
+require_all(
+    applet.function_body("refreshSpendIfStale"),
+    (
+        "!spendSelected || !expanded",
+        "return refreshCost(false)",
+    ),
+    "spend revisits must refresh only a visible spend tab through the hourly cost lifecycle",
+)
+require_all(
+    applet.handler_body("onSpendSelectedChanged"),
+    (
+        "if (spendSelected && expanded)",
+        "Qt.callLater(refreshSpendIfStale)",
+    ),
+    "entering Usage & Spend must check cost freshness",
+)
+require_all(
+    applet.function_body("selectGlobalView"),
+    ('candidate === "spend"', "refreshSpendIfStale()"),
+    "reselecting the spend tab must check whether its snapshot became stale",
+)
+require_all(
+    applet.id_block("panelClockTimer"),
+    (
+        "running: root.providers.length > 0 || (root.spendSelected && root.expanded)",
+        "CostRefreshPolicy.isNewBucketDay(",
+        "root.lastCostRefreshAttemptAt, root.panelClockMs",
+        "root.spendSelected && root.expanded",
+        "root.refreshSpendIfStale()",
+    ),
+    "a visible spend view must refresh across midnight even with no provider rows",
+)
+
 require_all(
     providers.function_body("runCommand"),
     (

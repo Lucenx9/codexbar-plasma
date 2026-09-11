@@ -264,8 +264,16 @@ PlasmoidItem {
         if (root.expanded) {
             Qt.callLater(refreshUsageOnOpen)
             Qt.callLater(refreshSessionsIfStale)
+            if (spendSelected) {
+                Qt.callLater(refreshSpendIfStale)
+            }
         } else {
             scheduleSessionsRefreshCheck()
+        }
+    }
+    onSpendSelectedChanged: {
+        if (spendSelected && expanded) {
+            Qt.callLater(refreshSpendIfStale)
         }
     }
     onSessionsSelectedChanged: {
@@ -898,6 +906,16 @@ PlasmoidItem {
         var started = requestSessionsRefresh(false)
         scheduleSessionsRefreshCheck()
         return started
+    }
+
+    // Entering Usage & Spend refreshes stale history through the existing
+    // hourly cost lifecycle (now also day-aware). Metric toggles reuse the
+    // loaded payload and day inspection never calls here, so neither scans.
+    function refreshSpendIfStale() {
+        if (!spendSelected || !expanded) {
+            return false
+        }
+        return refreshCost(false)
     }
 
     function refreshSessions() {
@@ -3757,6 +3775,9 @@ PlasmoidItem {
         if (candidate === "sessions") {
             refreshSessionsIfStale()
         }
+        if (candidate === "spend") {
+            refreshSpendIfStale()
+        }
     }
 
     function updateSelectedProvider() {
@@ -4142,11 +4163,20 @@ PlasmoidItem {
 
         interval: root.panelClockIntervalMs
         repeat: true
-        running: root.providers.length > 0
+        running: root.providers.length > 0 || (root.spendSelected && root.expanded)
         triggeredOnStart: false
         onTriggered: {
+            // A visible spend view that stays open across midnight refreshes
+            // once: the day-aware cost policy treats the new bucket as stale.
+            // Hidden views refresh on their next revisit instead, so the clock
+            // never starts background cost scans.
             root.panelClockMs = Date.now()
             root.expireStaleUsage(root.panelClockMs)
+            if (CostRefreshPolicy.isNewBucketDay(
+                    root.lastCostRefreshAttemptAt, root.panelClockMs)
+                    && root.spendSelected && root.expanded) {
+                root.refreshSpendIfStale()
+            }
         }
     }
 

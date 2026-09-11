@@ -21,14 +21,6 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Implementable on Linux
 
-### Spend freshness
-
-- [ ] Refresh stale Usage & Spend data on tab revisit and calendar-day changes.
-  Use the existing `cost` command and `CostRefreshPolicy.js`; preserve cached
-  charts, in-flight guards, and failed-attempt cooldowns. Done when a stale view
-  refreshes on return and across midnight without scans on metric/day selection.
-  Evidence: [0.57.0 comparison](docs/research/2026-09-09-macos-parity-0.57.0.md#refresh-stale-spend-views-when-revisited).
-
 ### Popup usage row visibility
 
 - [ ] Hide and restore individual popup usage rows per provider, mirroring the

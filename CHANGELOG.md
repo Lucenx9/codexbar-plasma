@@ -10,6 +10,14 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Added
+
+- Refresh stale **Usage & Spend** history when revisiting the tab and when a
+  visible spend view stays open across midnight. The existing hourly cost
+  lifecycle still guards in-flight scans and failed-attempt cooldowns, cached
+  charts stay visible during refresh, and switching the cost/token metric or
+  inspecting a day still starts no scan.
+
 ### Fixed
 
 - Keep failed usage replies from borrowing another account's quota when distinct
