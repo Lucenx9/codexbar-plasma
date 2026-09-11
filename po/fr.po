@@ -1033,7 +1033,9 @@ msgstr "Fournisseurs du panneau"
 msgid ""
 "Choose the providers shown in the panel. The popup keeps every enabled "
 "provider."
-msgstr "Choisissez les fournisseurs affichés dans le panneau. La fenêtre contextuelle continue d'afficher tous les fournisseurs activés."
+msgstr ""
+"Choisissez les fournisseurs affichés dans le panneau. La fenêtre "
+"contextuelle continue d'afficher tous les fournisseurs activés."
 
 #: contents/ui/configPanel.qml contents/ui/configPopup.qml
 msgid "Loading providers..."
@@ -1940,6 +1942,10 @@ msgstr "Le délai de chargement des comptes a expiré. Réessayez."
 #: contents/ui/main.qml
 msgid "codexbar did not return account data."
 msgstr "codexbar n'a renvoyé aucune donnée de compte."
+
+#: contents/ui/main.qml
+msgid "Could not read a codexbar account record: %1"
+msgstr "Impossible de lire un enregistrement de compte de codexbar : %1"
 
 #: contents/ui/main.qml
 msgid "Could not parse codexbar account JSON: %1"

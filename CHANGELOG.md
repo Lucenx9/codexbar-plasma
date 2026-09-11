@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep the healthy accounts listed in the account picker when another account
+  record in the same `codexbar` reply cannot be read.
 - Preserve newer retained usage and its last-known timestamp when startup cache
   restoration is delayed past a failed refresh.
 - A tiny negative credit balance that rounds to zero now reads as `0` instead
