@@ -10,6 +10,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Fixed
+
+- A tiny negative credit balance that rounds to zero now reads as `0` instead
+  of the negative-zero string `-0`.
+
 ## 0.2.37 - 2026-09-10
 
 ### Added

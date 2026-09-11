@@ -279,6 +279,19 @@ TestCase {
         compare(CostPresentation.formatCount(null, 12.5), "12.5")
     }
 
+    // A tiny negative balance rounds to a displayed zero. The sign must not
+    // survive as the negative-zero string "-0".
+    function test_formatCountDropsTheSignWhenANegativeRoundsToZero() {
+        compare(CostPresentation.formatCount(fmt, -0.04), "0")
+        compare(CostPresentation.formatCount(fmt, -0.049), "0")
+        var italian = CostPresentation.numberFormat(".", ",")
+        compare(CostPresentation.formatCount(italian, -0.04), "0")
+        // A negative that survives rounding keeps its sign.
+        compare(CostPresentation.formatCount(fmt, -0.05), "-0.1")
+        compare(CostPresentation.formatCount(fmt, -0.4), "-0.4")
+        compare(CostPresentation.formatCount(fmt, -5), "-5")
+    }
+
     function test_tokenCountStringScalesAndDropsTrailingZero() {
         compare(CostPresentation.tokenCountString(999), "999")
         compare(CostPresentation.tokenCountString(1000), "1K")
