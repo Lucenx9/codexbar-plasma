@@ -112,7 +112,7 @@ if sed -n 's/^[[:space:]]*image: //p' "$WORKFLOW" | grep -Evq '^invent-registry\
 fi
 require_in_file "$WORKFLOW" "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
 reject_text "workflow" "$(cat "$WORKFLOW")" "actions/checkout@v4"
-require_in_file "$WORKFLOW" "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02"
+require_in_file "$WORKFLOW" "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
 require_in_file "$WORKFLOW" "dist/codexbar-plasma.plasmoid.sha256"
 require_in_file "$MAKEFILE" "sha256sum codexbar-plasma.plasmoid > codexbar-plasma.plasmoid.sha256"
 require_in_file "$UPDATER" "sha256sum --check --strict"
