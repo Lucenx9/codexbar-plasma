@@ -87,6 +87,38 @@ TestCase {
         compare(Cache.reconcile([], [failed("codex")], nowMs)[0].rows.length, 0);
     }
 
+    function test_retentionUsesAccountKeys_data() {
+        return [
+            { tag: "collapsed-label", label: "Work Team", previousKey: "Work  Team",
+                incomingKey: "Work Team", retain: false },
+            { tag: "organization-only", label: "", previousKey: "Workspace A",
+                incomingKey: "Workspace B", retain: false },
+            { tag: "same-key", label: "Work Team", previousKey: "Work  Team",
+                incomingKey: "Work  Team", retain: true },
+            { tag: "identityless-failure", label: "", previousKey: "Workspace A",
+                incomingKey: "", retain: true }
+        ];
+    }
+
+    function test_retentionUsesAccountKeys(data) {
+        // normalizeProvider keeps the uncollapsed key beside the display label;
+        // organization-only identities have a key but no account display text.
+        var prior = snapshot("codex", 72);
+        prior.account = data.label;
+        prior.accountKey = data.previousKey;
+        var previous = Cache.reconcile([], [prior], nowMs);
+        var incoming = failed("codex", data.label);
+        incoming.accountKey = data.incomingKey;
+        var result = Cache.reconcile(previous, [incoming], nowMs + 60000)[0];
+        compare(result.rows.length, data.retain ? 1 : 0);
+        compare(result.accountKey, data.retain ? data.previousKey : data.incomingKey);
+        compare(result.usageStale, data.retain);
+        compare(result.lastGoodAtMs, data.retain ? previous[0].lastGoodAtMs : 0);
+        compare(result.error, incoming.error);
+        compare(previous[0].rows[0].usedPercent, 72);
+        verify(!previous[0].usageStale);
+    }
+
     function test_failuresStopReusingExpiredMeasurements() {
         var previous = fresh();
         var deadline = previous[0].lastGoodAtMs + Cache.maximumAgeMs;
