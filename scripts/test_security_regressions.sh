@@ -271,8 +271,11 @@ require_in_surface applet 'import "ProviderIdentity.js" as ProviderIdentity'
 # aliases first so an alias cannot smuggle in a key the screen would have caught.
 require_in_surface applet "return ProviderIdentity.providerMapKey(ProviderIdentity.resolveProviderKey(providerID))"
 require_in_file "$PROVIDER_IDENTITY_JS" "Object.prototype.hasOwnProperty.call(Object.prototype, key)"
-require_in_surface applet "if (name.length === 0 || isUnsafeObjectKey(name))"
-require_in_surface applet "if (!hasOwnKey(byName, name))"
+# Per-model aggregates are keyed by the raw model identity: display labels are
+# bounded and collapse whitespace, so keying by the label would merge distinct
+# models. The raw identity is screened before it can name an object slot.
+require_in_surface applet "|| isUnsafeObjectKey(rawName)) {"
+require_in_surface applet "if (!hasOwnKey(byName, rawName))"
 require_in_surface applet "if (!hasOwnKey(byName, modelName))"
 require_in_surface applet "if (!hasOwnKey(item, key) || isUnsafeObjectKey(key))"
 require_in_surface applet "var providerID = normalizedProviderID(items[i].provider)"
