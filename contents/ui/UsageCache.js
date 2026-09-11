@@ -37,16 +37,34 @@ function withCurrentStatus(snapshot, source) {
     return next
 }
 
+// A provider is identity-pinned when the caller carries its explicit account
+// override, the same value the disk cache context fingerprints. An automatic or
+// default account is never pinned: the CLI can hand it a different identity
+// between sessions while that fingerprint stays unchanged.
+function pinnedProvider(pinnedAccounts, providerID) {
+    return Normalizer.isCliRecord(pinnedAccounts)
+        && Guards.hasOwnKey(pinnedAccounts, providerID)
+        && typeof pinnedAccounts[providerID] === "string"
+        && pinnedAccounts[providerID].length > 0
+}
+
 // Inputs are normalized live snapshots. A successful empty usage result replaces
 // old quotas; only an explicit failure may reuse them in the same account scope.
-function reconcile(previous, incoming, nowMs) {
+// `pinnedAccounts` reaches this function from the verified disk-cache restore,
+// whose entries deliberately store no identity: for a pinned provider the key
+// comparison could only reject its own verified account instead of protecting
+// it, while every other provider keeps the comparison.
+function reconcile(previous, incoming, nowMs, pinnedAccounts) {
     var byProvider = ({})
     previous.forEach(function(item) { byProvider[item.provider] = item })
     return incoming.map(function(item) {
         var next = Guards.copyObject(item)
         var old = byProvider[item.provider]
+        var incomingAccountKey = Normalizer.accountKey(item)
         if (item.error.length > 0 && hasQuota(old) && recent(old.lastGoodAtMs, nowMs)
-                && (!item.account || item.account === old.account)) {
+                && (pinnedProvider(pinnedAccounts, item.provider)
+                    || incomingAccountKey.length === 0
+                    || incomingAccountKey === Normalizer.accountKey(old))) {
             next = withCurrentStatus(old, item)
             next.error = item.error
             next.usageStale = true
@@ -97,7 +115,7 @@ function reconcile(previous, incoming, nowMs) {
 
 // Restores cached provider snapshots during widget initialization, merging any
 // cached providers missing from live results while keeping live data fresh.
-function restore(cached, live, nowMs) {
+function restore(cached, live, nowMs, pinnedAccounts) {
     if (!Array.isArray(cached) || cached.length === 0) {
         return Array.isArray(live) ? live : []
     }
@@ -108,7 +126,7 @@ function restore(cached, live, nowMs) {
             return copy
         })
     }
-    var reconciled = reconcile(cached, live, nowMs).map(function(item, index) {
+    var reconciled = reconcile(cached, live, nowMs, pinnedAccounts).map(function(item, index) {
         var current = live[index]
         // These measurements were already accepted by the live refresh path.
         return hasQuota(current) && recent(current.lastGoodAtMs, nowMs) ? current : item
