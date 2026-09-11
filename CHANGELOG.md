@@ -50,6 +50,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   the provider snapshot.
 - Align reset countdown / timestamp text with pace metadata along the text
   baseline in provider usage rows.
+- Aggregate per-model cost and token totals by the raw model identity instead
+  of the bounded display label, so distinct models that share a truncated or
+  whitespace-collapsed label no longer merge into one row.
 
 ## 0.2.37 - 2026-09-10
 

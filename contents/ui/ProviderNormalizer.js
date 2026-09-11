@@ -957,8 +957,16 @@ function costModelSummary(modelDays, currency) {
                     && hasOwnKey(breakdown, "model")) {
                 rawName = breakdown.model
             }
-            var name = typeof rawName === "string" ? boundedDisplayText(rawName, 120) : ""
-            if (name.length === 0 || isUnsafeObjectKey(name)) {
+            // Aggregate by the raw model identity. Display labels are bounded
+            // to 120 characters and collapse whitespace, so two distinct
+            // models can share one label; keying by the label would merge
+            // their costs and token counts.
+            if (typeof rawName !== "string" || rawName.length === 0
+                    || isUnsafeObjectKey(rawName)) {
+                continue
+            }
+            var name = boundedDisplayText(rawName, 120)
+            if (name.length === 0) {
                 continue
             }
             var cost = firstStrictFiniteNumber(
@@ -970,8 +978,8 @@ function costModelSummary(modelDays, currency) {
             if (!isFinite(cost) && !isFinite(tokens)) {
                 continue
             }
-            if (!hasOwnKey(byName, name)) {
-                byName[name] = {
+            if (!hasOwnKey(byName, rawName)) {
+                byName[rawName] = {
                     label: name,
                     cost: null,
                     tokens: null,
@@ -980,7 +988,7 @@ function costModelSummary(modelDays, currency) {
                     tokensOverflow: false
                 }
             }
-            var aggregate = byName[name]
+            var aggregate = byName[rawName]
             // Later finite rows must not revive an overflowed sum as a partial total.
             if (isFinite(cost) && !aggregate.costOverflow) {
                 var totalCost = (aggregate.cost === null ? 0 : aggregate.cost) + Math.max(0, cost)
