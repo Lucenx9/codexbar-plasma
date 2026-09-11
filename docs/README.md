@@ -30,6 +30,9 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   in the cost and settings documents do not replace this full audit.
 - [0.57.0 release review](research/2026-09-09-macos-parity-0.57.0.md): Linux-relevant
   changes since 0.56.2, current Plasma gaps, and scoped official CLI probes.
+- [0.58.0 release review](research/2026-09-11-macos-parity-0.58.0.md): release
+  delta with no Linux CLI contract changes, feature classification against
+  existing Plasma behavior, and scoped official CLI probes.
 - [Settings decisions](research/2026-09-08-settings-experience.md): Panel disclosure and text grouping,
   Plasma settings, privacy, refresh behavior, and the macOS 0.56.8 comparison.
 
