@@ -312,6 +312,14 @@ prompt commands with synthetic dialog and CLI processes and shortened timeouts.
 It checks cancellation, process termination, late submission, and the total
 deadline needed to preserve the full save timeout.
 
+`tests/test_session_context.py` exercises the production Sessions request and
+reply handlers. Failed scans record when the attempt finishes, separately from
+successful snapshot completion, so popup/tab reentry respects the retry cooldown.
+The full cooldown starts at the reply or timeout, even after a long scan.
+Manual retry bypasses that cooldown, and a command change clears it. The pure
+policy and timer share the same activity baseline; changing visibility does not
+extend the deadline or mark retained sessions fresh.
+
 `tests/test_widget_update_controller.py` instantiates the production updater
 module and runs temporary executable fixtures through Plasma's real DataSource.
 It checks overlapping requests, setting changes during a check, captured install
