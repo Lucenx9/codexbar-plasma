@@ -393,6 +393,11 @@ msgid "History metric"
 msgstr ""
 
 #: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/SpendView.qml
+msgid "Some local history is unavailable: %1"
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml
 msgid "Cost unavailable: %1"
 msgstr ""
 
@@ -502,10 +507,6 @@ msgstr ""
 
 #: contents/ui/components/SpendView.qml
 msgid "History range"
-msgstr ""
-
-#: contents/ui/components/SpendView.qml
-msgid "Some local history is unavailable: %1"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml

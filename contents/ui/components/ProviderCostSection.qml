@@ -123,8 +123,10 @@ ColumnLayout {
     }
 
     PlainPlasmaLabel {
-        visible: !tokenCostSection.tokenCost && tokenCostSection.costErrorText.length > 0
-        text: i18n("Cost unavailable: %1", tokenCostSection.costErrorText)
+        visible: tokenCostSection.costErrorText.length > 0
+        text: tokenCostSection.tokenCost
+            ? i18n("Some local history is unavailable: %1", tokenCostSection.costErrorText)
+            : i18n("Cost unavailable: %1", tokenCostSection.costErrorText)
         color: Kirigami.Theme.negativeTextColor
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
