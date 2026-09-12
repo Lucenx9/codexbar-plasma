@@ -241,6 +241,27 @@ TestCase {
         verify(result.message.length <= 500)
     }
 
+    function test_commandOutcomeRejectsErrorsWithoutReadableMessages_data() {
+        return [
+            {tag: "missing", error: {}},
+            {tag: "empty", error: {message: ""}},
+            {tag: "whitespace", error: {message: "   "}},
+            {tag: "object", error: {message: {detail: "failed"}}},
+            {tag: "array", error: {message: ["failed"]}},
+            {tag: "null-toString", error: {message: {toString: null}}}
+        ]
+    }
+
+    function test_commandOutcomeRejectsErrorsWithoutReadableMessages(data) {
+        var payload = {provider: "codex", error: data.error}
+        var result = ProviderConfigProtocol.commandOutcome(payload, "", 0)
+        compare(result.outcome, "envelopeError")
+        compare(result.message, "")
+        verify(!ProviderConfigProtocol.setApiKeyOutcomeIsSuccess(result))
+        compare(ProviderConfigProtocol.commandOutcome([payload], "", 0).outcome,
+            "envelopeError")
+    }
+
     function test_commandOutcomeClassifiesCancellationOnACleanExit() {
         var cases = [
             { cancelled: true },

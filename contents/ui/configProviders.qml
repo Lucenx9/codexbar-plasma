@@ -140,9 +140,9 @@ KCM.SimpleKCM {
     // lives in ProviderConfigProtocol.commandOutcome; only the words live here.
     function providerCommandFailureText(result) {
         switch (result.outcome) {
-        case "envelopeError":
         case "stderrError":
             return result.message
+        case "envelopeError":
         case "statusError":
             return result.message.length > 0
                 ? result.message

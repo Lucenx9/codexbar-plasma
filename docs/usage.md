@@ -192,6 +192,8 @@ Provider-specific editable settings depend on the official CLI contract.
   Clear filters restores the list without changing selection or provider settings.
 - Provider enable/disable and setup actions write CodexBar configuration
   immediately; Apply and Cancel cover widget settings only.
+  A CLI error with an empty or malformed message shows a generic failure
+  instead of confirming that the change was saved.
 - API key and secret prompts stay open while you type. A prompt left open for
   about 15 minutes closes by itself, the provider's actions unlock again, and
   the prompt can be reopened. Submitting near that limit still allows the full
