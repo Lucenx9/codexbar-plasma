@@ -121,6 +121,20 @@ work and upstream contract requirements.
 
 ## Data freshness
 
+When no provider data is available, the popup offers **Configure providers**
+with a hint to open **Providers** in widget settings. A confirmed empty list of
+enabled providers uses this setup state and still clears previous quotas and
+their cache. Global and provider usage errors offer **Retry** and **Settings**,
+with a hint to open **Diagnostics** for
+connection checks. Both settings actions open Plasma's standard widget settings
+window; select the named page there. They do not change configuration or run
+diagnostics automatically.
+
+**Retry** starts the existing manual quota refresh, including a fresh provider
+list, and is disabled while a usage refresh is running. It does not scan local
+cost history or sessions. The existing last-known quota and timestamp rules
+below also apply while retrying and after another failure.
+
 Malformed optional login-method metadata does not discard valid provider quotas
 or named accounts. The Codex plan label uses the same validated login method as
 the account details, including a valid fallback supplied by the CLI.

@@ -120,6 +120,13 @@ class SmokePopupTests(unittest.TestCase):
         self.assertIn("error", failed)
         self.assertNotIn("usage", failed)
 
+    def test_setup_and_error_fixtures_do_not_invent_provider_data(self):
+        now = datetime(2026, 9, 1, tzinfo=timezone.utc)
+        command = ["config", "providers", "--format", "json", "--json-only"]
+        self.assertEqual(response(command, "empty-providers", now), [])
+        with self.assertRaisesRegex(ValueError, "Synthetic connection failure"):
+            response(command, "usage-error", now)
+
     def test_fixture_refuses_commands_outside_the_preview_contract(self):
         now = datetime(2026, 9, 1, tzinfo=timezone.utc)
         for args in (["config", "set-api-key"], ["usage", "--provider", "unexpected"], []):

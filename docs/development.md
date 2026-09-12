@@ -403,6 +403,13 @@ leaving the plot or clearing its points preserves the reserved readout space.
 
 ## Popup smoke tests
 
+`empty-providers` and `usage-error` exercise the popup's setup and recovery
+actions. `usage-recovery` retries a failed refresh with retained quotas, checks
+that repeated activation cannot start another request, and waits for fresh
+usage without rescanning cost history. `tests/test_usage_recovery.py` exercises
+the production action handlers and message controls with keyboard activation,
+observing refresh and native configuration actions at their effect boundaries.
+
 Run the popup smoke test from a graphical Plasma 6 session:
 
 ```sh

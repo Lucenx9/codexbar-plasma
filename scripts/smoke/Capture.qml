@@ -28,6 +28,9 @@ Item {
     property int settingsCommandSerial: 0
     property var settingsCostSnapshot
     property var settingsProviderSnapshot
+    property int recoveryStep: 0
+    property var recoveryUsageSnapshot
+    property var recoveryCostSnapshot
     readonly property bool settingsScenario: scenario.indexOf("settings-") === 0
     readonly property bool panelInformationScenario: scenario.indexOf("panel-information") === 0
     readonly property bool panelDefaultsScenario: scenario === "panel-default" || scenario === "panel-default-single"
@@ -40,7 +43,8 @@ Item {
     readonly property bool panelAppearanceScenario: scenario === "panel-standard" || scenario === "panel-minimal"
         || scenario === "panel-minimal-single" || readmePanelScenario || capsulePanelScenario || panelInformationScenario
     readonly property bool readmeScenario: scenario.indexOf("readme-") === 0
-    readonly property int expectedProviderCount: scenario === "panel-information-single" || scenario === "panel-minimal-single" || scenario === "panel-default-single"
+    readonly property int expectedProviderCount: scenario === "empty-providers" || scenario === "usage-error" ? 0
+        : scenario === "panel-information-single" || scenario === "panel-minimal-single" || scenario === "panel-default-single"
         ? 1 : (readmeScenario ? 3 : 2)
 
     Loader {
@@ -928,6 +932,51 @@ Item {
     }
 
     function scenarioReady() {
+        if (scenario === "empty-providers") {
+            var empty = findItem(applet.fullRepresentationItem, "emptyProvidersPlaceholder");
+            return !applet.loading && applet.providers.length === 0 && empty && empty.visible
+                && empty.helpfulAction && empty.helpfulAction.enabled && empty.plainExplanation.length > 0;
+        }
+        if (scenario === "usage-error") {
+            var error = findItem(applet.fullRepresentationItem, "globalErrorMessage");
+            return !applet.loading && applet.providers.length === 0 && error && error.visible
+                && error.actions.length === 2 && error.actions[0].enabled
+                && error.plainText.indexOf("Synthetic connection failure") >= 0;
+        }
+        if (scenario === "usage-recovery") {
+            if (applet.loading || applet.costLoading || applet.providers.length !== 2)
+                return false;
+            if (recoveryStep === 0) {
+                recoveryCostSnapshot = applet.tokenCosts;
+                applet.openProviderFromPanel("codex");
+                applet.failUsageRefresh("Synthetic network failure. Try again.");
+                recoveryUsageSnapshot = applet.providers;
+                recoveryStep = 1;
+                return false;
+            }
+            if (recoveryStep === 1) {
+                var message = findItem(applet.fullRepresentationItem, "providerErrorMessage");
+                if (!message || !message.visible)
+                    return false;
+                verifyScenario(applet.providers[0].usageStale && applet.providers[0].rows.length === 2,
+                    "recovery actions erased retained quotas");
+                message.actions[0].trigger();
+                var serial = applet.commandRunSerial;
+                verifyScenario(applet.loading && !message.actions[0].enabled,
+                    "Retry did not start a refresh or stayed enabled while busy");
+                message.actions[0].trigger();
+                applet.retryUsage();
+                verifyScenario(applet.commandRunSerial === serial && applet.providers === recoveryUsageSnapshot
+                    && applet.tokenCosts === recoveryCostSnapshot,
+                    "repeated retry restarted work, changed retained usage, or scanned cost history");
+                recoveryStep = 2;
+                return false;
+            }
+            verifyScenario(applet.providers.every(function(item) { return !item.usageStale && !item.error; })
+                && applet.tokenCosts === recoveryCostSnapshot,
+                "successful retry did not restore fresh usage or reloaded cost history");
+            return true;
+        }
         if (scenario === "usage-cache-restart") {
             if (applet.providers.length !== 2)
                 return false;
@@ -1153,7 +1202,8 @@ Item {
                 "changed configuration restored another scope's usage");
             applet.commitUsageSnapshot(previous);
             applet.startProviderFallbackForProviders([]);
-            verifyScenario(applet.providers.length === 0 && Plasmoid.configuration.usageCache === "",
+            verifyScenario(applet.providers.length === 0 && Plasmoid.configuration.usageCache === ""
+                && applet.errorText === "",
                 "disabling every provider retained cached quotas");
             applet.commitUsageSnapshot(previous);
             applet.failUsageRefresh("Synthetic network failure. Try again.");

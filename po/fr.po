@@ -112,6 +112,23 @@ msgstr "La source du total affiché pour la période n'a pas pu être vérifiée
 msgid "%1 %2"
 msgstr "%1 %2"
 
+#: contents/ui/components/FullRepresentation.qml
+msgid "For connection checks, open Diagnostics in widget settings."
+msgstr ""
+"Pour vérifier la connexion, ouvrez Diagnostic dans les paramètres du widget."
+
+#: contents/ui/components/FullRepresentation.qml
+msgid "Retry"
+msgstr "Réessayer"
+
+#: contents/ui/components/FullRepresentation.qml contents/ui/main.qml
+msgid "Settings..."
+msgstr "Réglages..."
+
+#: contents/ui/components/FullRepresentation.qml
+msgid "Configure providers..."
+msgstr "Configurer les fournisseurs..."
+
 #: contents/ui/components/FullRepresentation.qml scripts/smoke/Capture.qml
 msgid "Overview"
 msgstr "Vue d'ensemble"
@@ -141,6 +158,12 @@ msgstr "Chargement de l'utilisation..."
 #: contents/ui/components/FullRepresentation.qml
 msgid "No provider data."
 msgstr "Aucune donnée de fournisseur."
+
+#: contents/ui/components/FullRepresentation.qml
+msgid "Open Providers in widget settings to enable or set up a provider."
+msgstr ""
+"Ouvrez Fournisseurs dans les paramètres du widget pour activer ou configurer "
+"un fournisseur."
 
 #: contents/ui/components/FullRepresentation.qml
 #: contents/ui/components/OverviewProviderRow.qml
@@ -415,6 +438,11 @@ msgid "History metric"
 msgstr "Mesure de l'historique"
 
 #: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/SpendView.qml
+msgid "Some local history is unavailable: %1"
+msgstr "Une partie de l'historique local est indisponible : %1"
+
+#: contents/ui/components/ProviderCostSection.qml
 msgid "Cost unavailable: %1"
 msgstr "Coût indisponible : %1"
 
@@ -527,10 +555,6 @@ msgstr "Historique"
 #: contents/ui/components/SpendView.qml
 msgid "History range"
 msgstr "Période de l'historique"
-
-#: contents/ui/components/SpendView.qml
-msgid "Some local history is unavailable: %1"
-msgstr "Une partie de l'historique local est indisponible : %1"
 
 #: contents/ui/components/SpendView.qml
 msgid "Local history is unavailable: %1"
@@ -1183,7 +1207,7 @@ msgstr "Utiliser automatiquement les %1 premiers fournisseurs"
 msgid "Set the codexbar command path in Diagnostics."
 msgstr "Définissez le chemin de la commande codexbar dans Diagnostic."
 
-#: contents/ui/configProviders.qml
+#: contents/ui/configProviders.qml contents/ui/main.qml
 msgid "codexbar command failed."
 msgstr "La commande codexbar a échoué."
 
@@ -1914,10 +1938,6 @@ msgstr ""
 "Impossible d'analyser la configuration des fournisseurs de CodexBar : %1"
 
 #: contents/ui/main.qml
-msgid "No enabled CodexBar providers."
-msgstr "Aucun fournisseur CodexBar activé."
-
-#: contents/ui/main.qml
 msgid "Loading usage timed out. Try again."
 msgstr "Le délai de chargement de l'utilisation a expiré. Réessayez."
 
@@ -2537,10 +2557,6 @@ msgstr "État du service"
 #: contents/ui/main.qml
 msgid "Changelog"
 msgstr "Journal des modifications"
-
-#: contents/ui/main.qml
-msgid "Settings..."
-msgstr "Réglages..."
 
 #: contents/ui/main.qml
 msgid "About CodexBar"

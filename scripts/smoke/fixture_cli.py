@@ -24,6 +24,7 @@ SCENARIOS += ("popup-cost-missing-tokens", "popup-cost-partial-models")
 SCENARIOS += ("popup-content", "refresh-on-open", "privacy-provider", "privacy-spend", "privacy-sessions")
 SCENARIOS += ("privacy-cost-details",)
 SCENARIOS += ("usage-retention", "usage-cache-restart")
+SCENARIOS += ("empty-providers", "usage-error", "usage-recovery")
 MAX_SCENARIO_TIMEOUT_SECONDS = 120
 MATRIX_SCENARIOS = ("panel-matrix-one", "panel-matrix-four")
 
@@ -112,6 +113,10 @@ def response(args, scenario, now):
     if args == ["--version"]:
         return "CodexBar 0.56.2 (synthetic smoke fixture)"
     if args == ["config", "providers", "--format", "json", "--json-only"]:
+        if scenario == "empty-providers":
+            return []
+        if scenario == "usage-error":
+            raise ValueError("Synthetic connection failure.")
         providers = ("codex",) if scenario in ("panel-minimal-single", "panel-default-single", "panel-information-single", "panel-matrix-one") else ("codex", "claude")
         if scenario.startswith("readme-"):
             providers += ("gemini",)
