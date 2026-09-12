@@ -26,6 +26,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   styles, avoiding repeated width binding loops while the pages settle.
 - Keep the provider filter tabs usable with KDE styles whose tab buttons expose
   no content item, avoiding repeated QML errors when opening Providers settings.
+- Use the pinned KDE CI image’s authenticated package indexes so an outage of
+  the archive’s current metadata does not block checks and package builds.
 - Preserve ampersands and angle brackets in provider selection and settings
   checkbox labels when KDE styles process keyboard mnemonics.
 - Preserve quota, pace, and reset notification baselines when a successful CLI
