@@ -22,6 +22,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Respect the automatic refresh interval after a failed Sessions scan when
+  reopening the popup or revisiting the tab, while allowing immediate manual
+  retries and scans after changing the CLI command.
 - Preserve valid Codex quotas and named accounts when optional login-method
   metadata is malformed, and use a valid fallback for the plan label.
 - Keep disabled Overview providers from occupying the three selection slots,
