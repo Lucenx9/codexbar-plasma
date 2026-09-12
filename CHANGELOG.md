@@ -22,6 +22,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep unavailable days in their calendar positions in the Usage & Spend
+  activity heatmap, so missing cost or token values do not shift weekday rows
+  or shorten the displayed range.
 - Show cost refresh errors beside retained provider costs, including when the
   details are collapsed, so older values do not hide a failed update.
 - Coalesce cost-setting changes applied together into one scan using the final

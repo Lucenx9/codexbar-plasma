@@ -94,7 +94,9 @@ work and upstream contract requirements.
 - Global **Usage & Spend** tab with a Cost/Tokens selector, a 7/30/90-day range
   selector, interactive daily chart, activity heatmap, and provider totals that
   keep different currencies separate. The heatmap groups the range into weekday
-  rows and week columns, and stays hidden for ranges that fill a single column.
+  rows and week columns, leaving empty cells for unavailable days in the loaded
+  calendar, including its first and last days. Measured zero remains a recorded
+  day. It stays hidden for ranges that fill a single column.
 - Local **Sessions** tab backed by `sessions --json-v2`; transcript paths and
   working directories are never rendered or opened. The tab refreshes stale
   session data while it remains visible.
