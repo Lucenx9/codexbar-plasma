@@ -13,7 +13,7 @@ sys.path.insert(0, str(ROOT / "scripts/lib"))
 from qml_surfaces import Surface
 
 FUNCTIONS = (
-    "addWindow", "replaceProviderSnapshot", "runOutTextForRow", "paceEtaText",
+    "presentUsageWindow", "replaceProviderSnapshot", "runOutTextForRow", "paceEtaText",
     "paceWarningActive", "selectAccount", "providerMapKey", "copyObject",
     "accountKey", "accountOptionsForProvider", "markUsageSnapshotReceived",
 )
@@ -21,6 +21,8 @@ FUNCTIONS = (
 QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
+import "SOURCE_URL/ProviderSnapshot.js" as ProviderSnapshot
+import "SOURCE_URL/AccountResponse.js" as AccountResponse
 import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/PanelDisplay.js" as PanelDisplay
 import "SOURCE_URL/ProviderOrder.js" as ProviderOrder
@@ -49,7 +51,7 @@ TestCase {
             }
             function i18np(one, many, count) { return i18n(count === 1 ? one : many, count); }
             function resetText() { return ""; }
-            function paceSummaryText() { return ""; }
+            function paceSummaryPartsText() { return ""; }
             function providerTokenCost() { return null; }
             function invalidateUsageData() { providers = []; }
             function setNotificationProviderRefreshPending() {}
@@ -70,9 +72,10 @@ TestCase {
         var applet = createTemporaryObject(harness, this);
         var rows = [];
         // Account discovery normalizes rows before storing the picker options.
-        var row = applet.addWindow(rows, "Session", {usedPercent: 85}, {
+        var row = applet.presentUsageWindow(ProviderSnapshot.windowSnapshot({usedPercent: 85}, {
             expectedUsedPercent: 60, willLastToReset: false, etaSeconds: 1800
-        }, true, "primary");
+        }, true, "primary", "Session", applet.testNowMs), "codex");
+        rows.push(row);
         applet.accountOptions = {codex: [{
             provider: "codex", account: "Synthetic account", accountKey: "Synthetic account",
             rows: rows, primaryRow: row, updatedAt: "", error: ""

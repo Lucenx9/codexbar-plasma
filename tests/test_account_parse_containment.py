@@ -13,21 +13,21 @@ sys.path.insert(0, str(ROOT / "scripts/lib"))
 from qml_surfaces import Surface
 
 FUNCTIONS = (
-    "parseProviderAccountsOutput", "normalizeProvider", "planText", "capitalize",
+    "normalizeProvider", "presentProviderSnapshot", "presentUsageWindow", "planText", "capitalize",
     "isCliRecord", "hasOwnKey", "copyObject", "accountLabel", "providerMapKey",
-    "providerKey", "boundedCliMessage", "setAccountOptions", "setAccountError",
-    "accountLoadingForProvider", "finishUsageCommandSource",
+    "providerKey", "boundedCliMessage", "finishUsageCommandSource",
     "parseProviderFallbackOutput", "normalizedProviderID", "providerErrorPayload",
-    "addWindow", "replaceProviderSnapshot",
+    "replaceProviderSnapshot",
 )
 
 QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
+import "SOURCE_URL/ProviderSnapshot.js" as ProviderSnapshot
+import "SOURCE_URL/AccountResponse.js" as AccountResponse
 import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
 import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/SafeText.js" as SafeText
-import "SOURCE_URL/AccountRequests.js" as AccountRequests
 import "SOURCE_URL/CommandLedger.js" as CommandLedger
 import "SOURCE_URL/UsageDetails.js" as UsageDetails
 import "SOURCE_URL/UsageCache.js" as UsageCache
@@ -40,14 +40,10 @@ TestCase {
             id: root
             property var activeCommandDescriptors: ({})
             property var accountOptions: ({})
-            property var accountErrors: ({})
             property var providers: []
             property string providerOrderRaw: ""
             property double testNowMs: Date.UTC(2026, 8, 12, 12)
             property var providerDisplayNames: ({})
-            property int maximumAccountSnapshots: Normalizer.maximumAccountSnapshots
-            property int maximumExtraRateWindows: Normalizer.maximumExtraRateWindows
-            property string currentCommand: "accounts-context"
             property string source: ""
             property var fallbackCompletions: []
             property QtObject usageSource: QtObject {
@@ -57,18 +53,15 @@ TestCase {
             SOURCE_FUNCTIONS
 
             function i18n(text) { return text; }
-            function buildProviderAccountsCommand(providerID) { return currentCommand; }
-            // Keep presentation unrelated to this account parser test empty.
+            // Keep presentation unrelated to this parser/selection test empty.
             // normalizeProvider, its identity reads, planText and capitalize
             // above are the actual production functions, not a throwing stub.
             function resetText() { return ""; }
-            function paceSummaryText() { return ""; }
+            function paceSummaryPartsText() { return ""; }
             function rateWindowLabel() { return ""; }
-            function usageDashboard() { return null; }
-            function providerPlaceholder() { return ""; }
             function providerTitle(providerID) { return providerID; }
             function providerCostSection(providerID, cost) {
-                if (cost && cost.syntheticFailure === true) {
+                if (cost && cost.used === 999) {
                     throw new Error("synthetic presentation failure");
                 }
                 return null;
@@ -90,44 +83,14 @@ TestCase {
         // parser's per-record exception containment as normalization improves.
         return {
             provider: "codex", account: "broken",
-            usage: {providerCost: {syntheticFailure: true}}
+            usage: {providerCost: {used: 999}}
         };
     }
 
     function deliver(applet, payload) {
-        var descriptor = CommandLedger.descriptor("account", "codex", 1000, 60000, 60000);
-        descriptor.commandSignature = applet.currentCommand;
-        applet.activeCommandDescriptors = CommandLedger.opened(
-            applet.activeCommandDescriptors, "accounts-run", descriptor);
-        verify(applet.accountLoadingForProvider("codex"));
-        applet.parseProviderAccountsOutput("accounts-run", descriptor, JSON.stringify(payload), "");
-        verify(!applet.accountLoadingForProvider("codex"));
-        compare(CommandLedger.find(applet.activeCommandDescriptors, "accounts-run"), null);
-    }
-
-    function test_malformedAccountKeepsHealthyOptionsBeforeAndAfterIt() {
-        var applet = createTemporaryObject(harness, this, {});
-        verify(applet !== null);
-        deliver(applet, [
-            {provider: "codex", account: "valid-before"},
-            malformedAccount(),
-            {provider: "codex", account: "valid-after"}
-        ]);
-        var options = applet.accountOptions.codex || [];
-        compare(options.length, 2);
-        compare(options[0].accountKey, "valid-before");
-        compare(options[1].accountKey, "valid-after");
-        compare(applet.accountErrors.codex || "", "");
-    }
-
-    function test_allMalformedAccountsKeepPreviousOptionsAndReportAnError() {
-        var applet = createTemporaryObject(harness, this, {});
-        verify(applet !== null);
-        var previous = [{provider: "codex", account: "previous", accountKey: "previous"}];
-        applet.accountOptions = {codex: previous};
-        deliver(applet, [malformedAccount()]);
-        compare(applet.accountOptions.codex, previous);
-        verify((applet.accountErrors.codex || "").length > 0);
+        var result = AccountResponse.response(JSON.stringify(payload), "", "codex", applet.testNowMs);
+        compare(result.outcome, "success");
+        applet.accountOptions = {codex: result.options.map(function(item) { return applet.presentProviderSnapshot(item); })};
     }
 
     function test_cachedAccountSelectionKeepsMeasurementAge_data() {
@@ -223,7 +186,6 @@ TestCase {
         compare(options.length, 1);
         compare(options[0].accountKey, "retained");
         compare(options[0].planText, "");
-        compare(applet.accountErrors.codex || "", "");
     }
 }
 '''

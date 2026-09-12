@@ -62,6 +62,17 @@ For those, use `make install` or `./install.sh`. Release-package users can use
   inputs and adapts the outputs for the existing view and privacy presentation.
   `SessionRefreshPolicy.js` owns pure scheduling decisions; `SessionResponse.js`
   bounds and classifies CLI output through the existing session normalizer.
+- `contents/ui/controllers/AccountsController.qml` owns account discovery's
+  executable source, request ledger, nonce, deadlines, per-provider loading and
+  errors, and last successful lists. Inputs are the CLI path, source, and status
+  setting; `load(providerID)` starts discovery and `reset()` retires requests and
+  clears results. Input changes synchronously retire obsolete requests. Failed
+  refreshes retain successful lists; a confirmed empty list clears only its
+  provider. `main.qml` owns account selection and cache invalidation, localizes
+  snapshots, and applies privacy presentation. `AccountResponse.js` bounds and
+  classifies replies; `ProviderSnapshot.js` shares pure quota normalization with
+  usage refreshes. Cached account quotas and forecasts keep their receipt time
+  through presentation, unrelated loads, and later selection.
 - `contents/ui/components/CompactRepresentation.qml` renders the panel;
   `FullRepresentation.qml` in the same directory renders the popup. Components
   are presentation-only and receive normalized data plus an explicit parent API
@@ -319,11 +330,22 @@ and command binding in Qt's event loop. It counts refresh requests for cached
 and uncached accounts in single-provider and aggregate modes; CLI effects are
 replaced by observations at the refresh boundary.
 
-`tests/test_account_parse_containment.py` exercises the production account and
-provider-scoped usage parsers with malformed records before and after healthy
-siblings. It verifies quota values including measured zero, scoped provider
-identity, command retirement, and exactly one fallback completion even when
-every record fails normalization.
+`tests/test_account_parse_containment.py` checks account snapshot presentation,
+selection freshness, and provider-scoped usage fallback containment. Malformed
+records before and after healthy siblings preserve measured-zero quotas,
+scoped provider identity, command retirement, and exactly one fallback
+completion even when every record fails normalization.
+
+`tests/test_accounts_controller.py` instantiates the production controller with
+isolated CLI processes and real Plasma DataSource/timers. It covers concurrent
+providers, duplicate suppression, quoted arguments, retained lists, successful
+empty results, context changes, reset, original measurement timestamps, and
+recovery after the production 60-second timeout. It adds about 90 seconds to
+`make check`; optional KDE modules may skip locally, while
+`QML_TEST_REQUIRE_NO_SKIPS=1` rejects skips in CI. Direct tests in
+`tests/tst_account_response.qml` cover malformed records, bounded replies,
+redacted failures, and identity deduplication. `tests/tst_provider_snapshot.qml`
+covers shared normalization independently of QML presentation.
 
 `tests/test_provider_write_errors.py` exercises the production enable/disable
 and API-key result handlers with empty and structured CLI error messages. It

@@ -190,7 +190,7 @@ from qml_surfaces import Surface
 applet = Surface("applet", root)
 applet.require("text: view.applet.sessionStateText(modelData.state)", "session states must use localized labels")
 applet.require("details.push(sessionSourceText(item.source))", "session sources must use localized labels")
-applet.require("pace: paceSummaryText(pace)", "usage rows must localize structured pace fields")
+applet.require("row.pace = paceSummaryPartsText(snapshot.paceParts)", "usage rows must localize structured pace fields")
 applet.require_definition_where_used("sessionStateText")
 applet.require_definition_where_used("sessionSourceText")
 applet.require_definition_where_used("paceSummaryText")
@@ -778,16 +778,16 @@ for range_match_fragment in ("Number(tokenCost.historyDays)", "Number(historyDay
 if "CostPresentation.spendSnapshots(" not in function_body(main_text, "spendProviderCosts"):
     raise AssertionError("main.qml must read spend snapshots from CostPresentation.js")
 
-add_window_body = function_body(main_text, "addWindow")
-for reset_source_fragment in (
-    "resetsAt: Normalizer.boundedDisplayText(",
-    "resetDescription: Normalizer.boundedDisplayText(",
-    "reset: Normalizer.boundedDisplayText(",
-):
-    if reset_source_fragment not in add_window_body:
-        raise AssertionError("addWindow must retain raw reset data for render-time formatting")
-if "paceKnown: metrics.paceKnown" not in add_window_body:
-    raise AssertionError("addWindow must retain normalized pace availability for notifications")
+snapshot_text = (root / "contents/ui/ProviderSnapshot.js").read_text()
+window_body = function_body(snapshot_text, "windowSnapshot")
+for fragment in ("Normalizer.rateWindowMetrics(", "Guards.copyObject(metrics)",
+                 "result.resetsAt = Normalizer.boundedDisplayText(",
+                 "result.resetDescription = Normalizer.boundedDisplayText(",
+                 "result.paceObservedAtMs = receivedAtMs"):
+    if fragment not in window_body:
+        raise AssertionError("quota normalization must preserve reset and forecast data")
+if "row.reset = Normalizer.boundedDisplayText(resetText(" not in function_body(main_text, "presentUsageWindow"):
+    raise AssertionError("QML must format the initial reset label")
 if "onResetTimesShowAbsoluteChanged: Qt.callLater(refreshNow)" in main_text:
     raise AssertionError("changing reset formatting must not fan out new CLI requests")
 
@@ -863,14 +863,6 @@ for clear_override_fragment in (
 if "|| applet.selectedAccountForProvider(providerID).length > 0" not in provider_accounts_panel_text:
     raise AssertionError("an orphaned account override must keep its removal control visible")
 
-parse_accounts_body = function_body(main_text, "parseProviderAccountsOutput")
-if "setAccountOptions(providerID, [])" in parse_accounts_body:
-    raise AssertionError("transient account errors must preserve the last healthy account options")
-replace_options_index = parse_accounts_body.find("setAccountOptions(providerID, dedupedOptions)")
-no_error_guard_index = parse_accounts_body.rfind("if (accountError.length === 0)", 0, replace_options_index)
-if replace_options_index < 0 or no_error_guard_index < 0:
-    raise AssertionError("structured account errors must not replace the last healthy options")
-
 if 'String(modelData.value || "")' in providers_text:
     raise AssertionError("descriptor text fields must preserve numeric zero")
 descriptor_value_body = providers_surface.function_body("valueText")
@@ -936,30 +928,8 @@ assert_dismissible_message_restores_visibility(
     diagnostics_surface, "diagnosticErrorMessage", "page.diagnosticError"
 )
 
-accounts_body = function_body(main_text, "parseProviderAccountsOutput")
-if "var dedupedOptions = Normalizer.dedupeAccountOptions(options)" not in accounts_body:
-    raise AssertionError("parseProviderAccountsOutput must decide errors after account option dedupe")
-if "var accountError = \"\"" not in accounts_body:
-    raise AssertionError("parseProviderAccountsOutput must build account errors separately from account options")
-if "dedupedOptions.length === 0" not in accounts_body or "else if (items.length > 0 && !sawMissingTokenAccountsError)" not in accounts_body:
-    raise AssertionError("parseProviderAccountsOutput must not treat a valid empty account list as an error")
-if "isMissingTokenAccountsError(normalized.error)" not in accounts_body:
-    raise AssertionError(
-        "parseProviderAccountsOutput must treat 'No token accounts configured' as an "
-        "empty account list, not a red error, so OAuth/CLI-auth providers stay clean"
-    )
-if "function isMissingTokenAccountsError(errorMessage)" not in main_text:
-    raise AssertionError("main.qml must define isMissingTokenAccountsError")
-missing_accounts_body = function_body(main_text, "isMissingTokenAccountsError")
-if 'String(errorMessage || "")' not in missing_accounts_body:
-    raise AssertionError(
-        "isMissingTokenAccountsError must coerce CLI error messages before "
-        "calling string helpers so malformed JSON cannot abort account parsing"
-    )
-if "setAccountError(providerID, accountError)" not in accounts_body:
-    raise AssertionError("parseProviderAccountsOutput must set the post-dedupe account error")
-if "message.length > 0 ? message : i18n(\"codexbar did not return account data.\")" in accounts_body:
-    raise AssertionError("parseProviderAccountsOutput must not fabricate an account error for JSON []")
+# Account response outcomes and empty-list semantics have direct QtTests in
+# tst_account_response.qml and real process coverage in test_accounts_controller.py.
 
 dedupe_accounts_body = function_body(main_text, "dedupeAccountOptions")
 if "accountOptionKey(items[i])" not in dedupe_accounts_body:
@@ -3078,29 +3048,17 @@ for component_path in sorted((root / "contents/ui/components").glob("*.qml")):
             "elide or wrap, so a long translation cannot push the row past the popup"
         )
 
-normalize_provider_body = function_body(main_text, "normalizeProvider")
-if "statusKnown: status !== null" not in normalize_provider_body:
-    raise AssertionError("provider snapshots must distinguish absent status from an observed recovery")
-for lane in ("primary", "secondary", "tertiary"):
-    if not re.search(rf'usage\.{lane},\s*pace\.{lane},\s*true,\s*"{lane}"', normalize_provider_body):
-        raise AssertionError(f"the {lane} quota must retain its CLI pace data")
-for bounded_provider_fragment in (
-    "title: Normalizer.boundedDisplayText(",
-    "status: Normalizer.boundedDisplayText(",
-    "boundedCliMessage(Normalizer.safeScalarText(error.message))",
-    "error: errorMessage",
-):
-    if bounded_provider_fragment not in normalize_provider_body:
-        raise AssertionError("new provider display surfaces must use bounded normalized text")
-for extra_window_fragment in (
-    "Array.isArray(usage.extraRateWindows)",
-    "Math.min(extras.length, maximumExtraRateWindows)",
-):
-    if extra_window_fragment not in normalize_provider_body:
-        raise AssertionError(
-            "extra rate windows must reject pseudo-arrays and cap delegate work; "
-            f"missing {extra_window_fragment!r}"
-        )
+normalize_provider_body = function_body(snapshot_text, "normalize")
+present_provider_body = function_body(main_text, "presentProviderSnapshot")
+for fragment in ("statusKnown: snapshot.statusRecord !== null", "title: Normalizer.boundedDisplayText(",
+                 "status: Normalizer.boundedDisplayText(", "usageReceivedAtMs: snapshot.usageReceivedAtMs"):
+    if fragment not in present_provider_body:
+        raise AssertionError("provider presentation must retain bounded metadata and original receipt time")
+for fragment in ('var lanes = ["primary", "secondary", "tertiary"]',
+                 "windowSnapshot(usage[lane], pace[lane], true, lane, null, receivedAtMs)",
+                 "Array.isArray(usage.extraRateWindows)", "Math.min(extras.length, Normalizer.maximumExtraRateWindows)"):
+    if fragment not in normalize_provider_body:
+        raise AssertionError("normalized windows must preserve CLI lanes and bound extra records")
 
 if "onCfg_commandPathChanged: handleCommandPathChanged()" not in providers_text:
     raise AssertionError("the Providers page must reload when the configured CLI path changes")
@@ -3273,14 +3231,14 @@ direct_number_call = re.compile(r"(?<![A-Za-z0-9_])Number\(")
 if direct_number_call.search(reset_credits_body):
     raise AssertionError("reset credits must not use loose numeric coercion")
 
-normalize_provider_body = function_body(main_text, "normalizeProvider")
+normalize_provider_body = function_body(snapshot_text, "normalize")
 if "Normalizer.strictFiniteNumber(credits.remaining)" not in normalize_provider_body:
     raise AssertionError("remaining credits must reject coercive CLI numeric values")
 if "Normalizer.normalizeCodexCreditLimit(" not in normalize_provider_body:
     raise AssertionError("Codex monthly limits must cross the shared bounded normalizer")
 if 'hasOwnKey(credits, "codexCreditLimit")' not in normalize_provider_body:
     raise AssertionError("Codex monthly limits must come from an own credits field")
-if "credits: isFinite(creditsRemaining)" not in normalize_provider_body:
+if "credits: isFinite(remaining)" not in normalize_provider_body:
     raise AssertionError("the plain credits balance must remain independent of the monthly limit")
 if "credits: codexCreditLimit" in normalize_provider_body:
     raise AssertionError("the monthly-limit remainder must not replace the plain credits balance")
@@ -3297,14 +3255,11 @@ if direct_number_call.search(provider_cost_body):
 # Parsing and fallback behavior are covered directly by
 # tst_legacy_usage_dashboard.qml; keep localization and generic-detail priority
 # wired through the applet without pinning the module's private helpers.
-dashboard_body = applet.function_body("usageDashboard")
-if "LegacyUsageDashboard.normalize(usage, item)" not in dashboard_body:
-    raise AssertionError("legacy dashboards must use the bounded normalization module")
-for dashboard_rows in ("kpis", "rows"):
-    if f"{dashboard_rows}: dashboard.{dashboard_rows}.map(dashboardDisplayRow)" not in dashboard_body:
-        raise AssertionError("legacy dashboard rows and KPIs must use the localized row adapter")
-if "providerDetails.length > 0 ? null : usageDashboard(usage, item)" not in normalize_provider_body:
-    raise AssertionError("generic usage.details must take precedence over legacy dashboards")
+if "providerDetails.length > 0 ? null : LegacyUsageDashboard.normalize(usage, item)" not in normalize_provider_body:
+    raise AssertionError("generic details must take precedence over bounded legacy dashboards")
+for field in ("kpis", "rows"):
+    if f"{field}: dashboard.{field}.map(dashboardDisplayRow)" not in present_provider_body:
+        raise AssertionError("legacy dashboard rows must use the localized adapter")
 dashboard_display_body = applet.function_body("dashboardDisplayRow")
 if "row.parts.map(dashboardPartText)" not in dashboard_display_body:
     raise AssertionError("dashboard number formatting must remain in the QML adapter")

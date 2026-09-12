@@ -613,6 +613,7 @@ msgid "Diagnostic command timed out. Try again."
 msgstr "Tempo scaduto per il comando diagnostico. Riprova."
 
 #: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
+#: contents/ui/controllers/AccountsController.qml
 #: contents/ui/controllers/CostController.qml
 #: contents/ui/controllers/ProviderRosterController.qml
 #: contents/ui/controllers/SessionsController.qml contents/ui/main.qml
@@ -1210,7 +1211,8 @@ msgstr "Usa automaticamente i primi %1 provider"
 msgid "Set the codexbar command path in Diagnostics."
 msgstr "Imposta il percorso del comando codexbar in Diagnostica."
 
-#: contents/ui/configProviders.qml contents/ui/main.qml
+#: contents/ui/configProviders.qml
+#: contents/ui/controllers/AccountsController.qml contents/ui/main.qml
 msgid "codexbar command failed."
 msgstr "Il comando codexbar non è riuscito."
 
@@ -1786,6 +1788,28 @@ msgstr "Nessun provider corrispondente"
 msgid "Try another search or choose a different filter."
 msgstr "Prova un'altra ricerca o scegli un filtro diverso."
 
+#: contents/ui/controllers/AccountsController.qml
+#: contents/ui/controllers/SessionsController.qml contents/ui/main.qml
+msgid "Set the codexbar command path in widget settings."
+msgstr ""
+"Imposta il percorso del comando codexbar nelle impostazioni del widget."
+
+#: contents/ui/controllers/AccountsController.qml
+msgid "codexbar did not return account data."
+msgstr "codexbar non ha restituito dati sugli account."
+
+#: contents/ui/controllers/AccountsController.qml
+msgid "Could not parse codexbar account JSON: %1"
+msgstr "Impossibile interpretare il JSON degli account di codexbar: %1"
+
+#: contents/ui/controllers/AccountsController.qml
+msgid "Could not read a codexbar account record: %1"
+msgstr "Impossibile leggere un record di account di codexbar: %1"
+
+#: contents/ui/controllers/AccountsController.qml
+msgid "Loading accounts timed out. Try again."
+msgstr "Tempo scaduto per il caricamento degli account. Riprova."
+
 #: contents/ui/controllers/CostController.qml
 msgid "Loading cost data timed out. Try again."
 msgstr "Tempo scaduto per il caricamento dei costi. Riprova."
@@ -1805,11 +1829,6 @@ msgstr "Impossibile interpretare il JSON di codexbar cost: %1"
 #: contents/ui/controllers/CostController.qml
 msgid "codexbar cost returned an unsupported JSON payload."
 msgstr "codexbar cost ha restituito dati JSON non supportati."
-
-#: contents/ui/controllers/SessionsController.qml contents/ui/main.qml
-msgid "Set the codexbar command path in widget settings."
-msgstr ""
-"Imposta il percorso del comando codexbar nelle impostazioni del widget."
 
 #: contents/ui/controllers/SessionsController.qml
 msgid "Loading sessions timed out. Try again."
@@ -1982,22 +2001,6 @@ msgstr "Tempo scaduto per il caricamento dell'utilizzo. Riprova."
 msgid "Loading provider configuration timed out. Try again."
 msgstr ""
 "Tempo scaduto per il caricamento della configurazione dei provider. Riprova."
-
-#: contents/ui/main.qml
-msgid "Loading accounts timed out. Try again."
-msgstr "Tempo scaduto per il caricamento degli account. Riprova."
-
-#: contents/ui/main.qml
-msgid "codexbar did not return account data."
-msgstr "codexbar non ha restituito dati sugli account."
-
-#: contents/ui/main.qml
-msgid "Could not read a codexbar account record: %1"
-msgstr "Impossibile leggere un record di account di codexbar: %1"
-
-#: contents/ui/main.qml
-msgid "Could not parse codexbar account JSON: %1"
-msgstr "Impossibile interpretare il JSON degli account di codexbar: %1"
 
 #: contents/ui/main.qml
 msgid "Session %1"
@@ -2209,12 +2212,12 @@ msgid "Usage"
 msgstr "Utilizzo"
 
 #: contents/ui/main.qml
-msgid "Extra"
-msgstr "Extra"
-
-#: contents/ui/main.qml
 msgid "Limits not available"
 msgstr "Limiti non disponibili"
+
+#: contents/ui/main.qml
+msgid "Extra"
+msgstr "Extra"
 
 #: contents/ui/main.qml
 msgid "5-hour"
