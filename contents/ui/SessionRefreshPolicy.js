@@ -14,6 +14,21 @@ function staleAfterMs(refreshIntervalSeconds) {
     return Math.max(1000, Math.floor(refreshIntervalSeconds * 1000))
 }
 
+// A failed attempt delays automatic retries without making its snapshot fresh.
+// QML clears the attempt timestamp whenever the command source changes.
+function lastActivityAtMs(current) {
+    var attempt = current.lastAttemptAtMs
+    var baseline = typeof attempt === "number" && isFinite(attempt) && attempt >= 0
+        ? attempt : -1
+    var completed = current.lastCompletedAtMs
+    if (typeof current.loadedCommandSource === "string"
+            && current.loadedCommandSource.trim() === current.commandSource.trim()
+            && typeof completed === "number" && isFinite(completed) && completed >= 0) {
+        baseline = Math.max(baseline, completed)
+    }
+    return baseline
+}
+
 function refreshAction(observation) {
     var current = observation && typeof observation === "object"
         && !Array.isArray(observation) ? observation : ({})
@@ -34,26 +49,19 @@ function refreshAction(observation) {
         return startAction
     }
 
-    var loadedCommandSource = typeof current.loadedCommandSource === "string"
-        ? current.loadedCommandSource.trim() : ""
-    if (loadedCommandSource !== commandSource) {
-        return startAction
-    }
-
-    var completedAtMs = current.lastCompletedAtMs
-    if (typeof completedAtMs !== "number" || !isFinite(completedAtMs)
-            || completedAtMs < 0) {
+    var activityAtMs = lastActivityAtMs(current)
+    if (activityAtMs < 0) {
         return startAction
     }
     var nowMs = current.nowMs
-    if (typeof nowMs !== "number" || !isFinite(nowMs) || nowMs < completedAtMs) {
+    if (typeof nowMs !== "number" || !isFinite(nowMs) || nowMs < activityAtMs) {
         return startAction
     }
     var maximumAgeMs = typeof current.staleAfterMs === "number"
         && isFinite(current.staleAfterMs) && current.staleAfterMs > 0
         ? Math.floor(current.staleAfterMs)
         : defaultStaleAfterMs
-    return nowMs - completedAtMs >= maximumAgeMs ? startAction : keepAction
+    return nowMs - activityAtMs >= maximumAgeMs ? startAction : keepAction
 }
 
 function nextCheckDelay(observation) {
@@ -73,6 +81,6 @@ function nextCheckDelay(observation) {
     if (refreshAction(current) !== keepAction) {
         return maximumAgeMs
     }
-    var ageMs = current.nowMs - current.lastCompletedAtMs
+    var ageMs = current.nowMs - lastActivityAtMs(current)
     return Math.max(1, maximumAgeMs - ageMs)
 }

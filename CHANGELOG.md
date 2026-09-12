@@ -22,6 +22,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Respect the automatic refresh interval after a failed Sessions scan when
+  reopening the popup or revisiting the tab, while allowing immediate manual
+  retries and scans after changing the CLI command.
 - Preserve ampersands and angle brackets in provider selection and settings
   checkbox labels when KDE styles process keyboard mnemonics.
 - Preserve quota, pace, and reset notification baselines when a successful CLI

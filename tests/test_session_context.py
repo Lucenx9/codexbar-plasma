@@ -39,6 +39,7 @@ TestCase {
             property string sessionsErrorText: ""
             property string sessionsLastUpdatedText: ""
             property bool sessionsLoading: false
+            property double sessionsLastAttemptAtMs: -1
             property double sessionsLastCompletedAtMs: -1
             property string sessionsLoadedCommandSource: ""
             property int sessionsStaleAfterMs: 300000
@@ -166,6 +167,53 @@ TestCase {
         compare(applet.sessionsLoadedCommandSource, applet.sessionsCommandSource);
         compare(applet.sessionsLoading, false);
         compare(applet.sessionsErrorText, "temporary failure");
+    }
+
+    function test_failedScanDoesNotRestartWhenReopening_data() {
+        return [
+            {tag: "empty-reply", output: "", timeout: false},
+            {tag: "invalid-json", output: "{", timeout: false},
+            {tag: "unsupported-payload", output: "{}", timeout: false},
+            {tag: "timeout", output: "", timeout: true}
+        ];
+    }
+
+    function test_failedScanDoesNotRestartWhenReopening(data) {
+        var applet = createTemporaryObject(harness, this, {});
+        applet.expanded = true;
+        verify(applet.refreshSessionsIfStale());
+        var source = applet.startedSources[0];
+        if (data.timeout) {
+            applet.handleCommandTimeout(source,
+                CommandLedger.find(applet.activeCommandDescriptors, source));
+        } else {
+            applet.engine.newData(source, {stdout: data.output, stderr: "scan failed"});
+        }
+        compare(applet.sessionsLoading, false);
+        compare(applet.sessionsLastCompletedAtMs, -1);
+        var error = applet.sessionsErrorText;
+        verify(error.length > 0);
+        applet.expanded = false;
+        verify(!applet.refreshSessionsIfStale());
+        applet.expanded = true;
+        verify(!applet.refreshSessionsIfStale());
+        compare(applet.startedSources.length, 1);
+        compare(applet.sessionsErrorText, error);
+        // Explicit retry remains available during the automatic cooldown.
+        verify(applet.refreshSessions());
+        compare(applet.startedSources.length, 2);
+    }
+
+    function test_sourceChangeClearsTheFailedAttemptCooldown() {
+        var applet = createTemporaryObject(harness, this, {});
+        applet.expanded = true;
+        verify(applet.refreshSessionsIfStale());
+        applet.engine.newData(applet.startedSources[0], {stdout: "", stderr: "scan failed"});
+        verify(!applet.refreshSessionsIfStale());
+        applet.commandPath = "codexbar-b";
+        tryVerify(function() { return applet.startedSources.length === 2; });
+        verify(applet.startedSources[1].indexOf("codexbar-b") !== -1);
+        verify(applet.sessionsLoading);
     }
 }
 '''

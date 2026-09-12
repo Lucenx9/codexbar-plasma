@@ -161,6 +161,7 @@ PlasmoidItem {
     property string sessionsErrorText: ""
     property string sessionsLastUpdatedText: ""
     property bool sessionsLoading: false
+    property double sessionsLastAttemptAtMs: -1
     property double sessionsLastCompletedAtMs: -1
     property string sessionsLoadedCommandSource: ""
     readonly property int sessionsStaleAfterMs: SessionRefreshPolicy.staleAfterMs(refreshIntervalSec)
@@ -255,6 +256,7 @@ PlasmoidItem {
         sessions = []
         sessionsErrorText = ""
         sessionsLastUpdatedText = ""
+        sessionsLastAttemptAtMs = -1
         sessionsLastCompletedAtMs = -1
         sessionsLoadedCommandSource = ""
         if (expanded && sessionsSelected) {
@@ -886,6 +888,7 @@ PlasmoidItem {
             loading: sessionsLoading,
             visible: expanded && sessionsSelected,
             force: force === true,
+            lastAttemptAtMs: sessionsLastAttemptAtMs,
             lastCompletedAtMs: sessionsLastCompletedAtMs,
             nowMs: Date.now(),
             staleAfterMs: sessionsStaleAfterMs
@@ -900,6 +903,7 @@ PlasmoidItem {
         }
 
         retireUsageCommandKind("sessions")
+        sessionsLastAttemptAtMs = Date.now()
         sessionsLoading = true
         sessionsErrorText = ""
         connectUsageCommand(
@@ -938,6 +942,7 @@ PlasmoidItem {
             loading: sessionsLoading,
             visible: expanded && sessionsSelected,
             force: false,
+            lastAttemptAtMs: sessionsLastAttemptAtMs,
             lastCompletedAtMs: sessionsLastCompletedAtMs,
             nowMs: Date.now(),
             staleAfterMs: sessionsStaleAfterMs
