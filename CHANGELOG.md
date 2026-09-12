@@ -24,6 +24,19 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Coalesce cost-setting changes applied together into one scan using the final
   settings, avoiding duplicate scans that immediately replace each other.
+- Keep panel run-out countdowns tied to each forecast's receipt time, so
+  selecting a cached account cannot restart an old or expired prediction.
+- Keep last-known quotas when a provider error has an empty or malformed message,
+  showing a generic error while healthy providers and current status still update.
+- Preserve healthy usage records after a malformed sibling in provider-scoped
+  CLI replies, including measured-zero quotas, while keeping all-invalid
+  replies as provider errors.
+- Keep settings checkboxes stable in right-to-left layouts under KDE/Breeze
+  styles, avoiding repeated width binding loops while the pages settle.
+- Keep the provider filter tabs usable with KDE styles whose tab buttons expose
+  no content item, avoiding repeated QML errors when opening Providers settings.
+- Use the pinned KDE CI image’s authenticated package indexes so an outage of
+  the archive’s current metadata does not block checks and package builds.
 - Preserve ampersands and angle brackets in provider selection and settings
   checkbox labels when KDE styles process keyboard mnemonics.
 - Preserve quota, pace, and reset notification baselines when a successful CLI

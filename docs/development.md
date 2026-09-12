@@ -155,6 +155,10 @@ Extraction must hide complexity, not merely reduce line count.
   quota can satisfy the provider meter condition. Direct missing quotas stay omitted; `runOut` depends on `paceWarningActive`. Panel visibility,
   order, and metric settings preserve the minute clock and icon fallback and
   must not fetch data or change notification state.
+- `main.qml` stamps each normalized quota row with its local forecast receipt
+  time. Cached account selection and privacy projection preserve it, so a later
+  refresh cannot restart another row's run-out countdown. This timestamp stays
+  in memory; it is neither a CLI field nor part of the persisted quota cache.
 - `PanelTextFit.js` composes the optional panel text from the segments the
   settings enable and offers progressively smaller compositions when the meter
   row leaves too little room. The renderer measures each candidate on its own
@@ -207,6 +211,13 @@ Extraction must hide complexity, not merely reduce line count.
   text caps, a plain `Item` may size children from its own and sibling widths.
   Keep those bindings out of layout size hints, and expose implicit sizes
   independent of the `Item`'s assigned width. See [Qt's layout guidance](https://doc.qt.io/qt-6/qtquicklayouts-overview.html#size-constraints).
+- Set `implicitWidth: 0` on fill-width settings checkboxes so the layout owns
+  their horizontal size. KDE/Breeze checkbox labels derive their implicit width
+  from wrapped content; feeding that width back through a mirrored layout can
+  otherwise create an `implicitWidth` binding loop.
+- Give settings `TabButton` instances an explicit `baselineOffset` when their
+  layout does not use baseline alignment. Older KDE desktop styles expose no
+  content item but still derive the default baseline from it.
 - Prefer declarative bindings. Move repeated or expensive calculations into
   helpers or cached properties. Avoid heavy JavaScript in delegates, compact
   rendering, timers, and DataSource callbacks; profile before optimizing.
@@ -269,6 +280,13 @@ QtTests configured to reject skips. A local machine missing QML modules may
 provide less coverage; report what actually ran.
 
 All CI container jobs pin the official KDE neon User Edition image by digest.
+Jobs install dependencies using the authenticated APT indexes already included
+in that pinned image; they do not run `apt-get update` against a mutable archive.
+APT still checks downloaded packages against those indexes. This avoids making
+an otherwise reproducible job depend on the availability of the archive's
+current Release metadata. If a package from that snapshot is removed, update
+the image pin and revalidate the full toolchain; do not disable authentication
+or substitute unverified packages.
 If the registry removes that manifest, resolve the official `user` tag again,
 verify its Linux/amd64 Ubuntu 24.04 image metadata, and update every container
 pin together. Validate the replacement through the full check and smoke jobs.
@@ -277,6 +295,12 @@ pin together. Validate the replacement through the full check and smoke jobs.
 and command binding in Qt's event loop. It counts refresh requests for cached
 and uncached accounts in single-provider and aggregate modes; CLI effects are
 replaced by observations at the refresh boundary.
+
+`tests/test_account_parse_containment.py` exercises the production account and
+provider-scoped usage parsers with malformed records before and after healthy
+siblings. It verifies quota values including measured zero, scoped provider
+identity, command retirement, and exactly one fallback completion even when
+every record fails normalization.
 
 `tests/test_provider_config_watcher.py` delivers a cached reply synchronously
 during the production watcher connection, matching Plasma's shared-source

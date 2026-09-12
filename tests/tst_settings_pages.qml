@@ -13,6 +13,11 @@ TestCase {
     height: 760
     visible: true
 
+    property bool mirroredPage: false
+
+    LayoutMirroring.enabled: mirroredPage
+    LayoutMirroring.childrenInherit: true
+
     function i18n(text, value, second) {
         var result = value === undefined ? text : String(text).replace("%1", value);
         return second === undefined ? result : result.replace("%2", second);
@@ -36,6 +41,22 @@ TestCase {
         }, properties || {}));
         verify(page !== null);
         return page;
+    }
+
+    function cleanup() {
+        mirroredPage = false;
+    }
+
+    function test_generalRtlLoadsWithoutWarnings() {
+        mirroredPage = true;
+        var page = createPage("../contents/ui/configGeneral.qml", {
+            cfg_commandPath: " ",
+            cfg_refreshInterval: 300,
+            cfg_autoUpdateIntervalHours: 24
+        });
+        if (!page)
+            return;
+        wait(0);
     }
 
     function test_restoringDefaultsStaysPendingUntilSaved() {
