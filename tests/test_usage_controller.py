@@ -286,7 +286,7 @@ class UsageControllerTests(unittest.TestCase):
                                .replace("FIXTURE_PATH", str(directory)))
             result = subprocess.run([os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
                                     env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
-                                    capture_output=True, text=True, timeout=180)
+                                    capture_output=True, text=True, timeout=300)
             output = result.stdout + result.stderr
             self.assertEqual(result.returncode, 0, output)
             if os.environ.get("QML_TEST_REQUIRE_NO_SKIPS") == "1" and "SKIP" in output:

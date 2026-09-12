@@ -23,7 +23,7 @@ function records(payload, providerID, receivedAtMs) {
     var items = Array.isArray(payload) ? payload : [payload];
     var limit = key.length > 0 ? Normalizer.maximumAccountSnapshots : Normalizer.maximumProviderSnapshots;
     var snapshots = [];
-    var failure = null;
+    var lastFailure = null;
     for (var i = 0; i < Math.min(items.length, limit); i++) {
         try {
             if (!Normalizer.isCliRecord(items[i])) continue;
@@ -36,11 +36,11 @@ function records(payload, providerID, receivedAtMs) {
             }
             snapshots.push(ProviderSnapshot.normalize(record, receivedAtMs));
         } catch (error) {
-            failure = {outcome: "invalidJson", message: ProviderSnapshot.message(error.message)};
+            lastFailure = {outcome: "invalidJson", message: ProviderSnapshot.message(error.message)};
         }
     }
     snapshots = Normalizer.dedupeProviderSnapshots(snapshots);
-    if (snapshots.length === 0) return key.length > 0 && failure ? failure : {outcome: "noProviders", message: ""};
+    if (snapshots.length === 0) return key.length > 0 && lastFailure ? lastFailure : {outcome: "noProviders", message: ""};
     return {outcome: "success", items: snapshots, message: ""};
 }
 

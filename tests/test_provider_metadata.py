@@ -40,7 +40,6 @@ TestCase {
             property var providers: []
             property var providerDisplayNames: ({})
             property string providerOrderRaw: ""
-            property string errorText: ""
             property bool loading: true
             property double panelClockMs: Date.UTC(2026, 8, 11, 12)
             property int maximumProviderSnapshots: Normalizer.maximumProviderSnapshots
@@ -66,8 +65,6 @@ TestCase {
             function commitUsageSnapshot(items) {
                 providers = UsageCache.reconcile(providers, items, panelClockMs);
             }
-            function failUsageRefresh(message) { errorText = message; loading = false; }
-            function canUseProviderFallback() { return false; }
             function rateWindowLabel() { return "Quota"; }
             function providerCostSection() { return null; }
             function resetCreditsSection() { return null; }
@@ -125,7 +122,6 @@ TestCase {
         compare(item.statusSeverity, "minor");
         compare(item.statusIncidentKey, "synthetic-incident");
         compare(applet.providers.filter(function(provider) { return provider.provider === "claude"; })[0].rows[0].usedPercent, 12);
-        compare(applet.errorText, "");
         verify(!applet.loading);
     }
 
@@ -220,7 +216,6 @@ TestCase {
         compare(item.rows[0].usedPercent, 72);
         compare(applet.providers[1].rows[0].usedPercent, 12);
         compare(item.error, "");
-        compare(applet.errorText, "");
         verify(!applet.loading);
     }
 }

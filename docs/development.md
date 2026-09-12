@@ -350,7 +350,9 @@ provider discovery/cache, bounded fallback concurrency, exact account/source
 arguments, batched setting changes, retired replies, empty rosters, automatic
 refresh, and recovery after the production 120-second deadlines. The three
 command kinds time out concurrently; the test adds about 145 seconds to
-`make check`. Missing optional KDE modules are reported as local skips and
+`make check`. Its outer process timeout is 300 seconds to leave room for loaded
+CI runners while keeping the production deadlines unchanged.
+Missing optional KDE modules are reported as local skips and
 rejected by `QML_TEST_REQUIRE_NO_SKIPS=1`. `tests/tst_usage_response.qml` covers
 malformed siblings and identities, response bounds, measured zeros, scoped
 provider identity, deduplication, and redaction directly at the pure interface.

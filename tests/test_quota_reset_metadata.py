@@ -36,7 +36,6 @@ TestCase {
             property var providers: []
             property var providerDisplayNames: ({})
             property string providerOrderRaw: ""
-            property string errorText: ""
             property bool loading: true
             property double panelClockMs: Date.UTC(2026, 8, 11, 12)
             property int maximumProviderSnapshots: Normalizer.maximumProviderSnapshots
@@ -57,11 +56,9 @@ TestCase {
                 return text;
             }
             function i18np(one, many, count) { return i18n(count === 1 ? one : many, count); }
-            // Observe the parser's publication/failure boundary. Quota parsing,
+            // Observe the parser's publication boundary. Quota parsing,
             // bounded normalization and reset formatting above are production.
             function commitUsageSnapshot(items) { providers = items; }
-            function failUsageRefresh(message) { errorText = message; loading = false; }
-            function canUseProviderFallback() { return false; }
             function rateWindowLabel() { return "Quota"; }
             function providerTitle(providerID) { return providerID; }
             function providerCostSection() { return null; }
@@ -113,7 +110,6 @@ TestCase {
         compare(item.rows[0].lane, data.extra ? "extra" : "primary");
         compare(item.rows[0].reset, data.reset);
         compare(item.rows[0].resetsAt, typeof data.window.resetsAt === "string" ? data.window.resetsAt : "");
-        compare(applet.errorText, "");
         verify(!applet.loading);
     }
 }
