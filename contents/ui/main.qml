@@ -2229,7 +2229,7 @@ PlasmoidItem {
             resetCredits: resetCreditsSection(providerID, usage.codexResetCredits),
             tokenCost: providerTokenCost(providerID),
             codexCreditLimit: codexCreditLimit,
-            planText: Normalizer.boundedDisplayText(planText(providerID, usage, item), 120),
+            planText: Normalizer.boundedDisplayText(planText(providerID, rawLoginMethod), 120),
             dashboardUrl: providerDashboardUrl(providerID),
             statusUrl: safeStatusUrl(providerID, status && status.url ? status.url : ""),
             changelogUrl: providerChangelogUrl(providerID),
@@ -3054,9 +3054,7 @@ PlasmoidItem {
         sendPlasmaNotification(title, body, "normal")
     }
 
-    function planText(providerID, usage, item) {
-        var identity = usage.identity || ({})
-        var method = identity.loginMethod || usage.loginMethod || ""
+    function planText(providerID, method) {
         if (providerKey(providerID) === "codex" && method.length > 0) {
             return capitalize(method)
         }

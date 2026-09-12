@@ -62,7 +62,12 @@ TestCase {
             function usageDashboard() { return null; }
             function providerPlaceholder() { return ""; }
             function providerTitle(providerID) { return providerID; }
-            function providerCostSection() { return null; }
+            function providerCostSection(providerID, cost) {
+                if (cost && cost.syntheticFailure === true) {
+                    throw new Error("synthetic presentation failure");
+                }
+                return null;
+            }
             function resetCreditsSection() { return null; }
             function providerTokenCost() { return null; }
             function providerDashboardUrl() { return ""; }
@@ -76,11 +81,11 @@ TestCase {
     }
 
     function malformedAccount() {
-        // Ordinary JSON: the structured login method passes no functions or
-        // getters into QML, but its string coercion throws in planText.
+        // Inject a failure at the presentation boundary to keep testing the
+        // parser's per-record exception containment as normalization improves.
         return {
             provider: "codex", account: "broken",
-            usage: {identity: {loginMethod: [{toString: null}]}}
+            usage: {providerCost: {syntheticFailure: true}}
         };
     }
 
@@ -167,6 +172,20 @@ TestCase {
         compare(result.provider, "codex");
         verify(result.error.length > 0);
         compare(result.rows.length, 0);
+    }
+
+    function test_malformedOptionalLoginMethodKeepsTheAccount() {
+        var applet = createTemporaryObject(harness, this, {});
+        verify(applet !== null);
+        deliver(applet, [{
+            provider: "codex", account: "retained",
+            usage: {identity: {loginMethod: [{toString: null}]}}
+        }]);
+        var options = applet.accountOptions.codex || [];
+        compare(options.length, 1);
+        compare(options[0].accountKey, "retained");
+        compare(options[0].planText, "");
+        compare(applet.accountErrors.codex || "", "");
     }
 }
 '''

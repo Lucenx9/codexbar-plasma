@@ -116,6 +116,10 @@ work and upstream contract requirements.
 
 ## Data freshness
 
+Malformed optional login-method metadata does not discard valid provider quotas
+or named accounts. The Codex plan label uses the same validated login method as
+the account details, including a valid fallback supplied by the CLI.
+
 Failed usage refreshes keep the last valid quotas visible. Each retained provider
 shows **Last known usage** with the age of its measurement in the popup and panel
 tooltip; its panel icon and capsules are dimmed. Errors remain visible. A provider

@@ -22,6 +22,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve valid Codex quotas and named accounts when optional login-method
+  metadata is malformed, and use a valid fallback for the plan label.
 - Keep disabled Overview providers from occupying the three selection slots,
   while preserving their saved selection when other providers are chosen.
 - Keep unavailable days in their calendar positions in the Usage & Spend
