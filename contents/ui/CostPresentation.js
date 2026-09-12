@@ -1,5 +1,6 @@
 .pragma library
 .import "Guards.js" as Guards
+.import "ProviderNormalizer.js" as Normalizer
 
 // Cost and spend presentation: number formatting, chart geometry, and the row
 // and summary builders the Usage & Spend tab and the provider cost sections
@@ -1083,6 +1084,54 @@ function historyStillBuilding(costs) {
         }
     }
     return false
+}
+
+// The selected metric can omit unavailable days. Use the unfiltered snapshots'
+// calendar bounds so missing values at either edge keep their slots too.
+// Legacy labels with no unambiguous calendar order keep their bounded sequence.
+function spendHeatmapDays(points, costs) {
+    var items = Array.isArray(points) ? points.slice(-maximumCostHistoryPoints) : []
+    var byDate = ({})
+    var firstDayMs = 0
+    var lastDayMs = 0
+    for (var i = 0; i < items.length; i++) {
+        var point = items[i]
+        var date = point && typeof point.label === "string"
+            ? Normalizer.parsedCalendarDateKey(point.label) : null
+        if (!date || (i > 0 && date.timestampMs <= lastDayMs)) {
+            return items
+        }
+        if (i === 0) {
+            firstDayMs = date.timestampMs
+        }
+        lastDayMs = date.timestampMs
+        byDate[lastDayMs] = point
+    }
+    if (items.length === 0) {
+        return []
+    }
+    var snapshots = Array.isArray(costs) ? costs : []
+    for (var providerIndex = 0; providerIndex < Math.min(snapshots.length, Normalizer.maximumCostSnapshots); providerIndex++) {
+        var snapshot = snapshots[providerIndex]
+        var daily = snapshot && Array.isArray(snapshot.daily) ? snapshot.daily : []
+        for (var dayIndex = Math.max(0, daily.length - maximumCostHistoryPoints); dayIndex < daily.length; dayIndex++) {
+            var calendarPoint = daily[dayIndex]
+            var calendarDate = calendarPoint && typeof calendarPoint.label === "string"
+                ? Normalizer.parsedCalendarDateKey(calendarPoint.label) : null
+            if (calendarDate) {
+                firstDayMs = Math.min(firstDayMs, calendarDate.timestampMs)
+                lastDayMs = Math.max(lastDayMs, calendarDate.timestampMs)
+            }
+        }
+    }
+    // UTC calendar keys keep DST changes from adding or losing a day.
+    var dayMs = 24 * 60 * 60 * 1000
+    firstDayMs = Math.max(firstDayMs, lastDayMs - (maximumCostHistoryPoints - 1) * dayMs)
+    var days = []
+    for (var currentDayMs = firstDayMs; currentDayMs <= lastDayMs; currentDayMs += dayMs) {
+        days.push(hasOwnKey(byDate, currentDayMs) ? byDate[currentDayMs] : null)
+    }
+    return days
 }
 
 // Lays the daily points out for the activity heatmap's fixed seven rows. The

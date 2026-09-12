@@ -152,18 +152,21 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: usageBarsShowUsedCheck
+            implicitWidth: 0
             Layout.fillWidth: true
             text: i18n("Show usage as percent used")
         }
 
         Controls.CheckBox {
             id: resetTimesShowAbsoluteCheck
+            implicitWidth: 0
             Layout.fillWidth: true
             text: i18n("Show reset times as clock time")
         }
 
         Controls.CheckBox {
             id: showQuotaWarningMarkersCheck
+            implicitWidth: 0
             Layout.fillWidth: true
             text: i18n("Show quota warnings on usage meters")
         }
@@ -176,6 +179,7 @@ KCM.SimpleKCM {
         Controls.CheckBox {
             id: showPopupPaceCheck
             objectName: "showPopupPaceCheck"
+            implicitWidth: 0
             Layout.fillWidth: true
             text: i18n("Show pace forecasts")
         }
@@ -183,6 +187,7 @@ KCM.SimpleKCM {
         Controls.CheckBox {
             id: showPopupCreditsCheck
             objectName: "showPopupCreditsCheck"
+            implicitWidth: 0
             Layout.fillWidth: true
             text: i18n("Show credits and reset credits")
         }
@@ -190,18 +195,21 @@ KCM.SimpleKCM {
         Controls.CheckBox {
             id: showPopupProviderDetailsCheck
             objectName: "showPopupProviderDetailsCheck"
+            implicitWidth: 0
             Layout.fillWidth: true
             text: i18n("Show provider details and charts")
         }
 
         Controls.CheckBox {
             id: showPopupTabLabelsCheck
+            implicitWidth: 0
             Layout.fillWidth: true
             text: i18n("Show text labels in the tab bar")
         }
 
         Controls.CheckBox {
             id: showProviderChangelogsCheck
+            implicitWidth: 0
             Layout.fillWidth: true
             text: i18n("Show provider changelog links")
         }
@@ -340,6 +348,7 @@ KCM.SimpleKCM {
                 model: page.orderedEnabledProviderRoster
 
                 delegate: Controls.CheckBox {
+                    implicitWidth: 0
                     Layout.fillWidth: true
                     required property var modelData
 

@@ -95,6 +95,7 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: enableNotificationsCheck
+            implicitWidth: 0
             Layout.fillWidth: true
             text: i18n("Enable Plasma notifications")
         }
@@ -105,6 +106,7 @@ KCM.SimpleKCM {
 
             Controls.CheckBox {
                 id: notifyQuotaWarningsCheck
+                implicitWidth: 0
                 Layout.fillWidth: true
                 Layout.leftMargin: Kirigami.Units.gridUnit
                 text: i18n("Notify quota warnings")
@@ -113,6 +115,7 @@ KCM.SimpleKCM {
 
             Controls.CheckBox {
                 id: notifyPredictivePaceWarningsCheck
+                implicitWidth: 0
                 Layout.fillWidth: true
                 Layout.leftMargin: Kirigami.Units.gridUnit
                 text: i18n("Notify predicted quota exhaustion")
@@ -128,6 +131,7 @@ KCM.SimpleKCM {
 
             Controls.CheckBox {
                 id: notifyLimitResetsCheck
+                implicitWidth: 0
                 Layout.fillWidth: true
                 Layout.leftMargin: Kirigami.Units.gridUnit
                 text: i18n("Notify limit resets")
@@ -137,6 +141,7 @@ KCM.SimpleKCM {
             Controls.CheckBox {
                 id: notifyStatusIncidentsCheck
                 objectName: "notifyStatusIncidentsCheck"
+                implicitWidth: 0
                 Layout.fillWidth: true
                 Layout.leftMargin: Kirigami.Units.gridUnit
                 text: i18n("Notify status incidents")
