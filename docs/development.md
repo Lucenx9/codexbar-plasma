@@ -397,6 +397,10 @@ the runtime result is missing, or required smoke tests fail or are cancelled.
 The workflow itself has no path filter, so required checks still report a result.
 This follows [GitHub's required-check guidance](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks).
 
+`tests/tst_interactive_chart.qml` checks that first pointer and keyboard
+inspection preserve the plot position and chart height. It also checks that
+leaving the plot or clearing its points preserves the reserved readout space.
+
 ## Popup smoke tests
 
 Run the popup smoke test from a graphical Plasma 6 session:

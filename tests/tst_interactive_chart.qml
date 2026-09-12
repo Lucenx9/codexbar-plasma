@@ -33,6 +33,45 @@ TestCase {
         return chart
     }
 
+    function test_firstInspectionKeepsPlotGeometry_data() {
+        return [{tag: "hover", keyboard: false}, {tag: "keyboard", keyboard: true}]
+    }
+
+    function test_firstInspectionKeepsPlotGeometry(data) {
+        var chart = createChart({
+            applet: {secondaryTextOpacity: 0.7, canvasColor: function() { return "#000000" }},
+            width: 300,
+            points: [{label: "First", value: 0}],
+            accent: "blue"
+        })
+        if (!chart)
+            return
+        failOnWarning(/.*/)
+        var plot = chart.nextItemInFocusChain(true)
+        verify(typeof plot.requestPaint === "function")
+        verify(waitForRendering(chart))
+        var initialY = plot.y
+        var initialHeight = chart.implicitHeight
+        compare(chart.readoutIndex, -1)
+        if (data.keyboard) {
+            plot.forceActiveFocus(Qt.TabFocusReason)
+            keyClick(Qt.Key_Home)
+        } else {
+            mouseMove(plot, plot.width / 2, plot.height / 2)
+        }
+        compare(chart.readoutIndex, 0)
+        verify(waitForRendering(chart))
+        compare(plot.y, initialY)
+        compare(chart.implicitHeight, initialHeight)
+        mouseMove(this, 330, 230)
+        chart.selectedIndex = -1
+        verify(waitForRendering(chart))
+        compare(plot.y, initialY)
+        chart.points = []
+        verify(waitForRendering(chart))
+        compare(plot.y, initialY)
+    }
+
     function test_readoutPreservesNegativeDetailValues() {
         var chart = createChart({
             applet: {

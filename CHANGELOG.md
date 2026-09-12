@@ -22,6 +22,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Reserve initial readout row height in interactive charts so that hovering
+  a point for the first time does not cause a vertical layout shift.
 - Guard session refresh activity calculations against missing, null, or
   non-string command sources, avoiding uncaught exceptions during refresh
   scheduling.
