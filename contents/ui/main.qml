@@ -240,7 +240,7 @@ PlasmoidItem {
             // any other source until the refetch lands.
             retireUsageCommandKind("cost")
             applyTokenCosts()
-            Qt.callLater(function() { root.refreshCost(true) })
+            Qt.callLater(root.refreshCost, true)
         }
     }
     onProviderConfigRevisionChanged: {

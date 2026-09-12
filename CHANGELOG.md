@@ -22,6 +22,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Coalesce cost-setting changes applied together into one scan using the final
+  settings, avoiding duplicate scans that immediately replace each other.
 - Preserve ampersands and angle brackets in provider selection and settings
   checkbox labels when KDE styles process keyboard mnemonics.
 - Preserve quota, pace, and reset notification baselines when a successful CLI
