@@ -102,8 +102,9 @@ cached account changes, ranges, missing token counts, and incomplete models.
 The `popup-cost-refresh-error` scenario covers retained costs through empty,
 malformed, unsupported, and partial error replies, collapsed/expanded details,
 privacy, an initial failure without cached costs, and recovery.
-[Cost-context tests](../tests/test_cost_context.py) also exercise malformed error
-messages through the production parser, checking that healthy providers update,
-failed providers retain same-context costs, and a generic warning remains visible.
+[Cost response tests](../tests/tst_cost_response.qml) exercise malformed error
+messages and bounded normalization. [Controller tests](../tests/test_cost_context.py)
+use real CLI processes to check healthy provider updates, same-context retention,
+command changes, forced refreshes, and timeouts.
 Run `make check` for logic and wiring, and `make smoke` for the real applet with
 synthetic data. Executed check results belong in the PR.

@@ -15,6 +15,8 @@ Item {
     property bool cacheRestart: false
     property double cacheSavedAtMs: 0
     property int costDetailsStep: 0
+    property var costRetentionProviders: null
+    property bool costRetentionChecked: false
     property var costSnapshot: null
     property var costSelectionProviderMemo: null
     property var costSelectionPointsMemo: null
@@ -386,47 +388,44 @@ Item {
 
     function verifyCostRefreshError() {
         var section = findItem(applet.fullRepresentationItem, "providerLocalCostSection");
-        if (!section || !section.tokenCost || applet.costLoading)
+        if (!section || applet.costLoading || (costDetailsStep === 0 && !section.tokenCost))
             return false;
-        if (costDetailsStep > 0)
-            return true;
-        var snapshot = applet.tokenCosts;
-        var retainedCost = section.tokenCost;
-        var failures = [
-            { stdout: "", stderr: "Synthetic cost refresh failed." },
-            { stdout: "{", stderr: "" },
-            { stdout: "null", stderr: "" },
-            { stdout: JSON.stringify([{provider: "codex", error: {message: "Synthetic cost scan failed."}}]), stderr: "" }
-        ];
-        for (var expanded of [false, true]) {
-            section.detailsExpanded = expanded;
-            for (var failure of failures) {
-                applet.parseCostOutput(failure.stdout, failure.stderr, applet.costHistoryDays);
-                verifyScenario(section.tokenCost === retainedCost, "cost failure discarded the retained snapshot");
-                verifyScenario(applet.costErrorText.length > 0
-                    && hasVisibleText(section, section.costErrorText),
-                    "cost refresh error is hidden beside retained data");
+        if (costDetailsStep === 0) {
+            costSnapshot = section.tokenCost.totals.cost;
+            section.detailsExpanded = false;
+        } else if (costDetailsStep <= 8 || costDetailsStep === 13) {
+            verifyScenario(section.tokenCost !== null && section.tokenCost.totals.cost === costSnapshot,
+                "cost failure discarded the retained snapshot");
+            verifyScenario(applet.costErrorText.length > 0
+                && hasVisibleText(section, section.costErrorText),
+                "cost refresh error is hidden beside retained data");
+            if (costDetailsStep === 4)
+                section.detailsExpanded = true;
+            if (costDetailsStep === 8) {
+                section.detailsExpanded = false;
+                applet.Plasmoid.configuration.privacyMode = true;
+                verifyScenario(section.costErrorText === i18n("Details hidden by privacy mode.")
+                    && hasVisibleText(section, section.costErrorText), "cost error lost its privacy projection");
+                applet.Plasmoid.configuration.privacyMode = false;
             }
+            if (costDetailsStep === 13) {
+                findItem(applet.fullRepresentationItem, "providerScroll").contentItem.contentY = section.y;
+                return true;
+            }
+        } else if (costDetailsStep === 9) {
+            verifyScenario(section.tokenCost === null && applet.costErrorText.length === 0,
+                "confirmed empty cost reply retained old data");
+        } else if (costDetailsStep === 10) {
+            verifyScenario(section.tokenCost === null && section.visible
+                && hasVisibleText(section, section.costErrorText), "initial cost failure is hidden");
+        } else if (costDetailsStep === 11) {
+            verifyScenario(section.tokenCost !== null && section.tokenCost.totals.cost === 4
+                && section.costErrorText.length === 0, "successful cost refresh did not clear the warning");
+        } else if (costDetailsStep === 12) {
+            verifyScenario(section.tokenCost !== null && section.tokenCost.totals.cost === costSnapshot,
+                "synthetic history did not reload for the review capture");
         }
-        section.detailsExpanded = false;
-        applet.Plasmoid.configuration.privacyMode = true;
-        verifyScenario(section.costErrorText === i18n("Details hidden by privacy mode.")
-            && hasVisibleText(section, section.costErrorText), "cost error lost its privacy projection");
-        applet.Plasmoid.configuration.privacyMode = false;
-        applet.parseCostOutput("[]", "", applet.costHistoryDays);
-        applet.parseCostOutput("", failures[0].stderr, applet.costHistoryDays);
-        verifyScenario(section.tokenCost === null && section.visible
-            && hasVisibleText(section, section.costErrorText), "initial cost failure is hidden");
-        applet.parseCostOutput(JSON.stringify([{provider: "codex", totals: {totalCost: 4, totalTokens: 100}}]),
-            "", applet.costHistoryDays);
-        verifyScenario(section.tokenCost !== null && section.tokenCost.totals.cost === 4
-            && section.costErrorText.length === 0
-            && !hasVisibleText(section, failures[0].stderr), "successful cost refresh did not clear the warning");
-        // Keep the synthetic history and failure visible in the review capture.
-        applet.tokenCosts = snapshot;
-        applet.applyTokenCosts();
-        applet.parseCostOutput("", failures[0].stderr, applet.costHistoryDays);
-        findItem(applet.fullRepresentationItem, "providerScroll").contentItem.contentY = section.y;
+        verifyScenario(applet.refreshCost(true), "manual cost refresh did not start");
         costDetailsStep++;
         return false;
     }
@@ -604,7 +603,7 @@ Item {
             chart.moveSelection(-1);
             applet.setCostHistoryDays(7);
             applet.applyTokenCosts();
-            verifyScenario(applet.tokenCosts === costSnapshot && section.tokenCost === null && section.selectedDay === null
+            verifyScenario(Object.keys(applet.tokenCosts).length === 0 && section.tokenCost === null && section.selectedDay === null
                 && chart.selectedIndex === -1 && !details.visible,
                 "requested range change retained the previous cached payload or selection");
             applet.setCostHistoryDays(30);
@@ -854,7 +853,7 @@ Item {
         var section = findItem(applet.fullRepresentationItem, "providerLocalCostSection");
         var chart = findItem(section, "providerCostChart");
         var details = findItem(section, "costDrillDownSection");
-        if (!section || !section.tokenCost || !chart || !details)
+        if (!section || !section.tokenCost || !chart || !details || applet.costLoading)
             return false;
         verifyScenario(section.tokenCost.windowLabel === applet.costHistoryWindowLabel(section.tokenCost, 30)
             && section.tokenCost.valueMode === "estimated", "privacy lost the cost period or estimation qualifier");
@@ -888,9 +887,10 @@ Item {
         } else if (settingsBehaviorStep === 4) {
             verifyScenario(section.selectedDay === null, "private organization switch retained its day pin");
             replaceCostSelectionProvider(costSelectionProviderMemo);
-        } else {
+        } else if (settingsBehaviorStep === 5) {
             chart.selectedIndex = chart.points.length - 1;
-            applet.costErrorText = "demo@example.com private cost error";
+            verifyScenario(applet.refreshCost(true), "private cost refresh did not start");
+        } else {
             verifyScenario(section.costErrorText === i18n("Details hidden by privacy mode."),
                 "private cost error was exposed");
             findItem(applet.fullRepresentationItem, "providerScroll").contentItem.contentY = section.y;
@@ -1000,6 +1000,22 @@ Item {
                 return true;
             if (applet.loading || applet.costLoading || applet.providers.length !== 2)
                 return false;
+            if (!costRetentionChecked) {
+                if (costRetentionProviders === null) {
+                    costRetentionProviders = applet.providers;
+                    var retainedProviders = applet.providers.slice();
+                    retainedProviders[1] = applet.copyObject(retainedProviders[1]);
+                    retainedProviders[1].usageStale = true;
+                    retainedProviders[1].tokenCost = null;
+                    applet.providers = retainedProviders;
+                    verifyScenario(applet.refreshCost(true), "retention cost refresh did not start");
+                    return false;
+                }
+                verifyScenario(applet.costErrorText.length > 0 && applet.providers[1].tokenCost === null,
+                    "failed cost refresh reattached costs to stale usage");
+                applet.commitUsageSnapshot(costRetentionProviders);
+                costRetentionChecked = true;
+            }
             var previous = applet.providers;
             var measuredAt = previous[0].lastGoodAtMs;
             for (var includePrimary of [true, false]) {
@@ -1078,9 +1094,9 @@ Item {
                 "retention fixture needs cost snapshots for both providers");
             verifyScenario(applet.providers[0].tokenCost !== null && applet.providers[1].tokenCost === null,
                 "provider fallback reattached token costs to retained usage");
-            applet.parseCostOutput("{", "Synthetic cost failure", applet.costHistoryDays);
+            applet.applyTokenCosts();
             verifyScenario(applet.providers[1].tokenCost === null,
-                "cost refresh reattached token costs to retained usage");
+                "cost projection reattached token costs to retained usage");
             var retainedHistoryDays = applet.costHistoryDays;
             applet.setCostHistoryDays(7);
             applet.setCostHistoryDays(retainedHistoryDays);

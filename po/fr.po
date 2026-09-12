@@ -612,6 +612,7 @@ msgid "Diagnostic command timed out. Try again."
 msgstr "Le délai du diagnostic a expiré. Réessayez."
 
 #: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
+#: contents/ui/controllers/CostController.qml
 #: contents/ui/controllers/ProviderRosterController.qml
 #: contents/ui/controllers/SessionsController.qml contents/ui/main.qml
 msgid "codexbar response exceeded the supported size."
@@ -1783,6 +1784,26 @@ msgstr "Aucun fournisseur correspondant"
 msgid "Try another search or choose a different filter."
 msgstr "Essayez une autre recherche ou choisissez un autre filtre."
 
+#: contents/ui/controllers/CostController.qml
+msgid "Loading cost data timed out. Try again."
+msgstr "Le délai de chargement des coûts a expiré. Réessayez."
+
+#: contents/ui/controllers/CostController.qml
+msgid "Some cost data could not be refreshed."
+msgstr "Certaines données de coût n'ont pas pu être actualisées."
+
+#: contents/ui/controllers/CostController.qml
+msgid "codexbar cost did not return JSON."
+msgstr "codexbar cost n'a pas renvoyé de JSON."
+
+#: contents/ui/controllers/CostController.qml
+msgid "Could not parse codexbar cost JSON: %1"
+msgstr "Impossible d'analyser le JSON de codexbar cost : %1"
+
+#: contents/ui/controllers/CostController.qml
+msgid "codexbar cost returned an unsupported JSON payload."
+msgstr "codexbar cost a renvoyé des données JSON non prises en charge."
+
 #: contents/ui/controllers/SessionsController.qml contents/ui/main.qml
 msgid "Set the codexbar command path in widget settings."
 msgstr ""
@@ -1959,10 +1980,6 @@ msgid "Loading usage timed out. Try again."
 msgstr "Le délai de chargement de l'utilisation a expiré. Réessayez."
 
 #: contents/ui/main.qml
-msgid "Loading cost data timed out. Try again."
-msgstr "Le délai de chargement des coûts a expiré. Réessayez."
-
-#: contents/ui/main.qml
 msgid "Loading provider configuration timed out. Try again."
 msgstr ""
 "Le délai de chargement de la configuration des fournisseurs a expiré. "
@@ -1983,22 +2000,6 @@ msgstr "Impossible de lire un enregistrement de compte de codexbar : %1"
 #: contents/ui/main.qml
 msgid "Could not parse codexbar account JSON: %1"
 msgstr "Impossible d'analyser le JSON des comptes de codexbar : %1"
-
-#: contents/ui/main.qml
-msgid "codexbar cost did not return JSON."
-msgstr "codexbar cost n'a pas renvoyé de JSON."
-
-#: contents/ui/main.qml
-msgid "Could not parse codexbar cost JSON: %1"
-msgstr "Impossible d'analyser le JSON de codexbar cost : %1"
-
-#: contents/ui/main.qml
-msgid "codexbar cost returned an unsupported JSON payload."
-msgstr "codexbar cost a renvoyé des données JSON non prises en charge."
-
-#: contents/ui/main.qml
-msgid "Some cost data could not be refreshed."
-msgstr "Certaines données de coût n'ont pas pu être actualisées."
 
 #: contents/ui/main.qml
 msgid "Session %1"

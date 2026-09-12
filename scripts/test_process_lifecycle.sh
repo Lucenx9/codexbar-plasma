@@ -39,10 +39,9 @@ require_in_surface applet "interval: root.providerConfigWatchIntervalMs"
 require_in_surface applet 'property string connectedProviderConfigWatchCommand: ""'
 require_in_surface applet "function reconnectProviderConfigWatcher()"
 require_in_surface applet "onProviderConfigWatchCommandChanged: reconnectProviderConfigWatcher()"
-require_in_surface applet 'import "CostRefreshPolicy.js" as CostRefreshPolicy'
-require_in_surface applet "readonly property int costAutoRefreshIntervalMs: CostRefreshPolicy.automaticRefreshIntervalMs"
-require_in_surface applet "property double lastCostRefreshAttemptAt: -1"
-require_in_surface applet "id: costRefreshTimer"
+require_in_surface applet 'import "../CostRefreshPolicy.js" as CostRefreshPolicy'
+require_in_surface applet "interval: CostRefreshPolicy.automaticRefreshIntervalMs"
+require_in_surface applet "property double lastAttemptAtMs: -1"
 require_in_surface applet "property bool updateRetryPending: false"
 require_in_surface applet "property bool connectedUpdateInstallMode: false"
 require_in_surface applet "property bool pendingAutomaticUpdateCheck: false"
@@ -232,7 +231,6 @@ require_all(
     (
         "switch (descriptor.kind) {",
         'case "usage":',
-        'case "cost":',
         'case "providerConfig":',
         'case "account":',
         'case "providerFallback":',
@@ -240,7 +238,6 @@ require_all(
         "finishUsageCommandSource(sourceName)",
         "finishNotificationCommandSource(sourceName)",
         "Loading usage timed out. Try again.",
-        "Loading cost data timed out. Try again.",
         "Loading provider configuration timed out. Try again.",
         "Loading accounts timed out. Try again.",
     ),
@@ -302,18 +299,6 @@ require_all(
     ),
     "notification replies must close only their live ledger entry",
 )
-
-require_all(
-    applet.function_body("buildCostCommandDescriptor"),
-    ('buildCommandDescriptor("cost", "")', "descriptor.costHistoryDays = costHistoryDays"),
-    "cost command descriptors must retain the requested history range",
-)
-for fragment in (
-    "var descriptor = CommandLedger.find(root.activeCommandDescriptors, sourceName)",
-    "descriptor.costHistoryDays !== undefined",
-    "root.parseCostOutput(stdoutText, stderrText, requestedHistoryDays)",
-):
-    applet.require(fragment, "cost completion must pass its captured request range to normalization")
 
 # Routing reads the ledger entry, so a reply whose source name has already been
 # retired returns before any parse runs. That is the whole staleness guarantee.
@@ -442,7 +427,12 @@ require_all(
      "Loading sessions timed out. Try again."),
     "Sessions must own nonce, process, timeout, and destruction cleanup",
 )
-reply = applet.function_body("acceptReply")
+def controller_function(text, name):
+    start = text.index("function " + name + "(")
+    return Surface._match_braces(text, text.index("{", start))
+
+
+reply = controller_function(sessions_text, "acceptReply")
 require_all(
     " ".join(reply.split()),
     ("if (!CommandLedger.find(commands, sourceName)) { return; }",),
@@ -450,10 +440,10 @@ require_all(
 )
 if reply.index("CommandLedger.find(commands, sourceName)") > reply.index("finishRequest(sourceName)"):
     raise AssertionError("Sessions must reject retired replies before committing a result")
-finish = applet.function_body("finishRequest")
+finish = controller_function(sessions_text, "finishRequest")
 if finish.index("CommandLedger.closed(") > finish.index("disconnectSource("):
     raise AssertionError("Sessions must retire a request before disconnect callbacks")
-request = applet.function_body("requestRefresh")
+request = controller_function(sessions_text, "requestRefresh")
 if request.index("CommandLedger.opened(") > request.index("connectSource("):
     raise AssertionError("Sessions must register a request before synchronous replies")
 
@@ -553,66 +543,56 @@ require_all(
     "watcher replies from a retired poll must be disconnected, never left polling",
 )
 
-cost_refresh_body = applet.function_body("refreshCost")
+cost_text = (root / "contents/ui/controllers/CostController.qml").read_text()
 require_all(
-    cost_refresh_body,
-    (
-        "CostRefreshPolicy.refreshAction(",
-        "costCommandSource.length > 0",
-        "costLoading",
-        "force === true",
-        "lastCostRefreshAttemptAt",
-        "CostRefreshPolicy.clearAction",
-        "CostRefreshPolicy.startAction",
-        'retireUsageCommandKind("cost")',
-    ),
-    "cost refreshes must preserve their independent hourly lifecycle",
+    applet.id_block("costController"),
+    ("commandPath: root.commandPath", "provider: root.provider",
+     "historyDays: root.costHistoryDays", "costUsageEnabled: root.costUsageEnabled",
+     "active: root.spendSelected && root.expanded"),
+    "cost lifecycle must receive explicit command, range, enabled, and visibility inputs",
 )
-
+for forbidden in ("root.", "Plasmoid.configuration", "required property var applet"):
+    if forbidden in cost_text:
+        raise AssertionError("cost lifecycle must be independent of the applet root")
+for body in (applet.function_body("handleCommandTimeout"), applet.id_block("usageSource")):
+    if 'case "cost"' in body:
+        raise AssertionError("cost processes must leave the shared usage dispatcher")
 require_all(
-    applet.id_block("costRefreshTimer"),
-    (
-        "interval: root.costAutoRefreshIntervalMs",
-        "running: root.costCommandSource.length > 0",
-        "root.refreshCost(false)",
-    ),
-    "automatic cost scans must use their own hourly scheduler",
+    cost_text,
+    ('engine: "executable"', "running: controller.loading", "lifecycle.expireRequests(Date.now())",
+     "Component.onDestruction: lifecycle.retireRequests()", "Loading cost data timed out. Try again.",
+     "interval: CostRefreshPolicy.automaticRefreshIntervalMs", "running: lifecycle.commandSource.length > 0",
+     "running: controller.active", "CostRefreshPolicy.isNewBucketDay(lifecycle.lastAttemptAtMs, Date.now())",
+     "snapshotContext === lifecycle.commandSource", "Qt.callLater(refreshChangedSource)"),
+    "cost controller must own process cleanup, hourly scans, day rollover, and context projection",
 )
-
-# Spend freshness reuses the hourly cost lifecycle: revisits and a visible
-# midnight crossing refresh through refreshCost(false), never forcing a scan.
-require_all(
-    applet.function_body("refreshSpendIfStale"),
-    (
-        "!spendSelected || !expanded",
-        "return refreshCost(false)",
-    ),
-    "spend revisits must refresh only a visible spend tab through the hourly cost lifecycle",
+require_ordered(
+    controller_function(cost_text, "requestRefresh"),
+    ("CostRefreshPolicy.refreshAction(", "retireRequests()", "lastAttemptAtMs = nowMs",
+     "CommandLedger.withRunNonce(commandSource, runSerial)", "descriptor.historyDays = controller.historyDays",
+     "descriptor.context = commandSource", "CommandLedger.opened(", "connectSource("),
+    "cost runs must capture their context, replace older runs, and register before connecting",
 )
-require_all(
-    applet.handler_body("onSpendSelectedChanged"),
-    (
-        "if (spendSelected && expanded)",
-        "Qt.callLater(refreshSpendIfStale)",
-    ),
-    "entering Usage & Spend must check cost freshness",
+require_ordered(
+    controller_function(cost_text, "acceptReply"),
+    ("CommandLedger.find(commands, sourceName)", "if (!descriptor)", "return;",
+     "finishRequest(sourceName)", "CostResponse.response(stdoutText, stderrText, descriptor.historyDays)",
+     "snapshotContext === descriptor.context", "Normalizer.mergeCostSnapshotsAfterPartialFailure("),
+    "only live cost replies may commit or retain snapshots from the captured context",
 )
-require_all(
-    applet.function_body("selectGlobalView"),
-    ('candidate === "spend"', "refreshSpendIfStale()"),
-    "reselecting the spend tab must check whether its snapshot became stale",
+require_ordered(
+    controller_function(cost_text, "finishRequest"),
+    ("CommandLedger.closed(", "disconnectSource("),
+    "cost commands must retire before disconnect callbacks",
 )
-require_all(
-    applet.id_block("panelClockTimer"),
-    (
-        "running: root.providers.length > 0 || (root.spendSelected && root.expanded)",
-        "CostRefreshPolicy.isNewBucketDay(",
-        "root.lastCostRefreshAttemptAt, root.panelClockMs",
-        "root.spendSelected && root.expanded",
-        "root.refreshSpendIfStale()",
-    ),
-    "a visible spend view must refresh across midnight even with no provider rows",
-)
+require_all(applet.function_body("refreshCost"), ("costController.refresh(force)",),
+            "manual cost refresh must reach the controller")
+require_all(applet.function_body("refreshSpendIfStale"),
+            ("!spendSelected || !expanded", "costController.refresh(false)"),
+            "spend revisits must respect visibility and cooldown")
+require_all(applet.function_body("selectGlobalView"),
+            ('candidate === "spend"', "refreshSpendIfStale()"),
+            "reselecting spend must recheck freshness")
 
 require_all(
     providers.function_body("runCommand"),

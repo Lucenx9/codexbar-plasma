@@ -124,11 +124,16 @@ external effects, and cheapest behavioral test. Read the existing implementation
 and tests. Preserve compatibility and unexpected behavior until evidence or the
 request shows it should change.
 
-Cost-source changes retire obsolete commands synchronously and queue
-`refreshCost` directly through `Qt.callLater`, which coalesces settings applied
-in the same event-loop turn. `tests/test_cost_context.py` exercises the production
-bindings, refresh policy, and command ledger to verify one final-context scan,
-disabled-cost behavior, and immediate manual refreshes.
+`controllers/CostController.qml` owns cost commands, nonces, deadlines, cached
+context, and the independent hourly/day-aware refresh policy. Source changes
+retire obsolete commands synchronously and coalesce settings through
+`Qt.callLater`. Only snapshots for the current command context reach `main.qml`,
+which localizes them and attaches them to fresh provider usage. `CostResponse.js`
+returns bounded snapshots and semantic failure outcomes without effects or
+localization. `tests/test_cost_context.py` exercises the production controller
+with isolated CLI processes; `tests/tst_cost_response.qml` covers adversarial
+response normalization. Together they cover batched settings, partial failures,
+late replies, disabled costs, timeout retention, and forced manual refreshes.
 
 When multiple pages consume one CLI envelope, share the bounded record/envelope
 contract and keep page-specific projections separate. Avoid both duplicate raw

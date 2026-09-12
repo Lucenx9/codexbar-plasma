@@ -45,8 +45,6 @@ TestCase {
     property var providers: []
     property var tokenCosts: ({})
     property int costHistoryDays: 30
-    property string costCommandSource: "codexbar cost --format json --json-only --days 30"
-    property string tokenCostsContext: "codexbar cost --format json --json-only --days 30"
 
     SOURCE_FUNCTIONS
 
