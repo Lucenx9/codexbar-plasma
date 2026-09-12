@@ -286,6 +286,12 @@ and command binding in Qt's event loop. It counts refresh requests for cached
 and uncached accounts in single-provider and aggregate modes; CLI effects are
 replaced by observations at the refresh boundary.
 
+`tests/test_account_parse_containment.py` exercises the production account and
+provider-scoped usage parsers with malformed records before and after healthy
+siblings. It verifies quota values including measured zero, scoped provider
+identity, command retirement, and exactly one fallback completion even when
+every record fails normalization.
+
 `tests/test_provider_config_watcher.py` delivers a cached reply synchronously
 during the production watcher connection, matching Plasma's shared-source
 behavior. It checks that the new poll stays connected and retired replies are

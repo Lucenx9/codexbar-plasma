@@ -1164,11 +1164,19 @@ PlasmoidItem {
                         if (!isCliRecord(items[i])) {
                             continue
                         }
-                        var providerItem = copyObject(items[i])
-                        // A provider-scoped command may only update the requested
-                        // provider, even if a malformed CLI payload claims another id.
-                        providerItem.provider = providerID
-                        normalizedItems.push(normalizeProvider(providerItem))
+                        try {
+                            var providerItem = copyObject(items[i])
+                            // A provider-scoped command may only update the requested
+                            // provider, even if a malformed CLI payload claims another id.
+                            providerItem.provider = providerID
+                            normalizedItems.push(normalizeProvider(providerItem))
+                        } catch (recordError) {
+                            // Keep reading: a later healthy account snapshot must
+                            // still be able to replace this provider's error row.
+                            normalizedItems.push(normalizeProvider(providerErrorPayload(
+                                providerID,
+                                i18n("Could not parse codexbar JSON: %1", recordError.message))))
+                        }
                     }
                     parsedWithoutRecords = normalizedItems.length === 0
                 } catch (error) {

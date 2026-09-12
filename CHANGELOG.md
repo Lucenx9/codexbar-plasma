@@ -22,6 +22,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve healthy usage records after a malformed sibling in provider-scoped
+  CLI replies, including measured-zero quotas, while keeping all-invalid
+  replies as provider errors.
 - Keep settings checkboxes stable in right-to-left layouts under KDE/Breeze
   styles, avoiding repeated width binding loops while the pages settle.
 - Keep the provider filter tabs usable with KDE styles whose tab buttons expose
