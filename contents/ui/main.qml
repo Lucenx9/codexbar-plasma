@@ -226,7 +226,6 @@ PlasmoidItem {
     Component.onCompleted: {
         usageLifecycleInitialized = true
         reconnectProviderConfigWatcher()
-        refreshNow(false)
     }
 
     function buildProviderConfigWatchCommand() {

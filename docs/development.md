@@ -67,6 +67,8 @@ For those, use `make install` or `./install.sh`. Release-package users can use
   automatic/popup refresh scheduling. Inputs are CLI settings, selected accounts,
   provider order, configuration revision/checksum, and popup visibility. Changed
   request inputs synchronously retire old work and coalesce a replacement.
+  The controller alone schedules startup; `main.qml` does not start a second
+  refresh from its completion handler.
   Manual refresh bypasses the roster cache; periodic refresh waits for pending
   usage work. Read-only outputs expose loading, errors, provider display names,
   and refresh timestamps. Signals deliver bounded snapshots, failed refreshes,

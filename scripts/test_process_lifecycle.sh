@@ -148,6 +148,19 @@ require_all(usage_text,
      "lifecycle.expireCommands(Date.now())", "readonly property bool loading:"),
     "usage must own input retirement, destruction, and deadline cleanup")
 
+# Completion-handler order is undefined: only the controller owns startup.
+main_text = (root / "contents/ui/main.qml").read_text()
+main_start = main_text.index("Component.onCompleted:")
+main_startup = Surface._match_braces(main_text, main_text.index("{", main_start))
+for duplicate in ("refreshNow(", "scheduleUsageRefresh(", "usageController.refresh(", "usageController.scheduleRefresh("):
+    if duplicate in main_startup:
+        raise AssertionError("the applet must not start a second initial usage refresh")
+usage_start = usage_text.index("Component.onCompleted:")
+usage_startup = Surface._match_braces(usage_text, usage_text.index("{", usage_start))
+require_ordered(usage_startup,
+    ("lifecycle.initialized = true", "lifecycle.scheduleUsageRefresh()"),
+    "the usage controller must initialize and schedule its own startup")
+
 retire_body = applet.function_body("retireUsageCommands")
 if "finishUsageCommandSource(" not in retire_body and "retireUsageCommandKind(" not in retire_body:
     raise AssertionError("retiring active usage sources must disconnect them immediately")
