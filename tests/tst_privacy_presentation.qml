@@ -15,6 +15,7 @@ TestCase {
         return { lane: "primary", label: "confidential deployment", hasPercent: true,
             usedPercent: 42, leftPercent: 58, paceKnown: true, pacePercent: 20,
             paceOnTop: false, paceEtaSeconds: 7200, resetsAt: "2026-09-08T17:00:00Z",
+            paceObservedAtMs: 1788868800000,
             resetDescription: "confidential reset owner", reset: "confidential fallback",
             pace: "confidential organization" }
     }
@@ -57,6 +58,7 @@ TestCase {
         compare(result.primaryRow, result.rows[0])
         compare(result.rows[0].usedPercent, 42)
         compare(result.rows[0].paceEtaSeconds, 7200)
+        compare(result.rows[0].paceObservedAtMs, 1788868800000)
         compare(result.rows[0].resetsAt, "2026-09-08T17:00:00.000Z")
         compare(result.credits, 14)
         compare(JSON.stringify(source), before)

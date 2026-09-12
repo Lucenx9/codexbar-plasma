@@ -114,10 +114,9 @@ PlasmoidItem {
         commandPath, provider, source, providerConfigRevision])
     property bool loading: false
     // Reset labels and run-out durations keep moving even when automatic CLI
-    // refresh is disabled. The usage timestamp anchors forecast durations; cost
-    // enrichment must not restart that countdown.
+    // refresh is disabled. Each row's receipt time anchors forecast durations;
+    // unrelated refreshes must not restart that countdown.
     property double panelClockMs: Date.now()
-    property double usageSnapshotReceivedAtMs: panelClockMs
     property double usageLastRefreshAttemptAtMs: -1
     property double usageLastCompletedAtMs: -1
     readonly property int panelClockIntervalMs: 60000
@@ -652,7 +651,6 @@ PlasmoidItem {
     function markUsageSnapshotReceived() {
         var nowMs = Date.now()
         usageLastCompletedAtMs = nowMs
-        usageSnapshotReceivedAtMs = nowMs
         panelClockMs = nowMs
     }
 
@@ -2291,6 +2289,7 @@ PlasmoidItem {
             pacePercent: metrics.pacePercent,
             paceOnTop: metrics.paceOnTop,
             paceEtaSeconds: metrics.paceEtaSeconds,
+            paceObservedAtMs: Date.now(),
             resetsAt: Normalizer.boundedDisplayText(
                 window.resetsAt === undefined || window.resetsAt === null ? "" : window.resetsAt,
                 128),
@@ -4089,12 +4088,13 @@ PlasmoidItem {
     // Duration-only forecast token. It stays empty unless the CLI actually
     // predicts exhaustion before the reset, so the panel never shows a
     // countdown the pace data does not support.
+    // Account options retain their own receipt time across later refreshes.
     function runOutTextForRow(row) {
         if (!paceWarningActive(row)) {
             return ""
         }
         return paceEtaText(PanelDisplay.remainingSeconds(
-            row.paceEtaSeconds, usageSnapshotReceivedAtMs, panelClockMs))
+            row.paceEtaSeconds, row.paceObservedAtMs, panelClockMs))
     }
 
     function resetTextForRow(row) {

@@ -22,6 +22,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep panel run-out countdowns tied to each forecast's receipt time, so
+  selecting a cached account cannot restart an old or expired prediction.
 - Preserve ampersands and angle brackets in provider selection and settings
   checkbox labels when KDE styles process keyboard mnemonics.
 - Preserve quota, pace, and reset notification baselines when a successful CLI

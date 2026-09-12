@@ -149,6 +149,10 @@ Extraction must hide complexity, not merely reduce line count.
   quota can satisfy the provider meter condition. Direct missing quotas stay omitted; `runOut` depends on `paceWarningActive`. Panel visibility,
   order, and metric settings preserve the minute clock and icon fallback and
   must not fetch data or change notification state.
+- `main.qml` stamps each normalized quota row with its local forecast receipt
+  time. Cached account selection and privacy projection preserve it, so a later
+  refresh cannot restart another row's run-out countdown. This timestamp stays
+  in memory; it is neither a CLI field nor part of the persisted quota cache.
 - `PanelTextFit.js` composes the optional panel text from the segments the
   settings enable and offers progressively smaller compositions when the meter
   row leaves too little room. The renderer measures each candidate on its own
