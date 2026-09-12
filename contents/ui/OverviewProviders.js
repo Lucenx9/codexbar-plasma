@@ -22,7 +22,7 @@ function configuredProviderIDs(value) {
     if (raw.length === 0 || raw === noneValue) {
         return [];
     }
-    return ProviderOrder.configuredProviderIDs(raw).slice(0, maximumOverviewProviders);
+    return ProviderOrder.configuredProviderIDs(raw);
 }
 
 // Resolves the stored value against roster IDs already in display order.
@@ -53,6 +53,29 @@ function isSelected(resolvedProviderIDs, providerID) {
     return selected.indexOf(ProviderOrder.normalizedProviderID(providerID)) !== -1;
 }
 
+// Disabled providers keep their saved selection but cannot occupy a visible
+// slot. Count canonical roster IDs once, including after providers return.
+function selectedProviderCount(orderedProviderIDs, selectedProviderIDs) {
+    var selected = Array.isArray(selectedProviderIDs) ? selectedProviderIDs : [];
+    var selectedSet = ({});
+    for (var i = 0; i < Math.min(selected.length, ProviderOrder.maximumProviderItems); i++) {
+        var providerID = ProviderOrder.normalizedProviderID(selected[i]);
+        if (providerID.length > 0) {
+            selectedSet[providerID] = true;
+        }
+    }
+    var roster = Array.isArray(orderedProviderIDs) ? orderedProviderIDs : [];
+    var count = 0;
+    for (var j = 0; j < Math.min(roster.length, ProviderOrder.maximumProviderItems); j++) {
+        var key = ProviderOrder.normalizedProviderID(roster[j]);
+        if (Guards.hasOwnKey(selectedSet, key)) {
+            count++;
+            delete selectedSet[key];
+        }
+    }
+    return count;
+}
+
 // Returns the next selection after one toggle. Roster order wins so the
 // stored value follows the saved provider order; selected providers missing
 // from the current roster survive, so disabling a provider elsewhere does not
@@ -73,7 +96,8 @@ function toggledSelection(orderedProviderIDs, selectedProviderIDs, providerID, c
         return selected.slice(0);
     }
     if (checked) {
-        if (!Guards.hasOwnKey(selectedSet, key) && selected.length >= maximumOverviewProviders) {
+        if (!Guards.hasOwnKey(selectedSet, key)
+                && selectedProviderCount(orderedProviderIDs, selected) >= maximumOverviewProviders) {
             return selected.slice(0);
         }
         selectedSet[key] = true;
@@ -87,12 +111,9 @@ function toggledSelection(orderedProviderIDs, selectedProviderIDs, providerID, c
         var candidate = ProviderOrder.normalizedProviderID(roster[j]);
         if (candidate.length > 0 && Guards.hasOwnKey(selectedSet, candidate) && result.indexOf(candidate) === -1) {
             result.push(candidate);
-            if (result.length >= maximumOverviewProviders) {
-                break;
-            }
         }
     }
-    for (var k = 0; k < selected.length && result.length < maximumOverviewProviders; k++) {
+    for (var k = 0; k < selected.length; k++) {
         var prior = ProviderOrder.normalizedProviderID(selected[k]);
         if (prior.length > 0 && Guards.hasOwnKey(selectedSet, prior) && result.indexOf(prior) === -1) {
             result.push(prior);

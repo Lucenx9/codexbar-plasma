@@ -114,10 +114,9 @@ PlasmoidItem {
         commandPath, provider, source, providerConfigRevision])
     property bool loading: false
     // Reset labels and run-out durations keep moving even when automatic CLI
-    // refresh is disabled. The usage timestamp anchors forecast durations; cost
-    // enrichment must not restart that countdown.
+    // refresh is disabled. Each row's receipt time anchors forecast durations;
+    // unrelated refreshes must not restart that countdown.
     property double panelClockMs: Date.now()
-    property double usageSnapshotReceivedAtMs: panelClockMs
     property double usageLastRefreshAttemptAtMs: -1
     property double usageLastCompletedAtMs: -1
     readonly property int panelClockIntervalMs: 60000
@@ -240,7 +239,7 @@ PlasmoidItem {
             // any other source until the refetch lands.
             retireUsageCommandKind("cost")
             applyTokenCosts()
-            Qt.callLater(function() { root.refreshCost(true) })
+            Qt.callLater(root.refreshCost, true)
         }
     }
     onProviderConfigRevisionChanged: {
@@ -652,7 +651,6 @@ PlasmoidItem {
     function markUsageSnapshotReceived() {
         var nowMs = Date.now()
         usageLastCompletedAtMs = nowMs
-        usageSnapshotReceivedAtMs = nowMs
         panelClockMs = nowMs
     }
 
@@ -1164,11 +1162,19 @@ PlasmoidItem {
                         if (!isCliRecord(items[i])) {
                             continue
                         }
-                        var providerItem = copyObject(items[i])
-                        // A provider-scoped command may only update the requested
-                        // provider, even if a malformed CLI payload claims another id.
-                        providerItem.provider = providerID
-                        normalizedItems.push(normalizeProvider(providerItem))
+                        try {
+                            var providerItem = copyObject(items[i])
+                            // A provider-scoped command may only update the requested
+                            // provider, even if a malformed CLI payload claims another id.
+                            providerItem.provider = providerID
+                            normalizedItems.push(normalizeProvider(providerItem))
+                        } catch (recordError) {
+                            // Keep reading: a later healthy account snapshot must
+                            // still be able to replace this provider's error row.
+                            normalizedItems.push(normalizeProvider(providerErrorPayload(
+                                providerID,
+                                i18n("Could not parse codexbar JSON: %1", recordError.message))))
+                        }
                     }
                     parsedWithoutRecords = normalizedItems.length === 0
                 } catch (error) {
@@ -2161,6 +2167,10 @@ PlasmoidItem {
 
         var identity = isCliRecord(usage.identity) ? usage.identity : ({})
         var error = isCliRecord(item.error) ? item.error : null
+        // The error record establishes failure even when its display message
+        // is unusable. Both the placeholder and cache consume this safe text.
+        var errorMessage = error ? (boundedCliMessage(Normalizer.safeScalarText(error.message))
+            || i18n("codexbar command failed.")) : ""
         var status = isCliRecord(item.status) ? item.status : null
         var severity = Normalizer.statusSeverity(status)
         var credits = isCliRecord(item.credits) ? item.credits : null
@@ -2195,7 +2205,7 @@ PlasmoidItem {
         var hasSupplementalUsage = providerDetails.length > 0
             || providerUsageDashboard !== null
             || codexCreditLimit !== null
-        var placeholder = providerPlaceholder(providerID, rows, usage, item, error, hasSupplementalUsage)
+        var placeholder = providerPlaceholder(providerID, rows, usage, item, errorMessage, hasSupplementalUsage)
         var creditsRemaining = credits
             ? Normalizer.strictFiniteNumber(credits.remaining)
             : Number.NaN
@@ -2231,19 +2241,18 @@ PlasmoidItem {
             statusSeverity: severity,
             statusIncidentKey: Normalizer.boundedDisplayText(Normalizer.statusIncidentKey(status), 128),
             hasIncident: severity.length > 0,
-            error: boundedCliMessage(error && error.message ? error.message : ""),
+            error: errorMessage,
             placeholder: placeholder,
             updatedAt: Normalizer.boundedDisplayText(usage.updatedAt || (credits ? credits.updatedAt : ""), 128)
         }
     }
 
-    function providerPlaceholder(providerID, rows, usage, item, error, hasSupplementalUsage) {
+    function providerPlaceholder(providerID, rows, usage, item, errorMessage, hasSupplementalUsage) {
         if ((rows && rows.length > 0) || hasSupplementalUsage === true) {
             return ""
         }
 
-        var message = error && error.message ? String(error.message).trim() : ""
-        if (message.length > 0 && message !== "Found sessions, but no rate limit events yet.") {
+        if (errorMessage.length > 0 && errorMessage !== "Found sessions, but no rate limit events yet.") {
             return ""
         }
 
@@ -2291,6 +2300,7 @@ PlasmoidItem {
             pacePercent: metrics.pacePercent,
             paceOnTop: metrics.paceOnTop,
             paceEtaSeconds: metrics.paceEtaSeconds,
+            paceObservedAtMs: Date.now(),
             resetsAt: Normalizer.boundedDisplayText(
                 window.resetsAt === undefined || window.resetsAt === null ? "" : window.resetsAt,
                 128),
@@ -4087,12 +4097,13 @@ PlasmoidItem {
     // Duration-only forecast token. It stays empty unless the CLI actually
     // predicts exhaustion before the reset, so the panel never shows a
     // countdown the pace data does not support.
+    // Account options retain their own receipt time across later refreshes.
     function runOutTextForRow(row) {
         if (!paceWarningActive(row)) {
             return ""
         }
         return paceEtaText(PanelDisplay.remainingSeconds(
-            row.paceEtaSeconds, usageSnapshotReceivedAtMs, panelClockMs))
+            row.paceEtaSeconds, row.paceObservedAtMs, panelClockMs))
     }
 
     function resetTextForRow(row) {

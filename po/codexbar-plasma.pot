@@ -393,6 +393,11 @@ msgid "History metric"
 msgstr ""
 
 #: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/SpendView.qml
+msgid "Some local history is unavailable: %1"
+msgstr ""
+
+#: contents/ui/components/ProviderCostSection.qml
 msgid "Cost unavailable: %1"
 msgstr ""
 
@@ -502,10 +507,6 @@ msgstr ""
 
 #: contents/ui/components/SpendView.qml
 msgid "History range"
-msgstr ""
-
-#: contents/ui/components/SpendView.qml
-msgid "Some local history is unavailable: %1"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
@@ -1113,7 +1114,7 @@ msgstr ""
 msgid "Set the codexbar command path in Diagnostics."
 msgstr ""
 
-#: contents/ui/configProviders.qml
+#: contents/ui/configProviders.qml contents/ui/main.qml
 msgid "codexbar command failed."
 msgstr ""
 

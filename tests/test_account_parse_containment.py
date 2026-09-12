@@ -1,4 +1,4 @@
-"""A malformed account record must not discard healthy options in its reply."""
+"""Malformed records must not discard healthy account or usage siblings."""
 
 import os
 from pathlib import Path
@@ -17,6 +17,8 @@ FUNCTIONS = (
     "isCliRecord", "hasOwnKey", "copyObject", "accountLabel", "providerMapKey",
     "providerKey", "boundedCliMessage", "setAccountOptions", "setAccountError",
     "accountLoadingForProvider", "finishUsageCommandSource",
+    "parseProviderFallbackOutput", "normalizedProviderID", "providerErrorPayload",
+    "addWindow",
 )
 
 QML = '''import QtQuick
@@ -41,6 +43,8 @@ TestCase {
             property int maximumAccountSnapshots: Normalizer.maximumAccountSnapshots
             property int maximumExtraRateWindows: Normalizer.maximumExtraRateWindows
             property string currentCommand: "accounts-context"
+            property string source: ""
+            property var fallbackCompletions: []
             property QtObject usageSource: QtObject {
                 function disconnectSource(sourceName) {}
             }
@@ -52,7 +56,8 @@ TestCase {
             // Keep presentation unrelated to this account parser test empty.
             // normalizeProvider, its identity reads, planText and capitalize
             // above are the actual production functions, not a throwing stub.
-            function addWindow() { return null; }
+            function resetText() { return ""; }
+            function paceSummaryText() { return ""; }
             function rateWindowLabel() { return ""; }
             function usageDashboard() { return null; }
             function providerPlaceholder() { return ""; }
@@ -69,6 +74,9 @@ TestCase {
             function safeStatusUrl() { return ""; }
             function providerChangelogUrl() { return ""; }
             function statusText() { return ""; }
+            function completeProviderFallbackSlot(sourceName, item) {
+                fallbackCompletions = fallbackCompletions.concat({sourceName: sourceName, item: item});
+            }
         }
     }
 
@@ -115,6 +123,55 @@ TestCase {
         deliver(applet, [malformedAccount()]);
         compare(applet.accountOptions.codex, previous);
         verify((applet.accountErrors.codex || "").length > 0);
+    }
+
+    function deliverFallback(applet, payload) {
+        var descriptor = CommandLedger.descriptor("providerFallback", "codex", 1000, 60000, 60000);
+        applet.activeCommandDescriptors = CommandLedger.opened(
+            applet.activeCommandDescriptors, "fallback-run", descriptor);
+        applet.parseProviderFallbackOutput("fallback-run", "codex", JSON.stringify(payload), "");
+        compare(CommandLedger.find(applet.activeCommandDescriptors, "fallback-run"), null);
+        compare(applet.fallbackCompletions.length, 1);
+        compare(applet.fallbackCompletions[0].sourceName, "fallback-run");
+        return applet.fallbackCompletions[0].item;
+    }
+
+    function test_fallbackKeepsHealthyRecordsRegardlessOfMalformedSiblingOrder_data() {
+        return [
+            {tag: "malformed-first", malformedIndex: 0, used: 72},
+            {tag: "malformed-middle", malformedIndex: 1, used: 72},
+            {tag: "malformed-last", malformedIndex: 2, used: 72},
+            {tag: "measured-zero", malformedIndex: 0, used: 0}
+        ];
+    }
+
+    function test_fallbackKeepsHealthyRecordsRegardlessOfMalformedSiblingOrder(data) {
+        var applet = createTemporaryObject(harness, this, {});
+        verify(applet !== null);
+        var records = [
+            {provider: "codex", error: {message: "Synthetic unavailable account"}},
+            // A scoped response may only publish to the requested provider.
+            {provider: "claude", account: "healthy", usage: {primary: {usedPercent: data.used}}}
+        ];
+        records.splice(data.malformedIndex, 0, malformedAccount());
+        var result = deliverFallback(applet, records);
+        verify(result !== null);
+        compare(result.provider, "codex");
+        compare(result.accountKey, "healthy");
+        compare(result.error, "");
+        compare(result.rows.length, 1);
+        verify(result.rows[0].hasPercent);
+        compare(result.rows[0].usedPercent, data.used);
+    }
+
+    function test_allMalformedFallbackRecordsCompleteWithScopedError() {
+        var applet = createTemporaryObject(harness, this, {});
+        verify(applet !== null);
+        var result = deliverFallback(applet, [malformedAccount(), malformedAccount()]);
+        verify(result !== null);
+        compare(result.provider, "codex");
+        verify(result.error.length > 0);
+        compare(result.rows.length, 0);
     }
 
     function test_malformedOptionalLoginMethodKeepsTheAccount() {

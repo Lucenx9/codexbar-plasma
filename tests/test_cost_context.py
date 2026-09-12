@@ -16,6 +16,8 @@ FUNCTIONS = (
     "buildCostCommand", "shellQuote", "copyObject", "providerMapKey",
     "isCliRecord", "parseCostOutput",
     "providerTokenCost", "applyTokenCosts", "retireUsageCommandKind",
+    "refreshCost", "commandWithRunNonce", "buildCommandDescriptor",
+    "buildCostCommandDescriptor", "connectUsageCommand", "finishUsageCommandSource",
 )
 
 QML = '''import QtQuick
@@ -24,6 +26,7 @@ import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
 import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/CommandLedger.js" as CommandLedger
 import "SOURCE_URL/CostPresentation.js" as CostPresentation
+import "SOURCE_URL/CostRefreshPolicy.js" as CostRefreshPolicy
 TestCase {
     name: "CostContext"
     Component {
@@ -39,9 +42,13 @@ TestCase {
             property string tokenCostsContext: ""
             property string costErrorText: ""
             property var activeCommandDescriptors: ({})
+            readonly property bool costLoading: CommandLedger.hasKind(activeCommandDescriptors, "cost")
+            property double lastCostRefreshAttemptAt: -1
+            property int commandRunSerial: 0
+            property int defaultCommandTimeoutMs: 120000
             property var providers: []
             property var finishedSources: []
-            property var refreshCalls: []
+            property var startedSources: []
 
             SOURCE_BINDINGS
             SOURCE_FUNCTIONS
@@ -52,12 +59,14 @@ TestCase {
             function normalizeTokenCost(item, requestedHistoryDays) {
                 return {provider: item.provider, historyDays: requestedHistoryDays};
             }
-            function finishUsageCommandSource(sourceName) {
-                finishedSources = finishedSources.concat(sourceName);
-            }
-            function refreshCost(force) {
-                refreshCalls = refreshCalls.concat(force === true);
-                return true;
+            property QtObject engine: QtObject {
+                id: usageSource
+                function connectSource(sourceName) {
+                    root.startedSources = root.startedSources.concat(sourceName);
+                }
+                function disconnectSource(sourceName) {
+                    root.finishedSources = root.finishedSources.concat(sourceName);
+                }
             }
         }
     }
@@ -101,9 +110,14 @@ TestCase {
         applet.providers = [{provider: "codex"}];
         applet.applyTokenCosts();
         compare(applet.providers[0].tokenCost, snapshot);
+        applet.startedSources = [];
         applet.costHistoryDays = 7;
         applet.costHistoryDays = 30;
         compare(applet.providers[0].tokenCost, snapshot);
+        tryVerify(function() { return applet.startedSources.length > 0; });
+        wait(0);
+        compare(applet.startedSources.length, 1);
+        verify(applet.startedSources[0].endsWith(applet.costCommandSource));
     }
 
     function test_costSourceChangeRetiresRunsWhileSnapshotsStayDetached() {
@@ -117,7 +131,7 @@ TestCase {
         applet.tokenCostsContext = applet.costCommandSource;
         applet.activeCommandDescriptors = CommandLedger.opened({}, "cost#1", {kind: "cost"});
         applet.finishedSources = [];
-        applet.refreshCalls = [];
+        applet.startedSources = [];
         applet.commandPath = "codexbar-b";
         // The previous context's map is retained for a way back, but detached:
         // neither surface may render it beside the new context's quotas.
@@ -125,9 +139,48 @@ TestCase {
         compare(applet.tokenCostsContext !== applet.costCommandSource, true);
         compare(applet.providerTokenCost("codex"), null);
         compare(applet.finishedSources, ["cost#1"]);
-        tryVerify(function() { return applet.refreshCalls.length > 0; });
+        tryVerify(function() { return applet.startedSources.length > 0; });
         wait(0);
-        compare(applet.refreshCalls, [true]);
+        compare(applet.startedSources.length, 1);
+        verify(applet.startedSources[0].endsWith(applet.costCommandSource));
+    }
+
+    function test_settingsBatchStartsOnlyTheFinalCostCommand_data() {
+        return [{tag: "enabled", enabled: true}, {tag: "disabled", enabled: false}];
+    }
+
+    function test_settingsBatchStartsOnlyTheFinalCostCommand(data) {
+        var applet = createTemporaryObject(harness, this, {});
+        verify(applet !== null);
+        wait(0);
+        applet.refreshCost(true);
+        var previousSource = applet.startedSources[applet.startedSources.length - 1];
+        applet.startedSources = [];
+        applet.finishedSources = [];
+        applet.commandPath = "codexbar-b";
+        applet.provider = "claude";
+        applet.costHistoryDays = 7;
+        applet.costUsageEnabled = data.enabled;
+        // The old command must be retired before any deferred work executes.
+        compare(applet.startedSources.length, 0);
+        compare(applet.finishedSources, [previousSource]);
+        compare(CommandLedger.find(applet.activeCommandDescriptors, previousSource), null);
+        wait(0);
+        compare(applet.startedSources.length, data.enabled ? 1 : 0);
+        if (data.enabled) {
+            var source = applet.startedSources[0];
+            verify(source.endsWith(applet.costCommandSource));
+            compare(CommandLedger.find(applet.activeCommandDescriptors, source).costHistoryDays, 7);
+            verify(applet.costLoading);
+        } else {
+            verify(!applet.costLoading);
+        }
+        // Later manual refreshes must still bypass the automatic cooldown.
+        applet.costUsageEnabled = true;
+        wait(0);
+        var before = applet.startedSources.length;
+        verify(applet.refreshCost(true));
+        compare(applet.startedSources.length, before + 1);
     }
 
     function test_partialRefreshAfterSourceChangeDropsOldSnapshots() {
