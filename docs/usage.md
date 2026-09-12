@@ -101,6 +101,8 @@ work and upstream contract requirements.
 - Overview providers can be limited to a chosen set of up to 3 providers, or
   left automatic (the first 3 eligible providers). The checkboxes recognize
   provider aliases and mixed-case IDs, like the panel provider selection.
+  Provider selection checkboxes preserve literal characters such as `&`, `<`,
+  and `>` in display names, including with KDE desktop styles.
 - Usage dashboard summaries for provider payloads that expose API spend,
   request, token, model, or dashboard fields through the CLI.
 - Declarative provider detail sections from the CLI `usage.details` contract,

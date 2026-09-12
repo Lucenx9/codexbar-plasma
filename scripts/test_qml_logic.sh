@@ -32,7 +32,8 @@ if [[ -x "$QT_PATHS_TOOL" ]] \
   QT_QUICK_CONTROLS_STYLE=org.kde.desktop \
     QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
     run_qml_tests -input "$ROOT_DIR/tests/tst_plain_text_controls.qml" \
-    PlainTextControls::test_buttonUsesActiveStyleLabelPath
+    PlainTextControls::test_buttonUsesActiveStyleLabelPath \
+    PlainTextControls::test_checkBoxPreservesVisibleText
   QT_QUICK_CONTROLS_STYLE=org.kde.desktop QT_QPA_PLATFORMTHEME=kde \
     QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
     run_qml_tests -input "$ROOT_DIR/tests/tst_panel_settings_geometry.qml"

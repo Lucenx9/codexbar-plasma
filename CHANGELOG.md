@@ -22,6 +22,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve ampersands and angle brackets in provider selection and settings
+  checkbox labels when KDE styles process keyboard mnemonics.
 - Clear completed Sessions snapshots and update metadata when the configured CLI
   command changes, so a failed or timed-out scan cannot display sessions from
   the previous executable.
