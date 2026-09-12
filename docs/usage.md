@@ -173,7 +173,9 @@ future-dated entries, corrupt records, and unsupported cache versions are ignore
 Supplemental sections (cost, credits, detail views, token costs) are hidden
 while usage is stale, including after cost refreshes and history-range changes,
 and are not restored from disk; only the retained quotas carry the last-known
-indication. A missing or future live measurement timestamp uses receipt time;
+indication. A missing, invalid, or future live measurement timestamp uses its
+original receipt time. Selecting a cached account preserves that fallback and
+its 24-hour retention deadline, even if the CLI timestamp has since become past;
 future timestamps in persisted records are rejected. The 24-hour limit is a widget policy, not a guarantee
 that a retained quota remains accurate throughout that period.
 

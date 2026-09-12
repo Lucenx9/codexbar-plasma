@@ -48,6 +48,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   settings, avoiding duplicate scans that immediately replace each other.
 - Keep panel run-out countdowns tied to each forecast's receipt time, so
   selecting a cached account cannot restart an old or expired prediction.
+- Preserve the original measurement age when selecting a cached account whose
+  usage timestamp is missing, invalid, or future-dated, so old quotas cannot
+  become fresh again or extend their 24-hour retention limit.
 - Keep last-known quotas when a provider error has an empty or malformed message,
   showing a generic error while healthy providers and current status still update.
 - Preserve healthy usage records after a malformed sibling in provider-scoped

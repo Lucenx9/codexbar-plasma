@@ -351,6 +351,35 @@ TestCase {
         }
     }
 
+    function test_receiptFallbackPreservesCachedMeasurementAge() {
+        var receivedAtMs = nowMs - 60000;
+        for (var updatedAt of ["", "invalid", new Date(receivedAtMs + 1).toISOString()]) {
+            var item = snapshot("codex", 0);
+            item.updatedAt = updatedAt;
+            item.usageReceivedAtMs = receivedAtMs;
+            var before = JSON.stringify(item);
+            var result = Cache.reconcile([], [item], nowMs);
+            compare(result[0].lastGoodAtMs, receivedAtMs);
+            var deadline = receivedAtMs + Cache.maximumAgeMs;
+            var expired = Cache.reconcile([], [item], deadline + 1);
+            verify(expired[0].usageStale);
+            compare(expired[0].lastGoodAtMs, receivedAtMs);
+            verify(!expired[0].rows[0].paceKnown);
+            compare(Cache.expiredProviderIDs(expired, deadline + 1), ["codex"]);
+            compare(Cache.decode(Cache.encode(result, context, nowMs), context, deadline + 1), []);
+            compare(JSON.stringify(item), before);
+        }
+        for (var receipt of [undefined, null, "123", NaN, Infinity, -1, 0, nowMs + 1]) {
+            var unknown = snapshot("codex", 0);
+            unknown.updatedAt = "";
+            unknown.usageReceivedAtMs = receipt;
+            compare(Cache.reconcile([], [unknown], nowMs)[0].lastGoodAtMs, nowMs);
+        }
+        var dated = snapshot("codex", 0);
+        dated.usageReceivedAtMs = receivedAtMs;
+        compare(Cache.reconcile([], [dated], nowMs)[0].lastGoodAtMs, Date.parse(dated.updatedAt));
+    }
+
     function test_redactedRoundTripAndContextIsolation() {
         var encoded = Cache.encode(fresh(), context, nowMs);
         for (var secret of ["secret@", "Sensitive", "Private", "Bearer", "/private", "credits", "account"])

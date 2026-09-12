@@ -18,7 +18,7 @@ FUNCTIONS = (
     "providerKey", "boundedCliMessage", "setAccountOptions", "setAccountError",
     "accountLoadingForProvider", "finishUsageCommandSource",
     "parseProviderFallbackOutput", "normalizedProviderID", "providerErrorPayload",
-    "addWindow",
+    "addWindow", "replaceProviderSnapshot",
 )
 
 QML = '''import QtQuick
@@ -30,6 +30,8 @@ import "SOURCE_URL/SafeText.js" as SafeText
 import "SOURCE_URL/AccountRequests.js" as AccountRequests
 import "SOURCE_URL/CommandLedger.js" as CommandLedger
 import "SOURCE_URL/UsageDetails.js" as UsageDetails
+import "SOURCE_URL/UsageCache.js" as UsageCache
+import "SOURCE_URL/ProviderOrder.js" as ProviderOrder
 TestCase {
     name: "AccountParseContainment"
     Component {
@@ -39,6 +41,9 @@ TestCase {
             property var activeCommandDescriptors: ({})
             property var accountOptions: ({})
             property var accountErrors: ({})
+            property var providers: []
+            property string providerOrderRaw: ""
+            property double testNowMs: Date.UTC(2026, 8, 12, 12)
             property var providerDisplayNames: ({})
             property int maximumAccountSnapshots: Normalizer.maximumAccountSnapshots
             property int maximumExtraRateWindows: Normalizer.maximumExtraRateWindows
@@ -125,6 +130,39 @@ TestCase {
         verify((applet.accountErrors.codex || "").length > 0);
     }
 
+    function test_cachedAccountSelectionKeepsMeasurementAge_data() {
+        var cases = [];
+        for (var timestamp of ["", "invalid", "2026-09-12T12:01:00Z"])
+            for (var age of [900000, UsageCache.maximumAgeMs + 1])
+                cases.push({tag: timestamp + "-" + age, timestamp: timestamp, age: age});
+        return cases;
+    }
+
+    function test_cachedAccountSelectionKeepsMeasurementAge(data) {
+        var applet = createTemporaryObject(harness, this, {});
+        var receivedAtMs = applet.testNowMs;
+        deliver(applet, [{provider: "codex", account: "Synthetic account",
+            usage: {updatedAt: data.timestamp, primary: {usedPercent: 0}}}]);
+        var option = applet.accountOptions.codex[0];
+        var original = JSON.stringify(option);
+        applet.testNowMs += data.age;
+        applet.replaceProviderSnapshot("codex", option);
+        var selected = applet.providers[0];
+        compare(selected.lastGoodAtMs, receivedAtMs);
+        compare(selected.rows[0].usedPercent, 0);
+        compare(selected.usageStale, data.age > UsageCache.maximumAgeMs);
+        compare(JSON.stringify(option), original);
+        var deadline = receivedAtMs + UsageCache.maximumAgeMs;
+        if (data.age > UsageCache.maximumAgeMs) {
+            compare(UsageCache.expiredProviderIDs([selected], applet.testNowMs), ["codex"]);
+            return;
+        }
+        var retained = UsageCache.reconcile([selected], [{provider: "codex",
+            error: "Synthetic failure", account: "", rows: []}], deadline);
+        compare(retained[0].lastGoodAtMs, receivedAtMs);
+        compare(UsageCache.expiredProviderIDs(retained, deadline + 1), ["codex"]);
+    }
+
     function deliverFallback(applet, payload) {
         var descriptor = CommandLedger.descriptor("providerFallback", "codex", 1000, 60000, 60000);
         applet.activeCommandDescriptors = CommandLedger.opened(
@@ -200,7 +238,8 @@ class AccountParseContainmentTests(unittest.TestCase):
         functions = []
         for name in FUNCTIONS:
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
-            functions.append(signature + " {" + applet.function_body(name) + "}")
+            body = applet.function_body(name).replace("Date.now()", "testNowMs")
+            functions.append(signature + " {" + body + "}")
         qml = QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
         qml = qml.replace("SOURCE_FUNCTIONS", "\n".join(functions))
         with tempfile.TemporaryDirectory(prefix="codexbar-account-parse-") as temporary:
