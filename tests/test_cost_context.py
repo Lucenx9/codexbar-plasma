@@ -1,293 +1,268 @@
-"""Exercise cost-context isolation with the production QML bindings."""
+"""Exercise the production cost controller with real timers and isolated CLI processes."""
 
 import os
 from pathlib import Path
-import re
 import subprocess
-import sys
 import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts/lib"))
-from qml_surfaces import Surface
-
-FUNCTIONS = (
-    "buildCostCommand", "shellQuote", "copyObject", "providerMapKey",
-    "isCliRecord", "parseCostOutput", "boundedCliMessage",
-    "providerTokenCost", "applyTokenCosts", "retireUsageCommandKind",
-    "refreshCost", "commandWithRunNonce", "buildCommandDescriptor",
-    "buildCostCommandDescriptor", "connectUsageCommand", "finishUsageCommandSource",
-)
 
 QML = '''import QtQuick
 import QtTest
-import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
-import "SOURCE_URL/Guards.js" as Guards
-import "SOURCE_URL/SafeText.js" as SafeText
-import "SOURCE_URL/CommandLedger.js" as CommandLedger
-import "SOURCE_URL/CostPresentation.js" as CostPresentation
-import "SOURCE_URL/CostRefreshPolicy.js" as CostRefreshPolicy
 TestCase {
-    name: "CostContext"
-    Component {
-        id: harness
-        QtObject {
-            id: root
-            property string commandPath: "codexbar-a"
-            property string provider: ""
-            property bool costUsageEnabled: true
-            property int costHistoryDays: 30
-            property bool costLifecycleInitialized: true
-            property var tokenCosts: ({})
-            property string tokenCostsContext: ""
-            property string costErrorText: ""
-            property var activeCommandDescriptors: ({})
-            readonly property bool costLoading: CommandLedger.hasKind(activeCommandDescriptors, "cost")
-            property double lastCostRefreshAttemptAt: -1
-            property int commandRunSerial: 0
-            property int defaultCommandTimeoutMs: 120000
-            property var providers: []
-            property var finishedSources: []
-            property var startedSources: []
+    id: testCase
+    name: "CostController"
 
-            SOURCE_BINDINGS
-            SOURCE_FUNCTIONS
-            SOURCE_HANDLERS
-
-            function i18n(text) { return text; }
-            function normalizeTokenCost(item, requestedHistoryDays) {
-                return {provider: item.provider, historyDays: requestedHistoryDays};
-            }
-            property QtObject engine: QtObject {
-                id: usageSource
-                function connectSource(sourceName) {
-                    root.startedSources = root.startedSources.concat(sourceName);
-                }
-                function disconnectSource(sourceName) {
-                    root.finishedSources = root.finishedSources.concat(sourceName);
-                }
-            }
-        }
+    function i18n(text, first) {
+        return text.replace("%1", first === undefined ? "%1" : first);
     }
-
-    function test_staleContextSnapshotsStayDetached() {
-        var applet = createTemporaryObject(harness, this, {});
-        verify(applet !== null);
-        wait(0);
-        var key = applet.providerMapKey("codex");
-        var snapshot = {provider: "codex", historyDays: 30, total: 47};
-        var costs = ({});
-        costs[key] = snapshot;
-        applet.tokenCosts = costs;
-        applet.tokenCostsContext = applet.costCommandSource;
-        // Move to a new executable: the retained map must not attach, even
-        // when the history range still matches.
-        applet.commandPath = "codexbar-b";
-        compare(Object.keys(applet.tokenCosts).length, 1);
-        compare(applet.providerTokenCost("codex"), null);
-        applet.providers = [{provider: "codex"}];
-        applet.applyTokenCosts();
-        compare(applet.providers.length, 1);
-        compare(applet.providers[0].tokenCost, null);
-        // Control: the same snapshot serves the context that produced it.
-        applet.commandPath = "codexbar-a";
-        compare(applet.providerTokenCost("codex"), snapshot);
+    function init() {
+        var probe = Qt.createComponent("CONTROLLER_URL");
+        if (probe.status === Component.Error && /module "org\\.kde\\.[^"]+" is not installed/.test(probe.errorString()))
+            skip("CostController needs the optional KDE QML modules");
     }
-
-    function test_rangeToggleReattachesRetainedSnapshots() {
-        // Mirrors the usage-retention smoke run: two synchronous range changes
-        // must reattach the retained map without waiting for a refetch.
-        var applet = createTemporaryObject(harness, this, {});
-        verify(applet !== null);
-        wait(0);
-        var key = applet.providerMapKey("codex");
-        var snapshot = {provider: "codex", historyDays: 30, total: 47};
-        var costs = ({});
-        costs[key] = snapshot;
-        applet.tokenCosts = costs;
-        applet.tokenCostsContext = applet.costCommandSource;
-        applet.providers = [{provider: "codex"}];
-        applet.applyTokenCosts();
-        compare(applet.providers[0].tokenCost, snapshot);
-        applet.startedSources = [];
-        applet.costHistoryDays = 7;
-        applet.costHistoryDays = 30;
-        compare(applet.providers[0].tokenCost, snapshot);
-        tryVerify(function() { return applet.startedSources.length > 0; });
-        wait(0);
-        compare(applet.startedSources.length, 1);
-        verify(applet.startedSources[0].endsWith(applet.costCommandSource));
+    function create(script, options) {
+        var factory = Qt.createComponent("CONTROLLER_URL");
+        compare(factory.status, Component.Ready, factory.errorString());
+        var subject = createTemporaryObject(factory, testCase, Object.assign({
+            commandPath: "FIXTURE_PATH/" + script, active: false
+        }, options || {}));
+        verify(subject !== null);
+        return subject;
     }
-
-    function test_costSourceChangeRetiresRunsWhileSnapshotsStayDetached() {
-        var applet = createTemporaryObject(harness, this, {});
-        verify(applet !== null);
-        wait(0);
-        var key = applet.providerMapKey("codex");
-        var costs = ({});
-        costs[key] = {provider: "codex", historyDays: 30, total: 47};
-        applet.tokenCosts = costs;
-        applet.tokenCostsContext = applet.costCommandSource;
-        applet.activeCommandDescriptors = CommandLedger.opened({}, "cost#1", {kind: "cost"});
-        applet.finishedSources = [];
-        applet.startedSources = [];
-        applet.commandPath = "codexbar-b";
-        // The previous context's map is retained for a way back, but detached:
-        // neither surface may render it beside the new context's quotas.
-        compare(Object.keys(applet.tokenCosts).length, 1);
-        compare(applet.tokenCostsContext !== applet.costCommandSource, true);
-        compare(applet.providerTokenCost("codex"), null);
-        compare(applet.finishedSources, ["cost#1"]);
-        tryVerify(function() { return applet.startedSources.length > 0; });
-        wait(0);
-        compare(applet.startedSources.length, 1);
-        verify(applet.startedSources[0].endsWith(applet.costCommandSource));
+    function completed(subject, label, days) {
+        tryVerify(function() {
+            return !subject.loading && subject.costs.codex
+                && subject.costs.codex.historyLabel === label;
+        }, 8000);
+        compare(subject.costs.codex.historyDays, days === undefined ? 30 : days);
     }
-
-    function test_settingsBatchStartsOnlyTheFinalCostCommand_data() {
-        return [{tag: "enabled", enabled: true}, {tag: "disabled", enabled: false}];
+    function test_startupRunsWhileHiddenAndReentryKeepsFreshData() {
+        var subject = create("normal");
+        completed(subject, "normal 1");
+        subject.active = true;
+        wait(100);
+        verify(!subject.loading);
+        verify(!subject.refresh(false));
+        completed(subject, "normal 1");
+        compare(subject.errorText, "");
     }
-
-    function test_settingsBatchStartsOnlyTheFinalCostCommand(data) {
-        var applet = createTemporaryObject(harness, this, {});
-        verify(applet !== null);
-        wait(0);
-        applet.refreshCost(true);
-        var previousSource = applet.startedSources[applet.startedSources.length - 1];
-        applet.startedSources = [];
-        applet.finishedSources = [];
-        applet.commandPath = "codexbar-b";
-        applet.provider = "claude";
-        applet.costHistoryDays = 7;
-        applet.costUsageEnabled = data.enabled;
-        // The old command must be retired before any deferred work executes.
-        compare(applet.startedSources.length, 0);
-        compare(applet.finishedSources, [previousSource]);
-        compare(CommandLedger.find(applet.activeCommandDescriptors, previousSource), null);
-        wait(0);
-        compare(applet.startedSources.length, data.enabled ? 1 : 0);
-        if (data.enabled) {
-            var source = applet.startedSources[0];
-            verify(source.endsWith(applet.costCommandSource));
-            compare(CommandLedger.find(applet.activeCommandDescriptors, source).costHistoryDays, 7);
-            verify(applet.costLoading);
-        } else {
-            verify(!applet.costLoading);
-        }
-        // Later manual refreshes must still bypass the automatic cooldown.
-        applet.costUsageEnabled = true;
-        wait(0);
-        var before = applet.startedSources.length;
-        verify(applet.refreshCost(true));
-        compare(applet.startedSources.length, before + 1);
+    function test_disabledOrMissingCommandDoesNotStart_data() {
+        return [{tag: "disabled", options: {costUsageEnabled: false}},
+                {tag: "missing", options: {commandPath: ""}}];
     }
-
-    function test_malformedCostErrorKeepsPartialRefresh_data() {
-        return [
-            {tag: "object", message: {}},
-            {tag: "shadowed-conversion", message: {toString: null}},
-            {tag: "array", message: [{toString: null}]},
-            {tag: "empty", message: ""},
-            {tag: "whitespace", message: "   "},
-            {tag: "null", message: null}
-        ];
+    function test_disabledOrMissingCommandDoesNotStart(data) {
+        var subject = create("normal", data.options);
+        wait(100);
+        compare(subject.costs, {});
+        verify(!subject.loading);
+        verify(!subject.refresh(true));
+        compare(subject.errorText, "");
     }
-
-    function test_malformedCostErrorKeepsPartialRefresh(data) {
-        var applet = createTemporaryObject(harness, this, {});
-        verify(applet !== null);
-        wait(0);
-        var retained = {provider: "claude", historyDays: 30, total: 9};
-        applet.tokenCosts = {claude: retained};
-        applet.tokenCostsContext = applet.costCommandSource;
-        applet.providers = [{provider: "codex"}, {provider: "claude"}];
-        applet.parseCostOutput(JSON.stringify([
-            {provider: "claude", error: {message: data.message}},
-            {provider: "codex"}
-        ]), "", 30);
-        compare(applet.tokenCosts.claude, retained);
-        compare(applet.tokenCosts.codex.historyDays, 30);
-        compare(applet.providers[0].tokenCost, applet.tokenCosts.codex);
-        compare(applet.providers[1].tokenCost, retained);
-        compare(applet.costErrorText, "Some cost data could not be refreshed.");
+    function test_sourceBatchUsesOnlyTheFinalSettings() {
+        var subject = create("normal");
+        completed(subject, "normal 1");
+        subject.historyDays = 7;
+        subject.commandPath = "FIXTURE_PATH/batched";
+        subject.provider = "example'; quoted provider";
+        subject.costUsageEnabled = false;
+        subject.historyDays = 90;
+        subject.costUsageEnabled = true;
+        compare(subject.costs, {});
+        completed(subject, "batched 2", 90);
+        wait(300);
+        completed(subject, "batched 2", 90);
+        compare(subject.errorText, "");
     }
-
-    function test_partialRefreshAfterSourceChangeDropsOldSnapshots() {
-        // A partial reply from the new source must retain only failed
-        // providers from the same source: merging the retained map would
-        // re-tag the previous executable's costs with the new source.
-        var applet = createTemporaryObject(harness, this, {});
-        verify(applet !== null);
-        wait(0);
-        var oldCosts = ({});
-        oldCosts[applet.providerMapKey("codex")] = {provider: "codex", historyDays: 30, total: 1};
-        oldCosts[applet.providerMapKey("claude")] = {provider: "claude", historyDays: 30, total: 2};
-        applet.tokenCosts = oldCosts;
-        applet.tokenCostsContext = applet.costCommandSource;
-        applet.commandPath = "codexbar-b";
-        var partial = JSON.stringify([
-            {provider: "codex"},
-            {provider: "claude", error: {message: "cost failed"}}
-        ]);
-        applet.parseCostOutput(partial, "", 30);
-        compare(applet.tokenCostsContext, applet.costCommandSource);
-        verify(applet.tokenCosts[applet.providerMapKey("codex")] !== undefined);
-        compare(applet.tokenCosts[applet.providerMapKey("codex")].historyDays, 30);
-        // The failed provider has no fresh snapshot and no same-source
-        // snapshot to retain, so it must stay absent instead of resurfacing
-        // the previous executable's costs.
-        verify(applet.tokenCosts[applet.providerMapKey("claude")] === undefined);
-        compare(applet.providerTokenCost("claude"), null);
-        // Control: the same partial reply in the producing context retains
-        // the failed provider from that context's map.
-        var sameCosts = ({});
-        sameCosts[applet.providerMapKey("claude")] = {provider: "claude", historyDays: 30, total: 9};
-        applet.tokenCosts = sameCosts;
-        applet.tokenCostsContext = applet.costCommandSource;
-        applet.parseCostOutput(partial, "", 30);
-        compare(applet.tokenCosts[applet.providerMapKey("claude")].total, 9);
-        compare(applet.providerTokenCost("claude").total, 9);
+    function test_rangeRoundTripReattachesBeforeOneQueuedScan() {
+        var subject = create("normal");
+        completed(subject, "normal 1");
+        var stored = subject.costs;
+        subject.historyDays = 7;
+        compare(subject.costs, {});
+        subject.historyDays = 30;
+        compare(subject.costs, stored);
+        completed(subject, "normal 2");
+    }
+    function test_failedNewContextCannotExposeOldDataButReturningCan() {
+        var subject = create("normal");
+        completed(subject, "normal 1");
+        var stored = subject.costs;
+        subject.commandPath = "FIXTURE_PATH/failure";
+        compare(subject.costs, {});
+        tryVerify(function() { return !subject.loading && subject.errorText.length > 0; });
+        compare(subject.costs, {});
+        subject.commandPath = "FIXTURE_PATH/normal";
+        compare(subject.costs, stored);
+        completed(subject, "normal 3");
+    }
+    function test_partialFailuresRetainOnlySameContextProviders() {
+        var subject = create("partial");
+        completed(subject, "partial 1");
+        var old = subject.costs.claude;
+        verify(subject.refresh(true));
+        completed(subject, "partial 2");
+        compare(subject.costs.claude, old);
+        compare(subject.costs.gemini, undefined);
+        compare(subject.errorText, "Some cost data could not be refreshed.");
+        subject.provider = "codex";
+        compare(subject.costs, {});
+        completed(subject, "partial 3");
+        compare(subject.costs.claude, undefined);
+        verify(subject.errorText.length > 0);
+    }
+    function test_transientFailuresRetainDataAndThrottleAutomaticRetries_data() {
+        return [{tag: "stderr", script: "failure"}, {tag: "malformed", script: "malformed"},
+                {tag: "unsupported", script: "unsupported"}, {tag: "empty", script: "missing"}];
+    }
+    function test_transientFailuresRetainDataAndThrottleAutomaticRetries(data) {
+        var subject = create(data.script);
+        completed(subject, data.script + " 1");
+        var old = subject.costs;
+        verify(subject.refresh(true));
+        tryCompare(subject, "loading", false);
+        verify(subject.errorText.length > 0);
+        compare(subject.costs, old);
+        verify(!subject.refresh(false));
+        subject.active = true;
+        wait(100);
+        verify(!subject.loading);
+        compare(subject.costs, old);
+    }
+    function test_confirmedEmptyResultReplacesData() {
+        var subject = create("empty");
+        completed(subject, "empty 1");
+        verify(subject.refresh(true));
+        tryCompare(subject, "loading", false);
+        compare(subject.costs, {});
+        compare(subject.errorText, "");
+    }
+    function test_manualRefreshSupersedesAnActiveScan() {
+        var subject = create("slow");
+        tryCompare(subject, "loading", true);
+        wait(100);
+        verify(subject.refresh(true));
+        completed(subject, "slow 2");
+        wait(1200);
+        completed(subject, "slow 2");
+    }
+    function test_commandChangeRetiresTheOldSourceSynchronously() {
+        var subject = create("normal");
+        completed(subject, "normal 1");
+        subject.commandPath = "FIXTURE_PATH/slow";
+        tryCompare(subject, "loading", true);
+        wait(100);
+        subject.commandPath = "FIXTURE_PATH/normal";
+        verify(!subject.loading);
+        completed(subject, "normal 1");
+        completed(subject, "normal 3");
+        wait(1200);
+        completed(subject, "normal 3");
+    }
+    function test_disablingClearsAndRetiresData() {
+        var subject = create("normal");
+        completed(subject, "normal 1");
+        subject.commandPath = "FIXTURE_PATH/slow";
+        tryCompare(subject, "loading", true);
+        subject.costUsageEnabled = false;
+        verify(!subject.loading);
+        compare(subject.costs, {});
+        wait(1300);
+        compare(subject.costs, {});
+        compare(subject.errorText, "");
+        subject.costUsageEnabled = true;
+        completed(subject, "slow 3");
+    }
+    function test_timeoutPreservesDataAndManualRetryRecovers() {
+        var subject = create("late");
+        completed(subject, "late 1");
+        var old = subject.costs;
+        verify(subject.refresh(true));
+        // Keep the real 120-second deadline and DataSource in this test.
+        tryCompare(subject, "loading", false, 125000);
+        verify(subject.errorText.indexOf("timed out") >= 0);
+        compare(subject.costs, old);
+        verify(!subject.refresh(false));
+        verify(subject.refresh(true));
+        completed(subject, "late 3");
+        wait(300);
+        completed(subject, "late 3");
+        compare(subject.errorText, "");
     }
 }
 '''
 
+CLI = '''#!/usr/bin/env python3
+import json
+import os
+from pathlib import Path
+import sys
+import time
+
+args = sys.argv[1:]
+name = Path(sys.argv[0]).name
+expected_provider = ["--provider", "example'; quoted provider"] if name == "batched" else ["--provider", "codex"]
+if args[:5] != ["cost", "--format", "json", "--json-only", "--days"] or args[5] not in ("7", "30", "90") or args[6:] not in ([], expected_provider):
+    print("unexpected CLI arguments", file=sys.stderr)
+    sys.exit(1)
+run = int(os.environ["CODEXBAR_PLASMA_RUN"])
+time.sleep(0.2)
+if name == "slow":
+    time.sleep(1)
+if name == "late" and run == 2:
+    time.sleep(122)
+if name == "late" and run == 3:
+    time.sleep(3)
+if run > 1:
+    if name == "failure":
+        print("synthetic cost failure", file=sys.stderr)
+        sys.exit(1)
+    if name in ("malformed", "unsupported", "empty"):
+        print({"malformed": "{", "unsupported": "null", "empty": "[]"}[name])
+        sys.exit(0)
+    if name == "missing":
+        sys.exit(0)
+result = [{"provider": "codex", "historyLabel": name + " " + str(run),
+           "totals": {"totalCost": run}}]
+if name == "partial":
+    result.append({"provider": "claude", **({"totals": {"totalCost": 9}} if run == 1 else {"error": {"message": {"toString": None}}})})
+    if run == 1:
+        result.append({"provider": "gemini", "totals": {"totalCost": 8}})
+print(json.dumps(result))
+'''
+
 
 class CostContextTests(unittest.TestCase):
-    def test_cost_snapshots_stay_with_their_command_source(self):
-        applet = Surface("applet", ROOT)
-        main = ROOT / "contents/ui/main.qml"
-        source = applet.texts[main]
-        applet.texts = {main: source}
-        # Successful cost parses must stamp the source they came from, so a
-        # later source change can tell them apart from current data.
-        applet.require("tokenCostsContext = costCommandSource",
-                       "cost snapshots must record the source that produced them")
-        # Both cost surfaces must refuse foreign snapshots; the spend tab reads
-        # the map directly instead of going through providerTokenCost.
-        applet.require("if (tokenCostsContext !== costCommandSource) {\n            return []",
-                       "the spend tab must not total costs from another command source")
-        functions = []
-        for name in FUNCTIONS:
-            signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
-            functions.append(signature + " {" + applet.function_body(name) + "}")
-        bindings = [re.search(pattern, source, re.MULTILINE).group(0) for pattern in (
-            r"^    property string costCommandSource: .+$",
-            r"^    onCostHistoryDaysChanged: .+$",
-        )]
-        handlers = ["onCostCommandSourceChanged: {" + applet.handler_body("onCostCommandSourceChanged") + "}"]
-        qml = QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
-        qml = qml.replace("SOURCE_FUNCTIONS", "\n".join(functions))
-        qml = qml.replace("SOURCE_BINDINGS", "\n".join(bindings))
-        qml = qml.replace("SOURCE_HANDLERS", "\n".join(handlers))
-        with tempfile.TemporaryDirectory(prefix="codexbar-cost-context-") as temporary:
-            fixture = Path(temporary) / "tst_cost_context.qml"
-            fixture.write_text(qml)
+    def test_production_lifecycle_with_synthetic_cli(self):
+        with tempfile.TemporaryDirectory(prefix="codexbar cost 'test-") as temporary:
+            directory = Path(temporary)
+            for name in ("normal", "batched", "partial", "slow", "late", "failure",
+                         "malformed", "unsupported", "missing", "empty"):
+                script = directory / name
+                script.write_text(CLI)
+                script.chmod(0o700)
+            fixture = directory / "tst_cost.qml"
+            fixture.write_text(QML.replace("CONTROLLER_URL", (ROOT / "contents/ui/controllers/CostController.qml").as_uri())
+                               .replace("FIXTURE_PATH", str(directory)))
             result = subprocess.run(
                 [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
                 env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
-                capture_output=True, text=True, timeout=30)
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                capture_output=True, text=True, timeout=185)
+            output = result.stdout + result.stderr
+            self.assertEqual(result.returncode, 0, output)
+            if os.environ.get("QML_TEST_REQUIRE_NO_SKIPS") == "1" and "SKIP" in output:
+                self.fail("QML tests were skipped; the test environment must provide the KDE QML modules.")
+            if "SKIP" in output:
+                self.skipTest("CostController needs the optional KDE QML modules")
+            warnings = [line for line in output.splitlines() if "QWARN" in line and not (
+                'QProcess: Destroyed while process ("/bin/sh") is still running.' in line
+                and any(case in line for case in (
+                    "test_manualRefreshSupersedesAnActiveScan()",
+                    "test_commandChangeRetiresTheOldSourceSynchronously()",
+                    "test_disablingClearsAndRetiresData()",
+                    "test_timeoutPreservesDataAndManualRetryRecovers()")))]
+            self.assertEqual(warnings, [])
 
 
 if __name__ == "__main__":

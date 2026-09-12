@@ -575,6 +575,7 @@ msgid "Diagnostic command timed out. Try again."
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
+#: contents/ui/controllers/CostController.qml
 #: contents/ui/controllers/ProviderRosterController.qml
 #: contents/ui/controllers/SessionsController.qml contents/ui/main.qml
 msgid "codexbar response exceeded the supported size."
@@ -1697,6 +1698,26 @@ msgstr ""
 msgid "Try another search or choose a different filter."
 msgstr ""
 
+#: contents/ui/controllers/CostController.qml
+msgid "Loading cost data timed out. Try again."
+msgstr ""
+
+#: contents/ui/controllers/CostController.qml
+msgid "Some cost data could not be refreshed."
+msgstr ""
+
+#: contents/ui/controllers/CostController.qml
+msgid "codexbar cost did not return JSON."
+msgstr ""
+
+#: contents/ui/controllers/CostController.qml
+msgid "Could not parse codexbar cost JSON: %1"
+msgstr ""
+
+#: contents/ui/controllers/CostController.qml
+msgid "codexbar cost returned an unsupported JSON payload."
+msgstr ""
+
 #: contents/ui/controllers/SessionsController.qml contents/ui/main.qml
 msgid "Set the codexbar command path in widget settings."
 msgstr ""
@@ -1866,10 +1887,6 @@ msgid "Loading usage timed out. Try again."
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Loading cost data timed out. Try again."
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "Loading provider configuration timed out. Try again."
 msgstr ""
 
@@ -1887,22 +1904,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Could not parse codexbar account JSON: %1"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "codexbar cost did not return JSON."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Could not parse codexbar cost JSON: %1"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "codexbar cost returned an unsupported JSON payload."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Some cost data could not be refreshed."
 msgstr ""
 
 #: contents/ui/main.qml

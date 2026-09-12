@@ -693,43 +693,14 @@ bounded_revision_body = function_body(main_text, "boundedConfigRevision")
 if "2147480000" not in bounded_revision_body or "1000000" in bounded_revision_body:
     raise AssertionError("boundedConfigRevision must use the same cap as bumpProviderConfigRevision")
 
-parse_cost_body = function_body(main_text, "parseCostOutput")
-if "codexbar cost did not return JSON." not in parse_cost_body:
-    raise AssertionError("parseCostOutput must keep a visible fallback error when cost returns no JSON")
-if "var items = Normalizer.normalizeCostEnvelope(payload)" not in parse_cost_body:
-    raise AssertionError("parseCostOutput must validate and bound the cost envelope before replacing snapshots")
-if "if (items === null)" not in parse_cost_body:
-    raise AssertionError("unsupported cost JSON must remain distinct from a valid empty snapshot")
-if "codexbar cost returned an unsupported JSON payload." not in parse_cost_body:
-    raise AssertionError("unsupported cost JSON must surface a scoped error")
-if parse_cost_body.find("Normalizer.normalizeCostEnvelope(payload)") > parse_cost_body.find("var nextCosts = ({})"):
-    raise AssertionError("cost envelope validation must happen before constructing replacement state")
-unsupported_cost_start = parse_cost_body.find("if (items === null)")
-unsupported_cost_end = parse_cost_body.find("var nextCosts = ({})", unsupported_cost_start)
-unsupported_cost_block = parse_cost_body[unsupported_cost_start:unsupported_cost_end]
-if "applyTokenCosts()" not in unsupported_cost_block or "return" not in unsupported_cost_block:
-    raise AssertionError("unsupported cost JSON must preserve and reapply the last healthy snapshot")
-for cost_error_fragment in (
-    'var costMessage = ""',
-    "item.error && item.error.message",
-    "costErrorText = costMessage",
-):
-    if cost_error_fragment not in parse_cost_body:
-        raise AssertionError(
-            "parseCostOutput must surface CLI JSON errors when no cost rows are valid; "
-            f"missing {cost_error_fragment!r}"
-        )
-if "normalizeTokenCost(item, requestedHistoryDays)" not in parse_cost_body:
-    raise AssertionError("cost snapshots must retain the range of the request that produced them")
-if "Normalizer.costRecordHasError(item)" not in parse_cost_body:
-    raise AssertionError("cost error records must use the shared envelope contract")
-if "Normalizer.mergeCostSnapshotsAfterPartialFailure(" not in parse_cost_body:
-    raise AssertionError("partial cost errors must retain only explicitly failed providers")
-if "tokenCostsContext === costCommandSource" not in parse_cost_body:
-    raise AssertionError(
-        "a partial cost reply after a source change must not re-tag the previous "
-        "context's snapshots: only same-source failures may be retained"
-    )
+cost_controller_text = (root / "contents/ui/controllers/CostController.qml").read_text()
+for message in ("codexbar cost did not return JSON.",
+                "codexbar cost returned an unsupported JSON payload.",
+                "Some cost data could not be refreshed."):
+    if message not in cost_controller_text:
+        raise AssertionError("cost controller must localize each failure outcome")
+if "onTokenCostsChanged: applyTokenCosts()" not in main_text:
+    raise AssertionError("controller snapshots must update provider-local cost sections")
 
 parse_usage_body = function_body(main_text, "parseOutput")
 if "Normalizer.dedupeProviderSnapshots(nextProviders)" not in parse_usage_body:
@@ -753,32 +724,13 @@ if "points: tokenCostSection.chartPoints" not in token_cost_section_body \
         "provider cost charts must use the points available for the selected metric"
     )
 
-normalize_token_cost_body = function_body(main_text, "normalizeTokenCost")
-for fragment in ("today: today", "models: modelSummary.rows", "modelsTruncated: modelSummary.truncated"):
-    if fragment not in normalize_token_cost_body:
-        raise AssertionError(f"normalized cost summaries must preserve availability and coverage: {fragment!r}")
-for ranged_cost_fragment in (
-    "costHistoryWindowLabel(item, historyDays)",
-    "historyDays: historyDays",
-    "normalizeCostModels(item.daily, currency, historyDays, item.updatedAt)",
-    "normalizeCostDaily(item.daily, currency, historyDays, item.updatedAt)",
-):
-    if ranged_cost_fragment not in normalize_token_cost_body:
-        raise AssertionError(
-            "normalizeTokenCost must retain and apply its bounded history range; "
-            f"missing {ranged_cost_fragment!r}"
-        )
-for provider_cost_pattern in (
-    r"Normalizer\.normalizeProviderCostTotals\(\s*providerID,\s*item\.totals,"
-    r"\s*item\.last30DaysCostUSD,\s*item\.last30DaysTokens,\s*currency\)",
-    r"costLine\(\s*windowLabel,\s*totals\.cost,\s*totals\.tokens,",
-    r"costValueLine\(\s*totals\.cost,\s*totals\.tokens,",
-):
-    if not re.search(provider_cost_pattern, normalize_token_cost_body):
-        raise AssertionError(
-            "normalized provider totals must drive every range cost line; "
-            f"missing pattern {provider_cost_pattern!r}"
-        )
+present_cost_body = function_body(main_text, "presentTokenCosts")
+for fragment in ("copyObject(snapshot)", "costHistoryWindowLabel(null, snapshot.labelDays)",
+                 'item.title = i18n("Cost")', "item.monthLine = costLine(windowLabel, snapshot.totals.cost,",
+                 "item.windowValueLine = costValueLine(snapshot.totals.cost,"):
+    if fragment not in present_cost_body:
+        raise AssertionError(f"cost presentation must localize normalized snapshots: {fragment!r}")
+
 if "function costHistoryWindowLabel(item, requestedHistoryDays)" not in main_text:
     raise AssertionError("main.qml must define costHistoryWindowLabel")
 cost_history_label_body = function_body(main_text, "costHistoryWindowLabel")
@@ -918,10 +870,6 @@ replace_options_index = parse_accounts_body.find("setAccountOptions(providerID, 
 no_error_guard_index = parse_accounts_body.rfind("if (accountError.length === 0)", 0, replace_options_index)
 if replace_options_index < 0 or no_error_guard_index < 0:
     raise AssertionError("structured account errors must not replace the last healthy options")
-
-parse_cost_body = function_body(main_text, "parseCostOutput")
-if "tokenCosts = ({})" in parse_cost_body:
-    raise AssertionError("transient cost errors must preserve the last healthy cost snapshot")
 
 if 'String(modelData.value || "")' in providers_text:
     raise AssertionError("descriptor text fields must preserve numeric zero")
@@ -2847,7 +2795,7 @@ for cost_loading_fragment in (
             "SpendView must distinguish a range refresh from an empty result; "
             f"missing {cost_loading_fragment!r}"
         )
-if ('readonly property bool costLoading: CommandLedger.hasKind(activeCommandDescriptors, "cost")'
+if ('readonly property bool costLoading: costController.loading'
         not in main_text):
     raise AssertionError("cost loading state must follow the active cost command lifecycle")
 if "required property int index" not in popup_text:
@@ -2915,7 +2863,7 @@ if "modelData.monthLine" in spend_view_text:
         "the Usage & Spend provider rows must not repeat the window label that the "
         "range selector already states; use the windowValueLine figures"
     )
-if "windowValueLine: costValueLine(" not in main_text:
+if "item.windowValueLine = costValueLine(" not in main_text:
     raise AssertionError(
         "normalized token costs must expose a window-free value line for range-scoped surfaces"
     )
@@ -3030,14 +2978,9 @@ for qualified_value_fragment in (
             "cost amount lines must carry their trust qualifier in localized text; "
             f"missing {qualified_value_fragment!r}"
         )
-if not re.search(
-        r'sessionLine:\s*costLine\(i18n\("Today"\),\s*'
-        r'Normalizer\.normalizeProviderCostAmount\(providerID,\s*item\.sessionCostUSD\),\s*'
-        r'item\.sessionTokens,\s*currency\)',
-        applet.function_body("normalizeTokenCost")):
-    raise AssertionError(
-        "Today must respect provider cost availability without inheriting window-level trust qualifiers"
-    )
+if not re.search(r'item.sessionLine = costLine\(i18n\("Today"\), snapshot.sessionCost,\s*'
+                 r'snapshot.sessionTokens, currency\)', present_cost_body):
+    raise AssertionError("Today must not inherit history-level trust qualifiers")
 if "view.dailyPoints.length - 42" in spend_view_text:
     raise AssertionError(
         "the activity heatmap must not pin itself to a fixed 42-day window while the "

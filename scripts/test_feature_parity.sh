@@ -553,7 +553,7 @@ require_in_surface applet "historyCoverageEstablished: item.historyCoverageIsEst
 require_in_file "$SPEND_COMPONENT_QML" "function metricOptions()"
 require_in_file "$SPEND_COMPONENT_QML" "view.applet.setCostHistoryMetric(metricCombo.valueAt(index))"
 require_in_file "$SPEND_COMPONENT_QML" "view.applet.spendHistoryStillBuilding()"
-require_in_surface applet "if (!costUsageEnabled) {"
+require_in_surface applet "if (!controller.costUsageEnabled || controller.commandPath.length === 0) {"
 require_in_surface applet "--days"
 require_in_surface applet "Math.max(1, Math.min(365, Number(Plasmoid.configuration.costHistoryDays)"
 

@@ -17,7 +17,6 @@ import "PanelTextFit.js" as PanelTextFit
 import "PopupSelection.js" as PopupSelection
 import "CommandLedger.js" as CommandLedger
 import "AccountRequests.js" as AccountRequests
-import "CostRefreshPolicy.js" as CostRefreshPolicy
 import "CostPresentation.js" as CostPresentation
 import "OverviewProviders.js" as OverviewProviders
 import "ProviderFallbackQueue.js" as ProviderFallbackQueue
@@ -131,29 +130,18 @@ PlasmoidItem {
     property bool usageRefreshScheduled: false
     readonly property int providerConfigWatchIntervalMs: 60000
     property int commandRunSerial: 0
-    property bool costLifecycleInitialized: false
     property var activeCommandDescriptors: ({})
     readonly property int defaultCommandTimeoutMs: 120000
     readonly property int maximumExtraRateWindows: Normalizer.maximumExtraRateWindows
     readonly property int maximumProviderSnapshots: Normalizer.maximumProviderSnapshots
     readonly property int maximumAccountSnapshots: Normalizer.maximumAccountSnapshots
-    readonly property int maximumCostSnapshots: Normalizer.maximumCostSnapshots
     readonly property int maximumCostHistoryPoints: Normalizer.maximumCostHistoryPoints
-    readonly property int maximumCostHistoryScanItems: Normalizer.maximumCostHistoryScanItems
-    readonly property int maximumModelBreakdownsPerDay: Normalizer.maximumModelBreakdownsPerDay
     readonly property int maximumConcurrentProviderFallbackCommands: 8
     property var providerFallbackState: null
-    property string costCommandSource: buildCostCommand()
-    readonly property bool costLoading: CommandLedger.hasKind(activeCommandDescriptors, "cost")
-    readonly property int costAutoRefreshIntervalMs: CostRefreshPolicy.automaticRefreshIntervalMs
-    property double lastCostRefreshAttemptAt: -1
-    property var tokenCosts: ({})
-    // The cost command source that produced tokenCosts. Costs belong to the
-    // context that fetched them; a source change clears the map, and readers
-    // additionally refuse snapshots from any other source.
-    property string tokenCostsContext: ""
+    readonly property bool costLoading: costController.loading
+    readonly property var tokenCosts: presentTokenCosts(costController.costs)
     property var costTrustNoticeStates: ({})
-    property string costErrorText: ""
+    readonly property string costErrorText: costController.errorText
     readonly property var sessions: sessionsController.sessions
     readonly property string sessionsErrorText: sessionsController.errorText
     readonly property string sessionsLastUpdatedText: sessionsController.lastUpdatedAtMs >= 0
@@ -223,19 +211,7 @@ PlasmoidItem {
         scheduleUsageRefresh()
     }
     onCostHistoryDaysChanged: applyTokenCosts()
-    onCostCommandSourceChanged: {
-        if (costLifecycleInitialized) {
-            // Retire live cost runs synchronously so a late reply from the
-            // previous source cannot reseed the map: the ledger drops retired
-            // replies before parsing. The map itself is retained and
-            // reprojected at once, because the source can settle after the
-            // range handler already ran; readers still refuse snapshots from
-            // any other source until the refetch lands.
-            retireUsageCommandKind("cost")
-            applyTokenCosts()
-            Qt.callLater(root.refreshCost, true)
-        }
-    }
+    onTokenCostsChanged: applyTokenCosts()
     onProviderConfigRevisionChanged: {
         invalidateProviderRosterCache()
         scheduleUsageRefresh()
@@ -243,14 +219,6 @@ PlasmoidItem {
     onExpandedChanged: {
         if (root.expanded) {
             Qt.callLater(refreshUsageOnOpen)
-            if (spendSelected) {
-                Qt.callLater(refreshSpendIfStale)
-            }
-        }
-    }
-    onSpendSelectedChanged: {
-        if (spendSelected && expanded) {
-            Qt.callLater(refreshSpendIfStale)
         }
     }
     onAutoSelectProviderChanged: updateSelectedProvider()
@@ -285,10 +253,8 @@ PlasmoidItem {
 
     Component.onCompleted: {
         usageLifecycleInitialized = true
-        costLifecycleInitialized = true
         reconnectProviderConfigWatcher()
         refreshNow(false)
-        refreshCost(false)
     }
 
     function buildCommand() {
@@ -415,32 +381,6 @@ PlasmoidItem {
         return parts.join(" ")
     }
 
-    function buildCostCommand() {
-        if (commandPath.length === 0) {
-            return ""
-        }
-        if (!costUsageEnabled) {
-            return ""
-        }
-
-        var parts = [
-            shellQuote(commandPath),
-            "cost",
-            "--format",
-            "json",
-            "--json-only",
-            "--days",
-            String(costHistoryDays)
-        ]
-
-        if (provider.length > 0) {
-            parts.push("--provider")
-            parts.push(shellQuote(provider))
-        }
-
-        return parts.join(" ")
-    }
-
     function shellQuote(value) {
         return Guards.shellQuote(value)
     }
@@ -510,12 +450,6 @@ PlasmoidItem {
     function buildCommandDescriptor(kind, providerID, timeoutMs) {
         return CommandLedger.descriptor(
             kind, providerID, Date.now(), timeoutMs, defaultCommandTimeoutMs)
-    }
-
-    function buildCostCommandDescriptor() {
-        var descriptor = buildCommandDescriptor("cost", "")
-        descriptor.costHistoryDays = costHistoryDays
-        return descriptor
     }
 
     function providerRosterContext() {
@@ -813,42 +747,14 @@ PlasmoidItem {
     }
 
     function refreshCost(force) {
-        var nowMs = Date.now()
-        var action = CostRefreshPolicy.refreshAction(
-            costCommandSource.length > 0,
-            costLoading,
-            force === true,
-            lastCostRefreshAttemptAt,
-            nowMs)
-        if (action === CostRefreshPolicy.clearAction) {
-            retireUsageCommandKind("cost")
-            tokenCosts = ({})
-            tokenCostsContext = ""
-            costErrorText = ""
-            applyTokenCosts()
-            return false
-        }
-        if (action !== CostRefreshPolicy.startAction) {
-            return false
-        }
-
-        retireUsageCommandKind("cost")
-        lastCostRefreshAttemptAt = nowMs
-        costErrorText = ""
-        connectUsageCommand(
-            commandWithRunNonce(costCommandSource),
-            buildCostCommandDescriptor())
-        return true
+        return costController.refresh(force)
     }
 
-    // Entering Usage & Spend refreshes stale history through the existing
-    // hourly cost lifecycle (now also day-aware). Metric toggles reuse the
-    // loaded payload and day inspection never calls here, so neither scans.
     function refreshSpendIfStale() {
         if (!spendSelected || !expanded) {
             return false
         }
-        return refreshCost(false)
+        return costController.refresh(false)
     }
 
     function refreshSessions() {
@@ -1204,11 +1110,6 @@ PlasmoidItem {
             }
             failUsageRefresh(i18n("Loading usage timed out. Try again."))
             return
-        case "cost":
-            finishUsageCommandSource(sourceName)
-            costErrorText = i18n("Loading cost data timed out. Try again.")
-            applyTokenCosts()
-            return
         case "providerConfig":
             finishUsageCommandSource(sourceName)
             failUsageRefresh(i18n("Loading provider configuration timed out. Try again."))
@@ -1312,79 +1213,6 @@ PlasmoidItem {
         }
     }
 
-    function parseCostOutput(stdoutText, stderrText, requestedHistoryDays) {
-        var trimmed = stdoutText.trim()
-        if (trimmed.length === 0) {
-            costErrorText = stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("codexbar cost did not return JSON.")
-            applyTokenCosts()
-            return
-        }
-
-        var payload
-        try {
-            payload = JSON.parse(trimmed)
-        } catch (error) {
-            costErrorText = i18n("Could not parse codexbar cost JSON: %1", error.message)
-            applyTokenCosts()
-            return
-        }
-
-        var items = Normalizer.normalizeCostEnvelope(payload)
-        if (items === null) {
-            costErrorText = i18n("codexbar cost returned an unsupported JSON payload.")
-            applyTokenCosts()
-            return
-        }
-        var nextCosts = ({})
-        var costMessage = ""
-        var hadCostRecordError = false
-        var failedCostProviderIDs = []
-        for (var i = 0; i < items.length; i++) {
-            var item = items[i]
-            if (!isCliRecord(item)) {
-                continue
-            }
-            var itemHasCostError = Normalizer.costRecordHasError(item)
-            if (itemHasCostError) {
-                hadCostRecordError = true
-                failedCostProviderIDs.push(item.provider)
-            }
-            if (costMessage.length === 0 && item && item.error && item.error.message) {
-                costMessage = boundedCliMessage(Normalizer.safeScalarText(item.error.message))
-            }
-            if (itemHasCostError) {
-                continue
-            }
-            var cost = normalizeTokenCost(item, requestedHistoryDays)
-            var providerID = cost ? providerMapKey(cost.provider) : ""
-            if (cost && providerID.length > 0) {
-                nextCosts[providerID] = cost
-            }
-        }
-
-        if (hadCostRecordError) {
-            // A partial reply retains only failed providers from the same
-            // command source. After a source change the retained map still
-            // holds the previous context's snapshots, and merging them here
-            // would re-tag old costs with the new source.
-            var previousCosts = tokenCostsContext === costCommandSource
-                ? tokenCosts
-                : ({})
-            tokenCosts = Normalizer.mergeCostSnapshotsAfterPartialFailure(
-                previousCosts, nextCosts, failedCostProviderIDs)
-            tokenCostsContext = costCommandSource
-            costErrorText = costMessage
-            if (costErrorText.length === 0) {
-                costErrorText = i18n("Some cost data could not be refreshed.")
-            }
-        } else {
-            tokenCosts = nextCosts
-            tokenCostsContext = costCommandSource
-            costErrorText = ""
-        }
-        applyTokenCosts()
-    }
-
     function sessionTitle(item, index) {
         if (privacyMode) {
             return i18n("Session %1", (index >= 0 ? index : 0) + 1)
@@ -1472,62 +1300,27 @@ PlasmoidItem {
         return i18np("%1 day ago", "%1 days ago", days)
     }
 
-    function normalizeTokenCost(item, requestedHistoryDays) {
-        if (!item || !item.provider) {
-            return null
+    function presentTokenCosts(snapshots) {
+        var presented = ({})
+        var keys = Object.keys(snapshots)
+        for (var i = 0; i < keys.length; i++) {
+            var snapshot = snapshots[keys[i]]
+            var item = copyObject(snapshot)
+            var windowLabel = snapshot.historyLabel !== null ? snapshot.historyLabel
+                : Normalizer.boundedDisplayText(costHistoryWindowLabel(null, snapshot.labelDays), 120)
+            var currency = snapshot.currency
+            item.windowLabel = windowLabel
+            item.title = i18n("Cost")
+            item.sessionLine = costLine(i18n("Today"), snapshot.sessionCost,
+                snapshot.sessionTokens, currency)
+            item.monthLine = costLine(windowLabel, snapshot.totals.cost,
+                snapshot.totals.tokens, currency, snapshot.valueMode)
+            item.windowValueLine = costValueLine(snapshot.totals.cost,
+                snapshot.totals.tokens, currency, snapshot.valueMode)
+            item.hintLine = tokenCostHint(snapshot.provider)
+            presented[keys[i]] = item
         }
-
-        var providerID = providerMapKey(item.provider)
-        if (providerID.length === 0) {
-            return null
-        }
-        var currency = Normalizer.boundedDisplayText(item.currencyCode || "USD", 12)
-        var emittedHistoryDays = Normalizer.strictFiniteNumber(item.historyDays)
-        var fallbackHistoryDays = Normalizer.strictFiniteNumber(requestedHistoryDays)
-        var historyDays = isFinite(emittedHistoryDays) && emittedHistoryDays > 0
-            ? Math.max(1, Math.min(maximumCostHistoryPoints, Math.floor(emittedHistoryDays)))
-            : (isFinite(fallbackHistoryDays) && fallbackHistoryDays > 0
-            ? Math.max(1, Math.min(maximumCostHistoryPoints, Math.floor(fallbackHistoryDays)))
-            : 30)
-        var windowLabel = Normalizer.boundedDisplayText(item.historyLabel || costHistoryWindowLabel(item, historyDays), 120)
-        var trust = Normalizer.normalizeCostTrustMetadata(item)
-        var totals = Normalizer.normalizeProviderCostTotals(
-            providerID, item.totals, item.last30DaysCostUSD,
-            item.last30DaysTokens, currency)
-        var trustSummary = CostPresentation.costTrustSummary([{
-            totals: totals,
-            trust: trust
-        }])
-        var valueMode = trustSummary ? trustSummary.valueMode : "plain"
-        var today = Normalizer.normalizeProviderCostTotals(
-            providerID, null, item.sessionCostUSD, item.sessionTokens, currency)
-        var modelSummary = Normalizer.normalizeCostModels(item.daily, currency, historyDays, item.updatedAt)
-        return {
-            provider: providerID,
-            historyDays: historyDays,
-            // Older payloads omit the flag; absent means "do not warn".
-            historyCoverageEstablished: item.historyCoverageIsEstablished !== false,
-            trust: trust,
-            valueMode: valueMode,
-            windowLabel: windowLabel,
-            today: today,
-            title: i18n("Cost"),
-            // Top-level coverage/provenance describes the requested history
-            // window, not the independently emitted current-session figure.
-            sessionLine: costLine(i18n("Today"),
-                Normalizer.normalizeProviderCostAmount(providerID, item.sessionCostUSD),
-                item.sessionTokens, currency),
-            monthLine: costLine(windowLabel, totals.cost, totals.tokens,
-                currency, valueMode),
-            windowValueLine: costValueLine(
-                totals.cost, totals.tokens, currency, valueMode),
-            hintLine: tokenCostHint(providerID),
-            totals: totals,
-            projects: Normalizer.normalizeCostProjects(item.projects, currency),
-            models: modelSummary.rows,
-            modelsTruncated: modelSummary.truncated,
-            daily: Normalizer.normalizeCostDaily(item.daily, currency, historyDays, item.updatedAt)
-        }
+        return presented
     }
 
     function costHistoryWindowLabel(item, requestedHistoryDays) {
@@ -1584,12 +1377,6 @@ PlasmoidItem {
     }
 
     function spendProviderCosts() {
-        // The Usage & Spend tab reads the map directly, so it needs the same
-        // source check as the provider meters: never total the previous
-        // context's costs beside the new context's quotas.
-        if (tokenCostsContext !== costCommandSource) {
-            return []
-        }
         var snapshots = CostPresentation.spendSnapshots(tokenCosts, costHistoryDays, function(providerID) {
             return providerTitle(providerID)
         })
@@ -1779,11 +1566,6 @@ PlasmoidItem {
     function providerTokenCost(providerID) {
         var key = providerMapKey(providerID)
         if (key.length === 0) {
-            return null
-        }
-        // A snapshot that outruns a command-source change must never attach to
-        // the new context's providers, even if the history range still matches.
-        if (tokenCostsContext !== costCommandSource) {
             return null
         }
         var snapshot = tokenCosts[key] || null
@@ -4015,13 +3797,6 @@ PlasmoidItem {
             }
 
             switch (descriptor.kind) {
-            case "cost":
-                var requestedHistoryDays = descriptor.costHistoryDays !== undefined
-                    ? descriptor.costHistoryDays
-                    : root.costHistoryDays
-                root.finishUsageCommandSource(sourceName)
-                root.parseCostOutput(stdoutText, stderrText, requestedHistoryDays)
-                return
             case "providerConfig":
                 root.finishUsageCommandSource(sourceName)
                 root.parseProviderConfigOutput(descriptor, stdoutText, stderrText)
@@ -4062,31 +3837,12 @@ PlasmoidItem {
 
         interval: root.panelClockIntervalMs
         repeat: true
-        running: root.providers.length > 0 || (root.spendSelected && root.expanded)
+        running: root.providers.length > 0
         triggeredOnStart: false
         onTriggered: {
-            // A visible spend view that stays open across midnight refreshes
-            // once: the day-aware cost policy treats the new bucket as stale.
-            // Hidden views refresh on their next revisit instead, so the clock
-            // never starts background cost scans.
             root.panelClockMs = Date.now()
             root.expireStaleUsage(root.panelClockMs)
-            if (CostRefreshPolicy.isNewBucketDay(
-                    root.lastCostRefreshAttemptAt, root.panelClockMs)
-                    && root.spendSelected && root.expanded) {
-                root.refreshSpendIfStale()
-            }
         }
-    }
-
-    Timer {
-        id: costRefreshTimer
-
-        interval: root.costAutoRefreshIntervalMs
-        repeat: true
-        running: root.costCommandSource.length > 0
-        triggeredOnStart: false
-        onTriggered: root.refreshCost(false)
     }
 
     Timer {
@@ -4127,6 +3883,16 @@ PlasmoidItem {
             }
             root.finishNotificationCommandSource(sourceName)
         }
+    }
+
+    Controllers.CostController {
+        id: costController
+
+        commandPath: root.commandPath
+        provider: root.provider
+        historyDays: root.costHistoryDays
+        costUsageEnabled: root.costUsageEnabled
+        active: root.spendSelected && root.expanded
     }
 
     Controllers.SessionsController {

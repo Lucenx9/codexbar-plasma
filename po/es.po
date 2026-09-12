@@ -611,6 +611,7 @@ msgstr ""
 "Se ha agotado el tiempo de espera del diagnóstico. Vuelva a intentarlo."
 
 #: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
+#: contents/ui/controllers/CostController.qml
 #: contents/ui/controllers/ProviderRosterController.qml
 #: contents/ui/controllers/SessionsController.qml contents/ui/main.qml
 msgid "codexbar response exceeded the supported size."
@@ -1782,6 +1783,27 @@ msgstr "No hay proveedores coincidentes"
 msgid "Try another search or choose a different filter."
 msgstr "Pruebe otra búsqueda o elija otro filtro."
 
+#: contents/ui/controllers/CostController.qml
+msgid "Loading cost data timed out. Try again."
+msgstr ""
+"Se ha agotado el tiempo de espera al cargar los costes. Vuelva a intentarlo."
+
+#: contents/ui/controllers/CostController.qml
+msgid "Some cost data could not be refreshed."
+msgstr "No se han podido actualizar algunos datos de costes."
+
+#: contents/ui/controllers/CostController.qml
+msgid "codexbar cost did not return JSON."
+msgstr "codexbar cost no ha devuelto JSON."
+
+#: contents/ui/controllers/CostController.qml
+msgid "Could not parse codexbar cost JSON: %1"
+msgstr "No se ha podido analizar el JSON de codexbar cost: %1"
+
+#: contents/ui/controllers/CostController.qml
+msgid "codexbar cost returned an unsupported JSON payload."
+msgstr "codexbar cost ha devuelto datos JSON no admitidos."
+
 #: contents/ui/controllers/SessionsController.qml contents/ui/main.qml
 msgid "Set the codexbar command path in widget settings."
 msgstr "Configure la ruta del comando codexbar en los ajustes del widget."
@@ -1957,11 +1979,6 @@ msgstr ""
 "Se ha agotado el tiempo de espera al cargar el uso. Vuelva a intentarlo."
 
 #: contents/ui/main.qml
-msgid "Loading cost data timed out. Try again."
-msgstr ""
-"Se ha agotado el tiempo de espera al cargar los costes. Vuelva a intentarlo."
-
-#: contents/ui/main.qml
 msgid "Loading provider configuration timed out. Try again."
 msgstr ""
 "Se ha agotado el tiempo de espera al cargar la configuración de proveedores. "
@@ -1983,22 +2000,6 @@ msgstr "No se ha podido leer un registro de cuenta de codexbar: %1"
 #: contents/ui/main.qml
 msgid "Could not parse codexbar account JSON: %1"
 msgstr "No se ha podido analizar el JSON de cuentas de codexbar: %1"
-
-#: contents/ui/main.qml
-msgid "codexbar cost did not return JSON."
-msgstr "codexbar cost no ha devuelto JSON."
-
-#: contents/ui/main.qml
-msgid "Could not parse codexbar cost JSON: %1"
-msgstr "No se ha podido analizar el JSON de codexbar cost: %1"
-
-#: contents/ui/main.qml
-msgid "codexbar cost returned an unsupported JSON payload."
-msgstr "codexbar cost ha devuelto datos JSON no admitidos."
-
-#: contents/ui/main.qml
-msgid "Some cost data could not be refreshed."
-msgstr "No se han podido actualizar algunos datos de costes."
 
 #: contents/ui/main.qml
 msgid "Session %1"

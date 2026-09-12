@@ -219,6 +219,27 @@ def main():
     if scenario not in SCENARIOS + MATRIX_SCENARIOS:
         raise ValueError("SMOKE_FAILED: missing or unknown fixture scenario")
     result = response(sys.argv[1:], scenario, datetime.now(timezone.utc))
+    if sys.argv[1:2] == ["cost"]:
+        run = int(os.environ.get("CODEXBAR_PLASMA_RUN", "0"))
+        if scenario == "popup-cost-refresh-error":
+            if run in (2, 6, 11, 14):
+                print("Synthetic cost refresh failed.", file=sys.stderr)
+                return
+            if run in (3, 7):
+                result = "{"
+            elif run in (4, 8):
+                result = "null"
+            elif run in (5, 9):
+                result = [{"provider": "codex", "error": {"message": "Synthetic cost scan failed."}}]
+            elif run == 10:
+                result = []
+            elif run == 12:
+                result = [{"provider": "codex", "totals": {"totalCost": 4, "totalTokens": 100}}]
+        elif scenario == "privacy-cost-details" and run == 2:
+            print("demo@example.com private cost error", file=sys.stderr)
+            return
+        elif scenario == "usage-retention" and run == 2:
+            result = "{"
     if scenario == "loading" or (
         scenario == "usage-cache-restart" and os.environ.get("CODEXBAR_SMOKE_RESTART") == "1"
     ):
