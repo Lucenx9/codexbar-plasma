@@ -332,6 +332,7 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: showMultiProviderCheck
+            implicitWidth: 0
             Layout.fillWidth: true
             text: i18n("Provider meters")
         }
@@ -376,6 +377,7 @@ KCM.SimpleKCM {
 
             Controls.CheckBox {
                 id: showProviderCheck
+                implicitWidth: 0
                 Layout.fillWidth: true
                 text: i18n("Provider name")
             }
@@ -383,6 +385,7 @@ KCM.SimpleKCM {
             Controls.CheckBox {
                 id: showPercentCheck
                 objectName: "panelUsageTextCheck"
+                implicitWidth: 0
                 Layout.fillWidth: true
                 text: i18n("Usage text")
             }
@@ -442,6 +445,7 @@ KCM.SimpleKCM {
 
             Controls.CheckBox {
                 id: showCreditsCheck
+                implicitWidth: 0
                 Layout.fillWidth: true
                 text: i18n("Credits")
             }
@@ -520,6 +524,7 @@ KCM.SimpleKCM {
                 model: page.orderedPanelProviderRoster
 
                 delegate: Controls.CheckBox {
+                    implicitWidth: 0
                     Layout.fillWidth: true
                     required property var modelData
 
@@ -740,6 +745,7 @@ KCM.SimpleKCM {
 
             Controls.CheckBox {
                 id: autoSelectProviderCheck
+                implicitWidth: 0
                 Layout.fillWidth: true
                 text: i18n("Auto-select highest-usage provider")
             }

@@ -1358,12 +1358,15 @@ KCM.SimpleKCM {
             currentIndex: 0
 
             Controls.TabButton {
+                baselineOffset: 0
                 text: i18n("All providers")
             }
             Controls.TabButton {
+                baselineOffset: 0
                 text: i18n("Enabled")
             }
             Controls.TabButton {
+                baselineOffset: 0
                 text: i18n("Disabled")
             }
         }
@@ -1735,6 +1738,7 @@ KCM.SimpleKCM {
                                 Components.PlainCheckBox {
                                     checked: modelData.value === true || String(modelData.value).toLowerCase() === "true"
                                     plainText: modelData.description
+                                    implicitWidth: 0
                                     Layout.fillWidth: true
                                     enabled: page.selectedProvider
                                         && !page.isFieldPending(page.selectedProvider.provider, modelData.id)

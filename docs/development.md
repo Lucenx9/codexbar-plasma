@@ -201,6 +201,13 @@ Extraction must hide complexity, not merely reduce line count.
   text caps, a plain `Item` may size children from its own and sibling widths.
   Keep those bindings out of layout size hints, and expose implicit sizes
   independent of the `Item`'s assigned width. See [Qt's layout guidance](https://doc.qt.io/qt-6/qtquicklayouts-overview.html#size-constraints).
+- Set `implicitWidth: 0` on fill-width settings checkboxes so the layout owns
+  their horizontal size. KDE/Breeze checkbox labels derive their implicit width
+  from wrapped content; feeding that width back through a mirrored layout can
+  otherwise create an `implicitWidth` binding loop.
+- Give settings `TabButton` instances an explicit `baselineOffset` when their
+  layout does not use baseline alignment. Older KDE desktop styles expose no
+  content item but still derive the default baseline from it.
 - Prefer declarative bindings. Move repeated or expensive calculations into
   helpers or cached properties. Avoid heavy JavaScript in delegates, compact
   rendering, timers, and DataSource callbacks; profile before optimizing.

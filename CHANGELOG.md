@@ -22,6 +22,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep settings checkboxes stable in right-to-left layouts under KDE/Breeze
+  styles, avoiding repeated width binding loops while the pages settle.
+- Keep the provider filter tabs usable with KDE styles whose tab buttons expose
+  no content item, avoiding repeated QML errors when opening Providers settings.
 - Use the pinned KDE CI image’s authenticated package indexes so an outage of
   the archive’s current metadata does not block checks and package builds.
 - Preserve ampersands and angle brackets in provider selection and settings
