@@ -14,7 +14,7 @@ from qml_surfaces import Surface
 
 FUNCTIONS = (
     "buildCostCommand", "shellQuote", "copyObject", "providerMapKey",
-    "isCliRecord", "parseCostOutput",
+    "isCliRecord", "parseCostOutput", "boundedCliMessage",
     "providerTokenCost", "applyTokenCosts", "retireUsageCommandKind",
     "refreshCost", "commandWithRunNonce", "buildCommandDescriptor",
     "buildCostCommandDescriptor", "connectUsageCommand", "finishUsageCommandSource",
@@ -24,6 +24,7 @@ QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
 import "SOURCE_URL/Guards.js" as Guards
+import "SOURCE_URL/SafeText.js" as SafeText
 import "SOURCE_URL/CommandLedger.js" as CommandLedger
 import "SOURCE_URL/CostPresentation.js" as CostPresentation
 import "SOURCE_URL/CostRefreshPolicy.js" as CostRefreshPolicy
@@ -55,7 +56,6 @@ TestCase {
             SOURCE_HANDLERS
 
             function i18n(text) { return text; }
-            function boundedCliMessage(value) { return String(value); }
             function normalizeTokenCost(item, requestedHistoryDays) {
                 return {provider: item.provider, historyDays: requestedHistoryDays};
             }
@@ -181,6 +181,36 @@ TestCase {
         var before = applet.startedSources.length;
         verify(applet.refreshCost(true));
         compare(applet.startedSources.length, before + 1);
+    }
+
+    function test_malformedCostErrorKeepsPartialRefresh_data() {
+        return [
+            {tag: "object", message: {}},
+            {tag: "shadowed-conversion", message: {toString: null}},
+            {tag: "array", message: [{toString: null}]},
+            {tag: "empty", message: ""},
+            {tag: "whitespace", message: "   "},
+            {tag: "null", message: null}
+        ];
+    }
+
+    function test_malformedCostErrorKeepsPartialRefresh(data) {
+        var applet = createTemporaryObject(harness, this, {});
+        verify(applet !== null);
+        wait(0);
+        var retained = {provider: "claude", historyDays: 30, total: 9};
+        applet.tokenCosts = {claude: retained};
+        applet.tokenCostsContext = applet.costCommandSource;
+        applet.providers = [{provider: "codex"}, {provider: "claude"}];
+        applet.parseCostOutput(JSON.stringify([
+            {provider: "claude", error: {message: data.message}},
+            {provider: "codex"}
+        ]), "", 30);
+        compare(applet.tokenCosts.claude, retained);
+        compare(applet.tokenCosts.codex.historyDays, 30);
+        compare(applet.providers[0].tokenCost, applet.tokenCosts.codex);
+        compare(applet.providers[1].tokenCost, retained);
+        compare(applet.costErrorText, "Some cost data could not be refreshed.");
     }
 
     function test_partialRefreshAfterSourceChangeDropsOldSnapshots() {
