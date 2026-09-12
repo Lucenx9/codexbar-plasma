@@ -646,7 +646,7 @@ require_in_surface panel 'elementID: "meters"'
 reject_in_surface applet "onPanelQuotaLaneChanged: Qt.callLater(refreshNow)"
 reject_in_surface applet "onPanelVisibilityRulesChanged: Qt.callLater(refreshNow)"
 require_in_surface applet '"sessions", "--json-v2"'
-require_in_surface applet "function parseSessionsOutput(stdoutText, stderrText)"
+require_in_surface applet "SessionResponse.response(stdoutText, stderrText)"
 require_in_surface applet "function normalizeSession(item)"
 reject_in_file "$SESSIONS_COMPONENT_QML" "transcriptPath"
 reject_in_file "$SESSIONS_COMPONENT_QML" "cwd"

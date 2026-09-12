@@ -26,7 +26,7 @@ require_in_surface applet "root.finishUsageCommandSource(sourceName)"
 require_in_surface applet 'import "ProviderFallbackQueue.js" as ProviderFallbackQueue'
 require_in_surface applet 'import "ProviderRosterCache.js" as ProviderRosterCache'
 require_in_surface applet 'import "AccountRequests.js" as AccountRequests'
-require_in_surface applet 'import "SessionRefreshPolicy.js" as SessionRefreshPolicy'
+require_in_surface applet 'import "../SessionRefreshPolicy.js" as SessionRefreshPolicy'
 require_in_surface applet "property var providerFallbackState: null"
 require_in_surface applet "readonly property int accountCommandTimeoutMs: 60000"
 require_in_surface applet "readonly property int sessionsCommandTimeoutMs: 60000"
@@ -233,7 +233,6 @@ require_all(
         "switch (descriptor.kind) {",
         'case "usage":',
         'case "cost":',
-        'case "sessions":',
         'case "providerConfig":',
         'case "account":',
         'case "providerFallback":',
@@ -242,7 +241,6 @@ require_all(
         "finishNotificationCommandSource(sourceName)",
         "Loading usage timed out. Try again.",
         "Loading cost data timed out. Try again.",
-        "Loading sessions timed out. Try again.",
         "Loading provider configuration timed out. Try again.",
         "Loading accounts timed out. Try again.",
     ),
@@ -414,77 +412,50 @@ for independent_kind in ('"cost"', '"sessions"'):
 if "refreshSessions" in applet.function_body("refreshNow"):
     raise AssertionError("quota refresh must not start Sessions work")
 
+# Sessions owns its executable source and timers. The applet supplies inputs
+# and projects outputs; runtime tests exercise refresh and cooldown behavior.
+sessions_controller = root / "contents/ui/controllers/SessionsController.qml"
+sessions_text = sessions_controller.read_text(encoding="utf-8")
 require_all(
-    applet.function_body("requestSessionsRefresh"),
-    (
-        "SessionRefreshPolicy.refreshAction(",
-        "expanded && sessionsSelected",
-        "sessionsLastCompletedAtMs",
-        "lastFinishedAtMs: sessionsLastFinishedAtMs",
-        "sessionsLoadedCommandSource",
-        'retireUsageCommandKind("sessions")',
-        "commandWithRunNonce(sessionsCommandSource)",
-    ),
-    "Sessions intent must cross the freshness policy before starting a command",
+    applet.id_block("sessionsController"),
+    ("commandPath: root.commandPath", "refreshIntervalSec: root.refreshIntervalSec",
+     "active: root.expanded && root.sessionsSelected"),
+    "Sessions must receive explicit configuration and visibility inputs",
 )
 require_all(
-    applet.handler_body("onExpandedChanged"),
-    (
-        "if (root.expanded)",
-        "Qt.callLater(refreshSessionsIfStale)",
-        "scheduleSessionsRefreshCheck()",
-    ),
-    "opening the popup must check visible Sessions freshness",
+    applet.function_body("refreshSessions"),
+    ("sessionsController.refresh()",),
+    "the applet's manual Sessions action must reach its controller",
 )
+for forbidden in ("Plasmoid.configuration", "required property var applet", "root."):
+    if forbidden in sessions_text:
+        raise AssertionError("Sessions controller must own its lifecycle without the applet root")
+if 'case "sessions"' in applet.function_body("handleCommandTimeout"):
+    raise AssertionError("Sessions timeouts must leave the shared applet dispatcher")
+if 'case "sessions"' in applet.id_block("usageSource"):
+    raise AssertionError("Sessions replies must leave the shared usage source")
 require_all(
-    applet.handler_body("onSessionsSelectedChanged"),
-    (
-        "if (sessionsSelected && expanded)",
-        "Qt.callLater(refreshSessionsIfStale)",
-        "scheduleSessionsRefreshCheck()",
-    ),
-    "entering Sessions must check freshness",
+    sessions_text,
+    ("CommandLedger.withRunNonce(commandSource, runSerial)",
+     'engine: "executable"', "running: controller.loading",
+     "lifecycle.expireRequests(Date.now())", "Component.onDestruction: lifecycle.retireRequests()",
+     "Loading sessions timed out. Try again."),
+    "Sessions must own nonce, process, timeout, and destruction cleanup",
 )
+reply = applet.function_body("acceptReply")
 require_all(
-    applet.handler_body("onSessionsStaleAfterMsChanged"),
-    ("Qt.callLater(refreshSessionsIfStale)",),
-    "changing the refresh interval must recheck Sessions and reschedule its timer",
+    " ".join(reply.split()),
+    ("if (!CommandLedger.find(commands, sourceName)) { return; }",),
+    "Sessions must return immediately for a retired source",
 )
-require_all(
-    applet.function_body("selectGlobalView"),
-    ('candidate === "sessions"', "refreshSessionsIfStale()"),
-    "reselecting the Sessions tab must check whether its snapshot became stale",
-)
-require_all(
-    applet.id_block("sessionsRefreshTimer"),
-    (
-        "repeat: false",
-        "running: false",
-        "root.refreshSessionsIfStale()",
-    ),
-    "the Sessions timer must run once at the snapshot's exact stale boundary",
-)
-require_all(
-    applet.function_body("scheduleSessionsRefreshCheck"),
-    (
-        "sessionsRefreshTimer.stop()",
-        "SessionRefreshPolicy.nextCheckDelay(",
-        "lastFinishedAtMs: sessionsLastFinishedAtMs",
-        "sessionsRefreshTimer.interval = delayMs",
-        "sessionsRefreshTimer.start()",
-    ),
-    "Sessions checks must be scheduled from the current snapshot completion",
-)
-require_all(
-    applet.function_body("refreshSessionsIfStale"),
-    ("requestSessionsRefresh(false)", "scheduleSessionsRefreshCheck()"),
-    "each stale check must schedule the next exact boundary",
-)
-require_all(
-    applet.function_body("handleCommandTimeout"),
-    ('case "sessions"', "scheduleSessionsRefreshCheck()"),
-    "a failed Sessions refresh must schedule a bounded retry",
-)
+if reply.index("CommandLedger.find(commands, sourceName)") > reply.index("finishRequest(sourceName)"):
+    raise AssertionError("Sessions must reject retired replies before committing a result")
+finish = applet.function_body("finishRequest")
+if finish.index("CommandLedger.closed(") > finish.index("disconnectSource("):
+    raise AssertionError("Sessions must retire a request before disconnect callbacks")
+request = applet.function_body("requestRefresh")
+if request.index("CommandLedger.opened(") > request.index("connectSource("):
+    raise AssertionError("Sessions must register a request before synchronous replies")
 
 require_all(
     applet.function_body("startProviderFallback"),

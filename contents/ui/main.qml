@@ -29,7 +29,6 @@ import "ProviderRosterCache.js" as ProviderRosterCache
 import "UsageCache.js" as UsageCache
 import "QuotaThresholds.js" as QuotaThresholds
 import "SafeText.js" as SafeText
-import "SessionRefreshPolicy.js" as SessionRefreshPolicy
 import "PopupRefreshPolicy.js" as PopupRefreshPolicy
 import "ThemeContrast.js" as ThemeContrast
 import "UsageDetails.js" as UsageDetails
@@ -155,17 +154,11 @@ PlasmoidItem {
     property string tokenCostsContext: ""
     property var costTrustNoticeStates: ({})
     property string costErrorText: ""
-    property string sessionsCommandSource: buildSessionsCommand()
-    property var sessions: []
-    property string sessionsErrorText: ""
-    property string sessionsLastUpdatedText: ""
-    property bool sessionsLoading: false
-    property double sessionsLastFinishedAtMs: -1
-    property double sessionsLastCompletedAtMs: -1
-    property string sessionsLoadedCommandSource: ""
-    readonly property int sessionsStaleAfterMs: SessionRefreshPolicy.staleAfterMs(refreshIntervalSec)
-    readonly property int maximumSessions: Normalizer.maximumSessions
-    readonly property int sessionsCommandTimeoutMs: 60000
+    readonly property var sessions: sessionsController.sessions
+    readonly property string sessionsErrorText: sessionsController.errorText
+    readonly property string sessionsLastUpdatedText: sessionsController.lastUpdatedAtMs >= 0
+        ? i18n("Updated %1", Qt.formatDateTime(new Date(sessionsController.lastUpdatedAtMs), "hh:mm")) : ""
+    readonly property bool sessionsLoading: sessionsController.loading
     property string selectedProviderID: ""
     // Provider meter currently under the panel pointer. The plasmoid tooltip
     // narrows to this provider while it is set, so hovering one panel icon
@@ -247,47 +240,17 @@ PlasmoidItem {
         invalidateProviderRosterCache()
         scheduleUsageRefresh()
     }
-    onSessionsCommandSourceChanged: {
-        if (retireUsageCommandKind("sessions") > 0) {
-            sessionsLoading = false
-        }
-        // A failed scan must not keep a snapshot from another executable.
-        sessions = []
-        sessionsErrorText = ""
-        sessionsLastUpdatedText = ""
-        sessionsLastFinishedAtMs = -1
-        sessionsLastCompletedAtMs = -1
-        sessionsLoadedCommandSource = ""
-        if (expanded && sessionsSelected) {
-            Qt.callLater(refreshSessionsIfStale)
-        } else {
-            scheduleSessionsRefreshCheck()
-        }
-    }
-    onSessionsStaleAfterMsChanged: {
-        Qt.callLater(refreshSessionsIfStale)
-    }
     onExpandedChanged: {
         if (root.expanded) {
             Qt.callLater(refreshUsageOnOpen)
-            Qt.callLater(refreshSessionsIfStale)
             if (spendSelected) {
                 Qt.callLater(refreshSpendIfStale)
             }
-        } else {
-            scheduleSessionsRefreshCheck()
         }
     }
     onSpendSelectedChanged: {
         if (spendSelected && expanded) {
             Qt.callLater(refreshSpendIfStale)
-        }
-    }
-    onSessionsSelectedChanged: {
-        if (sessionsSelected && expanded) {
-            Qt.callLater(refreshSessionsIfStale)
-        } else {
-            scheduleSessionsRefreshCheck()
         }
     }
     onAutoSelectProviderChanged: updateSelectedProvider()
@@ -476,13 +439,6 @@ PlasmoidItem {
         }
 
         return parts.join(" ")
-    }
-
-    function buildSessionsCommand() {
-        if (commandPath.length === 0) {
-            return ""
-        }
-        return [shellQuote(commandPath), "sessions", "--json-v2"].join(" ")
     }
 
     function shellQuote(value) {
@@ -885,42 +841,6 @@ PlasmoidItem {
         return true
     }
 
-    function requestSessionsRefresh(force) {
-        var action = SessionRefreshPolicy.refreshAction({
-            commandSource: sessionsCommandSource,
-            loadedCommandSource: sessionsLoadedCommandSource,
-            loading: sessionsLoading,
-            visible: expanded && sessionsSelected,
-            force: force === true,
-            lastFinishedAtMs: sessionsLastFinishedAtMs,
-            lastCompletedAtMs: sessionsLastCompletedAtMs,
-            nowMs: Date.now(),
-            staleAfterMs: sessionsStaleAfterMs
-        })
-        if (action === SessionRefreshPolicy.keepAction) {
-            return false
-        }
-        if (action === SessionRefreshPolicy.missingCommandAction) {
-            sessionsLoading = false
-            sessionsErrorText = i18n("Set the codexbar command path in widget settings.")
-            return false
-        }
-
-        retireUsageCommandKind("sessions")
-        sessionsLoading = true
-        sessionsErrorText = ""
-        connectUsageCommand(
-            commandWithRunNonce(sessionsCommandSource),
-            buildCommandDescriptor("sessions", "", sessionsCommandTimeoutMs))
-        return true
-    }
-
-    function refreshSessionsIfStale() {
-        var started = requestSessionsRefresh(false)
-        scheduleSessionsRefreshCheck()
-        return started
-    }
-
     // Entering Usage & Spend refreshes stale history through the existing
     // hourly cost lifecycle (now also day-aware). Metric toggles reuse the
     // loaded payload and day inspection never calls here, so neither scans.
@@ -932,29 +852,7 @@ PlasmoidItem {
     }
 
     function refreshSessions() {
-        var started = requestSessionsRefresh(true)
-        scheduleSessionsRefreshCheck()
-        return started
-    }
-
-    function scheduleSessionsRefreshCheck() {
-        sessionsRefreshTimer.stop()
-        var delayMs = SessionRefreshPolicy.nextCheckDelay({
-            commandSource: sessionsCommandSource,
-            loadedCommandSource: sessionsLoadedCommandSource,
-            loading: sessionsLoading,
-            visible: expanded && sessionsSelected,
-            force: false,
-            lastFinishedAtMs: sessionsLastFinishedAtMs,
-            lastCompletedAtMs: sessionsLastCompletedAtMs,
-            nowMs: Date.now(),
-            staleAfterMs: sessionsStaleAfterMs
-        })
-        if (delayMs <= 0) {
-            return
-        }
-        sessionsRefreshTimer.interval = delayMs
-        sessionsRefreshTimer.start()
+        return sessionsController.refresh()
     }
 
     function parseOutput(stdoutText, stderrText) {
@@ -1311,13 +1209,6 @@ PlasmoidItem {
             costErrorText = i18n("Loading cost data timed out. Try again.")
             applyTokenCosts()
             return
-        case "sessions":
-            finishUsageCommandSource(sourceName)
-            sessionsLastFinishedAtMs = Date.now()
-            sessionsLoading = false
-            sessionsErrorText = i18n("Loading sessions timed out. Try again.")
-            scheduleSessionsRefreshCheck()
-            return
         case "providerConfig":
             finishUsageCommandSource(sourceName)
             failUsageRefresh(i18n("Loading provider configuration timed out. Try again."))
@@ -1492,39 +1383,6 @@ PlasmoidItem {
             costErrorText = ""
         }
         applyTokenCosts()
-    }
-
-    function parseSessionsOutput(stdoutText, stderrText) {
-        sessionsLastFinishedAtMs = Date.now()
-        sessionsLoading = false
-        var trimmed = stdoutText.trim()
-        if (trimmed.length === 0) {
-            sessionsErrorText = stderrText.trim().length > 0
-                ? boundedCliMessage(stderrText)
-                : i18n("codexbar sessions did not return JSON.")
-            return
-        }
-
-        var payload
-        try {
-            payload = JSON.parse(trimmed)
-        } catch (error) {
-            sessionsErrorText = i18n("Could not parse codexbar sessions JSON: %1", error.message)
-            return
-        }
-
-        // null means the payload shape is unsupported. It must not read as an
-        // empty successful snapshot, which would wipe the visible sessions.
-        var nextSessions = Normalizer.normalizeSessions(payload)
-        if (nextSessions === null) {
-            sessionsErrorText = i18n("codexbar sessions returned an unsupported JSON payload.")
-            return
-        }
-        sessions = nextSessions
-        sessionsErrorText = ""
-        sessionsLastCompletedAtMs = Date.now()
-        sessionsLoadedCommandSource = sessionsCommandSource
-        sessionsLastUpdatedText = i18n("Updated %1", Qt.formatDateTime(new Date(), "hh:mm"))
     }
 
     function sessionTitle(item, index) {
@@ -3820,9 +3678,6 @@ PlasmoidItem {
         selectedGlobalView = candidate
         selectedProviderID = ""
         selectionInitialized = true
-        if (candidate === "sessions") {
-            refreshSessionsIfStale()
-        }
         if (candidate === "spend") {
             refreshSpendIfStale()
         }
@@ -4167,11 +4022,6 @@ PlasmoidItem {
                 root.finishUsageCommandSource(sourceName)
                 root.parseCostOutput(stdoutText, stderrText, requestedHistoryDays)
                 return
-            case "sessions":
-                root.finishUsageCommandSource(sourceName)
-                root.parseSessionsOutput(stdoutText, stderrText)
-                root.scheduleSessionsRefreshCheck()
-                return
             case "providerConfig":
                 root.finishUsageCommandSource(sourceName)
                 root.parseProviderConfigOutput(descriptor, stdoutText, stderrText)
@@ -4240,16 +4090,6 @@ PlasmoidItem {
     }
 
     Timer {
-        id: sessionsRefreshTimer
-
-        interval: root.sessionsStaleAfterMs
-        repeat: false
-        running: false
-        triggeredOnStart: false
-        onTriggered: root.refreshSessionsIfStale()
-    }
-
-    Timer {
         id: commandTimeoutTimer
 
         interval: 1000
@@ -4287,6 +4127,14 @@ PlasmoidItem {
             }
             root.finishNotificationCommandSource(sourceName)
         }
+    }
+
+    Controllers.SessionsController {
+        id: sessionsController
+
+        commandPath: root.commandPath
+        refreshIntervalSec: root.refreshIntervalSec
+        active: root.expanded && root.sessionsSelected
     }
 
     Controllers.WidgetUpdateController {

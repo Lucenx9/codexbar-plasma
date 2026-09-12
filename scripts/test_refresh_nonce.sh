@@ -12,7 +12,7 @@ require_in_surface applet "function commandWithRunNonce(command)"
 require_in_surface applet "function withRunNonce(command, serial)"
 require_in_surface applet "commandWithRunNonce(commandSource)"
 require_in_surface applet "commandWithRunNonce(costCommandSource)"
-require_in_surface applet "commandWithRunNonce(sessionsCommandSource)"
+require_in_surface applet "CommandLedger.withRunNonce(commandSource, runSerial)"
 require_in_surface applet "commandWithRunNonce(providerConfigCommandSource)"
 # The nonce alone does not drop a late result; the ledger does, by no longer
 # holding the retired source name. Assert that routing reads the ledger and not

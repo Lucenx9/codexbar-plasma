@@ -51,6 +51,17 @@ For those, use `make install` or `./install.sh`. Release-package users can use
   existing privacy and notification-deduplication rules. The module never reads
   the applet root or writes configuration. `UpdateLogic.js` keeps the pure
   scheduling and result decisions shared with settings.
+- `contents/ui/controllers/SessionsController.qml` owns the Sessions executable
+  source, request ledger, timeout, refresh timer, snapshot, and attempt/success
+  timestamps. Its inputs are the CLI path, refresh interval, and whether the
+  Sessions tab is open. `refresh()` requests a manual scan; read-only outputs
+  expose normalized sessions, loading, error text, and the last successful
+  timestamp. Hiding the tab stops automatic scheduling while an already running
+  scan may finish. A command change retires the previous request and clears its
+  snapshot before scheduling work for the new command. `main.qml` supplies the
+  inputs and adapts the outputs for the existing view and privacy presentation.
+  `SessionRefreshPolicy.js` owns pure scheduling decisions; `SessionResponse.js`
+  bounds and classifies CLI output through the existing session normalizer.
 - `contents/ui/components/CompactRepresentation.qml` renders the panel;
   `FullRepresentation.qml` in the same directory renders the popup. Components
   are presentation-only and receive normalized data plus an explicit parent API
@@ -322,13 +333,21 @@ prompt commands with synthetic dialog and CLI processes and shortened timeouts.
 It checks cancellation, process termination, late submission, and the total
 deadline needed to preserve the full save timeout.
 
-`tests/test_session_context.py` exercises the production Sessions request and
-reply handlers. Failed scans record when the attempt finishes, separately from
-successful snapshot completion, so popup/tab reentry respects the retry cooldown.
-The full cooldown starts at the reply or timeout, even after a long scan.
-Manual retry bypasses that cooldown, and a command change clears it. The pure
-policy and timer share the same activity baseline; changing visibility does not
-extend the deadline or mark retained sessions fresh.
+`tests/test_sessions_controller.py` instantiates the production Sessions module
+with temporary synthetic CLI executables and real Plasma DataSource/timers.
+It checks visible refresh scheduling, interval changes, hidden and queued work,
+duplicate requests, command isolation, retained snapshots, successful empty
+responses, and the production 60-second timeout followed by recovery. Failed
+scans record attempt completion separately from successful snapshot completion;
+the full retry cooldown starts at the reply or timeout, even after a long scan.
+Manual retry bypasses that cooldown, and a command change clears it. The test
+adds about 80 seconds to `make check`, without changing private timers/state or
+using provider credentials. Missing optional KDE modules are reported as a local
+skip and rejected by `QML_TEST_REQUIRE_NO_SKIPS=1`. Surface checks preserve input
+wiring, process ownership, and request registration/retirement ordering.
+`tests/tst_session_response.qml` directly checks bounded, redacted response
+outcomes and distinguishes failed output from a confirmed empty snapshot;
+`tests/tst_session_refresh_policy.qml` checks exact scheduling boundaries.
 
 `tests/test_widget_update_controller.py` instantiates the production updater
 module and runs temporary executable fixtures through Plasma's real DataSource.
