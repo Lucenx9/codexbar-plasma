@@ -118,9 +118,12 @@ refresh updates healthy providers independently, and a successful refresh remove
 the retained-data indication. Retained data never generates quota, pace, reset,
 or status notifications, and its run-out forecasts are suppressed. If a failed
 quota response includes newly fetched service status, that status still updates
-and can trigger incident notifications independently of the retained quotas. Failed
-refreshes stop reusing measurements older than 24 hours, and a quota measurement
-older than 24 hours never stamps a new snapshot as fresh. A failed refresh that
+and can trigger incident notifications independently of the retained quotas.
+Stale quotas preserve the previous quota, pace, and reset notification state,
+even when the CLI reports success with old quotas and current status. If no fresh
+quota has been seen, the first fresh measurement establishes that state silently.
+Failed refreshes stop reusing measurements older than 24 hours, and a quota
+measurement older than 24 hours never stamps a new snapshot as fresh. A failed refresh that
 reports a different account than the retained measurement does not reuse it; a
 failure that reports no account still does. Restored cache entries hold no
 account, so an early failed refresh keeps them only for a provider whose

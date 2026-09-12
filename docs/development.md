@@ -100,7 +100,10 @@ The restarted fixture delays CLI responses beyond the runner's maximum allowed
 scenario duration, proving that the second process displays persisted quotas.
 Quota freshness and service-status evidence are independent: retained rows never
 reach the notification planner, while a status record from the current response
-still can. Retaining or expiring quotas must preserve that current status; a
+still can. The observation's `usageStale` flag keeps quota, pace, and reset
+baselines unchanged, even when the CLI reports no error. Stale observations do
+not prime a new quota scope; its first fresh measurement primes silently.
+Retaining or expiring quotas must preserve that current status; a
 later response without status marks the retained incident as unknown to the planner.
 Incident selection, tooltips, and provider badges/banners also exclude unknown
 status instead of presenting a retained outage as current.
@@ -258,6 +261,11 @@ Read its output for tool failures and skips. CI uses the pinned Plasma image in
 [the workflow](../.github/workflows/ci.yml), with explicit import warnings and
 QtTests configured to reject skips. A local machine missing QML modules may
 provide less coverage; report what actually ran.
+
+All CI container jobs pin the official KDE neon User Edition image by digest.
+If the registry removes that manifest, resolve the official `user` tag again,
+verify its Linux/amd64 Ubuntu 24.04 image metadata, and update every container
+pin together. Validate the replacement through the full check and smoke jobs.
 
 `tests/test_account_refresh.py` runs the production account-selection functions
 and command binding in Qt's event loop. It counts refresh requests for cached
