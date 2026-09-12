@@ -22,6 +22,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Reserve initial readout row height in interactive charts so that hovering
+  a point for the first time does not cause a vertical layout shift.
 - Preserve ampersands and angle brackets in provider selection and settings
   checkbox labels when KDE styles process keyboard mnemonics.
 - Preserve quota, pace, and reset notification baselines when a successful CLI
