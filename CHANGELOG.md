@@ -22,6 +22,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep panel run-out countdowns tied to each forecast's receipt time, so
+  selecting a cached account cannot restart an old or expired prediction.
 - Keep last-known quotas when a provider error has an empty or malformed message,
   showing a generic error while healthy providers and current status still update.
 - Preserve healthy usage records after a malformed sibling in provider-scoped
