@@ -217,7 +217,8 @@ Provider-specific editable settings depend on the official CLI contract.
   Revisiting **Usage & Spend** refreshes history that became stale since the last
   scan, and a spend view left open across midnight refreshes once for the new day.
   Switching the Cost/Tokens metric or inspecting a day reuses the loaded data and
-  starts no scan.
+  starts no scan. Cost settings applied together start a single scan using the
+  final executable, provider, and history range; disabling costs starts none.
 - Token breakdowns, model summaries, recent daily spend, cost history bars, and
   average cost per 1M tokens, with a configurable cost history window.
 - Token, request, and point counts use the current language's singular and

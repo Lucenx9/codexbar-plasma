@@ -22,6 +22,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Coalesce cost-setting changes applied together into one scan using the final
+  settings, avoiding duplicate scans that immediately replace each other.
 - Keep panel run-out countdowns tied to each forecast's receipt time, so
   selecting a cached account cannot restart an old or expired prediction.
 - Keep last-known quotas when a provider error has an empty or malformed message,

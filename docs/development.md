@@ -113,6 +113,12 @@ external effects, and cheapest behavioral test. Read the existing implementation
 and tests. Preserve compatibility and unexpected behavior until evidence or the
 request shows it should change.
 
+Cost-source changes retire obsolete commands synchronously and queue
+`refreshCost` directly through `Qt.callLater`, which coalesces settings applied
+in the same event-loop turn. `tests/test_cost_context.py` exercises the production
+bindings, refresh policy, and command ledger to verify one final-context scan,
+disabled-cost behavior, and immediate manual refreshes.
+
 When multiple pages consume one CLI envelope, share the bounded record/envelope
 contract and keep page-specific projections separate. Avoid both duplicate raw
 parsing and one lossy result that erases different UI semantics. For a new CLI
