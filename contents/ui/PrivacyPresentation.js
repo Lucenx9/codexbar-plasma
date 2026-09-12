@@ -51,6 +51,7 @@ function quota(row, enabled, label) {
         pacePercent: numeric(row, "pacePercent", -1),
         paceOnTop: field(row, "paceOnTop", false) === true,
         paceEtaSeconds: numeric(row, "paceEtaSeconds", 0),
+        paceObservedAtMs: numeric(row, "paceObservedAtMs", NaN),
         resetsAt: timestamp(field(row, "resetsAt", "")),
         resetDescription: "",
         reset: "",

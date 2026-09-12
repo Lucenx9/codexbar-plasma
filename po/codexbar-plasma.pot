@@ -1114,7 +1114,7 @@ msgstr ""
 msgid "Set the codexbar command path in Diagnostics."
 msgstr ""
 
-#: contents/ui/configProviders.qml
+#: contents/ui/configProviders.qml contents/ui/main.qml
 msgid "codexbar command failed."
 msgstr ""
 
