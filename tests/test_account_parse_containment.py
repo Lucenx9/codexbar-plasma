@@ -15,8 +15,7 @@ from qml_surfaces import Surface
 FUNCTIONS = (
     "normalizeProvider", "presentProviderSnapshot", "presentUsageWindow", "planText", "capitalize",
     "isCliRecord", "hasOwnKey", "copyObject", "accountLabel", "providerMapKey",
-    "providerKey", "boundedCliMessage", "finishUsageCommandSource",
-    "parseProviderFallbackOutput", "normalizedProviderID", "providerErrorPayload",
+    "providerKey", "boundedCliMessage", "normalizedProviderID", "providerErrorPayload",
     "replaceProviderSnapshot",
 )
 
@@ -45,11 +44,6 @@ TestCase {
             property double testNowMs: Date.UTC(2026, 8, 12, 12)
             property var providerDisplayNames: ({})
             property string source: ""
-            property var fallbackCompletions: []
-            property QtObject usageSource: QtObject {
-                function disconnectSource(sourceName) {}
-            }
-
             SOURCE_FUNCTIONS
 
             function i18n(text) { return text; }
@@ -61,9 +55,6 @@ TestCase {
             function rateWindowLabel() { return ""; }
             function providerTitle(providerID) { return providerID; }
             function providerCostSection(providerID, cost) {
-                if (cost && cost.used === 999) {
-                    throw new Error("synthetic presentation failure");
-                }
                 return null;
             }
             function resetCreditsSection() { return null; }
@@ -72,19 +63,7 @@ TestCase {
             function safeStatusUrl() { return ""; }
             function providerChangelogUrl() { return ""; }
             function statusText() { return ""; }
-            function completeProviderFallbackSlot(sourceName, item) {
-                fallbackCompletions = fallbackCompletions.concat({sourceName: sourceName, item: item});
-            }
         }
-    }
-
-    function malformedAccount() {
-        // Inject a failure at the presentation boundary to keep testing the
-        // parser's per-record exception containment as normalization improves.
-        return {
-            provider: "codex", account: "broken",
-            usage: {providerCost: {used: 999}}
-        };
     }
 
     function deliver(applet, payload) {
@@ -124,55 +103,6 @@ TestCase {
             error: "Synthetic failure", account: "", rows: []}], deadline);
         compare(retained[0].lastGoodAtMs, receivedAtMs);
         compare(UsageCache.expiredProviderIDs(retained, deadline + 1), ["codex"]);
-    }
-
-    function deliverFallback(applet, payload) {
-        var descriptor = CommandLedger.descriptor("providerFallback", "codex", 1000, 60000, 60000);
-        applet.activeCommandDescriptors = CommandLedger.opened(
-            applet.activeCommandDescriptors, "fallback-run", descriptor);
-        applet.parseProviderFallbackOutput("fallback-run", "codex", JSON.stringify(payload), "");
-        compare(CommandLedger.find(applet.activeCommandDescriptors, "fallback-run"), null);
-        compare(applet.fallbackCompletions.length, 1);
-        compare(applet.fallbackCompletions[0].sourceName, "fallback-run");
-        return applet.fallbackCompletions[0].item;
-    }
-
-    function test_fallbackKeepsHealthyRecordsRegardlessOfMalformedSiblingOrder_data() {
-        return [
-            {tag: "malformed-first", malformedIndex: 0, used: 72},
-            {tag: "malformed-middle", malformedIndex: 1, used: 72},
-            {tag: "malformed-last", malformedIndex: 2, used: 72},
-            {tag: "measured-zero", malformedIndex: 0, used: 0}
-        ];
-    }
-
-    function test_fallbackKeepsHealthyRecordsRegardlessOfMalformedSiblingOrder(data) {
-        var applet = createTemporaryObject(harness, this, {});
-        verify(applet !== null);
-        var records = [
-            {provider: "codex", error: {message: "Synthetic unavailable account"}},
-            // A scoped response may only publish to the requested provider.
-            {provider: "claude", account: "healthy", usage: {primary: {usedPercent: data.used}}}
-        ];
-        records.splice(data.malformedIndex, 0, malformedAccount());
-        var result = deliverFallback(applet, records);
-        verify(result !== null);
-        compare(result.provider, "codex");
-        compare(result.accountKey, "healthy");
-        compare(result.error, "");
-        compare(result.rows.length, 1);
-        verify(result.rows[0].hasPercent);
-        compare(result.rows[0].usedPercent, data.used);
-    }
-
-    function test_allMalformedFallbackRecordsCompleteWithScopedError() {
-        var applet = createTemporaryObject(harness, this, {});
-        verify(applet !== null);
-        var result = deliverFallback(applet, [malformedAccount(), malformedAccount()]);
-        verify(result !== null);
-        compare(result.provider, "codex");
-        verify(result.error.length > 0);
-        compare(result.rows.length, 0);
     }
 
     function test_malformedOptionalLoginMethodKeepsTheAccount() {

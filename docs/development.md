@@ -37,9 +37,9 @@ For those, use `make install` or `./install.sh`. Release-package users can use
 
 ## Ownership and implementation
 
-- `contents/ui/main.qml` owns applet processes, refresh/account coordination,
-  selected state, configuration updates, and external effects. Its adapters
-  supply the panel and popup.
+- `contents/ui/main.qml` owns configuration watching, notification delivery,
+  account coordination, selected state, configuration updates, and external
+  effects. Its adapters supply the panel and popup.
 - `contents/ui/controllers/WidgetUpdateController.qml` owns the widget updater's
   executable source, per-request nonce, captured install mode, timeout, queued
   install request, and retry/interval timers. It receives update settings and
@@ -62,6 +62,18 @@ For those, use `make install` or `./install.sh`. Release-package users can use
   inputs and adapts the outputs for the existing view and privacy presentation.
   `SessionRefreshPolicy.js` owns pure scheduling decisions; `SessionResponse.js`
   bounds and classifies CLI output through the existing session normalizer.
+- `contents/ui/controllers/UsageController.qml` owns usage commands, provider
+  discovery, the cached roster, bounded fallback queue, nonces, deadlines, and
+  automatic/popup refresh scheduling. Inputs are CLI settings, selected accounts,
+  provider order, configuration revision/checksum, and popup visibility. Changed
+  request inputs synchronously retire old work and coalesce a replacement.
+  Manual refresh bypasses the roster cache; periodic refresh waits for pending
+  usage work. Read-only outputs expose loading, errors, provider display names,
+  and refresh timestamps. Signals deliver bounded snapshots, failed refreshes,
+  and confirmed empty rosters. `main.qml` presents the snapshots, reconciles and
+  persists quotas, and coordinates accounts and notifications. `UsageResponse.js`
+  contains bounded response classification and per-record normalization; the
+  controller supplies the receipt time and localizes failure outcomes.
 - `contents/ui/controllers/AccountsController.qml` owns account discovery's
   executable source, request ledger, nonce, deadlines, per-provider loading and
   errors, and last successful lists. Inputs are the CLI path, source, and status
@@ -182,13 +194,13 @@ Extraction must hide complexity, not merely reduce line count.
   quota can satisfy the provider meter condition. Direct missing quotas stay omitted; `runOut` depends on `paceWarningActive`. Panel visibility,
   order, and metric settings preserve the minute clock and icon fallback and
   must not fetch data or change notification state.
-- `main.qml` stamps each normalized quota row with its local forecast receipt
-  time. Cached account selection and privacy projection preserve it, so a later
-  refresh cannot restart another row's run-out countdown. This timestamp stays
+- `ProviderSnapshot.js` stamps normalized quota rows with the receipt time
+  supplied by their QML owner. Cached account selection and privacy projection
+  preserve it, so a later refresh cannot restart another row's run-out countdown. This timestamp stays
   in memory; it is neither a CLI field nor part of the persisted quota cache.
-- `main.qml` also stamps normalized provider snapshots with their local usage
-  receipt time. `UsageCache.js` uses that original time when a measurement
-  timestamp is missing, invalid, or future at receipt, so selecting a cached
+- `ProviderSnapshot.js` also preserves the supplied local usage receipt time
+  on normalized provider snapshots. `UsageCache.js` uses that original time when
+  a measurement timestamp is missing, invalid, or future at receipt, so selecting a cached
   account cannot renew its retention deadline. The receipt field stays in
   memory; persistence continues to store only the resolved measurement time.
 - `PanelTextFit.js` composes the optional panel text from the segments the
@@ -325,16 +337,22 @@ If the registry removes that manifest, resolve the official `user` tag again,
 verify its Linux/amd64 Ubuntu 24.04 image metadata, and update every container
 pin together. Validate the replacement through the full check and smoke jobs.
 
-`tests/test_account_refresh.py` runs the production account-selection functions
-and command binding in Qt's event loop. It counts refresh requests for cached
-and uncached accounts in single-provider and aggregate modes; CLI effects are
-replaced by observations at the refresh boundary.
+`tests/test_account_refresh.py` runs production account-selection functions
+against the real usage controller and an isolated CLI in Qt's event loop. It
+counts refresh starts for cached/uncached accounts in single-provider and
+aggregate modes. `tests/test_account_parse_containment.py` checks account
+snapshot presentation and selection freshness.
 
-`tests/test_account_parse_containment.py` checks account snapshot presentation,
-selection freshness, and provider-scoped usage fallback containment. Malformed
-records before and after healthy siblings preserve measured-zero quotas,
-scoped provider identity, command retirement, and exactly one fallback
-completion even when every record fails normalization.
+`tests/test_usage_controller.py` exercises the production executable source,
+provider discovery/cache, bounded fallback concurrency, exact account/source
+arguments, batched setting changes, retired replies, empty rosters, automatic
+refresh, and recovery after the production 120-second deadlines. The three
+command kinds time out concurrently; the test adds about 145 seconds to
+`make check`. Missing optional KDE modules are reported as local skips and
+rejected by `QML_TEST_REQUIRE_NO_SKIPS=1`. `tests/tst_usage_response.qml` covers
+malformed siblings and identities, response bounds, measured zeros, scoped
+provider identity, deduplication, and redaction directly at the pure interface.
+Surface checks protect process ownership and registration/retirement ordering.
 
 `tests/test_accounts_controller.py` instantiates the production controller with
 isolated CLI processes and real Plasma DataSource/timers. It covers concurrent
@@ -523,6 +541,8 @@ and activation through both text and meters. The live adapter limits meters to
 four; a renderer stress test exceeds that limit to verify the zero-width guard
 independently of theme dimensions. Early preview exits report the process exit
 code in addition to the log path.
+The staged smoke package exposes a temporary handle to the usage lifecycle for
+synthetic clock and deadline probes; the installed production API stays read-only.
 `usage-retention` exercises failed/partial refreshes, recovery, notification
 suppression, and cache invalidation. It also verifies multiple extra windows
 through cache decode, QML normalization, and re-encoding, including extra-only

@@ -19,16 +19,13 @@ import "CommandLedger.js" as CommandLedger
 import "ProviderSnapshot.js" as ProviderSnapshot
 import "CostPresentation.js" as CostPresentation
 import "OverviewProviders.js" as OverviewProviders
-import "ProviderFallbackQueue.js" as ProviderFallbackQueue
 import "ProviderIdentity.js" as ProviderIdentity
 import "PrivacyPresentation.js" as PrivacyPresentation
 import "ProviderNormalizer.js" as Normalizer
 import "ProviderOrder.js" as ProviderOrder
-import "ProviderRosterCache.js" as ProviderRosterCache
 import "UsageCache.js" as UsageCache
 import "QuotaThresholds.js" as QuotaThresholds
 import "SafeText.js" as SafeText
-import "PopupRefreshPolicy.js" as PopupRefreshPolicy
 import "ThemeContrast.js" as ThemeContrast
 
 PlasmoidItem {
@@ -102,38 +99,30 @@ PlasmoidItem {
     readonly property int maxOverviewProviders: 3
     property int providerConfigRevision: boundedConfigRevision(Plasmoid.configuration.providerConfigRevision)
     property var providers: []
-    property var providerDisplayNames: ({})
-    property string errorText: ""
+    readonly property var providerDisplayNames: usageController.providerDisplayNames
+    readonly property string errorText: usageController.errorText
     property string lastUpdatedText: ""
     property bool usageLifecycleInitialized: false
     readonly property string usageIdentityContext: JSON.stringify([
         commandPath, provider, source, providerConfigRevision])
-    property bool loading: false
+    readonly property bool loading: usageController.loading
     // Reset labels and run-out durations keep moving even when automatic CLI
     // refresh is disabled. Each row's receipt time anchors forecast durations;
     // unrelated refreshes must not restart that countdown.
     property double panelClockMs: Date.now()
-    property double usageLastRefreshAttemptAtMs: -1
-    property double usageLastCompletedAtMs: -1
     readonly property int panelClockIntervalMs: 60000
-    property string commandSource: buildCommand()
-    property string providerConfigCommandSource: buildProviderConfigCommand()
+    readonly property string commandSource: usageController.commandSource
     property string providerConfigWatchCommand: buildProviderConfigWatchCommand()
     // The watch poll this instance currently follows. A reply under any other
     // source name belongs to a retired command and must be disconnected, not
     // left running on every interval tick.
     property string connectedProviderConfigWatchCommand: ""
     property string providerConfigStamp: ""
-    property var providerRosterCache: null
-    property bool usageRefreshScheduled: false
     readonly property int providerConfigWatchIntervalMs: 60000
     property int commandRunSerial: 0
     property var activeCommandDescriptors: ({})
     readonly property int defaultCommandTimeoutMs: 120000
-    readonly property int maximumProviderSnapshots: Normalizer.maximumProviderSnapshots
     readonly property int maximumCostHistoryPoints: Normalizer.maximumCostHistoryPoints
-    readonly property int maximumConcurrentProviderFallbackCommands: 8
-    property var providerFallbackState: null
     readonly property bool costLoading: costController.loading
     readonly property var tokenCosts: presentTokenCosts(costController.costs)
     property var costTrustNoticeStates: ({})
@@ -195,26 +184,15 @@ PlasmoidItem {
     // two scales apart is what makes the primary meters read as primary.
     readonly property real compactMeterTrackHeight: Math.round(Kirigami.Units.gridUnit * 0.28)
 
-    onUsageIdentityContextChanged: invalidateUsageData()
-    onCommandSourceChanged: scheduleUsageRefresh()
+    onUsageIdentityContextChanged: {
+        invalidateUsageData()
+        scheduleUsageRefresh()
+    }
     onProviderConfigWatchCommandChanged: reconnectProviderConfigWatcher()
     onProviderOrderRawChanged: providers = ProviderOrder.orderedItems(
         providers, providerOrderRaw)
-    onProviderConfigCommandSourceChanged: {
-        invalidateProviderRosterCache()
-        scheduleUsageRefresh()
-    }
     onCostHistoryDaysChanged: applyTokenCosts()
     onTokenCostsChanged: applyTokenCosts()
-    onProviderConfigRevisionChanged: {
-        invalidateProviderRosterCache()
-        scheduleUsageRefresh()
-    }
-    onExpandedChanged: {
-        if (root.expanded) {
-            Qt.callLater(refreshUsageOnOpen)
-        }
-    }
     onAutoSelectProviderChanged: updateSelectedProvider()
     onOverviewProviderIDsRawChanged: updateSelectedProvider()
     onOverviewAvailableChanged: reconcileGlobalViewAvailability()
@@ -251,56 +229,6 @@ PlasmoidItem {
         refreshNow(false)
     }
 
-    function buildCommand() {
-        if (commandPath.length === 0) {
-            return ""
-        }
-
-        var parts = [
-            shellQuote(commandPath),
-            "usage",
-            "--format",
-            "json",
-            "--json-only"
-        ]
-
-        if (provider.length > 0) {
-            parts.push("--provider")
-            parts.push(shellQuote(provider))
-            var selectedAccount = selectedAccountForProvider(provider)
-            if (selectedAccount.length > 0) {
-                parts.push("--account")
-                parts.push(shellQuote(selectedAccount))
-            }
-        }
-
-        if (source.length > 0) {
-            parts.push("--source")
-            parts.push(shellQuote(source))
-        }
-
-        if (includeStatus) {
-            parts.push("--status")
-        }
-
-        return parts.join(" ")
-    }
-
-    function buildProviderConfigCommand() {
-        if (commandPath.length === 0) {
-            return ""
-        }
-
-        return [
-            shellQuote(commandPath),
-            "config",
-            "providers",
-            "--format",
-            "json",
-            "--json-only"
-        ].join(" ")
-    }
-
     function buildProviderConfigWatchCommand() {
         var script = [
             "config=${CODEXBAR_CONFIG:-};",
@@ -316,35 +244,6 @@ PlasmoidItem {
             "if [ -r \"$config\" ]; then cksum \"$config\"; else printf missing; fi"
         ].join(" ")
         return ["sh", "-c", shellQuote(script)].join(" ")
-    }
-
-    function buildProviderUsageCommand(providerID) {
-        var parts = [
-            shellQuote(commandPath),
-            "usage",
-            "--provider",
-            shellQuote(providerCliArgument(providerID)),
-            "--format",
-            "json",
-            "--json-only"
-        ]
-
-        if (source.length > 0) {
-            parts.push("--source")
-            parts.push(shellQuote(source))
-        }
-
-        var selectedAccount = selectedAccountForProvider(providerID)
-        if (selectedAccount.length > 0) {
-            parts.push("--account")
-            parts.push(shellQuote(selectedAccount))
-        }
-
-        if (includeStatus) {
-            parts.push("--status")
-        }
-
-        return parts.join(" ")
     }
 
     function shellQuote(value) {
@@ -403,42 +302,9 @@ PlasmoidItem {
         return CommandLedger.withRunNonce(command, commandRunSerial)
     }
 
-    function connectUsageCommand(sourceName, descriptor) {
-        if (sourceName.length === 0) {
-            return
-        }
-
-        activeCommandDescriptors = CommandLedger.opened(
-            activeCommandDescriptors, sourceName, descriptor)
-        usageSource.connectSource(sourceName)
-    }
-
     function buildCommandDescriptor(kind, providerID, timeoutMs) {
         return CommandLedger.descriptor(
             kind, providerID, Date.now(), timeoutMs, defaultCommandTimeoutMs)
-    }
-
-    function providerRosterContext() {
-        return {
-            commandSource: providerConfigCommandSource,
-            revision: providerConfigRevision,
-            stamp: providerConfigStamp
-        }
-    }
-
-    function buildProviderConfigCommandDescriptor() {
-        var descriptor = buildCommandDescriptor("providerConfig", "")
-        descriptor.providerRosterContext = providerRosterContext()
-        return descriptor
-    }
-
-    function finishUsageCommandSource(sourceName) {
-        if (sourceName.length === 0) {
-            return
-        }
-
-        usageSource.disconnectSource(sourceName)
-        activeCommandDescriptors = CommandLedger.closed(activeCommandDescriptors, sourceName)
     }
 
     function connectNotificationCommand(sourceName) {
@@ -460,49 +326,12 @@ PlasmoidItem {
         activeCommandDescriptors = CommandLedger.closed(activeCommandDescriptors, sourceName)
     }
 
-    // Retiring by kind is what makes a late reply harmless: the source name
-    // leaves the ledger, so routing no longer recognises it.
-    function retireUsageCommandKind(kind) {
-        var sourceNames = CommandLedger.sourcesOfKind(activeCommandDescriptors, kind)
-        for (var i = 0; i < sourceNames.length; i++) {
-            finishUsageCommandSource(sourceNames[i])
-        }
-        return sourceNames.length
+    function refreshNow(bypassProviderRosterCache) {
+        usageController.refresh(bypassProviderRosterCache)
     }
 
     function scheduleUsageRefresh() {
-        if (usageRefreshScheduled) {
-            return
-        }
-        usageRefreshScheduled = true
-        Qt.callLater(function() {
-            if (!root.usageRefreshScheduled) {
-                return
-            }
-            root.usageRefreshScheduled = false
-            root.refreshNow(false)
-        })
-    }
-
-    function refreshNow(bypassProviderRosterCache) {
-        usageRefreshScheduled = false
-        retireUsageCommands()
-
-        if (commandSource.length === 0) {
-            failUsageRefresh(i18n("Set the codexbar command path in widget settings."))
-            return
-        }
-
-        usageLastRefreshAttemptAtMs = Date.now()
-        loading = true
-        errorText = ""
-        if (canUseProviderFallback()) {
-            startProviderFallback(bypassProviderRosterCache === true)
-            return
-        }
-        connectUsageCommand(
-            commandWithRunNonce(commandSource),
-            buildCommandDescriptor("usage", ""))
+        usageController.scheduleRefresh()
     }
 
     function retryUsage() {
@@ -513,7 +342,6 @@ PlasmoidItem {
 
     function markUsageSnapshotReceived() {
         var nowMs = Date.now()
-        usageLastCompletedAtMs = nowMs
         panelClockMs = nowMs
     }
 
@@ -531,7 +359,7 @@ PlasmoidItem {
         if (!usageLifecycleInitialized) {
             return
         }
-        retireUsageCommands()
+        usageController.reset()
         providers = providerID ? providers.map(function(item) {
             return item.provider === providerID ? root.normalizeProvider({ provider: providerID }) : item
         }) : []
@@ -546,9 +374,7 @@ PlasmoidItem {
         if (!providerID) {
             accountsController.reset()
         }
-        usageLastCompletedAtMs = -1
         lastUpdatedText = ""
-        loading = false
     }
 
     function restoreUsageCache() {
@@ -608,8 +434,6 @@ PlasmoidItem {
             Plasmoid.configuration.usageCache = UsageCache.encode(providers, context, nowMs)
         }
         panelClockMs = nowMs
-        errorText = message
-        loading = false
     }
 
     function expireStaleUsage(nowMs) {
@@ -652,31 +476,6 @@ PlasmoidItem {
             : i18n("Updated %1", Qt.formatDateTime(new Date(item.lastGoodAtMs), "hh:mm"))
     }
 
-    function refreshUsageOnOpen() {
-        if (PopupRefreshPolicy.shouldRefresh({
-            enabled: refreshOnOpen,
-            visible: expanded,
-            loading: loading,
-            scheduled: usageRefreshScheduled,
-            commandSource: commandSource,
-            lastAttemptAtMs: usageLastRefreshAttemptAtMs,
-            lastCompletedAtMs: usageLastCompletedAtMs,
-            nowMs: Date.now(),
-            refreshIntervalSeconds: refreshIntervalSec
-        })) {
-            refreshNow(false)
-        }
-    }
-
-    function retireUsageCommands() {
-        retireUsageCommandKind("usage")
-        retireUsageCommandKind("providerConfig")
-        retireUsageCommandKind("providerFallback")
-        // Account loads are user-triggered; keep them alive across usage refreshes
-        // so their replies can still populate the account picker.
-        providerFallbackState = null
-    }
-
     function reconnectProviderConfigWatcher() {
         if (connectedProviderConfigWatchCommand.length > 0
                 && connectedProviderConfigWatchCommand !== providerConfigWatchCommand) {
@@ -696,7 +495,6 @@ PlasmoidItem {
         }
         if (providerConfigStamp.length === 0) {
             providerConfigStamp = stamp
-            invalidateProviderRosterCache()
             restoreUsageCache()
             return
         }
@@ -704,7 +502,6 @@ PlasmoidItem {
             return
         }
         providerConfigStamp = stamp
-        invalidateProviderRosterCache()
         invalidateUsageData()
         scheduleUsageRefresh()
     }
@@ -722,275 +519,6 @@ PlasmoidItem {
 
     function refreshSessions() {
         return sessionsController.refresh()
-    }
-
-    function parseOutput(stdoutText, stderrText) {
-        var trimmed = stdoutText.trim()
-        if (trimmed.length === 0) {
-            if (canUseProviderFallback()) {
-                startProviderFallback()
-                return
-            }
-            failUsageRefresh(stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("codexbar did not return JSON."))
-            return
-        }
-
-        var payload
-        try {
-            payload = JSON.parse(trimmed)
-        } catch (error) {
-            failUsageRefresh(i18n("Could not parse codexbar JSON: %1", error.message))
-            return
-        }
-
-        var items = Array.isArray(payload) ? payload : [payload]
-        var nextProviders = []
-        var itemLimit = Math.min(items.length, maximumProviderSnapshots)
-        for (var i = 0; i < itemLimit; i++) {
-            // A malformed provider must not abort the whole refresh or leave
-            // loading set: skip it and keep the healthy providers. The id
-            // screen stays inside the guard so a throwing identity read drops
-            // only its own provider instead of stranding the whole run.
-            try {
-                if (!isCliRecord(items[i]) || normalizedProviderID(items[i].provider).length === 0) {
-                    continue
-                }
-                nextProviders.push(normalizeProvider(items[i]))
-            } catch (providerError) {
-                continue
-            }
-        }
-
-        nextProviders = ProviderOrder.orderedItems(
-            Normalizer.dedupeProviderSnapshots(nextProviders),
-            providerOrderRaw)
-
-        if (nextProviders.length === 0) {
-            failUsageRefresh(stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("codexbar did not return provider data."))
-            return
-        }
-        commitUsageSnapshot(nextProviders)
-        errorText = ""
-        loading = false
-    }
-
-    function hasSelectedAccountOverrides() {
-        for (var providerID in selectedAccounts) {
-            if (hasOwnKey(selectedAccounts, providerID)
-                && String(selectedAccounts[providerID] || "").length > 0) {
-                return true
-            }
-        }
-        return false
-    }
-
-    function canUseProviderFallback() {
-        return source.length === 0 || hasSelectedAccountOverrides()
-    }
-
-    function startProviderFallback(bypassProviderRosterCache) {
-        retireUsageCommandKind("usage")
-        if (provider.length > 0) {
-            startProviderFallbackForProviders([providerKey(provider)])
-            return
-        }
-
-        if (bypassProviderRosterCache !== true) {
-            var cachedProviderIDs = ProviderRosterCache.read(
-                providerRosterCache, providerRosterContext())
-            if (cachedProviderIDs !== null) {
-                startProviderFallbackForProviders(cachedProviderIDs)
-                return
-            }
-        }
-
-        if (providerConfigCommandSource.length === 0) {
-            failUsageRefresh(i18n("codexbar did not return JSON."))
-            return
-        }
-
-        connectUsageCommand(
-            commandWithRunNonce(providerConfigCommandSource),
-            buildProviderConfigCommandDescriptor())
-    }
-
-    function invalidateProviderRosterCache() {
-        providerRosterCache = null
-    }
-
-    function parseProviderConfigOutput(descriptor, stdoutText, stderrText) {
-        // Config reads are asynchronous. A reply from an older command,
-        // revision, or checksum must not seed a cache for the current context.
-        if (!descriptor || !ProviderRosterCache.responseContextsMatch(
-                descriptor.providerRosterContext, providerRosterContext())) {
-            scheduleUsageRefresh()
-            return
-        }
-        var trimmed = stdoutText.trim()
-        if (trimmed.length === 0) {
-            failUsageRefresh(stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("Could not load CodexBar provider configuration."))
-            return
-        }
-
-        var payload
-        try {
-            payload = JSON.parse(trimmed)
-        } catch (error) {
-            failUsageRefresh(i18n("Could not parse CodexBar provider configuration: %1", error.message))
-            return
-        }
-
-        var entries = Normalizer.normalizeProviderConfigEntries(payload)
-        if (entries === null) {
-            failUsageRefresh(i18n("Could not load CodexBar provider configuration."))
-            return
-        }
-        providerDisplayNames = entries.displayNames
-        providerRosterCache = ProviderRosterCache.remember(
-            entries.providerIDs, descriptor.providerRosterContext)
-        startProviderFallbackForProviders(entries.providerIDs)
-    }
-
-    function startProviderFallbackForProviders(providerIDs) {
-        retireUsageCommandKind("providerFallback")
-        providerFallbackState = null
-
-        var orderedProviderIDs = ProviderOrder.orderedItems(
-            providerIDs, providerOrderRaw)
-        var requests = []
-        var providerLimit = Math.min(orderedProviderIDs.length, maximumProviderSnapshots)
-        for (var i = 0; i < providerLimit; i++) {
-            var providerID = normalizedProviderID(String(orderedProviderIDs[i] || ""))
-            if (providerID.length === 0) {
-                continue
-            }
-            var baseCommand = buildProviderUsageCommand(providerID)
-            requests.push({
-                sourceName: commandWithRunNonce(baseCommand),
-                providerID: providerID
-            })
-        }
-
-        var transition = ProviderFallbackQueue.begin(requests, {
-            maximumConcurrent: maximumConcurrentProviderFallbackCommands,
-            maximumSnapshots: maximumProviderSnapshots
-        })
-        if (transition.finished) {
-            providerFallbackState = null
-            invalidateUsageData()
-            // A confirmed empty roster uses the popup's provider setup state.
-            errorText = ""
-            loading = false
-            return
-        }
-        applyProviderFallbackTransition(transition)
-    }
-
-    function applyProviderFallbackTransition(transition) {
-        providerFallbackState = transition.state
-        var sourcesToStart = transition.sourcesToStart
-        for (var i = 0; i < sourcesToStart.length; i++) {
-            var request = sourcesToStart[i]
-            connectUsageCommand(
-                request.sourceName,
-                buildCommandDescriptor("providerFallback", request.providerID))
-        }
-        if (transition.finished) {
-            finishProviderFallback(transition.orderedItems)
-        }
-    }
-
-    function completeProviderFallbackSlot(sourceName, item) {
-        var transition = ProviderFallbackQueue.complete(providerFallbackState, {
-            sourceName: sourceName,
-            item: item
-        })
-        applyProviderFallbackTransition(transition)
-    }
-
-    function parseProviderFallbackOutput(sourceName, providerID, stdoutText, stderrText) {
-        providerID = normalizedProviderID(providerID)
-        if (providerID.length === 0) {
-            finishUsageCommandSource(sourceName)
-            return
-        }
-        finishUsageCommandSource(sourceName)
-
-        // The ledger entry is closed above, so an unexpected parse failure
-        // would strand a fallback queue slot until the whole run retires.
-        // The guard only selects the item; the slot is completed exactly once
-        // outside it, so a throwing completion can never be retried against
-        // already-advanced queue state.
-        var completedItem = null
-        try {
-            var normalizedItems = []
-            var trimmed = stdoutText.trim()
-            if (trimmed.length === 0) {
-                normalizedItems.push(normalizeProvider(providerErrorPayload(
-                    providerID,
-                    stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("codexbar did not return JSON."))))
-            } else {
-                var payload
-                var parsedWithoutRecords = false
-                try {
-                    payload = JSON.parse(trimmed)
-                    var items = Array.isArray(payload) ? payload : [payload]
-                    var itemLimit = Math.min(items.length, Normalizer.maximumAccountSnapshots)
-                    for (var i = 0; i < itemLimit; i++) {
-                        if (!isCliRecord(items[i])) {
-                            continue
-                        }
-                        try {
-                            var providerItem = copyObject(items[i])
-                            // A provider-scoped command may only update the requested
-                            // provider, even if a malformed CLI payload claims another id.
-                            providerItem.provider = providerID
-                            normalizedItems.push(normalizeProvider(providerItem))
-                        } catch (recordError) {
-                            // Keep reading: a later healthy account snapshot must
-                            // still be able to replace this provider's error row.
-                            normalizedItems.push(normalizeProvider(providerErrorPayload(
-                                providerID,
-                                i18n("Could not parse codexbar JSON: %1", recordError.message))))
-                        }
-                    }
-                    parsedWithoutRecords = normalizedItems.length === 0
-                } catch (error) {
-                    normalizedItems.push(normalizeProvider(providerErrorPayload(
-                        providerID,
-                        i18n("Could not parse codexbar JSON: %1", error.message))))
-                }
-                if (parsedWithoutRecords) {
-                    // Valid JSON without CLI records (null, [], scalars) must
-                    // degrade to a scoped error row: a null item would silently
-                    // drop this provider from the roster while others stay healthy.
-                    normalizedItems.push(normalizeProvider(providerErrorPayload(
-                        providerID,
-                        i18n("codexbar did not return provider data."))))
-                }
-            }
-
-            var semanticItems = Normalizer.dedupeProviderSnapshots(normalizedItems)
-            completedItem = semanticItems.length > 0 ? semanticItems[0] : null
-        } catch (error) {
-            completedItem = normalizeProvider(providerErrorPayload(
-                providerID,
-                i18n("Could not parse codexbar JSON: %1", error.message)))
-        }
-        completeProviderFallbackSlot(sourceName, completedItem)
-    }
-
-    function finishProviderFallback(orderedItems) {
-        var nextProviders = Array.isArray(orderedItems) ? orderedItems : []
-        nextProviders = ProviderOrder.orderedItems(
-            Normalizer.dedupeProviderSnapshots(nextProviders),
-            providerOrderRaw)
-
-        commitUsageSnapshot(nextProviders)
-        errorText = nextProviders.length === 0 ? i18n("codexbar did not return JSON.") : ""
-        loading = false
-        providerFallbackState = null
-        applyTokenCosts()
     }
 
     function providerErrorPayload(providerID, message) {
@@ -1013,14 +541,6 @@ PlasmoidItem {
         return CommandLedger.hasDeadlines(activeCommandDescriptors)
     }
 
-    function hasPendingPeriodicRefreshCommands() {
-        return CommandLedger.hasAnyKind(activeCommandDescriptors, [
-            "usage",
-            "providerConfig",
-            "providerFallback"
-        ])
-    }
-
     function expireCommands(nowMs) {
         var expired = CommandLedger.expired(activeCommandDescriptors, nowMs)
         for (var i = 0; i < expired.length; i++) {
@@ -1031,35 +551,9 @@ PlasmoidItem {
     // The ledger entry already proves the command is the live one for its kind,
     // so the kind alone decides how the timeout is reported.
     function handleCommandTimeout(sourceName, descriptor) {
-        if (!descriptor || !CommandLedger.find(activeCommandDescriptors, sourceName)) {
-            return
-        }
-
-        switch (descriptor.kind) {
-        case "usage":
-            finishUsageCommandSource(sourceName)
-            if (canUseProviderFallback()) {
-                startProviderFallback()
-                return
-            }
-            failUsageRefresh(i18n("Loading usage timed out. Try again."))
-            return
-        case "providerConfig":
-            finishUsageCommandSource(sourceName)
-            failUsageRefresh(i18n("Loading provider configuration timed out. Try again."))
-            return
-        case "providerFallback":
-            parseProviderFallbackOutput(
-                sourceName,
-                descriptor.providerID,
-                "",
-                i18n("Loading usage timed out. Try again."))
-            return
-        case "notification":
+        if (descriptor && descriptor.kind === "notification"
+                && CommandLedger.find(activeCommandDescriptors, sourceName)) {
             finishNotificationCommandSource(sourceName)
-            return
-        default:
-            finishUsageCommandSource(sourceName)
         }
     }
 
@@ -1586,10 +1080,7 @@ PlasmoidItem {
                 return
             }
         }
-        // scheduleUsageRefresh coalesces with the onCommandSourceChanged trigger
-        // that the selectedAccounts write above fires in single-provider mode;
-        // a direct callLater(refreshNow) would start one CLI run and immediately
-        // retire it in favour of a second.
+        // Coalesce this request with the controller's changed account inputs.
         scheduleUsageRefresh()
     }
 
@@ -3487,62 +2978,6 @@ PlasmoidItem {
         return CostPresentation.formatCount(costNumberFormat, value)
     }
 
-    Plasma5Support.DataSource {
-        id: usageSource
-
-        engine: "executable"
-        interval: 0
-
-        onNewData: function(sourceName, data) {
-            var rawStdoutText = data && data["stdout"] ? data["stdout"] : ""
-            var stdoutText = SafeText.cliJsonText(rawStdoutText)
-            var stderrText = data && data["stderr"] ? data["stderr"] : ""
-            if (stdoutText === null) {
-                stdoutText = ""
-                stderrText = i18n("codexbar response exceeded the supported size.")
-            }
-
-            // A reply the ledger no longer holds is a late result from a
-            // retired run. Dropping it is what keeps it from overwriting the
-            // refresh that replaced it.
-            var descriptor = CommandLedger.find(root.activeCommandDescriptors, sourceName)
-            if (!descriptor) {
-                return
-            }
-
-            switch (descriptor.kind) {
-            case "providerConfig":
-                root.finishUsageCommandSource(sourceName)
-                root.parseProviderConfigOutput(descriptor, stdoutText, stderrText)
-                return
-            case "providerFallback":
-                root.parseProviderFallbackOutput(
-                    sourceName, descriptor.providerID, stdoutText, stderrText)
-                return
-            case "usage":
-                root.finishUsageCommandSource(sourceName)
-                root.parseOutput(stdoutText, stderrText)
-                return
-            default:
-                root.finishUsageCommandSource(sourceName)
-            }
-        }
-    }
-
-    Timer {
-        id: usageRefreshTimer
-
-        interval: Math.max(1, root.refreshIntervalSec) * 1000
-        repeat: true
-        running: root.refreshIntervalSec > 0
-        triggeredOnStart: false
-        onTriggered: {
-            if (!root.hasPendingPeriodicRefreshCommands()) {
-                root.refreshNow(false)
-            }
-        }
-    }
-
     Timer {
         id: panelClockTimer
 
@@ -3594,6 +3029,28 @@ PlasmoidItem {
             }
             root.finishNotificationCommandSource(sourceName)
         }
+    }
+
+    Controllers.UsageController {
+        id: usageController
+
+        commandPath: root.commandPath
+        provider: root.provider
+        sourceMode: root.source
+        includeStatus: root.includeStatus
+        selectedAccounts: root.selectedAccounts
+        providerConfigRevision: root.providerConfigRevision
+        providerConfigStamp: root.providerConfigStamp
+        providerOrderRaw: root.providerOrderRaw
+        refreshIntervalSec: root.refreshIntervalSec
+        refreshOnOpen: root.refreshOnOpen
+        popupVisible: root.expanded
+        onSnapshotReceived: function(items) {
+            root.commitUsageSnapshot(items.map(function(item) { return root.presentProviderSnapshot(item) }))
+            root.applyTokenCosts()
+        }
+        onFailed: function(message) { root.failUsageRefresh(message) }
+        onEmptyRoster: root.invalidateUsageData()
     }
 
     Controllers.AccountsController {

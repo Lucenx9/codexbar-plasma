@@ -7,6 +7,7 @@ import org.kde.plasma.plasmoid
 Item {
     id: capture
 
+    required property var usageLifecycle
     required property var applet
     required property string scenario
     required property string imagePath
@@ -332,7 +333,7 @@ Item {
         var wasLoading = applet.loading;
         var conditions = ["usageAtLeast", "resetWithin", "runOut"];
         for (var busy = 0; busy < 2; busy++) {
-            applet.loading = busy === 1;
+            usageLifecycle.loading = busy === 1;
             for (var i = 0; i < conditions.length; i++) {
                 config.panelVisibilityRules = JSON.stringify({text: {condition: conditions[i]}});
                 verifyScenario(applet.compactText() === "", "missing data bypassed the text condition");
@@ -340,7 +341,7 @@ Item {
             config.panelVisibilityRules = "{}";
             verifyScenario(applet.compactText().length > 0, "Always lost its loading or empty text");
         }
-        applet.loading = wasLoading;
+        usageLifecycle.loading = wasLoading;
     }
 
     Component.onCompleted: {
@@ -708,7 +709,7 @@ Item {
         verifyScenario(disclosure && options && textMode && !options.visible && !textMode.visible,
             "panel details or text format are visible by default");
         var snapshots = applet.providers;
-        var serial = applet.commandRunSerial;
+        var serial = usageLifecycle.commandRunSerial;
         var liveStyle = applet.Plasmoid.configuration.panelStyle;
         page.cfg_showPercentInPanel = true;
         page.cfg_showProviderInPanel = true;
@@ -752,7 +753,7 @@ Item {
         page.cfg_panelVisibilityRules = "{}";
         verifyScenario(applet.Plasmoid.configuration.panelStyle === liveStyle
             && !applet.Plasmoid.configuration.showPercentInPanel
-            && applet.providers === snapshots && applet.commandRunSerial === serial,
+            && applet.providers === snapshots && usageLifecycle.commandRunSerial === serial,
             "pending preview changed live settings or executed a command");
     }
 
@@ -771,14 +772,14 @@ Item {
             var providers = applet.providers;
             var costs = applet.tokenCosts;
             var memo = applet.notificationMemo;
-            var serial = applet.commandRunSerial;
+            var serial = usageLifecycle.commandRunSerial;
             config.showPopupPace = false;
             config.showPopupCredits = false;
             config.showPopupProviderDetails = false;
             verifyScenario(!pace.visible && !marker.visible && !credits.visible && !details.visible,
                 "popup content switches left a section visible");
             verifyScenario(applet.providers === providers && applet.tokenCosts === costs
-                && applet.notificationMemo === memo && applet.commandRunSerial === serial,
+                && applet.notificationMemo === memo && usageLifecycle.commandRunSerial === serial,
                 "popup content switches changed data, notifications or commands");
             config.showPopupPace = true;
             config.showPopupCredits = true;
@@ -905,28 +906,28 @@ Item {
     function verifyRefreshOnOpen() {
         var config = applet.Plasmoid.configuration;
         if (settingsBehaviorStep === 0) {
-            settingsCommandSerial = applet.commandRunSerial;
+            settingsCommandSerial = usageLifecycle.commandRunSerial;
             settingsCostSnapshot = applet.tokenCosts;
             config.refreshOnOpen = false;
-            applet.usageLastRefreshAttemptAtMs = Date.now() - 300001;
-            applet.usageLastCompletedAtMs = Date.now() - 300001;
-            applet.refreshUsageOnOpen();
-            verifyScenario(applet.commandRunSerial === settingsCommandSerial, "disabled popup opening refreshed usage");
+            usageLifecycle.usageLastRefreshAttemptAtMs = Date.now() - 300001;
+            usageLifecycle.usageLastCompletedAtMs = Date.now() - 300001;
+            usageLifecycle.refreshUsageOnOpen();
+            verifyScenario(usageLifecycle.commandRunSerial === settingsCommandSerial, "disabled popup opening refreshed usage");
             config.refreshOnOpen = true;
-            applet.usageLastCompletedAtMs = Date.now();
-            applet.refreshUsageOnOpen();
-            verifyScenario(applet.commandRunSerial === settingsCommandSerial, "fresh popup opening refreshed usage");
-            applet.usageLastCompletedAtMs = Date.now() - 300001;
+            usageLifecycle.usageLastCompletedAtMs = Date.now();
+            usageLifecycle.refreshUsageOnOpen();
+            verifyScenario(usageLifecycle.commandRunSerial === settingsCommandSerial, "fresh popup opening refreshed usage");
+            usageLifecycle.usageLastCompletedAtMs = Date.now() - 300001;
             applet.expanded = false;
             applet.expanded = true;
             settingsBehaviorStep = 1;
             return false;
         }
-        if (applet.loading || applet.commandRunSerial === settingsCommandSerial)
+        if (applet.loading || usageLifecycle.commandRunSerial === settingsCommandSerial)
             return false;
-        var serial = applet.commandRunSerial;
-        applet.refreshUsageOnOpen();
-        verifyScenario(applet.commandRunSerial === serial && applet.tokenCosts === settingsCostSnapshot,
+        var serial = usageLifecycle.commandRunSerial;
+        usageLifecycle.refreshUsageOnOpen();
+        verifyScenario(usageLifecycle.commandRunSerial === serial && applet.tokenCosts === settingsCostSnapshot,
             "reopening fresh popup fetched usage or local history");
         return true;
     }
@@ -961,12 +962,12 @@ Item {
                 verifyScenario(applet.providers[0].usageStale && applet.providers[0].rows.length === 2,
                     "recovery actions erased retained quotas");
                 message.actions[0].trigger();
-                var serial = applet.commandRunSerial;
+                var serial = usageLifecycle.commandRunSerial;
                 verifyScenario(applet.loading && !message.actions[0].enabled,
                     "Retry did not start a refresh or stayed enabled while busy");
                 message.actions[0].trigger();
                 applet.retryUsage();
-                verifyScenario(applet.commandRunSerial === serial && applet.providers === recoveryUsageSnapshot
+                verifyScenario(usageLifecycle.commandRunSerial === serial && applet.providers === recoveryUsageSnapshot
                     && applet.tokenCosts === recoveryCostSnapshot,
                     "repeated retry restarted work, changed retained usage, or scanned cost history");
                 recoveryStep = 2;
@@ -984,7 +985,7 @@ Item {
                 verifyScenario(applet.providers.every(function(item) {
                     return item.usageStale === true && item.account === "" && item.rows.length === 2;
                 }), "restarted process did not restore redacted stale quotas");
-                verifyScenario(applet.loading && applet.usageLastCompletedAtMs < 0,
+                verifyScenario(applet.loading && usageLifecycle.usageLastCompletedAtMs < 0,
                     "restored cache was counted as a successful refresh");
                 return true;
             }
@@ -1042,7 +1043,7 @@ Item {
                 }
             }
             applet.commitUsageSnapshot(previous);
-            applet.parseOutput("{", "Synthetic malformed response");
+            usageLifecycle.parseOutput("{", "Synthetic malformed response");
             verifyScenario(applet.providers.length === 2 && applet.providers[0].rows.length === 2,
                 "a malformed refresh erased the last valid quotas");
             verifyScenario(applet.providers[0].usageStale && applet.providers[0].lastGoodAtMs === measuredAt,
@@ -1075,19 +1076,20 @@ Item {
             verifyScenario(applet.providers[0].rows.length === 0 && applet.providers[0].statusKnown
                 && applet.providers[0].status === "Operational", "quota expiry erased fresh service status");
             applet.commitUsageSnapshot(previous);
-            applet.parseOutput("null", "");
+            usageLifecycle.parseOutput("null", "");
             verifyScenario(applet.providers[0].rows.length === 2, "invalid envelope erased quotas");
             verifyScenario(applet.notificationObservations().every(function(item) { return item.pending; }),
                 "retained service status was promoted to a fresh observation");
-            var sourceName = applet.commandWithRunNonce("synthetic timeout");
-            var descriptor = applet.buildCommandDescriptor("providerConfig", "");
+            var sourceName = usageLifecycle.commandWithRunNonce("synthetic timeout");
+            var descriptor = usageLifecycle.buildCommandDescriptor("providerConfig", "");
             var descriptors = {};
             descriptors[sourceName] = descriptor;
-            applet.activeCommandDescriptors = descriptors;
-            applet.handleCommandTimeout(sourceName, descriptor);
+            usageLifecycle.activeCommandDescriptors = descriptors;
+            usageLifecycle.handleCommandTimeout(sourceName, descriptor);
             verifyScenario(applet.providers[0].rows.length === 2, "timeout erased quotas");
-            applet.finishProviderFallback([previous[0],
+            applet.commitUsageSnapshot([previous[0],
                 applet.normalizeProvider(applet.providerErrorPayload("claude", "Synthetic provider timeout"))]);
+            applet.applyTokenCosts();
             verifyScenario(!applet.providers[0].usageStale && applet.providers[1].usageStale,
                 "partial refresh did not distinguish current and retained providers");
             verifyScenario(applet.providerTokenCost("codex") !== null && applet.providerTokenCost("claude") !== null,
@@ -1217,7 +1219,7 @@ Item {
             verifyScenario(applet.providers.length === 0 && Plasmoid.configuration.usageCache === "",
                 "changed configuration restored another scope's usage");
             applet.commitUsageSnapshot(previous);
-            applet.startProviderFallbackForProviders([]);
+            usageLifecycle.startProviderFallbackForProviders([]);
             verifyScenario(applet.providers.length === 0 && Plasmoid.configuration.usageCache === ""
                 && applet.errorText === "",
                 "disabling every provider retained cached quotas");

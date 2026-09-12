@@ -13,28 +13,41 @@ sys.path.insert(0, str(ROOT / "scripts/lib"))
 from qml_surfaces import Surface
 
 FUNCTIONS = (
-    "buildCommand", "shellQuote", "copyObject", "providerMapKey", "accountLabel",
+    "shellQuote", "copyObject", "providerMapKey", "accountLabel",
     "accountKey", "selectedAccountForProvider", "accountOptionsForProvider",
-    "selectAccount", "scheduleUsageRefresh",
+    "selectAccount", "scheduleUsageRefresh", "refreshNow",
 )
 
 QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
 import "SOURCE_URL/Guards.js" as Guards
+import "SOURCE_URL/controllers" as Controllers
 TestCase {
     name: "AccountRefresh"
     Component {
         id: harness
         QtObject {
             id: root
-            property string commandPath: "codexbar"
+            property string commandPath: "FIXTURE_PATH"
             property string provider: "codex"
             property string source: ""
             property bool includeStatus: false
             property var selectedAccounts: ({codex: "initial"})
             property var accountOptions: ({})
-            property bool usageRefreshScheduled: false
+            readonly property bool usageRefreshScheduled: usageController.refreshScheduled
+            property QtObject usageController: Controllers.UsageController {
+                commandPath: root.commandPath
+                provider: root.provider
+                sourceMode: root.source
+                selectedAccounts: root.selectedAccounts
+                includeStatus: root.includeStatus
+                refreshIntervalSec: 0
+                onLoadingChanged: {
+                    if (loading) root.refreshes = root.refreshes.concat({
+                        account: root.selectedAccountForProvider("codex"), command: commandSource, pending: root.pending});
+                }
+            }
             property var refreshes: []
             property var invalidations: []
             property bool pending: false
@@ -51,12 +64,6 @@ TestCase {
             }
             function replaceProviderSnapshot(key, snapshot) {
                 cachedSnapshot = snapshot;
-            }
-            // Observe the refresh boundary without starting CLI processes.
-            function refreshNow(bypass) {
-                usageRefreshScheduled = false;
-                refreshes = refreshes.concat({account: selectedAccountForProvider("codex"),
-                    command: commandSource, pending: pending});
             }
         }
     }
@@ -81,6 +88,7 @@ TestCase {
         });
         verify(applet !== null);
         wait(0);
+        tryCompare(applet.usageController, "loading", false);
         applet.refreshes = [];
         applet.selectAccount("codex", identity);
         compare(applet.selectedAccountForProvider("codex"), identity);
@@ -101,6 +109,7 @@ TestCase {
         verify(applet !== null);
         wait(0);
         tryCompare(applet, "usageRefreshScheduled", false);
+        tryCompare(applet.usageController, "loading", false);
         applet.refreshes = [];
         var before = applet.commandSource;
         applet.selectAccount("codex", "target");
@@ -130,15 +139,17 @@ class AccountRefreshTests(unittest.TestCase):
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
             functions.append(signature + " {" + applet.function_body(name) + "}")
         bindings = [re.search(pattern, source, re.MULTILINE).group(0) for pattern in (
-            r"^    property string commandSource: .+$",
-            r"^    onCommandSourceChanged: .+$",
+            r"^    readonly property string commandSource: .+$",
         )]
         qml = QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
         qml = qml.replace("SOURCE_FUNCTIONS", "\n".join(functions))
         qml = qml.replace("SOURCE_BINDINGS", "\n".join(bindings))
         with tempfile.TemporaryDirectory(prefix="codexbar-account-refresh-") as temporary:
             fixture = Path(temporary) / "tst_account_refresh.qml"
-            fixture.write_text(qml)
+            script = Path(temporary) / "codexbar-fixture"
+            script.write_text("#!/usr/bin/env python3\nimport json, sys\nprint(json.dumps([{'provider': 'codex', 'enabled': True}]))\n")
+            script.chmod(0o700)
+            fixture.write_text(qml.replace("FIXTURE_PATH", str(script)))
             result = subprocess.run(
                 [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
                 env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},

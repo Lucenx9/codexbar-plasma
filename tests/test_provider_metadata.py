@@ -13,7 +13,7 @@ sys.path.insert(0, str(ROOT / "scripts/lib"))
 from qml_surfaces import Surface
 
 FUNCTIONS = (
-    "parseOutput", "normalizeProvider", "presentProviderSnapshot", "presentUsageWindow", "copyObject", "resetText",
+    "normalizeProvider", "presentProviderSnapshot", "presentUsageWindow", "copyObject", "resetText",
     "isCliRecord", "normalizedProviderID", "providerMapKey", "hasOwnKey",
     "boundedCliMessage", "paceSummaryText", "paceSummaryPartsText", "paceEtaText", "providerTitle",
     "providerKey", "statusText",
@@ -24,6 +24,7 @@ QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
 import "SOURCE_URL/ProviderSnapshot.js" as ProviderSnapshot
+import "SOURCE_URL/UsageResponse.js" as UsageResponse
 import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
 import "SOURCE_URL/ProviderOrder.js" as ProviderOrder
 import "SOURCE_URL/Guards.js" as Guards
@@ -45,6 +46,13 @@ TestCase {
             property int maximumProviderSnapshots: Normalizer.maximumProviderSnapshots
 
             SOURCE_FUNCTIONS
+
+            function parseOutput(stdout, stderr) {
+                var result = UsageResponse.response(stdout, stderr, "", panelClockMs);
+                compare(result.outcome, "success");
+                commitUsageSnapshot(result.items.map(function(item) { return root.presentProviderSnapshot(item); }));
+                loading = false;
+            }
 
             function i18n(text) {
                 for (var i = 1; i < arguments.length; i++) {

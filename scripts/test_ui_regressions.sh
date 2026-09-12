@@ -702,14 +702,12 @@ for message in ("codexbar cost did not return JSON.",
 if "onTokenCostsChanged: applyTokenCosts()" not in main_text:
     raise AssertionError("controller snapshots must update provider-local cost sections")
 
-parse_usage_body = function_body(main_text, "parseOutput")
-if "Normalizer.dedupeProviderSnapshots(nextProviders)" not in parse_usage_body:
+usage_controller_text = (root / "contents/ui/controllers/UsageController.qml").read_text()
+usage_response_text = (root / "contents/ui/UsageResponse.js").read_text()
+if "UsageResponse.response(" not in function_body(usage_controller_text, "parseOutput"):
+    raise AssertionError("usage parsing must cross the bounded pure response interface")
+if "Normalizer.dedupeProviderSnapshots(snapshots)" not in usage_response_text:
     raise AssertionError("direct usage payloads must not create duplicate provider tabs")
-if parse_usage_body.find("normalizedProviderID(items[i].provider)") < parse_usage_body.find("try {"):
-    raise AssertionError(
-        "parseOutput must screen the provider id inside the per-provider guard so a "
-        "throwing identity read drops only its own provider instead of the whole refresh"
-    )
 
 token_cost_section_body = id_block(main_text, "tokenCostSection")
 if "applet.costErrorText" not in token_cost_section_body:
@@ -791,38 +789,19 @@ if "row.reset = Normalizer.boundedDisplayText(resetText(" not in function_body(m
 if "onResetTimesShowAbsoluteChanged: Qt.callLater(refreshNow)" in main_text:
     raise AssertionError("changing reset formatting must not fan out new CLI requests")
 
-refresh_body = function_body(main_text, "refreshNow")
+refresh_body = function_body(usage_controller_text, "refreshNow")
 if "refreshCost(" in refresh_body or 'retireUsageCommandKind("cost")' in refresh_body:
     raise AssertionError("quota refreshes must not start or retire independent cost scans")
-fallback_body = function_body(main_text, "canUseProviderFallback")
-if not re.fullmatch(
-    r"\s*return\s+source\.length\s*===\s*0\s*\|\|\s*hasSelectedAccountOverrides\(\)\s*",
-    fallback_body,
-    re.S,
-):
-    raise AssertionError("account overrides must force provider-scoped refreshes even with a source override")
-selected_overrides_body = function_body(main_text, "hasSelectedAccountOverrides")
-for selected_fragment in ("selectedAccounts", "hasOwnKey(selectedAccounts, providerID)", "String(selectedAccounts[providerID] || \"\").length > 0"):
-    if selected_fragment not in selected_overrides_body:
-        raise AssertionError(
-            "hasSelectedAccountOverrides must detect configured provider accounts; "
-            f"missing {selected_fragment!r}"
-        )
-if not re.search(
-    r"if\s*\(hasOwnKey\(selectedAccounts,\s*providerID\).*?String\(selectedAccounts\[providerID\]\s*\|\|\s*\"\"\)\.length\s*>\s*0\)\s*\{\s*return\s+true\s*\}",
-    selected_overrides_body,
-    re.S,
-):
-    raise AssertionError("a populated selected-account override must return true")
-if not re.search(r"return\s+false\s*$", selected_overrides_body):
-    raise AssertionError("hasSelectedAccountOverrides must return false when no override exists")
+fallback_body = function_body(usage_controller_text, "canUseProviderFallback")
+if "controller.sourceMode.length === 0 || hasSelectedAccountOverrides()" not in fallback_body:
+    raise AssertionError("account overrides must force provider-scoped refreshes")
 empty_command_index = refresh_body.find("if (commandSource.length === 0)")
 loading_false_index = refresh_body.find("failUsageRefresh(", empty_command_index)
 empty_return_index = refresh_body.find("return", empty_command_index)
 if empty_command_index < 0 or loading_false_index < 0 or loading_false_index > empty_return_index:
     raise AssertionError("refreshNow must clear loading before returning for an empty command")
 
-if "loading = false" not in function_body(main_text, "failUsageRefresh"):
+if "loading = false" not in function_body(usage_controller_text, "failUsageRefresh"):
     raise AssertionError("failed usage refreshes must finish loading")
 
 provider_token_cost_body = function_body(main_text, "providerTokenCost")
@@ -2415,9 +2394,11 @@ if "Qt.callLater(refreshNow)" in select_account_body:
         "selectAccount must schedule refreshes through scheduleUsageRefresh; a direct callLater(refreshNow) "
         "double-starts the usage command when the selectedAccounts write already changed commandSource"
     )
-for caller in ("parseOutput", "finishProviderFallback"):
-    if "commitUsageSnapshot(nextProviders)" not in function_body(main_text, caller):
-        raise AssertionError(f"{caller} must commit usage through the shared cache boundary")
+usage_wiring = id_block(main_text, "usageController")
+for fragment in ("onSnapshotReceived:", "root.commitUsageSnapshot(", "root.presentProviderSnapshot(item)",
+                 "onFailed:", "root.failUsageRefresh(message)", "onEmptyRoster: root.invalidateUsageData()"):
+    if fragment not in usage_wiring:
+        raise AssertionError("usage results must reach the applet cache boundary: " + fragment)
 restore_body = function_body(main_text, "restoreUsageCache")
 restore_steps = [restore_body.find(fragment) for fragment in (
     "UsageCache.decode(", "root.normalizeProvider(payload)", "item.tokenCost = null",
