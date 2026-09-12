@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls as Controls
 import QtQuick.Window
 import QtTest
+import org.kde.kirigami as Kirigami
 
 TestCase {
     id: testCase
@@ -69,6 +70,9 @@ TestCase {
         measuredItems = [];
         positions = [];
         mirroredPage = false;
+        // KDE style transitions outlive the property changes checked above.
+        // Let them finish before QtTest destroys the temporary page.
+        wait(Kirigami.Units.longDuration + 50);
     }
 
     function test_openingKeepsTextStill_data() {
@@ -202,6 +206,7 @@ TestCase {
         var page = createPage();
         if (!page)
             return;
+        verify(waitForRendering(page));
         var view = page.scrollView;
         var left = view.leftPadding;
         var right = view.rightPadding;
@@ -210,8 +215,10 @@ TestCase {
         tryCompare(page, "mirrored", true);
         tryCompare(view, "leftPadding", right);
         tryCompare(view, "rightPadding", left);
+        verify(waitForRendering(page));
         mirroredPage = false;
         tryCompare(view, "leftPadding", left);
         tryCompare(view, "rightPadding", right);
+        verify(waitForRendering(page));
     }
 }

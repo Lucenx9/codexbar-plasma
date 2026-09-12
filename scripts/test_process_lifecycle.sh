@@ -18,13 +18,13 @@ require_in_surface applet "function handleCommandTimeout(sourceName, descriptor)
 require_in_surface applet "id: commandTimeoutTimer"
 require_in_surface applet "root.expireCommands(Date.now())"
 require_in_surface applet "id: usageRefreshTimer"
-require_in_surface applet "running: root.refreshIntervalSec > 0"
-require_in_surface applet "if (!root.hasPendingPeriodicRefreshCommands())"
+require_in_surface applet "running: controller.refreshIntervalSec > 0"
+require_in_surface applet "if (!lifecycle.hasPendingPeriodicRefreshCommands())"
 require_in_surface applet "function hasPendingPeriodicRefreshCommands()"
 require_in_surface applet "interval: 0"
-require_in_surface applet "root.finishUsageCommandSource(sourceName)"
-require_in_surface applet 'import "ProviderFallbackQueue.js" as ProviderFallbackQueue'
-require_in_surface applet 'import "ProviderRosterCache.js" as ProviderRosterCache'
+require_in_surface applet "lifecycle.finishUsageCommandSource(sourceName)"
+require_in_surface applet 'import "../ProviderFallbackQueue.js" as ProviderFallbackQueue'
+require_in_surface applet 'import "../ProviderRosterCache.js" as ProviderRosterCache'
 require_in_surface applet 'import "../AccountRequests.js" as AccountRequests'
 require_in_surface applet 'import "../SessionRefreshPolicy.js" as SessionRefreshPolicy'
 require_in_surface applet "property var providerFallbackState: null"
@@ -100,6 +100,9 @@ sys.path.insert(0, str(root / "scripts/lib"))
 from qml_surfaces import Surface
 
 applet = Surface("applet", root)
+usage = Surface("applet", root)
+usage_path = root / "contents/ui/controllers/UsageController.qml"
+usage.texts = {usage_path: usage_path.read_text()}
 providers = Surface("providers", root)
 popup = Surface("popup", root)
 diagnostics = Surface("diagnostics", root)
@@ -119,6 +122,44 @@ def require_ordered(body, fragments, reason):
             raise AssertionError(f"{reason}: {fragment}")
         offset = index + len(fragment)
 
+
+# The applet coordinates presentation/cache; usage owns all of its effects.
+usage_text = usage_path.read_text()
+for forbidden in ("Plasmoid.configuration", "required property var applet", "root."):
+    if forbidden in usage_text:
+        raise AssertionError("usage controller must not reach the applet root")
+require_all(applet.id_block("usageController"),
+    ("selectedAccounts: root.selectedAccounts", "providerConfigRevision: root.providerConfigRevision",
+     "providerConfigStamp: root.providerConfigStamp", "popupVisible: root.expanded",
+     "onSnapshotReceived:", "root.commitUsageSnapshot(", "onFailed:", "root.failUsageRefresh(message)"),
+    "usage must receive explicit inputs and publish through the cache owner")
+require_ordered(usage.function_body("connectUsageCommand"),
+    ("CommandLedger.opened(", "usageSource.connectSource("),
+    "usage requests must register before synchronous replies")
+require_ordered(usage.function_body("finishUsageCommandSource"),
+    ("CommandLedger.closed(", "usageSource.disconnectSource("),
+    "usage requests must retire before disconnect callbacks")
+require_ordered(usage.id_block("usageSource"),
+    ("CommandLedger.find(lifecycle.activeCommandDescriptors, sourceName)",
+     "if (!descriptor)", "return", 'data["stdout"]', "switch (descriptor.kind)"),
+    "retired usage replies must be dropped before parsing")
+require_all(usage_text,
+    ("Component.onDestruction: lifecycle.retireUsageCommands()", "onRequestContextChanged:",
+     "lifecycle.expireCommands(Date.now())", "readonly property bool loading:"),
+    "usage must own input retirement, destruction, and deadline cleanup")
+
+# Completion-handler order is undefined: only the controller owns startup.
+main_text = (root / "contents/ui/main.qml").read_text()
+main_start = main_text.index("Component.onCompleted:")
+main_startup = Surface._match_braces(main_text, main_text.index("{", main_start))
+for duplicate in ("refreshNow(", "scheduleUsageRefresh(", "usageController.refresh(", "usageController.scheduleRefresh("):
+    if duplicate in main_startup:
+        raise AssertionError("the applet must not start a second initial usage refresh")
+usage_start = usage_text.index("Component.onCompleted:")
+usage_startup = Surface._match_braces(usage_text, usage_text.index("{", usage_start))
+require_ordered(usage_startup,
+    ("lifecycle.initialized = true", "lifecycle.scheduleUsageRefresh()"),
+    "the usage controller must initialize and schedule its own startup")
 
 retire_body = applet.function_body("retireUsageCommands")
 if "finishUsageCommandSource(" not in retire_body and "retireUsageCommandKind(" not in retire_body:
@@ -152,7 +193,7 @@ require_all(applet.function_body("invalidateUsageData"), ("accountsController.re
 
 for function_name in ("buildProviderUsageCommand",):
     body = applet.function_body(function_name)
-    if 'if (source.length > 0)' not in body:
+    if 'if (controller.sourceMode.length > 0)' not in body:
         raise AssertionError(f"{function_name} must preserve the automatic CLI source by default")
     if 'effectiveSource' in body or '"cli"' in body:
         raise AssertionError(f"{function_name} must not force Codex to the CLI source")
@@ -161,7 +202,7 @@ for function_name in ("buildProviderUsageCommand",):
 # hands every overdue command to the timeout handler, and that the scan itself
 # keeps comparing against the recorded deadline with a clock that fails closed.
 require_all(
-    applet.function_body("expireCommands"),
+    usage.function_body("expireCommands"),
     ("CommandLedger.expired(activeCommandDescriptors, nowMs)", "handleCommandTimeout("),
     "command timeout scan is incomplete",
 )
@@ -171,12 +212,12 @@ require_all(
     "the ledger deadline scan is incomplete",
 )
 require_all(
-    applet.function_body("hasPendingCommandTimeouts"),
+    usage.function_body("hasPendingCommandTimeouts"),
     ("CommandLedger.hasDeadlines(activeCommandDescriptors)",),
     "the timeout timer must read its deadlines from the ledger",
 )
 
-timeout_body = applet.function_body("handleCommandTimeout")
+timeout_body = usage.function_body("handleCommandTimeout")
 require_all(
     timeout_body,
     (
@@ -184,16 +225,14 @@ require_all(
         'case "usage":',
         'case "providerConfig":',
         'case "providerFallback":',
-        'case "notification":',
         "finishUsageCommandSource(sourceName)",
-        "finishNotificationCommandSource(sourceName)",
         "Loading usage timed out. Try again.",
         "Loading provider configuration timed out. Try again.",
     ),
     "command timeout cleanup is incomplete",
 )
 fallback_timeout_start = timeout_body.find('case "providerFallback":')
-fallback_timeout_end = timeout_body.find('case "notification":', fallback_timeout_start)
+fallback_timeout_end = timeout_body.find('default:', fallback_timeout_start)
 if fallback_timeout_start < 0 or fallback_timeout_end < 0:
     raise AssertionError("provider fallback timeout branch is missing")
 require_all(
@@ -262,28 +301,12 @@ require_all(
     "fallback slot completion must cross the pure queue interface",
 )
 fallback_parse_body = applet.function_body("parseProviderFallbackOutput")
-require_all(
-    fallback_parse_body,
-    (
-        "Normalizer.dedupeProviderSnapshots(normalizedItems)",
-        "var completedItem = null",
-        "completeProviderFallbackSlot(sourceName, completedItem)",
-        "codexbar did not return provider data.",
-    ),
-    "fallback replies must cross the pure queue interface",
-)
+require_ordered(fallback_parse_body,
+    ("finishUsageCommandSource(sourceName)", "UsageResponse.response(",
+     "completeProviderFallbackSlot(sourceName, item)"),
+    "fallback replies must normalize and settle their slot once after retirement")
 if fallback_parse_body.count("completeProviderFallbackSlot(") != 1:
-    raise AssertionError(
-        "the fallback slot must be completed exactly once, outside the parse guard"
-    )
-require_all(
-    fallback_parse_body[fallback_parse_body.rfind("} catch (error) {"):],
-    (
-        "providerErrorPayload(",
-        "completedItem =",
-    ),
-    "an unexpected fallback parse failure must still yield its scoped error item",
-)
+    raise AssertionError("fallback replies must complete exactly once")
 require_all(
     applet.function_body("applyProviderFallbackTransition"),
     (
@@ -306,7 +329,7 @@ require_all(
 
 require_all(
     applet.id_block("usageRefreshTimer"),
-    ("root.hasPendingPeriodicRefreshCommands()", "root.refreshNow(false)"),
+    ("lifecycle.hasPendingPeriodicRefreshCommands()", "lifecycle.refreshNow(false)"),
     "periodic refreshes must not starve active command deadlines",
 )
 
@@ -327,7 +350,7 @@ for independent_kind in ('"cost"', '"sessions"'):
             f"independent {independent_kind} work must not block the quota refresh timer"
         )
 
-if "refreshSessions" in applet.function_body("refreshNow"):
+if "refreshSessions" in usage.function_body("refreshNow"):
     raise AssertionError("quota refresh must not start Sessions work")
 
 # Sessions owns its executable source and timers. The applet supplies inputs
@@ -348,7 +371,7 @@ require_all(
 for forbidden in ("Plasmoid.configuration", "required property var applet", "root."):
     if forbidden in sessions_text:
         raise AssertionError("Sessions controller must own its lifecycle without the applet root")
-if 'case "sessions"' in applet.function_body("handleCommandTimeout"):
+if 'case "sessions"' in usage.function_body("handleCommandTimeout"):
     raise AssertionError("Sessions timeouts must leave the shared applet dispatcher")
 if 'case "sessions"' in applet.id_block("usageSource"):
     raise AssertionError("Sessions replies must leave the shared usage source")
@@ -392,7 +415,7 @@ require_all(
     "global fallback must reuse only a current provider roster",
 )
 require_all(
-    applet.function_body("refreshNow"),
+    usage.function_body("refreshNow"),
     ("startProviderFallback(bypassProviderRosterCache === true)",),
     "manual refresh intent must reach provider discovery",
 )
@@ -439,8 +462,8 @@ require_ordered(
         "ProviderRosterCache.responseContextsMatch(",
         "scheduleUsageRefresh()",
         "return",
-        "var entries = Normalizer.normalizeProviderConfigEntries(payload)",
-        "if (entries === null)",
+        "var result = UsageResponse.roster(stdoutText, stderrText)",
+        'if (result.outcome !== "success")',
         "return",
         "ProviderRosterCache.remember(",
     ),
@@ -452,7 +475,6 @@ require_ordered(
         "if (stamp === providerConfigStamp)",
         "return",
         "providerConfigStamp = stamp",
-        "invalidateProviderRosterCache()",
         "scheduleUsageRefresh()",
     ),
     "a changed provider config checksum must invalidate and refresh the roster",
@@ -483,7 +505,7 @@ require_all(applet.id_block("accountsController"),
 for forbidden in ("root.", "Plasmoid.configuration", "required property var applet"):
     if forbidden in accounts_text:
         raise AssertionError("account controller must own its lifecycle without root callbacks")
-for body in (applet.function_body("handleCommandTimeout"), applet.id_block("usageSource")):
+for body in (usage.function_body("handleCommandTimeout"), applet.id_block("usageSource")):
     if 'case "account"' in body:
         raise AssertionError("account processes must leave the usage dispatcher")
 require_ordered(controller_function(accounts_text, "request"),
@@ -514,7 +536,7 @@ require_all(
 for forbidden in ("root.", "Plasmoid.configuration", "required property var applet"):
     if forbidden in cost_text:
         raise AssertionError("cost lifecycle must be independent of the applet root")
-for body in (applet.function_body("handleCommandTimeout"), applet.id_block("usageSource")):
+for body in (usage.function_body("handleCommandTimeout"), applet.id_block("usageSource")):
     if 'case "cost"' in body:
         raise AssertionError("cost processes must leave the shared usage dispatcher")
 require_all(

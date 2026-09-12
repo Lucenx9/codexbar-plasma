@@ -616,7 +616,8 @@ msgstr "Zeitüberschreitung beim Diagnosebefehl. Erneut versuchen."
 #: contents/ui/controllers/AccountsController.qml
 #: contents/ui/controllers/CostController.qml
 #: contents/ui/controllers/ProviderRosterController.qml
-#: contents/ui/controllers/SessionsController.qml contents/ui/main.qml
+#: contents/ui/controllers/SessionsController.qml
+#: contents/ui/controllers/UsageController.qml
 msgid "codexbar response exceeded the supported size."
 msgstr "Die Antwort von codexbar überschreitet die unterstützte Größe."
 
@@ -1221,7 +1222,8 @@ msgid "codexbar command timed out. Try again."
 msgstr "Zeitüberschreitung beim Befehl codexbar. Erneut versuchen."
 
 #: contents/ui/configProviders.qml
-#: contents/ui/controllers/ProviderRosterController.qml contents/ui/main.qml
+#: contents/ui/controllers/ProviderRosterController.qml
+#: contents/ui/controllers/UsageController.qml
 msgid "codexbar did not return provider data."
 msgstr "codexbar hat keine Anbieterdaten zurückgegeben."
 
@@ -1785,7 +1787,8 @@ msgid "Try another search or choose a different filter."
 msgstr "Versuchen Sie eine andere Suche oder wählen Sie einen anderen Filter."
 
 #: contents/ui/controllers/AccountsController.qml
-#: contents/ui/controllers/SessionsController.qml contents/ui/main.qml
+#: contents/ui/controllers/SessionsController.qml
+#: contents/ui/controllers/UsageController.qml
 msgid "Set the codexbar command path in widget settings."
 msgstr ""
 "Den Pfad zum Befehl codexbar in den Einstellungen des Miniprogramms "
@@ -1842,6 +1845,31 @@ msgstr "Die JSON-Daten von codexbar sessions konnten nicht gelesen werden: %1"
 #: contents/ui/controllers/SessionsController.qml
 msgid "codexbar sessions returned an unsupported JSON payload."
 msgstr "codexbar sessions hat nicht unterstützte JSON-Daten zurückgegeben."
+
+#: contents/ui/controllers/UsageController.qml
+msgid "codexbar did not return JSON."
+msgstr "codexbar hat keine JSON-Daten zurückgegeben."
+
+#: contents/ui/controllers/UsageController.qml
+msgid "Loading usage timed out. Try again."
+msgstr "Zeitüberschreitung beim Laden der Nutzung. Erneut versuchen."
+
+#: contents/ui/controllers/UsageController.qml
+msgid "Loading provider configuration timed out. Try again."
+msgstr ""
+"Zeitüberschreitung beim Laden der Anbieterkonfiguration. Erneut versuchen."
+
+#: contents/ui/controllers/UsageController.qml
+msgid "Could not parse CodexBar provider configuration: %1"
+msgstr "Die CodexBar-Anbieterkonfiguration konnte nicht gelesen werden: %1"
+
+#: contents/ui/controllers/UsageController.qml
+msgid "Could not parse codexbar JSON: %1"
+msgstr "Die JSON-Daten von codexbar konnten nicht gelesen werden: %1"
+
+#: contents/ui/controllers/UsageController.qml
+msgid "Could not load CodexBar provider configuration."
+msgstr "Die CodexBar-Anbieterkonfiguration konnte nicht geladen werden."
 
 #: contents/ui/controllers/WidgetUpdateController.qml
 msgid "Widget updater script is missing from the installed package."
@@ -1988,31 +2016,6 @@ msgstr "Letzte bekannte Nutzung, gerade eben"
 #: contents/ui/main.qml
 msgid "Last known usage, %1 ago"
 msgstr "Letzte bekannte Nutzung, vor %1"
-
-#: contents/ui/main.qml
-msgid "codexbar did not return JSON."
-msgstr "codexbar hat keine JSON-Daten zurückgegeben."
-
-#: contents/ui/main.qml
-msgid "Could not parse codexbar JSON: %1"
-msgstr "Die JSON-Daten von codexbar konnten nicht gelesen werden: %1"
-
-#: contents/ui/main.qml
-msgid "Could not load CodexBar provider configuration."
-msgstr "Die CodexBar-Anbieterkonfiguration konnte nicht geladen werden."
-
-#: contents/ui/main.qml
-msgid "Could not parse CodexBar provider configuration: %1"
-msgstr "Die CodexBar-Anbieterkonfiguration konnte nicht gelesen werden: %1"
-
-#: contents/ui/main.qml
-msgid "Loading usage timed out. Try again."
-msgstr "Zeitüberschreitung beim Laden der Nutzung. Erneut versuchen."
-
-#: contents/ui/main.qml
-msgid "Loading provider configuration timed out. Try again."
-msgstr ""
-"Zeitüberschreitung beim Laden der Anbieterkonfiguration. Erneut versuchen."
 
 #: contents/ui/main.qml
 msgid "Session %1"

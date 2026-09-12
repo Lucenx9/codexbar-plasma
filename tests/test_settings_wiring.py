@@ -11,17 +11,20 @@ from qml_surfaces import Surface
 class SettingsWiringTests(unittest.TestCase):
     def test_popup_open_refreshes_only_usage_through_the_existing_lifecycle(self):
         applet = Surface("applet")
-        applet.require("Qt.callLater(refreshUsageOnOpen)", "popup opening must consult the freshness policy")
+        applet.require("Qt.callLater(lifecycle.refreshUsageOnOpen)", "popup opening must consult the freshness policy")
         body = applet.function_body("refreshUsageOnOpen")
-        for fragment in ("PopupRefreshPolicy.shouldRefresh", "enabled: refreshOnOpen",
-                         "visible: expanded", "loading: loading", "scheduled: usageRefreshScheduled",
+        for fragment in ("PopupRefreshPolicy.shouldRefresh", "enabled: controller.refreshOnOpen",
+                         "visible: controller.popupVisible", "loading: loading", "scheduled: usageRefreshScheduled",
                          "lastAttemptAtMs: usageLastRefreshAttemptAtMs",
                          "lastCompletedAtMs: usageLastCompletedAtMs", "refreshNow(false)"):
             self.assertIn(fragment, body)
         self.assertNotIn("refreshCost", body)
         self.assertNotIn("connectSource", body)
-        self.assertIn("usageLastRefreshAttemptAtMs = Date.now()", applet.function_body("refreshNow"))
-        self.assertIn("usageLastCompletedAtMs = nowMs", applet.function_body("markUsageSnapshotReceived"))
+        path = Path(__file__).resolve().parents[1] / "contents/ui/controllers/UsageController.qml"
+        controller = Surface("applet")
+        controller.texts = {path: path.read_text()}
+        self.assertIn("usageLastRefreshAttemptAtMs = Date.now()", controller.function_body("refreshNow"))
+        self.assertIn("usageLastCompletedAtMs = Date.now()", controller.function_body("finishProviderFallback"))
 
     def test_privacy_masks_notification_text_before_the_external_effect(self):
         body = Surface("applet").function_body("sendPlasmaNotification")

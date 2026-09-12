@@ -142,9 +142,9 @@ function normalizeProviderConfigEntries(payload) {
 
 function providerSnapshotHasError(item) {
     return isCliRecord(item)
-        && item.error !== undefined
-        && item.error !== null
-        && String(item.error).trim().length > 0
+        && (item.commandFailed === true || (item.error !== undefined
+            && item.error !== null
+            && String(item.error).trim().length > 0))
 }
 
 // Provider tabs are keyed by canonical provider id. Keep their model unique and

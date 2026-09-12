@@ -578,7 +578,8 @@ msgstr ""
 #: contents/ui/controllers/AccountsController.qml
 #: contents/ui/controllers/CostController.qml
 #: contents/ui/controllers/ProviderRosterController.qml
-#: contents/ui/controllers/SessionsController.qml contents/ui/main.qml
+#: contents/ui/controllers/SessionsController.qml
+#: contents/ui/controllers/UsageController.qml
 msgid "codexbar response exceeded the supported size."
 msgstr ""
 
@@ -1147,7 +1148,8 @@ msgid "codexbar command timed out. Try again."
 msgstr ""
 
 #: contents/ui/configProviders.qml
-#: contents/ui/controllers/ProviderRosterController.qml contents/ui/main.qml
+#: contents/ui/controllers/ProviderRosterController.qml
+#: contents/ui/controllers/UsageController.qml
 msgid "codexbar did not return provider data."
 msgstr ""
 
@@ -1701,7 +1703,8 @@ msgid "Try another search or choose a different filter."
 msgstr ""
 
 #: contents/ui/controllers/AccountsController.qml
-#: contents/ui/controllers/SessionsController.qml contents/ui/main.qml
+#: contents/ui/controllers/SessionsController.qml
+#: contents/ui/controllers/UsageController.qml
 msgid "Set the codexbar command path in widget settings."
 msgstr ""
 
@@ -1755,6 +1758,30 @@ msgstr ""
 
 #: contents/ui/controllers/SessionsController.qml
 msgid "codexbar sessions returned an unsupported JSON payload."
+msgstr ""
+
+#: contents/ui/controllers/UsageController.qml
+msgid "codexbar did not return JSON."
+msgstr ""
+
+#: contents/ui/controllers/UsageController.qml
+msgid "Loading usage timed out. Try again."
+msgstr ""
+
+#: contents/ui/controllers/UsageController.qml
+msgid "Loading provider configuration timed out. Try again."
+msgstr ""
+
+#: contents/ui/controllers/UsageController.qml
+msgid "Could not parse CodexBar provider configuration: %1"
+msgstr ""
+
+#: contents/ui/controllers/UsageController.qml
+msgid "Could not parse codexbar JSON: %1"
+msgstr ""
+
+#: contents/ui/controllers/UsageController.qml
+msgid "Could not load CodexBar provider configuration."
 msgstr ""
 
 #: contents/ui/controllers/WidgetUpdateController.qml
@@ -1883,30 +1910,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Last known usage, %1 ago"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "codexbar did not return JSON."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Could not parse codexbar JSON: %1"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Could not load CodexBar provider configuration."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Could not parse CodexBar provider configuration: %1"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Loading usage timed out. Try again."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Loading provider configuration timed out. Try again."
 msgstr ""
 
 #: contents/ui/main.qml

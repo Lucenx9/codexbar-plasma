@@ -103,7 +103,10 @@ def stage_applet(work, scenario, image_path):
         main = main.replace(expression, "true")
     if not main.endswith("}"):
         raise RuntimeError("Cannot attach capture to the applet root")
+    # The capture alone follows private lifecycle state for synthetic clock probes;
+    # the production controller and its read-only API stay unchanged.
     main_path.write_text(main[:-1] + "\n    SmokeCapture {\n        applet: root\n"
+                        + "        usageLifecycle: usageController.children[0]\n"
                         + "        cacheRestart: false\n"
                         + "        scenario: " + json.dumps(scenario) + "\n"
                         + "        imagePath: " + json.dumps(str(image_path)) + "\n    }\n}\n")

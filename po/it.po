@@ -616,7 +616,8 @@ msgstr "Tempo scaduto per il comando diagnostico. Riprova."
 #: contents/ui/controllers/AccountsController.qml
 #: contents/ui/controllers/CostController.qml
 #: contents/ui/controllers/ProviderRosterController.qml
-#: contents/ui/controllers/SessionsController.qml contents/ui/main.qml
+#: contents/ui/controllers/SessionsController.qml
+#: contents/ui/controllers/UsageController.qml
 msgid "codexbar response exceeded the supported size."
 msgstr "La risposta di codexbar supera la dimensione supportata."
 
@@ -1221,7 +1222,8 @@ msgid "codexbar command timed out. Try again."
 msgstr "Tempo scaduto per il comando codexbar. Riprova."
 
 #: contents/ui/configProviders.qml
-#: contents/ui/controllers/ProviderRosterController.qml contents/ui/main.qml
+#: contents/ui/controllers/ProviderRosterController.qml
+#: contents/ui/controllers/UsageController.qml
 msgid "codexbar did not return provider data."
 msgstr "codexbar non ha restituito dati sui provider."
 
@@ -1789,7 +1791,8 @@ msgid "Try another search or choose a different filter."
 msgstr "Prova un'altra ricerca o scegli un filtro diverso."
 
 #: contents/ui/controllers/AccountsController.qml
-#: contents/ui/controllers/SessionsController.qml contents/ui/main.qml
+#: contents/ui/controllers/SessionsController.qml
+#: contents/ui/controllers/UsageController.qml
 msgid "Set the codexbar command path in widget settings."
 msgstr ""
 "Imposta il percorso del comando codexbar nelle impostazioni del widget."
@@ -1845,6 +1848,32 @@ msgstr "Impossibile interpretare il JSON di codexbar sessions: %1"
 #: contents/ui/controllers/SessionsController.qml
 msgid "codexbar sessions returned an unsupported JSON payload."
 msgstr "codexbar sessions ha restituito dati JSON non supportati."
+
+#: contents/ui/controllers/UsageController.qml
+msgid "codexbar did not return JSON."
+msgstr "codexbar non ha restituito JSON."
+
+#: contents/ui/controllers/UsageController.qml
+msgid "Loading usage timed out. Try again."
+msgstr "Tempo scaduto per il caricamento dell'utilizzo. Riprova."
+
+#: contents/ui/controllers/UsageController.qml
+msgid "Loading provider configuration timed out. Try again."
+msgstr ""
+"Tempo scaduto per il caricamento della configurazione dei provider. Riprova."
+
+#: contents/ui/controllers/UsageController.qml
+msgid "Could not parse CodexBar provider configuration: %1"
+msgstr ""
+"Impossibile interpretare la configurazione dei provider di CodexBar: %1"
+
+#: contents/ui/controllers/UsageController.qml
+msgid "Could not parse codexbar JSON: %1"
+msgstr "Impossibile interpretare il JSON di codexbar: %1"
+
+#: contents/ui/controllers/UsageController.qml
+msgid "Could not load CodexBar provider configuration."
+msgstr "Impossibile caricare la configurazione dei provider di CodexBar."
 
 #: contents/ui/controllers/WidgetUpdateController.qml
 msgid "Widget updater script is missing from the installed package."
@@ -1975,32 +2004,6 @@ msgstr "Ultimo dato valido, pochi istanti fa"
 #: contents/ui/main.qml
 msgid "Last known usage, %1 ago"
 msgstr "Ultimo dato valido, %1 fa"
-
-#: contents/ui/main.qml
-msgid "codexbar did not return JSON."
-msgstr "codexbar non ha restituito JSON."
-
-#: contents/ui/main.qml
-msgid "Could not parse codexbar JSON: %1"
-msgstr "Impossibile interpretare il JSON di codexbar: %1"
-
-#: contents/ui/main.qml
-msgid "Could not load CodexBar provider configuration."
-msgstr "Impossibile caricare la configurazione dei provider di CodexBar."
-
-#: contents/ui/main.qml
-msgid "Could not parse CodexBar provider configuration: %1"
-msgstr ""
-"Impossibile interpretare la configurazione dei provider di CodexBar: %1"
-
-#: contents/ui/main.qml
-msgid "Loading usage timed out. Try again."
-msgstr "Tempo scaduto per il caricamento dell'utilizzo. Riprova."
-
-#: contents/ui/main.qml
-msgid "Loading provider configuration timed out. Try again."
-msgstr ""
-"Tempo scaduto per il caricamento della configurazione dei provider. Riprova."
 
 #: contents/ui/main.qml
 msgid "Session %1"

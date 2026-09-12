@@ -7,6 +7,7 @@ import org.kde.plasma.plasmoid
 Item {
     id: capture
 
+    required property var usageLifecycle
     required property var applet
     required property string scenario
     required property string imagePath
@@ -96,7 +97,7 @@ Item {
         onTriggered: {
             capture.applet.expanded = true;
             var popup = capture.applet.fullRepresentationItem;
-            if (!popup || !panel.item || capture.applet.loading || capture.applet.costLoading || capture.applet.providers.length !== capture.expectedProviders)
+            if (!popup || !panel.item || capture.usageLifecycle.loading || capture.applet.costLoading || capture.applet.providers.length !== capture.expectedProviders)
                 return;
             popup.Window.window.width = 560;
             popup.Window.window.height = 360;
