@@ -24,6 +24,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Reserve initial readout row height in interactive charts so that hovering
   a point for the first time does not cause a vertical layout shift.
+- Keep partial cost refreshes working when a provider error message is malformed,
+  retaining its previous costs while healthy providers update.
 - Respect the automatic refresh interval after a failed Sessions scan when
   reopening the popup or revisiting the tab, while allowing immediate manual
   retries and scans after changing the CLI command.
