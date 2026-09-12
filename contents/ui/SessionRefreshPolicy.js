@@ -17,12 +17,15 @@ function staleAfterMs(refreshIntervalSeconds) {
 // A failed attempt delays automatic retries without making its snapshot fresh.
 // QML records attempt completion and clears it whenever the command source changes.
 function lastActivityAtMs(current) {
-    var finished = current.lastFinishedAtMs
+    var source = current && typeof current === "object"
+        && !Array.isArray(current) ? current : ({})
+    var finished = source.lastFinishedAtMs
     var baseline = typeof finished === "number" && isFinite(finished) && finished >= 0
         ? finished : -1
-    var completed = current.lastCompletedAtMs
-    if (typeof current.loadedCommandSource === "string"
-            && current.loadedCommandSource.trim() === current.commandSource.trim()
+    var completed = source.lastCompletedAtMs
+    if (typeof source.loadedCommandSource === "string"
+            && typeof source.commandSource === "string"
+            && source.loadedCommandSource.trim() === source.commandSource.trim()
             && typeof completed === "number" && isFinite(completed) && completed >= 0) {
         baseline = Math.max(baseline, completed)
     }

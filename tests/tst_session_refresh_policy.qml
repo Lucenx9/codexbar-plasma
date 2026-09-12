@@ -175,4 +175,19 @@ TestCase {
         compare(SessionRefreshPolicy.refreshAction(observation({lastFinishedAtMs: data.value})),
             SessionRefreshPolicy.startAction)
     }
+
+    function test_lastActivityAtMsAcceptsMissingOrInvalidCommandSource_data() {
+        return [
+            {tag: "missing-command", current: {loadedCommandSource: "codexbar sessions --json-v2", lastCompletedAtMs: 900000}},
+            {tag: "null-command", current: {loadedCommandSource: "codexbar sessions --json-v2", commandSource: null, lastCompletedAtMs: 900000}},
+            {tag: "non-string-command", current: {loadedCommandSource: "codexbar sessions --json-v2", commandSource: 42, lastCompletedAtMs: 900000}},
+            {tag: "null-current", current: null},
+            {tag: "undefined-current", current: undefined},
+            {tag: "primitive-current", current: "invalid"}
+        ]
+    }
+
+    function test_lastActivityAtMsAcceptsMissingOrInvalidCommandSource(data) {
+        compare(SessionRefreshPolicy.lastActivityAtMs(data.current), -1)
+    }
 }
