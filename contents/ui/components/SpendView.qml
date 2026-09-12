@@ -17,7 +17,7 @@ ColumnLayout {
     readonly property string spendCurrency: applet.spendCurrency(providerCosts)
     readonly property bool hasMixedCostCurrencies: CostPresentation.spendHasMixedCostCurrencies(providerCosts)
     readonly property real heatmapMaximum: chartMaximum(dailyPoints)
-    readonly property int heatmapDayCount: CostPresentation.spendHeatmapDays(dailyPoints).length
+    readonly property var heatmapDays: CostPresentation.spendHeatmapDays(dailyPoints, providerCosts)
 
     Layout.fillWidth: true
     Layout.fillHeight: true
@@ -277,7 +277,7 @@ ColumnLayout {
             ColumnLayout {
                 // One week column carries a single day per row, which repeats
                 // the chart above instead of showing a weekday pattern.
-                visible: view.heatmapDayCount > 7
+                visible: view.heatmapDays.length > 7
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing / 2
 
@@ -308,7 +308,7 @@ ColumnLayout {
                         readonly property int fittingColumns: Math.max(1, Math.floor(
                             (width + cellSpacing) / (minimumCellSize + cellSpacing)))
                         readonly property int columnCount: Math.max(1, Math.min(
-                            fittingColumns, Math.ceil(view.heatmapDayCount / 7)))
+                            fittingColumns, Math.ceil(view.heatmapDays.length / 7)))
                         readonly property real availableCellWidth: Math.max(minimumCellSize,
                             (width - cellSpacing * (columnCount - 1)) / columnCount)
                         readonly property real cellHeight: Math.max(minimumCellSize, Math.min(
@@ -319,7 +319,7 @@ ColumnLayout {
                         readonly property real cellWidth: Math.min(
                             availableCellWidth, cellHeight * 3)
                         readonly property var cells: CostPresentation.spendHeatmapCells(
-                            view.dailyPoints, columnCount * 7)
+                            view.heatmapDays, columnCount * 7)
 
                         width: parent.width
                         rows: 7

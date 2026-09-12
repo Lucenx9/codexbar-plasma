@@ -1086,10 +1086,10 @@ function historyStillBuilding(costs) {
     return false
 }
 
-// The selected metric can omit unavailable days. Keep their calendar slots
-// empty so every heatmap row still represents one weekday. Legacy labels with
-// no unambiguous calendar order keep their existing bounded sequence.
-function spendHeatmapDays(points) {
+// The selected metric can omit unavailable days. Use the unfiltered snapshots'
+// calendar bounds so missing values at either edge keep their slots too.
+// Legacy labels with no unambiguous calendar order keep their bounded sequence.
+function spendHeatmapDays(points, costs) {
     var items = Array.isArray(points) ? points.slice(-maximumCostHistoryPoints) : []
     var byDate = ({})
     var firstDayMs = 0
@@ -1110,6 +1110,20 @@ function spendHeatmapDays(points) {
     if (items.length === 0) {
         return []
     }
+    var snapshots = Array.isArray(costs) ? costs : []
+    for (var providerIndex = 0; providerIndex < Math.min(snapshots.length, Normalizer.maximumCostSnapshots); providerIndex++) {
+        var snapshot = snapshots[providerIndex]
+        var daily = snapshot && Array.isArray(snapshot.daily) ? snapshot.daily : []
+        for (var dayIndex = Math.max(0, daily.length - maximumCostHistoryPoints); dayIndex < daily.length; dayIndex++) {
+            var calendarPoint = daily[dayIndex]
+            var calendarDate = calendarPoint && typeof calendarPoint.label === "string"
+                ? Normalizer.parsedCalendarDateKey(calendarPoint.label) : null
+            if (calendarDate) {
+                firstDayMs = Math.min(firstDayMs, calendarDate.timestampMs)
+                lastDayMs = Math.max(lastDayMs, calendarDate.timestampMs)
+            }
+        }
+    }
     // UTC calendar keys keep DST changes from adding or losing a day.
     var dayMs = 24 * 60 * 60 * 1000
     firstDayMs = Math.max(firstDayMs, lastDayMs - (maximumCostHistoryPoints - 1) * dayMs)
@@ -1126,7 +1140,7 @@ function spendHeatmapDays(points) {
 // otherwise cuts a week-wide notch out of the block. Points beyond the
 // capacity are dropped, oldest first.
 function spendHeatmapCells(points, capacity) {
-    var items = spendHeatmapDays(points)
+    var items = Array.isArray(points) ? points : []
     var slots = Math.max(0, Math.floor(Number(capacity) || 0))
     var visible = items.slice(Math.max(0, items.length - slots))
     var cells = []

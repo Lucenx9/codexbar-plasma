@@ -732,7 +732,8 @@ TestCase {
         var costs = [{ totals: { currency: "USD" }, daily: daily }]
         var points = CostPresentation.spendDailyPoints(fmt, costs, false)
         compare(points.length, 8)
-        var cells = CostPresentation.spendHeatmapCells(points, 14)
+        var cells = CostPresentation.spendHeatmapCells(
+            CostPresentation.spendHeatmapDays(points, costs), 14)
         compare(cells.length, 14)
         verify(cells[5] !== null, "the first day must occupy its calendar slot")
         compare(cells[5].label, "2026-09-01")
@@ -741,7 +742,7 @@ TestCase {
         compare(cells[13].label, "2026-09-09")
         compare(cells[12].value, 8)
         var tokenCells = CostPresentation.spendHeatmapCells(
-            CostPresentation.spendDailyPoints(fmt, costs, true), 14)
+            CostPresentation.spendHeatmapDays(CostPresentation.spendDailyPoints(fmt, costs, true), costs), 14)
         compare(tokenCells[8].label, "2026-09-04")
         compare(tokenCells[8].value, 40)
     }
@@ -755,6 +756,36 @@ TestCase {
             {tag: "adjacent", first: "2026-09-01", last: "2026-09-02", span: 2},
             {tag: "two-weeks", first: "2026-09-01", last: "2026-09-09", span: 9}
         ]
+    }
+
+    function test_spendHeatmapDaysKeepUnavailableBoundaryDays_data() {
+        return [
+            {tag: "cost-first", missing: [1], tokens: false},
+            {tag: "cost-last", missing: [9], tokens: false},
+            {tag: "cost-both-edges", missing: [1, 2, 8, 9], tokens: false},
+            {tag: "tokens-last", missing: [9], tokens: true}
+        ]
+    }
+
+    function test_spendHeatmapDaysKeepUnavailableBoundaryDays(data) {
+        var daily = []
+        for (var day = 1; day <= 9; day++) {
+            var amount = data.missing.indexOf(day) >= 0 ? null : day === 5 ? 0 : day
+            daily.push(dailyPoint("2026-09-0" + day,
+                data.tokens ? day : amount, data.tokens ? amount : day * 10, "USD"))
+        }
+        var costs = [{totals: {currency: "USD"}, daily: daily}]
+        var points = CostPresentation.spendDailyPoints(fmt, costs, data.tokens)
+        var days = CostPresentation.spendHeatmapDays(points, costs)
+        compare(days.length, 9, "metric filtering must preserve the loaded calendar boundaries")
+        compare(CostPresentation.spendHeatmapDays([], costs), [])
+        compare(days[4].value, 0)
+        for (var i = 0; i < data.missing.length; i++) {
+            compare(days[data.missing[i] - 1], null)
+        }
+        var cells = CostPresentation.spendHeatmapCells(days, 14)
+        compare(cells[9].label, "2026-09-05")
+        compare(cells[13], days[8])
     }
 
     function test_spendHeatmapDaysPreserveCalendarBoundaries(data) {
@@ -776,7 +807,7 @@ TestCase {
         compare(days[0], null)
         compare(days[days.length - 1], latest)
         var cells = CostPresentation.spendHeatmapCells(
-            [{label: "2026-09-01", value: 2}, latest], 7)
+            CostPresentation.spendHeatmapDays([{label: "2026-09-01", value: 2}, latest]), 7)
         compare(cells.length, 7)
         compare(cells[0], null)
         compare(cells[6], latest)

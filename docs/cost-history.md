@@ -12,7 +12,8 @@ remain visible when the details are collapsed.
   expose truncation and an explicit empty state.
 - Missing costs and token counts remain unknown. Measured zero stays zero;
   filling calendar gaps only fills metrics actually observed in the snapshot.
-- The global activity heatmap preserves calendar gaps between measured days.
+- The global activity heatmap uses the unfiltered history's calendar dates,
+  preserving unavailable days at either boundary and between measured days.
   Unavailable days occupy empty cells, so filtering missing amounts never shifts
   weekday rows. Its visible span and week count include those gaps, bounded to
   the newest 365 calendar days. Legacy non-date labels retain sequence order.
