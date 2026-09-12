@@ -1,4 +1,4 @@
-"""Optional provider names must not discard otherwise valid usage records."""
+"""Optional provider names and plan metadata must preserve valid usage records."""
 
 import os
 from pathlib import Path
@@ -16,7 +16,7 @@ FUNCTIONS = (
     "parseOutput", "normalizeProvider", "addWindow", "resetText",
     "isCliRecord", "normalizedProviderID", "providerMapKey", "hasOwnKey",
     "boundedCliMessage", "paceSummaryText", "paceEtaText", "providerTitle",
-    "providerKey", "statusText",
+    "providerKey", "statusText", "planText", "capitalize",
 )
 
 QML = '''import QtQuick
@@ -63,7 +63,6 @@ TestCase {
             function providerCostSection() { return null; }
             function resetCreditsSection() { return null; }
             function providerTokenCost() { return null; }
-            function planText() { return ""; }
             function providerDashboardUrl() { return ""; }
             function safeStatusUrl() { return ""; }
             function providerChangelogUrl() { return ""; }
@@ -117,6 +116,42 @@ TestCase {
         compare(item.statusSeverity, "minor");
         compare(item.statusIncidentKey, "synthetic-incident");
         compare(applet.providers.filter(function(provider) { return provider.provider === "claude"; })[0].rows[0].usedPercent, 12);
+        compare(applet.errorText, "");
+        verify(!applet.loading);
+    }
+
+    function test_optionalLoginMethodKeepsQuota_data() {
+        return [
+            {tag: "structured-array", method: [{toString: null}], fallback: undefined, expected: ""},
+            {tag: "structured-array-fallback", method: [{toString: null}], fallback: "pro", expected: "Pro"},
+            {tag: "structured-object-fallback", method: {toString: null}, fallback: "plus", expected: "Plus"},
+            {tag: "blank-fallback", method: "  ", fallback: "pro", expected: "Pro"},
+            {tag: "oversized-fallback", method: "x".repeat(257), fallback: "pro", expected: "Pro"},
+            {tag: "valid-preferred", method: "plus", fallback: "pro", expected: "Plus"},
+            {tag: "valid-fallback", method: undefined, fallback: "pro", expected: "Pro"}
+        ];
+    }
+
+    function test_optionalLoginMethodKeepsQuota(data) {
+        var applet = createTemporaryObject(harness, this, {});
+        verify(applet !== null);
+        applet.parseOutput(JSON.stringify([
+            {provider: "codex", account: "Synthetic  Account", usage: {
+                identity: {loginMethod: data.method}, loginMethod: data.fallback,
+                primary: {usedPercent: 72}
+            }},
+            {provider: "claude", usage: {primary: {usedPercent: 12}}}
+        ]), "");
+        compare(applet.providers.length, 2, "optional login method discarded valid usage");
+        var item = applet.providers[0];
+        compare(item.provider, "codex");
+        compare(item.planText, data.expected);
+        compare(item.loginMethod, data.expected.toLowerCase());
+        compare(item.accountKey, "Synthetic  Account");
+        compare(item.rows.length, 1);
+        compare(item.rows[0].usedPercent, 72);
+        compare(applet.providers[1].rows[0].usedPercent, 12);
+        compare(item.error, "");
         compare(applet.errorText, "");
         verify(!applet.loading);
     }

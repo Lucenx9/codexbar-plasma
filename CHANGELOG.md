@@ -22,6 +22,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve valid Codex quotas and named accounts when optional login-method
+  metadata is malformed, and use a valid fallback for the plan label.
 - Preserve ampersands and angle brackets in provider selection and settings
   checkbox labels when KDE styles process keyboard mnemonics.
 - Preserve quota, pace, and reset notification baselines when a successful CLI
