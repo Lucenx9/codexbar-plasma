@@ -131,8 +131,12 @@ function commandError(payload) {
 //   "invalidPayload"  stdout JSON had an unsupported shape
 function commandOutcome(payload, stderrText, exitCode) {
     var record = isCliRecord(payload) ? payload : null
+    var envelope = Array.isArray(payload) ? payload[0] : record
     var envelopeMessage = commandError(payload)
-    if (envelopeMessage.length > 0) {
+    // The error record establishes failure even when its message is absent
+    // or malformed. Display text must not decide whether a write succeeded.
+    if ((isCliRecord(envelope) && isCliRecord(envelope.error))
+            || envelopeMessage.length > 0) {
         return ({ outcome: "envelopeError", message: envelopeMessage })
     }
 
@@ -265,6 +269,9 @@ function fallbackTitle(resolver, providerID) {
 }
 
 function boundedCliMessage(value) {
+    if (SafeText.isStructuredValue(value)) {
+        return ""
+    }
     return SafeText.cliMessage(
         SafeText.stripLoaderDiagnostics(value), SafeText.maximumCliMessageLength)
 }

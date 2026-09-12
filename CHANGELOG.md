@@ -34,6 +34,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   metadata is malformed, and use a valid fallback for the plan label.
 - Keep disabled Overview providers from occupying the three selection slots,
   while preserving their saved selection when other providers are chosen.
+- Provider setup no longer reports a successful save when a CLI error has no
+  readable message. Structured error messages cannot interrupt result handling;
+  the widget shows a generic failure instead.
 - Keep unavailable days in their calendar positions in the Usage & Spend
   activity heatmap, so missing cost or token values do not shift weekday rows
   or shorten the displayed range.
