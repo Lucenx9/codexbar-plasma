@@ -117,7 +117,10 @@ tooltip; its panel icon and capsules are dimmed. Errors remain visible. A provid
 error with an empty or malformed message shows a generic error and follows the
 same quota-retention rules. A partial
 refresh updates healthy providers independently, and a successful refresh removes
-the retained-data indication. Retained data never generates quota, pace, reset,
+the retained-data indication. When a provider-scoped reply contains multiple
+records, an unreadable record does not prevent a later healthy record from
+updating that provider; a reply with no readable records remains an error.
+Retained data never generates quota, pace, reset,
 or status notifications, and its run-out forecasts are suppressed. If a failed
 quota response includes newly fetched service status, that status still updates
 and can trigger incident notifications independently of the retained quotas.
