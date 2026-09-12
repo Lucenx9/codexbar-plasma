@@ -650,6 +650,12 @@ PlasmoidItem {
             buildCommandDescriptor("usage", ""))
     }
 
+    function retryUsage() {
+        if (!loading) {
+            root.refreshNow(true)
+        }
+    }
+
     function markUsageSnapshotReceived() {
         var nowMs = Date.now()
         usageLastCompletedAtMs = nowMs
@@ -1105,7 +1111,8 @@ PlasmoidItem {
         if (transition.finished) {
             providerFallbackState = null
             invalidateUsageData()
-            errorText = i18n("No enabled CodexBar providers.")
+            // A confirmed empty roster uses the popup's provider setup state.
+            errorText = ""
             loading = false
             return
         }

@@ -2136,13 +2136,18 @@ for semantic_type in ("Kirigami.MessageType.Error", "Kirigami.MessageType.Warnin
         raise AssertionError(f"statusMessageType must expose {semantic_type}")
 
 for placeholder_id in (
-    "emptyProvidersMessage",
     "overviewPlaceholderMessage",
     "providerPlaceholderMessage",
 ):
     placeholder_body = id_block(main_text, placeholder_id)
     if "Kirigami.PlaceholderMessage.Type.Informational" not in placeholder_body:
         raise AssertionError(f"{placeholder_id} must use the native informational empty state")
+
+empty_providers_body = id_block(main_text, "emptyProvidersMessage")
+for fragment in ("Kirigami.PlaceholderMessage.Type.Actionable", "helpfulAction: configureProvidersAction",
+                 "plainExplanation:"):
+    if fragment not in empty_providers_body:
+        raise AssertionError("the empty provider state must explain and open native widget settings")
 
 provider_account_label_body = id_block(provider_header_text, "providerAccountLabel")
 for account_label_fragment in (

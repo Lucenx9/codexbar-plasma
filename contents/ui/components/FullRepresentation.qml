@@ -28,6 +28,33 @@ Item {
     Layout.preferredWidth: implicitWidth
     Layout.preferredHeight: implicitHeight
 
+    readonly property string usageRecoveryHint: i18n("For connection checks, open Diagnostics in widget settings.")
+
+    Controls.Action {
+        id: retryUsageAction
+
+        text: i18n("Retry")
+        icon.name: "view-refresh"
+        enabled: !applet.loading
+        onTriggered: applet.retryUsage()
+    }
+
+    Controls.Action {
+        id: usageSettingsAction
+
+        text: i18n("Settings...")
+        icon.name: "configure"
+        onTriggered: applet.performAction("settings")
+    }
+
+    Controls.Action {
+        id: configureProvidersAction
+
+        text: i18n("Configure providers...")
+        icon.name: "configure"
+        onTriggered: applet.performAction("settings")
+    }
+
     Rectangle {
         id: popupInnerSurface
 
@@ -680,11 +707,13 @@ Item {
 
         Components.PlainInlineMessage {
             id: globalErrorMessage
+            objectName: "globalErrorMessage"
 
             visible: applet.providerUsageFeedbackVisible && applet.errorText.length > 0
                 && (!applet.selectedProviderData || applet.selectedProviderData.error !== applet.errorText)
-            plainText: applet.privateErrorText(applet.errorText)
+            plainText: applet.privateErrorText(applet.errorText) + "\n\n" + fullRoot.usageRecoveryHint
             type: Kirigami.MessageType.Error
+            actions: [retryUsageAction, usageSettingsAction]
             Layout.fillWidth: true
         }
 
@@ -735,12 +764,15 @@ Item {
             // Keep the native placeholder together while this item fills the view.
             PlainPlaceholderMessage {
                 id: emptyProvidersPlaceholder
+                objectName: "emptyProvidersPlaceholder"
 
                 anchors.centerIn: parent
                 width: parent.width
                 plainText: i18n("No provider data.")
+                plainExplanation: i18n("Open Providers in widget settings to enable or set up a provider.")
                 icon.name: "view-statistics-symbolic"
-                type: Kirigami.PlaceholderMessage.Type.Informational
+                type: Kirigami.PlaceholderMessage.Type.Actionable
+                helpfulAction: configureProvidersAction
             }
         }
 
@@ -875,12 +907,15 @@ Item {
 
             Components.PlainInlineMessage {
                 id: providerErrorMessage
+                objectName: "providerErrorMessage"
 
                 visible: applet.presentedProviderData
                     && applet.presentedProviderData.error
                     && applet.presentedProviderData.error.length > 0
-                plainText: applet.presentedProviderData ? applet.presentedProviderData.error : ""
+                plainText: (applet.presentedProviderData ? applet.presentedProviderData.error : "")
+                    + (globalErrorMessage.visible ? "" : "\n\n" + fullRoot.usageRecoveryHint)
                 type: Kirigami.MessageType.Error
+                actions: globalErrorMessage.visible ? [] : [retryUsageAction, usageSettingsAction]
                 Layout.fillWidth: true
             }
 

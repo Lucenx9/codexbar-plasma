@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Offer **Configure providers** when the popup has no provider data, and
+  **Retry** and **Settings** beside usage errors. The messages point to
+  Providers or Diagnostics in widget settings. Retry keeps last-known quotas
+  visible and cannot repeat while a usage refresh is running.
 - Refresh stale **Usage & Spend** history when revisiting the tab and when a
   visible spend view stays open across midnight. The existing hourly cost
   lifecycle still guards in-flight scans and failed-attempt cooldowns, cached

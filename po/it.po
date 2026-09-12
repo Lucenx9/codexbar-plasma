@@ -113,6 +113,24 @@ msgstr ""
 msgid "%1 %2"
 msgstr "%1 %2"
 
+#: contents/ui/components/FullRepresentation.qml
+msgid "For connection checks, open Diagnostics in widget settings."
+msgstr ""
+"Per verificare la connessione, apri Diagnostica nelle impostazioni del "
+"widget."
+
+#: contents/ui/components/FullRepresentation.qml
+msgid "Retry"
+msgstr "Riprova"
+
+#: contents/ui/components/FullRepresentation.qml contents/ui/main.qml
+msgid "Settings..."
+msgstr "Impostazioni..."
+
+#: contents/ui/components/FullRepresentation.qml
+msgid "Configure providers..."
+msgstr "Configura provider..."
+
 #: contents/ui/components/FullRepresentation.qml scripts/smoke/Capture.qml
 msgid "Overview"
 msgstr "Panoramica"
@@ -142,6 +160,12 @@ msgstr "Caricamento dell'utilizzo..."
 #: contents/ui/components/FullRepresentation.qml
 msgid "No provider data."
 msgstr "Nessun dato sui provider."
+
+#: contents/ui/components/FullRepresentation.qml
+msgid "Open Providers in widget settings to enable or set up a provider."
+msgstr ""
+"Apri Provider nelle impostazioni del widget per abilitare o configurare un "
+"provider."
 
 #: contents/ui/components/FullRepresentation.qml
 #: contents/ui/components/OverviewProviderRow.qml
@@ -416,6 +440,11 @@ msgid "History metric"
 msgstr "Metrica della cronologia"
 
 #: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/SpendView.qml
+msgid "Some local history is unavailable: %1"
+msgstr "Parte della cronologia locale non è disponibile: %1"
+
+#: contents/ui/components/ProviderCostSection.qml
 msgid "Cost unavailable: %1"
 msgstr "Costo non disponibile: %1"
 
@@ -527,10 +556,6 @@ msgstr "Cronologia"
 #: contents/ui/components/SpendView.qml
 msgid "History range"
 msgstr "Periodo della cronologia"
-
-#: contents/ui/components/SpendView.qml
-msgid "Some local history is unavailable: %1"
-msgstr "Parte della cronologia locale non è disponibile: %1"
 
 #: contents/ui/components/SpendView.qml
 msgid "Local history is unavailable: %1"
@@ -1183,7 +1208,7 @@ msgstr "Usa automaticamente i primi %1 provider"
 msgid "Set the codexbar command path in Diagnostics."
 msgstr "Imposta il percorso del comando codexbar in Diagnostica."
 
-#: contents/ui/configProviders.qml
+#: contents/ui/configProviders.qml contents/ui/main.qml
 msgid "codexbar command failed."
 msgstr "Il comando codexbar non è riuscito."
 
@@ -1912,10 +1937,6 @@ msgstr ""
 "Impossibile interpretare la configurazione dei provider di CodexBar: %1"
 
 #: contents/ui/main.qml
-msgid "No enabled CodexBar providers."
-msgstr "Nessun provider CodexBar abilitato."
-
-#: contents/ui/main.qml
 msgid "Loading usage timed out. Try again."
 msgstr "Tempo scaduto per il caricamento dell'utilizzo. Riprova."
 
@@ -2533,10 +2554,6 @@ msgstr "Pagina di stato"
 #: contents/ui/main.qml
 msgid "Changelog"
 msgstr "Novità"
-
-#: contents/ui/main.qml
-msgid "Settings..."
-msgstr "Impostazioni..."
 
 #: contents/ui/main.qml
 msgid "About CodexBar"

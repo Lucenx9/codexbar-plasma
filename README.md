@@ -141,6 +141,10 @@ The source-checkout helper `./install.sh` checks for `kpackagetool6` and
 
 ### The widget stays on Loading or cannot find the CLI
 
+Usage errors in the popup offer **Retry** and **Settings**. Open **Diagnostics**
+in widget settings to check the connection. Retry is unavailable while a quota
+refresh is running; the last known quotas stay visible when available.
+
 Run `codexbar usage --format json --json-only` in a terminal. If it fails,
 resolve the provider or CLI setup first. If it works, locate the executable:
 
@@ -153,6 +157,9 @@ may have a different `PATH` from your terminal. **Use PATH** restores the
 portable `codexbar` default.
 
 ### Providers, accounts, or costs are missing
+
+If the popup has no provider data, choose **Configure providers**, then open
+**Providers** in widget settings to enable or set up a provider.
 
 Check that the provider is enabled in **Providers**, then inspect the relevant
 CLI response. For example, for Codex accounts and local cost data:

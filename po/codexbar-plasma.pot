@@ -96,6 +96,22 @@ msgstr ""
 msgid "%1 %2"
 msgstr ""
 
+#: contents/ui/components/FullRepresentation.qml
+msgid "For connection checks, open Diagnostics in widget settings."
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+msgid "Retry"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml contents/ui/main.qml
+msgid "Settings..."
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+msgid "Configure providers..."
+msgstr ""
+
 #: contents/ui/components/FullRepresentation.qml scripts/smoke/Capture.qml
 msgid "Overview"
 msgstr ""
@@ -124,6 +140,10 @@ msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
 msgid "No provider data."
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+msgid "Open Providers in widget settings to enable or set up a provider."
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
@@ -1825,10 +1845,6 @@ msgid "Could not parse CodexBar provider configuration: %1"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "No enabled CodexBar providers."
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "Loading usage timed out. Try again."
 msgstr ""
 
@@ -2444,10 +2460,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Changelog"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Settings..."
 msgstr ""
 
 #: contents/ui/main.qml
