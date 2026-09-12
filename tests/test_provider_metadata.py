@@ -1,4 +1,4 @@
-"""Optional provider names must not discard otherwise valid usage records."""
+"""Malformed provider metadata must preserve healthy and last-known quotas."""
 
 import os
 from pathlib import Path
@@ -16,7 +16,8 @@ FUNCTIONS = (
     "parseOutput", "normalizeProvider", "addWindow", "resetText",
     "isCliRecord", "normalizedProviderID", "providerMapKey", "hasOwnKey",
     "boundedCliMessage", "paceSummaryText", "paceEtaText", "providerTitle",
-    "providerKey", "statusText",
+    "providerKey", "statusText", "providerPlaceholder", "rateLimitsUnavailable",
+    "planText", "capitalize",
 )
 
 QML = '''import QtQuick
@@ -28,8 +29,9 @@ import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/SafeText.js" as SafeText
 import "SOURCE_URL/UsageDetails.js" as UsageDetails
 import "SOURCE_URL/PacePresentation.js" as PacePresentation
+import "SOURCE_URL/UsageCache.js" as UsageCache
 TestCase {
-    name: "ProviderTitleMetadata"
+    name: "ProviderMetadata"
     Component {
         id: harness
         QtObject {
@@ -53,17 +55,17 @@ TestCase {
             }
             function i18np(one, many, count) { return i18n(count === 1 ? one : many, count); }
             // Observe publication without running processes or persisting data.
-            // Parsing, provider titles and quota normalization are production.
-            function commitUsageSnapshot(items) { providers = items; }
+            // Parsing, normalization and quota retention are production.
+            function commitUsageSnapshot(items) {
+                providers = UsageCache.reconcile(providers, items, panelClockMs);
+            }
             function failUsageRefresh(message) { errorText = message; loading = false; }
             function canUseProviderFallback() { return false; }
             function rateWindowLabel() { return "Quota"; }
             function usageDashboard() { return null; }
-            function providerPlaceholder() { return ""; }
             function providerCostSection() { return null; }
             function resetCreditsSection() { return null; }
             function providerTokenCost() { return null; }
-            function planText() { return ""; }
             function providerDashboardUrl() { return ""; }
             function safeStatusUrl() { return ""; }
             function providerChangelogUrl() { return ""; }
@@ -120,12 +122,107 @@ TestCase {
         compare(applet.errorText, "");
         verify(!applet.loading);
     }
+
+    function test_errorWithoutDisplayableMessageRetainsQuota_data() {
+        return [
+            {tag: "missing-message", error: {code: 1, kind: "provider"}},
+            {tag: "empty-message", error: {code: 1, message: ""}},
+            {tag: "blank-message", error: {code: 1, message: "   "}},
+            {tag: "null-message", error: {code: 1, message: null}},
+            {tag: "object-message", error: {code: 1, message: {detail: "Synthetic failure"}}},
+            {tag: "structured-message", error: {code: 1, message: {toString: null}}},
+            {tag: "array-message", error: {code: 1, message: [{toString: null}]}},
+            {tag: "valid-message", error: {code: 1, message: "Synthetic failure"}}
+        ];
+    }
+
+    function test_errorWithoutDisplayableMessageRetainsQuota(data) {
+        var applet = createTemporaryObject(harness, this, {});
+        verify(applet !== null);
+        applet.parseOutput(JSON.stringify([
+            {provider: "codex", usage: {primary: {usedPercent: 72}}},
+            {provider: "claude", usage: {primary: {usedPercent: 12}}}
+        ]), "");
+        var measuredAt = applet.providers[0].lastGoodAtMs;
+        applet.panelClockMs += 60000;
+        applet.loading = true;
+        applet.parseOutput(JSON.stringify([
+            {provider: "codex", error: data.error,
+                status: {indicator: "major", incidentId: "synthetic-incident"}},
+            {provider: "claude", usage: {primary: {usedPercent: 45}}}
+        ]), "");
+        compare(applet.providers.length, 2);
+        var retained = applet.providers[0];
+        verify(retained.error.length > 0, "An error envelope must not become a successful empty snapshot");
+        compare(retained.rows.length, 1);
+        compare(retained.rows[0].usedPercent, 72);
+        compare(retained.lastGoodAtMs, measuredAt);
+        verify(retained.usageStale);
+        compare(retained.statusKnown, true);
+        compare(retained.statusSeverity, "major");
+        compare(retained.error, data.tag === "valid-message" ? "Synthetic failure" : "codexbar command failed.");
+        compare(applet.providers[1].rows[0].usedPercent, 45);
+        verify(!applet.providers[1].usageStale);
+        verify(!applet.loading);
+    }
+
+    function test_successWithoutQuotaClearsPreviousMeasurement_data() {
+        return [{tag: "absent-error"}, {tag: "null-error", error: null}];
+    }
+
+    function test_successWithoutQuotaClearsPreviousMeasurement(data) {
+        var applet = createTemporaryObject(harness, this, {});
+        applet.parseOutput(JSON.stringify({
+            provider: "codex", usage: {primary: {usedPercent: 72}}
+        }), "");
+        applet.parseOutput(JSON.stringify({provider: "codex", error: data.error}), "");
+        compare(applet.providers.length, 1);
+        compare(applet.providers[0].error, "");
+        compare(applet.providers[0].rows.length, 0);
+        verify(!applet.providers[0].usageStale);
+    }
+
+    function test_optionalLoginMethodKeepsQuota_data() {
+        return [
+            {tag: "structured-array", method: [{toString: null}], fallback: undefined, expected: ""},
+            {tag: "structured-array-fallback", method: [{toString: null}], fallback: "pro", expected: "Pro"},
+            {tag: "structured-object-fallback", method: {toString: null}, fallback: "plus", expected: "Plus"},
+            {tag: "blank-fallback", method: "  ", fallback: "pro", expected: "Pro"},
+            {tag: "oversized-fallback", method: "x".repeat(257), fallback: "pro", expected: "Pro"},
+            {tag: "valid-preferred", method: "plus", fallback: "pro", expected: "Plus"},
+            {tag: "valid-fallback", method: undefined, fallback: "pro", expected: "Pro"}
+        ];
+    }
+
+    function test_optionalLoginMethodKeepsQuota(data) {
+        var applet = createTemporaryObject(harness, this, {});
+        verify(applet !== null);
+        applet.parseOutput(JSON.stringify([
+            {provider: "codex", account: "Synthetic  Account", usage: {
+                identity: {loginMethod: data.method}, loginMethod: data.fallback,
+                primary: {usedPercent: 72}
+            }},
+            {provider: "claude", usage: {primary: {usedPercent: 12}}}
+        ]), "");
+        compare(applet.providers.length, 2, "optional login method discarded valid usage");
+        var item = applet.providers[0];
+        compare(item.provider, "codex");
+        compare(item.planText, data.expected);
+        compare(item.loginMethod, data.expected.toLowerCase());
+        compare(item.accountKey, "Synthetic  Account");
+        compare(item.rows.length, 1);
+        compare(item.rows[0].usedPercent, 72);
+        compare(applet.providers[1].rows[0].usedPercent, 12);
+        compare(item.error, "");
+        compare(applet.errorText, "");
+        verify(!applet.loading);
+    }
 }
 '''
 
 
-class ProviderTitleMetadataTests(unittest.TestCase):
-    def test_optional_provider_names_preserve_valid_quotas(self):
+class ProviderMetadataTests(unittest.TestCase):
+    def test_provider_metadata_preserves_valid_quotas(self):
         applet = Surface("applet", ROOT)
         main = ROOT / "contents/ui/main.qml"
         source = applet.texts[main]
@@ -136,8 +233,8 @@ class ProviderTitleMetadataTests(unittest.TestCase):
             functions.append(signature + " {" + applet.function_body(name) + "}")
         qml = QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
         qml = qml.replace("SOURCE_FUNCTIONS", "\n".join(functions))
-        with tempfile.TemporaryDirectory(prefix="codexbar-provider-title-") as temporary:
-            fixture = Path(temporary) / "tst_provider_title.qml"
+        with tempfile.TemporaryDirectory(prefix="codexbar-provider-metadata-") as temporary:
+            fixture = Path(temporary) / "tst_provider_metadata.qml"
             fixture.write_text(qml)
             result = subprocess.run(
                 [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],

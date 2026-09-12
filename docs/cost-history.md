@@ -2,7 +2,8 @@
 
 The provider popup shows Today and the selected period side by side. History,
 period models, and projects expand on demand. Cost errors and pricing notices
-remain visible when the details are collapsed.
+remain visible when the details are collapsed, including refresh errors beside
+retained values. A successful refresh clears the error.
 
 ## Data and display rules
 
@@ -12,6 +13,11 @@ remain visible when the details are collapsed.
   expose truncation and an explicit empty state.
 - Missing costs and token counts remain unknown. Measured zero stays zero;
   filling calendar gaps only fills metrics actually observed in the snapshot.
+- The global activity heatmap uses the unfiltered history's calendar dates,
+  preserving unavailable days at either boundary and between measured days.
+  Unavailable days occupy empty cells, so filtering missing amounts never shifts
+  weekday rows. Its visible span and week count include those gaps, bounded to
+  the newest 365 calendar days. Legacy non-date labels retain sequence order.
 - Model names are strings. Numeric names are not coerced into display labels.
   Tied model amounts use the label as a stable ordering tiebreaker.
 - Standard/Fast totals remain blocked on an official CLI contract. No service
@@ -93,5 +99,8 @@ output are linked in the
 [presentation tests](../tests/tst_cost_presentation.qml) cover the data rules.
 The popup smoke scenarios cover pinned-day refreshes, reordering, missing days,
 cached account changes, ranges, missing token counts, and incomplete models.
+The `popup-cost-refresh-error` scenario covers retained costs through empty,
+malformed, unsupported, and partial error replies, collapsed/expanded details,
+privacy, an initial failure without cached costs, and recovery.
 Run `make check` for logic and wiring, and `make smoke` for the real applet with
 synthetic data. Executed check results belong in the PR.

@@ -2870,7 +2870,9 @@ if "visible: view.dailyPoints.length > 0" not in spend_view_text:
 if "visible: view.dailyPoints.length > 1" in spend_view_text:
     raise AssertionError("SpendView must not hide the accessible chart when one history day is available")
 for heatmap_range_fragment in (
-    "Math.ceil(view.dailyPoints.length / 7)",
+    "readonly property var heatmapDays: CostPresentation.spendHeatmapDays(dailyPoints, providerCosts)",
+    "Math.ceil(view.heatmapDays.length / 7)",
+    "view.heatmapDays, columnCount * 7)",
     "readonly property int fittingColumns",
     "readonly property real cellHeight",
     "Layout.preferredHeight: 7 * heatmapGrid.cellHeight",
@@ -2896,7 +2898,7 @@ if "CostPresentation.spendHeatmapCells(" not in spend_view_text:
         "the activity heatmap must pad its grid through the shared cell layout, so a ragged "
         "final column cannot cut a week-wide notch out of the block"
     )
-if "visible: view.dailyPoints.length > 7" not in spend_view_text:
+if "visible: view.heatmapDays.length > 7" not in spend_view_text:
     raise AssertionError(
         "the activity heatmap must stay hidden for ranges that fill a single week column, "
         "which repeat the chart above instead of showing a weekday pattern"
@@ -3145,7 +3147,8 @@ for lane in ("primary", "secondary", "tertiary"):
 for bounded_provider_fragment in (
     "title: Normalizer.boundedDisplayText(",
     "status: Normalizer.boundedDisplayText(",
-    "error: boundedCliMessage(",
+    "boundedCliMessage(Normalizer.safeScalarText(error.message))",
+    "error: errorMessage",
 ):
     if bounded_provider_fragment not in normalize_provider_body:
         raise AssertionError("new provider display surfaces must use bounded normalized text")

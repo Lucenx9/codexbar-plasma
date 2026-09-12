@@ -94,13 +94,23 @@ work and upstream contract requirements.
 - Global **Usage & Spend** tab with a Cost/Tokens selector, a 7/30/90-day range
   selector, interactive daily chart, activity heatmap, and provider totals that
   keep different currencies separate. The heatmap groups the range into weekday
-  rows and week columns, and stays hidden for ranges that fill a single column.
+  rows and week columns, leaving empty cells for unavailable days in the loaded
+  calendar, including its first and last days. Measured zero remains a recorded
+  day. It stays hidden for ranges that fill a single column.
 - Local **Sessions** tab backed by `sessions --json-v2`; transcript paths and
   working directories are never rendered or opened. The tab refreshes stale
-  session data while it remains visible.
+  session data while it remains visible. Failed scans also respect the refresh
+  interval from the failure or timeout (five minutes when periodic usage
+  refresh is disabled), so reopening
+  the popup or revisiting the tab does not repeat a failed scan immediately.
+  The Sessions refresh button can retry immediately; changing the CLI command
+  clears the retry cooldown.
 - Overview providers can be limited to a chosen set of up to 3 providers, or
   left automatic (the first 3 eligible providers). The checkboxes recognize
   provider aliases and mixed-case IDs, like the panel provider selection.
+  Disabled providers keep their saved selection without occupying one of the
+  three slots. If more than three selected providers become available again,
+  Overview shows the first three eligible providers in the saved provider order.
   Provider selection checkboxes preserve literal characters such as `&`, `<`,
   and `>` in display names, including with KDE desktop styles.
 - Usage dashboard summaries for provider payloads that expose API spend,
@@ -111,17 +121,29 @@ work and upstream contract requirements.
 
 ## Data freshness
 
+Malformed optional login-method metadata does not discard valid provider quotas
+or named accounts. The Codex plan label uses the same validated login method as
+the account details, including a valid fallback supplied by the CLI.
+
 Failed usage refreshes keep the last valid quotas visible. Each retained provider
 shows **Last known usage** with the age of its measurement in the popup and panel
-tooltip; its panel icon and capsules are dimmed. Errors remain visible. A partial
+tooltip; its panel icon and capsules are dimmed. Errors remain visible. A provider
+error with an empty or malformed message shows a generic error and follows the
+same quota-retention rules. A partial
 refresh updates healthy providers independently, and a successful refresh removes
-the retained-data indication. Retained data never generates quota, pace, reset,
+the retained-data indication. When a provider-scoped reply contains multiple
+records, an unreadable record does not prevent a later healthy record from
+updating that provider; a reply with no readable records remains an error.
+Retained data never generates quota, pace, reset,
 or status notifications, and its run-out forecasts are suppressed. If a failed
 quota response includes newly fetched service status, that status still updates
 and can trigger incident notifications independently of the retained quotas.
 Stale quotas preserve the previous quota, pace, and reset notification state,
 even when the CLI reports success with old quotas and current status. If no fresh
 quota has been seen, the first fresh measurement establishes that state silently.
+Panel run-out countdowns advance from the receipt time of their own forecast.
+Selecting a cached account preserves that time, including in privacy mode;
+a later refresh for another account cannot restart its countdown.
 Failed refreshes stop reusing measurements older than 24 hours, and a quota
 measurement older than 24 hours never stamps a new snapshot as fresh. A failed refresh that
 reports a different account than the retained measurement does not reuse it; a
@@ -199,7 +221,9 @@ Provider-specific editable settings depend on the official CLI contract.
   overage, z.ai BigModel CN balance, and Cursor Grok Bot usage, use the existing
   generic detail, provider-cost, and extra-window paths.
 - A compact provider summary compares today with the selected period. Expand
-  details for period models, history, and projects; cost warnings remain visible.
+  details for period models, history, and projects; cost warnings remain visible,
+  including when a failed refresh keeps the previous cost snapshot. A successful
+  refresh clears the error.
 - Click a day in the provider chart or select it with the keyboard to see that
   day's model costs and tokens. Hover previews stay inside the chart, keeping
   the layout steady. The cost/token selector reuses the loaded data.
@@ -209,7 +233,8 @@ Provider-specific editable settings depend on the official CLI contract.
   Revisiting **Usage & Spend** refreshes history that became stale since the last
   scan, and a spend view left open across midnight refreshes once for the new day.
   Switching the Cost/Tokens metric or inspecting a day reuses the loaded data and
-  starts no scan.
+  starts no scan. Cost settings applied together start a single scan using the
+  final executable, provider, and history range; disabling costs starts none.
 - Token breakdowns, model summaries, recent daily spend, cost history bars, and
   average cost per 1M tokens, with a configurable cost history window.
 - Token, request, and point counts use the current language's singular and

@@ -19,6 +19,7 @@ SCENARIOS += ("panel-information", "panel-information-minimal", "panel-informati
 SCENARIOS += ("panel-default", "panel-default-single")
 SCENARIOS += ("panel-vertical", "panel-vertical-minimal", "panel-small", "panel-dual-edge")
 SCENARIOS += ("popup-cost-details", "popup-cost-tokens")
+SCENARIOS += ("popup-cost-refresh-error",)
 SCENARIOS += ("popup-cost-missing-tokens", "popup-cost-partial-models")
 SCENARIOS += ("popup-content", "refresh-on-open", "privacy-provider", "privacy-spend", "privacy-sessions")
 SCENARIOS += ("privacy-cost-details",)
