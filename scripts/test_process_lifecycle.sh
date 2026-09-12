@@ -25,7 +25,7 @@ require_in_surface applet "interval: 0"
 require_in_surface applet "root.finishUsageCommandSource(sourceName)"
 require_in_surface applet 'import "ProviderFallbackQueue.js" as ProviderFallbackQueue'
 require_in_surface applet 'import "ProviderRosterCache.js" as ProviderRosterCache'
-require_in_surface applet 'import "AccountRequests.js" as AccountRequests'
+require_in_surface applet 'import "../AccountRequests.js" as AccountRequests'
 require_in_surface applet 'import "../SessionRefreshPolicy.js" as SessionRefreshPolicy'
 require_in_surface applet "property var providerFallbackState: null"
 require_in_surface applet "readonly property int accountCommandTimeoutMs: 60000"
@@ -143,63 +143,14 @@ for retire_kind_fragment in ("CommandLedger.sourcesOfKind(activeCommandDescripto
             f"missing {retire_kind_fragment!r}"
         )
 
-require_all(
-    applet.function_body("loadAccounts"),
-    (
-        "accountLoadingForProvider(normalizedProviderID)",
-        "buildCommandDescriptor(",
-        '"account", normalizedProviderID, accountCommandTimeoutMs)',
-        "descriptor.commandSignature = command",
-        "connectUsageCommand(connectedCommand, descriptor)",
-    ),
-    "account loads must enter the shared deadline ledger",
-)
+require_all(applet.function_body("loadAccounts"), ("accountsController.load(providerID)",),
+            "account discovery must reach its controller")
+require_all(applet.function_body("accountLoadingForProvider"), ("accountsController.loadingForProvider(key)",),
+            "account loading must follow the controller ledger")
+require_all(applet.function_body("invalidateUsageData"), ("accountsController.reset()",),
+            "a full usage context invalidation must reset account lists")
 
-# Behavioral ownership and context cases live in tst_account_requests.qml.
-# Keep only the QML seam and effect ordering here: decide while registered,
-# disconnect completed requests, then parse only accepted payloads.
-require_ordered(
-    applet.function_body("parseProviderAccountsOutput"),
-    (
-        "AccountRequests.completion(activeCommandDescriptors, sourceName,",
-        "buildProviderAccountsCommand(descriptor.providerID)",
-        "if (!decision)",
-        "finishUsageCommandSource(sourceName)",
-        "if (!decision.acceptsPayload)",
-        "JSON.parse(trimmed)",
-    ),
-    "account replies must decide before disconnecting and gate payload parsing on acceptance",
-)
-accounts_parse_body = applet.function_body("parseProviderAccountsOutput")
-require_all(
-    accounts_parse_body[accounts_parse_body.rfind("} catch (error) {"):],
-    ("setAccountError(providerID,",),
-    "an unexpected account parse failure must report a scoped error",
-)
-
-require_all(
-    applet.function_body("accountLoadingForProvider"),
-    ("AccountRequests.isLoading(activeCommandDescriptors, key)",),
-    "account loading must derive from the shared ledger, including completion and timeout cleanup",
-)
-
-require_all(
-    applet.function_body("retireStaleAccountCommands"),
-    (
-        'CommandLedger.sourcesOfKind(activeCommandDescriptors, "account")',
-        "CommandLedger.find(activeCommandDescriptors, sourceName)",
-        "AccountRequests.completion(activeCommandDescriptors, sourceName,",
-        "buildProviderAccountsCommand(descriptor.providerID)",
-        "if (decision && !decision.acceptsPayload)",
-        "finishUsageCommandSource(sourceName)",
-    ),
-    "stale account cleanup is incomplete",
-)
-
-if "retireStaleAccountCommands()" not in applet.function_body("refreshNow"):
-    raise AssertionError("refreshNow must retire account commands from an obsolete CLI context")
-
-for function_name in ("buildProviderAccountsCommand", "buildProviderUsageCommand"):
+for function_name in ("buildProviderUsageCommand",):
     body = applet.function_body(function_name)
     if 'if (source.length > 0)' not in body:
         raise AssertionError(f"{function_name} must preserve the automatic CLI source by default")
@@ -232,29 +183,14 @@ require_all(
         "switch (descriptor.kind) {",
         'case "usage":',
         'case "providerConfig":',
-        'case "account":',
         'case "providerFallback":',
         'case "notification":',
         "finishUsageCommandSource(sourceName)",
         "finishNotificationCommandSource(sourceName)",
         "Loading usage timed out. Try again.",
         "Loading provider configuration timed out. Try again.",
-        "Loading accounts timed out. Try again.",
     ),
     "command timeout cleanup is incomplete",
-)
-account_timeout_start = timeout_body.find('case "account":')
-account_timeout_end = timeout_body.find('case "providerFallback":', account_timeout_start)
-if account_timeout_start < 0 or account_timeout_end < 0:
-    raise AssertionError("account timeout branch is missing")
-require_all(
-    timeout_body[account_timeout_start:account_timeout_end],
-    (
-        "finishUsageCommandSource(sourceName)",
-        "setAccountError(",
-        "descriptor.providerID",
-    ),
-    "account timeout must close the shared ledger entry and report the scoped error",
 )
 fallback_timeout_start = timeout_body.find('case "providerFallback":')
 fallback_timeout_end = timeout_body.find('case "notification":', fallback_timeout_start)
@@ -316,9 +252,6 @@ for stale_route_fragment in (
             "process replies must route on the ledger entry, not a parallel "
             f"per-kind source name: {stale_route_fragment}"
         )
-
-if "root.parseProviderAccountsOutput(sourceName, descriptor, stdoutText, stderrText)" not in usage_source_block:
-    raise AssertionError("account completion must consume the descriptor routed by the shared ledger")
 
 require_all(
     applet.function_body("completeProviderFallbackSlot"),
@@ -542,6 +475,33 @@ require_all(
     ),
     "watcher replies from a retired poll must be disconnected, never left polling",
 )
+
+accounts_text = (root / "contents/ui/controllers/AccountsController.qml").read_text()
+require_all(applet.id_block("accountsController"),
+            ("commandPath: root.commandPath", "sourceMode: root.source", "includeStatus: root.includeStatus"),
+            "account discovery must receive explicit CLI inputs")
+for forbidden in ("root.", "Plasmoid.configuration", "required property var applet"):
+    if forbidden in accounts_text:
+        raise AssertionError("account controller must own its lifecycle without root callbacks")
+for body in (applet.function_body("handleCommandTimeout"), applet.id_block("usageSource")):
+    if 'case "account"' in body:
+        raise AssertionError("account processes must leave the usage dispatcher")
+require_ordered(controller_function(accounts_text, "request"),
+                ("controller.loadingForProvider(key)", "CommandLedger.withRunNonce(",
+                 "descriptor.commandSignature = baseCommand", "CommandLedger.opened(", "connectSource("),
+                "account requests must suppress duplicates and register before connecting")
+require_ordered(controller_function(accounts_text, "acceptReply"),
+                ("AccountRequests.completion(", "if (!decision)", "return;", "finishRequest(sourceName)",
+                 "if (!decision.acceptsPayload)", "return;", "AccountResponse.response("),
+                "account replies must reject obsolete sources before normalization")
+require_ordered(controller_function(accounts_text, "finishRequest"),
+                ("CommandLedger.closed(", "disconnectSource("),
+                "account requests must retire before disconnect callbacks")
+require_all(accounts_text,
+            ("onCommandContextChanged: retireRequests()", "Component.onDestruction: lifecycle.retireRequests()",
+             "CommandLedger.hasDeadlines(lifecycle.commands)", "lifecycle.expireRequests(Date.now())",
+             "Loading accounts timed out. Try again."),
+            "account controller must own context retirement, deadlines, and destruction cleanup")
 
 cost_text = (root / "contents/ui/controllers/CostController.qml").read_text()
 require_all(

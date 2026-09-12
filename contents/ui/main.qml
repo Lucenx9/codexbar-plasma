@@ -16,7 +16,7 @@ import "PanelRules.js" as PanelRules
 import "PanelTextFit.js" as PanelTextFit
 import "PopupSelection.js" as PopupSelection
 import "CommandLedger.js" as CommandLedger
-import "AccountRequests.js" as AccountRequests
+import "ProviderSnapshot.js" as ProviderSnapshot
 import "CostPresentation.js" as CostPresentation
 import "OverviewProviders.js" as OverviewProviders
 import "ProviderFallbackQueue.js" as ProviderFallbackQueue
@@ -30,8 +30,6 @@ import "QuotaThresholds.js" as QuotaThresholds
 import "SafeText.js" as SafeText
 import "PopupRefreshPolicy.js" as PopupRefreshPolicy
 import "ThemeContrast.js" as ThemeContrast
-import "UsageDetails.js" as UsageDetails
-import "LegacyUsageDashboard.js" as LegacyUsageDashboard
 
 PlasmoidItem {
     id: root
@@ -132,9 +130,7 @@ PlasmoidItem {
     property int commandRunSerial: 0
     property var activeCommandDescriptors: ({})
     readonly property int defaultCommandTimeoutMs: 120000
-    readonly property int maximumExtraRateWindows: Normalizer.maximumExtraRateWindows
     readonly property int maximumProviderSnapshots: Normalizer.maximumProviderSnapshots
-    readonly property int maximumAccountSnapshots: Normalizer.maximumAccountSnapshots
     readonly property int maximumCostHistoryPoints: Normalizer.maximumCostHistoryPoints
     readonly property int maximumConcurrentProviderFallbackCommands: 8
     property var providerFallbackState: null
@@ -155,9 +151,7 @@ PlasmoidItem {
     property string selectedGlobalView: "overview"
     property bool selectionInitialized: false
     property var selectedAccounts: ({})
-    property var accountOptions: ({})
-    property var accountErrors: ({})
-    readonly property int accountCommandTimeoutMs: 60000
+    readonly property var accountOptions: presentAccountOptions(accountsController.options)
     readonly property int notificationCommandTimeoutMs: 10000
     property var notificationMemo: ({})
     property var notificationRefreshPending: ({})
@@ -279,34 +273,6 @@ PlasmoidItem {
                 parts.push(shellQuote(selectedAccount))
             }
         }
-
-        if (source.length > 0) {
-            parts.push("--source")
-            parts.push(shellQuote(source))
-        }
-
-        if (includeStatus) {
-            parts.push("--status")
-        }
-
-        return parts.join(" ")
-    }
-
-    function buildProviderAccountsCommand(providerID) {
-        if (commandPath.length === 0) {
-            return ""
-        }
-
-        var parts = [
-            shellQuote(commandPath),
-            "usage",
-            "--provider",
-            shellQuote(providerCliArgument(providerID)),
-            "--all-accounts",
-            "--format",
-            "json",
-            "--json-only"
-        ]
 
         if (source.length > 0) {
             parts.push("--source")
@@ -521,7 +487,6 @@ PlasmoidItem {
     function refreshNow(bypassProviderRosterCache) {
         usageRefreshScheduled = false
         retireUsageCommands()
-        retireStaleAccountCommands()
 
         if (commandSource.length === 0) {
             failUsageRefresh(i18n("Set the codexbar command path in widget settings."))
@@ -579,9 +544,7 @@ PlasmoidItem {
             Plasmoid.configuration.usageCache = ""
         }
         if (!providerID) {
-            retireUsageCommandKind("account")
-            accountOptions = ({})
-            accountErrors = ({})
+            accountsController.reset()
         }
         usageLastCompletedAtMs = -1
         lastUpdatedText = ""
@@ -972,7 +935,7 @@ PlasmoidItem {
                 try {
                     payload = JSON.parse(trimmed)
                     var items = Array.isArray(payload) ? payload : [payload]
-                    var itemLimit = Math.min(items.length, maximumAccountSnapshots)
+                    var itemLimit = Math.min(items.length, Normalizer.maximumAccountSnapshots)
                     for (var i = 0; i < itemLimit; i++) {
                         if (!isCliRecord(items[i])) {
                             continue
@@ -1043,36 +1006,7 @@ PlasmoidItem {
     }
 
     function loadAccounts(providerID) {
-        var normalizedProviderID = providerKey(providerID)
-        if (accountLoadingForProvider(normalizedProviderID)) {
-            return
-        }
-
-        var command = buildProviderAccountsCommand(normalizedProviderID)
-        if (command.length === 0) {
-            setAccountError(normalizedProviderID, i18n("Set the codexbar command path in widget settings."))
-            return
-        }
-
-        setAccountError(normalizedProviderID, "")
-        var connectedCommand = commandWithRunNonce(command)
-        var descriptor = buildCommandDescriptor(
-            "account", normalizedProviderID, accountCommandTimeoutMs)
-        descriptor.commandSignature = command
-        connectUsageCommand(connectedCommand, descriptor)
-    }
-
-    function retireStaleAccountCommands() {
-        var sourceNames = CommandLedger.sourcesOfKind(activeCommandDescriptors, "account")
-        for (var i = 0; i < sourceNames.length; i++) {
-            var sourceName = sourceNames[i]
-            var descriptor = CommandLedger.find(activeCommandDescriptors, sourceName)
-            var decision = AccountRequests.completion(activeCommandDescriptors, sourceName,
-                buildProviderAccountsCommand(descriptor.providerID))
-            if (decision && !decision.acceptsPayload) {
-                finishUsageCommandSource(sourceName)
-            }
-        }
+        return accountsController.load(providerID)
     }
 
     function hasPendingCommandTimeouts() {
@@ -1114,12 +1048,6 @@ PlasmoidItem {
             finishUsageCommandSource(sourceName)
             failUsageRefresh(i18n("Loading provider configuration timed out. Try again."))
             return
-        case "account":
-            finishUsageCommandSource(sourceName)
-            setAccountError(
-                descriptor.providerID,
-                i18n("Loading accounts timed out. Try again."))
-            return
         case "providerFallback":
             parseProviderFallbackOutput(
                 sourceName,
@@ -1132,84 +1060,6 @@ PlasmoidItem {
             return
         default:
             finishUsageCommandSource(sourceName)
-        }
-    }
-
-    function parseProviderAccountsOutput(sourceName, descriptor, stdoutText, stderrText) {
-        var decision = AccountRequests.completion(activeCommandDescriptors, sourceName,
-            descriptor ? buildProviderAccountsCommand(descriptor.providerID) : "")
-        if (!decision) {
-            return
-        }
-        finishUsageCommandSource(sourceName)
-        if (!decision.acceptsPayload) {
-            return
-        }
-        var providerID = providerMapKey(decision.providerID)
-        if (providerID.length === 0) {
-            return
-        }
-
-        var trimmed = stdoutText.trim()
-        if (trimmed.length === 0) {
-            setAccountError(providerID, stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("codexbar did not return account data."))
-            return
-        }
-
-        // The ledger entry is already closed; still report a scoped error if
-        // normalization fails after JSON parsing.
-        try {
-            var payload = JSON.parse(trimmed)
-
-            var items = Array.isArray(payload) ? payload : [payload]
-            var options = []
-            var message = ""
-            var sawMissingTokenAccountsError = false
-            var itemLimit = Math.min(items.length, maximumAccountSnapshots)
-            for (var i = 0; i < itemLimit; i++) {
-                var item = items[i]
-                if (!isCliRecord(item)) {
-                    continue
-                }
-                var normalized = null
-                try {
-                    var accountItem = copyObject(item)
-                    accountItem.provider = providerID
-                    normalized = normalizeProvider(accountItem)
-                } catch (recordError) {
-                    // Contain the failure to its own record: a malformed
-                    // sibling must not discard the accounts parsed before or
-                    // after it.
-                    message = i18n("Could not read a codexbar account record: %1",
-                        boundedCliMessage(recordError.message))
-                    continue
-                }
-                if (normalized.error.length > 0 && accountLabel(normalized).length === 0) {
-                    if (Normalizer.isMissingTokenAccountsError(normalized.error)) {
-                        sawMissingTokenAccountsError = true
-                    } else {
-                        message = normalized.error
-                    }
-                    continue
-                }
-                options.push(normalized)
-            }
-
-            var dedupedOptions = Normalizer.dedupeAccountOptions(options)
-            var accountError = ""
-            if (dedupedOptions.length === 0) {
-                if (message.length > 0) {
-                    accountError = message
-                } else if (items.length > 0 && !sawMissingTokenAccountsError) {
-                    accountError = i18n("codexbar did not return account data.")
-                }
-            }
-            if (accountError.length === 0) {
-                setAccountOptions(providerID, dedupedOptions)
-            }
-            setAccountError(providerID, accountError)
-        } catch (error) {
-            setAccountError(providerID, i18n("Could not parse codexbar account JSON: %1", error.message))
         }
     }
 
@@ -1498,17 +1348,6 @@ PlasmoidItem {
             CostPresentation.amountString(costNumberFormat, perMillion.value, perMillion.currency))
     }
 
-    function usageDashboard(usage, item) {
-        var dashboard = LegacyUsageDashboard.normalize(usage, item)
-        if (!dashboard) {
-            return null
-        }
-        return {
-            kpis: dashboard.kpis.map(dashboardDisplayRow),
-            rows: dashboard.rows.map(dashboardDisplayRow)
-        }
-    }
-
     function dashboardLabelText(labelKey) {
         var labels = {
             codexDashboard: i18n("Codex dashboard"),
@@ -1610,37 +1449,12 @@ PlasmoidItem {
         if (key.length === 0) {
             return ""
         }
-        return privateErrorText(accountErrors[key] ? String(accountErrors[key]) : "")
+        return privateErrorText(accountsController.errorForProvider(key))
     }
 
     function accountLoadingForProvider(providerID) {
         var key = providerMapKey(providerID)
-        return key.length > 0 && AccountRequests.isLoading(activeCommandDescriptors, key)
-    }
-
-    function setAccountOptions(providerID, options) {
-        var key = providerMapKey(providerID)
-        if (key.length === 0) {
-            return
-        }
-        var next = copyObject(accountOptions)
-        next[key] = options || []
-        accountOptions = next
-    }
-
-    function setAccountError(providerID, message) {
-        var next = copyObject(accountErrors)
-        var key = providerMapKey(providerID)
-        if (key.length === 0) {
-            return
-        }
-        var cleanMessage = boundedCliMessage(message)
-        if (cleanMessage.length > 0) {
-            next[key] = cleanMessage
-        } else {
-            delete next[key]
-        }
-        accountErrors = next
+        return key.length > 0 && accountsController.loadingForProvider(key)
     }
 
     function privateErrorText(text) {
@@ -1796,173 +1610,70 @@ PlasmoidItem {
         providers = ProviderOrder.orderedItems(nextProviders, providerOrderRaw)
     }
 
+    function presentAccountOptions(options) {
+        var result = ({})
+        var keys = Object.keys(options)
+        for (var i = 0; i < keys.length; i++) {
+            result[keys[i]] = options[keys[i]].map(function(item) {
+                return root.presentProviderSnapshot(item)
+            })
+        }
+        return result
+    }
+
     function normalizeProvider(item) {
-        var usage = isCliRecord(item.usage) ? item.usage : ({})
-        var pace = isCliRecord(item.pace) ? item.pace : ({})
-        var rows = []
-        var providerID = providerMapKey(item.provider || "unknown")
-        if (providerID.length === 0) {
-            providerID = "unknown"
-        }
+        return presentProviderSnapshot(ProviderSnapshot.normalize(item, Date.now()))
+    }
 
-        var primaryRow = addWindow(rows, rateWindowLabel(providerID, "primary"), usage.primary, pace.primary, true, "primary")
-        addWindow(rows, rateWindowLabel(providerID, "secondary"), usage.secondary, pace.secondary, true, "secondary")
-        addWindow(rows, rateWindowLabel(providerID, "tertiary"), usage.tertiary, pace.tertiary, true, "tertiary")
-
-        var extras = Array.isArray(usage.extraRateWindows) ? usage.extraRateWindows : []
-        var extraLimit = Math.min(extras.length, maximumExtraRateWindows)
-        for (var i = 0; i < extraLimit; i++) {
-            var extra = extras[i]
-            if (isCliRecord(extra) && isCliRecord(extra.window)) {
-                addWindow(rows, Normalizer.boundedDisplayText(extra.title || extra.id || i18n("Extra"), 120), extra.window, null, extra.usageKnown !== false, "extra")
-            }
-        }
-
-        var identity = isCliRecord(usage.identity) ? usage.identity : ({})
-        var error = isCliRecord(item.error) ? item.error : null
-        // The error record establishes failure even when its display message
-        // is unusable. Both the placeholder and cache consume this safe text.
-        var errorMessage = error ? (boundedCliMessage(Normalizer.safeScalarText(error.message))
-            || i18n("codexbar command failed.")) : ""
-        var status = isCliRecord(item.status) ? item.status : null
-        var severity = Normalizer.statusSeverity(status)
-        var credits = isCliRecord(item.credits) ? item.credits : null
-        var codexCreditLimit = Normalizer.normalizeCodexCreditLimit(
-            providerID,
-            credits && hasOwnKey(credits, "codexCreditLimit")
-                ? credits.codexCreditLimit
-                : null)
-        var displayCandidates = [item.displayName, item.title, providerDisplayNames[providerID]]
-        // Optional display names are CLI-controlled and may carry structured
-        // values. A truthy object must not mask a valid fallback, so only
-        // truthy scalars win; anything else keeps searching.
-        var displayName = ""
-        for (var candidateIndex = 0; candidateIndex < displayCandidates.length; candidateIndex++) {
-            var candidate = displayCandidates[candidateIndex]
-            if ((typeof candidate === "string" || typeof candidate === "number" || typeof candidate === "boolean") && candidate) {
-                displayName = candidate
-                break
-            }
-        }
-        // Identity fields are CLI-controlled and may carry structured values.
-        // A truthy object must not mask a valid fallback, so each candidate is
-        // validated before it wins; a non-string candidate never does.
-        var rawAccount = Normalizer.firstValidAccountIdentity(
-            [item.account, identity.accountEmail, usage.accountEmail])
-        var rawOrganization = Normalizer.firstValidAccountIdentity(
-            [identity.accountOrganization, usage.accountOrganization])
-        var rawLoginMethod = Normalizer.firstValidAccountIdentity(
-            [identity.loginMethod, usage.loginMethod])
-        var providerDetails = UsageDetails.normalizeSections(usage.details)
-        var providerUsageDashboard = providerDetails.length > 0 ? null : usageDashboard(usage, item)
-        var hasSupplementalUsage = providerDetails.length > 0
-            || providerUsageDashboard !== null
-            || codexCreditLimit !== null
-        var placeholder = providerPlaceholder(providerID, rows, usage, item, errorMessage, hasSupplementalUsage)
-        var creditsRemaining = credits
-            ? Normalizer.strictFiniteNumber(credits.remaining)
-            : Number.NaN
-
+    function presentProviderSnapshot(snapshot) {
+        var providerID = snapshot.provider
+        var rows = snapshot.rows.map(function(row) { return root.presentUsageWindow(row, providerID) })
+        var dashboard = snapshot.usageDashboard
         return {
             provider: providerID,
-            title: Normalizer.boundedDisplayText(providerTitle(providerID, displayName), 120),
-            source: Normalizer.boundedDisplayText(item.source || "", 120),
-            version: Normalizer.boundedDisplayText(item.version || "", 120),
-            account: Normalizer.boundedDisplayText(rawAccount, 256),
-            organization: Normalizer.boundedDisplayText(rawOrganization, 256),
-            loginMethod: Normalizer.boundedDisplayText(rawLoginMethod, 120),
-            // The `--account` identity keeps the original spacing: display text
-            // may collapse it, but selection and the CLI argument must not.
-            accountKey: Normalizer.accountKey({ account: rawAccount, organization: rawOrganization, loginMethod: rawLoginMethod }),
+            title: Normalizer.boundedDisplayText(providerTitle(providerID,
+                snapshot.displayName === null ? providerDisplayNames[providerID] : snapshot.displayName), 120),
+            source: snapshot.source,
+            version: snapshot.version,
+            account: snapshot.account,
+            organization: snapshot.organization,
+            loginMethod: snapshot.loginMethod,
+            accountKey: snapshot.accountKey,
             rows: rows,
-            primaryRow: primaryRow,
-            providerDetails: providerDetails,
-            usageDashboard: providerUsageDashboard,
-            providerCost: providerCostSection(providerID, usage.providerCost),
-            resetCredits: resetCreditsSection(providerID, usage.codexResetCredits),
+            primaryRow: rows.length > 0 && rows[0].lane === "primary" ? rows[0] : null,
+            providerDetails: snapshot.providerDetails,
+            usageDashboard: dashboard ? {kpis: dashboard.kpis.map(dashboardDisplayRow), rows: dashboard.rows.map(dashboardDisplayRow)} : null,
+            providerCost: providerCostSection(providerID, snapshot.providerCost),
+            resetCredits: resetCreditsSection(providerID, snapshot.resetCredits),
             tokenCost: providerTokenCost(providerID),
-            codexCreditLimit: codexCreditLimit,
-            planText: Normalizer.boundedDisplayText(planText(providerID, rawLoginMethod), 120),
+            codexCreditLimit: snapshot.codexCreditLimit,
+            planText: Normalizer.boundedDisplayText(planText(providerID, snapshot.planMethod), 120),
             dashboardUrl: providerDashboardUrl(providerID),
-            statusUrl: safeStatusUrl(providerID, status && status.url ? status.url : ""),
+            statusUrl: safeStatusUrl(providerID, snapshot.statusUrl),
             changelogUrl: providerChangelogUrl(providerID),
-            credits: isFinite(creditsRemaining)
-                ? creditsRemaining
-                : null,
-            status: Normalizer.boundedDisplayText(status ? statusText(status) : "", 500),
-            statusKnown: status !== null,
-            statusSeverity: severity,
-            statusIncidentKey: Normalizer.boundedDisplayText(Normalizer.statusIncidentKey(status), 128),
-            hasIncident: severity.length > 0,
-            error: errorMessage,
-            placeholder: placeholder,
-            usageReceivedAtMs: Date.now(),
-            updatedAt: Normalizer.boundedDisplayText(usage.updatedAt || (credits ? credits.updatedAt : ""), 128)
+            credits: snapshot.credits,
+            status: Normalizer.boundedDisplayText(snapshot.statusRecord ? statusText(snapshot.statusRecord) : "", 500),
+            statusKnown: snapshot.statusRecord !== null,
+            statusSeverity: snapshot.statusSeverity,
+            statusIncidentKey: snapshot.statusIncidentKey,
+            hasIncident: snapshot.statusSeverity.length > 0,
+            error: snapshot.commandFailed ? (snapshot.error || i18n("codexbar command failed.")) : "",
+            placeholder: snapshot.placeholder === "limitsUnavailable" ? i18n("Limits not available")
+                : (snapshot.placeholder === "noUsage" ? i18n("No usage yet") : ""),
+            usageReceivedAtMs: snapshot.usageReceivedAtMs,
+            updatedAt: snapshot.updatedAt
         }
     }
 
-    function providerPlaceholder(providerID, rows, usage, item, errorMessage, hasSupplementalUsage) {
-        if ((rows && rows.length > 0) || hasSupplementalUsage === true) {
-            return ""
-        }
-
-        if (errorMessage.length > 0 && errorMessage !== "Found sessions, but no rate limit events yet.") {
-            return ""
-        }
-
-        if (rateLimitsUnavailable(providerID, usage, item)) {
-            return i18n("Limits not available")
-        }
-
-        return i18n("No usage yet")
-    }
-
-    function rateLimitsUnavailable(providerID, usage, item) {
-        var key = providerKey(providerID)
-        if (key !== "antigravity" && key !== "doubao" && key !== "codex") {
-            return false
-        }
-
-        var identity = usage && usage.identity ? usage.identity : ({})
-        var hasIdentity = (item && item.account && item.account.length > 0)
-            || (identity.accountEmail && identity.accountEmail.length > 0)
-            || (identity.accountOrganization && identity.accountOrganization.length > 0)
-            || (identity.loginMethod && identity.loginMethod.length > 0)
-        if (!hasIdentity) {
-            return false
-        }
-
-        return !usage.primary && !usage.secondary && !usage.tertiary
-    }
-
-    // The clamped percentages come from the normalizer; the words stay here,
-    // because every text field below is either translated or formatted against
-    // the current theme/locale, which a `.pragma library` may not reach.
-    function addWindow(rows, label, window, pace, usageKnown, lane) {
-        var metrics = Normalizer.rateWindowMetrics(window, pace, usageKnown)
-        if (metrics === null) {
-            return null
-        }
-
-        var row = {
-            lane: lane || "",
-            label: Normalizer.boundedDisplayText(label, 120),
-            hasPercent: metrics.hasPercent,
-            usedPercent: metrics.usedPercent,
-            leftPercent: metrics.leftPercent,
-            paceKnown: metrics.paceKnown,
-            pacePercent: metrics.pacePercent,
-            paceOnTop: metrics.paceOnTop,
-            paceEtaSeconds: metrics.paceEtaSeconds,
-            paceObservedAtMs: Date.now(),
-            resetsAt: Normalizer.boundedDisplayText(
-                window.resetsAt === undefined || window.resetsAt === null ? "" : window.resetsAt,
-                128),
-            resetDescription: Normalizer.boundedDisplayText(window.resetDescription || "", 500),
-            reset: Normalizer.boundedDisplayText(resetText(window, false), 500),
-            pace: paceSummaryText(pace)
-        }
-        rows.push(row)
+    function presentUsageWindow(snapshot, providerID) {
+        var row = copyObject(snapshot)
+        row.label = snapshot.label !== null ? snapshot.label
+            : (snapshot.lane === "extra" ? i18n("Extra") : rateWindowLabel(providerID, snapshot.lane))
+        row.reset = Normalizer.boundedDisplayText(resetText({resetsAt: snapshot.resetValue,
+            resetDescription: snapshot.resetDescription}, false), 500)
+        row.pace = paceSummaryPartsText(snapshot.paceParts)
+        delete row.resetValue
+        delete row.paceParts
         return row
     }
 
@@ -2095,7 +1806,7 @@ PlasmoidItem {
         var limit = Normalizer.strictFiniteNumber(cost.limit)
         var personalUsed = Normalizer.strictFiniteNumber(cost.personalUsed)
         var currency = Normalizer.boundedDisplayText(cost.currencyCode || "USD", 12)
-        var period = Normalizer.boundedDisplayText(cost.period || i18n("This month"), 120)
+        var period = Normalizer.boundedDisplayText(cost.period === null || cost.period === undefined ? i18n("This month") : cost.period, 120)
         var hasUsed = isFinite(used)
         var hasLimit = isFinite(limit) && limit > 0
         if (!hasUsed) {
@@ -2446,7 +2157,10 @@ PlasmoidItem {
     }
 
     function paceSummaryText(pace) {
-        var parts = PacePresentation.summaryParts(pace)
+        return paceSummaryPartsText(PacePresentation.summaryParts(pace))
+    }
+
+    function paceSummaryPartsText(parts) {
         var labels = []
         for (var i = 0; i < parts.length; i++) {
             var part = parts[i]
@@ -3801,9 +3515,6 @@ PlasmoidItem {
                 root.finishUsageCommandSource(sourceName)
                 root.parseProviderConfigOutput(descriptor, stdoutText, stderrText)
                 return
-            case "account":
-                root.parseProviderAccountsOutput(sourceName, descriptor, stdoutText, stderrText)
-                return
             case "providerFallback":
                 root.parseProviderFallbackOutput(
                     sourceName, descriptor.providerID, stdoutText, stderrText)
@@ -3883,6 +3594,14 @@ PlasmoidItem {
             }
             root.finishNotificationCommandSource(sourceName)
         }
+    }
+
+    Controllers.AccountsController {
+        id: accountsController
+
+        commandPath: root.commandPath
+        sourceMode: root.source
+        includeStatus: root.includeStatus
     }
 
     Controllers.CostController {

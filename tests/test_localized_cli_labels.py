@@ -21,7 +21,8 @@ class LocalizedCliLabelTests(unittest.TestCase):
         applet = Surface("applet", ROOT)
         signatures = {"sessionStateText": "state", "sessionSourceText": "source",
                       "sessionSubtitle": "item", "capitalize": "value",
-                      "paceSummaryText": "pace", "paceEtaText": "seconds",
+                      "paceSummaryText": "pace", "paceSummaryPartsText": "parts",
+                      "paceEtaText": "seconds",
                       "usageCountText": "value, unit",
                       "dashboardPartText": "part"}
         adapters = "\n".join(f"function {name}({args}) {{ {applet.function_body(name)} }}"

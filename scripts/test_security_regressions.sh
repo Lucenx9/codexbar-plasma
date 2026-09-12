@@ -284,7 +284,7 @@ require_in_surface applet "if (!hasOwnKey(byName, modelName))"
 require_in_surface applet "if (!hasOwnKey(item, key) || isUnsafeObjectKey(key))"
 require_in_surface applet "var providerID = normalizedProviderID(items[i].provider)"
 require_in_surface applet "var providerID = providerMapKey(item.provider)"
-require_in_surface applet "var providerID = providerMapKey(item.provider || \"unknown\")"
+require_in_file "${ROOT_DIR}/contents/ui/ProviderSnapshot.js" 'var providerID = Normalizer.providerSnapshotKey(item.provider || "unknown") || "unknown"'
 require_in_surface applet "var key = providerMapKey(providerID)"
 require_in_surface providers "function providerMapKey(providerID)"
 require_in_surface providers "return ProviderIdentity.providerMapKey(key)"
@@ -357,7 +357,7 @@ require_in_file "$PROVIDERS_QML" '["sh", "-c", shellQuote(script), "_", shellQuo
 
 require_in_surface applet "function safeStatusUrl(providerID, url)"
 require_in_surface applet "function httpsUrlHost(url)"
-require_in_surface applet "statusUrl: safeStatusUrl(providerID, status && status.url ? status.url : \"\")"
+require_in_surface applet "statusUrl: safeStatusUrl(providerID, snapshot.statusUrl)"
 require_in_surface applet "Qt.openUrlExternally(safeStatusUrl(item.provider, item.statusUrl))"
 
 require_in_surface applet "notify-send --app-name=CodexBar --icon=view-statistics --urgency="

@@ -13,21 +13,21 @@ sys.path.insert(0, str(ROOT / "scripts/lib"))
 from qml_surfaces import Surface
 
 FUNCTIONS = (
-    "parseOutput", "normalizeProvider", "addWindow", "resetText",
+    "parseOutput", "normalizeProvider", "presentProviderSnapshot", "presentUsageWindow", "copyObject", "resetText",
     "isCliRecord", "normalizedProviderID", "providerMapKey", "hasOwnKey",
-    "boundedCliMessage", "paceSummaryText", "paceEtaText", "providerTitle",
-    "providerKey", "statusText", "providerPlaceholder", "rateLimitsUnavailable",
+    "boundedCliMessage", "paceSummaryText", "paceSummaryPartsText", "paceEtaText", "providerTitle",
+    "providerKey", "statusText",
     "planText", "capitalize",
 )
 
 QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
+import "SOURCE_URL/ProviderSnapshot.js" as ProviderSnapshot
 import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
 import "SOURCE_URL/ProviderOrder.js" as ProviderOrder
 import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/SafeText.js" as SafeText
-import "SOURCE_URL/UsageDetails.js" as UsageDetails
 import "SOURCE_URL/PacePresentation.js" as PacePresentation
 import "SOURCE_URL/UsageCache.js" as UsageCache
 TestCase {
@@ -43,7 +43,6 @@ TestCase {
             property bool loading: true
             property double panelClockMs: Date.UTC(2026, 8, 11, 12)
             property int maximumProviderSnapshots: Normalizer.maximumProviderSnapshots
-            property int maximumExtraRateWindows: Normalizer.maximumExtraRateWindows
 
             SOURCE_FUNCTIONS
 
@@ -62,7 +61,6 @@ TestCase {
             function failUsageRefresh(message) { errorText = message; loading = false; }
             function canUseProviderFallback() { return false; }
             function rateWindowLabel() { return "Quota"; }
-            function usageDashboard() { return null; }
             function providerCostSection() { return null; }
             function resetCreditsSection() { return null; }
             function providerTokenCost() { return null; }
