@@ -262,6 +262,11 @@ Read its output for tool failures and skips. CI uses the pinned Plasma image in
 QtTests configured to reject skips. A local machine missing QML modules may
 provide less coverage; report what actually ran.
 
+All CI container jobs pin the official KDE neon User Edition image by digest.
+If the registry removes that manifest, resolve the official `user` tag again,
+verify its Linux/amd64 Ubuntu 24.04 image metadata, and update every container
+pin together. Validate the replacement through the full check and smoke jobs.
+
 `tests/test_account_refresh.py` runs the production account-selection functions
 and command binding in Qt's event loop. It counts refresh requests for cached
 and uncached accounts in single-provider and aggregate modes; CLI effects are
