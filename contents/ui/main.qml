@@ -160,6 +160,7 @@ PlasmoidItem {
     property string sessionsErrorText: ""
     property string sessionsLastUpdatedText: ""
     property bool sessionsLoading: false
+    property double sessionsLastFinishedAtMs: -1
     property double sessionsLastCompletedAtMs: -1
     property string sessionsLoadedCommandSource: ""
     readonly property int sessionsStaleAfterMs: SessionRefreshPolicy.staleAfterMs(refreshIntervalSec)
@@ -254,6 +255,7 @@ PlasmoidItem {
         sessions = []
         sessionsErrorText = ""
         sessionsLastUpdatedText = ""
+        sessionsLastFinishedAtMs = -1
         sessionsLastCompletedAtMs = -1
         sessionsLoadedCommandSource = ""
         if (expanded && sessionsSelected) {
@@ -884,6 +886,7 @@ PlasmoidItem {
             loading: sessionsLoading,
             visible: expanded && sessionsSelected,
             force: force === true,
+            lastFinishedAtMs: sessionsLastFinishedAtMs,
             lastCompletedAtMs: sessionsLastCompletedAtMs,
             nowMs: Date.now(),
             staleAfterMs: sessionsStaleAfterMs
@@ -936,6 +939,7 @@ PlasmoidItem {
             loading: sessionsLoading,
             visible: expanded && sessionsSelected,
             force: false,
+            lastFinishedAtMs: sessionsLastFinishedAtMs,
             lastCompletedAtMs: sessionsLastCompletedAtMs,
             nowMs: Date.now(),
             staleAfterMs: sessionsStaleAfterMs
@@ -1302,6 +1306,7 @@ PlasmoidItem {
             return
         case "sessions":
             finishUsageCommandSource(sourceName)
+            sessionsLastFinishedAtMs = Date.now()
             sessionsLoading = false
             sessionsErrorText = i18n("Loading sessions timed out. Try again.")
             scheduleSessionsRefreshCheck()
@@ -1483,6 +1488,7 @@ PlasmoidItem {
     }
 
     function parseSessionsOutput(stdoutText, stderrText) {
+        sessionsLastFinishedAtMs = Date.now()
         sessionsLoading = false
         var trimmed = stdoutText.trim()
         if (trimmed.length === 0) {
