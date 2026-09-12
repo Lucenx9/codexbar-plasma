@@ -23,6 +23,7 @@ TestCase {
             return;
         }
         compare(component.status, Component.Ready, component.errorString());
+        failOnWarning(/.*/);
         var page = createTemporaryObject(component, testCase, {
             cfg_commandPath: " ",
             width: 620,
