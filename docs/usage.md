@@ -98,7 +98,8 @@ work and upstream contract requirements.
 - Local **Sessions** tab backed by `sessions --json-v2`; transcript paths and
   working directories are never rendered or opened. The tab refreshes stale
   session data while it remains visible. Failed scans also respect the refresh
-  interval (five minutes when periodic usage refresh is disabled), so reopening
+  interval from the failure or timeout (five minutes when periodic usage
+  refresh is disabled), so reopening
   the popup or revisiting the tab does not repeat a failed scan immediately.
   The Sessions refresh button can retry immediately; changing the CLI command
   clears the retry cooldown.

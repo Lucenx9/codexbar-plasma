@@ -12,7 +12,7 @@ TestCase {
             loading: false,
             visible: true,
             force: false,
-            lastAttemptAtMs: -1,
+            lastFinishedAtMs: -1,
             lastCompletedAtMs: -1,
             nowMs: 1000000,
             staleAfterMs: 300000
@@ -134,7 +134,7 @@ TestCase {
     }
 
     function test_failedAttemptCooldownEndsAtTheAttemptBoundary() {
-        var current = observation({ lastAttemptAtMs: 900000 })
+        var current = observation({ lastFinishedAtMs: 900000 })
         compare(SessionRefreshPolicy.refreshAction(current), SessionRefreshPolicy.keepAction)
         compare(SessionRefreshPolicy.nextCheckDelay(current), 200000)
         current.nowMs = 1199999
@@ -148,7 +148,7 @@ TestCase {
         var current = observation({
             loadedCommandSource: "codexbar sessions --json-v2",
             lastCompletedAtMs: 500000,
-            lastAttemptAtMs: 900000
+            lastFinishedAtMs: 900000
         })
         compare(SessionRefreshPolicy.refreshAction(current), SessionRefreshPolicy.keepAction)
         compare(SessionRefreshPolicy.nextCheckDelay(current), 200000)
@@ -172,7 +172,7 @@ TestCase {
     }
 
     function test_invalidAttemptDoesNotPreventRetry(data) {
-        compare(SessionRefreshPolicy.refreshAction(observation({lastAttemptAtMs: data.value})),
+        compare(SessionRefreshPolicy.refreshAction(observation({lastFinishedAtMs: data.value})),
             SessionRefreshPolicy.startAction)
     }
 }

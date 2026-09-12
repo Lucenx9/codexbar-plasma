@@ -420,7 +420,7 @@ require_all(
         "SessionRefreshPolicy.refreshAction(",
         "expanded && sessionsSelected",
         "sessionsLastCompletedAtMs",
-        "lastAttemptAtMs: sessionsLastAttemptAtMs",
+        "lastFinishedAtMs: sessionsLastFinishedAtMs",
         "sessionsLoadedCommandSource",
         'retireUsageCommandKind("sessions")',
         "commandWithRunNonce(sessionsCommandSource)",
@@ -469,7 +469,7 @@ require_all(
     (
         "sessionsRefreshTimer.stop()",
         "SessionRefreshPolicy.nextCheckDelay(",
-        "lastAttemptAtMs: sessionsLastAttemptAtMs",
+        "lastFinishedAtMs: sessionsLastFinishedAtMs",
         "sessionsRefreshTimer.interval = delayMs",
         "sessionsRefreshTimer.start()",
     ),

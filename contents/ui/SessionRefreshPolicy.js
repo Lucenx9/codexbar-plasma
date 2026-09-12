@@ -15,11 +15,11 @@ function staleAfterMs(refreshIntervalSeconds) {
 }
 
 // A failed attempt delays automatic retries without making its snapshot fresh.
-// QML clears the attempt timestamp whenever the command source changes.
+// QML records attempt completion and clears it whenever the command source changes.
 function lastActivityAtMs(current) {
-    var attempt = current.lastAttemptAtMs
-    var baseline = typeof attempt === "number" && isFinite(attempt) && attempt >= 0
-        ? attempt : -1
+    var finished = current.lastFinishedAtMs
+    var baseline = typeof finished === "number" && isFinite(finished) && finished >= 0
+        ? finished : -1
     var completed = current.lastCompletedAtMs
     if (typeof current.loadedCommandSource === "string"
             && current.loadedCommandSource.trim() === current.commandSource.trim()

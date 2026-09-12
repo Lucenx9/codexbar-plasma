@@ -281,8 +281,9 @@ It checks cancellation, process termination, late submission, and the total
 deadline needed to preserve the full save timeout.
 
 `tests/test_session_context.py` exercises the production Sessions request and
-reply handlers. Failed scans retain their attempt timestamp separately from
+reply handlers. Failed scans record when the attempt finishes, separately from
 successful snapshot completion, so popup/tab reentry respects the retry cooldown.
+The full cooldown starts at the reply or timeout, even after a long scan.
 Manual retry bypasses that cooldown, and a command change clears it. The pure
 policy and timer share the same activity baseline; changing visibility does not
 extend the deadline or mark retained sessions fresh.
