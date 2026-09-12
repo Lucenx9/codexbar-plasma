@@ -25,6 +25,30 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Respect the automatic refresh interval after a failed Sessions scan when
   reopening the popup or revisiting the tab, while allowing immediate manual
   retries and scans after changing the CLI command.
+- Preserve valid Codex quotas and named accounts when optional login-method
+  metadata is malformed, and use a valid fallback for the plan label.
+- Keep disabled Overview providers from occupying the three selection slots,
+  while preserving their saved selection when other providers are chosen.
+- Keep unavailable days in their calendar positions in the Usage & Spend
+  activity heatmap, so missing cost or token values do not shift weekday rows
+  or shorten the displayed range.
+- Show cost refresh errors beside retained provider costs, including when the
+  details are collapsed, so older values do not hide a failed update.
+- Coalesce cost-setting changes applied together into one scan using the final
+  settings, avoiding duplicate scans that immediately replace each other.
+- Keep panel run-out countdowns tied to each forecast's receipt time, so
+  selecting a cached account cannot restart an old or expired prediction.
+- Keep last-known quotas when a provider error has an empty or malformed message,
+  showing a generic error while healthy providers and current status still update.
+- Preserve healthy usage records after a malformed sibling in provider-scoped
+  CLI replies, including measured-zero quotas, while keeping all-invalid
+  replies as provider errors.
+- Keep settings checkboxes stable in right-to-left layouts under KDE/Breeze
+  styles, avoiding repeated width binding loops while the pages settle.
+- Keep the provider filter tabs usable with KDE styles whose tab buttons expose
+  no content item, avoiding repeated QML errors when opening Providers settings.
+- Use the pinned KDE CI image’s authenticated package indexes so an outage of
+  the archive’s current metadata does not block checks and package builds.
 - Preserve ampersands and angle brackets in provider selection and settings
   checkbox labels when KDE styles process keyboard mnemonics.
 - Preserve quota, pace, and reset notification baselines when a successful CLI

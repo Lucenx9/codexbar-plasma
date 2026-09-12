@@ -380,6 +380,53 @@ Item {
         navigationVerified = true;
     }
 
+    function verifyCostRefreshError() {
+        var section = findItem(applet.fullRepresentationItem, "providerLocalCostSection");
+        if (!section || !section.tokenCost || applet.costLoading)
+            return false;
+        if (costDetailsStep > 0)
+            return true;
+        var snapshot = applet.tokenCosts;
+        var retainedCost = section.tokenCost;
+        var failures = [
+            { stdout: "", stderr: "Synthetic cost refresh failed." },
+            { stdout: "{", stderr: "" },
+            { stdout: "null", stderr: "" },
+            { stdout: JSON.stringify([{provider: "codex", error: {message: "Synthetic cost scan failed."}}]), stderr: "" }
+        ];
+        for (var expanded of [false, true]) {
+            section.detailsExpanded = expanded;
+            for (var failure of failures) {
+                applet.parseCostOutput(failure.stdout, failure.stderr, applet.costHistoryDays);
+                verifyScenario(section.tokenCost === retainedCost, "cost failure discarded the retained snapshot");
+                verifyScenario(applet.costErrorText.length > 0
+                    && hasVisibleText(section, section.costErrorText),
+                    "cost refresh error is hidden beside retained data");
+            }
+        }
+        section.detailsExpanded = false;
+        applet.Plasmoid.configuration.privacyMode = true;
+        verifyScenario(section.costErrorText === i18n("Details hidden by privacy mode.")
+            && hasVisibleText(section, section.costErrorText), "cost error lost its privacy projection");
+        applet.Plasmoid.configuration.privacyMode = false;
+        applet.parseCostOutput("[]", "", applet.costHistoryDays);
+        applet.parseCostOutput("", failures[0].stderr, applet.costHistoryDays);
+        verifyScenario(section.tokenCost === null && section.visible
+            && hasVisibleText(section, section.costErrorText), "initial cost failure is hidden");
+        applet.parseCostOutput(JSON.stringify([{provider: "codex", totals: {totalCost: 4, totalTokens: 100}}]),
+            "", applet.costHistoryDays);
+        verifyScenario(section.tokenCost !== null && section.tokenCost.totals.cost === 4
+            && section.costErrorText.length === 0
+            && !hasVisibleText(section, failures[0].stderr), "successful cost refresh did not clear the warning");
+        // Keep the synthetic history and failure visible in the review capture.
+        applet.tokenCosts = snapshot;
+        applet.applyTokenCosts();
+        applet.parseCostOutput("", failures[0].stderr, applet.costHistoryDays);
+        findItem(applet.fullRepresentationItem, "providerScroll").contentItem.contentY = section.y;
+        costDetailsStep++;
+        return false;
+    }
+
     function verifyCostDetails() {
         var section = findItem(applet.fullRepresentationItem, "providerLocalCostSection");
         var chart = findItem(section, "providerCostChart");
@@ -1265,6 +1312,8 @@ Item {
             return applet.selectedProviderID === "claude" && claude.error.indexOf("Synthetic provider timeout") >= 0;
         if (claude.error.length > 0 || claude.rows.length !== 2)
             return false;
+        if (scenario === "popup-cost-refresh-error")
+            return verifyCostRefreshError();
         if (scenario === "popup-cost-missing-tokens" || scenario === "popup-cost-partial-models")
             return verifyCostCoverage();
         if (scenario.indexOf("popup-cost-") === 0)
@@ -1412,6 +1461,18 @@ Item {
                 return found;
         }
         return null;
+    }
+
+    function hasVisibleText(item, text) {
+        if (!item.visible)
+            return false;
+        if (typeof item.text === "string" && item.text.indexOf(text) >= 0)
+            return true;
+        for (var child of item.children) {
+            if (hasVisibleText(child, text))
+                return true;
+        }
+        return false;
     }
 
     function hasText(item, text) {
