@@ -22,9 +22,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
-- Provider setup no longer reports a successful save when a CLI error has no
-  readable message. Structured error messages cannot interrupt result handling;
-  the widget shows a generic failure instead.
+- Keep partial cost refreshes working when a provider error message is malformed,
+  retaining its previous costs while healthy providers update.
 - Respect the automatic refresh interval after a failed Sessions scan when
   reopening the popup or revisiting the tab, while allowing immediate manual
   retries and scans after changing the CLI command.
@@ -32,6 +31,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   metadata is malformed, and use a valid fallback for the plan label.
 - Keep disabled Overview providers from occupying the three selection slots,
   while preserving their saved selection when other providers are chosen.
+- Provider setup no longer reports a successful save when a CLI error has no
+  readable message. Structured error messages cannot interrupt result handling;
+  the widget shows a generic failure instead.
 - Keep unavailable days in their calendar positions in the Usage & Spend
   activity heatmap, so missing cost or token values do not shift weekday rows
   or shorten the displayed range.
