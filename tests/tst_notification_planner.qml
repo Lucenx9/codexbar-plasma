@@ -130,6 +130,49 @@ TestCase {
         compare(recovered.intents.length, 0)
     }
 
+    function test_staleUsageKeepsThresholdStateAndProcessesStatus_data() {
+        return [{ tag: "rows-omitted", includeRows: false },
+                { tag: "stale-rows-present", includeRows: true }]
+    }
+
+    function test_staleUsageKeepsThresholdStateAndProcessesStatus(data) {
+        var rows = [usageRow("minor", 85, true)]
+        var initial = transition("prime", [observation("", "", rows)])
+        var stale = observation("major", "incident-1",
+            data.includeRows ? [usageRow("major", 99, false)] : [])
+        stale.usageStale = true
+        var changed = transition("observe", [stale], initial.nextMemo)
+        compare(intentKinds(changed), "status")
+
+        var fresh = transition("observe", [observation("major", "incident-1", rows)],
+            changed.nextMemo)
+        compare(intentKinds(fresh), "")
+        var reset = transition("observe", [observation("major", "incident-1",
+            [usageRow("", 2, false)])], fresh.nextMemo)
+        compare(intentKinds(reset), "reset")
+        var escalated = transition("observe", [observation("major", "incident-1",
+            [usageRow("major", 96, true)])], reset.nextMemo)
+        compare(intentKinds(escalated), "quota,pace")
+    }
+
+    function test_firstStaleUsageDoesNotPrimeThresholds_data() {
+        return [{ tag: "prime", mode: "prime" },
+                { tag: "observe", mode: "observe" }]
+    }
+
+    function test_firstStaleUsageDoesNotPrimeThresholds(data) {
+        var stale = observation("major", "incident-1", [])
+        stale.usageStale = true
+        var initial = transition(data.mode, [stale])
+        compare(intentKinds(initial), "")
+        var fresh = transition("observe", [observation("major", "incident-1",
+            [usageRow("minor", 85, true)])], initial.nextMemo)
+        compare(intentKinds(fresh), "")
+        var escalated = transition("observe", [observation("major", "incident-1",
+            [usageRow("major", 96, true)])], fresh.nextMemo)
+        compare(intentKinds(escalated), "quota")
+    }
+
     function test_erroredFirstPrimePassLeavesTheScopeUnprimed() {
         var primed = transition(
             "prime",

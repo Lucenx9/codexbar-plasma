@@ -100,7 +100,10 @@ The restarted fixture delays CLI responses beyond the runner's maximum allowed
 scenario duration, proving that the second process displays persisted quotas.
 Quota freshness and service-status evidence are independent: retained rows never
 reach the notification planner, while a status record from the current response
-still can. Retaining or expiring quotas must preserve that current status; a
+still can. The observation's `usageStale` flag keeps quota, pace, and reset
+baselines unchanged, even when the CLI reports no error. Stale observations do
+not prime a new quota scope; its first fresh measurement primes silently.
+Retaining or expiring quotas must preserve that current status; a
 later response without status marks the retained incident as unknown to the planner.
 Incident selection, tooltips, and provider badges/banners also exclude unknown
 status instead of presenting a retained outage as current.

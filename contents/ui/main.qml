@@ -2892,6 +2892,7 @@ PlasmoidItem {
                     item.statusKnown === true,
                     rows.length),
                 errorPresent: String(item.error || "").length > 0,
+                usageStale: item.usageStale === true,
                 statusKnown: item.statusKnown === true,
                 statusActive: item.hasIncident === true
                     && String(item.statusSeverity || "").length > 0

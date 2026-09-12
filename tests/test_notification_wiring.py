@@ -28,6 +28,7 @@ import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
 import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/QuotaThresholds.js" as QuotaThresholds
 import "SOURCE_URL/CostPresentation.js" as CostPresentation
+import "SOURCE_URL/UsageCache.js" as UsageCache
 TestCase {
     name: "NotificationWiring"
     property bool includeStatus: true
@@ -83,6 +84,39 @@ TestCase {
     function receive(items) {
         markNotificationProvidersFresh(items);
         providers = items;
+    }
+    function test_oldSuccessfulQuotaPreservesNotificationBaseline_data() {
+        return [
+            {tag: "unchanged-quota", used: 85, expectedKinds: []},
+            {tag: "limit-reset", used: 2, expectedKinds: ["reset"]},
+            {tag: "quota-escalation", used: 96, expectedKinds: ["quota"]}
+        ];
+    }
+    function test_oldSuccessfulQuotaPreservesNotificationBaseline(data) {
+        var nowMs = Date.parse("2026-09-12T12:00:00Z");
+        var fresh = item("account-a", "", "", 85);
+        fresh.updatedAt = new Date(nowMs).toISOString();
+        receive(UsageCache.reconcile([], [fresh], nowMs));
+        var initial = observe("prime");
+
+        // A successful CLI reply can still carry an expired quota alongside
+        // newly fetched status. Exercise the cache's real classification.
+        var old = item("account-a", "major", "", 85);
+        old.updatedAt = new Date(nowMs - 2 * UsageCache.maximumAgeMs).toISOString();
+        receive(UsageCache.reconcile(providers, [old], nowMs + 1000));
+        verify(providers[0].usageStale);
+        compare(providers[0].error, "");
+        compare(notificationObservationRows(providers[0]).length, 0);
+        var stale = observe("observe", initial.nextMemo);
+        compare(stale.intents.length, 1);
+        compare(stale.intents[0].kind, "status");
+
+        var current = item("account-a", "major", "", data.used);
+        current.updatedAt = new Date(nowMs + 2000).toISOString();
+        receive(UsageCache.reconcile(providers, [current], nowMs + 2000));
+        var recovered = observe("observe", stale.nextMemo);
+        compare(recovered.intents.map(function(intent) { return intent.kind; }), data.expectedKinds);
+        compare(observe("observe", recovered.nextMemo).intents.length, 0);
     }
     function test_statusFetchingToggleDoesNotInventAnIncidentTransition() {
         providers = [item("account-a", "major", "", 85)];

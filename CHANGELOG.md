@@ -22,6 +22,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve quota, pace, and reset notification baselines when a successful CLI
+  reply contains obsolete quotas alongside current service status, avoiding
+  repeated warnings and missed reset notices when fresh usage returns.
 - Clear completed Sessions snapshots and update metadata when the configured CLI
   command changes, so a failed or timed-out scan cannot display sessions from
   the previous executable.
