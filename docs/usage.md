@@ -99,7 +99,12 @@ work and upstream contract requirements.
   day. It stays hidden for ranges that fill a single column.
 - Local **Sessions** tab backed by `sessions --json-v2`; transcript paths and
   working directories are never rendered or opened. The tab refreshes stale
-  session data while it remains visible.
+  session data while it remains visible. Failed scans also respect the refresh
+  interval from the failure or timeout (five minutes when periodic usage
+  refresh is disabled), so reopening
+  the popup or revisiting the tab does not repeat a failed scan immediately.
+  The Sessions refresh button can retry immediately; changing the CLI command
+  clears the retry cooldown.
 - Overview providers can be limited to a chosen set of up to 3 providers, or
   left automatic (the first 3 eligible providers). The checkboxes recognize
   provider aliases and mixed-case IDs, like the panel provider selection.

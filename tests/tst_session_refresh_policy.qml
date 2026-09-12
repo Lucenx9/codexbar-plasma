@@ -12,6 +12,7 @@ TestCase {
             loading: false,
             visible: true,
             force: false,
+            lastFinishedAtMs: -1,
             lastCompletedAtMs: -1,
             nowMs: 1000000,
             staleAfterMs: 300000
@@ -130,5 +131,48 @@ TestCase {
         current.visible = false
         compare(SessionRefreshPolicy.refreshAction(current), SessionRefreshPolicy.keepAction)
         compare(SessionRefreshPolicy.nextCheckDelay(current), 0)
+    }
+
+    function test_failedAttemptCooldownEndsAtTheAttemptBoundary() {
+        var current = observation({ lastFinishedAtMs: 900000 })
+        compare(SessionRefreshPolicy.refreshAction(current), SessionRefreshPolicy.keepAction)
+        compare(SessionRefreshPolicy.nextCheckDelay(current), 200000)
+        current.nowMs = 1199999
+        compare(SessionRefreshPolicy.refreshAction(current), SessionRefreshPolicy.keepAction)
+        compare(SessionRefreshPolicy.nextCheckDelay(current), 1)
+        current.nowMs = 1200000
+        compare(SessionRefreshPolicy.refreshAction(current), SessionRefreshPolicy.startAction)
+    }
+
+    function test_retryCooldownPreservesStaleSnapshotAndManualRetry() {
+        var current = observation({
+            loadedCommandSource: "codexbar sessions --json-v2",
+            lastCompletedAtMs: 500000,
+            lastFinishedAtMs: 900000
+        })
+        compare(SessionRefreshPolicy.refreshAction(current), SessionRefreshPolicy.keepAction)
+        compare(SessionRefreshPolicy.nextCheckDelay(current), 200000)
+        compare(current.lastCompletedAtMs, 500000)
+        current.force = true
+        compare(SessionRefreshPolicy.refreshAction(current), SessionRefreshPolicy.startAction)
+        current.loading = true
+        compare(SessionRefreshPolicy.refreshAction(current), SessionRefreshPolicy.keepAction)
+    }
+
+    function test_invalidAttemptDoesNotPreventRetry_data() {
+        return [
+            {tag: "missing", value: undefined},
+            {tag: "null", value: null},
+            {tag: "string", value: "900000"},
+            {tag: "negative", value: -1},
+            {tag: "nan", value: NaN},
+            {tag: "infinite", value: Infinity},
+            {tag: "clock-rollback", value: 1000001}
+        ]
+    }
+
+    function test_invalidAttemptDoesNotPreventRetry(data) {
+        compare(SessionRefreshPolicy.refreshAction(observation({lastFinishedAtMs: data.value})),
+            SessionRefreshPolicy.startAction)
     }
 }
