@@ -724,6 +724,76 @@ TestCase {
         compare(cells[34].label, "day-29")
     }
 
+    function test_spendHeatmapCellsKeepUnavailableDaysInTheirCalendarSlots() {
+        var daily = []
+        for (var day = 1; day <= 9; day++) {
+            daily.push(dailyPoint("2026-09-0" + day, day === 4 ? null : day, day * 10, "USD"))
+        }
+        var costs = [{ totals: { currency: "USD" }, daily: daily }]
+        var points = CostPresentation.spendDailyPoints(fmt, costs, false)
+        compare(points.length, 8)
+        var cells = CostPresentation.spendHeatmapCells(points, 14)
+        compare(cells.length, 14)
+        verify(cells[5] !== null, "the first day must occupy its calendar slot")
+        compare(cells[5].label, "2026-09-01")
+        compare(cells[8], null, "an unavailable day must leave a gap, not shift earlier weekdays")
+        compare(cells[12].label, "2026-09-08")
+        compare(cells[13].label, "2026-09-09")
+        compare(cells[12].value, 8)
+        var tokenCells = CostPresentation.spendHeatmapCells(
+            CostPresentation.spendDailyPoints(fmt, costs, true), 14)
+        compare(tokenCells[8].label, "2026-09-04")
+        compare(tokenCells[8].value, 40)
+    }
+
+    function test_spendHeatmapDaysPreserveCalendarBoundaries_data() {
+        return [
+            {tag: "weekend", first: "2026-09-04", last: "2026-09-07", span: 4},
+            {tag: "leap-day", first: "2024-02-28", last: "2024-03-01", span: 3},
+            {tag: "daylight-saving", first: "2026-03-07", last: "2026-03-09", span: 3},
+            {tag: "year-boundary", first: "2025-12-31", last: "2026-01-02", span: 3},
+            {tag: "adjacent", first: "2026-09-01", last: "2026-09-02", span: 2},
+            {tag: "two-weeks", first: "2026-09-01", last: "2026-09-09", span: 9}
+        ]
+    }
+
+    function test_spendHeatmapDaysPreserveCalendarBoundaries(data) {
+        var points = [{label: data.first, value: 0}, {label: data.last, value: 3}]
+        var days = CostPresentation.spendHeatmapDays(points)
+        compare(days.length, data.span)
+        compare(days[0], points[0])
+        compare(days[days.length - 1], points[1])
+        for (var i = 1; i < days.length - 1; i++) {
+            compare(days[i], null)
+        }
+        compare(points.length, 2)
+    }
+
+    function test_spendHeatmapDaysBoundSparseHistoryAndPreserveLegacyLabels() {
+        var latest = {label: "2026-09-09", value: 0}
+        var days = CostPresentation.spendHeatmapDays([{label: "1970-01-01", value: 2}, latest])
+        compare(days.length, CostPresentation.maximumCostHistoryPoints)
+        compare(days[0], null)
+        compare(days[days.length - 1], latest)
+        var cells = CostPresentation.spendHeatmapCells(
+            [{label: "2026-09-01", value: 2}, latest], 7)
+        compare(cells.length, 7)
+        compare(cells[0], null)
+        compare(cells[6], latest)
+        var legacyCases = [
+            [{label: "Mon"}, {label: "Wed"}],
+            [{label: "2026-02-30"}, latest],
+            [latest, latest],
+            [latest, {label: "2026-09-01"}],
+            [null, latest],
+            [{label: {toString: null}}, latest]
+        ]
+        for (var i = 0; i < legacyCases.length; i++) {
+            compare(CostPresentation.spendHeatmapDays(legacyCases[i]), legacyCases[i])
+        }
+        compare(CostPresentation.spendHeatmapDays(null), [])
+    }
+
     function test_spendHeatmapCellsDropTheOldestDaysBeyondCapacity() {
         var cells = CostPresentation.spendHeatmapCells([
             { label: "a" }, { label: "b" }, { label: "c" }

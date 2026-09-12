@@ -1,5 +1,6 @@
 .pragma library
 .import "Guards.js" as Guards
+.import "ProviderNormalizer.js" as Normalizer
 
 // Cost and spend presentation: number formatting, chart geometry, and the row
 // and summary builders the Usage & Spend tab and the provider cost sections
@@ -1085,13 +1086,47 @@ function historyStillBuilding(costs) {
     return false
 }
 
+// The selected metric can omit unavailable days. Keep their calendar slots
+// empty so every heatmap row still represents one weekday. Legacy labels with
+// no unambiguous calendar order keep their existing bounded sequence.
+function spendHeatmapDays(points) {
+    var items = Array.isArray(points) ? points.slice(-maximumCostHistoryPoints) : []
+    var byDate = ({})
+    var firstDayMs = 0
+    var lastDayMs = 0
+    for (var i = 0; i < items.length; i++) {
+        var point = items[i]
+        var date = point && typeof point.label === "string"
+            ? Normalizer.parsedCalendarDateKey(point.label) : null
+        if (!date || (i > 0 && date.timestampMs <= lastDayMs)) {
+            return items
+        }
+        if (i === 0) {
+            firstDayMs = date.timestampMs
+        }
+        lastDayMs = date.timestampMs
+        byDate[lastDayMs] = point
+    }
+    if (items.length === 0) {
+        return []
+    }
+    // UTC calendar keys keep DST changes from adding or losing a day.
+    var dayMs = 24 * 60 * 60 * 1000
+    firstDayMs = Math.max(firstDayMs, lastDayMs - (maximumCostHistoryPoints - 1) * dayMs)
+    var days = []
+    for (var currentDayMs = firstDayMs; currentDayMs <= lastDayMs; currentDayMs += dayMs) {
+        days.push(hasOwnKey(byDate, currentDayMs) ? byDate[currentDayMs] : null)
+    }
+    return days
+}
+
 // Lays the daily points out for the activity heatmap's fixed seven rows. The
 // newest day keeps the last slot, so every row stays one weekday, and the grid
 // is padded at the oldest end with `null` placeholders: a ragged final column
 // otherwise cuts a week-wide notch out of the block. Points beyond the
 // capacity are dropped, oldest first.
 function spendHeatmapCells(points, capacity) {
-    var items = Array.isArray(points) ? points : []
+    var items = spendHeatmapDays(points)
     var slots = Math.max(0, Math.floor(Number(capacity) || 0))
     var visible = items.slice(Math.max(0, items.length - slots))
     var cells = []

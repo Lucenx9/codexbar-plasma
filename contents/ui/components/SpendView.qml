@@ -17,6 +17,7 @@ ColumnLayout {
     readonly property string spendCurrency: applet.spendCurrency(providerCosts)
     readonly property bool hasMixedCostCurrencies: CostPresentation.spendHasMixedCostCurrencies(providerCosts)
     readonly property real heatmapMaximum: chartMaximum(dailyPoints)
+    readonly property int heatmapDayCount: CostPresentation.spendHeatmapDays(dailyPoints).length
 
     Layout.fillWidth: true
     Layout.fillHeight: true
@@ -276,7 +277,7 @@ ColumnLayout {
             ColumnLayout {
                 // One week column carries a single day per row, which repeats
                 // the chart above instead of showing a weekday pattern.
-                visible: view.dailyPoints.length > 7
+                visible: view.heatmapDayCount > 7
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing / 2
 
@@ -307,7 +308,7 @@ ColumnLayout {
                         readonly property int fittingColumns: Math.max(1, Math.floor(
                             (width + cellSpacing) / (minimumCellSize + cellSpacing)))
                         readonly property int columnCount: Math.max(1, Math.min(
-                            fittingColumns, Math.ceil(view.dailyPoints.length / 7)))
+                            fittingColumns, Math.ceil(view.heatmapDayCount / 7)))
                         readonly property real availableCellWidth: Math.max(minimumCellSize,
                             (width - cellSpacing * (columnCount - 1)) / columnCount)
                         readonly property real cellHeight: Math.max(minimumCellSize, Math.min(
