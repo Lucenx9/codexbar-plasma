@@ -22,6 +22,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep last-known quotas when a provider error has an empty or malformed message,
+  showing a generic error while healthy providers and current status still update.
 - Preserve healthy usage records after a malformed sibling in provider-scoped
   CLI replies, including measured-zero quotas, while keeping all-invalid
   replies as provider errors.

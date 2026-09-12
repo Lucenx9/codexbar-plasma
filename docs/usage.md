@@ -113,7 +113,9 @@ work and upstream contract requirements.
 
 Failed usage refreshes keep the last valid quotas visible. Each retained provider
 shows **Last known usage** with the age of its measurement in the popup and panel
-tooltip; its panel icon and capsules are dimmed. Errors remain visible. A partial
+tooltip; its panel icon and capsules are dimmed. Errors remain visible. A provider
+error with an empty or malformed message shows a generic error and follows the
+same quota-retention rules. A partial
 refresh updates healthy providers independently, and a successful refresh removes
 the retained-data indication. When a provider-scoped reply contains multiple
 records, an unreadable record does not prevent a later healthy record from
