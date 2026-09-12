@@ -263,6 +263,13 @@ QtTests configured to reject skips. A local machine missing QML modules may
 provide less coverage; report what actually ran.
 
 All CI container jobs pin the official KDE neon User Edition image by digest.
+Jobs install dependencies using the authenticated APT indexes already included
+in that pinned image; they do not run `apt-get update` against a mutable archive.
+APT still checks downloaded packages against those indexes. This avoids making
+an otherwise reproducible job depend on the availability of the archive's
+current Release metadata. If a package from that snapshot is removed, update
+the image pin and revalidate the full toolchain; do not disable authentication
+or substitute unverified packages.
 If the registry removes that manifest, resolve the official `user` tag again,
 verify its Linux/amd64 Ubuntu 24.04 image metadata, and update every container
 pin together. Validate the replacement through the full check and smoke jobs.
