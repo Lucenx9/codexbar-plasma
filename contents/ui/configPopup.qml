@@ -134,7 +134,7 @@ KCM.SimpleKCM {
     }
 
     function selectedOverviewProviderCount() {
-        return resolvedOverviewProviderIDs().length
+        return OverviewProviders.selectedProviderCount(overviewRosterProviderIDs(), resolvedOverviewProviderIDs())
     }
 
     function providerIconSource(providerID) {

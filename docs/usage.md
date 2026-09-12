@@ -101,6 +101,9 @@ work and upstream contract requirements.
 - Overview providers can be limited to a chosen set of up to 3 providers, or
   left automatic (the first 3 eligible providers). The checkboxes recognize
   provider aliases and mixed-case IDs, like the panel provider selection.
+  Disabled providers keep their saved selection without occupying one of the
+  three slots. If more than three selected providers become available again,
+  Overview shows the first three eligible providers in the saved provider order.
   Provider selection checkboxes preserve literal characters such as `&`, `<`,
   and `>` in display names, including with KDE desktop styles.
 - Usage dashboard summaries for provider payloads that expose API spend,

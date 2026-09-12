@@ -30,7 +30,7 @@ TestCase {
         compare(OverviewProviders.configuredProviderIDs("codex,codex,CODEX").join(","), "codex");
         compare(OverviewProviders.configuredProviderIDs("constructor,prototype").length, 0);
         compare(OverviewProviders.configuredProviderIDs(new Array(600).join("x")).length, 0);
-        compare(OverviewProviders.configuredProviderIDs("codex,claude,gemini,cursor").join(","), "codex,claude,gemini");
+        compare(OverviewProviders.configuredProviderIDs("codex,claude,gemini,cursor").join(","), "codex,claude,gemini,cursor");
     }
 
     function test_automaticSelectionUsesRosterOrderAndNormalizes() {
@@ -98,6 +98,39 @@ TestCase {
         compare(OverviewProviders.selectionText([]), OverviewProviders.noneValue);
         compare(OverviewProviders.selectionText(null), OverviewProviders.noneValue);
         compare(OverviewProviders.selectionText("codex"), OverviewProviders.noneValue);
+    }
+
+    function test_absentSelectionsDoNotOccupyVisibleSlots() {
+        var saved = ["claude", "gemini", "copilot"];
+        var roster = ["codex", "groqcloud", "cursor", "openai"];
+        var next = OverviewProviders.toggledSelection(roster, saved, "codex", true);
+        compare(next.join(","), "codex,claude,gemini,copilot");
+        next = OverviewProviders.toggledSelection(roster, next, "groq", true);
+        next = OverviewProviders.toggledSelection(roster, next, "cursor", true);
+        compare(next.join(","), "codex,groq,cursor,claude,gemini,copilot");
+        compare(OverviewProviders.toggledSelection(roster, next, "openai", true), next);
+
+        var restored = OverviewProviders.configuredProviderIDs(OverviewProviders.selectionText(next));
+        compare(restored, next);
+        compare(OverviewProviders.toggledSelection(roster, restored, "codex", false).join(","),
+                "groq,cursor,claude,gemini,copilot");
+    }
+
+    function test_selectedCountUsesUniqueCanonicalRosterIDs() {
+        compare(OverviewProviders.selectedProviderCount(["codex"], ["claude", "gemini", "copilot"]), 0);
+        compare(OverviewProviders.selectedProviderCount(["groqcloud", "GROQ", "codex"], ["groq", "CODEX", "missing"]), 2);
+        compare(OverviewProviders.selectedProviderCount([null, "constructor", "codex"], ["codex"]), 1);
+        compare(OverviewProviders.selectedProviderCount(null, ["codex"]), 0);
+        compare(OverviewProviders.selectedProviderCount(["codex"], null), 0);
+    }
+
+    function test_returningProvidersKeepTheirSavedSelection() {
+        var saved = ["codex", "groq", "cursor", "claude", "gemini", "copilot"];
+        var roster = ["claude", "gemini", "copilot", "codex", "groq", "cursor", "openai"];
+        compare(OverviewProviders.selectedProviderCount(roster, saved), 6);
+        compare(OverviewProviders.toggledSelection(roster, saved, "openai", true), saved);
+        compare(OverviewProviders.toggledSelection(roster, saved, "claude", false).join(","),
+                "gemini,copilot,codex,groq,cursor");
     }
 
     function test_maximumMatchesTheOverviewLimit() {
