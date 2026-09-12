@@ -112,13 +112,7 @@ PlasmoidItem {
     property double panelClockMs: Date.now()
     readonly property int panelClockIntervalMs: 60000
     readonly property string commandSource: usageController.commandSource
-    property string providerConfigWatchCommand: buildProviderConfigWatchCommand()
-    // The watch poll this instance currently follows. A reply under any other
-    // source name belongs to a retired command and must be disconnected, not
-    // left running on every interval tick.
-    property string connectedProviderConfigWatchCommand: ""
     property string providerConfigStamp: ""
-    readonly property int providerConfigWatchIntervalMs: 60000
     property int commandRunSerial: 0
     property var activeCommandDescriptors: ({})
     readonly property int defaultCommandTimeoutMs: 120000
@@ -188,7 +182,6 @@ PlasmoidItem {
         invalidateUsageData()
         scheduleUsageRefresh()
     }
-    onProviderConfigWatchCommandChanged: reconnectProviderConfigWatcher()
     onProviderOrderRawChanged: providers = ProviderOrder.orderedItems(
         providers, providerOrderRaw)
     onCostHistoryDaysChanged: applyTokenCosts()
@@ -225,24 +218,6 @@ PlasmoidItem {
 
     Component.onCompleted: {
         usageLifecycleInitialized = true
-        reconnectProviderConfigWatcher()
-    }
-
-    function buildProviderConfigWatchCommand() {
-        var script = [
-            "config=${CODEXBAR_CONFIG:-};",
-            "case \"$config\" in '~/'*) config=\"$HOME/${config#\\~/}\";; esac;",
-            "if [ -z \"$config\" ]; then",
-            "xdg=${XDG_CONFIG_HOME:-};",
-            "case \"$xdg\" in '~/'*) xdg=\"$HOME/${xdg#\\~/}\";; esac;",
-            "case \"$xdg\" in",
-            "/*) config=\"$xdg/codexbar/config.json\";;",
-            "*) config=\"$HOME/.config/codexbar/config.json\"; if [ ! -e \"$config\" ] && [ -e \"$HOME/.codexbar/config.json\" ]; then config=\"$HOME/.codexbar/config.json\"; fi;;",
-            "esac;",
-            "fi;",
-            "if [ -r \"$config\" ]; then cksum \"$config\"; else printf missing; fi"
-        ].join(" ")
-        return ["sh", "-c", shellQuote(script)].join(" ")
     }
 
     function shellQuote(value) {
@@ -475,32 +450,12 @@ PlasmoidItem {
             : i18n("Updated %1", Qt.formatDateTime(new Date(item.lastGoodAtMs), "hh:mm"))
     }
 
-    function reconnectProviderConfigWatcher() {
-        if (connectedProviderConfigWatchCommand.length > 0
-                && connectedProviderConfigWatchCommand !== providerConfigWatchCommand) {
-            providerConfigWatcher.disconnectSource(connectedProviderConfigWatchCommand)
-        }
-        // Connecting to a shared source can synchronously deliver cached data.
-        connectedProviderConfigWatchCommand = providerConfigWatchCommand
-        if (providerConfigWatchCommand.length > 0) {
-            providerConfigWatcher.connectSource(providerConfigWatchCommand)
-        }
-    }
-
-    function handleProviderConfigWatch(stdoutText) {
-        var stamp = stdoutText.trim()
-        if (stamp.length === 0) {
-            return
-        }
-        if (providerConfigStamp.length === 0) {
-            providerConfigStamp = stamp
+    function handleProviderConfigObservation(stamp, initial) {
+        providerConfigStamp = stamp
+        if (initial) {
             restoreUsageCache()
             return
         }
-        if (stamp === providerConfigStamp) {
-            return
-        }
-        providerConfigStamp = stamp
         invalidateUsageData()
         scheduleUsageRefresh()
     }
@@ -3000,19 +2955,12 @@ PlasmoidItem {
         onTriggered: root.expireCommands(Date.now())
     }
 
-    Plasma5Support.DataSource {
+    Controllers.ProviderConfigWatcher {
         id: providerConfigWatcher
 
-        engine: "executable"
-        interval: root.providerConfigWatchIntervalMs
-
-        onNewData: function(sourceName, data) {
-            if (sourceName !== root.connectedProviderConfigWatchCommand) {
-                providerConfigWatcher.disconnectSource(sourceName)
-                return
-            }
-            var stdoutText = data && data["stdout"] ? data["stdout"] : ""
-            root.handleProviderConfigWatch(stdoutText)
+        active: root.usageLifecycleInitialized
+        onStampObserved: function(stamp, initial) {
+            root.handleProviderConfigObservation(stamp, initial)
         }
     }
 

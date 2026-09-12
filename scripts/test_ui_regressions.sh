@@ -646,7 +646,7 @@ if "Array.isArray(payload) ? payload : [payload]" not in provider_config_body:
         "as the normal provider-list array"
     )
 
-config_watch_body = function_body(main_text, "buildProviderConfigWatchCommand")
+config_watch_body = function_body((root / "contents/ui/ProviderConfigWatch.js").read_text(), "watchCommand")
 for config_path_fragment in (
     "CODEXBAR_CONFIG",
     "XDG_CONFIG_HOME",
@@ -655,7 +655,7 @@ for config_path_fragment in (
 ):
     if config_path_fragment not in config_watch_body:
         raise AssertionError(
-            "buildProviderConfigWatchCommand must mirror the CLI config path resolver; "
+            "ProviderConfigWatch.watchCommand must mirror the CLI config path resolver; "
             f"missing {config_path_fragment!r}"
         )
 if config_watch_body.index("CODEXBAR_CONFIG") > config_watch_body.index("XDG_CONFIG_HOME"):

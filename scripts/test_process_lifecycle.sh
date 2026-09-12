@@ -34,11 +34,8 @@ require_in_surface applet "readonly property int notificationCommandTimeoutMs: 1
 require_in_surface applet "function connectNotificationCommand(sourceName)"
 require_in_surface applet "function finishNotificationCommandSource(sourceName)"
 require_in_surface applet "function refreshSessions()"
-require_in_surface applet "readonly property int providerConfigWatchIntervalMs: 60000"
-require_in_surface applet "interval: root.providerConfigWatchIntervalMs"
-require_in_surface applet 'property string connectedProviderConfigWatchCommand: ""'
-require_in_surface applet "function reconnectProviderConfigWatcher()"
-require_in_surface applet "onProviderConfigWatchCommandChanged: reconnectProviderConfigWatcher()"
+require_in_surface applet "readonly property int pollIntervalMs: 60000"
+require_in_surface applet "interval: controller.pollIntervalMs"
 require_in_surface applet 'import "../CostRefreshPolicy.js" as CostRefreshPolicy'
 require_in_surface applet "interval: CostRefreshPolicy.automaticRefreshIntervalMs"
 require_in_surface applet "property double lastAttemptAtMs: -1"
@@ -469,34 +466,35 @@ require_ordered(
     ),
     "provider config replies must reject stale contexts and unsupported envelopes before caching",
 )
-require_ordered(
-    applet.function_body("handleProviderConfigWatch"),
-    (
-        "if (stamp === providerConfigStamp)",
-        "return",
-        "providerConfigStamp = stamp",
-        "scheduleUsageRefresh()",
-    ),
-    "a changed provider config checksum must invalidate and refresh the roster",
-)
-require_ordered(
-    applet.function_body("reconnectProviderConfigWatcher"),
-    (
-        "providerConfigWatcher.disconnectSource(connectedProviderConfigWatchCommand)",
-        "connectedProviderConfigWatchCommand = providerConfigWatchCommand",
-        "providerConfigWatcher.connectSource(providerConfigWatchCommand)",
-    ),
-    "watcher reconnect must retire the old poll and register the new command before cached replies arrive",
-)
-require_all(
-    applet.id_block("providerConfigWatcher"),
-    (
-        "sourceName !== root.connectedProviderConfigWatchCommand",
-        "providerConfigWatcher.disconnectSource(sourceName)",
-        "root.handleProviderConfigWatch(stdoutText)",
-    ),
-    "watcher replies from a retired poll must be disconnected, never left polling",
-)
+watcher_path = root / "contents/ui/controllers/ProviderConfigWatcher.qml"
+watcher_text = watcher_path.read_text()
+watcher = Surface("applet", root)
+watcher.texts = {watcher_path: watcher_text}
+for forbidden in ("root.", "Plasmoid.configuration", "required property var applet"):
+    if forbidden in watcher_text:
+        raise AssertionError("config watcher must not reach the applet root or persist cache")
+require_all(applet.id_block("providerConfigWatcher"),
+            ("active: root.usageLifecycleInitialized", "root.handleProviderConfigObservation(stamp, initial)"),
+            "the applet must activate the watcher after initialization and handle its observations")
+require_ordered(applet.function_body("handleProviderConfigObservation"),
+                ("providerConfigStamp = stamp", "if (initial)", "restoreUsageCache()", "return",
+                 "invalidateUsageData()", "scheduleUsageRefresh()"),
+                "first checksum restores cache; later changes invalidate before refreshing")
+require_ordered(watcher.function_body("disconnect"),
+                ('connectedCommand = ""', "watchSource.disconnectSource(previous)"),
+                "disconnect must retire the source before process effects")
+require_ordered(watcher.function_body("reconnect"),
+                ("disconnect()", "connectedCommand = nextCommand", "watchSource.connectSource(nextCommand)"),
+                "reconnect must register the new source before synchronous cached replies")
+require_ordered(watcher.function_body("accept"),
+                ("sourceName !== connectedCommand", "watchSource.disconnectSource(sourceName)", "return",
+                 "ProviderConfigWatch.observation(", "stamp = result.stamp", "controller.stampObserved("),
+                "retired replies must stop polling and observations must commit before signaling")
+require_all(watcher_text,
+            ("onActiveChanged: lifecycle.reconnect()", "onCommandChanged: lifecycle.reconnect()",
+             "Component.onDestruction: lifecycle.disconnect()"),
+            "watcher must reconnect on inputs and disconnect during destruction")
+
 
 accounts_text = (root / "contents/ui/controllers/AccountsController.qml").read_text()
 require_all(applet.id_block("accountsController"),

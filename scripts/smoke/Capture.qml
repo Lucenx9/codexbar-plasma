@@ -1148,7 +1148,7 @@ Item {
                 var earlyUpdateLabel = applet.lastUpdatedText;
                 verifyScenario(Plasmoid.configuration.usageCache === initialCache,
                     "usage overwrote saved quotas before the configuration context was known");
-                applet.handleProviderConfigWatch(configStamp);
+                applet.handleProviderConfigObservation(configStamp, true);
                 verifyScenario(Plasmoid.configuration.usageCache.length > 0
                     && JSON.parse(Plasmoid.configuration.usageCache).snapshots[0].windows.primary.usedPercent
                         === previous[0].rows[0].usedPercent,
@@ -1160,7 +1160,7 @@ Item {
             Plasmoid.configuration.usageCache = saved;
             applet.providers = [];
             applet.commitUsageSnapshot([previous[0]]);
-            applet.handleProviderConfigWatch(configStamp);
+            applet.handleProviderConfigObservation(configStamp, true);
             verifyScenario(applet.providers.length === 2 && !applet.providers[0].usageStale
                 && applet.providers[1].usageStale && applet.providers[1].rows.length > 0
                 && applet.providers[1].lastGoodAtMs === previous[1].lastGoodAtMs
@@ -1173,7 +1173,7 @@ Item {
             applet.providers = [];
             applet.commitUsageSnapshot([previous[0],
                 applet.normalizeProvider(applet.providerErrorPayload("claude", "Early failure"))]);
-            applet.handleProviderConfigWatch(configStamp);
+            applet.handleProviderConfigObservation(configStamp, true);
             verifyScenario(!applet.providers[0].usageStale && applet.providers[1].usageStale
                 && JSON.parse(Plasmoid.configuration.usageCache).snapshots.length === 2,
                 "late checksum failed to merge and save partial success with retained quotas");

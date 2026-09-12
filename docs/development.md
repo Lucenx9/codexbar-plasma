@@ -37,8 +37,8 @@ For those, use `make install` or `./install.sh`. Release-package users can use
 
 ## Ownership and implementation
 
-- `contents/ui/main.qml` owns configuration watching, notification delivery,
-  account coordination, selected state, configuration updates, and external
+- `contents/ui/main.qml` owns notification delivery, account coordination,
+  selected state, quota-cache persistence, configuration updates, and external
   effects. Its adapters supply the panel and popup.
 - `contents/ui/controllers/WidgetUpdateController.qml` owns the widget updater's
   executable source, per-request nonce, captured install mode, timeout, queued
@@ -62,6 +62,14 @@ For those, use `make install` or `./install.sh`. Release-package users can use
   inputs and adapts the outputs for the existing view and privacy presentation.
   `SessionRefreshPolicy.js` owns pure scheduling decisions; `SessionResponse.js`
   bounds and classifies CLI output through the existing session normalizer.
+- `contents/ui/controllers/ProviderConfigWatcher.qml` owns the read-only config
+  checksum command, minute polling, connection changes, and retired replies.
+  It starts after the applet initializes and emits accepted checksum changes;
+  the first observation restores cache in `main.qml`, while later changes
+  invalidate usage and schedule a refresh. Repeated or malformed observations
+  leave the current state intact. `ProviderConfigWatch.js` preserves the existing
+  config-path precedence and checksum text, and bounds observation processing.
+  The watcher never reads JSON fields or writes configuration.
 - `contents/ui/controllers/UsageController.qml` owns usage commands, provider
   discovery, the cached roster, bounded fallback queue, nonces, deadlines, and
   automatic/popup refresh scheduling. Inputs are CLI settings, selected accounts,
@@ -344,6 +352,14 @@ against the real usage controller and an isolated CLI in Qt's event loop. It
 counts refresh starts for cached/uncached accounts in single-provider and
 aggregate modes. `tests/test_account_parse_containment.py` checks account
 snapshot presentation and selection freshness.
+
+`tests/test_provider_config_watcher.py` instantiates the watcher with real
+checksum processes and a substituted transport for synchronous cached replies.
+It covers source replacement, activation, malformed/retired replies, reentrant
+observers, and explicit/XDG config paths with quoted filenames.
+`tests/tst_provider_config_watch.qml` directly tests first/changed/unchanged
+observations and input bounds. Surface checks preserve the minute poll and
+cache-restore/invalidation ordering in the applet.
 
 `tests/test_usage_controller.py` exercises the production executable source,
 provider discovery/cache, bounded fallback concurrency, exact account/source
