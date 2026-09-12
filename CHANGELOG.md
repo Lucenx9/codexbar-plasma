@@ -22,6 +22,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep disabled Overview providers from occupying the three selection slots,
+  while preserving their saved selection when other providers are chosen.
 - Keep unavailable days in their calendar positions in the Usage & Spend
   activity heatmap, so missing cost or token values do not shift weekday rows
   or shorten the displayed range.

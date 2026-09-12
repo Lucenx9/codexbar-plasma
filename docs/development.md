@@ -179,8 +179,10 @@ Extraction must hide complexity, not merely reduce line count.
 - `OverviewProviders.js` owns the Overview-tab provider selection without
   effects. An empty stored value means the first three eligible providers,
   `__none__` stores an explicit empty selection, and aliases with mixed-case
-  IDs match canonically. Manual selections keep at most three IDs in roster
-  order, and absent IDs survive the next toggle. The settings page and the
+  IDs match canonically. Manual selections allow three enabled providers;
+  absent IDs survive toggles and settings round trips without occupying slots.
+  Returning selections remain saved, and the runtime displays at most three
+  eligible providers in roster order. The settings page and the
   runtime share its parsing so the checkboxes cannot drift from the applied
   selection.
 - Privacy projects display records without changing cached snapshots or account
