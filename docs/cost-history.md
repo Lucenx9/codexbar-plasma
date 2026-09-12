@@ -2,7 +2,8 @@
 
 The provider popup shows Today and the selected period side by side. History,
 period models, and projects expand on demand. Cost errors and pricing notices
-remain visible when the details are collapsed.
+remain visible when the details are collapsed, including refresh errors beside
+retained values. A successful refresh clears the error.
 
 ## Data and display rules
 
@@ -93,5 +94,8 @@ output are linked in the
 [presentation tests](../tests/tst_cost_presentation.qml) cover the data rules.
 The popup smoke scenarios cover pinned-day refreshes, reordering, missing days,
 cached account changes, ranges, missing token counts, and incomplete models.
+The `popup-cost-refresh-error` scenario covers retained costs through empty,
+malformed, unsupported, and partial error replies, collapsed/expanded details,
+privacy, an initial failure without cached costs, and recovery.
 Run `make check` for logic and wiring, and `make smoke` for the real applet with
 synthetic data. Executed check results belong in the PR.

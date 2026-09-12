@@ -22,6 +22,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Show cost refresh errors beside retained provider costs, including when the
+  details are collapsed, so older values do not hide a failed update.
 - Coalesce cost-setting changes applied together into one scan using the final
   settings, avoiding duplicate scans that immediately replace each other.
 - Keep panel run-out countdowns tied to each forecast's receipt time, so

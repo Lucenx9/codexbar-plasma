@@ -207,7 +207,9 @@ Provider-specific editable settings depend on the official CLI contract.
   overage, z.ai BigModel CN balance, and Cursor Grok Bot usage, use the existing
   generic detail, provider-cost, and extra-window paths.
 - A compact provider summary compares today with the selected period. Expand
-  details for period models, history, and projects; cost warnings remain visible.
+  details for period models, history, and projects; cost warnings remain visible,
+  including when a failed refresh keeps the previous cost snapshot. A successful
+  refresh clears the error.
 - Click a day in the provider chart or select it with the keyboard to see that
   day's model costs and tokens. Hover previews stay inside the chart, keeping
   the layout steady. The cost/token selector reuses the loaded data.

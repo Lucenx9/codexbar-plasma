@@ -458,6 +458,9 @@ widget processes with the same isolated settings and delays the second CLI
 refresh to verify startup restoration from disk.
 Synthetic payloads cover a subset of the CLI 0.56.2 contract; fixture dates
 are relative to run time. Typography uses Noto Sans and Breeze icons.
+The `popup-cost-refresh-error` scenario checks that failed cost refreshes keep
+their error visible beside cached values, with details collapsed or expanded,
+and exercises privacy, an initial failure without a cache, and recovery.
 
 `make check` covers the runner's portable isolation and failure-handling tests
 and lints the capture QML.
