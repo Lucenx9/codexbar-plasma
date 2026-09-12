@@ -159,6 +159,11 @@ Extraction must hide complexity, not merely reduce line count.
   time. Cached account selection and privacy projection preserve it, so a later
   refresh cannot restart another row's run-out countdown. This timestamp stays
   in memory; it is neither a CLI field nor part of the persisted quota cache.
+- `main.qml` also stamps normalized provider snapshots with their local usage
+  receipt time. `UsageCache.js` uses that original time when a measurement
+  timestamp is missing, invalid, or future at receipt, so selecting a cached
+  account cannot renew its retention deadline. The receipt field stays in
+  memory; persistence continues to store only the resolved measurement time.
 - `PanelTextFit.js` composes the optional panel text from the segments the
   settings enable and offers progressively smaller compositions when the meter
   row leaves too little room. The renderer measures each candidate on its own

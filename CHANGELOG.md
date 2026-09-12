@@ -22,6 +22,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve the original measurement age when selecting a cached account whose
+  usage timestamp is missing, invalid, or future-dated, so old quotas cannot
+  become fresh again or extend their 24-hour retention limit.
 - Preserve valid Codex quotas and named accounts when optional login-method
   metadata is malformed, and use a valid fallback for the plan label.
 - Keep disabled Overview providers from occupying the three selection slots,

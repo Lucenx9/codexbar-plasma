@@ -2243,6 +2243,7 @@ PlasmoidItem {
             hasIncident: severity.length > 0,
             error: errorMessage,
             placeholder: placeholder,
+            usageReceivedAtMs: Date.now(),
             updatedAt: Normalizer.boundedDisplayText(usage.updatedAt || (credits ? credits.updatedAt : ""), 128)
         }
     }

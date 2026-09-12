@@ -70,6 +70,14 @@ function reconcile(previous, incoming, nowMs, pinnedAccounts) {
             next.usageStale = true
         } else {
             var measuredAt = timestamp(item.updatedAt)
+            // Cached account options keep their original receipt time. Missing
+            // or future CLI timestamps must not gain a new lifetime on selection.
+            var receivedAt = typeof item.usageReceivedAtMs === "number"
+                && isFinite(item.usageReceivedAtMs) && item.usageReceivedAtMs > 0
+                && item.usageReceivedAtMs <= nowMs ? item.usageReceivedAtMs : nowMs
+            if (!isFinite(measuredAt) || measuredAt > receivedAt) {
+                measuredAt = receivedAt
+            }
             if (item.error.length === 0 && isFinite(measuredAt) && measuredAt <= nowMs
                     && nowMs - measuredAt <= maximumAgeMs) {
                 next.lastGoodAtMs = measuredAt
