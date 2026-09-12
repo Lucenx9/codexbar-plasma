@@ -22,6 +22,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Guard session refresh activity calculations against missing, null, or
+  non-string command sources, avoiding uncaught exceptions during refresh
+  scheduling.
 - Keep partial cost refreshes working when a provider error message is malformed,
   retaining its previous costs while healthy providers update.
 - Respect the automatic refresh interval after a failed Sessions scan when
