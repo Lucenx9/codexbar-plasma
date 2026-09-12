@@ -2161,6 +2161,10 @@ PlasmoidItem {
 
         var identity = isCliRecord(usage.identity) ? usage.identity : ({})
         var error = isCliRecord(item.error) ? item.error : null
+        // The error record establishes failure even when its display message
+        // is unusable. Both the placeholder and cache consume this safe text.
+        var errorMessage = error ? (boundedCliMessage(Normalizer.safeScalarText(error.message))
+            || i18n("codexbar command failed.")) : ""
         var status = isCliRecord(item.status) ? item.status : null
         var severity = Normalizer.statusSeverity(status)
         var credits = isCliRecord(item.credits) ? item.credits : null
@@ -2195,7 +2199,7 @@ PlasmoidItem {
         var hasSupplementalUsage = providerDetails.length > 0
             || providerUsageDashboard !== null
             || codexCreditLimit !== null
-        var placeholder = providerPlaceholder(providerID, rows, usage, item, error, hasSupplementalUsage)
+        var placeholder = providerPlaceholder(providerID, rows, usage, item, errorMessage, hasSupplementalUsage)
         var creditsRemaining = credits
             ? Normalizer.strictFiniteNumber(credits.remaining)
             : Number.NaN
@@ -2231,19 +2235,18 @@ PlasmoidItem {
             statusSeverity: severity,
             statusIncidentKey: Normalizer.boundedDisplayText(Normalizer.statusIncidentKey(status), 128),
             hasIncident: severity.length > 0,
-            error: boundedCliMessage(error && error.message ? error.message : ""),
+            error: errorMessage,
             placeholder: placeholder,
             updatedAt: Normalizer.boundedDisplayText(usage.updatedAt || (credits ? credits.updatedAt : ""), 128)
         }
     }
 
-    function providerPlaceholder(providerID, rows, usage, item, error, hasSupplementalUsage) {
+    function providerPlaceholder(providerID, rows, usage, item, errorMessage, hasSupplementalUsage) {
         if ((rows && rows.length > 0) || hasSupplementalUsage === true) {
             return ""
         }
 
-        var message = error && error.message ? String(error.message).trim() : ""
-        if (message.length > 0 && message !== "Found sessions, but no rate limit events yet.") {
+        if (errorMessage.length > 0 && errorMessage !== "Found sessions, but no rate limit events yet.") {
             return ""
         }
 

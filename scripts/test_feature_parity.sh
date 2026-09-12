@@ -387,7 +387,7 @@ require_in_surface applet "var providerUsageDashboard = providerDetails.length >
 require_in_surface applet "var hasSupplementalUsage = providerDetails.length > 0"
 require_in_surface applet "|| providerUsageDashboard !== null"
 require_in_surface applet "|| codexCreditLimit !== null"
-require_in_surface applet "providerPlaceholder(providerID, rows, usage, item, error, hasSupplementalUsage)"
+require_in_surface applet "providerPlaceholder(providerID, rows, usage, item, errorMessage, hasSupplementalUsage)"
 require_in_surface applet "usageDashboard: providerUsageDashboard"
 require_in_surface applet "hasSupplementalUsage === true"
 require_in_surface applet 'import "LegacyUsageDashboard.js" as LegacyUsageDashboard'
