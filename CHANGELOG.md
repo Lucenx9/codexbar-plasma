@@ -22,6 +22,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve ampersands and angle brackets in provider selection and settings
+  checkbox labels when KDE styles process keyboard mnemonics.
 - Preserve quota, pace, and reset notification baselines when a successful CLI
   reply contains obsolete quotas alongside current service status, avoiding
   repeated warnings and missed reset notices when fresh usage returns.

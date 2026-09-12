@@ -346,6 +346,7 @@ KCM.SimpleKCM {
                     readonly property bool selected: page.overviewProviderSelected(modelData.provider)
 
                     text: SafeText.plainTextAsRichText(modelData.displayName)
+                    Kirigami.MnemonicData.label: SafeText.plainTextAsMnemonicRichText(modelData.displayName)
                     Accessible.name: modelData.displayName
                     checked: selected
                     enabled: selected || page.selectedOverviewProviderCount() < page.maxOverviewProviders

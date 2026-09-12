@@ -307,6 +307,8 @@ both pages. It also requires the viewport padding and, for the static
 Notifications content, the content height to stay constant across frames.
 The QML runner repeats both geometry files with the KDE desktop controls style
 because its scrollbar reserves viewport width, unlike the default overlay style.
+It also checks checkbox label text after the active style processes mnemonics,
+so escaped ampersands and markup remain literal under both Qt and KDE styles.
 Every runner invocation applies the strict no-skips check;
 `tests/test_qml_runner.py` verifies skip and failure propagation across styles.
 

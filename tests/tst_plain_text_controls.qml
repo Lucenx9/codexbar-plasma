@@ -19,6 +19,11 @@ TestCase {
     }
 
     Component {
+        id: richTextReaderComponent
+        TextEdit { textFormat: TextEdit.RichText }
+    }
+
+    Component {
         id: itemDelegateComponent
         Components.PlainItemDelegate {}
     }
@@ -48,6 +53,28 @@ TestCase {
 
         compare(checkBox.text, SafeText.plainTextAsRichText(activeMarkup))
         compare(itemDelegate.text, SafeText.plainTextAsMnemonicRichText(activeMarkup))
+    }
+
+    function test_checkBoxPreservesVisibleText_data() {
+        return [
+            {tag: "plain", label: "Codex"},
+            {tag: "special-characters", label: "Research & Development <example>"},
+            {tag: "literal-entities", label: "&lt;example&gt; && team"},
+            {tag: "markup", label: activeMarkup},
+            {tag: "empty", label: ""}
+        ]
+    }
+
+    function test_checkBoxPreservesVisibleText(data) {
+        var checkBox = createTemporaryObject(checkBoxComponent, this, {plainText: data.label})
+        verify(checkBox.contentItem !== null)
+        // Read the styled label after mnemonic processing, then decode its
+        // rich text exactly once to compare the visible characters.
+        var reader = createTemporaryObject(richTextReaderComponent, this, {
+            text: checkBox.contentItem.text
+        })
+        compare(reader.getText(0, reader.length), data.label)
+        compare(checkBox.Accessible.name, data.label)
     }
 
     function test_toolTipEscapesMarkup() {
