@@ -54,7 +54,7 @@ jobs:
     steps:
       - name: Install checkout prerequisites
         run: |
-          apt-get update
+          # Use the signed package indexes shipped in the pinned image.
           apt-get install -y --no-install-recommends ca-certificates git
 
       - name: Checkout
@@ -82,7 +82,7 @@ jobs:
     steps:
       - name: Install checkout prerequisites
         run: |
-          apt-get update
+          # Use the signed package indexes shipped in the pinned image.
           apt-get install -y --no-install-recommends ca-certificates git
 
       - name: Checkout
@@ -147,7 +147,7 @@ jobs:
     steps:
       - name: Install build-only tooling
         run: |
-          apt-get update
+          # Use the signed package indexes shipped in the pinned image.
           apt-get install -y --no-install-recommends \
             make cmake git ca-certificates jq gettext python3
 
