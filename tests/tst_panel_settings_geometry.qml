@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls as Controls
 import QtQuick.Window
 import QtTest
+import org.kde.kirigami as Kirigami
 
 TestCase {
     id: testCase
@@ -69,6 +70,9 @@ TestCase {
         measuredItems = [];
         positions = [];
         mirroredPage = false;
+        // KDE style transitions outlive the property changes checked above.
+        // Let them finish before QtTest destroys the temporary page.
+        wait(Kirigami.Units.longDuration + 50);
     }
 
     function test_openingKeepsTextStill_data() {

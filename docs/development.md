@@ -411,7 +411,8 @@ result signals. The script URL is a local executable dependency, not a widget
 setting. Internal request state and timers remain inside the module.
 
 The panel mirror check waits for a rendered frame before and after direction
-changes, so KDE style animations settle before fixture teardown.
+changes. Fixture cleanup also waits for the KDE style transition duration before
+QtTest destroys the temporary page, preserving warning failures during teardown.
 
 `tests/tst_panel_settings_geometry.qml` records control positions after rendered
 frames while the real Panel page initializes. It covers narrow/wide windows,
