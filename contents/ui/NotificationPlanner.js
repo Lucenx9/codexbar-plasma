@@ -331,6 +331,11 @@ function transition(observations, previousMemo, options) {
             // after status fetching is re-enabled.
             NotificationMemo.carryStatusMemo(previousMemo, item.providerID, nextMemo)
         }
+        // Current status remains useful when a successful reply carries old
+        // quotas. Only fresh usage may prime or change threshold baselines.
+        if (item.usageStale === true) {
+            continue
+        }
         if (mode === "prime") {
             if (item.errorPresent === true && Array.isArray(item.rows) && item.rows.length === 0) {
                 // A failed first observation establishes no threshold
