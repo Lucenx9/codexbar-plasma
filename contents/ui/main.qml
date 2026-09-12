@@ -1447,7 +1447,7 @@ PlasmoidItem {
                 failedCostProviderIDs.push(item.provider)
             }
             if (costMessage.length === 0 && item && item.error && item.error.message) {
-                costMessage = boundedCliMessage(item.error.message)
+                costMessage = boundedCliMessage(Normalizer.safeScalarText(item.error.message))
             }
             if (itemHasCostError) {
                 continue

@@ -218,7 +218,9 @@ Provider-specific editable settings depend on the official CLI contract.
 - A compact provider summary compares today with the selected period. Expand
   details for period models, history, and projects; cost warnings remain visible,
   including when a failed refresh keeps the previous cost snapshot. A successful
-  refresh clears the error.
+  refresh clears the error. Malformed provider error messages use a generic
+  warning while healthy providers update and failed providers keep their
+  previous costs.
 - Click a day in the provider chart or select it with the keyboard to see that
   day's model costs and tokens. Hover previews stay inside the chart, keeping
   the layout steady. The cost/token selector reuses the loaded data.

@@ -22,6 +22,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep partial cost refreshes working when a provider error message is malformed,
+  retaining its previous costs while healthy providers update.
 - Preserve valid Codex quotas and named accounts when optional login-method
   metadata is malformed, and use a valid fallback for the plan label.
 - Keep disabled Overview providers from occupying the three selection slots,
