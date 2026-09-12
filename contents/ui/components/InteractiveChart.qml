@@ -83,11 +83,18 @@ ColumnLayout {
         plot.requestPaint()
     }
 
+    FontMetrics {
+        id: chartReadoutFontMetrics
+
+        font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+    }
+
     RowLayout {
         // Fading keeps the row from blinking as the pointer enters and leaves
         // the plot; the reserved height keeps the chart from shifting either way.
         opacity: chart.hasActivePoint ? 1 : 0
         Layout.fillWidth: true
+        Layout.preferredHeight: chartReadoutFontMetrics.height
         spacing: Kirigami.Units.smallSpacing
 
         Behavior on opacity {
