@@ -304,6 +304,11 @@ siblings. It verifies quota values including measured zero, scoped provider
 identity, command retirement, and exactly one fallback completion even when
 every record fails normalization.
 
+`tests/test_provider_write_errors.py` exercises the production enable/disable
+and API-key result handlers with empty and structured CLI error messages. It
+checks that actions unlock, no successful write or revision is recorded, and a
+generic failure remains visible.
+
 `tests/test_provider_config_watcher.py` delivers a cached reply synchronously
 during the production watcher connection, matching Plasma's shared-source
 behavior. It checks that the new poll stays connected and retired replies are
