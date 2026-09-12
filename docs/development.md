@@ -410,6 +410,9 @@ The module's interface is settings, `checkNow()`, read-only runtime status, and
 result signals. The script URL is a local executable dependency, not a widget
 setting. Internal request state and timers remain inside the module.
 
+The panel mirror check waits for a rendered frame before and after direction
+changes, so KDE style animations settle before fixture teardown.
+
 `tests/tst_panel_settings_geometry.qml` records control positions after rendered
 frames while the real Panel page initializes. It covers narrow/wide windows,
 larger text, right-to-left layout, and scrolling through expanded options.

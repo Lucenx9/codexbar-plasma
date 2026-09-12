@@ -202,6 +202,7 @@ TestCase {
         var page = createPage();
         if (!page)
             return;
+        verify(waitForRendering(page));
         var view = page.scrollView;
         var left = view.leftPadding;
         var right = view.rightPadding;
@@ -210,8 +211,10 @@ TestCase {
         tryCompare(page, "mirrored", true);
         tryCompare(view, "leftPadding", right);
         tryCompare(view, "rightPadding", left);
+        verify(waitForRendering(page));
         mirroredPage = false;
         tryCompare(view, "leftPadding", left);
         tryCompare(view, "rightPadding", right);
+        verify(waitForRendering(page));
     }
 }
