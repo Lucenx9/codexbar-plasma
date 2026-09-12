@@ -2621,7 +2621,7 @@ for global_view_fragment in (
 
 for session_contract_fragment in (
     '"sessions", "--json-v2"',
-    'retireUsageCommandKind("sessions")',
+    "SessionResponse.response(stdoutText, stderrText)",
     "maximumSessions = 128",
     "function normalizeSession(item)",
 ):
@@ -2738,18 +2738,10 @@ for rejected_shape_fragment in (
 if ": []" in normalize_sessions_body:
     raise AssertionError("unexpected session payload shapes must not become an empty successful snapshot")
 
-parse_sessions_body = function_body(main_text, "parseSessionsOutput")
-for rejected_shape_fragment in (
-    "nextSessions === null",
-    "codexbar sessions returned an unsupported JSON payload.",
-):
-    if rejected_shape_fragment not in parse_sessions_body:
-        raise AssertionError(
-            "unexpected session payload shapes must preserve the previous snapshot and surface an error; "
-            f"missing {rejected_shape_fragment!r}"
-        )
-if "sessions = []" in parse_sessions_body:
-    raise AssertionError("an unsupported sessions payload must not clear the visible sessions")
+applet.require("codexbar sessions returned an unsupported JSON payload.",
+               "unsupported Sessions output must have a localized error")
+# SessionResponse QtTests distinguish failed output from confirmed empty data;
+# the controller tests verify that only a successful result replaces a snapshot.
 
 session_activity_body = function_body(main_text, "sessionActivityText")
 for live_age_fragment in (

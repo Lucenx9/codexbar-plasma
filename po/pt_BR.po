@@ -609,7 +609,8 @@ msgid "Diagnostic command timed out. Try again."
 msgstr "O comando de diagnóstico excedeu o tempo limite. Tente novamente."
 
 #: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
-#: contents/ui/controllers/ProviderRosterController.qml contents/ui/main.qml
+#: contents/ui/controllers/ProviderRosterController.qml
+#: contents/ui/controllers/SessionsController.qml contents/ui/main.qml
 msgid "codexbar response exceeded the supported size."
 msgstr "A resposta do codexbar excedeu o tamanho suportado."
 
@@ -1772,6 +1773,26 @@ msgstr "Nenhum provedor correspondente"
 msgid "Try another search or choose a different filter."
 msgstr "Tente outra busca ou escolha outro filtro."
 
+#: contents/ui/controllers/SessionsController.qml contents/ui/main.qml
+msgid "Set the codexbar command path in widget settings."
+msgstr "Defina o caminho do comando codexbar nas configurações do widget."
+
+#: contents/ui/controllers/SessionsController.qml
+msgid "Loading sessions timed out. Try again."
+msgstr "O carregamento das sessões excedeu o tempo limite. Tente novamente."
+
+#: contents/ui/controllers/SessionsController.qml
+msgid "codexbar sessions did not return JSON."
+msgstr "O comando codexbar sessions não retornou JSON."
+
+#: contents/ui/controllers/SessionsController.qml
+msgid "Could not parse codexbar sessions JSON: %1"
+msgstr "Não foi possível analisar o JSON de codexbar sessions: %1"
+
+#: contents/ui/controllers/SessionsController.qml
+msgid "codexbar sessions returned an unsupported JSON payload."
+msgstr "O comando codexbar sessions retornou dados JSON não suportados."
+
 #: contents/ui/controllers/WidgetUpdateController.qml
 msgid "Widget updater script is missing from the installed package."
 msgstr "O script de atualização do widget não está no pacote instalado."
@@ -1881,16 +1902,12 @@ msgid "Widget updater response exceeded the supported size."
 msgstr "A resposta do atualizador do widget excedeu o tamanho suportado."
 
 #: contents/ui/main.qml
-msgid "Set the codexbar command path in widget settings."
-msgstr "Defina o caminho do comando codexbar nas configurações do widget."
+msgid "Updated %1"
+msgstr "Atualizado às %1"
 
 #: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "Showing last known usage"
 msgstr "Exibindo os últimos dados válidos"
-
-#: contents/ui/main.qml
-msgid "Updated %1"
-msgstr "Atualizado às %1"
 
 #: contents/ui/main.qml
 msgid "Cached usage has expired. Refresh to try again."
@@ -1930,10 +1947,6 @@ msgid "Loading cost data timed out. Try again."
 msgstr "O carregamento dos custos excedeu o tempo limite. Tente novamente."
 
 #: contents/ui/main.qml
-msgid "Loading sessions timed out. Try again."
-msgstr "O carregamento das sessões excedeu o tempo limite. Tente novamente."
-
-#: contents/ui/main.qml
 msgid "Loading provider configuration timed out. Try again."
 msgstr ""
 "O carregamento da configuração dos provedores excedeu o tempo limite. Tente "
@@ -1970,18 +1983,6 @@ msgstr "O comando codexbar cost retornou dados JSON não suportados."
 #: contents/ui/main.qml
 msgid "Some cost data could not be refreshed."
 msgstr "Não foi possível atualizar alguns dados de custos."
-
-#: contents/ui/main.qml
-msgid "codexbar sessions did not return JSON."
-msgstr "O comando codexbar sessions não retornou JSON."
-
-#: contents/ui/main.qml
-msgid "Could not parse codexbar sessions JSON: %1"
-msgstr "Não foi possível analisar o JSON de codexbar sessions: %1"
-
-#: contents/ui/main.qml
-msgid "codexbar sessions returned an unsupported JSON payload."
-msgstr "O comando codexbar sessions retornou dados JSON não suportados."
 
 #: contents/ui/main.qml
 msgid "Session %1"

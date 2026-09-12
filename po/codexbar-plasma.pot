@@ -575,7 +575,8 @@ msgid "Diagnostic command timed out. Try again."
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
-#: contents/ui/controllers/ProviderRosterController.qml contents/ui/main.qml
+#: contents/ui/controllers/ProviderRosterController.qml
+#: contents/ui/controllers/SessionsController.qml contents/ui/main.qml
 msgid "codexbar response exceeded the supported size."
 msgstr ""
 
@@ -1696,6 +1697,26 @@ msgstr ""
 msgid "Try another search or choose a different filter."
 msgstr ""
 
+#: contents/ui/controllers/SessionsController.qml contents/ui/main.qml
+msgid "Set the codexbar command path in widget settings."
+msgstr ""
+
+#: contents/ui/controllers/SessionsController.qml
+msgid "Loading sessions timed out. Try again."
+msgstr ""
+
+#: contents/ui/controllers/SessionsController.qml
+msgid "codexbar sessions did not return JSON."
+msgstr ""
+
+#: contents/ui/controllers/SessionsController.qml
+msgid "Could not parse codexbar sessions JSON: %1"
+msgstr ""
+
+#: contents/ui/controllers/SessionsController.qml
+msgid "codexbar sessions returned an unsupported JSON payload."
+msgstr ""
+
 #: contents/ui/controllers/WidgetUpdateController.qml
 msgid "Widget updater script is missing from the installed package."
 msgstr ""
@@ -1805,15 +1826,11 @@ msgid "Widget updater response exceeded the supported size."
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Set the codexbar command path in widget settings."
+msgid "Updated %1"
 msgstr ""
 
 #: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "Showing last known usage"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Updated %1"
 msgstr ""
 
 #: contents/ui/main.qml
@@ -1853,10 +1870,6 @@ msgid "Loading cost data timed out. Try again."
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Loading sessions timed out. Try again."
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "Loading provider configuration timed out. Try again."
 msgstr ""
 
@@ -1890,18 +1903,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Some cost data could not be refreshed."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "codexbar sessions did not return JSON."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Could not parse codexbar sessions JSON: %1"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "codexbar sessions returned an unsupported JSON payload."
 msgstr ""
 
 #: contents/ui/main.qml
