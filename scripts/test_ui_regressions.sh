@@ -3147,7 +3147,8 @@ for lane in ("primary", "secondary", "tertiary"):
 for bounded_provider_fragment in (
     "title: Normalizer.boundedDisplayText(",
     "status: Normalizer.boundedDisplayText(",
-    "error: boundedCliMessage(",
+    "boundedCliMessage(Normalizer.safeScalarText(error.message))",
+    "error: errorMessage",
 ):
     if bounded_provider_fragment not in normalize_provider_body:
         raise AssertionError("new provider display surfaces must use bounded normalized text")

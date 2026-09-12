@@ -359,6 +359,7 @@ KCM.SimpleKCM {
         Controls.CheckBox {
             id: refreshOnOpenCheck
             objectName: "refreshOnOpenCheck"
+            implicitWidth: 0
             Layout.fillWidth: true
             text: i18n("Refresh when opening the popup")
         }
@@ -374,6 +375,7 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: includeStatusCheck
+            implicitWidth: 0
             Layout.fillWidth: true
             text: i18n("Fetch provider service status")
         }
@@ -395,6 +397,7 @@ KCM.SimpleKCM {
         Controls.CheckBox {
             id: privacyModeCheck
             objectName: "privacyModeCheck"
+            implicitWidth: 0
             Layout.fillWidth: true
             text: i18n("Hide personal information")
         }
@@ -415,6 +418,7 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: costUsageEnabledCheck
+            implicitWidth: 0
             Layout.fillWidth: true
             text: i18n("Load local usage and spend history")
         }
@@ -453,6 +457,7 @@ KCM.SimpleKCM {
 
         Controls.CheckBox {
             id: updateChecksEnabledCheck
+            implicitWidth: 0
             Layout.fillWidth: true
             text: i18n("Check for widget updates")
         }
@@ -481,6 +486,7 @@ KCM.SimpleKCM {
 
             Controls.CheckBox {
                 id: updateNotificationsEnabledCheck
+                implicitWidth: 0
                 Layout.fillWidth: true
                 Layout.leftMargin: Kirigami.Units.gridUnit
                 text: i18n("Notify when a widget update is available")
@@ -489,6 +495,7 @@ KCM.SimpleKCM {
 
             Controls.CheckBox {
                 id: autoUpdateEnabledCheck
+                implicitWidth: 0
                 Layout.fillWidth: true
                 Layout.leftMargin: Kirigami.Units.gridUnit
                 text: i18n("Install widget updates automatically")
