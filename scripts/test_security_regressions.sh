@@ -361,7 +361,7 @@ require_in_surface applet "statusUrl: safeStatusUrl(providerID, snapshot.statusU
 require_in_surface applet "Qt.openUrlExternally(safeStatusUrl(item.provider, item.statusUrl))"
 
 require_in_surface applet "notify-send --app-name=CodexBar --icon=view-statistics --urgency="
-require_in_surface applet "+ \" -- \" + shellQuote(cleanTitle)"
+require_in_file "${ROOT_DIR}/contents/ui/NotificationCommand.js" '+ " -- " + Guards.shellQuote(cleanTitle) + " " + Guards.shellQuote(cleanBody)'
 
 require_in_file "$MAKEFILE" "scripts/test_security_regressions.sh"
 require_in_file "$MAKEFILE" "scripts/test_qml_hardening.sh"

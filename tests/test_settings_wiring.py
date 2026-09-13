@@ -30,9 +30,9 @@ class SettingsWiringTests(unittest.TestCase):
         body = Surface("applet").function_body("sendPlasmaNotification")
         self.assertIn('cleanTitle = privacyMode ? "CodexBar"', body)
         self.assertIn('cleanBody = privacyMode ? i18n(', body)
-        self.assertIn("shellQuote(cleanTitle)", body)
-        self.assertIn("shellQuote(cleanBody)", body)
-        self.assertLess(body.index("cleanBody ="), body.index("connectNotificationCommand("))
+        self.assertIn("notificationDispatcher.send(cleanTitle, cleanBody, urgency)", body)
+        self.assertLess(body.index("cleanBody ="), body.index("notificationDispatcher.send("))
+        self.assertNotIn("notify-send", body)
 
     def test_privacy_stops_session_copy_before_touching_the_clipboard(self):
         applet = Surface("applet")

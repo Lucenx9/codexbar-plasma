@@ -16,17 +16,17 @@ require_in_surface applet "commandWithRunNonce(providerConfigCommandSource)"
 # The nonce alone does not drop a late result; the ledger does, by no longer
 # holding the retired source name. Assert that routing reads the ledger and not
 # a parallel per-kind string that could disagree with it.
-require_in_surface applet "CommandLedger.find(root.activeCommandDescriptors, sourceName)"
+require_in_surface applet "CommandLedger.find(lifecycle.activeCommandDescriptors, sourceName)"
 reject_in_surface applet "property string connectedCommandSource"
 reject_in_surface applet "property string connectedCostCommandSource"
 reject_in_surface applet "property string connectedSessionsCommandSource"
 reject_in_surface applet "property string connectedProviderConfigCommandSource"
 require_in_surface applet "var baseCommand = buildProviderUsageCommand(providerID)"
 require_in_surface applet "sourceName: commandWithRunNonce(baseCommand)"
-# Pinning the ":; " prefix here is also the /bin/sh-validity guard for the
-# notification wrapper: a shell assignment cannot directly prefix the reserved
-# word "if", so any rewrite that drops the separator fails this assertion.
-require_in_surface applet 'connectNotificationCommand(commandWithRunNonce(":; " + command))'
+# Notifications retain the shell separator before `if` and register a unique
+# source before connecting it. The dispatcher tests execute the real command.
+require_in_surface applet 'return ":; if command -v notify-send'
+require_in_surface applet 'var sourceName = CommandLedger.withRunNonce(command, runSerial)'
 reject_in_surface applet "notificationSource.connectSource(command)"
 
 require_in_surface providers "property int commandRunSerial: 0"
