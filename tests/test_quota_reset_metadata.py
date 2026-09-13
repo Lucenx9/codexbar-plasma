@@ -27,6 +27,7 @@ import "SOURCE_URL/ProviderOrder.js" as ProviderOrder
 import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/SafeText.js" as SafeText
 import "SOURCE_URL/PacePresentation.js" as PacePresentation
+import "SOURCE_URL/ResetPresentation.js" as ResetPresentation
 TestCase {
     name: "QuotaResetMetadata"
     Component {

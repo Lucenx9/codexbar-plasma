@@ -17,6 +17,7 @@ import "PopupSelection.js" as PopupSelection
 import "ProviderSnapshot.js" as ProviderSnapshot
 import "CostPresentation.js" as CostPresentation
 import "ProviderCostPresentation.js" as ProviderCostPresentation
+import "ResetPresentation.js" as ResetPresentation
 import "OverviewProviders.js" as OverviewProviders
 import "ProviderIdentity.js" as ProviderIdentity
 import "PrivacyPresentation.js" as PrivacyPresentation
@@ -1256,44 +1257,21 @@ PlasmoidItem {
     }
 
     function resetText(window, absolute) {
-        // Optional reset metadata is CLI-controlled and may carry structured
-        // values: passing them to new Date() or String() throws inside
-        // ToPrimitive and would discard the whole provider snapshot. Only
-        // strings and numbers reach the date parser; anything else degrades
-        // to no reset, keeping the valid quota visible.
-        var resetsAt = window.resetsAt
-        if (typeof resetsAt !== "string" && typeof resetsAt !== "number") {
-            resetsAt = ""
-        }
-        if (!resetsAt) {
-            return window.resetDescription && window.resetDescription.length > 0 ? window.resetDescription : ""
-        }
-
-        var date = new Date(resetsAt)
-        if (isNaN(date.getTime())) {
-            return String(resetsAt)
-        }
-
-        if (absolute === true) {
-            return Qt.formatDateTime(date, "ddd HH:mm")
-        }
-
-        var remainingMs = date.getTime() - panelClockMs
-        if (remainingMs <= 0) {
+        var parts = ResetPresentation.parts(window, panelClockMs, absolute)
+        switch (parts.kind) {
+        case "absolute":
+            return Qt.formatDateTime(new Date(parts.timestampMs), "ddd HH:mm")
+        case "now":
             return i18n("now")
+        case "minutes":
+            return i18np("%1 min", "%1 min", parts.minutes)
+        case "hours":
+            return parts.minutes > 0 ? i18n("%1h %2m", parts.hours, parts.minutes) : i18np("%1h", "%1h", parts.hours)
+        case "days":
+            return parts.hours > 0 ? i18n("%1d %2h", parts.days, parts.hours) : i18np("%1d", "%1d", parts.days)
+        default:
+            return parts.text
         }
-        var minutes = Math.max(1, Math.round(remainingMs / 60000))
-        if (minutes < 60) {
-            return i18np("%1 min", "%1 min", minutes)
-        }
-        var hours = Math.floor(minutes / 60)
-        var restMinutes = minutes % 60
-        if (hours < 24) {
-            return restMinutes > 0 ? i18n("%1h %2m", hours, restMinutes) : i18np("%1h", "%1h", hours)
-        }
-        var days = Math.floor(hours / 24)
-        var restHours = hours % 24
-        return restHours > 0 ? i18n("%1d %2h", days, restHours) : i18np("%1d", "%1d", days)
     }
 
     function usageResetText(row) {
@@ -2426,44 +2404,8 @@ PlasmoidItem {
     }
 
     function resetLabel(value) {
-        var text = String(value || "").trim()
-        if (text.length === 0) {
-            return ""
-        }
-        // Only split where a unit letter runs into the next number
-        // ("Resets5h30m" -> "Resets 5h 30m"). Splitting digit-then-letter as
-        // well would also tear a number away from its own unit and render our
-        // own compact durations ("2h 30m") as "2 h 30 m".
-        text = text
-            .replace(/([A-Za-z])(\d)/g, "$1 $2")
-            .replace(/\)([A-Za-z])/g, ") $1")
-            .replace(/(am|pm)\(/ig, "$1 (")
-            .replace(/\s+/g, " ")
-        if (/^resets\b/i.test(text)) {
-            var rest = text.replace(/^resets\s*/i, "")
-            return resetLabelLooksLikeTime(rest) ? i18n("Resets %1", rest) : rest
-        }
-        return resetLabelLooksLikeTime(text) ? i18n("Resets %1", text) : text
-    }
-
-    function resetLabelLooksLikeTime(value) {
-        var text = String(value || "").trim()
-        if (text.length === 0) {
-            return false
-        }
-        if (/^(now|today|tomorrow)\b/i.test(text)) {
-            return true
-        }
-        if (/^\d{1,2}(:\d{2})?\s*(am|pm)(\s*\([^)]+\))?$/i.test(text)) {
-            return true
-        }
-        if (/^\d{1,2}:\d{2}(\s*\([^)]+\))?$/.test(text)) {
-            return true
-        }
-        if (/^\S+\s+\d{1,2}:\d{2}(\s*\([^)]+\))?$/.test(text)) {
-            return true
-        }
-        return /^\d+\s*(min|m|h|hr|hour|hours|d|day|days)(\s+\d+\s*(min|m|h|hr|hour|hours|d|day|days))*$/i.test(text)
+        var parts = ResetPresentation.labelParts(value)
+        return parts.isTime ? i18n("Resets %1", parts.text) : parts.text
     }
 
     function providerCountText(count) {
