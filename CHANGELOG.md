@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.38 - 2026-09-13
+
 ### Added
 
 - Offer **Configure providers** when the popup has no provider data, and
@@ -109,6 +111,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Aggregate per-model cost and token totals by the raw model identity instead
   of the bounded display label, so distinct models that share a truncated or
   whitespace-collapsed label no longer merge into one row.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.37...v0.2.38)
 
 ## 0.2.37 - 2026-09-10
 
