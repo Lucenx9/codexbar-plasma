@@ -26,6 +26,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Eliminate duplicate section separators in the popup detail view when plain
+  credit balances are absent but other additional sections are displayed.
 - Ignore malformed configuration checksum replies so they cannot clear cached
   quotas or trigger unnecessary usage refreshes.
 - Reserve initial readout row height in interactive charts so that hovering
