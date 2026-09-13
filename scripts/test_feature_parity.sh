@@ -516,7 +516,7 @@ require_in_surface applet 'kind: "quota"'
 require_in_surface applet 'kind: "pace"'
 require_in_surface applet 'kind: "reset"'
 require_in_surface applet "notify-send --app-name=CodexBar"
-require_in_surface applet 'connectNotificationCommand(commandWithRunNonce(":; " + command))'
+require_in_surface applet "notificationDispatcher.send(cleanTitle, cleanBody, urgency)"
 require_in_surface applet "property bool costUsageEnabled"
 require_in_surface applet "property int costHistoryDays"
 # Cost and tokens both come from one cost payload: switching the plotted metric

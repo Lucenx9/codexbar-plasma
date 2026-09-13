@@ -37,9 +37,19 @@ For those, use `make install` or `./install.sh`. Release-package users can use
 
 ## Ownership and implementation
 
-- `contents/ui/main.qml` owns notification delivery, account coordination,
+- `contents/ui/main.qml` owns notification policy and text, account coordination,
   selected state, quota-cache persistence, configuration updates, and external
   effects. Its adapters supply the panel and popup.
+- `contents/ui/controllers/NotificationDispatcher.qml` owns notification
+  execution, per-send nonces, the request ledger, the 10-second deadline, and
+  disconnection on completion, timeout, or destruction. Its `send(title, body,
+  urgency)` method accepts already localized and privacy-filtered text;
+  read-only `sending` reports whether requests remain pending. Failed commands
+  finish silently, and missing `notify-send` remains a quiet no-op.
+  `NotificationCommand.js` builds the quoted command and restricts urgency to
+  the supported values. The applet retains notification settings, privacy,
+  deduplication, account freshness, and update-notification persistence. The
+  applet itself no longer owns an executable DataSource or command ledger.
 - `contents/ui/controllers/WidgetUpdateController.qml` owns the widget updater's
   executable source, per-request nonce, captured install mode, timeout, queued
   install request, and retry/interval timers. It receives update settings and
@@ -361,6 +371,16 @@ observers, and explicit/XDG config paths with quoted filenames.
 `tests/tst_provider_config_watch.qml` directly tests first/changed/unchanged
 observations and input bounds. Surface checks preserve the minute poll and
 cache-restore/invalidation ordering in the applet.
+
+`tests/test_notification_dispatcher.py` checks concurrent and repeated messages,
+argument boundaries with synthetic `notify-send` executables, missing executables,
+and failure recovery through the real Plasma DataSource. A substituted transport
+exercises synchronous and retired replies, reentrant completion, destruction,
+and the production 10-second timer. The pure command interface has adversarial
+QtTests in `tests/tst_notification_command.qml`. Surface checks keep notification
+policy and privacy in the applet and enforce registration and retirement ordering.
+Missing optional KDE modules are reported as local skips and rejected by
+`QML_TEST_REQUIRE_NO_SKIPS=1`.
 
 `tests/test_usage_controller.py` exercises the production executable source,
 provider discovery/cache, bounded fallback concurrency, exact account/source
