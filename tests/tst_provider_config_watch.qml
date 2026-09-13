@@ -8,6 +8,11 @@ TestCase {
     function test_firstObservation_data() {
         return [
             {
+                tag: "filename-whitespace",
+                stdout: "123 42 /synthetic/space name\twith\na newline.json\n",
+                stamp: "123 42 /synthetic/space name\twith\na newline.json"
+            },
+            {
                 tag: "missing",
                 stdout: "missing",
                 stamp: "missing"
@@ -67,6 +72,38 @@ TestCase {
     function test_invalidObservation_data() {
         return [
             {
+                tag: "garbage",
+                value: "checksum unavailable"
+            },
+            {
+                tag: "missing-prefix",
+                value: "missing /synthetic/config.json"
+            },
+            {
+                tag: "invalid-checksum",
+                value: "abc 42 /synthetic/config.json"
+            },
+            {
+                tag: "negative-checksum",
+                value: "-1 42 /synthetic/config.json"
+            },
+            {
+                tag: "invalid-byte-count",
+                value: "123 size /synthetic/config.json"
+            },
+            {
+                tag: "negative-byte-count",
+                value: "123 -1 /synthetic/config.json"
+            },
+            {
+                tag: "missing-filename",
+                value: "123 42 "
+            },
+            {
+                tag: "multiline-header",
+                value: "123\n42 /synthetic/config.json"
+            },
+            {
                 tag: "undefined",
                 value: undefined
             },
@@ -98,7 +135,7 @@ TestCase {
             },
             {
                 tag: "oversized",
-                value: "x".repeat(ConfigWatch.maximumStampLength + 1)
+                value: "123 42 " + "x".repeat(ConfigWatch.maximumStampLength)
             }
         ];
     }
@@ -109,7 +146,7 @@ TestCase {
     }
 
     function test_stampBoundIsInclusive() {
-        var stamp = "x".repeat(ConfigWatch.maximumStampLength);
+        var stamp = "123 42 " + "x".repeat(ConfigWatch.maximumStampLength - 7);
         compare(ConfigWatch.observation("", stamp), {
             stamp: stamp,
             initial: true

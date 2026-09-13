@@ -42,51 +42,51 @@ CACHED_TESTS = '''
         var subject = create({command: "watch-current"});
         subject.active = true;
         compare(subject.testSource.connected, ["watch-current"]);
-        compare(events, [{stamp: "cached", initial: true}]);
+        compare(events, [{stamp: "123 42 /synthetic/config.json", initial: true}]);
         subject.command = "watch-new";
         compare(subject.testSource.connected, ["watch-new"]);
         compare(events.length, 1);
-        subject.testSource.newData("watch-current", {stdout: "retired"});
+        subject.testSource.newData("watch-current", {stdout: "111 42 /synthetic/retired.json"});
         compare(subject.testSource.connected, ["watch-new"]);
-        compare(subject.stamp, "cached");
-        subject.testSource.newData("watch-new", {stdout: "changed\\n"});
-        compare(events, [{stamp: "cached", initial: true}, {stamp: "changed", initial: false}]);
+        compare(subject.stamp, "123 42 /synthetic/config.json");
+        subject.testSource.newData("watch-new", {stdout: "456 43 /synthetic/config.json\\n"});
+        compare(events, [{stamp: "123 42 /synthetic/config.json", initial: true}, {stamp: "456 43 /synthetic/config.json", initial: false}]);
         subject.command = "";
         compare(subject.testSource.connected, []);
-        subject.testSource.newData("watch-new", {stdout: "retired"});
-        compare(subject.stamp, "changed");
+        subject.testSource.newData("watch-new", {stdout: "111 42 /synthetic/retired.json"});
+        compare(subject.stamp, "456 43 /synthetic/config.json");
     }
     function test_inactiveAndMalformedRepliesKeepTheLastStamp() {
         var subject = create({command: "watch-current"});
         compare(subject.testSource.connected, []);
         subject.active = true;
         for (var data of [null, {}, {stdout: 42}, {stdout: {toString: null}},
-                {stdout: " "}, {stdout: "x".repeat(8193)}]) {
+                {stdout: " "}, {stdout: "checksum unavailable"}, {stdout: "x".repeat(8193)}]) {
             subject.testSource.newData("watch-current", data);
         }
-        compare(subject.stamp, "cached");
+        compare(subject.stamp, "123 42 /synthetic/config.json");
         compare(events.length, 1);
         subject.active = false;
         compare(subject.testSource.connected, []);
-        subject.testSource.newData("watch-current", {stdout: "late"});
+        subject.testSource.newData("watch-current", {stdout: "222 42 /synthetic/late.json"});
         compare(events.length, 1);
-        subject.testSource.cachedReply = "resumed";
+        subject.testSource.cachedReply = "789 44 /synthetic/config.json";
         subject.active = true;
-        compare(events[1], {stamp: "resumed", initial: false});
+        compare(events[1], {stamp: "789 44 /synthetic/config.json", initial: false});
     }
     function test_reentrantReconnectKeepsTheNewObservation() {
         var subject = create({command: "watch-current"});
         subject.stampObserved.connect(function(stamp, initial) {
             if (initial) {
-                subject.testSource.cachedReply = "replacement";
+                subject.testSource.cachedReply = "987 45 /synthetic/replacement.json";
                 subject.command = "watch-replacement";
             }
         });
         subject.active = true;
-        compare(events, [{stamp: "cached", initial: true}, {stamp: "replacement", initial: false}]);
-        compare(subject.stamp, "replacement");
+        compare(events, [{stamp: "123 42 /synthetic/config.json", initial: true}, {stamp: "987 45 /synthetic/replacement.json", initial: false}]);
+        compare(subject.stamp, "987 45 /synthetic/replacement.json");
         compare(subject.testSource.connected, ["watch-replacement"]);
-        subject.testSource.newData("watch-current", {stdout: "late"});
+        subject.testSource.newData("watch-current", {stdout: "222 42 /synthetic/late.json"});
         compare(events.length, 2);
     }
 '''
@@ -106,12 +106,12 @@ REAL_TESTS = '''
         compare(subject.stamp, "missing");
         compare(events.length, 2);
         subject.active = false;
-        subject.command = "printf resumed";
+        subject.command = "printf '789 44 /synthetic/config.json'";
         wait(250);
         compare(events.length, 2);
         subject.active = true;
-        tryCompare(subject, "stamp", "resumed", 5000);
-        compare(events[2], {stamp: "resumed", initial: false});
+        tryCompare(subject, "stamp", "789 44 /synthetic/config.json", 5000);
+        compare(events[2], {stamp: "789 44 /synthetic/config.json", initial: false});
         subject.active = false;
     }
 '''
@@ -144,7 +144,7 @@ class ProviderConfigWatcherTests(unittest.TestCase):
         source = source.replace('id: controller', 'id: controller\n    property alias testSource: watchSource', 1)
         source = source.replace('Plasma5Support.DataSource {', 'QtObject {')
         source = source.replace('engine: "executable"', '''property var connected: []
-        property string cachedReply: "cached"
+        property string cachedReply: "123 42 /synthetic/config.json"
         signal newData(string sourceName, var data)
         function connectSource(sourceName) {
             connected = connected.concat(sourceName)
@@ -163,7 +163,7 @@ class ProviderConfigWatcherTests(unittest.TestCase):
     def test_real_process_and_config_paths(self):
         with tempfile.TemporaryDirectory(prefix="codexbar watcher 'test-") as temporary:
             directory = Path(temporary)
-            explicit = directory / "explicit 'config.json"
+            explicit = directory / "explicit 'config\tname\n.json"
             explicit.write_text('{"synthetic": "first"}\n')
             expected = subprocess.check_output(["cksum", str(explicit)], text=True).strip()
             output = self.run_qml(directory, CONTROLLER,

@@ -171,7 +171,8 @@ their supplemental timestamp is old; they do not enter quota retention or expiry
 
 The widget automatically saves a small quota cache in its Plasma configuration.
 After a restart it verifies the CLI configuration fingerprint before restoring
-the cache, then refreshes in the background. Restored quotas are always marked
+the cache, then refreshes in the background. Malformed checksum replies leave
+the current fingerprint and quotas intact. Restored quotas are always marked
 last known, even if they were saved recently. A cache is not a successful refresh.
 If a partial refresh finishes before that verification, its results take
 precedence for the providers it returned. Other cached providers are restored

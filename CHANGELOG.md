@@ -26,6 +26,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Ignore malformed configuration checksum replies so they cannot clear cached
+  quotas or trigger unnecessary usage refreshes.
 - Reserve initial readout row height in interactive charts so that hovering
   a point for the first time does not cause a vertical layout shift.
 - Guard session refresh activity calculations against missing, null, or

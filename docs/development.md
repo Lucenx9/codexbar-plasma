@@ -68,7 +68,8 @@ For those, use `make install` or `./install.sh`. Release-package users can use
   the first observation restores cache in `main.qml`, while later changes
   invalidate usage and schedule a refresh. Repeated or malformed observations
   leave the current state intact. `ProviderConfigWatch.js` preserves the existing
-  config-path precedence and checksum text, and bounds observation processing.
+  config-path precedence and checksum text, and accepts only bounded `missing`
+  or CRC checksum/byte-count/file records. Filenames may contain whitespace.
   The watcher never reads JSON fields or writes configuration.
 - `contents/ui/controllers/UsageController.qml` owns usage commands, provider
   discovery, the cached roster, bounded fallback queue, nonces, deadlines, and

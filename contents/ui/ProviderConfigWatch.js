@@ -25,5 +25,6 @@ function observation(previousStamp, stdoutValue) {
     if (typeof stdoutValue !== "string" || stdoutValue.length > maximumStampLength) return null;
     var stamp = stdoutValue.trim();
     if (stamp.length === 0 || stamp === previousStamp) return null;
+    if (stamp !== "missing" && !/^[0-9]+ [0-9]+ [\s\S]+$/.test(stamp)) return null;
     return {stamp: stamp, initial: previousStamp.length === 0};
 }
