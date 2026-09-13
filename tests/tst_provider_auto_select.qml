@@ -108,6 +108,19 @@ TestCase {
         compare(ProviderAutoSelect.bestIndex([quotaProvider("claude", 1), degraded]), 1);
     }
 
+    function test_aFullyBrokenRosterStillSelectsItsFirstProvider() {
+        // Nothing is rankable, but the popup and the panel still have to show a
+        // provider. The first one surfaces its error instead of leaving the
+        // surfaces blank, which is what a no-selection answer would produce.
+        var broken = [
+            { provider: "codex", error: "codexbar exited with status 1", credits: null, codexCreditLimit: null },
+            { provider: "claude", error: "connection refused", credits: null, codexCreditLimit: null }
+        ];
+        compare(ProviderAutoSelect.score(broken[0]), -1);
+        compare(ProviderAutoSelect.score(broken[1]), -1);
+        compare(ProviderAutoSelect.bestIndex(broken), 0);
+    }
+
     function test_theFirstProviderKeepsATie() {
         compare(ProviderAutoSelect.bestIndex([
             quotaProvider("codex", 40),

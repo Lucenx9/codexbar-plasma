@@ -50,6 +50,10 @@ function score(item) {
 // The first provider wins a tie, so a roster whose order the user chose keeps
 // its head selected while nothing stands out. An empty or unusable roster
 // answers 0: callers index a roster they have already checked is non-empty.
+// A roster where every provider failed answers 0 as well. There is no
+// no-selection state to fall back to: the popup and the panel must show a
+// provider, and the first one at least surfaces its error instead of leaving
+// the surfaces blank.
 function bestIndex(items) {
     var source = Array.isArray(items) ? items : [];
     var bestScore = -1;
