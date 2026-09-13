@@ -2274,10 +2274,6 @@ msgid "Extra usage"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Balance: %1"
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "Zen balance"
 msgstr ""
 
@@ -2286,15 +2282,19 @@ msgid "Quota usage"
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "API spend"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Balance: %1"
+msgstr ""
+
+#: contents/ui/main.qml
 msgid "%1: %2 / %3"
 msgstr ""
 
 #: contents/ui/main.qml
 msgid "Your spend: %1"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "API spend"
 msgstr ""
 
 #: contents/ui/main.qml

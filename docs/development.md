@@ -124,6 +124,12 @@ For those, use `make install` or `./install.sh`. Release-package users can use
   command, and deactivation clears loading and error state. `ProviderRoster.js`
   projects the shared provider-list contract into bounded enabled identities
   and semantic errors; QML owns localization and state updates.
+- `ProviderCostPresentation.js` classifies provider costs as balances, points,
+  allowances, or spend, and validates reset-credit counts. It preserves the
+  established provider exceptions, bounds display metadata, and keeps plain
+  balances separate from allowance percentages. `main.qml` localizes these
+  semantic sections and formats their amounts. The Codex monthly-credit limit
+  retains its dedicated `ProviderNormalizer.js` contract and existing row adapter.
 - Pure applet modules live in `contents/ui/*.js`; their public interfaces have
   direct tests in `tests/tst_*.qml`. Configuration is declared in
   `contents/config/main.xml` and bound through `cfg_*` in config pages and
@@ -372,6 +378,13 @@ observers, and explicit/XDG config paths with quoted filenames.
 `tests/tst_provider_config_watch.qml` directly tests first/changed/unchanged
 observations and input bounds. Surface checks preserve the minute poll and
 cache-restore/invalidation ordering in the applet.
+
+`tests/tst_provider_cost_presentation.qml` covers malformed amounts, balance
+precedence, percentage bounds, provider fallbacks, reset counts, metadata bounds,
+and healthy quotas with invalid optional costs. `tests/test_provider_cost_presentation.py`
+executes the owning QML cost and reset-credit adapters against the compiled
+English fallback and all five translation catalogs. Surface checks enforce
+module delegation and keep plural-aware localization in QML.
 
 `tests/test_notification_dispatcher.py` checks concurrent and repeated messages,
 argument boundaries with synthetic `notify-send` executables, missing executables,

@@ -3206,8 +3206,8 @@ for helper_name in ("chartLineX", "chartLineIndexAt", "chartLineY"):
 reset_credits_body = function_body(main_text, "resetCreditsSection")
 if 'i18np("%1 available", "%1 available"' not in reset_credits_body:
     raise AssertionError("reset credit counts must use plural-aware translations")
-if "Normalizer.strictFiniteNumber(resetCredits.availableCount)" not in reset_credits_body:
-    raise AssertionError("reset credits must reject coercive CLI numeric values")
+if "ProviderCostPresentation.resetCount(providerID, resetCredits)" not in reset_credits_body:
+    raise AssertionError("reset credits must use the tested semantic count")
 direct_number_call = re.compile(r"(?<![A-Za-z0-9_])Number\(")
 if direct_number_call.search(reset_credits_body):
     raise AssertionError("reset credits must not use loose numeric coercion")
@@ -3227,11 +3227,17 @@ if direct_number_call.search(normalize_provider_body):
     raise AssertionError("remaining credits must not use loose numeric coercion")
 
 provider_cost_body = function_body(main_text, "providerCostSection")
-for cost_numeric_field in ("cost.used", "cost.limit", "cost.personalUsed"):
-    if f"Normalizer.strictFiniteNumber({cost_numeric_field})" not in provider_cost_body:
-        raise AssertionError(f"provider cost must strictly parse {cost_numeric_field}")
+if "ProviderCostPresentation.section(providerID, cost)" not in provider_cost_body:
+    raise AssertionError("provider cost must use the tested semantic section")
 if direct_number_call.search(provider_cost_body):
     raise AssertionError("provider cost must not use loose numeric coercion")
+provider_cost_presentation = (root / "contents/ui/ProviderCostPresentation.js").read_text()
+for forbidden in ("root.", "Plasmoid.", "i18n(", "i18np(", "Qt."):
+    if forbidden in provider_cost_presentation:
+        raise AssertionError("provider cost decisions must be pure: " + forbidden)
+for field in ("cost.used", "cost.limit", "cost.personalUsed", "resetCredits.availableCount"):
+    if field in provider_cost_body + reset_credits_body:
+        raise AssertionError("numeric cost/credit decisions must stay in the semantic module: " + field)
 
 # Parsing and fallback behavior are covered directly by
 # tst_legacy_usage_dashboard.qml; keep localization and generic-detail priority

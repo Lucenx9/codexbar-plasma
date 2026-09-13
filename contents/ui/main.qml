@@ -16,6 +16,7 @@ import "PanelTextFit.js" as PanelTextFit
 import "PopupSelection.js" as PopupSelection
 import "ProviderSnapshot.js" as ProviderSnapshot
 import "CostPresentation.js" as CostPresentation
+import "ProviderCostPresentation.js" as ProviderCostPresentation
 import "OverviewProviders.js" as OverviewProviders
 import "ProviderIdentity.js" as ProviderIdentity
 import "PrivacyPresentation.js" as PrivacyPresentation
@@ -1176,97 +1177,56 @@ PlasmoidItem {
     }
 
     function providerCostSection(providerID, cost) {
-        var key = providerKey(providerID)
-        if (key === "manus" || key === "synthetic") {
+        var section = ProviderCostPresentation.section(providerID, cost)
+        if (section === null) {
             return null
         }
-
-        if (!isCliRecord(cost)) {
-            return null
+        var title = i18n("Extra usage")
+        switch (section.titleKey) {
+        case "zenBalance":
+            title = i18n("Zen balance")
+            break
+        case "credits":
+            title = i18n("Credits")
+            break
+        case "quotaUsage":
+            title = i18n("Quota usage")
+            break
+        case "apiSpend":
+            title = i18n("API spend")
+            break
         }
-
-        var used = Normalizer.strictFiniteNumber(cost.used)
-        var limit = Normalizer.strictFiniteNumber(cost.limit)
-        var personalUsed = Normalizer.strictFiniteNumber(cost.personalUsed)
-        var currency = Normalizer.boundedDisplayText(cost.currencyCode || "USD", 12)
-        var period = Normalizer.boundedDisplayText(cost.period === null || cost.period === undefined ? i18n("This month") : cost.period, 120)
-        var hasUsed = isFinite(used)
-        var hasLimit = isFinite(limit) && limit > 0
-        if (!hasUsed) {
-            return null
-        }
-
-        if (key === "factory" && period === "Extra usage balance") {
-            return {
-                title: i18n("Extra usage"),
-                percentUsed: -1,
-                spendLine: i18n("Balance: %1", amountString(used, currency)),
-                percentLine: "",
-                personalSpendLine: ""
-            }
-        }
-
-        if (key === "opencodego" && period === "Zen balance") {
-            return {
-                title: i18n("Zen balance"),
-                percentUsed: -1,
-                spendLine: i18n("Balance: %1", amountString(used, currency)),
-                percentLine: "",
-                personalSpendLine: ""
-            }
-        }
-
-        if (key === "minimax" && period === "MiniMax points balance") {
-            return {
-                title: i18n("Credits"),
-                percentUsed: -1,
-                spendLine: i18n("Balance: %1", Math.round(used)),
-                percentLine: "",
-                personalSpendLine: ""
-            }
-        }
-
-        if (hasLimit) {
-            var percent = clamp((used / limit) * 100, 0, 100)
-            return {
-                title: currency === "Quota" ? i18n("Quota usage") : i18n("Extra usage"),
-                percentUsed: percent,
-                spendLine: i18n("%1: %2 / %3", localizedPeriod(period), amountString(used, currency), amountString(limit, currency)),
-                percentLine: i18n("%1% used", Math.round(percent)),
-                personalSpendLine: isFinite(personalUsed) && personalUsed > 0
-                    ? i18n("Your spend: %1", amountString(personalUsed, currency))
-                    : ""
-            }
-        }
-
-        if (key === "litellm") {
-            return null
-        }
-
-        return {
-            title: key === "openai" || key === "claude"
-                ? i18n("API spend")
-                : i18n("Extra usage"),
-            percentUsed: -1,
-            spendLine: i18n("%1: %2", localizedPeriod(period), amountString(used, currency)),
+        var result = {
+            title: title,
+            percentUsed: section.percentUsed,
+            spendLine: "",
             percentLine: "",
             personalSpendLine: ""
         }
+        if (section.kind === "balance" || section.kind === "pointsBalance") {
+            result.spendLine = i18n("Balance: %1", section.kind === "pointsBalance"
+                ? Math.round(section.used) : amountString(section.used, section.currency))
+        } else {
+            var period = section.period === null ? i18n("This month") : localizedPeriod(section.period)
+            if (section.kind === "allowance") {
+                result.spendLine = i18n("%1: %2 / %3", period,
+                    amountString(section.used, section.currency), amountString(section.limit, section.currency))
+                result.percentLine = i18n("%1% used", Math.round(section.percentUsed))
+                if (section.personalUsed !== null) {
+                    result.personalSpendLine = i18n("Your spend: %1", amountString(section.personalUsed, section.currency))
+                }
+            } else {
+                result.spendLine = i18n("%1: %2", period, amountString(section.used, section.currency))
+            }
+        }
+        return result
     }
 
     function resetCreditsSection(providerID, resetCredits) {
-        if (providerKey(providerID) !== "codex" || !resetCredits) {
-            return null
-        }
-
-        var count = Normalizer.strictFiniteNumber(resetCredits.availableCount)
-        if (!isFinite(count) || count <= 0) {
-            return null
-        }
-
-        return {
+        var count = ProviderCostPresentation.resetCount(providerID, resetCredits)
+        return count === null ? null : {
             title: i18n("Reset credits"),
-            line: i18np("%1 available", "%1 available", Math.round(count))
+            line: i18np("%1 available", "%1 available", count)
         }
     }
 
