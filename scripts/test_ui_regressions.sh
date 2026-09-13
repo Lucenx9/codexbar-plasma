@@ -628,16 +628,21 @@ if provider_publish_index < 0 or descriptor_supported_index < provider_publish_i
 
 # Overview selection stores canonical provider IDs (legacy raw CLI spellings,
 # e.g. groqcloud, alibaba-coding-plan, still resolve) matched at runtime
-# against providerKey-normalized IDs (groq, alibaba).
-# configuredOverviewProviderIDs must share parsing with
-# the settings page through OverviewProviders so the custom selection is not
-# silently ignored for aliased providers.
-overview_body = function_body(main_text, "configuredOverviewProviderIDs")
-if "OverviewProviders.configuredProviderIDs(" not in overview_body:
+# against providerKey-normalized IDs (groq, alibaba). The applet must resolve
+# the stored value through OverviewProviders, the module the settings page
+# uses, so the custom selection is not silently ignored for aliased providers.
+overview_body = function_body(main_text, "overviewProviders")
+if "OverviewProviders.visibleItems(providers, overviewProviderIDsRaw)" not in overview_body:
     raise AssertionError(
-        "configuredOverviewProviderIDs must share parsing with the settings page so "
+        "the Overview rows must share filtering and parsing with the settings page so "
         "aliased providers match runtime keys"
     )
+for retired_overview_fragment in ("maxOverviewProviders", "configuredOverviewProviderIDs"):
+    if retired_overview_fragment in main_text:
+        raise AssertionError(
+            "the Overview limit and selection parsing belong to OverviewProviders: "
+            + retired_overview_fragment
+        )
 
 provider_config_body = function_body(main_text, "normalizeProviderConfigEntries")
 if "Array.isArray(payload) ? payload : [payload]" not in provider_config_body:
@@ -3252,10 +3257,30 @@ if "readonly property var overviewProviderItems: overviewProviders()" not in mai
     raise AssertionError("overview provider rows must be cached in a QML property binding")
 if ".overviewProviders()" in main_text:
     raise AssertionError("overview UI bindings must reuse overviewProviderItems")
-overview_error_only_body = function_body(main_text, "isOverviewErrorOnly")
+overview_providers_js = (root / "contents/ui/OverviewProviders.js").read_text()
+overview_error_only_body = function_body(overview_providers_js, "isErrorOnly")
 if "item.codexCreditLimit === null" not in overview_error_only_body:
     raise AssertionError(
         "a valid Codex monthly limit must keep a partially healthy provider overview-eligible"
+    )
+
+# Direct QtTests cover eligibility, the stored selection, and the automatic
+# ranking. Both modules stay pure so those cases describe the runtime.
+auto_select_js = (root / "contents/ui/ProviderAutoSelect.js").read_text()
+for pure_module_text in (overview_providers_js, auto_select_js):
+    for forbidden in ("root.", "Plasmoid.", "Qt.", "i18n(", "i18np(", "Date.now("):
+        if forbidden in pure_module_text:
+            raise AssertionError(
+                "Overview filtering and automatic selection must stay pure: " + forbidden
+            )
+auto_select_score_body = function_body(auto_select_js, "score")
+if "OverviewProviders.isErrorOnly(item)" not in auto_select_score_body:
+    raise AssertionError(
+        "a provider carrying only an error must never win the automatic selection"
+    )
+if "NotificationMemo.severityRank(item.statusSeverity) / 100" not in auto_select_score_body:
+    raise AssertionError(
+        "incident severity must stay a tie breaker instead of outranking consumption"
     )
 
 # Text de-emphasis had drifted into eleven ad-hoc opacity literals, several

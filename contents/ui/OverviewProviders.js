@@ -126,3 +126,68 @@ function selectionText(providerIDs) {
     var selected = Array.isArray(providerIDs) ? providerIDs : [];
     return selected.length > 0 ? selected.join(",") : noneValue;
 }
+
+// The placeholder line a provider shows instead of quota rows. Codex spends
+// its placeholder slot on the token cost summary, which the popup already
+// renders, so an empty string keeps that line from being shown twice.
+function placeholderText(item) {
+    if (!item || !item.placeholder || item.placeholder.length === 0) {
+        return "";
+    }
+    if (item.provider === "codex" && item.tokenCost) {
+        return "";
+    }
+    return item.placeholder;
+}
+
+// A snapshot that carries an error and nothing else. Any surviving quota row,
+// credit balance, Codex monthly limit, cost figure, or placeholder keeps the
+// provider eligible, so a failed enrichment never hides healthy data.
+function isErrorOnly(item) {
+    return !!(item
+        && item.error
+        && item.error.length > 0
+        && (!item.rows || item.rows.length === 0)
+        && placeholderText(item).length === 0
+        && item.credits === null
+        && item.codexCreditLimit === null
+        && !item.resetCredits
+        && !item.providerCost
+        && !item.tokenCost);
+}
+
+// The Overview rows: eligible providers in roster order, capped at the visible
+// limit. An empty stored value keeps the automatic first-N behavior, an active
+// selection keeps only its providers, and noneValue keeps none. Stored IDs are
+// canonical, so a roster entry using a raw CLI spelling is normalized here as
+// it is for the settings checkboxes.
+function visibleItems(items, value) {
+    var roster = Array.isArray(items) ? items : [];
+    var eligible = [];
+    for (var i = 0; i < roster.length && eligible.length < ProviderOrder.maximumProviderItems; i++) {
+        var item = roster[i];
+        if (item && typeof item === "object" && !Array.isArray(item) && !isErrorOnly(item)) {
+            eligible.push(item);
+        }
+    }
+
+    if (!selectionActive(value)) {
+        return eligible.slice(0, maximumOverviewProviders);
+    }
+    var configured = configuredProviderIDs(value);
+    if (configured.length === 0) {
+        return [];
+    }
+
+    var selected = ({});
+    for (var j = 0; j < configured.length; j++) {
+        selected[configured[j]] = true;
+    }
+    var result = [];
+    for (var k = 0; k < eligible.length && result.length < maximumOverviewProviders; k++) {
+        if (Guards.hasOwnKey(selected, ProviderOrder.normalizedProviderID(eligible[k].provider))) {
+            result.push(eligible[k]);
+        }
+    }
+    return result;
+}

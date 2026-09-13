@@ -136,4 +136,116 @@ TestCase {
     function test_maximumMatchesTheOverviewLimit() {
         compare(OverviewProviders.maximumOverviewProviders, 3);
     }
+
+    function healthy(providerID, usedPercent) {
+        return {
+            provider: providerID,
+            rows: [{ hasPercent: true, usedPercent: usedPercent }]
+        };
+    }
+
+    function errorOnly(providerID) {
+        return {
+            provider: providerID,
+            error: "codexbar exited with status 1",
+            rows: [],
+            credits: null,
+            codexCreditLimit: null
+        };
+    }
+
+    function providerIDs(items) {
+        var result = [];
+        for (var i = 0; i < items.length; i++) {
+            result.push(items[i].provider);
+        }
+        return result.join(",");
+    }
+
+    function test_placeholderTextYieldsToTheCodexTokenCost() {
+        compare(OverviewProviders.placeholderText({ provider: "gemini", placeholder: "No usage yet" }), "No usage yet");
+        // Codex renders its token cost on the same line.
+        compare(OverviewProviders.placeholderText({ provider: "codex", placeholder: "No usage yet", tokenCost: { total: 1 } }), "");
+        compare(OverviewProviders.placeholderText({ provider: "codex", placeholder: "No usage yet" }), "No usage yet");
+        compare(OverviewProviders.placeholderText({ provider: "gemini", placeholder: "" }), "");
+        compare(OverviewProviders.placeholderText({ provider: "gemini" }), "");
+        compare(OverviewProviders.placeholderText(null), "");
+        compare(OverviewProviders.placeholderText(undefined), "");
+    }
+
+    function test_onlyAnEmptyFailedSnapshotIsErrorOnly() {
+        verify(OverviewProviders.isErrorOnly(errorOnly("codex")));
+        // Anything the provider still knows keeps its row.
+        var survivors = [
+            { rows: [{ hasPercent: true, usedPercent: 10 }] },
+            { placeholder: "No usage yet" },
+            { credits: { remaining: 0 } },
+            { codexCreditLimit: 0 },
+            { resetCredits: { amount: 1 } },
+            { providerCost: { percentUsed: 0 } },
+            { tokenCost: { total: 0 } }
+        ];
+        for (var i = 0; i < survivors.length; i++) {
+            var item = survivors[i];
+            item.provider = "codex";
+            item.error = "status unavailable";
+            if (item.credits === undefined) {
+                item.credits = null;
+            }
+            if (item.codexCreditLimit === undefined) {
+                item.codexCreditLimit = null;
+            }
+            verify(!OverviewProviders.isErrorOnly(item), "survivor " + i + " must keep its Overview row");
+        }
+        // A healthy provider without an error is never error-only.
+        verify(!OverviewProviders.isErrorOnly(healthy("claude", 20)));
+        verify(!OverviewProviders.isErrorOnly({ provider: "claude", error: "" }));
+        verify(!OverviewProviders.isErrorOnly(null));
+        verify(!OverviewProviders.isErrorOnly(undefined));
+    }
+
+    function test_automaticRowsTakeTheFirstEligibleProviders() {
+        var roster = [errorOnly("codex"), healthy("claude", 10), healthy("gemini", 20),
+            healthy("cursor", 30), healthy("groq", 40)];
+        compare(providerIDs(OverviewProviders.visibleItems(roster, "")), "claude,gemini,cursor");
+        compare(providerIDs(OverviewProviders.visibleItems(roster, "   ")), "claude,gemini,cursor");
+        compare(providerIDs(OverviewProviders.visibleItems(roster, null)), "claude,gemini,cursor");
+        compare(OverviewProviders.visibleItems([errorOnly("codex")], "").length, 0);
+    }
+
+    function test_storedSelectionKeepsRosterOrderAndTheVisibleLimit() {
+        var roster = [healthy("codex", 10), healthy("claude", 20), healthy("gemini", 30),
+            healthy("cursor", 40), healthy("groq", 50)];
+        compare(providerIDs(OverviewProviders.visibleItems(roster, "gemini,codex")), "codex,gemini");
+        // A selection wider than the visible limit is truncated in roster order.
+        compare(providerIDs(OverviewProviders.visibleItems(roster, "groq,cursor,gemini,claude,codex")),
+                "codex,claude,gemini");
+        // Providers absent from the roster take no slot.
+        compare(providerIDs(OverviewProviders.visibleItems(roster, "openai,groq")), "groq");
+        compare(OverviewProviders.visibleItems(roster, OverviewProviders.noneValue).length, 0);
+    }
+
+    function test_selectionMatchesTheAliasesTheSettingsPageStores() {
+        // The settings page normalizes groqcloud to groq before storing it, so
+        // a roster still using the raw CLI spelling has to resolve the same way.
+        var roster = [healthy("groqcloud", 10), healthy("Codex", 20)];
+        compare(providerIDs(OverviewProviders.visibleItems(roster, "groq")), "groqcloud");
+        compare(providerIDs(OverviewProviders.visibleItems(roster, "codex")), "Codex");
+    }
+
+    function test_unusableSelectionsAndRostersShowNoRows() {
+        var roster = [healthy("codex", 10), healthy("claude", 20)];
+        compare(OverviewProviders.visibleItems(roster, "constructor,prototype").length, 0);
+        compare(OverviewProviders.visibleItems(roster, "__proto__").length, 0);
+        compare(OverviewProviders.visibleItems(roster, ",,, ,").length, 0);
+        compare(OverviewProviders.visibleItems(null, "").length, 0);
+        compare(OverviewProviders.visibleItems(undefined, "codex").length, 0);
+        compare(OverviewProviders.visibleItems("codex", "codex").length, 0);
+    }
+
+    function test_unusableRosterEntriesTakeNoSlot() {
+        var roster = [null, undefined, "codex", [], healthy("claude", 20), { provider: "gemini" }];
+        compare(providerIDs(OverviewProviders.visibleItems(roster, "")), "claude,gemini");
+        compare(providerIDs(OverviewProviders.visibleItems(roster, "claude")), "claude");
+    }
 }
