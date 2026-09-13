@@ -14,6 +14,7 @@ import "PanelProviders.js" as PanelProviders
 import "PanelRules.js" as PanelRules
 import "PanelTextFit.js" as PanelTextFit
 import "PopupSelection.js" as PopupSelection
+import "ProviderAutoSelect.js" as ProviderAutoSelect
 import "ProviderSnapshot.js" as ProviderSnapshot
 import "CostPresentation.js" as CostPresentation
 import "ProviderCostPresentation.js" as ProviderCostPresentation
@@ -96,7 +97,6 @@ PlasmoidItem {
     property bool showProviderChangelogs: Plasmoid.configuration.showProviderChangelogs === true
     property bool autoSelectProvider: Plasmoid.configuration.autoSelectProvider === true
     property string overviewProviderIDsRaw: Plasmoid.configuration.overviewProviderIDs || ""
-    readonly property int maxOverviewProviders: 3
     property int providerConfigRevision: boundedConfigRevision(Plasmoid.configuration.providerConfigRevision)
     property var providers: []
     readonly property var providerDisplayNames: usageController.providerDisplayNames
@@ -1680,10 +1680,6 @@ PlasmoidItem {
         dispatchNotificationIntents(result.intents, observations)
     }
 
-    function notificationRank(severity) {
-        return NotificationMemo.severityRank(severity)
-    }
-
     function notificationUrgency(severity) {
         switch (String(severity || "")) {
         case "critical":
@@ -2261,61 +2257,11 @@ PlasmoidItem {
         return row ? displayPercent(row) : -1
     }
 
-    function isOverviewErrorOnly(item) {
-        return item
-            && item.error
-            && item.error.length > 0
-            && (!item.rows || item.rows.length === 0)
-            && providerPlaceholderText(item).length === 0
-            && item.credits === null
-            && item.codexCreditLimit === null
-            && !item.resetCredits
-            && !item.providerCost
-            && !item.tokenCost
-    }
-
+    // Eligibility, the stored selection, and the visible limit all live in
+    // OverviewProviders, so the settings checkboxes and the rendered rows
+    // resolve the same canonical provider IDs.
     function overviewProviders() {
-        var eligible = []
-        if (!providers) {
-            return eligible
-        }
-        for (var i = 0; i < providers.length; i++) {
-            if (!isOverviewErrorOnly(providers[i])) {
-                eligible.push(providers[i])
-            }
-        }
-
-        var configured = configuredOverviewProviderIDs()
-        if (String(overviewProviderIDsRaw || "").trim().length === 0) {
-            return eligible.slice(0, maxOverviewProviders)
-        }
-        if (configured.length === 0) {
-            return []
-        }
-
-        var selected = ({})
-        for (var j = 0; j < configured.length; j++) {
-            selected[configured[j]] = true
-        }
-
-        var result = []
-        for (var k = 0; k < eligible.length; k++) {
-            if (hasOwnKey(selected, String(eligible[k].provider))) {
-                result.push(eligible[k])
-                if (result.length >= maxOverviewProviders) {
-                    break
-                }
-            }
-        }
-        return result
-    }
-
-    // The settings page stores canonical provider IDs (legacy raw CLI
-    // spellings such as groqcloud still resolve); parsing is shared with
-    // configPopup.qml through OverviewProviders so the checkboxes cannot
-    // drift from this selection.
-    function configuredOverviewProviderIDs() {
-        return OverviewProviders.configuredProviderIDs(overviewProviderIDsRaw)
+        return OverviewProviders.visibleItems(providers, overviewProviderIDsRaw)
     }
 
     function providerIndex(item) {
@@ -2376,13 +2322,7 @@ PlasmoidItem {
     }
 
     function providerPlaceholderText(item) {
-        if (!item || !item.placeholder || item.placeholder.length === 0) {
-            return ""
-        }
-        if (item.provider === "codex" && item.tokenCost) {
-            return ""
-        }
-        return item.placeholder
+        return OverviewProviders.placeholderText(item)
     }
 
     function displayPercent(row) {
@@ -2487,51 +2427,11 @@ PlasmoidItem {
         }
     }
 
+    // Usage and incident severity decide the automatic selection in
+    // ProviderAutoSelect; the roster it ranks is the panel-filtered list for
+    // the panel and the full roster for the popup.
     function autoSelectedProviderIndex(items) {
-        var source = Array.isArray(items) ? items : providers
-        var bestIndex = 0
-        var bestScore = -1
-        for (var i = 0; i < source.length; i++) {
-            var score = autoSelectScore(source[i])
-            if (score > bestScore) {
-                bestScore = score
-                bestIndex = i
-            }
-        }
-        return bestIndex
-    }
-
-    function autoSelectScore(item) {
-        if (!item || isOverviewErrorOnly(item)) {
-            return -1
-        }
-        var percent = autoSelectUsedPercent(item)
-        var incidentTieBreaker = notificationRank(item.statusSeverity) / 100
-        return percent >= 0 ? percent + incidentTieBreaker : incidentTieBreaker
-    }
-
-    function autoSelectUsedPercent(item) {
-        if (!item) {
-            return -1
-        }
-
-        var best = -1
-        var rows = item.rows || []
-        for (var i = 0; i < rows.length; i++) {
-            if (rows[i] && rows[i].hasPercent) {
-                var used = Number(rows[i].usedPercent)
-                if (isFinite(used)) {
-                    best = Math.max(best, clamp(used, 0, 100))
-                }
-            }
-        }
-        if (item.providerCost && item.providerCost.percentUsed >= 0) {
-            var providerCostUsed = Number(item.providerCost.percentUsed)
-            if (isFinite(providerCostUsed)) {
-                best = Math.max(best, clamp(providerCostUsed, 0, 100))
-            }
-        }
-        return best
+        return ProviderAutoSelect.bestIndex(Array.isArray(items) ? items : providers)
     }
 
     // The panel-only provider selection. The popup, notifications, and every

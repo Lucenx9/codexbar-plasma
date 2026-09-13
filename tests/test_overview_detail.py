@@ -16,6 +16,7 @@ FUNCTIONS = ("overviewDetailText", "providerPlaceholderText")
 
 QML = '''import QtQuick
 import QtTest
+import "SOURCE_URL/OverviewProviders.js" as OverviewProviders
 TestCase {
     name: "OverviewDetail"
 
@@ -113,6 +114,7 @@ class OverviewDetailTests(unittest.TestCase):
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
             functions.append(signature + " {" + applet.function_body(name) + "}")
         qml = QML.replace("SOURCE_FUNCTIONS", "\n".join(functions))
+        qml = qml.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
         with tempfile.TemporaryDirectory(prefix="codexbar-overview-detail-") as temporary:
             fixture = Path(temporary) / "tst_overview_detail.qml"
             fixture.write_text(qml)

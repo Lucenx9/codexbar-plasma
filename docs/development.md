@@ -262,7 +262,18 @@ Extraction must hide complexity, not merely reduce line count.
   Returning selections remain saved, and the runtime displays at most three
   eligible providers in roster order. The settings page and the
   runtime share its parsing so the checkboxes cannot drift from the applied
-  selection.
+  selection. It also classifies eligibility: a snapshot carrying an error and
+  nothing else has no row, while any surviving quota, credit balance, Codex
+  monthly limit, cost figure, or placeholder keeps the provider visible. QML
+  binds the resulting rows and localizes them; the module reads no root state.
+- `ProviderAutoSelect.js` ranks the roster for the automatic provider
+  selection. Consumption decides it, taking the busiest quota row or the
+  provider cost meter, whichever reports further along; incident severity adds
+  at most one point, so it separates equally used providers without ever
+  outranking real usage. Providers with no percentage at all are ordered by
+  severity alone, an error-only provider never wins, and the first provider
+  keeps a tie. The popup ranks the full roster and the panel ranks its own
+  filtered selection through `PopupSelection.js`.
 - Privacy projects display records without changing cached snapshots or account
   command keys. Preserve config keys and pending defaults across all settings
   pages. `PopupRefreshPolicy.js` handles freshness and failed-attempt cooldown,
@@ -391,6 +402,14 @@ and healthy quotas with invalid optional costs. `tests/test_provider_cost_presen
 executes the owning QML cost and reset-credit adapters against the compiled
 English fallback and all five translation catalogs. Surface checks enforce
 module delegation and keep plural-aware localization in QML.
+
+`tests/tst_overview_selection.qml` directly covers Overview eligibility,
+placeholder suppression, automatic and stored selections, aliased roster IDs,
+unusable stored values, and unusable roster entries alongside the settings-page
+toggles. `tests/tst_provider_auto_select.qml` covers malformed percentages,
+missing data, provider cost competition, severity tie breaks, score parity, and
+error-only providers. `tests/test_overview_detail.py` keeps exercising the owning
+QML detail chain, and surface checks pin both modules as pure.
 
 `tests/tst_reset_presentation.qml` directly covers timestamp precedence, malformed
 metadata, text bounds, minute/hour/day rounding, calendar and daylight-saving
