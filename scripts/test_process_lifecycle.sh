@@ -15,8 +15,8 @@ require_in_surface applet "function finishUsageCommandSource(sourceName)"
 require_in_surface applet "function retireUsageCommands()"
 require_in_surface applet "function expireCommands(nowMs)"
 require_in_surface applet "function handleCommandTimeout(sourceName, descriptor)"
-require_in_surface applet "id: commandTimeoutTimer"
-require_in_surface applet "root.expireCommands(Date.now())"
+require_in_surface applet "running: controller.sending"
+require_in_surface applet "lifecycle.expireCommands(Date.now())"
 require_in_surface applet "id: usageRefreshTimer"
 require_in_surface applet "running: controller.refreshIntervalSec > 0"
 require_in_surface applet "if (!lifecycle.hasPendingPeriodicRefreshCommands())"
@@ -31,8 +31,6 @@ require_in_surface applet "property var providerFallbackState: null"
 require_in_surface applet "readonly property int accountCommandTimeoutMs: 60000"
 require_in_surface applet "readonly property int sessionsCommandTimeoutMs: 60000"
 require_in_surface applet "readonly property int notificationCommandTimeoutMs: 10000"
-require_in_surface applet "function connectNotificationCommand(sourceName)"
-require_in_surface applet "function finishNotificationCommandSource(sourceName)"
 require_in_surface applet "function refreshSessions()"
 require_in_surface applet "readonly property int pollIntervalMs: 60000"
 require_in_surface applet "interval: controller.pollIntervalMs"
@@ -238,39 +236,39 @@ require_all(
     "provider fallback timeouts must complete the queue before returning",
 )
 
-require_all(
-    applet.function_body("connectNotificationCommand"),
-    (
-        'buildCommandDescriptor(',
-        '"notification", "", notificationCommandTimeoutMs)',
-        "CommandLedger.opened(",
-        "activeCommandDescriptors, sourceName, descriptor)",
-        "notificationSource.connectSource(sourceName)",
-    ),
-    "notifications must enter the shared deadline ledger",
-)
-require_all(
-    applet.function_body("finishNotificationCommandSource"),
-    (
-        "notificationSource.disconnectSource(sourceName)",
-        "CommandLedger.closed(activeCommandDescriptors, sourceName)",
-    ),
-    "notification completion must disconnect and close its ledger entry",
-)
-require_all(
-    applet.function_body("sendPlasmaNotification"),
-    ("connectNotificationCommand(", "commandWithRunNonce("),
-    "notification dispatch must start a unique bounded command",
-)
-require_all(
-    applet.id_block("notificationSource"),
-    (
-        "CommandLedger.find(root.activeCommandDescriptors, sourceName)",
-        '!descriptor || descriptor.kind !== "notification"',
-        "root.finishNotificationCommandSource(sourceName)",
-    ),
-    "notification replies must close only their live ledger entry",
-)
+# Notification effects own their ledger and retirement; the applet supplies
+# localized, privacy-filtered text and never owns an executable source.
+notification_path = root / "contents/ui/controllers/NotificationDispatcher.qml"
+notification = Surface("applet", root)
+notification.texts = {notification_path: notification_path.read_text()}
+notification.files = [notification_path]
+require_all(notification.text, ("readonly property int notificationCommandTimeoutMs: 10000",
+            "running: controller.sending", "lifecycle.expire(Date.now())",
+            "Component.onDestruction: lifecycle.retire()"), "notification deadline and destruction cleanup")
+require_ordered(notification.function_body("dispatch"),
+                ("CommandLedger.withRunNonce(command, runSerial)",
+                 "commands = CommandLedger.opened(commands, sourceName, descriptor)",
+                 "notificationSource.connectSource(sourceName)"),
+                "notifications must be registered before synchronous cached replies")
+require_ordered(notification.function_body("finish"),
+                ("commands = CommandLedger.closed(commands, sourceName)",
+                 "notificationSource.disconnectSource(sourceName)"),
+                "notifications must retire before disconnecting")
+require_ordered(notification.function_body("retire"),
+                ("destroyed = true", "commands = ({})", "notificationSource.disconnectSource(sources[i])"),
+                "destruction must retire all commands before disconnecting")
+require_ordered(notification.id_block("notificationSource"),
+                ("CommandLedger.find(lifecycle.commands, sourceName)", "lifecycle.finish(sourceName)"),
+                "notification replies must finish only their live entry")
+require_all(applet.function_body("sendPlasmaNotification"),
+            ("notificationDispatcher.send(cleanTitle, cleanBody, urgency)",),
+            "the applet must delegate notification delivery")
+for forbidden in ("Plasma5Support", "CommandLedger", "activeCommandDescriptors", "commandTimeoutTimer"):
+    if forbidden in main_text:
+        raise AssertionError("main.qml must delegate process ownership: " + forbidden)
+for forbidden in ("root.", "Plasmoid.configuration", "i18n(", "NotificationPlanner", "privacyMode"):
+    if forbidden in notification.text:
+        raise AssertionError("notification delivery must not own applet policy: " + forbidden)
 
 # Routing reads the ledger entry, so a reply whose source name has already been
 # retired returns before any parse runs. That is the whole staleness guarantee.

@@ -13,7 +13,7 @@ sys.path.insert(0, str(ROOT / "scripts/lib"))
 from qml_surfaces import Surface
 
 FUNCTIONS = (
-    "shellQuote", "copyObject", "providerMapKey", "accountLabel",
+    "copyObject", "providerMapKey", "accountLabel",
     "accountKey", "selectedAccountForProvider", "accountOptionsForProvider",
     "selectAccount", "scheduleUsageRefresh", "refreshNow",
 )

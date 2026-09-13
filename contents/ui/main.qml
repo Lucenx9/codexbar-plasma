@@ -1,7 +1,6 @@
 import QtQuick
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.core as PlasmaCore
-import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.plasma.plasmoid
 import "components" as Components
 import "controllers" as Controllers
@@ -15,7 +14,6 @@ import "PanelProviders.js" as PanelProviders
 import "PanelRules.js" as PanelRules
 import "PanelTextFit.js" as PanelTextFit
 import "PopupSelection.js" as PopupSelection
-import "CommandLedger.js" as CommandLedger
 import "ProviderSnapshot.js" as ProviderSnapshot
 import "CostPresentation.js" as CostPresentation
 import "OverviewProviders.js" as OverviewProviders
@@ -113,9 +111,6 @@ PlasmoidItem {
     readonly property int panelClockIntervalMs: 60000
     readonly property string commandSource: usageController.commandSource
     property string providerConfigStamp: ""
-    property int commandRunSerial: 0
-    property var activeCommandDescriptors: ({})
-    readonly property int defaultCommandTimeoutMs: 120000
     readonly property int maximumCostHistoryPoints: Normalizer.maximumCostHistoryPoints
     readonly property bool costLoading: costController.loading
     readonly property var tokenCosts: presentTokenCosts(costController.costs)
@@ -135,7 +130,6 @@ PlasmoidItem {
     property bool selectionInitialized: false
     property var selectedAccounts: ({})
     readonly property var accountOptions: presentAccountOptions(accountsController.options)
-    readonly property int notificationCommandTimeoutMs: 10000
     property var notificationMemo: ({})
     property var notificationRefreshPending: ({})
     property bool notificationsPrimed: false
@@ -220,10 +214,6 @@ PlasmoidItem {
         usageLifecycleInitialized = true
     }
 
-    function shellQuote(value) {
-        return Guards.shellQuote(value)
-    }
-
     function safeMenuBarDisplayMode(value) {
         return PanelDisplay.safeMode(value)
     }
@@ -266,38 +256,6 @@ PlasmoidItem {
 
     function providerMapKey(providerID) {
         return Normalizer.providerSnapshotKey(providerID)
-    }
-
-    function commandWithRunNonce(command) {
-        if (command.length === 0) {
-            return ""
-        }
-        commandRunSerial += 1
-        return CommandLedger.withRunNonce(command, commandRunSerial)
-    }
-
-    function buildCommandDescriptor(kind, providerID, timeoutMs) {
-        return CommandLedger.descriptor(
-            kind, providerID, Date.now(), timeoutMs, defaultCommandTimeoutMs)
-    }
-
-    function connectNotificationCommand(sourceName) {
-        if (sourceName.length === 0) {
-            return
-        }
-        var descriptor = buildCommandDescriptor(
-            "notification", "", notificationCommandTimeoutMs)
-        activeCommandDescriptors = CommandLedger.opened(
-            activeCommandDescriptors, sourceName, descriptor)
-        notificationSource.connectSource(sourceName)
-    }
-
-    function finishNotificationCommandSource(sourceName) {
-        if (sourceName.length === 0) {
-            return
-        }
-        notificationSource.disconnectSource(sourceName)
-        activeCommandDescriptors = CommandLedger.closed(activeCommandDescriptors, sourceName)
     }
 
     function refreshNow(bypassProviderRosterCache) {
@@ -489,26 +447,6 @@ PlasmoidItem {
 
     function loadAccounts(providerID) {
         return accountsController.load(providerID)
-    }
-
-    function hasPendingCommandTimeouts() {
-        return CommandLedger.hasDeadlines(activeCommandDescriptors)
-    }
-
-    function expireCommands(nowMs) {
-        var expired = CommandLedger.expired(activeCommandDescriptors, nowMs)
-        for (var i = 0; i < expired.length; i++) {
-            handleCommandTimeout(expired[i].sourceName, expired[i].descriptor)
-        }
-    }
-
-    // The ledger entry already proves the command is the live one for its kind,
-    // so the kind alone decides how the timeout is reported.
-    function handleCommandTimeout(sourceName, descriptor) {
-        if (descriptor && descriptor.kind === "notification"
-                && CommandLedger.find(activeCommandDescriptors, sourceName)) {
-            finishNotificationCommandSource(sourceName)
-        }
     }
 
     function sessionTitle(item, index) {
@@ -1823,17 +1761,7 @@ PlasmoidItem {
     function sendPlasmaNotification(title, body, urgency) {
         var cleanTitle = privacyMode ? "CodexBar" : String(title || "CodexBar").trim()
         var cleanBody = privacyMode ? i18n("Usage or status changed. Open CodexBar for details.") : String(body || "").trim()
-        var cleanUrgency = String(urgency || "normal").trim()
-        if (cleanTitle.length === 0) {
-            cleanTitle = "CodexBar"
-        }
-        if (cleanUrgency !== "low" && cleanUrgency !== "normal" && cleanUrgency !== "critical") {
-            cleanUrgency = "normal"
-        }
-        var command = "if command -v notify-send >/dev/null 2>&1; then notify-send --app-name=CodexBar --icon=view-statistics --urgency="
-            + shellQuote(cleanUrgency) + " -- " + shellQuote(cleanTitle) + " " + shellQuote(cleanBody) + "; fi"
-        // A shell assignment cannot directly prefix the reserved word `if`.
-        connectNotificationCommand(commandWithRunNonce(":; " + command))
+        notificationDispatcher.send(cleanTitle, cleanBody, urgency)
     }
 
     function notifyAvailableUpdate(version, url) {
@@ -2945,16 +2873,6 @@ PlasmoidItem {
         }
     }
 
-    Timer {
-        id: commandTimeoutTimer
-
-        interval: 1000
-        repeat: true
-        running: root.hasPendingCommandTimeouts()
-        triggeredOnStart: false
-        onTriggered: root.expireCommands(Date.now())
-    }
-
     Controllers.ProviderConfigWatcher {
         id: providerConfigWatcher
 
@@ -2964,18 +2882,8 @@ PlasmoidItem {
         }
     }
 
-    Plasma5Support.DataSource {
-        id: notificationSource
-
-        engine: "executable"
-
-        onNewData: function(sourceName, data) {
-            var descriptor = CommandLedger.find(root.activeCommandDescriptors, sourceName)
-            if (!descriptor || descriptor.kind !== "notification") {
-                return
-            }
-            root.finishNotificationCommandSource(sourceName)
-        }
+    Controllers.NotificationDispatcher {
+        id: notificationDispatcher
     }
 
     Controllers.UsageController {
