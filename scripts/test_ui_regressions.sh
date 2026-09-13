@@ -3111,24 +3111,22 @@ run_out_text_body = function_body(main_text, "runOutTextForRow")
 if "PanelDisplay.remainingSeconds(" not in run_out_text_body:
     raise AssertionError("the run-out token must advance from the usage observation time")
 reset_text_body = function_body(main_text, "resetText")
-# Structured CLI values must never reach the date parser: their primitive
-# conversion throws and would discard the whole provider snapshot. The guard
-# narrows resetsAt to strings and numbers before parsing.
-hardened_guard_index = reset_text_body.find("typeof resetsAt")
-valid_reset_timestamp_index = reset_text_body.find("var date = new Date(resetsAt)")
-relative_countdown_index = reset_text_body.find(
-    "var remainingMs = date.getTime() - panelClockMs"
-)
-last_description_index = reset_text_body.rfind("window.resetDescription")
-if not (
-    hardened_guard_index >= 0
-    and valid_reset_timestamp_index > hardened_guard_index
-    and relative_countdown_index > valid_reset_timestamp_index
-    and last_description_index < valid_reset_timestamp_index
-):
-    raise AssertionError(
-        "a valid reset timestamp must drive the live relative countdown instead of a stale description"
-    )
+# Direct QtTests cover timestamp precedence, bounds, and countdown arithmetic.
+# The owning adapter supplies the live clock and keeps local date formatting.
+if "ResetPresentation.parts(window, panelClockMs, absolute)" not in reset_text_body:
+    raise AssertionError("reset formatting must use semantic parts with the live panel clock")
+if 'Qt.formatDateTime(new Date(parts.timestampMs), "ddd HH:mm")' not in reset_text_body:
+    raise AssertionError("absolute reset dates must retain QML locale formatting")
+for field in ("window.resetsAt", "window.resetDescription", "Math.round", "Math.floor"):
+    if field in reset_text_body:
+        raise AssertionError("reset parsing and arithmetic belong in ResetPresentation: " + field)
+for message in ("%1 min", "%1h", "%1d"):
+    if f'i18np("{message}"' not in reset_text_body:
+        raise AssertionError("reset duration units must retain plural-aware localization")
+reset_presentation = (root / "contents/ui/ResetPresentation.js").read_text()
+for forbidden in ("root.", "Plasmoid.", "Qt.", "i18n(", "i18np(", "Date.now("):
+    if forbidden in reset_presentation:
+        raise AssertionError("reset decisions must be pure and use the caller's clock: " + forbidden)
 # Every file that calls this unqualified must declare it: QML and JS share no
 # function scope, so a surface-wide search would be satisfied by SafeText.js while
 # the applet root's callers were left with an undefined function.
@@ -3150,19 +3148,11 @@ for retired_literal in ("usageBarsShowUsed ? 80 : 20", "usageBarsShowUsed ? 95 :
             f"quota thresholds must stay configurable; found hardcoded {retired_literal!r}"
         )
 
-reset_time_body = function_body(main_text, "resetLabelLooksLikeTime")
-if r"\S+\s+\d{1,2}:\d{2}" not in reset_time_body:
-    raise AssertionError("absolute weekday reset labels must be recognized as times")
-
-# resetText() already emits compact durations such as "2h 30m". Splitting
-# digit-then-letter rewrote those as "2 h 30 m" in the popup, the Overview rows
-# and the resetTime panel mode. Only the letter-then-digit split (which
-# separates a run-together "5h30m" into "5h 30m") may stay.
 reset_label_body = function_body(main_text, "resetLabel")
-if r'.replace(/([A-Za-z])(\d)/g, "$1 $2")' not in reset_label_body:
-    raise AssertionError("resetLabel must split a unit letter that runs into the next number")
-if r'.replace(/(\d)([A-Za-z])/g, "$1 $2")' in reset_label_body:
-    raise AssertionError("resetLabel must not separate a number from its own unit")
+if "ResetPresentation.labelParts(value)" not in reset_label_body:
+    raise AssertionError("reset labels must use the tested semantic text classification")
+if 'i18n("Resets %1", parts.text)' not in reset_label_body:
+    raise AssertionError("QML must localize the reset-label prefix")
 
 # Bar charts are painted for up to 365 cost-history days and 120 detail-chart
 # points. Their one-pixel minimum width can exceed a dense point slot, so the

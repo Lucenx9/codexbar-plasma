@@ -130,6 +130,12 @@ For those, use `make install` or `./install.sh`. Release-package users can use
   balances separate from allowance percentages. `main.qml` localizes these
   semantic sections and formats their amounts. The Codex monthly-credit limit
   retains its dedicated `ProviderNormalizer.js` contract and existing row adapter.
+- `ResetPresentation.js` parses bounded reset metadata, splits countdowns into
+  semantic units using an explicit clock, and classifies existing reset-label
+  compatibility text. `main.qml` supplies the live panel clock, translates the
+  units and prefix, and formats absolute dates in the local timezone. Valid
+  timestamps take precedence over descriptions; missing or invalid metadata
+  preserves the existing text fallback without discarding healthy quotas.
 - Pure applet modules live in `contents/ui/*.js`; their public interfaces have
   direct tests in `tests/tst_*.qml`. Configuration is declared in
   `contents/config/main.xml` and bound through `cfg_*` in config pages and
@@ -385,6 +391,14 @@ and healthy quotas with invalid optional costs. `tests/test_provider_cost_presen
 executes the owning QML cost and reset-credit adapters against the compiled
 English fallback and all five translation catalogs. Surface checks enforce
 module delegation and keep plural-aware localization in QML.
+
+`tests/tst_reset_presentation.qml` directly covers timestamp precedence, malformed
+metadata, text bounds, minute/hour/day rounding, calendar and daylight-saving
+boundaries, and compact reset labels. `tests/test_reset_presentation.py` exercises
+the owning QML adapters with all compiled catalogs in UTC, Rome, and Los Angeles.
+It checks local absolute dates and reactive clock, display-mode, and privacy
+bindings. The quota-reset and provider-metadata integration tests keep their
+production parsing path; surface checks enforce QML clock/localization ownership.
 
 `tests/test_notification_dispatcher.py` checks concurrent and repeated messages,
 argument boundaries with synthetic `notify-send` executables, missing executables,
