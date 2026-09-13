@@ -955,11 +955,6 @@ Item {
                         }
                     }
 
-                    Kirigami.Separator {
-                        visible: applet.hasAdditionalSections(applet.presentedProviderData)
-                        Layout.fillWidth: true
-                    }
-
                     ColumnLayout {
                         id: creditsSection
                         objectName: "creditsSection"
@@ -975,6 +970,10 @@ Item {
                                 || creditsSection.creditLimit !== null)
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing / 1.5
+
+                        Kirigami.Separator {
+                            Layout.fillWidth: true
+                        }
 
                         PlainHeading {
                             text: i18n("Credits")
