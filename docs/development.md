@@ -46,10 +46,11 @@ For those, use `make install` or `./install.sh`. Release-package users can use
   urgency)` method accepts already localized and privacy-filtered text;
   read-only `sending` reports whether requests remain pending. Failed commands
   finish silently, and missing `notify-send` remains a quiet no-op.
-  `NotificationCommand.js` builds the quoted command and restricts urgency to
-  the supported values. The applet retains notification settings, privacy,
-  deduplication, account freshness, and update-notification persistence. The
-  applet itself no longer owns an executable DataSource or command ledger.
+  `NotificationCommand.js` bounds notification text, builds the quoted command,
+  and restricts urgency to the supported values. The applet retains notification
+  settings, privacy, deduplication, account freshness, and update-notification
+  persistence. The applet itself no longer owns an executable DataSource or
+  command ledger.
 - `contents/ui/controllers/WidgetUpdateController.qml` owns the widget updater's
   executable source, per-request nonce, captured install mode, timeout, queued
   install request, and retry/interval timers. It receives update settings and

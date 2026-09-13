@@ -109,4 +109,12 @@ TestCase {
     function test_emptyTitleAndBody() {
         verify(NotificationCommand.command(" \n", " \t", "normal").endsWith(" -- 'CodexBar' ''; fi"));
     }
+
+    function test_textBounds() {
+        var title = "t".repeat(NotificationCommand.maximumTitleLength);
+        var body = "b".repeat(NotificationCommand.maximumBodyLength);
+        var expected = NotificationCommand.command(title, body, "normal");
+
+        compare(NotificationCommand.command(title + "extra", body + "extra", "normal"), expected);
+    }
 }
