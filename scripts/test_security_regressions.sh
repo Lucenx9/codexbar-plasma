@@ -352,7 +352,7 @@ reject_text "configProviders.qml" "$(cat "$PROVIDERS_QML")" "var field = provide
 
 reject_text "main.qml" "$(cat "$MAIN_QML")" '"sh", "-lc"'
 reject_text "configProviders.qml" "$(cat "$PROVIDERS_QML")" '"sh", "-lc"'
-require_in_surface applet '["sh", "-c", shellQuote(script)]'
+require_in_file "${ROOT_DIR}/contents/ui/ProviderConfigWatch.js" '["sh", "-c", Guards.shellQuote(script)]'
 require_in_file "$PROVIDERS_QML" '["sh", "-c", shellQuote(script), "_", shellQuote(prompt)'
 
 require_in_surface applet "function safeStatusUrl(providerID, url)"
