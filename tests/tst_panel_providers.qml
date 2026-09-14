@@ -110,6 +110,11 @@ TestCase {
         compare(next.join(","), "groq");
         next = PanelProviders.toggledSelection(["groq"], ["groq"], "GROQCLOUD", false);
         compare(next.join(","), "");
+        // A stored raw spelling still toggles through its canonical ID.
+        next = PanelProviders.toggledSelection(["groqcloud"], ["groqcloud"], "groqcloud", false);
+        compare(next.join(","), "");
+        next = PanelProviders.toggledSelection(["groqcloud", "codex"], ["groqcloud"], "codex", true);
+        compare(next.join(","), "groq,codex");
     }
 
     function test_selectionTextRoundTripsEmptyAsNone() {
