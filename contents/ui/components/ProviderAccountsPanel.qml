@@ -39,6 +39,12 @@ ColumnLayout {
             icon.name: "edit-clear"
             Accessible.name: i18n("Use default account")
             onClicked: accountsPanel.applet.selectAccount(accountsPanel.providerID, "")
+
+            PlainToolTip {
+                visible: clearAccountOverrideButton.hovered
+                delay: Kirigami.Units.toolTipDelay
+                plainText: clearAccountOverrideButton.Accessible.name
+            }
         }
 
         Controls.BusyIndicator {
@@ -50,6 +56,8 @@ ColumnLayout {
         }
 
         PlasmaComponents.ToolButton {
+            id: reloadAccountsButton
+
             icon.name: "view-refresh"
             enabled: accountsPanel.providerID.length > 0
                 && !accountsPanel.applet.accountLoadingForProvider(accountsPanel.providerID)
@@ -58,6 +66,12 @@ ColumnLayout {
                 if (accountsPanel.providerID.length > 0) {
                     accountsPanel.applet.loadAccounts(accountsPanel.providerID)
                 }
+            }
+
+            PlainToolTip {
+                visible: reloadAccountsButton.hovered
+                delay: Kirigami.Units.toolTipDelay
+                plainText: reloadAccountsButton.Accessible.name
             }
         }
     }
