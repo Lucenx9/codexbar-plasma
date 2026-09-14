@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Show hover tooltips on the clear-override and reload buttons in provider
+  account selection.
 - Keep the panel quota-lane combo in sync with external settings changes, such
   as the restore-defaults action, after a manual pick in the widget settings.
 - Match stored panel provider selections canonically when toggling, so raw CLI
