@@ -126,6 +126,16 @@ TestCase {
         compare(quota.currentValue, "auto");
         page.cfg_showPercentInPanel = true;
         compare(text.currentValue, "percent");
+        // An interactive pick writes currentIndex imperatively, severing the
+        // declarative binding, then emits activated. The quota combo still
+        // follows external changes such as the restore-defaults action on the
+        // General page of the same dialog.
+        quota.currentIndex = 1;
+        quota.activated(1);
+        compare(page.cfg_panelQuotaLane, "primary");
+        compare(quota.currentValue, "primary");
+        page.cfg_panelQuotaLane = page.cfg_panelQuotaLaneDefault;
+        compare(quota.currentValue, "auto");
     }
 
     function test_reorderingKeepsLayoutAndKeyboardFocusAfterDisclosure() {
