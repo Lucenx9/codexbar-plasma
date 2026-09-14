@@ -10,6 +10,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Fixed
+
+- Keep the panel quota-lane combo in sync with external settings changes, such
+  as the restore-defaults action, after a manual pick in the widget settings.
+
 ## 0.2.38 - 2026-09-13
 
 ### Added

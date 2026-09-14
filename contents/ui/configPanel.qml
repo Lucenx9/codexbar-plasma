@@ -119,6 +119,16 @@ KCM.SimpleKCM {
         return 0
     }
 
+    function quotaLaneIndex(value) {
+        var lane = PanelDisplay.safeLane(value)
+        for (var i = 0; i < panelQuotaCombo.model.length; i++) {
+            if (panelQuotaCombo.model[i].value === lane) {
+                return i
+            }
+        }
+        return 0
+    }
+
     function panelElementTitle(elementID) {
         switch (elementID) {
         case "identity":
@@ -215,6 +225,13 @@ KCM.SimpleKCM {
         var nextIndex = displayModeIndex(cfg_menuBarDisplayMode)
         if (displayModeCombo.currentIndex !== nextIndex) {
             displayModeCombo.currentIndex = nextIndex
+        }
+    }
+
+    onCfg_panelQuotaLaneChanged: {
+        var nextIndex = quotaLaneIndex(cfg_panelQuotaLane)
+        if (panelQuotaCombo.currentIndex !== nextIndex) {
+            panelQuotaCombo.currentIndex = nextIndex
         }
     }
 
@@ -599,7 +616,7 @@ KCM.SimpleKCM {
                     {text: i18n("Secondary"), value: "secondary"},
                     {text: i18n("Tertiary"), value: "tertiary"}
                 ]
-                currentIndex: ["auto", "primary", "secondary", "tertiary"].indexOf(PanelDisplay.safeLane(page.cfg_panelQuotaLane))
+                currentIndex: page.quotaLaneIndex(page.cfg_panelQuotaLane)
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 12
                 enabled: showProviderCheck.checked || showPercentCheck.checked
                     || showCreditsCheck.checked || showMultiProviderCheck.checked
