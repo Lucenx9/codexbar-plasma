@@ -250,8 +250,9 @@ Extraction must hide complexity, not merely reduce line count.
   the popup, fetching, and notifications keep the full roster. An empty stored
   value means automatic (all enabled providers), `__none__` stores an explicit
   empty selection, and unknown IDs keep hiding instead of resetting the choice.
-  Manual selections show at most four enabled providers in roster order. Saved
-  IDs absent from the enabled roster do not consume the settings selection limit.
+  Aliases with mixed-case IDs match canonically. Manual selections show at most
+  four enabled providers in roster order. Saved IDs absent from the enabled
+  roster do not consume the settings selection limit.
   An empty filtered roster suppresses panel text; automatic mode retains its
   loading and no-data text fallback.
 - `OverviewProviders.js` owns the Overview-tab provider selection without
