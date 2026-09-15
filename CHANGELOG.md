@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep the panel visibility rule editor's condition combo and threshold spinner
+  in sync with external settings changes, such as the restore-defaults action,
+  after an interactive pick or typed value in the widget settings.
 - Show hover tooltips on the clear-override and reload buttons in provider
   account selection.
 - Keep the panel quota-lane combo in sync with external settings changes, such

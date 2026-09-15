@@ -45,6 +45,13 @@ RowLayout {
             editor.configPage.setPanelVisibilityRule(editor.elementID, {
                 condition: valueAt(index)
             });
+            // The interactive pick wrote currentIndex imperatively and severed
+            // the declarative binding; restore it so external rule changes,
+            // such as restore-defaults on another settings page, keep
+            // rendering here.
+            currentIndex = Qt.binding(function() {
+                return PanelRules.conditions.indexOf(editor.rule.condition)
+            })
         }
     }
 
@@ -56,11 +63,19 @@ RowLayout {
         to: editor.usesPercent ? 100 : PanelRules.maximumResetMinutes
         value: editor.usesPercent ? editor.rule.usedPercent : editor.rule.resetMinutes
         editable: true
-        onValueModified: editor.configPage.setPanelVisibilityRule(editor.elementID, editor.usesPercent ? {
-            usedPercent: value
-        } : {
-            resetMinutes: value
-        })
+        onValueModified: {
+            editor.configPage.setPanelVisibilityRule(editor.elementID, editor.usesPercent ? {
+                usedPercent: value
+            } : {
+                resetMinutes: value
+            })
+            // valueModified fires on user edits only; the edit severed the
+            // value binding, so re-install it to keep following external rule
+            // changes, as other settings pages do after interactive writes.
+            value = Qt.binding(function() {
+                return editor.usesPercent ? editor.rule.usedPercent : editor.rule.resetMinutes
+            })
+        }
     }
 
     PlainControlsLabel {
