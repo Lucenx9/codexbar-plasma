@@ -143,8 +143,9 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   macOS 0.57.0 uses provider-specific prose parsing for several cases. A generic
   official Linux amount, unit/currency, and availability contract is missing.
   At 0.60.4 the source-observed `balanceIsWorkspace`/`creditsAvailable` fields
-  (Codex workspace balances, Copilot seat entitlements) are the likely carrier,
-  still awaiting authenticated Linux output. Done when the widget can display
+  cover Codex workspace balances only; Copilot seat-credit data travels in
+  `details` rows with stable IDs instead. Both await authenticated Linux output.
+  Done when the widget can display
   that record without parsing provider text,
   overriding a real quota, or treating a balance as an allowance.
   [Source comparison](docs/research/2026-09-09-macos-parity-0.57.0.md#automatic-balance-text-needs-a-generic-contract);
