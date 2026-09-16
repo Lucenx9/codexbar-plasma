@@ -37,6 +37,10 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
 - [0.58.0 release review](research/2026-09-11-macos-parity-0.58.0.md): release
   delta with no Linux CLI contract changes, feature classification against
   existing Plasma behavior, and scoped official CLI probes.
+- [0.60.4 release review](research/2026-09-16-macos-parity-0.60.4.md): releases
+  0.59.0 through 0.60.4, source-observed credit-availability and detail-row
+  fields, unchanged JSON schemas, and scoped official CLI probes. Cursor cost,
+  provider descriptors, and generic config actions remain unavailable on Linux.
 - [Settings decisions](research/2026-09-08-settings-experience.md): Panel disclosure and text grouping,
   Plasma settings, privacy, refresh behavior, and the macOS 0.56.8 comparison.
 
