@@ -3,8 +3,11 @@ set -euo pipefail
 
 # Run only in the disposable KDE neon CI container, as root.
 export DEBIAN_FRONTEND=noninteractive
-# The pinned image includes authenticated package indexes for this toolchain.
-# Keep that snapshot instead of refreshing a mutable archive during each job.
+# The pinned image includes authenticated package indexes for this toolchain,
+# kept as a fallback when the archive metadata is unreachable. Refresh them
+# when the archive answers: once it rolls superseded packages (e.g. krb5),
+# the snapshot references 404 and the install below fails.
+apt-get update || true
 apt-get install -y --no-install-recommends \
   make cmake git ca-certificates gettext jq libxml2-utils shellcheck \
   qt6-base-dev-tools qt6-declarative-dev-tools qml6-module-qttest \
