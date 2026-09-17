@@ -232,6 +232,10 @@ Extraction must hide complexity, not merely reduce line count.
   supplied by their QML owner. Cached account selection and privacy projection
   preserve it, so a later refresh cannot restart another row's run-out countdown. This timestamp stays
   in memory; it is neither a CLI field nor part of the persisted quota cache.
+- `ProviderSnapshot.js` stores a quota reset date as text every later reader can
+  parse: the live countdown, the panel `resetWithin` rule, and absolute reset
+  formatting all read that field, so a numeric CLI date is normalized to its ISO
+  form instead of its epoch digits.
 - `ProviderSnapshot.js` also preserves the supplied local usage receipt time
   on normalized provider snapshots. `UsageCache.js` uses that original time when
   a measurement timestamp is missing, invalid, or future at receipt, so selecting a cached

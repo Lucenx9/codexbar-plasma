@@ -10,6 +10,18 @@ function message(value) {
     return SafeText.cliMessage(SafeText.stripLoaderDiagnostics(value), SafeText.maximumCliMessageLength);
 }
 
+// Every later reader of the stored `resetsAt` parses it as a date string: the
+// live countdown, the panel "resets within" rule, and absolute formatting. A
+// numeric CLI date is epoch milliseconds, whose digits Date.parse cannot read,
+// so it is stored in its ISO form instead.
+function resetsAtText(value) {
+    if (typeof value === "number") {
+        return isFinite(value) && Math.abs(value) <= 8640000000000000
+            ? new Date(value).toISOString() : "";
+    }
+    return Normalizer.boundedDisplayText(value === undefined || value === null ? "" : value, 128);
+}
+
 function windowSnapshot(window, pace, usageKnown, lane, label, receivedAtMs) {
     var metrics = Normalizer.rateWindowMetrics(window, pace, usageKnown);
     if (metrics === null) {
@@ -19,7 +31,7 @@ function windowSnapshot(window, pace, usageKnown, lane, label, receivedAtMs) {
     result.lane = lane;
     result.label = label;
     result.paceObservedAtMs = receivedAtMs;
-    result.resetsAt = Normalizer.boundedDisplayText(window.resetsAt === undefined || window.resetsAt === null ? "" : window.resetsAt, 128);
+    result.resetsAt = resetsAtText(window.resetsAt);
     result.resetDescription = Normalizer.boundedDisplayText(window.resetDescription || "", 500);
     // Initial reset formatting accepts numeric dates; the stored reset label
     // continues to use the bounded CLI text, as it does for live quota rows.
