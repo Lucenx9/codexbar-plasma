@@ -93,7 +93,8 @@ work and upstream contract requirements.
   active service incident otherwise; an operational status or the provider's
   own source name is never presented as identity.
 - Overflowing popup tabs have separate scroll buttons and immediate keyboard
-  focus reveal, so navigation never covers provider labels.
+  focus reveal, so navigation never covers provider labels. A tab wider than the
+  available area stays aligned at its start when focused or selected again.
 - Global **Usage & Spend** tab with a Cost/Tokens selector, a 7/30/90-day range
   selector, interactive daily chart, activity heatmap, and provider totals that
   keep different currencies separate. The heatmap groups the range into weekday
