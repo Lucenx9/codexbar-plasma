@@ -273,9 +273,9 @@ Extraction must hide complexity, not merely reduce line count.
   binds the resulting rows and localizes them; the module reads no root state.
 - `ProviderAutoSelect.js` ranks the roster for the automatic provider
   selection. Consumption decides it, taking the busiest quota row or the
-  provider cost meter, whichever reports further along; incident severity adds
-  at most one point, so it separates equally used providers without ever
-  outranking real usage. Providers with no percentage at all are ordered by
+  provider cost meter, whichever reports further along; incident severity only
+  breaks equal-consumption ties, so it cannot outrank even a fractional usage
+  difference. Providers with no percentage at all are ordered by
   severity alone, an error-only provider never wins, and the first provider
   keeps a tie. The popup ranks the full roster and the panel ranks its own
   filtered selection through `PopupSelection.js`.
@@ -412,7 +412,7 @@ module delegation and keep plural-aware localization in QML.
 placeholder suppression, automatic and stored selections, aliased roster IDs,
 unusable stored values, and unusable roster entries alongside the settings-page
 toggles. `tests/tst_provider_auto_select.qml` covers malformed percentages,
-missing data, provider cost competition, severity tie breaks, score parity, and
+missing data, provider cost competition, fractional usage, severity tie breaks, and
 error-only providers. `tests/test_overview_detail.py` keeps exercising the owning
 QML detail chain, and surface checks pin both modules as pure.
 
