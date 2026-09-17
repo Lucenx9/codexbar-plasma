@@ -365,6 +365,24 @@ TestCase {
         compare(CostPresentation.averageDailyValue([], false), null)
     }
 
+    // A range the CLI measured as zero is an answer, not a missing one. The
+    // history rows below the average already print those zeros.
+    function test_averageDailyValueKeepsAFullyMeasuredZeroRange() {
+        var measuredZeros = [dailyPoint("Mon", 0, 0), dailyPoint("Tue", 0, 0)]
+
+        compare(CostPresentation.averageDailyValue(measuredZeros, false).value, 0)
+        compare(CostPresentation.averageDailyValue(measuredZeros, false).currency, "USD")
+        compare(CostPresentation.averageDailyValue(measuredZeros, true).value, 0)
+        compare(CostPresentation.averageDailyValue(
+            [dailyPoint("Mon", null, null), dailyPoint("Tue", null, null)], false), null)
+
+        // The caller prints the average through these formatters, so a zero has
+        // to reach the line as a figure rather than the unavailable dash.
+        var fmt = CostPresentation.numberFormat(undefined, undefined)
+        compare(CostPresentation.amountString(fmt, 0, "USD"), "$0.00")
+        compare(CostPresentation.tokenCountString(0), "0")
+    }
+
     function test_averageDailyValueExcludesUnavailableMetricDays() {
         var points = [
             dailyPoint("Mon", null, 100),

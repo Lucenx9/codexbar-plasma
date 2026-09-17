@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep the **Average/day** line visible when every day in the cost history
+  window was measured as zero, matching the zeros the history rows below it
+  already print. A window with no measured day still shows no average.
 - Align popup usage dashboard section heading typographic hierarchy with other
   popup card section titles by using a level-4 primary heading.
 - Keep oversized popup tabs aligned at their start when focus or selection is
