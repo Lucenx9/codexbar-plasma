@@ -34,18 +34,6 @@ function usedPercent(item) {
     return best;
 }
 
-// Severity contributes at most a single percentage point, so it breaks ties
-// between equally used providers without ever outranking real consumption. A
-// provider with no percentage at all is ordered by severity alone, and one
-// carrying only an error never wins.
-function score(item) {
-    if (!item || OverviewProviders.isErrorOnly(item)) {
-        return -1;
-    }
-    var percent = usedPercent(item);
-    var incidentTieBreaker = NotificationMemo.severityRank(item.statusSeverity) / 100;
-    return percent >= 0 ? percent + incidentTieBreaker : incidentTieBreaker;
-}
 
 // The first provider wins a tie, so a roster whose order the user chose keeps
 // its head selected while nothing stands out. An empty or unusable roster
@@ -56,12 +44,21 @@ function score(item) {
 // the surfaces blank.
 function bestIndex(items) {
     var source = Array.isArray(items) ? items : [];
-    var bestScore = -1;
+    var bestPercent = -1;
+    var bestSeverity = -1;
     var best = 0;
     for (var i = 0; i < source.length; i++) {
-        var candidate = score(source[i]);
-        if (candidate > bestScore) {
-            bestScore = candidate;
+        var item = source[i];
+        if (!item || OverviewProviders.isErrorOnly(item)) {
+            continue;
+        }
+        // Missing percentages and idle quotas tie on consumption; incidents
+        // distinguish them without outweighing even fractional positive usage.
+        var percent = Math.max(0, usedPercent(item));
+        var severity = NotificationMemo.severityRank(item.statusSeverity);
+        if (percent > bestPercent || (percent === bestPercent && severity > bestSeverity)) {
+            bestPercent = percent;
+            bestSeverity = severity;
             best = i;
         }
     }

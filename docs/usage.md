@@ -72,7 +72,8 @@ work and upstream contract requirements.
   Missing data does not satisfy a condition. Reset conditions update each minute;
   the provider icon remains available when all conditional elements are hidden.
 - Auto-select highest-usage provider for the compact panel and provider detail
-  focus.
+  focus. Consumption takes precedence even for fractional percentage differences;
+  incident severity breaks equal-consumption ties, then saved provider order.
 - Panel providers can be limited to a chosen set in **Panel → Panel
   providers**. The choice lists the enabled providers in their saved order, is
   limited to the four meters the panel can draw, and can also be left automatic

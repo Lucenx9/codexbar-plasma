@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Select the genuinely highest-usage provider automatically even when usage
+  differs by a fraction of a percentage point; service incidents only break ties.
 - Choose empty-usage messages from validated account identities: malformed
   identity fields no longer imply available account limits, and supported legacy
   identity fields receive the same message as nested identities.
