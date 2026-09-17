@@ -469,13 +469,6 @@ TestCase {
         compare(rows[0].value, "1.5K")
     }
 
-    function test_tokenSummaryOmitsTheHalfThatIsMissing() {
-        compare(CostPresentation.tokenSummary(fmt, 3, 0, "USD", ""), "$3.00")
-        compare(CostPresentation.tokenSummary(fmt, 0, 2000, "USD", ""), "2K")
-        compare(CostPresentation.tokenSummary(fmt, 0, 0, "USD", ""), "")
-        compare(CostPresentation.tokenSummary(fmt, 3, 2000, "USD", "2K tokens"), "$3.00 · 2K tokens")
-    }
-
     function test_historyRowsRunNewestFirstAndScaleToTheSelectedMetric() {
         var tokenCost = { daily: [
             dailyPoint("Mon", 1, 4000),
@@ -490,6 +483,48 @@ TestCase {
         compare(byTokens[0].label, "Tue")
         compare(byTokens[0].isPeak, false)
         compare(byTokens[1].isPeak, true)
+    }
+
+    function test_historyRowsPreserveMeasuredZeroAndFilterMissingMetrics_data() {
+        var cases = [
+            { tag: "zero-cost", point: dailyPoint("Day", 0, 2000), value: "$0.00 · 2K", costPercent: 0, tokenPercent: 100 },
+            { tag: "zero-tokens", point: dailyPoint("Day", 3, 0), value: "$3.00 · 0", costPercent: 100, tokenPercent: 0 },
+            { tag: "both-zero", point: dailyPoint("Day", 0, 0), value: "$0.00 · 0", costPercent: 0, tokenPercent: 0 },
+            { tag: "missing-cost", point: dailyPoint("Day", null, 2000), value: "2K", costPercent: null, tokenPercent: 100 },
+            { tag: "missing-tokens", point: dailyPoint("Day", 3, null), value: "$3.00", costPercent: 100, tokenPercent: null },
+            { tag: "missing-cost-zero-tokens", point: dailyPoint("Day", null, 0), value: "0", costPercent: null, tokenPercent: 0 },
+            { tag: "zero-cost-missing-tokens", point: dailyPoint("Day", 0, null), value: "$0.00", costPercent: 0, tokenPercent: null },
+            { tag: "both-missing", point: dailyPoint("Day", null, null), value: "", costPercent: null, tokenPercent: null },
+            { tag: "omitted-cost", point: { label: "Day", tokens: 2000, currency: "USD" }, value: "2K", costPercent: null, tokenPercent: 100 },
+            { tag: "omitted-tokens", point: { label: "Day", cost: 3, currency: "USD" }, value: "$3.00", costPercent: 100, tokenPercent: null },
+            { tag: "both-omitted", point: { label: "Day" }, value: "", costPercent: null, tokenPercent: null }
+        ]
+        var data = []
+        for (var i = 0; i < cases.length; i++) {
+            for (var metric = 0; metric < 2; metric++) {
+                data.push({
+                    tag: cases[i].tag + (metric === 1 ? "-tokens" : "-cost"),
+                    point: cases[i].point,
+                    value: cases[i].value,
+                    showsTokens: metric === 1,
+                    percent: metric === 1 ? cases[i].tokenPercent : cases[i].costPercent
+                })
+            }
+        }
+        return data
+    }
+
+    function test_historyRowsPreserveMeasuredZeroAndFilterMissingMetrics(data) {
+        var rows = CostPresentation.historyRows(fmt, { daily: [data.point] }, data.showsTokens, "Latest")
+
+        compare(rows.length, data.percent === null ? 0 : 1)
+        if (data.percent === null) {
+            return
+        }
+        compare(rows[0].label, "Day")
+        compare(rows[0].percent, data.percent)
+        compare(rows[0].isPeak, data.percent === 100)
+        compare(rows[0].value, data.value)
     }
 
     function test_historyRowsKeepAtMostSevenDays() {

@@ -260,7 +260,9 @@ Provider-specific editable settings depend on the official CLI contract.
   starts no scan. Cost settings applied together start a single scan using the
   final executable, provider, and history range; disabling costs starts none.
 - Token breakdowns, model summaries, recent daily spend, cost history bars, and
-  average cost per 1M tokens, with a configurable cost history window.
+  average cost per 1M tokens, with a configurable cost history window. Recent
+  history rows show measured zero costs and token counts alongside positive
+  amounts; missing amounts stay omitted.
 - Token, request, and point counts use the current language's singular and
   plural forms. Large counts retain compact notation such as `1K` and `4.3B`.
 - Cost totals qualified as estimated, partial, or approximate from the CLI's

@@ -13,6 +13,8 @@ retained values. A successful refresh clears the error.
   expose truncation and an explicit empty state.
 - Missing costs and token counts remain unknown. Measured zero stays zero;
   filling calendar gaps only fills metrics actually observed in the snapshot.
+  Recent history rows show both available amounts, including zero, in either
+  metric mode. The selected metric still controls row filtering and bar scaling.
 - The global activity heatmap uses the unfiltered history's calendar dates,
   preserving unavailable days at either boundary and between measured days.
   Unavailable days occupy empty cells, so filtering missing amounts never shifts

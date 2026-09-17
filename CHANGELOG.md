@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve measured zero costs and token counts in recent history rows instead
+  of omitting them when the other amount is positive.
 - Select the genuinely highest-usage provider automatically even when usage
   differs by a fraction of a percentage point; service incidents only break ties.
 - Choose empty-usage messages from validated account identities: malformed
