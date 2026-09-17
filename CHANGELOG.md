@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Choose empty-usage messages from validated account identities: malformed
+  identity fields no longer imply available account limits, and supported legacy
+  identity fields receive the same message as nested identities.
 - Keep the panel visibility rule editor's condition combo and threshold spinner
   in sync with external settings changes, such as the restore-defaults action,
   after an interactive pick or typed value in the widget settings.

@@ -108,6 +108,24 @@ TestCase {
             }
         }, 1000).statusIncidentKey, "outage");
     }
+    function test_placeholderUsesValidatedIdentity() {
+        var malformed = ProviderSnapshot.normalize({
+            provider: "codex",
+            account: ["invalid"],
+            usage: {identity: {accountOrganization: ["invalid"], loginMethod: ["invalid"]}}
+        }, 1000);
+        compare(malformed.account, "");
+        compare(malformed.organization, "");
+        compare(malformed.loginMethod, "");
+        compare(malformed.placeholder, "noUsage");
+
+        var legacy = ProviderSnapshot.normalize({
+            provider: "codex",
+            usage: {accountEmail: "demo@example.com"}
+        }, 1000);
+        compare(legacy.account, "demo@example.com");
+        compare(legacy.placeholder, "limitsUnavailable");
+    }
     function test_invalidRecords_data() {
         return [
             {

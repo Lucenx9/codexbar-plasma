@@ -83,11 +83,7 @@ function normalize(item, receivedAtMs) {
     var hasSupplementalUsage = providerDetails.length > 0 || dashboard !== null || codexCreditLimit !== null;
     var placeholder = "";
     if (rows.length === 0 && !hasSupplementalUsage && (!error || errorMessage === "Found sessions, but no rate limit events yet.")) {
-        var rawIdentity = usage.identity || {};
-        var hasIdentity = (item.account && item.account.length > 0)
-            || (rawIdentity.accountEmail && rawIdentity.accountEmail.length > 0)
-            || (rawIdentity.accountOrganization && rawIdentity.accountOrganization.length > 0)
-            || (rawIdentity.loginMethod && rawIdentity.loginMethod.length > 0);
+        var hasIdentity = account.length > 0 || organization.length > 0 || loginMethod.length > 0;
         placeholder = ["antigravity", "doubao", "codex"].indexOf(providerID) >= 0 && hasIdentity
             && !usage.primary && !usage.secondary && !usage.tertiary ? "limitsUnavailable" : "noUsage";
     }
