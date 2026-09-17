@@ -411,11 +411,16 @@ TestCase {
         wait(0);
         var icon = findItem(panel, item => item.objectName === "panelIdentityIcon");
         verify(icon !== null && icon.visible);
+        var focusBorder = findItem(panel, item => item.objectName === "panelIdentityFocusBorder");
+        verify(focusBorder !== null);
+        verify(!focusBorder.visible);
         if (data.key === 0) {
             mouseClick(icon, icon.width / 2, icon.height / 2);
+            verify(!focusBorder.visible);
         } else {
             verify(icon.parent.activeFocusOnTab);
             icon.parent.forceActiveFocus(Qt.TabFocusReason);
+            verify(focusBorder.visible);
             keyClick(data.key);
         }
         compare(applet.openedProvider, data.provider === "codex" ? "codex" : "claude");
@@ -432,8 +437,11 @@ TestCase {
         var icon = findItem(panel, item => item.objectName === "panelIdentityIcon");
         verify(icon !== null && icon.visible);
         verify(!icon.parent.activeFocusOnTab);
+        var focusBorder = findItem(panel, item => item.objectName === "panelIdentityFocusBorder");
+        verify(focusBorder !== null);
         mouseClick(icon, icon.width / 2, icon.height / 2);
         icon.parent.forceActiveFocus();
+        verify(!focusBorder.visible);
         keyClick(Qt.Key_Space);
         compare(applet.openedProvider, "claude");
         verify(!applet.expanded);

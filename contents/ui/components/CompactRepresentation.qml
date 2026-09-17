@@ -312,6 +312,19 @@ Item {
                 onClicked: compactIdentity.activate()
             }
 
+            // Keyboard users get the same focus ring the provider meters draw,
+            // so the standalone icon shows when it is the active control.
+            Rectangle {
+                objectName: "panelIdentityFocusBorder"
+
+                anchors.fill: parent
+                visible: compactIdentity.activeFocus && compactRoot.interactive
+                radius: Kirigami.Units.smallSpacing
+                color: "transparent"
+                border.width: 1
+                border.color: Kirigami.Theme.focusColor
+            }
+
             readonly property string compactProvider: compactRoot.applet.selectedCompactProvider()
                 ? compactRoot.applet.selectedCompactProvider().provider
                 : "codex"
