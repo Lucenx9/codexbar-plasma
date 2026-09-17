@@ -379,24 +379,6 @@ function sparklineSummary(fmt, points, showsTokens) {
     }
 }
 
-// Joins a money figure and a token figure with the separator the cost sections
-// use. `tokensText` is the caller's already-worded token phrase, or "" to print
-// the bare count.
-function tokenSummary(fmt, cost, tokens, currency, tokensText) {
-    var parts = []
-    var costValue = Number(cost)
-    var tokenValue = Number(tokens)
-    if (isFinite(costValue) && costValue > 0) {
-        parts.push(amountString(fmt, costValue, currency || "USD"))
-    }
-    if (isFinite(tokenValue) && tokenValue > 0) {
-        parts.push(typeof tokensText === "string" && tokensText.length > 0
-            ? tokensText
-            : tokenCountString(tokenValue))
-    }
-    return parts.join(" · ")
-}
-
 // `entries` is an ordered list of `{ label, tokens }`. Rows with no positive
 // token count are dropped rather than printed as zero.
 function breakdownRows(entries) {
@@ -472,12 +454,9 @@ function historyRows(fmt, tokenCost, showsTokens, fallbackLabel) {
     for (var i = visibleDaily.length - 1; i >= 0; i--) {
         var item = visibleDaily[i]
         var magnitude = Math.max(0, metricValue(item, showsTokens))
-        var value = tokenSummary(fmt, item.cost, item.tokens, item.currency, "")
         rows.push({
             label: item.label && item.label.length > 0 ? item.label : fallbackLabel,
-            value: value.length > 0
-                ? value
-                : metricText(fmt, 0, item.currency, showsTokens),
+            value: amountSummary(fmt, item),
             percent: maximum > 0 && magnitude > 0 ? Math.max(3, magnitude * 100 / maximum) : 0,
             isPeak: maximum > 0 && magnitude === maximum
         })
