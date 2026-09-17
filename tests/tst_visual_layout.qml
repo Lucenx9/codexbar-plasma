@@ -216,6 +216,7 @@ TestCase {
         }
         function openProviderFromPanel(id) {
             openedProvider = id;
+            expanded = true;
         }
         property string hoveredPanelProviderID: ""
         function setHoveredPanelProvider(providerID) {
@@ -280,6 +281,8 @@ TestCase {
     }
 
     function init() {
+        applet.expanded = false;
+        applet.openedProvider = "";
         applet.hoveredPanelProviderID = "";
         applet.dualQuota = true;
         applet.meterCount = 2;
@@ -383,6 +386,65 @@ TestCase {
         applet.verticalFormFactor = true;
         tryCompare(panel, "inlinePrimaryText", false);
         verify(!panel.showPrimaryIdentity);
+    }
+
+    function test_standaloneIdentityActivation_data() {
+        var cases = [];
+        for (var open of [false, true]) {
+            for (var provider of ["codex", "missing"]) {
+                for (var key of [0, Qt.Key_Space, Qt.Key_Return]) {
+                    cases.push({tag: provider + "-" + open + "-" + key,
+                        open: open, provider: provider, key: key});
+                }
+            }
+        }
+        return cases;
+    }
+
+    function test_standaloneIdentityActivation(data) {
+        applet.metersHidden = true;
+        applet.selectedProviderID = data.provider;
+        applet.openedProvider = "claude";
+        applet.expanded = data.open;
+        var panel = createControl("CompactRepresentation", {applet: applet, height: 44});
+        if (!panel) return;
+        wait(0);
+        var icon = findItem(panel, item => item.objectName === "panelIdentityIcon");
+        verify(icon !== null && icon.visible);
+        var focusBorder = findItem(panel, item => item.objectName === "panelIdentityFocusBorder");
+        verify(focusBorder !== null);
+        verify(!focusBorder.visible);
+        if (data.key === 0) {
+            mouseClick(icon, icon.width / 2, icon.height / 2);
+            verify(!focusBorder.visible);
+        } else {
+            verify(icon.parent.activeFocusOnTab);
+            icon.parent.forceActiveFocus(Qt.TabFocusReason);
+            verify(focusBorder.visible);
+            keyClick(data.key);
+        }
+        compare(applet.openedProvider, data.provider === "codex" ? "codex" : "claude");
+        compare(applet.expanded, data.provider === "codex" ? true : !data.open);
+    }
+
+    function test_standaloneIdentityPreviewDoesNotActivate() {
+        applet.metersHidden = true;
+        applet.openedProvider = "claude";
+        applet.expanded = false;
+        var panel = createControl("CompactRepresentation", {applet: applet, height: 44, interactive: false});
+        if (!panel) return;
+        wait(0);
+        var icon = findItem(panel, item => item.objectName === "panelIdentityIcon");
+        verify(icon !== null && icon.visible);
+        verify(!icon.parent.activeFocusOnTab);
+        var focusBorder = findItem(panel, item => item.objectName === "panelIdentityFocusBorder");
+        verify(focusBorder !== null);
+        mouseClick(icon, icon.width / 2, icon.height / 2);
+        icon.parent.forceActiveFocus();
+        verify(!focusBorder.visible);
+        keyClick(Qt.Key_Space);
+        compare(applet.openedProvider, "claude");
+        verify(!applet.expanded);
     }
 
     function test_crowdedMeterRowsRetainStandaloneText() {
@@ -874,7 +936,7 @@ TestCase {
         applet.openedProvider = "";
         mouseClick(meter, meter.width / 2, meter.height / 2);
         compare(applet.openedProvider, "codex");
-        compare(applet.expanded, false);
+        compare(applet.expanded, true);
     }
 
     function test_panelMeterHoverTracksPerProviderTooltip() {

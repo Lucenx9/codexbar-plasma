@@ -273,6 +273,58 @@ Item {
         id: identityElement
 
         Item {
+            id: compactIdentity
+
+            function activate() {
+                if (!compactRoot.interactive) {
+                    return
+                }
+                if (compactRoot.selectedProvider) {
+                    compactRoot.applet.openProviderFromPanel(compactRoot.selectedProvider.provider)
+                } else {
+                    compactRoot.applet.expanded = !compactRoot.applet.expanded
+                }
+            }
+
+            activeFocusOnTab: compactRoot.interactive && visible
+            Accessible.role: compactRoot.interactive ? Accessible.Button : Accessible.Graphic
+            Accessible.name: compactRoot.selectedProvider
+                ? i18n("Open %1", compactRoot.selectedProvider.title) : "CodexBar"
+            Accessible.ignored: !compactRoot.interactive
+            Accessible.onPressAction: activate()
+
+            Keys.onPressed: function(event) {
+                switch (event.key) {
+                case Qt.Key_Space:
+                case Qt.Key_Enter:
+                case Qt.Key_Return:
+                case Qt.Key_Select:
+                    compactIdentity.activate()
+                    event.accepted = true
+                    break
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                enabled: compactRoot.interactive
+                cursorShape: Qt.PointingHandCursor
+                onClicked: compactIdentity.activate()
+            }
+
+            // Keyboard users get the same focus ring the provider meters draw,
+            // so the standalone icon shows when it is the active control.
+            Rectangle {
+                objectName: "panelIdentityFocusBorder"
+
+                anchors.fill: parent
+                visible: compactIdentity.activeFocus && compactRoot.interactive
+                radius: Kirigami.Units.smallSpacing
+                color: "transparent"
+                border.width: 1
+                border.color: Kirigami.Theme.focusColor
+            }
+
             readonly property string compactProvider: compactRoot.applet.selectedCompactProvider()
                 ? compactRoot.applet.selectedCompactProvider().provider
                 : "codex"
