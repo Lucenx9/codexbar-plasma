@@ -75,6 +75,34 @@ TestCase {
         compare(TabStripGeometry.revealPosition(400, 900, 500, viewport, margin), 400 - margin)
     }
 
+    function test_revealPositionPinsAnOversizedTabAtItsStartFromEitherSide() {
+        var start = 400 - margin
+        compare(TabStripGeometry.revealPosition(400, 900, 382, viewport, margin), null)
+        compare(TabStripGeometry.revealPosition(400, 900, start + 1, viewport, margin), start)
+        compare(TabStripGeometry.revealPosition(400, 900, start - 1, viewport, margin), start)
+        compare(TabStripGeometry.revealPosition(400, 900, start + 700, viewport, margin), start)
+    }
+
+    function test_revealPositionRecognizesAnExactFractionalStartOfAnOversizedTab() {
+        compare(TabStripGeometry.revealPosition(400.25, 900, 382.25, viewport, margin), null)
+        compare(TabStripGeometry.revealPosition(400.25, 900, 382.5, viewport, margin), 382.25)
+        compare(TabStripGeometry.revealPosition(400.25, 900, 382, viewport, margin), 382.25)
+    }
+
+    function test_revealPositionPinsAMarginOnlyOverflowAtItsStart() {
+        var wide = viewport - 2 * margin + 1
+        compare(TabStripGeometry.revealPosition(40, wide, 40 - margin, viewport, margin), null)
+        compare(TabStripGeometry.revealPosition(40, wide, 300, viewport, margin), 40 - margin)
+        compare(TabStripGeometry.revealPosition(40, wide, 0, viewport, margin), 40 - margin)
+    }
+
+    function test_revealPositionKeepsAnExactFitUnderTheOrdinaryRules() {
+        var exact = viewport - 2 * margin
+        compare(TabStripGeometry.revealPosition(margin, exact, 0, viewport, margin), null)
+        compare(TabStripGeometry.revealPosition(margin + 1, exact, 0, viewport, margin), 1)
+        compare(TabStripGeometry.revealPosition(0, exact, 0, viewport, margin), -margin)
+    }
+
     function test_revealPositionCanAnswerBelowZeroForTheCallerToClamp() {
         // Reported without clamping; scrollTo bounds it, which is what keeps the
         // two decisions separable and testable.

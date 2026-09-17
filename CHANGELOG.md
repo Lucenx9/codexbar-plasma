@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep oversized popup tabs aligned at their start when focus or selection is
+  reported again, instead of alternating between the tab's start and end.
 - Preserve measured zero costs and token counts in recent history rows instead
   of omitting them when the other amount is positive.
 - Select the genuinely highest-usage provider automatically even when usage

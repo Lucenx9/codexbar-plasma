@@ -48,6 +48,9 @@ function revealPosition(itemLeft, itemWidth, contentX, viewportWidth, margin) {
     }
 
     var right = left + width
+    if (width + 2 * gap > viewport) {
+        return left - gap === origin ? null : left - gap
+    }
     if (left - gap < origin) {
         return left - gap
     }
