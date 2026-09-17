@@ -3,6 +3,7 @@ import QtTest
 import "../contents/ui/ProviderSnapshot.js" as ProviderSnapshot
 import "../contents/ui/ProviderNormalizer.js" as Normalizer
 import "../contents/ui/UsageCache.js" as UsageCache
+import "../contents/ui/ResetPresentation.js" as ResetPresentation
 
 TestCase {
     name: "ProviderSnapshot"
@@ -77,6 +78,32 @@ TestCase {
         compare(result.credits, null);
         compare(result.statusRecord.indicator, "");
         verify(JSON.stringify(result).indexOf("private-token") < 0);
+    }
+    // A numeric CLI reset date has to survive as a parsable date: the live
+    // countdown, the panel "resets within" rule and absolute formatting all
+    // read the stored string, and epoch digits are not a date Date.parse knows.
+    function test_numericResetDateStaysParsable() {
+        var epochMs = Date.UTC(2026, 8, 13, 13);
+        var result = ProviderSnapshot.normalize({
+            provider: "codex",
+            usage: {
+                primary: {
+                    usedPercent: 50,
+                    resetsAt: epochMs
+                }
+            }
+        }, 1000);
+        compare(result.rows[0].resetValue, epochMs);
+        compare(Date.parse(result.rows[0].resetsAt), epochMs);
+        compare(ResetPresentation.parts({resetsAt: result.rows[0].resetsAt},
+            epochMs - 3600000, false), {kind: "hours", hours: 1, minutes: 0});
+        // Unusable numbers keep the empty reset instead of throwing.
+        for (var value of [NaN, Infinity, 8640000000000001]) {
+            compare(ProviderSnapshot.normalize({
+                provider: "codex",
+                usage: {primary: {usedPercent: 50, resetsAt: value}}
+            }, 1000).rows[0].resetsAt, "");
+        }
     }
     function test_errorsAndEmptyPlaceholdersRemainDistinct() {
         compare(ProviderSnapshot.normalize({

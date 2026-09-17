@@ -15,6 +15,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Choose empty-usage messages from validated account identities: malformed
   identity fields no longer imply available account limits, and supported legacy
   identity fields receive the same message as nested identities.
+- Show a real countdown for providers whose CLI reports a numeric reset date:
+  the stored reset now keeps a parsable date, so the popup no longer prints the
+  raw timestamp digits and the panel "resets within" rule matches again.
 - Keep the panel visibility rule editor's condition combo and threshold spinner
   in sync with external settings changes, such as the restore-defaults action,
   after an interactive pick or typed value in the widget settings.
