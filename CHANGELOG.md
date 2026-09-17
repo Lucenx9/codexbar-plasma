@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Select the genuinely highest-usage provider automatically even when usage
+  differs by a fraction of a percentage point; service incidents only break ties.
 - Keep the panel visibility rule editor's condition combo and threshold spinner
   in sync with external settings changes, such as the restore-defaults action,
   after an interactive pick or typed value in the widget settings.

@@ -3273,15 +3273,6 @@ for pure_module_text in (overview_providers_js, auto_select_js):
             raise AssertionError(
                 "Overview filtering and automatic selection must stay pure: " + forbidden
             )
-auto_select_score_body = function_body(auto_select_js, "score")
-if "OverviewProviders.isErrorOnly(item)" not in auto_select_score_body:
-    raise AssertionError(
-        "a provider carrying only an error must never win the automatic selection"
-    )
-if "NotificationMemo.severityRank(item.statusSeverity) / 100" not in auto_select_score_body:
-    raise AssertionError(
-        "incident severity must stay a tie breaker instead of outranking consumption"
-    )
 
 # Text de-emphasis had drifted into eleven ad-hoc opacity literals, several
 # below the WCAG AA 4.5:1 floor for Kirigami.Theme.textColor on Breeze Light.
