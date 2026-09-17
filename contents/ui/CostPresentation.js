@@ -505,7 +505,9 @@ function averageDailyValue(points, showsTokens) {
             currency = points[i].currency
         }
     }
-    if (total <= 0) {
+    // Only an empty denominator has no average. A range measured as zero keeps
+    // its zero, like the history rows built from the same points.
+    if (count === 0) {
         return null
     }
     return { value: total / count, currency: currency }
