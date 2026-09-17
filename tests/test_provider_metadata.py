@@ -22,6 +22,7 @@ FUNCTIONS = (
 
 QML = '''import QtQuick
 import QtTest
+import "SOURCE_URL/components" as Components
 import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
 import "SOURCE_URL/ProviderSnapshot.js" as ProviderSnapshot
 import "SOURCE_URL/UsageResponse.js" as UsageResponse
@@ -34,6 +35,12 @@ import "SOURCE_URL/ResetPresentation.js" as ResetPresentation
 import "SOURCE_URL/UsageCache.js" as UsageCache
 TestCase {
     name: "ProviderMetadata"
+    // The production display-name table, with the catalog strings stubbed the
+    // way the page harnesses below stub i18n itself.
+    Components.ProviderNames {
+        id: providerNames
+        function i18n(text) { return text }
+    }
     Component {
         id: harness
         QtObject {

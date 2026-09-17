@@ -163,24 +163,6 @@ def id_block(text, object_id):
     return text[brace + 1:index - 1]
 
 
-def extract_object_entries(text, function_name, variable_name):
-    body = function_body(text, function_name)
-    marker = f"var {variable_name} = {{"
-    start = body.find(marker)
-    if start < 0:
-        raise AssertionError(f"missing {variable_name} catalog in {function_name}")
-    entries = {}
-    for line in body[start + len(marker):].splitlines():
-        stripped = line.strip()
-        if stripped == "}":
-            break
-        match = re.match(r'(?:"([^"]+)"|([A-Za-z0-9_]+)):\s*(.+?)(?:,)?$', stripped)
-        if match:
-            key = match.group(1) or match.group(2)
-            entries[key] = match.group(3).removesuffix(",")
-    return entries
-
-
 sys.path.insert(0, str(root / "scripts/lib"))
 from qml_surfaces import Surface
 
@@ -520,21 +502,21 @@ for source_text, label in ((main_text, "main.qml"), (providers_text, "configProv
                 f"{label}: {function_name} has grown a local provider table again"
             )
 
-# The display names cannot move: i18n needs literal strings in a file gettext
-# scans, so this one table stays duplicated and still needs a drift check.
-main_titles = extract_object_entries(main_text, "providerTitle", "names")
-provider_titles = extract_object_entries(providers_text, "providerTitle", "names")
-if main_titles != provider_titles:
-    missing = sorted(set(main_titles) - set(provider_titles))
-    extra = sorted(set(provider_titles) - set(main_titles))
-    changed = sorted(
-        key for key in set(main_titles) & set(provider_titles)
-        if main_titles[key] != provider_titles[key]
-    )
-    raise AssertionError(
-        "providerTitle drift between main.qml and configProviders.qml; "
-        f"missing={missing}, extra={extra}, changed={changed}"
-    )
+# The display names used to be two copies compared entry by entry. They now
+# live once in components/ProviderNames.qml, whose literal i18n() strings
+# gettext still scans; what is worth asserting is that neither surface has
+# grown a private copy again: both must read the shared component.
+for source_text, label in ((main_text, "main.qml"), (providers_text, "configProviders.qml")):
+    title_body = function_body(source_text, "providerTitle")
+    if "providerNames.titleForKey(" not in title_body:
+        raise AssertionError(
+            f"{label}: providerTitle must read display names from "
+            "components/ProviderNames.qml"
+        )
+    if "var names = {" in title_body:
+        raise AssertionError(
+            f"{label}: providerTitle has grown a local display-name table again"
+        )
 
 # Wayfinder was added late and is the canary for a half-finished provider.
 identity_text = (root / "contents/ui/ProviderIdentity.js").read_text(encoding="utf-8")
@@ -544,9 +526,9 @@ for identity_fragment, requirement in (
 ):
     if identity_fragment not in identity_text:
         raise AssertionError(f"ProviderIdentity.js must expose the Wayfinder {requirement}")
-for source_text, label in ((main_text, "main.qml"), (providers_text, "configProviders.qml")):
-    if '"wayfinder": i18n("Wayfinder")' not in function_body(source_text, "providerTitle"):
-        raise AssertionError(f"{label} must expose the Wayfinder display name")
+names_text = (root / "contents/ui/components/ProviderNames.qml").read_text(encoding="utf-8")
+if '"wayfinder": i18n("Wayfinder")' not in function_body(names_text, "titleForKey"):
+    raise AssertionError("ProviderNames.qml must expose the Wayfinder display name")
 
 api_key_setup_body = function_body(providers_text, "supportsApiKeySetup")
 for provider in ("crossmodel", "clawrouter", "fireworks"):
