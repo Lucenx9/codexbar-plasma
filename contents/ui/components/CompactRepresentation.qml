@@ -273,6 +273,45 @@ Item {
         id: identityElement
 
         Item {
+            id: compactIdentity
+
+            function activate() {
+                if (!compactRoot.interactive) {
+                    return
+                }
+                if (compactRoot.selectedProvider) {
+                    compactRoot.applet.openProviderFromPanel(compactRoot.selectedProvider.provider)
+                } else {
+                    compactRoot.applet.expanded = !compactRoot.applet.expanded
+                }
+            }
+
+            activeFocusOnTab: compactRoot.interactive && visible
+            Accessible.role: compactRoot.interactive ? Accessible.Button : Accessible.Graphic
+            Accessible.name: compactRoot.selectedProvider
+                ? i18n("Open %1", compactRoot.selectedProvider.title) : "CodexBar"
+            Accessible.ignored: !compactRoot.interactive
+            Accessible.onPressAction: activate()
+
+            Keys.onPressed: function(event) {
+                switch (event.key) {
+                case Qt.Key_Space:
+                case Qt.Key_Enter:
+                case Qt.Key_Return:
+                case Qt.Key_Select:
+                    compactIdentity.activate()
+                    event.accepted = true
+                    break
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                enabled: compactRoot.interactive
+                cursorShape: Qt.PointingHandCursor
+                onClicked: compactIdentity.activate()
+            }
+
             readonly property string compactProvider: compactRoot.applet.selectedCompactProvider()
                 ? compactRoot.applet.selectedCompactProvider().provider
                 : "codex"

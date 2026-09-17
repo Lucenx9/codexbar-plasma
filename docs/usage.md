@@ -22,7 +22,9 @@ work and upstream contract requirements.
   or activate it with the keyboard, to open its detail tab. Hovering one
   provider's icon narrows the panel tooltip to that provider alone; hovering
   elsewhere shows the whole roster. Accessible descriptions identify the
-  displayed quotas and their values.
+  displayed quotas and their values. The standalone provider icon opens that
+  provider's detail tab too, including when meters are hidden. With no panel
+  provider selected, the widget icon toggles the popup without changing its tab.
 - With the default element order, optional text sits after the selected
   provider's capsules in one group, with a single logo. The other providers keep
   their own icon and capsules. If that provider's meters are hidden or unavailable,
