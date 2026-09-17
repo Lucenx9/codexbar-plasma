@@ -784,11 +784,22 @@ if "CostPresentation.spendSnapshots(" not in function_body(main_text, "spendProv
 snapshot_text = (root / "contents/ui/ProviderSnapshot.js").read_text()
 window_body = function_body(snapshot_text, "windowSnapshot")
 for fragment in ("Normalizer.rateWindowMetrics(", "Guards.copyObject(metrics)",
-                 "result.resetsAt = Normalizer.boundedDisplayText(",
+                 "result.resetsAt = resetsAtText(",
                  "result.resetDescription = Normalizer.boundedDisplayText(",
                  "result.paceObservedAtMs = receivedAtMs"):
     if fragment not in window_body:
         raise AssertionError("quota normalization must preserve reset and forecast data")
+# The stored reset is read back as a date string by the countdown, the panel
+# reset rule, and absolute formatting, so a numeric CLI date keeps its ISO form
+# and every other value stays bounded display text.
+resets_at_body = function_body(snapshot_text, "resetsAtText")
+for fragment in ("typeof value === \"number\"", "new Date(value).toISOString()",
+                 "Normalizer.boundedDisplayText("):
+    if fragment not in resets_at_body:
+        raise AssertionError(
+            "stored quota reset dates must stay parsable and bounded; "
+            f"missing {fragment!r}"
+        )
 if "row.reset = Normalizer.boundedDisplayText(resetText(" not in function_body(main_text, "presentUsageWindow"):
     raise AssertionError("QML must format the initial reset label")
 if "onResetTimesShowAbsoluteChanged: Qt.callLater(refreshNow)" in main_text:
