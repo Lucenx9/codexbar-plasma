@@ -6,7 +6,6 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # Parity rules use require_in_surface so extracting popup UI or a controller out
 # of main.qml does not need an edit here. The per-component variables below stay
 # file-scoped: those are delegate contracts about one specific component.
-MAIN_QML="${ROOT_DIR}/contents/ui/main.qml"
 GENERAL_QML="${ROOT_DIR}/contents/ui/configGeneral.qml"
 POPUP_QML="${ROOT_DIR}/contents/ui/configPopup.qml"
 PANEL_QML="${ROOT_DIR}/contents/ui/configPanel.qml"
@@ -14,6 +13,7 @@ NOTIFICATIONS_QML="${ROOT_DIR}/contents/ui/configNotifications.qml"
 DIAGNOSTICS_QML="${ROOT_DIR}/contents/ui/configDiagnostics.qml"
 PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
 PROVIDER_IDENTITY_JS="${ROOT_DIR}/contents/ui/ProviderIdentity.js"
+PROVIDER_NAMES_QML="${ROOT_DIR}/contents/ui/components/ProviderNames.qml"
 COMPACT_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/CompactRepresentation.qml"
 PROVIDER_HEADER_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/ProviderHeader.qml"
 USAGE_ROW_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/ProviderUsageRow.qml"
@@ -265,20 +265,20 @@ if failures:
     sys.exit(1)
 PY
 
-for qml_file in "$MAIN_QML" "$PROVIDERS_QML"; do
-  require_in_file "$qml_file" '"clawrouter": i18n("ClawRouter")'
-  require_in_file "$qml_file" '"crossmodel": i18n("CrossModel")'
-  require_in_file "$qml_file" '"elevenlabs": i18n("ElevenLabs")'
-  require_in_file "$qml_file" '"fireworks": i18n("Fireworks")'
-  require_in_file "$qml_file" '"ibmbob": i18n("IBM Bob")'
-  require_in_file "$qml_file" '"kimi": i18n("Kimi Code")'
-  require_in_file "$qml_file" '"minimax": i18n("MiniMax")'
-  require_in_file "$qml_file" '"moonshot": i18n("Moonshot / Kimi Open Platform")'
-  require_in_file "$qml_file" '"qoder": i18n("Qoder")'
-  require_in_file "$qml_file" '"stepfun": i18n("StepFun")'
-  require_in_file "$qml_file" '"wayfinder": i18n("Wayfinder")'
-  require_in_file "$qml_file" '"zai": i18n("z.ai / GLM")'
-done
+# Display names live once in the shared component; these late-added
+# providers are the canary for a half-finished provider addition.
+require_in_file "$PROVIDER_NAMES_QML" '"clawrouter": i18n("ClawRouter")'
+require_in_file "$PROVIDER_NAMES_QML" '"crossmodel": i18n("CrossModel")'
+require_in_file "$PROVIDER_NAMES_QML" '"elevenlabs": i18n("ElevenLabs")'
+require_in_file "$PROVIDER_NAMES_QML" '"fireworks": i18n("Fireworks")'
+require_in_file "$PROVIDER_NAMES_QML" '"ibmbob": i18n("IBM Bob")'
+require_in_file "$PROVIDER_NAMES_QML" '"kimi": i18n("Kimi Code")'
+require_in_file "$PROVIDER_NAMES_QML" '"minimax": i18n("MiniMax")'
+require_in_file "$PROVIDER_NAMES_QML" '"moonshot": i18n("Moonshot / Kimi Open Platform")'
+require_in_file "$PROVIDER_NAMES_QML" '"qoder": i18n("Qoder")'
+require_in_file "$PROVIDER_NAMES_QML" '"stepfun": i18n("StepFun")'
+require_in_file "$PROVIDER_NAMES_QML" '"wayfinder": i18n("Wayfinder")'
+require_in_file "$PROVIDER_NAMES_QML" '"zai": i18n("z.ai / GLM")'
 
 python3 - "$PROVIDERS_QML" <<'PY'
 import pathlib
