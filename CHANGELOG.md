@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve measured zero costs and token counts in recent history rows instead
+  of omitting them when the other amount is positive.
 - Keep the panel visibility rule editor's condition combo and threshold spinner
   in sync with external settings changes, such as the restore-defaults action,
   after an interactive pick or typed value in the widget settings.
