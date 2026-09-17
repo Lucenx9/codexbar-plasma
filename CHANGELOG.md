@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.39 - 2026-09-17
+
 ### Fixed
 
 - Keep the **Average/day** line visible when every day in the cost history
@@ -42,6 +44,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Match stored panel provider selections canonically when toggling, so raw CLI
   spellings and mixed-case IDs resolve to the same provider instead of leaving
   a stale entry that cannot be removed.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.38...v0.2.39)
 
 ## 0.2.38 - 2026-09-13
 
