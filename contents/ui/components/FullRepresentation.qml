@@ -1155,9 +1155,10 @@ Item {
                             Layout.fillWidth: true
                         }
 
-                        PlainPlasmaLabel {
+                        PlainHeading {
                             text: i18n("Usage dashboard")
-                            font.weight: Font.DemiBold
+                            level: 4
+                            type: Kirigami.Heading.Type.Primary
                             Layout.fillWidth: true
                             elide: Text.ElideRight
                         }

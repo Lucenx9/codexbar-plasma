@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Align popup usage dashboard section heading typographic hierarchy with other
+  popup card section titles by using a level-4 primary heading.
 - Keep oversized popup tabs aligned at their start when focus or selection is
   reported again, instead of alternating between the tab's start and end.
 - Preserve measured zero costs and token counts in recent history rows instead
