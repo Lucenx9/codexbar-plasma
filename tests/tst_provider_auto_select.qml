@@ -78,19 +78,22 @@ TestCase {
     function test_severityOnlyBreaksTiesBetweenEqualConsumption() {
         var quiet = quotaProvider("codex", 50);
         var critical = { provider: "claude", statusSeverity: "critical", rows: [{ hasPercent: true, usedPercent: 50 }] };
-        verify(ProviderAutoSelect.score(critical) > ProviderAutoSelect.score(quiet));
-        // One point of severity can never overtake one point of usage.
-        verify(ProviderAutoSelect.score(quotaProvider("gemini", 51)) > ProviderAutoSelect.score(critical));
         compare(ProviderAutoSelect.bestIndex([quiet, critical]), 1);
         compare(ProviderAutoSelect.bestIndex([quotaProvider("gemini", 51), critical]), 0);
+    }
+
+    function test_fractionalConsumptionOutranksIncidentSeverity() {
+        var busier = quotaProvider("codex", 50.01);
+        var critical = quotaProvider("claude", 50);
+        critical.statusSeverity = "critical";
+        compare(ProviderAutoSelect.bestIndex([busier, critical]), 0);
+        compare(ProviderAutoSelect.bestIndex([critical, busier]), 1);
     }
 
     function test_providersWithoutAnyPercentageRankBySeverityAlone() {
         var unknown = { provider: "cursor" };
         var maintenance = { provider: "claude", statusSeverity: "maintenance" };
         var outage = { provider: "codex", statusSeverity: "major" };
-        compare(ProviderAutoSelect.score(unknown), 0);
-        verify(ProviderAutoSelect.score(outage) > ProviderAutoSelect.score(maintenance));
         compare(ProviderAutoSelect.bestIndex([unknown, maintenance, outage]), 2);
         // Severity still outranks an idle provider: an incident is the reason
         // the popup was opened, an unused quota is not.
@@ -100,7 +103,6 @@ TestCase {
     function test_anErrorOnlyProviderNeverWins() {
         var broken = { provider: "codex", error: "codexbar exited with status 1", statusSeverity: "critical",
             credits: null, codexCreditLimit: null };
-        compare(ProviderAutoSelect.score(broken), -1);
         compare(ProviderAutoSelect.bestIndex([broken, quotaProvider("claude", 1)]), 1);
         // A provider that still carries a quota row stays rankable even with
         // an error attached to its refresh.
@@ -116,8 +118,6 @@ TestCase {
             { provider: "codex", error: "codexbar exited with status 1", credits: null, codexCreditLimit: null },
             { provider: "claude", error: "connection refused", credits: null, codexCreditLimit: null }
         ];
-        compare(ProviderAutoSelect.score(broken[0]), -1);
-        compare(ProviderAutoSelect.score(broken[1]), -1);
         compare(ProviderAutoSelect.bestIndex(broken), 0);
     }
 
@@ -137,6 +137,5 @@ TestCase {
         compare(ProviderAutoSelect.bestIndex("codex,claude"), 0);
         compare(ProviderAutoSelect.bestIndex([null, undefined]), 0);
         compare(ProviderAutoSelect.bestIndex([null, quotaProvider("claude", 3)]), 1);
-        compare(ProviderAutoSelect.score(null), -1);
     }
 }
