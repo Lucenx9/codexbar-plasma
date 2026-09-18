@@ -246,6 +246,12 @@ contracts belong upstream. To add or improve a language, follow the
 [translation guide](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/translations.md).
 CLI-supplied free-form text retains its original language.
 
+## Support
+
+If CodexBar Plasma saves you time, you can
+[support development on Ko-fi](https://ko-fi.com/lucenx9). The same link is in
+the repository's **Sponsor** button.
+
 ## License and attribution
 
 CodexBar Plasma is derived from [CodexBar](https://github.com/steipete/CodexBar)
