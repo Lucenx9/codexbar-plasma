@@ -1075,6 +1075,117 @@ TestCase {
         verify(summary.hasUnmetered)
     }
 
+    function test_costTrustSummaryMakesExcludedRequestsPartial() {
+        var summary = CostPresentation.costTrustSummary([{
+            totals: { cost: 4, tokens: 40, currency: "USD" },
+            trust: {
+                coverage: { priced: 2, unpriced: 0, unmetered: 0, estimated: 0 },
+                sourceKind: "vendor",
+                incompleteRequests: 2
+            }
+        }])
+
+        compare(summary.level, "warning")
+        compare(summary.valueMode, "partial")
+        compare(summary.incompleteRequests, 2)
+        verify(!summary.hasUnpriced)
+        verify(!summary.hasUnmetered)
+    }
+
+    function test_costTrustSummaryAddsExcludedRequestsAcrossSnapshots() {
+        var summary = CostPresentation.costTrustSummary([
+            {
+                totals: { cost: 1, tokens: 10, currency: "USD" },
+                trust: { coverage: null, sourceKind: "vendor", incompleteRequests: 2 }
+            },
+            {
+                totals: { cost: 2, tokens: 20, currency: "USD" },
+                trust: { coverage: null, sourceKind: "vendor", incompleteRequests: 3 }
+            }
+        ])
+
+        compare(summary.incompleteRequests, 5)
+        compare(summary.valueMode, "partial")
+    }
+
+    function test_costTrustSummaryRejectsUnusableExcludedRequestCounts_data() {
+        return [
+            { tag: "absent", value: undefined },
+            { tag: "null", value: null },
+            { tag: "negative", value: -2 },
+            { tag: "fractional", value: 0.5 },
+            { tag: "text", value: "2" },
+            { tag: "nan", value: NaN },
+            { tag: "infinite", value: Infinity }
+        ]
+    }
+
+    function test_costTrustSummaryRejectsUnusableExcludedRequestCounts(data) {
+        var summary = CostPresentation.costTrustSummary([{
+            totals: { cost: 1, tokens: 10, currency: "USD" },
+            trust: { coverage: null, sourceKind: "vendor", incompleteRequests: data.value }
+        }])
+
+        compare(summary.incompleteRequests, 0)
+        compare(summary.valueMode, "plain")
+        compare(summary.level, "information")
+    }
+
+    function test_costTrustSummaryBoundsSaturatedExcludedRequestCounts() {
+        var summary = CostPresentation.costTrustSummary([
+            {
+                totals: { cost: 1, tokens: 10, currency: "USD" },
+                trust: { coverage: null, sourceKind: "vendor", incompleteRequests: 1000000000 }
+            },
+            {
+                totals: { cost: 2, tokens: 20, currency: "USD" },
+                trust: { coverage: null, sourceKind: "vendor", incompleteRequests: 1000000000 }
+            }
+        ])
+
+        compare(summary.incompleteRequests, 1000000000)
+    }
+
+    function test_costTrustSummaryQualifiesATokenOnlyTotalWithExcludedRequests() {
+        // The excluded requests are missing from the tokens as well, so the
+        // warning must survive a snapshot without a cost amount.
+        var summary = CostPresentation.costTrustSummary([{
+            totals: { tokens: 10, currency: "USD" },
+            trust: { coverage: null, sourceKind: "", incompleteRequests: 4 }
+        }])
+
+        compare(summary.level, "warning")
+        compare(summary.valueMode, "partial")
+        compare(summary.incompleteRequests, 4)
+    }
+
+    function test_costTrustSummaryStaysQuietWithoutAnyDisplayedAmount() {
+        compare(CostPresentation.costTrustSummary([{
+            totals: { tokens: 0, currency: "USD" },
+            trust: { coverage: null, sourceKind: "", incompleteRequests: 4 }
+        }]), null)
+    }
+
+    function test_costTrustNoticeKeyIgnoresTheExcludedRequestMagnitude() {
+        var one = CostPresentation.costTrustNoticeKey({
+            level: "warning", sourceKind: "vendor", incompleteRequests: 1
+        })
+        var many = CostPresentation.costTrustNoticeKey({
+            level: "warning", sourceKind: "vendor", incompleteRequests: 9
+        })
+        var none = CostPresentation.costTrustNoticeKey({
+            level: "warning", sourceKind: "vendor", incompleteRequests: 0
+        })
+
+        compare(one, many)
+        verify(one.indexOf("incomplete") !== -1)
+        verify(none.indexOf("complete") !== -1)
+        verify(none.indexOf("incomplete") === -1)
+        compare(CostPresentation.costTrustNoticeKey({ incompleteRequests: 3 }),
+            "information||exact|priced|metered|incomplete")
+        compare(CostPresentation.costTrustNoticeKey({ incompleteRequests: 0 }), "")
+    }
+
     function test_costTrustSummaryTreatsUnknownAsApproximateAndConservative() {
         var summary = CostPresentation.costTrustSummary([
             trustedCost("USD", null, "listPrice"),
@@ -1240,7 +1351,7 @@ TestCase {
 
         var state = CostPresentation.costTrustNoticeTransition(
             summary, null, false)
-        compare(state.key, "information|listPrice|estimated|priced|metered")
+        compare(state.key, "information|listPrice|estimated|priced|metered|complete")
         verify(state.shouldShow)
     }
 

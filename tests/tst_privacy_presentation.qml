@@ -146,11 +146,28 @@ TestCase {
         compare(Privacy.cost({}, true).trust, null)
         compare(Privacy.cost({ trust: {} }, true).trust, null)
         var source = { trust: { sourceKind: "vendor", coverage: { priced: 4 } } }
-        compare(Privacy.cost(source, true).trust, { sourceKind: "vendor", coverage: null })
+        compare(Privacy.cost(source, true).trust,
+            { sourceKind: "vendor", coverage: null, incompleteRequests: 0 })
         source.trust.coverage = { priced: 1, estimated: 0, unpriced: -1, unmetered: 0 }
         compare(Privacy.cost(source, true).trust.coverage, null)
         source.trust.sourceKind = "confidential"
         compare(Privacy.cost(source, true).trust, null)
+    }
+
+    function test_excludedRequestCountSurvivesPrivacyRedaction() {
+        // The count is a bounded figure with no identity, and it is the only
+        // evidence that the redacted totals are partial.
+        var counted = Privacy.cost({ trust: { incompleteRequests: 3 } }, true)
+        verify(counted.trust !== null)
+        compare(counted.trust.incompleteRequests, 3)
+        compare(counted.trust.sourceKind, "")
+        compare(counted.trust.coverage, null)
+
+        compare(Privacy.cost({ trust: { incompleteRequests: -1 } }, true).trust, null)
+        compare(Privacy.cost({ trust: { incompleteRequests: "3" } }, true).trust, null)
+        compare(Privacy.cost({
+            trust: { sourceKind: "vendor", incompleteRequests: 1.5 }
+        }, true).trust.incompleteRequests, 0)
     }
 
     function test_invalidQuotaRowsCannotCreateFalseZeroMeters() {
