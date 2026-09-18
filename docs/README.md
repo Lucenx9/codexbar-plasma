@@ -73,6 +73,10 @@ These synthetic captures appear in the project README or usage guide. The README
 captures are also included in the widget package. Replace the relevant image
 when the product changes instead of adding dated before/after copies.
 
+- [Popup tour](codexbar-plasma-tour.gif): the README animation stepping through
+  Overview, Usage & Spend, Sessions, and a provider detail tab. Rebuild it from
+  the `readme-` popup smoke scenarios; see
+  [runtime verification](development.md#runtime-verification).
 - [Overview](codexbar-plasma-overview.png)
 - [Provider details](codexbar-plasma-codex.png)
 - [Usage and spend](codexbar-plasma-usage-spend.png)
