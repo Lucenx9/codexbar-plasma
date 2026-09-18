@@ -1,11 +1,76 @@
 # CodexBar Plasma
 
-Track AI provider quotas, reset times, costs, and local agent sessions from your
-KDE Plasma 6 panel. CodexBar Plasma uses the
-[CodexBar CLI](https://github.com/steipete/CodexBar) for provider data and
-authentication. This repository contains the Linux Plasma widget only.
+Track Codex, Claude, Gemini, and 70+ more AI providers from your KDE Plasma 6
+panel. Quotas, reset windows, costs, local agent sessions, notifications, and
+multiple accounts per provider.
 
 [Install](#install) · [Features](#features) · [Troubleshooting](#troubleshooting) · [Development](#development)
+
+![Overview, Usage and Spend, Sessions, and a provider detail tab in the CodexBar popup](docs/codexbar-plasma-tour.gif)
+
+Widget 0.2.39 in Breeze Dark with synthetic data. The widget follows your Plasma
+theme; provider accent colors stay consistent across themes.
+
+## Install
+
+1. Install the Linux CLI from the
+   [official CodexBar release tarballs](https://github.com/steipete/CodexBar/releases/latest)
+   or another method documented by [upstream CodexBar](https://github.com/steipete/CodexBar).
+   Third-party packages such as AUR can lag behind upstream releases.
+   Set up your provider using the upstream instructions, then verify usage:
+
+   ```sh
+   codexbar usage --format json --json-only
+   ```
+
+2. Install the widget. From your panel, open **Add Widgets → Get New Widgets →
+   Download New Plasma Widgets**, search for **CodexBar**, and install it from
+   the [KDE Store](https://store.kde.org/p/2370789/).
+
+   Or download `codexbar-plasma.plasmoid` from the widget's
+   [latest release](https://github.com/Lucenx9/codexbar-plasma/releases/latest)
+   and run, in the directory containing that file:
+
+   ```sh
+   kpackagetool6 -t Plasma/Applet -i codexbar-plasma.plasmoid
+   ```
+
+   The GitHub release is the newest package; a store listing can trail it. The
+   widget's own update check always follows GitHub releases.
+
+3. Open your Plasma panel's **Add Widgets** chooser and add **CodexBar**.
+
+4. Open the widget settings. Use **Providers** to enable providers and supported
+   setup actions, **Panel** to adjust the compact display, and **General** to
+   choose refresh and privacy settings.
+
+Provider enable/disable and setup actions change the CLI configuration
+immediately. **Apply** and **Cancel** cover widget settings only.
+
+New widgets refresh quotas every five minutes, refresh again when you open the
+popup on quotas older than that interval, and show percent **used**. Warning
+and critical thresholds default to 80% and 95%. Existing settings are preserved
+when you upgrade.
+
+Failed refreshes retain quotas measured within the last 24 hours and identify
+them as last known.
+A redacted cache restores recent quotas after a Plasma restart while the CLI
+refreshes. See [data freshness](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#data-freshness)
+for its limits.
+
+## Requirements
+
+- KDE Plasma 6, `kpackagetool6`, and the `org.kde.plasma.plasma5support` QML module.
+- A working `codexbar` CLI, available on Plasma's `PATH` or through an absolute
+  path configured in the widget.
+- `notify-send` for Plasma notifications.
+- `curl`, `jq`, `python3`, `sha256sum`, and GNU `timeout` for the bundled release
+  updater. GNU `timeout` also bounds CLI writes after a secret prompt.
+
+Distribution package names vary. Source builds additionally need `make`, Python
+3, and GNU gettext; see [Development](#development).
+
+## Features
 
 | Standard panel | Minimal panel |
 | --- | --- |
@@ -21,12 +86,11 @@ sit beside primary and secondary quota capsules. Choose the appearance in
 | **Usage & Spend** | **Provider details** |
 | [![Thirty days of spending and activity across providers](docs/codexbar-plasma-usage-spend.png)](docs/codexbar-plasma-usage-spend.png) | [![Codex quotas, reset windows, and daily cost history](docs/codexbar-plasma-codex.png)](docs/codexbar-plasma-codex.png) |
 
-Click an image for full size. Panel captures show the capsule design released in
-0.2.36; popup captures show version 0.2.34. All use Breeze Dark with synthetic
-data. The widget follows your Plasma theme; provider accent colors stay
-consistent across themes.
-
-## Features
+The popup captures are the full-size stills behind the animation above. Click an
+image to open it. Panel captures show the capsule design released in 0.2.36;
+popup captures show version 0.2.34. All use Breeze Dark with synthetic data. The
+widget follows your Plasma theme; provider accent colors stay consistent across
+themes.
 
 - Quota meters, reset windows, account selection, and provider status in the panel
   and popup, with configurable quota warnings and Plasma notifications.
@@ -58,58 +122,6 @@ See the [usage and settings guide](https://github.com/Lucenx9/codexbar-plasma/bl
 for options and defaults, the [documentation index](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/README.md)
 for verified CLI evidence, and [Linux parity TODO](https://github.com/Lucenx9/codexbar-plasma/blob/main/TODO.md)
 for remaining Linux/Plasma work.
-
-## Requirements
-
-- KDE Plasma 6, `kpackagetool6`, and the `org.kde.plasma.plasma5support` QML module.
-- A working `codexbar` CLI, available on Plasma's `PATH` or through an absolute
-  path configured in the widget.
-- `notify-send` for Plasma notifications.
-- `curl`, `jq`, `python3`, `sha256sum`, and GNU `timeout` for the bundled release
-  updater. GNU `timeout` also bounds CLI writes after a secret prompt.
-
-Distribution package names vary. Source builds additionally need `make`, Python
-3, and GNU gettext; see [Development](#development).
-
-## Install
-
-1. Install the Linux CLI from the
-   [official CodexBar release tarballs](https://github.com/steipete/CodexBar/releases/latest)
-   or another method documented by [upstream CodexBar](https://github.com/steipete/CodexBar).
-   Third-party packages such as AUR can lag behind upstream releases.
-   Set up your provider using the upstream instructions, then verify usage:
-
-   ```sh
-   codexbar usage --format json --json-only
-   ```
-
-2. Download `codexbar-plasma.plasmoid` from the widget's
-   [latest release](https://github.com/Lucenx9/codexbar-plasma/releases/latest).
-   In the directory containing that file, run:
-
-   ```sh
-   kpackagetool6 -t Plasma/Applet -i codexbar-plasma.plasmoid
-   ```
-
-3. Open your Plasma panel's **Add Widgets** chooser and add **CodexBar**.
-
-4. Open the widget settings. Use **Providers** to enable providers and supported
-   setup actions, **Panel** to adjust the compact display, and **General** to
-   choose refresh and privacy settings.
-
-Provider enable/disable and setup actions change the CLI configuration
-immediately. **Apply** and **Cancel** cover widget settings only.
-
-New widgets refresh quotas every five minutes, refresh again when you open the
-popup on quotas older than that interval, and show percent **used**. Warning
-and critical thresholds default to 80% and 95%. Existing settings are preserved
-when you upgrade.
-
-Failed refreshes retain quotas measured within the last 24 hours and identify
-them as last known.
-A redacted cache restores recent quotas after a Plasma restart while the CLI
-refreshes. See [data freshness](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#data-freshness)
-for its limits.
 
 ## Update
 
