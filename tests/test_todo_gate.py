@@ -5,7 +5,8 @@ import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from todo_gate import DIFF_LIMIT, TODO_LIMIT, build_request, verdict
+from todo_gate import (DIFF_LIMIT, TODO_LIMIT, build_request, probability,
+                       threshold_argument, usage_line, verdict)
 
 
 def answered(probability):
@@ -47,10 +48,45 @@ class VerdictTests(unittest.TestCase):
 
     def test_malformed_answers_are_rejected(self):
         for broken in ({}, {"todo": {"type": "noul"}}, {"todo": {"noul": "high"}},
-                       {"todo": {"noul": True}}, {"todo": 0.9}, {"other": answered(0.9)}):
+                       {"todo": {"noul": True}}, {"todo": 0.9}, {"other": answered(0.9)},
+                       [], None):
             with self.subTest(broken=broken):
                 with self.assertRaises(ValueError):
                     verdict(broken, ["a"])
+
+    def test_out_of_range_scores_are_rejected_not_silently_passed(self):
+        for score in (float("nan"), float("inf"), float("-inf"), 1.5, -0.1):
+            with self.subTest(score=score):
+                with self.assertRaises(ValueError):
+                    verdict(answered(score), ["a"])
+
+
+class ProbabilityTests(unittest.TestCase):
+    def test_bounds_are_inclusive_and_finite(self):
+        self.assertEqual(probability(0.0, "p"), 0.0)
+        self.assertEqual(probability(1, "p"), 1.0)
+        for bad in (float("nan"), float("inf"), 1.01, -0.01, True, "0.5", None):
+            with self.subTest(bad=bad):
+                with self.assertRaises(ValueError):
+                    probability(bad, "p")
+
+    def test_threshold_argument_rejects_junk_and_out_of_range(self):
+        import argparse
+        self.assertEqual(threshold_argument("0.6"), 0.6)
+        for bad in ("nan", "inf", "2", "-1", "abc", ""):
+            with self.subTest(bad=bad):
+                with self.assertRaises(argparse.ArgumentTypeError):
+                    threshold_argument(bad)
+
+
+class UsageLineTests(unittest.TestCase):
+    def test_untrusted_usage_never_raises(self):
+        self.assertEqual(usage_line({"input_tokens": 12, "cost": 0.5}),
+                         "(12 input tokens, $0.500000)")
+        for usage in ({}, {"cost": "free"}, {"input_tokens": True, "cost": None},
+                      {"input_tokens": "many", "cost": [1]}):
+            with self.subTest(usage=usage):
+                self.assertIn("input tokens", usage_line(usage))
 
 
 if __name__ == "__main__":
