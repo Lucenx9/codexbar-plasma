@@ -102,7 +102,8 @@ function cliVersionAtLeast(value, requiredMajor, requiredMinor, requiredPatch) {
 // resolved executable, the rest is the CLI's own version banner. Both are
 // untrusted process output, so each is length-bounded and redacted, and a
 // resolved path is accepted only as a single absolute path without control
-// characters. Returns { commandPath, version }, either of which may be "".
+// characters. Its valid whitespace remains intact for an executable path.
+// Returns { commandPath, version }, either of which may be "".
 function environmentSummary(stdoutText) {
     if (typeof stdoutText !== "string") {
         return {commandPath: "", version: ""}
@@ -112,11 +113,15 @@ function environmentSummary(stdoutText) {
     // between them still exists.
     var lines = SafeText.stripLoaderDiagnostics(
         stdoutText, maximumEnvironmentTextLength).split("\n")
-    var candidate = SafeText.cliMessage(
-        lines.length > 0 ? lines[0] : "", maximumEnvironmentTextLength)
-    // Control characters have already become spaces, so one absolute path is
-    // exactly one leading slash followed by no whitespace at all.
-    var resolved = /^\/\S*$/.test(candidate) ? candidate : ""
+    var candidate = lines.length > 0 ? lines[0] : ""
+    // Check raw text before redaction: sanitizers can turn controls into
+    // harmless-looking spaces. Absolute executable paths may legitimately
+    // contain spaces, so preserve that whitespace after the control check.
+    var resolved = candidate.charAt(0) === "/"
+            && !/[\u0000-\u001f\u007f]/.test(candidate)
+        ? SafeText.redactCredentialsWithinSourceLimit(
+            candidate, maximumEnvironmentTextLength)
+        : ""
     return {
         commandPath: resolved,
         version: SafeText.cliMessage(lines.slice(1).join(" "), maximumCliVersionTextLength)
