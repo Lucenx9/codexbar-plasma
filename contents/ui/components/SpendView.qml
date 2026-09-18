@@ -437,23 +437,16 @@ ColumnLayout {
                         Layout.fillWidth: true
                         implicitHeight: spendProviderRow.implicitHeight + Kirigami.Units.smallSpacing * 1.5
                         radius: view.applet.nestedSurfaceRadius
-                        color: view.applet.withAlpha(Kirigami.Theme.textColor, spendProviderHover.hovered ? 0.075 : 0.035)
+                        // A passive display row: no hover state, because every
+                        // other highlighted surface in the popup acts on click
+                        // or reveals actions, and this one does neither.
+                        color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.035)
                         border.width: 1
                         border.color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.07)
-
-                        Behavior on color {
-                            ColorAnimation {
-                                duration: Kirigami.Units.shortDuration
-                            }
-                        }
 
                         Accessible.role: Accessible.ListItem
                         Accessible.name: view.applet.providerDisplayTitle(spendProviderCard.modelData.provider)
                         Accessible.description: spendProviderCard.modelData.windowValueLine
-
-                        HoverHandler {
-                            id: spendProviderHover
-                        }
 
                         RowLayout {
                             id: spendProviderRow
@@ -466,10 +459,14 @@ ColumnLayout {
                             Rectangle {
                                 Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
                                 Layout.preferredHeight: Layout.preferredWidth
-                                radius: Kirigami.Units.cornerRadius / 2
+                                // Same identity-tile treatment as the overview
+                                // and header tiles, scaled down for this row.
+                                radius: view.applet.nestedSurfaceRadius
                                 color: view.applet.withAlpha(view.applet.providerReadableColor(
                                     spendProviderCard.modelData.provider,
                                     Kirigami.Theme.backgroundColor), 0.12)
+                                border.width: 1
+                                border.color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
 
                                 Kirigami.Icon {
                                     anchors.centerIn: parent
