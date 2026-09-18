@@ -139,6 +139,7 @@ function resultIntent(payload, installMode) {
             successful: false,
             version: "",
             assetUrl: "",
+            releaseUrl: "",
             errorCode: boundedOwnString(payload, "errorCode", maximumErrorCodeLength),
             errorDetail: boundedOwnString(payload, "errorDetail", maximumErrorDetailLength),
             notificationKind: ""
@@ -150,6 +151,7 @@ function resultIntent(payload, installMode) {
             successful: true,
             version: boundedOwnString(payload, "remoteVersion", maximumVersionLength),
             assetUrl: Guards.hasOwnKey(payload, "assetUrl") ? boundedHttpsUrl(payload.assetUrl) : "",
+            releaseUrl: Guards.hasOwnKey(payload, "releaseUrl") ? boundedHttpsUrl(payload.releaseUrl) : "",
             errorCode: "",
             errorDetail: "",
             notificationKind: installMode === true ? "" : "available"
@@ -161,6 +163,7 @@ function resultIntent(payload, installMode) {
             successful: true,
             version: boundedOwnString(payload, "remoteVersion", maximumVersionLength),
             assetUrl: "",
+            releaseUrl: "",
             errorCode: "",
             errorDetail: "",
             notificationKind: "installed"
@@ -172,6 +175,7 @@ function resultIntent(payload, installMode) {
             successful: true,
             version: "",
             assetUrl: "",
+            releaseUrl: "",
             errorCode: "",
             errorDetail: "",
             notificationKind: ""
@@ -183,6 +187,7 @@ function resultIntent(payload, installMode) {
         status: status,
         version: "",
         assetUrl: "",
+        releaseUrl: "",
         errorCode: "",
         errorDetail: "",
         notificationKind: ""

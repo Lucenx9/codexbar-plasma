@@ -8,8 +8,10 @@ Item {
 
     readonly property bool sending: CommandLedger.hasDeadlines(lifecycle.commands)
 
-    function send(title, body, urgency) {
-        return lifecycle.dispatch(title, body, urgency);
+    signal activated(string sourceName)
+
+    function send(title, body, urgency, actionLabel) {
+        return lifecycle.dispatch(title, body, urgency, actionLabel);
     }
 
     Component.onDestruction: lifecycle.retire()
@@ -21,20 +23,27 @@ Item {
         property int runSerial: 0
         property bool destroyed: false
         readonly property int notificationCommandTimeoutMs: 10000
+        // A clickable notification blocks until it is activated or closed, so
+        // its command needs a longer bounded lifetime than a fire-and-forget
+        // send.
+        readonly property int notificationActionCommandTimeoutMs: 120000
 
-        function dispatch(title, body, urgency) {
+        function dispatch(title, body, urgency, actionLabel) {
             if (destroyed)
-                return false;
-            var command = NotificationCommand.command(title, body, urgency);
+                return "";
+            var command = NotificationCommand.command(title, body, urgency, actionLabel);
             if (command.length === 0)
-                return false;
+                return "";
             runSerial += 1;
             var sourceName = CommandLedger.withRunNonce(command, runSerial);
-            var descriptor = CommandLedger.descriptor("notification", "", Date.now(), notificationCommandTimeoutMs);
+            var timeout = command.indexOf("--action=") >= 0
+                ? notificationActionCommandTimeoutMs
+                : notificationCommandTimeoutMs;
+            var descriptor = CommandLedger.descriptor("notification", "", Date.now(), timeout);
             // Plasma may publish a cached result while connecting the source.
             commands = CommandLedger.opened(commands, sourceName, descriptor);
             notificationSource.connectSource(sourceName);
-            return true;
+            return sourceName;
         }
 
         function finish(sourceName) {
@@ -57,6 +66,14 @@ Item {
                 notificationSource.disconnectSource(sources[i]);
             }
         }
+
+        function actionActivated(data) {
+            var exitCode = data && data["exit code"] !== undefined ? Number(data["exit code"]) : 0
+            if (exitCode !== 0)
+                return false
+            var stdoutText = data && typeof data["stdout"] === "string" ? data["stdout"] : ""
+            return stdoutText.slice(0, 64).trim() === "default"
+        }
     }
 
     Timer {
@@ -75,7 +92,11 @@ Item {
                 notificationSource.disconnectSource(sourceName);
                 return;
             }
+            var actionActivated = lifecycle.actionActivated(data);
             lifecycle.finish(sourceName);
+            if (actionActivated) {
+                controller.activated(sourceName);
+            }
         }
     }
 }

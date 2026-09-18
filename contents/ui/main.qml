@@ -136,6 +136,10 @@ PlasmoidItem {
     property var notificationRefreshPending: ({})
     property bool notificationsPrimed: false
     property string lastNotifiedUpdateVersion: Plasmoid.configuration.lastNotifiedUpdateVersion || ""
+    // Keyed by notification source name: queued actionable update
+    // notifications stay independently clickable, and entries leave only with
+    // their own activation.
+    property var pendingUpdateReleaseUrls: ({})
     readonly property bool verticalFormFactor: Plasmoid.formFactor === PlasmaCore.Types.Vertical
     readonly property var overviewProviderItems: overviewProviders()
     readonly property bool globalNavigationAvailable: provider.length === 0
@@ -1692,13 +1696,18 @@ PlasmoidItem {
         }
     }
 
-    function sendPlasmaNotification(title, body, urgency) {
+    function sendPlasmaNotification(title, body, urgency, actionLabel) {
         var cleanTitle = privacyMode ? "CodexBar" : String(title || "CodexBar").trim()
         var cleanBody = privacyMode ? i18n("Usage or status changed. Open CodexBar for details.") : String(body || "").trim()
-        notificationDispatcher.send(cleanTitle, cleanBody, urgency)
+        return notificationDispatcher.send(cleanTitle, cleanBody, urgency, actionLabel)
     }
 
-    function notifyAvailableUpdate(version, url) {
+    function safeReleaseUrl(url) {
+        var candidate = typeof url === "string" ? url.trim() : ""
+        return candidate.length <= 2048 && Normalizer.httpsUrlHost(candidate) === "github.com" ? candidate : ""
+    }
+
+    function notifyAvailableUpdate(version, url, releaseUrl) {
         if (!enableNotifications || !updateNotificationsEnabled) {
             return
         }
@@ -1713,7 +1722,25 @@ PlasmoidItem {
         var body = cleanVersion.length > 0
             ? i18n("Version %1 is available.", cleanVersion)
             : i18n("A new widget version is available.")
-        sendPlasmaNotification(title, body, "normal")
+        var releasePageUrl = safeReleaseUrl(releaseUrl)
+        var actionLabel = releasePageUrl.length > 0 ? i18n("Open release page") : ""
+        var sourceName = sendPlasmaNotification(title, body, "normal", actionLabel)
+        if (releasePageUrl.length > 0 && sourceName.length > 0 && !Guards.isUnsafeObjectKey(sourceName)) {
+            var nextPending = copyObject(pendingUpdateReleaseUrls)
+            nextPending[sourceName] = releasePageUrl
+            pendingUpdateReleaseUrls = nextPending
+        }
+    }
+
+    function handleUpdateNotificationActivated(sourceName) {
+        if (sourceName.length === 0 || !hasOwnKey(pendingUpdateReleaseUrls, sourceName)) {
+            return
+        }
+        var nextPending = copyObject(pendingUpdateReleaseUrls)
+        var releasePageUrl = nextPending[sourceName]
+        delete nextPending[sourceName]
+        pendingUpdateReleaseUrls = nextPending
+        Qt.openUrlExternally(releasePageUrl)
     }
 
     function notifyInstalledUpdate(version) {
@@ -2602,6 +2629,10 @@ PlasmoidItem {
 
     Controllers.NotificationDispatcher {
         id: notificationDispatcher
+
+        onActivated: function(sourceName) {
+            root.handleUpdateNotificationActivated(sourceName)
+        }
     }
 
     Controllers.UsageController {
@@ -2666,8 +2697,8 @@ PlasmoidItem {
         onCheckSucceeded: function(timestamp) {
             Plasmoid.configuration.autoUpdateLastCheck = timestamp
         }
-        onUpdateAvailable: function(version, assetUrl) {
-            root.notifyAvailableUpdate(version, assetUrl)
+        onUpdateAvailable: function(version, assetUrl, releaseUrl) {
+            root.notifyAvailableUpdate(version, assetUrl, releaseUrl)
         }
         onUpdateInstalled: function(version) {
             root.notifyInstalledUpdate(version)

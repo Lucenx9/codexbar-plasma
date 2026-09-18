@@ -1,6 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/NotificationCommand.js" as NotificationCommand
+import "../contents/ui/Guards.js" as Guards
 
 TestCase {
     name: "NotificationCommand"
@@ -111,10 +112,48 @@ TestCase {
     }
 
     function test_textBounds() {
-        var title = "t".repeat(NotificationCommand.maximumTitleLength);
-        var body = "b".repeat(NotificationCommand.maximumBodyLength);
-        var expected = NotificationCommand.command(title, body, "normal");
+        var title = "t".repeat(NotificationCommand.maximumTitleLength)
+        var body = "b".repeat(NotificationCommand.maximumBodyLength)
+        var expected = NotificationCommand.command(title, body, "normal")
 
-        compare(NotificationCommand.command(title + "extra", body + "extra", "normal"), expected);
+        compare(NotificationCommand.command(title + "extra", body + "extra", "normal"), expected)
+    }
+
+    function test_actionlessSendsStayOnThePlainCommand() {
+        var plain = NotificationCommand.command("title", "body", "normal")
+
+        compare(NotificationCommand.command("title", "body", "normal", undefined), plain)
+        compare(NotificationCommand.command("title", "body", "normal", ""), plain)
+        compare(NotificationCommand.command("title", "body", "normal", "   "), plain)
+        compare(NotificationCommand.command("title", "body", "normal", 42), plain)
+        compare(NotificationCommand.command("title", "body", "normal", ["label"]), plain)
+        compare(NotificationCommand.command("title", "body", "normal", { toString: null }), plain)
+    }
+
+    function test_actionSendRegistersTheDefaultActionAndFallsBack() {
+        var command = NotificationCommand.command("title", "body", "normal", "Open release page")
+
+        verify(command.indexOf("notify-send --help 2>&1 | grep -q -- '--action'") >= 0)
+        verify(command.indexOf("--urgency='normal' --action=" + Guards.shellQuote("default=Open release page") + " -- 'title' 'body'") >= 0)
+        // The pre-0.8 fallback keeps the exact plain send.
+        verify(command.indexOf("else notify-send --app-name=CodexBar --icon=view-statistics --urgency='normal' -- 'title' 'body'; fi; fi") >= 0)
+    }
+
+    function test_actionLabelBounds() {
+        var label = "l".repeat(NotificationCommand.maximumActionLabelLength)
+        var command = NotificationCommand.command("title", "body", "low", label + "extra")
+
+        verify(command.indexOf("--action=" + Guards.shellQuote("default=" + label) + " ") >= 0)
+        verify(command.indexOf("extra") < 0)
+    }
+
+    function test_actionLabelCannotInjectShellSyntax() {
+        var marker = "/synthetic-marker"
+        var command = NotificationCommand.command("title", "body", "normal", "' ; touch " + marker + "; #")
+
+        verify(command.indexOf("--action=" + Guards.shellQuote("default=' ; touch " + marker + "; #") + " ") >= 0)
+        // The marker stays inside the quoted action label: exactly one
+        // occurrence, never as a standalone command.
+        compare(command.split(marker).length, 2)
     }
 }

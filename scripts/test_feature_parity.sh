@@ -482,7 +482,7 @@ require_in_surface applet "property bool enableNotifications"
 require_in_surface applet "property bool updateChecksEnabled"
 require_in_surface applet "function buildUpdateCommand(installMode)"
 require_in_surface applet "UpdateLogic.resultIntent(payload, installMode)"
-require_in_surface applet "function notifyAvailableUpdate(version, url)"
+require_in_surface applet "function notifyAvailableUpdate(version, url, releaseUrl)"
 require_in_surface applet "function boundedWidgetUpdateText(value)"
 require_in_surface applet "boundedWidgetUpdateText(errorText)"
 require_in_surface applet "property bool autoSelectProvider"
@@ -508,12 +508,16 @@ require_in_surface applet "function dispatchNotificationIntents(intents, observa
 require_in_surface applet "NotificationPlanner.transition("
 require_in_surface applet "function quotaNotificationLevel(row)"
 require_in_surface applet "function notificationUrgency(severity)"
-require_in_surface applet "function sendPlasmaNotification(title, body, urgency)"
+require_in_surface applet "function sendPlasmaNotification(title, body, urgency, actionLabel)"
 require_in_surface applet 'kind: "quota"'
 require_in_surface applet 'kind: "pace"'
 require_in_surface applet 'kind: "reset"'
 require_in_surface applet "notify-send --app-name=CodexBar"
-require_in_surface applet "notificationDispatcher.send(cleanTitle, cleanBody, urgency)"
+require_in_surface applet "notificationDispatcher.send(cleanTitle, cleanBody, urgency, actionLabel)"
+# Clicking the update-available notification opens the release page on GitHub.
+require_in_surface applet "i18n(\"Open release page\")"
+require_in_surface applet "function safeReleaseUrl(url)"
+require_in_surface applet "Qt.openUrlExternally(releasePageUrl)"
 require_in_surface applet "property bool costUsageEnabled"
 require_in_surface applet "property int costHistoryDays"
 # Cost and tokens both come from one cost payload: switching the plotted metric

@@ -47,6 +47,7 @@ emit_status() {
   local asset_url="${5:-}"
   local error_code="${6:-}"
   local error_detail="${7:-}"
+  local release_url="${8:-}"
   jq -n \
     --arg status "$status" \
     --arg message "$message" \
@@ -55,7 +56,8 @@ emit_status() {
     --arg assetUrl "$asset_url" \
     --arg errorCode "$error_code" \
     --arg errorDetail "$error_detail" \
-    '{status: $status, message: $message, localVersion: $localVersion, remoteVersion: $remoteVersion, assetUrl: $assetUrl, errorCode: $errorCode, errorDetail: $errorDetail}'
+    --arg releaseUrl "$release_url" \
+    '{status: $status, message: $message, localVersion: $localVersion, remoteVersion: $remoteVersion, assetUrl: $assetUrl, errorCode: $errorCode, errorDetail: $errorDetail, releaseUrl: $releaseUrl}'
 }
 
 fail() {
@@ -204,7 +206,7 @@ if [[ "$MODE" != "check" && "$MODE" != "install" ]]; then
 fi
 
 if ! command -v jq >/dev/null 2>&1; then
-  printf '{"status":"error","message":"missing required command: jq","localVersion":"","remoteVersion":"","assetUrl":"","errorCode":"missing_tool","errorDetail":"jq"}\n'
+  printf '{"status":"error","message":"missing required command: jq","localVersion":"","remoteVersion":"","assetUrl":"","errorCode":"missing_tool","errorDetail":"jq","releaseUrl":""}\n'
   exit 1
 fi
 
@@ -286,6 +288,10 @@ if [[ ! "$remote_version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   fail "release_metadata_invalid" "release tag must use vX.Y.Z"
 fi
 
+# Derived from the validated tag, not read from the payload, so the frontend
+# can trust it without another field in the release contract.
+release_page_url="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/tag/${remote_version}"
+
 if [[ "$is_draft" == "true" || "$is_prerelease" == "true" ]]; then
   emit_status "skipped" "latest release is draft or prerelease" "$local_version" "$remote_version" "$asset_url"
   exit 0
@@ -313,7 +319,7 @@ checksum_size="$(jq -r --arg name "$CHECKSUM_NAME" '.assets[] | select(.name == 
 checksum_digest="$(jq -r --arg name "$CHECKSUM_NAME" '.assets[] | select(.name == $name) | .digest' "$RELEASE_JSON")"
 
 if [[ "$MODE" == "check" ]]; then
-  emit_status "available" "widget update is available" "$local_version" "$remote_version" "$asset_url"
+  emit_status "available" "widget update is available" "$local_version" "$remote_version" "$asset_url" "" "" "$release_page_url"
   exit 0
 fi
 
