@@ -15,3 +15,6 @@ __pycache__/
 *.pyc
 # Compiled from po/*.po by make package; included in the .plasmoid archive.
 contents/locale/
+# Crash dumps the kernel writes beside the tests when qmltestrunner or the
+# smoke scripts abort. They embed process memory, so they must never be added.
+core.[0-9]*
