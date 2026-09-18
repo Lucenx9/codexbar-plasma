@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Publish a Ko-fi donation link through the repository **Sponsor** button and a
+  README **Support** section.
 - Tell an unreachable CodexBar CLI apart from a provider that is not set up.
   When the shell reports the configured command as not found or not executable,
   the empty popup now says so, names the configured value, and points at
