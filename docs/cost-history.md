@@ -53,10 +53,22 @@ payload; the selected metric also controls bar scaling. Metric and day selection
 must not add CLI calls. `historyCoverageIsEstablished` controls the collecting
 history notice; a missing flag counts as established for legacy payloads.
 
-`ProviderNormalizer.normalizeCostTrustMetadata` bounds `coverage` and `provenance`.
-`CostPresentation.costTrustSummary` qualifies provider and global amounts with
-one shared notice. Missing legacy metadata stays quiet. Keep pricing coverage
-separate from history collection coverage and never expose raw provenance in QML.
+`ProviderNormalizer.normalizeCostTrustMetadata` bounds `coverage`, `provenance`,
+and the official `incompleteRequestCount`. `CostPresentation.costTrustSummary`
+qualifies provider and global amounts with one shared notice. Missing legacy
+metadata stays quiet. Keep pricing coverage separate from history collection
+coverage and never expose raw provenance in QML.
+
+Official CLI 0.60.5 reports `incompleteRequestCount` on the cost payload, its
+`totals`, each daily entry, and each model breakdown, omitting the key when no
+request was excluded. The counts describe requests that lacked final usage and
+are therefore missing from the reported tokens and cost. Treat them as a
+partial-total marker only: sum them under the coverage bound, never fold them
+into an amount, and keep the notice semantic so a changed count cannot revive a
+dismissed warning. A day whose requests are all incomplete arrives without
+`totalCost` and `totalTokens`, which daily normalization already keeps unknown
+instead of turning into a measured zero. Privacy mode keeps the count, which
+carries no identity.
 
 `normalizeCostProjects` retains bounded names and optional amounts, discarding
 paths and nested source records. Preserve unknown amounts and duplicate names;
@@ -88,6 +100,10 @@ The scoped implementation used official CodexBar v0.56.8, commit
 The existing daily model fields are `modelName`, `cost`, and `totalTokens`.
 This adds no command or provider-specific source and does not replace the full
 [0.56.2 parity baseline](research/2026-09-01-macos-parity-0.56.2.md).
+
+The incomplete-request counts were verified in official Linux 0.60.5 output;
+the [0.60.5 review](research/2026-09-18-macos-parity-0.60.5.md#scoped-official-linux-probes)
+records the checksum-verified asset, the isolated probes, and the emitted keys.
 
 The official Linux x86_64 release archive was checksum-verified with SHA-256
 `ab98788e12840e5689ae505bf62731e0ea0db1c77e63dceda1589b6e795ac5b8`.

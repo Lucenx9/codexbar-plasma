@@ -86,6 +86,20 @@ msgid "Some usage costs in the selected range are estimated."
 msgstr "Alguns custos de uso no intervalo selecionado são estimados."
 
 #: contents/ui/components/CostTrustNotice.qml
+msgid ""
+"%1 request in the selected range lacked final usage, so it is excluded from "
+"the displayed totals."
+msgid_plural ""
+"%1 requests in the selected range lacked final usage, so they are excluded "
+"from the displayed totals."
+msgstr[0] ""
+"%1 solicitação no intervalo selecionado não tem uso final, portanto está "
+"excluída dos totais exibidos."
+msgstr[1] ""
+"%1 solicitações no intervalo selecionado não têm uso final, portanto estão "
+"excluídas dos totais exibidos."
+
+#: contents/ui/components/CostTrustNotice.qml
 msgid "The displayed range total is estimated from public list prices."
 msgstr ""
 "O total exibido para o intervalo é estimado com base nos preços públicos de "

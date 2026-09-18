@@ -10,6 +10,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Added
+
+- Mark cost totals as partial when the CLI excluded requests that lacked final
+  usage, naming how many were left out of the displayed cost and tokens. The
+  notice appears for a provider and for the aggregate **Usage & Spend** total,
+  and closing it keeps the same warning closed even when the count changes.
+
 ## 0.2.39 - 2026-09-17
 
 ### Fixed

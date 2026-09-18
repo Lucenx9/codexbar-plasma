@@ -674,10 +674,26 @@ function normalizedCostCoverage(coverage) {
     return result
 }
 
-// `coverage` and `provenance` describe how trustworthy the top-level cost
-// figures are. Preserve only the official bounded contract and translate the
-// provenance wire enum before the snapshot becomes QML state; older payloads
-// and records whose two axes are both unusable remain quiet.
+// CLI 0.60.5 counts requests that lacked final usage and were excluded from
+// the reported tokens and cost. The key is omitted when none were excluded, so
+// an absent, malformed, or negative value means "none reported" rather than an
+// unknown amount. The upstream sum saturates, so accept the same bound as the
+// coverage counts and keep anything larger as the bound.
+function normalizedIncompleteRequestCount(value) {
+    if (typeof value !== "number"
+            || !isFinite(value)
+            || Math.floor(value) !== value
+            || value <= 0) {
+        return 0
+    }
+    return Math.min(value, maximumCostCoverageCount)
+}
+
+// `coverage`, `provenance`, and the incomplete-request count describe how
+// trustworthy the top-level cost figures are. Preserve only the official
+// bounded contract and translate the provenance wire enum before the snapshot
+// becomes QML state; older payloads and records whose axes are all unusable
+// remain quiet.
 function normalizeCostTrustMetadata(rawCostRecord) {
     if (!isCliRecord(rawCostRecord)) {
         return null
@@ -686,6 +702,8 @@ function normalizeCostTrustMetadata(rawCostRecord) {
     var coverage = hasOwnKey(rawCostRecord, "coverage")
         ? normalizedCostCoverage(rawCostRecord.coverage)
         : null
+    var incompleteRequests = normalizedIncompleteRequestCount(
+        rawCostRecord.incompleteRequestCount)
     var sourceKind = ""
     if (hasOwnKey(rawCostRecord, "provenance")
             && typeof rawCostRecord.provenance === "string") {
@@ -703,8 +721,12 @@ function normalizeCostTrustMetadata(rawCostRecord) {
         }
     }
 
-    return coverage !== null || sourceKind.length > 0
-        ? { coverage: coverage, sourceKind: sourceKind }
+    return coverage !== null || sourceKind.length > 0 || incompleteRequests > 0
+        ? {
+            coverage: coverage,
+            sourceKind: sourceKind,
+            incompleteRequests: incompleteRequests
+        }
         : null
 }
 

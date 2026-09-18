@@ -21,6 +21,7 @@
 var maximumCostHistoryPoints = 365
 var maximumProjectRows = 128
 var maximumCostTrustNoticeScopes = 128
+var maximumIncompleteRequests = 1000000000
 
 // Locale separators, resolved once by the caller from `Qt.locale()`.
 function numberFormat(groupSeparator, decimalPoint) {
@@ -706,6 +707,28 @@ function acceptedCostCoverage(value) {
     return value
 }
 
+// Excluded requests are counted, never summed into an amount. Keep the total
+// bounded so a saturated upstream count cannot overflow the joined notice.
+function acceptedIncompleteRequests(trust) {
+    if (trust === null
+            || typeof trust !== "object"
+            || Array.isArray(trust)
+            || !hasOwnKey(trust, "incompleteRequests")) {
+        return 0
+    }
+    var count = trust.incompleteRequests
+    return typeof count === "number"
+            && isFinite(count)
+            && Math.floor(count) === count
+            && count > 0
+        ? Math.min(count, maximumIncompleteRequests)
+        : 0
+}
+
+function boundedIncompleteRequests(count) {
+    return Math.min(Math.max(0, count), maximumIncompleteRequests)
+}
+
 function acceptedCostSourceKind(value) {
     return typeof value === "string"
             && ["listPrice", "vendor", "mixed", "unknown"]
@@ -773,6 +796,8 @@ function costTrustSummary(costs) {
     var hasUnknown = false
     var hasUnclassifiedSource = false
     var hasDisplayedCost = false
+    var hasDisplayedTokens = false
+    var incompleteRequests = 0
 
     for (var i = 0; i < items.length; i++) {
         var item = items[i]
@@ -785,6 +810,10 @@ function costTrustSummary(costs) {
         }
         hasDisplayedCost = hasDisplayedCost
             || itemHasCost
+        // Excluded requests are missing from the token totals too, so a
+        // token-only snapshot still has an amount they can qualify.
+        hasDisplayedTokens = hasDisplayedTokens
+            || (hasMetricValue(item.totals, true) && item.totals.tokens > 0)
         if (!hasOwnKey(item, "trust")
                 || item.trust === null
                 || typeof item.trust !== "object"
@@ -801,6 +830,9 @@ function costTrustSummary(costs) {
             hasUnpriced = hasUnpriced || coverage.unpriced > 0
             hasUnmetered = hasUnmetered || coverage.unmetered > 0
         }
+
+        incompleteRequests = boundedIncompleteRequests(
+            incompleteRequests + acceptedIncompleteRequests(item.trust))
 
         var sourceKind = hasOwnKey(item.trust, "sourceKind")
             ? acceptedCostSourceKind(item.trust.sourceKind)
@@ -845,8 +877,10 @@ function costTrustSummary(costs) {
         sourceKind = "unknown"
     }
 
-    var isPartial = hasUnpriced || hasUnmetered
-    if (!hasDisplayedCost
+    var hasExcludedRequests = incompleteRequests > 0
+        && (hasDisplayedCost || hasDisplayedTokens)
+    var isPartial = hasUnpriced || hasUnmetered || hasExcludedRequests
+    if ((!hasDisplayedCost && !hasExcludedRequests)
             || (!hasEstimated && !isPartial && sourceKind.length === 0)) {
         return null
     }
@@ -859,7 +893,8 @@ function costTrustSummary(costs) {
         sourceKind: sourceKind,
         hasEstimated: hasEstimated,
         hasUnpriced: hasUnpriced,
-        hasUnmetered: hasUnmetered
+        hasUnmetered: hasUnmetered,
+        incompleteRequests: hasExcludedRequests ? incompleteRequests : 0
     }
 }
 
@@ -879,10 +914,14 @@ function costTrustNoticeKey(summary) {
         && summary.hasUnpriced === true
     var hasUnmetered = hasOwnKey(summary, "hasUnmetered")
         && summary.hasUnmetered === true
+    // Dismissal is semantic: a changed count describes the same warning, so it
+    // must not revive a notice the user already closed.
+    var hasIncomplete = acceptedIncompleteRequests(summary) > 0
     if (sourceKind.length === 0
             && !hasEstimated
             && !hasUnpriced
-            && !hasUnmetered) {
+            && !hasUnmetered
+            && !hasIncomplete) {
         return ""
     }
 
@@ -892,7 +931,8 @@ function costTrustNoticeKey(summary) {
         sourceKind,
         hasEstimated ? "estimated" : "exact",
         hasUnpriced ? "unpriced" : "priced",
-        hasUnmetered ? "unmetered" : "metered"
+        hasUnmetered ? "unmetered" : "metered",
+        hasIncomplete ? "incomplete" : "complete"
     ].join("|")
 }
 

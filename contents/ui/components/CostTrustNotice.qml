@@ -100,6 +100,23 @@ PlainInlineMessage {
         return ""
     }
 
+    // The CLI reports how many requests it excluded from the displayed amounts.
+    // Keep it a separate sentence so the coverage and source wording that
+    // translators already have stays untouched.
+    function incompleteText() {
+        var count = summary && typeof summary.incompleteRequests === "number"
+            && isFinite(summary.incompleteRequests)
+            ? Math.floor(summary.incompleteRequests)
+            : 0
+        if (count <= 0) {
+            return ""
+        }
+        return i18np(
+            "%1 request in the selected range lacked final usage, so it is excluded from the displayed totals.",
+            "%1 requests in the selected range lacked final usage, so they are excluded from the displayed totals.",
+            count)
+    }
+
     function sourceText() {
         if (!summary) {
             return ""
@@ -119,11 +136,25 @@ PlainInlineMessage {
     }
 
     function summaryText() {
+        var sentences = []
         var coverage = coverageText()
-        var source = sourceText()
-        if (coverage.length > 0 && source.length > 0) {
-            return i18n("%1 %2", coverage, source)
+        if (coverage.length > 0) {
+            sentences.push(coverage)
         }
-        return coverage.length > 0 ? coverage : source
+        var incomplete = incompleteText()
+        if (incomplete.length > 0) {
+            sentences.push(incomplete)
+        }
+        var source = sourceText()
+        if (source.length > 0) {
+            sentences.push(source)
+        }
+        // Join with the sentence separator translators already have instead of
+        // adding a placeholder-only message per sentence count.
+        var text = sentences.length > 0 ? sentences[0] : ""
+        for (var i = 1; i < sentences.length; i++) {
+            text = i18n("%1 %2", text, sentences[i])
+        }
+        return text
     }
 }

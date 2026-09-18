@@ -2879,6 +2879,9 @@ for cost_trust_fragment in (
     "&& presentationVisible",
     'i18n("%1 %2"',
     'i18n("The displayed range total',
+    'i18np(',
+    "lacked final usage",
+    "function incompleteText()",
 ):
     if cost_trust_fragment not in cost_trust_notice_text:
         raise AssertionError(

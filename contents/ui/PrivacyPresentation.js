@@ -79,8 +79,16 @@ function costTrust(value) {
     }
     var coverage = Normalizer.normalizedCostCoverage(field(value, "coverage", null))
     var sourceKind = known(field(value, "sourceKind", ""), ["listPrice", "vendor", "mixed", "unknown"], "")
-    return coverage !== null || sourceKind.length > 0
-        ? { coverage: coverage, sourceKind: sourceKind } : null
+    // A request count carries no identity, so privacy mode keeps the same
+    // partial-total warning the ordinary snapshot shows.
+    var incompleteRequests = Normalizer.normalizedIncompleteRequestCount(
+        field(value, "incompleteRequests", 0))
+    return coverage !== null || sourceKind.length > 0 || incompleteRequests > 0
+        ? {
+            coverage: coverage,
+            sourceKind: sourceKind,
+            incompleteRequests: incompleteRequests
+        } : null
 }
 
 // resetCreditsSection builds both strings from local translation literals and

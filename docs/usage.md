@@ -275,10 +275,13 @@ Provider-specific editable settings depend on the official CLI contract.
   0.56.2 exposes project data for Codex. Missing amounts remain unavailable;
   project paths and nested source records are discarded. The bounded list
   signals omitted projects and does not change provider or global totals.
-- Cost-trust notices explain why a range is incomplete or estimated. Closing a
+- Cost-trust notices explain why a range is incomplete or estimated, including
+  how many requests the CLI excluded from the displayed totals because they
+  lacked final usage. Closing a
   notice suppresses the same meaning for that provider or the aggregate Spend
   view across refreshes and popup reopenings; a materially different warning is
-  shown again.
+  shown again. A changed count of excluded requests describes the same warning
+  and stays closed.
 
 See [Cost history](cost-history.md) for data bounds, selection rules, and
 evidence. Dashboard extras and additional history views require official CLI

@@ -878,6 +878,62 @@ TestCase {
         compare(Normalizer.normalizeCostTrustMetadata([]), null)
     }
 
+    function test_costTrustMetadataKeepsTheOfficialIncompleteRequestCount() {
+        var counted = Normalizer.normalizeCostTrustMetadata({
+            coverage: { priced: 1, unpriced: 0, unmetered: 1, estimated: 0 },
+            provenance: "listPriceEstimate",
+            incompleteRequestCount: 3
+        })
+        compare(counted.incompleteRequests, 3)
+
+        // The count alone qualifies the displayed total, so it must survive
+        // without coverage or provenance.
+        var countOnly = Normalizer.normalizeCostTrustMetadata({
+            provider: "claude",
+            incompleteRequestCount: 1
+        })
+        verify(countOnly !== null)
+        compare(countOnly.incompleteRequests, 1)
+        compare(countOnly.coverage, null)
+        compare(countOnly.sourceKind, "")
+    }
+
+    function test_costTrustMetadataRejectsUnusableIncompleteCounts_data() {
+        return [
+            { tag: "absent", value: undefined },
+            { tag: "null", value: null },
+            { tag: "zero", value: 0 },
+            { tag: "negative", value: -4 },
+            { tag: "fractional", value: 1.5 },
+            { tag: "text", value: "3" },
+            { tag: "nan", value: NaN },
+            { tag: "infinite", value: Infinity },
+            { tag: "boolean", value: true },
+            { tag: "record", value: { count: 2 } }
+        ]
+    }
+
+    function test_costTrustMetadataRejectsUnusableIncompleteCounts(data) {
+        compare(Normalizer.normalizeCostTrustMetadata({
+            provider: "claude",
+            incompleteRequestCount: data.value
+        }), null)
+
+        var withCoverage = Normalizer.normalizeCostTrustMetadata({
+            coverage: { priced: 1, unpriced: 0, unmetered: 0, estimated: 0 },
+            incompleteRequestCount: data.value
+        })
+        compare(withCoverage.incompleteRequests, 0)
+    }
+
+    function test_costTrustMetadataBoundsASaturatedIncompleteCount() {
+        var saturated = Normalizer.normalizeCostTrustMetadata({
+            provider: "claude",
+            incompleteRequestCount: 9223372036854775807
+        })
+        compare(saturated.incompleteRequests, 1000000000)
+    }
+
     function test_costRecordErrorDetectionUsesTheOfficialEnvelope() {
         verify(Normalizer.costRecordHasError({
             provider: "codex",
