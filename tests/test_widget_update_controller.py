@@ -61,6 +61,8 @@ TestCase {
             autoUpdateLastCheck: new Date().toISOString()});
         tryCompare(succeeded, "count", 1);
         compare(available.count, 1);
+        compare(available.signalArguments[0][0], "2.0");
+        compare(available.signalArguments[0][2], "https://github.com/Lucenx9/codexbar-plasma/releases/tag/v2.0");
         updater.checkNow();
         updater.checkNow();
         verify(updater.busy);
@@ -148,7 +150,7 @@ sleep 0.2
 if [ "$1" = --install ]; then
     printf '%s\\n' '{"status":"installed","remoteVersion":"2.0"}'
 else
-    printf '%s\\n' '{"status":"available","remoteVersion":"2.0","assetUrl":"https://example.test/widget"}'
+    printf '%s\\n' '{"status":"available","remoteVersion":"2.0","assetUrl":"https://example.test/widget","releaseUrl":"https://github.com/Lucenx9/codexbar-plasma/releases/tag/v2.0"}'
 fi
 '''
 

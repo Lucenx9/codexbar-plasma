@@ -135,7 +135,44 @@ TRANSPORT_TESTS = '''
         subject.destroy();
         tryVerify(function() { return disconnected.length === 2; });
         compare(disconnected.sort(), sources.slice().sort());
-        compare(reentrantAccepted, [false, false]);
+        // Reentrant sends during destruction return no source name.
+        verify(!reentrantAccepted[0]);
+        verify(!reentrantAccepted[1]);
+    }
+
+    function test_actionSendActivatesOnlyItsOwnSource() {
+        var subject = create();
+        var activated = [];
+        subject.activated.connect(function(source) { activated.push(source); });
+        var actionSource = subject.send("update", "body", "normal", "Open release page");
+        var plainSource = subject.send("plain", "body", "normal");
+        verify(actionSource.length > 0);
+        verify(plainSource.length > 0);
+        verify(actionSource !== plainSource);
+        subject.testSource.newData(plainSource, {"exit code": 0, stdout: ""});
+        compare(activated, []);
+        compare(subject.testSource.connected, [actionSource]);
+        subject.testSource.newData(actionSource, {"exit code": 0, stdout: "default\n"});
+        compare(activated, [actionSource]);
+        compare(subject.sending, false);
+        compare(subject.testSource.connected, []);
+        // A late replay of the retired action source must not reactivate.
+        subject.testSource.newData(actionSource, {"exit code": 0, stdout: "default\n"});
+        compare(activated, [actionSource]);
+    }
+
+    function test_closedActionNotificationsNeverActivate() {
+        var subject = create();
+        var activated = [];
+        subject.activated.connect(function(source) { activated.push(source); });
+        var dismissedSource = subject.send("update", "body", "normal", "Open release page");
+        subject.testSource.newData(dismissedSource, {"exit code": 1, stdout: ""});
+        compare(activated, []);
+        compare(subject.sending, false);
+        var noisySource = subject.send("update", "body", "normal", "Open release page");
+        subject.testSource.newData(noisySource, {"exit code": 0, stdout: "x".repeat(4096) + "default"});
+        compare(activated, []);
+        compare(subject.sending, false);
     }
 '''
 
@@ -150,6 +187,18 @@ REAL_TESTS = '''
         tryCompare(subject, "sending", false, 5000);
         verify(subject.send("recovery", "ok", "normal"));
         tryCompare(subject, "sending", false, 5000);
+    }
+'''
+
+REAL_ACTION_TESTS = '''
+    function test_realActionSendActivatesThroughStdout() {
+        var subject = create();
+        var activated = [];
+        subject.activated.connect(function(source) { activated.push(source); });
+        var source = subject.send("update available", "body", "normal", "Open release page");
+        verify(source.length > 0);
+        tryCompare(subject, "sending", false, 5000);
+        compare(activated, [source]);
     }
 '''
 
@@ -200,6 +249,8 @@ import os
 import sys
 with open(os.environ["NOTIFICATION_TEST_LOG"], "a") as output:
     output.write(json.dumps(sys.argv[1:]) + "\\n")
+if any(argument.startswith("--action=") for argument in sys.argv):
+    print("default")
 sys.exit(1 if "synthetic failure" in sys.argv else 0)
 ''')
             executable.chmod(0o755)
@@ -228,6 +279,68 @@ sys.exit(1 if "synthetic failure" in sys.argv else 0)
                                  "--", message["title"].strip() or "CodexBar", message["body"].strip()])
             self.assertCountEqual(calls, expected)
             self.assertFalse(marker.exists(), "notification text must not execute shell commands")
+
+    def test_real_action_activation_and_capability_probe(self):
+        with tempfile.TemporaryDirectory(prefix="codexbar-notification-action-") as temporary:
+            directory = Path(temporary)
+            log = directory / "calls.jsonl"
+            executable = directory / "notify-send"
+            # The capability probe runs first and must advertise --action;
+            # the action send answers with the activated default action name.
+            executable.write_text('''#!/usr/bin/python3
+import json
+import os
+import sys
+with open(os.environ["NOTIFICATION_TEST_LOG"], "a") as output:
+    output.write(json.dumps(sys.argv[1:]) + "\\n")
+if "--help" in sys.argv:
+    print("  -A, --action=[NAME=]Text  notification actions")
+elif any(argument.startswith("--action=") for argument in sys.argv):
+    print("default")
+sys.exit(0)
+''')
+            executable.chmod(0o755)
+            self.run_qml(directory, CONTROLLER, REAL_ACTION_TESTS,
+                         {"PATH": str(directory) + os.pathsep + os.environ.get("PATH", ""),
+                          "NOTIFICATION_TEST_LOG": str(log)})
+            calls = [json.loads(line) for line in log.read_text().splitlines()]
+            self.assertEqual(len(calls), 2)
+            self.assertEqual(calls[0], ["--help"])
+            self.assertEqual(calls[1], ["--app-name=CodexBar", "--icon=view-statistics",
+                                        "--urgency=normal", "--action=default=Open release page",
+                                        "--", "update available", "body"])
+
+    def test_real_action_falls_back_without_capability(self):
+        with tempfile.TemporaryDirectory(prefix="codexbar-notification-legacy-") as temporary:
+            directory = Path(temporary)
+            log = directory / "calls.jsonl"
+            executable = directory / "notify-send"
+            # A libnotify 0.7 notify-send has no --action: the probe must
+            # route the send through the plain command instead of failing.
+            executable.write_text('''#!/usr/bin/python3
+import json
+import os
+import sys
+with open(os.environ["NOTIFICATION_TEST_LOG"], "a") as output:
+    output.write(json.dumps(sys.argv[1:]) + "\\n")
+sys.exit(0)
+''')
+            executable.chmod(0o755)
+            self.run_qml(directory, CONTROLLER, '''
+    function test_realActionSendFallsBackToPlain() {
+        var subject = create();
+        var activated = [];
+        subject.activated.connect(function(source) { activated.push(source); });
+        verify(subject.send("update available", "body", "normal", "Open release page").length > 0);
+        tryCompare(subject, "sending", false, 5000);
+        compare(activated, []);
+    }
+''', {"PATH": str(directory) + os.pathsep + os.environ.get("PATH", ""),
+      "NOTIFICATION_TEST_LOG": str(log)})
+            calls = [json.loads(line) for line in log.read_text().splitlines()]
+            self.assertEqual(calls, [["--help"],
+                                     ["--app-name=CodexBar", "--icon=view-statistics",
+                                      "--urgency=normal", "--", "update available", "body"]])
 
     def test_missing_notify_send_completes_quietly(self):
         with tempfile.TemporaryDirectory(prefix="codexbar-notification-missing-") as temporary:

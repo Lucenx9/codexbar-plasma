@@ -21,7 +21,7 @@ Item {
 
     signal statusRecorded(string statusText, string errorText)
     signal checkSucceeded(string timestamp)
-    signal updateAvailable(string version, string assetUrl)
+    signal updateAvailable(string version, string assetUrl, string releaseUrl)
     signal updateInstalled(string version)
 
     function checkNow() {
@@ -290,7 +290,7 @@ Item {
                 var availableStatus = intent.version.length > 0 ? i18n("Widget update %1 is available.", intent.version) : i18n("A widget update is available.");
                 setWidgetUpdateState(availableStatus, "");
                 if (intent.notificationKind === "available") {
-                    controller.updateAvailable(intent.version, intent.assetUrl);
+                    controller.updateAvailable(intent.version, intent.assetUrl, intent.releaseUrl);
                 }
                 return;
             case "installed":

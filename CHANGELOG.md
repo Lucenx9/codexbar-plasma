@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Open the update's GitHub release page when clicking the widget-update
+  notification. The page address is derived from the release tag announced by
+  the updater and stays non-clickable when the installed `notify-send` is too
+  old to support notification actions.
 - Mark cost totals as partial when the CLI excluded requests that lacked final
   usage, naming how many were left out of the displayed cost and tokens. The
   notice appears for a provider and for the aggregate **Usage & Spend** total,

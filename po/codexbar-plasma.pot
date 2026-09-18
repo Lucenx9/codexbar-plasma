@@ -2445,6 +2445,10 @@ msgid "A new widget version is available."
 msgstr ""
 
 #: contents/ui/main.qml
+msgid "Open release page"
+msgstr ""
+
+#: contents/ui/main.qml
 msgid "CodexBar widget update installed"
 msgstr ""
 

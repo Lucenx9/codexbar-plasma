@@ -41,15 +41,20 @@ For those, use `make install` or `./install.sh`. Release-package users can use
   selected state, quota-cache persistence, configuration updates, and external
   effects. Its adapters supply the panel and popup.
 - `contents/ui/controllers/NotificationDispatcher.qml` owns notification
-  execution, per-send nonces, the request ledger, the 10-second deadline, and
+  execution, per-send nonces, the request ledger, the 10-second deadline, the
+  2-minute deadline for clickable notifications, and
   disconnection on completion, timeout, or destruction. Its `send(title, body,
-  urgency)` method accepts already localized and privacy-filtered text;
-  read-only `sending` reports whether requests remain pending. Failed commands
-  finish silently, and missing `notify-send` remains a quiet no-op.
+  urgency, actionLabel)` method accepts already localized and privacy-filtered
+  text plus an optional default-action label, returns the started source name,
+  and emits `activated(sourceName)` only after that reply retired its ledger
+  entry; read-only `sending` reports whether requests remain pending. Failed
+  commands finish silently, and missing `notify-send` remains a quiet no-op.
   `NotificationCommand.js` bounds notification text, builds the quoted command,
-  and restricts urgency to the supported values. The applet retains notification
+  restricts urgency to the supported values, and probes `notify-send --help`
+  for action support so older libnotify builds keep the plain send.
+  The applet retains notification
   settings, privacy, deduplication, account freshness, and update-notification
-  persistence. The applet itself no longer owns an executable DataSource or
+  persistence, and owns what an activation opens: the applet itself no longer owns an executable DataSource or
   command ledger.
 - `contents/ui/controllers/WidgetUpdateController.qml` owns the widget updater's
   executable source, per-request nonce, captured install mode, timeout, queued
@@ -59,7 +64,10 @@ For those, use `make install` or `./install.sh`. Release-package users can use
   recent saved timestamp, preserving the previous startup behavior.
   `main.qml` persists its status and successful-check
   signals and delivers its available/installed notifications, preserving the
-  existing privacy and notification-deduplication rules. The module never reads
+  existing privacy and notification-deduplication rules. The available-update
+  notification carries a host-pinned release-page URL derived from the
+  updater's validated tag; `main.qml` stores the pending source and opens that
+  URL when the dispatcher reports the notification's activation. The module never reads
   the applet root or writes configuration. `UpdateLogic.js` keeps the pure
   scheduling and result decisions shared with settings.
 - `contents/ui/controllers/SessionsController.qml` owns the Sessions executable
@@ -426,7 +434,8 @@ production parsing path; surface checks enforce QML clock/localization ownership
 
 `tests/test_notification_dispatcher.py` checks concurrent and repeated messages,
 argument boundaries with synthetic `notify-send` executables, missing executables,
-and failure recovery through the real Plasma DataSource. A substituted transport
+default-action activation through stdout, and the pre-action fallback without
+capability, plus failure recovery through the real Plasma DataSource. A substituted transport
 exercises synchronous and retired replies, reentrant completion, destruction,
 and the production 10-second timer. The pure command interface has adversarial
 QtTests in `tests/tst_notification_command.qml`. Surface checks keep notification

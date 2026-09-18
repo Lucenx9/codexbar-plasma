@@ -243,6 +243,8 @@ notification = Surface("applet", root)
 notification.texts = {notification_path: notification_path.read_text()}
 notification.files = [notification_path]
 require_all(notification.text, ("readonly property int notificationCommandTimeoutMs: 10000",
+            "readonly property int notificationActionCommandTimeoutMs: 120000",
+            "signal activated(string sourceName)",
             "running: controller.sending", "lifecycle.expire(Date.now())",
             "Component.onDestruction: lifecycle.retire()"), "notification deadline and destruction cleanup")
 require_ordered(notification.function_body("dispatch"),
@@ -260,8 +262,13 @@ require_ordered(notification.function_body("retire"),
 require_ordered(notification.id_block("notificationSource"),
                 ("CommandLedger.find(lifecycle.commands, sourceName)", "lifecycle.finish(sourceName)"),
                 "notification replies must finish only their live entry")
+# Activation is delivered only after the reply's ledger entry is retired, so an
+# activation handler can never observe a still-connected source.
+require_ordered(notification.id_block("notificationSource"),
+                ("lifecycle.finish(sourceName)", "controller.activated(sourceName)"),
+                "notification activation must follow retirement")
 require_all(applet.function_body("sendPlasmaNotification"),
-            ("notificationDispatcher.send(cleanTitle, cleanBody, urgency)",),
+            ("notificationDispatcher.send(cleanTitle, cleanBody, urgency, actionLabel)",),
             "the applet must delegate notification delivery")
 for forbidden in ("Plasma5Support", "CommandLedger", "activeCommandDescriptors", "commandTimeoutTimer"):
     if forbidden in main_text:
@@ -935,7 +942,7 @@ require_all(updater_text, (
     "if (sourceName !== connectedUpdateCommandSource)",
     "SafeText.cliJsonText(rawStdoutText)",
     "controller.statusRecorded(updateStatusText, updateErrorText)",
-    "controller.updateAvailable(intent.version, intent.assetUrl)",
+    "controller.updateAvailable(intent.version, intent.assetUrl, intent.releaseUrl)",
     "controller.updateInstalled(intent.version)",
 ), "the updater must preserve its packaged script, request identity, validation, and events")
 require_all(main_text, (
@@ -945,7 +952,7 @@ require_all(main_text, (
     "Plasmoid.configuration.widgetUpdateLastError = errorText",
     "onCheckSucceeded: function(timestamp)",
     "Plasmoid.configuration.autoUpdateLastCheck = timestamp",
-    "root.notifyAvailableUpdate(version, assetUrl)",
+    "root.notifyAvailableUpdate(version, assetUrl, releaseUrl)",
     "root.notifyInstalledUpdate(version)",
 ), "main must persist updater results and retain notification delivery")
 

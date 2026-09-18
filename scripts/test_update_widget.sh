@@ -119,6 +119,7 @@ require_in_file "$UPDATER" "curl --fail --location --show-error --silent"
 require_in_file "$UPDATER" "version_gt()"
 require_in_file "$UPDATER" "emit_status"
 require_in_file "$UPDATER" "errorCode"
+require_in_file "$UPDATER" "releases/tag/\${remote_version}"
 require_in_file "$UPDATER" "restart Plasma to apply the update"
 reject_in_file "$UPDATER" "schedule_plasmashell_restart"
 reject_in_file "$UPDATER" "systemd-run --user"
@@ -290,9 +291,21 @@ legacy_current_output="$(
     --metadata "$fixture_dir/legacy-current-metadata.json" \
     --release-json "$fixture_dir/legacy-current-release.json"
 )"
-if ! jq -e '.status == "current" and .localVersion == "0.2.20" and .remoteVersion == "v0.2.20"' \
+if ! jq -e '.status == "current" and .localVersion == "0.2.20" and .remoteVersion == "v0.2.20" and .releaseUrl == ""' \
   >/dev/null <<<"$legacy_current_output"; then
   echo "the current legacy mutable release must be recognized before the immutability gate" >&2
+  exit 1
+fi
+
+available_output="$(
+  "$UPDATER" --check \
+    --metadata "$fixture_dir/metadata.json" \
+    --release-json "$fixture_dir/release.json"
+)"
+if ! jq -e '.status == "available"
+  and .releaseUrl == "https://github.com/Lucenx9/codexbar-plasma/releases/tag/v9.9.9"' \
+  >/dev/null <<<"$available_output"; then
+  echo "an available update must carry the release page URL derived from its tag" >&2
   exit 1
 fi
 

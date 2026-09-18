@@ -360,8 +360,16 @@ require_in_surface applet "function httpsUrlHost(url)"
 require_in_surface applet "statusUrl: safeStatusUrl(providerID, snapshot.statusUrl)"
 require_in_surface applet "Qt.openUrlExternally(safeStatusUrl(item.provider, item.statusUrl))"
 
+# The update notification's release URL is opened only after the host-pinning
+# guard accepts it; a payload URL cannot redirect the click elsewhere.
+require_in_surface applet "function safeReleaseUrl(url)"
+require_in_surface applet "Qt.openUrlExternally(releasePageUrl)"
+require_in_surface applet 'Normalizer.httpsUrlHost(candidate) === "github.com"'
+require_in_surface applet "pendingUpdateNotificationSource = releasePageUrl.length > 0 ? sourceName : \"\""
+
 require_in_surface applet "notify-send --app-name=CodexBar --icon=view-statistics --urgency="
-require_in_file "${ROOT_DIR}/contents/ui/NotificationCommand.js" '+ " -- " + Guards.shellQuote(cleanTitle) + " " + Guards.shellQuote(cleanBody)'
+require_in_file "${ROOT_DIR}/contents/ui/NotificationCommand.js" 'Guards.shellQuote(cleanTitle), Guards.shellQuote(cleanBody)'
+require_in_file "${ROOT_DIR}/contents/ui/NotificationCommand.js" 'Guards.shellQuote("default=" + cleanLabel)'
 
 require_in_file "$MAKEFILE" "scripts/test_security_regressions.sh"
 require_in_file "$MAKEFILE" "scripts/test_qml_hardening.sh"

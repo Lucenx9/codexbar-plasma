@@ -39,15 +39,15 @@ msgid "Diagnostics"
 msgstr "Diagnose"
 
 #: contents/ui/components/CompactRepresentation.qml
+msgid "Open %1"
+msgstr "%1 öffnen"
+
+#: contents/ui/components/CompactRepresentation.qml
 #: contents/ui/components/InteractiveChart.qml
 #: contents/ui/components/SpendView.qml contents/ui/configProviders.qml
 #: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "%1: %2"
 msgstr "%1: %2"
-
-#: contents/ui/components/CompactRepresentation.qml
-msgid "Open %1"
-msgstr "%1 öffnen"
 
 #: contents/ui/components/CopyableValue.qml
 msgid "Copy value"
@@ -96,8 +96,8 @@ msgstr[0] ""
 "%1 Anfrage im ausgewählten Zeitraum hat keine endgültige Nutzung und ist "
 "daher von den angezeigten Summen ausgeschlossen."
 msgstr[1] ""
-"%1 Anfragen im ausgewählten Zeitraum haben keine endgültige Nutzung und "
-"sind daher von den angezeigten Summen ausgeschlossen."
+"%1 Anfragen im ausgewählten Zeitraum haben keine endgültige Nutzung und sind "
+"daher von den angezeigten Summen ausgeschlossen."
 
 #: contents/ui/components/CostTrustNotice.qml
 msgid "The displayed range total is estimated from public list prices."
@@ -521,6 +521,290 @@ msgstr "Kostenverlauf"
 #: contents/ui/components/ProviderDetailSection.qml
 msgid "Usage chart"
 msgstr "Nutzungsdiagramm"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Abacus AI"
+msgstr "Abacus AI"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "ai&"
+msgstr "ai&"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Alibaba"
+msgstr "Alibaba"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Alibaba Token Plan"
+msgstr "Alibaba Token Plan"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Amp"
+msgstr "Amp"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Antigravity"
+msgstr "Antigravity"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Augment"
+msgstr "Augment"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Azure OpenAI"
+msgstr "Azure OpenAI"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "AWS Bedrock"
+msgstr "AWS Bedrock"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Chutes"
+msgstr "Chutes"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Claude"
+msgstr "Claude"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "ClawRouter"
+msgstr "ClawRouter"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "ClinePass"
+msgstr "ClinePass"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Codebuff"
+msgstr "Codebuff"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Codex"
+msgstr "Codex"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Command Code"
+msgstr "Command Code"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Copilot"
+msgstr "Copilot"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Crof"
+msgstr "Crof"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "CrossModel"
+msgstr "CrossModel"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Cursor"
+msgstr "Cursor"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Deepgram"
+msgstr "Deepgram"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "DeepInfra"
+msgstr "DeepInfra"
+
+#: contents/ui/components/ProviderNames.qml contents/ui/main.qml
+msgid "DeepSeek"
+msgstr "DeepSeek"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Devin"
+msgstr "Devin"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Doubao"
+msgstr "Doubao"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "ElevenLabs"
+msgstr "ElevenLabs"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Droid"
+msgstr "Droid"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Fireworks"
+msgstr "Fireworks"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Gemini"
+msgstr "Gemini"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Grok"
+msgstr "Grok"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Groq"
+msgstr "Groq"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "IBM Bob"
+msgstr "IBM Bob"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "JetBrains AI"
+msgstr "JetBrains AI"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Kilo"
+msgstr "Kilo"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Kimi Code"
+msgstr "Kimi Code"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Kimi K2 (unofficial)"
+msgstr "Kimi K2 (inoffiziell)"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Kiro"
+msgstr "Kiro"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "LiteLLM"
+msgstr "LiteLLM"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "LLM Proxy"
+msgstr "LLM Proxy"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "LongCat"
+msgstr "LongCat"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Manus"
+msgstr "Manus"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Xiaomi MiMo"
+msgstr "Xiaomi MiMo"
+
+#: contents/ui/components/ProviderNames.qml contents/ui/main.qml
+msgid "MiniMax"
+msgstr "MiniMax"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Mistral"
+msgstr "Mistral"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Moonshot / Kimi Open Platform"
+msgstr "Moonshot / Kimi Open Platform"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Neuralwatt"
+msgstr "Neuralwatt"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Notion AI"
+msgstr "Notion AI"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Ollama"
+msgstr "Ollama"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "OpenAI"
+msgstr "OpenAI"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "OpenCode"
+msgstr "OpenCode"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "OpenCode Go"
+msgstr "OpenCode Go"
+
+#: contents/ui/components/ProviderNames.qml contents/ui/main.qml
+msgid "OpenRouter"
+msgstr "OpenRouter"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Perplexity"
+msgstr "Perplexity"
+
+#: contents/ui/components/ProviderNames.qml contents/ui/main.qml
+msgid "Poe"
+msgstr "Poe"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Qoder"
+msgstr "Qoder"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Qwen Cloud"
+msgstr "Qwen Cloud"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Sakana AI"
+msgstr "Sakana AI"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "StepFun"
+msgstr "StepFun"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "sub2api"
+msgstr "sub2api"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Synthetic"
+msgstr "Synthetic"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "T3 Chat"
+msgstr "T3 Chat"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Venice"
+msgstr "Venice"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Vertex AI"
+msgstr "Vertex AI"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Warp"
+msgstr "Warp"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Wayfinder"
+msgstr "Wayfinder"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Windsurf"
+msgstr "Windsurf"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "xAI"
+msgstr "xAI"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "z.ai / GLM"
+msgstr "z.ai / GLM"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Zed"
+msgstr "Zed"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "ZenMux"
+msgstr "ZenMux"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "ZoomMate"
+msgstr "ZoomMate"
 
 #: contents/ui/components/SessionsView.qml
 msgid "%1 local session"
@@ -1406,290 +1690,6 @@ msgstr ""
 msgid "%1 for %2"
 msgstr "%1 für %2"
 
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Abacus AI"
-msgstr "Abacus AI"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "ai&"
-msgstr "ai&"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Alibaba"
-msgstr "Alibaba"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Alibaba Token Plan"
-msgstr "Alibaba Token Plan"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Amp"
-msgstr "Amp"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Antigravity"
-msgstr "Antigravity"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Augment"
-msgstr "Augment"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Azure OpenAI"
-msgstr "Azure OpenAI"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "AWS Bedrock"
-msgstr "AWS Bedrock"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Chutes"
-msgstr "Chutes"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Claude"
-msgstr "Claude"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "ClawRouter"
-msgstr "ClawRouter"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "ClinePass"
-msgstr "ClinePass"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Codebuff"
-msgstr "Codebuff"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Codex"
-msgstr "Codex"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Command Code"
-msgstr "Command Code"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Copilot"
-msgstr "Copilot"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Crof"
-msgstr "Crof"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "CrossModel"
-msgstr "CrossModel"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Cursor"
-msgstr "Cursor"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Deepgram"
-msgstr "Deepgram"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "DeepInfra"
-msgstr "DeepInfra"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "DeepSeek"
-msgstr "DeepSeek"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Devin"
-msgstr "Devin"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Doubao"
-msgstr "Doubao"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "ElevenLabs"
-msgstr "ElevenLabs"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Droid"
-msgstr "Droid"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Fireworks"
-msgstr "Fireworks"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Gemini"
-msgstr "Gemini"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Grok"
-msgstr "Grok"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Groq"
-msgstr "Groq"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "IBM Bob"
-msgstr "IBM Bob"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "JetBrains AI"
-msgstr "JetBrains AI"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Kilo"
-msgstr "Kilo"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Kimi Code"
-msgstr "Kimi Code"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Kimi K2 (unofficial)"
-msgstr "Kimi K2 (inoffiziell)"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Kiro"
-msgstr "Kiro"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "LiteLLM"
-msgstr "LiteLLM"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "LLM Proxy"
-msgstr "LLM Proxy"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "LongCat"
-msgstr "LongCat"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Manus"
-msgstr "Manus"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Xiaomi MiMo"
-msgstr "Xiaomi MiMo"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "MiniMax"
-msgstr "MiniMax"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Mistral"
-msgstr "Mistral"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Moonshot / Kimi Open Platform"
-msgstr "Moonshot / Kimi Open Platform"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Neuralwatt"
-msgstr "Neuralwatt"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Notion AI"
-msgstr "Notion AI"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Ollama"
-msgstr "Ollama"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "OpenAI"
-msgstr "OpenAI"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "OpenCode"
-msgstr "OpenCode"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "OpenCode Go"
-msgstr "OpenCode Go"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "OpenRouter"
-msgstr "OpenRouter"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Perplexity"
-msgstr "Perplexity"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Poe"
-msgstr "Poe"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Qoder"
-msgstr "Qoder"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Qwen Cloud"
-msgstr "Qwen Cloud"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Sakana AI"
-msgstr "Sakana AI"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "StepFun"
-msgstr "StepFun"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "sub2api"
-msgstr "sub2api"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Synthetic"
-msgstr "Synthetic"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "T3 Chat"
-msgstr "T3 Chat"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Venice"
-msgstr "Venice"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Vertex AI"
-msgstr "Vertex AI"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Warp"
-msgstr "Warp"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Wayfinder"
-msgstr "Wayfinder"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Windsurf"
-msgstr "Windsurf"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "xAI"
-msgstr "xAI"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "z.ai / GLM"
-msgstr "z.ai / GLM"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "Zed"
-msgstr "Zed"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "ZenMux"
-msgstr "ZenMux"
-
-#: contents/ui/configProviders.qml contents/ui/main.qml
-msgid "ZoomMate"
-msgstr "ZoomMate"
-
 #: contents/ui/configProviders.qml
 msgid "Clear filters"
 msgstr "Filter zurücksetzen"
@@ -2393,10 +2393,6 @@ msgid "Extra usage"
 msgstr "Zusatznutzung"
 
 #: contents/ui/main.qml
-msgid "Balance: %1"
-msgstr "Guthaben: %1"
-
-#: contents/ui/main.qml
 msgid "Zen balance"
 msgstr "Zen-Guthaben"
 
@@ -2405,16 +2401,20 @@ msgid "Quota usage"
 msgstr "Kontingentnutzung"
 
 #: contents/ui/main.qml
+msgid "API spend"
+msgstr "API-Ausgaben"
+
+#: contents/ui/main.qml
+msgid "Balance: %1"
+msgstr "Guthaben: %1"
+
+#: contents/ui/main.qml
 msgid "%1: %2 / %3"
 msgstr "%1: %2 / %3"
 
 #: contents/ui/main.qml
 msgid "Your spend: %1"
 msgstr "Ihre Ausgaben: %1"
-
-#: contents/ui/main.qml
-msgid "API spend"
-msgstr "API-Ausgaben"
 
 #: contents/ui/main.qml
 msgid "Reset credits"
@@ -2554,6 +2554,10 @@ msgstr "Version %1 ist verfügbar."
 #: contents/ui/main.qml
 msgid "A new widget version is available."
 msgstr "Eine neue Version des Miniprogramms ist verfügbar."
+
+#: contents/ui/main.qml
+msgid "Open release page"
+msgstr "Release-Seite öffnen"
 
 #: contents/ui/main.qml
 msgid "CodexBar widget update installed"

@@ -127,7 +127,9 @@ systemctl --user restart plasma-plasmashell.service
 ```
 
 In **General → Updates**, **Check for widget updates** and update notifications
-are enabled by default. **Install widget updates automatically** is opt-in.
+are enabled by default. Clicking an update notification opens that release's
+page on GitHub where the installed `notify-send` supports notification actions.
+**Install widget updates automatically** is opt-in.
 The bundled helper accepts only immutable GitHub releases. It binds assets to
 the advertised tag, verifies SHA-256 digests and the published checksum, and
 checks the applet ID and version before installation. A validation mismatch

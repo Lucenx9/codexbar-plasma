@@ -124,13 +124,54 @@ TestCase {
         var intent = UpdateLogic.resultIntent({
             status: "available",
             remoteVersion: "v0.2.24",
-            assetUrl: "https://github.com/Lucenx9/codexbar-plasma/releases/download/v0.2.24/codexbar-plasma.plasmoid"
+            assetUrl: "https://github.com/Lucenx9/codexbar-plasma/releases/download/v0.2.24/codexbar-plasma.plasmoid",
+            releaseUrl: "https://github.com/Lucenx9/codexbar-plasma/releases/tag/v0.2.24"
         }, false)
 
         compare(intent.kind, "available")
         compare(intent.successful, true)
         compare(intent.version, "v0.2.24")
+        compare(intent.releaseUrl, "https://github.com/Lucenx9/codexbar-plasma/releases/tag/v0.2.24")
         compare(intent.notificationKind, "available")
+    }
+
+    function test_availableResultWithoutReleaseUrlStaysEmpty() {
+        var intent = UpdateLogic.resultIntent({
+            status: "available",
+            remoteVersion: "v0.2.24"
+        }, false)
+
+        compare(intent.releaseUrl, "")
+    }
+
+    function test_availableResultKeepsOnlyHttpsReleaseUrls() {
+        compare(UpdateLogic.resultIntent({
+            status: "available",
+            releaseUrl: "  https://github.com/Lucenx9/codexbar-plasma/releases/tag/v0.2.24  "
+        }, false).releaseUrl, "https://github.com/Lucenx9/codexbar-plasma/releases/tag/v0.2.24")
+        compare(UpdateLogic.resultIntent({
+            status: "available",
+            releaseUrl: "http://github.com/Lucenx9/codexbar-plasma/releases/tag/v0.2.24"
+        }, false).releaseUrl, "")
+        compare(UpdateLogic.resultIntent({
+            status: "available",
+            releaseUrl: ["https://github.com/example/tag"]
+        }, false).releaseUrl, "")
+        compare(UpdateLogic.resultIntent({
+            status: "available",
+            releaseUrl: "https://" + "x".repeat(2048)
+        }, false).releaseUrl, "")
+    }
+
+    function test_otherResultsCarryNoReleaseUrl() {
+        compare(UpdateLogic.resultIntent({ status: "installed", remoteVersion: "v0.2.24" }, true).releaseUrl, "")
+        compare(UpdateLogic.resultIntent({ status: "current" }, false).releaseUrl, "")
+        compare(UpdateLogic.resultIntent({ status: "skipped" }, false).releaseUrl, "")
+        compare(UpdateLogic.resultIntent({
+            status: "error",
+            errorCode: "missing_tool"
+        }, false).releaseUrl, "")
+        compare(UpdateLogic.resultIntent({ status: "future-status" }, false).releaseUrl, "")
     }
 
     function test_availableResultStaysQuietDuringAutomaticInstall() {
@@ -191,7 +232,8 @@ TestCase {
         var availableIntent = UpdateLogic.resultIntent({
             status: "available",
             remoteVersion: oversized,
-            assetUrl: oversized
+            assetUrl: oversized,
+            releaseUrl: oversized
         }, false)
         var errorIntent = UpdateLogic.resultIntent({
             status: "error",
@@ -202,6 +244,7 @@ TestCase {
 
         compare(availableIntent.version, "")
         compare(availableIntent.assetUrl, "")
+        compare(availableIntent.releaseUrl, "")
         compare(errorIntent.errorCode, "")
         compare(errorIntent.errorDetail, "")
         compare(unknownIntent.status, "")

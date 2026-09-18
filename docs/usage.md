@@ -305,6 +305,10 @@ fields; track proposed extensions in the issue tracker.
 - Optional Plasma notifications for provider status incidents, configurable
   quota crossings, predicted quota exhaustion from CLI pace data, and when a
   heavily used limit resets back to empty.
+- Clicking the available-update notification opens that release's page on
+  GitHub, addressed from the tag the updater announced. The notification stays
+  non-clickable when the release address is unknown or the installed
+  `notify-send` predates notification actions.
 
 ## Settings
 
@@ -355,7 +359,8 @@ fields; track proposed extensions in the issue tracker.
 - Configurable order for the provider identity, service status, usage text, and
   provider meters shown in the panel.
 - Check for widget updates, notify when an update is available, and opt in to
-  silent automatic widget installation.
+  silent automatic widget installation. The update notification opens the
+  release page on GitHub when clicked, where supported.
 
 ## Default settings
 
