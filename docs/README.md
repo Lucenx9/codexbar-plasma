@@ -45,6 +45,11 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   cost `incompleteRequestCount` contract verified in official Linux output,
   its unknown-not-zero day shape, and scoped official CLI probes. Provider
   descriptors, generic config actions, and Cursor cost remain unavailable.
+- [0.61.0 release review](research/2026-09-18-macos-parity-0.61.0.md): the
+  registry growth to 74 providers, the source-observed Grok reset-credit detail
+  row, the live-only `grokResetCredits` property, and scoped official CLI
+  probes. Provider descriptors, generic config actions, and Cursor cost remain
+  unavailable.
 - [Settings decisions](research/2026-09-08-settings-experience.md): Panel disclosure and text grouping,
   Plasma settings, privacy, refresh behavior, and the macOS 0.56.8 comparison.
 

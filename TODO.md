@@ -8,21 +8,37 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.60.5](https://github.com/steipete/CodexBar/releases/tag/v0.60.5),
-  commit `2ac2323629ce0e3b3759707013aeb4a6c77161c1`, checked 2026-09-18.
-- Coverage: release changes from 0.59.0 through 0.60.5 against Plasma
-  `c69b0a0481bbf2373087658f620e0ffeab854429`. The
+- Last release reviewed: [CodexBar 0.61.0](https://github.com/steipete/CodexBar/releases/tag/v0.61.0),
+  commit `60a677e6b22e160675e1bf2b2be1b57d54598f3b`, checked 2026-09-18.
+- Coverage: release changes from 0.59.0 through 0.61.0 against Plasma
+  `f589bffdfc593b0d3338532cbed0349a349faa97`. The
+  [0.61.0 review](docs/research/2026-09-18-macos-parity-0.61.0.md) records the
+  registry growth to 74 providers and confirms that usage, cost, sessions, and
+  config envelopes are unchanged; the
   [0.60.5 review](docs/research/2026-09-18-macos-parity-0.60.5.md) verifies the
-  new cost `incompleteRequestCount` contract in official Linux output; the
+  cost `incompleteRequestCount` contract in official Linux output; the
   [0.60.4 review](docs/research/2026-09-16-macos-parity-0.60.4.md) records the
-  earlier release delta and source comparison. Usage JSON schemas are
-  unchanged; shared payload structs gained optional credit-availability and
-  detail-row fields awaiting authenticated output evidence.
+  earlier release delta and source comparison. Shared payload structs retain
+  optional credit-availability and detail-row fields awaiting authenticated
+  output evidence.
 - Full CLI baseline remains the [0.56.2 audit](docs/research/2026-09-01-macos-parity-0.56.2.md).
   Later probes verify only their named cases. Older blockers below retain their
   last verified version; source inspection is not authenticated output evidence.
 
 ## Implementable on Linux
+
+### Bundled metadata for the 0.61.0 providers
+
+- [ ] Extend the bundled fallback metadata to the five providers official
+  0.61.0 adds to the registry: `nous` (Nous Portal), `muse` (Muse Code),
+  `coderabbit` (CodeRabbit), `replicate` (Replicate), and `huggingface`
+  (Hugging Face). A 0.61.0 probe returns 74 records with unchanged keys. They
+  already degrade gracefully, taking the CLI `displayName` and the theme
+  highlight, but have no bundled icon, brand color, dashboard/login/status
+  link, or documentation path. Done when each ID has the same bundled metadata
+  as the existing registry, an icon in `contents/icons/providers`, and the
+  provider icon and catalog checks cover it.
+  Evidence: [0.61.0 review](docs/research/2026-09-18-macos-parity-0.61.0.md#scoped-official-linux-probes).
 
 ### Incomplete cost requests
 
@@ -52,9 +68,11 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider settings
 
 - [ ] Enable generic settings and token-account editing through official
-  descriptors and writes. Linux 0.60.4 still rejects `config providers
-  --descriptors` (69 records, same four keys); its provider records have no
-  descriptor. Keep existing
+  descriptors and writes. Linux 0.61.0 still rejects `config providers
+  --descriptors` (74 records, same four keys); its provider records have no
+  descriptor. 0.61.0 adds an `azureOpenAIAPIVersion` config extension value
+  with no supported CLI writer, which the frontend must not reach by editing
+  the config file. Keep existing
   enable/disable, supported single-key setup, and link fallbacks working.
   The [proposal](docs/cli-provider-settings-descriptor.md) covers source mode,
   keys/cookies, URLs, workspace/project, region, AWS profile/auth mode, and
@@ -66,7 +84,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.60.4 still has no
+  flow, CLI-auth setup, and token-account actions. Linux 0.61.0 still has no
   generic `config action` command (`set-api-key` remains the sole writer).
   Done when supported actions expose validated
   prompts/results and handle cancellation, failure, and stale responses in
@@ -97,7 +115,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Cursor cost
 
 - [ ] Show Cursor cost history through the generic Linux `cost` path. Linux
-  0.60.4 still rejects Cursor and lists Antigravity, Claude, and Codex as supported;
+  0.61.0 still rejects Cursor and lists Antigravity, Claude, and Codex as supported;
   the descriptor gate keeps the new cookie-source availability errors unreachable.
   Done when a released Linux command emits supported cost data and Plasma tests
   cover its amounts, currencies, and trust metadata.
@@ -186,6 +204,15 @@ These are unresolved Linux candidates, not confirmed missing features.
   0.60.5 reads the `copilot-seat-credits` row's `progress` as a switcher
   used-percent fallback, which does not establish a quota cadence.
   [Source evidence](docs/research/2026-09-16-macos-parity-0.60.4.md#linux-cli-contract-changes-since-0580).
+- [ ] Verify the Grok reset-credit detail row in official Linux output. 0.61.0
+  source emits an untitled `details` section holding one `Limit Reset Credits`
+  row valued `N available` from shared Core fetch strategies, gated on the
+  pre-existing `requiresOptionalUsageCompleteness` fetch-context flag. Plasma's
+  generic details path already keeps an untitled section that carries rows, so
+  confirm with authenticated output whether the row reaches CLI JSON before
+  deciding that no work is required. The companion `grokResetCredits` property
+  is live-only and never encoded.
+  [Source evidence](docs/research/2026-09-18-macos-parity-0.61.0.md#linux-cli-contract-changes-since-0605).
 - [ ] Compare exhausted automatic text/popup quota selection with the exact
   0.56.6 cases. Automatic panel capsules already show primary and secondary.
   Keep direct lane choices and independent quota pools. Accept a change only
