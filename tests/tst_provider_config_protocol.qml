@@ -473,6 +473,54 @@ TestCase {
         verify(normalized.settingsKeys.indexOf("z63") !== -1)
     }
 
+    function test_environmentSummaryReadsResolvedPathAndVersion() {
+        var summary = ProviderConfigProtocol.environmentSummary(
+            "/usr/local/bin/codexbar\nCodexBar 0.61.0\n")
+
+        compare(summary.commandPath, "/usr/local/bin/codexbar")
+        compare(summary.version, "CodexBar 0.61.0")
+    }
+
+    function test_environmentSummaryKeepsSpacesInsideAnAbsolutePath() {
+        // An install directory may legitimately contain spaces, and the value is
+        // only displayed, never re-executed, so the whitespace must survive.
+        var summary = ProviderConfigProtocol.environmentSummary(
+            "/opt/CodexBar CLI/bin/codexbar\nCodexBar 0.61.0")
+
+        compare(summary.commandPath, "/opt/CodexBar CLI/bin/codexbar")
+        compare(summary.version, "CodexBar 0.61.0")
+    }
+
+    function test_environmentSummaryRejectsUntrustedShapes() {
+        compare(ProviderConfigProtocol.environmentSummary(null).commandPath, "")
+        compare(ProviderConfigProtocol.environmentSummary(null).version, "")
+        compare(ProviderConfigProtocol.environmentSummary(42).version, "")
+        compare(ProviderConfigProtocol.environmentSummary({}).commandPath, "")
+        compare(ProviderConfigProtocol.environmentSummary("").commandPath, "")
+
+        // Only a single absolute path is a resolved executable. A relative name,
+        // an injected newline, or a control character is not reported as one.
+        compare(ProviderConfigProtocol.environmentSummary("codexbar\nCodexBar 1.0.0").commandPath, "")
+        compare(ProviderConfigProtocol.environmentSummary("../codexbar\nCodexBar 1.0.0").commandPath, "")
+        compare(ProviderConfigProtocol.environmentSummary("/bin/co\u0007dexbar\nX").commandPath, "")
+        // A banner still survives an unusable first line, because the version is
+        // read from the remaining output rather than from the rejected path.
+        compare(ProviderConfigProtocol.environmentSummary("codexbar\nCodexBar 1.0.0").version, "CodexBar 1.0.0")
+    }
+
+    function test_environmentSummaryBoundsAndRedactsProcessOutput() {
+        var secret = "sk-abcdefghijklmnop"
+        var summary = ProviderConfigProtocol.environmentSummary(
+            "/usr/bin/codexbar\ntoken=" + secret + " " + repeated("x", 400).join(""))
+
+        compare(summary.version.indexOf(secret), -1)
+        verify(summary.version.length <= 128)
+
+        var overlong = ProviderConfigProtocol.environmentSummary(
+            "/usr/bin/" + repeated("x", 4000).join("") + "\nCodexBar 1.0.0")
+        verify(overlong.commandPath.length <= 1024)
+    }
+
     function test_diagnosticTextIsRedactedAndBounded() {
         var secret = "sk-abcdefghijklmnop"
         var normalized = ProviderConfigProtocol.normalizeProviderDiagnostic({

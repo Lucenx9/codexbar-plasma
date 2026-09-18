@@ -37,6 +37,9 @@ TestCase {
             property alias message: providerErrorMessage
             property alias globalMessage: globalErrorMessage
             property alias placeholder: emptyProvidersPlaceholder
+            property alias missingPlaceholder: missingCommandPlaceholder
+            property alias missingMessage: missingCommandMessage
+            SOURCE_MISSING_PROPERTY
             property int settingsOpened: 0
             readonly property string usageRecoveryHint: "Diagnostics in widget settings"
 
@@ -57,6 +60,10 @@ TestCase {
                 property int refreshes: 0
                 property bool bypassRoster: false
                 property string errorText: ""
+                property bool commandPathFailed: false
+                property string commandPath: "codexbar"
+                property bool globalViewSelected: false
+                property var providers: []
                 property bool providerUsageFeedbackVisible: true
                 property var selectedProviderData: ({error: "Synthetic provider failure", rows: [{percent: 43}],
                     usageStale: true, lastGoodAtMs: 1000})
@@ -77,6 +84,7 @@ TestCase {
                 Layout.preferredHeight: 220
                 Components.PlainPlaceholderMessage { EMPTY_MESSAGE }
             }
+            Item { MISSING_MESSAGE }
         }
     }
 
@@ -147,6 +155,47 @@ TestCase {
         compare(subject.applet.refreshes, 0);
     }
 
+    function test_unreachableCommandTakesItsOwnStateAwayFromSetupAndRetry() {
+        var subject = createSubject();
+        subject.applet.selectedProviderData = null;
+        subject.applet.errorText = "sh: 1: codexbar: not found";
+        subject.applet.commandPathFailed = true;
+
+        // The widget never reached the CLI, so neither the retryable connection
+        // banner nor the "enable a provider" setup message may claim this case.
+        verify(subject.missingMessage.visible);
+        verify(!subject.globalMessage.visible);
+        verify(subject.missingPlaceholder.plainExplanation.indexOf("codexbar") !== -1);
+        // Its action opens settings rather than repeating a command that cannot run.
+        subject.missingPlaceholder.helpfulAction.trigger();
+        compare(subject.settingsOpened, 1);
+        compare(subject.applet.refreshes, 0);
+
+        // A reachable command hands the view back to the ordinary states.
+        subject.applet.commandPathFailed = false;
+        verify(!subject.missingMessage.visible);
+        verify(subject.globalMessage.visible);
+    }
+
+    function test_unreachableCommandDefersToLoadingAndToRecoveredProviders() {
+        var subject = createSubject();
+        subject.applet.selectedProviderData = null;
+        subject.applet.commandPathFailed = true;
+        subject.applet.errorText = "sh: 1: codexbar: not found";
+        verify(subject.missingMessage.visible);
+
+        // A refresh in flight must not flash the setup error under the spinner.
+        subject.applet.loading = true;
+        verify(!subject.missingMessage.visible);
+        subject.applet.loading = false;
+        verify(subject.missingMessage.visible);
+
+        // Retained providers keep their data on screen; the state is for an
+        // empty popup, not for a stale classification over usable quotas.
+        subject.applet.providers = [{provider: "codex"}];
+        verify(!subject.missingMessage.visible);
+    }
+
     function test_globalAndProviderErrorsShareOneSetOfActions() {
         var subject = createSubject();
         subject.applet.errorText = "Synthetic connection failure";
@@ -179,8 +228,21 @@ class UsageRecoveryTests(unittest.TestCase):
             for name in ("retryUsageAction", "usageSettingsAction", "configureProvidersAction")))
         for placeholder, name in (("GLOBAL_MESSAGE", "globalErrorMessage"),
                                   ("PROVIDER_MESSAGE", "providerErrorMessage"),
-                                  ("EMPTY_MESSAGE", "emptyProvidersPlaceholder")):
-            qml = qml.replace(placeholder, surface.id_block(name))
+                                  ("EMPTY_MESSAGE", "emptyProvidersPlaceholder"),
+                                  ("MISSING_MESSAGE", "missingCommandMessage")):
+            # The harness imports the shared components under a namespace, while
+            # production resolves them from the same directory.
+            qml = qml.replace(placeholder, surface.id_block(name).replace(
+                "PlainPlaceholderMessage {", "Components.PlainPlaceholderMessage {"))
+        # The production condition itself, so the test cannot drift from it.
+        representation = (ROOT / "contents/ui/components/FullRepresentation.qml").read_text()
+        condition = re.search(
+            r"readonly property bool commandPathMissing:.*?(?=\n\n)", representation, re.S)
+        assert condition, "commandPathMissing must stay a single readonly property"
+        qml = qml.replace("SOURCE_MISSING_PROPERTY", condition.group(0))
+        # The provider setup state is rendered outside this harness, so assert at
+        # the source that it also stands aside for an unreachable command.
+        self.assertIn("!fullRoot.commandPathMissing", surface.id_block("emptyProvidersMessage"))
         with tempfile.TemporaryDirectory(prefix="codexbar-recovery-") as temporary:
             fixture = Path(temporary) / "tst_recovery.qml"
             fixture.write_text(qml)

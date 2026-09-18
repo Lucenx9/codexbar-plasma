@@ -29,6 +29,9 @@ Item {
 
     readonly property bool loading: lifecycle.loading
     readonly property string errorText: lifecycle.errorText
+    // True when the last finished usage command could not run the configured
+    // executable at all, which needs a command-path answer rather than a retry.
+    readonly property bool commandPathFailed: lifecycle.commandPathFailed
     readonly property var providerDisplayNames: lifecycle.providerDisplayNames
     readonly property string commandSource: lifecycle.commandSource
     readonly property double lastAttemptAtMs: lifecycle.usageLastRefreshAttemptAtMs
@@ -67,6 +70,7 @@ Item {
         property bool initialized: false
         property bool loading: false
         property string errorText: ""
+        property bool commandPathFailed: false
         property var providerDisplayNames: ({})
         property double usageLastRefreshAttemptAtMs: -1
         property double usageLastCompletedAtMs: -1
@@ -226,6 +230,7 @@ Item {
             usageLastRefreshAttemptAtMs = Date.now();
             loading = true;
             errorText = "";
+            commandPathFailed = false;
             if (canUseProviderFallback()) {
                 startProviderFallback(bypassProviderRosterCache === true);
                 return;
@@ -302,6 +307,7 @@ Item {
                 controller.emptyRoster();
                 // A confirmed empty roster uses the popup's provider setup state.
                 errorText = "";
+                commandPathFailed = false;
                 loading = false;
                 return;
             }
@@ -489,6 +495,11 @@ Item {
 
             var stdoutText = data ? data["stdout"] : "";
             var stderrText = data ? data["stderr"] : "";
+            // A shell that cannot run the configured executable reports it the
+            // same way for every command kind, so classify before dispatching.
+            // One reachable command clears the classification for all of them.
+            lifecycle.commandPathFailed = Guards.isCommandPathFailure(
+                data ? data["exit code"] : null);
             switch (descriptor.kind) {
             case "providerConfig":
                 lifecycle.finishUsageCommandSource(sourceName);

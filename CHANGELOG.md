@@ -12,6 +12,16 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Tell an unreachable CodexBar CLI apart from a provider that is not set up.
+  When the shell reports the configured command as not found or not executable,
+  the empty popup now says so, names the configured value, and points at
+  **Diagnostics** for an absolute path, instead of offering a retry that cannot
+  start or claiming that no provider is enabled.
+- Report the widget version in **Diagnostics**, plus the CLI version and the
+  absolute command the shell resolved after **Check versions**. The configured
+  value can be a bare name, so the resolved path is what identifies which
+  executable Plasma actually runs.
+
 - Open the update's GitHub release page when clicking the widget-update
   notification. The page address is derived from the release tag announced by
   the updater and stays non-clickable when the installed `notify-send` is too

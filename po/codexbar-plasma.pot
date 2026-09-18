@@ -149,6 +149,17 @@ msgid "Loading usage..."
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
+msgid "CodexBar CLI not found."
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
+msgid ""
+"Plasma could not run '%1'. Install the CodexBar CLI, or find it with "
+"'command -v codexbar' in a terminal and paste the absolute path into "
+"Diagnostics in widget settings."
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
 msgid "No provider data."
 msgstr ""
 
@@ -895,6 +906,38 @@ msgstr ""
 
 #: contents/ui/configDiagnostics.qml
 msgid "Use PATH"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "Versions"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "CodexBar Plasma:"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml contents/ui/main.qml
+msgid "Unknown"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "CodexBar CLI:"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "Not checked"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "Not found"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "Resolved command:"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "Check versions"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
@@ -1944,10 +1987,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Working"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Unknown"
 msgstr ""
 
 #: contents/ui/main.qml

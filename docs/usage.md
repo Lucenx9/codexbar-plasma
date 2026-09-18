@@ -130,7 +130,16 @@ with a hint to open **Providers** in widget settings. A confirmed empty list of
 enabled providers uses this setup state and still clears previous quotas and
 their cache. Global and provider usage errors offer **Retry** and **Settings**,
 with a hint to open **Diagnostics** for
-connection checks. Both settings actions open Plasma's standard widget settings
+connection checks.
+
+A command Plasma cannot run at all takes a separate state. When the shell
+reports that the configured command was not found or is not executable, the
+empty popup says **CodexBar CLI not found**, names the configured value, and
+sends you to **Diagnostics** to set an absolute path. It offers no **Retry**,
+because repeating a command that cannot start cannot succeed, and it does not
+claim that no provider is set up. Any other failure keeps the existing error
+and setup states. Retained providers, a refresh in flight, and the global
+views keep precedence over this state. Both settings actions open Plasma's standard widget settings
 window; select the named page there. They do not change configuration or run
 diagnostics automatically.
 
@@ -317,6 +326,10 @@ fields; track proposed extensions in the issue tracker.
 - Six settings pages: **General**, **Providers**, **Panel**, **Popup**,
   **Notifications**, and **Diagnostics**. CLI path and provider/source overrides
   sit beside redacted diagnostics; quota thresholds sit beside their alerts.
+  **Diagnostics** also reports the widget version, and, after **Check
+  versions**, the CLI version and the absolute command the shell resolved.
+  Those three lines are what a bug report needs; the probe runs only when
+  asked, and a changed command path clears the previous result.
   **Popup** and **Notifications** keep their text and controls still while the
   page opens, including while the Popup provider list arrives.
 - **Panel** starts with the preview, side-by-side Standard/Minimal choices, and

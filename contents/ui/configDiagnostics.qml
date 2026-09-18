@@ -7,6 +7,7 @@ import org.kde.plasma.plasma5support as Plasma5Support
 import "components" as Components
 import "Guards.js" as Guards
 import "SafeText.js" as SafeText
+import "config/ProviderConfigProtocol.js" as ProviderConfigProtocol
 
 KCM.SimpleKCM {
     id: page
@@ -24,6 +25,15 @@ KCM.SimpleKCM {
     property string diagnosticOutput: ""
     property string diagnosticError: ""
     property string activeCommand: ""
+    // Reported environment, filled by the versions probe. Empty until it runs.
+    property string resolvedCommandPath: ""
+    property string cliVersionText: ""
+    property bool environmentProbeFailed: false
+    property string activeCommandKind: "diagnostic"
+    // `Plasmoid` is an attached name, so a bare reference throws wherever the
+    // page is loaded outside an applet, such as the settings smoke capture.
+    readonly property string widgetVersion: typeof Plasmoid !== "undefined" && Plasmoid.metaData
+        ? String(Plasmoid.metaData.version || "") : ""
     property int commandRunSerial: 0
     readonly property int diagnosticCommandTimeoutMs: 60000
 
@@ -33,6 +43,9 @@ KCM.SimpleKCM {
         }
         diagnosticOutput = ""
         diagnosticError = ""
+        resolvedCommandPath = ""
+        cliVersionText = ""
+        environmentProbeFailed = false
     }
 
     function shellQuote(value) {
@@ -45,15 +58,23 @@ KCM.SimpleKCM {
             provider = "all"
         }
         var command = shellQuote(commandPath) + " diagnose --provider " + shellQuote(provider) + " --format json --redact"
-        runCommand(command)
+        runCommand(command, "diagnostic")
     }
 
     function runProviderList() {
         var command = shellQuote(commandPath) + " config providers --format json --json-only"
-        runCommand(command)
+        runCommand(command, "diagnostic")
     }
 
-    function runCommand(command) {
+    // One process reports both facts: line one is the resolved executable from
+    // the shell, the rest is the CLI's own version banner. `command -v` exits
+    // non-zero when the path cannot be resolved, which short-circuits the rest.
+    function runEnvironmentProbe() {
+        var quoted = shellQuote(commandPath)
+        runCommand("command -v " + quoted + " && " + quoted + " --version", "environment")
+    }
+
+    function runCommand(command, kind) {
         if (commandPath.length === 0) {
             diagnosticError = i18n("Set the codexbar command path above.")
             return
@@ -62,8 +83,15 @@ KCM.SimpleKCM {
             finishDiagnosticCommand(activeCommand)
         }
         diagnosticRunning = true
-        diagnosticOutput = ""
-        diagnosticError = ""
+        activeCommandKind = kind === "environment" ? "environment" : "diagnostic"
+        if (activeCommandKind === "environment") {
+            resolvedCommandPath = ""
+            cliVersionText = ""
+            environmentProbeFailed = false
+        } else {
+            diagnosticOutput = ""
+            diagnosticError = ""
+        }
         activeCommand = commandWithRunNonce(command)
         diagnosticSource.connectSource(activeCommand)
         diagnosticCommandTimeoutTimer.restart()
@@ -90,7 +118,12 @@ KCM.SimpleKCM {
         if (activeCommand.length === 0) {
             return
         }
+        var kind = activeCommandKind
         finishDiagnosticCommand(activeCommand)
+        if (kind === "environment") {
+            environmentProbeFailed = true
+            return
+        }
         diagnosticOutput = ""
         diagnosticError = i18n("Diagnostic command timed out. Try again.")
     }
@@ -99,7 +132,18 @@ KCM.SimpleKCM {
         if (sourceName !== activeCommand) {
             return
         }
+        var kind = activeCommandKind
         finishDiagnosticCommand(sourceName)
+
+        if (kind === "environment") {
+            var probeExitCode = data && data["exit code"] !== undefined ? Number(data["exit code"]) : 0
+            var summary = ProviderConfigProtocol.environmentSummary(
+                data && data["stdout"] ? data["stdout"] : "")
+            environmentProbeFailed = !(probeExitCode === 0) || summary.version.length === 0
+            resolvedCommandPath = summary.commandPath
+            cliVersionText = summary.version
+            return
+        }
 
         var rawStdoutText = data && data["stdout"] ? data["stdout"] : ""
         var stdoutText = SafeText.cliJsonText(rawStdoutText)
@@ -171,6 +215,51 @@ KCM.SimpleKCM {
                     enabled: page.cfg_commandPath.trim() !== (page.cfg_commandPathDefault || "codexbar")
                     onClicked: page.cfg_commandPath = page.cfg_commandPathDefault || "codexbar"
                 }
+            }
+
+            Kirigami.Separator {
+                Kirigami.FormData.label: i18n("Versions")
+                Kirigami.FormData.isSection: true
+            }
+
+            Components.PlainControlsLabel {
+                id: widgetVersionLabel
+                objectName: "widgetVersionLabel"
+
+                Kirigami.FormData.label: i18n("CodexBar Plasma:")
+                text: page.widgetVersion.length > 0 ? page.widgetVersion : i18n("Unknown")
+            }
+
+            Components.PlainControlsLabel {
+                id: cliVersionLabel
+                objectName: "cliVersionLabel"
+
+                Kirigami.FormData.label: i18n("CodexBar CLI:")
+                text: page.cliVersionText.length > 0 ? page.cliVersionText
+                    : (page.environmentProbeFailed ? i18n("Not found") : i18n("Not checked"))
+            }
+
+            Components.PlainControlsLabel {
+                id: resolvedCommandLabel
+                objectName: "resolvedCommandLabel"
+
+                Kirigami.FormData.label: i18n("Resolved command:")
+                // The configured value can be a bare name; this is the absolute
+                // path Plasma actually runs, which is what a bug report needs.
+                text: page.resolvedCommandPath.length > 0 ? page.resolvedCommandPath
+                    : (page.environmentProbeFailed ? i18n("Not found") : i18n("Not checked"))
+                Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                elide: Text.ElideMiddle
+            }
+
+            Controls.Button {
+                id: checkEnvironmentButton
+                objectName: "checkEnvironmentButton"
+
+                text: i18n("Check versions")
+                enabled: !page.diagnosticRunning
+                onClicked: page.runEnvironmentProbe()
             }
 
             Kirigami.Separator {

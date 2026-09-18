@@ -112,4 +112,23 @@ TestCase {
         compare(Guards.shellQuote(7), "'7'")
         compare(Guards.shellQuote(null), "'null'")
     }
+
+    function test_commandPathFailureAcceptsOnlyTheShellNotFoundCodes() {
+        verify(Guards.isCommandPathFailure(127))
+        verify(Guards.isCommandPathFailure(126))
+        verify(Guards.isCommandPathFailure("127"))
+        verify(!Guards.isCommandPathFailure(0))
+        verify(!Guards.isCommandPathFailure(1))
+        verify(!Guards.isCommandPathFailure(125))
+        verify(!Guards.isCommandPathFailure(128))
+        // A missing, unparseable or hostile value must never claim the path is
+        // wrong: a retryable provider failure would be reported as a setup bug.
+        verify(!Guards.isCommandPathFailure(null))
+        verify(!Guards.isCommandPathFailure(undefined))
+        verify(!Guards.isCommandPathFailure("not a number"))
+        verify(!Guards.isCommandPathFailure(NaN))
+        verify(!Guards.isCommandPathFailure(Infinity))
+        verify(!Guards.isCommandPathFailure({}))
+        verify(!Guards.isCommandPathFailure([127]))
+    }
 }

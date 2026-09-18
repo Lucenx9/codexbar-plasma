@@ -59,6 +59,26 @@ TestCase {
         wait(0);
     }
 
+    function test_diagnosticsShowsResolvedPathWithSpaces() {
+        var page = createPage("../contents/ui/configDiagnostics.qml", {
+            cfg_commandPath: "/opt/CodexBar CLI/bin/codexbar"
+        });
+        if (!page)
+            return;
+
+        page.activeCommand = "environment";
+        page.activeCommandKind = "environment";
+        page.handleDiagnosticData("environment", {
+            "exit code": 0,
+            stdout: "/opt/CodexBar CLI/bin/codexbar\nCodexBar 0.61.0"
+        });
+
+        var resolvedCommandLabel = findChild(page, "resolvedCommandLabel");
+        verify(resolvedCommandLabel !== null);
+        compare(resolvedCommandLabel.text, "/opt/CodexBar CLI/bin/codexbar");
+        verify(resolvedCommandLabel.text !== "Not checked");
+    }
+
     function test_restoringDefaultsStaysPendingUntilSaved() {
         var page = createPage("../contents/ui/configGeneral.qml", {
             cfg_commandPath: "/opt/codexbar/bin/codexbar",
