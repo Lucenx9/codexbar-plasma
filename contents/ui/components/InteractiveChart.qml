@@ -205,6 +205,15 @@ ColumnLayout {
                 return
             }
 
+            if (chart.kind === "bar" && chart.valueDomain.maximum > 0) {
+                var peakBar = ChartScale.barGeometry(height, chart.valueDomain.maximum, chart.valueDomain)
+                var peakY = Math.round(peakBar.baseline - peakBar.height)
+                if (baseline - peakY >= Kirigami.Units.gridUnit) {
+                    context.fillStyle = chart.applet.canvasColor(Kirigami.Theme.textColor, 0.08)
+                    context.fillRect(0, peakY, width, 1)
+                }
+            }
+
             if (chart.kind === "line") {
                 context.strokeStyle = chart.applet.canvasColor(chart.accent, 0.9)
                 context.fillStyle = chart.applet.canvasColor(chart.accent, 1)
