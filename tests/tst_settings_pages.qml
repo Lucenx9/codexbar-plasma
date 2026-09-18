@@ -70,7 +70,7 @@ TestCase {
         page.activeCommandKind = "environment";
         page.handleDiagnosticData("environment", {
             "exit code": 0,
-            stdout: "/opt/CodexBar CLI/bin/codexbar\\nCodexBar 0.61.0"
+            stdout: "/opt/CodexBar CLI/bin/codexbar\nCodexBar 0.61.0"
         });
 
         var resolvedCommandLabel = findChild(page, "resolvedCommandLabel");

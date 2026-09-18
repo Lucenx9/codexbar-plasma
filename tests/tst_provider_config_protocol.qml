@@ -481,6 +481,16 @@ TestCase {
         compare(summary.version, "CodexBar 0.61.0")
     }
 
+    function test_environmentSummaryKeepsSpacesInsideAnAbsolutePath() {
+        // An install directory may legitimately contain spaces, and the value is
+        // only displayed, never re-executed, so the whitespace must survive.
+        var summary = ProviderConfigProtocol.environmentSummary(
+            "/opt/CodexBar CLI/bin/codexbar\nCodexBar 0.61.0")
+
+        compare(summary.commandPath, "/opt/CodexBar CLI/bin/codexbar")
+        compare(summary.version, "CodexBar 0.61.0")
+    }
+
     function test_environmentSummaryRejectsUntrustedShapes() {
         compare(ProviderConfigProtocol.environmentSummary(null).commandPath, "")
         compare(ProviderConfigProtocol.environmentSummary(null).version, "")
