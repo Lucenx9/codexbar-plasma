@@ -68,8 +68,11 @@ Item {
         }
 
         function actionActivated(data) {
-            var stdoutText = data && typeof data["stdout"] === "string" ? data["stdout"] : "";
-            return stdoutText.slice(0, 64).trim() === "default";
+            var exitCode = data && data["exit code"] !== undefined ? Number(data["exit code"]) : 0
+            if (exitCode !== 0)
+                return false
+            var stdoutText = data && typeof data["stdout"] === "string" ? data["stdout"] : ""
+            return stdoutText.slice(0, 64).trim() === "default"
         }
     }
 

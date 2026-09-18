@@ -136,8 +136,10 @@ PlasmoidItem {
     property var notificationRefreshPending: ({})
     property bool notificationsPrimed: false
     property string lastNotifiedUpdateVersion: Plasmoid.configuration.lastNotifiedUpdateVersion || ""
-    property string pendingUpdateNotificationSource: ""
-    property string pendingUpdateReleaseUrl: ""
+    // Keyed by notification source name: queued actionable update
+    // notifications stay independently clickable, and entries leave only with
+    // their own activation.
+    property var pendingUpdateReleaseUrls: ({})
     readonly property bool verticalFormFactor: Plasmoid.formFactor === PlasmaCore.Types.Vertical
     readonly property var overviewProviderItems: overviewProviders()
     readonly property bool globalNavigationAvailable: provider.length === 0
@@ -1723,17 +1725,21 @@ PlasmoidItem {
         var releasePageUrl = safeReleaseUrl(releaseUrl)
         var actionLabel = releasePageUrl.length > 0 ? i18n("Open release page") : ""
         var sourceName = sendPlasmaNotification(title, body, "normal", actionLabel)
-        pendingUpdateNotificationSource = releasePageUrl.length > 0 ? sourceName : ""
-        pendingUpdateReleaseUrl = releasePageUrl
+        if (releasePageUrl.length > 0 && sourceName.length > 0 && !Guards.isUnsafeObjectKey(sourceName)) {
+            var nextPending = copyObject(pendingUpdateReleaseUrls)
+            nextPending[sourceName] = releasePageUrl
+            pendingUpdateReleaseUrls = nextPending
+        }
     }
 
     function handleUpdateNotificationActivated(sourceName) {
-        if (sourceName.length === 0 || sourceName !== pendingUpdateNotificationSource) {
+        if (sourceName.length === 0 || !hasOwnKey(pendingUpdateReleaseUrls, sourceName)) {
             return
         }
-        pendingUpdateNotificationSource = ""
-        var releasePageUrl = pendingUpdateReleaseUrl
-        pendingUpdateReleaseUrl = ""
+        var nextPending = copyObject(pendingUpdateReleaseUrls)
+        var releasePageUrl = nextPending[sourceName]
+        delete nextPending[sourceName]
+        pendingUpdateReleaseUrls = nextPending
         Qt.openUrlExternally(releasePageUrl)
     }
 

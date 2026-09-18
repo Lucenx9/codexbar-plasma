@@ -267,5 +267,150 @@ class NotificationWiringTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
+class UpdateNotificationWiringTests(unittest.TestCase):
+    UPDATE_FUNCTIONS = (
+        "hasOwnKey", "copyObject", "safeReleaseUrl", "sendPlasmaNotification",
+        "notifyAvailableUpdate", "handleUpdateNotificationActivated",
+    )
+
+    UPDATE_QML = '''import QtQuick
+import QtTest
+import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
+import "SOURCE_URL/Guards.js" as Guards
+TestCase {
+    name: "UpdateNotificationWiring"
+    property bool enableNotifications: true
+    property bool updateNotificationsEnabled: true
+    property bool privacyMode: false
+    property string lastNotifiedUpdateVersion: ""
+    property var pendingUpdateReleaseUrls: ({})
+    property var notificationPlasmoidConfiguration: ({})
+    property var sentNotifications: []
+    property int sentSerial: 0
+    property var openedReleaseUrls: []
+    property var notificationDispatcher: ({
+        send: function(title, body, urgency, actionLabel) {
+            sentSerial += 1;
+            sentNotifications = sentNotifications.concat([{
+                title: title, body: body, urgency: urgency, actionLabel: actionLabel
+            }]);
+            return "source-" + sentSerial;
+        }
+    })
+
+    function i18n(text, first) {
+        return text.replace("%1", first === undefined ? "%1" : first);
+    }
+
+    function recordOpenedReleaseUrl(url) {
+        openedReleaseUrls = openedReleaseUrls.concat([url]);
+    }
+
+    SOURCE_FUNCTIONS
+
+    function init() {
+        enableNotifications = true;
+        updateNotificationsEnabled = true;
+        privacyMode = false;
+        lastNotifiedUpdateVersion = "";
+        pendingUpdateReleaseUrls = ({});
+        notificationPlasmoidConfiguration = ({});
+        sentNotifications = [];
+        sentSerial = 0;
+        openedReleaseUrls = [];
+    }
+
+    function releaseUrl(version) {
+        return "https://github.com/Lucenx9/codexbar-plasma/releases/tag/" + version;
+    }
+
+    function announce(version) {
+        notifyAvailableUpdate(version, "", releaseUrl(version));
+    }
+
+    function test_queuedActionableUpdatesOpenTheirOwnReleasePage() {
+        announce("v0.2.40");
+        announce("v0.2.41");
+        compare(sentNotifications.length, 2);
+        verify(sentNotifications[0].actionLabel.length > 0);
+        verify(sentNotifications[1].actionLabel.length > 0);
+        compare(Object.keys(pendingUpdateReleaseUrls).length, 2);
+
+        // The later notification activating must not retire the earlier one.
+        handleUpdateNotificationActivated("source-2");
+        compare(openedReleaseUrls, [releaseUrl("v0.2.41")]);
+        handleUpdateNotificationActivated("source-1");
+        compare(openedReleaseUrls, [releaseUrl("v0.2.41"), releaseUrl("v0.2.40")]);
+        compare(pendingUpdateReleaseUrls, ({}));
+
+        // Replays of retired sources open nothing.
+        handleUpdateNotificationActivated("source-1");
+        handleUpdateNotificationActivated("unknown-source");
+        compare(openedReleaseUrls.length, 2);
+    }
+
+    function test_updatesWithoutATrustedReleaseUrlStayNonActionable() {
+        announce("v0.2.40");
+        compare(sentNotifications.length, 1);
+        verify(sentNotifications[0].actionLabel.length > 0);
+
+        notifyAvailableUpdate("v0.2.41", "", "");
+        compare(sentNotifications.length, 2);
+        compare(sentNotifications[1].actionLabel, "");
+        compare(Object.keys(pendingUpdateReleaseUrls).length, 1);
+
+        notifyAvailableUpdate("v0.2.42", "", "https://example.dev/releases/tag/v0.2.42");
+        compare(sentNotifications.length, 3);
+        compare(sentNotifications[2].actionLabel, "");
+        compare(Object.keys(pendingUpdateReleaseUrls).length, 1);
+
+        // Only the trusted first announcement is actionable; the non-actionable
+        // sources were never registered, and unknown sources open nothing.
+        handleUpdateNotificationActivated("source-2");
+        handleUpdateNotificationActivated("source-3");
+        compare(openedReleaseUrls, []);
+        handleUpdateNotificationActivated("source-1");
+        compare(openedReleaseUrls, [releaseUrl("v0.2.40")]);
+        compare(pendingUpdateReleaseUrls, ({}));
+    }
+
+    function test_disabledNotificationsNeverReachTheDispatcher() {
+        enableNotifications = false;
+        announce("v0.2.40");
+        compare(sentNotifications.length, 0);
+        enableNotifications = true;
+        updateNotificationsEnabled = false;
+        announce("v0.2.41");
+        compare(sentNotifications.length, 0);
+        compare(pendingUpdateReleaseUrls, ({}));
+    }
+}
+'''
+
+    def test_update_notification_adapters_keep_activations_source_scoped(self):
+        applet = Surface("applet", ROOT)
+        main = ROOT / "contents/ui/main.qml"
+        source = applet.texts[main]
+        applet.texts = {main: source}
+        functions = []
+        for name in self.UPDATE_FUNCTIONS:
+            signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
+            functions.append(signature + " {" + applet.function_body(name) + "}")
+        qml = self.UPDATE_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
+        qml = qml.replace("SOURCE_FUNCTIONS", "\n".join(functions))
+        # A property named Plasmoid is not addressable in QML, so route the
+        # configuration write and the external open through harness-owned names.
+        qml = qml.replace("Plasmoid.configuration", "notificationPlasmoidConfiguration")
+        qml = qml.replace("Qt.openUrlExternally(releasePageUrl)", "recordOpenedReleaseUrl(releasePageUrl)")
+        with tempfile.TemporaryDirectory(prefix="codexbar-update-notification-") as temporary:
+            fixture = Path(temporary) / "tst_update_notifications.qml"
+            fixture.write_text(qml, encoding="utf-8")
+            result = subprocess.run(
+                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

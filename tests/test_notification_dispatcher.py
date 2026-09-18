@@ -169,9 +169,27 @@ TRANSPORT_TESTS = '''
         subject.testSource.newData(dismissedSource, {"exit code": 1, stdout: ""});
         compare(activated, []);
         compare(subject.sending, false);
+        var failedSource = subject.send("update", "body", "normal", "Open release page");
+        subject.testSource.newData(failedSource, {"exit code": 1, stdout: "default\n"});
+        compare(activated, []);
+        compare(subject.sending, false);
         var noisySource = subject.send("update", "body", "normal", "Open release page");
         subject.testSource.newData(noisySource, {"exit code": 0, stdout: "x".repeat(4096) + "default"});
         compare(activated, []);
+        compare(subject.sending, false);
+    }
+
+    function test_queuedActionNotificationsActivateIndependently() {
+        var subject = create();
+        var activated = [];
+        subject.activated.connect(function(source) { activated.push(source); });
+        var first = subject.send("first update", "body", "normal", "Open release page");
+        var second = subject.send("second update", "body", "normal", "Open release page");
+        verify(first !== second);
+        subject.testSource.newData(second, {"exit code": 0, stdout: "default\n"});
+        compare(activated, [second]);
+        subject.testSource.newData(first, {"exit code": 0, stdout: "default\n"});
+        compare(activated, [second, first]);
         compare(subject.sending, false);
     }
 '''

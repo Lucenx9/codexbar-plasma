@@ -365,7 +365,9 @@ require_in_surface applet "Qt.openUrlExternally(safeStatusUrl(item.provider, ite
 require_in_surface applet "function safeReleaseUrl(url)"
 require_in_surface applet "Qt.openUrlExternally(releasePageUrl)"
 require_in_surface applet 'Normalizer.httpsUrlHost(candidate) === "github.com"'
-require_in_surface applet "pendingUpdateNotificationSource = releasePageUrl.length > 0 ? sourceName : \"\""
+require_in_surface applet "property var pendingUpdateReleaseUrls: ({})"
+require_in_surface applet "nextPending[sourceName] = releasePageUrl"
+require_in_surface applet "delete nextPending[sourceName]"
 
 require_in_surface applet "notify-send --app-name=CodexBar --icon=view-statistics --urgency="
 require_in_file "${ROOT_DIR}/contents/ui/NotificationCommand.js" 'Guards.shellQuote(cleanTitle), Guards.shellQuote(cleanBody)'
