@@ -8,20 +8,35 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.60.4](https://github.com/steipete/CodexBar/releases/tag/v0.60.4),
-  commit `937b20813cf47340093b6c312331c63a52768097`, checked 2026-09-16.
-- Coverage: release changes from 0.59.0 through 0.60.4 against Plasma
-  `8d49266166c3e892a1c52f191b57cf44374bc498`.
-  The [review](docs/research/2026-09-16-macos-parity-0.60.4.md) records the
-  release delta, source comparison, and scoped Linux 0.60.4 probes. Emitted
-  JSON schemas are unchanged; shared payload structs gained optional
-  credit-availability and detail-row fields awaiting authenticated output
-  evidence.
+- Last release reviewed: [CodexBar 0.60.5](https://github.com/steipete/CodexBar/releases/tag/v0.60.5),
+  commit `2ac2323629ce0e3b3759707013aeb4a6c77161c1`, checked 2026-09-18.
+- Coverage: release changes from 0.59.0 through 0.60.5 against Plasma
+  `c69b0a0481bbf2373087658f620e0ffeab854429`. The
+  [0.60.5 review](docs/research/2026-09-18-macos-parity-0.60.5.md) verifies the
+  new cost `incompleteRequestCount` contract in official Linux output; the
+  [0.60.4 review](docs/research/2026-09-16-macos-parity-0.60.4.md) records the
+  earlier release delta and source comparison. Usage JSON schemas are
+  unchanged; shared payload structs gained optional credit-availability and
+  detail-row fields awaiting authenticated output evidence.
 - Full CLI baseline remains the [0.56.2 audit](docs/research/2026-09-01-macos-parity-0.56.2.md).
   Later probes verify only their named cases. Older blockers below retain their
   last verified version; source inspection is not authenticated output evidence.
 
 ## Implementable on Linux
+
+### Incomplete cost requests
+
+- [ ] Consume the official `incompleteRequestCount` counts in cost views so a
+  window, day, or model row whose requests lacked final usage is marked as
+  partial instead of presenting a complete-looking amount. Verified in Linux
+  0.60.5 output on `cost` at top level, `totals`, `daily[]`, and
+  `daily[].modelBreakdowns[]`; the key is omitted when zero and an
+  only-incomplete day already arrives without `totalCost`/`totalTokens`, which
+  Plasma keeps unknown. Done when normalization bounds the counts, the popup
+  marks affected totals, rows, and model entries, the average and chart
+  semantics stay unchanged for measured data, and tests cover mixed,
+  only-incomplete, absent, and malformed counts.
+  Evidence: [0.60.5 review](docs/research/2026-09-18-macos-parity-0.60.5.md#linux-cli-contract-changes-since-0604).
 
 ### Popup usage row visibility
 
@@ -109,6 +124,9 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   probes omit cost totals, and the Claude probes report measured zeros;
   none verifies that established-empty case. The 0.60.4 OpenCodex
   unpriced-instead-of-zero change affects values within the unchanged cost schema.
+  Linux 0.60.5 adds verified `incompleteRequestCount` counts, which explain
+  requests excluded from an amount but do not mark an unavailable total; that
+  contract is tracked as its own implementable entry above.
   Done when verified
   Linux fields distinguish unavailable from measured zero, with old-payload compatibility and
   usable token charts. [Prior discussion #173](https://github.com/Lucenx9/codexbar-plasma/issues/173).
@@ -168,7 +186,9 @@ These are unresolved Linux candidates, not confirmed missing features.
   seat-credit rows with stable IDs and Antigravity local rows at 0.60.4).
   Reproduce rows with and without the numeric fields safely, then specify the
   bounded Plasma rendering (progress bars from numbers, no display-string
-  parsing) and whether stable IDs can back per-row popup visibility.
+  parsing) and whether stable IDs can back per-row popup visibility. macOS
+  0.60.5 reads the `copilot-seat-credits` row's `progress` as a switcher
+  used-percent fallback, which does not establish a quota cadence.
   [Source evidence](docs/research/2026-09-16-macos-parity-0.60.4.md#linux-cli-contract-changes-since-0580).
 - [ ] Compare exhausted automatic text/popup quota selection with the exact
   0.56.6 cases. Automatic panel capsules already show primary and secondary.

@@ -41,6 +41,10 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   0.59.0 through 0.60.4, source-observed credit-availability and detail-row
   fields, unchanged JSON schemas, and scoped official CLI probes. Cursor cost,
   provider descriptors, and generic config actions remain unavailable on Linux.
+- [0.60.5 release review](research/2026-09-18-macos-parity-0.60.5.md): the new
+  cost `incompleteRequestCount` contract verified in official Linux output,
+  its unknown-not-zero day shape, and scoped official CLI probes. Provider
+  descriptors, generic config actions, and Cursor cost remain unavailable.
 - [Settings decisions](research/2026-09-08-settings-experience.md): Panel disclosure and text grouping,
   Plasma settings, privacy, refresh behavior, and the macOS 0.56.8 comparison.
 
