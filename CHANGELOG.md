@@ -16,6 +16,15 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   usage, naming how many were left out of the displayed cost and tokens. The
   notice appears for a provider and for the aggregate **Usage & Spend** total,
   and closing it keeps the same warning closed even when the count changes.
+- Draw a faint peak reference line across bar charts at the highest plotted
+  value, grounding the vertical scale of the columns before any point is
+  inspected.
+
+### Changed
+
+- Restyle the **Usage & Spend** provider breakdown rows as subtle cards with a
+  bordered, tinted provider identity tile matching the overview and provider
+  header tiles.
 
 ## 0.2.39 - 2026-09-17
 

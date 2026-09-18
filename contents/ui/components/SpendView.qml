@@ -429,37 +429,73 @@ ColumnLayout {
 
                     model: view.presentedProviderCosts
 
-                    delegate: RowLayout {
+                    delegate: Rectangle {
+                        id: spendProviderCard
+
                         required property var modelData
 
                         Layout.fillWidth: true
-                        spacing: Kirigami.Units.smallSpacing
+                        implicitHeight: spendProviderRow.implicitHeight + Kirigami.Units.smallSpacing * 1.5
+                        radius: view.applet.nestedSurfaceRadius
+                        // A passive display row: no hover state, because every
+                        // other highlighted surface in the popup acts on click
+                        // or reveals actions, and this one does neither.
+                        color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.035)
+                        border.width: 1
+                        border.color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.07)
 
-                        Kirigami.Icon {
-                            source: view.applet.providerIconSource(modelData.provider)
-                            fallback: "view-statistics"
-                            isMask: view.applet.providerIconIsMask(modelData.provider)
-                            color: view.applet.providerReadableColor(
-                                modelData.provider,
-                                Kirigami.Theme.backgroundColor)
-                            Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                            Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                        }
+                        Accessible.role: Accessible.ListItem
+                        Accessible.name: view.applet.providerDisplayTitle(spendProviderCard.modelData.provider)
+                        Accessible.description: spendProviderCard.modelData.windowValueLine
 
-                        PlainPlasmaLabel {
-                            text: view.applet.providerDisplayTitle(modelData.provider)
-                            font.weight: Font.DemiBold
-                            Layout.fillWidth: true
-                            elide: Text.ElideRight
-                        }
+                        RowLayout {
+                            id: spendProviderRow
 
-                        PlainPlasmaLabel {
-                            // The range selector above states the window once,
-                            // so each row carries only its own figures.
-                            text: modelData.windowValueLine
-                            opacity: view.applet.valueTextOpacity
-                            horizontalAlignment: Text.AlignRight
-                            elide: Text.ElideRight
+                            anchors.fill: parent
+                            anchors.leftMargin: Kirigami.Units.smallSpacing
+                            anchors.rightMargin: Kirigami.Units.smallSpacing
+                            spacing: Kirigami.Units.smallSpacing
+
+                            Rectangle {
+                                Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
+                                Layout.preferredHeight: Layout.preferredWidth
+                                // Same identity-tile treatment as the overview
+                                // and header tiles, scaled down for this row.
+                                radius: view.applet.nestedSurfaceRadius
+                                color: view.applet.withAlpha(view.applet.providerReadableColor(
+                                    spendProviderCard.modelData.provider,
+                                    Kirigami.Theme.backgroundColor), 0.12)
+                                border.width: 1
+                                border.color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
+
+                                Kirigami.Icon {
+                                    anchors.centerIn: parent
+                                    source: view.applet.providerIconSource(spendProviderCard.modelData.provider)
+                                    fallback: "view-statistics"
+                                    isMask: view.applet.providerIconIsMask(spendProviderCard.modelData.provider)
+                                    color: view.applet.providerReadableColor(
+                                        spendProviderCard.modelData.provider,
+                                        Kirigami.Theme.backgroundColor)
+                                    width: Kirigami.Units.iconSizes.small
+                                    height: Kirigami.Units.iconSizes.small
+                                }
+                            }
+
+                            PlainPlasmaLabel {
+                                text: view.applet.providerDisplayTitle(spendProviderCard.modelData.provider)
+                                font.weight: Font.DemiBold
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                            }
+
+                            PlainPlasmaLabel {
+                                // The range selector above states the window once,
+                                // so each row carries only its own figures.
+                                text: spendProviderCard.modelData.windowValueLine
+                                opacity: view.applet.valueTextOpacity
+                                horizontalAlignment: Text.AlignRight
+                                elide: Text.ElideRight
+                            }
                         }
                     }
                 }
