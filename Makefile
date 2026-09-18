@@ -1,4 +1,4 @@
-.PHONY: check smoke install restart package translations compile-translations update
+.PHONY: check todo-gate smoke install restart package translations compile-translations update
 
 PACKAGE_FILES := metadata.json contents docs/codexbar-plasma-overview.png docs/codexbar-plasma-codex.png docs/codexbar-plasma-usage-spend.png docs/codexbar-plasma-sessions.png docs/codexbar-plasma-panel-standard.png docs/codexbar-plasma-panel-minimal.png scripts/update-widget.sh LICENSE NOTICE.md README.md CHANGELOG.md
 
@@ -36,6 +36,9 @@ check:
 	else \
 		echo "kpackagetool6 not found; skipping appstream metainfo check"; \
 	fi
+
+todo-gate:
+	python3 scripts/todo_gate.py $(GATE_ARGS)
 
 smoke:
 	python3 scripts/smoke_popup.py $(SMOKE_ARGS)

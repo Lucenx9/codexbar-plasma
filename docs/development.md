@@ -940,6 +940,33 @@ For every repository change, including authorized direct commits:
    when all acceptance criteria are met. For partial work use `Refs #123`.
    Keep implementation status in TODO; do not create an issue for every gap.
 
+`make todo-gate` is an optional second pair of eyes on the TODO half of step 2.
+It sends the committed diff against `main`, plus TODO.md itself, to
+[Jev](https://docs.typesafe.ai/), a decision model that returns a probability
+instead of prose, and asks the single question code cannot answer: does this
+change deliver an unchecked entry that it does not remove? Code owns the
+policy, including the check for whether TODO.md was touched at all; the model
+only compares the diff with the listed entries.
+
+It needs `OPENROUTER_API_KEY`, costs well under a cent per run, and skips itself
+with a message when that variable is unset, when TODO.md is missing, or when
+nothing is committed against the base. Pass options through `GATE_ARGS`, such as
+`make todo-gate GATE_ARGS="--base main --threshold 0.5"`.
+
+The 0.6 default comes from replaying 17 recent commits: every change that left
+TODO.md alone scored at or below 0.36, and the one change that completed a
+listed entry scored 0.86. Injecting a matching entry into TODO.md moved an
+unrelated commit from 0.03 to 0.92, and deleting the matching entry moved the
+completing commit from 0.88 to 0.36, so the answer tracks TODO.md rather than
+the diff alone. Recalibrate the same way if TODO.md is restructured. Questions
+about changelog and guide updates were measured too and dropped: their scores
+for changes that updated those files overlapped their scores for changes that
+did not, so no threshold separated them.
+
+The gate stays out of `make check`, which must remain offline and deterministic.
+A flagged entry is a prompt to look, never a verdict, and an unflagged run does
+not discharge step 2.
+
 Keep proposal status visible inside each contract document, with exact verified
 versions. Dated audits retain their findings; a successor names the evidence it
 replaces. Current guides describe delivered behavior. During widget release
