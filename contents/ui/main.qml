@@ -101,6 +101,7 @@ PlasmoidItem {
     property var providers: []
     readonly property var providerDisplayNames: usageController.providerDisplayNames
     readonly property string errorText: usageController.errorText
+    readonly property bool commandPathFailed: usageController.commandPathFailed
     property string lastUpdatedText: ""
     property bool usageLifecycleInitialized: false
     readonly property string usageIdentityContext: JSON.stringify([

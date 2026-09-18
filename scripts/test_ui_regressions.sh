@@ -381,7 +381,17 @@ assert_form_sections(
 
 assert_form_sections(panel_surface.text, "configPanel.qml", ("Appearance", "Contents", "Panel visibility"))
 assert_form_sections(notifications_surface.text, "configNotifications.qml", ("Quota warnings", "Notifications"))
-assert_form_sections(diagnostics_text, "configDiagnostics.qml", ("Connection", "Advanced provider override"))
+assert_form_sections(diagnostics_text, "configDiagnostics.qml",
+                     ("Connection", "Versions", "Advanced provider override"))
+
+# The environment summary is what a bug report needs: the widget and CLI
+# versions plus the absolute command Plasma actually resolved, which the
+# configured value hides whenever it is a bare name resolved through PATH.
+for needle in ('i18n("CodexBar Plasma:")', 'i18n("CodexBar CLI:")',
+               'i18n("Resolved command:")', 'i18n("Check versions")',
+               "ProviderConfigProtocol.environmentSummary"):
+    if needle not in diagnostics_text:
+        raise AssertionError(f"configDiagnostics.qml must keep the versions summary: {needle}")
 
 # Presentation pages must not acquire provider processes or claim configuration
 # owned by an unrelated page when Plasma saves its cfg_* creation properties.

@@ -12,6 +12,7 @@
 var maximumProviderItems = 256
 var maximumDiagnosticListItems = 64
 var maximumCliVersionTextLength = 128
+var maximumEnvironmentTextLength = 1024
 
 function providerListResultIsCurrent(descriptor, currentRevision) {
     if (!isCliRecord(descriptor)
@@ -95,6 +96,31 @@ function cliVersionAtLeast(value, requiredMajor, requiredMinor, requiredPatch) {
     var suffix = match[4]
     return suffix.length === 0 || suffix.charAt(0) === "+"
         || /^-\d[^~]*$/.test(suffix)
+}
+
+// Bounded reading of `command -v <path> && <path> --version`. Line one is the
+// resolved executable, the rest is the CLI's own version banner. Both are
+// untrusted process output, so each is length-bounded and redacted, and a
+// resolved path is accepted only as a single absolute path without control
+// characters. Returns { commandPath, version }, either of which may be "".
+function environmentSummary(stdoutText) {
+    if (typeof stdoutText !== "string") {
+        return {commandPath: "", version: ""}
+    }
+    // Split before sanitizing. The bounded display helpers collapse every run
+    // of whitespace, so the two facts stay separable only while the line break
+    // between them still exists.
+    var lines = SafeText.stripLoaderDiagnostics(
+        stdoutText, maximumEnvironmentTextLength).split("\n")
+    var candidate = SafeText.cliMessage(
+        lines.length > 0 ? lines[0] : "", maximumEnvironmentTextLength)
+    // Control characters have already become spaces, so one absolute path is
+    // exactly one leading slash followed by no whitespace at all.
+    var resolved = /^\/\S*$/.test(candidate) ? candidate : ""
+    return {
+        commandPath: resolved,
+        version: SafeText.cliMessage(lines.slice(1).join(" "), maximumCliVersionTextLength)
+    }
 }
 
 function commandError(payload) {

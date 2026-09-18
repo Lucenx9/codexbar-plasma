@@ -44,3 +44,23 @@ function copyObject(item) {
 function shellQuote(value) {
     return "'" + String(value).replace(/'/g, "'\\''") + "'"
 }
+
+// POSIX shells report 127 for a command that could not be found and 126 for one
+// that exists but could not be executed. Both mean the configured command path
+// is wrong, which needs a different answer from a provider or network failure.
+// The codes are part of the shell contract, so they hold in every locale, while
+// the matching stderr text does not.
+var commandNotFoundExitCode = 127
+var commandNotExecutableExitCode = 126
+
+function isCommandPathFailure(exitCode) {
+    // The engine reports the code as a number or a string. Anything else,
+    // including a single-element array that would coerce to 127, is not an
+    // exit code and must not be read as one.
+    if (typeof exitCode !== "number" && typeof exitCode !== "string") {
+        return false
+    }
+    var code = Number(exitCode)
+    return isFinite(code)
+        && (code === commandNotFoundExitCode || code === commandNotExecutableExitCode)
+}

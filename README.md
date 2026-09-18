@@ -161,6 +161,11 @@ Usage errors in the popup offer **Retry** and **Settings**. Open **Diagnostics**
 in widget settings to check the connection. Retry is unavailable while a quota
 refresh is running; the last known quotas stay visible when available.
 
+If the popup says **CodexBar CLI not found**, Plasma could not run the
+configured command at all, so there is nothing to retry. Set an absolute path as
+described below. **Diagnostics → Check versions** reports the widget and CLI
+versions and the absolute command the shell resolved.
+
 Run `codexbar usage --format json --json-only` in a terminal. If it fails,
 resolve the provider or CLI setup first. If it works, locate the executable:
 

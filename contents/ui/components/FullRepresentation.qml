@@ -30,6 +30,13 @@ Item {
 
     readonly property string usageRecoveryHint: i18n("For connection checks, open Diagnostics in widget settings.")
 
+    // Two different problems reach an empty popup. A shell that cannot run
+    // the configured executable needs a command path, not a retry, so it
+    // takes its own state instead of sharing the provider setup message.
+    readonly property bool commandPathMissing: applet.commandPathFailed
+        && applet.providers.length === 0
+        && !applet.loading
+
     Controls.Action {
         id: retryUsageAction
 
@@ -710,6 +717,7 @@ Item {
             objectName: "globalErrorMessage"
 
             visible: applet.providerUsageFeedbackVisible && applet.errorText.length > 0
+                && !fullRoot.commandPathMissing
                 && (!applet.selectedProviderData || applet.selectedProviderData.error !== applet.errorText)
             plainText: applet.privateErrorText(applet.errorText) + "\n\n" + fullRoot.usageRecoveryHint
             type: Kirigami.MessageType.Error
@@ -725,6 +733,7 @@ Item {
 
             visible: applet.providerUsageFeedbackVisible
                 && applet.providers.length === 0
+                && !fullRoot.commandPathMissing
                 && (applet.loading || applet.errorText.length > 0)
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -751,11 +760,36 @@ Item {
         }
 
         Item {
+            id: missingCommandMessage
+
+            implicitHeight: missingCommandPlaceholder.implicitHeight
+            visible: fullRoot.commandPathMissing && !applet.globalViewSelected
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            PlainPlaceholderMessage {
+                id: missingCommandPlaceholder
+                objectName: "missingCommandPlaceholder"
+
+                anchors.centerIn: parent
+                width: parent.width
+                plainText: i18n("CodexBar CLI not found.")
+                // The configured value is named because it is what the user has
+                // to correct, and a bare "codexbar" hides a PATH problem.
+                plainExplanation: i18n("Plasma could not run '%1'. Install the CodexBar CLI, or find it with 'command -v codexbar' in a terminal and paste the absolute path into Diagnostics in widget settings.", applet.commandPath)
+                icon.name: "dialog-error-symbolic"
+                type: Kirigami.PlaceholderMessage.Type.Actionable
+                helpfulAction: usageSettingsAction
+            }
+        }
+
+        Item {
             id: emptyProvidersMessage
 
             implicitHeight: emptyProvidersPlaceholder.implicitHeight
             visible: applet.providers.length === 0
                 && !applet.globalViewSelected
+                && !fullRoot.commandPathMissing
                 && applet.errorText.length === 0
                 && !applet.loading
             Layout.fillWidth: true

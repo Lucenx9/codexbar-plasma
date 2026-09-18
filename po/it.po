@@ -172,6 +172,17 @@ msgid "Loading usage..."
 msgstr "Caricamento dell'utilizzo..."
 
 #: contents/ui/components/FullRepresentation.qml
+msgid "CodexBar CLI not found."
+msgstr "CodexBar CLI non trovata."
+
+#: contents/ui/components/FullRepresentation.qml
+msgid ""
+"Plasma could not run '%1'. Install the CodexBar CLI, or find it with "
+"'command -v codexbar' in a terminal and paste the absolute path into "
+"Diagnostics in widget settings."
+msgstr "Plasma non è riuscito a eseguire «%1». Installa la CLI CodexBar, oppure trovala con «command -v codexbar» in un terminale e incolla il percorso assoluto in Diagnostica nelle impostazioni del widget."
+
+#: contents/ui/components/FullRepresentation.qml
 msgid "No provider data."
 msgstr "Nessun dato sui provider."
 
@@ -938,6 +949,38 @@ msgstr "Percorso del comando:"
 #: contents/ui/configDiagnostics.qml
 msgid "Use PATH"
 msgstr "Usa PATH"
+
+#: contents/ui/configDiagnostics.qml
+msgid "Versions"
+msgstr "Versioni"
+
+#: contents/ui/configDiagnostics.qml
+msgid "CodexBar Plasma:"
+msgstr "CodexBar Plasma:"
+
+#: contents/ui/configDiagnostics.qml contents/ui/main.qml
+msgid "Unknown"
+msgstr "Sconosciuto"
+
+#: contents/ui/configDiagnostics.qml
+msgid "CodexBar CLI:"
+msgstr "CodexBar CLI:"
+
+#: contents/ui/configDiagnostics.qml
+msgid "Not checked"
+msgstr "Non controllato"
+
+#: contents/ui/configDiagnostics.qml
+msgid "Not found"
+msgstr "Non trovato"
+
+#: contents/ui/configDiagnostics.qml
+msgid "Resolved command:"
+msgstr "Comando risolto:"
+
+#: contents/ui/configDiagnostics.qml
+msgid "Check versions"
+msgstr "Controlla versioni"
 
 #: contents/ui/configDiagnostics.qml
 msgid "Advanced provider override"
@@ -2042,10 +2085,6 @@ msgstr "In esecuzione"
 #: contents/ui/main.qml
 msgid "Working"
 msgstr "Al lavoro"
-
-#: contents/ui/main.qml
-msgid "Unknown"
-msgstr "Sconosciuto"
 
 #: contents/ui/main.qml
 msgid "Command line"
