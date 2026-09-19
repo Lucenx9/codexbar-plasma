@@ -359,4 +359,15 @@ TestCase {
         compare(ProviderDescriptor.safeHttpsUrl("javascript:alert(1)"), "")
         compare(ProviderDescriptor.safeHttpsUrl(null), "")
     }
+
+    function test_safeHttpsUrlRejectsOverlongUrls() {
+        var base = "https://example.com/"
+        var boundary = base
+        while (boundary.length < 2048) {
+            boundary += "a"
+        }
+        compare(boundary.length, 2048)
+        compare(ProviderDescriptor.safeHttpsUrl(boundary), boundary)
+        compare(ProviderDescriptor.safeHttpsUrl(boundary + "a"), "")
+    }
 }
