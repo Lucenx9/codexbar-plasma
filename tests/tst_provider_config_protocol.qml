@@ -491,6 +491,16 @@ TestCase {
         compare(summary.version, "CodexBar 0.61.0")
     }
 
+    function test_environmentSummaryToleratesCarriageReturns() {
+        // Output from a shell or wrapper with Windows-style CRLF must not
+        // leave carriage returns on the resolved path or fail the control check.
+        var summary = ProviderConfigProtocol.environmentSummary(
+            "/usr/local/bin/codexbar\r\nCodexBar 0.61.0\r\n")
+
+        compare(summary.commandPath, "/usr/local/bin/codexbar")
+        compare(summary.version, "CodexBar 0.61.0")
+    }
+
     function test_environmentSummaryRejectsUntrustedShapes() {
         compare(ProviderConfigProtocol.environmentSummary(null).commandPath, "")
         compare(ProviderConfigProtocol.environmentSummary(null).version, "")
