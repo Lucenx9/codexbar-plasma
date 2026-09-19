@@ -44,7 +44,7 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
-- Preserve carriage returns and Windows line endings when reading the resolved
+- Normalize carriage returns and Windows line endings when reading the resolved
   executable path from the environment probe, so a CLI reporting CRLF output does
   not fail path validation in **Diagnostics**.
 - Mark the CLI version and resolved path as not found immediately when running
