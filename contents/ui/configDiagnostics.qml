@@ -302,6 +302,7 @@ KCM.SimpleKCM {
         Components.PlainControlsLabel {
             Layout.fillWidth: true
             text: i18n("Run redacted CodexBar CLI diagnostics from Plasma. The diagnostic command omits raw tokens, cookies, auth headers, emails, account IDs, org IDs, raw responses, and billing-history records.")
+            font: Kirigami.Theme.smallFont
             opacity: 0.72
             wrapMode: Text.WordWrap
         }
