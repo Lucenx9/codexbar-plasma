@@ -42,6 +42,14 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   bordered, tinted provider identity tile matching the overview and provider
   header tiles.
 
+### Fixed
+
+- Preserve carriage returns and Windows line endings when reading the resolved
+  executable path from the environment probe, so a CLI reporting CRLF output does
+  not fail path validation in **Diagnostics**.
+- Mark the CLI version and resolved path as not found immediately when running
+  **Check versions** with an empty command path in **Diagnostics**.
+
 ## 0.2.39 - 2026-09-17
 
 ### Fixed

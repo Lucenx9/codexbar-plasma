@@ -76,6 +76,11 @@ KCM.SimpleKCM {
 
     function runCommand(command, kind) {
         if (commandPath.length === 0) {
+            if (kind === "environment") {
+                resolvedCommandPath = ""
+                cliVersionText = ""
+                environmentProbeFailed = true
+            }
             diagnosticError = i18n("Set the codexbar command path above.")
             return
         }

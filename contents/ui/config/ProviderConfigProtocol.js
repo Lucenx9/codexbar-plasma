@@ -110,9 +110,11 @@ function environmentSummary(stdoutText) {
     }
     // Split before sanitizing. The bounded display helpers collapse every run
     // of whitespace, so the two facts stay separable only while the line break
-    // between them still exists.
+    // between them still exists. Normalize CRLF first so carriage returns from
+    // process output do not leave a trailing control character on the resolved
+    // path.
     var lines = SafeText.stripLoaderDiagnostics(
-        stdoutText, maximumEnvironmentTextLength).split("\n")
+        stdoutText, maximumEnvironmentTextLength).replace(/\r\n?/g, "\n").split("\n")
     var candidate = lines.length > 0 ? lines[0] : ""
     // Check raw text before redaction: sanitizers can turn controls into
     // harmless-looking spaces. Absolute executable paths may legitimately
