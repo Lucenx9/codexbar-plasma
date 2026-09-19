@@ -49,6 +49,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   not fail path validation in **Diagnostics**.
 - Mark the CLI version and resolved path as not found immediately when running
   **Check versions** with an empty command path in **Diagnostics**.
+- Open descriptor action URLs only when the returned HTTPS address fits in
+  2048 characters, matching the existing descriptor text bounds. Longer
+  addresses now report an unsupported URL instead of opening externally.
 
 ## 0.2.39 - 2026-09-17
 

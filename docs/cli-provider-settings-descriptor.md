@@ -203,7 +203,8 @@ Rules for Plasma:
 - Reject descriptor commands unless they start with `codexbar config` and use
   an allowed local subcommand: `set`/`set-api-key` for fields, `action` for
   actions.
-- Open descriptor-returned URLs only when they are HTTPS URLs.
+- Open descriptor-returned URLs only when they are HTTPS URLs of at most 2048
+  characters.
 - Keep secret fields write-only except for `redactedValue`.
 - Fall back to current CLI command hints when a descriptor is missing,
   unsupported, or invalid.

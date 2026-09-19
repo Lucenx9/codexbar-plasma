@@ -13,6 +13,7 @@ var maximumOptions = 64
 var maximumCommandTokens = 64
 var maximumTokenLength = 2048
 var maximumIdentifierLength = 128
+var maximumSafeUrlLength = 2048
 
 function emptyDescriptor() {
     return { schemaVersion: 0, fields: [], actions: [] }
@@ -184,6 +185,9 @@ function planAction(action, commandPath) {
 
 function safeHttpsUrl(value) {
     var text = String(value || "").trim()
+    if (text.length === 0 || text.length > maximumSafeUrlLength) {
+        return ""
+    }
     return text.toLowerCase().indexOf("https://") === 0 ? text : ""
 }
 
