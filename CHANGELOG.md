@@ -44,6 +44,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Standardize helper text font sizing across **General**, **Notifications**,
+  and **Diagnostics** settings pages to use `Kirigami.Theme.smallFont`, matching
+  the secondary label typography used in **Panel** settings.
 - Normalize carriage returns and Windows line endings when reading the resolved
   executable path from the environment probe, so a CLI reporting CRLF output does
   not fail path validation in **Diagnostics**.

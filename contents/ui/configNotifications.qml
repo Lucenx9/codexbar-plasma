@@ -81,6 +81,7 @@ KCM.SimpleKCM {
 
         Components.PlainControlsLabel {
             text: i18n("Thresholds also set warning colors and markers on usage meters.")
+            font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24

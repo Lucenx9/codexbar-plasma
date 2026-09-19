@@ -382,6 +382,7 @@ KCM.SimpleKCM {
 
         Components.PlainControlsLabel {
             text: i18n("Required for status incident notifications.")
+            font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
@@ -508,6 +509,7 @@ KCM.SimpleKCM {
 
             text: page.lastUpdateCheckText(autoUpdateLastCheck)
             visible: updateChecksEnabledCheck.checked
+            font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
@@ -520,6 +522,7 @@ KCM.SimpleKCM {
 
             text: i18n("Last update status: %1", widgetUpdateLastStatus)
             visible: updateChecksEnabledCheck.checked && widgetUpdateLastStatus.length > 0
+            font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
@@ -543,6 +546,7 @@ KCM.SimpleKCM {
 
         Components.PlainControlsLabel {
             text: i18n("Restore every widget setting. Provider accounts and CodexBar CLI configuration are not changed.")
+            font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
