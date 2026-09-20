@@ -130,6 +130,17 @@ class ManagedCliTests(unittest.TestCase):
             self.operation("update")
         self.assertEqual(cli.status(self.root)["version"], "0.62.0")
 
+    def test_abandoned_download_is_pruned_before_a_failed_retry(self):
+        cli.private_directory(self.root)
+        abandoned = self.root / ".install-abandoned"
+        abandoned.mkdir()
+        (abandoned / "archive.tar.gz").write_bytes(b"partial")
+        old = cli.time.time() - 86401
+        os.utime(abandoned, (old, old))
+        with patch.object(cli.cli_release, "latest_release", side_effect=OSError("offline")), self.assertRaises(OSError):
+            cli.run("install")
+        self.assertFalse(abandoned.exists())
+
     def test_lock_is_shared_between_instances(self):
         cli.private_directory(self.root)
         with (self.root / ".lock").open("w") as lock:

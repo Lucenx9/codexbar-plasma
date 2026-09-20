@@ -343,6 +343,10 @@ def run(action, command=""):
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             return {"status": "busy"}
+        try:
+            prune(root)
+        except OSError:
+            pass  # A failed cleanup must not prevent a retry or rollback.
         if action == "rollback":
             state = state_record(root)
             previous = installed(root, state.get("previous", ""))
