@@ -105,6 +105,22 @@
       <label>Notify when a heavily used limit resets back to empty.</label>
       <default>false</default>
     </entry>
+    <entry name="cliUpdateChecksEnabled" type="Bool">
+      <label>Check upstream CLI releases daily.</label>
+      <default>false</default>
+    </entry>
+    <entry name="cliUpdateNotificationsEnabled" type="Bool">
+      <label>Notify when an upstream CLI release is available.</label>
+      <default>true</default>
+    </entry>
+    <entry name="cliUpdateLastCheck" type="String">
+      <label>Last successful upstream CLI release check.</label>
+      <default></default>
+    </entry>
+    <entry name="cliUpdateLastNotifiedVersion" type="String">
+      <label>Last announced upstream CLI release.</label>
+      <default></default>
+    </entry>
     <entry name="updateChecksEnabled" type="Bool">
       <label>Check for widget updates.</label>
       <default>true</default>

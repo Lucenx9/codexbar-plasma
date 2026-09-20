@@ -174,6 +174,7 @@ msgid "Loading usage..."
 msgstr "Nutzung wird geladen..."
 
 #: contents/ui/components/FullRepresentation.qml
+#: contents/ui/controllers/CliUpdateController.qml
 msgid "CodexBar CLI not found."
 msgstr "CodexBar-CLI nicht gefunden."
 
@@ -182,7 +183,10 @@ msgid ""
 "Plasma could not run '%1'. Install the CodexBar CLI, or find it with "
 "'command -v codexbar' in a terminal and paste the absolute path into "
 "Diagnostics in widget settings."
-msgstr "Plasma konnte „%1“ nicht ausführen. Installieren Sie die CodexBar-CLI, oder finden Sie sie mit „command -v codexbar“ in einem Terminal und fügen Sie den absoluten Pfad in Diagnose in den Widget-Einstellungen ein."
+msgstr ""
+"Plasma konnte „%1“ nicht ausführen. Installieren Sie die CodexBar-CLI, oder "
+"finden Sie sie mit „command -v codexbar“ in einem Terminal und fügen Sie den "
+"absoluten Pfad in Diagnose in den Widget-Einstellungen ein."
 
 #: contents/ui/components/FullRepresentation.qml
 msgid "No provider data."
@@ -967,20 +971,29 @@ msgid "CodexBar CLI:"
 msgstr "CodexBar-CLI:"
 
 #: contents/ui/configDiagnostics.qml
+#: contents/ui/controllers/CliUpdateController.qml
 msgid "Not checked"
 msgstr "Nicht geprüft"
-
-#: contents/ui/configDiagnostics.qml
-msgid "Not found"
-msgstr "Nicht gefunden"
 
 #: contents/ui/configDiagnostics.qml
 msgid "Resolved command:"
 msgstr "Aufgelöster Befehl:"
 
 #: contents/ui/configDiagnostics.qml
+msgid "Not found"
+msgstr "Nicht gefunden"
+
+#: contents/ui/configDiagnostics.qml
 msgid "Check versions"
 msgstr "Versionen prüfen"
+
+#: contents/ui/configDiagnostics.qml
+msgid ""
+"This checks installed versions only. Check upstream CLI releases in "
+"General / CLI updates."
+msgstr ""
+"Prüft nur installierte Versionen. Neue CLI-Versionen finden Sie unter "
+"Allgemein / CLI-Aktualisierungen."
 
 #: contents/ui/configDiagnostics.qml
 msgid "Advanced provider override"
@@ -1158,6 +1171,34 @@ msgstr "Miniprogramm automatisch aktualisieren"
 #: contents/ui/configGeneral.qml
 msgid "Last update status: %1"
 msgstr "Letzter Aktualisierungsstatus: %1"
+
+#: contents/ui/configGeneral.qml
+msgid "CLI updates"
+msgstr "CLI-Aktualisierungen"
+
+#: contents/ui/configGeneral.qml
+msgid "Check upstream CLI releases daily"
+msgstr "Täglich nach offiziellen CLI-Versionen suchen"
+
+#: contents/ui/configGeneral.qml
+msgid "Notify when a CLI release is available"
+msgstr "Über neue CLI-Versionen benachrichtigen"
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"Checks GitHub for official releases. The widget does not install or replace "
+"the CLI."
+msgstr ""
+"Sucht auf GitHub nach offiziellen Versionen. Das Widget installiert oder "
+"ersetzt die CLI nicht."
+
+#: contents/ui/configGeneral.qml
+msgid "Check CLI releases now"
+msgstr "Jetzt nach CLI-Versionen suchen"
+
+#: contents/ui/configGeneral.qml contents/ui/main.qml
+msgid "Open release page"
+msgstr "Release-Seite öffnen"
 
 #: contents/ui/configGeneral.qml
 msgid "Defaults"
@@ -1866,6 +1907,53 @@ msgstr "Ein codexbar-Kontodatensatz konnte nicht gelesen werden: %1"
 #: contents/ui/controllers/AccountsController.qml
 msgid "Loading accounts timed out. Try again."
 msgstr "Zeitüberschreitung beim Laden der Konten. Erneut versuchen."
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid "Managed by Homebrew. Update through Homebrew."
+msgstr "Von Homebrew verwaltet. Über Homebrew aktualisieren."
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid ""
+"Managed by %1. Update through your package manager; its version may lag "
+"behind upstream."
+msgstr ""
+"Von %1 verwaltet. Über die Paketverwaltung aktualisieren; deren Version kann "
+"hinter der offiziellen Version liegen."
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid "External installation. Update using your original installation method."
+msgstr ""
+"Externe Installation. Mit der ursprünglichen Installationsmethode "
+"aktualisieren."
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid "Checking..."
+msgstr "Prüfung läuft..."
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid "Upstream CLI %1 is available. Installed: %2."
+msgstr "Die offizielle CLI-Version %1 ist verfügbar. Installiert: %2."
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid "CLI %1 is current or newer than the latest stable release."
+msgstr "CLI %1 ist aktuell oder neuer als die letzte stabile Version."
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid "Could not identify the installed CLI version."
+msgstr "Die installierte CLI-Version konnte nicht ermittelt werden."
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid ""
+"Latest stable CLI: %1. The installed version cannot be compared "
+"automatically."
+msgstr ""
+"Letzte stabile CLI-Version: %1. Die installierte Version kann nicht "
+"automatisch verglichen werden."
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid "Could not check CLI releases. Try again later."
+msgstr ""
+"CLI-Versionen konnten nicht geprüft werden. Versuchen Sie es später erneut."
 
 #: contents/ui/controllers/CostController.qml
 msgid "Loading cost data timed out. Try again."
@@ -2595,10 +2683,6 @@ msgid "A new widget version is available."
 msgstr "Eine neue Version des Miniprogramms ist verfügbar."
 
 #: contents/ui/main.qml
-msgid "Open release page"
-msgstr "Release-Seite öffnen"
-
-#: contents/ui/main.qml
 msgid "CodexBar widget update installed"
 msgstr "CodexBar-Aktualisierung installiert"
 
@@ -2729,3 +2813,13 @@ msgstr "Wird geladen"
 #: contents/ui/main.qml
 msgid "Refreshing usage..."
 msgstr "Nutzung wird aktualisiert..."
+
+#: contents/ui/main.qml
+msgid "CodexBar CLI release available"
+msgstr "Neue CodexBar-CLI-Version verfügbar"
+
+#: contents/ui/main.qml
+msgid "Upstream CLI %1 is available. Update using your installation method."
+msgstr ""
+"Die offizielle CLI-Version %1 ist verfügbar. Mit Ihrer Installationsmethode "
+"aktualisieren."

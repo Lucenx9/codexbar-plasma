@@ -56,6 +56,17 @@ For those, use `make install` or `./install.sh`. Release-package users can use
   settings, privacy, deduplication, account freshness, and update-notification
   persistence, and owns what an activation opens: the applet itself no longer owns an executable DataSource or
   command ledger.
+- `contents/ui/controllers/CliUpdateController.qml` owns the read-only CLI
+  version/release process, nonce, deadline, stale-reply retirement and optional
+  daily scheduling. General runs manual release checks; Diagnostics uses its
+  local-only mode; `main.qml` persists background check timestamps and notification
+  deduplication. `CliUpdate.js` bounds results and constructs host-pinned release
+  links. `scripts/check-cli-update.py` probes `--version` and positive package
+  ownership, then optionally reads the official GitHub latest-release metadata.
+  It never installs or changes the CLI. Its subprocesses have output/deadline
+  bounds, and the QML command has an outer GNU timeout. Tests cover numeric
+  version comparison, unsupported banners, package provenance, network failure,
+  process retirement, manual checks, and the offline Diagnostics boundary.
 - `contents/ui/controllers/WidgetUpdateController.qml` owns the widget updater's
   executable source, per-request nonce, captured install mode, timeout, queued
   install request, and retry/interval timers. It receives update settings and

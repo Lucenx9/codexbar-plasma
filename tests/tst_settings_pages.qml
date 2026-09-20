@@ -66,11 +66,14 @@ TestCase {
         if (!page)
             return;
 
-        page.activeCommand = "environment";
-        page.activeCommandKind = "environment";
-        page.handleDiagnosticData("environment", {
+        var versions = findChild(page, "cliVersionsController");
+        verify(versions !== null);
+        verify(versions.localOnly);
+        versions.activeSource = "environment";
+        versions.accept("environment", {
             "exit code": 0,
-            stdout: "/opt/CodexBar CLI/bin/codexbar\nCodexBar 0.61.0"
+            stdout: JSON.stringify({status: "local", version: "0.61.0",
+                path: "/opt/CodexBar CLI/bin/codexbar", manager: "external"})
         });
 
         var resolvedCommandLabel = findChild(page, "resolvedCommandLabel");

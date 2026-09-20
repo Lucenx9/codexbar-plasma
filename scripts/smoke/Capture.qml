@@ -1247,6 +1247,20 @@ Item {
                 return false;
             if (scenario === "settings-general" && !navigationVerified) {
                 verifyGeneralDefaults(preview.page);
+                var releaseChecker = findItem(preview.page, "cliReleaseController");
+                verifyScenario(releaseChecker !== null, "General must expose CLI release checks");
+                releaseChecker.activeSource = "synthetic-release";
+                releaseChecker.accept("synthetic-release", {"exit code": 0, stdout: JSON.stringify({
+                    status: "available", version: "0.60.4", path: "/usr/bin/codexbar",
+                    manager: "pacman", latest: "0.62.0", tag: "v0.62.0"})});
+                navigationVerified = true;
+            }
+            if (scenario === "settings-diagnostics" && !navigationVerified) {
+                var versions = findItem(preview.page, "cliVersionsController");
+                verifyScenario(versions !== null, "Diagnostics must expose the local versions controller");
+                versions.activeSource = "synthetic-versions";
+                versions.accept("synthetic-versions", {"exit code": 0, stdout: JSON.stringify({
+                    status: "local", version: "0.60.4", path: "/usr/bin/codexbar", manager: "pacman"})});
                 navigationVerified = true;
             }
             if (scenario.indexOf("settings-panel") === 0 && !navigationVerified) {

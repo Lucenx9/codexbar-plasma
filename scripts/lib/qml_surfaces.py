@@ -63,10 +63,16 @@ SURFACES: dict[str, tuple[str, ...]] = {
         "contents/ui/controllers/ProviderRosterController.qml",
     ),
     "notifications": ("contents/ui/configNotifications.qml",),
-    "diagnostics": ("contents/ui/configDiagnostics.qml",),
+    "diagnostics": (
+        "contents/ui/configDiagnostics.qml",
+        "contents/ui/controllers/CliUpdateController.qml",
+        "contents/ui/CliUpdate.js",
+    ),
     "general": (
         "contents/ui/configGeneral.qml",
         "contents/ui/general/*.js",
+        "contents/ui/controllers/CliUpdateController.qml",
+        "contents/ui/CliUpdate.js",
     ),
     # Everything qmllint, the hardening check, and gettext extraction must see.
     "all": (

@@ -5,6 +5,7 @@ import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
 import "components" as Components
+import "controllers" as Controllers
 import "UpdateLogic.js" as UpdateLogic
 import "general/ConfigValueSync.js" as ConfigValueSync
 
@@ -51,6 +52,10 @@ KCM.SimpleKCM {
     property int cfg_quotaWarningPercentDefault: 80
     property int cfg_quotaCriticalPercent
     property int cfg_quotaCriticalPercentDefault: 95
+    property alias cfg_cliUpdateChecksEnabled: cliUpdateChecksEnabledCheck.checked
+    property bool cfg_cliUpdateChecksEnabledDefault: false
+    property alias cfg_cliUpdateNotificationsEnabled: cliUpdateNotificationsEnabledCheck.checked
+    property bool cfg_cliUpdateNotificationsEnabledDefault: true
     property alias cfg_updateChecksEnabled: updateChecksEnabledCheck.checked
     property bool cfg_updateChecksEnabledDefault: true
     property alias cfg_updateNotificationsEnabled: updateNotificationsEnabledCheck.checked
@@ -129,6 +134,12 @@ KCM.SimpleKCM {
         ? Plasmoid.configuration.widgetUpdateLastStatus || "" : ""
     readonly property string widgetUpdateLastError: Plasmoid.configuration
         ? Plasmoid.configuration.widgetUpdateLastError || "" : ""
+
+    Controllers.CliUpdateController {
+        id: cliUpdater
+        objectName: "cliReleaseController"
+        commandPath: page.cfg_commandPath || "codexbar"
+    }
 
     Component.onCompleted: {
         syncCostHistoryDaysFromPersisted()
@@ -222,6 +233,8 @@ KCM.SimpleKCM {
             [cfg_notifyQuotaWarnings, cfg_notifyQuotaWarningsDefault],
             [cfg_notifyPredictivePaceWarnings, cfg_notifyPredictivePaceWarningsDefault],
             [cfg_notifyLimitResets, cfg_notifyLimitResetsDefault],
+            [cfg_cliUpdateChecksEnabled, cfg_cliUpdateChecksEnabledDefault],
+            [cfg_cliUpdateNotificationsEnabled, cfg_cliUpdateNotificationsEnabledDefault],
             [cfg_updateChecksEnabled, cfg_updateChecksEnabledDefault],
             [cfg_updateNotificationsEnabled, cfg_updateNotificationsEnabledDefault],
             [cfg_autoUpdateEnabled, cfg_autoUpdateEnabledDefault],
@@ -274,6 +287,8 @@ KCM.SimpleKCM {
         cfg_notifyQuotaWarnings = cfg_notifyQuotaWarningsDefault
         cfg_notifyPredictivePaceWarnings = cfg_notifyPredictivePaceWarningsDefault
         cfg_notifyLimitResets = cfg_notifyLimitResetsDefault
+        cfg_cliUpdateChecksEnabled = cfg_cliUpdateChecksEnabledDefault
+        cfg_cliUpdateNotificationsEnabled = cfg_cliUpdateNotificationsEnabledDefault
         cfg_updateChecksEnabled = cfg_updateChecksEnabledDefault
         cfg_updateNotificationsEnabled = cfg_updateNotificationsEnabledDefault
         cfg_autoUpdateEnabled = cfg_autoUpdateEnabledDefault
@@ -537,6 +552,78 @@ KCM.SimpleKCM {
             type: Kirigami.MessageType.Error
             plainText: widgetUpdateLastError.slice(0, 500)
             visible: updateChecksEnabledCheck.checked && widgetUpdateLastError.length > 0
+        }
+
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("CLI updates")
+            Kirigami.FormData.isSection: true
+        }
+
+        Controls.CheckBox {
+            id: cliUpdateChecksEnabledCheck
+            implicitWidth: 0
+            Layout.fillWidth: true
+            text: i18n("Check upstream CLI releases daily")
+        }
+
+        Controls.CheckBox {
+            id: cliUpdateNotificationsEnabledCheck
+            implicitWidth: 0
+            Layout.fillWidth: true
+            Layout.leftMargin: Kirigami.Units.gridUnit
+            text: i18n("Notify when a CLI release is available")
+            enabled: cliUpdateChecksEnabledCheck.checked && page.cfg_enableNotifications
+        }
+
+        Components.PlainControlsLabel {
+            text: i18n("Checks GitHub for official releases. The widget does not install or replace the CLI.")
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+            Layout.fillWidth: true
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            wrapMode: Text.WordWrap
+        }
+
+        RowLayout {
+            Controls.Button {
+                objectName: "checkCliReleaseButton"
+                text: i18n("Check CLI releases now")
+                icon.name: "view-refresh"
+                enabled: !cliUpdater.busy
+                onClicked: cliUpdater.checkNow()
+            }
+            Controls.BusyIndicator {
+                running: cliUpdater.busy
+                opacity: running ? 1 : 0
+                Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                Layout.preferredHeight: Kirigami.Units.iconSizes.small
+            }
+        }
+
+        Components.PlainControlsLabel {
+            objectName: "cliReleaseStatusLabel"
+            text: cliUpdater.statusText
+            Layout.fillWidth: true
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            wrapMode: Text.WordWrap
+        }
+
+        Components.PlainControlsLabel {
+            text: cliUpdater.guidanceText
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+            visible: cliUpdater.checked && cliUpdater.result.path.length > 0
+            Layout.fillWidth: true
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            wrapMode: Text.WordWrap
+        }
+
+        Controls.Button {
+            text: i18n("Open release page")
+            icon.name: "internet-services"
+            visible: cliUpdater.checked && cliUpdater.result.releaseUrl.length > 0
+            enabled: !cliUpdater.busy
+            onClicked: Qt.openUrlExternally(cliUpdater.result.releaseUrl)
         }
 
         Kirigami.Separator {

@@ -249,6 +249,8 @@ plain_tool_tip_text = plain_tool_tip_qml.read_text(encoding="utf-8")
 internal_config_keys = {
     "usageCache",
     "autoUpdateLastCheck",
+    "cliUpdateLastCheck",
+    "cliUpdateLastNotifiedVersion",
     "widgetUpdateLastStatus",
     "widgetUpdateLastError",
     "lastNotifiedUpdateVersion",
@@ -371,7 +373,7 @@ def assert_form_sections(text, filename, labels):
 assert_form_sections(
     general_text,
     "configGeneral.qml",
-    ("Refresh", "Privacy", "Usage history", "Updates", "Defaults"),
+    ("Refresh", "Privacy", "Usage history", "Updates", "CLI updates", "Defaults"),
 )
 assert_form_sections(
     popup_text,
@@ -389,7 +391,7 @@ assert_form_sections(diagnostics_text, "configDiagnostics.qml",
 # configured value hides whenever it is a bare name resolved through PATH.
 for needle in ('i18n("CodexBar Plasma:")', 'i18n("CodexBar CLI:")',
                'i18n("Resolved command:")', 'i18n("Check versions")',
-               "ProviderConfigProtocol.environmentSummary"):
+               "Controllers.CliUpdateController", "localOnly: true"):
     if needle not in diagnostics_text:
         raise AssertionError(f"configDiagnostics.qml must keep the versions summary: {needle}")
 
