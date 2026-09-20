@@ -63,10 +63,25 @@ For those, use `make install` or `./install.sh`. Release-package users can use
   deduplication. `CliUpdate.js` bounds results and constructs host-pinned release
   links. `scripts/check-cli-update.py` probes `--version` and positive package
   ownership, then optionally reads the official GitHub latest-release metadata.
-  It never installs or changes the CLI. Its subprocesses have output/deadline
+  This read-only entry point never installs or changes the CLI. Shared probes and
+  release validation live in `scripts/lib/cli_release.py`. Its subprocesses have output/deadline
   bounds, and the QML command has an outer GNU timeout. Tests cover numeric
   version comparison, unsupported banners, package provenance, network failure,
   process retirement, manual checks, and the offline Diagnostics boundary.
+- `contents/ui/controllers/ManagedCliController.qml` owns private CLI installation
+  processes, per-request nonces, deadlines, stale-result retirement and optional
+  background scheduling. General owns the explicit installation/selection action;
+  only Apply saves its command path. `ManagedCli.js` validates results and quotes
+  allowlisted operations. `scripts/manage-cli.py` calls `scripts/lib/managed_cli.py`
+  for per-user locking, daily throttling, bounded official asset downloads, strict
+  archive extraction, isolated-environment version probes, atomic activation and
+  rollback. Only the exact managed command is eligible for update/rollback.
+  Tests use temporary XDG directories and synthetic archives, never host binaries
+  or provider configuration. The helper's 600-second alarm and QML's outer GNU
+  timeout bound downloads, including decompression. Recent inactive releases have
+  a seven-day grace period before cleanup. A completed rollback blocks that release
+  from automatic reinstall. Changing the selection retires UI replies; an already
+  started install can still finish in the private directory.
 - `contents/ui/controllers/WidgetUpdateController.qml` owns the widget updater's
   executable source, per-request nonce, captured install mode, timeout, queued
   install request, and retry/interval timers. It receives update settings and

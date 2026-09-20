@@ -25,8 +25,9 @@ Issues linked below preserve discussion; this file owns parity status.
   Later probes verify only their named cases. Older blockers below retain their
   last verified version; source inspection is not authenticated output evidence.
 
-The CLI release-check work verified only the installed `0.60.4 --version` banner
-and official `v0.62.0` GitHub release metadata. It does not advance this parity
+The CLI update work verified the installed `0.60.4 --version` banner, official
+`v0.62.0` release assets/checksums, the Linux x86_64 archive layout, and its
+`CodexBar 0.62.0` banner in an isolated environment. It does not advance this parity
 baseline. A full 0.62.0 release/contract review remains pending.
 
 ## Implementable on Linux

@@ -1,11 +1,13 @@
 """Offline release checks, provenance and bounded executable probes."""
 import importlib.util
+import sys
 from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
 
-SPEC = importlib.util.spec_from_file_location("cli_update", Path(__file__).resolve().parents[1] / "scripts/check-cli-update.py")
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+SPEC = importlib.util.spec_from_file_location("cli_update", Path(__file__).resolve().parents[1] / "scripts/lib/cli_release.py")
 cli = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(cli)
 

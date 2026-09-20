@@ -15,7 +15,7 @@ function response(text) {
     var version = typeof value.version === "string" && versionPattern.test(value.version) ? value.version : ""
     var path = typeof value.path === "string" && value.path.length <= 4096
         && value.path.charAt(0) === "/" && !/[\x00-\x1f\x7f]/.test(value.path) ? value.path : ""
-    var manager = ["pacman", "dpkg", "rpm", "apk", "homebrew"].indexOf(value.manager) >= 0 ? value.manager : "external"
+    var manager = ["pacman", "dpkg", "rpm", "apk", "homebrew", "managed"].indexOf(value.manager) >= 0 ? value.manager : "external"
     var tag = typeof value.tag === "string" && stablePattern.test(value.tag) ? value.tag : ""
     if (["available", "current", "uncomparable"].indexOf(value.status) >= 0
             && (tag.length === 0 || value.latest !== tag.slice(1))) return empty

@@ -25,6 +25,8 @@ Item {
     signal updateAvailable(string version, string releaseUrl)
 
     readonly property string guidanceText: {
+        if (result.manager === "managed")
+            return i18n("Managed by this widget. Install updates or restore the previous version in General.")
         if (result.manager === "homebrew")
             return i18n("Managed by Homebrew. Update through Homebrew.")
         if (result.manager !== "external")

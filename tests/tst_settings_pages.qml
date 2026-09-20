@@ -40,6 +40,10 @@ TestCase {
             height: testCase.height
         }, properties || {}));
         verify(page !== null);
+        var managed = findChild(page, "managedCliController");
+        if (managed) {
+            tryVerify(function() { return managed.activeAction === "status" && !managed.busy; });
+        }
         return page;
     }
 
@@ -57,6 +61,25 @@ TestCase {
         if (!page)
             return;
         wait(0);
+    }
+
+    function test_existingManagedCopyCanBeSelectedWithoutAProcess() {
+        var page = createPage("../contents/ui/configGeneral.qml", {cfg_commandPath: "/usr/bin/codexbar"});
+        if (!page) return;
+        var managed = findChild(page, "managedCliController");
+        managed.activeAction = "status";
+        managed.activeSource = "synthetic";
+        var path = "/home/test/.local/share/codexbar-plasma/cli/current/codexbar";
+        managed.accept("synthetic", {"exit code": 0, stdout: JSON.stringify({
+            status: "ready", version: "0.62.0", previous: "", path: path})});
+        var button = findChild(page, "installManagedCliButton");
+        compare(button.text, "Use managed CLI");
+        button.clicked();
+        compare(page.cfg_commandPath, path);
+        verify(!managed.busy);
+        verify(managed.selected);
+        compare(button.text, "Update now");
+        compare(page.cfg_cliAutomaticUpdates, false);
     }
 
     function test_diagnosticsRejectsBlankPath() {
@@ -98,6 +121,7 @@ TestCase {
             cfg_source: "cli",
             cfg_refreshInterval: 900,
             cfg_privacyMode: true,
+            cfg_cliAutomaticUpdates: true,
             cfg_refreshOnOpen: false,
             cfg_includeStatus: true,
             cfg_costUsageEnabled: false,
@@ -127,6 +151,7 @@ TestCase {
         compare(page.cfg_source, "");
         compare(page.cfg_refreshInterval, 300);
         compare(page.cfg_privacyMode, false);
+        compare(page.cfg_cliAutomaticUpdates, false);
         compare(page.cfg_refreshOnOpen, true);
         compare(page.cfg_includeStatus, false);
         compare(page.cfg_costUsageEnabled, true);

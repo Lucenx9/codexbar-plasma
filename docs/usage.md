@@ -393,8 +393,9 @@ repository. The widget identifies positive package ownership through pacman,
 dpkg, RPM, or APK, and recognizes a Homebrew formula by its installed prefix and
 receipt. A pacman-owned package is not automatically labeled AUR. Unknown
 origins, custom wrappers, manual downloads, and source builds remain external.
-Update with the original installation method; the widget does not run package
-managers, request privileges, download CLI binaries, or change the command path.
+Update external copies with the original installation method; the widget does
+not run package managers or request privileges. The separate managed-copy option
+below downloads official binaries only after an explicit install action.
 
 **Diagnostics → Versions → Check versions** remains an offline probe. It reports
 the widget version, installed CLI version, resolved command path, and installation
@@ -402,6 +403,45 @@ guidance using the same local probe as the release checker. Editing the command
 path clears the previous result. Prerelease or custom version strings are not
 silently treated as older stable versions. Network errors do not affect quota
 fetching or replace the installed version with a guessed value.
+
+### Managed CLI
+
+**General → Managed CLI → Install and select managed CLI** installs the latest
+stable official Linux release under `$XDG_DATA_HOME/codexbar-plasma/cli`, falling
+back to `~/.local/share/codexbar-plasma/cli`. Installation happens immediately;
+**Apply** or **OK** saves its `current/codexbar` path as the widget command.
+**Cancel** leaves the downloaded copy unused and preserves the saved command.
+If a managed copy already exists, **Use managed CLI** selects it offline without
+checking GitHub or downloading again. System, AUR, other package-manager copies,
+and provider configuration are unchanged.
+To return to an external copy, enter its path or `codexbar` in **Diagnostics**
+and apply. **Check versions** identifies the managed copy offline.
+
+**Update now** changes the managed copy immediately. The optional **Automatically
+update the managed CLI daily** setting is off by default and takes effect after
+applying settings. It operates only while that exact managed path is selected,
+independently of release-check notifications. Widget instances using the same
+user data directory share one installation, lock and daily attempt timestamp.
+Any instance with automatic updates enabled can update that shared copy. Failed
+automatic attempts retry the next day; manual actions bypass the daily interval.
+An installation already in progress can finish after closing settings or disabling
+automatic updates. No package-manager command or privilege prompt is used.
+
+Downloads select the official x86_64 or aarch64 asset for the running glibc or
+musl environment. Unknown environments fail without changing the active copy.
+Both the GitHub asset SHA-256 digest and published checksum must match; only
+expected archive entries are accepted. A staged `--version` probe must report
+the requested stable version before an atomic symlink switch. Unlike widget
+releases, official CLI 0.62.0 releases are not marked immutable, so CLI downloads
+use pinned tag/asset URLs and digest verification without requiring that flag.
+A download, extraction or compatibility failure leaves the active copy available.
+
+**Restore previous version** switches back immediately and prevents automatic
+reinstallation of the replaced version. A newer release remains eligible;
+**Update now** explicitly permits reinstalling the skipped version. The current
+and previous copies are retained. Other versions have a seven-day grace period
+before cleanup, so recent CLI processes can finish using their resource bundles.
+A restored CLI does not roll back upstream provider configuration changes.
 
 ## Default settings
 
@@ -422,6 +462,7 @@ and 95% critical thresholds. Reset notifications are off until enabled.
 | Local usage and spend history | On, 30 days, cost metric |
 | Quota display | Percent used; warning markers on; thresholds at 80% and 95% used |
 | CLI release checks | Off; manual checks available in General |
+| Managed CLI automatic updates | Off; requires the managed copy to be selected |
 | Plasma notifications | On; quota warnings on; predicted exhaustion and limit-reset notices off |
 | Widget updates | Check and notify every 24 hours; automatic installation off |
 | Panel appearance | Standard style with colored provider icons and automatic quota capsules, including a single provider |

@@ -52,6 +52,8 @@ KCM.SimpleKCM {
     property int cfg_quotaWarningPercentDefault: 80
     property int cfg_quotaCriticalPercent
     property int cfg_quotaCriticalPercentDefault: 95
+    property bool cfg_cliAutomaticUpdates: false
+    property bool cfg_cliAutomaticUpdatesDefault: false
     property alias cfg_cliUpdateChecksEnabled: cliUpdateChecksEnabledCheck.checked
     property bool cfg_cliUpdateChecksEnabledDefault: false
     property alias cfg_cliUpdateNotificationsEnabled: cliUpdateNotificationsEnabledCheck.checked
@@ -134,6 +136,17 @@ KCM.SimpleKCM {
         ? Plasmoid.configuration.widgetUpdateLastStatus || "" : ""
     readonly property string widgetUpdateLastError: Plasmoid.configuration
         ? Plasmoid.configuration.widgetUpdateLastError || "" : ""
+
+    Controllers.ManagedCliController {
+        id: managedCli
+        objectName: "managedCliController"
+        commandPath: page.cfg_commandPath || "codexbar"
+        onInstalled: function(path) {
+            page.cfg_commandPath = path
+        }
+        onChanged: cliUpdater.reset()
+        Component.onCompleted: Qt.callLater(function() { managedCli.run("status") })
+    }
 
     Controllers.CliUpdateController {
         id: cliUpdater
@@ -233,6 +246,7 @@ KCM.SimpleKCM {
             [cfg_notifyQuotaWarnings, cfg_notifyQuotaWarningsDefault],
             [cfg_notifyPredictivePaceWarnings, cfg_notifyPredictivePaceWarningsDefault],
             [cfg_notifyLimitResets, cfg_notifyLimitResetsDefault],
+            [cfg_cliAutomaticUpdates, cfg_cliAutomaticUpdatesDefault],
             [cfg_cliUpdateChecksEnabled, cfg_cliUpdateChecksEnabledDefault],
             [cfg_cliUpdateNotificationsEnabled, cfg_cliUpdateNotificationsEnabledDefault],
             [cfg_updateChecksEnabled, cfg_updateChecksEnabledDefault],
@@ -287,6 +301,7 @@ KCM.SimpleKCM {
         cfg_notifyQuotaWarnings = cfg_notifyQuotaWarningsDefault
         cfg_notifyPredictivePaceWarnings = cfg_notifyPredictivePaceWarningsDefault
         cfg_notifyLimitResets = cfg_notifyLimitResetsDefault
+        cfg_cliAutomaticUpdates = cfg_cliAutomaticUpdatesDefault
         cfg_cliUpdateChecksEnabled = cfg_cliUpdateChecksEnabledDefault
         cfg_cliUpdateNotificationsEnabled = cfg_cliUpdateNotificationsEnabledDefault
         cfg_updateChecksEnabled = cfg_updateChecksEnabledDefault
@@ -576,7 +591,7 @@ KCM.SimpleKCM {
         }
 
         Components.PlainControlsLabel {
-            text: i18n("Checks GitHub for official releases. The widget does not install or replace the CLI.")
+            text: i18n("Checks GitHub for official releases. External installations are updated through their original installation method.")
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true
@@ -624,6 +639,69 @@ KCM.SimpleKCM {
             visible: cliUpdater.checked && cliUpdater.result.releaseUrl.length > 0
             enabled: !cliUpdater.busy
             onClicked: Qt.openUrlExternally(cliUpdater.result.releaseUrl)
+        }
+
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Managed CLI")
+            Kirigami.FormData.isSection: true
+        }
+
+        Components.PlainControlsLabel {
+            text: i18n("Install a private copy for this widget. System and package-manager installations remain available. Apply settings to use the selected copy.")
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+            Layout.fillWidth: true
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            wrapMode: Text.WordWrap
+        }
+
+        RowLayout {
+            Controls.Button {
+                objectName: "installManagedCliButton"
+                text: managedCli.selected ? i18n("Update now")
+                    : managedCli.result.version.length > 0 ? i18n("Use managed CLI") : i18n("Install and select managed CLI")
+                icon.name: managedCli.selected ? "view-refresh"
+                    : managedCli.result.version.length > 0 ? "dialog-ok-apply" : "download"
+                enabled: !managedCli.busy
+                onClicked: {
+                    if (managedCli.selected) managedCli.run("update")
+                    else if (managedCli.result.version.length > 0) page.cfg_commandPath = managedCli.result.path
+                    else managedCli.run("install")
+                }
+            }
+            Controls.BusyIndicator {
+                running: managedCli.busy
+                opacity: running ? 1 : 0
+                Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                Layout.preferredHeight: Kirigami.Units.iconSizes.small
+            }
+        }
+
+        Components.PlainControlsLabel {
+            objectName: "managedCliStatusLabel"
+            text: managedCli.statusText
+            Layout.fillWidth: true
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            wrapMode: Text.WordWrap
+        }
+
+        Controls.CheckBox {
+            objectName: "cliAutomaticUpdatesCheck"
+            implicitWidth: 0
+            Layout.fillWidth: true
+            text: i18n("Automatically update the managed CLI daily")
+            checked: page.cfg_cliAutomaticUpdates
+            enabled: managedCli.selected && !managedCli.busy
+            onToggled: page.cfg_cliAutomaticUpdates = checked
+        }
+
+        Controls.Button {
+            objectName: "rollbackManagedCliButton"
+            text: i18n("Restore previous version (%1)", managedCli.result.previous)
+            icon.name: "edit-undo"
+            visible: managedCli.selected && managedCli.result.previous.length > 0
+            enabled: !managedCli.busy
+            onClicked: managedCli.run("rollback")
         }
 
         Kirigami.Separator {

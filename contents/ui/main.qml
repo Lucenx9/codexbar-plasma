@@ -2684,6 +2684,12 @@ PlasmoidItem {
         active: root.expanded && root.sessionsSelected
     }
 
+    Controllers.ManagedCliController {
+        commandPath: root.commandPath
+        automaticUpdates: Plasmoid.configuration.cliAutomaticUpdates === true
+        onChanged: root.refreshNow(true)
+    }
+
     Controllers.CliUpdateController {
         commandPath: root.commandPath
         automaticChecks: Plasmoid.configuration.cliUpdateChecksEnabled === true

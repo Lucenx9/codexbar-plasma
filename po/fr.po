@@ -991,8 +991,8 @@ msgid ""
 "This checks installed versions only. Check upstream CLI releases in "
 "General / CLI updates."
 msgstr ""
-"Cette vérification porte uniquement sur les versions installées. Consultez les versions du CLI "
-"dans Général / Mises à jour du CLI."
+"Cette vérification porte uniquement sur les versions installées. Consultez "
+"les versions du CLI dans Général / Mises à jour du CLI."
 
 #: contents/ui/configDiagnostics.qml
 msgid "Advanced provider override"
@@ -1184,11 +1184,11 @@ msgstr "Notifier la disponibilité d’une version du CLI"
 
 #: contents/ui/configGeneral.qml
 msgid ""
-"Checks GitHub for official releases. The widget does not install or replace "
-"the CLI."
+"Checks GitHub for official releases. External installations are updated "
+"through their original installation method."
 msgstr ""
-"Consulte les versions officielles sur GitHub. Le widget n’installe ni ne "
-"remplace le CLI."
+"Consulte les versions officielles sur GitHub. Les installations externes se "
+"mettent à jour avec leur méthode d’installation d’origine."
 
 #: contents/ui/configGeneral.qml
 msgid "Check CLI releases now"
@@ -1197,6 +1197,39 @@ msgstr "Vérifier les versions du CLI maintenant"
 #: contents/ui/configGeneral.qml contents/ui/main.qml
 msgid "Open release page"
 msgstr "Ouvrir la page de la version"
+
+#: contents/ui/configGeneral.qml
+msgid "Managed CLI"
+msgstr "CLI gérée"
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"Install a private copy for this widget. System and package-manager "
+"installations remain available. Apply settings to use the selected copy."
+msgstr ""
+"Installez une copie privée pour ce composant. Les installations système et "
+"des gestionnaires de paquets restent disponibles. Appliquez les réglages "
+"pour utiliser la copie sélectionnée."
+
+#: contents/ui/configGeneral.qml
+msgid "Update now"
+msgstr "Mettre à jour maintenant"
+
+#: contents/ui/configGeneral.qml
+msgid "Install and select managed CLI"
+msgstr "Installer et sélectionner la CLI gérée"
+
+#: contents/ui/configGeneral.qml
+msgid "Use managed CLI"
+msgstr "Utiliser la CLI gérée"
+
+#: contents/ui/configGeneral.qml
+msgid "Automatically update the managed CLI daily"
+msgstr "Mettre à jour automatiquement la CLI gérée chaque jour"
+
+#: contents/ui/configGeneral.qml
+msgid "Restore previous version (%1)"
+msgstr "Restaurer la version précédente (%1)"
 
 #: contents/ui/configGeneral.qml
 msgid "Defaults"
@@ -1910,6 +1943,14 @@ msgid "Loading accounts timed out. Try again."
 msgstr "Le délai de chargement des comptes a expiré. Réessayez."
 
 #: contents/ui/controllers/CliUpdateController.qml
+msgid ""
+"Managed by this widget. Install updates or restore the previous version in "
+"General."
+msgstr ""
+"Gérée par ce composant. Installez les mises à jour ou restaurez la version "
+"précédente dans Général."
+
+#: contents/ui/controllers/CliUpdateController.qml
 msgid "Managed by Homebrew. Update through Homebrew."
 msgstr "Géré par Homebrew. Mettez à jour via Homebrew."
 
@@ -1928,6 +1969,7 @@ msgstr ""
 "d’origine."
 
 #: contents/ui/controllers/CliUpdateController.qml
+#: contents/ui/controllers/ManagedCliController.qml
 msgid "Checking..."
 msgstr "Vérification..."
 
@@ -1975,6 +2017,47 @@ msgstr "Impossible d'analyser le JSON de codexbar cost : %1"
 #: contents/ui/controllers/CostController.qml
 msgid "codexbar cost returned an unsupported JSON payload."
 msgstr "codexbar cost a renvoyé des données JSON non prises en charge."
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "Preparing the managed CLI..."
+msgstr "Préparation de la CLI gérée…"
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "Managed CLI %1 is installed."
+msgstr "La CLI gérée %1 est installée."
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "Managed CLI %1 is ready."
+msgstr "La CLI gérée %1 est prête."
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "Restored CLI %1. Automatic updates will skip the replaced version."
+msgstr ""
+"CLI %1 restaurée. Les mises à jour automatiques ignoreront la version "
+"remplacée."
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "No managed CLI installed."
+msgstr "Aucune CLI gérée installée."
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "Select the managed CLI before updating it."
+msgstr "Sélectionnez la CLI gérée avant de la mettre à jour."
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "Another widget is updating the managed CLI. Try again shortly."
+msgstr "Un autre composant met à jour la CLI gérée. Réessayez dans un instant."
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "No previous CLI version is available."
+msgstr "Aucune version précédente de la CLI n’est disponible."
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid ""
+"Could not prepare the managed CLI. Check the installed version and try again."
+msgstr ""
+"Impossible de préparer la CLI gérée. Vérifiez la version installée et "
+"réessayez."
 
 #: contents/ui/controllers/SessionsController.qml
 msgid "Loading sessions timed out. Try again."
@@ -2813,3 +2896,10 @@ msgid "Upstream CLI %1 is available. Update using your installation method."
 msgstr ""
 "La version officielle %1 du CLI est disponible. Mettez à jour avec votre "
 "méthode d’installation."
+
+#~ msgid ""
+#~ "Checks GitHub for official releases. The widget does not install or "
+#~ "replace the CLI."
+#~ msgstr ""
+#~ "Consulte les versions officielles sur GitHub. Le widget n’installe ni ne "
+#~ "remplace le CLI."

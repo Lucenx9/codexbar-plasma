@@ -105,6 +105,10 @@
       <label>Notify when a heavily used limit resets back to empty.</label>
       <default>false</default>
     </entry>
+    <entry name="cliAutomaticUpdates" type="Bool">
+      <label>Automatically update the selected widget-managed CLI daily.</label>
+      <default>false</default>
+    </entry>
     <entry name="cliUpdateChecksEnabled" type="Bool">
       <label>Check upstream CLI releases daily.</label>
       <default>false</default>

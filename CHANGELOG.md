@@ -12,6 +12,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Install an optional widget-managed CodexBar CLI, update it manually or with
+  opt-in daily automatic updates, and restore the previous version. Official
+  Linux downloads are checksum-verified and activated atomically. External and
+  package-manager installations remain independent; Diagnostics identifies the
+  managed copy.
+
 - Check official CodexBar CLI releases manually or with optional daily checks
   and notifications. Package-managed installations keep their original updater;
   Diagnostics reports installed versions and recognized package ownership offline.
