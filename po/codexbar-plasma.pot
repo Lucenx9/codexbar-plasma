@@ -558,6 +558,10 @@ msgid "Codebuff"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
+msgid "CodeRabbit"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Codex"
 msgstr ""
 
@@ -626,6 +630,10 @@ msgid "Groq"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Hugging Face"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
 msgid "IBM Bob"
 msgstr ""
 
@@ -682,7 +690,15 @@ msgid "Moonshot / Kimi Open Platform"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Muse Code"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Neuralwatt"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Nous Portal"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
@@ -723,6 +739,10 @@ msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
 msgid "Qwen Cloud"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Replicate"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml

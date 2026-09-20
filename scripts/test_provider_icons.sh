@@ -50,8 +50,9 @@ require_icon() {
   fi
 }
 
-# Released official CodexBar v0.49.1 provider registry. The live CLI probe below
-# adds an early warning when a newer installed release introduces another provider.
+# Released official CodexBar provider registry through v0.61.0. The live CLI
+# probe below adds an early warning when a newer installed release introduces
+# another provider.
 released_providers=(
   codex
   openai
@@ -122,6 +123,11 @@ released_providers=(
   xai
   notion
   ibmbob
+  coderabbit
+  huggingface
+  muse
+  nous
+  replicate
 )
 
 for provider in "${released_providers[@]}"; do

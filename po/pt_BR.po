@@ -589,6 +589,10 @@ msgid "Codebuff"
 msgstr "Codebuff"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "CodeRabbit"
+msgstr "CodeRabbit"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Codex"
 msgstr "Codex"
 
@@ -657,6 +661,10 @@ msgid "Groq"
 msgstr "Groq"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Hugging Face"
+msgstr "Hugging Face"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "IBM Bob"
 msgstr "IBM Bob"
 
@@ -713,8 +721,16 @@ msgid "Moonshot / Kimi Open Platform"
 msgstr "Moonshot / Kimi Open Platform"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Muse Code"
+msgstr "Muse Code"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Neuralwatt"
 msgstr "Neuralwatt"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Nous Portal"
+msgstr "Nous Portal"
 
 #: contents/ui/components/ProviderNames.qml
 msgid "Notion AI"
@@ -755,6 +771,10 @@ msgstr "Qoder"
 #: contents/ui/components/ProviderNames.qml
 msgid "Qwen Cloud"
 msgstr "Qwen Cloud"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Replicate"
+msgstr "Replicate"
 
 #: contents/ui/components/ProviderNames.qml
 msgid "Sakana AI"
