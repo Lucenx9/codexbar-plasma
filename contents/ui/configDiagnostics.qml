@@ -260,7 +260,9 @@ KCM.SimpleKCM {
                 Kirigami.FormData.label: i18n("System CLI (PATH):")
                 text: systemVersions.result.version.length > 0
                     ? i18n("%1 (%2)", systemVersions.result.version, systemVersions.result.path)
-                    : i18n("Not found")
+                    : systemVersions.result.status === "unknown"
+                        ? i18n("Could not identify the installed CLI version.")
+                        : i18n("Not found")
                 Layout.fillWidth: true
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 24
                 wrapMode: Text.WordWrap

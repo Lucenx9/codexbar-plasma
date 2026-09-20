@@ -85,6 +85,19 @@ class ManagedCliTests(unittest.TestCase):
         # Explicit Update now may reinstall the previously rejected version.
         self.assertEqual(self.operation("update")["version"], "0.63.0")
 
+    def test_owns_command_resolves_canonical_probe_paths(self):
+        self.operation("install")
+        current = cli.installed(self.root)
+        # Probes canonicalize directory prefixes (resolving `current`) while
+        # keeping the `codexbar` entry name.
+        probed = os.path.join(os.path.realpath(self.root / "current"), "codexbar")
+        self.assertTrue(cli.owns_command(self.command))
+        self.assertTrue(cli.owns_command(probed))
+        self.assertTrue(cli.owns_command(str(self.root / current["target"] / "codexbar")))
+        self.assertFalse(cli.owns_command(str(self.root / "current/CodexBarCLI")))
+        self.assertFalse(cli.owns_command(""))
+        self.assertFalse(cli.owns_command("/usr/bin/codexbar"))
+
     def test_select_existing_copy_is_offline_even_during_an_update(self):
         self.operation("install")
         with (self.root / ".lock").open("w") as lock, \

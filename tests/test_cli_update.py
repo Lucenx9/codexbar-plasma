@@ -42,7 +42,23 @@ class CliUpdateTests(unittest.TestCase):
                 result = cli.check(str(path), local_only=True)
             remote.assert_not_called()
             self.assertEqual(result["version"], "0.60.4")
-            self.assertEqual(result["path"], str(path))
+            self.assertEqual(result["path"], str(path.resolve()))
+
+    def test_probe_reports_canonical_path_through_symlinked_dir(self):
+        with tempfile.TemporaryDirectory() as directory:
+            real = Path(directory) / "real"
+            real.mkdir()
+            target = real / "codexbar"
+            target.write_text('#!/bin/sh\nprintf "CodexBar 0.60.4\\n"\n')
+            target.chmod(0o700)
+            linked = Path(directory) / "linked"
+            linked.symlink_to(real, target_is_directory=True)
+            with patch.object(cli, "installation_manager", return_value="external"), \
+                    patch.object(cli.shutil, "which", return_value=str(linked / "codexbar")):
+                result = cli.local_record("codexbar")
+            self.assertEqual(result["status"], "local")
+            self.assertEqual(result["path"], str(target.resolve()))
+            self.assertNotEqual(str(linked / "codexbar"), str(target.resolve()))
 
     def test_missing_does_not_fetch(self):
         with patch.object(cli.shutil, "which", return_value=None), patch.object(cli, "latest_release") as remote:

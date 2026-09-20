@@ -76,7 +76,15 @@ def installed(root, target=None):
 
 def owns_command(command):
     root = root_path()
-    return command == str(root / "current/codexbar") and installed(root) is not None
+    # Probes report canonical paths, so symlinked directory prefixes (the
+    # managed `current` link, /bin vs /usr/bin) must resolve before comparing.
+    # The entry-point filename still has to match: a differently named file in
+    # one release directory is not the managed command.
+    if not isinstance(command, str) or not command:
+        return False
+    return os.path.basename(command) == "codexbar" \
+        and os.path.realpath(command) == os.path.realpath(root / "current/codexbar") \
+        and installed(root) is not None
 
 
 def state_record(root):

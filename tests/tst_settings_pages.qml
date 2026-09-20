@@ -221,6 +221,31 @@ TestCase {
         verify(!findChild(page, "systemCliVersionLabel").visible);
     }
 
+    function test_diagnosticsReportsUnidentifiedSystemCli() {
+        var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: "codexbar"});
+        if (!page)
+            return;
+
+        var versions = findChild(page, "cliVersionsController");
+        versions.activeSource = "selected";
+        versions.accept("selected", {
+            "exit code": 0,
+            stdout: JSON.stringify({status: "unknown", version: "",
+                path: "/usr/bin/codexbar", manager: "external"})
+        });
+        var systemVersions = findChild(page, "systemCliVersionsController");
+        systemVersions.activeSource = "system";
+        systemVersions.accept("system", {
+            "exit code": 0,
+            stdout: JSON.stringify({status: "unknown", version: "",
+                path: "/usr/local/bin/codexbar", manager: "external"})
+        });
+
+        var label = findChild(page, "systemCliVersionLabel");
+        verify(label.visible);
+        compare(label.text, "Could not identify the installed CLI version.");
+    }
+
     function test_restoringDefaultsStaysPendingUntilSaved() {
         var page = createPage("../contents/ui/configGeneral.qml", {
             cfg_commandPath: "/opt/codexbar/bin/codexbar",
