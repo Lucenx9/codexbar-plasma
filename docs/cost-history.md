@@ -82,10 +82,15 @@ envelope. Absent costs stay absent in daily/model normalization. Its established
 empty snapshot uses zero dollar totals despite costs being unavailable, so
 `normalizeProviderCostTotals` masks that provider sentinel until an official
 availability field exists. Token charts remain usable while cost totals and
-cost-mode charts stay unavailable. Cursor cost is rejected by that Linux release;
+cost-mode charts stay unavailable. Official CLI 0.62.0 emits the same
+token-only shape for Muse Code: a synthetic `model_completed` turn counted
+exactly into `sessionTokens`, daily entries, and model breakdowns while every
+monetary field stayed absent. Cursor cost is rejected by that Linux release;
 neither case authorizes provider fetching or source parsing in QML. The scoped
 [0.57.0 probes](research/2026-09-09-macos-parity-0.57.0.md#scoped-official-linux-probes)
-confirm Cursor is still rejected; they do not retest established-empty
+confirm Cursor is still rejected, and the scoped
+[0.62.0 probes](research/2026-09-20-macos-parity-0.62.0.md#scoped-official-linux-probes)
+confirm it again alongside the Muse contract; neither retests established-empty
 Antigravity history.
 
 Track [explicit cost availability](../TODO.md#cost-availability),
@@ -104,6 +109,12 @@ This adds no command or provider-specific source and does not replace the full
 The incomplete-request counts were verified in official Linux 0.60.5 output;
 the [0.60.5 review](research/2026-09-18-macos-parity-0.60.5.md#scoped-official-linux-probes)
 records the checksum-verified asset, the isolated probes, and the emitted keys.
+
+The Muse token-only shape was verified in official Linux 0.62.0 output; the
+[0.62.0 review](research/2026-09-20-macos-parity-0.62.0.md#scoped-official-linux-probes)
+records the checksum-verified asset
+(`11b88fef999f18cd7fd8b52e52a7fb3eb90e84eaf9fc98a1d4bc5d4170353513`), the
+isolated probes, and the emitted keys.
 
 The official Linux x86_64 release archive was checksum-verified with SHA-256
 `ab98788e12840e5689ae505bf62731e0ea0db1c77e63dceda1589b6e795ac5b8`.
