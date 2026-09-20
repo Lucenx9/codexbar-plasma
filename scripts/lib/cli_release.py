@@ -96,7 +96,13 @@ def local_record(command):
     path = shutil.which(command)
     if not path:
         return record
-    path = os.path.abspath(path)
+    # Canonicalize the directory prefixes so two spellings of one executable
+    # (symlinked PATH entries such as /bin vs /usr/bin, or the managed
+    # `current` link) compare equal. The entry name itself is preserved: the
+    # managed copy exposes both `codexbar` and `CodexBarCLI` for one file, and
+    # ownership keeps referring to the `codexbar` entry point.
+    parent, name = os.path.split(path)
+    path = os.path.join(os.path.realpath(parent), name)
     if len(path) > 4096 or any(ord(c) < 32 for c in path):
         return record
     record["path"] = path

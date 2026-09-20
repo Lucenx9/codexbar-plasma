@@ -30,6 +30,19 @@ function nextResponse(previous, text) {
         previous: parsed.status === "no_previous" ? "" : prior.previous}
 }
 
+function needsInstallConfirmation(managed, updater) {
+    if (!managed || typeof managed !== "object" || !updater || typeof updater !== "object") return false
+    // A managed copy already installed (or being selected) needs no warning.
+    if (typeof managed.version === "string" && managed.version.length > 0) return false
+    if (updater.checked !== true) return false
+    var externalPath = typeof updater.path === "string" ? updater.path : ""
+    var externalVersion = typeof updater.version === "string" ? updater.version : ""
+    if (externalPath.length === 0 || externalVersion.length === 0) return false
+    // The managed helper always reports its own expected path, so an equal
+    // path means the selection already points at the private copy.
+    return externalPath !== managed.path
+}
+
 function command(scriptUrl, action, commandPath) {
     if (["status", "install", "update", "automatic", "rollback"].indexOf(action) < 0) return ""
     var url = String(scriptUrl)

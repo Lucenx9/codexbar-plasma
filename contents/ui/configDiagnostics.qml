@@ -71,10 +71,26 @@ KCM.SimpleKCM {
         localOnly: true
     }
 
+    // PATH-resolved copy (system or package-manager installation), probed
+    // alongside the selected command so version drift between the two is
+    // visible. Hidden when it resolves to the selected command itself.
+    Controllers.CliUpdateController {
+        id: systemVersions
+        objectName: "systemCliVersionsController"
+        commandPath: "codexbar"
+        localOnly: true
+    }
+    readonly property bool systemCliDiffers: systemVersions.checked
+        && systemVersions.result.path.length > 0
+        && systemVersions.result.path !== versions.result.path
+
     function runEnvironmentProbe() {
         if (commandPath.length === 0)
             diagnosticError = i18n("Set the codexbar command path above.")
         versions.checkNow()
+        // Without a selected command the page is already in an error state;
+        // do not leave a second probe running past teardown.
+        if (commandPath.length > 0) systemVersions.checkNow()
     }
 
     function runCommand(command) {
@@ -236,17 +252,33 @@ KCM.SimpleKCM {
                 elide: Text.ElideMiddle
             }
 
+            Components.PlainControlsLabel {
+                id: systemCliVersionLabel
+                objectName: "systemCliVersionLabel"
+                visible: page.systemCliDiffers
+
+                Kirigami.FormData.label: i18n("System CLI (PATH):")
+                text: systemVersions.result.version.length > 0
+                    ? i18n("%1 (%2)", systemVersions.result.version, systemVersions.result.path)
+                    : systemVersions.result.status === "unknown"
+                        ? i18n("Could not identify the installed CLI version.")
+                        : i18n("Not found")
+                Layout.fillWidth: true
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                wrapMode: Text.WordWrap
+            }
+
             RowLayout {
                 Controls.Button {
                     id: checkEnvironmentButton
                     objectName: "checkEnvironmentButton"
 
                     text: i18n("Check versions")
-                    enabled: !versions.busy && !page.diagnosticRunning
+                    enabled: !versions.busy && !systemVersions.busy && !page.diagnosticRunning
                     onClicked: page.runEnvironmentProbe()
                 }
                 Controls.BusyIndicator {
-                    running: versions.busy
+                    running: versions.busy || systemVersions.busy
                     opacity: running ? 1 : 0
                     Layout.preferredWidth: Kirigami.Units.iconSizes.small
                     Layout.preferredHeight: Kirigami.Units.iconSizes.small

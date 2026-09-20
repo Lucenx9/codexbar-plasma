@@ -939,6 +939,19 @@ msgid "Not found"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
+msgid "System CLI (PATH):"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml contents/ui/main.qml
+msgid "%1 (%2)"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+#: contents/ui/controllers/CliUpdateController.qml
+msgid "Could not identify the installed CLI version."
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
 msgid "Check versions"
 msgstr ""
 
@@ -1159,6 +1172,21 @@ msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid "Use managed CLI"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"The selected %1 %2 keeps working outside the widget. Installing creates a "
+"second private copy and switches the widget to it; updates through the "
+"original method will no longer affect the widget."
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Install second copy"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Keep current CLI"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -1875,10 +1903,6 @@ msgid "CLI %1 is current or newer than the latest stable release."
 msgstr ""
 
 #: contents/ui/controllers/CliUpdateController.qml
-msgid "Could not identify the installed CLI version."
-msgstr ""
-
-#: contents/ui/controllers/CliUpdateController.qml
 msgid ""
 "Latest stable CLI: %1. The installed version cannot be compared "
 "automatically."
@@ -2284,10 +2308,6 @@ msgstr ""
 #: contents/ui/main.qml
 #, kde-format
 msgid "%1%"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 (%2)"
 msgstr ""
 
 #: contents/ui/main.qml scripts/smoke/Capture.qml

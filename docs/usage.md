@@ -399,16 +399,22 @@ below downloads official binaries only after an explicit install action.
 
 **Diagnostics → Versions → Check versions** remains an offline probe. It reports
 the widget version, installed CLI version, resolved command path, and installation
-guidance using the same local probe as the release checker. Editing the command
-path clears the previous result. Prerelease or custom version strings are not
-silently treated as older stable versions. Network errors do not affect quota
-fetching or replace the installed version with a guessed value.
+guidance using the same local probe as the release checker. It also reports the
+PATH-resolved system CLI version whenever it differs from the selected command,
+so drift between a managed copy and a package-manager installation stays visible.
+Editing the command path clears the previous result. Prerelease or custom version
+strings are not silently treated as older stable versions. Network errors do not
+affect quota fetching or replace the installed version with a guessed value.
 
 ### Managed CLI
 
 **General → Managed CLI → Install and select managed CLI** installs the latest
 stable official Linux release under `$XDG_DATA_HOME/codexbar-plasma/cli`, falling
-back to `~/.local/share/codexbar-plasma/cli`. Installation happens immediately;
+back to `~/.local/share/codexbar-plasma/cli`. When the selected command is a
+working external copy, the widget first asks for confirmation: installing keeps
+that copy for outside use but creates a second private copy, and later updates
+through the original method no longer affect the widget. Installation happens
+immediately;
 **Apply** or **OK** saves its `current/codexbar` path as the widget command.
 **Cancel** leaves the downloaded copy unused and preserves the saved command.
 If a managed copy already exists, **Use managed CLI** selects it offline without

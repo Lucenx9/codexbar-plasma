@@ -40,6 +40,21 @@ TestCase {
         var cyclic = {}; cyclic.previous = cyclic
         compare(ManagedCli.nextResponse(cyclic, "").path, "")
     }
+    function test_installConfirmation() {
+        var managedPath = "/home/test/.local/share/codexbar-plasma/cli/current/codexbar"
+        var absent = {status: "absent", version: "", previous: "", path: managedPath}
+        var external = {checked: true, path: "/usr/bin/codexbar", version: "0.60.4"}
+        verify(ManagedCli.needsInstallConfirmation(absent, external))
+        var installed = {status: "ready", version: "0.62.0", previous: "", path: managedPath}
+        verify(!ManagedCli.needsInstallConfirmation(installed, external))
+        verify(!ManagedCli.needsInstallConfirmation(absent, {checked: false, path: "/usr/bin/codexbar", version: "0.60.4"}))
+        verify(!ManagedCli.needsInstallConfirmation(absent, {checked: true, path: "", version: "0.60.4"}))
+        verify(!ManagedCli.needsInstallConfirmation(absent, {checked: true, path: "/usr/bin/codexbar", version: ""}))
+        verify(!ManagedCli.needsInstallConfirmation(absent,
+            {checked: true, path: managedPath, version: "0.62.0"}))
+        verify(!ManagedCli.needsInstallConfirmation(null, external))
+        verify(!ManagedCli.needsInstallConfirmation(absent, null))
+    }
     function test_command() {
         compare(ManagedCli.command("file:///%ZZ", "install", "codexbar"), "")
         compare(ManagedCli.command("https://evil.test/helper", "install", "codexbar"), "")

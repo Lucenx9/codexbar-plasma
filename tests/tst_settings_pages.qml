@@ -82,6 +82,60 @@ TestCase {
         compare(page.cfg_cliAutomaticUpdates, false);
     }
 
+    function test_installWithWorkingExternalCliAsksForConfirmation() {
+        var page = createPage("../contents/ui/configGeneral.qml", {cfg_commandPath: "/usr/bin/codexbar"});
+        if (!page) return;
+        var managed = findChild(page, "managedCliController");
+        managed.activeAction = "status";
+        managed.activeSource = "synthetic";
+        managed.accept("synthetic", {"exit code": 0, stdout: JSON.stringify({status: "absent"})});
+        var updater = findChild(page, "cliReleaseController");
+        updater.activeSource = "manual";
+        updater.accept("manual", {"exit code": 0, stdout: JSON.stringify({status: "local",
+            version: "0.60.4", path: "/usr/bin/codexbar", manager: "external"})});
+        var button = findChild(page, "installManagedCliButton");
+        compare(button.text, "Install and select managed CLI");
+        button.clicked();
+        var confirmLabel = findChild(page, "managedInstallConfirmLabel");
+        verify(confirmLabel.visible);
+        verify(confirmLabel.text.indexOf("/usr/bin/codexbar") >= 0);
+        verify(confirmLabel.text.indexOf("0.60.4") >= 0);
+        verify(!managed.busy);
+        var cancelButton = findChild(page, "cancelManagedInstallButton");
+        cancelButton.clicked();
+        verify(!confirmLabel.visible);
+        verify(!managed.busy);
+        button.clicked();
+        verify(confirmLabel.visible);
+        var confirmButton = findChild(page, "confirmManagedInstallButton");
+        // A missing helper fails immediately, so no real download starts and
+        // the failed probe retires before teardown.
+        managed.scriptUrl = "file:///nonexistent-helper.py";
+        confirmButton.clicked();
+        verify(page.managedInstallConfirming === false);
+        verify(managed.busy);
+        verify(managed.activeAction === "install");
+        tryVerify(function() { return !managed.busy; });
+    }
+
+    function test_installWithoutKnownExternalCliStartsImmediately() {
+        var page = createPage("../contents/ui/configGeneral.qml", {cfg_commandPath: "/usr/bin/codexbar"});
+        if (!page) return;
+        var managed = findChild(page, "managedCliController");
+        managed.activeAction = "status";
+        managed.activeSource = "synthetic";
+        managed.accept("synthetic", {"exit code": 0, stdout: JSON.stringify({status: "absent"})});
+        var button = findChild(page, "installManagedCliButton");
+        // A missing helper fails immediately, so no real download starts and
+        // the failed probe retires before teardown.
+        managed.scriptUrl = "file:///nonexistent-helper.py";
+        button.clicked();
+        verify(!findChild(page, "managedInstallConfirmLabel").visible);
+        verify(managed.busy);
+        verify(managed.activeAction === "install");
+        tryVerify(function() { return !managed.busy; });
+    }
+
     function test_diagnosticsRejectsBlankPath() {
         var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: "   "});
         if (!page) return;
@@ -112,6 +166,84 @@ TestCase {
         verify(resolvedCommandLabel !== null);
         compare(resolvedCommandLabel.text, "/opt/CodexBar CLI/bin/codexbar");
         verify(resolvedCommandLabel.text !== "Not checked");
+    }
+
+    function test_diagnosticsShowsSystemCliWhenItDiffers() {
+        var page = createPage("../contents/ui/configDiagnostics.qml", {
+            cfg_commandPath: "/home/test/.local/share/codexbar-plasma/cli/current/codexbar"
+        });
+        if (!page)
+            return;
+
+        var versions = findChild(page, "cliVersionsController");
+        versions.activeSource = "selected";
+        versions.accept("selected", {
+            "exit code": 0,
+            stdout: JSON.stringify({status: "local", version: "0.62.0",
+                path: "/home/test/.local/share/codexbar-plasma/cli/current/codexbar", manager: "managed"})
+        });
+        var systemVersions = findChild(page, "systemCliVersionsController");
+        verify(systemVersions !== null);
+        verify(systemVersions.localOnly);
+        systemVersions.activeSource = "system";
+        systemVersions.accept("system", {
+            "exit code": 0,
+            stdout: JSON.stringify({status: "local", version: "0.60.4",
+                path: "/usr/bin/codexbar", manager: "external"})
+        });
+
+        var label = findChild(page, "systemCliVersionLabel");
+        verify(label.visible);
+        verify(label.text.indexOf("0.60.4") >= 0);
+        verify(label.text.indexOf("/usr/bin/codexbar") >= 0);
+    }
+
+    function test_diagnosticsHidesSystemCliWhenItMatchesSelection() {
+        var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: "codexbar"});
+        if (!page)
+            return;
+
+        var versions = findChild(page, "cliVersionsController");
+        versions.activeSource = "selected";
+        versions.accept("selected", {
+            "exit code": 0,
+            stdout: JSON.stringify({status: "local", version: "0.60.4",
+                path: "/usr/bin/codexbar", manager: "external"})
+        });
+        var systemVersions = findChild(page, "systemCliVersionsController");
+        systemVersions.activeSource = "system";
+        systemVersions.accept("system", {
+            "exit code": 0,
+            stdout: JSON.stringify({status: "local", version: "0.60.4",
+                path: "/usr/bin/codexbar", manager: "external"})
+        });
+
+        verify(!findChild(page, "systemCliVersionLabel").visible);
+    }
+
+    function test_diagnosticsReportsUnidentifiedSystemCli() {
+        var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: "codexbar"});
+        if (!page)
+            return;
+
+        var versions = findChild(page, "cliVersionsController");
+        versions.activeSource = "selected";
+        versions.accept("selected", {
+            "exit code": 0,
+            stdout: JSON.stringify({status: "unknown", version: "",
+                path: "/usr/bin/codexbar", manager: "external"})
+        });
+        var systemVersions = findChild(page, "systemCliVersionsController");
+        systemVersions.activeSource = "system";
+        systemVersions.accept("system", {
+            "exit code": 0,
+            stdout: JSON.stringify({status: "unknown", version: "",
+                path: "/usr/local/bin/codexbar", manager: "external"})
+        });
+
+        var label = findChild(page, "systemCliVersionLabel");
+        verify(label.visible);
+        compare(label.text, "Could not identify the installed CLI version.");
     }
 
     function test_restoringDefaultsStaysPendingUntilSaved() {
