@@ -1244,9 +1244,9 @@ msgid ""
 "second private copy and switches the widget to it; updates through the "
 "original method will no longer affect the widget."
 msgstr ""
-"Das ausgewählte %1 %2 funktioniert außerhalb des Widgets weiterhin.Die "
-"Installation erstellt eine zweite private Kopie und stellt dasWidget darauf "
-"um; Updates über die ursprüngliche Methode wirken sichdanach nicht mehr auf "
+"Das ausgewählte %1 %2 funktioniert außerhalb des Widgets weiterhin. Die "
+"Installation erstellt eine zweite private Kopie und stellt das Widget darauf "
+"um; Updates über die ursprüngliche Methode wirken sich danach nicht mehr auf "
 "das Widget aus."
 
 #: contents/ui/configGeneral.qml
@@ -2083,7 +2083,8 @@ msgstr "Keine vorherige CLI-Version verfügbar."
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "Could not reach the release server. Try again later."
-msgstr "Der Release-Server ist nicht erreichbar. Versuchen Sie es später erneut."
+msgstr ""
+"Der Release-Server ist nicht erreichbar. Versuchen Sie es später erneut."
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "No official CLI build is available for this system."
@@ -2091,7 +2092,9 @@ msgstr "Für dieses System ist keine offizielle CLI verfügbar."
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "The downloaded CLI failed verification and was discarded."
-msgstr "Die heruntergeladene CLI hat die Überprüfung nicht bestanden und wurde verworfen."
+msgstr ""
+"Die heruntergeladene CLI hat die Überprüfung nicht bestanden und wurde "
+"verworfen."
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid ""

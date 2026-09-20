@@ -1243,9 +1243,9 @@ msgid ""
 "second private copy and switches the widget to it; updates through the "
 "original method will no longer affect the widget."
 msgstr ""
-"Il %1 %2 selezionato continua a funzionare fuori dal widget.L'installazione "
-"crea una seconda copia privata e vi passa il widget;gli aggiornamenti con il "
-"metodo originale non avranno più effettosul widget."
+"Il %1 %2 selezionato continua a funzionare fuori dal widget. L'installazione "
+"crea una seconda copia privata e vi passa il widget; gli aggiornamenti con "
+"il metodo originale non avranno più effetto sul widget."
 
 #: contents/ui/configGeneral.qml
 msgid "Install second copy"

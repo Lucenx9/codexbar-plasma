@@ -1241,9 +1241,9 @@ msgid ""
 "second private copy and switches the widget to it; updates through the "
 "original method will no longer affect the widget."
 msgstr ""
-"El %1 %2 seleccionado sigue funcionando fuera del widget. Lainstalación crea "
-"una segunda copia privada y cambia el widget aella; las actualizaciones con "
-"el método original ya no afectarán alwidget."
+"El %1 %2 seleccionado sigue funcionando fuera del widget. La instalación "
+"crea una segunda copia privada y cambia el widget a ella; las "
+"actualizaciones con el método original ya no afectarán al widget."
 
 #: contents/ui/configGeneral.qml
 msgid "Install second copy"
@@ -2081,7 +2081,8 @@ msgstr "No hay una versión anterior de la CLI disponible."
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "Could not reach the release server. Try again later."
-msgstr "No se pudo contactar con el servidor de versiones. Inténtelo más tarde."
+msgstr ""
+"No se pudo contactar con el servidor de versiones. Inténtelo más tarde."
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "No official CLI build is available for this system."
