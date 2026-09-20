@@ -5,7 +5,7 @@ import json
 import signal
 import subprocess
 import tarfile
-from lib.managed_cli import run
+from lib.managed_cli import failure_status, run
 
 
 def main():
@@ -16,8 +16,8 @@ def main():
     signal.alarm(600)
     try:
         result = run(args.action, args.command)
-    except (OSError, ValueError, tarfile.TarError, subprocess.SubprocessError):
-        result = {"status": "error"}
+    except (OSError, ValueError, tarfile.TarError, subprocess.SubprocessError) as error:
+        result = {"status": failure_status(error)}
     print(json.dumps(result))
 
 

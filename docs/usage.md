@@ -443,6 +443,11 @@ the requested stable version before an atomic symlink switch. Unlike widget
 releases, official CLI 0.62.0 releases are not marked immutable, so CLI downloads
 use pinned tag/asset URLs and digest verification without requiring that flag.
 A download, extraction or compatibility failure leaves the active copy available.
+The status names which kind of failure occurred: a refused download that failed
+verification, an unreachable release server, or a system with no official build.
+A repeated verification failure is worth investigating rather than retrying,
+because the published digest and checksum already agreed before the download.
+Reasons stay generic; command output, paths and remote text are never shown.
 
 **Restore previous version** switches back immediately and prevents automatic
 reinstallation of the replaced version. A newer release remains eligible;

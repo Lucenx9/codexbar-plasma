@@ -987,6 +987,15 @@ msgstr "Nicht gefunden"
 msgid "System CLI (PATH):"
 msgstr "System-CLI (PATH):"
 
+#: contents/ui/configDiagnostics.qml contents/ui/main.qml
+msgid "%1 (%2)"
+msgstr "%1 (%2)"
+
+#: contents/ui/configDiagnostics.qml
+#: contents/ui/controllers/CliUpdateController.qml
+msgid "Could not identify the installed CLI version."
+msgstr "Die installierte CLI-Version konnte nicht ermittelt werden."
+
 #: contents/ui/configDiagnostics.qml
 msgid "Check versions"
 msgstr "Versionen prüfen"
@@ -1235,10 +1244,10 @@ msgid ""
 "second private copy and switches the widget to it; updates through the "
 "original method will no longer affect the widget."
 msgstr ""
-"Das ausgewählte %1 %2 funktioniert außerhalb des Widgets weiterhin."
-"Die Installation erstellt eine zweite private Kopie und stellt das"
-"Widget darauf um; Updates über die ursprüngliche Methode wirken sich"
-"danach nicht mehr auf das Widget aus."
+"Das ausgewählte %1 %2 funktioniert außerhalb des Widgets weiterhin. Die "
+"Installation erstellt eine zweite private Kopie und stellt das Widget darauf "
+"um; Updates über die ursprüngliche Methode wirken sich danach nicht mehr auf "
+"das Widget aus."
 
 #: contents/ui/configGeneral.qml
 msgid "Install second copy"
@@ -2004,10 +2013,6 @@ msgid "CLI %1 is current or newer than the latest stable release."
 msgstr "CLI %1 ist aktuell oder neuer als die letzte stabile Version."
 
 #: contents/ui/controllers/CliUpdateController.qml
-msgid "Could not identify the installed CLI version."
-msgstr "Die installierte CLI-Version konnte nicht ermittelt werden."
-
-#: contents/ui/controllers/CliUpdateController.qml
 msgid ""
 "Latest stable CLI: %1. The installed version cannot be compared "
 "automatically."
@@ -2075,6 +2080,21 @@ msgstr ""
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "No previous CLI version is available."
 msgstr "Keine vorherige CLI-Version verfügbar."
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "Could not reach the release server. Try again later."
+msgstr ""
+"Der Release-Server ist nicht erreichbar. Versuchen Sie es später erneut."
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "No official CLI build is available for this system."
+msgstr "Für dieses System ist keine offizielle CLI verfügbar."
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "The downloaded CLI failed verification and was discarded."
+msgstr ""
+"Die heruntergeladene CLI hat die Überprüfung nicht bestanden und wurde "
+"verworfen."
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid ""
@@ -2442,10 +2462,6 @@ msgstr "Letzter Dashboard-Tag"
 #, kde-format
 msgid "%1%"
 msgstr "%1%"
-
-#: contents/ui/configDiagnostics.qml contents/ui/main.qml
-msgid "%1 (%2)"
-msgstr "%1 (%2)"
 
 #: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "Details hidden by privacy mode."

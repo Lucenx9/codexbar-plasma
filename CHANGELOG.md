@@ -16,7 +16,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   opt-in daily automatic updates, and restore the previous version. Official
   Linux downloads are checksum-verified and activated atomically. External and
   package-manager installations remain independent; Diagnostics identifies the
-  managed copy.
+  managed copy. A failed attempt names its reason, so a refused download reads
+  differently from an unreachable release server or an unsupported system.
 - Confirm before installing a managed copy while a working external CLI is
   selected, so the resulting second copy is explicit. Diagnostics also reports
   the PATH-resolved system CLI version next to the selected command.

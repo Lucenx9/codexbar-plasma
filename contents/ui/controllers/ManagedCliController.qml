@@ -28,6 +28,9 @@ Item {
         case "external": return i18n("Select the managed CLI before updating it.")
         case "busy": return i18n("Another widget is updating the managed CLI. Try again shortly.")
         case "no_previous": return i18n("No previous CLI version is available.")
+        case "network": return i18n("Could not reach the release server. Try again later.")
+        case "unsupported": return i18n("No official CLI build is available for this system.")
+        case "unverified": return i18n("The downloaded CLI failed verification and was discarded.")
         default: return i18n("Could not prepare the managed CLI. Check the installed version and try again.")
         }
     }

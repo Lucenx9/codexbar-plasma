@@ -7,7 +7,9 @@ function response(text) {
     var value
     try { value = JSON.parse(text) } catch (error) { return empty }
     if (!value || typeof value !== "object" || Array.isArray(value)) return empty
-    if (["ready", "absent", "installed", "restored", "external", "busy", "no_previous", "error"].indexOf(value.status) < 0) return empty
+    var statuses = ["ready", "absent", "installed", "restored", "external", "busy",
+        "no_previous", "network", "unsupported", "unverified", "error"]
+    if (statuses.indexOf(value.status) < 0) return empty
     if (value.status === "absent") return {status: "absent", path: "", version: "", previous: ""}
     var version = /^(0|[1-9][0-9]{0,5})\.(0|[1-9][0-9]{0,5})\.(0|[1-9][0-9]{0,5})$/
     var path = typeof value.path === "string" && value.path.length <= 4096
@@ -22,7 +24,9 @@ function response(text) {
 
 function nextResponse(previous, text) {
     var parsed = response(text)
-    if (parsed.path || ["error", "busy", "external", "no_previous"].indexOf(parsed.status) < 0) return parsed
+    // A failed attempt reports only its reason, so the known installation stays visible.
+    var keepPrior = ["error", "busy", "external", "no_previous", "network", "unsupported", "unverified"]
+    if (parsed.path || keepPrior.indexOf(parsed.status) < 0) return parsed
     var prior
     try { prior = response(JSON.stringify(previous)) }
     catch (error) { prior = response("") }
