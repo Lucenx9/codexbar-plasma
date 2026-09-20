@@ -248,7 +248,9 @@ Provider-specific editable settings depend on the official CLI contract.
 
 - Local cost drill-down when the CLI exposes cost data.
 - In the verified CLI 0.56.2 contract, Antigravity supplies token-only local
-  history; its dollar amounts remain unavailable. Cursor local or dashboard
+  history; its dollar amounts remain unavailable. Official CLI 0.62.0 adds the
+  same token-only history for Muse Code, read from local Muse session logs
+  with unavailable monetary fields absent. Cursor local or dashboard
   cost is rejected by the Linux CLI. Other provider fields, including Kiro
   overage, z.ai BigModel CN balance, and Cursor Grok Bot usage, use the existing
   generic detail, provider-cost, and extra-window paths.

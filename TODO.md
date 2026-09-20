@@ -8,13 +8,16 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.61.0](https://github.com/steipete/CodexBar/releases/tag/v0.61.0),
-  commit `60a677e6b22e160675e1bf2b2be1b57d54598f3b`, checked 2026-09-18.
-- Coverage: release changes from 0.59.0 through 0.61.0 against Plasma
-  `f589bffdfc593b0d3338532cbed0349a349faa97`. The
+- Last release reviewed: [CodexBar 0.62.0](https://github.com/steipete/CodexBar/releases/tag/v0.62.0),
+  commit `4b3ed1a2a49a545522fb10196ff420526d85784a`, checked 2026-09-20.
+- Coverage: release changes from 0.61.0 through 0.62.0 against Plasma
+  `9205e518a6b0eba78894386ff8dad5a308305bfb`. The
+  [0.62.0 review](docs/research/2026-09-20-macos-parity-0.62.0.md) verifies
+  Muse token history in official Linux cost output, the Codex-only `--remote`
+  and `--summary-only` cost modes, the `usage_updated` hook event, and
+  confirms that usage, sessions, and config envelopes are unchanged; the
   [0.61.0 review](docs/research/2026-09-18-macos-parity-0.61.0.md) records the
-  registry growth to 74 providers and confirms that usage, cost, sessions, and
-  config envelopes are unchanged; the
+  registry growth to 74 providers; the
   [0.60.5 review](docs/research/2026-09-18-macos-parity-0.60.5.md) verifies the
   cost `incompleteRequestCount` contract in official Linux output; the
   [0.60.4 review](docs/research/2026-09-16-macos-parity-0.60.4.md) records the
@@ -24,11 +27,6 @@ Issues linked below preserve discussion; this file owns parity status.
 - Full CLI baseline remains the [0.56.2 audit](docs/research/2026-09-01-macos-parity-0.56.2.md).
   Later probes verify only their named cases. Older blockers below retain their
   last verified version; source inspection is not authenticated output evidence.
-
-The CLI update work verified the installed `0.60.4 --version` banner, official
-`v0.62.0` release assets/checksums, the Linux x86_64 archive layout, and its
-`CodexBar 0.62.0` banner in an isolated environment. It does not advance this parity
-baseline. A full 0.62.0 release/contract review remains pending.
 
 ## Implementable on Linux
 
@@ -42,15 +40,30 @@ baseline. A full 0.62.0 release/contract review remains pending.
   and unknown amounts distinct, and stays legible in the narrow popup.
   Evidence: [0.60.5 review](docs/research/2026-09-18-macos-parity-0.60.5.md#linux-cli-contract-changes-since-0604).
 
+### Quota-window cost history
+
+- [ ] Show Codex and Claude cost/token subtotals per current and recent weekly
+  quota window, mirroring the macOS 0.62.0 Recent-windows list as a
+  Plasma-native view. No new CLI contract is required: the windows derive from
+  the live Weekly `resetsAt` the widget already consumes plus the local cost
+  history it already scans. Done when each window states its exact boundaries,
+  keeps measured and unknown amounts distinct, marks estimated boundaries, and
+  drops windows older than the scanned history instead of presenting truncated
+  slices as complete weeks.
+  Evidence: [0.62.0 review](docs/research/2026-09-20-macos-parity-0.62.0.md#linux-cli-contract-changes-since-0610).
+
 ### Popup usage row visibility
 
 - [ ] Hide and restore individual popup usage rows per provider, mirroring the
   macOS 0.58.0 visible-row choice as a Plasma-local display preference. Panel
   rows already have visibility rules; popup provider cards expose only fixed
-  section toggles, and no CLI contract is required. Done when rows can be
+  section toggles, and no CLI contract is required. macOS 0.62.0 extends its
+  Visible usage items to titled provider detail sections, which informs the
+  row set a Plasma equivalent should cover. Done when rows can be
   hidden and restored without affecting fetching, alerts, or the panel, with
   the choice persisted and previewed in settings.
-  Evidence: [0.58.0 comparison](docs/research/2026-09-11-macos-parity-0.58.0.md).
+  Evidence: [0.58.0 comparison](docs/research/2026-09-11-macos-parity-0.58.0.md);
+  [0.62.0 review](docs/research/2026-09-20-macos-parity-0.62.0.md#linux-cli-contract-changes-since-0610).
 
 ## Blocked on official Linux CLI contracts
 
@@ -60,7 +73,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider settings
 
 - [ ] Enable generic settings and token-account editing through official
-  descriptors and writes. Linux 0.61.0 still rejects `config providers
+  descriptors and writes. Linux 0.62.0 still rejects `config providers
   --descriptors` (74 records, same four keys); its provider records have no
   descriptor. 0.61.0 adds an `azureOpenAIAPIVersion` config extension value
   with no supported CLI writer, which the frontend must not reach by editing
@@ -76,9 +89,10 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.61.0 still has no
-  generic `config action` command (`set-api-key` remains the sole writer).
-  Done when supported actions expose validated
+  flow, CLI-auth setup, and token-account actions. Linux 0.62.0 still has no
+  generic `config action` command (`set-api-key` remains the sole writer; the
+  new `usage_updated` hook event is CLI automation surface, not a setup
+  action). Done when supported actions expose validated
   prompts/results and handle cancellation, failure, and stale responses in
   Plasma. Preserve current key/link setup. [Prior discussion #168](https://github.com/Lucenx9/codexbar-plasma/issues/168).
 
@@ -107,7 +121,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Cursor cost
 
 - [ ] Show Cursor cost history through the generic Linux `cost` path. Linux
-  0.61.0 still rejects Cursor and lists Antigravity, Claude, and Codex as supported;
+  0.62.0 still rejects Cursor and lists Antigravity, Claude, Codex, and Muse
+  Code as supported;
   the descriptor gate keeps the new cookie-source availability errors unreachable.
   Done when a released Linux command emits supported cost data and Plasma tests
   cover its amounts, currencies, and trust metadata.
@@ -117,7 +132,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 - [ ] Show Standard/Fast totals from explicit official tier fields. The scoped
   0.56.8 daily-model check established no service-tier contract. The 0.57.0 and
-  0.60.4 empty cost probes do not establish one either. Done when official Linux output
+  0.60.4 empty cost probes do not establish one either, and 0.62.0 computes
+  quota windows in-process without emitting tier fields. Done when official Linux output
   identifies tiers and bounded amounts with tested legacy fallback. Never infer
   tier from models, prices, or tokens. [Cost evidence](docs/cost-history.md#pinned-cli-evidence);
   [prior discussion #172](https://github.com/Lucenx9/codexbar-plasma/issues/172).
@@ -132,7 +148,10 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   unpriced-instead-of-zero change affects values within the unchanged cost schema.
   Linux 0.60.5 adds verified `incompleteRequestCount` counts, which explain
   requests excluded from an amount but do not mark an unavailable total; that
-  contract is tracked as its own implementable entry above.
+  contract is tracked as its own implementable entry above. Linux 0.62.0 nils
+  out invalid model-breakdown and daily totals instead of emitting them, which
+  keeps unknown amounts out of the JSON without supplying an explicit
+  unavailable-versus-zero field.
   Done when verified
   Linux fields distinguish unavailable from measured zero, with old-payload compatibility and
   usable token charts. [Prior discussion #173](https://github.com/Lucenx9/codexbar-plasma/issues/173).
