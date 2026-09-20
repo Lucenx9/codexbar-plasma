@@ -11,7 +11,8 @@ TestCase {
         for (var value of [null, [], {}, {status: "installed"}, Object.assign({}, valid, {version: ["0.62.0"]}),
                           Object.assign({}, valid, {path: "/usr/bin/codexbar"}),
                           Object.assign({}, valid, {path: "/home/../" + path}),
-                          Object.assign({}, valid, {version: "0.62.0-beta"})]) {
+                          Object.assign({}, valid, {version: "0.62.0-beta"}),
+                          {status: "tampering"}, {status: ""}]) {
             compare(ManagedCli.response(JSON.stringify(value)).status, "error")
         }
         compare(ManagedCli.response("x".repeat(20000)).status, "error")
@@ -19,7 +20,8 @@ TestCase {
     function test_authoritativeAndTransientResults() {
         var prior = {status: "ready", version: "0.62.0", previous: "0.61.0",
             path: "/home/test/.local/share/codexbar-plasma/cli/current/codexbar"}
-        for (var item of [{status: "error"}, {status: "busy"}, {status: "external"}]) {
+        for (var item of [{status: "error"}, {status: "busy"}, {status: "external"},
+                          {status: "network"}, {status: "unsupported"}, {status: "unverified"}]) {
             var retained = ManagedCli.nextResponse(prior, JSON.stringify(item))
             compare(retained.path, prior.path)
             compare(retained.version, prior.version)

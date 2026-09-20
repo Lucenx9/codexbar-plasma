@@ -12,6 +12,7 @@ import stat
 import tarfile
 import tempfile
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
@@ -22,6 +23,13 @@ MAX_ARCHIVE = 160 * 1024 * 1024
 MAX_EXPANDED = 600 * 1024 * 1024
 RELEASE_DIRECTORY = re.compile(r"releases/v" + cli_release.VERSION + r"-[a-f0-9]{16}")
 DOWNLOAD_PREFIX = "https://github.com/steipete/CodexBar/releases/download/"
+# A refused download and an unreachable server need different answers, so the
+# helper reports which one happened. Repeated refusals are a tampering signal,
+# not ordinary network noise, and an unsupported system never becomes ready.
+UNVERIFIED = frozenset(("archive_missing", "archive_name", "archive_size", "archive_type",
+                        "asset_shape", "assets", "checksum", "checksum_file", "download_size",
+                        "redirect_host", "version_file", "version_probe"))
+UNSUPPORTED = frozenset(("asset_missing", "unsupported_platform"))
 
 
 def root_path():
@@ -285,7 +293,9 @@ def install(root, automatic=False):
     # Shared throttle also covers failures and concurrent widget instances.
     state["lastAttempt"] = now
     write_state(root, state)
-    version, assets = release_assets(cli_release.latest_release(), platform_suffix())
+    # Reject an unsupported system before spending a request on the release API.
+    suffix = platform_suffix()
+    version, assets = release_assets(cli_release.latest_release(), suffix)
     if current and tuple(map(int, version.split("."))) <= tuple(map(int, current["version"].split("."))):
         return status(root)
     if automatic and state.get("blockedVersion") == version:
@@ -337,6 +347,21 @@ def prune(root):
     for directory in root.glob(".install-*"):
         if not directory.is_symlink() and directory.is_dir() and now - directory.stat().st_mtime > 86400:
             shutil.rmtree(directory)
+
+
+def failure_status(error):
+    """Name a failure without leaking paths, remote prose or local detail."""
+    if isinstance(error, tarfile.TarError):
+        # The digest already matched, so a broken archive is still content we refuse.
+        return "unverified"
+    if isinstance(error, urllib.error.URLError):
+        return "network"
+    code = str(error) if isinstance(error, ValueError) else ""
+    if code in UNVERIFIED:
+        return "unverified"
+    if code in UNSUPPORTED:
+        return "unsupported"
+    return "error"
 
 
 def run(action, command=""):

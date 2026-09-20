@@ -76,6 +76,11 @@ For those, use `make install` or `./install.sh`. Release-package users can use
   for per-user locking, daily throttling, bounded official asset downloads, strict
   archive extraction, isolated-environment version probes, atomic activation and
   rollback. Only the exact managed command is eligible for update/rollback.
+  `failure_status` maps a raised failure onto the bounded status the widget
+  renders, so a refused download (`unverified`) stays distinct from an
+  unreachable server (`network`) and an unsupported system (`unsupported`).
+  Add new helper failure codes to `UNVERIFIED` or `UNSUPPORTED`; anything
+  unlisted degrades to the generic `error`.
   Tests use temporary XDG directories and synthetic archives, never host binaries
   or provider configuration. The helper's 600-second alarm and QML's outer GNU
   timeout bound downloads, including decompression. Recent inactive releases have
