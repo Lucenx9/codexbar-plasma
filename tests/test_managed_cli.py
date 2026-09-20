@@ -9,6 +9,7 @@ import sys
 import tarfile
 import tempfile
 import unittest
+import urllib.error
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
@@ -291,6 +292,32 @@ class ManagedCliTests(unittest.TestCase):
         cli.private_directory(self.root)
         (self.root / "current").symlink_to("/usr/bin")
         self.assertFalse(cli.owns_command(self.command))
+
+    def test_failures_are_named_without_leaking_detail(self):
+        self.operation("install")
+        self.publish("0.63.0")
+        self.payload.with_suffix(".sha256").write_text("0" * 64)
+        with self.assertRaises(ValueError) as refused:
+            self.operation("update")
+        self.assertEqual(cli.failure_status(refused.exception), "unverified")
+        self.publish("0.64.0", banner="0.62.0")
+        with self.assertRaises(ValueError) as probed:
+            self.operation("update")
+        self.assertEqual(cli.failure_status(probed.exception), "unverified")
+        # An unsupported system is rejected before the release API is contacted.
+        with patch.object(cli, "platform_suffix", side_effect=ValueError("unsupported_platform")), \
+                patch.object(cli.cli_release, "latest_release", side_effect=AssertionError("requested")), \
+                self.assertRaises(ValueError) as unsupported:
+            cli.run("update", self.command)
+        self.assertEqual(cli.failure_status(unsupported.exception), "unsupported")
+        for error, expected in [(urllib.error.URLError("offline"), "network"),
+                                (tarfile.TarError("truncated"), "unverified"),
+                                (ValueError("asset_missing"), "unsupported"),
+                                (ValueError("state_field"), "error"),
+                                (OSError("disk"), "error"), (RuntimeError("checksum"), "error")]:
+            with self.subTest(error=error):
+                self.assertEqual(cli.failure_status(error), expected)
+        self.assertEqual(cli.status(self.root)["version"], "0.62.0")
 
     def test_download_size_digest_and_redirect_bounds(self):
         from unittest.mock import MagicMock
