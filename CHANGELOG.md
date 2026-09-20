@@ -20,7 +20,6 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Confirm before installing a managed copy while a working external CLI is
   selected, so the resulting second copy is explicit. Diagnostics also reports
   the PATH-resolved system CLI version next to the selected command.
-
 - Check official CodexBar CLI releases manually or with optional daily checks
   and notifications. Package-managed installations keep their original updater;
   Diagnostics reports installed versions and recognized package ownership offline.
@@ -56,6 +55,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep **Automatically update the managed CLI daily** switchable while it is on.
+  Selecting a command outside the managed copy previously disabled the checkbox
+  with the setting still enabled, leaving no way to turn it off and letting the
+  widget keep starting an update helper that could never act.
 - Standardize helper text font sizing across **General**, **Notifications**,
   and **Diagnostics** settings pages to use `Kirigami.Theme.smallFont`, matching
   the secondary label typography used in **Panel** settings.
