@@ -947,6 +947,11 @@ msgid "%1 (%2)"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
+#: contents/ui/controllers/CliUpdateController.qml
+msgid "Could not identify the installed CLI version."
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
 msgid "Check versions"
 msgstr ""
 
@@ -1895,10 +1900,6 @@ msgstr ""
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "CLI %1 is current or newer than the latest stable release."
-msgstr ""
-
-#: contents/ui/controllers/CliUpdateController.qml
-msgid "Could not identify the installed CLI version."
 msgstr ""
 
 #: contents/ui/controllers/CliUpdateController.qml
