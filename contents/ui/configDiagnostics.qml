@@ -7,7 +7,7 @@ import org.kde.plasma.plasma5support as Plasma5Support
 import "components" as Components
 import "Guards.js" as Guards
 import "SafeText.js" as SafeText
-import "config/ProviderConfigProtocol.js" as ProviderConfigProtocol
+import "controllers" as Controllers
 
 KCM.SimpleKCM {
     id: page
@@ -26,10 +26,9 @@ KCM.SimpleKCM {
     property string diagnosticError: ""
     property string activeCommand: ""
     // Reported environment, filled by the versions probe. Empty until it runs.
-    property string resolvedCommandPath: ""
-    property string cliVersionText: ""
-    property bool environmentProbeFailed: false
-    property string activeCommandKind: "diagnostic"
+    readonly property string resolvedCommandPath: versions.result.path
+    readonly property string cliVersionText: versions.result.version
+    readonly property bool environmentProbeFailed: versions.checked && versions.result.version.length === 0
     // `Plasmoid` is an attached name, so a bare reference throws wherever the
     // page is loaded outside an applet, such as the settings smoke capture.
     readonly property string widgetVersion: typeof Plasmoid !== "undefined" && Plasmoid.metaData
@@ -43,9 +42,6 @@ KCM.SimpleKCM {
         }
         diagnosticOutput = ""
         diagnosticError = ""
-        resolvedCommandPath = ""
-        cliVersionText = ""
-        environmentProbeFailed = false
     }
 
     function shellQuote(value) {
@@ -58,29 +54,31 @@ KCM.SimpleKCM {
             provider = "all"
         }
         var command = shellQuote(commandPath) + " diagnose --provider " + shellQuote(provider) + " --format json --redact"
-        runCommand(command, "diagnostic")
+        runCommand(command)
     }
 
     function runProviderList() {
         var command = shellQuote(commandPath) + " config providers --format json --json-only"
-        runCommand(command, "diagnostic")
+        runCommand(command)
     }
 
-    // One process reports both facts: line one is the resolved executable from
-    // the shell, the rest is the CLI's own version banner. `command -v` exits
-    // non-zero when the path cannot be resolved, which short-circuits the rest.
+    // Versions remains an offline probe, using the same selected executable and
+    // bounded version/ownership contract as the release checker in General.
+    Controllers.CliUpdateController {
+        id: versions
+        objectName: "cliVersionsController"
+        commandPath: page.commandPath
+        localOnly: true
+    }
+
     function runEnvironmentProbe() {
-        var quoted = shellQuote(commandPath)
-        runCommand("command -v " + quoted + " && " + quoted + " --version", "environment")
+        if (commandPath.length === 0)
+            diagnosticError = i18n("Set the codexbar command path above.")
+        versions.checkNow()
     }
 
-    function runCommand(command, kind) {
+    function runCommand(command) {
         if (commandPath.length === 0) {
-            if (kind === "environment") {
-                resolvedCommandPath = ""
-                cliVersionText = ""
-                environmentProbeFailed = true
-            }
             diagnosticError = i18n("Set the codexbar command path above.")
             return
         }
@@ -88,15 +86,8 @@ KCM.SimpleKCM {
             finishDiagnosticCommand(activeCommand)
         }
         diagnosticRunning = true
-        activeCommandKind = kind === "environment" ? "environment" : "diagnostic"
-        if (activeCommandKind === "environment") {
-            resolvedCommandPath = ""
-            cliVersionText = ""
-            environmentProbeFailed = false
-        } else {
-            diagnosticOutput = ""
-            diagnosticError = ""
-        }
+        diagnosticOutput = ""
+        diagnosticError = ""
         activeCommand = commandWithRunNonce(command)
         diagnosticSource.connectSource(activeCommand)
         diagnosticCommandTimeoutTimer.restart()
@@ -123,12 +114,7 @@ KCM.SimpleKCM {
         if (activeCommand.length === 0) {
             return
         }
-        var kind = activeCommandKind
         finishDiagnosticCommand(activeCommand)
-        if (kind === "environment") {
-            environmentProbeFailed = true
-            return
-        }
         diagnosticOutput = ""
         diagnosticError = i18n("Diagnostic command timed out. Try again.")
     }
@@ -137,18 +123,7 @@ KCM.SimpleKCM {
         if (sourceName !== activeCommand) {
             return
         }
-        var kind = activeCommandKind
         finishDiagnosticCommand(sourceName)
-
-        if (kind === "environment") {
-            var probeExitCode = data && data["exit code"] !== undefined ? Number(data["exit code"]) : 0
-            var summary = ProviderConfigProtocol.environmentSummary(
-                data && data["stdout"] ? data["stdout"] : "")
-            environmentProbeFailed = !(probeExitCode === 0) || summary.version.length === 0
-            resolvedCommandPath = summary.commandPath
-            cliVersionText = summary.version
-            return
-        }
 
         var rawStdoutText = data && data["stdout"] ? data["stdout"] : ""
         var stdoutText = SafeText.cliJsonText(rawStdoutText)
@@ -241,7 +216,10 @@ KCM.SimpleKCM {
 
                 Kirigami.FormData.label: i18n("CodexBar CLI:")
                 text: page.cliVersionText.length > 0 ? page.cliVersionText
-                    : (page.environmentProbeFailed ? i18n("Not found") : i18n("Not checked"))
+                    : (versions.checked ? versions.statusText : i18n("Not checked"))
+                Layout.fillWidth: true
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                wrapMode: Text.WordWrap
             }
 
             Components.PlainControlsLabel {
@@ -258,13 +236,39 @@ KCM.SimpleKCM {
                 elide: Text.ElideMiddle
             }
 
-            Controls.Button {
-                id: checkEnvironmentButton
-                objectName: "checkEnvironmentButton"
+            RowLayout {
+                Controls.Button {
+                    id: checkEnvironmentButton
+                    objectName: "checkEnvironmentButton"
 
-                text: i18n("Check versions")
-                enabled: !page.diagnosticRunning
-                onClicked: page.runEnvironmentProbe()
+                    text: i18n("Check versions")
+                    enabled: !versions.busy && !page.diagnosticRunning
+                    onClicked: page.runEnvironmentProbe()
+                }
+                Controls.BusyIndicator {
+                    running: versions.busy
+                    opacity: running ? 1 : 0
+                    Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                    Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                }
+            }
+
+            Components.PlainControlsLabel {
+                objectName: "cliInstallationLabel"
+                text: versions.guidanceText
+                visible: versions.checked && versions.result.path.length > 0
+                Layout.fillWidth: true
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                wrapMode: Text.WordWrap
+            }
+
+            Components.PlainControlsLabel {
+                text: i18n("This checks installed versions only. Check upstream CLI releases in General / CLI updates.")
+                font: Kirigami.Theme.smallFont
+                opacity: 0.7
+                Layout.fillWidth: true
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                wrapMode: Text.WordWrap
             }
 
             Kirigami.Separator {

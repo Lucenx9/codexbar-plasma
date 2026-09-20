@@ -65,7 +65,8 @@ for its limits.
   path configured in the widget.
 - `notify-send` for Plasma notifications.
 - `curl`, `jq`, `python3`, `sha256sum`, and GNU `timeout` for the bundled release
-  updater. GNU `timeout` also bounds CLI writes after a secret prompt.
+  updater. CLI release checks also use `python3` and GNU `timeout`. GNU `timeout`
+  also bounds CLI writes after a secret prompt.
 
 Distribution package names vary. Source builds additionally need `make`, Python
 3, and GNU gettext; see [Development](#development).
@@ -144,10 +145,20 @@ In **General → Updates**, **Check for widget updates** and update notification
 are enabled by default. Clicking an update notification opens that release's
 page on GitHub where the installed `notify-send` supports notification actions.
 **Install widget updates automatically** is opt-in.
+
 The bundled helper accepts only immutable GitHub releases. It binds assets to
 the advertised tag, verifies SHA-256 digests and the published checksum, and
 checks the applet ID and version before installation. A validation mismatch
 aborts the update.
+
+**General → CLI updates** offers a manual check of official CodexBar releases
+and optional daily checks, off by default. Notifications can be enabled separately.
+These announce upstream releases, not package-manager availability. AUR and other
+package users should update through their existing package tools; the widget
+never replaces their CLI. Recognized ownership includes pacman, dpkg, RPM, APK,
+and Homebrew. Unrecognized installations keep their original update method.
+**Diagnostics → Check versions** stays offline and reports the installed CLI,
+resolved command, and recognized installation manager.
 
 For a source checkout, see the [development update commands](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/development.md#work-from-a-checkout).
 The source-checkout helper `./install.sh` checks for `kpackagetool6` and

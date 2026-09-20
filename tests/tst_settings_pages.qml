@@ -59,6 +59,15 @@ TestCase {
         wait(0);
     }
 
+    function test_diagnosticsRejectsBlankPath() {
+        var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: "   "});
+        if (!page) return;
+        page.runEnvironmentProbe();
+        verify(page.environmentProbeFailed);
+        compare(page.resolvedCommandPath, "");
+        compare(page.diagnosticError, "Set the codexbar command path above.");
+    }
+
     function test_diagnosticsShowsResolvedPathWithSpaces() {
         var page = createPage("../contents/ui/configDiagnostics.qml", {
             cfg_commandPath: "/opt/CodexBar CLI/bin/codexbar"
@@ -66,11 +75,14 @@ TestCase {
         if (!page)
             return;
 
-        page.activeCommand = "environment";
-        page.activeCommandKind = "environment";
-        page.handleDiagnosticData("environment", {
+        var versions = findChild(page, "cliVersionsController");
+        verify(versions !== null);
+        verify(versions.localOnly);
+        versions.activeSource = "environment";
+        versions.accept("environment", {
             "exit code": 0,
-            stdout: "/opt/CodexBar CLI/bin/codexbar\nCodexBar 0.61.0"
+            stdout: JSON.stringify({status: "local", version: "0.61.0",
+                path: "/opt/CodexBar CLI/bin/codexbar", manager: "external"})
         });
 
         var resolvedCommandLabel = findChild(page, "resolvedCommandLabel");

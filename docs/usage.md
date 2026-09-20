@@ -377,6 +377,32 @@ fields; track proposed extensions in the issue tracker.
   silent automatic widget installation. The update notification opens the
   release page on GitHub when clicked, where supported.
 
+### CLI release checks and installed versions
+
+In **General → CLI updates**, **Check CLI releases now** compares the selected
+executable's `--version` with the latest stable official GitHub release. The
+manual check works even when daily checks are disabled. Daily checks are opt-in,
+run independently of quota refreshes, and retry failures after one hour. CLI
+release notifications have their own switch, respect the global notification
+setting and privacy mode, and announce each version once per widget instance.
+Clicking a notification opens the corresponding official release page where
+notification actions are supported.
+
+An upstream release may precede its availability in AUR or a distribution
+repository. The widget identifies positive package ownership through pacman,
+dpkg, RPM, or APK, and recognizes a Homebrew formula by its installed prefix and
+receipt. A pacman-owned package is not automatically labeled AUR. Unknown
+origins, custom wrappers, manual downloads, and source builds remain external.
+Update with the original installation method; the widget does not run package
+managers, request privileges, download CLI binaries, or change the command path.
+
+**Diagnostics → Versions → Check versions** remains an offline probe. It reports
+the widget version, installed CLI version, resolved command path, and installation
+guidance using the same local probe as the release checker. Editing the command
+path clears the previous result. Prerelease or custom version strings are not
+silently treated as older stable versions. Network errors do not affect quota
+fetching or replace the installed version with a guessed value.
+
 ## Default settings
 
 The defaults keep quota usage visible and current, and reserve notifications for
@@ -395,6 +421,7 @@ and 95% critical thresholds. Reset notifications are off until enabled.
 | Provider service status | Off; incident notifications become active when status fetching is enabled |
 | Local usage and spend history | On, 30 days, cost metric |
 | Quota display | Percent used; warning markers on; thresholds at 80% and 95% used |
+| CLI release checks | Off; manual checks available in General |
 | Plasma notifications | On; quota warnings on; predicted exhaustion and limit-reset notices off |
 | Widget updates | Check and notify every 24 hours; automatic installation off |
 | Panel appearance | Standard style with colored provider icons and automatic quota capsules, including a single provider |

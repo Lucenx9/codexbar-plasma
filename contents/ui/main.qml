@@ -2684,6 +2684,28 @@ PlasmoidItem {
         active: root.expanded && root.sessionsSelected
     }
 
+    Controllers.CliUpdateController {
+        commandPath: root.commandPath
+        automaticChecks: Plasmoid.configuration.cliUpdateChecksEnabled === true
+        lastCheck: Plasmoid.configuration.cliUpdateLastCheck || ""
+        onCheckedRelease: function(timestamp) {
+            Plasmoid.configuration.cliUpdateLastCheck = timestamp
+        }
+        onUpdateAvailable: function(version, releaseUrl) {
+            if (!root.enableNotifications || Plasmoid.configuration.cliUpdateNotificationsEnabled === false
+                    || Plasmoid.configuration.cliUpdateLastNotifiedVersion === version) return
+            var sourceName = root.sendPlasmaNotification(i18n("CodexBar CLI release available"),
+                i18n("Upstream CLI %1 is available. Update using your installation method.", version),
+                "normal", i18n("Open release page"))
+            if (sourceName.length > 0 && !Guards.isUnsafeObjectKey(sourceName)) {
+                Plasmoid.configuration.cliUpdateLastNotifiedVersion = version
+                var nextPending = root.copyObject(root.pendingUpdateReleaseUrls)
+                nextPending[sourceName] = releaseUrl
+                root.pendingUpdateReleaseUrls = nextPending
+            }
+        }
+    }
+
     Controllers.WidgetUpdateController {
         updateChecksEnabled: Plasmoid.configuration.updateChecksEnabled !== false
         autoUpdateEnabled: Plasmoid.configuration.autoUpdateEnabled === true

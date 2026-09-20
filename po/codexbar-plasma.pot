@@ -149,6 +149,7 @@ msgid "Loading usage..."
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
+#: contents/ui/controllers/CliUpdateController.qml
 msgid "CodexBar CLI not found."
 msgstr ""
 
@@ -925,11 +926,8 @@ msgid "CodexBar CLI:"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
+#: contents/ui/controllers/CliUpdateController.qml
 msgid "Not checked"
-msgstr ""
-
-#: contents/ui/configDiagnostics.qml
-msgid "Not found"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
@@ -937,7 +935,17 @@ msgid "Resolved command:"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
+msgid "Not found"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
 msgid "Check versions"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid ""
+"This checks installed versions only. Check upstream CLI releases in "
+"General / CLI updates."
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
@@ -1103,6 +1111,32 @@ msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid "Last update status: %1"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "CLI updates"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Check upstream CLI releases daily"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Notify when a CLI release is available"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"Checks GitHub for official releases. The widget does not install or replace "
+"the CLI."
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Check CLI releases now"
+msgstr ""
+
+#: contents/ui/configGeneral.qml contents/ui/main.qml
+msgid "Open release page"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -1775,6 +1809,46 @@ msgstr ""
 
 #: contents/ui/controllers/AccountsController.qml
 msgid "Loading accounts timed out. Try again."
+msgstr ""
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid "Managed by Homebrew. Update through Homebrew."
+msgstr ""
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid ""
+"Managed by %1. Update through your package manager; its version may lag "
+"behind upstream."
+msgstr ""
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid "External installation. Update using your original installation method."
+msgstr ""
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid "Checking..."
+msgstr ""
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid "Upstream CLI %1 is available. Installed: %2."
+msgstr ""
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid "CLI %1 is current or newer than the latest stable release."
+msgstr ""
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid "Could not identify the installed CLI version."
+msgstr ""
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid ""
+"Latest stable CLI: %1. The installed version cannot be compared "
+"automatically."
+msgstr ""
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid "Could not check CLI releases. Try again later."
 msgstr ""
 
 #: contents/ui/controllers/CostController.qml
@@ -2484,10 +2558,6 @@ msgid "A new widget version is available."
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Open release page"
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "CodexBar widget update installed"
 msgstr ""
 
@@ -2615,4 +2685,12 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Refreshing usage..."
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "CodexBar CLI release available"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Upstream CLI %1 is available. Update using your installation method."
 msgstr ""

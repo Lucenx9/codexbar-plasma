@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Check official CodexBar CLI releases manually or with optional daily checks
+  and notifications. Package-managed installations keep their original updater;
+  Diagnostics reports installed versions and recognized package ownership offline.
 - Publish a Ko-fi donation link through the repository **Sponsor** button and a
   README **Support** section.
 - Tell an unreachable CodexBar CLI apart from a provider that is not set up.
