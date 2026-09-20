@@ -984,6 +984,10 @@ msgid "Not found"
 msgstr "Non trovato"
 
 #: contents/ui/configDiagnostics.qml
+msgid "System CLI (PATH):"
+msgstr "CLI di sistema (PATH):"
+
+#: contents/ui/configDiagnostics.qml
 msgid "Check versions"
 msgstr "Controlla versioni"
 
@@ -1223,6 +1227,25 @@ msgstr "Installa e seleziona la CLI gestita"
 #: contents/ui/configGeneral.qml
 msgid "Use managed CLI"
 msgstr "Usa la CLI gestita"
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"The selected %1 %2 keeps working outside the widget. Installing creates a "
+"second private copy and switches the widget to it; updates through the "
+"original method will no longer affect the widget."
+msgstr ""
+"Il %1 %2 selezionato continua a funzionare fuori dal widget."
+"L'installazione crea una seconda copia privata e vi passa il widget;"
+"gli aggiornamenti con il metodo originale non avranno più effetto"
+"sul widget."
+
+#: contents/ui/configGeneral.qml
+msgid "Install second copy"
+msgstr "Installa seconda copia"
+
+#: contents/ui/configGeneral.qml
+msgid "Keep current CLI"
+msgstr "Mantieni la CLI attuale"
 
 #: contents/ui/configGeneral.qml
 msgid "Automatically update the managed CLI daily"
@@ -2404,7 +2427,7 @@ msgstr "Ultimo giorno nel pannello"
 msgid "%1%"
 msgstr "%1%"
 
-#: contents/ui/main.qml
+#: contents/ui/configDiagnostics.qml contents/ui/main.qml
 msgid "%1 (%2)"
 msgstr "%1 (%2)"
 

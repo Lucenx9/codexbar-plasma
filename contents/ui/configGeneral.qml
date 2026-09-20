@@ -7,6 +7,7 @@ import org.kde.plasma.plasmoid
 import "components" as Components
 import "controllers" as Controllers
 import "UpdateLogic.js" as UpdateLogic
+import "ManagedCli.js" as ManagedCli
 import "general/ConfigValueSync.js" as ConfigValueSync
 
 KCM.SimpleKCM {
@@ -136,6 +137,9 @@ KCM.SimpleKCM {
         ? Plasmoid.configuration.widgetUpdateLastStatus || "" : ""
     readonly property string widgetUpdateLastError: Plasmoid.configuration
         ? Plasmoid.configuration.widgetUpdateLastError || "" : ""
+    // Two-step install confirmation; the confirm block hides itself once the
+    // install starts or the selection leaves the install state.
+    property bool managedInstallConfirming: false
 
     Controllers.ManagedCliController {
         id: managedCli
@@ -666,6 +670,10 @@ KCM.SimpleKCM {
                 onClicked: {
                     if (managedCli.selected) managedCli.run("update")
                     else if (managedCli.result.version.length > 0) page.cfg_commandPath = managedCli.result.path
+                    else if (ManagedCli.needsInstallConfirmation(managedCli.result, {
+                            checked: cliUpdater.checked,
+                            path: cliUpdater.result.path, version: cliUpdater.result.version
+                        })) page.managedInstallConfirming = true
                     else managedCli.run("install")
                 }
             }
@@ -674,6 +682,34 @@ KCM.SimpleKCM {
                 opacity: running ? 1 : 0
                 Layout.preferredWidth: Kirigami.Units.iconSizes.small
                 Layout.preferredHeight: Kirigami.Units.iconSizes.small
+            }
+        }
+
+        ColumnLayout {
+            visible: page.managedInstallConfirming && !managedCli.busy
+                && !managedCli.selected && managedCli.result.version.length === 0
+            Components.PlainControlsLabel {
+                objectName: "managedInstallConfirmLabel"
+                text: i18n("The selected %1 %2 keeps working outside the widget. Installing creates a second private copy and switches the widget to it; updates through the original method will no longer affect the widget.", cliUpdater.result.path, cliUpdater.result.version)
+                Layout.fillWidth: true
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                wrapMode: Text.WordWrap
+            }
+            RowLayout {
+                Controls.Button {
+                    objectName: "confirmManagedInstallButton"
+                    text: i18n("Install second copy")
+                    enabled: !managedCli.busy
+                    onClicked: {
+                        page.managedInstallConfirming = false
+                        managedCli.run("install")
+                    }
+                }
+                Controls.Button {
+                    objectName: "cancelManagedInstallButton"
+                    text: i18n("Keep current CLI")
+                    onClicked: page.managedInstallConfirming = false
+                }
             }
         }
 
