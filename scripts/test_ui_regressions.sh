@@ -395,6 +395,18 @@ for needle in ('i18n("CodexBar Plasma:")', 'i18n("CodexBar CLI:")',
     if needle not in diagnostics_text:
         raise AssertionError(f"configDiagnostics.qml must keep the versions summary: {needle}")
 
+# Managed-CLI automatic updates apply only to the managed copy, so the checkbox
+# dims once another command is selected. It must stay reachable while it is
+# still on, or the setting is stranded with no way to switch it back off.
+if not re.search(
+    r"enabled:\s*\(managedCli\.selected\s*\|\|\s*page\.cfg_cliAutomaticUpdates\)",
+    general_text,
+):
+    raise AssertionError(
+        "configGeneral.qml must keep the managed CLI automatic update checkbox "
+        "enabled while cfg_cliAutomaticUpdates is set"
+    )
+
 # Presentation pages must not acquire provider processes or claim configuration
 # owned by an unrelated page when Plasma saves its cfg_* creation properties.
 # The Panel page deliberately loads the read-only enabled roster through the

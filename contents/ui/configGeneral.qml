@@ -727,7 +727,9 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             text: i18n("Automatically update the managed CLI daily")
             checked: page.cfg_cliAutomaticUpdates
-            enabled: managedCli.selected && !managedCli.busy
+            // Stays reachable while enabled so selecting another command cannot
+            // strand the setting on, leaving the helper to run with no effect.
+            enabled: (managedCli.selected || page.cfg_cliAutomaticUpdates) && !managedCli.busy
             onToggled: page.cfg_cliAutomaticUpdates = checked
         }
 
