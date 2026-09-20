@@ -124,10 +124,13 @@ or **macOS-only/non-goal**. Screenshots and Swift models are not CLI contracts.
   and work tracking agree with the delivered behavior.
 - Run the narrowest relevant check while iterating, then `make check` before
   handing off any repository change. It includes QML lint/QtTests, ShellCheck,
-  Python/static checks, and AppStream metadata validation.
-- Report exact failures, skips, and unavailable tools. If `kpackagetool6` is
-  absent, its metadata check is skipped, not passed. Use the actual check output
-  to assess coverage; consult `.github/workflows/ci.yml` for the CI environment.
+  workflow and Python lint, other static checks, and AppStream metadata
+  validation. Each check is its own `make` target, so iterate with that target
+  instead of the whole suite.
+- Report exact failures, skips, and unavailable tools. An absent `kpackagetool6`,
+  `actionlint`, or `pyflakes` means its check is skipped, not passed. Use the
+  actual check output to assess coverage; consult `.github/workflows/ci.yml`
+  for the CI environment.
 - For packaging changes, also run `make package`. For component/delegate
   extraction, install or upgrade the local plasmoid and inspect recent Plasma
   logs as described in [Development](docs/development.md#runtime-verification).

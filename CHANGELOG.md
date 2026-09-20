@@ -10,6 +10,16 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Changed
+
+- `make check` runs its checks concurrently and exposes each one as its own
+  target, such as `make check-shellcheck`, so contributors can iterate on a
+  single check instead of the whole suite. `make check JOBS=2` bounds the
+  concurrency on a constrained machine.
+- The check suite also lints GitHub workflows with `actionlint` and the Python
+  scripts and tests with `pyflakes`. Both are optional locally and report
+  themselves as skipped when absent; CI installs them.
+
 ## 0.2.40 - 2026-09-20
 
 ### Added

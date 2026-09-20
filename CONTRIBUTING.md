@@ -61,9 +61,12 @@ apply to every change, human or agent. To add or improve a language, follow the
    [pull request template](.github/pull_request_template.md), including the
    verification results, and keep it current when the diff changes.
 
-CI runs QML lint and QtTests, ShellCheck, Python and static checks, AppStream
-validation, and popup smoke tests. Own your PR's checks through their final
-result; see [delivery and CI](docs/development.md#delivery-and-ci).
+CI runs QML lint and QtTests, ShellCheck, workflow and Python lint, other
+static checks, AppStream validation, and popup smoke tests. `make check` runs
+its checks concurrently; each one is also a separate target, such as
+`make check-shellcheck`, for a faster loop while you iterate. Own your PR's
+checks through their final result; see
+[delivery and CI](docs/development.md#delivery-and-ci).
 
 By contributing, you agree that your work is licensed under the
 [MIT License](LICENSE).

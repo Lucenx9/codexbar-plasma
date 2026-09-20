@@ -14,7 +14,9 @@ changes.
 
 Install `make`, Python 3, GNU gettext, and the Plasma runtime requirements in
 [the README](../README.md#requirements). The check suite also needs Qt 6 QML
-lint/test tools, ShellCheck, `xmllint`, and `jq`. The pinned
+lint/test tools, ShellCheck, `xmllint`, and `jq`. `actionlint`, `pyflakes`, and
+`kpackagetool6` are optional locally: each check reports itself as skipped when
+its tool is absent, and CI installs all three. The pinned
 [CI workflow](../.github/workflows/ci.yml) lists the complete test environment;
 package names vary by distribution.
 
@@ -414,6 +416,26 @@ Read its output for tool failures and skips. CI uses the pinned Plasma image in
 QtTests configured to reject skips. A local machine missing QML modules may
 provide less coverage; report what actually ran.
 
+Every check is a separate `make` target, so iteration can run one of them
+directly: `make check-security-regressions`, `make check-qml-logic`, or
+`make check-python-test_usage_controller` for a single Python module.
+`make -n check` lists the whole set. `make check` runs them concurrently across
+the available cores, because most Python modules start their own
+`qmltestrunner` and a sequential suite leaves the machine idle. `--output-sync`
+keeps each target's output together, so a failure is still attributable to one
+check.
+Use `make check JOBS=2` where memory or cores are constrained, and read the
+final result rather than the first lines: concurrent targets keep running after
+another one fails.
+
+`make check-workflows` runs [actionlint](https://github.com/rhysd/actionlint)
+over `.github/workflows`, and `make check-python-lint` runs `pyflakes` over
+`scripts` and `tests` for undefined names and unused imports. Neither
+reformats anything, so neither introduces style churn. `qmlformat` stays out of
+the suite: the current QML tree predates it, and reformatting it would rewrite
+almost every file and invalidate the literal source fragments that the parity
+and security checks assert.
+
 All CI container jobs pin the official KDE neon User Edition image by digest.
 Jobs install dependencies using the authenticated APT indexes already included
 in that pinned image; they do not run `apt-get update` against a mutable archive.
@@ -425,6 +447,13 @@ or substitute unverified packages.
 If the registry removes that manifest, resolve the official `user` tag again,
 verify its Linux/amd64 Ubuntu 24.04 image metadata, and update every container
 pin together. Validate the replacement through the full check and smoke jobs.
+
+`actionlint` has no package in that snapshot, so
+[`scripts/install-ci-dependencies.sh`](../scripts/install-ci-dependencies.sh)
+downloads the official release binary and verifies it against a pinned SHA-256
+before installing it. Update the version and the checksum together, taking the
+new value from that release's `checksums.txt`. An unverified or unreachable
+archive fails the job instead of leaving the workflow lint silently skipped.
 
 `tests/test_account_refresh.py` runs production account-selection functions
 against the real usage controller and an isolated CLI in Qt's event loop. It
