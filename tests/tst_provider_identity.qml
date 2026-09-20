@@ -78,6 +78,37 @@ TestCase {
         }
     }
 
+    function test_official061RegistryProvidersHaveBundledMetadata() {
+        // Official 0.61.0 additions, verified in emitted `config providers`
+        // output; metadata mirrors the upstream v0.61.0 descriptors.
+        var providers = ["coderabbit", "huggingface", "muse", "nous", "replicate"]
+        for (var i = 0; i < providers.length; i++) {
+            var key = providers[i]
+            compare(ProviderIdentity.providerIconFileName(key), key + ".svg")
+            var channels = ProviderIdentity.providerBrandColorChannels(key)
+            compare(channels.length, 3)
+            for (var channel = 0; channel < channels.length; channel++) {
+                verify(channels[channel] >= 0 && channels[channel] <= 1)
+            }
+            verify(ProviderIdentity.providerDashboardUrl(key).indexOf("https://") === 0)
+            verify(ProviderIdentity.providerDocsUrl(key).indexOf(
+                ProviderIdentity.documentationBaseUrl + key + ".md") === 0)
+        }
+        compare(ProviderIdentity.providerStatusUrl("coderabbit"), "https://status.coderabbit.ai")
+        compare(ProviderIdentity.providerStatusUrl("huggingface"), "https://status.huggingface.co")
+        compare(ProviderIdentity.providerStatusUrl("muse"), "")
+    }
+
+    function test_official061RegistryAliasesResolveCanonically() {
+        compare(ProviderIdentity.resolveProviderKey("hf"), "huggingface")
+        compare(ProviderIdentity.resolveProviderKey("hermes"), "nous")
+        compare(ProviderIdentity.resolveProviderKey("muse-code"), "muse")
+        compare(ProviderIdentity.resolveProviderKey("nous-portal"), "nous")
+        compare(ProviderIdentity.resolveProviderKey("r8"), "replicate")
+        compare(ProviderIdentity.providerDashboardUrl("nous-portal"),
+            ProviderIdentity.providerDashboardUrl("nous"))
+    }
+
     function test_iconFileNamesRefuseKeysThatCannotNameAnAsset() {
         compare(ProviderIdentity.providerIconFileName("codex"), "codex.svg")
         // The one provider whose asset name differs from its key.

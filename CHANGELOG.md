@@ -12,6 +12,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Bundle names, icons, brand colors, and dashboard, status, and documentation
+  links for the five providers official CodexBar 0.61.0 added to the registry:
+  Nous Portal, Muse Code, CodeRabbit, Replicate, and Hugging Face. They
+  previously fell back to the CLI name, a generic icon, and the theme
+  highlight color.
 - Install an optional widget-managed CodexBar CLI, update it manually or with
   opt-in daily automatic updates, and restore the previous version. Official
   Linux downloads are checksum-verified and activated atomically. External and

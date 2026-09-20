@@ -32,19 +32,6 @@ baseline. A full 0.62.0 release/contract review remains pending.
 
 ## Implementable on Linux
 
-### Bundled metadata for the 0.61.0 providers
-
-- [ ] Extend the bundled fallback metadata to the five providers official
-  0.61.0 adds to the registry: `nous` (Nous Portal), `muse` (Muse Code),
-  `coderabbit` (CodeRabbit), `replicate` (Replicate), and `huggingface`
-  (Hugging Face). A 0.61.0 probe returns 74 records with unchanged keys. They
-  already degrade gracefully, taking the CLI `displayName` and the theme
-  highlight, but have no bundled icon, brand color, dashboard/login/status
-  link, or documentation path. Done when each ID has the same bundled metadata
-  as the existing registry, an icon in `contents/icons/providers`, and the
-  provider icon and catalog checks cover it.
-  Evidence: [0.61.0 review](docs/research/2026-09-18-macos-parity-0.61.0.md#scoped-official-linux-probes).
-
 ### Incomplete cost requests
 
 - [ ] Mark the individual history and model rows whose requests the CLI

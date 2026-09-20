@@ -147,13 +147,17 @@ require("providerDocsPaths", table("providerDocsPaths"), {
     "aiand": "aiand.md",
     "azureopenai": "providers.md#azure-openai",
     "clawrouter": "clawrouter.md",
+    "coderabbit": "coderabbit.md",
     "copilot": "copilot.md",
     "crossmodel": "crossmodel.md",
     "deepinfra": "deepinfra.md",
     "fireworks": "fireworks.md",
+    "huggingface": "huggingface.md",
     "ibmbob": "ibm-bob.md",
     "mistral": "providers.md#mistral",
+    "muse": "muse.md",
     "neuralwatt": "neuralwatt.md",
+    "nous": "nous.md",
     "notion": "notion.md",
     "openai": "openai.md",
     "openrouter": "openrouter.md",
@@ -161,6 +165,7 @@ require("providerDocsPaths", table("providerDocsPaths"), {
     "poe": "poe.md",
     "qoder": "qoder.md",
     "qwencloud": "qwen-cloud.md",
+    "replicate": "replicate.md",
     "sakana": "sakana.md",
     "stepfun": "stepfun.md",
     "sub2api": "sub2api.md",
@@ -195,10 +200,15 @@ require("providerAliases", table("providerAliases"), {
     "deep-seek": "deepseek",
     "fw": "fireworks",
     "groq-api": "groq",
+    "hermes": "nous",
+    "hf": "huggingface",
     "ibm-bob": "ibmbob",
+    "muse-code": "muse",
+    "nous-portal": "nous",
     "notion-ai": "notion",
     "openai-api": "openai",
     "qwen-cloud": "qwencloud",
+    "r8": "replicate",
     "step-fun": "stepfun",
     "sub-2-api": "sub2api",
     "synthetic.new": "synthetic",
@@ -213,12 +223,17 @@ require("providerAliases", table("providerAliases"), {
 require("providerBrandChannels", table("providerBrandChannels"), {
     "aiand": "[226 / 255, 92 / 255, 43 / 255]",
     "clawrouter": "[89 / 255, 110 / 255, 246 / 255]",
+    "coderabbit": "[1, 92 / 255, 53 / 255]",
     "crossmodel": "[124 / 255, 58 / 255, 237 / 255]",
     "commandcode": "[160 / 255, 77 / 255, 253 / 255]",
     "fireworks": "[242 / 255, 91 / 255, 28 / 255]",
+    "huggingface": "[1, 210 / 255, 30 / 255]",
     "ibmbob": "[14 / 255, 97 / 255, 250 / 255]",
+    "muse": "[6 / 255, 104 / 255, 225 / 255]",
+    "nous": "[214 / 255, 165 / 255, 92 / 255]",
     "poe": "[93 / 255, 92 / 255, 222 / 255]",
     "qoder": "[16 / 255, 185 / 255, 129 / 255]",
+    "replicate": "[0, 0, 0]",
 })
 
 dashboards = table("providerDashboardUrls")
@@ -228,15 +243,20 @@ require("providerDashboardUrls", dashboards, {
     "clawrouter": "https://clawrouter.openclaw.ai/dashboard/access",
     "claude": "https://console.anthropic.com/settings/billing",
     "clinepass": "https://app.cline.bot/dashboard/subscription?personal=true",
+    "coderabbit": "https://app.coderabbit.ai",
     "crof": "https://crof.ai/dashboard",
     "crossmodel": "https://crossmodel.ai/console/usage",
     "deepinfra": "https://deepinfra.com/dash",
     "fireworks": "https://app.fireworks.ai",
     "groq": "https://console.groq.com/dashboard/usage",
+    "huggingface": "https://huggingface.co/settings/billing",
     "ibmbob": "https://bob.ibm.com",
+    "muse": "https://dev.meta.ai",
+    "nous": "https://portal.nousresearch.com/usage",
     "wayfinder": "http://127.0.0.1:8088/router",
     "notion": "https://app.notion.com/",
     "qoder": "https://qoder.com/account/usage",
+    "replicate": "https://replicate.com/account/billing",
     "sakana": "https://console.sakana.ai/billing",
     "xai": "https://console.x.ai",
 })
@@ -255,6 +275,8 @@ reject("providerLoginUrls", table("providerLoginUrls"), {"opencode": "https://op
 
 require("providerStatusUrls", table("providerStatusUrls"), {
     "augment": "https://status.augmentcode.com",
+    "coderabbit": "https://status.coderabbit.ai",
+    "huggingface": "https://status.huggingface.co",
     "ibmbob": "https://status.bob.ibm.com",
     "mistral": "https://status.mistral.ai",
 })
@@ -268,14 +290,19 @@ PY
 # Display names live once in the shared component; these late-added
 # providers are the canary for a half-finished provider addition.
 require_in_file "$PROVIDER_NAMES_QML" '"clawrouter": i18n("ClawRouter")'
+require_in_file "$PROVIDER_NAMES_QML" '"coderabbit": i18n("CodeRabbit")'
 require_in_file "$PROVIDER_NAMES_QML" '"crossmodel": i18n("CrossModel")'
 require_in_file "$PROVIDER_NAMES_QML" '"elevenlabs": i18n("ElevenLabs")'
 require_in_file "$PROVIDER_NAMES_QML" '"fireworks": i18n("Fireworks")'
+require_in_file "$PROVIDER_NAMES_QML" '"huggingface": i18n("Hugging Face")'
 require_in_file "$PROVIDER_NAMES_QML" '"ibmbob": i18n("IBM Bob")'
 require_in_file "$PROVIDER_NAMES_QML" '"kimi": i18n("Kimi Code")'
 require_in_file "$PROVIDER_NAMES_QML" '"minimax": i18n("MiniMax")'
 require_in_file "$PROVIDER_NAMES_QML" '"moonshot": i18n("Moonshot / Kimi Open Platform")'
+require_in_file "$PROVIDER_NAMES_QML" '"muse": i18n("Muse Code")'
+require_in_file "$PROVIDER_NAMES_QML" '"nous": i18n("Nous Portal")'
 require_in_file "$PROVIDER_NAMES_QML" '"qoder": i18n("Qoder")'
+require_in_file "$PROVIDER_NAMES_QML" '"replicate": i18n("Replicate")'
 require_in_file "$PROVIDER_NAMES_QML" '"stepfun": i18n("StepFun")'
 require_in_file "$PROVIDER_NAMES_QML" '"wayfinder": i18n("Wayfinder")'
 require_in_file "$PROVIDER_NAMES_QML" '"zai": i18n("z.ai / GLM")'
@@ -686,10 +713,10 @@ require_in_file "$README_MD" "kpackagetool6 -t Plasma/Applet -i codexbar-plasma.
 require_in_file "$README_MD" "kpackagetool6 -t Plasma/Applet -u codexbar-plasma.plasmoid"
 require_in_file "$README_MD" "make install"
 reject_in_file "$README_MD" "kpackagetool6 -t Plasma/Applet -u ."
-require_in_file "$USAGE_GUIDE_MD" "all 69 providers"
+require_in_file "$USAGE_GUIDE_MD" "all 74 providers"
 # shellcheck disable=SC2016 # Match the literal Markdown code span.
 require_in_file "$USAGE_GUIDE_MD" '`usage.details` contract'
-require_in_file "$README_MD" "all 69 providers"
+require_in_file "$README_MD" "all 74 providers"
 require_in_file "$README_MD" "systemctl --user restart plasma-plasmashell.service"
 require_in_file "$README_MD" "codexbar usage --provider codex --all-accounts --format json --json-only"
 

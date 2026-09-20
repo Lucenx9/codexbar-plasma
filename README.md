@@ -117,12 +117,11 @@ themes.
   selected through your Plasma language preferences.
 
 Provider authentication and data support come from the CLI. The widget includes
-fallback metadata for all 69 providers in the official CodexBar 0.49.1 registry,
-rechecked against CLI 0.56.2. CLI 0.61.0 lists 74; the five it added are not
-bundled yet and fall back to the CLI name without an icon. Available metrics and
-setup actions vary by provider. The proposed generic provider-settings
-descriptor is not available in CLI 0.61.0; its additional editors remain
-unavailable.
+fallback metadata for all 74 providers in the official CodexBar 0.61.0 registry,
+covering names, icons, brand colors, and dashboard, status, and documentation
+links. Available metrics and setup actions vary by provider. The proposed
+generic provider-settings descriptor is not available in CLI 0.61.0; its
+additional editors remain unavailable.
 
 <!-- Web links to guides also work in the installed package, which omits those files. -->
 See the [usage and settings guide](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md)
