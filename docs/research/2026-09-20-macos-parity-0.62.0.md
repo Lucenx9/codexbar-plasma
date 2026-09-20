@@ -42,12 +42,14 @@ Compared `60a677e...4b3ed1a` (50 changed files) under `Sources/CodexBarCLI/`,
   existing Plasma normalization, which keeps missing amounts unknown instead
   of turning them into measured zeros. Standard empty-history probes print the
   same established-zero shapes as 0.61.0.
-- **Codex-only `--remote` and `--summary-only` cost modes (verified).**
-  `--remote <ssh-host>` returns separate local and SSH-host summaries without
-  adding overlapping histories together; `--summary-only` emits a versioned
+- **Codex-only `--remote` and `--summary-only` cost modes (`--summary-only`
+  verified, `--remote` source-observed).** `--summary-only` emits a versioned
   (`schemaVersion: 1`) `CodexCostSummary` without account or session details.
-  Both reject any other provider, `--group-by`, and `--breakdown`, and an
-  invalid host fails closed with an args error before any SSH attempt. Plasma
+  `--remote <ssh-host>` is built to return separate local and SSH-host
+  summaries without adding overlapping histories together, but no successful
+  SSH run was exercised: the isolated probe only verified that an invalid
+  host fails closed with an args error before any SSH attempt. Both modes
+  reject any other provider, `--group-by`, and `--breakdown`. Plasma
   has no multi-host concept, so these stay available CLI features with no
   frontend work tracked.
 - **`usage_updated` hook event (verified in help).** `hooks watch` can emit it

@@ -116,7 +116,7 @@ records the checksum-verified asset
 (`11b88fef999f18cd7fd8b52e52a7fb3eb90e84eaf9fc98a1d4bc5d4170353513`), the
 isolated probes, and the emitted keys.
 
-The official Linux x86_64 release archive was checksum-verified with SHA-256
+The official v0.56.8 Linux x86_64 release archive was checksum-verified with SHA-256
 `ab98788e12840e5689ae505bf62731e0ea0db1c77e63dceda1589b6e795ac5b8`.
 An isolated probe with two synthetic days and two models ran
 `cost --provider codex --days 7 --format json --json-only --refresh --provider-native-only`
