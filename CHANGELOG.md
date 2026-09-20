@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.40 - 2026-09-20
+
 ### Added
 
 - Bundle names, icons, brand colors, and dashboard, status, and documentation
@@ -78,6 +80,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Open descriptor action URLs only when the returned HTTPS address fits in
   2048 characters, matching the existing descriptor text bounds. Longer
   addresses now report an unsupported URL instead of opening externally.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.39...v0.2.40)
 
 ## 0.2.39 - 2026-09-17
 

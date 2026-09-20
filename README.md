@@ -8,7 +8,7 @@ multiple accounts per provider.
 
 ![Overview, Usage and Spend, Sessions, and a provider detail tab in the CodexBar popup](docs/codexbar-plasma-tour.gif)
 
-Widget 0.2.39 in Breeze Dark with synthetic data. The widget follows your Plasma
+Widget 0.2.40 in Breeze Dark with synthetic data. The widget follows your Plasma
 theme; provider accent colors stay consistent across themes.
 
 ## Install
