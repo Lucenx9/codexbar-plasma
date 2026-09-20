@@ -80,7 +80,13 @@ Item {
     function checkNow() {
         if (busy) return
         var command = CliUpdate.command(scriptUrl, commandPath, localOnly)
-        if (!command) return
+        if (!command) {
+            checked = true
+            result = CliUpdate.response(commandPath.trim().length === 0
+                ? '{"status":"missing"}' : "")
+            retryAfter = Date.now() + 60 * 60 * 1000
+            return
+        }
         forceNextCheck = false
         serial += 1
         activeSource = CommandLedger.withRunNonce(command, serial)

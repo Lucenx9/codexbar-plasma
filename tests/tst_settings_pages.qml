@@ -59,6 +59,15 @@ TestCase {
         wait(0);
     }
 
+    function test_diagnosticsRejectsBlankPath() {
+        var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: "   "});
+        if (!page) return;
+        page.runEnvironmentProbe();
+        verify(page.environmentProbeFailed);
+        compare(page.resolvedCommandPath, "");
+        compare(page.diagnosticError, "Set the codexbar command path above.");
+    }
+
     function test_diagnosticsShowsResolvedPathWithSpaces() {
         var page = createPage("../contents/ui/configDiagnostics.qml", {
             cfg_commandPath: "/opt/CodexBar CLI/bin/codexbar"

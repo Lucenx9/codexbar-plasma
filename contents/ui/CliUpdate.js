@@ -31,8 +31,8 @@ function command(scriptUrl, commandPath, localOnly) {
     var script = ""
     try { script = url.indexOf("file:///") === 0 ? decodeURIComponent(url.slice(7)) : "" }
     catch (error) { return "" }
-    if (!script) return ""
+    if (!script || typeof commandPath !== "string" || !commandPath.trim()) return ""
     return "timeout --kill-after=2s 45s python3 " + Guards.shellQuote(script)
-        + " --command " + Guards.shellQuote(commandPath.trim() || "codexbar")
+        + " --command " + Guards.shellQuote(commandPath.trim())
         + (localOnly ? " --local-only" : "")
 }

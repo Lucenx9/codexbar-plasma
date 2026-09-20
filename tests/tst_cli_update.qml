@@ -26,6 +26,7 @@ TestCase {
         compare(CliUpdate.response(JSON.stringify(value)).path, value.path)
     }
     function test_commands() {
+        compare(CliUpdate.command("file:///tmp/helper.py", " \t ", false), "")
         var command = CliUpdate.command("file:///tmp/check%20it.py", "/tmp/cli'$(nope)", true)
         verify(command.indexOf("'/tmp/check it.py'") >= 0)
         verify(command.indexOf("--local-only") >= 0)

@@ -72,6 +72,8 @@ KCM.SimpleKCM {
     }
 
     function runEnvironmentProbe() {
+        if (commandPath.length === 0)
+            diagnosticError = i18n("Set the codexbar command path above.")
         versions.checkNow()
     }
 

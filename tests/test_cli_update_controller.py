@@ -30,6 +30,16 @@ TestCase {
         available.clear(); succeeded.clear();
         return subject;
     }
+    function test_blankPathDoesNotUsePathExecutable() {
+        var updater = create({commandPath: "   "}); if (!updater) return;
+        updater.checkNow();
+        verify(!updater.busy);
+        verify(updater.checked);
+        compare(updater.result.status, "missing");
+        compare(updater.result.path, "");
+        compare(available.count, 0);
+        compare(succeeded.count, 0);
+    }
     function test_manualAndLocalChecks() {
         var updater = create(); if (!updater) return;
         wait(50); verify(!updater.busy);

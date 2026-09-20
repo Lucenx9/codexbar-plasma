@@ -992,7 +992,7 @@ msgid ""
 "This checks installed versions only. Check upstream CLI releases in "
 "General / CLI updates."
 msgstr ""
-"Verifica solo le versioni installate. Controlla le release del CLI in "
+"Verifica solo le versioni installate. Controlla le release della CLI in "
 "Generale / Aggiornamenti CLI."
 
 #: contents/ui/configDiagnostics.qml
@@ -1177,11 +1177,11 @@ msgstr "Aggiornamenti CLI"
 
 #: contents/ui/configGeneral.qml
 msgid "Check upstream CLI releases daily"
-msgstr "Controlla ogni giorno le release ufficiali del CLI"
+msgstr "Controlla ogni giorno le release ufficiali della CLI"
 
 #: contents/ui/configGeneral.qml
 msgid "Notify when a CLI release is available"
-msgstr "Notifica quando è disponibile una release del CLI"
+msgstr "Notifica quando è disponibile una release della CLI"
 
 #: contents/ui/configGeneral.qml
 msgid ""
@@ -1189,11 +1189,11 @@ msgid ""
 "the CLI."
 msgstr ""
 "Controlla le release ufficiali su GitHub. Il widget non installa né "
-"sostituisce il CLI."
+"sostituisce la CLI."
 
 #: contents/ui/configGeneral.qml
 msgid "Check CLI releases now"
-msgstr "Controlla ora le release del CLI"
+msgstr "Controlla ora le release della CLI"
 
 #: contents/ui/configGeneral.qml contents/ui/main.qml
 msgid "Open release page"
@@ -1938,23 +1938,23 @@ msgstr "È disponibile la release ufficiale CLI %1. Installata: %2."
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "CLI %1 is current or newer than the latest stable release."
-msgstr "Il CLI %1 è aggiornato o più recente dell’ultima release stabile."
+msgstr "La CLI %1 è aggiornata o più recente dell’ultima release stabile."
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "Could not identify the installed CLI version."
-msgstr "Impossibile identificare la versione del CLI installata."
+msgstr "Impossibile identificare la versione della CLI installata."
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid ""
 "Latest stable CLI: %1. The installed version cannot be compared "
 "automatically."
 msgstr ""
-"Ultima release stabile del CLI: %1. La versione installata non può essere "
+"Ultima release stabile della CLI: %1. La versione installata non può essere "
 "confrontata automaticamente."
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "Could not check CLI releases. Try again later."
-msgstr "Impossibile controllare le release del CLI. Riprova più tardi."
+msgstr "Impossibile controllare le release della CLI. Riprova più tardi."
 
 #: contents/ui/controllers/CostController.qml
 msgid "Loading cost data timed out. Try again."
@@ -2800,7 +2800,7 @@ msgstr "Aggiornamento dell'utilizzo..."
 
 #: contents/ui/main.qml
 msgid "CodexBar CLI release available"
-msgstr "Release del CLI CodexBar disponibile"
+msgstr "Release della CLI CodexBar disponibile"
 
 #: contents/ui/main.qml
 msgid "Upstream CLI %1 is available. Update using your installation method."

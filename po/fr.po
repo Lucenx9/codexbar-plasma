@@ -991,7 +991,7 @@ msgid ""
 "This checks installed versions only. Check upstream CLI releases in "
 "General / CLI updates."
 msgstr ""
-"Vérifie uniquement les versions installées. Consultez les versions du CLI "
+"Cette vérification porte uniquement sur les versions installées. Consultez les versions du CLI "
 "dans Général / Mises à jour du CLI."
 
 #: contents/ui/configDiagnostics.qml
