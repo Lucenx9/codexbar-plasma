@@ -85,6 +85,17 @@ class ManagedCliTests(unittest.TestCase):
         # Explicit Update now may reinstall the previously rejected version.
         self.assertEqual(self.operation("update")["version"], "0.63.0")
 
+    def test_select_existing_copy_is_offline_even_during_an_update(self):
+        self.operation("install")
+        with (self.root / ".lock").open("w") as lock, \
+                patch.object(cli.cli_release, "latest_release", side_effect=OSError("offline")) as remote:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            result = cli.run("install", "/usr/bin/codexbar")
+        self.assertEqual(result["status"], "ready")
+        self.assertEqual(result["path"], self.command)
+        self.assertEqual(result["version"], "0.62.0")
+        remote.assert_not_called()
+
     def test_external_actions_do_not_create_storage_or_fetch(self):
         for action in ("automatic", "update", "rollback"):
             with self.subTest(action=action), patch.object(cli.cli_release, "latest_release") as remote:

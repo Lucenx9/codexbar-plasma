@@ -1188,7 +1188,9 @@ msgstr "Über neue CLI-Versionen benachrichtigen"
 msgid ""
 "Checks GitHub for official releases. External installations are updated "
 "through their original installation method."
-msgstr "Prüft offizielle Versionen auf GitHub. Externe Installationen werden über ihre ursprüngliche Installationsmethode aktualisiert."
+msgstr ""
+"Prüft offizielle Versionen auf GitHub. Externe Installationen werden über "
+"ihre ursprüngliche Installationsmethode aktualisiert."
 
 #: contents/ui/configGeneral.qml
 msgid "Check CLI releases now"
@@ -1206,15 +1208,22 @@ msgstr "Verwaltete CLI"
 msgid ""
 "Install a private copy for this widget. System and package-manager "
 "installations remain available. Apply settings to use the selected copy."
-msgstr "Installiert eine private Kopie für dieses Widget. Systeminstallationen und Installationen über Paketverwaltungen bleiben verfügbar. Übernehmen Sie die Einstellungen, um die ausgewählte Kopie zu verwenden."
+msgstr ""
+"Installiert eine private Kopie für dieses Widget. Systeminstallationen und "
+"Installationen über Paketverwaltungen bleiben verfügbar. Übernehmen Sie die "
+"Einstellungen, um die ausgewählte Kopie zu verwenden."
+
+#: contents/ui/configGeneral.qml
+msgid "Update now"
+msgstr "Jetzt aktualisieren"
 
 #: contents/ui/configGeneral.qml
 msgid "Install and select managed CLI"
 msgstr "Verwaltete CLI installieren und auswählen"
 
 #: contents/ui/configGeneral.qml
-msgid "Update now"
-msgstr "Jetzt aktualisieren"
+msgid "Use managed CLI"
+msgstr "Verwaltete CLI verwenden"
 
 #: contents/ui/configGeneral.qml
 msgid "Automatically update the managed CLI daily"
@@ -1936,7 +1945,9 @@ msgstr "Zeitüberschreitung beim Laden der Konten. Erneut versuchen."
 msgid ""
 "Managed by this widget. Install updates or restore the previous version in "
 "General."
-msgstr "Von diesem Widget verwaltet. Unter Allgemein können Sie Updates installieren oder die vorherige Version wiederherstellen."
+msgstr ""
+"Von diesem Widget verwaltet. Unter Allgemein können Sie Updates installieren "
+"oder die vorherige Version wiederherstellen."
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "Managed by Homebrew. Update through Homebrew."
@@ -2020,7 +2031,9 @@ msgstr "Verwaltete CLI %1 ist bereit."
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "Restored CLI %1. Automatic updates will skip the replaced version."
-msgstr "CLI %1 wiederhergestellt. Automatische Updates überspringen die ersetzte Version."
+msgstr ""
+"CLI %1 wiederhergestellt. Automatische Updates überspringen die ersetzte "
+"Version."
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "No managed CLI installed."
@@ -2032,7 +2045,9 @@ msgstr "Wählen Sie vor dem Aktualisieren die verwaltete CLI aus."
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "Another widget is updating the managed CLI. Try again shortly."
-msgstr "Ein anderes Widget aktualisiert die verwaltete CLI. Versuchen Sie es in Kürze erneut."
+msgstr ""
+"Ein anderes Widget aktualisiert die verwaltete CLI. Versuchen Sie es in "
+"Kürze erneut."
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "No previous CLI version is available."
@@ -2041,7 +2056,9 @@ msgstr "Keine vorherige CLI-Version verfügbar."
 #: contents/ui/controllers/ManagedCliController.qml
 msgid ""
 "Could not prepare the managed CLI. Check the installed version and try again."
-msgstr "Die verwaltete CLI konnte nicht vorbereitet werden. Prüfen Sie die installierte Version und versuchen Sie es erneut."
+msgstr ""
+"Die verwaltete CLI konnte nicht vorbereitet werden. Prüfen Sie die "
+"installierte Version und versuchen Sie es erneut."
 
 #: contents/ui/controllers/SessionsController.qml
 msgid "Loading sessions timed out. Try again."

@@ -167,7 +167,8 @@ and Homebrew. Unrecognized installations keep their original update method.
 resolved command, and recognized installation manager.
 
 **General → Managed CLI** can install and select a separate private CLI, update
-it immediately, or restore its previous version. **Automatically update the
+it immediately, or restore its previous version. An existing managed copy can be
+selected offline with **Use managed CLI**. **Automatically update the
 managed CLI daily** is optional and off by default; it acts only while the
 managed command path is selected. Downloads match the host architecture/libc,
 verify GitHub SHA-256 metadata and the published checksum, and switch atomically

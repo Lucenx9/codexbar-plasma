@@ -331,7 +331,8 @@ def prune(root):
 
 def run(action, command=""):
     root = root_path()
-    if action == "status":
+    if action == "status" or (action == "install" and installed(root)):
+        # Selecting an existing private copy is local; only Update now needs GitHub.
         return status(root)
     if action in ("update", "automatic", "rollback") and not owns_command(command):
         return {"status": "external"}

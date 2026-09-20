@@ -658,10 +658,16 @@ KCM.SimpleKCM {
         RowLayout {
             Controls.Button {
                 objectName: "installManagedCliButton"
-                text: managedCli.selected ? i18n("Update now") : i18n("Install and select managed CLI")
-                icon.name: managedCli.selected ? "view-refresh" : "download"
+                text: managedCli.selected ? i18n("Update now")
+                    : managedCli.result.version.length > 0 ? i18n("Use managed CLI") : i18n("Install and select managed CLI")
+                icon.name: managedCli.selected ? "view-refresh"
+                    : managedCli.result.version.length > 0 ? "dialog-ok-apply" : "download"
                 enabled: !managedCli.busy
-                onClicked: managedCli.run(managedCli.selected ? "update" : "install")
+                onClicked: {
+                    if (managedCli.selected) managedCli.run("update")
+                    else if (managedCli.result.version.length > 0) page.cfg_commandPath = managedCli.result.path
+                    else managedCli.run("install")
+                }
             }
             Controls.BusyIndicator {
                 running: managedCli.busy

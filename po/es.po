@@ -1185,7 +1185,9 @@ msgstr "Notificar cuando haya una versión del CLI disponible"
 msgid ""
 "Checks GitHub for official releases. External installations are updated "
 "through their original installation method."
-msgstr "Busca versiones oficiales en GitHub. Las instalaciones externas se actualizan mediante su método de instalación original."
+msgstr ""
+"Busca versiones oficiales en GitHub. Las instalaciones externas se "
+"actualizan mediante su método de instalación original."
 
 #: contents/ui/configGeneral.qml
 msgid "Check CLI releases now"
@@ -1203,15 +1205,22 @@ msgstr "CLI gestionada"
 msgid ""
 "Install a private copy for this widget. System and package-manager "
 "installations remain available. Apply settings to use the selected copy."
-msgstr "Instale una copia privada para este elemento. Las instalaciones del sistema y de los gestores de paquetes siguen disponibles. Aplique los ajustes para usar la copia seleccionada."
+msgstr ""
+"Instale una copia privada para este elemento. Las instalaciones del sistema "
+"y de los gestores de paquetes siguen disponibles. Aplique los ajustes para "
+"usar la copia seleccionada."
+
+#: contents/ui/configGeneral.qml
+msgid "Update now"
+msgstr "Actualizar ahora"
 
 #: contents/ui/configGeneral.qml
 msgid "Install and select managed CLI"
 msgstr "Instalar y seleccionar la CLI gestionada"
 
 #: contents/ui/configGeneral.qml
-msgid "Update now"
-msgstr "Actualizar ahora"
+msgid "Use managed CLI"
+msgstr "Usar la CLI gestionada"
 
 #: contents/ui/configGeneral.qml
 msgid "Automatically update the managed CLI daily"
@@ -1936,7 +1945,9 @@ msgstr ""
 msgid ""
 "Managed by this widget. Install updates or restore the previous version in "
 "General."
-msgstr "Gestionada por este elemento. Instale actualizaciones o restaure la versión anterior en General."
+msgstr ""
+"Gestionada por este elemento. Instale actualizaciones o restaure la versión "
+"anterior en General."
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "Managed by Homebrew. Update through Homebrew."
@@ -2019,7 +2030,9 @@ msgstr "La CLI gestionada %1 está lista."
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "Restored CLI %1. Automatic updates will skip the replaced version."
-msgstr "CLI %1 restaurada. Las actualizaciones automáticas omitirán la versión reemplazada."
+msgstr ""
+"CLI %1 restaurada. Las actualizaciones automáticas omitirán la versión "
+"reemplazada."
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "No managed CLI installed."
@@ -2031,7 +2044,9 @@ msgstr "Seleccione la CLI gestionada antes de actualizarla."
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "Another widget is updating the managed CLI. Try again shortly."
-msgstr "Otro elemento está actualizando la CLI gestionada. Vuelva a intentarlo en breve."
+msgstr ""
+"Otro elemento está actualizando la CLI gestionada. Vuelva a intentarlo en "
+"breve."
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "No previous CLI version is available."
@@ -2040,7 +2055,9 @@ msgstr "No hay una versión anterior de la CLI disponible."
 #: contents/ui/controllers/ManagedCliController.qml
 msgid ""
 "Could not prepare the managed CLI. Check the installed version and try again."
-msgstr "No se pudo preparar la CLI gestionada. Compruebe la versión instalada y vuelva a intentarlo."
+msgstr ""
+"No se pudo preparar la CLI gestionada. Compruebe la versión instalada y "
+"vuelva a intentarlo."
 
 #: contents/ui/controllers/SessionsController.qml
 msgid "Loading sessions timed out. Try again."

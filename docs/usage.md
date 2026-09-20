@@ -411,7 +411,9 @@ stable official Linux release under `$XDG_DATA_HOME/codexbar-plasma/cli`, fallin
 back to `~/.local/share/codexbar-plasma/cli`. Installation happens immediately;
 **Apply** or **OK** saves its `current/codexbar` path as the widget command.
 **Cancel** leaves the downloaded copy unused and preserves the saved command.
-System, AUR, other package-manager copies, and provider configuration are unchanged.
+If a managed copy already exists, **Use managed CLI** selects it offline without
+checking GitHub or downloading again. System, AUR, other package-manager copies,
+and provider configuration are unchanged.
 To return to an external copy, enter its path or `codexbar` in **Diagnostics**
 and apply. **Check versions** identifies the managed copy offline.
 

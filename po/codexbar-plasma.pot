@@ -1150,11 +1150,15 @@ msgid ""
 msgstr ""
 
 #: contents/ui/configGeneral.qml
+msgid "Update now"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
 msgid "Install and select managed CLI"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
-msgid "Update now"
+msgid "Use managed CLI"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
