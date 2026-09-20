@@ -19,11 +19,11 @@ TestCase {
     function test_authoritativeAndTransientResults() {
         var prior = {status: "ready", version: "0.62.0", previous: "0.61.0",
             path: "/home/test/.local/share/codexbar-plasma/cli/current/codexbar"}
-        for (var status of ["error", "busy", "external"]) {
-            var transient = ManagedCli.nextResponse(prior, JSON.stringify({status: status}))
-            compare(transient.path, prior.path)
-            compare(transient.version, prior.version)
-            compare(transient.previous, prior.previous)
+        for (var item of [{status: "error"}, {status: "busy"}, {status: "external"}]) {
+            var retained = ManagedCli.nextResponse(prior, JSON.stringify(item))
+            compare(retained.path, prior.path)
+            compare(retained.version, prior.version)
+            compare(retained.previous, prior.previous)
         }
         var missingPrevious = ManagedCli.nextResponse(prior, '{"status":"no_previous"}')
         compare(missingPrevious.path, prior.path)
