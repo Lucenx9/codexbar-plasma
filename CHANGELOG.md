@@ -55,6 +55,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Align provider header account label typography with secondary plan and timestamp
+  metadata by using small font size.
 - Keep **Automatically update the managed CLI daily** switchable while it is on.
   Selecting a command outside the managed copy previously disabled the checkbox
   with the setting still enabled, leaving no way to turn it off and letting the
