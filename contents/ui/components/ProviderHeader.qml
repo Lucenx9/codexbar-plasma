@@ -108,6 +108,7 @@ RowLayout {
                 Layout.alignment: Qt.AlignBaseline
                 visible: providerHeaderRow.hasAccount
                 text: providerHeaderRow.providerData ? providerHeaderRow.providerData.account : ""
+                font: Kirigami.Theme.smallFont
                 opacity: providerHeaderRow.applet.secondaryTextOpacity
                 elide: Text.ElideMiddle
                 // The plan sits beside the account instead of drifting to the
