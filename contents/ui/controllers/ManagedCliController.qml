@@ -52,10 +52,7 @@ Item {
         if (sourceName !== activeSource) return
         var action = activeAction
         retire()
-        var parsed = ManagedCli.response(data && Number(data["exit code"]) === 0 ? data["stdout"] : "")
-        // Retain known installation facts after transient failures so manual retry stays available.
-        if (!parsed.path) parsed = Object.assign({}, result, {status: parsed.status})
-        result = parsed
+        result = ManagedCli.nextResponse(result, data && Number(data["exit code"]) === 0 ? data["stdout"] : "")
         if (action === "install" && ["installed", "ready"].indexOf(result.status) >= 0) installed(result.path)
         if (["installed", "restored"].indexOf(result.status) >= 0) changed()
     }
@@ -89,7 +86,7 @@ Item {
         interval: 615000
         onTriggered: {
             controller.retire()
-            controller.result = Object.assign({}, controller.result, {status: "error"})
+            controller.result = ManagedCli.nextResponse(controller.result, "")
         }
     }
     Timer {

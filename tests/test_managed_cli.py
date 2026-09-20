@@ -225,6 +225,36 @@ class ManagedCliTests(unittest.TestCase):
         self.assertFalse((self.root / first).exists())
         self.assertTrue((self.root / second).exists())
 
+    def test_prune_removes_incomplete_orphans_but_protects_selected_paths_and_symlinks(self):
+        self.operation("install")
+        orphan = self.root / cli.installed(self.root)["target"]
+        self.publish("0.63.0")
+        self.operation("update")
+        previous = self.root / cli.installed(self.root)["target"]
+        self.publish("0.64.0")
+        self.operation("update")
+        current = self.root / cli.installed(self.root)["target"]
+        old = cli.time.time() - 8 * 86400
+        for directory in (orphan, previous, current):
+            (directory / "receipt.json").unlink()
+            os.utime(directory, (old, old))
+        outside = self.base / "outside"
+        outside.mkdir()
+        (outside / "keep").write_text("untouched")
+        link = self.root / "releases" / ("v0.65.0-" + "a" * 16)
+        link.symlink_to(outside, target_is_directory=True)
+        os.utime(outside, (old, old))
+        unrelated = self.root / "releases/notes"
+        unrelated.mkdir()
+        os.utime(unrelated, (old, old))
+        cli.prune(self.root)
+        self.assertFalse(orphan.exists())
+        self.assertTrue(previous.exists())
+        self.assertTrue(current.exists())
+        self.assertTrue(link.is_symlink())
+        self.assertTrue((outside / "keep").exists())
+        self.assertTrue(unrelated.exists())
+
     def test_rollback_then_update_retains_recently_active_old_release(self):
         self.operation("install")
         self.publish("0.63.0")

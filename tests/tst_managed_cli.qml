@@ -16,6 +16,30 @@ TestCase {
         }
         compare(ManagedCli.response("x".repeat(20000)).status, "error")
     }
+    function test_authoritativeAndTransientResults() {
+        var prior = {status: "ready", version: "0.62.0", previous: "0.61.0",
+            path: "/home/test/.local/share/codexbar-plasma/cli/current/codexbar"}
+        for (var status of ["error", "busy", "external"]) {
+            var transient = ManagedCli.nextResponse(prior, JSON.stringify({status: status}))
+            compare(transient.path, prior.path)
+            compare(transient.version, prior.version)
+            compare(transient.previous, prior.previous)
+        }
+        var missingPrevious = ManagedCli.nextResponse(prior, '{"status":"no_previous"}')
+        compare(missingPrevious.path, prior.path)
+        compare(missingPrevious.previous, "")
+        compare(ManagedCli.nextResponse(prior, JSON.stringify(Object.assign({}, prior,
+            {status: "no_previous"}))).previous, "")
+        for (var absent of [{status: "absent"}, Object.assign({}, prior, {status: "absent"})]) {
+            var missing = ManagedCli.nextResponse(prior, JSON.stringify(absent))
+            compare(missing.path, "")
+            compare(missing.version, "")
+            compare(missing.previous, "")
+        }
+        compare(ManagedCli.nextResponse({status: "ready", path: "/tmp/private"}, "").path, "")
+        var cyclic = {}; cyclic.previous = cyclic
+        compare(ManagedCli.nextResponse(cyclic, "").path, "")
+    }
     function test_command() {
         compare(ManagedCli.command("file:///%ZZ", "install", "codexbar"), "")
         compare(ManagedCli.command("https://evil.test/helper", "install", "codexbar"), "")

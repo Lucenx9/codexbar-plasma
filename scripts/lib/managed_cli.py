@@ -316,13 +316,15 @@ def install(root, automatic=False):
 
 def prune(root):
     """Keep current/previous releases and a seven-day grace period for running CLIs."""
-    current = installed(root)
+    current = os.readlink(root / "current") if (root / "current").is_symlink() else ""
     state = state_record(root)
-    keep = {current["target"] if current else "", state.get("previous", "")}
+    keep = {current, state.get("previous", "")}
     now = time.time()
     for directory in (root / "releases").iterdir():
         target = "releases/" + directory.name
-        if target not in keep and installed(root, target) and now - directory.stat().st_mtime > 7 * 86400:
+        if target not in keep and RELEASE_DIRECTORY.fullmatch(target) \
+                and not directory.is_symlink() and directory.is_dir() \
+                and now - directory.stat().st_mtime > 7 * 86400:
             shutil.rmtree(directory)
     for directory in root.glob(".install-*"):
         if not directory.is_symlink() and directory.is_dir() and now - directory.stat().st_mtime > 86400:

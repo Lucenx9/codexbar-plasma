@@ -8,6 +8,7 @@ function response(text) {
     try { value = JSON.parse(text) } catch (error) { return empty }
     if (!value || typeof value !== "object" || Array.isArray(value)) return empty
     if (["ready", "absent", "installed", "restored", "external", "busy", "no_previous", "error"].indexOf(value.status) < 0) return empty
+    if (value.status === "absent") return {status: "absent", path: "", version: "", previous: ""}
     var version = /^(0|[1-9][0-9]{0,5})\.(0|[1-9][0-9]{0,5})\.(0|[1-9][0-9]{0,5})$/
     var path = typeof value.path === "string" && value.path.length <= 4096
         && /^\/[^\x00-\x1f\x7f]+\/codexbar-plasma\/cli\/current\/codexbar$/.test(value.path)
@@ -16,7 +17,17 @@ function response(text) {
             && (typeof value.version !== "string" || !version.test(value.version) || !path)) return empty
     return {status: value.status, path: path,
         version: typeof value.version === "string" && version.test(value.version) ? value.version : "",
-        previous: typeof value.previous === "string" && version.test(value.previous) ? value.previous : ""}
+        previous: value.status !== "no_previous" && typeof value.previous === "string" && version.test(value.previous) ? value.previous : ""}
+}
+
+function nextResponse(previous, text) {
+    var parsed = response(text)
+    if (parsed.path || ["error", "busy", "external", "no_previous"].indexOf(parsed.status) < 0) return parsed
+    var prior
+    try { prior = response(JSON.stringify(previous)) }
+    catch (error) { prior = response("") }
+    return {status: parsed.status, path: prior.path, version: prior.version,
+        previous: parsed.status === "no_previous" ? "" : prior.previous}
 }
 
 function command(scriptUrl, action, commandPath) {
