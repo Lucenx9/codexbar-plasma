@@ -203,6 +203,20 @@ class ManagedCliTests(unittest.TestCase):
         self.assertFalse((self.root / first).exists())
         self.assertTrue((self.root / second).exists())
 
+    def test_rollback_then_update_retains_recently_active_old_release(self):
+        self.operation("install")
+        self.publish("0.63.0")
+        self.operation("update")
+        outgoing = cli.installed(self.root)["target"]
+        old = cli.time.time() - 8 * 86400
+        for directory in (self.root / "releases").iterdir():
+            os.utime(directory, (old, old))
+        self.operation("rollback")
+        self.publish("0.64.0")
+        self.operation("update")
+        self.assertTrue((self.root / outgoing).exists())
+        self.assertGreater((self.root / outgoing).stat().st_mtime, old)
+
     def test_unsafe_storage_and_forged_pointer(self):
         self.root.parent.mkdir(parents=True)
         self.root.symlink_to(self.base, target_is_directory=True)

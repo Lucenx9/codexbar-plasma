@@ -143,7 +143,6 @@ KCM.SimpleKCM {
         commandPath: page.cfg_commandPath || "codexbar"
         onInstalled: function(path) {
             page.cfg_commandPath = path
-            Qt.callLater(function() { managedCli.run("status") })
         }
         onChanged: cliUpdater.reset()
         Component.onCompleted: Qt.callLater(function() { managedCli.run("status") })

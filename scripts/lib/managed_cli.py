@@ -141,6 +141,11 @@ def switch(root, target):
 
 def activate(root, target, state, previous, blocked_version=""):
     before = os.readlink(root / "current") if (root / "current").is_symlink() else ""
+    if before:
+        if not installed(root, before):
+            raise ValueError("activation_origin")
+        # Grace starts when a version stops being active, including after rollback.
+        os.utime(root / before, None)
     state["activation"] = dict(target=target, before=before, previous=state.get("previous", ""),
                                blockedVersion=state.get("blockedVersion", ""))
     state.update(previous=previous, blockedVersion=blocked_version)

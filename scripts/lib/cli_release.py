@@ -158,4 +158,3 @@ def check(command, local_only=False):
     except (OSError, ValueError):
         record["status"] = "network_error"
         return record
-

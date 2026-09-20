@@ -29,6 +29,8 @@ TestCase {
         compare(selected.count, 0); compare(changed.count, 0);
         verify(!updater.selected);
         updater.commandPath = "/home/test/.local/share/codexbar-plasma/cli/current/codexbar";
+        verify(updater.selected);
+        compare(updater.result.status, "ready");
         updater.run("status"); tryCompare(updater, "busy", false);
         verify(updater.selected);
     }

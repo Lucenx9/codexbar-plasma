@@ -67,7 +67,7 @@ Item {
     }
     onCommandPathChanged: {
         retire()
-        result = ManagedCli.response("")
+        // Installation facts belong to the shared private directory, not the selected command.
         nextAttempt = 0
         Qt.callLater(checkIfDue)
     }
