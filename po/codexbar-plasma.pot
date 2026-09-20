@@ -1127,8 +1127,8 @@ msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid ""
-"Checks GitHub for official releases. The widget does not install or replace "
-"the CLI."
+"Checks GitHub for official releases. External installations are updated "
+"through their original installation method."
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -1137,6 +1137,32 @@ msgstr ""
 
 #: contents/ui/configGeneral.qml contents/ui/main.qml
 msgid "Open release page"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Managed CLI"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"Install a private copy for this widget. System and package-manager "
+"installations remain available. Apply settings to use the selected copy."
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Install and select managed CLI"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Update now"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Automatically update the managed CLI daily"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Restore previous version (%1)"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -1812,6 +1838,12 @@ msgid "Loading accounts timed out. Try again."
 msgstr ""
 
 #: contents/ui/controllers/CliUpdateController.qml
+msgid ""
+"Managed by this widget. Install updates or restore the previous version in "
+"General."
+msgstr ""
+
+#: contents/ui/controllers/CliUpdateController.qml
 msgid "Managed by Homebrew. Update through Homebrew."
 msgstr ""
 
@@ -1826,6 +1858,7 @@ msgid "External installation. Update using your original installation method."
 msgstr ""
 
 #: contents/ui/controllers/CliUpdateController.qml
+#: contents/ui/controllers/ManagedCliController.qml
 msgid "Checking..."
 msgstr ""
 
@@ -1869,6 +1902,43 @@ msgstr ""
 
 #: contents/ui/controllers/CostController.qml
 msgid "codexbar cost returned an unsupported JSON payload."
+msgstr ""
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "Preparing the managed CLI..."
+msgstr ""
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "Managed CLI %1 is installed."
+msgstr ""
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "Managed CLI %1 is ready."
+msgstr ""
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "Restored CLI %1. Automatic updates will skip the replaced version."
+msgstr ""
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "No managed CLI installed."
+msgstr ""
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "Select the managed CLI before updating it."
+msgstr ""
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "Another widget is updating the managed CLI. Try again shortly."
+msgstr ""
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "No previous CLI version is available."
+msgstr ""
+
+#: contents/ui/controllers/ManagedCliController.qml
+msgid ""
+"Could not prepare the managed CLI. Check the installed version and try again."
 msgstr ""
 
 #: contents/ui/controllers/SessionsController.qml

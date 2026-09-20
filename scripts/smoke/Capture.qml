@@ -1247,20 +1247,32 @@ Item {
                 return false;
             if (scenario === "settings-general" && !navigationVerified) {
                 verifyGeneralDefaults(preview.page);
+                var managed = findItem(preview.page, "managedCliController");
+                verifyScenario(managed !== null, "General must expose the managed CLI controller");
+                preview.page.cfg_commandPath = "/home/demo/.local/share/codexbar-plasma/cli/current/codexbar";
+                managed.retire();
+                managed.activeAction = "status";
+                managed.activeSource = "synthetic-managed";
+                managed.accept("synthetic-managed", {"exit code": 0, stdout: JSON.stringify({
+                    status: "ready", version: "0.61.0", previous: "0.60.4", path: preview.page.cfg_commandPath})});
+                verifyScenario(managed.selected && !preview.page.cfg_cliAutomaticUpdates,
+                    "Managed CLI selection must keep automatic updates opt-in");
                 var releaseChecker = findItem(preview.page, "cliReleaseController");
                 verifyScenario(releaseChecker !== null, "General must expose CLI release checks");
                 releaseChecker.activeSource = "synthetic-release";
                 releaseChecker.accept("synthetic-release", {"exit code": 0, stdout: JSON.stringify({
-                    status: "available", version: "0.60.4", path: "/usr/bin/codexbar",
-                    manager: "pacman", latest: "0.62.0", tag: "v0.62.0"})});
+                    status: "available", version: "0.61.0", path: preview.page.cfg_commandPath,
+                    manager: "managed", latest: "0.62.0", tag: "v0.62.0"})});
                 navigationVerified = true;
             }
             if (scenario === "settings-diagnostics" && !navigationVerified) {
+                preview.page.cfg_commandPath = "/home/demo/.local/share/codexbar-plasma/cli/current/codexbar";
                 var versions = findItem(preview.page, "cliVersionsController");
                 verifyScenario(versions !== null, "Diagnostics must expose the local versions controller");
                 versions.activeSource = "synthetic-versions";
                 versions.accept("synthetic-versions", {"exit code": 0, stdout: JSON.stringify({
-                    status: "local", version: "0.60.4", path: "/usr/bin/codexbar", manager: "pacman"})});
+                    status: "local", version: "0.61.0",
+                    path: "/home/demo/.local/share/codexbar-plasma/cli/current/codexbar", manager: "managed"})});
                 navigationVerified = true;
             }
             if (scenario.indexOf("settings-panel") === 0 && !navigationVerified) {

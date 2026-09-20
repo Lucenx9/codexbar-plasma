@@ -17,6 +17,10 @@ theme; provider accent colors stay consistent across themes.
    [official CodexBar release tarballs](https://github.com/steipete/CodexBar/releases/latest)
    or another method documented by [upstream CodexBar](https://github.com/steipete/CodexBar).
    Third-party packages such as AUR can lag behind upstream releases.
+   Alternatively, install the widget first and use **General → Managed CLI →
+   Install and select managed CLI**, then **Apply**. This downloads an official
+   Linux binary to a private directory without replacing a system installation.
+   Use the resolved path from **Diagnostics → Check versions** for terminal commands.
    Set up your provider using the upstream instructions, then verify usage:
 
    ```sh
@@ -62,10 +66,12 @@ for its limits.
 
 - KDE Plasma 6, `kpackagetool6`, and the `org.kde.plasma.plasma5support` QML module.
 - A working `codexbar` CLI, available on Plasma's `PATH` or through an absolute
-  path configured in the widget.
+  path configured in the widget, including its optional managed copy. Managed
+  downloads support Linux x86_64/aarch64 with glibc or musl; the downloaded
+  executable must pass a local version probe before activation.
 - `notify-send` for Plasma notifications.
 - `curl`, `jq`, `python3`, `sha256sum`, and GNU `timeout` for the bundled release
-  updater. CLI release checks also use `python3` and GNU `timeout`. GNU `timeout`
+  updater. CLI release checks and managed installs also use `python3` and GNU `timeout`. GNU `timeout`
   also bounds CLI writes after a secret prompt.
 
 Distribution package names vary. Source builds additionally need `make`, Python
@@ -146,7 +152,7 @@ are enabled by default. Clicking an update notification opens that release's
 page on GitHub where the installed `notify-send` supports notification actions.
 **Install widget updates automatically** is opt-in.
 
-The bundled helper accepts only immutable GitHub releases. It binds assets to
+The widget-update helper accepts only immutable GitHub releases. It binds assets to
 the advertised tag, verifies SHA-256 digests and the published checksum, and
 checks the applet ID and version before installation. A validation mismatch
 aborts the update.
@@ -159,6 +165,14 @@ never replaces their CLI. Recognized ownership includes pacman, dpkg, RPM, APK,
 and Homebrew. Unrecognized installations keep their original update method.
 **Diagnostics → Check versions** stays offline and reports the installed CLI,
 resolved command, and recognized installation manager.
+
+**General → Managed CLI** can install and select a separate private CLI, update
+it immediately, or restore its previous version. **Automatically update the
+managed CLI daily** is optional and off by default; it acts only while the
+managed command path is selected. Downloads match the host architecture/libc,
+verify GitHub SHA-256 metadata and the published checksum, and switch atomically
+after a version probe. A restored version stays selected until a newer release
+arrives or you explicitly update again. See [managed CLI details](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#managed-cli).
 
 For a source checkout, see the [development update commands](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/development.md#work-from-a-checkout).
 The source-checkout helper `./install.sh` checks for `kpackagetool6` and

@@ -70,6 +70,8 @@ SURFACES: dict[str, tuple[str, ...]] = {
     ),
     "general": (
         "contents/ui/configGeneral.qml",
+        "contents/ui/controllers/ManagedCliController.qml",
+        "contents/ui/ManagedCli.js",
         "contents/ui/general/*.js",
         "contents/ui/controllers/CliUpdateController.qml",
         "contents/ui/CliUpdate.js",

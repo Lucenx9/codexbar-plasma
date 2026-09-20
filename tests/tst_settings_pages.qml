@@ -40,6 +40,10 @@ TestCase {
             height: testCase.height
         }, properties || {}));
         verify(page !== null);
+        var managed = findChild(page, "managedCliController");
+        if (managed) {
+            tryVerify(function() { return managed.activeAction === "status" && !managed.busy; });
+        }
         return page;
     }
 
@@ -98,6 +102,7 @@ TestCase {
             cfg_source: "cli",
             cfg_refreshInterval: 900,
             cfg_privacyMode: true,
+            cfg_cliAutomaticUpdates: true,
             cfg_refreshOnOpen: false,
             cfg_includeStatus: true,
             cfg_costUsageEnabled: false,
@@ -127,6 +132,7 @@ TestCase {
         compare(page.cfg_source, "");
         compare(page.cfg_refreshInterval, 300);
         compare(page.cfg_privacyMode, false);
+        compare(page.cfg_cliAutomaticUpdates, false);
         compare(page.cfg_refreshOnOpen, true);
         compare(page.cfg_includeStatus, false);
         compare(page.cfg_costUsageEnabled, true);
