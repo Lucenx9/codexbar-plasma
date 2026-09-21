@@ -9,7 +9,6 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # in, so assert it across the whole surface.
 
 require_in_surface applet "function commandWithRunNonce(command)"
-require_in_surface applet "function withRunNonce(command, serial)"
 require_in_surface applet "commandWithRunNonce(commandSource)"
 require_in_surface applet "CommandLedger.withRunNonce(commandSource, runSerial)"
 require_in_surface applet "commandWithRunNonce(providerConfigCommandSource)"
@@ -23,9 +22,8 @@ reject_in_surface applet "property string connectedSessionsCommandSource"
 reject_in_surface applet "property string connectedProviderConfigCommandSource"
 require_in_surface applet "var baseCommand = buildProviderUsageCommand(providerID)"
 require_in_surface applet "sourceName: commandWithRunNonce(baseCommand)"
-# Notifications retain the shell separator before `if` and register a unique
-# source before connecting it. The dispatcher tests execute the real command.
-require_in_surface applet 'return ":; if command -v notify-send'
+# Notifications register a unique source before connecting it. The dispatcher
+# tests execute the real command.
 require_in_surface applet 'var sourceName = CommandLedger.withRunNonce(command, runSerial)'
 reject_in_surface applet "notificationSource.connectSource(command)"
 

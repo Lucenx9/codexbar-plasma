@@ -147,6 +147,16 @@ TestCase {
         verify(command.indexOf("extra") < 0)
     }
 
+    // The dispatcher appends this command after a nonce assignment, so it must
+    // start detached and never run notify-send unguarded.
+    function test_commandStartsDetachedAndGuardsNotifySend() {
+        var plain = NotificationCommand.command("title", "body", "normal")
+        var withAction = NotificationCommand.command("title", "body", "normal", "Open")
+
+        verify(plain.indexOf(":; if command -v notify-send") === 0)
+        verify(withAction.indexOf(":; if command -v notify-send") === 0)
+    }
+
     function test_actionLabelCannotInjectShellSyntax() {
         var marker = "/synthetic-marker"
         var command = NotificationCommand.command("title", "body", "normal", "' ; touch " + marker + "; #")

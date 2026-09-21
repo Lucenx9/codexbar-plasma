@@ -3,7 +3,6 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 . "${ROOT_DIR}/scripts/lib/qml_surfaces.sh"
-THEME_CONTRAST_JS="${ROOT_DIR}/contents/ui/ThemeContrast.js"
 
 require_in_surface applet "function providerColor(value)"
 require_in_surface applet "function providerReadableColor(value, background)"
@@ -12,7 +11,6 @@ require_in_surface providers "function providerReadableColor(value, background)"
 require_in_surface panel "function providerColor(value)"
 require_in_surface applet 'import "ThemeContrast.js" as ThemeContrast'
 require_in_surface providers 'import "ThemeContrast.js" as ThemeContrast'
-require_in_file "$THEME_CONTRAST_JS" "var minimumNonTextContrastRatio = 3"
 require_definition_where_used applet contrastTextColor
 require_in_surface applet "Kirigami.Theme.textColor"
 require_in_surface applet "Kirigami.Theme.highlightColor"

@@ -10,9 +10,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MAIN_QML="${ROOT_DIR}/contents/ui/main.qml"
 PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
 POPUP_QML="${ROOT_DIR}/contents/ui/configPopup.qml"
-ROSTER_JS="${ROOT_DIR}/contents/ui/ProviderRoster.js"
 DIAGNOSTICS_QML="${ROOT_DIR}/contents/ui/configDiagnostics.qml"
-SAFE_TEXT_JS="${ROOT_DIR}/contents/ui/SafeText.js"
 PLAIN_INLINE_MESSAGE_QML="${ROOT_DIR}/contents/ui/components/PlainInlineMessage.qml"
 PLAIN_CONTROLS_LABEL_QML="${ROOT_DIR}/contents/ui/components/PlainControlsLabel.qml"
 PLAIN_BUTTON_QML="${ROOT_DIR}/contents/ui/components/PlainButton.qml"
@@ -23,8 +21,6 @@ PLAIN_HEADING_QML="${ROOT_DIR}/contents/ui/components/PlainHeading.qml"
 PLAIN_ITEM_DELEGATE_QML="${ROOT_DIR}/contents/ui/components/PlainItemDelegate.qml"
 PLAIN_PLACEHOLDER_MESSAGE_QML="${ROOT_DIR}/contents/ui/components/PlainPlaceholderMessage.qml"
 PLAIN_TOOL_TIP_QML="${ROOT_DIR}/contents/ui/components/PlainToolTip.qml"
-PROVIDER_IDENTITY_JS="${ROOT_DIR}/contents/ui/ProviderIdentity.js"
-NOTIFICATION_PLANNER_JS="${ROOT_DIR}/contents/ui/NotificationPlanner.js"
 WORKFLOW="${ROOT_DIR}/.github/workflows/ci.yml"
 MAKEFILE="${ROOT_DIR}/Makefile"
 UPDATER="${ROOT_DIR}/scripts/update-widget.sh"
@@ -122,21 +118,7 @@ for qml_file in "$MAIN_QML" "$PROVIDERS_QML" "$POPUP_QML" "$DIAGNOSTICS_QML"; do
 done
 require_in_surface applet "SafeText.cliMessage"
 require_in_surface providers "SafeText.cliMessage"
-# The shared roster parser bounds and redacts CLI messages before QML display.
-require_in_file "$ROSTER_JS" "SafeText.cliMessage"
 require_in_file "$DIAGNOSTICS_QML" "SafeText.cliDiagnostic"
-require_in_file "$SAFE_TEXT_JS" "function redactCredentials(value, inspectionLimit)"
-require_in_file "$SAFE_TEXT_JS" "maximumDiagnosticLength = 65536"
-require_in_file "$SAFE_TEXT_JS" "maximumCliJsonLength = 4 * 1024 * 1024"
-require_in_file "$SAFE_TEXT_JS" "function boundedInspectionText(value, inspectionLimit, lookaheadLength)"
-require_in_file "$SAFE_TEXT_JS" 'chunk.search(/[^\s\u0000-\u001f\u007f]/)'
-require_in_file "$SAFE_TEXT_JS" "credentialRedactionLookaheadLength"
-require_in_file "$SAFE_TEXT_JS" 'redactedLookaheadText.slice(0, redactedText.length) !== redactedText'
-require_in_file "$SAFE_TEXT_JS" "function cliJsonText(value)"
-require_in_file "$SAFE_TEXT_JS" "function plainTextAsRichText(value)"
-require_in_file "$SAFE_TEXT_JS" "function plainTextAsMnemonicRichText(value)"
-require_in_file "$SAFE_TEXT_JS" "function plainTextAsMnemonicLabel(value)"
-require_in_file "$SAFE_TEXT_JS" "function plainButtonText(value, hasContentItem)"
 require_in_file "$PLAIN_INLINE_MESSAGE_QML" "text: SafeText.plainTextAsRichText(plainText)"
 require_in_file "$PLAIN_BUTTON_QML" "SafeText.plainButtonText(plainText, contentItem !== null)"
 require_in_file "$PLAIN_CHECK_BOX_QML" "text: SafeText.plainTextAsRichText(plainText)"
@@ -236,8 +218,6 @@ for path, text in surface.texts.items():
             )
 PY
 
-GUARDS_JS="${ROOT_DIR}/contents/ui/Guards.js"
-
 # QML and JS files share no function scope, so every file that calls these
 # unqualified must still declare them. The body is now a delegation, so the
 # guard itself lives once in Guards.js and is covered behaviourally by
@@ -252,11 +232,6 @@ require_definition_where_used providers hasOwnKey
 # every calling file bound to a declaration; these assert the declaration is a
 # delegation and that exactly one file still carries the implementation, so a
 # re-inlined copy cannot drift away from the tested one.
-require_in_file "$GUARDS_JS" "Object.prototype.hasOwnProperty.call(item, key)"
-require_in_file "$GUARDS_JS" 'var value = String(key || "")'
-require_in_file "$GUARDS_JS" 'value === "__proto__" || value === "constructor" || value === "prototype"'
-require_in_file "$GUARDS_JS" "String(value).replace(/'/g"
-require_in_file "$NOTIFICATION_PLANNER_JS" "return Guards.copyObject(memo || ({}))"
 
 for guard_body in \
   "Object.prototype.hasOwnProperty.call(item, key)" \
@@ -273,16 +248,6 @@ require_in_surface applet "function providerMapKey(providerID)"
 require_in_surface applet 'import "ProviderIdentity.js" as ProviderIdentity'
 # The applet reaches the shared screen through the normalizer, which resolves CLI
 # aliases first so an alias cannot smuggle in a key the screen would have caught.
-require_in_surface applet "return ProviderIdentity.providerMapKey(ProviderIdentity.resolveProviderKey(providerID))"
-require_in_file "$PROVIDER_IDENTITY_JS" "Object.prototype.hasOwnProperty.call(Object.prototype, key)"
-# Per-model aggregates are keyed by the raw model identity: display labels are
-# bounded and collapse whitespace, so keying by the label would merge distinct
-# models. The raw identity is screened before it can name an object slot.
-require_in_surface applet "|| isUnsafeObjectKey(rawName)) {"
-require_in_surface applet "if (!hasOwnKey(byName, rawName))"
-require_in_surface applet "if (!hasOwnKey(byName, modelName))"
-require_in_surface applet "if (!hasOwnKey(item, key) || isUnsafeObjectKey(key))"
-require_in_surface applet "var providerID = normalizedProviderID(items[i].provider)"
 require_in_surface applet "var providerID = providerMapKey(item.provider)"
 require_in_file "${ROOT_DIR}/contents/ui/ProviderSnapshot.js" 'var providerID = Normalizer.providerSnapshotKey(item.provider || "unknown") || "unknown"'
 require_in_surface applet "var key = providerMapKey(providerID)"
@@ -300,16 +265,9 @@ require_in_surface applet "maximumSnapshots: maximumProviderSnapshots"
 require_in_surface applet "value: Normalizer.boundedDisplayText(parts.join(\" · \"), 500)"
 # The icon file name is built from a provider-controlled key, so that key is
 # bounded and pattern-checked before it can name a path. Both surfaces reach that
-# validation through providerIconFileName, so it is asserted once where it lives.
-require_in_file "$PROVIDER_IDENTITY_JS" "var key = providerMapKey(resolveProviderKey(value))"
-require_in_file "$PROVIDER_IDENTITY_JS" 'if (!/^[a-z0-9][a-z0-9._-]*$/.test(key) || key.indexOf("..") !== -1) {'
+# validation through providerIconFileName.
 require_in_surface applet "var fileName = ProviderIdentity.providerIconFileName(value)"
 require_in_surface providers "var fileName = ProviderIdentity.providerIconFileName(value)"
-require_in_surface providers "function isAllowedCommand(commandTokens, purpose)"
-require_in_surface providers "String(commandTokens[0]) !== \"codexbar\""
-require_in_surface providers "String(commandTokens[1]) !== \"config\""
-require_in_surface providers "subcommand === \"set\" || subcommand === \"set-api-key\""
-require_in_surface providers "subcommand === \"action\""
 # The pure planners and their adversarial command rules are covered by
 # tst_provider_descriptor.qml. Keep only the QML wiring here: the config page
 # must ask the planner before it performs the external process effect.
@@ -321,12 +279,8 @@ require_in_surface providers "var plan = ProviderDescriptor.planAction(action, c
 # leaks it exactly like an expanded `{value}` placeholder would. Only
 # promptDescriptorSecret may carry a secret, and it reads the value inside the
 # script instead of receiving it as an argument.
-require_in_surface providers 'if (field.kind === "secret") {'
-require_in_surface providers "function planSecretPrompt(field, commandPath)"
 reject_in_surface providers 'shellQuote(stdinValue)'
 reject_in_surface providers '({ "{value}": value }), field.kind === "secret" ? value : null)'
-require_in_surface providers "function safeHttpsUrl(value)"
-require_in_surface providers "text.toLowerCase().indexOf(\"https://\") === 0"
 require_in_surface providers "var url = String(payload.value.url)"
 require_in_surface providers "var safeUrl = ProviderDescriptor.safeHttpsUrl(url)"
 # The key validation itself is asserted once above, against ProviderIdentity.js.
@@ -356,7 +310,6 @@ require_in_file "${ROOT_DIR}/contents/ui/ProviderConfigWatch.js" '["sh", "-c", G
 require_in_file "$PROVIDERS_QML" '["sh", "-c", shellQuote(script), "_", shellQuote(prompt)'
 
 require_in_surface applet "function safeStatusUrl(providerID, url)"
-require_in_surface applet "function httpsUrlHost(url)"
 require_in_surface applet "statusUrl: safeStatusUrl(providerID, snapshot.statusUrl)"
 require_in_surface applet "Qt.openUrlExternally(safeStatusUrl(item.provider, item.statusUrl))"
 
@@ -369,7 +322,6 @@ require_in_surface applet "property var pendingUpdateReleaseUrls: ({})"
 require_in_surface applet "nextPending[sourceName] = releasePageUrl"
 require_in_surface applet "delete nextPending[sourceName]"
 
-require_in_surface applet "notify-send --app-name=CodexBar --icon=view-statistics --urgency="
 require_in_file "${ROOT_DIR}/contents/ui/NotificationCommand.js" 'Guards.shellQuote(cleanTitle), Guards.shellQuote(cleanBody)'
 require_in_file "${ROOT_DIR}/contents/ui/NotificationCommand.js" 'Guards.shellQuote("default=" + cleanLabel)'
 

@@ -287,6 +287,64 @@ TestCase {
         compare(estimated.valueMode, "estimated");
         compare(estimated.sessionCost, 2);
     }
+    // Snapshot projects are normalized display rows, never raw CLI records.
+    function test_snapshotExposesNormalizedProjects() {
+        var cost = parse({
+            provider: "codex",
+            projects: [
+                {
+                    name: "example",
+                    path: "/private/path",
+                    totalCost: 4
+                }
+            ]
+        }).costs.codex;
+        compare(cost.projects.rows.length, 1);
+        compare(cost.projects.rows[0].label, "example");
+        compare(cost.projects.rows[0].cost, 4);
+        compare(cost.projects.truncated, false);
+        verify(JSON.stringify(cost.projects).indexOf("/private/path") < 0);
+    }
+    // Snapshot model truncation follows the normalized model summary.
+    function test_snapshotPropagatesModelTruncation() {
+        var breakdowns = [];
+        for (var i = 0; i < 7; i++) {
+            breakdowns.push({
+                modelName: "model-" + i,
+                cost: i + 1,
+                totalTokens: 10
+            });
+        }
+        var few = parse({
+            provider: "codex",
+            daily: [
+                {
+                    date: "2026-09-12",
+                    totalCost: 4,
+                    totalTokens: 123,
+                    modelBreakdowns: [
+                        {
+                            modelName: "Example",
+                            cost: 4,
+                            totalTokens: 123
+                        }
+                    ]
+                }
+            ]
+        }).costs.codex;
+        compare(few.modelsTruncated, false);
+        var many = parse({
+            provider: "codex",
+            daily: [
+                {
+                    date: "2026-09-12",
+                    modelBreakdowns: breakdowns
+                }
+            ]
+        }).costs.codex;
+        compare(many.models.length, 6);
+        compare(many.modelsTruncated, true);
+    }
     function test_partialMergeRetainsOnlyExplicitFailures() {
         var old = parse([
             {
