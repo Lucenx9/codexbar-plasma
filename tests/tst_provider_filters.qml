@@ -144,11 +144,14 @@ TestCase {
         return matches.length > 0 ? matches[0] : null;
     }
 
-    function rowLayoutVisible(item) {
+    // A hidden control inside a visible row is still hidden from the user, so
+    // both have to be checked: a row-only test would pass on a control the
+    // page never shows.
+    function controlVisibleInRow(item) {
         var node = item.parent;
         while (node !== null && node.toString().indexOf("RowLayout") === -1)
             node = node.parent;
-        return node !== null && node.visible;
+        return node !== null && node.visible && item.visible;
     }
 
     // Each descriptor kind shows its own row: flipping a kind hides that
@@ -187,17 +190,17 @@ TestCase {
         compare(optionsLabels.length, 1);
         var setButtons = all.filter(function(item) {
             return item instanceof Controls.Button && item.text === "Set..."
-                && rowLayoutVisible(item);
+                && controlVisibleInRow(item);
         });
         compare(setButtons.length, 1);
         var combos = all.filter(function(item) {
             return item instanceof Controls.ComboBox && item.model !== undefined
-                && item.model.length === 1 && rowLayoutVisible(item);
+                && item.model.length === 1 && controlVisibleInRow(item);
         });
         compare(combos.length, 1);
         var boxes = all.filter(function(item) {
             return item instanceof Controls.CheckBox && item.Accessible.name === "Enable everything"
-                && rowLayoutVisible(item);
+                && controlVisibleInRow(item);
         });
         compare(boxes.length, 1);
     }

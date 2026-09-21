@@ -726,11 +726,11 @@ class ProviderCommandWiringTests(unittest.TestCase):
                            re.MULTILINE).group(0)
         command_timeout = re.search(r"^    readonly property int configCommandTimeoutMs: \d+$",
                                     source, re.MULTILINE).group(0).replace("readonly ", "")
-        secrets = re.findall(
+        secret_prompt_timeouts = re.findall(
             r"^    readonly property int configSecret\w+:.*(?:\n[ \t]{8,}\S.*)*", source, re.MULTILINE)
         qml = QML_WIRING.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
         qml = qml.replace("SOURCE_FUNCTIONS", "\n".join(functions))
-        qml = qml.replace("SOURCE_PROPERTIES", "\n".join([serial, command_timeout] + secrets))
+        qml = qml.replace("SOURCE_PROPERTIES", "\n".join([serial, command_timeout] + secret_prompt_timeouts))
         fixture = cls.directory / "tst_provider_wiring.qml"
         fixture.write_text(qml)
         result = subprocess.run(
