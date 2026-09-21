@@ -23,7 +23,6 @@ require_in_surface applet 'import "../SessionRefreshPolicy.js" as SessionRefresh
 require_in_surface applet "readonly property int accountCommandTimeoutMs: 60000"
 require_in_surface applet "readonly property int sessionsCommandTimeoutMs: 60000"
 require_in_surface applet "readonly property int notificationCommandTimeoutMs: 10000"
-require_in_surface applet "function refreshSessions()"
 require_in_surface applet "readonly property int pollIntervalMs: 60000"
 require_in_surface applet "interval: controller.pollIntervalMs"
 # Kept: the hourly cost auto-refresh interval is unobservable in executed

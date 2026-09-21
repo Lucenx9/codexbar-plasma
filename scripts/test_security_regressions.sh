@@ -227,23 +227,11 @@ for guard_body in \
     exit 1
   fi
 done
-require_in_surface applet "function providerMapKey(providerID)"
 require_in_surface applet 'import "ProviderIdentity.js" as ProviderIdentity'
-# The applet reaches the shared screen through the normalizer, which resolves CLI
-# aliases first so an alias cannot smuggle in a key the screen would have caught.
-require_in_surface applet "var providerID = providerMapKey(item.provider)"
 require_in_file "${ROOT_DIR}/contents/ui/ProviderSnapshot.js" 'var providerID = Normalizer.providerSnapshotKey(item.provider || "unknown") || "unknown"'
-require_in_surface applet "var key = providerMapKey(providerID)"
 # Guards.js is not part of the providers surface, so assert the delegation here;
 # the filtering rule itself is covered by tests/tst_guards.qml.
 require_definition_where_used providers hasOwnKey "Guards.hasOwnKey(item, key)"
-# ProviderFallbackQueue enforces the global snapshot budget behaviourally in
-# tst_provider_fallback_queue.qml; the applet must still pass its canonical cap.
-require_in_surface applet "value: Normalizer.boundedDisplayText(parts.join(\" · \"), 500)"
-# The icon file name is built from a provider-controlled key, so that key is
-# bounded and pattern-checked before it can name a path. Both surfaces reach that
-# validation through providerIconFileName.
-require_in_surface applet "var fileName = ProviderIdentity.providerIconFileName(value)"
 # The pure planners and their adversarial command rules are covered by
 # tst_provider_descriptor.qml. The config page's planner wiring is executed by
 # tests/test_secret_prompt_lifecycle.py, which rejects unplannable writes,
@@ -277,18 +265,11 @@ reject_text "main.qml" "$(cat "$MAIN_QML")" '"sh", "-lc"'
 reject_text "configProviders.qml" "$(cat "$PROVIDERS_QML")" '"sh", "-lc"'
 require_in_file "${ROOT_DIR}/contents/ui/ProviderConfigWatch.js" '["sh", "-c", Guards.shellQuote(script)]'
 
-require_in_surface applet "function safeStatusUrl(providerID, url)"
-require_in_surface applet "statusUrl: safeStatusUrl(providerID, snapshot.statusUrl)"
-require_in_surface applet "Qt.openUrlExternally(safeStatusUrl(item.provider, item.statusUrl))"
-
-# The update notification's release URL is opened only after the host-pinning
-# guard accepts it; a payload URL cannot redirect the click elsewhere.
-require_in_surface applet "function safeReleaseUrl(url)"
-require_in_surface applet "Qt.openUrlExternally(releasePageUrl)"
-require_in_surface applet 'Normalizer.httpsUrlHost(candidate) === "github.com"'
+# Kept: the pending-update URL map declaration is unobservable in executed
+# tests (deleting it keeps the whole updater suite green: every fixture
+# declares its own map, and the applet is never instantiated), so no mutation
+# can prove this pin redundant. It stays as the only pin that the queue exists.
 require_in_surface applet "property var pendingUpdateReleaseUrls: ({})"
-require_in_surface applet "nextPending[sourceName] = releasePageUrl"
-require_in_surface applet "delete nextPending[sourceName]"
 
 require_in_file "${ROOT_DIR}/contents/ui/NotificationCommand.js" 'Guards.shellQuote(cleanTitle), Guards.shellQuote(cleanBody)'
 require_in_file "${ROOT_DIR}/contents/ui/NotificationCommand.js" 'Guards.shellQuote("default=" + cleanLabel)'

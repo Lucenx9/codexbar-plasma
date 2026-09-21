@@ -213,5 +213,63 @@ TestCase {
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
+class ProviderColorTests(unittest.TestCase):
+    # Provider swatches come from the shared brand table and stay readable on
+    # the theme background; unknown providers fall back to the theme
+    # highlight instead of inventing a color.
+    COLOR_FUNCTIONS = (
+        "providerColor", "readableAccentColor", "providerReadableColor",
+    )
+
+    COLOR_QML = '''import QtQuick
+import QtTest
+import org.kde.kirigami as Kirigami
+import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
+import "SOURCE_URL/ThemeContrast.js" as ThemeContrast
+TestCase {
+    name: "ProviderColors"
+
+    SOURCE_FUNCTIONS
+
+    function test_brandColorsSurviveAndUnknownFallsBackToHighlight() {
+        // Compared against the live Theme singleton, so the test pins the
+        // production mapping without hardcoding any theme palette.
+        compare(providerColor("unknown-xyz"), Kirigami.Theme.highlightColor);
+        verify(providerColor("codex") !== Kirigami.Theme.highlightColor);
+        verify(providerColor("claude") !== Kirigami.Theme.highlightColor);
+    }
+    function test_readableColorKeepsContrastOnThemeBackground() {
+        var background = Kirigami.Theme.backgroundColor;
+        var readable = providerReadableColor("codex", background);
+        verify(ThemeContrast.contrastRatio(readable, background)
+            >= ThemeContrast.minimumNonTextContrastRatio);
+        compare(providerReadableColor("codex"), providerReadableColor("codex", background));
+        compare(providerReadableColor("unknown-xyz", background),
+            readableAccentColor(Kirigami.Theme.highlightColor, background));
+    }
+}
+'''
+
+    def test_production_provider_colors_follow_brand_and_theme(self):
+        applet = Surface("applet", ROOT)
+        main = ROOT / "contents/ui/main.qml"
+        source = applet.texts[main]
+        applet.texts = {main: source}
+        functions = []
+        for name in self.COLOR_FUNCTIONS:
+            signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
+            functions.append(signature + " {" + applet.function_body(name) + "}")
+        qml = self.COLOR_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
+        qml = qml.replace("SOURCE_FUNCTIONS", "\n".join(functions))
+        with tempfile.TemporaryDirectory(prefix="codexbar-provider-colors-") as temporary:
+            fixture = Path(temporary) / "tst_provider_colors.qml"
+            fixture.write_text(qml)
+            result = subprocess.run(
+                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

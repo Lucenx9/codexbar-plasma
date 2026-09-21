@@ -249,6 +249,21 @@ TestCase {
         ];
         compare(primaryIncidentProvider(), null);
     }
+    // Pending slots and account lookups resolve CLI aliases before mapping,
+    // so an alias and its canonical id share one slot instead of leaking a
+    // parallel key an allowlist would not recognize.
+    function test_providerMapKeyNormalizesAliases() {
+        compare(providerMapKey("11labs"), "elevenlabs");
+        compare(providerMapKey("codex"), "codex");
+        selectedAccounts = ({elevenlabs: "account-a"});
+        compare(selectedAccountForProvider("11labs"), "account-a");
+        selectedAccounts = ({});
+        notificationRefreshPending = ({elevenlabs: true});
+        markNotificationProvidersFresh([{provider: "11labs", usageStale: false, statusKnown: true}]);
+        compare(notificationRefreshPending, ({}));
+        compare(notificationScopeKey({provider: "11labs", account: "account-a"}),
+            notificationScopeKey({provider: "elevenlabs", account: "account-a"}));
+    }
 }
 '''
 
@@ -432,6 +447,7 @@ class UpdateNotificationWiringTests(unittest.TestCase):
     UPDATE_FUNCTIONS = (
         "hasOwnKey", "copyObject", "safeReleaseUrl", "sendPlasmaNotification",
         "notifyAvailableUpdate", "handleUpdateNotificationActivated",
+        "notifyInstalledUpdate",
     )
 
     UPDATE_QML = '''import QtQuick
@@ -546,6 +562,28 @@ TestCase {
         announce("v0.2.41");
         compare(sentNotifications.length, 0);
         compare(pendingUpdateReleaseUrls, ({}));
+    }
+
+    // The notified version persists, so the same update is not re-announced
+    // on every plasmashell restart.
+    function test_availableUpdatePersistsMemoVersion() {
+        announce("v0.2.40");
+        compare(lastNotifiedUpdateVersion, "v0.2.40");
+        compare(notificationPlasmoidConfiguration.lastNotifiedUpdateVersion, "v0.2.40");
+        announce("v0.2.40");
+        compare(sentNotifications.length, 1);
+    }
+
+    // An installed update notifies once with its version, and stays silent
+    // while notifications are disabled.
+    function test_installedUpdateNotifiesOnceWithVersion() {
+        notifyInstalledUpdate("v0.2.42");
+        compare(sentNotifications.length, 1);
+        compare(sentNotifications[0].title, "CodexBar widget update installed");
+        verify(sentNotifications[0].body.indexOf("v0.2.42") >= 0);
+        enableNotifications = false;
+        notifyInstalledUpdate("v0.2.43");
+        compare(sentNotifications.length, 1);
     }
 }
 '''

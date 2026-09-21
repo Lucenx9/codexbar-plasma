@@ -4,15 +4,14 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 . "${ROOT_DIR}/scripts/lib/qml_surfaces.sh"
 
-require_in_surface applet "function providerColor(value)"
-require_in_surface applet "function providerReadableColor(value, background)"
 require_in_surface panel "function providerColor(value)"
+# Kept: the ThemeContrast import is unobservable in executed tests (removing
+# it keeps every naming module green: each fixture imports the module itself,
+# and the applet is never instantiated), so no mutation can prove this pin
+# redundant. It stays as the only pin that the applet resolves its readable
+# accents through the shared contrast helper.
 require_in_surface applet 'import "ThemeContrast.js" as ThemeContrast'
 require_definition_where_used applet contrastTextColor
-require_in_surface applet "Kirigami.Theme.textColor"
-require_in_surface applet "Kirigami.Theme.highlightColor"
-require_in_surface applet "Kirigami.Theme.negativeTextColor"
-require_in_surface applet "Kirigami.Theme.neutralTextColor"
 
 python3 - "$ROOT_DIR" <<'PY'
 import pathlib

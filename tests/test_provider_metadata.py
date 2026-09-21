@@ -20,6 +20,7 @@ FUNCTIONS = (
     "planText", "capitalize",
     "dashboardDisplayRow", "dashboardPartText", "dashboardLabelText",
     "amountString", "usageCountText", "tokenCountString",
+    "safeStatusUrl", "providerStatusUrl", "providerIconSource",
 )
 
 QML = '''import QtQuick
@@ -82,7 +83,6 @@ TestCase {
             function resetCreditsSection() { return null; }
             function providerTokenCost() { return null; }
             function providerDashboardUrl() { return ""; }
-            function safeStatusUrl() { return ""; }
             function providerChangelogUrl() { return ""; }
         }
     }
@@ -258,6 +258,46 @@ TestCase {
         compare(presented.usageDashboard.kpis[0], {label: "Spend", value: "$3"});
         compare(presented.usageDashboard.kpis[1], {label: "Today", value: "Named (42%)"});
         compare(presented.usageDashboard.rows.length, 0);
+    }
+
+    // Dashboard values render CLI-controlled prose, so the joined row text
+    // stays bounded instead of carrying an unbounded payload into the popup.
+    function test_dashboardRowBoundsUntrustedText() {
+        var applet = createTemporaryObject(harness, this, {});
+        verify(applet !== null);
+        var row = applet.dashboardDisplayRow({labelKey: "", label: "Spend", name: "",
+            parts: [{kind: "text", value: "x".repeat(600)}]});
+        compare(row.value.length, 500);
+        verify(row.value !== "x".repeat(600));
+    }
+
+    // A provider-supplied status URL is honored only on the host of the URL
+    // already shipped for that provider; anything else falls back to the
+    // identity table, and unknown providers offer no status URL at all.
+    function test_hostileStatusUrlFallsBackToIdentityTable() {
+        var applet = createTemporaryObject(harness, this, {});
+        verify(applet !== null);
+        var fallback = applet.providerStatusUrl("codex");
+        verify(fallback.indexOf("https://") === 0);
+        compare(applet.safeStatusUrl("codex", "https://evil.example/status"), fallback);
+        compare(applet.safeStatusUrl("codex", fallback + "incidents/7"), fallback + "incidents/7");
+        compare(applet.safeStatusUrl("unknown-xyz", "https://evil.example/"), "");
+        var normalized = ProviderSnapshot.normalize({provider: "codex",
+            usage: {primary: {usedPercent: 5}}}, 1234);
+        normalized.statusUrl = "https://evil.example/status";
+        compare(applet.presentProviderSnapshot(normalized).statusUrl, fallback);
+    }
+
+    // The icon file name is built from a provider-controlled key: unusable
+    // keys fall back to the generic icon instead of reaching a URL.
+    function test_providerIconSourceFallsBackForUnusableKeys() {
+        var applet = createTemporaryObject(harness, this, {});
+        verify(applet !== null);
+        compare(String(applet.providerIconSource("../../etc/passwd")), "view-statistics");
+        compare(String(applet.providerIconSource("<b>evil</b>")), "view-statistics");
+        var benign = String(applet.providerIconSource("codex"));
+        verify(benign !== "view-statistics");
+        verify(benign.slice(-10) === "/codex.svg");
     }
 }
 '''
