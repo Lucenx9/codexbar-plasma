@@ -369,47 +369,31 @@ require_in_surface applet "property bool showQuotaWarningMarkers"
 # markers drawn on the usage bars, so they must come from one bounded source.
 require_in_file "$CONFIG_XML" 'name="quotaWarningPercent"'
 require_in_file "$CONFIG_XML" 'name="quotaCriticalPercent"'
+# Kept: the import, the readonly Plasmoid-backed bounds and their reset
+# handlers below have no executed pin — every fixture declares its own
+# threshold values, so renaming the import or zeroing either bound keeps
+# all naming modules green.
 require_in_surface applet 'import "QuotaThresholds.js" as QuotaThresholds'
 require_in_surface applet "readonly property int quotaWarningPercent: QuotaThresholds.warningPercent("
 require_in_surface applet "readonly property int quotaCriticalPercent: QuotaThresholds.criticalPercent("
 require_in_surface applet "onQuotaWarningPercentChanged: resetNotificationMemo()"
 require_in_surface applet "onQuotaCriticalPercentChanged: resetNotificationMemo()"
-require_in_surface applet "function statusBadgeColor(severity)"
-require_in_surface applet "function primaryIncidentProvider()"
 require_in_file "$COMPACT_COMPONENT_QML" "id: compactStatusBadge"
 require_in_file "$PROVIDER_HEADER_COMPONENT_QML" "id: providerStatusBadge"
-require_in_surface applet "function quotaWarningMarkers(row)"
 require_in_file "$USAGE_ROW_COMPONENT_QML" "quotaWarningMarkerRepeater"
-require_in_surface applet "showQuotaWarningMarkers"
+# Kept: the Plasmoid-backed state defaults and declarative change handlers
+# kept below have no executed pin — fixtures declare their own values, so
+# flipping any default or no-opping any handler keeps all naming modules
+# green. The logic behind them is pinned by the selection/pipeline tests.
 require_in_surface applet "property bool enableNotifications"
-require_in_surface applet "function notifyAvailableUpdate(version, url, releaseUrl)"
 require_in_surface applet "property bool autoSelectProvider"
 require_in_surface applet "property string selectedProviderID"
 require_in_surface applet "readonly property int selectedProviderIndex: providerIndexForID(selectedProviderID)"
 reject_in_surface applet "    property int selectedProviderIndex:"
-require_in_surface applet "function boundedConfigRevision(value)"
 require_in_surface applet "property string overviewProviderIDsRaw"
-require_in_surface applet "OverviewProviders.visibleItems(providers, overviewProviderIDsRaw)"
 require_in_surface applet "onOverviewProviderIDsRawChanged: updateSelectedProvider()"
 require_in_surface applet "Math.max(0, Number(Plasmoid.configuration.refreshInterval))"
-require_in_surface applet "function updateSelectedProvider()"
-require_in_surface applet "function autoSelectedProviderIndex(items)"
-require_in_surface applet "ProviderAutoSelect.bestIndex("
-require_in_surface applet "function selectedCompactProvider()"
-require_in_surface applet "function panelProviderItems()"
 require_in_surface applet "property var notificationMemo"
-require_in_surface applet "function processNotifications()"
-require_in_surface applet "function notificationObservations()"
-require_in_surface applet "function dispatchNotificationIntents(intents, observations)"
-require_in_surface applet "NotificationPlanner.transition("
-require_in_surface applet "function quotaNotificationLevel(row)"
-require_in_surface applet "function notificationUrgency(severity)"
-require_in_surface applet "function sendPlasmaNotification(title, body, urgency, actionLabel)"
-require_in_surface applet "notificationDispatcher.send(cleanTitle, cleanBody, urgency, actionLabel)"
-# Clicking the update-available notification opens the release page on GitHub.
-require_in_surface applet "i18n(\"Open release page\")"
-require_in_surface applet "function safeReleaseUrl(url)"
-require_in_surface applet "Qt.openUrlExternally(releasePageUrl)"
 # Kept: this surface pin also covers main.qml's Plasmoid-backed copy, which
 # belongs to the main.qml step. The cost controller's own copy is proven
 # covered by executed tests (deleting it turns
