@@ -2,7 +2,6 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-. "${ROOT_DIR}/scripts/lib/qml_surfaces.sh"
 CONTRACT_MD="${ROOT_DIR}/docs/cli-provider-settings-descriptor.md"
 TODO_MD="${ROOT_DIR}/TODO.md"
 
@@ -50,21 +49,6 @@ require_in_file "$CONTRACT_MD" "32 actions"
 require_in_file "$CONTRACT_MD" "64 options"
 require_in_file "$CONTRACT_MD" '[A-Za-z0-9][A-Za-z0-9._-]*'
 require_in_file "$CONTRACT_MD" "reject invalid IDs"
-
-require_in_surface providers "var maximumFields = 32"
-require_in_surface providers "var maximumActions = 32"
-require_in_surface providers "var maximumOptions = 64"
-require_in_surface providers "Math.min(rawFields.length, maximumFields)"
-require_in_surface providers "Math.min(rawActions.length, maximumActions)"
-require_in_surface providers "Math.min(rawOptions.length, maximumOptions)"
-require_in_surface providers "value.length > maximumTokenLength"
-require_in_surface providers "function identifier(value)"
-require_in_surface providers 'return /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(value) ? value : ""'
-reject_in_surface providers "SafeText.boundedDisplayText(raw.id, 128)"
-reject_in_surface providers "SafeText.boundedDisplayText(option.id, 128)"
-require_in_surface providers "SafeText.cliMessage(raw.title, 120)"
-require_in_surface providers "description: SafeText.cliMessage(raw.description, 500)"
-require_in_surface providers "SafeText.cliMessage(option.title, 120)"
 
 require_in_file "$TODO_MD" "docs/cli-provider-settings-descriptor.md"
 

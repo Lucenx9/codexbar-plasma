@@ -131,6 +131,34 @@ TestCase {
         compare(normalized.actions.length, 0)
     }
 
+    // Titles and descriptions are CLI-supplied display text: they must stay
+    // inside their render budget and must never carry a credential from a
+    // provider payload into the settings page.
+    function test_boundsAndRedactsDescriptorDisplayText() {
+        var overlongTitle = repeated("t", 400).join("")
+        var overlongDescription = repeated("d", 900).join("")
+        var normalized = ProviderDescriptor.normalize(descriptor([
+            field({
+                id: "region",
+                kind: "enum",
+                title: overlongTitle,
+                description: overlongDescription,
+                options: [{ id: "eu", title: repeated("o", 400).join("") }]
+            }),
+            field({ id: "token", title: "api-key: sk-live1234567890abcdef" })
+        ], [
+            action({ title: overlongTitle, description: overlongDescription })
+        ]))
+
+        compare(normalized.fields[0].title.length, 120)
+        compare(normalized.fields[0].description.length, 500)
+        compare(normalized.fields[0].options[0].title.length, 120)
+        compare(normalized.actions[0].title.length, 120)
+        compare(normalized.actions[0].description.length, 500)
+        verify(normalized.fields[1].title.indexOf("sk-live") === -1)
+        verify(normalized.fields[1].title.indexOf("[redacted]") !== -1)
+    }
+
     function test_numericZeroSelectsMatchingOption() {
         var normalized = ProviderDescriptor.normalize(descriptor([
             field({

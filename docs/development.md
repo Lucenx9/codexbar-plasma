@@ -389,6 +389,11 @@ effect ownership, and lifecycle ordering statically. Use runtime checks where
 static checks cannot establish the behavior. Avoid assertions on private helper
 names or body decomposition when public behavior is already covered.
 
+Before adding a static assertion, and before keeping an existing one, break the
+behavior it describes and confirm a QtTest or Python test goes red. A fragment
+whose behavior is already covered that way is removed, not duplicated: it fails
+on a rename that changes nothing and passes on an edit that changes behavior.
+
 `scripts/lib/qml_surfaces.py` defines QML/JS file groups for the Makefile,
 hardening checks, and translation extraction. Existing globs cover new files;
 add a glob only for a new directory. `scripts/test_qml_hardening.sh` rejects
