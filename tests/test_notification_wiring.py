@@ -405,6 +405,22 @@ TestCase {
         processNotifications();
         compare(sentNotifications.length, 1);
     }
+    function test_quotaNotificationBodyCarriesTheResetLine() {
+        var prime = quotaItem(85, "");
+        prime.rows[0].resetsAt = new Date(panelClockMs + 2 * 3600 * 1000).toISOString();
+        providers = [prime];
+        processNotifications();
+        compare(sentNotifications.length, 0);
+        var escalated = quotaItem(96, "");
+        escalated.rows[0].resetsAt = new Date(panelClockMs + 2 * 3600 * 1000).toISOString();
+        providers = [escalated];
+        processNotifications();
+        compare(sentNotifications.length, 1);
+        // The quota body keeps the localized reset countdown alongside the
+        // percentage; the label wrapper owns the "Resets" prefix.
+        verify(sentNotifications[0].body.indexOf("96") >= 0);
+        verify(sentNotifications[0].body.indexOf("Resets") >= 0);
+    }
     function test_statusIncidentDispatchesWithMappedUrgency() {
         providers = [quotaItem(40, "")];
         processNotifications();

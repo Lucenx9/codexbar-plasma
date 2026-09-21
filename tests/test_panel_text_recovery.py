@@ -181,6 +181,12 @@ TestCase {
             usedPercent: 43, leftPercent: 57, pacePercent: 60, paceOnTop: true,
             paceEtaSeconds: 0, resetsAt: "", resetDescription: "", reset: ""}]};
     }
+    function runOutItem() {
+        return {provider: "codex", rows: [{lane: "primary", hasPercent: true,
+            usedPercent: 43, leftPercent: 57, pacePercent: 60, paceOnTop: false,
+            paceEtaSeconds: 7200, paceObservedAtMs: root.panelClockMs,
+            resetsAt: "", resetDescription: "", reset: ""}]};
+    }
     // The menu-bar label follows the selected display mode, with unknown
     // modes falling back to the percent text.
     function test_menuBarTextFollowsDisplayMode() {
@@ -195,6 +201,9 @@ TestCase {
         compare(root.menuBarDisplayText(usageItem()), "");
         root.menuBarDisplayMode = "runOut";
         compare(root.menuBarDisplayText(usageItem()), "");
+        // A live pace forecast selects the run-out branch instead of the
+        // percent fallback, discounting the observed clock.
+        compare(root.menuBarDisplayText(runOutItem()), "2 hours");
         root.menuBarDisplayMode = "bogus";
         compare(root.menuBarDisplayText(usageItem()), "43% used");
         root.menuBarDisplayMode = "percent";

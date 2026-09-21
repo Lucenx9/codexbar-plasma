@@ -349,18 +349,10 @@ require_in_surface applet "--account"
 require_in_surface applet "property string menuBarDisplayMode"
 require_in_surface applet "property bool resetTimesShowAbsolute"
 require_in_surface applet 'import "PanelDisplay.js" as PanelDisplay'
-require_in_surface applet "PanelDisplay.rowForMode("
 # The run-out token reports a duration only when the CLI predicts exhaustion,
 # so it must stay tied to the pace forecast instead of the percent used.
-require_in_surface applet 'mode === "runOut"'
-require_in_surface applet "if (!paceWarningActive(row)) {"
-require_in_surface applet "PanelDisplay.remainingSeconds("
 require_in_surface applet "id: panelClockTimer"
 require_in_surface applet "root.panelClockMs = Date.now()"
-require_in_surface applet "function resetText(window, absolute)"
-require_in_surface applet "function usageResetText(row)"
-require_in_surface applet "ResetPresentation.labelParts(value)"
-require_in_surface applet "var resetLine = resetLabel(usageResetText(row))"
 require_in_surface applet "Plasmoid.configuration.menuBarDisplayMode"
 reject_in_surface applet "onResetTimesShowAbsoluteChanged: Qt.callLater(refreshNow)"
 require_in_file "$USAGE_ROW_COMPONENT_QML" "usageRow.applet.usageResetText(usageRow.rowData)"
