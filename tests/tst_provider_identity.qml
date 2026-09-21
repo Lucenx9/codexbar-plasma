@@ -70,6 +70,13 @@ TestCase {
             "https://openrouter.ai/activity")
     }
 
+    function test_openRouterDocsResolveToTheCanonicalDocsPath() {
+        // The docs table pins the canonical path, so the help link stays
+        // under the versioned docs tree.
+        compare(ProviderIdentity.providerDocsUrl("openrouter"),
+            ProviderIdentity.documentationBaseUrl + "openrouter.md")
+    }
+
     function test_brandColorsAreThreeChannelsInRange() {
         var channels = ProviderIdentity.providerBrandColorChannels("aiand")
         compare(channels.length, 3)
@@ -114,7 +121,19 @@ TestCase {
         // The one provider whose asset name differs from its key.
         compare(ProviderIdentity.providerIconFileName("gemini-cli"), "gemini-white.png")
         compare(ProviderIdentity.providerIconFileName("../../etc/passwd"), "")
+        // Dots pass the asset pattern, so only the explicit dotdot guard
+        // refuses a parent traversal that stays inside the pattern.
+        compare(ProviderIdentity.providerIconFileName("a..b"), "")
         compare(ProviderIdentity.providerIconFileName("__proto__"), "")
         compare(ProviderIdentity.providerIconFileName("bad\nprovider"), "")
+    }
+
+    function test_iconFileNamesRefuseInheritedAndOverlongKeys() {
+        // providerMapKey bounds the key before the pattern check, so inherited
+        // Object.prototype names that pass the pattern and overlong keys still
+        // refuse to name an asset.
+        compare(ProviderIdentity.providerIconFileName("constructor"), "")
+        compare(ProviderIdentity.providerIconFileName("CONSTRUCTOR"), "")
+        compare(ProviderIdentity.providerIconFileName("x".repeat(129)), "")
     }
 }

@@ -71,6 +71,12 @@ TestCase {
         compare(SafeText.cliMessage(" ".repeat(5000) + "quota exceeded", 500), "quota exceeded")
     }
 
+    // Non-display control bytes are padding, not message: the leading scan
+    // skips them instead of starting the window on a NUL.
+    function test_skipsLeadingControlBytesBeforeMessage() {
+        compare(SafeText.boundedInspectionText("\x00\x01\x7fquota exceeded", 500, 0), "quota exceeded")
+    }
+
     function test_redactsCommonCredentialShapes() {
         var message = SafeText.cliMessage(
             "Authorization: Bearer header.payload.signature api_key=sk-secretvalue Cookie: session=abc; theme=dark",
@@ -244,5 +250,11 @@ TestCase {
         compare(SafeText.cliJsonText(false), "false")
         compare(SafeText.cliJsonText(null), "")
         compare(SafeText.cliJsonText(undefined), "")
+    }
+
+    function test_cliJsonBoundMatchesFourMebibyteContract() {
+        // The CLI JSON cap is a 4 MiB denial-of-service bound, not a tunable:
+        // pin its absolute value so a shrink cannot silently reject payloads.
+        compare(SafeText.maximumCliJsonLength, 4 * 1024 * 1024)
     }
 }

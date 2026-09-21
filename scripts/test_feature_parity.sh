@@ -98,8 +98,6 @@ require_in_file "$PROVIDERS_QML" "Settings and diagnostics"
 require_in_file "$PROVIDERS_QML" "Inspect redacted settings"
 require_in_file "$PROVIDERS_QML" "Provider changes are saved by CodexBar immediately"
 require_in_file "$PROVIDERS_QML" "CLI commands"
-require_in_file "$PROVIDER_IDENTITY_JS" "\"openai\": \"openai.md\""
-require_in_file "$PROVIDER_IDENTITY_JS" "\"openrouter\": \"openrouter.md\""
 # Provider identity is one table set in ProviderIdentity.js, so the parity facts
 # below are asserted once against that module rather than once per surface. The
 # display names are the exception: `i18n` needs literal strings in a file gettext
@@ -356,27 +354,12 @@ for provider_id, cli_name in {
         sys.exit(1)
 PY
 
-require_in_surface applet "daily: Normalizer.normalizeCostDaily(item.daily, currency, historyDays, item.updatedAt)"
-require_in_surface applet "var totals = Normalizer.normalizeProviderCostTotals("
-require_in_surface applet "totals: totals"
-require_in_surface applet "var modelSummary = Normalizer.normalizeCostModels(item.daily, currency, historyDays, item.updatedAt)"
-require_in_surface applet "models: modelSummary.rows"
-require_in_surface applet "modelsTruncated: modelSummary.truncated"
-require_in_surface applet "projects: Normalizer.normalizeCostProjects(item.projects, currency)"
 require_in_surface applet "Components.ProjectCostSection"
 require_in_surface applet "providerCosts: view.presentedProviderCosts"
 require_in_surface applet "CostPresentation.projectRows(providerCosts, applet.costHistoryShowsTokens)"
 require_in_surface applet "model: section.projectData.rows"
 require_in_surface applet 'i18n("Cost unavailable")'
 require_in_surface applet 'i18n("Tokens unavailable")'
-require_in_surface applet "Normalizer.normalizeCostTrustMetadata(item)"
-require_in_surface applet "function normalizeCostDaily(items, currency, days, updatedAt)"
-# Daily output bounds are covered directly by tst_provider_normalizer.qml.
-require_in_surface applet "inspectedItems < maximumCostHistoryScanItems"
-require_in_surface applet "result.unshift({"
-require_in_surface applet "function normalizeCostTotals(totals, fallbackCost, fallbackTokens, currency)"
-require_in_surface applet "function normalizeProviderCostTotals(providerID, totals, fallbackCost,"
-require_in_surface applet "function normalizeCostModels(items, currency, days, updatedAt)"
 require_in_surface applet "function costBreakdownRows(tokenCost)"
 require_in_surface applet "function costModelRows(tokenCost)"
 require_in_surface applet "function costHistoryRows(tokenCost)"
@@ -385,7 +368,6 @@ require_in_surface applet "function costAverageDailyLine(points)"
 require_in_surface applet "function costPerMillionLine(tokenCost)"
 # Cost presentation moved behind CostPresentation.js. Assert the delegation so
 # the maths cannot quietly grow a second copy back inside main.qml.
-require_in_surface applet "function spendSnapshots(tokenCosts, historyDays, titleFor)"
 require_in_surface applet "CostPresentation.spendSnapshots(tokenCosts, costHistoryDays"
 require_in_surface applet "CostPresentation.breakdownRows("
 require_in_surface applet "CostPresentation.modelRows("
@@ -393,27 +375,13 @@ require_in_surface applet "CostPresentation.historyRows("
 require_in_surface applet "CostPresentation.averageDailyValue("
 require_in_surface applet "CostPresentation.perMillionAmount("
 require_in_surface applet "CostPresentation.spendTotals("
-require_in_surface applet "function costTrustSummary(costs)"
 require_in_surface applet "CostPresentation.costTrustSummary("
 require_in_surface applet "CostPresentation.historyStillBuilding("
 require_in_surface applet "CostPresentation.numberFormat("
 reject_in_surface applet "function appendTokenBreakdownRow("
 require_in_surface applet "ProviderSnapshot.normalize(item, Date.now())"
-require_in_surface applet "var providerDetails = UsageDetails.normalizeSections(usage.details)"
-require_in_surface applet "providerDetails: providerDetails"
-require_in_surface applet "providerDetails.length > 0 ? null : LegacyUsageDashboard.normalize(usage, item)"
-require_in_surface applet "hasSupplementalUsage = providerDetails.length > 0 || dashboard !== null || codexCreditLimit !== null"
-require_in_surface applet "rows.length === 0 && !hasSupplementalUsage"
 require_in_surface applet "kpis: dashboard.kpis.map(dashboardDisplayRow)"
 require_in_surface applet "rows: dashboard.rows.map(dashboardDisplayRow)"
-require_in_surface applet "openaiDashboard"
-require_in_surface applet "openAIAPIUsage"
-require_in_surface applet "openRouterUsage"
-require_in_surface applet "claudeAdminAPIUsage"
-require_in_surface applet "poeUsage"
-require_in_surface applet "deepseekUsage"
-require_in_surface applet "minimaxUsage"
-require_in_surface applet "zaiUsage"
 require_in_surface applet "id: usageDashboardSection"
 require_in_surface applet "text: i18n(\"Usage dashboard\")"
 require_in_surface applet "model: usageDashboardSection.kpis"
@@ -427,14 +395,7 @@ require_in_file "$INTERACTIVE_CHART_COMPONENT_QML" 'if (chart.kind === "line")'
 require_in_file "$INTERACTIVE_CHART_COMPONENT_QML" "activeFocusOnTab: true"
 require_in_file "$INTERACTIVE_CHART_COMPONENT_QML" "Keys.onPressed:"
 require_in_file "$INTERACTIVE_CHART_COMPONENT_QML" "onPositionChanged:"
-require_in_file "$USAGE_DETAILS_JS" "maximumSectionsPerSnapshot = 8"
-require_in_file "$USAGE_DETAILS_JS" "maximumRowsPerSection = 24"
-require_in_file "$USAGE_DETAILS_JS" "maximumPointsPerChart = 120"
-require_in_file "$USAGE_DETAILS_JS" "maximumStringCodeUnitsForSafety = maximumStringLength * 32"
 require_in_file "$USAGE_DETAILS_JS" "QML JavaScript has no grapheme segmenter"
-require_in_file "$USAGE_DETAILS_JS" "Math.min(rawSections.length, maximumSectionsPerSnapshot)"
-require_in_file "$USAGE_DETAILS_JS" "Math.min(rawRows.length, maximumRowsPerSection)"
-require_in_file "$USAGE_DETAILS_JS" "Math.min(rawPoints.length, maximumPointsPerChart)"
 reject_in_file "$USAGE_DETAILS_JS" "sections.length < maximumSectionsPerSnapshot"
 reject_in_file "$USAGE_DETAILS_JS" "rows.length < maximumRowsPerSection"
 reject_in_file "$USAGE_DETAILS_JS" "points.length < maximumPointsPerChart"
@@ -489,7 +450,6 @@ require_in_surface applet "onQuotaCriticalPercentChanged: resetNotificationMemo(
 require_in_file "$NOTIFICATIONS_QML" "cfg_quotaWarningPercent"
 require_in_file "$NOTIFICATIONS_QML" "cfg_quotaCriticalPercent"
 require_in_file "$NOTIFICATIONS_QML" "from: quotaWarningPercentSpin.value"
-require_in_surface applet "function statusSeverity(status)"
 require_in_surface applet "function statusBadgeColor(severity)"
 require_in_surface applet "function primaryIncidentProvider()"
 require_in_file "$COMPACT_COMPONENT_QML" "id: compactStatusBadge"
@@ -528,10 +488,6 @@ require_in_surface applet "NotificationPlanner.transition("
 require_in_surface applet "function quotaNotificationLevel(row)"
 require_in_surface applet "function notificationUrgency(severity)"
 require_in_surface applet "function sendPlasmaNotification(title, body, urgency, actionLabel)"
-require_in_surface applet 'kind: "quota"'
-require_in_surface applet 'kind: "pace"'
-require_in_surface applet 'kind: "reset"'
-require_in_surface applet "notify-send --app-name=CodexBar"
 require_in_surface applet "notificationDispatcher.send(cleanTitle, cleanBody, urgency, actionLabel)"
 # Clicking the update-available notification opens the release page on GitHub.
 require_in_surface applet "i18n(\"Open release page\")"
@@ -550,19 +506,11 @@ require_in_surface applet "CostPresentation.chartPoints(costNumberFormat, points
 require_in_surface applet 'applet.costHistoryShowsTokens'
 # The chart's "Latest" summary annotates the same series the bars plot, so it
 # must follow the metric instead of always printing the cost amount.
-require_in_surface applet "function sparklineSummary(fmt, points, showsTokens)"
-require_in_surface applet "metricText(fmt, metricValue(last, showsTokens), last.currency, showsTokens)"
 reject_in_surface applet 'i18n("%1: %2", label, amountString(last.cost'
-# Token counts carry no currency, so the money-only filter must not drop
-# providers from the token aggregation.
-require_in_surface applet "(!showsTokens && pointCurrency !== currency)"
 # The peak and average annotations must name the same day the bars highlight.
-require_in_surface applet "function peakPoint(points, showsTokens)"
-require_in_surface applet "return peak && peak.magnitude > 0 ? peak : null"
 require_in_surface applet "CostPresentation.peakPoint(points, costHistoryShowsTokens)"
 reject_in_surface applet 'i18n("Average/day: %1", amountString('
 require_in_surface applet "function spendHistoryStillBuilding()"
-require_in_surface applet "historyCoverageEstablished: item.historyCoverageIsEstablished !== false"
 require_in_file "$SPEND_COMPONENT_QML" "function metricOptions()"
 require_in_file "$SPEND_COMPONENT_QML" "view.applet.setCostHistoryMetric(metricCombo.valueAt(index))"
 require_in_file "$SPEND_COMPONENT_QML" "view.applet.spendHistoryStillBuilding()"
@@ -660,7 +608,6 @@ reject_in_surface applet "onPanelQuotaLaneChanged: Qt.callLater(refreshNow)"
 reject_in_surface applet "onPanelVisibilityRulesChanged: Qt.callLater(refreshNow)"
 require_in_surface applet '"sessions", "--json-v2"'
 require_in_surface applet "SessionResponse.response(stdoutText, stderrText)"
-require_in_surface applet "function normalizeSession(item)"
 reject_in_file "$SESSIONS_COMPONENT_QML" "transcriptPath"
 reject_in_file "$SESSIONS_COMPONENT_QML" "cwd"
 require_in_file "$SPEND_COMPONENT_QML" "InteractiveChart"

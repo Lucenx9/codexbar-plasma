@@ -70,6 +70,13 @@ TestCase {
         compare(Normalizer.normalizedProviderID("  codex  "), "codex")
     }
 
+    // Snapshots arrive keyed by CLI spelling, so the snapshot key resolves
+    // aliases before screening, exactly like the normalized ID does.
+    function test_snapshotKeyResolvesAliasesBeforeScreening() {
+        compare(Normalizer.providerSnapshotKey("groqcloud"), "groq")
+        compare(Normalizer.providerSnapshotKey("__proto__"), "")
+    }
+
     function test_rejectsProviderIDsThatAreNotUsableMapKeys() {
         compare(Normalizer.normalizedProviderID(""), "")
         compare(Normalizer.normalizedProviderID("   "), "")

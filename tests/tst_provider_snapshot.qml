@@ -153,6 +153,32 @@ TestCase {
         compare(legacy.account, "demo@example.com");
         compare(legacy.placeholder, "limitsUnavailable");
     }
+    // New-style detail sections flow through to the popup and suppress the
+    // legacy dashboard: both must never render at once.
+    function test_detailsSectionsSuppressTheLegacyDashboard() {
+        var detailed = ProviderSnapshot.normalize({
+            provider: "codex",
+            usage: {
+                details: [{title: "API usage", rows: [{label: "Requests", value: "1,240"}]}]
+            },
+            openaiDashboard: {creditsRemaining: 8}
+        }, 1000);
+        compare(detailed.providerDetails.length, 1);
+        compare(detailed.providerDetails[0].rows[0].value, "1,240");
+        compare(detailed.usageDashboard, null);
+    }
+    // Without detail sections the legacy dashboard still feeds the popup, and
+    // either supplemental source suppresses the empty placeholder.
+    function test_legacyDashboardFeedsThePopupWithoutDetails() {
+        var legacy = ProviderSnapshot.normalize({
+            provider: "codex",
+            usage: {},
+            openaiDashboard: {creditsRemaining: 8}
+        }, 1000);
+        compare(legacy.providerDetails.length, 0);
+        verify(legacy.usageDashboard !== null);
+        compare(legacy.placeholder, "");
+    }
     function test_invalidRecords_data() {
         return [
             {
