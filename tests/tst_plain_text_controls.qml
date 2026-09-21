@@ -58,6 +58,21 @@ TestCase {
         }
     }
 
+    Component {
+        id: controlsLabelComponent
+        Components.PlainControlsLabel {}
+    }
+
+    Component {
+        id: plasmaLabelComponent
+        Components.PlainPlasmaLabel {}
+    }
+
+    Component {
+        id: headingComponent
+        Components.PlainHeading {}
+    }
+
     function test_buttonUsesActiveStyleLabelPath() {
         var button = createTemporaryObject(buttonComponent, this, { plainText: activeMarkup })
         var expectedText = button.contentItem === null
@@ -123,6 +138,21 @@ TestCase {
         compare(holder.text, SafeText.plainTextAsRichText(activeMarkup))
         compare(holder.explanation, SafeText.plainTextAsRichText(activeMarkup))
         compare(holder.Accessible.name, activeMarkup)
+    }
+
+    // The label wrappers exist to keep untrusted text out of rich-text
+    // rendering: hostile input must stay literal plain text.
+    function test_plainLabelsStayPlainText() {
+        var controlsLabel = createTemporaryObject(controlsLabelComponent, this, { text: activeMarkup })
+        var plasmaLabel = createTemporaryObject(plasmaLabelComponent, this, { text: activeMarkup })
+        var heading = createTemporaryObject(headingComponent, this, { text: activeMarkup })
+
+        compare(controlsLabel.textFormat, Text.PlainText)
+        compare(plasmaLabel.textFormat, Text.PlainText)
+        compare(heading.textFormat, Text.PlainText)
+        compare(controlsLabel.text, activeMarkup)
+        compare(plasmaLabel.text, activeMarkup)
+        compare(heading.text, activeMarkup)
     }
 
     function test_toolTipEscapesMarkup() {

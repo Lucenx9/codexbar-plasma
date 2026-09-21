@@ -115,10 +115,8 @@ require_in_surface applet "SafeText.cliMessage"
 require_in_surface providers "SafeText.cliMessage"
 # Plain wrapper escaping is executed by tests/tst_plain_text_controls.qml
 # with hostile markup (including the styled CheckBox mnemonic label read
-# through a binding mirror), so the literal bindings are not pinned here.
-require_in_file "$PLAIN_CONTROLS_LABEL_QML" "textFormat: Text.PlainText"
-require_in_file "$PLAIN_PLASMA_LABEL_QML" "textFormat: Text.PlainText"
-require_in_file "$PLAIN_HEADING_QML" "textFormat: Text.PlainText"
+# through a binding mirror, and the PlainText format of the label wrappers),
+# so the literal bindings are not pinned here.
 require_in_file "$COPYABLE_VALUE_QML" 'plainText: valueRow.copyAccessibleName'
 require_in_file "$COPYABLE_VALUE_QML" 'plainText: i18n("Copied")'
 require_in_surface applet "parent: copyButton"
