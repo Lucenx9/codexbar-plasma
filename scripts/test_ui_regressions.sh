@@ -61,14 +61,14 @@ reject_in_file "$README_MD" "yay -S codexbar-cli"
 # shellcheck disable=SC2016 # Match the literal Markdown code span.
 reject_in_file "$README_MD" 'for example `/usr/bin/codexbar`'
 
-require_in_surface providers "Editable provider options come from CodexBar"
-require_in_surface providers "This CodexBar version does not expose editable provider options"
 reject_in_surface providers "Provider-specific editing stays in the CodexBar CLI until it exposes a stable settings descriptor"
 # Successful provider commands must be classified by the shared outcome
 # contract, never re-inlined with stderr consulted before the parsed payload:
 # loader diagnostics make successful runs print to stderr, and the inlined
-# order reported those runs as failures.
-require_in_surface providers "ProviderConfigProtocol.commandOutcome("
+# order reported those runs as failures. The classification call itself is
+# executed-covered (forcing a literal success in handleToggleResult turns the
+# write-errors test red), so the surface pin is removed.
+
 for provider_group_fragment in \
   'import "ProviderOrder.js" as ProviderOrder' \
   'property string cfg_providerOrder' \

@@ -6,11 +6,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 require_in_surface applet "function providerColor(value)"
 require_in_surface applet "function providerReadableColor(value, background)"
-require_in_surface providers "function providerColor(value)"
-require_in_surface providers "function providerReadableColor(value, background)"
 require_in_surface panel "function providerColor(value)"
 require_in_surface applet 'import "ThemeContrast.js" as ThemeContrast'
-require_in_surface providers 'import "ThemeContrast.js" as ThemeContrast'
 require_definition_where_used applet contrastTextColor
 require_in_surface applet "Kirigami.Theme.textColor"
 require_in_surface applet "Kirigami.Theme.highlightColor"

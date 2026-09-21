@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls as Controls
 import QtTest
 import "../contents/ui/SafeText.js" as SafeText
+import "../contents/ui/ThemeContrast.js" as ThemeContrast
 
 TestCase {
     id: testCase
@@ -353,5 +354,122 @@ TestCase {
         verify(options.length >= 1);
         compare(options[0].text, SafeText.plainTextAsMnemonicRichText(option));
         combos[0].popup.close();
+    }
+
+    function configTimeoutTimer(page) {
+        var all = [];
+        walkPageObjects(page, all);
+        // The sweep timer is the only repeating one-second timer on the
+        // page: desktop-style delegates add their own hover timers, so the
+        // production interval doubles as the identity here.
+        var found = all.filter(function(item) {
+            return item.toString().indexOf("Timer") >= 0 && item.repeat === true
+                && item.interval === 1000;
+        });
+        return found.length === 1 ? found[0] : null;
+    }
+
+    // The sweep timer must retire a hung command through the expire path:
+    // with the timer shortened, an already-overdue entry is disconnected
+    // and the page reports the timeout instead of loading forever.
+    function test_configTimeoutTimerExpiresHungCommands() {
+        var page = createProvidersPage();
+        if (!page)
+            return;
+        var timer = configTimeoutTimer(page);
+        verify(timer !== null);
+        page.loading = true;
+        page.errorText = "";
+        page.commands = {
+            "synthetic-hung-source": {kind: "list", provider: "codex",
+                deadlineMs: Date.now() - 1000}
+        };
+        // No restart(): the running binding must have started the timer when
+        // the overdue entry landed, so shortening the interval is enough.
+        timer.interval = 80;
+        tryVerify(function() { return !page.loading; }, 5000);
+        verify(page.errorText.length > 0);
+        verify(page.errorText.indexOf("timed out") !== -1);
+        compare(Object.keys(page.commands).length, 0);
+    }
+
+    // Switching the command path must retire the in-flight command and
+    // clear the roster, so a late reply from the old executable cannot
+    // replace the fresh state.
+    function test_commandPathChangeRetiresCommandsAndClearsProviders() {
+        var page = createProvidersPage();
+        if (!page)
+            return;
+        page.commands = {
+            "synthetic-old-source": {kind: "list", provider: "codex",
+                deadlineMs: Date.now() + 60000}
+        };
+        page.providers = [{provider: "codex", displayName: "Codex", enabled: true}];
+        page.selectedProviderID = "codex";
+        // Blank on purpose: the handler retires and clears before the
+        // reloaded commands could run, and the follow-up reload then stays
+        // on its early-return path (Plasmoid.configuration is absent here).
+        page.cfg_commandPath = "   ";
+        compare(Object.keys(page.commands).length, 0);
+        compare(page.providers.length, 0);
+        compare(page.selectedProviderID, "");
+        wait(0);
+        page.retireAllConfigCommands();
+    }
+
+    function optionsNoticeText(page) {
+        var all = [];
+        walkPageObjects(page, all);
+        var labels = all.filter(function(item) {
+            return item.toString().indexOf("PlainControlsLabel") >= 0
+                && item.visible
+                && (String(item.text).indexOf("Editable provider options") === 0
+                    || String(item.text).indexOf("This CodexBar version") === 0);
+        });
+        return labels.length === 1 ? String(labels[0].text) : "";
+    }
+
+    // The options notice must name the source of truth for the current CLI:
+    // with descriptors it points at CodexBar, without them it discloses
+    // that only the fallback rows remain.
+    function test_optionsNoticeFollowsDescriptorsAvailability() {
+        var page = createProvidersPage();
+        if (!page)
+            return;
+        page.providers = [{provider: "openai", displayName: "OpenAI", enabled: true}];
+        page.selectedProviderID = "openai";
+        var toggle = settingsToggle(page);
+        verify(toggle !== null);
+        toggle.checked = true;
+        wait(0);
+        page.providerDescriptorsUnavailable = false;
+        wait(0);
+        verify(optionsNoticeText(page).indexOf("Editable provider options come from CodexBar") === 0);
+        page.providerDescriptorsUnavailable = true;
+        wait(0);
+        verify(optionsNoticeText(page).indexOf("This CodexBar version does not expose editable provider options") === 0);
+    }
+
+    // Brand colours survive per provider instead of collapsing to one
+    // accent: two branded providers differ, and unbranded ids share the
+    // single theme fallback.
+    function test_providerColorKeepsBrandIdentityPerProvider() {
+        var page = createProvidersPage();
+        if (!page)
+            return;
+        verify(String(page.providerColor("codex")) !== String(page.providerColor("replicate")));
+        compare(String(page.providerColor("unknown-xyz")), String(page.providerColor("unknown-abc")));
+        verify(String(page.providerColor("unknown-xyz")) !== String(page.providerColor("replicate")));
+    }
+
+    // The readable variant keeps the non-text contrast bar on a dark
+    // background, so a near-black brand cannot dissolve into it.
+    function test_providerReadableColorKeepsContrastOnDarkBackground() {
+        var page = createProvidersPage();
+        if (!page)
+            return;
+        var background = Qt.rgba(0, 0, 0, 1);
+        var readable = page.providerReadableColor("replicate", background);
+        verify(ThemeContrast.contrastRatio(readable, background) >= 3);
     }
 }

@@ -293,6 +293,29 @@ TestCase {
         compare(configSource.connected.length, 3);
         compare(commandRunSerial, 3);
     }
+    // A command without its own timeout inherits the 60s configured default:
+    // the sweep leaves it connected at 59s and retires it with the timeout
+    // message at 61s, so the absolute offsets pin the default by its effect.
+    function test_runCommandFallsBackToConfigTimeoutAndExpires() {
+        configSource = freshSource();
+        commandRunSerial = 0;
+        commands = ({});
+        loading = true;
+        errorText = "";
+        runCommand("slow-list", {kind: "list"});
+        var source = configSource.connected[0];
+        var launched = Date.now();
+        verify(hasTimedConfigCommands());
+        expireConfigCommands(launched + 59000);
+        compare(configSource.disconnected.length, 0);
+        verify(CommandLedger.find(commands, source) !== null);
+        expireConfigCommands(launched + 61000);
+        compare(configSource.disconnected.length, 1);
+        compare(configSource.disconnected[0], source);
+        verify(CommandLedger.find(commands, source) === null);
+        compare(loading, false);
+        verify(errorText.length > 0);
+    }
     // Descriptors are copied through Guards: the ledger must own its entry,
     // and unsafe keys must not survive the copy.
     function test_copyObjectDetachesAndDropsUnsafeKeys() {
@@ -660,7 +683,9 @@ TestCase {
 '''
 
 WIRING_FUNCTIONS = (
-    "runCommand", "disconnectCommandsByKind", "reload", "runProviderListCommand",
+    "runCommand", "disconnectCommandsByKind", "expireConfigCommands",
+    "hasTimedConfigCommands", "handleConfigCommandTimeout",
+    "reload", "runProviderListCommand",
     "runCliVersionCommand", "loadProviderSettings",
     "providerConfigRevisionValue", "bumpProviderConfigRevision",
     "copyObject", "hasOwnKey", "providerKey", "providerMapKey", "descriptorPendingKey",
@@ -699,7 +724,7 @@ class ProviderCommandWiringTests(unittest.TestCase):
             functions.append(signature + " {" + body + "}")
         serial = re.search(r"^    property int commandRunSerial: 0$", source,
                            re.MULTILINE).group(0)
-        command_timeout = re.search(r"^    readonly property int configCommandTimeoutMs: 60000$",
+        command_timeout = re.search(r"^    readonly property int configCommandTimeoutMs: \d+$",
                                     source, re.MULTILINE).group(0).replace("readonly ", "")
         secrets = re.findall(
             r"^    readonly property int configSecret\w+:.*(?:\n[ \t]{8,}\S.*)*", source, re.MULTILINE)
