@@ -105,7 +105,6 @@ RowLayout {
             PlainPlasmaLabel {
                 id: providerAccountLabel
 
-                Layout.alignment: Qt.AlignBaseline
                 visible: providerHeaderRow.hasAccount
                 text: providerHeaderRow.providerData ? providerHeaderRow.providerData.account : ""
                 font: Kirigami.Theme.smallFont
@@ -124,7 +123,6 @@ RowLayout {
             PlainPlasmaLabel {
                 id: providerPlanLabel
 
-                Layout.alignment: Qt.AlignBaseline
                 visible: providerHeaderRow.hasPlan
                 text: providerHeaderRow.providerData ? providerHeaderRow.providerData.planText : ""
                 font: Kirigami.Theme.smallFont
