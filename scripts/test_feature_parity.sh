@@ -10,7 +10,6 @@ GENERAL_QML="${ROOT_DIR}/contents/ui/configGeneral.qml"
 PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
 PROVIDER_IDENTITY_JS="${ROOT_DIR}/contents/ui/ProviderIdentity.js"
 COMPACT_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/CompactRepresentation.qml"
-PROVIDER_HEADER_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/ProviderHeader.qml"
 INTERACTIVE_CHART_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/InteractiveChart.qml"
 SESSIONS_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/SessionsView.qml"
 SPEND_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/SpendView.qml"
@@ -353,7 +352,9 @@ require_in_surface applet "readonly property int quotaCriticalPercent: QuotaThre
 require_in_surface applet "onQuotaWarningPercentChanged: resetNotificationMemo()"
 require_in_surface applet "onQuotaCriticalPercentChanged: resetNotificationMemo()"
 require_in_file "$COMPACT_COMPONENT_QML" "id: compactStatusBadge"
-require_in_file "$PROVIDER_HEADER_COMPONENT_QML" "id: providerStatusBadge"
+# The provider incident badge is executed by tst_popup_controls.qml
+# (incidentBadgeGrowsWithItsText); its id has no references outside the
+# component, so the token itself is unobservable in the harness.
 # Kept: the Plasmoid-backed state defaults and declarative change handlers
 # kept below have no executed pin — fixtures declare their own values, so
 # flipping any default or no-opping any handler keeps all naming modules
