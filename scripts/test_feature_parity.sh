@@ -306,29 +306,15 @@ require_in_surface applet "providerCosts: view.presentedProviderCosts"
 require_in_surface applet "CostPresentation.projectRows(providerCosts, applet.costHistoryShowsTokens)"
 require_in_surface applet "model: section.projectData.rows"
 require_in_surface applet 'i18n("Cost unavailable")'
-require_in_surface applet 'i18n("Tokens unavailable")'
-require_in_surface applet "function costBreakdownRows(tokenCost)"
-require_in_surface applet "function costModelRows(tokenCost)"
-require_in_surface applet "function costHistoryRows(tokenCost)"
-require_in_surface applet "function costPeakLine(points)"
-require_in_surface applet "function costAverageDailyLine(points)"
-require_in_surface applet "function costPerMillionLine(tokenCost)"
 # Cost presentation moved behind CostPresentation.js. Assert the delegation so
 # the maths cannot quietly grow a second copy back inside main.qml.
-require_in_surface applet "CostPresentation.spendSnapshots(tokenCosts, costHistoryDays"
-require_in_surface applet "CostPresentation.breakdownRows("
-require_in_surface applet "CostPresentation.modelRows("
-require_in_surface applet "CostPresentation.historyRows("
-require_in_surface applet "CostPresentation.averageDailyValue("
-require_in_surface applet "CostPresentation.perMillionAmount("
-require_in_surface applet "CostPresentation.spendTotals("
 require_in_surface applet "CostPresentation.costTrustSummary("
-require_in_surface applet "CostPresentation.historyStillBuilding("
+# The locale separator wiring is unobservable in executed tests: the
+# costNumberFormat property initializer cannot be extracted, so fixtures
+# declare the format themselves and swapping the separators keeps every cost
+# test green. This stays as the only pin on the locale wiring.
 require_in_surface applet "CostPresentation.numberFormat("
 reject_in_surface applet "function appendTokenBreakdownRow("
-require_in_surface applet "ProviderSnapshot.normalize(item, Date.now())"
-require_in_surface applet "kpis: dashboard.kpis.map(dashboardDisplayRow)"
-require_in_surface applet "rows: dashboard.rows.map(dashboardDisplayRow)"
 require_in_surface applet "id: usageDashboardSection"
 require_in_surface applet "text: i18n(\"Usage dashboard\")"
 require_in_surface applet "model: usageDashboardSection.kpis"
@@ -347,113 +333,83 @@ reject_in_file "$USAGE_DETAILS_JS" "sections.length < maximumSectionsPerSnapshot
 reject_in_file "$USAGE_DETAILS_JS" "rows.length < maximumRowsPerSection"
 reject_in_file "$USAGE_DETAILS_JS" "points.length < maximumPointsPerChart"
 require_in_surface applet "Components.InteractiveChart"
-require_in_surface applet "function costChartPoints(points)"
 require_in_surface applet "id: costHistoryChartSection"
 require_in_surface applet "id: costDrillDownSection"
 require_in_surface applet "model: costDrillDownSection.breakdownRows"
 require_in_surface applet "model: costDrillDownSection.modelRows"
 require_in_surface applet "model: costHistoryChartSection.rows"
-require_in_surface applet "function providerDocsUrl(providerID)"
-require_in_surface applet "function providerLoginUrl(providerID)"
-require_in_surface applet "action: \"docs\""
 require_in_surface applet "function command(providerID)"
 require_in_surface applet "--all-accounts"
 require_in_surface applet "--account"
-require_in_surface applet "function selectAccount(providerID, accountIdentity)"
-require_in_surface applet "function accountOptionsForProvider(providerID)"
-require_in_surface applet "action: \"accounts\""
+# The menu-bar mode and reset-time initializers read Plasmoid.configuration,
+# which is absent under test (fixtures declare these properties themselves),
+# so no executed test can pin the wiring: hardcoding either value keeps every
+# panel test green. Mode routing through these values is covered by the
+# MenuBarText executed tests.
 require_in_surface applet "property string menuBarDisplayMode"
 require_in_surface applet "property bool resetTimesShowAbsolute"
-require_in_surface applet "function menuBarDisplayText(item)"
-require_in_surface applet "function safeMenuBarDisplayMode(value)"
 require_in_surface applet 'import "PanelDisplay.js" as PanelDisplay'
-require_in_surface applet "PanelDisplay.rowForMode("
 # The run-out token reports a duration only when the CLI predicts exhaustion,
 # so it must stay tied to the pace forecast instead of the percent used.
-require_in_surface applet 'mode === "runOut"'
-require_in_surface applet "if (!paceWarningActive(row)) {"
-require_in_surface applet "PanelDisplay.remainingSeconds("
 require_in_surface applet "id: panelClockTimer"
 require_in_surface applet "root.panelClockMs = Date.now()"
-require_in_surface applet "function resetText(window, absolute)"
-require_in_surface applet "function usageResetText(row)"
-require_in_surface applet "ResetPresentation.labelParts(value)"
-require_in_surface applet "var resetLine = resetLabel(usageResetText(row))"
 require_in_surface applet "Plasmoid.configuration.menuBarDisplayMode"
 reject_in_surface applet "onResetTimesShowAbsoluteChanged: Qt.callLater(refreshNow)"
 require_in_file "$USAGE_ROW_COMPONENT_QML" "usageRow.applet.usageResetText(usageRow.rowData)"
-require_in_surface applet "property bool showQuotaWarningMarkers"
 # Quota thresholds are user-configurable and shared by the notifications and the
 # markers drawn on the usage bars, so they must come from one bounded source.
 require_in_file "$CONFIG_XML" 'name="quotaWarningPercent"'
 require_in_file "$CONFIG_XML" 'name="quotaCriticalPercent"'
+# Kept: the import, the readonly Plasmoid-backed bounds and their reset
+# handlers below have no executed pin — every fixture declares its own
+# threshold values, so renaming the import or zeroing either bound keeps
+# all naming modules green.
 require_in_surface applet 'import "QuotaThresholds.js" as QuotaThresholds'
 require_in_surface applet "readonly property int quotaWarningPercent: QuotaThresholds.warningPercent("
 require_in_surface applet "readonly property int quotaCriticalPercent: QuotaThresholds.criticalPercent("
 require_in_surface applet "onQuotaWarningPercentChanged: resetNotificationMemo()"
 require_in_surface applet "onQuotaCriticalPercentChanged: resetNotificationMemo()"
-require_in_surface applet "function statusBadgeColor(severity)"
-require_in_surface applet "function primaryIncidentProvider()"
 require_in_file "$COMPACT_COMPONENT_QML" "id: compactStatusBadge"
 require_in_file "$PROVIDER_HEADER_COMPONENT_QML" "id: providerStatusBadge"
-require_in_surface applet "function quotaWarningMarkers(row)"
 require_in_file "$USAGE_ROW_COMPONENT_QML" "quotaWarningMarkerRepeater"
-require_in_surface applet "showQuotaWarningMarkers"
+# Kept: the Plasmoid-backed state defaults and declarative change handlers
+# kept below have no executed pin — fixtures declare their own values, so
+# flipping any default or no-opping any handler keeps all naming modules
+# green. The logic behind them is pinned by the selection/pipeline tests.
 require_in_surface applet "property bool enableNotifications"
-require_in_surface applet "function notifyAvailableUpdate(version, url, releaseUrl)"
 require_in_surface applet "property bool autoSelectProvider"
 require_in_surface applet "property string selectedProviderID"
 require_in_surface applet "readonly property int selectedProviderIndex: providerIndexForID(selectedProviderID)"
 reject_in_surface applet "    property int selectedProviderIndex:"
-require_in_surface applet "function boundedConfigRevision(value)"
 require_in_surface applet "property string overviewProviderIDsRaw"
-require_in_surface applet "OverviewProviders.visibleItems(providers, overviewProviderIDsRaw)"
 require_in_surface applet "onOverviewProviderIDsRawChanged: updateSelectedProvider()"
 require_in_surface applet "Math.max(0, Number(Plasmoid.configuration.refreshInterval))"
-require_in_surface applet "function updateSelectedProvider()"
-require_in_surface applet "function autoSelectedProviderIndex(items)"
-require_in_surface applet "ProviderAutoSelect.bestIndex("
-require_in_surface applet "function selectedCompactProvider()"
-require_in_surface applet "function panelProviderItems()"
 require_in_surface applet "property var notificationMemo"
-require_in_surface applet "function processNotifications()"
-require_in_surface applet "function notificationObservations()"
-require_in_surface applet "function dispatchNotificationIntents(intents, observations)"
-require_in_surface applet "NotificationPlanner.transition("
-require_in_surface applet "function quotaNotificationLevel(row)"
-require_in_surface applet "function notificationUrgency(severity)"
-require_in_surface applet "function sendPlasmaNotification(title, body, urgency, actionLabel)"
-require_in_surface applet "notificationDispatcher.send(cleanTitle, cleanBody, urgency, actionLabel)"
-# Clicking the update-available notification opens the release page on GitHub.
-require_in_surface applet "i18n(\"Open release page\")"
-require_in_surface applet "function safeReleaseUrl(url)"
-require_in_surface applet "Qt.openUrlExternally(releasePageUrl)"
-# Kept: this surface pin also covers main.qml's Plasmoid-backed copy, which
-# belongs to the main.qml step. The cost controller's own copy is proven
-# covered by executed tests (deleting it turns
-# test_startupRunsWhileHiddenAndReentryKeepsFreshData red: no command can
-# start when the guard property is missing), so that half needs no pin.
+# Kept: main.qml's Plasmoid-backed copy has no executed pin — every fixture
+# declares its own flag, so flipping the default keeps all naming modules
+# green. The cost controller's own copy is proven covered by executed tests
+# (deleting it turns test_startupRunsWhileHiddenAndReentryKeepsFreshData
+# red: no command can start when the guard property is missing).
 require_in_surface applet "property bool costUsageEnabled"
 require_in_surface applet "property int costHistoryDays"
 # Cost and tokens both come from one cost payload: switching the plotted metric
 # must never add a CLI call, and the bars must rescale with the choice.
 require_in_surface applet "property string costHistoryMetric"
-require_in_surface applet "function safeCostHistoryMetric(value)"
-require_in_surface applet "function setCostHistoryMetric(metric)"
 # Every cost chart follows one metric: the provider detail chart must not stay
 # on cost while the rows beneath it switch to tokens.
-require_in_surface applet "CostPresentation.chartPoints(costNumberFormat, points, costHistoryShowsTokens)"
 require_in_surface applet 'applet.costHistoryShowsTokens'
 # The chart's "Latest" summary annotates the same series the bars plot, so it
 # must follow the metric instead of always printing the cost amount.
 reject_in_surface applet 'i18n("%1: %2", label, amountString(last.cost'
 # The peak and average annotations must name the same day the bars highlight.
-require_in_surface applet "CostPresentation.peakPoint(points, costHistoryShowsTokens)"
 reject_in_surface applet 'i18n("Average/day: %1", amountString('
-require_in_surface applet "function spendHistoryStillBuilding()"
 require_in_file "$SPEND_COMPONENT_QML" "function metricOptions()"
 require_in_file "$SPEND_COMPONENT_QML" "view.applet.setCostHistoryMetric(metricCombo.valueAt(index))"
 require_in_file "$SPEND_COMPONENT_QML" "view.applet.spendHistoryStillBuilding()"
+# The 365-day clamp is unobservable in executed tests: the property
+# initializer reads Plasmoid.configuration, which is absent under test, so
+# fixtures declare their own day count and 365 -> 30 keeps every naming test
+# green. This stays as the only pin on the bound.
 require_in_surface applet "Math.max(1, Math.min(365, Number(Plasmoid.configuration.costHistoryDays)"
 
 # The 500-char truncation cap is unobservable in executed tests: the
@@ -490,11 +446,14 @@ require_in_file "$CONFIG_XML" "notifyPredictivePaceWarnings"
 require_in_file "$CONFIG_XML" "panelElementOrder"
 require_in_file "$CONFIG_XML" 'name="panelQuotaLane"'
 require_in_file "$CONFIG_XML" 'name="panelVisibilityRules"'
+# The lane and rules normalizers are unobservable in executed tests: both
+# readonly initializers read Plasmoid.configuration, which is absent under
+# test, so fixtures declare their own lane and rules and bogus replacements
+# keep every naming test green. These stay as the only pins on the wiring;
+# routing through these values is covered by the menu-bar and compact
+# provider selection tests.
 require_in_surface applet "PanelDisplay.safeLane(Plasmoid.configuration.panelQuotaLane)"
 require_in_surface applet "PanelRules.normalizedRules(Plasmoid.configuration.panelVisibilityRules)"
-require_in_surface applet "PanelDisplay.rowForMode(switcherCandidateRows(item), mode, panelQuotaLane)"
-require_in_surface applet "PanelRules.matches(panelVisibilityRules.text, row, panelClockMs)"
-require_in_surface applet "PanelRules.matchesAny(panelVisibilityRules.meters, rows, panelClockMs)"
 reject_in_surface applet "onPanelQuotaLaneChanged: Qt.callLater(refreshNow)"
 reject_in_surface applet "onPanelVisibilityRulesChanged: Qt.callLater(refreshNow)"
 require_in_surface applet '"sessions", "--json-v2"'

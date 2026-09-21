@@ -134,7 +134,7 @@ require_in_file "$MAKEFILE" "python3 -m zipfile -c dist/codexbar-plasma.plasmoid
 require_in_file "$MAKEFILE" "sha256sum codexbar-plasma.plasmoid > codexbar-plasma.plasmoid.sha256"
 require_in_file "$MAKEFILE" "missing required command: cmake, zip, or python3"
 reject_in_file "$MAKEFILE" "cmake -E tar cf dist/codexbar-plasma.plasmoid --format=zip metadata.json contents docs scripts/update-widget.sh"
-require_in_surface applet "notifyInstalledUpdate(version)"
+
 # Kept: stopping the single-shot timeout timer on completion is unobservable
 # in executed tests (removing it keeps the whole updater suite green: the
 # timer either already fired or fires into the empty-source guard no-op), so
@@ -142,9 +142,6 @@ require_in_surface applet "notifyInstalledUpdate(version)"
 # finished command retires its deadline.
 require_in_surface applet "updateCommandTimeoutTimer.stop()"
 reject_in_surface applet "Widget update check timed out."
-# The notified version must persist so the same update is not re-announced on
-# every plasmashell restart.
-require_in_surface applet "Plasmoid.configuration.lastNotifiedUpdateVersion = memoKey"
 require_in_file "${ROOT_DIR}/contents/config/main.xml" "name=\"lastNotifiedUpdateVersion\""
 reject_in_surface applet "return \"sh \" + shellQuote(updateScriptPath())"
 reject_in_surface applet "return shellQuote(updateScriptPath()) + (installMode ? \" --install\" : \" --check\")"

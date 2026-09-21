@@ -18,6 +18,9 @@ FUNCTIONS = (
     "boundedCliMessage", "paceSummaryText", "paceSummaryPartsText", "paceEtaText", "providerTitle",
     "providerKey", "statusText",
     "planText", "capitalize",
+    "dashboardDisplayRow", "dashboardPartText", "dashboardLabelText",
+    "amountString", "usageCountText", "tokenCountString",
+    "safeStatusUrl", "providerStatusUrl", "providerIconSource",
 )
 
 QML = '''import QtQuick
@@ -33,6 +36,7 @@ import "SOURCE_URL/SafeText.js" as SafeText
 import "SOURCE_URL/PacePresentation.js" as PacePresentation
 import "SOURCE_URL/ResetPresentation.js" as ResetPresentation
 import "SOURCE_URL/UsageCache.js" as UsageCache
+import "SOURCE_URL/CostPresentation.js" as CostPresentation
 TestCase {
     name: "ProviderMetadata"
     // The production display-name table, with the catalog strings stubbed the
@@ -51,6 +55,7 @@ TestCase {
             property bool loading: true
             property double panelClockMs: Date.UTC(2026, 8, 11, 12)
             property int maximumProviderSnapshots: Normalizer.maximumProviderSnapshots
+            property var costNumberFormat: CostPresentation.numberFormat(",", ".")
 
             SOURCE_FUNCTIONS
 
@@ -78,7 +83,6 @@ TestCase {
             function resetCreditsSection() { return null; }
             function providerTokenCost() { return null; }
             function providerDashboardUrl() { return ""; }
-            function safeStatusUrl() { return ""; }
             function providerChangelogUrl() { return ""; }
         }
     }
@@ -225,6 +229,75 @@ TestCase {
         compare(applet.providers[1].rows[0].usedPercent, 12);
         compare(item.error, "");
         verify(!applet.loading);
+    }
+
+    // Normalization stamps the live receipt clock, so per-account forecasts
+    // keep their own time instead of collapsing to the epoch.
+    function test_normalizeStampsTheLiveReceiptClock() {
+        var applet = createTemporaryObject(harness, this, {});
+        verify(applet !== null);
+        var before = Date.now();
+        var presented = applet.normalizeProvider({provider: "codex",
+            usage: {primary: {usedPercent: 5}}});
+        verify(presented.usageReceivedAtMs >= before);
+    }
+
+    // A populated usage dashboard renders through the shared display-row
+    // adapter, so KPIs keep their labels and joined values.
+    function test_dashboardSectionsMapThroughDisplayRows() {
+        var applet = createTemporaryObject(harness, this, {});
+        verify(applet !== null);
+        var normalized = ProviderSnapshot.normalize({provider: "codex",
+            usage: {primary: {usedPercent: 5}}}, 1234);
+        normalized.usageDashboard = {kpis: [
+            {labelKey: "", label: "Spend", name: "", parts: [{kind: "text", value: "$3"}]},
+            {labelKey: "today", label: "", name: "Named", parts: [{kind: "percent", value: 42}]}
+        ], rows: []};
+        var presented = applet.presentProviderSnapshot(normalized);
+        compare(presented.usageDashboard.kpis.length, 2);
+        compare(presented.usageDashboard.kpis[0], {label: "Spend", value: "$3"});
+        compare(presented.usageDashboard.kpis[1], {label: "Today", value: "Named (42%)"});
+        compare(presented.usageDashboard.rows.length, 0);
+    }
+
+    // Dashboard values render CLI-controlled prose, so the joined row text
+    // stays bounded instead of carrying an unbounded payload into the popup.
+    function test_dashboardRowBoundsUntrustedText() {
+        var applet = createTemporaryObject(harness, this, {});
+        verify(applet !== null);
+        var row = applet.dashboardDisplayRow({labelKey: "", label: "Spend", name: "",
+            parts: [{kind: "text", value: "x".repeat(600)}]});
+        compare(row.value.length, 500);
+        verify(row.value !== "x".repeat(600));
+    }
+
+    // A provider-supplied status URL is honored only on the host of the URL
+    // already shipped for that provider; anything else falls back to the
+    // identity table, and unknown providers offer no status URL at all.
+    function test_hostileStatusUrlFallsBackToIdentityTable() {
+        var applet = createTemporaryObject(harness, this, {});
+        verify(applet !== null);
+        var fallback = applet.providerStatusUrl("codex");
+        verify(fallback.indexOf("https://") === 0);
+        compare(applet.safeStatusUrl("codex", "https://evil.example/status"), fallback);
+        compare(applet.safeStatusUrl("codex", fallback + "incidents/7"), fallback + "incidents/7");
+        compare(applet.safeStatusUrl("unknown-xyz", "https://evil.example/"), "");
+        var normalized = ProviderSnapshot.normalize({provider: "codex",
+            usage: {primary: {usedPercent: 5}}}, 1234);
+        normalized.statusUrl = "https://evil.example/status";
+        compare(applet.presentProviderSnapshot(normalized).statusUrl, fallback);
+    }
+
+    // The icon file name is built from a provider-controlled key: unusable
+    // keys fall back to the generic icon instead of reaching a URL.
+    function test_providerIconSourceFallsBackForUnusableKeys() {
+        var applet = createTemporaryObject(harness, this, {});
+        verify(applet !== null);
+        compare(String(applet.providerIconSource("../../etc/passwd")), "view-statistics");
+        compare(String(applet.providerIconSource("<b>evil</b>")), "view-statistics");
+        var benign = String(applet.providerIconSource("codex"));
+        verify(benign !== "view-statistics");
+        verify(benign.slice(-10) === "/codex.svg");
     }
 }
 '''

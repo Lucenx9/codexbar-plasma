@@ -252,6 +252,91 @@ class UsageRecoveryTests(unittest.TestCase):
                 capture_output=True, text=True, timeout=30)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_popup_menu_offers_accounts_and_docs(self):
+        surface = Surface("applet", ROOT)
+        main = ROOT / "contents/ui/main.qml"
+        source = main.read_text()
+        surface.texts = {main: source}
+        functions = []
+        for name in ("actionRows", "providerAccountAction", "providerDocsUrl",
+                     "providerLoginUrl", "providerStatusUrl", "safeStatusUrl",
+                     "providerKey", "providerMapKey", "accountLoadingForProvider",
+                     "performAction"):
+            signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
+            functions.append(signature + " {" + surface.function_body(name) + "}")
+        qml = MENU_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
+        qml = qml.replace("SOURCE_FUNCTIONS", "\n        ".join(functions))
+        # The status action opens through the host guard; route the external
+        # open through a harness recorder the same way the update tests do.
+        qml = qml.replace("Qt.openUrlExternally(", "recordOpenedUrl(")
+        with tempfile.TemporaryDirectory(prefix="codexbar-popup-menu-") as temporary:
+            fixture = Path(temporary) / "tst_popup_menu.qml"
+            fixture.write_text(qml)
+            result = subprocess.run(
+                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
+MENU_QML = '''import QtQuick
+import QtTest
+import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
+import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
+TestCase {
+    name: "PopupMenuRows"
+    QtObject {
+        id: root
+        property bool showProviderChangelogs: false
+        property var selectedProviderData: null
+        property var openedUrls: []
+        property var accountsController: QtObject {
+            function loadingForProvider(key) { return false; }
+        }
+        SOURCE_FUNCTIONS
+        function i18n(text) { return text; }
+        function recordOpenedUrl(url) { openedUrls.push(url); }
+    }
+    function menuItem(provider) {
+        return {provider: provider, account: "", dashboardUrl: "",
+                statusUrl: "", changelogUrl: ""};
+    }
+    // The overflow menu always offers account switching first, with a docs
+    // entry carrying the identity-table URL whenever one exists.
+    function test_menuOffersAccountsAndDocs() {
+        var rows = root.actionRows(menuItem("codex"));
+        compare(rows[0].action, "accounts");
+        var docs = rows.filter(function(row) { return row.action === "docs"; });
+        compare(docs.length, 1);
+        verify(docs[0].url.indexOf("https://") === 0);
+        verify(root.providerDocsUrl("codex").indexOf("https://") === 0);
+        compare(root.providerLoginUrl("codex"), "https://chatgpt.com");
+    }
+    // Unknown providers get no docs entry instead of a guessed URL.
+    function test_unknownProviderHasNoDocsRow() {
+        var rows = root.actionRows(menuItem("unknown-xyz"));
+        compare(rows.filter(function(row) { return row.action === "docs"; }).length, 0);
+        compare(root.providerDocsUrl("unknown-xyz"), "");
+        compare(root.providerLoginUrl("unknown-xyz"), "");
+    }
+    // The status action opens the guarded URL, so a payload status URL on a
+    // foreign host cannot redirect the click away from the shipped page.
+    function test_statusActionOpensGuardedUrl() {
+        var item = menuItem("codex");
+        item.statusUrl = "https://evil.example/status";
+        root.selectedProviderData = item;
+        root.openedUrls = [];
+        root.performAction({action: "status"});
+        compare(root.openedUrls, [root.providerStatusUrl("codex")]);
+        item.statusUrl = root.providerStatusUrl("codex") + "incidents/7";
+        root.selectedProviderData = item;
+        root.openedUrls = [];
+        root.performAction({action: "status"});
+        compare(root.openedUrls, [item.statusUrl]);
+    }
+}
+'''
+
 
 if __name__ == "__main__":
     unittest.main()

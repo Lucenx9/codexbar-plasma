@@ -139,5 +139,137 @@ class QuotaResetMetadataTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
+class QuotaMarkerTests(unittest.TestCase):
+    # The threshold markers on the usage bars and the severity colours on
+    # badges and meter fills share one bounded threshold source; the flag
+    # that hides the markers also quiets the colours.
+    MARK_FUNCTIONS = (
+        "quotaWarningMarkers", "quotaSeverity", "quotaMeterColor", "statusBadgeColor",
+    )
+
+    MARK_QML = '''import QtQuick
+import QtTest
+import org.kde.kirigami as Kirigami
+import "SOURCE_URL/QuotaThresholds.js" as QuotaThresholds
+TestCase {
+    name: "QuotaMarkers"
+    property bool showQuotaWarningMarkers: true
+    property bool usageBarsShowUsed: true
+    property int quotaWarningPercent: 80
+    property int quotaCriticalPercent: 95
+
+    SOURCE_FUNCTIONS
+
+    function init() {
+        showQuotaWarningMarkers = true;
+        usageBarsShowUsed = true;
+    }
+    function test_markersFollowTheVisibilityFlag() {
+        var row = {hasPercent: true, usedPercent: 96};
+        compare(quotaWarningMarkers(row),
+            QuotaThresholds.markers(quotaWarningPercent, quotaCriticalPercent, usageBarsShowUsed));
+        verify(quotaWarningMarkers(row).length > 0);
+        showQuotaWarningMarkers = false;
+        compare(quotaWarningMarkers(row), []);
+    }
+    function test_badgeColoursFollowSeverity() {
+        // Compared against the real Theme singleton, so the test pins the
+        // production mapping without hardcoding any theme palette.
+        compare(statusBadgeColor("critical"), Kirigami.Theme.negativeTextColor);
+        compare(statusBadgeColor("major"), Kirigami.Theme.negativeTextColor);
+        compare(statusBadgeColor("minor"), Kirigami.Theme.neutralTextColor);
+        compare(statusBadgeColor("maintenance"), Kirigami.Theme.neutralTextColor);
+        compare(statusBadgeColor("unknown"), Kirigami.Theme.textColor);
+        compare(statusBadgeColor(""), "transparent");
+    }
+    function test_meterFillUsesTheBadgeColourPastTheWarningStep() {
+        compare(quotaMeterColor({hasPercent: true, usedPercent: 96}, "ACC"),
+            Kirigami.Theme.negativeTextColor);
+        compare(quotaMeterColor({hasPercent: true, usedPercent: 10}, "ACC"), "ACC");
+        showQuotaWarningMarkers = false;
+        compare(quotaMeterColor({hasPercent: true, usedPercent: 96}, "ACC"), "ACC");
+    }
+}
+'''
+
+    def test_production_markers_and_badge_colours_follow_thresholds(self):
+        applet = Surface("applet", ROOT)
+        main = ROOT / "contents/ui/main.qml"
+        source = applet.texts[main]
+        applet.texts = {main: source}
+        functions = []
+        for name in self.MARK_FUNCTIONS:
+            signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
+            functions.append(signature + " {" + applet.function_body(name) + "}")
+        qml = self.MARK_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
+        qml = qml.replace("SOURCE_FUNCTIONS", "\n".join(functions))
+        with tempfile.TemporaryDirectory(prefix="codexbar-quota-markers-") as temporary:
+            fixture = Path(temporary) / "tst_quota_markers.qml"
+            fixture.write_text(qml)
+            result = subprocess.run(
+                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
+class ProviderColorTests(unittest.TestCase):
+    # Provider swatches come from the shared brand table and stay readable on
+    # the theme background; unknown providers fall back to the theme
+    # highlight instead of inventing a color.
+    COLOR_FUNCTIONS = (
+        "providerColor", "readableAccentColor", "providerReadableColor",
+    )
+
+    COLOR_QML = '''import QtQuick
+import QtTest
+import org.kde.kirigami as Kirigami
+import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
+import "SOURCE_URL/ThemeContrast.js" as ThemeContrast
+TestCase {
+    name: "ProviderColors"
+
+    SOURCE_FUNCTIONS
+
+    function test_brandColorsSurviveAndUnknownFallsBackToHighlight() {
+        // Compared against the live Theme singleton, so the test pins the
+        // production mapping without hardcoding any theme palette.
+        compare(providerColor("unknown-xyz"), Kirigami.Theme.highlightColor);
+        verify(providerColor("codex") !== Kirigami.Theme.highlightColor);
+        verify(providerColor("claude") !== Kirigami.Theme.highlightColor);
+    }
+    function test_readableColorKeepsContrastOnThemeBackground() {
+        var background = Kirigami.Theme.backgroundColor;
+        var readable = providerReadableColor("codex", background);
+        verify(ThemeContrast.contrastRatio(readable, background)
+            >= ThemeContrast.minimumNonTextContrastRatio);
+        compare(providerReadableColor("codex"), providerReadableColor("codex", background));
+        compare(providerReadableColor("unknown-xyz", background),
+            readableAccentColor(Kirigami.Theme.highlightColor, background));
+    }
+}
+'''
+
+    def test_production_provider_colors_follow_brand_and_theme(self):
+        applet = Surface("applet", ROOT)
+        main = ROOT / "contents/ui/main.qml"
+        source = applet.texts[main]
+        applet.texts = {main: source}
+        functions = []
+        for name in self.COLOR_FUNCTIONS:
+            signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
+            functions.append(signature + " {" + applet.function_body(name) + "}")
+        qml = self.COLOR_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
+        qml = qml.replace("SOURCE_FUNCTIONS", "\n".join(functions))
+        with tempfile.TemporaryDirectory(prefix="codexbar-provider-colors-") as temporary:
+            fixture = Path(temporary) / "tst_provider_colors.qml"
+            fixture.write_text(qml)
+            result = subprocess.run(
+                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

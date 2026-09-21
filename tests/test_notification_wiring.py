@@ -18,6 +18,7 @@ FUNCTIONS = (
     "markNotificationProvidersFresh", "notificationProviderRefreshPending",
     "notificationScopeKey", "notificationObservationRows", "notificationObservations",
     "quotaNotificationLevel", "paceWarningActive", "notificationPlannerOptions",
+    "notificationUrgency",
     "applyTokenCosts", "providerTokenCost", "primaryIncidentProvider",
 )
 
@@ -200,6 +201,15 @@ TestCase {
         compare(escalated.intents.length, 1);
         compare(escalated.intents[0].kind, "quota");
     }
+    function test_notificationUrgencyFollowsSeverity() {
+        // The dispatcher urgency is the only thing distinguishing a critical
+        // quota breach from a routine warning once the planner has spoken.
+        compare(notificationUrgency("critical"), "critical");
+        compare(notificationUrgency("major"), "critical");
+        compare(notificationUrgency("unknown"), "low");
+        compare(notificationUrgency("minor"), "normal");
+        compare(notificationUrgency(""), "normal");
+    }
     function test_primaryIncidentProviderIgnoresUnknownOrInactiveStatus() {
         providers = [
             {
@@ -239,6 +249,21 @@ TestCase {
         ];
         compare(primaryIncidentProvider(), null);
     }
+    // Pending slots and account lookups resolve CLI aliases before mapping,
+    // so an alias and its canonical id share one slot instead of leaking a
+    // parallel key an allowlist would not recognize.
+    function test_providerMapKeyNormalizesAliases() {
+        compare(providerMapKey("11labs"), "elevenlabs");
+        compare(providerMapKey("codex"), "codex");
+        selectedAccounts = ({elevenlabs: "account-a"});
+        compare(selectedAccountForProvider("11labs"), "account-a");
+        selectedAccounts = ({});
+        notificationRefreshPending = ({elevenlabs: true});
+        markNotificationProvidersFresh([{provider: "11labs", usageStale: false, statusKnown: true}]);
+        compare(notificationRefreshPending, ({}));
+        compare(notificationScopeKey({provider: "11labs", account: "account-a"}),
+            notificationScopeKey({provider: "elevenlabs", account: "account-a"}));
+    }
 }
 '''
 
@@ -267,10 +292,178 @@ class NotificationWiringTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
+class NotificationPipelineTests(unittest.TestCase):
+    # processNotifications and dispatchNotificationIntents are the composition
+    # root: the guard, the prime/observe mode, the commit-before-effect order,
+    # and the intent routing have no other executed pin.
+    PIPELINE_FUNCTIONS = FUNCTIONS + (
+        "processNotifications", "dispatchNotificationIntents",
+        "sendPlasmaNotification",
+        "resetLabel", "usageResetText", "paceEtaText", "resetText",
+    )
+
+    PIPELINE_QML = '''import QtQuick
+import QtTest
+import "SOURCE_URL/NotificationPlanner.js" as NotificationPlanner
+import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
+import "SOURCE_URL/Guards.js" as Guards
+import "SOURCE_URL/QuotaThresholds.js" as QuotaThresholds
+import "SOURCE_URL/CostPresentation.js" as CostPresentation
+import "SOURCE_URL/UsageCache.js" as UsageCache
+import "SOURCE_URL/PrivacyPresentation.js" as PrivacyPresentation
+import "SOURCE_URL/ResetPresentation.js" as ResetPresentation
+TestCase {
+    name: "NotificationPipeline"
+    property bool enableNotifications: true
+    property bool includeStatus: true
+    property bool notifyStatusIncidents: true
+    property bool notifyQuotaWarnings: true
+    property bool notifyPredictivePaceWarnings: false
+    property bool notifyLimitResets: true
+    property int quotaWarningPercent: 80
+    property int quotaCriticalPercent: 95
+    property int limitResetArmThreshold: 80
+    property int limitResetFloor: 5
+    property bool privacyMode: false
+    property bool resetTimesShowAbsolute: false
+    property double panelClockMs: Date.UTC(2026, 8, 12)
+    property var selectedAccounts: ({})
+    property var notificationRefreshPending: ({})
+    property var providers: []
+    property var tokenCosts: ({})
+    property int costHistoryDays: 30
+    property bool notificationsPrimed: false
+    property var notificationMemo: ({})
+    property var sentNotifications: []
+    property var notificationDispatcher: ({
+        send: function(title, body, urgency, actionLabel) {
+            sentNotifications = sentNotifications.concat([{
+                title: title, body: body, urgency: urgency, actionLabel: actionLabel
+            }]);
+            return "source-" + sentNotifications.length;
+        }
+    })
+
+    SOURCE_FUNCTIONS
+
+    function i18n(text) {
+        var out = String(text);
+        for (var i = 1; i < arguments.length; i++) {
+            out = out.replace("%" + i, String(arguments[i]));
+        }
+        return out;
+    }
+    function i18np(one, many, count) { return i18n(count === 1 ? one : many, count); }
+
+    function init() {
+        enableNotifications = true;
+        selectedAccounts = ({});
+        notificationRefreshPending = ({});
+        providers = [];
+        notificationsPrimed = false;
+        notificationMemo = ({});
+        sentNotifications = [];
+    }
+    function quotaItem(used, severity) {
+        return {
+            provider: "codex", title: "Codex",
+            hasIncident: severity.length > 0, statusSeverity: severity,
+            statusIncidentKey: severity.length > 0 ? "incident-1" : "",
+            status: severity.length > 0 ? "Service degraded" : "",
+            statusKnown: true, error: "",
+            rows: [{
+                lane: "primary", label: "Session", hasPercent: true,
+                usedPercent: used, paceKnown: false
+            }]
+        };
+    }
+    function test_disabledNotificationsSkipPrimingAndDispatch() {
+        enableNotifications = false;
+        providers = [quotaItem(96, "major")];
+        processNotifications();
+        compare(sentNotifications.length, 0);
+        verify(!notificationsPrimed);
+    }
+    function test_emptyRosterStaysUnprimed() {
+        providers = [];
+        processNotifications();
+        compare(sentNotifications.length, 0);
+        verify(!notificationsPrimed);
+    }
+    function test_primeThenEscalationDispatchesOneCriticalQuotaNotification() {
+        providers = [quotaItem(85, "")];
+        processNotifications();
+        verify(notificationsPrimed);
+        compare(sentNotifications.length, 0);
+        providers = [quotaItem(96, "")];
+        processNotifications();
+        compare(sentNotifications.length, 1);
+        compare(sentNotifications[0].urgency, "critical");
+        compare(sentNotifications[0].title, "Codex quota critical");
+        verify(sentNotifications[0].body.indexOf("96") >= 0);
+        // The committed memo absorbs the escalation; a repeat stays silent.
+        processNotifications();
+        compare(sentNotifications.length, 1);
+    }
+    function test_quotaNotificationBodyCarriesTheResetLine() {
+        var prime = quotaItem(85, "");
+        prime.rows[0].resetsAt = new Date(panelClockMs + 2 * 3600 * 1000).toISOString();
+        providers = [prime];
+        processNotifications();
+        compare(sentNotifications.length, 0);
+        var escalated = quotaItem(96, "");
+        escalated.rows[0].resetsAt = new Date(panelClockMs + 2 * 3600 * 1000).toISOString();
+        providers = [escalated];
+        processNotifications();
+        compare(sentNotifications.length, 1);
+        // The quota body keeps the localized reset countdown alongside the
+        // percentage; the label wrapper owns the "Resets" prefix.
+        verify(sentNotifications[0].body.indexOf("96") >= 0);
+        verify(sentNotifications[0].body.indexOf("Resets") >= 0);
+    }
+    function test_statusIncidentDispatchesWithMappedUrgency() {
+        providers = [quotaItem(40, "")];
+        processNotifications();
+        compare(sentNotifications.length, 0);
+        providers = [quotaItem(40, "major")];
+        processNotifications();
+        compare(sentNotifications.length, 1);
+        compare(sentNotifications[0].title, "Codex status issue");
+        compare(sentNotifications[0].urgency, "critical");
+        processNotifications();
+        compare(sentNotifications.length, 1);
+    }
+}
+'''
+
+    def test_notification_pipeline_guards_primes_and_dispatches(self):
+        applet = Surface("applet", ROOT)
+        main = ROOT / "contents/ui/main.qml"
+        source = applet.texts[main]
+        # These adapters belong to the composition root; several JS modules
+        # declare helpers with the same names in their own isolated scopes.
+        applet.texts = {main: source}
+        functions = []
+        for name in self.PIPELINE_FUNCTIONS:
+            signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
+            functions.append(signature + " {" + applet.function_body(name) + "}")
+        qml = self.PIPELINE_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
+        qml = qml.replace("SOURCE_FUNCTIONS", "\n".join(functions))
+        with tempfile.TemporaryDirectory(prefix="codexbar-notification-pipeline-") as temporary:
+            fixture = Path(temporary) / "tst_notification_pipeline.qml"
+            fixture.write_text(qml, encoding="utf-8")
+            result = subprocess.run(
+                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
 class UpdateNotificationWiringTests(unittest.TestCase):
     UPDATE_FUNCTIONS = (
         "hasOwnKey", "copyObject", "safeReleaseUrl", "sendPlasmaNotification",
         "notifyAvailableUpdate", "handleUpdateNotificationActivated",
+        "notifyInstalledUpdate",
     )
 
     UPDATE_QML = '''import QtQuick
@@ -332,8 +525,10 @@ TestCase {
         announce("v0.2.40");
         announce("v0.2.41");
         compare(sentNotifications.length, 2);
-        verify(sentNotifications[0].actionLabel.length > 0);
-        verify(sentNotifications[1].actionLabel.length > 0);
+        // The action label is the production wording; a relabelled button
+        // still opens the page but no longer reads as the release action.
+        compare(sentNotifications[0].actionLabel, "Open release page");
+        compare(sentNotifications[1].actionLabel, "Open release page");
         compare(Object.keys(pendingUpdateReleaseUrls).length, 2);
 
         // The later notification activating must not retire the earlier one.
@@ -384,6 +579,28 @@ TestCase {
         compare(sentNotifications.length, 0);
         compare(pendingUpdateReleaseUrls, ({}));
     }
+
+    // The notified version persists, so the same update is not re-announced
+    // on every plasmashell restart.
+    function test_availableUpdatePersistsMemoVersion() {
+        announce("v0.2.40");
+        compare(lastNotifiedUpdateVersion, "v0.2.40");
+        compare(notificationPlasmoidConfiguration.lastNotifiedUpdateVersion, "v0.2.40");
+        announce("v0.2.40");
+        compare(sentNotifications.length, 1);
+    }
+
+    // An installed update notifies once with its version, and stays silent
+    // while notifications are disabled.
+    function test_installedUpdateNotifiesOnceWithVersion() {
+        notifyInstalledUpdate("v0.2.42");
+        compare(sentNotifications.length, 1);
+        compare(sentNotifications[0].title, "CodexBar widget update installed");
+        verify(sentNotifications[0].body.indexOf("v0.2.42") >= 0);
+        enableNotifications = false;
+        notifyInstalledUpdate("v0.2.43");
+        compare(sentNotifications.length, 1);
+    }
 }
 '''
 
@@ -404,6 +621,62 @@ TestCase {
         qml = qml.replace("Qt.openUrlExternally(releasePageUrl)", "recordOpenedReleaseUrl(releasePageUrl)")
         with tempfile.TemporaryDirectory(prefix="codexbar-update-notification-") as temporary:
             fixture = Path(temporary) / "tst_update_notifications.qml"
+            fixture.write_text(qml, encoding="utf-8")
+            result = subprocess.run(
+                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
+class UpdateInstalledForwardingTests(unittest.TestCase):
+    # The onUpdateInstalled handler is the only pin on the call site: the
+    # controller emits updateInstalled and the applet must forward the
+    # version to root.notifyInstalledUpdate. The handler body is extracted
+    # and executed against a recording stub, never grepped, so deleting the
+    # forward (or its argument) reddens the QML compare instead of a
+    # source-text assertion.
+    FORWARD_QML = '''import QtQuick
+import QtTest
+TestCase {
+    name: "UpdateInstalledForwarding"
+    QtObject {
+        id: root
+        property var forwardedVersions: []
+        function notifyInstalledUpdate(version) {
+            forwardedVersions = forwardedVersions.concat([version]);
+        }
+        SOURCE_HANDLER
+    }
+    function test_updateInstalledForwardsVersionToNotifier() {
+        root.forwardedVersions = [];
+        root.forwardUpdateInstalled("v9.9.9");
+        compare(root.forwardedVersions, ["v9.9.9"]);
+    }
+}
+'''
+
+    def test_applet_forwards_update_installed_version_to_notifier(self):
+        applet = Surface("applet", ROOT)
+        main = ROOT / "contents/ui/main.qml"
+        source = applet.texts[main]
+        start = source.find("onUpdateInstalled")
+        self.assertNotEqual(start, -1)
+        open_brace = source.index("{", start)
+        depth = 1
+        index = open_brace + 1
+        while index < len(source) and depth > 0:
+            if source[index] == "{":
+                depth += 1
+            elif source[index] == "}":
+                depth -= 1
+            index += 1
+        body = source[open_brace + 1:index - 1]
+        qml = self.FORWARD_QML.replace(
+            "SOURCE_HANDLER",
+            "function forwardUpdateInstalled(version) {" + body + "}")
+        with tempfile.TemporaryDirectory(prefix="codexbar-update-installed-forward-") as temporary:
+            fixture = Path(temporary) / "tst_update_installed_forward.qml"
             fixture.write_text(qml, encoding="utf-8")
             result = subprocess.run(
                 [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],

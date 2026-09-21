@@ -2,11 +2,15 @@
 
 import os
 from pathlib import Path
+import re
 import subprocess
+import sys
 import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts/lib"))
+from qml_surfaces import Surface
 
 QML = '''import QtQuick
 import QtTest
@@ -290,6 +294,46 @@ class SessionsControllerTests(unittest.TestCase):
                     "test_commandChangeInvalidatesDataAndRetiresTheRunningSource()",
                     "test_timeoutPreservesTheSnapshotAndAllowsANewRequest()")))]
             self.assertEqual(warnings, [])
+
+
+class AppletRefreshDelegationTests(unittest.TestCase):
+    # The applet wrapper owns no scheduling or fetching: it forwards to the
+    # sessions controller and returns its verdict.
+    WRAPPER_QML = '''import QtQuick
+import QtTest
+TestCase {
+    name: "SessionsRefreshDelegation"
+    QtObject {
+        id: root
+        property int refreshCalls: 0
+        property QtObject sessionsController: QtObject {
+            function refresh() { root.refreshCalls += 1; return true; }
+        }
+        SOURCE_FUNCTIONS
+    }
+    function test_refreshSessionsDelegatesToController() {
+        verify(root.refreshSessions());
+        compare(root.refreshCalls, 1);
+    }
+}
+'''
+
+    def test_applet_refresh_sessions_delegates_to_controller(self):
+        applet = Surface("applet", ROOT)
+        main = ROOT / "contents/ui/main.qml"
+        source = applet.texts[main]
+        applet.texts = {main: source}
+        signature = re.search(r"function refreshSessions\([^)]*\)", source).group(0)
+        qml = self.WRAPPER_QML.replace(
+            "SOURCE_FUNCTIONS", signature + " {" + applet.function_body("refreshSessions") + "}")
+        with tempfile.TemporaryDirectory(prefix="codexbar-sessions-delegation-") as temporary:
+            fixture = Path(temporary) / "tst_sessions_delegation.qml"
+            fixture.write_text(qml)
+            result = subprocess.run(
+                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 if __name__ == "__main__":
