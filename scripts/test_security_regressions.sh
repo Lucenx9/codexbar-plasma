@@ -21,9 +21,7 @@ WORKFLOW="${ROOT_DIR}/.github/workflows/ci.yml"
 MAKEFILE="${ROOT_DIR}/Makefile"
 UPDATER="${ROOT_DIR}/scripts/update-widget.sh"
 FULL_REPRESENTATION_QML="${ROOT_DIR}/contents/ui/components/FullRepresentation.qml"
-COMPACT_REPRESENTATION_QML="${ROOT_DIR}/contents/ui/components/CompactRepresentation.qml"
 SPEND_VIEW_QML="${ROOT_DIR}/contents/ui/components/SpendView.qml"
-COPYABLE_VALUE_QML="${ROOT_DIR}/contents/ui/components/CopyableValue.qml"
 
 require_in_file() {
   local file="$1"
@@ -116,9 +114,14 @@ require_in_surface providers "SafeText.cliMessage"
 # Plain wrapper escaping is executed by tests/tst_plain_text_controls.qml
 # with hostile markup (including the styled CheckBox mnemonic label read
 # through a binding mirror, and the PlainText format of the label wrappers),
-# so the literal bindings are not pinned here.
-require_in_file "$COPYABLE_VALUE_QML" 'plainText: valueRow.copyAccessibleName'
-require_in_file "$COPYABLE_VALUE_QML" 'plainText: i18n("Copied")'
+# so the literal bindings are not pinned here. CopyableValue tooltip text and
+# anchoring are executed by tests/tst_visual_layout.qml
+# (test_copyableValueTooltipsEscapeAndAnchorToButton) with a hostile
+# accessible name.
+# The explicit tooltip anchor stays pinned here: the tooltips are declared
+# inside the copy button, so deleting the parent line changes no observable
+# behavior and no executed test can tell it apart. Reparenting to another
+# item does go red in the layout test above.
 require_in_surface applet "parent: copyButton"
 # The accounts delegate stays the safe button: tests/tst_visual_layout.qml
 # (accountDelegatesStaySafeKeyboardButtons plus the long-account-button rows)
@@ -126,7 +129,9 @@ require_in_surface applet "parent: copyButton"
 # and goes red there instead of passing vacuously.
 require_in_surface popup "Kirigami.MnemonicData.label: SafeText.plainTextAsMnemonicRichText(modelData.displayName)"
 require_in_surface panel "Kirigami.MnemonicData.label: SafeText.plainTextAsMnemonicRichText(modelData.displayName)"
-require_in_file "$COMPACT_REPRESENTATION_QML" "PlainToolTip {"
+# The compact status tooltip is executed by tests/tst_visual_layout.qml
+# (test_compactStatusTooltipEscapesIncidentText): removing its PlainToolTip
+# leaves zero tooltips and goes red there.
 require_in_file "$SPEND_VIEW_QML" "Components.PlainToolTip {"
 
 reject_raw_text_control() {

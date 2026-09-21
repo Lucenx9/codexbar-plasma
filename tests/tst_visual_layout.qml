@@ -1,6 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/CostPresentation.js" as CostPresentation
+import "../contents/ui/SafeText.js" as SafeText
 import "../contents/ui/UsageDetails.js" as UsageDetails
 
 TestCase {
@@ -369,6 +370,24 @@ TestCase {
         return null;
     }
 
+    // Non-visual children (tooltips live in resources/data, not children),
+    // so tooltip hunts need the whole object tree. findItem is left on
+    // children alone; existing first-match callers keep their order.
+    function findAllItems(item, predicate, out) {
+        if (item === null || item === undefined || out.indexOf(item) >= 0)
+            return;
+        if (predicate(item))
+            out.push(item);
+        var groups = [item.children, item.resources, item.data];
+        for (var g = 0; g < groups.length; g++) {
+            var kids = groups[g];
+            if (kids === undefined || kids === null)
+                continue;
+            for (var i = 0; i < kids.length; i++)
+                findAllItems(kids[i], predicate, out);
+        }
+    }
+
     function test_selectedTextStaysWithItsMeterAndFits_data() {
         return [
             {tag: "standard-small", minimal: false, extent: 24},
@@ -730,6 +749,57 @@ TestCase {
             verify(placeholder !== null);
             compare(placeholder.height, placeholder.implicitHeight);
         }
+    }
+
+    // CopyableValue labels its copy action through tooltips anchored to the
+    // copy button, so a hostile accessible name must arrive escaped there
+    // and the transient confirmation must keep its own immediate tooltip.
+    function test_copyableValueTooltipsEscapeAndAnchorToButton() {
+        var hostile = "Copy <img src=\"http://127.0.0.1/probe\"> & <sessions>";
+        var row = createControl("CopyableValue", {
+            text: "session text",
+            copyAccessibleName: hostile
+        });
+        if (!row)
+            return;
+        var tips = [];
+        findAllItems(row, function (item) {
+            return item.toString().indexOf("PlainToolTip") >= 0;
+        }, tips);
+        compare(tips.length, 2);
+        var hoverTips = tips.filter(function (tip) { return tip.plainText === hostile; });
+        var copiedTips = tips.filter(function (tip) { return tip.plainText === "Copied"; });
+        compare(hoverTips.length, 1);
+        compare(copiedTips.length, 1);
+        var hoverTip = hoverTips[0];
+        var copiedTip = copiedTips[0];
+        compare(hoverTip.text, SafeText.plainTextAsRichText(hostile));
+        compare(copiedTip.text, SafeText.plainTextAsRichText("Copied"));
+        var buttons = [];
+        findAllItems(row, function (item) {
+            return item.icon !== undefined && item.icon.name === "edit-copy";
+        }, buttons);
+        compare(buttons.length, 1);
+        var button = buttons[0];
+        compare(hoverTip.parent, button);
+        compare(copiedTip.parent, button);
+    }
+
+    // The standalone status dot carries its incident label in a tooltip, so
+    // provider-controlled titles must arrive escaped.
+    function test_compactStatusTooltipEscapesIncidentText() {
+        applet.incidentOnMeter = false;
+        var panel = createControl("CompactRepresentation", {applet: applet, height: 44});
+        if (!panel)
+            return;
+        var compactTips = [];
+        findAllItems(panel, function (item) {
+            return item.toString().indexOf("PlainToolTip") >= 0;
+        }, compactTips);
+        compare(compactTips.length, 1);
+        var tip = compactTips[0];
+        verify(tip.plainText.length > 0);
+        compare(tip.text, SafeText.plainTextAsRichText(tip.plainText));
     }
 
     function test_incidentDotsStaySquareAndAttributed_data() {
