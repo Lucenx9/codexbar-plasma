@@ -9,34 +9,35 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # either is correct as long as the rule is still there. Assert against the
 # surface so a file split cannot silently drop a nonce, deadline, or cleanup.
 
-require_in_surface applet "readonly property int defaultCommandTimeoutMs: 120000"
-require_in_surface applet "function connectUsageCommand(sourceName, descriptor)"
-require_in_surface applet "function finishUsageCommandSource(sourceName)"
-require_in_surface applet "function retireUsageCommands()"
-require_in_surface applet "function expireCommands(nowMs)"
-require_in_surface applet "function handleCommandTimeout(sourceName, descriptor)"
 require_in_surface applet "running: controller.sending"
 require_in_surface applet "lifecycle.expire(Date.now())"
-require_in_surface applet "id: usageRefreshTimer"
-require_in_surface applet "running: controller.refreshIntervalSec > 0"
-require_in_surface applet "if (!lifecycle.hasPendingPeriodicRefreshCommands())"
-require_in_surface applet "function hasPendingPeriodicRefreshCommands()"
+# Kept: the no-poll rule is unobservable in executed tests (0 -> 200 on the
+# usage DataSource keeps every controller test green: polling an
+# already-running executable source is a logged no-op) and this existence
+# check cannot pin a single file anyway (ten surface files carry it), so no
+# mutation can prove it redundant file-by-file. It stays as the only pin
+# that the rule exists somewhere in the surface.
 require_in_surface applet "interval: 0"
-require_in_surface applet "lifecycle.finishUsageCommandSource(sourceName)"
-require_in_surface applet 'import "../ProviderFallbackQueue.js" as ProviderFallbackQueue'
-require_in_surface applet 'import "../ProviderRosterCache.js" as ProviderRosterCache'
 require_in_surface applet 'import "../AccountRequests.js" as AccountRequests'
 require_in_surface applet 'import "../SessionRefreshPolicy.js" as SessionRefreshPolicy'
-require_in_surface applet "property var providerFallbackState: null"
 require_in_surface applet "readonly property int accountCommandTimeoutMs: 60000"
 require_in_surface applet "readonly property int sessionsCommandTimeoutMs: 60000"
 require_in_surface applet "readonly property int notificationCommandTimeoutMs: 10000"
 require_in_surface applet "function refreshSessions()"
 require_in_surface applet "readonly property int pollIntervalMs: 60000"
 require_in_surface applet "interval: controller.pollIntervalMs"
-require_in_surface applet 'import "../CostRefreshPolicy.js" as CostRefreshPolicy'
+# Kept: the hourly cost auto-refresh interval is unobservable in executed
+# tests (3600000 and 50 both keep the cost suite green: a longer wait never
+# elapses in a fast test, and rapid firing throttles to a no-op inside
+# CostRefreshPolicy), so no mutation can prove this pin redundant. It stays
+# as the only pin that the auto-refresh timer follows the shared policy
+# instead of a hardcoded literal.
 require_in_surface applet "interval: CostRefreshPolicy.automaticRefreshIntervalMs"
-require_in_surface applet "property double lastAttemptAtMs: -1"
+# Kept: the updater's initial-false flags are unobservable in executed tests
+# (flipping all three to true keeps the whole updater suite green: each flag
+# is overwritten by its request/completion decision before any effect), so no
+# mutation can prove these pins redundant. They stay as the only pins that a
+# fresh controller starts idle, in check mode, with no queued request.
 require_in_surface applet "property bool updateRetryPending: false"
 require_in_surface applet "property bool connectedUpdateInstallMode: false"
 require_in_surface applet "property bool pendingAutomaticUpdateCheck: false"
@@ -50,16 +51,11 @@ require_in_surface providers "page.expireConfigCommands(Date.now())"
 require_in_surface providers "Component.onCompleted: Qt.callLater(reload)"
 require_in_surface providers "onCfg_commandPathChanged: handleCommandPathChanged()"
 
-require_in_surface popup "readonly property int providerRosterCommandTimeoutMs: 60000"
-# The roster load lives in the shared controllers/ loader: its ledger import
-# carries the parent-directory prefix, and its lifecycle reacts to the
-# controller's own commandPath/active inputs instead of the page cfg keys.
-require_in_surface popup 'import "../CommandLedger.js" as CommandLedger'
 reject_in_surface popup "function commandWithRunNonce(command)"
-require_in_surface popup "Component.onCompleted: if (active) Qt.callLater(loadProviderRoster)"
-require_in_surface popup "onCommandPathChanged: if (active) Qt.callLater(loadProviderRoster)"
-require_in_surface popup "function expireProviderRosterCommands(nowMs)"
-require_in_surface popup "id: providerRosterCommandTimeoutTimer"
+# Kept: the per-second roster sweep only fires its effect after a 60s
+# pending window, so neutering the sweep call keeps every executed roster
+# test green. It stays as the only pin that the sweep retires overdue
+# commands instead of idling.
 require_in_surface popup "controller.expireProviderRosterCommands(Date.now())"
 
 

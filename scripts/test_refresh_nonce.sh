@@ -8,20 +8,18 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # mistaken for a fresh one. That rule follows the command, not the file it lives
 # in, so assert it across the whole surface.
 
-require_in_surface applet "function commandWithRunNonce(command)"
-require_in_surface applet "commandWithRunNonce(commandSource)"
+# The cost controller mints its nonce inline (bare commandSource keeps the
+# suite red: the CLI crashes without CODEXBAR_PLASMA_RUN, proven against
+# test_manualRefreshSupersedesAnActiveScan), so this surface pin now covers
+# only the sessions controller's identical call.
 require_in_surface applet "CommandLedger.withRunNonce(commandSource, runSerial)"
-require_in_surface applet "commandWithRunNonce(providerConfigCommandSource)"
 # The nonce alone does not drop a late result; the ledger does, by no longer
 # holding the retired source name. Assert that routing reads the ledger and not
 # a parallel per-kind string that could disagree with it.
-require_in_surface applet "CommandLedger.find(lifecycle.activeCommandDescriptors, sourceName)"
 reject_in_surface applet "property string connectedCommandSource"
 reject_in_surface applet "property string connectedCostCommandSource"
 reject_in_surface applet "property string connectedSessionsCommandSource"
 reject_in_surface applet "property string connectedProviderConfigCommandSource"
-require_in_surface applet "var baseCommand = buildProviderUsageCommand(providerID)"
-require_in_surface applet "sourceName: commandWithRunNonce(baseCommand)"
 # Notifications register a unique source before connecting it. The dispatcher
 # tests execute the real command.
 require_in_surface applet 'var sourceName = CommandLedger.withRunNonce(command, runSerial)'
@@ -39,15 +37,7 @@ require_in_surface providers "configSource.connectSource(sourceName)"
 reject_in_surface providers "existing[command] = descriptor"
 reject_in_surface providers "configSource.connectSource(command)"
 
-require_in_surface popup "property int commandRunSerial: 0"
-# The roster load lives in the shared controllers/ loader, so its ledger
-# import carries the parent-directory prefix.
-require_in_surface popup 'import "../CommandLedger.js" as CommandLedger'
 reject_in_surface popup "function commandWithRunNonce(command)"
-require_in_surface popup "commandRunSerial += 1"
-require_in_surface popup "var sourceName = CommandLedger.withRunNonce(command, commandRunSerial)"
-require_in_surface popup "providerRosterCommands = CommandLedger.opened("
-require_in_surface popup "providerRosterSource.connectSource(sourceName)"
 
 reject_in_surface applet "console.log(\"CodexBar"
 reject_in_surface providers "console.log(\"CodexBar"
