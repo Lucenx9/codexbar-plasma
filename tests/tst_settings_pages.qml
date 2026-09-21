@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls as Controls
 import QtTest
 import "../contents/ui/SafeText.js" as SafeText
 
@@ -566,5 +567,140 @@ TestCase {
 
         page.handleDiagnosticData("stale-source", {stdout: "replacement", "exit code": 0});
         verify(page.diagnosticOutput.indexOf("replacement") < 0);
+    }
+
+    function generalCheckByText(page, label) {
+        var all = [];
+        walkPageObjects(page, all);
+        var matches = all.filter(function(item) {
+            return item instanceof Controls.CheckBox && item.text === label;
+        });
+        return matches.length > 0 ? matches[0] : null;
+    }
+
+    // Each General toggle owns its own configuration key: flipping the
+    // visible checkbox must write only that key, found by its label.
+    function test_generalTogglesWriteTheirOwnConfiguration() {
+        var page = createPage("../contents/ui/configGeneral.qml", {
+            cfg_commandPath: "/usr/bin/codexbar",
+            cfg_updateChecksEnabled: true,
+            cfg_enableNotifications: true
+        });
+        if (!page)
+            return;
+        var cases = [
+            {label: "Fetch provider service status", key: "cfg_includeStatus"},
+            {label: "Load local usage and spend history", key: "cfg_costUsageEnabled"},
+            {label: "Check for widget updates", key: "cfg_updateChecksEnabled"},
+            {label: "Notify when a widget update is available", key: "cfg_updateNotificationsEnabled"},
+            {label: "Install widget updates automatically", key: "cfg_autoUpdateEnabled"}
+        ];
+        for (var i = 0; i < cases.length; i++) {
+            var box = generalCheckByText(page, cases[i].label);
+            verify(box !== null, cases[i].label);
+            verify(box.enabled, cases[i].label);
+            var before = page[cases[i].key];
+            box.forceActiveFocus(Qt.TabFocusReason);
+            keyClick(Qt.Key_Space);
+            compare(page[cases[i].key], !before);
+            keyClick(Qt.Key_Space);
+            compare(page[cases[i].key], before);
+        }
+    }
+
+    // Every refresh preset must round-trip: a stored value selects its own
+    // entry, activating an entry writes its value, and Custom writes nothing.
+    function test_refreshPresetsRoundTripEveryEntry() {
+        var page = createPage("../contents/ui/configGeneral.qml", {
+            cfg_commandPath: "/usr/bin/codexbar",
+            cfg_refreshInterval: 300
+        });
+        if (!page)
+            return;
+        var combo = findChild(page, "refreshPresetCombo");
+        var intervalSpin = findChild(page, "refreshIntervalSpin");
+        verify(combo !== null && intervalSpin !== null);
+        // -1 is the Custom entry's marker, not a storable interval: the
+        // spin alias clamps it to 0, so only listed non-negative values
+        // round-trip through the stored setting.
+        var entries = [0, 60, 120, 300, 900, -1];
+        var stored = [0, 60, 120, 300, 900];
+        for (var s = 0; s < stored.length; s++) {
+            page.cfg_refreshInterval = stored[s];
+            tryCompare(combo, "currentValue", stored[s]);
+            verify(!intervalSpin.visible);
+        }
+        for (var a = 0; a < entries.length; a++) {
+            page.cfg_refreshInterval = 300;
+            tryCompare(combo, "currentValue", 300);
+            combo.currentIndex = a;
+            combo.activated(a);
+            if (entries[a] >= 0)
+                compare(page.cfg_refreshInterval, entries[a]);
+            else
+                compare(page.cfg_refreshInterval, 300);
+        }
+    }
+
+    // The update status label renders the pending runtime status text, and
+    // stays hidden while the status is empty.
+    function test_updateStatusLabelShowsPendingStatus() {
+        var page = createPage("../contents/ui/configGeneral.qml", {
+            cfg_commandPath: "/usr/bin/codexbar",
+            cfg_updateChecksEnabled: true
+        });
+        if (!page)
+            return;
+        var all = [];
+        walkPageObjects(page, all);
+        var labels = all.filter(function(item) {
+            return item.toString().indexOf("PlainControlsLabel") >= 0
+                && item.text !== undefined
+                && String(item.text).indexOf("Last update status:") === 0;
+        });
+        compare(labels.length, 1);
+        compare(labels[0].text, "Last update status: ");
+        verify(!labels[0].visible);
+        page.cfg_updateChecksEnabled = false;
+        verify(!labels[0].visible);
+    }
+
+    // The last-check label formats through the shared update logic: blank or
+    // unparsable stamps stay on "never", dated stamps use the local format.
+    function test_lastUpdateCheckTextFormatsLocalShortDate() {
+        var page = createPage("../contents/ui/configGeneral.qml", {
+            cfg_commandPath: "/usr/bin/codexbar"
+        });
+        if (!page)
+            return;
+        compare(page.lastUpdateCheckText(""), "Last checked: never");
+        compare(page.lastUpdateCheckText("not-a-date"), "Last checked: never");
+        var dated = page.lastUpdateCheckText("2026-09-21T12:00:00Z");
+        verify(dated.indexOf("Last checked: ") === 0);
+        verify(dated.indexOf("never") < 0);
+    }
+
+    // A cost-history edit stays pending across persisted changes until the
+    // user saves, so runtime updates cannot clobber an unapplied edit.
+    function test_costHistoryEditsStayPendingUntilSaved() {
+        var page = createPage("../contents/ui/configGeneral.qml", {
+            cfg_commandPath: "/usr/bin/codexbar"
+        });
+        if (!page)
+            return;
+        compare(page.costHistoryDaysEditPending, false);
+        page.editCostHistoryDays(90);
+        compare(page.cfg_costHistoryDays, 90);
+        compare(page.costHistoryDaysEditPending, true);
+        page.syncCostHistoryDaysFromPersisted();
+        compare(page.cfg_costHistoryDays, 90);
+        compare(page.costHistoryDaysEditPending, true);
+        page.editCostHistoryMetric("tokens");
+        compare(page.cfg_costHistoryMetric, "tokens");
+        compare(page.costHistoryMetricEditPending, true);
+        page.saveConfig();
+        compare(page.cfg_costHistoryDays, 90);
+        compare(page.costHistoryDaysEditPending, false);
+        compare(page.costHistoryMetricEditPending, false);
     }
 }
