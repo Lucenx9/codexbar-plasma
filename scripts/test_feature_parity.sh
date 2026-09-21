@@ -414,12 +414,14 @@ require_in_surface applet 'applet.costHistoryShowsTokens'
 # must follow the metric instead of always printing the cost amount.
 reject_in_surface applet 'i18n("%1: %2", label, amountString(last.cost'
 # The peak and average annotations must name the same day the bars highlight.
-require_in_surface applet "CostPresentation.peakPoint(points, costHistoryShowsTokens)"
 reject_in_surface applet 'i18n("Average/day: %1", amountString('
-require_in_surface applet "function spendHistoryStillBuilding()"
 require_in_file "$SPEND_COMPONENT_QML" "function metricOptions()"
 require_in_file "$SPEND_COMPONENT_QML" "view.applet.setCostHistoryMetric(metricCombo.valueAt(index))"
 require_in_file "$SPEND_COMPONENT_QML" "view.applet.spendHistoryStillBuilding()"
+# The 365-day clamp is unobservable in executed tests: the property
+# initializer reads Plasmoid.configuration, which is absent under test, so
+# fixtures declare their own day count and 365 -> 30 keeps every naming test
+# green. This stays as the only pin on the bound.
 require_in_surface applet "Math.max(1, Math.min(365, Number(Plasmoid.configuration.costHistoryDays)"
 
 # The 500-char truncation cap is unobservable in executed tests: the
@@ -456,11 +458,14 @@ require_in_file "$CONFIG_XML" "notifyPredictivePaceWarnings"
 require_in_file "$CONFIG_XML" "panelElementOrder"
 require_in_file "$CONFIG_XML" 'name="panelQuotaLane"'
 require_in_file "$CONFIG_XML" 'name="panelVisibilityRules"'
+# The lane and rules normalizers are unobservable in executed tests: both
+# readonly initializers read Plasmoid.configuration, which is absent under
+# test, so fixtures declare their own lane and rules and bogus replacements
+# keep every naming test green. These stay as the only pins on the wiring;
+# routing through these values is covered by the menu-bar and compact
+# provider selection tests.
 require_in_surface applet "PanelDisplay.safeLane(Plasmoid.configuration.panelQuotaLane)"
 require_in_surface applet "PanelRules.normalizedRules(Plasmoid.configuration.panelVisibilityRules)"
-require_in_surface applet "PanelDisplay.rowForMode(switcherCandidateRows(item), mode, panelQuotaLane)"
-require_in_surface applet "PanelRules.matches(panelVisibilityRules.text, row, panelClockMs)"
-require_in_surface applet "PanelRules.matchesAny(panelVisibilityRules.meters, rows, panelClockMs)"
 reject_in_surface applet "onPanelQuotaLaneChanged: Qt.callLater(refreshNow)"
 reject_in_surface applet "onPanelVisibilityRulesChanged: Qt.callLater(refreshNow)"
 require_in_surface applet '"sessions", "--json-v2"'

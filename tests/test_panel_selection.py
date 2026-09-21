@@ -75,6 +75,84 @@ class PanelSelectionTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
+class CompactProvidersTests(unittest.TestCase):
+    # Only compact rendering narrows to the panel-filtered roster, and only
+    # to the meters the visibility rules still allow: a hidden meter drops
+    # its provider instead of printing a row the user asked to hide.
+    COMPACT_FUNCTIONS = (
+        "compactProviders", "panelProviderItems", "panelMeterRows",
+        "switcherCandidateRows", "usageRowForLane", "appendUniqueUsageRow",
+        "providerKey", "clamp",
+    )
+
+    COMPACT_QML = '''import QtQuick
+import QtTest
+import "SOURCE_URL/PanelProviders.js" as PanelProviders
+import "SOURCE_URL/PanelRules.js" as PanelRules
+import "SOURCE_URL/PanelDisplay.js" as PanelDisplay
+import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
+import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
+TestCase {
+    name: "CompactProviders"
+    property var providers: []
+    property string panelProviderIDsRaw: ""
+    property string panelQuotaLane: "primary"
+    property var panelVisibilityRules: PanelRules.normalizedRules("{}")
+    property real panelClockMs: Date.now()
+    // QML rejects a property named Plasmoid, so the harness rewrites the
+    // configuration read; see the substitution below.
+    property var hostConfiguration: ({showMultiProviderInPanel: true})
+    function providerPresentation(item) { return item; }
+    SOURCE_FUNCTIONS
+    function meterItem(used) {
+        return {provider: "codex", rows: [{lane: "primary", hasPercent: true,
+            usedPercent: used, leftPercent: 100 - used}]};
+    }
+    function test_allowedMetersKeepTheProvider() {
+        providers = [meterItem(43)];
+        compare(compactProviders().length, 1);
+        providers = [];
+    }
+    function test_hiddenMetersDropTheProvider() {
+        providers = [meterItem(43)];
+        panelVisibilityRules = PanelRules.normalizedRules(
+            JSON.stringify({meters: {condition: "usageAtLeast", usedPercent: 99}}));
+        compare(compactProviders().length, 0);
+        panelVisibilityRules = PanelRules.normalizedRules("{}");
+        providers = [];
+    }
+    function test_disabledMultiProviderShowsNothing() {
+        providers = [meterItem(43)];
+        hostConfiguration = ({showMultiProviderInPanel: false});
+        compare(compactProviders().length, 0);
+        hostConfiguration = ({showMultiProviderInPanel: true});
+        providers = [];
+    }
+}
+'''
+
+    def test_production_compact_providers_honor_visibility_rules(self):
+        surface = Surface("applet", ROOT)
+        main = ROOT / "contents/ui/main.qml"
+        source = surface.texts[main]
+        surface.texts = {main: source}
+        functions = []
+        for name in self.COMPACT_FUNCTIONS:
+            signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
+            functions.append((signature + " {" + surface.function_body(name) + "}")
+                             .replace("Plasmoid.configuration", "hostConfiguration"))
+        qml = self.COMPACT_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
+        qml = qml.replace("SOURCE_FUNCTIONS", "\n    ".join(functions))
+        with tempfile.TemporaryDirectory(prefix="codexbar-compact-providers-") as temporary:
+            fixture = Path(temporary) / "tst_compact_providers.qml"
+            fixture.write_text(qml)
+            result = subprocess.run(
+                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
 class ProviderSelectionTests(unittest.TestCase):
     # The roster selectors behind the panel, popup and overview: index
     # lookup, ID filtering, automatic ranking and selection reconciliation
