@@ -26,9 +26,13 @@ require_in_surface applet "readonly property int notificationCommandTimeoutMs: 1
 require_in_surface applet "function refreshSessions()"
 require_in_surface applet "readonly property int pollIntervalMs: 60000"
 require_in_surface applet "interval: controller.pollIntervalMs"
-require_in_surface applet 'import "../CostRefreshPolicy.js" as CostRefreshPolicy'
+# Kept: the hourly cost auto-refresh interval is unobservable in executed
+# tests (3600000 and 50 both keep the cost suite green: a longer wait never
+# elapses in a fast test, and rapid firing throttles to a no-op inside
+# CostRefreshPolicy), so no mutation can prove this pin redundant. It stays
+# as the only pin that the auto-refresh timer follows the shared policy
+# instead of a hardcoded literal.
 require_in_surface applet "interval: CostRefreshPolicy.automaticRefreshIntervalMs"
-require_in_surface applet "property double lastAttemptAtMs: -1"
 # Kept: the updater's initial-false flags are unobservable in executed tests
 # (flipping all three to true keeps the whole updater suite green: each flag
 # is overwritten by its request/completion decision before any effect), so no

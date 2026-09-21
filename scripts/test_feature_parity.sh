@@ -477,6 +477,11 @@ require_in_surface applet "notificationDispatcher.send(cleanTitle, cleanBody, ur
 require_in_surface applet "i18n(\"Open release page\")"
 require_in_surface applet "function safeReleaseUrl(url)"
 require_in_surface applet "Qt.openUrlExternally(releasePageUrl)"
+# Kept: this surface pin also covers main.qml's Plasmoid-backed copy, which
+# belongs to the main.qml step. The cost controller's own copy is proven
+# covered by executed tests (deleting it turns
+# test_startupRunsWhileHiddenAndReentryKeepsFreshData red: no command can
+# start when the guard property is missing), so that half needs no pin.
 require_in_surface applet "property bool costUsageEnabled"
 require_in_surface applet "property int costHistoryDays"
 # Cost and tokens both come from one cost payload: switching the plotted metric
@@ -498,8 +503,6 @@ require_in_surface applet "function spendHistoryStillBuilding()"
 require_in_file "$SPEND_COMPONENT_QML" "function metricOptions()"
 require_in_file "$SPEND_COMPONENT_QML" "view.applet.setCostHistoryMetric(metricCombo.valueAt(index))"
 require_in_file "$SPEND_COMPONENT_QML" "view.applet.spendHistoryStillBuilding()"
-require_in_surface applet "if (!controller.costUsageEnabled || controller.commandPath.length === 0) {"
-require_in_surface applet "--days"
 require_in_surface applet "Math.max(1, Math.min(365, Number(Plasmoid.configuration.costHistoryDays)"
 
 # The 500-char truncation cap is unobservable in executed tests: the
