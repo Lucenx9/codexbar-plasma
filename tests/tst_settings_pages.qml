@@ -1,5 +1,6 @@
 import QtQuick
 import QtTest
+import "../contents/ui/SafeText.js" as SafeText
 
 // General owns the global defaults action; Notifications owns the quota
 // thresholds both of them share. Both pages read applied configuration, so
@@ -348,6 +349,103 @@ TestCase {
         verify(intervalSpin.visible);
     }
 
+    // Non-visual children (timers, tooltips, data sources) live in resources
+    // and data, not in children, so reaching the timeout timer or the
+    // predictive tooltip needs the whole object tree.
+    function walkPageObjects(root, out) {
+        if (root === null || root === undefined || out.indexOf(root) >= 0)
+            return;
+        out.push(root);
+        var groups = [root.children, root.resources, root.data];
+        for (var g = 0; g < groups.length; g++) {
+            var kids = groups[g];
+            if (kids === undefined || kids === null)
+                continue;
+            for (var i = 0; i < kids.length; i++)
+                walkPageObjects(kids[i], out);
+        }
+    }
+
+    function notificationCheckBoxes(page) {
+        var all = [];
+        walkPageObjects(page, all);
+        return all.filter(function(item) {
+            return item.toString().indexOf("CheckBox") >= 0;
+        });
+    }
+
+    function diagnosticTimeoutTimer(page) {
+        var all = [];
+        walkPageObjects(page, all);
+        var found = all.filter(function(item) {
+            return item.toString().indexOf("Timer") >= 0 && item.repeat === false
+                && item.interval > 0 && item.toString().indexOf("cliUpdateDeadline") < 0;
+        });
+        return found.length === 1 ? found[0] : null;
+    }
+
+    function diagnosticProviderField(page) {
+        var all = [];
+        walkPageObjects(page, all);
+        for (var i = 0; i < all.length; i++) {
+            if (all[i].placeholderText === "all")
+                return all[i];
+        }
+        return null;
+    }
+
+    // The master switch owns the detail toggles: turning it off must disable
+    // quota, predictive and reset notices, and its own checked state must
+    // follow the applied configuration. The status toggle stays gated on the
+    // General status probe and is covered by the threshold test above.
+    function test_notificationTogglesFollowMasterSwitch() {
+        var page = createPage("../contents/ui/configNotifications.qml", {
+            cfg_quotaWarningPercent: 80,
+            cfg_quotaCriticalPercent: 95
+        });
+        if (!page)
+            return;
+        var boxes = notificationCheckBoxes(page);
+        compare(boxes.length, 5);
+
+        page.cfg_enableNotifications = false;
+        var masters = boxes.filter(function(box) { return box.enabled; });
+        compare(masters.length, 1);
+        compare(masters[0].checked, false);
+
+        page.cfg_enableNotifications = true;
+        compare(masters[0].checked, true);
+        // All but the status toggle, which needs status fetching enabled.
+        compare(boxes.filter(function(box) { return box.enabled; }).length, 4);
+    }
+
+    // The predictive tooltip must keep routing through plainText so the
+    // shared escaping applies; assigning text directly would bypass it.
+    // The tooltip is found through its parent checkbox, never by its words.
+    function test_predictiveTooltipKeepsPlainTextRouting() {
+        var page = createPage("../contents/ui/configNotifications.qml", {
+            cfg_quotaWarningPercent: 80,
+            cfg_quotaCriticalPercent: 95
+        });
+        if (!page)
+            return;
+        var all = [];
+        walkPageObjects(page, all);
+        var tips = all.filter(function(item) {
+            return item.toString().indexOf("PlainToolTip") >= 0;
+        });
+        compare(tips.length, 1);
+        // The predictive checkbox is the one the applied configuration
+        // checks here, so the tooltip parent is identified by wiring.
+        page.cfg_notifyPredictivePaceWarnings = true;
+        var boxes = notificationCheckBoxes(page);
+        var predictive = boxes.filter(function(box) { return box.checked; });
+        compare(predictive.length, 1);
+        verify(tips[0].parent === predictive[0]);
+        verify(tips[0].plainText.length > 0);
+        compare(tips[0].text, SafeText.plainTextAsRichText(tips[0].plainText));
+    }
+
     function test_quotaThresholdsKeepCriticalAboveWarning() {
         var page = createPage("../contents/ui/configNotifications.qml", {
             cfg_quotaWarningPercent: 70,
@@ -374,5 +472,99 @@ TestCase {
 
         // Status incident notices stay unavailable while status fetching is off.
         verify(!statusCheck.enabled);
+    }
+
+    // A blank diagnostic provider means "all enabled providers": the page
+    // must send the redacted diagnose command with a run nonce behind it.
+    // /bin/echo settles the DataSource immediately, so the test observes the
+    // issued command instead of the source text that built it.
+    function test_diagnosticBlankProviderRunsRedactedCommand() {
+        var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: "/bin/echo"});
+        if (!page)
+            return;
+        var field = diagnosticProviderField(page);
+        verify(field !== null);
+
+        field.text = "";
+        page.runDiagnostic();
+        tryVerify(function() { return !page.diagnosticRunning; }, 5000);
+        compare(page.diagnosticOutput, "diagnose --provider all --format json --redact");
+
+        field.text = "codex";
+        page.runDiagnostic();
+        tryVerify(function() { return !page.diagnosticRunning; }, 5000);
+        compare(page.diagnosticOutput, "diagnose --provider codex --format json --redact");
+    }
+
+    // The output area renders whatever the page accepted, so a severed
+    // binding shows up here even though the accepted property still changes.
+    function test_diagnosticOutputAreaFollowsAcceptedOutput() {
+        var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: "/bin/echo"});
+        if (!page)
+            return;
+        var field = diagnosticProviderField(page);
+        verify(field !== null);
+        field.text = "";
+        page.runDiagnostic();
+        tryVerify(function() { return !page.diagnosticRunning; }, 5000);
+
+        var all = [];
+        walkPageObjects(page, all);
+        var areas = all.filter(function(item) {
+            return item.toString().indexOf("TextArea") >= 0;
+        });
+        compare(areas.length, 1);
+        compare(areas[0].text, page.diagnosticOutput);
+        verify(areas[0].text.indexOf("diagnose --provider all") >= 0);
+    }
+
+    // The timeout timer must retire a hung command through the handler: with
+    // no process attached the test shortens the timer itself and observes the
+    // retired state and the timeout message, never the timeout constant.
+    function test_diagnosticTimeoutRetiresActiveCommand() {
+        var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: "/bin/echo"});
+        if (!page)
+            return;
+        var timer = diagnosticTimeoutTimer(page);
+        verify(timer !== null);
+        compare(timer.interval, page.diagnosticCommandTimeoutMs);
+
+        page.activeCommand = "synthetic-hung-source";
+        page.diagnosticRunning = true;
+        timer.interval = 80;
+        timer.restart();
+        tryVerify(function() { return !page.diagnosticRunning; }, 5000);
+        compare(page.activeCommand, "");
+        compare(page.diagnosticError, "Diagnostic command timed out. Try again.");
+    }
+
+    // Switching the command path must retire the in-flight command so a late
+    // reply from the old executable cannot replace the new page state.
+    function test_commandPathChangeRetiresActiveCommand() {
+        var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: "/bin/echo"});
+        if (!page)
+            return;
+        page.activeCommand = "synthetic-old-source";
+        page.diagnosticRunning = true;
+        page.cfg_commandPath = "/other/codexbar";
+        verify(!page.diagnosticRunning);
+        compare(page.activeCommand, "");
+    }
+
+    // Accepted output stays inside the diagnostic bound, and a reply for a
+    // retired source never replaces the current output.
+    function test_diagnosticOutputIsBoundedAndIgnoresStaleSources() {
+        var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: "/bin/echo"});
+        if (!page)
+            return;
+        page.activeCommand = "synthetic-source";
+        page.diagnosticRunning = true;
+        var overlong = new Array(70001).join("y");
+        page.handleDiagnosticData("synthetic-source", {stdout: overlong, "exit code": 0});
+        verify(!page.diagnosticRunning);
+        compare(page.diagnosticOutput.length, 65536);
+
+        page.handleDiagnosticData("stale-source", {stdout: "replacement", "exit code": 0});
+        verify(page.diagnosticOutput.indexOf("replacement") < 0);
     }
 }

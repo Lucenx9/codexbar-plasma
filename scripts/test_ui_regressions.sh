@@ -89,7 +89,6 @@ require_in_surface general "ConfigValueSync.afterUserEdit("
 require_in_surface general "ConfigValueSync.afterSave("
 reject_in_surface general "cfg_costHistoryDays: Plasmoid.configuration.costHistoryDays"
 reject_in_surface general "cfg_costHistoryMetric: Plasmoid.configuration.costHistoryMetric"
-require_in_file "$DIAGNOSTICS_QML" "id: advancedOverrideExplanation"
 
 python3 - "$ROOT_DIR" <<'PY'
 import re

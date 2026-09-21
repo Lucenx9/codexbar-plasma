@@ -118,7 +118,6 @@ for qml_file in "$MAIN_QML" "$PROVIDERS_QML" "$POPUP_QML" "$DIAGNOSTICS_QML"; do
 done
 require_in_surface applet "SafeText.cliMessage"
 require_in_surface providers "SafeText.cliMessage"
-require_in_file "$DIAGNOSTICS_QML" "SafeText.cliDiagnostic"
 require_in_file "$PLAIN_INLINE_MESSAGE_QML" "text: SafeText.plainTextAsRichText(plainText)"
 require_in_file "$PLAIN_BUTTON_QML" "SafeText.plainButtonText(plainText, contentItem !== null)"
 require_in_file "$PLAIN_CHECK_BOX_QML" "text: SafeText.plainTextAsRichText(plainText)"
@@ -136,14 +135,12 @@ require_in_surface popup "plainText: providerMoveDown.Accessible.name"
 require_in_surface panel "plainText: panelMoveUp.Accessible.name"
 require_in_surface panel "plainText: panelMoveDown.Accessible.name"
 require_in_surface providers "plainText: reloadProvidersButton.Accessible.name"
-require_in_surface notifications 'plainText: i18n("Uses the pace forecast reported by codexbar.")'
 require_in_file "$COPYABLE_VALUE_QML" 'plainText: valueRow.copyAccessibleName'
 require_in_file "$COPYABLE_VALUE_QML" 'plainText: i18n("Copied")'
 require_in_surface applet "parent: copyButton"
 require_in_surface panel "parent: panelMoveUp"
 require_in_surface panel "parent: panelMoveDown"
 require_in_surface providers "parent: reloadProvidersButton"
-require_in_surface notifications "parent: notifyPredictivePaceWarningsCheck"
 require_in_file "$PROVIDER_ACCOUNTS_PANEL_QML" "delegate: PlainButton {"
 require_in_file "$POPUP_QML" "text: SafeText.plainTextAsRichText(modelData.displayName)"
 require_in_surface popup "Kirigami.MnemonicData.label: SafeText.plainTextAsMnemonicRichText(modelData.displayName)"

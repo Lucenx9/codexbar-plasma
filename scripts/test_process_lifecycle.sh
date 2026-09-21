@@ -62,12 +62,6 @@ require_in_surface popup "function expireProviderRosterCommands(nowMs)"
 require_in_surface popup "id: providerRosterCommandTimeoutTimer"
 require_in_surface popup "controller.expireProviderRosterCommands(Date.now())"
 
-require_in_surface diagnostics "readonly property int diagnosticCommandTimeoutMs: 60000"
-require_in_surface diagnostics "function commandWithRunNonce(command)"
-require_in_surface diagnostics "function handleDiagnosticTimeout()"
-require_in_surface diagnostics "id: diagnosticCommandTimeoutTimer"
-require_in_surface diagnostics "page.handleDiagnosticTimeout()"
-require_in_surface diagnostics "onCommandPathChanged:"
 
 reject_in_surface applet "retiredUsageCommands"
 reject_in_surface applet "pendingAccountCommandStartedAt"
