@@ -10,6 +10,14 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Added
+
+- Bundle the fallback name, icon, and documentation link for the `Pi`
+  provider that official CodexBar 0.63.0 adds to the registry. Brand color and
+  dashboard, login, and status links are omitted pending verifiable upstream
+  sources; the widget uses the theme highlight and hides missing links by
+  design.
+
 ### Changed
 
 - `make check` runs its checks concurrently and exposes each one as its own

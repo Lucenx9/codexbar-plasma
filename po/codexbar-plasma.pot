@@ -729,6 +729,10 @@ msgstr ""
 msgid "Perplexity"
 msgstr ""
 
+#: contents/ui/components/ProviderNames.qml
+msgid "Pi"
+msgstr ""
+
 #: contents/ui/components/ProviderNames.qml contents/ui/main.qml
 msgid "Poe"
 msgstr ""

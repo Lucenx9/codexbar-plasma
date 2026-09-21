@@ -8,11 +8,15 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.62.0](https://github.com/steipete/CodexBar/releases/tag/v0.62.0),
-  commit `4b3ed1a2a49a545522fb10196ff420526d85784a`, checked 2026-09-20.
-- Coverage: release changes from 0.61.0 through 0.62.0 against Plasma
-  `9205e518a6b0eba78894386ff8dad5a308305bfb`. The
-  [0.62.0 review](docs/research/2026-09-20-macos-parity-0.62.0.md) verifies
+- Last release reviewed: [CodexBar 0.63.0](https://github.com/steipete/CodexBar/releases/tag/v0.63.0),
+  commit `f3e718c897d5ed76af4e07182df899c722118546`, checked 2026-09-21.
+- Coverage: release changes from 0.62.0 through 0.63.0 against Plasma
+  `1dc7f2c5fbc834bb74c205ad4b9d5607aba597bf`. The
+  [0.63.0 review](docs/research/2026-09-21-macos-parity-0.63.0.md) verifies
+  the Pi registry growth with local token history and estimated costs, the
+  still-rejected Cursor cost and provider-settings descriptor probes, and
+  confirms that usage, sessions, and config envelopes are otherwise unchanged;
+  the [0.62.0 review](docs/research/2026-09-20-macos-parity-0.62.0.md) verifies
   Muse token history in official Linux cost output, the Codex-only `--remote`
   and `--summary-only` cost modes, the `usage_updated` hook event, and
   confirms that usage, sessions, and config envelopes are unchanged; the
@@ -73,8 +77,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider settings
 
 - [ ] Enable generic settings and token-account editing through official
-  descriptors and writes. Linux 0.62.0 still rejects `config providers
-  --descriptors` (74 records, same four keys); its provider records have no
+  descriptors and writes. Linux 0.63.0 still rejects `config providers
+  --descriptors` (75 records, same four keys); its provider records have no
   descriptor. 0.61.0 adds an `azureOpenAIAPIVersion` config extension value
   with no supported CLI writer, which the frontend must not reach by editing
   the config file. Keep existing
@@ -89,9 +93,9 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.62.0 still has no
+  flow, CLI-auth setup, and token-account actions. Linux 0.63.0 still has no
   generic `config action` command (`set-api-key` remains the sole writer; the
-  new `usage_updated` hook event is CLI automation surface, not a setup
+  `usage_updated` hook event is CLI automation surface, not a setup
   action). Done when supported actions expose validated
   prompts/results and handle cancellation, failure, and stale responses in
   Plasma. Preserve current key/link setup. [Prior discussion #168](https://github.com/Lucenx9/codexbar-plasma/issues/168).
@@ -121,8 +125,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Cursor cost
 
 - [ ] Show Cursor cost history through the generic Linux `cost` path. Linux
-  0.62.0 still rejects Cursor and lists Antigravity, Claude, Codex, and Muse
-  Code as supported;
+  0.63.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
+  Code, and Pi as supported;
   the descriptor gate keeps the new cookie-source availability errors unreachable.
   Done when a released Linux command emits supported cost data and Plasma tests
   cover its amounts, currencies, and trust metadata.
