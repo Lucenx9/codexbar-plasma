@@ -9,7 +9,6 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GENERAL_QML="${ROOT_DIR}/contents/ui/configGeneral.qml"
 PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
 PROVIDER_IDENTITY_JS="${ROOT_DIR}/contents/ui/ProviderIdentity.js"
-PROVIDER_NAMES_QML="${ROOT_DIR}/contents/ui/components/ProviderNames.qml"
 COMPACT_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/CompactRepresentation.qml"
 PROVIDER_HEADER_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/ProviderHeader.qml"
 USAGE_ROW_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/ProviderUsageRow.qml"
@@ -224,25 +223,9 @@ if failures:
     sys.exit(1)
 PY
 
-# Display names live once in the shared component; these late-added
-# providers are the canary for a half-finished provider addition.
-require_in_file "$PROVIDER_NAMES_QML" '"clawrouter": i18n("ClawRouter")'
-require_in_file "$PROVIDER_NAMES_QML" '"coderabbit": i18n("CodeRabbit")'
-require_in_file "$PROVIDER_NAMES_QML" '"crossmodel": i18n("CrossModel")'
-require_in_file "$PROVIDER_NAMES_QML" '"elevenlabs": i18n("ElevenLabs")'
-require_in_file "$PROVIDER_NAMES_QML" '"fireworks": i18n("Fireworks")'
-require_in_file "$PROVIDER_NAMES_QML" '"huggingface": i18n("Hugging Face")'
-require_in_file "$PROVIDER_NAMES_QML" '"ibmbob": i18n("IBM Bob")'
-require_in_file "$PROVIDER_NAMES_QML" '"kimi": i18n("Kimi Code")'
-require_in_file "$PROVIDER_NAMES_QML" '"minimax": i18n("MiniMax")'
-require_in_file "$PROVIDER_NAMES_QML" '"moonshot": i18n("Moonshot / Kimi Open Platform")'
-require_in_file "$PROVIDER_NAMES_QML" '"muse": i18n("Muse Code")'
-require_in_file "$PROVIDER_NAMES_QML" '"nous": i18n("Nous Portal")'
-require_in_file "$PROVIDER_NAMES_QML" '"qoder": i18n("Qoder")'
-require_in_file "$PROVIDER_NAMES_QML" '"replicate": i18n("Replicate")'
-require_in_file "$PROVIDER_NAMES_QML" '"stepfun": i18n("StepFun")'
-require_in_file "$PROVIDER_NAMES_QML" '"wayfinder": i18n("Wayfinder")'
-require_in_file "$PROVIDER_NAMES_QML" '"zai": i18n("z.ai / GLM")'
+# Display names live once in the shared component; the late-added provider
+# fallback titles are executed by tests/tst_provider_names.qml against the
+# real ProviderNames.titleForKey.
 
 python3 - "$PROVIDERS_QML" <<'PY'
 import pathlib
