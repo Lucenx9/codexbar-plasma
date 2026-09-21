@@ -225,6 +225,7 @@ TestCase {
     property bool providerDescriptorsUnavailable: false
     property bool fireworksSingleKeySetupSupported: false
     property var providerFieldPending: ({})
+    property var providerDiagnosticLoading: ({})
     property var commands: ({})
     property int cfg_providerConfigRevision: 0
     property var configSource
@@ -240,6 +241,8 @@ TestCase {
     }
     function displayNameForProvider(provider) { return provider; }
     function providerCliArgument(provider) { return provider; }
+    function providerTitle(identifier) { return identifier; }
+    function updateProviderEnabled(provider, value) {}
     function freshSource() {
         var backend = {connected: [], disconnected: []};
         backend.connectSource = function(name) { backend.connected.push(name); };
@@ -247,8 +250,9 @@ TestCase {
         return backend;
     }
     function freshPage() {
-        var stub = {reloadCalls: 0};
-        stub.reload = function() { stub.reloadCalls++; };
+        var stub = {reloadCalls: 0, preserved: undefined};
+        stub.reload = function(preserve) { stub.reloadCalls++; stub.preserved = preserve; };
+        stub.providerTitle = function(identifier) { return identifier; };
         return stub;
     }
     // Every command must mint a distinct nonce source: without the serial the
@@ -393,6 +397,105 @@ TestCase {
         verify(statusText.length > 0);
         compare(page.reloadCalls, 1);
     }
+    // A fresh list selects the first enabled provider, so the page never
+    // opens on an empty selection; the selection property carries it.
+    function test_listResultSelectsFirstEnabledProvider() {
+        providers = [];
+        selectedProviderID = "";
+        loading = true;
+        errorText = "stale";
+        page = freshPage();
+        var currentRevision = providerConfigRevisionValue();
+        handleListResult({includeDescriptors: false, providerConfigRevision: currentRevision},
+            '[{"provider": "codex", "displayName": "Codex", "enabled": true}, {"provider": "claude", "displayName": "Claude", "enabled": false}]', "");
+        compare(providers.length, 2);
+        compare(providers[0].provider, "codex");
+        compare(selectedProviderID, "codex");
+        compare(loading, false);
+        compare(errorText, "");
+    }
+    // An old CLI that rejects --descriptors falls back to a plain list and
+    // marks descriptors unavailable, instead of leaving the page in error.
+    function test_listResultRetriesWithoutDescriptorsOnOldCli() {
+        configSource = freshSource();
+        commandRunSerial = 0;
+        commands = ({});
+        providerDescriptorsUnavailable = false;
+        loading = true;
+        var currentRevision = providerConfigRevisionValue();
+        handleListResult({includeDescriptors: true, providerConfigRevision: currentRevision},
+            "", "codexbar: error: unknown option '--descriptors'");
+        compare(providerDescriptorsUnavailable, true);
+        compare(configSource.connected.length, 1);
+        verify(configSource.connected[0].indexOf("--descriptors") === -1);
+        verify(configSource.connected[0].indexOf("--format") !== -1);
+        verify(configSource.connected[0].indexOf("--json-only") !== -1);
+    }
+    // The retry decision delegates to the protocol matcher: descriptor
+    // rejection retries, unrelated stderr does not.
+    function test_descriptorUnsupportedMessageDelegatesToProtocol() {
+        verify(descriptorListUnsupportedMessage("", "error: unknown option '--descriptors'").length > 0);
+        compare(descriptorListUnsupportedMessage("", "connection refused"), "");
+        compare(shouldRetryProviderListWithoutDescriptors("", "error: unknown option '--descriptors'"), true);
+        compare(shouldRetryProviderListWithoutDescriptors("", "connection refused"), false);
+    }
+    // A diagnose reply is normalized before it is stored, so the settings
+    // rows read shaped values rather than raw CLI JSON.
+    function test_diagnoseResultStoresNormalizedDiagnostic() {
+        providerDiagnostics = ({});
+        providerDiagnosticErrors = ({});
+        providerDiagnosticLoading = JSON.parse('{"codex": true}');
+        handleDiagnoseResult({provider: "codex"},
+            '{"provider": "codex", "source": "config.toml", "auth": {"configured": true, "modes": ["api-key"]}, "settings": {"model": {}}}', "");
+        var diagnostic = providerDiagnosticFor("codex");
+        verify(diagnostic !== null);
+        compare(diagnostic.source, "config.toml");
+        compare(diagnostic.authConfigured, true);
+        compare(diagnostic.settingsKeys, "model");
+        compare(providerDiagnosticErrorFor("codex"), "");
+        compare(providerDiagnosticLoadingFor("codex"), false);
+    }
+    // An error envelope becomes a diagnostic error and stores nothing, so a
+    // failed inspect never shows stale shaped data as current.
+    function test_diagnoseResultSurfacesEnvelopeError() {
+        providerDiagnostics = ({});
+        providerDiagnosticErrors = ({});
+        providerDiagnosticLoading = JSON.parse('{"codex": true}');
+        handleDiagnoseResult({provider: "codex"}, '{"error": {"message": "boom"}}', "");
+        verify(providerDiagnosticFor("codex") === null);
+        verify(providerDiagnosticErrorFor("codex").length > 0);
+        compare(providerDiagnosticLoadingFor("codex"), false);
+    }
+    // A successful field write unlocks the field, reports the save, and
+    // reloads preserving messages; the reload keeps status text visible.
+    function test_fieldResultSuccessReloadsPreservingMessages() {
+        configSource = freshSource();
+        providerFieldPending = ({});
+        page = freshPage();
+        errorText = "";
+        statusText = "";
+        markFieldPending("codex", "name", true);
+        verify(isFieldPending("codex", "name"));
+        handleDescriptorFieldResult({provider: "codex", fieldID: "name"},
+            '{"ok": true}', "", 0);
+        compare(isFieldPending("codex", "name"), false);
+        compare(errorText, "");
+        compare(statusText, "codex setting saved");
+        compare(page.reloadCalls, 1);
+        compare(page.preserved, true);
+    }
+    // A failed field write unlocks the field and reports the failure without
+    // reloading, so the rejected value stays on screen.
+    function test_fieldResultErrorReportsWithoutReload() {
+        providerFieldPending = ({});
+        page = freshPage();
+        markFieldPending("codex", "name", true);
+        handleDescriptorFieldResult({provider: "codex", fieldID: "name"},
+            '{"error": {"message": "boom"}}', "", 0);
+        compare(isFieldPending("codex", "name"), false);
+        compare(errorText, "codex: boom");
+        compare(page.reloadCalls, 0);
+    }
 }
 '''
 
@@ -402,7 +505,13 @@ WIRING_FUNCTIONS = (
     "copyObject", "hasOwnKey", "providerKey", "providerMapKey", "descriptorPendingKey",
     "descriptorPendingFieldKey", "providerIconSource", "shellQuote", "writeDescriptorField",
     "promptDescriptorSecret", "runDescriptorAction", "handleDescriptorActionResult",
+    "handleDescriptorFieldResult", "handleListResult", "handleDiagnoseResult",
+    "shouldRetryProviderListWithoutDescriptors", "descriptorListUnsupportedMessage",
+    "boundedCliMessage", "providerByID", "firstSelectableProvider",
+    "providerDiagnosticFor", "providerDiagnosticErrorFor", "setProviderDiagnostic",
+    "setProviderDiagnosticError", "setProviderDiagnosticLoading",
     "parseCommandPayload", "providerCommandFailureText", "markFieldPending", "isFieldPending",
+    "providerDiagnosticLoadingFor",
 )
 
 
