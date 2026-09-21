@@ -252,6 +252,69 @@ class UsageRecoveryTests(unittest.TestCase):
                 capture_output=True, text=True, timeout=30)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_popup_menu_offers_accounts_and_docs(self):
+        surface = Surface("applet", ROOT)
+        main = ROOT / "contents/ui/main.qml"
+        source = main.read_text()
+        surface.texts = {main: source}
+        functions = []
+        for name in ("actionRows", "providerAccountAction", "providerDocsUrl",
+                     "providerLoginUrl", "providerStatusUrl", "safeStatusUrl",
+                     "providerKey", "providerMapKey", "accountLoadingForProvider"):
+            signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
+            functions.append(signature + " {" + surface.function_body(name) + "}")
+        qml = MENU_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
+        qml = qml.replace("SOURCE_FUNCTIONS", "\n        ".join(functions))
+        with tempfile.TemporaryDirectory(prefix="codexbar-popup-menu-") as temporary:
+            fixture = Path(temporary) / "tst_popup_menu.qml"
+            fixture.write_text(qml)
+            result = subprocess.run(
+                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
+MENU_QML = '''import QtQuick
+import QtTest
+import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
+import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
+TestCase {
+    name: "PopupMenuRows"
+    QtObject {
+        id: root
+        property bool showProviderChangelogs: false
+        property var accountsController: QtObject {
+            function loadingForProvider(key) { return false; }
+        }
+        SOURCE_FUNCTIONS
+        function i18n(text) { return text; }
+    }
+    function menuItem(provider) {
+        return {provider: provider, account: "", dashboardUrl: "",
+                statusUrl: "", changelogUrl: ""};
+    }
+    // The overflow menu always offers account switching first, with a docs
+    // entry carrying the identity-table URL whenever one exists.
+    function test_menuOffersAccountsAndDocs() {
+        var rows = root.actionRows(menuItem("codex"));
+        compare(rows[0].action, "accounts");
+        var docs = rows.filter(function(row) { return row.action === "docs"; });
+        compare(docs.length, 1);
+        verify(docs[0].url.indexOf("https://") === 0);
+        verify(root.providerDocsUrl("codex").indexOf("https://") === 0);
+        compare(root.providerLoginUrl("codex"), "https://chatgpt.com");
+    }
+    // Unknown providers get no docs entry instead of a guessed URL.
+    function test_unknownProviderHasNoDocsRow() {
+        var rows = root.actionRows(menuItem("unknown-xyz"));
+        compare(rows.filter(function(row) { return row.action === "docs"; }).length, 0);
+        compare(root.providerDocsUrl("unknown-xyz"), "");
+        compare(root.providerLoginUrl("unknown-xyz"), "");
+    }
+}
+'''
+
 
 if __name__ == "__main__":
     unittest.main()

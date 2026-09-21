@@ -122,6 +122,92 @@ class PanelTextRecoveryTests(unittest.TestCase):
                 capture_output=True, text=True, timeout=30)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_production_menu_bar_text_follows_display_mode(self):
+        surface = Surface("applet", ROOT)
+        main = ROOT / "contents/ui/main.qml"
+        source = surface.texts[main]
+        surface.texts = {main: source}
+        functions = []
+        for name in ("menuBarDisplayText", "safeMenuBarDisplayMode", "panelDisplayRow",
+                     "switcherCandidateRows", "usageRowForLane", "appendUniqueUsageRow",
+                     "clamp", "providerKey", "displayPercent", "percentSuffix",
+                     "paceMarkerPercent", "percentTextForRow", "paceTextForRow",
+                     "paceWarningActive", "paceEtaText", "runOutTextForRow",
+                     "resetTextForRow", "usageResetText", "resetText", "resetLabel"):
+            signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
+            functions.append(signature + " {" + surface.function_body(name) + "}")
+        qml = MENUBAR_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
+        qml = qml.replace("SOURCE_FUNCTIONS", "\n        ".join(functions))
+        with tempfile.TemporaryDirectory(prefix="codexbar-menu-bar-text-") as temporary:
+            fixture = Path(temporary) / "tst_menu_bar_text.qml"
+            fixture.write_text(qml)
+            result = subprocess.run(
+                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
+MENUBAR_QML = '''import QtQuick
+import QtTest
+import "SOURCE_URL/PanelDisplay.js" as PanelDisplay
+import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
+import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
+import "SOURCE_URL/PrivacyPresentation.js" as PrivacyPresentation
+import "SOURCE_URL/ResetPresentation.js" as ResetPresentation
+TestCase {
+    name: "MenuBarText"
+    QtObject {
+        id: root
+        property string menuBarDisplayMode: "percent"
+        property bool usageBarsShowUsed: true
+        property string panelQuotaLane: "primary"
+        property real panelClockMs: Date.now()
+        property bool privacyMode: false
+        property bool resetTimesShowAbsolute: false
+        SOURCE_FUNCTIONS
+        function i18n(source) {
+            var text = source;
+            for (var i = 1; i < arguments.length; i++)
+                text = text.replace("%" + i, String(arguments[i]));
+            return text;
+        }
+        function i18np(one, many, count) {
+            return String(count === 1 ? one : many).replace("%1", String(count));
+        }
+    }
+    function usageItem() {
+        return {provider: "codex", rows: [{lane: "primary", hasPercent: true,
+            usedPercent: 43, leftPercent: 57, pacePercent: 60, paceOnTop: true,
+            paceEtaSeconds: 0, resetsAt: "", resetDescription: "", reset: ""}]};
+    }
+    // The menu-bar label follows the selected display mode, with unknown
+    // modes falling back to the percent text.
+    function test_menuBarTextFollowsDisplayMode() {
+        compare(root.menuBarDisplayText(null), "");
+        root.menuBarDisplayMode = "percent";
+        compare(root.menuBarDisplayText(usageItem()), "43% used");
+        root.menuBarDisplayMode = "pace";
+        compare(root.menuBarDisplayText(usageItem()), "60% used at pace");
+        root.menuBarDisplayMode = "both";
+        compare(root.menuBarDisplayText(usageItem()), "43% used - 60% used at pace");
+        root.menuBarDisplayMode = "resetTime";
+        compare(root.menuBarDisplayText(usageItem()), "");
+        root.menuBarDisplayMode = "runOut";
+        compare(root.menuBarDisplayText(usageItem()), "");
+        root.menuBarDisplayMode = "bogus";
+        compare(root.menuBarDisplayText(usageItem()), "43% used");
+        root.menuBarDisplayMode = "percent";
+    }
+    // Only allow-listed modes survive; anything else is the percent mode.
+    function test_safeMenuBarDisplayModeFallsBackToPercent() {
+        compare(root.safeMenuBarDisplayMode("pace"), "pace");
+        compare(root.safeMenuBarDisplayMode("bogus"), "percent");
+        compare(root.safeMenuBarDisplayMode(""), "percent");
+    }
+}
+'''
+
 
 if __name__ == "__main__":
     unittest.main()

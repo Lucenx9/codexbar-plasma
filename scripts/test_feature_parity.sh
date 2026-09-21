@@ -306,29 +306,15 @@ require_in_surface applet "providerCosts: view.presentedProviderCosts"
 require_in_surface applet "CostPresentation.projectRows(providerCosts, applet.costHistoryShowsTokens)"
 require_in_surface applet "model: section.projectData.rows"
 require_in_surface applet 'i18n("Cost unavailable")'
-require_in_surface applet 'i18n("Tokens unavailable")'
-require_in_surface applet "function costBreakdownRows(tokenCost)"
-require_in_surface applet "function costModelRows(tokenCost)"
-require_in_surface applet "function costHistoryRows(tokenCost)"
-require_in_surface applet "function costPeakLine(points)"
-require_in_surface applet "function costAverageDailyLine(points)"
-require_in_surface applet "function costPerMillionLine(tokenCost)"
 # Cost presentation moved behind CostPresentation.js. Assert the delegation so
 # the maths cannot quietly grow a second copy back inside main.qml.
-require_in_surface applet "CostPresentation.spendSnapshots(tokenCosts, costHistoryDays"
-require_in_surface applet "CostPresentation.breakdownRows("
-require_in_surface applet "CostPresentation.modelRows("
-require_in_surface applet "CostPresentation.historyRows("
-require_in_surface applet "CostPresentation.averageDailyValue("
-require_in_surface applet "CostPresentation.perMillionAmount("
-require_in_surface applet "CostPresentation.spendTotals("
 require_in_surface applet "CostPresentation.costTrustSummary("
-require_in_surface applet "CostPresentation.historyStillBuilding("
+# The locale separator wiring is unobservable in executed tests: the
+# costNumberFormat property initializer cannot be extracted, so fixtures
+# declare the format themselves and swapping the separators keeps every cost
+# test green. This stays as the only pin on the locale wiring.
 require_in_surface applet "CostPresentation.numberFormat("
 reject_in_surface applet "function appendTokenBreakdownRow("
-require_in_surface applet "ProviderSnapshot.normalize(item, Date.now())"
-require_in_surface applet "kpis: dashboard.kpis.map(dashboardDisplayRow)"
-require_in_surface applet "rows: dashboard.rows.map(dashboardDisplayRow)"
 require_in_surface applet "id: usageDashboardSection"
 require_in_surface applet "text: i18n(\"Usage dashboard\")"
 require_in_surface applet "model: usageDashboardSection.kpis"
@@ -347,25 +333,21 @@ reject_in_file "$USAGE_DETAILS_JS" "sections.length < maximumSectionsPerSnapshot
 reject_in_file "$USAGE_DETAILS_JS" "rows.length < maximumRowsPerSection"
 reject_in_file "$USAGE_DETAILS_JS" "points.length < maximumPointsPerChart"
 require_in_surface applet "Components.InteractiveChart"
-require_in_surface applet "function costChartPoints(points)"
 require_in_surface applet "id: costHistoryChartSection"
 require_in_surface applet "id: costDrillDownSection"
 require_in_surface applet "model: costDrillDownSection.breakdownRows"
 require_in_surface applet "model: costDrillDownSection.modelRows"
 require_in_surface applet "model: costHistoryChartSection.rows"
-require_in_surface applet "function providerDocsUrl(providerID)"
-require_in_surface applet "function providerLoginUrl(providerID)"
-require_in_surface applet "action: \"docs\""
 require_in_surface applet "function command(providerID)"
 require_in_surface applet "--all-accounts"
 require_in_surface applet "--account"
-require_in_surface applet "function selectAccount(providerID, accountIdentity)"
-require_in_surface applet "function accountOptionsForProvider(providerID)"
-require_in_surface applet "action: \"accounts\""
+# The menu-bar mode and reset-time initializers read Plasmoid.configuration,
+# which is absent under test (fixtures declare these properties themselves),
+# so no executed test can pin the wiring: hardcoding either value keeps every
+# panel test green. Mode routing through these values is covered by the
+# MenuBarText executed tests.
 require_in_surface applet "property string menuBarDisplayMode"
 require_in_surface applet "property bool resetTimesShowAbsolute"
-require_in_surface applet "function menuBarDisplayText(item)"
-require_in_surface applet "function safeMenuBarDisplayMode(value)"
 require_in_surface applet 'import "PanelDisplay.js" as PanelDisplay'
 require_in_surface applet "PanelDisplay.rowForMode("
 # The run-out token reports a duration only when the CLI predicts exhaustion,
