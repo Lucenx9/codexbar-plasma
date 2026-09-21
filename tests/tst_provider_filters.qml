@@ -134,6 +134,134 @@ TestCase {
         compare(tips[0].plainText, buttons[0].Accessible.name);
     }
 
+    function settingsToggle(page) {
+        var all = [];
+        walkPageObjects(page, all);
+        var matches = all.filter(function(item) {
+            return item instanceof Controls.Button && item.text === "Settings and diagnostics";
+        });
+        return matches.length > 0 ? matches[0] : null;
+    }
+
+    function rowLayoutVisible(item) {
+        var node = item.parent;
+        while (node !== null && node.toString().indexOf("RowLayout") === -1)
+            node = node.parent;
+        return node !== null && node.visible;
+    }
+
+    // Each descriptor kind shows its own row: flipping a kind hides that
+    // row's controls, so the options section cannot silently drop a field.
+    function test_descriptorKindRowsShowMatchingControls() {
+        var page = createProvidersPage();
+        if (!page)
+            return;
+        page.providers = [{
+                provider: "codex",
+                displayName: "Codex",
+                enabled: true,
+                descriptor: {fields: [
+                    {id: "apiKey", kind: "secret", title: "API key", description: "Secret",
+                        redactedValue: "", valueText: "", value: "", options: [],
+                        selectedOptionIndex: -1},
+                    {id: "color", kind: "enum", title: "Color", description: "Pick",
+                        redactedValue: "", valueText: "", value: "r",
+                        options: [{id: "r", title: "Red"}], selectedOptionIndex: 0},
+                    {id: "flag", kind: "boolean", title: "Flag", description: "Enable everything",
+                        redactedValue: "", valueText: "", value: "false", options: [],
+                        selectedOptionIndex: -1}
+                ]}
+            }];
+        page.selectedProviderID = "codex";
+        var toggle = settingsToggle(page);
+        verify(toggle !== null);
+        toggle.checked = true;
+        wait(0);
+        var all = [];
+        walkPageObjects(page, all);
+        var optionsLabels = all.filter(function(item) {
+            return item.toString().indexOf("PlainControlsLabel") >= 0
+                && item.text === "Provider options";
+        });
+        compare(optionsLabels.length, 1);
+        var setButtons = all.filter(function(item) {
+            return item instanceof Controls.Button && item.text === "Set..."
+                && rowLayoutVisible(item);
+        });
+        compare(setButtons.length, 1);
+        var combos = all.filter(function(item) {
+            return item instanceof Controls.ComboBox && item.model !== undefined
+                && item.model.length === 1 && rowLayoutVisible(item);
+        });
+        compare(combos.length, 1);
+        var boxes = all.filter(function(item) {
+            return item instanceof Controls.CheckBox && item.Accessible.name === "Enable everything"
+                && rowLayoutVisible(item);
+        });
+        compare(boxes.length, 1);
+    }
+
+    // The settings section keeps its headings and the immediate-save notice,
+    // so a renamed label cannot drift past review unnoticed.
+    function test_settingsSectionLabels() {
+        var page = createProvidersPage();
+        if (!page)
+            return;
+        page.providers = [{provider: "openai", displayName: "OpenAI", enabled: true}];
+        page.selectedProviderID = "openai";
+        var toggle = settingsToggle(page);
+        verify(toggle !== null);
+        toggle.checked = true;
+        wait(0);
+        var all = [];
+        walkPageObjects(page, all);
+        var inspect = all.filter(function(item) {
+            return item instanceof Controls.Button && item.text === "Inspect redacted settings";
+        });
+        compare(inspect.length, 1);
+        verify(inspect[0].visible);
+        var immediate = all.filter(function(item) {
+            return item.plainText !== undefined
+                && String(item.plainText).indexOf("Provider changes are saved by CodexBar immediately") === 0;
+        });
+        verify(immediate.length >= 1);
+        var cli = all.filter(function(item) {
+            return item instanceof Controls.ToolButton && item.text === "CLI commands";
+        });
+        compare(cli.length, 1);
+    }
+
+    // The CLI helper on the page prints the same redacted diagnose and
+    // set-api-key lines the command builder produces.
+    function test_cliCommandsTextShowsHelpfulCommands() {
+        var page = createProvidersPage();
+        if (!page)
+            return;
+        page.providers = [{provider: "openai", displayName: "OpenAI", enabled: true}];
+        page.selectedProviderID = "openai";
+        var toggle = settingsToggle(page);
+        verify(toggle !== null);
+        toggle.checked = true;
+        wait(0);
+        var all = [];
+        walkPageObjects(page, all);
+        var cli = all.filter(function(item) {
+            return item instanceof Controls.ToolButton && item.text === "CLI commands";
+        });
+        compare(cli.length, 1);
+        cli[0].checked = true;
+        wait(0);
+        var areas = [];
+        walkPageObjects(page, areas);
+        var textAreas = areas.filter(function(item) {
+            return item instanceof Controls.TextArea;
+        });
+        compare(textAreas.length, 1);
+        verify(textAreas[0].text.indexOf("diagnose --provider") !== -1);
+        verify(textAreas[0].text.indexOf("config set-api-key --provider") !== -1);
+        verify(textAreas[0].text.indexOf("openai") !== -1);
+    }
+
     // Provider action titles come from CLI descriptors: the button must route
     // them through the safe label instead of interpreting markup.
     function test_providerActionButtonRendersTitleAsPlainText() {

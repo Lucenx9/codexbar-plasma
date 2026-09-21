@@ -224,6 +224,7 @@ TestCase {
     property string selectedProviderID: ""
     property bool providerDescriptorsUnavailable: false
     property bool fireworksSingleKeySetupSupported: false
+    property var pending: ({})
     property var providerFieldPending: ({})
     property var providerDiagnosticLoading: ({})
     property var commands: ({})
@@ -240,7 +241,6 @@ TestCase {
         return String(text).replace("%1", first).replace("%2", second);
     }
     function displayNameForProvider(provider) { return provider; }
-    function providerCliArgument(provider) { return provider; }
     function providerTitle(identifier) { return identifier; }
     function updateProviderEnabled(provider, value) {}
     function freshSource() {
@@ -563,6 +563,87 @@ TestCase {
         compare(entry.kind, "descriptorAction");
         providerFieldPending = ({});
     }
+    // Descriptor rows read straight off the selected item: no descriptor or
+    // no list of that shape means no rows, so a missing descriptor cannot
+    // crash the options section.
+    function test_descriptorRowHelpersReadFieldsAndActions() {
+        var item = {provider: "codex",
+            descriptor: {fields: [{id: "name", kind: "text"}],
+                actions: [{id: "openDocs", title: "Docs"}]}};
+        compare(descriptorFieldRows(item).length, 1);
+        compare(descriptorActionRows(item).length, 1);
+        compare(descriptorHasField(item, "name"), true);
+        compare(descriptorHasField(item, "missing"), false);
+        compare(descriptorHasAction(item, "openDocs"), true);
+        compare(descriptorHasAction(item, "openDashboard"), false);
+        compare(descriptorFieldRows({provider: "codex"}).length, 0);
+        compare(descriptorHasAction(null, "openDocs"), false);
+    }
+    // The settings rows always identify the provider and its key setup;
+    // stored redacted diagnostics add source rows on top.
+    function test_providerSettingsRowsLabelAndDiagnose() {
+        providerDiagnostics = ({});
+        var rows = providerSettingsRows({provider: "openai", enabled: true});
+        var labels = rows.map(function(row) { return row.label; });
+        verify(labels.indexOf("Provider id") !== -1);
+        verify(labels.indexOf("API key setup") !== -1);
+        verify(labels.indexOf("Source") === -1);
+        setProviderDiagnostic("openai", {source: "config.toml", sourceMode: "",
+            authModes: "", authConfigured: true, fetchAttempts: 2, settingsKeys: "model"});
+        var enriched = providerSettingsRows({provider: "openai", enabled: true});
+        var enrichedLabels = enriched.map(function(row) { return row.label; });
+        verify(enrichedLabels.indexOf("Source") !== -1);
+        providerDiagnostics = ({});
+    }
+    // The CLI helper prints the redacted diagnose, the toggle and, for key
+    // providers, the piped set-api-key line: copy-pasteable without secrets.
+    function test_providerCliCommandTextListsHelpfulCommands() {
+        var text = providerCliCommandText({provider: "openai", enabled: true});
+        verify(text.indexOf("diagnose --provider") !== -1);
+        verify(text.indexOf("config set-api-key --provider") !== -1);
+        verify(text.indexOf("openai") !== -1);
+        var plain = providerCliCommandText({provider: "unknown-xyz", enabled: false});
+        verify(plain.indexOf("diagnose --provider") !== -1);
+        verify(plain.indexOf("set-api-key") === -1);
+    }
+    // Docs, login and CLI spelling come from the identity table, so an
+    // unknown provider yields nothing instead of a guessed URL.
+    function test_identityDelegatesToProviderTable() {
+        verify(providerDocsUrl("codex").indexOf("https://") === 0);
+        compare(providerLoginUrl("codex"), "https://chatgpt.com");
+        compare(providerCliArgument("groq"), "groqcloud");
+        compare(providerCliArgument("codex"), "codex");
+        compare(providerDocsUrl("unknown-xyz"), "");
+        compare(providerLoginUrl("unknown-xyz"), "");
+    }
+    // Only allow-listed providers offer API key setup; the fireworks CLI
+    // flag additionally gates its single-key flow.
+    function test_supportsApiKeySetupAllowlistsProviders() {
+        fireworksSingleKeySetupSupported = false;
+        compare(supportsApiKeySetup("openai"), true);
+        compare(supportsApiKeySetup("unknown-xyz"), false);
+        compare(supportsApiKeySetup("fireworks"), false);
+        fireworksSingleKeySetupSupported = true;
+        compare(supportsApiKeySetup("fireworks"), true);
+        fireworksSingleKeySetupSupported = false;
+    }
+    // Action rows offer set-api-key for key providers and a dashboard link
+    // only when no descriptor action already opens the dashboard.
+    function test_actionRowsGuardDashboardAndOfferApiKey() {
+        pending = ({});
+        providerFieldPending = ({});
+        var dashboard = {provider: "codex", enabled: true, displayName: "Codex",
+            descriptor: {actions: [{id: "openDashboard", title: "Dashboard"}]}};
+        var guarded = providerActionRows(dashboard);
+        var guardedActions = guarded.map(function(row) { return row.action; });
+        verify(guardedActions.indexOf("dashboard") === -1);
+        var plain = {provider: "codex", enabled: true, displayName: "Codex"};
+        var unguarded = providerActionRows(plain);
+        verify(unguarded.map(function(row) { return row.action; }).indexOf("dashboard") !== -1);
+        var keyed = providerActionRows({provider: "openai", enabled: true, displayName: "OpenAI"});
+        var keyRow = keyed.filter(function(row) { return row.action === "set-api-key"; });
+        compare(keyRow.length, 1);
+    }
     // A failed field write unlocks the field and reports the failure without
     // reloading, so the rejected value stays on screen.
     function test_fieldResultErrorReportsWithoutReload() {
@@ -591,7 +672,11 @@ WIRING_FUNCTIONS = (
     "providerDiagnosticFor", "providerDiagnosticErrorFor", "setProviderDiagnostic",
     "setProviderDiagnosticError", "setProviderDiagnosticLoading",
     "parseCommandPayload", "providerCommandFailureText", "markFieldPending", "isFieldPending",
-    "providerDiagnosticLoadingFor",
+    "isPending", "providerDiagnosticLoadingFor", "descriptorFieldRows", "descriptorActionRows",
+    "descriptorHasField", "descriptorHasAction", "appendSettingsRow", "providerSettingsRows",
+    "providerActionRows", "descriptorActionIcon", "providerCliCommandText",
+    "providerDocsUrl", "providerDashboardUrl", "providerLoginUrl", "providerCliArgument",
+    "supportsApiKeySetup",
 )
 
 

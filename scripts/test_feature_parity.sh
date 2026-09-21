@@ -44,27 +44,7 @@ reject_in_file() {
 }
 
 reject_in_file "$PROVIDERS_QML" "stdoutText + \"\\n\" + stderrText"
-require_in_file "$PROVIDERS_QML" "function descriptorFieldRows(item)"
-require_in_file "$PROVIDERS_QML" "function descriptorHasAction(item, actionID)"
-require_in_file "$PROVIDERS_QML" "function writeDescriptorField(providerID, field, value)"
-require_in_file "$PROVIDERS_QML" "function promptDescriptorSecret(providerID, field)"
-require_in_file "$PROVIDERS_QML" "function providerSettingsRows(item)"
-require_in_file "$PROVIDERS_QML" "function providerCliCommandText(item)"
-require_in_file "$PROVIDERS_QML" "!descriptorHasAction(item, \"openDashboard\")"
-require_in_file "$PROVIDERS_QML" "Provider options"
-require_in_file "$PROVIDERS_QML" "modelData.kind === \"secret\""
-require_in_file "$PROVIDERS_QML" "modelData.kind === \"enum\""
-require_in_file "$PROVIDERS_QML" "modelData.kind === \"boolean\""
 reject_in_file "$PROVIDERS_QML" "return field.options.length > 0 ? 0 : -1"
-require_in_file "$PROVIDERS_QML" "function providerDocsUrl(providerID)"
-require_in_file "$PROVIDERS_QML" "function providerLoginUrl(providerID)"
-require_in_file "$PROVIDERS_QML" "function providerCliArgument(value)"
-require_in_file "$PROVIDERS_QML" "function supportsApiKeySetup(providerID)"
-require_in_file "$PROVIDERS_QML" "action: \"set-api-key\""
-require_in_file "$PROVIDERS_QML" "Settings and diagnostics"
-require_in_file "$PROVIDERS_QML" "Inspect redacted settings"
-require_in_file "$PROVIDERS_QML" "Provider changes are saved by CodexBar immediately"
-require_in_file "$PROVIDERS_QML" "CLI commands"
 # Provider identity is one table set in ProviderIdentity.js, so the parity facts
 # below are asserted once against that module rather than once per surface. The
 # display names are the exception: `i18n` needs literal strings in a file gettext
