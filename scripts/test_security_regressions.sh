@@ -13,7 +13,6 @@ POPUP_QML="${ROOT_DIR}/contents/ui/configPopup.qml"
 DIAGNOSTICS_QML="${ROOT_DIR}/contents/ui/configDiagnostics.qml"
 PLAIN_INLINE_MESSAGE_QML="${ROOT_DIR}/contents/ui/components/PlainInlineMessage.qml"
 PLAIN_CONTROLS_LABEL_QML="${ROOT_DIR}/contents/ui/components/PlainControlsLabel.qml"
-PLAIN_CHECK_BOX_QML="${ROOT_DIR}/contents/ui/components/PlainCheckBox.qml"
 PLAIN_PLASMA_LABEL_QML="${ROOT_DIR}/contents/ui/components/PlainPlasmaLabel.qml"
 PLAIN_HEADING_QML="${ROOT_DIR}/contents/ui/components/PlainHeading.qml"
 PLAIN_PLACEHOLDER_MESSAGE_QML="${ROOT_DIR}/contents/ui/components/PlainPlaceholderMessage.qml"
@@ -114,17 +113,12 @@ for qml_file in "$MAIN_QML" "$PROVIDERS_QML" "$POPUP_QML" "$DIAGNOSTICS_QML"; do
 done
 require_in_surface applet "SafeText.cliMessage"
 require_in_surface providers "SafeText.cliMessage"
-# PlainButton, PlainComboBox delegate, PlainItemDelegate and PlainToolTip
-# escaping is executed by tests/tst_plain_text_controls.qml with hostile
-# markup, so the literal bindings are not pinned here as well.
-require_in_file "$PLAIN_INLINE_MESSAGE_QML" "text: SafeText.plainTextAsRichText(plainText)"
-require_in_file "$PLAIN_CHECK_BOX_QML" "text: SafeText.plainTextAsRichText(plainText)"
-require_in_file "$PLAIN_CHECK_BOX_QML" "Kirigami.MnemonicData.label: SafeText.plainTextAsMnemonicRichText(plainText)"
+# Plain wrapper escaping is executed by tests/tst_plain_text_controls.qml
+# with hostile markup (including the styled CheckBox mnemonic label read
+# through a binding mirror), so the literal bindings are not pinned here.
 require_in_file "$PLAIN_CONTROLS_LABEL_QML" "textFormat: Text.PlainText"
 require_in_file "$PLAIN_PLASMA_LABEL_QML" "textFormat: Text.PlainText"
 require_in_file "$PLAIN_HEADING_QML" "textFormat: Text.PlainText"
-require_in_file "$PLAIN_PLACEHOLDER_MESSAGE_QML" "text: SafeText.plainTextAsRichText(plainText)"
-require_in_file "$PLAIN_PLACEHOLDER_MESSAGE_QML" "explanation: SafeText.plainTextAsRichText(plainExplanation)"
 require_in_file "$COPYABLE_VALUE_QML" 'plainText: valueRow.copyAccessibleName'
 require_in_file "$COPYABLE_VALUE_QML" 'plainText: i18n("Copied")'
 require_in_surface applet "parent: copyButton"
