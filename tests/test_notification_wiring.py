@@ -629,5 +629,61 @@ TestCase {
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
+class UpdateInstalledForwardingTests(unittest.TestCase):
+    # The onUpdateInstalled handler is the only pin on the call site: the
+    # controller emits updateInstalled and the applet must forward the
+    # version to root.notifyInstalledUpdate. The handler body is extracted
+    # and executed against a recording stub, never grepped, so deleting the
+    # forward (or its argument) reddens the QML compare instead of a
+    # source-text assertion.
+    FORWARD_QML = '''import QtQuick
+import QtTest
+TestCase {
+    name: "UpdateInstalledForwarding"
+    QtObject {
+        id: root
+        property var forwardedVersions: []
+        function notifyInstalledUpdate(version) {
+            forwardedVersions = forwardedVersions.concat([version]);
+        }
+        SOURCE_HANDLER
+    }
+    function test_updateInstalledForwardsVersionToNotifier() {
+        root.forwardedVersions = [];
+        root.forwardUpdateInstalled("v9.9.9");
+        compare(root.forwardedVersions, ["v9.9.9"]);
+    }
+}
+'''
+
+    def test_applet_forwards_update_installed_version_to_notifier(self):
+        applet = Surface("applet", ROOT)
+        main = ROOT / "contents/ui/main.qml"
+        source = applet.texts[main]
+        start = source.find("onUpdateInstalled")
+        self.assertNotEqual(start, -1)
+        open_brace = source.index("{", start)
+        depth = 1
+        index = open_brace + 1
+        while index < len(source) and depth > 0:
+            if source[index] == "{":
+                depth += 1
+            elif source[index] == "}":
+                depth -= 1
+            index += 1
+        body = source[open_brace + 1:index - 1]
+        qml = self.FORWARD_QML.replace(
+            "SOURCE_HANDLER",
+            "function forwardUpdateInstalled(version) {" + body + "}")
+        with tempfile.TemporaryDirectory(prefix="codexbar-update-installed-forward-") as temporary:
+            fixture = Path(temporary) / "tst_update_installed_forward.qml"
+            fixture.write_text(qml, encoding="utf-8")
+            result = subprocess.run(
+                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

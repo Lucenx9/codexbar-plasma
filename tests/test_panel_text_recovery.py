@@ -136,8 +136,16 @@ class PanelTextRecoveryTests(unittest.TestCase):
                      "resetTextForRow", "usageResetText", "resetText", "resetLabel"):
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
             functions.append(signature + " {" + surface.function_body(name) + "}")
+        # The supported modes are read from the production definitions, so a
+        # mode the sanitizer stops accepting reddens its own survival line.
+        panel_display = (ROOT / "contents/ui/PanelDisplay.js").read_text(encoding="utf-8")
+        modes = re.findall(r'var \w+Mode = "([^"]+)"', panel_display)
+        self.assertGreater(len(modes), 0)
+        survival = "\n".join(
+            f'compare(root.safeMenuBarDisplayMode("{mode}"), "{mode}");' for mode in modes)
         qml = MENUBAR_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
         qml = qml.replace("SOURCE_FUNCTIONS", "\n        ".join(functions))
+        qml = qml.replace("MODE_SURVIVAL_CHECKS", survival)
         with tempfile.TemporaryDirectory(prefix="codexbar-menu-bar-text-") as temporary:
             fixture = Path(temporary) / "tst_menu_bar_text.qml"
             fixture.write_text(qml)
@@ -209,8 +217,10 @@ TestCase {
         root.menuBarDisplayMode = "percent";
     }
     // Only allow-listed modes survive; anything else is the percent mode.
+    // The survival lines are generated from PanelDisplay.js in Python, so
+    // every supported mode is pinned without hardcoding the set here.
     function test_safeMenuBarDisplayModeFallsBackToPercent() {
-        compare(root.safeMenuBarDisplayMode("pace"), "pace");
+        MODE_SURVIVAL_CHECKS
         compare(root.safeMenuBarDisplayMode("bogus"), "percent");
         compare(root.safeMenuBarDisplayMode(""), "percent");
     }
