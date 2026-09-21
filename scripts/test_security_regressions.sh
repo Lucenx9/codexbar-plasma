@@ -25,7 +25,6 @@ WORKFLOW="${ROOT_DIR}/.github/workflows/ci.yml"
 MAKEFILE="${ROOT_DIR}/Makefile"
 UPDATER="${ROOT_DIR}/scripts/update-widget.sh"
 FULL_REPRESENTATION_QML="${ROOT_DIR}/contents/ui/components/FullRepresentation.qml"
-PROVIDER_ACCOUNTS_PANEL_QML="${ROOT_DIR}/contents/ui/components/ProviderAccountsPanel.qml"
 COMPACT_REPRESENTATION_QML="${ROOT_DIR}/contents/ui/components/CompactRepresentation.qml"
 SPEND_VIEW_QML="${ROOT_DIR}/contents/ui/components/SpendView.qml"
 COPYABLE_VALUE_QML="${ROOT_DIR}/contents/ui/components/CopyableValue.qml"
@@ -133,7 +132,10 @@ require_in_file "$PLAIN_TOOL_TIP_QML" "text: SafeText.plainTextAsRichText(plainT
 require_in_file "$COPYABLE_VALUE_QML" 'plainText: valueRow.copyAccessibleName'
 require_in_file "$COPYABLE_VALUE_QML" 'plainText: i18n("Copied")'
 require_in_surface applet "parent: copyButton"
-require_in_file "$PROVIDER_ACCOUNTS_PANEL_QML" "delegate: PlainButton {"
+# The accounts delegate stays the safe button: tests/tst_visual_layout.qml
+# (accountDelegatesStaySafeKeyboardButtons plus the long-account-button rows)
+# instantiates the real panel, so swapping the delegate type fails creation
+# and goes red there instead of passing vacuously.
 require_in_surface popup "Kirigami.MnemonicData.label: SafeText.plainTextAsMnemonicRichText(modelData.displayName)"
 require_in_surface panel "Kirigami.MnemonicData.label: SafeText.plainTextAsMnemonicRichText(modelData.displayName)"
 require_in_file "$COMPACT_REPRESENTATION_QML" "PlainToolTip {"

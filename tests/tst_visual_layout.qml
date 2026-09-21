@@ -874,6 +874,42 @@ TestCase {
         testCase.forceActiveFocus();
     }
 
+    function test_accountDelegatesStaySafeKeyboardButtons() {
+        var savedItems = applet.accountItems;
+        var savedSelected = applet.selectedAccount;
+        var hostileAccount = "Status <img src=\"http://127.0.0.1/probe\"> & <test-org>";
+        var hostileSubtitle = "Workspace <b>evil</b>";
+        applet.accountItems = [{provider: "codex", account: hostileAccount, subtitle: hostileSubtitle}];
+        applet.selectedAccount = "";
+        try {
+            var view = createControl("ProviderAccountsPanel", {
+                applet: applet,
+                providerData: { provider: "codex" },
+                width: 540
+            });
+            // The accounts delegate must stay a real button: a swap that no
+            // longer compiles must fail here instead of passing vacuously.
+            verify(view !== null);
+            wait(0);
+            var button = findItem(view, function (item) {
+                return item.checkable && item.Accessible.name.indexOf("Status <img") === 0;
+            });
+            verify(button !== null);
+            // The safe-button interface carries the literal label; a delegate
+            // without it cannot route untrusted text through SafeText.
+            compare(button.plainText, hostileAccount + " · " + hostileSubtitle);
+            compare(button.Accessible.name, hostileAccount + " · " + hostileSubtitle);
+            button.forceActiveFocus(Qt.TabFocusReason);
+            keyClick(Qt.Key_Space);
+            compare(applet.selectedAccount, hostileAccount);
+            compare(button.checked, true);
+            testCase.forceActiveFocus();
+        } finally {
+            applet.accountItems = savedItems;
+            applet.selectedAccount = savedSelected;
+        }
+    }
+
     function test_providerRowKeyboardSelectionDoesNotToggleEnablement() {
         applet.selectedProviderID = "codex";
         applet.providerToggleCount = 0;
