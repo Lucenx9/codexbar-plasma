@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls as Controls
 import QtTest
 
 TestCase {
@@ -29,6 +30,20 @@ TestCase {
         }, properties || {}));
         verify(page !== null);
         return page;
+    }
+
+    function walkObjects(root, out) {
+        if (root === null || root === undefined || out.indexOf(root) >= 0)
+            return;
+        out.push(root);
+        var groups = [root.children, root.resources, root.data];
+        for (var g = 0; g < groups.length; g++) {
+            var kids = groups[g];
+            if (kids === undefined || kids === null)
+                continue;
+            for (var i = 0; i < kids.length; i++)
+                walkObjects(kids[i], out);
+        }
     }
 
     function storedValues(page) {
@@ -259,5 +274,105 @@ TestCase {
         compare(page.cfg_panelProviderIDs, "codex,future-ai,claude");
         verify(!page.panelProviderSelected("groq"));
         compare(page.selectedPanelProviderCount(), 3);
+    }
+
+    // The Usage-text checkbox owns the text-format combo: hiding the option
+    // must also disable it, so keyboard users cannot reach a dead control.
+    function test_usageTextToggleOwnsTextFormatCombo() {
+        var page = createPage({cfg_showPercentInPanel: true});
+        if (!page) return;
+        var additional = findChild(page, "panelAdditionalButton");
+        additional.forceActiveFocus();
+        keyClick(Qt.Key_Space);
+        verify(page.additionalExpanded);
+        var textCheck = findChild(page, "panelUsageTextCheck");
+        var combo = findChild(page, "panelTextMode");
+        verify(textCheck !== null && combo !== null);
+        verify(textCheck.checked && combo.visible && combo.enabled);
+        textCheck.forceActiveFocus();
+        keyClick(Qt.Key_Space);
+        verify(!textCheck.checked);
+        verify(!combo.visible && !combo.enabled);
+        keyClick(Qt.Key_Space);
+        verify(textCheck.checked);
+        verify(combo.visible && combo.enabled);
+    }
+
+    // Visibility rules are written through the rule editors: changing a
+    // condition must land in the configuration under that editor's element.
+    function test_ruleEditorsWriteVisibilityRules() {
+        var page = createPage();
+        if (!page) return;
+        page.advancedExpanded = true;
+        var textCondition = findChild(page, "textVisibilityCondition");
+        var metersCondition = findChild(page, "metersVisibilityCondition");
+        verify(textCondition !== null && metersCondition !== null);
+        textCondition.currentIndex = 1;
+        textCondition.activated(1);
+        verify(page.cfg_panelVisibilityRules.indexOf('"text":{"condition":"usageAtLeast"') >= 0);
+        verify(page.cfg_panelVisibilityRules.indexOf('"meters":{"condition":"always"') >= 0);
+        metersCondition.currentIndex = 3;
+        metersCondition.activated(3);
+        verify(page.cfg_panelVisibilityRules.indexOf('"meters":{"condition":"runOut"') >= 0);
+        verify(page.advancedSummary.indexOf("2 visibility rules") >= 0);
+    }
+
+    // The run-out entry must carry its own mode value: duplicating another
+    // entry's value silently writes the wrong display mode.
+    function test_runOutForecastWritesRunOutMode() {
+        var page = createPage({cfg_menuBarDisplayMode: "percent"});
+        if (!page) return;
+        page.additionalExpanded = true;
+        var combo = findChild(page, "panelTextMode");
+        verify(combo !== null);
+        combo.currentIndex = 4;
+        combo.activated(4);
+        compare(page.cfg_menuBarDisplayMode, "runOut");
+        page.cfg_menuBarDisplayMode = "runOut";
+        compare(combo.currentValue, "runOut");
+    }
+
+    // Order-button tooltips must label their own button: a static tooltip
+    // leaves keyboard users without a target, and a detached tooltip renders
+    // in the wrong place.
+    function test_orderTooltipsFollowMoveButtons() {
+        var page = createPage();
+        if (!page) return;
+        page.advancedExpanded = true;
+        var all = [];
+        walkObjects(page, all);
+        var moveTips = all.filter(function(item) {
+            return item.toString().indexOf("PlainToolTip") >= 0
+                && item.parent && item.parent.Accessible
+                && String(item.parent.Accessible.name).indexOf("Move ") === 0;
+        });
+        compare(moveTips.length, 8);
+        for (var i = 0; i < moveTips.length; i++) {
+            verify(moveTips[i].plainText.length > 0);
+            compare(moveTips[i].plainText, moveTips[i].parent.Accessible.name);
+        }
+    }
+
+    // Provider display names arrive from the CLI: markup in a name must
+    // render as text, never as structure, in the panel checklist.
+    function test_providerDisplayNamesEscapeMarkup() {
+        var page = createPage();
+        if (!page) return;
+        var controller = findChild(page, "panelProviderRosterController");
+        verify(controller);
+        // Inject the roster directly so no CLI process is spawned here; the
+        // Repeater instantiates its delegates from the model either way.
+        controller.enabledProviderRoster = [
+            {provider: "codex", displayName: "<b>Bold</b> & \"Quoted\""}
+        ];
+        var all = [];
+        walkObjects(page, all);
+        var boxes = all.filter(function(item) {
+            return item instanceof Controls.CheckBox
+                && item.Accessible.name === "<b>Bold</b> & \"Quoted\"";
+        });
+        compare(boxes.length, 1);
+        verify(boxes[0].text.indexOf("<b>") === -1);
+        verify(boxes[0].text.indexOf("&lt;b&gt;") >= 0);
     }
 }
