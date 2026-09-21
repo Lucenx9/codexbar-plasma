@@ -392,13 +392,23 @@ class UsageControllerTests(unittest.TestCase):
             shutil.copytree(ROOT / "contents/ui", shrunk_ui)
             controller = shrunk_ui / "controllers/UsageController.qml"
             text = controller.read_text()
-            shrunk, count = re.subn(r"readonly property int defaultCommandTimeoutMs: \d+",
-                                    "readonly property int defaultCommandTimeoutMs: 600", text)
+            # Both rewrites tolerate whitespace and property order: pinning the
+            # committed layout would make this test fail on a reformat that
+            # changes no behavior, which is the defect this suite exists to
+            # remove.
+            shrunk, count = re.subn(
+                r"(readonly\s+property\s+int\s+defaultCommandTimeoutMs\s*:\s*)\d+",
+                r"\g<1>600", text)
             self.assertEqual(count, 1)
-            sweeper = ("        interval: 1000\n        repeat: true\n"
-                       "        running: lifecycle.hasPendingCommandTimeouts()")
-            self.assertIn(sweeper, shrunk)
-            controller.write_text(shrunk.replace(sweeper, sweeper.replace("interval: 1000", "interval: 50")))
+            # The sweeper is the Timer whose running: binding asks the ledger
+            # for pending timeouts; scope the interval rewrite to that block.
+            anchor = shrunk.index("lifecycle.hasPendingCommandTimeouts()")
+            intervals = list(re.finditer(r"interval\s*:\s*\d+", shrunk[:anchor]))
+            self.assertTrue(intervals, "no interval precedes the sweeper binding")
+            start, end = intervals[-1].span()
+            self.assertNotIn("Timer", shrunk[end:anchor],
+                             "the nearest interval belongs to another Timer")
+            controller.write_text(shrunk[:start] + "interval: 50" + shrunk[end:])
             fixture = directory / "tst_usage_shrunk.qml"
             fixture.write_text(QML_SHRUNK.replace("SHRUNK_URL", controller.as_uri())
                                .replace("FIXTURE_PATH", str(directory)))
