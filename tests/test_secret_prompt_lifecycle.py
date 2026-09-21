@@ -26,7 +26,9 @@ TestCase {
     property var captured: []
     SOURCE_PROPERTIES
     SOURCE_FUNCTIONS
-    function i18n(text) { return text; }
+    function i18n(text, first, second) {
+        return String(text).replace("%1", first).replace("%2", second);
+    }
     function displayNameForProvider(provider) { return provider; }
     function providerCliArgument(provider) { return provider; }
     function isPending(provider) { return false; }
@@ -48,8 +50,13 @@ TestCase {
         setApiKey("codex");
         promptDescriptorSecret("codex", {id: "apiKey", title: "API key", kind: "secret",
             writeCommand: ["codexbar", "config", "set-api-key", "--provider", "codex", "--stdin"]});
+        // A hostile descriptor title must survive the shell round-trip
+        // verbatim: the prompt is a quoted positional argument, so command
+        // substitution inside it must never execute.
+        promptDescriptorSecret("codex", {id: "apiKey", title: HOSTILE_TITLE, kind: "secret",
+            writeCommand: ["codexbar", "config", "set-api-key", "--provider", "codex", "--stdin"]});
         compare(errorText, "");
-        compare(captured.length, 2);
+        compare(captured.length, 3);
         console.log("PROMPT_FIXTURE:" + JSON.stringify({production: production, commands: captured}));
     }
 }
@@ -60,6 +67,7 @@ from pathlib import Path
 role = Path(sys.argv[0]).name
 directory = Path(os.environ["PROMPT_DIRECTORY"])
 directory.joinpath(role + ".pid").write_text(str(os.getpid()))
+directory.joinpath(role + ".argv").write_text(json.dumps(sys.argv[1:]))
 mode = os.environ["PROMPT_MODE"]
 if role == "kdialog":
     if mode == "cancel":
@@ -107,6 +115,9 @@ class SecretPromptLifecycleTests(unittest.TestCase):
             r"^    readonly property int configSecret\w+:.*(?:\n[ \t]{8,}\S.*)*", source, re.MULTILINE)
         qml = QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
         qml = qml.replace("CLI_PATH", json.dumps(str(cls.directory / "codexbar")))
+        hostile = 'x"; touch "' + str(cls.directory / "PWNED") + '"; echo "y'
+        qml = qml.replace("HOSTILE_TITLE", json.dumps(hostile))
+        cls.hostile_prompt = hostile + " for codex"
         qml = qml.replace("SOURCE_FUNCTIONS", "\n".join(functions))
         qml = qml.replace("SOURCE_PROPERTIES", "\n".join(properties).replace("readonly property int", "property real"))
         fixture = cls.directory / "tst_secret_prompt.qml"
@@ -125,6 +136,29 @@ class SecretPromptLifecycleTests(unittest.TestCase):
     def test_ledger_deadline_covers_both_phases_and_disconnect_margin(self):
         production = self.fixture["production"]
         self.assertGreaterEqual(production["deadline"], production["phases"] * 1000 + 5000)
+
+    def test_prompt_commands_carry_positional_args_and_quote_hostile_prompts(self):
+        # The "_" placeholder keeps every positional stable: kdialog reads the
+        # prompt from $1 and the CLI from $2/$3, so a shift would silently
+        # rewire both. The recorded argv pins each position, and the hostile
+        # title proves the prompt quoting survives a real shell round-trip.
+        entry = next(item for item in self.fixture["commands"]
+                     if item["descriptor"]["kind"] == "setApiKey")
+        self.run_prompt(entry, "late")
+        kdialog_argv = json.loads((self.directory / "kdialog.argv").read_text())
+        self.assertEqual(kdialog_argv, ["--password", "API key for codex"])
+        codexbar_argv = json.loads((self.directory / "codexbar.argv").read_text())
+        self.assertEqual(codexbar_argv, ["config", "set-api-key", "--provider", "codex",
+                                         "--stdin", "--format", "json", "--json-only"])
+        hostile = next(item for item in self.fixture["commands"]
+                       if "PWNED" in item["command"])
+        for marker in self.directory.glob("*.argv"):
+            marker.unlink()
+        (self.directory / "PWNED").unlink(missing_ok=True)
+        self.run_prompt(hostile, "late")
+        self.assertFalse((self.directory / "PWNED").exists())
+        hostile_argv = json.loads((self.directory / "kdialog.argv").read_text())
+        self.assertEqual(hostile_argv, ["--password", self.hostile_prompt])
 
     def test_generated_scripts_cancel_finish_and_leave_no_running_children(self):
         for entry in self.fixture["commands"]:
@@ -168,6 +202,546 @@ class SecretPromptLifecycleTests(unittest.TestCase):
             except ProcessLookupError:
                 pass
             process.communicate()
+
+
+QML_WIRING = '''import QtQuick
+import QtTest
+import "SOURCE_URL/Guards.js" as Guards
+import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
+import "SOURCE_URL/SafeText.js" as SafeText
+import "SOURCE_URL/CommandLedger.js" as CommandLedger
+import "SOURCE_URL/config/ProviderDescriptor.js" as ProviderDescriptor
+import "SOURCE_URL/config/ProviderConfigProtocol.js" as ProviderConfigProtocol
+TestCase {
+    name: "ProviderCommandWiring"
+    property string commandPath: "codexbar"
+    property string errorText: ""
+    property string statusText: ""
+    property bool loading: false
+    property var providers: []
+    property var providerDiagnostics: ({})
+    property var providerDiagnosticErrors: ({})
+    property string selectedProviderID: ""
+    property bool providerDescriptorsUnavailable: false
+    property bool fireworksSingleKeySetupSupported: false
+    property var pending: ({})
+    property var providerFieldPending: ({})
+    property var providerDiagnosticLoading: ({})
+    property var commands: ({})
+    property int cfg_providerConfigRevision: 0
+    property var configSource
+    property var page
+    // Host-provided Plasmoid singleton, stubbed under a writable name: the
+    // builder renames the Plasmoid references inside the two extracted
+    // revision functions to this stub.
+    property var plasmoidHost: ({"configuration": ({})})
+    SOURCE_PROPERTIES
+    SOURCE_FUNCTIONS
+    function i18n(text, first, second) {
+        return String(text).replace("%1", first).replace("%2", second);
+    }
+    function displayNameForProvider(provider) { return provider; }
+    function providerTitle(identifier) { return identifier; }
+    function updateProviderEnabled(provider, value) {}
+    function freshSource() {
+        var backend = {connected: [], disconnected: []};
+        backend.connectSource = function(name) { backend.connected.push(name); };
+        backend.disconnectSource = function(name) { backend.disconnected.push(name); };
+        return backend;
+    }
+    function freshPage() {
+        var stub = {reloadCalls: 0, preserved: undefined};
+        stub.reload = function(preserve) { stub.reloadCalls++; stub.preserved = preserve; };
+        stub.providerTitle = function(identifier) { return identifier; };
+        return stub;
+    }
+    // Every command must mint a distinct nonce source: without the serial the
+    // list and version runs share one ledger entry and a late result lands on
+    // the wrong descriptor.
+    function initTestCase() {
+        // A fresh page starts its serial at zero, so its first command
+        // carries RUN=1: the probe observes the effect, not the property.
+        configSource = freshSource();
+        runCommand("probe-cmd", {kind: "probe", timeoutMs: 1000});
+        compare(configSource.connected[0], "CODEXBAR_PLASMA_RUN=1 probe-cmd");
+    }
+    function test_runCommandsMintDistinctNonceSources() {
+        configSource = freshSource();
+        commandRunSerial = 0;
+        commands = ({});
+        runCommand("list-cmd", {kind: "list", timeoutMs: 1000});
+        runCommand("version-cmd", {kind: "version", timeoutMs: 1000});
+        compare(commandRunSerial, 2);
+        compare(configSource.connected.length, 2);
+        compare(configSource.connected[0], "CODEXBAR_PLASMA_RUN=1 list-cmd");
+        compare(configSource.connected[1], "CODEXBAR_PLASMA_RUN=2 version-cmd");
+        compare(commands["CODEXBAR_PLASMA_RUN=1 list-cmd"].kind, "list");
+        compare(commands["CODEXBAR_PLASMA_RUN=2 version-cmd"].kind, "version");
+    }
+    // A reload retires the in-flight list run first, so its late result finds
+    // no ledger entry instead of overwriting the fresh providers.
+    function test_reloadRetiresInFlightListCommand() {
+        configSource = freshSource();
+        commandRunSerial = 0;
+        commands = ({});
+        runCommand("old-list", {kind: "list", timeoutMs: 60000});
+        var stale = configSource.connected[0];
+        reload();
+        compare(configSource.disconnected.length, 1);
+        compare(configSource.disconnected[0], stale);
+        verify(CommandLedger.find(commands, stale) === null);
+        compare(configSource.connected.length, 3);
+        compare(commandRunSerial, 3);
+    }
+    // A command without its own timeout inherits the 60s configured default:
+    // the sweep leaves it connected at 59s and retires it with the timeout
+    // message at 61s, so the absolute offsets pin the default by its effect.
+    function test_runCommandFallsBackToConfigTimeoutAndExpires() {
+        configSource = freshSource();
+        commandRunSerial = 0;
+        commands = ({});
+        loading = true;
+        errorText = "";
+        runCommand("slow-list", {kind: "list"});
+        var source = configSource.connected[0];
+        var launched = Date.now();
+        verify(hasTimedConfigCommands());
+        expireConfigCommands(launched + 59000);
+        compare(configSource.disconnected.length, 0);
+        verify(CommandLedger.find(commands, source) !== null);
+        expireConfigCommands(launched + 61000);
+        compare(configSource.disconnected.length, 1);
+        compare(configSource.disconnected[0], source);
+        verify(CommandLedger.find(commands, source) === null);
+        compare(loading, false);
+        verify(errorText.length > 0);
+    }
+    // Descriptors are copied through Guards: the ledger must own its entry,
+    // and unsafe keys must not survive the copy.
+    function test_copyObjectDetachesAndDropsUnsafeKeys() {
+        var original = {kind: "list"};
+        var copy = copyObject(original);
+        copy.kind = "version";
+        compare(original.kind, "list");
+        var evil = JSON.parse('{"__proto__": {"polluted": true}, "kind": "list"}');
+        var clean = copyObject(evil);
+        compare(clean.kind, "list");
+        verify(!("polluted" in clean));
+        verify(!("polluted" in {}));
+    }
+    // Pending keys resolve CLI aliases before mapping, so an alias and its
+    // canonical id share one pending slot; unusable ids map to nothing.
+    function test_providerMapKeyNormalizesAliases() {
+        compare(providerMapKey("11labs"), "elevenlabs");
+        compare(providerMapKey("codex"), "codex");
+        compare(descriptorPendingKey("__proto__", "apiKey"), "");
+    }
+    // Field keys are JSON-quoted so a crafted id cannot collide with another
+    // entry, and overlong ids are refused instead of keying unbounded state.
+    function test_descriptorPendingKeysQuoteAndBoundLengths() {
+        compare(descriptorPendingKey("codex", "apiKey"), 'codex::"apiKey"');
+        compare(descriptorPendingKey("codex", "  apiKey  "), 'codex::"apiKey"');
+        compare(descriptorPendingFieldKey(""), "");
+        compare(descriptorPendingKey("codex", ""), "");
+        var long = new Array(130).join("x");
+        compare(descriptorPendingFieldKey(long), "");
+        compare(descriptorPendingKey("codex", long), "");
+    }
+    // The icon file name is built from a provider-controlled key: unusable
+    // keys fall back to the generic icon instead of reaching a URL.
+    function test_providerIconSourceFallsBackForUnusableKeys() {
+        compare(String(providerIconSource("../../etc/passwd")), "view-statistics");
+        compare(String(providerIconSource("<b>evil</b>")), "view-statistics");
+        var benign = String(providerIconSource("codex"));
+        verify(benign !== "view-statistics");
+        verify(benign.slice(-10) === "/codex.svg");
+    }
+    // A secret field must never take the direct write path: the planner
+    // rejects it, nothing runs, and the value reaches no command line.
+    function test_secretFieldWriteRequiresSecurePrompt() {
+        configSource = freshSource();
+        writeDescriptorField("codex", {id: "apiKey", kind: "secret", title: "API key",
+            writeCommand: ["codexbar", "config", "set-api-key", "--provider", "codex", "--stdin"]},
+            "TOPSECRET");
+        compare(configSource.connected.length, 0);
+        verify(errorText.length > 0);
+        for (var i = 0; i < configSource.connected.length; i++) {
+            verify(configSource.connected[i].indexOf("TOPSECRET") === -1);
+        }
+    }
+    // A plain value takes the planned command with its placeholder filled.
+    function test_textFieldWriteRunsPlannedCommand() {
+        configSource = freshSource();
+        writeDescriptorField("codex", {id: "name", kind: "text", title: "Name",
+            writeCommand: ["codexbar", "config", "set", "--provider", "codex", "{value}"]}, "abc");
+        compare(errorText, "");
+        compare(configSource.connected.length, 1);
+        verify(configSource.connected[0].indexOf("abc") !== -1);
+    }
+    // The prompt path is secrets-only: a plain field is rejected before any
+    // dialog or command could carry its value.
+    function test_promptPathRejectsNonSecretField() {
+        configSource = freshSource();
+        promptDescriptorSecret("codex", {id: "name", kind: "text", title: "Name",
+            writeCommand: ["codexbar", "config", "set", "--provider", "codex", "{value}"]});
+        compare(configSource.connected.length, 0);
+        verify(errorText.length > 0);
+    }
+    // Only allow-listed descriptor actions run; anything else is refused
+    // before it can reach the shell.
+    function test_descriptorActionRunsOnlyAllowedCommands() {
+        configSource = freshSource();
+        runDescriptorAction("codex", {id: "openDocs",
+            command: ["codexbar", "config", "action", "open-docs"]});
+        compare(errorText, "");
+        compare(configSource.connected.length, 1);
+        verify(configSource.connected[0].indexOf("open-docs") !== -1);
+        runDescriptorAction("codex", {id: "evil", command: ["rm", "-rf", "/"]});
+        compare(configSource.connected.length, 1);
+        verify(errorText.length > 0);
+    }
+    // An action result opens only an https URL. Anything else reports an
+    // unsupported URL and never touches the opener; a non-string value is
+    // coerced before trimming instead of throwing inside the handler.
+    function test_actionResultOpensOnlyHttpsUrls() {
+        configSource = freshSource();
+        page = freshPage();
+        handleDescriptorActionResult({provider: "codex", actionID: "a1"},
+            '{"url": "javascript:alert(1)"}', "", 0);
+        verify(errorText.length > 0);
+        compare(page.reloadCalls, 0);
+        handleDescriptorActionResult({provider: "codex", actionID: "a1"},
+            '{"url": 12345}', "", 0);
+        verify(errorText.length > 0);
+        compare(page.reloadCalls, 0);
+        handleDescriptorActionResult({provider: "codex", actionID: "a1"},
+            '{"url": "https://example.com/x"}', "", 0);
+        compare(errorText, "");
+        verify(statusText.length > 0);
+        compare(page.reloadCalls, 1);
+    }
+    // A fresh list selects the first enabled provider, so the page never
+    // opens on an empty selection; the selection property carries it.
+    function test_listResultSelectsFirstEnabledProvider() {
+        providers = [];
+        selectedProviderID = "";
+        loading = true;
+        errorText = "stale";
+        page = freshPage();
+        var currentRevision = providerConfigRevisionValue();
+        handleListResult({includeDescriptors: false, providerConfigRevision: currentRevision},
+            '[{"provider": "codex", "displayName": "Codex", "enabled": true}, {"provider": "claude", "displayName": "Claude", "enabled": false}]', "");
+        compare(providers.length, 2);
+        compare(providers[0].provider, "codex");
+        compare(selectedProviderID, "codex");
+        compare(loading, false);
+        compare(errorText, "");
+    }
+    // An old CLI that rejects --descriptors falls back to a plain list and
+    // marks descriptors unavailable, instead of leaving the page in error.
+    function test_listResultRetriesWithoutDescriptorsOnOldCli() {
+        configSource = freshSource();
+        commandRunSerial = 0;
+        commands = ({});
+        providerDescriptorsUnavailable = false;
+        loading = true;
+        var currentRevision = providerConfigRevisionValue();
+        handleListResult({includeDescriptors: true, providerConfigRevision: currentRevision},
+            "", "codexbar: error: unknown option '--descriptors'");
+        compare(providerDescriptorsUnavailable, true);
+        compare(configSource.connected.length, 1);
+        verify(configSource.connected[0].indexOf("--descriptors") === -1);
+        verify(configSource.connected[0].indexOf("--format") !== -1);
+        verify(configSource.connected[0].indexOf("--json-only") !== -1);
+    }
+    // The retry decision delegates to the protocol matcher: descriptor
+    // rejection retries, unrelated stderr does not.
+    function test_descriptorUnsupportedMessageDelegatesToProtocol() {
+        verify(descriptorListUnsupportedMessage("", "error: unknown option '--descriptors'").length > 0);
+        compare(descriptorListUnsupportedMessage("", "connection refused"), "");
+        compare(shouldRetryProviderListWithoutDescriptors("", "error: unknown option '--descriptors'"), true);
+        compare(shouldRetryProviderListWithoutDescriptors("", "connection refused"), false);
+    }
+    // A diagnose reply is normalized before it is stored, so the settings
+    // rows read shaped values rather than raw CLI JSON.
+    function test_diagnoseResultStoresNormalizedDiagnostic() {
+        providerDiagnostics = ({});
+        providerDiagnosticErrors = ({});
+        providerDiagnosticLoading = JSON.parse('{"codex": true}');
+        handleDiagnoseResult({provider: "codex"},
+            '{"provider": "codex", "source": "config.toml", "auth": {"configured": true, "modes": ["api-key"]}, "settings": {"model": {}}}', "");
+        var diagnostic = providerDiagnosticFor("codex");
+        verify(diagnostic !== null);
+        compare(diagnostic.source, "config.toml");
+        compare(diagnostic.authConfigured, true);
+        compare(diagnostic.settingsKeys, "model");
+        compare(providerDiagnosticErrorFor("codex"), "");
+        compare(providerDiagnosticLoadingFor("codex"), false);
+    }
+    // An error envelope becomes a diagnostic error and stores nothing, so a
+    // failed inspect never shows stale shaped data as current.
+    function test_diagnoseResultSurfacesEnvelopeError() {
+        providerDiagnostics = ({});
+        providerDiagnosticErrors = ({});
+        providerDiagnosticLoading = JSON.parse('{"codex": true}');
+        handleDiagnoseResult({provider: "codex"}, '{"error": {"message": "boom"}}', "");
+        verify(providerDiagnosticFor("codex") === null);
+        verify(providerDiagnosticErrorFor("codex").length > 0);
+        compare(providerDiagnosticLoadingFor("codex"), false);
+    }
+    // A successful field write unlocks the field, reports the save, and
+    // reloads preserving messages; the reload keeps status text visible.
+    function test_fieldResultSuccessReloadsPreservingMessages() {
+        configSource = freshSource();
+        providerFieldPending = ({});
+        page = freshPage();
+        errorText = "";
+        statusText = "";
+        markFieldPending("codex", "name", true);
+        verify(isFieldPending("codex", "name"));
+        handleDescriptorFieldResult({provider: "codex", fieldID: "name"},
+            '{"ok": true}', "", 0);
+        compare(isFieldPending("codex", "name"), false);
+        compare(errorText, "");
+        compare(statusText, "codex setting saved");
+        compare(page.reloadCalls, 1);
+        compare(page.preserved, true);
+    }
+    // The list command always requests JSON; the descriptors flag is only
+    // sent on the first pass, so the fallback run stays parseable by old
+    // CLI builds that reject the flag.
+    function test_listCommandCarriesDescriptorsAndJsonFlags() {
+        configSource = freshSource();
+        commandRunSerial = 0;
+        commands = ({});
+        runProviderListCommand(true);
+        var first = configSource.connected[configSource.connected.length - 1];
+        verify(first.indexOf("--descriptors") !== -1);
+        verify(first.indexOf("--format") !== -1);
+        verify(first.indexOf("--json-only") !== -1);
+        runProviderListCommand(false);
+        var fallback = configSource.connected[configSource.connected.length - 1];
+        verify(fallback.indexOf("--descriptors") === -1);
+        verify(fallback.indexOf("--json-only") !== -1);
+    }
+    // Loading settings runs a redacted diagnose for the provider, so the
+    // inspect action never prints secrets into process output.
+    function test_loadProviderSettingsRunsRedactedDiagnose() {
+        configSource = freshSource();
+        commandRunSerial = 0;
+        commands = ({});
+        providerDiagnosticLoading = ({});
+        errorText = "";
+        loadProviderSettings("codex");
+        compare(configSource.connected.length, 1);
+        var command = configSource.connected[0];
+        verify(command.indexOf("diagnose --provider") !== -1);
+        verify(command.indexOf("--format json --redact") !== -1);
+        verify(command.indexOf("codex") !== -1);
+        compare(providerDiagnosticLoadingFor("codex"), true);
+        providerDiagnosticLoading = ({});
+    }
+    // A missing write/action command stays silent: the guard returns before
+    // the planner could report an unsupported command for a no-op row.
+    function test_emptyWriteCommandsStaySilent() {
+        configSource = freshSource();
+        providerFieldPending = ({});
+        errorText = "stale";
+        writeDescriptorField("codex", {id: "name", kind: "text"}, "abc");
+        promptDescriptorSecret("codex", {id: "apiKey", kind: "secret"});
+        runDescriptorAction("codex", {id: "openDocs"});
+        compare(configSource.connected.length, 0);
+        compare(errorText, "stale");
+        errorText = "";
+    }
+    // Field writes register under the descriptorField kind so their results
+    // unlock the field instead of landing on another handler.
+    function test_fieldWriteRegistersDescriptorFieldKind() {
+        configSource = freshSource();
+        commandRunSerial = 0;
+        commands = ({});
+        providerFieldPending = ({});
+        errorText = "";
+        writeDescriptorField("codex", {id: "name", kind: "text", title: "Name",
+            writeCommand: ["codexbar", "config", "set", "--provider", "codex", "{value}"]}, "abc");
+        compare(configSource.connected.length, 1);
+        var entry = CommandLedger.find(commands, configSource.connected[0]);
+        verify(entry !== null);
+        compare(entry.kind, "descriptorField");
+        providerFieldPending = ({});
+    }
+    // Descriptor actions register under the descriptorAction kind for the
+    // same routing reason as field writes.
+    function test_actionRegistersDescriptorActionKind() {
+        configSource = freshSource();
+        commandRunSerial = 0;
+        commands = ({});
+        providerFieldPending = ({});
+        errorText = "";
+        runDescriptorAction("codex", {id: "openDocs",
+            command: ["codexbar", "config", "action", "open-docs"]});
+        compare(configSource.connected.length, 1);
+        var entry = CommandLedger.find(commands, configSource.connected[0]);
+        verify(entry !== null);
+        compare(entry.kind, "descriptorAction");
+        providerFieldPending = ({});
+    }
+    // Descriptor rows read straight off the selected item: no descriptor or
+    // no list of that shape means no rows, so a missing descriptor cannot
+    // crash the options section.
+    function test_descriptorRowHelpersReadFieldsAndActions() {
+        var item = {provider: "codex",
+            descriptor: {fields: [{id: "name", kind: "text"}],
+                actions: [{id: "openDocs", title: "Docs"}]}};
+        compare(descriptorFieldRows(item).length, 1);
+        compare(descriptorActionRows(item).length, 1);
+        compare(descriptorHasField(item, "name"), true);
+        compare(descriptorHasField(item, "missing"), false);
+        compare(descriptorHasAction(item, "openDocs"), true);
+        compare(descriptorHasAction(item, "openDashboard"), false);
+        compare(descriptorFieldRows({provider: "codex"}).length, 0);
+        compare(descriptorHasAction(null, "openDocs"), false);
+    }
+    // The settings rows always identify the provider and its key setup;
+    // stored redacted diagnostics add source rows on top.
+    function test_providerSettingsRowsLabelAndDiagnose() {
+        providerDiagnostics = ({});
+        var rows = providerSettingsRows({provider: "openai", enabled: true});
+        var labels = rows.map(function(row) { return row.label; });
+        verify(labels.indexOf("Provider id") !== -1);
+        verify(labels.indexOf("API key setup") !== -1);
+        verify(labels.indexOf("Source") === -1);
+        setProviderDiagnostic("openai", {source: "config.toml", sourceMode: "",
+            authModes: "", authConfigured: true, fetchAttempts: 2, settingsKeys: "model"});
+        var enriched = providerSettingsRows({provider: "openai", enabled: true});
+        var enrichedLabels = enriched.map(function(row) { return row.label; });
+        verify(enrichedLabels.indexOf("Source") !== -1);
+        providerDiagnostics = ({});
+    }
+    // The CLI helper prints the redacted diagnose, the toggle and, for key
+    // providers, the piped set-api-key line: copy-pasteable without secrets.
+    function test_providerCliCommandTextListsHelpfulCommands() {
+        var text = providerCliCommandText({provider: "openai", enabled: true});
+        verify(text.indexOf("diagnose --provider") !== -1);
+        verify(text.indexOf("config set-api-key --provider") !== -1);
+        verify(text.indexOf("openai") !== -1);
+        var plain = providerCliCommandText({provider: "unknown-xyz", enabled: false});
+        verify(plain.indexOf("diagnose --provider") !== -1);
+        verify(plain.indexOf("set-api-key") === -1);
+    }
+    // Docs, login and CLI spelling come from the identity table, so an
+    // unknown provider yields nothing instead of a guessed URL.
+    function test_identityDelegatesToProviderTable() {
+        verify(providerDocsUrl("codex").indexOf("https://") === 0);
+        compare(providerLoginUrl("codex"), "https://chatgpt.com");
+        compare(providerCliArgument("groq"), "groqcloud");
+        compare(providerCliArgument("codex"), "codex");
+        compare(providerDocsUrl("unknown-xyz"), "");
+        compare(providerLoginUrl("unknown-xyz"), "");
+    }
+    // Only allow-listed providers offer API key setup; the fireworks CLI
+    // flag additionally gates its single-key flow.
+    function test_supportsApiKeySetupAllowlistsProviders() {
+        fireworksSingleKeySetupSupported = false;
+        compare(supportsApiKeySetup("openai"), true);
+        compare(supportsApiKeySetup("unknown-xyz"), false);
+        compare(supportsApiKeySetup("fireworks"), false);
+        fireworksSingleKeySetupSupported = true;
+        compare(supportsApiKeySetup("fireworks"), true);
+        fireworksSingleKeySetupSupported = false;
+    }
+    // Action rows offer set-api-key for key providers and a dashboard link
+    // only when no descriptor action already opens the dashboard.
+    function test_actionRowsGuardDashboardAndOfferApiKey() {
+        pending = ({});
+        providerFieldPending = ({});
+        var dashboard = {provider: "codex", enabled: true, displayName: "Codex",
+            descriptor: {actions: [{id: "openDashboard", title: "Dashboard"}]}};
+        var guarded = providerActionRows(dashboard);
+        var guardedActions = guarded.map(function(row) { return row.action; });
+        verify(guardedActions.indexOf("dashboard") === -1);
+        var plain = {provider: "codex", enabled: true, displayName: "Codex"};
+        var unguarded = providerActionRows(plain);
+        verify(unguarded.map(function(row) { return row.action; }).indexOf("dashboard") !== -1);
+        var keyed = providerActionRows({provider: "openai", enabled: true, displayName: "OpenAI"});
+        var keyRow = keyed.filter(function(row) { return row.action === "set-api-key"; });
+        compare(keyRow.length, 1);
+    }
+    // A failed field write unlocks the field and reports the failure without
+    // reloading, so the rejected value stays on screen.
+    function test_fieldResultErrorReportsWithoutReload() {
+        providerFieldPending = ({});
+        page = freshPage();
+        markFieldPending("codex", "name", true);
+        handleDescriptorFieldResult({provider: "codex", fieldID: "name"},
+            '{"error": {"message": "boom"}}', "", 0);
+        compare(isFieldPending("codex", "name"), false);
+        compare(errorText, "codex: boom");
+        compare(page.reloadCalls, 0);
+    }
+}
+'''
+
+WIRING_FUNCTIONS = (
+    "runCommand", "disconnectCommandsByKind", "expireConfigCommands",
+    "hasTimedConfigCommands", "handleConfigCommandTimeout",
+    "reload", "runProviderListCommand",
+    "runCliVersionCommand", "loadProviderSettings",
+    "providerConfigRevisionValue", "bumpProviderConfigRevision",
+    "copyObject", "hasOwnKey", "providerKey", "providerMapKey", "descriptorPendingKey",
+    "descriptorPendingFieldKey", "providerIconSource", "shellQuote", "writeDescriptorField",
+    "promptDescriptorSecret", "runDescriptorAction", "handleDescriptorActionResult",
+    "handleDescriptorFieldResult", "handleListResult", "handleDiagnoseResult",
+    "shouldRetryProviderListWithoutDescriptors", "descriptorListUnsupportedMessage",
+    "boundedCliMessage", "providerByID", "firstSelectableProvider",
+    "providerDiagnosticFor", "providerDiagnosticErrorFor", "setProviderDiagnostic",
+    "setProviderDiagnosticError", "setProviderDiagnosticLoading",
+    "parseCommandPayload", "providerCommandFailureText", "markFieldPending", "isFieldPending",
+    "isPending", "providerDiagnosticLoadingFor", "descriptorFieldRows", "descriptorActionRows",
+    "descriptorHasField", "descriptorHasAction", "appendSettingsRow", "providerSettingsRows",
+    "providerActionRows", "descriptorActionIcon", "providerCliCommandText",
+    "providerDocsUrl", "providerDashboardUrl", "providerLoginUrl", "providerCliArgument",
+    "supportsApiKeySetup",
+)
+
+
+class ProviderCommandWiringTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.temporary = tempfile.TemporaryDirectory(prefix="codexbar-provider-wiring-")
+        cls.addClassCleanup(cls.temporary.cleanup)
+        cls.directory = Path(cls.temporary.name)
+        providers = Surface("providers", ROOT)
+        page = ROOT / "contents/ui/configProviders.qml"
+        source = providers.texts[page]
+        providers.texts = {page: source}
+        functions = []
+        for name in WIRING_FUNCTIONS:
+            signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
+            body = providers.function_body(name)
+            if name in ("providerConfigRevisionValue", "bumpProviderConfigRevision"):
+                body = body.replace("Plasmoid", "plasmoidHost")
+            functions.append(signature + " {" + body + "}")
+        serial = re.search(r"^    property int commandRunSerial: 0$", source,
+                           re.MULTILINE).group(0)
+        command_timeout = re.search(r"^    readonly property int configCommandTimeoutMs: \d+$",
+                                    source, re.MULTILINE).group(0).replace("readonly ", "")
+        secret_prompt_timeouts = re.findall(
+            r"^    readonly property int configSecret\w+:.*(?:\n[ \t]{8,}\S.*)*", source, re.MULTILINE)
+        qml = QML_WIRING.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
+        qml = qml.replace("SOURCE_FUNCTIONS", "\n".join(functions))
+        qml = qml.replace("SOURCE_PROPERTIES", "\n".join([serial, command_timeout] + secret_prompt_timeouts))
+        fixture = cls.directory / "tst_provider_wiring.qml"
+        fixture.write_text(qml)
+        result = subprocess.run(
+            [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+            env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+            capture_output=True, text=True, timeout=30)
+        cls.output = result.stdout + result.stderr
+        cls.returncode = result.returncode
+
+    def test_provider_command_wiring(self):
+        self.assertEqual(self.returncode, 0, self.output)
 
 
 if __name__ == "__main__":

@@ -42,14 +42,18 @@ require_in_surface applet "property bool updateRetryPending: false"
 require_in_surface applet "property bool connectedUpdateInstallMode: false"
 require_in_surface applet "property bool pendingAutomaticUpdateCheck: false"
 
-require_in_surface providers "readonly property int configCommandTimeoutMs: 60000"
-require_in_surface providers "readonly property int configSecretPromptTimeoutMs:"
+# Kept: the secret-command timeout magnitudes only take effect in generated
+# scripts whose fixture shrinks them, so bumping 60->61 and 5->6 keeps the
+# whole secret-prompt module green. The kill-on-schedule effect runs against
+# the shrunk values and the ledger-margin invariant holds for any positive
+# magnitudes, leaving the production defaults with no failing-first pin.
 require_in_surface providers "readonly property int configSecretCommandTimeoutSeconds: 60"
 require_in_surface providers "readonly property int configSecretCommandKillAfterSeconds: 5"
-require_in_surface providers "id: configCommandTimeoutTimer"
-require_in_surface providers "page.expireConfigCommands(Date.now())"
+# Kept: page creation always coincides with the cfg_commandPath injection
+# reload, and Qt.callLater coalesces the two into one list+version pair, so
+# deleting the onCompleted line keeps every providers suite green with no
+# observable difference in the issued commands.
 require_in_surface providers "Component.onCompleted: Qt.callLater(reload)"
-require_in_surface providers "onCfg_commandPathChanged: handleCommandPathChanged()"
 
 reject_in_surface popup "function commandWithRunNonce(command)"
 # Kept: the per-second roster sweep only fires its effect after a 60s

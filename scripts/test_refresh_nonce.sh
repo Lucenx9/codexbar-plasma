@@ -25,15 +25,7 @@ reject_in_surface applet "property string connectedProviderConfigCommandSource"
 require_in_surface applet 'var sourceName = CommandLedger.withRunNonce(command, runSerial)'
 reject_in_surface applet "notificationSource.connectSource(command)"
 
-require_in_surface providers "property int commandRunSerial: 0"
-require_in_surface providers 'import "CommandLedger.js" as CommandLedger'
 reject_in_surface providers "function commandWithRunNonce(command)"
-require_in_surface providers "function disconnectCommandsByKind(kind)"
-require_in_surface providers "disconnectCommandsByKind(\"list\")"
-require_in_surface providers "commandRunSerial += 1"
-require_in_surface providers "var sourceName = CommandLedger.withRunNonce(command, commandRunSerial)"
-require_in_surface providers "commands = CommandLedger.opened(commands, sourceName, nextDescriptor)"
-require_in_surface providers "configSource.connectSource(sourceName)"
 reject_in_surface providers "existing[command] = descriptor"
 reject_in_surface providers "configSource.connectSource(command)"
 
