@@ -484,6 +484,85 @@ TestCase {
         compare(page.reloadCalls, 1);
         compare(page.preserved, true);
     }
+    // The list command always requests JSON; the descriptors flag is only
+    // sent on the first pass, so the fallback run stays parseable by old
+    // CLI builds that reject the flag.
+    function test_listCommandCarriesDescriptorsAndJsonFlags() {
+        configSource = freshSource();
+        commandRunSerial = 0;
+        commands = ({});
+        runProviderListCommand(true);
+        var first = configSource.connected[configSource.connected.length - 1];
+        verify(first.indexOf("--descriptors") !== -1);
+        verify(first.indexOf("--format") !== -1);
+        verify(first.indexOf("--json-only") !== -1);
+        runProviderListCommand(false);
+        var fallback = configSource.connected[configSource.connected.length - 1];
+        verify(fallback.indexOf("--descriptors") === -1);
+        verify(fallback.indexOf("--json-only") !== -1);
+    }
+    // Loading settings runs a redacted diagnose for the provider, so the
+    // inspect action never prints secrets into process output.
+    function test_loadProviderSettingsRunsRedactedDiagnose() {
+        configSource = freshSource();
+        commandRunSerial = 0;
+        commands = ({});
+        providerDiagnosticLoading = ({});
+        errorText = "";
+        loadProviderSettings("codex");
+        compare(configSource.connected.length, 1);
+        var command = configSource.connected[0];
+        verify(command.indexOf("diagnose --provider") !== -1);
+        verify(command.indexOf("--format json --redact") !== -1);
+        verify(command.indexOf("codex") !== -1);
+        compare(providerDiagnosticLoadingFor("codex"), true);
+        providerDiagnosticLoading = ({});
+    }
+    // A missing write/action command stays silent: the guard returns before
+    // the planner could report an unsupported command for a no-op row.
+    function test_emptyWriteCommandsStaySilent() {
+        configSource = freshSource();
+        providerFieldPending = ({});
+        errorText = "stale";
+        writeDescriptorField("codex", {id: "name", kind: "text"}, "abc");
+        promptDescriptorSecret("codex", {id: "apiKey", kind: "secret"});
+        runDescriptorAction("codex", {id: "openDocs"});
+        compare(configSource.connected.length, 0);
+        compare(errorText, "stale");
+        errorText = "";
+    }
+    // Field writes register under the descriptorField kind so their results
+    // unlock the field instead of landing on another handler.
+    function test_fieldWriteRegistersDescriptorFieldKind() {
+        configSource = freshSource();
+        commandRunSerial = 0;
+        commands = ({});
+        providerFieldPending = ({});
+        errorText = "";
+        writeDescriptorField("codex", {id: "name", kind: "text", title: "Name",
+            writeCommand: ["codexbar", "config", "set", "--provider", "codex", "{value}"]}, "abc");
+        compare(configSource.connected.length, 1);
+        var entry = CommandLedger.find(commands, configSource.connected[0]);
+        verify(entry !== null);
+        compare(entry.kind, "descriptorField");
+        providerFieldPending = ({});
+    }
+    // Descriptor actions register under the descriptorAction kind for the
+    // same routing reason as field writes.
+    function test_actionRegistersDescriptorActionKind() {
+        configSource = freshSource();
+        commandRunSerial = 0;
+        commands = ({});
+        providerFieldPending = ({});
+        errorText = "";
+        runDescriptorAction("codex", {id: "openDocs",
+            command: ["codexbar", "config", "action", "open-docs"]});
+        compare(configSource.connected.length, 1);
+        var entry = CommandLedger.find(commands, configSource.connected[0]);
+        verify(entry !== null);
+        compare(entry.kind, "descriptorAction");
+        providerFieldPending = ({});
+    }
     // A failed field write unlocks the field and reports the failure without
     // reloading, so the rejected value stays on screen.
     function test_fieldResultErrorReportsWithoutReload() {
@@ -501,7 +580,8 @@ TestCase {
 
 WIRING_FUNCTIONS = (
     "runCommand", "disconnectCommandsByKind", "reload", "runProviderListCommand",
-    "runCliVersionCommand", "providerConfigRevisionValue", "bumpProviderConfigRevision",
+    "runCliVersionCommand", "loadProviderSettings",
+    "providerConfigRevisionValue", "bumpProviderConfigRevision",
     "copyObject", "hasOwnKey", "providerKey", "providerMapKey", "descriptorPendingKey",
     "descriptorPendingFieldKey", "providerIconSource", "shellQuote", "writeDescriptorField",
     "promptDescriptorSecret", "runDescriptorAction", "handleDescriptorActionResult",
