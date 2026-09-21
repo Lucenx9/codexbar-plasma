@@ -295,11 +295,10 @@ require_in_surface applet "CostPresentation.costTrustSummary("
 # test green. This stays as the only pin on the locale wiring.
 require_in_surface applet "CostPresentation.numberFormat("
 reject_in_surface applet "function appendTokenBreakdownRow("
-require_in_surface applet "id: usageDashboardSection"
-require_in_surface applet "text: i18n(\"Usage dashboard\")"
-require_in_surface applet "model: usageDashboardSection.kpis"
-require_in_surface applet "model: usageDashboardSection.rows"
-require_in_surface applet "Components.ProviderDetailSection"
+# The popup dashboard sections are executed by tests/test_usage_dashboard.py,
+# which extracts the production providerDetailsSection and usageDashboardSection
+# blocks and renders them with hostile data: heading, KPI/row models, and the
+# per-entry detail delegate each go red there when broken.
 # The section's secondary-value label, chart element and chart visibility are
 # executed by tst_visual_layout.qml (providerDetailValuesStayWithinPopup and
 # providerDetailChartFollowsChartData). The `required modelData` scoping rule
