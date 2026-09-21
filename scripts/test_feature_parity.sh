@@ -9,7 +9,6 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GENERAL_QML="${ROOT_DIR}/contents/ui/configGeneral.qml"
 PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
 PROVIDER_IDENTITY_JS="${ROOT_DIR}/contents/ui/ProviderIdentity.js"
-COMPACT_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/CompactRepresentation.qml"
 INTERACTIVE_CHART_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/InteractiveChart.qml"
 SESSIONS_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/SessionsView.qml"
 SPEND_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/SpendView.qml"
@@ -350,7 +349,10 @@ require_in_surface applet "readonly property int quotaWarningPercent: QuotaThres
 require_in_surface applet "readonly property int quotaCriticalPercent: QuotaThresholds.criticalPercent("
 require_in_surface applet "onQuotaWarningPercentChanged: resetNotificationMemo()"
 require_in_surface applet "onQuotaCriticalPercentChanged: resetNotificationMemo()"
-require_in_file "$COMPACT_COMPONENT_QML" "id: compactStatusBadge"
+# The standalone status badge id stays load-bearing for
+# scripts/test_ui_regressions.sh, which extracts the compactStatusBadge block
+# and asserts its fallback wiring: renaming the id fails that extraction, so
+# the literal token is not pinned here as well.
 # The provider incident badge is executed by tst_popup_controls.qml
 # (incidentBadgeGrowsWithItsText); its id has no references outside the
 # component, so the token itself is unobservable in the harness.
