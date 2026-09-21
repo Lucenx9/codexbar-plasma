@@ -47,16 +47,11 @@ require_in_surface providers "page.expireConfigCommands(Date.now())"
 require_in_surface providers "Component.onCompleted: Qt.callLater(reload)"
 require_in_surface providers "onCfg_commandPathChanged: handleCommandPathChanged()"
 
-require_in_surface popup "readonly property int providerRosterCommandTimeoutMs: 60000"
-# The roster load lives in the shared controllers/ loader: its ledger import
-# carries the parent-directory prefix, and its lifecycle reacts to the
-# controller's own commandPath/active inputs instead of the page cfg keys.
-require_in_surface popup 'import "../CommandLedger.js" as CommandLedger'
 reject_in_surface popup "function commandWithRunNonce(command)"
-require_in_surface popup "Component.onCompleted: if (active) Qt.callLater(loadProviderRoster)"
-require_in_surface popup "onCommandPathChanged: if (active) Qt.callLater(loadProviderRoster)"
-require_in_surface popup "function expireProviderRosterCommands(nowMs)"
-require_in_surface popup "id: providerRosterCommandTimeoutTimer"
+# Kept: the per-second roster sweep only fires its effect after a 60s
+# pending window, so neutering the sweep call keeps every executed roster
+# test green. It stays as the only pin that the sweep retires overdue
+# commands instead of idling.
 require_in_surface popup "controller.expireProviderRosterCommands(Date.now())"
 
 
