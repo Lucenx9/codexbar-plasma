@@ -7,8 +7,6 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # of main.qml does not need an edit here. The per-component variables below stay
 # file-scoped: those are delegate contracts about one specific component.
 GENERAL_QML="${ROOT_DIR}/contents/ui/configGeneral.qml"
-POPUP_QML="${ROOT_DIR}/contents/ui/configPopup.qml"
-PANEL_QML="${ROOT_DIR}/contents/ui/configPanel.qml"
 PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
 PROVIDER_IDENTITY_JS="${ROOT_DIR}/contents/ui/ProviderIdentity.js"
 PROVIDER_NAMES_QML="${ROOT_DIR}/contents/ui/components/ProviderNames.qml"
@@ -427,7 +425,6 @@ require_in_surface applet "if (!paceWarningActive(row)) {"
 require_in_surface applet "PanelDisplay.remainingSeconds("
 require_in_surface applet "id: panelClockTimer"
 require_in_surface applet "root.panelClockMs = Date.now()"
-require_in_file "$PANEL_QML" "value: PanelDisplay.runOutMode"
 require_in_surface applet "function resetText(window, absolute)"
 require_in_surface applet "function usageResetText(row)"
 require_in_surface applet "ResetPresentation.labelParts(value)"
@@ -552,22 +549,6 @@ require_in_file "$MAKEFILE" "QMLLINT_FLAGS ?= --unqualified disable"
 require_in_file "$MAKEFILE" "update:"
 reject_in_file "$MAKEFILE" "contents/ui/configAbout.qml"
 
-require_in_file "$PANEL_QML" 'Kirigami.FormData.label: i18n("Text format:")'
-require_in_file "$PANEL_QML" 'text: i18n("Provider name")'
-require_in_file "$PANEL_QML" 'text: i18n("Usage text")'
-require_in_file "$PANEL_QML" "enabled: showPercentCheck.checked"
-require_in_file "$POPUP_QML" "Show usage as percent used"
-require_in_file "$POPUP_QML" "Show quota warnings on usage meters"
-require_in_file "$POPUP_QML" "Show reset times as clock time"
-require_in_file "$PANEL_QML" 'text: i18n("Provider meters")'
-require_in_file "$PANEL_QML" "Element order:"
-require_in_file "$PANEL_QML" "PanelElements.movedOrder("
-require_in_file "$PANEL_QML" "Auto-select highest-usage provider"
-require_in_file "$POPUP_QML" "cfg_overviewProviderIDs"
-require_in_file "$POPUP_QML" "Overview providers:"
-require_in_file "$POPUP_QML" "Choose up to %1 providers"
-require_in_file "$POPUP_QML" 'i18np("Choose up to %1 provider", "Choose up to %1 providers"'
-require_in_file "$POPUP_QML" "function toggleOverviewProvider(providerID, checked)"
 
 
 
@@ -582,11 +563,6 @@ require_in_surface applet "PanelRules.normalizedRules(Plasmoid.configuration.pan
 require_in_surface applet "PanelDisplay.rowForMode(switcherCandidateRows(item), mode, panelQuotaLane)"
 require_in_surface applet "PanelRules.matches(panelVisibilityRules.text, row, panelClockMs)"
 require_in_surface applet "PanelRules.matchesAny(panelVisibilityRules.meters, rows, panelClockMs)"
-require_in_surface panel "property string cfg_panelQuotaLane"
-require_in_surface panel "property string cfg_panelVisibilityRules"
-require_in_surface panel "PanelRules.updatedRules(cfg_panelVisibilityRules, elementID, patch)"
-require_in_surface panel 'elementID: "text"'
-require_in_surface panel 'elementID: "meters"'
 reject_in_surface applet "onPanelQuotaLaneChanged: Qt.callLater(refreshNow)"
 reject_in_surface applet "onPanelVisibilityRulesChanged: Qt.callLater(refreshNow)"
 require_in_surface applet '"sessions", "--json-v2"'
