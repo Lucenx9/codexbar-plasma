@@ -1098,6 +1098,50 @@ TestCase {
         tryCompare(view, "width", layout.width);
     }
 
+    function test_providerDetailChartFollowsChartData() {
+        var layout = createTemporaryQmlObject(
+            'import QtQuick; import QtQuick.Layouts; ColumnLayout { width: 540 }',
+            testCase, String(Qt.resolvedUrl("ProviderDetailChartTest.qml")));
+        var withChart = UsageDetails.normalizeSections([{
+            title: "Details",
+            rows: [{ label: "Model", value: "42", secondaryValue: "" }],
+            chart: { kind: "line", title: "Daily usage", unit: "tokens",
+                points: [{ label: "Mon", value: 3 }, { label: "Tue", value: 7 }] }
+        }])[0];
+        var plotted = createControl("ProviderDetailSection", {
+            applet: applet,
+            providerData: { provider: "codex" },
+            modelData: withChart
+        }, layout);
+        if (!plotted)
+            return;
+        // The section plots its chart through the shared interactive chart,
+        // which appears only while the section carries chart data.
+        var chart = findItem(plotted, function (item) {
+            return typeof item.pointCount === "number" && typeof item.selectedIndex === "number";
+        });
+        verify(chart !== null);
+        compare(chart.visible, true);
+        compare(chart.pointCount, 2);
+        var withoutChart = UsageDetails.normalizeSections([{
+            title: "Details",
+            rows: [{ label: "Model", value: "42", secondaryValue: "" }]
+        }])[0];
+        verify(withoutChart.chart === null);
+        var plain = createControl("ProviderDetailSection", {
+            applet: applet,
+            providerData: { provider: "codex" },
+            modelData: withoutChart
+        }, layout);
+        if (!plain)
+            return;
+        var hidden = findItem(plain, function (item) {
+            return typeof item.pointCount === "number" && typeof item.selectedIndex === "number";
+        });
+        verify(hidden !== null);
+        compare(hidden.visible, false);
+    }
+
     function test_projectCostsNestedLayoutDoesNotRearrangeRecursively_data() {
         return [{tag: "costs", tokens: false}, {tag: "tokens", tokens: true}];
     }

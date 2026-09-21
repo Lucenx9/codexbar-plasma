@@ -12,7 +12,6 @@ PROVIDER_IDENTITY_JS="${ROOT_DIR}/contents/ui/ProviderIdentity.js"
 COMPACT_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/CompactRepresentation.qml"
 PROVIDER_HEADER_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/ProviderHeader.qml"
 USAGE_ROW_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/ProviderUsageRow.qml"
-PROVIDER_DETAIL_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/ProviderDetailSection.qml"
 INTERACTIVE_CHART_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/InteractiveChart.qml"
 SESSIONS_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/SessionsView.qml"
 SPEND_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/SpendView.qml"
@@ -303,10 +302,10 @@ require_in_surface applet "text: i18n(\"Usage dashboard\")"
 require_in_surface applet "model: usageDashboardSection.kpis"
 require_in_surface applet "model: usageDashboardSection.rows"
 require_in_surface applet "Components.ProviderDetailSection"
-require_in_file "$PROVIDER_DETAIL_COMPONENT_QML" "required property var modelData"
-require_in_file "$PROVIDER_DETAIL_COMPONENT_QML" "modelData.secondaryValue"
-require_in_file "$PROVIDER_DETAIL_COMPONENT_QML" "InteractiveChart {"
-require_in_file "$PROVIDER_DETAIL_COMPONENT_QML" "visible: detailSection.chartData !== null"
+# The section's secondary-value label, chart element and chart visibility are
+# executed by tst_visual_layout.qml (providerDetailValuesStayWithinPopup and
+# providerDetailChartFollowsChartData). The `required modelData` scoping rule
+# for Components delegates stays owned by scripts/test_ui_regressions.sh.
 require_in_file "$INTERACTIVE_CHART_COMPONENT_QML" 'if (chart.kind === "line")'
 require_in_file "$INTERACTIVE_CHART_COMPONENT_QML" "activeFocusOnTab: true"
 require_in_file "$INTERACTIVE_CHART_COMPONENT_QML" "Keys.onPressed:"
