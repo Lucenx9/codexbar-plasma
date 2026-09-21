@@ -9,25 +9,17 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # either is correct as long as the rule is still there. Assert against the
 # surface so a file split cannot silently drop a nonce, deadline, or cleanup.
 
-require_in_surface applet "readonly property int defaultCommandTimeoutMs: 120000"
-require_in_surface applet "function connectUsageCommand(sourceName, descriptor)"
-require_in_surface applet "function finishUsageCommandSource(sourceName)"
-require_in_surface applet "function retireUsageCommands()"
-require_in_surface applet "function expireCommands(nowMs)"
-require_in_surface applet "function handleCommandTimeout(sourceName, descriptor)"
 require_in_surface applet "running: controller.sending"
 require_in_surface applet "lifecycle.expire(Date.now())"
-require_in_surface applet "id: usageRefreshTimer"
-require_in_surface applet "running: controller.refreshIntervalSec > 0"
-require_in_surface applet "if (!lifecycle.hasPendingPeriodicRefreshCommands())"
-require_in_surface applet "function hasPendingPeriodicRefreshCommands()"
+# Kept: the no-poll rule is unobservable in executed tests (0 -> 200 on the
+# usage DataSource keeps every controller test green: polling an
+# already-running executable source is a logged no-op) and this existence
+# check cannot pin a single file anyway (ten surface files carry it), so no
+# mutation can prove it redundant file-by-file. It stays as the only pin
+# that the rule exists somewhere in the surface.
 require_in_surface applet "interval: 0"
-require_in_surface applet "lifecycle.finishUsageCommandSource(sourceName)"
-require_in_surface applet 'import "../ProviderFallbackQueue.js" as ProviderFallbackQueue'
-require_in_surface applet 'import "../ProviderRosterCache.js" as ProviderRosterCache'
 require_in_surface applet 'import "../AccountRequests.js" as AccountRequests'
 require_in_surface applet 'import "../SessionRefreshPolicy.js" as SessionRefreshPolicy'
-require_in_surface applet "property var providerFallbackState: null"
 require_in_surface applet "readonly property int accountCommandTimeoutMs: 60000"
 require_in_surface applet "readonly property int sessionsCommandTimeoutMs: 60000"
 require_in_surface applet "readonly property int notificationCommandTimeoutMs: 10000"

@@ -1,6 +1,8 @@
 """Exercise the usage controller with real DataSource processes and deadlines."""
 import os
 from pathlib import Path
+import re
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -211,6 +213,85 @@ TestCase {
 }
 '''
 
+QML_SHRUNK = '''import QtQuick
+import QtTest
+TestCase {
+    id: testCase
+    name: "UsageControllerShrunkTimeouts"
+    function i18n(text, first) { return text.replace("%1", first === undefined ? "%1" : first); }
+    Component {
+        id: observation
+        QtObject {
+            property var subject
+            property var snapshots: []
+            property var failures: []
+        }
+    }
+    function init() {
+        var factory = Qt.createComponent("SHRUNK_URL");
+        if (factory.status === Component.Error && /module "org\\.kde\\.[^"]+" is not installed/.test(factory.errorString()))
+            skip("UsageController needs the optional KDE QML modules");
+    }
+    function create(script, options) {
+        var factory = Qt.createComponent("SHRUNK_URL");
+        compare(factory.status, Component.Ready, factory.errorString());
+        var subject = createTemporaryObject(factory, testCase, Object.assign({
+            commandPath: "FIXTURE_PATH/" + script, refreshIntervalSec: 0, providerConfigStamp: "synthetic-stamp"
+        }, options || {}));
+        verify(subject !== null);
+        var observed = createTemporaryObject(observation, testCase, {subject: subject});
+        subject.snapshotReceived.connect(function(items) { observed.snapshots = observed.snapshots.concat([items]); });
+        subject.failed.connect(function(message) { observed.failures = observed.failures.concat(message); });
+        return observed;
+    }
+    function completed(observed, count) {
+        tryVerify(function() { return observed.snapshots.length === count && !observed.subject.loading; }, 8000);
+    }
+    function failed(observed) {
+        tryVerify(function() { return observed.failures.length === 1 && !observed.subject.loading; }, 8000);
+    }
+    function latest(observed) { return observed.snapshots[observed.snapshots.length - 1]; }
+
+    // The shrunk fixture keeps every production code path and only shortens
+    // the deadline and the sweeper, so pending work must fail or degrade on
+    // schedule, late replies must be dropped, and a manual retry recovers.
+    function test_pendingCommandsExpireOnScheduleAndLateRepliesAreDropped() {
+        var aggregate = create("slow-first", {sourceMode: "cli"});
+        failed(aggregate);
+        verify(aggregate.failures[0].indexOf("usage timed out") >= 0);
+        compare(aggregate.snapshots.length, 0);
+        aggregate.subject.refresh(true);
+        completed(aggregate, 1);
+        compare(latest(aggregate)[0].account, "run 2");
+        wait(2500);
+        compare(aggregate.snapshots.length, 1);
+        compare(aggregate.failures.length, 1);
+
+        var roster = create("slow-first");
+        failed(roster);
+        verify(roster.failures[0].indexOf("provider configuration timed out") >= 0);
+        compare(roster.snapshots.length, 0);
+        roster.subject.refresh(true);
+        completed(roster, 1);
+        compare(latest(roster)[0].account, "run 3");
+        wait(2500);
+        compare(roster.snapshots.length, 1);
+        compare(roster.failures.length, 1);
+
+        var scoped = create("slow-first", {provider: "codex"});
+        completed(scoped, 1);
+        compare(scoped.failures.length, 0);
+        compare(latest(scoped)[0].commandFailed, true);
+        scoped.subject.refresh(true);
+        completed(scoped, 2);
+        compare(latest(scoped)[0].account, "run 2");
+        wait(2500);
+        compare(scoped.snapshots.length, 2);
+        compare(scoped.failures.length, 0);
+    }
+}
+'''
+
 CLI = '''#!/usr/bin/env python3
 import fcntl
 import json
@@ -291,6 +372,41 @@ class UsageControllerTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, output)
             if os.environ.get("QML_TEST_REQUIRE_NO_SKIPS") == "1" and "SKIP" in output:
                 self.fail("QML tests were skipped; the test environment must provide the KDE QML modules.")
+            if "SKIP" in output:
+                self.skipTest("UsageController needs the optional KDE QML modules")
+            warnings = [line for line in output.splitlines() if "QWARN" in line
+                        and 'QProcess: Destroyed while process ("/bin/sh") is still running.' not in line]
+            self.assertEqual(warnings, [])
+
+    def test_shrunk_timeouts_expire_pending_work_and_drop_late_replies(self):
+        # Same production file with only the deadline and the sweeper
+        # shortened, so the timeout path is observable in seconds instead of
+        # minutes. The derivation reads the committed file, so a production
+        # mutation propagates into the shrunk copy.
+        with tempfile.TemporaryDirectory(prefix="codexbar usage shrunk 'test-") as temporary:
+            directory = Path(temporary)
+            script = directory / "slow-first"
+            script.write_text(CLI)
+            script.chmod(0o700)
+            shrunk_ui = directory / "ui"
+            shutil.copytree(ROOT / "contents/ui", shrunk_ui)
+            controller = shrunk_ui / "controllers/UsageController.qml"
+            text = controller.read_text()
+            shrunk, count = re.subn(r"readonly property int defaultCommandTimeoutMs: \d+",
+                                    "readonly property int defaultCommandTimeoutMs: 600", text)
+            self.assertEqual(count, 1)
+            sweeper = ("        interval: 1000\n        repeat: true\n"
+                       "        running: lifecycle.hasPendingCommandTimeouts()")
+            self.assertIn(sweeper, shrunk)
+            controller.write_text(shrunk.replace(sweeper, sweeper.replace("interval: 1000", "interval: 50")))
+            fixture = directory / "tst_usage_shrunk.qml"
+            fixture.write_text(QML_SHRUNK.replace("SHRUNK_URL", controller.as_uri())
+                               .replace("FIXTURE_PATH", str(directory)))
+            result = subprocess.run([os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                                    env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                                    capture_output=True, text=True, timeout=120)
+            output = result.stdout + result.stderr
+            self.assertEqual(result.returncode, 0, output)
             if "SKIP" in output:
                 self.skipTest("UsageController needs the optional KDE QML modules")
             warnings = [line for line in output.splitlines() if "QWARN" in line
