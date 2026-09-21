@@ -29,6 +29,11 @@ require_in_surface applet "interval: controller.pollIntervalMs"
 require_in_surface applet 'import "../CostRefreshPolicy.js" as CostRefreshPolicy'
 require_in_surface applet "interval: CostRefreshPolicy.automaticRefreshIntervalMs"
 require_in_surface applet "property double lastAttemptAtMs: -1"
+# Kept: the updater's initial-false flags are unobservable in executed tests
+# (flipping all three to true keeps the whole updater suite green: each flag
+# is overwritten by its request/completion decision before any effect), so no
+# mutation can prove these pins redundant. They stay as the only pins that a
+# fresh controller starts idle, in check mode, with no queued request.
 require_in_surface applet "property bool updateRetryPending: false"
 require_in_surface applet "property bool connectedUpdateInstallMode: false"
 require_in_surface applet "property bool pendingAutomaticUpdateCheck: false"

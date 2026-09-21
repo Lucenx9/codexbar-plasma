@@ -85,6 +85,7 @@ TestCase {
         compare(succeeded.count, 2);
         compare(recorded.count, 2);
         compare(updater.errorText, "");
+        compare(updater.statusText, "Widget update 2.0 installed. Restart Plasma to apply the new widget version.");
         verify(!updater.busy);
     }
     function test_disablingChecksCancelsQueuedInstall() {
@@ -122,6 +123,24 @@ TestCase {
         compare(succeeded.count, 0);
         compare(available.count, 0);
         compare(installed.count, 0);
+        updater.updateChecksEnabled = false;
+    }
+    // A missing updater script is a packaging error, not a generic failure:
+    // the fallback JSON must surface the missing-updater text verbatim.
+    function test_missingUpdaterScriptReportsPackagingError() {
+        var updater = create("missing", {updateChecksEnabled: true});
+        tryCompare(recorded, "count", 1);
+        compare(updater.errorText, "Widget updater script is missing from the installed package.");
+        compare(succeeded.count, 0);
+        updater.updateChecksEnabled = false;
+    }
+    // Updater-controlled detail must stay bounded in the presented error:
+    // a 500-char detail plus its prefix collapses to the 500-char cap.
+    function test_longUpdaterDetailStaysBounded() {
+        var updater = create("longdetail", {updateChecksEnabled: true});
+        tryCompare(recorded, "count", 1);
+        compare(updater.errorText.length, 500);
+        compare(succeeded.count, 0);
         updater.updateChecksEnabled = false;
     }
     function test_timeoutCancelsRequestAndNextRunSucceeds() {
@@ -164,6 +183,8 @@ class WidgetUpdateControllerTests(unittest.TestCase):
                 "captured": '#!/bin/sh\nsleep 0.2\nprintf \'%s\\n\' \'{"status":"available","remoteVersion":"2.0"}\'\n',
                 "malformed": '#!/bin/sh\nprintf \'%s\\n\' \'{broken\'\n',
                 "structured": '#!/bin/sh\nprintf \'%s\\n\' \'{"status":"error","errorCode":"missing_tool","errorDetail":"jq"}\'\n',
+                "longdetail": '#!/bin/sh\nprintf \'%s\\n\' \'{"status":"error","errorCode":"missing_tool","errorDetail":"'
+                              + "D" * 500 + '"}\'\n',
                 "late": '''#!/bin/sh
 if [ "$CODEXBAR_PLASMA_RUN" = 1 ]; then
     sleep 62
