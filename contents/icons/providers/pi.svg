@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Original pi-glyph for the local-only Pi provider; no vendor mark. -->
+<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+  <path d="M4 6.5h16c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-2.3v9.1c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5V9.5H9.3v9.1c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5V9.5H4c-.83 0-1.5-.67-1.5-1.5S3.17 6.5 4 6.5z"/>
+</svg>

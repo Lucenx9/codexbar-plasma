@@ -71,6 +71,7 @@ QtObject {
             "opencodego": i18n("OpenCode Go"),
             "openrouter": i18n("OpenRouter"),
             "perplexity": i18n("Perplexity"),
+            "pi": i18n("Pi"),
             "poe": i18n("Poe"),
             "qoder": i18n("Qoder"),
             "qwencloud": i18n("Qwen Cloud"),

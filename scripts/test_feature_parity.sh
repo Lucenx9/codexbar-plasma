@@ -652,10 +652,10 @@ require_in_file "$README_MD" "kpackagetool6 -t Plasma/Applet -i codexbar-plasma.
 require_in_file "$README_MD" "kpackagetool6 -t Plasma/Applet -u codexbar-plasma.plasmoid"
 require_in_file "$README_MD" "make install"
 reject_in_file "$README_MD" "kpackagetool6 -t Plasma/Applet -u ."
-require_in_file "$USAGE_GUIDE_MD" "all 74 providers"
+require_in_file "$USAGE_GUIDE_MD" "all 75 providers"
 # shellcheck disable=SC2016 # Match the literal Markdown code span.
 require_in_file "$USAGE_GUIDE_MD" '`usage.details` contract'
-require_in_file "$README_MD" "all 74 providers"
+require_in_file "$README_MD" "all 75 providers"
 require_in_file "$README_MD" "systemctl --user restart plasma-plasmashell.service"
 require_in_file "$README_MD" "codexbar usage --provider codex --all-accounts --format json --json-only"
 

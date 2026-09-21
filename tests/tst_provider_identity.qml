@@ -106,6 +106,22 @@ TestCase {
         compare(ProviderIdentity.providerStatusUrl("muse"), "")
     }
 
+    function test_official063PiProviderHasMinimalBundledMetadata() {
+        // Official 0.63.0 addition, verified in emitted `config providers`
+        // output. Only the icon and docs path are bundled: the local-only
+        // Pi provider has no verifiable brand color or
+        // dashboard/login/status source, so those degrade by design.
+        compare(ProviderIdentity.providerIconFileName("pi"), "pi.svg")
+        compare(ProviderIdentity.providerDocsUrl("pi"),
+            ProviderIdentity.documentationBaseUrl + "pi.md")
+        compare(ProviderIdentity.providerBrandColorChannels("pi").length, 0)
+        compare(ProviderIdentity.providerDashboardUrl("pi"), "")
+        compare(ProviderIdentity.providerLoginUrl("pi"), "")
+        compare(ProviderIdentity.providerStatusUrl("pi"), "")
+        compare(ProviderIdentity.providerCliArgument("pi"), "pi")
+        compare(ProviderIdentity.resolveProviderKey("pi"), "pi")
+    }
+
     function test_official061RegistryAliasesResolveCanonically() {
         compare(ProviderIdentity.resolveProviderKey("hf"), "huggingface")
         compare(ProviderIdentity.resolveProviderKey("hermes"), "nous")

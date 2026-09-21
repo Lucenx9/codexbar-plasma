@@ -404,6 +404,7 @@ var providerDocsPaths = {
     "opencodego": "opencode.md",
     "openrouter": "openrouter.md",
     "perplexity": "providers.md#perplexity",
+    "pi": "pi.md",
     "poe": "poe.md",
     "qoder": "qoder.md",
     "qwencloud": "qwen-cloud.md",

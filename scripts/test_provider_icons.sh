@@ -50,7 +50,7 @@ require_icon() {
   fi
 }
 
-# Released official CodexBar provider registry through v0.61.0. The live CLI
+# Released official CodexBar provider registry through v0.63.0. The live CLI
 # probe below adds an early warning when a newer installed release introduces
 # another provider.
 released_providers=(
@@ -128,6 +128,7 @@ released_providers=(
   muse
   nous
   replicate
+  pi
 )
 
 for provider in "${released_providers[@]}"; do
