@@ -158,6 +158,58 @@ TestCase {
             self.assertNotIn("SKIP", output)
             self.assertNotIn("QWARN", output)
 
+    def test_cost_metric_helpers_sanitize_before_persisting(self):
+        applet = Surface("applet", ROOT)
+        main = ROOT / "contents/ui/main.qml"
+        applet.texts = {main: main.read_text()}
+        applet.files = [main]
+        names = ("safeCostHistoryMetric", "setCostHistoryMetric")
+        functions = []
+        for name in names:
+            signature = re.search(r"function " + name + r"\([^)]*\)",
+                                  applet.texts[main]).group(0)
+            # QML rejects a property named Plasmoid, so the harness rewrites
+            # the configuration write; see the substitution below.
+            functions.append((signature + " {" + applet.function_body(name) + "}")
+                             .replace("Plasmoid.configuration", "costConfiguration"))
+        qml = COST_METRIC_QML.replace("SOURCE_FUNCTIONS", "\n        ".join(functions))
+        with tempfile.TemporaryDirectory(prefix="codexbar-cost-metric-") as temporary:
+            fixture = Path(temporary) / "tst_main_cost_metric.qml"
+            fixture.write_text(qml)
+            result = subprocess.run(
+                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                capture_output=True, text=True, timeout=30)
+            output = result.stdout + result.stderr
+            self.assertEqual(result.returncode, 0, output)
+            self.assertNotIn("SKIP", output)
+            self.assertNotIn("QWARN", output)
+
+
+COST_METRIC_QML = '''import QtQuick
+import QtTest
+TestCase {
+    name: "MainCostMetric"
+    // QML rejects a property named Plasmoid, so the harness rewrites the
+    // configuration write; see the substitution above.
+    property var costConfiguration: ({})
+    SOURCE_FUNCTIONS
+    // Only the two known metrics survive: anything else persists as cost,
+    // so the chart and the summary lines can never disagree.
+    function test_unknownMetricsPersistAsCost() {
+        compare(safeCostHistoryMetric("tokens"), "tokens");
+        compare(safeCostHistoryMetric("cost"), "cost");
+        compare(safeCostHistoryMetric("bogus"), "cost");
+        compare(safeCostHistoryMetric(""), "cost");
+        setCostHistoryMetric("tokens");
+        compare(costConfiguration.costHistoryMetric, "tokens");
+        setCostHistoryMetric("bogus");
+        compare(costConfiguration.costHistoryMetric, "cost");
+        costConfiguration = ({});
+    }
+}
+'''
+
 
 COST_WRAPPER_QML = '''import QtQuick
 import QtTest

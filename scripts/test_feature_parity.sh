@@ -364,7 +364,6 @@ require_in_surface applet "var resetLine = resetLabel(usageResetText(row))"
 require_in_surface applet "Plasmoid.configuration.menuBarDisplayMode"
 reject_in_surface applet "onResetTimesShowAbsoluteChanged: Qt.callLater(refreshNow)"
 require_in_file "$USAGE_ROW_COMPONENT_QML" "usageRow.applet.usageResetText(usageRow.rowData)"
-require_in_surface applet "property bool showQuotaWarningMarkers"
 # Quota thresholds are user-configurable and shared by the notifications and the
 # markers drawn on the usage bars, so they must come from one bounded source.
 require_in_file "$CONFIG_XML" 'name="quotaWarningPercent"'
@@ -394,21 +393,18 @@ require_in_surface applet "property string overviewProviderIDsRaw"
 require_in_surface applet "onOverviewProviderIDsRawChanged: updateSelectedProvider()"
 require_in_surface applet "Math.max(0, Number(Plasmoid.configuration.refreshInterval))"
 require_in_surface applet "property var notificationMemo"
-# Kept: this surface pin also covers main.qml's Plasmoid-backed copy, which
-# belongs to the main.qml step. The cost controller's own copy is proven
-# covered by executed tests (deleting it turns
-# test_startupRunsWhileHiddenAndReentryKeepsFreshData red: no command can
-# start when the guard property is missing), so that half needs no pin.
+# Kept: main.qml's Plasmoid-backed copy has no executed pin — every fixture
+# declares its own flag, so flipping the default keeps all naming modules
+# green. The cost controller's own copy is proven covered by executed tests
+# (deleting it turns test_startupRunsWhileHiddenAndReentryKeepsFreshData
+# red: no command can start when the guard property is missing).
 require_in_surface applet "property bool costUsageEnabled"
 require_in_surface applet "property int costHistoryDays"
 # Cost and tokens both come from one cost payload: switching the plotted metric
 # must never add a CLI call, and the bars must rescale with the choice.
 require_in_surface applet "property string costHistoryMetric"
-require_in_surface applet "function safeCostHistoryMetric(value)"
-require_in_surface applet "function setCostHistoryMetric(metric)"
 # Every cost chart follows one metric: the provider detail chart must not stay
 # on cost while the rows beneath it switch to tokens.
-require_in_surface applet "CostPresentation.chartPoints(costNumberFormat, points, costHistoryShowsTokens)"
 require_in_surface applet 'applet.costHistoryShowsTokens'
 # The chart's "Latest" summary annotates the same series the bars plot, so it
 # must follow the metric instead of always printing the cost amount.
