@@ -11,7 +11,6 @@ PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
 PROVIDER_IDENTITY_JS="${ROOT_DIR}/contents/ui/ProviderIdentity.js"
 COMPACT_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/CompactRepresentation.qml"
 PROVIDER_HEADER_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/ProviderHeader.qml"
-USAGE_ROW_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/ProviderUsageRow.qml"
 INTERACTIVE_CHART_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/InteractiveChart.qml"
 SESSIONS_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/SessionsView.qml"
 SPEND_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/SpendView.qml"
@@ -337,7 +336,9 @@ require_in_surface applet "id: panelClockTimer"
 require_in_surface applet "root.panelClockMs = Date.now()"
 require_in_surface applet "Plasmoid.configuration.menuBarDisplayMode"
 reject_in_surface applet "onResetTimesShowAbsoluteChanged: Qt.callLater(refreshNow)"
-require_in_file "$USAGE_ROW_COMPONENT_QML" "usageRow.applet.usageResetText(usageRow.rowData)"
+# The usage row's reset-text source and quota-marker repeater are executed by
+# tst_visual_layout.qml (providerUsageRowResetTextComesFromRowData and
+# providerUsageRowDrawsQuotaWarningMarkers).
 # Quota thresholds are user-configurable and shared by the notifications and the
 # markers drawn on the usage bars, so they must come from one bounded source.
 require_in_file "$CONFIG_XML" 'name="quotaWarningPercent"'
@@ -353,7 +354,6 @@ require_in_surface applet "onQuotaWarningPercentChanged: resetNotificationMemo()
 require_in_surface applet "onQuotaCriticalPercentChanged: resetNotificationMemo()"
 require_in_file "$COMPACT_COMPONENT_QML" "id: compactStatusBadge"
 require_in_file "$PROVIDER_HEADER_COMPONENT_QML" "id: providerStatusBadge"
-require_in_file "$USAGE_ROW_COMPONENT_QML" "quotaWarningMarkerRepeater"
 # Kept: the Plasmoid-backed state defaults and declarative change handlers
 # kept below have no executed pin — fixtures declare their own values, so
 # flipping any default or no-opping any handler keeps all naming modules

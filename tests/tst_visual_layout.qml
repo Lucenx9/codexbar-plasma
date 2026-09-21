@@ -205,6 +205,23 @@ TestCase {
         function displayPercent(row) {
             return row.value;
         }
+        property bool showPopupPace: true
+        property real meterTrackHeight: 8
+        function usageResetText(row) {
+            return row.reset || "";
+        }
+        function resetLabel(value) {
+            return value;
+        }
+        function paceMarkerPercent(row) {
+            return row.pacePercent !== undefined ? row.pacePercent : -1;
+        }
+        function quotaWarningMarkers(row) {
+            return row.warningMarkers || [];
+        }
+        function percentSuffix() {
+            return "left";
+        }
         function quotaMeterColor(item, accent) {
             return quotaWarning || (secondaryWarning && item.value === 70) ? Qt.rgba(1, 0.5, 0, 1) : accent;
         }
@@ -1140,6 +1157,59 @@ TestCase {
         });
         verify(hidden !== null);
         compare(hidden.visible, false);
+    }
+
+    function usageRowData() {
+        return {
+            label: "Primary",
+            value: 57,
+            hasPercent: true,
+            pace: "On pace",
+            pacePercent: 40,
+            paceOnTop: true,
+            reset: "Resets 12:00",
+            warningMarkers: [{ percent: 80, severity: "major" }]
+        };
+    }
+
+    function test_providerUsageRowResetTextComesFromRowData() {
+        var row = createControl("ProviderUsageRow", {
+            applet: applet,
+            providerData: { provider: "codex" },
+            modelData: usageRowData(),
+            width: 540
+        });
+        if (!row)
+            return;
+        // The reset label renders the row's own reset text, not the
+        // provider's, so each meter keeps its own window.
+        var reset = findItem(row, function (item) {
+            return item.text === "Resets 12:00";
+        });
+        verify(reset !== null);
+        compare(reset.visible, true);
+        var pace = findItem(row, function (item) {
+            return item.text === "On pace";
+        });
+        verify(pace !== null);
+    }
+
+    function test_providerUsageRowDrawsQuotaWarningMarkers() {
+        var row = createControl("ProviderUsageRow", {
+            applet: applet,
+            providerData: { provider: "codex" },
+            modelData: usageRowData(),
+            width: 540
+        });
+        if (!row)
+            return;
+        // Every quota threshold the applet reports for the row draws one
+        // marker on the meter from the same bounded source.
+        var repeater = findItem(row, function (item) {
+            return typeof item.count === "number" && typeof item.itemAt === "function";
+        });
+        verify(repeater !== null);
+        compare(repeater.count, 1);
     }
 
     function test_projectCostsNestedLayoutDoesNotRearrangeRecursively_data() {
