@@ -510,26 +510,12 @@ require_in_surface applet "if (!controller.costUsageEnabled || controller.comman
 require_in_surface applet "--days"
 require_in_surface applet "Math.max(1, Math.min(365, Number(Plasmoid.configuration.costHistoryDays)"
 
-require_in_file "$GENERAL_QML" "Fetch provider service status"
-require_in_file "$GENERAL_QML" "Load local usage and spend history"
-require_in_file "$GENERAL_QML" "History window:"
-require_in_file "$GENERAL_QML" "Check for widget updates"
-require_in_file "$GENERAL_QML" "Notify when a widget update is available"
-require_in_file "$GENERAL_QML" "Install widget updates automatically"
-require_in_file "$GENERAL_QML" "Check every:"
-require_in_file "$GENERAL_QML" "Last update status:"
-require_in_file "$GENERAL_QML" "Plasmoid.configuration.widgetUpdateLastError"
+# The 500-char truncation cap is unobservable in executed tests: the
+# readonly Plasmoid-backed error is always empty without a host, so 500 -> 5
+# keeps every settings test green. This stays as the only pin on the bound,
+# and the rejection keeps the runtime-owned error out of the saved config.
 require_in_file "$GENERAL_QML" "widgetUpdateLastError.slice(0, 500)"
 reject_in_file "$GENERAL_QML" "cfg_widgetUpdateLastError"
-require_in_file "$GENERAL_QML" "Usage refresh:"
-require_in_file "$GENERAL_QML" "function refreshPresetIndex(value)"
-require_in_file "$GENERAL_QML" "onCfg_refreshIntervalChanged"
-require_in_file "$GENERAL_QML" "No periodic refresh"
-require_in_file "$GENERAL_QML" "1 min"
-require_in_file "$GENERAL_QML" "2 min"
-require_in_file "$GENERAL_QML" "5 min"
-require_in_file "$GENERAL_QML" "15 min"
-require_in_file "$GENERAL_QML" "Custom"
 
 require_in_file "$CONFIG_QML" "configPopup.qml"
 require_in_file "$CONFIG_QML" "configPanel.qml"

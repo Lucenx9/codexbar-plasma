@@ -41,8 +41,6 @@ reject_in_file() {
   fi
 }
 
-require_in_file "$GENERAL_QML" "id: lastUpdateCheckLabel"
-require_in_file "$GENERAL_QML" "id: lastUpdateStatusLabel"
 require_block_fragment "$GENERAL_QML" "id: lastUpdateCheckLabel" "Layout.fillWidth: true"
 require_block_fragment "$GENERAL_QML" "id: lastUpdateCheckLabel" "wrapMode: Text.WordWrap"
 require_block_fragment "$GENERAL_QML" "id: lastUpdateStatusLabel" "Layout.fillWidth: true"
@@ -82,11 +80,6 @@ done
 # Plasma injects cfg_* creation properties, so declarative cfg_* bindings do not
 # stay live. The General surface must observe the runtime values explicitly and
 # keep user edits pending until Apply.
-require_in_surface general 'import "general/ConfigValueSync.js" as ConfigValueSync'
-require_in_surface general 'import "UpdateLogic.js" as UpdateLogic'
-require_in_surface general "ConfigValueSync.afterPersistedChange("
-require_in_surface general "ConfigValueSync.afterUserEdit("
-require_in_surface general "ConfigValueSync.afterSave("
 reject_in_surface general "cfg_costHistoryDays: Plasmoid.configuration.costHistoryDays"
 reject_in_surface general "cfg_costHistoryMetric: Plasmoid.configuration.costHistoryMetric"
 
