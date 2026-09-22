@@ -35,6 +35,12 @@ KCM.SimpleKCM {
         ? String(Plasmoid.metaData.version || "") : ""
     property int commandRunSerial: 0
     readonly property int diagnosticCommandTimeoutMs: 60000
+    // Shell-side bound for every diagnostics command. disconnectSource cannot
+    // kill the child, so without this a hung `codexbar` outlives the page and
+    // the dialog. The shell timeout plus kill grace (50s + 5s = 55s) stays
+    // below diagnosticCommandTimeoutMs, keeping the QML timer the outer bound.
+    readonly property int diagnosticCommandTimeoutSeconds: 50
+    readonly property int diagnosticCommandKillAfterSeconds: 5
 
     onCommandPathChanged: {
         if (activeCommand.length > 0) {
@@ -93,11 +99,40 @@ KCM.SimpleKCM {
         if (commandPath.length > 0) systemVersions.checkNow()
     }
 
+    // Wrap the command so the shell kills a hung child on schedule, the way
+    // the provider secret commands use `timeout --kill-after`. The probe
+    // mirrors their guard: when GNU timeout is absent the raw command runs
+    // instead, so diagnostics keep working without coreutils. `sh -c` carries
+    // the conditional because the run-nonce prefix (`NAME=value` assignment)
+    // is only valid before a simple command, not before `if`.
+    // `--foreground` keeps the bound silent: without it, a `--kill-after`
+    // escalation SIGKILLs timeout's process group including timeout itself,
+    // and any shell reaping that signalled child may announce it with
+    // `Killed` on stderr, which would outrank the timeout message below.
+    // In the foreground the signals go to the hung child only, timeout exits
+    // 124/137 normally, and no shell ever reaps a signalled child, so stderr
+    // stays empty and the CLI's own error text still flows through untouched.
+    // Trade-off: children the CLI itself spawns are not timed out, accepted
+    // because these are leaf JSON dumps and the alternative (mapping 124/137
+    // over stderr) would discard genuine partial CLI errors.
+    function boundedDiagnosticCommand(command) {
+        if (command.length === 0) {
+            return ""
+        }
+        var bounded = "timeout --foreground --kill-after=" + shellQuote(diagnosticCommandKillAfterSeconds + "s")
+            + " " + shellQuote(diagnosticCommandTimeoutSeconds + "s")
+            + " " + command
+        var script = "if command -v timeout >/dev/null 2>&1 && timeout --foreground --kill-after=1s 1s true >/dev/null 2>&1; then "
+            + bounded + "; else " + command + "; fi"
+        return "sh -c " + shellQuote(script)
+    }
+
     function runCommand(command) {
         if (commandPath.length === 0) {
             diagnosticError = i18n("Set the codexbar command path above.")
             return
         }
+        command = boundedDiagnosticCommand(command)
         if (activeCommand.length > 0) {
             finishDiagnosticCommand(activeCommand)
         }
@@ -152,11 +187,24 @@ KCM.SimpleKCM {
         }
         var safeOutput = SafeText.cliDiagnostic(stdoutText, SafeText.maximumDiagnosticLength)
         var safeError = SafeText.cliMessage(SafeText.stripLoaderDiagnostics(stderrText), SafeText.maximumCliMessageLength)
+        // A command reaped by the shell bound above reports the same timeout
+        // message as the QML timer. GNU timeout exits 124 when the time limit
+        // is reached; when --kill-after escalates to SIGKILL for a child that
+        // ignores SIGTERM, it exits 137 instead (in the foreground, as a
+        // normal status rather than a signal death), so 137 is the bound's
+        // other reap status. No wider signal range is mapped: any other
+        // 128+signal death is the CLI's own crash, not our bound. The CLI's
+        // own stderr still wins when present, so without GNU timeout a
+        // genuine silent 124/137 from codexbar reads as a timeout -- accepted
+        // because a CLI has no reason to exit silent with timeout's statuses.
+        var shellTimeout = exitCode === 124 || exitCode === 137
         diagnosticOutput = safeOutput.length > 0 ? safeOutput : i18n("No diagnostic output.")
         diagnosticError = exitCode !== 0
             ? (safeError.length > 0
                 ? safeError
-                : i18n("codexbar exited with code %1", Number(exitCode)))
+                : (shellTimeout
+                    ? i18n("Diagnostic command timed out. Try again.")
+                    : i18n("codexbar exited with code %1", Number(exitCode))))
             : ""
     }
 
