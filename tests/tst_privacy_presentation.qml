@@ -99,6 +99,18 @@ TestCase {
         compare(Privacy.session(source, true).source, "cli")
     }
 
+    function test_quotaKeepsTheNonIdentifyingWindowLength() {
+        // Quota weeks need the length in privacy mode too; it names nothing.
+        var row = quota()
+        row.windowMinutes = 10080
+        row.resetsAt = "2026-09-29T20:56:06Z"
+        var result = Privacy.quota(row, true, "Usage")
+        compare(result.windowMinutes, 10080)
+        compare(result.resetsAt, "2026-09-29T20:56:06.000Z")
+        row.windowMinutes = "10080"
+        compare(Privacy.quota(row, true, "Usage").windowMinutes, 0)
+    }
+
     function test_quotaDropsInvalidDatesAndProseFallbacks() {
         var row = quota()
         row.resetsAt = "private@example.test"

@@ -53,6 +53,8 @@ function quota(row, enabled, label) {
         paceEtaSeconds: numeric(row, "paceEtaSeconds", 0),
         paceObservedAtMs: numeric(row, "paceObservedAtMs", NaN),
         resetsAt: timestamp(field(row, "resetsAt", "")),
+        // The window length is not identifying and lets cost split by quota week.
+        windowMinutes: numeric(row, "windowMinutes", 0),
         resetDescription: "",
         reset: "",
         pace: ""
@@ -122,6 +124,9 @@ function cost(snapshot, enabled) {
         return null
     }
     var models = modelAmounts(snapshot)
+    var ranking = field(snapshot, "tokenRanking", null)
+    var rankedAmounts = modelAmounts({ models: field(ranking, "rows", []),
+        modelsTruncated: field(ranking, "truncated", false) })
     var result = {
         provider: field(snapshot, "provider", ""),
         historyDays: Math.max(1, Math.min(365, Math.floor(numeric(snapshot, "historyDays", 30)))),
@@ -131,6 +136,8 @@ function cost(snapshot, enabled) {
         today: amounts(field(snapshot, "today", null)),
         daily: [],
         models: models.rows,
+        tokenRanking: { rows: rankedAmounts.rows, truncated: rankedAmounts.truncated,
+            omitted: Math.max(0, Math.min(1000000, Math.floor(numeric(ranking, "omitted", 0)))) },
         modelsTruncated: models.truncated,
         projects: { rows: [], truncated: false }
     }
@@ -139,6 +146,8 @@ function cost(snapshot, enabled) {
         var day = amounts(daily[i])
         var label = field(daily[i], "label", "")
         day.label = typeof label === "string" && /^\d{4}-\d{2}-\d{2}$/.test(label) ? label : ""
+        day.incompleteRequests = Normalizer.normalizedIncompleteRequestCount(
+            field(daily[i], "incompleteRequests", 0))
         var dayModels = modelAmounts(daily[i])
         day.models = dayModels.rows
         day.modelsTruncated = dayModels.truncated

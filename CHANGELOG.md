@@ -12,6 +12,25 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Share the selected Usage & Spend history as a local PNG or plain-text summary,
+  with a separate preview, native image clipboard and save picker, bounded
+  provider/model rankings, separate currencies, partial-data notices, and a
+  small repository attribution. Exports exclude account and project details.
+
+- Show **Quota weeks** in a provider's expanded cost details: the local cost
+  and tokens of the current weekly quota window and up to three earlier ones,
+  with exact boundaries; a current week with no full day yet is omitted until it
+  has one. Totals that count a whole day around a mid-day reset
+  are marked as estimated, unknown days are never counted as zero, and weeks
+  older than the scanned history are omitted. This mirrors the macOS 0.62.0
+  recent-windows list and needs no new CLI contract.
+- Bundle the fallback name, icon, documentation link, and dashboard link for
+  the `Helmcode`, `v0`, and `TypeSafe` providers that official CodexBar 0.64.0
+  adds to the registry. Brand colors and status links are omitted because
+  upstream defines none; the widget uses the theme highlight and hides missing
+  links by design. `v0` also offers the widget's API-key setup, which the
+  0.64.1 CLI accepts for it; Helmcode and TypeSafe are cookie-only and have no
+  supported Linux setup path yet.
 - Bundle the fallback name, icon, and documentation link for the `Pi`
   provider that official CodexBar 0.63.0 adds to the registry. Brand color and
   dashboard, login, and status links are omitted pending verifiable upstream
@@ -20,6 +39,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Keep the `Crof` fallback metadata after official CodexBar 0.64.1 retired the
+  provider, so an older installed CLI that still reports it keeps showing a
+  named provider instead of the unknown-provider fallback.
 - `make check` runs its checks concurrently and exposes each one as its own
   target, such as `make check-shellcheck`, so contributors can iterate on a
   single check instead of the whole suite. `make check JOBS=2` bounds the
@@ -33,6 +55,19 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Align provider header identity icon tile to the top of the row, matching the
   refresh button and title heading alignment when account, plan, or update
   metadata expands the middle column.
+- Keep absolute paths embedded in model labels out of shared images and text.
+- Mark quota-week cost and token totals as partial when a measured day excludes
+  incomplete requests, and show both boundaries of the current week.
+- Mark Quota weeks totals as partial when the cost history is older than the
+  current day and has not scanned the trailing dates of a quota week.
+- Bound **Diagnostics** commands shell-side with GNU `timeout --foreground
+  --kill-after`, so a hung `codexbar diagnose` or provider list is killed
+  instead of surviving as an orphan after the page times out or the dialog
+  closes. The shell bound (50s plus a 5s kill grace) stays inside the
+  existing 60s page timeout, and systems without GNU `timeout` run the raw
+  command unchanged. A command reaped by the bound reports the same timeout
+  message as the page timeout instead of an exit-code line or the shell's
+   own signal notice.
 
 ## 0.2.40 - 2026-09-20
 

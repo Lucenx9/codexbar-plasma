@@ -8,10 +8,15 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.63.0](https://github.com/steipete/CodexBar/releases/tag/v0.63.0),
-  commit `f3e718c897d5ed76af4e07182df899c722118546`, checked 2026-09-21.
-- Coverage: release changes from 0.62.0 through 0.63.0 against Plasma
-  `1dc7f2c5fbc834bb74c205ad4b9d5607aba597bf`. The
+- Last release reviewed: [CodexBar 0.64.1](https://github.com/steipete/CodexBar/releases/tag/v0.64.1),
+  commit `89e84ab3f243946dd914898f304410692ad5fbf7`, checked 2026-09-22.
+- Coverage: release changes from 0.63.0 through 0.64.1 against Plasma
+  `4de929a514386748e1b6870088573a196cd3196a`. The
+  [0.64.1 review](docs/research/2026-09-22-macos-parity-0.64.1.md) verifies the
+  Helmcode, v0, and TypeSafe registry additions and the Crof retirement, that
+  only v0 accepts the supported `set-api-key` writer while the other two are
+  cookie-only and unreachable on Linux, and that the descriptor and generic
+  config-action blockers are unchanged; the
   [0.63.0 review](docs/research/2026-09-21-macos-parity-0.63.0.md) verifies
   the Pi registry growth with local token history and estimated costs, the
   still-rejected Cursor cost and provider-settings descriptor probes, and
@@ -39,22 +44,11 @@ Issues linked below preserve discussion; this file owns parity status.
 - [ ] Mark the individual history and model rows whose requests the CLI
   excluded, now that the range total says how many were left out. The official
   counts also arrive per `daily[]` entry and per `daily[].modelBreakdowns[]`
-  record, while the popup rows still read as complete measurements. Done when a
+  record. Quota-week subtotals already use the daily count to mark lower bounds;
+  individual popup rows still read as complete measurements. Done when a
   row states its excluded requests without parsing display text, keeps measured
   and unknown amounts distinct, and stays legible in the narrow popup.
   Evidence: [0.60.5 review](docs/research/2026-09-18-macos-parity-0.60.5.md#linux-cli-contract-changes-since-0604).
-
-### Quota-window cost history
-
-- [ ] Show Codex and Claude cost/token subtotals per current and recent weekly
-  quota window, mirroring the macOS 0.62.0 Recent-windows list as a
-  Plasma-native view. No new CLI contract is required: the windows derive from
-  the live Weekly `resetsAt` the widget already consumes plus the local cost
-  history it already scans. Done when each window states its exact boundaries,
-  keeps measured and unknown amounts distinct, marks estimated boundaries, and
-  drops windows older than the scanned history instead of presenting truncated
-  slices as complete weeks.
-  Evidence: [0.62.0 review](docs/research/2026-09-20-macos-parity-0.62.0.md#linux-cli-contract-changes-since-0610).
 
 ### Popup usage row visibility
 
@@ -77,12 +71,15 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider settings
 
 - [ ] Enable generic settings and token-account editing through official
-  descriptors and writes. Linux 0.63.0 still rejects `config providers
-  --descriptors` (75 records, same four keys); its provider records have no
-  descriptor. 0.61.0 adds an `azureOpenAIAPIVersion` config extension value
-  with no supported CLI writer, which the frontend must not reach by editing
-  the config file. Keep existing
-  enable/disable, supported single-key setup, and link fallbacks working.
+  descriptors and writes. Linux 0.64.1 still rejects `config providers
+  --descriptors` (77 records, same four keys); its provider records have no
+  descriptor. Helmcode and TypeSafe make this concrete: both are cookie-only,
+  both refuse `--source api`, and their documented `cookieSource`/`cookieHeader`
+  config path has no supported writer, so they stay metadata-only on Linux.
+  0.61.0 adds an `azureOpenAIAPIVersion` config extension value with no
+  supported CLI writer, which the frontend must not reach by editing the config
+  file. Keep existing enable/disable, supported single-key setup, and link
+  fallbacks working.
   The [proposal](docs/cli-provider-settings-descriptor.md) covers source mode,
   keys/cookies, URLs, workspace/project, region, AWS profile/auth mode, and
   booleans. Remaining editors include token accounts, auth nuances,
@@ -93,7 +90,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.63.0 still has no
+  flow, CLI-auth setup, and token-account actions. Linux 0.64.1 still has no
   generic `config action` command (`set-api-key` remains the sole writer; the
   `usage_updated` hook event is CLI automation surface, not a setup
   action). Done when supported actions expose validated
@@ -202,6 +199,32 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 These are unresolved Linux candidates, not confirmed missing features.
 
+- [ ] Adopt `qmlformat` once it can format this tree safely. Measured at
+  6.11.2 on 2026-09-22: a full run with default settings leaves all 1500
+  executed QML assertions passing, so the formatter changes no behavior, but
+  it joins wrapped expressions into lines up to 2570 characters. Setting
+  `MaxColumnWidth` to 140 or less segfaults it on
+  `tests/tst_provider_roster_controller.qml` and `scripts/smoke/Capture.qml`;
+  160 avoids the crash without fixing readability, and rewraps enough to break
+  `test_feature_parity.sh` and `test_process_lifecycle.sh`, which still match
+  source text literally. CI runs 6.11.1, and no local container runtime was
+  available to confirm the two versions format identically. Done when a
+  setting formats every file without crashing, keeps lines readable, and
+  produces the same output on the CI image.
+- [ ] Verify the 0.64.x Linux quota-window changes in official Linux output.
+  0.64.0 claims Linux omits synthetic or unmeasured quota and reports only
+  measured provider-specific windows (#3785); 0.64.1 claims each Antigravity
+  quota pool is listed once with its family label (#3799). Both would change
+  the window array the popup renders, and Plasma currently renders whatever
+  windows arrive. The probe account has no enabled provider returning quota, so
+  neither was observed. Reproduce with a signed-in Antigravity account and one
+  other quota provider, then classify whether any normalization changes.
+  [Unverified at 0.64.1](docs/research/2026-09-22-macos-parity-0.64.1.md#unverified-in-this-review).
+- [ ] Verify whether Cursor's 0.64.1 Grok Bot allowance reaches Linux `usage`
+  output, and under which key. The release adds a `Grok Bot %` menu-bar layout
+  token; a corresponding rate window would be a normal extra window for Plasma,
+  while a macOS-only token is a non-goal. Unmeasured without a Cursor account.
+  [Unverified at 0.64.1](docs/research/2026-09-22-macos-parity-0.64.1.md#unverified-in-this-review).
 - [ ] Verify `credits.balanceReadSucceeded`, `creditsAvailable`, and
   `balanceIsWorkspace` (also on `openaiDashboard` with `accountID`) in official
   Linux output. 0.60.4 source widens the flag to cap-only/omitted balances and
@@ -259,8 +282,10 @@ The [usage guide](docs/usage.md) describes implemented Plasma behavior, includin
 panel composition with automatic dual-quota capsules and vertical provider meters,
 settings preview/privacy, grouped panel text and expandable Panel options, local
 sessions, notifications, and
-interactive cost/token charts. Claude 0.57.0 `--breakdown` is text-only; existing
-JSON daily/model views already consume its underlying data.
+interactive cost/token charts and local aggregate usage sharing as PNG/text,
+with separate currencies and no subscription-fee inference. Claude 0.57.0
+`--breakdown` is text-only; existing JSON daily/model views already consume its
+underlying data.
 
 macOS-only features do not enter this backlog. The [release review](docs/research/2026-09-09-macos-parity-0.57.0.md#excluded-from-the-linux-backlog)
 records exclusions. Provider parsing, pricing, authentication, and scanning

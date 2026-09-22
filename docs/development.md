@@ -250,6 +250,37 @@ For repeated JavaScript in delegates, timers, or callbacks, use named helpers.
 For repeated or bulky UI blocks, use small presentation-only components.
 Extraction must hide complexity, not merely reduce line count.
 
+## Usage sharing
+
+`ShareUsage.js` projects range-matched cost snapshots into bounded aggregate
+fields. `CostResponse.js` retains a separate bounded token ranking before the
+normalizer caps its existing cost-first list. Both rankings pass through the
+privacy projection. The export never serializes a provider record, account, project, or raw error.
+`main.qml` freezes that projection when the user opens the lazy-loaded
+`ShareUsageWindow.qml`. `ShareUsageCard.qml` renders the export with system
+fonts, tabular figures, theme colors, and responsive provider/model columns.
+The separate window owns capture generations, native
+clipboard writes, save results, and the save dialog. Closing or changing privacy
+retires pending captures; the panel popup may close independently.
+
+The implementation uses Qt's [asynchronous item capture](https://doc.qt.io/qt-6/qml-qtquick-item.html#grabToImage-method),
+[PNG saving](https://doc.qt.io/qt-6/qquickitemgrabresult.html#saveToFile),
+[FileDialog](https://doc.qt.io/qt-6/qml-qtquick-dialogs-filedialog.html), and
+KDE Declarative's [Clipboard](https://api.kde.org/qml-org-kde-kquickcontrols-addons-clipboard.html).
+It copies the returned QImage, not the temporary image-provider URL. The picker
+retains platform integration and overwrite confirmation. No shell clipboard
+helper, provider fetching, or file upload is involved. Runtime requirements are
+`QtQuick.Dialogs` and `org.kde.kquickcontrolsaddons` in addition to the existing
+Plasma modules.
+
+`tests/tst_share_usage.qml` covers the pure projection, missing amounts, mixed
+currencies, overflow, text redaction, range matching, and URL restrictions.
+`tests/test_share_usage.py` exercises the production window offscreen, checks
+clipboard image MIME data and a real PNG file, save failure, close-during-capture,
+and privacy invalidation. `share-usage` and `share-usage-narrow` smoke scenarios
+capture the card inside Plasma with synthetic data. These checks do not establish
+clipboard interoperability with every Wayland application or portal backend.
+
 ## Behavioral contracts to preserve
 
 - Quota thresholds come from `QuotaThresholds.js`, shared by notifications and
@@ -437,9 +468,15 @@ another one fails.
 over `.github/workflows`, and `make check-python-lint` runs `pyflakes` over
 `scripts` and `tests` for undefined names and unused imports. Neither
 reformats anything, so neither introduces style churn. `qmlformat` stays out of
-the suite: the current QML tree predates it, and reformatting it would rewrite
-almost every file and invalidate the literal source fragments that the parity
-and security checks assert.
+the suite, but no longer because the checks pin formatting: the membership
+assertions in `test_ui_regressions.sh` compare through `code_contains`, which
+ignores anonymous-function spacing, statement-terminating semicolons, and line
+breaks. Two measured problems block adoption instead, both recorded in
+[TODO.md](../TODO.md): `qmlformat` 6.11.2 segfaults on two of this repository's
+files at any `MaxColumnWidth` of 140 or less, and with wrapping disabled, its
+default, it joins wrapped expressions into lines as long as 2570 characters.
+`test_feature_parity.sh` and `test_process_lifecycle.sh` also still match
+literally, so a setting that rewraps differently breaks them.
 
 All CI container jobs pin the official KDE neon User Edition image by digest.
 Jobs install dependencies using the authenticated APT indexes already included

@@ -17,8 +17,8 @@ msgstr ""
 msgid "General"
 msgstr "Geral"
 
-#: contents/config/config.qml contents/ui/components/SpendView.qml
-#: contents/ui/configProviders.qml
+#: contents/config/config.qml contents/ui/components/ShareUsageWindow.qml
+#: contents/ui/components/SpendView.qml contents/ui/configProviders.qml
 msgid "Providers"
 msgstr "Provedores"
 
@@ -54,6 +54,7 @@ msgid "Copy value"
 msgstr "Copiar valor"
 
 #: contents/ui/components/CopyableValue.qml
+#: contents/ui/components/ShareUsageWindow.qml
 msgid "Copied"
 msgstr "Copiado"
 
@@ -196,6 +197,7 @@ msgstr ""
 #: contents/ui/components/FullRepresentation.qml
 #: contents/ui/components/OverviewProviderRow.qml
 #: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/SessionsView.qml contents/ui/main.qml
 msgid "%1 - %2"
 msgstr "%1 - %2"
@@ -210,7 +212,8 @@ msgstr "Atualizar"
 msgid "No overview data available."
 msgstr "Não há dados disponíveis para a visão geral."
 
-#: contents/ui/components/FullRepresentation.qml contents/ui/configPanel.qml
+#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/RateWindowLabels.qml contents/ui/configPanel.qml
 #: contents/ui/main.qml
 msgid "Credits"
 msgstr "Créditos"
@@ -304,6 +307,7 @@ msgstr[1] "%1 horas"
 
 #: contents/ui/components/PanelSettingsPreview.qml
 #: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/ShareUsageWindow.qml
 #: contents/ui/components/SpendView.qml contents/ui/configGeneral.qml
 #: contents/ui/main.qml
 msgid "%1 day"
@@ -398,12 +402,14 @@ msgstr ""
 "aplicadas."
 
 #: contents/ui/components/ProjectCostSection.qml
-#: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
+#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/ShareUsageWindow.qml scripts/smoke/Capture.qml
 msgid "Cost unavailable"
 msgstr "Custo indisponível"
 
 #: contents/ui/components/ProjectCostSection.qml
-#: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
+#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/ShareUsageWindow.qml contents/ui/main.qml
 #: scripts/smoke/Capture.qml
 msgid "Tokens unavailable"
 msgstr "Tokens indisponíveis"
@@ -451,12 +457,14 @@ msgid "Enable %1"
 msgstr "Ativar %1"
 
 #: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/RateWindowLabels.qml
 #: contents/ui/components/SpendView.qml contents/ui/main.qml
 msgid "Cost"
 msgstr "Custo"
 
 #: contents/ui/components/ProviderCostSection.qml
-#: contents/ui/components/SpendView.qml contents/ui/main.qml
+#: contents/ui/components/RateWindowLabels.qml
+#: contents/ui/components/SpendView.qml
 msgid "Tokens"
 msgstr "Tokens"
 
@@ -523,6 +531,22 @@ msgstr "O detalhamento por modelo está incompleto."
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Models"
 msgstr "Modelos"
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "at least %1"
+msgstr "pelo menos %1"
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Quota weeks"
+msgstr "Semanas de cota"
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid ""
+"The history is kept per day, so a day containing a reset counts toward one "
+"week only."
+msgstr ""
+"O histórico é diário, então um dia que contém uma redefinição conta para "
+"apenas uma semana."
 
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Cost history"
@@ -659,6 +683,10 @@ msgstr "Grok"
 #: contents/ui/components/ProviderNames.qml
 msgid "Groq"
 msgstr "Groq"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Helmcode"
+msgstr "Helmcode"
 
 #: contents/ui/components/ProviderNames.qml
 msgid "Hugging Face"
@@ -801,6 +829,14 @@ msgid "T3 Chat"
 msgstr "T3 Chat"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "TypeSafe"
+msgstr "TypeSafe"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "v0"
+msgstr "v0"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Venice"
 msgstr "Venice"
 
@@ -840,6 +876,154 @@ msgstr "ZenMux"
 msgid "ZoomMate"
 msgstr "ZoomMate"
 
+#: contents/ui/components/RateWindowLabels.qml
+msgid "5-hour"
+msgstr "5 horas"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Amp Free"
+msgstr "Amp Free"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Gemini Models"
+msgstr "Modelos Gemini"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Status"
+msgstr "Status"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Budget"
+msgstr "Orçamento"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Monthly credits"
+msgstr "Créditos mensais"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Premium"
+msgstr "Premium"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Total"
+msgstr "Total"
+
+#: contents/ui/components/RateWindowLabels.qml contents/ui/configPanel.qml
+msgid "Standard"
+msgstr "Padrão"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Requests"
+msgstr "Requisições"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Pro"
+msgstr "Pro"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Weekly"
+msgstr "Semanal"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Prompts"
+msgstr "Instruções"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Spend"
+msgstr "Gastos"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "API key limit"
+msgstr "Limite da chave de API"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Points"
+msgstr "Pontos"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Edit predictions"
+msgstr "Previsões de edição"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Session"
+msgstr "Sessão"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Claude and GPT"
+msgstr "Claude e GPT"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Balance"
+msgstr "Saldo"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Deployment"
+msgstr "Implantação"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Chat"
+msgstr "Conversa"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Auto"
+msgstr "Automático"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Rate limit"
+msgstr "Limite de frequência"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Flash"
+msgstr "Flash"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "On-demand"
+msgstr "Sob demanda"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Kilo Pass"
+msgstr "Kilo Pass"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Bonus"
+msgstr "Bônus"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Window"
+msgstr "Período"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Add-on credits"
+msgstr "Créditos adicionais"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Billing cycle"
+msgstr "Ciclo de faturamento"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Monthly"
+msgstr "Mensal"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Sonnet"
+msgstr "Sonnet"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "API"
+msgstr "API"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Flash Lite"
+msgstr "Flash Lite"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Opus"
+msgstr "Opus"
+
+#: contents/ui/components/RateWindowLabels.qml contents/ui/main.qml
+msgid "Usage"
+msgstr "Uso"
+
 #: contents/ui/components/SessionsView.qml
 msgid "%1 local session"
 msgid_plural "%1 local sessions"
@@ -866,6 +1050,103 @@ msgstr "Copiar nome da sessão"
 #: contents/ui/components/SessionsView.qml
 msgid "Copy session details"
 msgstr "Copiar detalhes da sessão"
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid ""
+"Some data is missing, incomplete, or estimated. Unavailable amounts are not "
+"zero."
+msgstr ""
+"Alguns dados estão ausentes, incompletos ou estimados. Valores indisponíveis "
+"não equivalem a zero."
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid ""
+"Created locally. Only aggregate usage is included. Costs are usage "
+"estimates, not subscription fees."
+msgstr ""
+"Criado localmente. Inclui apenas dados agregados de uso. Os custos são "
+"estimativas de uso, não mensalidades."
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Created %1"
+msgstr "Criado em %1"
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Estimated usage cost"
+msgstr "Custo estimado de uso"
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Top models by tokens"
+msgstr "Principais modelos por tokens"
+
+#: contents/ui/components/ShareUsageWindow.qml
+#: contents/ui/components/SpendView.qml
+msgid "Share AI usage"
+msgstr "Compartilhar uso de IA"
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Unavailable"
+msgstr "Indisponível"
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "%1 more provider included in totals"
+msgid_plural "%1 more providers included in totals"
+msgstr[0] "%1 outro provedor incluído nos totais"
+msgstr[1] "%1 outros provedores incluídos nos totais"
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "%1 more model not shown"
+msgid_plural "%1 more models not shown"
+msgstr[0] "%1 outro modelo não exibido"
+msgstr[1] "%1 outros modelos não exibidos"
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Image copied"
+msgstr "Imagem copiada"
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Could not create the image. Try again."
+msgstr "Não foi possível criar a imagem. Tente novamente."
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Choose a local PNG file."
+msgstr "Escolha um arquivo PNG local."
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Could not save the image. Choose another location."
+msgstr "Não foi possível salvar a imagem. Escolha outro local."
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Image saved"
+msgstr "Imagem salva"
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Save usage image"
+msgstr "Salvar imagem de uso"
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "PNG image (*.png)"
+msgstr "Imagem PNG (*.png)"
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Tracked tokens"
+msgstr "Tokens registrados"
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Copy image"
+msgstr "Copiar imagem"
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Copy statistics"
+msgstr "Copiar estatísticas"
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Save PNG..."
+msgstr "Salvar PNG..."
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Close"
+msgstr "Fechar"
 
 #: contents/ui/components/SpendView.qml
 msgid "7 days"
@@ -1423,10 +1704,6 @@ msgstr "Aparência"
 #: contents/ui/configPanel.qml
 msgid "Panel style:"
 msgstr "Estilo do painel:"
-
-#: contents/ui/configPanel.qml contents/ui/main.qml
-msgid "Standard"
-msgstr "Padrão"
 
 #: contents/ui/configPanel.qml
 msgid "Colored provider icons"
@@ -2481,156 +2758,12 @@ msgid "No usage yet"
 msgstr "Ainda sem uso"
 
 #: contents/ui/main.qml
-msgid "Usage"
-msgstr "Uso"
-
-#: contents/ui/main.qml
 msgid "Limits not available"
 msgstr "Limites indisponíveis"
 
 #: contents/ui/main.qml
 msgid "Extra"
 msgstr "Extra"
-
-#: contents/ui/main.qml
-msgid "5-hour"
-msgstr "5 horas"
-
-#: contents/ui/main.qml
-msgid "Amp Free"
-msgstr "Amp Free"
-
-#: contents/ui/main.qml
-msgid "Gemini Models"
-msgstr "Modelos Gemini"
-
-#: contents/ui/main.qml
-msgid "Status"
-msgstr "Status"
-
-#: contents/ui/main.qml
-msgid "Budget"
-msgstr "Orçamento"
-
-#: contents/ui/main.qml
-msgid "Monthly credits"
-msgstr "Créditos mensais"
-
-#: contents/ui/main.qml
-msgid "Premium"
-msgstr "Premium"
-
-#: contents/ui/main.qml
-msgid "Total"
-msgstr "Total"
-
-#: contents/ui/main.qml
-msgid "Requests"
-msgstr "Requisições"
-
-#: contents/ui/main.qml
-msgid "Pro"
-msgstr "Pro"
-
-#: contents/ui/main.qml
-msgid "Weekly"
-msgstr "Semanal"
-
-#: contents/ui/main.qml
-msgid "Prompts"
-msgstr "Instruções"
-
-#: contents/ui/main.qml
-msgid "Spend"
-msgstr "Gastos"
-
-#: contents/ui/main.qml
-msgid "API key limit"
-msgstr "Limite da chave de API"
-
-#: contents/ui/main.qml
-msgid "Points"
-msgstr "Pontos"
-
-#: contents/ui/main.qml
-msgid "Edit predictions"
-msgstr "Previsões de edição"
-
-#: contents/ui/main.qml
-msgid "Session"
-msgstr "Sessão"
-
-#: contents/ui/main.qml
-msgid "Claude and GPT"
-msgstr "Claude e GPT"
-
-#: contents/ui/main.qml
-msgid "Balance"
-msgstr "Saldo"
-
-#: contents/ui/main.qml
-msgid "Deployment"
-msgstr "Implantação"
-
-#: contents/ui/main.qml
-msgid "Chat"
-msgstr "Conversa"
-
-#: contents/ui/main.qml
-msgid "Auto"
-msgstr "Automático"
-
-#: contents/ui/main.qml
-msgid "Rate limit"
-msgstr "Limite de frequência"
-
-#: contents/ui/main.qml
-msgid "Flash"
-msgstr "Flash"
-
-#: contents/ui/main.qml
-msgid "On-demand"
-msgstr "Sob demanda"
-
-#: contents/ui/main.qml
-msgid "Kilo Pass"
-msgstr "Kilo Pass"
-
-#: contents/ui/main.qml
-msgid "Bonus"
-msgstr "Bônus"
-
-#: contents/ui/main.qml
-msgid "Window"
-msgstr "Período"
-
-#: contents/ui/main.qml
-msgid "Add-on credits"
-msgstr "Créditos adicionais"
-
-#: contents/ui/main.qml
-msgid "Billing cycle"
-msgstr "Ciclo de faturamento"
-
-#: contents/ui/main.qml
-msgid "Monthly"
-msgstr "Mensal"
-
-#: contents/ui/main.qml
-msgid "Sonnet"
-msgstr "Sonnet"
-
-#: contents/ui/main.qml
-msgid "API"
-msgstr "API"
-
-#: contents/ui/main.qml
-msgid "Flash Lite"
-msgstr "Flash Lite"
-
-#: contents/ui/main.qml
-msgid "Opus"
-msgstr "Opus"
 
 #: contents/ui/main.qml
 msgid "Extra usage"
@@ -2939,6 +3072,9 @@ msgid "Upstream CLI %1 is available. Update using your installation method."
 msgstr ""
 "A versão oficial %1 do CLI está disponível. Atualize usando seu método de "
 "instalação."
+
+#~ msgid "Since %1"
+#~ msgstr "Desde %1"
 
 #~ msgid ""
 #~ "Checks GitHub for official releases. The widget does not install or "

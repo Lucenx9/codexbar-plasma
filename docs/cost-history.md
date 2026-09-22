@@ -13,6 +13,9 @@ retained values. A successful refresh clears the error.
   expose truncation and an explicit empty state.
 - Missing costs and token counts remain unknown. Measured zero stays zero;
   filling calendar gaps only fills metrics actually observed in the snapshot.
+  Quota-week sums mark trailing days after a stale snapshot and measured days
+  with excluded incomplete requests as partial; a newer usage refresh does not
+  make those costs known.
   Recent history rows show both available amounts, including zero, in either
   metric mode. The selected metric still controls row filtering and bar scaling.
   The daily average divides the measured days only, so a range measured as zero
@@ -24,6 +27,10 @@ retained values. A successful refresh clears the error.
   the newest 365 calendar days. Legacy non-date labels retain sequence order.
 - Model names are strings. Numeric names are not coerced into display labels.
   Tied model amounts use the label as a stable ordering tiebreaker.
+- Sharing uses a separate token ranking from the full bounded period model
+  aggregation, before the existing six-row cost ranking is truncated. Cheap or
+  unpriced models remain eligible for the top-token list. Its known omitted-row
+  count and incomplete-scan flag survive privacy projection and export.
 - Standard/Fast totals remain blocked on an official CLI contract. No service
   tier is inferred from model names or amounts.
 
@@ -65,8 +72,12 @@ request was excluded. The counts describe requests that lacked final usage and
 are therefore missing from the reported tokens and cost. Treat them as a
 partial-total marker only: sum them under the coverage bound, never fold them
 into an amount, and keep the notice semantic so a changed count cannot revive a
-dismissed warning. A day whose requests are all incomplete arrives without
-`totalCost` and `totalTokens`, which daily normalization already keeps unknown
+dismissed warning. Quota-week subtotals carry the bounded daily count so a
+mixed day makes the affected cost and token sums lower bounds, including in
+privacy mode. Individual history and model rows still need their own
+incomplete-request indication, tracked in TODO. A day whose requests are all
+incomplete arrives without `totalCost` and `totalTokens`, which daily
+normalization already keeps unknown
 instead of turning into a measured zero. Privacy mode keeps the count, which
 carries no identity.
 

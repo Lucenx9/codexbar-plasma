@@ -240,12 +240,42 @@ Provider-specific editable settings depend on the official CLI contract.
   unavailable. They require upstream CLI support.
 - Generic API key setup for Fireworks, when the selected CLI reports version
   0.54.0 or later and can discover the account slug from the key.
-- Fallback names, icons, and documentation links for all 75 providers in the
-  official CodexBar 0.63.0 registry, plus colors, links, and aliases where
-  upstream defines them; fork-only provider assets remain available
-  for compatibility.
+- Fallback names, icons, and documentation links for all 77 providers in the
+  official CodexBar 0.64.1 registry, plus colors, links, and aliases where
+  upstream defines them; fork-only provider assets, and those for providers a
+  later CLI retired, remain available for compatibility.
 
 ## Costs and history
+
+### Share usage
+
+![Synthetic aggregate usage card with repository attribution](codexbar-plasma-share.png)
+
+Choose **Share AI usage** in the Usage & Spend header to open a separate window.
+It uses the selected history range and freezes the currently loaded data until
+reopened. It does not start another CLI scan. Refresh history first for a newer
+snapshot; the creation timestamp is not a measurement timestamp.
+
+**Copy image** places image data on the clipboard, **Copy statistics** copies the
+same aggregate figures as plain text, and **Save PNG...** opens the platform save
+picker with overwrite confirmation. Saving supports local PNG files. The image
+uses the Plasma colors and fonts and includes a small
+`github.com/Lucenx9/codexbar-plasma` attribution in its footer.
+
+Totals include the loaded providers; at most eight provider rows and six models
+are shown, ranked by tokens, with omitted row counts. Model rows without a token
+count are excluded from the ranking. Currencies remain separate. Unknown values
+are not zero, and incomplete or estimated data retains a notice in both exports.
+Costs estimate usage, not subscription fees; subscription plans are not exported.
+
+Only aggregate fields enter the export. Account identities, projects, absolute
+paths embedded in model labels, raw diagnostics, and conversation content are
+excluded. Privacy mode keeps its model anonymization; changing that setting
+closes an open snapshot. Nothing is uploaded. Copying or saving is an explicit
+action. The exported file and clipboard content remain under your control after
+closing the window.
+
+### History details
 
 - Local cost drill-down when the CLI exposes cost data.
 - In the verified CLI 0.56.2 contract, Antigravity supplies token-only local
@@ -278,6 +308,18 @@ Provider-specific editable settings depend on the official CLI contract.
   amounts; missing amounts stay omitted. The daily average stays visible for a
   range measured as zero, and the peak still names a day only once something
   was spent.
+- **Quota weeks** in the expanded provider details split the local history by
+  the provider's weekly quota window: the current week so far and up to three
+  earlier ones, each with its exact start and end. Right after a reset the
+  current week holds no full day yet and is left out until it does. The boundaries come from the
+  weekly usage row's reset time and window length, so the list appears once a
+  live usage refresh reports them. History is kept per day, so when the reset
+  falls inside a day that whole day counts toward one week, and the totals are
+  marked `≈`. Unknown or missing days, and days with requests excluded from
+  the CLI totals, make a total read "at least". Weeks reaching back before
+  the scanned history range are left out rather than shown incomplete. If the
+  last successful cost scan is older than today, unscanned trailing days also
+  make the affected week read "at least".
 - Token, request, and point counts use the current language's singular and
   plural forms. Large counts retain compact notation such as `1K` and `4.3B`.
 - Cost totals qualified as estimated, partial, or approximate from the CLI's

@@ -50,7 +50,7 @@ require_icon() {
   fi
 }
 
-# Released official CodexBar provider registry through v0.63.0. The live CLI
+# Released official CodexBar provider registry through v0.64.1. The live CLI
 # probe below adds an early warning when a newer installed release introduces
 # another provider.
 released_providers=(
@@ -99,7 +99,6 @@ released_providers=(
   deepseek
   deepinfra
   codebuff
-  crof
   venice
   commandcode
   qoder
@@ -129,9 +128,20 @@ released_providers=(
   nous
   replicate
   pi
+  helmcode
+  v0
+  typesafe
 )
 
-for provider in "${released_providers[@]}"; do
+# Retired upstream but still emitted by an older installed CLI. 0.64.1 removed
+# Crof after the service shut down and now rejects the provider outright, so it
+# leaves the current registry above; the bundled icon stays so a user who has
+# not upgraded keeps a named provider instead of the unknown-provider fallback.
+retired_providers=(
+  crof
+)
+
+for provider in "${released_providers[@]}" "${retired_providers[@]}"; do
   require_icon "$provider"
 done
 
@@ -141,6 +151,17 @@ if command -v codexbar >/dev/null 2>&1; then
     require_icon "$provider"
   done < <(codexbar config providers --format json --json-only 2>/dev/null | jq -r '.[].provider' 2>/dev/null || true)
 fi
+
+# The README and usage guide state the size of the bundled registry. Derive
+# the number here, so a registry update that forgets the docs fails instead of
+# relying on someone remembering to edit a pinned sentence.
+registry_size="${#released_providers[@]}"
+for doc in README.md docs/usage.md; do
+  if ! tr '\n' ' ' <"${ROOT_DIR}/${doc}" | grep -qE "all ${registry_size} providers"; then
+    echo "${doc} must state the bundled registry size: all ${registry_size} providers" >&2
+    missing=1
+  fi
+done
 
 if [[ "$missing" -ne 0 ]]; then
   exit 1

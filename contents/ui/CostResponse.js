@@ -19,7 +19,7 @@ function normalizeSnapshot(item, requestedHistoryDays) {
         item.last30DaysCostUSD, item.last30DaysTokens, currency);
     var trust = Normalizer.normalizeCostTrustMetadata(item);
     var summary = CostPresentation.costTrustSummary([{totals: totals, trust: trust}]);
-    var modelSummary = Normalizer.normalizeCostModels(item.daily, currency, historyDays, item.updatedAt);
+    var modelSummary = Normalizer.normalizeCostModels(item.daily, currency, historyDays, item.updatedAt, true);
     return {
         provider: provider,
         currency: currency,
@@ -36,6 +36,7 @@ function normalizeSnapshot(item, requestedHistoryDays) {
         totals: totals,
         projects: Normalizer.normalizeCostProjects(item.projects, currency),
         models: modelSummary.rows,
+        tokenRanking: modelSummary.tokenRanking || { rows: [], omitted: 0, truncated: false },
         modelsTruncated: modelSummary.truncated,
         daily: Normalizer.normalizeCostDaily(item.daily, currency, historyDays, item.updatedAt)
     };

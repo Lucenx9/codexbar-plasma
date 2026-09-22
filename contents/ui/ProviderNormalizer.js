@@ -251,8 +251,17 @@ function rateWindowMetrics(window, pace, usageKnown) {
         paceOnTop: !pace || pace.willLastToReset !== false,
         paceEtaSeconds: isFinite(paceEta)
             ? Math.max(0, Math.min(maximumPaceEtaSeconds, paceEta))
-            : 0
+            : 0,
+        windowMinutes: rateWindowMinutes(window.windowMinutes)
     }
+}
+
+// The window length the CLI reports beside `resetsAt` (10080 for a weekly
+// limit). Anything but a whole number of minutes up to a year is dropped to 0,
+// which consumers read as "length unknown".
+function rateWindowMinutes(value) {
+    return typeof value === "number" && isFinite(value) && Math.floor(value) === value
+        && value > 0 && value <= 366 * 24 * 60 ? value : 0
 }
 
 // CLI-controlled text that must never throw while being read. Only genuine
@@ -867,6 +876,7 @@ function normalizeCostDaily(items, currency, days, updatedAt) {
             label: label,
             cost: isFinite(cost) ? Math.max(0, cost) : null,
             tokens: isFinite(tokens) ? Math.max(0, tokens) : null,
+            incompleteRequests: normalizedIncompleteRequestCount(item.incompleteRequestCount),
             inputTokens: isFinite(inputTokens) ? Math.max(0, inputTokens) : 0,
             outputTokens: isFinite(outputTokens) ? Math.max(0, outputTokens) : 0,
             cacheReadTokens: isFinite(cacheReadTokens) ? Math.max(0, cacheReadTokens) : 0,
@@ -924,7 +934,7 @@ function normalizeProviderCostTotals(providerID, totals, fallbackCost,
     return result
 }
 
-function normalizeCostModels(items, currency, days, updatedAt) {
+function normalizeCostModels(items, currency, days, updatedAt, includeTokenRanking) {
     if (!items || !Array.isArray(items)) {
         return { rows: [], truncated: false }
     }
@@ -956,10 +966,10 @@ function normalizeCostModels(items, currency, days, updatedAt) {
         }
         modelDays.unshift(item)
     }
-    return costModelSummary(modelDays, currency)
+    return costModelSummary(modelDays, currency, includeTokenRanking)
 }
 
-function costModelSummary(modelDays, currency) {
+function costModelSummary(modelDays, currency, includeTokenRanking) {
     var byName = ({})
     var truncated = false
     for (var i = 0; i < modelDays.length; i++) {
@@ -1046,8 +1056,22 @@ function costModelSummary(modelDays, currency) {
         }
         return a.label === b.label ? 0 : (a.label < b.label ? -1 : 1)
     })
-    return {
+    var result = {
         rows: rows.slice(0, maximumCostModelRows),
         truncated: truncated || rows.length > maximumCostModelRows
     }
+    if (includeTokenRanking === true) {
+        // Rank the full bounded aggregation before the cost-first display cap.
+        // A cheap or unpriced model can still have the largest token count.
+        var tokenRows = rows.filter(function(row) { return row.tokens !== null })
+        tokenRows.sort(function(a, b) {
+            return b.tokens - a.tokens || (a.label === b.label ? 0 : (a.label < b.label ? -1 : 1))
+        })
+        result.tokenRanking = {
+            rows: tokenRows.slice(0, maximumCostModelRows),
+            omitted: Math.max(0, tokenRows.length - maximumCostModelRows),
+            truncated: truncated || tokenRows.length > maximumCostModelRows
+        }
+    }
+    return result
 }

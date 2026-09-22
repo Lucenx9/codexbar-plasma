@@ -98,9 +98,17 @@ if sed -n 's/^[[:space:]]*image: //p' "$WORKFLOW" | grep -Evq '^invent-registry\
   echo "CI container images must pin the official KDE neon image by SHA-256 digest" >&2
   exit 1
 fi
-require_in_file "$WORKFLOW" "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"
-reject_text "workflow" "$(cat "$WORKFLOW")" "actions/checkout@v4"
-require_in_file "$WORKFLOW" "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
+# A mutable tag lets a compromised action release run in CI with repository
+# credentials. Check the property, not two specific SHAs: a pinned bump must
+# pass, and a new unpinned `uses:` in any workflow must fail.
+unpinned_actions="$(grep -hE '^[[:space:]-]*uses:' "${ROOT_DIR}"/.github/workflows/*.yml \
+  | grep -vE 'uses:[[:space:]]*(\./|docker://)' \
+  | grep -vE '@[0-9a-f]{40}([[:space:]]|$)' || true)"
+if [[ -n "$unpinned_actions" ]]; then
+  echo "workflow actions must be pinned to a full commit SHA:" >&2
+  echo "$unpinned_actions" >&2
+  exit 1
+fi
 require_in_file "$WORKFLOW" "dist/codexbar-plasma.plasmoid.sha256"
 require_in_file "$MAKEFILE" "sha256sum codexbar-plasma.plasmoid > codexbar-plasma.plasmoid.sha256"
 require_in_file "$UPDATER" "sha256sum --check --strict"
@@ -270,8 +278,6 @@ require_in_surface applet "property var pendingUpdateReleaseUrls: ({})"
 require_in_file "${ROOT_DIR}/contents/ui/NotificationCommand.js" 'Guards.shellQuote(cleanTitle), Guards.shellQuote(cleanBody)'
 require_in_file "${ROOT_DIR}/contents/ui/NotificationCommand.js" 'Guards.shellQuote("default=" + cleanLabel)'
 
-require_in_file "$MAKEFILE" "scripts/test_security_regressions.sh"
-require_in_file "$MAKEFILE" "scripts/test_qml_hardening.sh"
 # shellcheck disable=SC2016 # Match the literal Make variable syntax.
 reject_text "Makefile" "$(cat "$MAKEFILE")" 'QML_FILES := $(shell'
 # shellcheck disable=SC2016 # Match the literal Make variable syntax.

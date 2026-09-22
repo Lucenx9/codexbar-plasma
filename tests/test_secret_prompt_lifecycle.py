@@ -625,9 +625,18 @@ TestCase {
         verify(text.indexOf("diagnose --provider") !== -1);
         verify(text.indexOf("config set-api-key --provider") !== -1);
         verify(text.indexOf("openai") !== -1);
+        // The copied diagnose line stays redacted: without --redact the user
+        // would paste an unredacted diagnose into a terminal or bug report.
+        var lines = text.split("\n");
+        var diagnose = lines.filter(function(line) { return line.indexOf("diagnose --provider") !== -1; });
+        compare(diagnose.length, 1);
+        verify(diagnose[0].indexOf("--format json --redact") !== -1);
         var plain = providerCliCommandText({provider: "unknown-xyz", enabled: false});
         verify(plain.indexOf("diagnose --provider") !== -1);
         verify(plain.indexOf("set-api-key") === -1);
+        var plainDiagnose = plain.split("\n").filter(function(line) { return line.indexOf("diagnose --provider") !== -1; });
+        compare(plainDiagnose.length, 1);
+        verify(plainDiagnose[0].indexOf("--format json --redact") !== -1);
     }
     // Docs, login and CLI spelling come from the identity table, so an
     // unknown provider yields nothing instead of a guessed URL.
@@ -644,6 +653,11 @@ TestCase {
     function test_supportsApiKeySetupAllowlistsProviders() {
         fireworksSingleKeySetupSupported = false;
         compare(supportsApiKeySetup("openai"), true);
+        // CLI 0.64.1 accepts `config set-api-key --provider v0` and rejects it
+        // for the two cookie-only 0.64.0 additions.
+        compare(supportsApiKeySetup("v0"), true);
+        compare(supportsApiKeySetup("helmcode"), false);
+        compare(supportsApiKeySetup("typesafe"), false);
         compare(supportsApiKeySetup("unknown-xyz"), false);
         compare(supportsApiKeySetup("fireworks"), false);
         fireworksSingleKeySetupSupported = true;

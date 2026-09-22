@@ -1,8 +1,9 @@
 # CodexBar macOS parity at 0.56.2
 
 Checked 2026-09-01. This is a read-only comparison of the official
-`steipete/CodexBar` product against the Plasma baseline. It supersedes
-[`2026-08-24-macos-parity-0.55.0.md`](./2026-08-24-macos-parity-0.55.0.md).
+`steipete/CodexBar` product against the Plasma baseline. It supersedes the
+0.55.0 report and the earlier 0.49.1 through 0.54.0 reports, which remain in
+Git history (removed after commit `ba0a0d8`).
 
 ## Pinned scope
 

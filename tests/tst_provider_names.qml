@@ -26,6 +26,7 @@ TestCase {
             { tag: "crossmodel", key: "crossmodel", title: "CrossModel" },
             { tag: "elevenlabs", key: "elevenlabs", title: "ElevenLabs" },
             { tag: "fireworks", key: "fireworks", title: "Fireworks" },
+            { tag: "helmcode", key: "helmcode", title: "Helmcode" },
             { tag: "huggingface", key: "huggingface", title: "Hugging Face" },
             { tag: "ibmbob", key: "ibmbob", title: "IBM Bob" },
             { tag: "kimi", key: "kimi", title: "Kimi Code" },
@@ -36,6 +37,8 @@ TestCase {
             { tag: "qoder", key: "qoder", title: "Qoder" },
             { tag: "replicate", key: "replicate", title: "Replicate" },
             { tag: "stepfun", key: "stepfun", title: "StepFun" },
+            { tag: "typesafe", key: "typesafe", title: "TypeSafe" },
+            { tag: "v0", key: "v0", title: "v0" },
             { tag: "wayfinder", key: "wayfinder", title: "Wayfinder" },
             { tag: "zai", key: "zai", title: "z.ai / GLM" }
         ];

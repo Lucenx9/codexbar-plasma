@@ -60,22 +60,20 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   still-rejected Cursor cost and descriptors probes, and scoped official CLI
   probes. Provider descriptors, generic config actions, and Cursor cost remain
   unavailable.
+- [0.64.1 release review](research/2026-09-22-macos-parity-0.64.1.md): the
+  Helmcode, v0, and TypeSafe registry additions, the Crof retirement, the
+  measured split between v0's supported API-key setup and the two cookie-only
+  providers, and scoped official CLI probes. Provider descriptors and generic
+  config actions remain unavailable.
 - [Settings decisions](research/2026-09-08-settings-experience.md): Panel disclosure and text grouping,
   Plasma settings, privacy, refresh behavior, and the macOS 0.56.8 comparison.
 
 ## Earlier CLI evidence
 
-These small reports preserve version-specific evidence used by later audits.
-They are historical comparisons, not current feature plans. Preserve their
-original findings; a new audit names the report it supersedes and its exact
-versions. Current guides describe implemented recommendations; TODO lists
-remaining Linux work.
-
-- [0.49.1](research/2026-08-10-macos-parity-progress.md)
-- [0.49.6](research/2026-08-15-macos-parity-0.49.6.md)
-- [0.50.0](research/2026-08-16-macos-parity-0.50.0.md)
-- [0.54.0](research/2026-08-20-macos-parity-0.54.0.md)
-- [0.55.0](research/2026-08-24-macos-parity-0.55.0.md)
+The 0.49.1 through 0.55.0 reports were superseded by the
+[0.56.2 audit](research/2026-09-01-macos-parity-0.56.2.md), which re-verified
+their contracts, and were removed. They remain recoverable from Git history
+at commit `ba0a0d8`.
 
 ## Product screenshots
 
@@ -90,6 +88,8 @@ when the product changes instead of adding dated before/after copies.
 - [Overview](codexbar-plasma-overview.png)
 - [Provider details](codexbar-plasma-codex.png)
 - [Usage and spend](codexbar-plasma-usage-spend.png)
+- [Shared usage card](codexbar-plasma-share.png): synthetic local PNG summary,
+  with separate provider/model rows and the repository attribution.
 - [Sessions](codexbar-plasma-sessions.png)
 - [Standard panel](codexbar-plasma-panel-standard.png): colored provider icons and dual quota capsules.
 - [Minimal panel](codexbar-plasma-panel-minimal.png): monochrome provider icons and dual quota capsules.

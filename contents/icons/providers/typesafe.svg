@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Original shield-and-check glyph for TypeSafe; no vendor mark. -->
+<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+  <path d="M12 1.8 3.9 4.9v6.4c0 4.7 3.2 9.1 8.1 10.9 4.9-1.8 8.1-6.2 8.1-10.9V4.9L12 1.8zm0 2.57 5.7 2.19v4.74c0 3.5-2.25 6.9-5.7 8.43-3.45-1.53-5.7-4.93-5.7-8.43V6.56L12 4.37z"/>
+  <path d="M10.9 13.44 8.96 11.5a1.15 1.15 0 0 0-1.63 1.63l2.76 2.76a1.15 1.15 0 0 0 1.63 0l4.6-4.6a1.15 1.15 0 1 0-1.63-1.63l-3.79 3.78z"/>
+</svg>

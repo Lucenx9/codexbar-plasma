@@ -60,7 +60,10 @@ TestCase {
             // Observe the parser's publication boundary. Quota parsing,
             // bounded normalization and reset formatting above are production.
             function commitUsageSnapshot(items) { providers = items; }
-            function rateWindowLabel() { return "Quota"; }
+            function providerKey(value) { return String(value); }
+            readonly property QtObject rateWindowLabels: QtObject {
+                function labelForLane() { return "Quota"; }
+            }
             function providerTitle(providerID) { return providerID; }
             function providerCostSection() { return null; }
             function resetCreditsSection() { return null; }

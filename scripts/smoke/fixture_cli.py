@@ -20,6 +20,7 @@ SCENARIOS += ("panel-default", "panel-default-single")
 SCENARIOS += ("panel-vertical", "panel-vertical-minimal", "panel-small", "panel-dual-edge")
 SCENARIOS += ("popup-cost-details", "popup-cost-tokens")
 SCENARIOS += ("popup-cost-refresh-error",)
+SCENARIOS += ("share-usage", "share-usage-narrow")
 SCENARIOS += ("popup-cost-missing-tokens", "popup-cost-partial-models")
 SCENARIOS += ("popup-content", "refresh-on-open", "privacy-provider", "privacy-spend", "privacy-sessions")
 SCENARIOS += ("privacy-cost-details",)
@@ -143,6 +144,15 @@ def response(args, scenario, now):
     if (args[:5] == ["cost", "--format", "json", "--json-only", "--days"]
             and len(args) == 6 and args[5] in ("7", "30", "90")):
         days = int(args[5])
+        if scenario.startswith("share-usage"):
+            snapshots = [readme_cost(provider, days, now) for provider in ("codex", "claude")]
+            for snapshot in snapshots:
+                snapshot["provenance"] = "listPriceEstimate"
+                for day in snapshot["daily"]:
+                    day["modelBreakdowns"] = [{
+                        "modelName": "Example coding model" if snapshot["provider"] == "codex" else "Example reasoning model",
+                        "cost": day["totalCost"], "totalTokens": day["totalTokens"]}]
+            return snapshots
         if scenario.startswith("readme-"):
             return [readme_cost(provider, days, now) for provider in ("codex", "claude")]
         if scenario.startswith("popup-cost-") or scenario == "privacy-cost-details":

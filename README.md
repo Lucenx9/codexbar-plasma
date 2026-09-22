@@ -65,6 +65,8 @@ for its limits.
 ## Requirements
 
 - KDE Plasma 6, `kpackagetool6`, and the `org.kde.plasma.plasma5support` QML module.
+- `QtQuick.Dialogs` and KDE Declarative's `org.kde.kquickcontrolsaddons` QML
+  modules for the local usage-sharing window, file picker, and image clipboard.
 - A working `codexbar` CLI, available on Plasma's `PATH` or through an absolute
   path configured in the widget, including its optional managed copy. Managed
   downloads support Linux x86_64/aarch64 with glibc or musl; the downloaded
@@ -78,6 +80,10 @@ Distribution package names vary. Source builds additionally need `make`, Python
 3, and GNU gettext; see [Development](#development).
 
 ## Features
+
+Share a local usage summary from **Usage & Spend** as a PNG or copied text.
+The preview includes the selected history range, token totals, estimated usage
+costs, providers, and top models, with a small repository attribution. See [usage sharing](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#share-usage).
 
 | Standard panel | Minimal panel |
 | --- | --- |
@@ -117,11 +123,11 @@ themes.
   selected through your Plasma language preferences.
 
 Provider authentication and data support come from the CLI. The widget includes
-fallback metadata for all 75 providers in the official CodexBar 0.63.0 registry,
+fallback metadata for all 77 providers in the official CodexBar 0.64.1 registry,
 covering names, icons, and documentation links, with brand colors and dashboard
 and status links where upstream defines them. Available metrics and setup
 actions vary by provider. The proposed generic provider-settings descriptor is
-not available in CLI 0.63.0; its additional editors remain unavailable.
+not available in CLI 0.64.1; its additional editors remain unavailable.
 
 <!-- Web links to guides also work in the installed package, which omits those files. -->
 See the [usage and settings guide](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md)

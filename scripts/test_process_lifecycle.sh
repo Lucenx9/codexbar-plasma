@@ -934,16 +934,16 @@ require_all(updater_text, (
     "controller.updateAvailable(intent.version, intent.assetUrl, intent.releaseUrl)",
     "controller.updateInstalled(intent.version)",
 ), "the updater must preserve its packaged script, request identity, validation, and events")
+# The handler bodies themselves are extracted and executed by
+# tests/test_widget_update_wiring.py, which proves the three persisted writes
+# against a fake configuration. Only the call sites stay here: a body test
+# cannot observe whether main still wires the controller or still reaches the
+# notification helpers.
 require_all(main_text, (
     "Controllers.WidgetUpdateController {",
-    "onStatusRecorded: function(statusText, errorText)",
-    "Plasmoid.configuration.widgetUpdateLastStatus = statusText",
-    "Plasmoid.configuration.widgetUpdateLastError = errorText",
-    "onCheckSucceeded: function(timestamp)",
-    "Plasmoid.configuration.autoUpdateLastCheck = timestamp",
     "root.notifyAvailableUpdate(version, assetUrl, releaseUrl)",
     "root.notifyInstalledUpdate(version)",
-), "main must persist updater results and retain notification delivery")
+), "main must wire the updater controller and retain notification delivery")
 
 PY
 
