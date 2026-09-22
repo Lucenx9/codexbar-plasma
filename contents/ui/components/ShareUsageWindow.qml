@@ -24,10 +24,10 @@ Controls.ApplicationWindow {
     readonly property string noticeText: snapshot.partial ? i18n("Some data is missing, incomplete, or estimated. Unavailable amounts are not zero.") : ""
     readonly property string privacyText: i18n("Created locally. Only aggregate usage is included. Costs are usage estimates, not subscription fees.")
     readonly property var providerLines: snapshot.providers.map(function (row) {
-        return applet.providerTitle(row.provider) + " · " + amountText(row);
+        return applet.providerDisplayTitle(row.provider) + " · " + amountText(row);
     })
     readonly property var modelLines: snapshot.models.map(function (row) {
-        return row.label + " · " + applet.providerTitle(row.provider) + " · " + amountText(row);
+        return row.label + " · " + applet.providerDisplayTitle(row.provider) + " · " + amountText(row);
     })
     readonly property string tokensText: snapshot.tokens === null ? i18n("Tokens unavailable") : applet.usageCountText(snapshot.tokens, "tokens")
     readonly property string costText: snapshot.currencies.length === 0 ? i18n("Cost unavailable") : snapshot.currencies.map(function (row) {
@@ -154,12 +154,12 @@ Controls.ApplicationWindow {
                 cost: window.costText,
                 sections: [
                     { title: i18n("Providers"), rows: window.snapshot.providers.map(function(row) {
-                        return { title: window.applet.providerTitle(row.provider), detail: window.amountText(row),
+                        return { title: window.applet.providerDisplayTitle(row.provider), detail: window.amountText(row),
                             color: window.applet.providerColor(row.provider) }
                     }), extra: window.omittedProviderText() },
                     { title: i18n("Top models by tokens"), rows: window.snapshot.models.map(function(row) {
                         return { title: row.label,
-                            detail: window.applet.providerTitle(row.provider) + " · " + window.amountText(row),
+                            detail: window.applet.providerDisplayTitle(row.provider) + " · " + window.amountText(row),
                             color: window.applet.providerColor(row.provider) }
                     }), extra: window.snapshot.models.length === 0 ? i18n("Unavailable") : window.omittedModelText() }
                 ],
