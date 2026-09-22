@@ -13,6 +13,40 @@ theme; provider accent colors stay consistent across themes.
 
 ## Install
 
+### Quick install from a terminal
+
+From your Plasma 6 desktop session, run this command as your regular user:
+
+```sh
+curl --fail --show-error --location --proto '=https' --proto-redir '=https' \
+  --connect-timeout 10 --max-time 30 --max-filesize 65536 \
+  https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/scripts/update-widget.sh \
+  --output install-codexbar-plasma.sh && bash install-codexbar-plasma.sh --setup
+```
+
+This downloads the installer from this repository's `main` branch before
+executing it. You can inspect `install-codexbar-plasma.sh` first by running the
+`curl` part separately. The installer downloads the latest stable **release
+package**, verifies its GitHub SHA-256 digests, published checksum, applet ID and
+version, and installs or updates it for your user. No Git checkout or build
+is needed. Run it without `sudo`; missing command-line dependencies are reported
+before installation. The [runtime requirements](#requirements) still apply.
+
+If `codexbar` is absent from your terminal's PATH, setup offers to install or
+reuse a private official CLI. Then add **CodexBar** through **Add Widgets**,
+open **General → Managed CLI → Use managed CLI**, and **Apply**. Existing CLI
+installations and provider credentials are preserved. Configure your providers
+in the widget's **Providers** settings using the supported setup actions.
+
+Rerunning the command upgrades an older widget and offers to restart Plasma.
+Prompts default to No; without a terminal they are skipped. For unattended setup,
+run the downloaded script with `--setup --no-input`; add `--with-cli` to explicitly
+install or reuse the private CLI too. Selecting it in widget settings is still
+required. A CLI failure leaves the widget installed and returns a nonzero status.
+You can delete `install-codexbar-plasma.sh` afterward.
+
+### KDE Store or manual installation
+
 1. Install the Linux CLI from the
    [official CodexBar release tarballs](https://github.com/steipete/CodexBar/releases/latest)
    or another method documented by [upstream CodexBar](https://github.com/steipete/CodexBar).

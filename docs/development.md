@@ -37,6 +37,32 @@ using the bundled helper. It does not pull Git changes or install local edits.
 For those, use `make install` or `./install.sh`. Release-package users can use
 [the widget's update settings](../README.md#update) without a checkout.
 
+### Standalone release setup
+
+`scripts/update-widget.sh --setup` is also the downloadable installer documented
+in [Quick install](../README.md#quick-install-from-a-terminal). It must work as a
+single file outside a checkout. Setup reads the installed user package metadata
+under the absolute `XDG_DATA_HOME`, falling back to `~/.local/share`; an absent
+package uses version `0.0.0` for the shared release validation. Existing package
+directories with invalid metadata fail rather than being overwritten blindly.
+Setup selects `kpackagetool6 -i` for a missing package and `-u` for an existing
+one, without treating any installation failure as a reason to try the other.
+The `--check` and `--install` JSON interfaces retain their update-only behavior.
+
+Only setup prompts for a private CLI or a Plasma restart. `--no-input` and
+non-terminal stdin suppress prompts; `--with-cli` explicitly requests private
+CLI installation even without a terminal. The installed package's existing
+`manage-cli.py --action install` owns that operation, including offline reuse,
+download verification and locking. Setup never edits provider or widget config,
+and reports CLI failure separately from successful widget installation. Shell
+installer messages are technical English; the widget's QML catalogs are unchanged.
+
+Run `make check-python-test_release_setup check-update-widget check-shellcheck`
+while editing. Setup tests run the standalone script with synthetic release
+archives, temporary user data, and recording tools; they never install into the
+real desktop or download a CLI. Run `make check` and `make package` before PR
+delivery. Keep the README command and installer help synchronized.
+
 ## Ownership and implementation
 
 - `contents/ui/main.qml` owns notification policy and text, account coordination,
