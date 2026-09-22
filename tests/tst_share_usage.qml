@@ -184,6 +184,14 @@ TestCase {
         input.tokenRanking = ranking
         compare(ShareUsage.snapshot([input], 30, "", false).partial, true)
         compare(ShareUsage.snapshot([Privacy.cost(input, true)], 30, "", false).partial, true)
+
+        // Without a calendar anchor, the legacy contract intentionally reads
+        // only the requested tail; older rows are not scan-budget loss.
+        var legacy = Normalizer.normalizeCostModels([
+            {modelBreakdowns: [{modelName: "old", cost: 1, totalTokens: 5}]},
+            {modelBreakdowns: [{modelName: "current", cost: 2, totalTokens: 10}]}
+        ], "USD", 1, undefined, true).tokenRanking
+        compare(legacy.sourceTruncated, false)
     }
 
     function test_localPngUrl_data() {

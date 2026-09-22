@@ -969,7 +969,7 @@ function normalizeCostModels(items, currency, days, updatedAt, includeTokenRanki
     var summary = costModelSummary(modelDays, currency, includeTokenRanking)
     if (summary.tokenRanking) {
         summary.tokenRanking.sourceTruncated = summary.tokenRanking.sourceTruncated
-            || firstInspectedItem > 0
+            || (window !== null && firstInspectedItem > 0)
     }
     return summary
 }
