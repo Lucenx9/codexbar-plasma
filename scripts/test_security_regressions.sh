@@ -21,7 +21,6 @@ WORKFLOW="${ROOT_DIR}/.github/workflows/ci.yml"
 MAKEFILE="${ROOT_DIR}/Makefile"
 UPDATER="${ROOT_DIR}/scripts/update-widget.sh"
 FULL_REPRESENTATION_QML="${ROOT_DIR}/contents/ui/components/FullRepresentation.qml"
-SPEND_VIEW_QML="${ROOT_DIR}/contents/ui/components/SpendView.qml"
 
 require_in_file() {
   local file="$1"
@@ -132,7 +131,9 @@ require_in_surface panel "Kirigami.MnemonicData.label: SafeText.plainTextAsMnemo
 # The compact status tooltip is executed by tests/tst_visual_layout.qml
 # (test_compactStatusTooltipEscapesIncidentText): removing its PlainToolTip
 # leaves zero tooltips and goes red there.
-require_in_file "$SPEND_VIEW_QML" "Components.PlainToolTip {"
+# The spend heatmap readout is executed by tests/test_cost_sections.py
+# (test_spendViewPresentsCostsAndControls): removing its PlainToolTip
+# leaves zero tooltips and goes red there.
 
 reject_raw_text_control() {
   local pattern="$1"

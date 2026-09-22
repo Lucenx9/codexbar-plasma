@@ -9,9 +9,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GENERAL_QML="${ROOT_DIR}/contents/ui/configGeneral.qml"
 PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
 PROVIDER_IDENTITY_JS="${ROOT_DIR}/contents/ui/ProviderIdentity.js"
-INTERACTIVE_CHART_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/InteractiveChart.qml"
 SESSIONS_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/SessionsView.qml"
-SPEND_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/SpendView.qml"
 USAGE_DETAILS_JS="${ROOT_DIR}/contents/ui/UsageDetails.js"
 README_MD="${ROOT_DIR}/README.md"
 USAGE_GUIDE_MD="${ROOT_DIR}/docs/usage.md"
@@ -280,11 +278,10 @@ for provider_id, cli_name in {
         sys.exit(1)
 PY
 
-require_in_surface applet "Components.ProjectCostSection"
-require_in_surface applet "providerCosts: view.presentedProviderCosts"
-require_in_surface applet "CostPresentation.projectRows(providerCosts, applet.costHistoryShowsTokens)"
-require_in_surface applet "model: section.projectData.rows"
-require_in_surface applet 'i18n("Cost unavailable")'
+# The project cost section is executed by tests/test_cost_sections.py, which
+# renders the real component with cost-heavy/token-heavy/unpriced rows:
+# metric ordering, the per-metric values and the unavailable fallback each
+# go red there when broken.
 # Cost presentation moved behind CostPresentation.js. Assert the delegation so
 # the maths cannot quietly grow a second copy back inside main.qml.
 require_in_surface applet "CostPresentation.costTrustSummary("
@@ -302,20 +299,16 @@ reject_in_surface applet "function appendTokenBreakdownRow("
 # executed by tst_visual_layout.qml (providerDetailValuesStayWithinPopup and
 # providerDetailChartFollowsChartData). The `required modelData` scoping rule
 # for Components delegates stays owned by scripts/test_ui_regressions.sh.
-require_in_file "$INTERACTIVE_CHART_COMPONENT_QML" 'if (chart.kind === "line")'
-require_in_file "$INTERACTIVE_CHART_COMPONENT_QML" "activeFocusOnTab: true"
-require_in_file "$INTERACTIVE_CHART_COMPONENT_QML" "Keys.onPressed:"
-require_in_file "$INTERACTIVE_CHART_COMPONENT_QML" "onPositionChanged:"
+# The interactive chart is executed by tests/tst_interactive_chart.qml against
+# the real component: keyboard selection, hover inspection, the line-kind
+# plot path and tab reachability each go red there when broken.
 require_in_file "$USAGE_DETAILS_JS" "QML JavaScript has no grapheme segmenter"
 reject_in_file "$USAGE_DETAILS_JS" "sections.length < maximumSectionsPerSnapshot"
 reject_in_file "$USAGE_DETAILS_JS" "rows.length < maximumRowsPerSection"
 reject_in_file "$USAGE_DETAILS_JS" "points.length < maximumPointsPerChart"
-require_in_surface applet "Components.InteractiveChart"
-require_in_surface applet "id: costHistoryChartSection"
-require_in_surface applet "id: costDrillDownSection"
-require_in_surface applet "model: costDrillDownSection.breakdownRows"
-require_in_surface applet "model: costDrillDownSection.modelRows"
-require_in_surface applet "model: costHistoryChartSection.rows"
+# The provider cost section is executed by tests/test_cost_sections.py, which
+# renders the real component: the chart, the drill-down/history blocks and
+# their breakdown/model/history models each go red there when broken.
 require_in_surface applet "function command(providerID)"
 require_in_surface applet "--all-accounts"
 require_in_surface applet "--account"
@@ -379,17 +372,18 @@ require_in_surface applet "property int costHistoryDays"
 # Cost and tokens both come from one cost payload: switching the plotted metric
 # must never add a CLI call, and the bars must rescale with the choice.
 require_in_surface applet "property string costHistoryMetric"
-# Every cost chart follows one metric: the provider detail chart must not stay
-# on cost while the rows beneath it switch to tokens.
-require_in_surface applet 'applet.costHistoryShowsTokens'
+# Every cost chart follows one metric: the section render tests in
+# tests/test_cost_sections.py flip the flag and pin the project ordering,
+# the provider combo/chart title/day selection and the spend history
+# wording, so a stuck metric goes red there instead of here.
 # The chart's "Latest" summary annotates the same series the bars plot, so it
 # must follow the metric instead of always printing the cost amount.
 reject_in_surface applet 'i18n("%1: %2", label, amountString(last.cost'
 # The peak and average annotations must name the same day the bars highlight.
 reject_in_surface applet 'i18n("Average/day: %1", amountString('
-require_in_file "$SPEND_COMPONENT_QML" "function metricOptions()"
-require_in_file "$SPEND_COMPONENT_QML" "view.applet.setCostHistoryMetric(metricCombo.valueAt(index))"
-require_in_file "$SPEND_COMPONENT_QML" "view.applet.spendHistoryStillBuilding()"
+# The spend metric controls are executed by tests/test_cost_sections.py, which
+# renders the real SpendView: the metric options, the combo-to-settings
+# setter and the still-building notice each go red there when broken.
 # The 365-day clamp is unobservable in executed tests: the property
 # initializer reads Plasmoid.configuration, which is absent under test, so
 # fixtures declare their own day count and 365 -> 30 keeps every naming test
@@ -447,8 +441,8 @@ require_in_surface applet "SessionResponse.response(stdoutText, stderrText)"
 # state. Absence has no runtime equivalent, so these rejections stay.
 reject_in_file "$SESSIONS_COMPONENT_QML" "transcriptPath"
 reject_in_file "$SESSIONS_COMPONENT_QML" "cwd"
-require_in_file "$SPEND_COMPONENT_QML" "InteractiveChart"
-require_in_file "$SPEND_COMPONENT_QML" "Activity heatmap"
+# The spend chart and heatmap are executed by tests/test_cost_sections.py,
+# which renders the real SpendView: removing either element goes red there.
 require_in_file "$CONFIG_XML" "updateChecksEnabled"
 require_in_file "$CONFIG_XML" "updateNotificationsEnabled"
 require_in_file "$CONFIG_XML" "autoUpdateEnabled"

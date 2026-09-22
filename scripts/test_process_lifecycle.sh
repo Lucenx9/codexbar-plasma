@@ -17,6 +17,11 @@ require_in_surface applet "lifecycle.expire(Date.now())"
 # check cannot pin a single file anyway (ten surface files carry it), so no
 # mutation can prove it redundant file-by-file. It stays as the only pin
 # that the rule exists somewhere in the surface.
+# Kept: the trust-notice coalescing timer is unobservable in executed tests
+# (0 -> 50 keeps the whole cost suite green: the refresh still fires before
+# any executed read of the notice state), so no mutation can prove this pin
+# redundant. It stays as the only pin that scope/summary updates coalesce
+# through a zero-interval restart instead of one store write per binding.
 require_in_surface applet "interval: 0"
 require_in_surface applet 'import "../AccountRequests.js" as AccountRequests'
 require_in_surface applet 'import "../SessionRefreshPolicy.js" as SessionRefreshPolicy'
