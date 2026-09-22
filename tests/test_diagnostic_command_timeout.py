@@ -5,7 +5,11 @@ shell-side `timeout --kill-after` bound actually kills a hung `codexbar`
 child. This test extracts the real `runCommand` path, shrinks the timeout
 constants in the fixture, and proves against a fake CLI that a child ignoring
 SIGTERM really dies on schedule, and that diagnostics still run where GNU
-`timeout` is absent.
+`timeout` is absent. It also extracts the real `handleDiagnosticData` branch
+and proves that a completion reaped by the shell bound (GNU timeout's 124,
+or 137 when --kill-after escalates to SIGKILL) surfaces the existing timeout
+message instead of "exited with code ...", while ordinary failures still
+report the CLI's own error.
 """
 
 import json
@@ -27,6 +31,7 @@ from qml_surfaces import Surface
 QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/Guards.js" as Guards
+import "SOURCE_URL/SafeText.js" as SafeText
 TestCase {
     name: "DiagnosticCommandTimeout"
     property string commandPath: CLI_PATH
@@ -61,6 +66,24 @@ TestCase {
         console.log("DIAGNOSTIC_FIXTURE:" + JSON.stringify({production: production,
             commands: diagnosticSource.connected}));
     }
+    function exerciseCompletion(stdoutText, stderrText, exitStatus) {
+        activeCommand = "CODEXBAR_PLASMA_RUN=99 probe";
+        handleDiagnosticData(activeCommand,
+            {"stdout": stdoutText, "stderr": stderrText, "exit code": exitStatus});
+        return diagnosticError;
+    }
+    function test_completionMessageMapping() {
+        diagnosticSource = freshBackend();
+        diagnosticCommandTimeoutTimer = {restart: function() {}, stop: function() {}};
+        var messages = {
+            shellTimeoutSilent: exerciseCompletion("", "", 124),
+            shellKillAfterSilent: exerciseCompletion("", "", 137),
+            cliErrorWithMessage: exerciseCompletion("", "cli broke", 1),
+            cliErrorSilent: exerciseCompletion("", "", 3),
+            cli124WithMessage: exerciseCompletion("", "weird code", 124)
+        };
+        console.log("DIAGNOSTIC_MESSAGES:" + JSON.stringify(messages));
+    }
 }
 '''
 
@@ -82,6 +105,7 @@ DIAGNOSTIC_FUNCTIONS = (
     "runCommand",
     "runDiagnostic",
     "runProviderList",
+    "handleDiagnosticData",
 )
 
 
@@ -133,6 +157,9 @@ class DiagnosticCommandTimeoutTests(unittest.TestCase):
         capture = next(line.split("DIAGNOSTIC_FIXTURE:", 1)[1] for line in output.splitlines()
                        if "DIAGNOSTIC_FIXTURE:" in line)
         cls.fixture = json.loads(capture)
+        messages = next(line.split("DIAGNOSTIC_MESSAGES:", 1)[1] for line in output.splitlines()
+                        if "DIAGNOSTIC_MESSAGES:" in line)
+        cls.messages = json.loads(messages)
 
     def test_production_shell_bound_sits_inside_qml_timer(self):
         production = self.fixture["production"]
@@ -158,7 +185,30 @@ class DiagnosticCommandTimeoutTests(unittest.TestCase):
             with self.subTest(command=command[:60]):
                 self.run_bounded(command, hang=False)
 
-    def run_bounded(self, command, hang):
+    def test_shell_bound_reap_surfaces_timeout_message(self):
+        command = next(command for command in self.fixture["commands"]
+                       if "diagnose --provider" in command)
+        returncode, _, stderr, _ = self.run_shell_capture(command, hang=True)
+        # The live reap is silent (GNU timeout prints nothing when it kills),
+        # so no CLI stderr outranks the message. A TERM-reaped child reports
+        # 124; a child ignoring SIGTERM survives to the kill-after SIGKILL and
+        # reports 137 -- both are the shell bound firing, and both must read
+        # as a timeout rather than "exited with code ...".
+        self.assertIn(returncode, (124, 137), stderr)
+        self.assertEqual(stderr, "")
+        self.assertEqual(self.messages["shellTimeoutSilent"],
+                         "Diagnostic command timed out. Try again.")
+        self.assertEqual(self.messages["shellKillAfterSilent"],
+                         "Diagnostic command timed out. Try again.")
+
+    def test_ordinary_nonzero_exit_reports_cli_error(self):
+        self.assertEqual(self.messages["cliErrorWithMessage"], "cli broke")
+        self.assertEqual(self.messages["cliErrorSilent"], "codexbar exited with code 3")
+        # stderr precedence holds for 124 as well: a CLI that really says
+        # something keeps its own message even at the timeout status.
+        self.assertEqual(self.messages["cli124WithMessage"], "weird code")
+
+    def run_shell_capture(self, command, hang):
         (self.directory / "codexbar.pid").unlink(missing_ok=True)
         path = str(self.directory) + os.pathsep + os.environ["PATH"] if hang else str(self.no_timeout_bin)
         process = subprocess.Popen(
@@ -171,16 +221,7 @@ class DiagnosticCommandTimeoutTests(unittest.TestCase):
             started = time.monotonic()
             stdout, stderr = process.communicate(timeout=10)
             elapsed = time.monotonic() - started
-            if hang:
-                # The fake CLI ignores SIGTERM, so only the kill-after KILL
-                # can have reaped it: survival past the shrunken bound would
-                # block here until the communicate timeout instead.
-                self.assertIn(process.returncode, (124, 137), stderr)
-                self.assertLess(elapsed, 10)
-                self.assertFalse(self.child_survives())
-            else:
-                self.assertEqual(process.returncode, 0, stderr)
-                self.assertEqual(json.loads(stdout), {"ok": True})
+            return process.returncode, stdout, stderr, elapsed
         finally:
             try:
                 os.killpg(process.pid, signal.SIGKILL)
@@ -188,6 +229,19 @@ class DiagnosticCommandTimeoutTests(unittest.TestCase):
                 pass
             process.communicate()
             self.kill_leftover_child()
+
+    def run_bounded(self, command, hang):
+        returncode, stdout, stderr, elapsed = self.run_shell_capture(command, hang)
+        if hang:
+            # The fake CLI ignores SIGTERM, so only the kill-after KILL
+            # can have reaped it: survival past the shrunken bound would
+            # block here until the communicate timeout instead.
+            self.assertIn(returncode, (124, 137), stderr)
+            self.assertLess(elapsed, 10)
+            self.assertFalse(self.child_survives())
+        else:
+            self.assertEqual(returncode, 0, stderr)
+            self.assertEqual(json.loads(stdout), {"ok": True})
 
     def child_survives(self):
         marker = self.directory / "codexbar.pid"

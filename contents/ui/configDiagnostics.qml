@@ -177,11 +177,23 @@ KCM.SimpleKCM {
         }
         var safeOutput = SafeText.cliDiagnostic(stdoutText, SafeText.maximumDiagnosticLength)
         var safeError = SafeText.cliMessage(SafeText.stripLoaderDiagnostics(stderrText), SafeText.maximumCliMessageLength)
+        // A command reaped by the shell bound above reports the same timeout
+        // message as the QML timer. GNU timeout exits 124 when the time limit
+        // is reached; when --kill-after escalates to SIGKILL for a child that
+        // ignores SIGTERM, it exits 128+SIGKILL instead, so 137 is the
+        // bound's other reap status. No wider signal range is mapped: any
+        // other 128+signal death is the CLI's own crash, not our bound. The
+        // CLI's own stderr still wins when present, so without GNU timeout a
+        // genuine silent 124/137 from codexbar reads as a timeout -- accepted
+        // because a CLI has no reason to exit silent with timeout's statuses.
+        var shellTimeout = exitCode === 124 || exitCode === 137
         diagnosticOutput = safeOutput.length > 0 ? safeOutput : i18n("No diagnostic output.")
         diagnosticError = exitCode !== 0
             ? (safeError.length > 0
                 ? safeError
-                : i18n("codexbar exited with code %1", Number(exitCode)))
+                : (shellTimeout
+                    ? i18n("Diagnostic command timed out. Try again.")
+                    : i18n("codexbar exited with code %1", Number(exitCode))))
             : ""
     }
 
