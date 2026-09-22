@@ -87,6 +87,32 @@ TestCase {
         verify(unknown[0].tokens > 0);
     }
 
+    function test_missingDateMakesTheWeekPartialNotComplete() {
+        // The normalizer can leave a hole when the CLI sent a malformed day.
+        var rows = history(2026, 9, 16, 7);
+        rows.splice(3, 1);                               // drop 09-19
+        var result = QuotaWindowCost.windows(rows, local(2026, 9, 23), weekMinutes, local(2026, 9, 22, 12));
+        compare(result[0].cost, 1 + 2 + 3 + 5 + 6 + 7);
+        compare(result[0].costPartial, true);
+        compare(result[0].tokensPartial, true);
+    }
+
+    function test_duplicateDateRefusesTheSplit() {
+        var rows = history(2026, 9, 16, 7);
+        rows.push({label: rows[2].label, cost: 99, tokens: 9900});
+        compare(QuotaWindowCost.windows(rows, local(2026, 9, 23), weekMinutes, local(2026, 9, 22, 12)).length, 0);
+    }
+
+    function test_overflowingSumIsUnknownNotInfinite() {
+        var rows = history(2026, 9, 16, 7);
+        rows[0].cost = Number.MAX_VALUE;
+        rows[1].cost = Number.MAX_VALUE;
+        var result = QuotaWindowCost.windows(rows, local(2026, 9, 23), weekMinutes, local(2026, 9, 22, 12));
+        compare(result[0].cost, null);
+        compare(result[0].costPartial, false);
+        verify(isFinite(result[0].tokens));
+    }
+
     function test_fixedDurationCrossesDaylightSavingWithoutDrift() {
         // Fall back on 2026-11-01: 168 hours before a midnight reset on 11-05
         // lands at 01:00 local, so the start is estimated and the end is not.
