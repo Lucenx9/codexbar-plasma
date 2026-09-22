@@ -28,11 +28,6 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   scripts and tests with `pyflakes`. Both are optional locally and report
   themselves as skipped when absent; CI installs them.
 
-### Fixed
-
-- Remove baseline alignment from provider header account and plan labels to keep
-  horizontal subtitle layout vertically aligned without layout warnings.
-
 ## 0.2.40 - 2026-09-20
 
 ### Added
