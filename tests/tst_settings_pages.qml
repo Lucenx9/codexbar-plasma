@@ -53,6 +53,29 @@ TestCase {
         mirroredPage = false;
     }
 
+    function test_historyWindowSpinKeepsFollowingConfigAfterAUserEdit() {
+        // Assigning to a SpinBox value severs its binding, which is exactly
+        // what a user edit does. The valueModified handler re-installs it, so
+        // a later config-driven write still reaches the control. Without the
+        // re-install the settings page would keep showing the edited number
+        // while the Usage & Spend tab moved the window somewhere else.
+        var page = createPage("../contents/ui/configGeneral.qml", {
+            cfg_costHistoryDays: 30
+        });
+        if (!page)
+            return;
+        var daysSpin = findChild(page, "costHistoryDaysSpin");
+        verify(daysSpin !== null);
+        compare(daysSpin.value, 30);
+
+        daysSpin.value = 45;
+        daysSpin.valueModified();
+        compare(page.cfg_costHistoryDays, 45);
+
+        page.cfg_costHistoryDays = 90;
+        compare(daysSpin.value, 90);
+    }
+
     function test_generalRtlLoadsWithoutWarnings() {
         mirroredPage = true;
         var page = createPage("../contents/ui/configGeneral.qml", {

@@ -437,9 +437,15 @@ another one fails.
 over `.github/workflows`, and `make check-python-lint` runs `pyflakes` over
 `scripts` and `tests` for undefined names and unused imports. Neither
 reformats anything, so neither introduces style churn. `qmlformat` stays out of
-the suite: the current QML tree predates it, and reformatting it would rewrite
-almost every file and invalidate the literal source fragments that the parity
-and security checks assert.
+the suite, but no longer because the checks pin formatting: the membership
+assertions in `test_ui_regressions.sh` compare through `code_contains`, which
+ignores anonymous-function spacing, statement-terminating semicolons, and line
+breaks. Two measured problems block adoption instead, both recorded in
+[TODO.md](../TODO.md): `qmlformat` 6.11.2 segfaults on two of this repository's
+files at any `MaxColumnWidth` of 140 or less, and with wrapping disabled, its
+default, it joins wrapped expressions into lines as long as 2570 characters.
+`test_feature_parity.sh` and `test_process_lifecycle.sh` also still match
+literally, so a setting that rewraps differently breaks them.
 
 All CI container jobs pin the official KDE neon User Edition image by digest.
 Jobs install dependencies using the authenticated APT indexes already included
