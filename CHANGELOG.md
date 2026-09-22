@@ -28,6 +28,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   scripts and tests with `pyflakes`. Both are optional locally and report
   themselves as skipped when absent; CI installs them.
 
+### Fixed
+
+- Align provider header identity icon tile to the top of the row, matching the
+  refresh button and title heading alignment when account, plan, or update
+  metadata expands the middle column.
+
 ## 0.2.40 - 2026-09-20
 
 ### Added
