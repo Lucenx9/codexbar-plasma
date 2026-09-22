@@ -152,6 +152,17 @@ if command -v codexbar >/dev/null 2>&1; then
   done < <(codexbar config providers --format json --json-only 2>/dev/null | jq -r '.[].provider' 2>/dev/null || true)
 fi
 
+# The README and usage guide state the size of the bundled registry. Derive
+# the number here, so a registry update that forgets the docs fails instead of
+# relying on someone remembering to edit a pinned sentence.
+registry_size="${#released_providers[@]}"
+for doc in README.md docs/usage.md; do
+  if ! tr '\n' ' ' <"${ROOT_DIR}/${doc}" | grep -qE "all ${registry_size} providers"; then
+    echo "${doc} must state the bundled registry size: all ${registry_size} providers" >&2
+    missing=1
+  fi
+done
+
 if [[ "$missing" -ne 0 ]]; then
   exit 1
 fi
