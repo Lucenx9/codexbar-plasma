@@ -258,6 +258,7 @@ var providerDashboardUrls = {
     "gemini": "https://gemini.google.com",
     "grok": "https://grok.com/?_s=usage",
     "groq": "https://console.groq.com/dashboard/usage",
+    "helmcode": "https://cloud.helmcode.com/dashboard",
     "huggingface": "https://huggingface.co/settings/billing",
     "ibmbob": "https://bob.ibm.com",
     "kilo": "https://app.kilo.ai/usage",
@@ -286,6 +287,8 @@ var providerDashboardUrls = {
     "sakana": "https://console.sakana.ai/billing",
     "stepfun": "https://platform.stepfun.com/plan-usage",
     "t3chat": "https://t3.chat/settings/customization",
+    "typesafe": "https://console.typesafe.ai/settings/billing",
+    "v0": "https://v0.app/settings/billing",
     "venice": "https://venice.ai/settings/api",
     "vertexai": "https://console.cloud.google.com/vertex-ai",
     "warp": "https://docs.warp.dev/reference/cli/api-keys",
@@ -310,7 +313,8 @@ var providerLoginUrls = {
     "openai": "https://chatgpt.com",
     "opencode": "https://opencode.ai/auth",
     "opencodego": "https://opencode.ai/auth",
-    "perplexity": "https://www.perplexity.ai"
+    "perplexity": "https://www.perplexity.ai",
+    "v0": "https://v0.app/settings/keys"
 }
 
 var providerStatusUrls = {
@@ -380,6 +384,7 @@ var providerDocsPaths = {
     "gemini": "gemini.md",
     "grok": "grok.md",
     "groq": "groqcloud.md",
+    "helmcode": "helmcode.md",
     "huggingface": "huggingface.md",
     "ibmbob": "ibm-bob.md",
     "jetbrains": "jetbrains.md",
@@ -414,6 +419,8 @@ var providerDocsPaths = {
     "sub2api": "sub2api.md",
     "synthetic": "providers.md#synthetic",
     "t3chat": "providers.md#t3-chat",
+    "typesafe": "typesafe.md",
+    "v0": "v0.md",
     "venice": "venice.md",
     "vertexai": "vertexai.md",
     "warp": "warp.md",

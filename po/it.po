@@ -664,6 +664,10 @@ msgid "Groq"
 msgstr "Groq"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Helmcode"
+msgstr "Helmcode"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Hugging Face"
 msgstr "Hugging Face"
 
@@ -802,6 +806,14 @@ msgstr "Synthetic"
 #: contents/ui/components/ProviderNames.qml
 msgid "T3 Chat"
 msgstr "T3 Chat"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "TypeSafe"
+msgstr "TypeSafe"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "v0"
+msgstr "v0"
 
 #: contents/ui/components/ProviderNames.qml
 msgid "Venice"

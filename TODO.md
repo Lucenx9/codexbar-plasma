@@ -8,10 +8,15 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.63.0](https://github.com/steipete/CodexBar/releases/tag/v0.63.0),
-  commit `f3e718c897d5ed76af4e07182df899c722118546`, checked 2026-09-21.
-- Coverage: release changes from 0.62.0 through 0.63.0 against Plasma
-  `1dc7f2c5fbc834bb74c205ad4b9d5607aba597bf`. The
+- Last release reviewed: [CodexBar 0.64.1](https://github.com/steipete/CodexBar/releases/tag/v0.64.1),
+  commit `89e84ab3f243946dd914898f304410692ad5fbf7`, checked 2026-09-22.
+- Coverage: release changes from 0.63.0 through 0.64.1 against Plasma
+  `4de929a514386748e1b6870088573a196cd3196a`. The
+  [0.64.1 review](docs/research/2026-09-22-macos-parity-0.64.1.md) verifies the
+  Helmcode, v0, and TypeSafe registry additions and the Crof retirement, that
+  only v0 accepts the supported `set-api-key` writer while the other two are
+  cookie-only and unreachable on Linux, and that the descriptor and generic
+  config-action blockers are unchanged; the
   [0.63.0 review](docs/research/2026-09-21-macos-parity-0.63.0.md) verifies
   the Pi registry growth with local token history and estimated costs, the
   still-rejected Cursor cost and provider-settings descriptor probes, and
@@ -77,12 +82,15 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider settings
 
 - [ ] Enable generic settings and token-account editing through official
-  descriptors and writes. Linux 0.63.0 still rejects `config providers
-  --descriptors` (75 records, same four keys); its provider records have no
-  descriptor. 0.61.0 adds an `azureOpenAIAPIVersion` config extension value
-  with no supported CLI writer, which the frontend must not reach by editing
-  the config file. Keep existing
-  enable/disable, supported single-key setup, and link fallbacks working.
+  descriptors and writes. Linux 0.64.1 still rejects `config providers
+  --descriptors` (77 records, same four keys); its provider records have no
+  descriptor. Helmcode and TypeSafe make this concrete: both are cookie-only,
+  both refuse `--source api`, and their documented `cookieSource`/`cookieHeader`
+  config path has no supported writer, so they stay metadata-only on Linux.
+  0.61.0 adds an `azureOpenAIAPIVersion` config extension value with no
+  supported CLI writer, which the frontend must not reach by editing the config
+  file. Keep existing enable/disable, supported single-key setup, and link
+  fallbacks working.
   The [proposal](docs/cli-provider-settings-descriptor.md) covers source mode,
   keys/cookies, URLs, workspace/project, region, AWS profile/auth mode, and
   booleans. Remaining editors include token accounts, auth nuances,
@@ -93,7 +101,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.63.0 still has no
+  flow, CLI-auth setup, and token-account actions. Linux 0.64.1 still has no
   generic `config action` command (`set-api-key` remains the sole writer; the
   `usage_updated` hook event is CLI automation surface, not a setup
   action). Done when supported actions expose validated
@@ -202,6 +210,20 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 These are unresolved Linux candidates, not confirmed missing features.
 
+- [ ] Verify the 0.64.x Linux quota-window changes in official Linux output.
+  0.64.0 claims Linux omits synthetic or unmeasured quota and reports only
+  measured provider-specific windows (#3785); 0.64.1 claims each Antigravity
+  quota pool is listed once with its family label (#3799). Both would change
+  the window array the popup renders, and Plasma currently renders whatever
+  windows arrive. The probe account has no enabled provider returning quota, so
+  neither was observed. Reproduce with a signed-in Antigravity account and one
+  other quota provider, then classify whether any normalization changes.
+  [Unverified at 0.64.1](docs/research/2026-09-22-macos-parity-0.64.1.md#unverified-in-this-review).
+- [ ] Verify whether Cursor's 0.64.1 Grok Bot allowance reaches Linux `usage`
+  output, and under which key. The release adds a `Grok Bot %` menu-bar layout
+  token; a corresponding rate window would be a normal extra window for Plasma,
+  while a macOS-only token is a non-goal. Unmeasured without a Cursor account.
+  [Unverified at 0.64.1](docs/research/2026-09-22-macos-parity-0.64.1.md#unverified-in-this-review).
 - [ ] Verify `credits.balanceReadSucceeded`, `creditsAvailable`, and
   `balanceIsWorkspace` (also on `openaiDashboard` with `accountID`) in official
   Linux output. 0.60.4 source widens the flag to cap-only/omitted balances and

@@ -1089,6 +1089,7 @@ KCM.SimpleKCM {
         case "perplexity":
         case "poe":
         case "stepfun":
+        case "v0":
         case "venice":
         case "warp":
         case "windsurf":
