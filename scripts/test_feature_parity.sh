@@ -403,10 +403,10 @@ require_in_surface applet "Math.max(1, Math.min(365, Number(Plasmoid.configurati
 require_in_file "$GENERAL_QML" "widgetUpdateLastError.slice(0, 500)"
 reject_in_file "$GENERAL_QML" "cfg_widgetUpdateLastError"
 
-require_in_file "$CONFIG_QML" "configPopup.qml"
-require_in_file "$CONFIG_QML" "configPanel.qml"
-require_in_file "$CONFIG_QML" "configNotifications.qml"
-require_in_file "$CONFIG_QML" "configDiagnostics.qml"
+# The dialog page registration is executed by tests/tst_config_model.qml,
+# which instantiates the real ConfigModel and pins all six sources:
+# removing any page fails it. The About rejections below stay: absence has
+# no runtime equivalent beyond the source set the model test already pins.
 reject_in_file "$CONFIG_QML" "configAbout.qml"
 reject_in_file "$CONFIG_QML" "name: i18n(\"About\")"
 
