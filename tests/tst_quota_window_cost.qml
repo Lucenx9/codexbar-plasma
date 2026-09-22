@@ -97,6 +97,35 @@ TestCase {
         compare(result[0].tokensPartial, true);
     }
 
+    function test_staleHistoryMakesTrailingDaysPartial() {
+        // The last successful cost scan ended on 09-20, but the quota row and
+        // clock have advanced to 09-22. The missing 21st and 22nd are unknown.
+        var rows = history(2026, 9, 16, 5);
+        var result = QuotaWindowCost.windows(rows, local(2026, 9, 23), weekMinutes,
+            local(2026, 9, 22, 12));
+        compare(result.length, 1);
+        compare(result[0].cost, 1 + 2 + 3 + 4 + 5);
+        compare(result[0].costPartial, true);
+        compare(result[0].tokensPartial, true);
+
+        // Even a completed earlier week is partial when its last two dates
+        // were never scanned; a newer usage row cannot fill that gap.
+        var older = QuotaWindowCost.windows(history(2026, 9, 9, 5),
+            local(2026, 9, 23), weekMinutes, local(2026, 9, 22, 12));
+        compare(older.length, 1);
+        compare(older[0].current, false);
+        compare(older[0].costPartial, true);
+    }
+
+    function test_futureHistoryDayDoesNotEnterCurrentWeek() {
+        var rows = history(2026, 9, 16, 8); // includes tomorrow, 09-23
+        var result = QuotaWindowCost.windows(rows, local(2026, 9, 24), weekMinutes,
+            local(2026, 9, 22, 12));
+        compare(result.length, 1);
+        compare(result[0].dayCount, 6);
+        compare(result[0].cost, 2 + 3 + 4 + 5 + 6 + 7);
+    }
+
     function test_duplicateDateRefusesTheSplit() {
         var rows = history(2026, 9, 16, 7);
         rows.push({label: rows[2].label, cost: 99, tokens: 9900});

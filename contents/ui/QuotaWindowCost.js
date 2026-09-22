@@ -62,14 +62,15 @@ function metricTotal(days, field, expectedDays) {
     }
 }
 
-// Local midnights in [startMs, endMs) that fall inside the scanned history.
-function expectedDayCount(startMs, endMs, scanStartMs, scanLastMs) {
+// Local midnights in [startMs, endMs) through today. A stale cost snapshot
+// must leave its unscanned trailing dates unknown, including in past windows.
+function expectedDayCount(startMs, endMs, scanStartMs, todayStartMs) {
     var cursor = new Date(startMs)
     if (!isLocalMidnight(startMs)) {
         cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 1)
     }
     var count = 0
-    while (cursor.getTime() < endMs && cursor.getTime() <= scanLastMs) {
+    while (cursor.getTime() < endMs && cursor.getTime() <= todayStartMs) {
         if (cursor.getTime() >= scanStartMs) {
             count += 1
         }
@@ -117,7 +118,8 @@ function windows(daily, resetsAtMs, windowMinutes, nowMs, limit) {
         }
     }
     var scanStartMs = days[0].startMs
-    var scanLastMs = days[days.length - 1].startMs
+    var now = new Date(nowMs)
+    var todayStartMs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
 
     var count = typeof limit === "number" && limit >= 1 ? Math.min(Math.floor(limit), maximumWindows) : maximumWindows
     var result = []
@@ -133,14 +135,16 @@ function windows(daily, resetsAtMs, windowMinutes, nowMs, limit) {
         if (firstMidnight.getTime() < scanStartMs) {
             break
         }
-        var attributed = days.filter(function(day) { return day.startMs >= startMs && day.startMs < endMs })
+        var attributed = days.filter(function(day) {
+            return day.startMs >= startMs && day.startMs < endMs && day.startMs <= todayStartMs
+        })
         // Right after a mid-day reset the current window holds no local
         // midnight yet: today belongs to the previous window. Skip it rather
         // than stop, or every earlier week would disappear with it.
         if (attributed.length === 0) {
             continue
         }
-        var expected = expectedDayCount(startMs, endMs, scanStartMs, scanLastMs)
+        var expected = expectedDayCount(startMs, endMs, scanStartMs, todayStartMs)
         var cost = metricTotal(attributed, "cost", expected)
         var tokens = metricTotal(attributed, "tokens", expected)
         result.push({

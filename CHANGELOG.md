@@ -47,6 +47,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Mark Quota weeks totals as partial when the cost history is older than the
+  current day and has not scanned the trailing dates of a quota week.
 - Bound **Diagnostics** commands shell-side with GNU `timeout --foreground
   --kill-after`, so a hung `codexbar diagnose` or provider list is killed
   instead of surviving as an orphan after the page times out or the dialog
