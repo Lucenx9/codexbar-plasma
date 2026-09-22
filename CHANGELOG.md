@@ -14,7 +14,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Show **Quota weeks** in a provider's expanded cost details: the local cost
   and tokens of the current weekly quota window and up to three earlier ones,
-  with exact boundaries. Totals that count a whole day around a mid-day reset
+  with exact boundaries; a current week with no full day yet is omitted until it
+  has one. Totals that count a whole day around a mid-day reset
   are marked as estimated, unknown days are never counted as zero, and weeks
   older than the scanned history are omitted. This mirrors the macOS 0.62.0
   recent-windows list and needs no new CLI contract.

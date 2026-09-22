@@ -141,6 +141,7 @@ TestCase {
         return [
             { tag: "stale-reset", daily: rows, reset: now - 1, minutes: weekMinutes },
             { tag: "reset-now", daily: rows, reset: now, minutes: weekMinutes },
+            { tag: "reset-beyond-one-window", daily: rows, reset: now + 7 * 86400000 + 1, minutes: weekMinutes },
             { tag: "no-history", daily: [], reset: reset, minutes: weekMinutes },
             { tag: "not-array", daily: {length: 1}, reset: reset, minutes: weekMinutes },
             { tag: "sub-day-window", daily: rows, reset: reset, minutes: 300 },

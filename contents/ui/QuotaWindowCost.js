@@ -92,8 +92,11 @@ function windows(daily, resetsAtMs, windowMinutes, nowMs, limit) {
         return []
     }
     // A reset already in the past means the usage row is stale; deriving
-    // windows from it would label last week as the current one.
-    if (resetsAtMs <= nowMs) {
+    // windows from it would label last week as the current one. A reset more
+    // than one window ahead is inconsistent in the other direction: the week
+    // actually in progress would be shown as a past one.
+    var windowMs = windowMinutes * 60 * 1000
+    if (resetsAtMs <= nowMs || resetsAtMs - nowMs > windowMs) {
         return []
     }
 
@@ -117,7 +120,6 @@ function windows(daily, resetsAtMs, windowMinutes, nowMs, limit) {
     var scanLastMs = days[days.length - 1].startMs
 
     var count = typeof limit === "number" && limit >= 1 ? Math.min(Math.floor(limit), maximumWindows) : maximumWindows
-    var windowMs = windowMinutes * 60 * 1000
     var result = []
     for (var index = 0; index < count; index++) {
         var endMs = resetsAtMs - index * windowMs
