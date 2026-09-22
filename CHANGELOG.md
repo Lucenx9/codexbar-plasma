@@ -12,6 +12,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Bundle the fallback name, icon, documentation link, and dashboard link for
+  the `Helmcode`, `v0`, and `TypeSafe` providers that official CodexBar 0.64.0
+  adds to the registry. Brand colors and status links are omitted because
+  upstream defines none; the widget uses the theme highlight and hides missing
+  links by design. `v0` also offers the widget's API-key setup, which the
+  0.64.1 CLI accepts for it; Helmcode and TypeSafe are cookie-only and have no
+  supported Linux setup path yet.
 - Bundle the fallback name, icon, and documentation link for the `Pi`
   provider that official CodexBar 0.63.0 adds to the registry. Brand color and
   dashboard, login, and status links are omitted pending verifiable upstream
@@ -20,6 +27,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Keep the `Crof` fallback metadata after official CodexBar 0.64.1 retired the
+  provider, so an older installed CLI that still reports it keeps showing a
+  named provider instead of the unknown-provider fallback.
 - `make check` runs its checks concurrently and exposes each one as its own
   target, such as `make check-shellcheck`, so contributors can iterate on a
   single check instead of the whole suite. `make check JOBS=2` bounds the

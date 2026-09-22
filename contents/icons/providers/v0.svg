@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Original chevron-and-ring glyph reading the "v0" name; no vendor mark. -->
+<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+  <path d="M2.6 5.4a1.3 1.3 0 0 1 2.42-.95l3.03 7.72 3.03-7.72a1.3 1.3 0 1 1 2.42.95l-4.24 10.8a1.3 1.3 0 0 1-2.42 0L2.6 5.4z"/>
+  <path d="M18.1 8.9c2.15 0 3.5 1.94 3.5 4.85s-1.35 4.85-3.5 4.85-3.5-1.94-3.5-4.85 1.35-4.85 3.5-4.85zm0 2.4c-.62 0-1.1.9-1.1 2.45s.48 2.45 1.1 2.45 1.1-.9 1.1-2.45-.48-2.45-1.1-2.45z"/>
+</svg>

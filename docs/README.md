@@ -60,6 +60,11 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   still-rejected Cursor cost and descriptors probes, and scoped official CLI
   probes. Provider descriptors, generic config actions, and Cursor cost remain
   unavailable.
+- [0.64.1 release review](research/2026-09-22-macos-parity-0.64.1.md): the
+  Helmcode, v0, and TypeSafe registry additions, the Crof retirement, the
+  measured split between v0's supported API-key setup and the two cookie-only
+  providers, and scoped official CLI probes. Provider descriptors and generic
+  config actions remain unavailable.
 - [Settings decisions](research/2026-09-08-settings-experience.md): Panel disclosure and text grouping,
   Plasma settings, privacy, refresh behavior, and the macOS 0.56.8 comparison.
 

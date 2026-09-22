@@ -122,6 +122,41 @@ TestCase {
         compare(ProviderIdentity.resolveProviderKey("pi"), "pi")
     }
 
+    function test_official0641RegistryProvidersHaveBundledMetadata() {
+        // Official 0.64.0 additions, still present in 0.64.1 `config providers`
+        // output. Upstream publishes a setup guide and a dashboard entry point
+        // for each; none declares a brand color or a status page, so those
+        // degrade by design rather than carrying an invented value.
+        var added = {
+            "helmcode": "https://cloud.helmcode.com/dashboard",
+            "typesafe": "https://console.typesafe.ai/settings/billing",
+            "v0": "https://v0.app/settings/billing"
+        };
+        for (var key in added) {
+            compare(ProviderIdentity.providerIconFileName(key), key + ".svg");
+            compare(ProviderIdentity.providerDocsUrl(key),
+                ProviderIdentity.documentationBaseUrl + key + ".md");
+            compare(ProviderIdentity.providerDashboardUrl(key), added[key]);
+            compare(ProviderIdentity.providerBrandColorChannels(key).length, 0);
+            compare(ProviderIdentity.providerStatusUrl(key), "");
+            compare(ProviderIdentity.resolveProviderKey(key), key);
+            compare(ProviderIdentity.providerCliArgument(key), key);
+        }
+        // Only v0 issues its own API key, so it is the only one of the three
+        // with a login entry point to send the user to.
+        compare(ProviderIdentity.providerLoginUrl("v0"), "https://v0.app/settings/keys");
+        compare(ProviderIdentity.providerLoginUrl("helmcode"), "");
+        compare(ProviderIdentity.providerLoginUrl("typesafe"), "");
+    }
+
+    function test_retiredCrofKeepsBundledMetadataForOlderCliReleases() {
+        // 0.64.1 retired Crof, but an installed 0.63.0 still emits it. Dropping
+        // the metadata would turn a named provider into the unknown fallback
+        // for anyone who has not upgraded.
+        compare(ProviderIdentity.providerIconFileName("crof"), "crof.svg");
+        compare(ProviderIdentity.resolveProviderKey("crofai"), "crof");
+    }
+
     function test_official061RegistryAliasesResolveCanonically() {
         compare(ProviderIdentity.resolveProviderKey("hf"), "huggingface")
         compare(ProviderIdentity.resolveProviderKey("hermes"), "nous")

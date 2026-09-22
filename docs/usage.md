@@ -240,10 +240,10 @@ Provider-specific editable settings depend on the official CLI contract.
   unavailable. They require upstream CLI support.
 - Generic API key setup for Fireworks, when the selected CLI reports version
   0.54.0 or later and can discover the account slug from the key.
-- Fallback names, icons, and documentation links for all 75 providers in the
-  official CodexBar 0.63.0 registry, plus colors, links, and aliases where
-  upstream defines them; fork-only provider assets remain available
-  for compatibility.
+- Fallback names, icons, and documentation links for all 77 providers in the
+  official CodexBar 0.64.1 registry, plus colors, links, and aliases where
+  upstream defines them; fork-only provider assets, and those for providers a
+  later CLI retired, remain available for compatibility.
 
 ## Costs and history
 

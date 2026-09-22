@@ -50,7 +50,7 @@ require_icon() {
   fi
 }
 
-# Released official CodexBar provider registry through v0.63.0. The live CLI
+# Released official CodexBar provider registry through v0.64.1. The live CLI
 # probe below adds an early warning when a newer installed release introduces
 # another provider.
 released_providers=(
@@ -99,7 +99,6 @@ released_providers=(
   deepseek
   deepinfra
   codebuff
-  crof
   venice
   commandcode
   qoder
@@ -129,9 +128,20 @@ released_providers=(
   nous
   replicate
   pi
+  helmcode
+  v0
+  typesafe
 )
 
-for provider in "${released_providers[@]}"; do
+# Retired upstream but still emitted by an older installed CLI. 0.64.1 removed
+# Crof after the service shut down and now rejects the provider outright, so it
+# leaves the current registry above; the bundled icon stays so a user who has
+# not upgraded keeps a named provider instead of the unknown-provider fallback.
+retired_providers=(
+  crof
+)
+
+for provider in "${released_providers[@]}" "${retired_providers[@]}"; do
   require_icon "$provider"
 done
 

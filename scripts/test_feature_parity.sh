@@ -179,6 +179,7 @@ require("providerDashboardUrls", dashboards, {
     "deepinfra": "https://deepinfra.com/dash",
     "fireworks": "https://app.fireworks.ai",
     "groq": "https://console.groq.com/dashboard/usage",
+    "helmcode": "https://cloud.helmcode.com/dashboard",
     "huggingface": "https://huggingface.co/settings/billing",
     "ibmbob": "https://bob.ibm.com",
     "muse": "https://dev.meta.ai",
@@ -188,6 +189,8 @@ require("providerDashboardUrls", dashboards, {
     "qoder": "https://qoder.com/account/usage",
     "replicate": "https://replicate.com/account/billing",
     "sakana": "https://console.sakana.ai/billing",
+    "typesafe": "https://console.typesafe.ai/settings/billing",
+    "v0": "https://v0.app/settings/billing",
     "xai": "https://console.x.ai",
 })
 # Dashboards that moved upstream; landing on the old page looks like working UI.
@@ -200,6 +203,7 @@ reject("providerDashboardUrls", dashboards, {
 require("providerLoginUrls", table("providerLoginUrls"), {
     "opencode": "https://opencode.ai/auth",
     "opencodego": "https://opencode.ai/auth",
+    "v0": "https://v0.app/settings/keys",
 })
 reject("providerLoginUrls", table("providerLoginUrls"), {"opencode": "https://opencode.ai"})
 
@@ -480,10 +484,10 @@ require_in_file "$README_MD" "kpackagetool6 -t Plasma/Applet -i codexbar-plasma.
 require_in_file "$README_MD" "kpackagetool6 -t Plasma/Applet -u codexbar-plasma.plasmoid"
 require_in_file "$README_MD" "make install"
 reject_in_file "$README_MD" "kpackagetool6 -t Plasma/Applet -u ."
-require_in_file "$USAGE_GUIDE_MD" "all 75 providers"
+require_in_file "$USAGE_GUIDE_MD" "all 77 providers"
 # shellcheck disable=SC2016 # Match the literal Markdown code span.
 require_in_file "$USAGE_GUIDE_MD" '`usage.details` contract'
-require_in_file "$README_MD" "all 75 providers"
+require_in_file "$README_MD" "all 77 providers"
 require_in_file "$README_MD" "systemctl --user restart plasma-plasmashell.service"
 require_in_file "$README_MD" "codexbar usage --provider codex --all-accounts --format json --json-only"
 

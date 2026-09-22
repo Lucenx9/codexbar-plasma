@@ -653,6 +653,11 @@ TestCase {
     function test_supportsApiKeySetupAllowlistsProviders() {
         fireworksSingleKeySetupSupported = false;
         compare(supportsApiKeySetup("openai"), true);
+        // CLI 0.64.1 accepts `config set-api-key --provider v0` and rejects it
+        // for the two cookie-only 0.64.0 additions.
+        compare(supportsApiKeySetup("v0"), true);
+        compare(supportsApiKeySetup("helmcode"), false);
+        compare(supportsApiKeySetup("typesafe"), false);
         compare(supportsApiKeySetup("unknown-xyz"), false);
         compare(supportsApiKeySetup("fireworks"), false);
         fireworksSingleKeySetupSupported = true;
