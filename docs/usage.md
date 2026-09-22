@@ -268,12 +268,12 @@ count are excluded from the ranking. Currencies remain separate. Unknown values
 are not zero, and incomplete or estimated data retains a notice in both exports.
 Costs estimate usage, not subscription fees; subscription plans are not exported.
 
-Only aggregate fields enter the export. Account identities, projects, paths,
-raw diagnostics, and conversation content are excluded. Privacy mode keeps its
-model anonymization and masks unknown provider identifiers in both exports;
-changing that setting closes an open snapshot. Nothing is
-uploaded. Copying or saving is an explicit action, and the exported file or
-clipboard content remains under your control after closing the window.
+Only aggregate fields enter the export. Account identities, projects, absolute
+paths embedded in model labels, raw diagnostics, and conversation content are
+excluded. Privacy mode keeps its model anonymization and masks unknown provider
+identifiers in both exports; changing that setting closes an open snapshot.
+Nothing is uploaded. Copying or saving is an explicit action. The exported file
+and clipboard content remain under your control after closing the window.
 
 ### History details
 
@@ -315,12 +315,13 @@ clipboard content remains under your control after closing the window.
   weekly usage row's reset time and window length, so the list appears once a
   live usage refresh reports them. History is kept per day, so when the reset
   falls inside a day that whole day counts toward one week, and the totals are
-  marked `≈`. Unknown or missing days make a total read "at least"; weeks
-  reaching back before the scanned history range are left out rather than
-  shown incomplete. If the last successful cost scan is older than today,
-  unscanned trailing days also make the affected week read "at least". When the
-  CLI reports that history coverage is still being established, every displayed
-  week reads "at least" even if its recorded days have numeric amounts.
+  marked `≈`. Unknown or missing days, and days with requests excluded from
+  the CLI totals, make a total read "at least". Weeks reaching back before
+  the scanned history range are left out rather than shown incomplete. If the
+  last successful cost scan is older than today, unscanned trailing days also
+  make the affected week read "at least". When the CLI reports that history
+  coverage is still being established, every displayed week reads "at least"
+  even if its recorded days have numeric amounts.
 - Token, request, and point counts use the current language's singular and
   plural forms. Large counts retain compact notation such as `1K` and `4.3B`.
 - Cost totals qualified as estimated, partial, or approximate from the CLI's

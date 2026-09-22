@@ -55,6 +55,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Mask unknown provider identifiers in shared images and statistics when
   personal information is hidden, and mark quota-week amounts as partial while
   the CLI is still establishing local history coverage.
+- Keep absolute paths embedded in model labels out of shared images and text.
+- Mark quota-week cost and token totals as partial when a measured day excludes
+  incomplete requests, and show both boundaries of the current week.
 - Mark Quota weeks totals as partial when the cost history is older than the
   current day and has not scanned the trailing dates of a quota week.
 - Bound **Diagnostics** commands shell-side with GNU `timeout --foreground

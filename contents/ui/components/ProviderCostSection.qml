@@ -439,8 +439,7 @@ ColumnLayout {
             return Qt.formatDateTime(new Date(timestampMs), "MMM d, hh:mm");
         }
         function rangeText(window) {
-            return window.current ? i18n("Since %1", instantText(window.startMs))
-                : i18n("%1 - %2", instantText(window.startMs), instantText(window.endMs));
+            return i18n("%1 - %2", instantText(window.startMs), instantText(window.endMs));
         }
         function amountText(window) {
             var currency = tokenCostSection.tokenCost ? tokenCostSection.tokenCost.currency : "USD";

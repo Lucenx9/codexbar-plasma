@@ -534,10 +534,6 @@ msgid "Models"
 msgstr "Modelos"
 
 #: contents/ui/components/ProviderCostSection.qml
-msgid "Since %1"
-msgstr "Desde %1"
-
-#: contents/ui/components/ProviderCostSection.qml
 msgid "at least %1"
 msgstr "al menos %1"
 
@@ -3093,6 +3089,9 @@ msgid "Upstream CLI %1 is available. Update using your installation method."
 msgstr ""
 "La versión oficial %1 del CLI está disponible. Actualice con su método de "
 "instalación."
+
+#~ msgid "Since %1"
+#~ msgstr "Desde %1"
 
 #~ msgid ""
 #~ "Checks GitHub for official releases. The widget does not install or "

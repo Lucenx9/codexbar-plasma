@@ -334,7 +334,7 @@ class CostSectionTests(unittest.TestCase):
         function stamp(ms) { return Qt.formatDateTime(new Date(ms), "MMM d, hh:mm"); }
         var texts = textsUnder(subject);
         verify(texts.indexOf("Quota weeks") >= 0);
-        verify(texts.indexOf("Since " + stamp(reset - 7 * 86400000)) >= 0, texts.join(" | "));
+        verify(texts.indexOf(stamp(reset - 7 * 86400000) + " - " + stamp(reset)) >= 0, texts.join(" | "));
         verify(texts.indexOf(stamp(reset - 14 * 86400000) + " - " + stamp(reset - 7 * 86400000)) >= 0);
         // A 12:22 reset splits days, so both totals are marked as estimated.
         verify(texts.indexOf("≈ USD 60 · 6000 tokens") >= 0, texts.join(" | "));
