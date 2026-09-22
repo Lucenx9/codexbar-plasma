@@ -30,13 +30,14 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
-- Bound **Diagnostics** commands shell-side with GNU `timeout --kill-after`,
-  so a hung `codexbar diagnose` or provider list is killed instead of
-  surviving as an orphan after the page times out or the dialog closes. The
-  shell bound (50s plus a 5s kill grace) stays inside the existing 60s page
-  timeout, and systems without GNU `timeout` run the raw command unchanged. A
-  command reaped by the bound reports the same timeout message as the page
-  timeout instead of an exit-code line.
+- Bound **Diagnostics** commands shell-side with GNU `timeout --foreground
+  --kill-after`, so a hung `codexbar diagnose` or provider list is killed
+  instead of surviving as an orphan after the page times out or the dialog
+  closes. The shell bound (50s plus a 5s kill grace) stays inside the
+  existing 60s page timeout, and systems without GNU `timeout` run the raw
+  command unchanged. A command reaped by the bound reports the same timeout
+  message as the page timeout instead of an exit-code line or the shell's
+  own signal notice.
 
 ## 0.2.40 - 2026-09-20
 

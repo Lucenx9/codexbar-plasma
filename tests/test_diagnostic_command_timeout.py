@@ -1,15 +1,17 @@
 """Execute production diagnostics commands with shrunken shell timeouts.
 
 `configDiagnostics.qml` retires its own state on timeout, but only a
-shell-side `timeout --kill-after` bound actually kills a hung `codexbar`
-child. This test extracts the real `runCommand` path, shrinks the timeout
-constants in the fixture, and proves against a fake CLI that a child ignoring
-SIGTERM really dies on schedule, and that diagnostics still run where GNU
-`timeout` is absent. It also extracts the real `handleDiagnosticData` branch
-and proves that a completion reaped by the shell bound (GNU timeout's 124,
-or 137 when --kill-after escalates to SIGKILL) surfaces the existing timeout
-message instead of "exited with code ...", while ordinary failures still
-report the CLI's own error.
+shell-side `timeout --foreground --kill-after` bound actually kills a hung
+`codexbar` child. This test extracts the real `runCommand` path, shrinks the
+timeout constants in the fixture, and proves against a fake CLI that a child
+ignoring SIGTERM really dies on schedule, and that diagnostics still run
+where GNU `timeout` is absent. It also extracts the real
+`handleDiagnosticData` branch and proves the user-visible outcome: a live
+reap by the shell bound (GNU timeout's 124, or 137 when --kill-after
+escalates) surfaces the existing timeout message instead of "exited with code
+...", while an ordinary failure still reports the CLI's own error text. The
+live completions run back through the real page function, so the assertions
+hold whether or not the shell announces signalled children on stderr.
 """
 
 import json
@@ -91,10 +93,53 @@ FAKE_CLI = '''import json, os, signal, sys, time
 from pathlib import Path
 directory = Path(os.environ["DIAG_DIRECTORY"])
 directory.joinpath("codexbar.pid").write_text(str(os.getpid()))
-if os.environ["DIAG_MODE"] == "hang":
+mode = os.environ["DIAG_MODE"]
+if mode == "fail":
+    print("cli broke", file=sys.stderr)
+    sys.exit(3)
+if mode == "hang":
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
     time.sleep(30)
 print(json.dumps({"ok": True}))
+'''
+
+LIVE_QML = '''import QtQuick
+import QtTest
+import "SOURCE_URL/Guards.js" as Guards
+import "SOURCE_URL/SafeText.js" as SafeText
+TestCase {
+    name: "DiagnosticLiveCompletion"
+    property string commandPath: CLI_PATH
+    property bool diagnosticRunning: false
+    property string diagnosticOutput: ""
+    property string diagnosticError: ""
+    property string activeCommand: ""
+    property var diagnosticProviderField: ({text: ""})
+    property var diagnosticSource
+    property var diagnosticCommandTimeoutTimer
+    SOURCE_PROPERTIES
+    SOURCE_FUNCTIONS
+    function i18n(text, first) {
+        return String(text).replace("%1", first);
+    }
+    function freshBackend() {
+        var backend = {connected: [], disconnected: []};
+        backend.connectSource = function(name) { backend.connected.push(name); };
+        backend.disconnectSource = function(name) { backend.disconnected.push(name); };
+        return backend;
+    }
+    function exerciseCompletion(stdoutText, stderrText, exitStatus) {
+        activeCommand = "CODEXBAR_PLASMA_RUN=99 probe";
+        handleDiagnosticData(activeCommand,
+            {"stdout": stdoutText, "stderr": stderrText, "exit code": exitStatus});
+        return diagnosticError;
+    }
+    function test_liveCompletion() {
+        diagnosticSource = freshBackend();
+        diagnosticCommandTimeoutTimer = {restart: function() {}, stop: function() {}};
+        console.log("DIAGNOSTIC_LIVE:" + JSON.stringify(exerciseCompletion(LIVE_STDOUT, LIVE_STDERR, LIVE_CODE)));
+    }
+}
 '''
 
 DIAGNOSTIC_FUNCTIONS = (
@@ -131,12 +176,14 @@ class DiagnosticCommandTimeoutTests(unittest.TestCase):
                            re.MULTILINE).group(0)
         timeouts = re.findall(
             r"^    readonly property int diagnosticCommand\w+: \d+$", source, re.MULTILINE)
+        cls.qml_functions = "\n".join(functions)
+        cls.qml_properties = "\n".join([serial] + timeouts).replace("readonly property int",
+                                                                    "property real")
+        cls.fake = fake
         qml = QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
         qml = qml.replace("CLI_PATH", json.dumps(str(fake)))
-        qml = qml.replace("SOURCE_FUNCTIONS", "\n".join(functions))
-        qml = qml.replace("SOURCE_PROPERTIES",
-                          "\n".join([serial] + timeouts).replace("readonly property int",
-                                                                 "property real"))
+        qml = qml.replace("SOURCE_FUNCTIONS", cls.qml_functions)
+        qml = qml.replace("SOURCE_PROPERTIES", cls.qml_properties)
         fixture = cls.directory / "tst_diagnostic_timeout.qml"
         fixture.write_text(qml)
         # A PATH with a shell but no GNU timeout, for the graceful-degradation
@@ -147,6 +194,16 @@ class DiagnosticCommandTimeoutTests(unittest.TestCase):
         shim = cls.no_timeout_bin / "sh"
         if not shim.exists():
             shim.symlink_to(Path(cls.shell).resolve())
+        output = cls.run_qml(fixture)
+        capture = next(line.split("DIAGNOSTIC_FIXTURE:", 1)[1] for line in output.splitlines()
+                       if "DIAGNOSTIC_FIXTURE:" in line)
+        cls.fixture = json.loads(capture)
+        messages = next(line.split("DIAGNOSTIC_MESSAGES:", 1)[1] for line in output.splitlines()
+                        if "DIAGNOSTIC_MESSAGES:" in line)
+        cls.messages = json.loads(messages)
+
+    @classmethod
+    def run_qml(cls, fixture):
         result = subprocess.run(
             [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
             env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
@@ -154,12 +211,29 @@ class DiagnosticCommandTimeoutTests(unittest.TestCase):
         output = result.stdout + result.stderr
         if result.returncode:
             raise AssertionError(output)
-        capture = next(line.split("DIAGNOSTIC_FIXTURE:", 1)[1] for line in output.splitlines()
-                       if "DIAGNOSTIC_FIXTURE:" in line)
-        cls.fixture = json.loads(capture)
-        messages = next(line.split("DIAGNOSTIC_MESSAGES:", 1)[1] for line in output.splitlines()
-                        if "DIAGNOSTIC_MESSAGES:" in line)
-        cls.messages = json.loads(messages)
+        return output
+
+    @classmethod
+    def live_completion(cls, stdout, stderr, code):
+        """Run one live completion back through the real page function.
+
+        The captured streams feed the production `handleDiagnosticData`, so
+        the returned message is the user-visible outcome whatever the shell
+        wrote about the reap -- including a `Killed` signal notice on shells
+        that announce signalled children.
+        """
+        qml = LIVE_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
+        qml = qml.replace("CLI_PATH", json.dumps(str(cls.fake)))
+        qml = qml.replace("SOURCE_FUNCTIONS", cls.qml_functions)
+        qml = qml.replace("SOURCE_PROPERTIES", cls.qml_properties)
+        qml = qml.replace("LIVE_STDOUT", json.dumps(stdout))
+        qml = qml.replace("LIVE_STDERR", json.dumps(stderr))
+        qml = qml.replace("LIVE_CODE", str(int(code)))
+        fixture = cls.directory / ("tst_diagnostic_live_%d.qml" % int(code))
+        fixture.write_text(qml)
+        output = cls.run_qml(fixture)
+        return json.loads(next(line.split("DIAGNOSTIC_LIVE:", 1)[1] for line in output.splitlines()
+                                if "DIAGNOSTIC_LIVE:" in line))
 
     def test_production_shell_bound_sits_inside_qml_timer(self):
         production = self.fixture["production"]
@@ -173,7 +247,12 @@ class DiagnosticCommandTimeoutTests(unittest.TestCase):
         self.assertIn("--redact", diagnose)
         for command in self.fixture["commands"]:
             self.assertTrue(command.startswith("CODEXBAR_PLASMA_RUN="))
-            self.assertIn("timeout --kill-after=", command)
+            self.assertIn("--kill-after=", command)
+            # The foreground flag keeps the bound silent: timeout exits
+            # 124/137 normally instead of SIGKILLing its own process group,
+            # so no shell in the chain reaps a signalled child and announces
+            # it with `Killed` on stderr.
+            self.assertIn("timeout --foreground", command)
 
     def test_hung_child_is_killed_on_schedule(self):
         for command in self.fixture["commands"]:
@@ -188,14 +267,16 @@ class DiagnosticCommandTimeoutTests(unittest.TestCase):
     def test_shell_bound_reap_surfaces_timeout_message(self):
         command = next(command for command in self.fixture["commands"]
                        if "diagnose --provider" in command)
-        returncode, _, stderr, _ = self.run_shell_capture(command, hang=True)
-        # The live reap is silent (GNU timeout prints nothing when it kills),
-        # so no CLI stderr outranks the message. A TERM-reaped child reports
-        # 124; a child ignoring SIGTERM survives to the kill-after SIGKILL and
-        # reports 137 -- both are the shell bound firing, and both must read
-        # as a timeout rather than "exited with code ...".
+        returncode, stdout, stderr, _ = self.run_shell_capture(command, "hang")
+        # A TERM-reaped child reports 124; a child ignoring SIGTERM survives
+        # to the kill-after SIGKILL and reports 137 -- both are the shell
+        # bound firing. The assertion is on the user-visible outcome the page
+        # computes from the live streams, not on the raw stderr value: some
+        # shells announce a signalled child with `Killed`, and the timeout
+        # message must win over that noise on every shell.
         self.assertIn(returncode, (124, 137), stderr)
-        self.assertEqual(stderr, "")
+        self.assertEqual(self.live_completion(stdout, stderr, returncode),
+                         "Diagnostic command timed out. Try again.")
         self.assertEqual(self.messages["shellTimeoutSilent"],
                          "Diagnostic command timed out. Try again.")
         self.assertEqual(self.messages["shellKillAfterSilent"],
@@ -208,14 +289,27 @@ class DiagnosticCommandTimeoutTests(unittest.TestCase):
         # something keeps its own message even at the timeout status.
         self.assertEqual(self.messages["cli124WithMessage"], "weird code")
 
-    def run_shell_capture(self, command, hang):
+    def test_ordinary_failure_reaches_user_through_bound(self):
+        command = next(command for command in self.fixture["commands"]
+                       if "diagnose --provider" in command)
+        returncode, stdout, stderr, _ = self.run_shell_capture(command, "fail")
+        # The bounded line must pass a real CLI failure through unchanged:
+        # the exit status, the error text, and the message the page shows.
+        self.assertEqual(returncode, 3)
+        self.assertIn("cli broke", stderr)
+        self.assertEqual(self.live_completion(stdout, stderr, returncode), "cli broke")
+
+    def run_shell_capture(self, command, mode):
         (self.directory / "codexbar.pid").unlink(missing_ok=True)
-        path = str(self.directory) + os.pathsep + os.environ["PATH"] if hang else str(self.no_timeout_bin)
+        if mode == "quick":
+            path = str(self.no_timeout_bin)
+        else:
+            path = str(self.directory) + os.pathsep + os.environ["PATH"]
         process = subprocess.Popen(
             [self.shell, "-c", command], start_new_session=True,
             env={**os.environ, "PATH": path,
                  "DIAG_DIRECTORY": str(self.directory),
-                 "DIAG_MODE": "hang" if hang else "quick"},
+                 "DIAG_MODE": mode},
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         try:
             started = time.monotonic()
@@ -231,7 +325,8 @@ class DiagnosticCommandTimeoutTests(unittest.TestCase):
             self.kill_leftover_child()
 
     def run_bounded(self, command, hang):
-        returncode, stdout, stderr, elapsed = self.run_shell_capture(command, hang)
+        returncode, stdout, stderr, elapsed = self.run_shell_capture(
+            command, "hang" if hang else "quick")
         if hang:
             # The fake CLI ignores SIGTERM, so only the kill-after KILL
             # can have reaped it: survival past the shrunken bound would
