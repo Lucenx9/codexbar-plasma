@@ -112,6 +112,41 @@ TestCase {
         compare(ShareUsage.snapshot([privateCost], 30, "", false).models[0].tokens, 900)
     }
 
+    function test_hiddenModelRowsDoNotClaimIncompleteData() {
+        var models = []
+        for (var i = 0; i < 7; i++)
+            models.push({modelName: "model " + i, cost: 1, totalTokens: 10})
+        function normalizedCost(rows) {
+            var response = CostResponse.response(JSON.stringify([{provider: "codex", historyDays: 30,
+                totals: {totalCost: rows.length, totalTokens: rows.length * 10},
+                daily: [{date: "2026-09-22", modelBreakdowns: rows}]}]), "", 30)
+            return response.costs.codex
+        }
+        var complete = normalizedCost(models)
+        compare(complete.tokenRanking.omitted, 1)
+        compare(complete.tokenRanking.truncated, true)
+        compare(complete.tokenRanking.sourceTruncated, false)
+        var shared = ShareUsage.snapshot([complete], 30, "", false)
+        compare(shared.omittedModels, 1)
+        compare(shared.partial, false)
+        compare(ShareUsage.snapshot([Privacy.cost(complete, true)], 30, "", false).partial, false)
+
+        models[6].cost = null
+        var unknownHiddenCost = normalizedCost(models)
+        compare(unknownHiddenCost.tokenRanking.hasUnknownCost, true)
+        compare(ShareUsage.snapshot([unknownHiddenCost], 30, "", false).partial, true)
+        compare(ShareUsage.snapshot([Privacy.cost(unknownHiddenCost, true)], 30, "", false).partial, true)
+        models[6].cost = 1
+
+        // A source day exceeding the bounded scan genuinely loses model data.
+        for (var j = 7; j < 129; j++)
+            models.push({modelName: "model " + j, cost: 1, totalTokens: 10})
+        var incomplete = normalizedCost(models)
+        compare(incomplete.tokenRanking.sourceTruncated, true)
+        compare(ShareUsage.snapshot([incomplete], 30, "", false).partial, true)
+        compare(ShareUsage.snapshot([Privacy.cost(incomplete, true)], 30, "", false).partial, true)
+    }
+
     function test_localPngUrl_data() {
         return [
             {tag: "local", url: "file:///tmp/a.png", valid: true},

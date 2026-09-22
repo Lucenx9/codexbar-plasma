@@ -1069,7 +1069,11 @@ function costModelSummary(modelDays, currency, includeTokenRanking) {
         result.tokenRanking = {
             rows: tokenRows.slice(0, maximumCostModelRows),
             omitted: Math.max(0, tokenRows.length - maximumCostModelRows),
-            truncated: truncated || tokenRows.length > maximumCostModelRows
+            truncated: truncated || tokenRows.length > maximumCostModelRows,
+            // Display-only omissions are listed separately. Source loss and
+            // unknown costs still qualify the export's data notice.
+            sourceTruncated: truncated,
+            hasUnknownCost: tokenRows.some(function(row) { return row.cost === null })
         }
     }
     return result

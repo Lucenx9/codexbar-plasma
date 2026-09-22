@@ -52,6 +52,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Show the upcoming reset time alongside the current Quota week's start.
+- Keep a fully measured share export free of an incomplete-data warning when
+  its model ranking simply has more rows than the six shown.
 - Mark Quota weeks totals as partial when the cost history is older than the
   current day and has not scanned the trailing dates of a quota week.
 - Bound **Diagnostics** commands shell-side with GNU `timeout --foreground

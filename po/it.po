@@ -536,10 +536,6 @@ msgid "Models"
 msgstr "Modelli"
 
 #: contents/ui/components/ProviderCostSection.qml
-msgid "Since %1"
-msgstr "Dal %1"
-
-#: contents/ui/components/ProviderCostSection.qml
 msgid "at least %1"
 msgstr "almeno %1"
 

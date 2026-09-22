@@ -266,6 +266,7 @@ Totals include the loaded providers; at most eight provider rows and six models
 are shown, ranked by tokens, with omitted row counts. Model rows without a token
 count are excluded from the ranking. Currencies remain separate. Unknown values
 are not zero, and incomplete or estimated data retains a notice in both exports.
+The ordinary six-row display limit alone does not trigger that notice.
 Costs estimate usage, not subscription fees; subscription plans are not exported.
 
 Only aggregate fields enter the export. Account identities, projects, paths,
@@ -309,10 +310,11 @@ clipboard content remains under your control after closing the window.
   was spent.
 - **Quota weeks** in the expanded provider details split the local history by
   the provider's weekly quota window: the current week so far and up to three
-  earlier ones, each with its exact start and end. Right after a reset the
-  current week holds no full day yet and is left out until it does. The boundaries come from the
-  weekly usage row's reset time and window length, so the list appears once a
-  live usage refresh reports them. History is kept per day, so when the reset
+  earlier ones. Each row shows its start and end; the current row ends at the
+  upcoming reset. Right after a reset, the current week holds no full day yet
+  and is left out until it does. The boundaries come from the weekly usage
+  row's reset time and window length, so the list appears once a live usage
+  refresh reports them. History is kept per day, so when the reset
   falls inside a day that whole day counts toward one week, and the totals are
   marked `≈`. Unknown or missing days make a total read "at least"; weeks
   reaching back before the scanned history range are left out rather than
