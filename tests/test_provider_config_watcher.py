@@ -117,6 +117,20 @@ REAL_TESTS = '''
 '''
 
 
+# A minute poll is only observable by counting executions: the watcher must
+# run its checksum once on activation and not refire within seconds.
+POLL_TESTS = '''
+    function test_minutePollingDoesNotRefireQuickly() {
+        var subject = create({command: "POLL_COMMAND"});
+        subject.active = true;
+        tryCompare(subject, "stamp", "1 1 /synthetic/poll", 5000);
+        wait(2500);
+        compare(subject.stamp, "1 1 /synthetic/poll");
+        subject.active = false;
+    }
+'''
+
+
 class ProviderConfigWatcherTests(unittest.TestCase):
     def run_qml(self, directory, controller, tests, env=None):
         fixture = directory / "tst_provider_config_watcher.qml"
@@ -187,6 +201,19 @@ class ProviderConfigWatcherTests(unittest.TestCase):
                     expected_output = subprocess.check_output(["cksum", str(expected_path)], text=True) if expected_path else "missing"
                     self.assertEqual(result.stdout, expected_output)
                     self.assertEqual(result.stderr, "")
+
+    def test_minute_poll_does_not_refire_quickly(self):
+        with tempfile.TemporaryDirectory(prefix="codexbar-watcher-poll-") as temporary:
+            directory = Path(temporary)
+            log = directory / "calls.log"
+            command = directory / "poll-command"
+            command.write_text('#!/bin/sh\necho run >> "$POLL_LOG"\nprintf "1 1 /synthetic/poll"\n')
+            command.chmod(0o700)
+            self.run_qml(directory, CONTROLLER,
+                         POLL_TESTS.replace("POLL_COMMAND", str(command)),
+                         {"POLL_LOG": str(log)})
+            calls = log.read_text().splitlines()
+            self.assertLessEqual(len(calls), 2, calls)
 
 
 if __name__ == "__main__":

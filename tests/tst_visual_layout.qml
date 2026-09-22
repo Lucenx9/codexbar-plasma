@@ -1,6 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/CostPresentation.js" as CostPresentation
+import "../contents/ui/SafeText.js" as SafeText
 import "../contents/ui/UsageDetails.js" as UsageDetails
 
 TestCase {
@@ -205,6 +206,23 @@ TestCase {
         function displayPercent(row) {
             return row.value;
         }
+        property bool showPopupPace: true
+        property real meterTrackHeight: 8
+        function usageResetText(row) {
+            return row.reset || "";
+        }
+        function resetLabel(value) {
+            return value;
+        }
+        function paceMarkerPercent(row) {
+            return row.pacePercent !== undefined ? row.pacePercent : -1;
+        }
+        function quotaWarningMarkers(row) {
+            return row.warningMarkers || [];
+        }
+        function percentSuffix() {
+            return "left";
+        }
         function quotaMeterColor(item, accent) {
             return quotaWarning || (secondaryWarning && item.value === 70) ? Qt.rgba(1, 0.5, 0, 1) : accent;
         }
@@ -350,6 +368,24 @@ TestCase {
                 return found;
         }
         return null;
+    }
+
+    // Non-visual children (tooltips live in resources/data, not children),
+    // so tooltip hunts need the whole object tree. findItem is left on
+    // children alone; existing first-match callers keep their order.
+    function findAllItems(item, predicate, out) {
+        if (item === null || item === undefined || out.indexOf(item) >= 0)
+            return;
+        if (predicate(item))
+            out.push(item);
+        var groups = [item.children, item.resources, item.data];
+        for (var g = 0; g < groups.length; g++) {
+            var kids = groups[g];
+            if (kids === undefined || kids === null)
+                continue;
+            for (var i = 0; i < kids.length; i++)
+                findAllItems(kids[i], predicate, out);
+        }
     }
 
     function test_selectedTextStaysWithItsMeterAndFits_data() {
@@ -715,6 +751,57 @@ TestCase {
         }
     }
 
+    // CopyableValue labels its copy action through tooltips anchored to the
+    // copy button, so a hostile accessible name must arrive escaped there
+    // and the transient confirmation must keep its own immediate tooltip.
+    function test_copyableValueTooltipsEscapeAndAnchorToButton() {
+        var hostile = "Copy <img src=\"http://127.0.0.1/probe\"> & <sessions>";
+        var row = createControl("CopyableValue", {
+            text: "session text",
+            copyAccessibleName: hostile
+        });
+        if (!row)
+            return;
+        var tips = [];
+        findAllItems(row, function (item) {
+            return item.toString().indexOf("PlainToolTip") >= 0;
+        }, tips);
+        compare(tips.length, 2);
+        var hoverTips = tips.filter(function (tip) { return tip.plainText === hostile; });
+        var copiedTips = tips.filter(function (tip) { return tip.plainText === "Copied"; });
+        compare(hoverTips.length, 1);
+        compare(copiedTips.length, 1);
+        var hoverTip = hoverTips[0];
+        var copiedTip = copiedTips[0];
+        compare(hoverTip.text, SafeText.plainTextAsRichText(hostile));
+        compare(copiedTip.text, SafeText.plainTextAsRichText("Copied"));
+        var buttons = [];
+        findAllItems(row, function (item) {
+            return item.icon !== undefined && item.icon.name === "edit-copy";
+        }, buttons);
+        compare(buttons.length, 1);
+        var button = buttons[0];
+        compare(hoverTip.parent, button);
+        compare(copiedTip.parent, button);
+    }
+
+    // The standalone status dot carries its incident label in a tooltip, so
+    // provider-controlled titles must arrive escaped.
+    function test_compactStatusTooltipEscapesIncidentText() {
+        applet.incidentOnMeter = false;
+        var panel = createControl("CompactRepresentation", {applet: applet, height: 44});
+        if (!panel)
+            return;
+        var compactTips = [];
+        findAllItems(panel, function (item) {
+            return item.toString().indexOf("PlainToolTip") >= 0;
+        }, compactTips);
+        compare(compactTips.length, 1);
+        var tip = compactTips[0];
+        verify(tip.plainText.length > 0);
+        compare(tip.text, SafeText.plainTextAsRichText(tip.plainText));
+    }
+
     function test_incidentDotsStaySquareAndAttributed_data() {
         return [
             {
@@ -855,6 +942,42 @@ TestCase {
         applet.selectedAccount = applet.accountItems[1].account;
         tryCompare(button, "checked", false);
         testCase.forceActiveFocus();
+    }
+
+    function test_accountDelegatesStaySafeKeyboardButtons() {
+        var savedItems = applet.accountItems;
+        var savedSelected = applet.selectedAccount;
+        var hostileAccount = "Status <img src=\"http://127.0.0.1/probe\"> & <test-org>";
+        var hostileSubtitle = "Workspace <b>evil</b>";
+        applet.accountItems = [{provider: "codex", account: hostileAccount, subtitle: hostileSubtitle}];
+        applet.selectedAccount = "";
+        try {
+            var view = createControl("ProviderAccountsPanel", {
+                applet: applet,
+                providerData: { provider: "codex" },
+                width: 540
+            });
+            // The accounts delegate must stay a real button: a swap that no
+            // longer compiles must fail here instead of passing vacuously.
+            verify(view !== null);
+            wait(0);
+            var button = findItem(view, function (item) {
+                return item.checkable && item.Accessible.name.indexOf("Status <img") === 0;
+            });
+            verify(button !== null);
+            // The safe-button interface carries the literal label; a delegate
+            // without it cannot route untrusted text through SafeText.
+            compare(button.plainText, hostileAccount + " · " + hostileSubtitle);
+            compare(button.Accessible.name, hostileAccount + " · " + hostileSubtitle);
+            button.forceActiveFocus(Qt.TabFocusReason);
+            keyClick(Qt.Key_Space);
+            compare(applet.selectedAccount, hostileAccount);
+            compare(button.checked, true);
+            testCase.forceActiveFocus();
+        } finally {
+            applet.accountItems = savedItems;
+            applet.selectedAccount = savedSelected;
+        }
     }
 
     function test_providerRowKeyboardSelectionDoesNotToggleEnablement() {
@@ -1096,6 +1219,103 @@ TestCase {
         tryCompare(view, "width", layout.width);
         layout.width = 540;
         tryCompare(view, "width", layout.width);
+    }
+
+    function test_providerDetailChartFollowsChartData() {
+        var layout = createTemporaryQmlObject(
+            'import QtQuick; import QtQuick.Layouts; ColumnLayout { width: 540 }',
+            testCase, String(Qt.resolvedUrl("ProviderDetailChartTest.qml")));
+        var withChart = UsageDetails.normalizeSections([{
+            title: "Details",
+            rows: [{ label: "Model", value: "42", secondaryValue: "" }],
+            chart: { kind: "line", title: "Daily usage", unit: "tokens",
+                points: [{ label: "Mon", value: 3 }, { label: "Tue", value: 7 }] }
+        }])[0];
+        var plotted = createControl("ProviderDetailSection", {
+            applet: applet,
+            providerData: { provider: "codex" },
+            modelData: withChart
+        }, layout);
+        if (!plotted)
+            return;
+        // The section plots its chart through the shared interactive chart,
+        // which appears only while the section carries chart data.
+        var chart = findItem(plotted, function (item) {
+            return typeof item.pointCount === "number" && typeof item.selectedIndex === "number";
+        });
+        verify(chart !== null);
+        compare(chart.visible, true);
+        compare(chart.pointCount, 2);
+        var withoutChart = UsageDetails.normalizeSections([{
+            title: "Details",
+            rows: [{ label: "Model", value: "42", secondaryValue: "" }]
+        }])[0];
+        verify(withoutChart.chart === null);
+        var plain = createControl("ProviderDetailSection", {
+            applet: applet,
+            providerData: { provider: "codex" },
+            modelData: withoutChart
+        }, layout);
+        if (!plain)
+            return;
+        var hidden = findItem(plain, function (item) {
+            return typeof item.pointCount === "number" && typeof item.selectedIndex === "number";
+        });
+        verify(hidden !== null);
+        compare(hidden.visible, false);
+    }
+
+    function usageRowData() {
+        return {
+            label: "Primary",
+            value: 57,
+            hasPercent: true,
+            pace: "On pace",
+            pacePercent: 40,
+            paceOnTop: true,
+            reset: "Resets 12:00",
+            warningMarkers: [{ percent: 80, severity: "major" }]
+        };
+    }
+
+    function test_providerUsageRowResetTextComesFromRowData() {
+        var row = createControl("ProviderUsageRow", {
+            applet: applet,
+            providerData: { provider: "codex" },
+            modelData: usageRowData(),
+            width: 540
+        });
+        if (!row)
+            return;
+        // The reset label renders the row's own reset text, not the
+        // provider's, so each meter keeps its own window.
+        var reset = findItem(row, function (item) {
+            return item.text === "Resets 12:00";
+        });
+        verify(reset !== null);
+        compare(reset.visible, true);
+        var pace = findItem(row, function (item) {
+            return item.text === "On pace";
+        });
+        verify(pace !== null);
+    }
+
+    function test_providerUsageRowDrawsQuotaWarningMarkers() {
+        var row = createControl("ProviderUsageRow", {
+            applet: applet,
+            providerData: { provider: "codex" },
+            modelData: usageRowData(),
+            width: 540
+        });
+        if (!row)
+            return;
+        // Every quota threshold the applet reports for the row draws one
+        // marker on the meter from the same bounded source.
+        var repeater = findItem(row, function (item) {
+            return typeof item.count === "number" && typeof item.itemAt === "function";
+        });
+        verify(repeater !== null);
+        compare(repeater.count, 1);
     }
 
     function test_projectCostsNestedLayoutDoesNotRearrangeRecursively_data() {

@@ -13,22 +13,14 @@ POPUP_QML="${ROOT_DIR}/contents/ui/configPopup.qml"
 DIAGNOSTICS_QML="${ROOT_DIR}/contents/ui/configDiagnostics.qml"
 PLAIN_INLINE_MESSAGE_QML="${ROOT_DIR}/contents/ui/components/PlainInlineMessage.qml"
 PLAIN_CONTROLS_LABEL_QML="${ROOT_DIR}/contents/ui/components/PlainControlsLabel.qml"
-PLAIN_BUTTON_QML="${ROOT_DIR}/contents/ui/components/PlainButton.qml"
-PLAIN_CHECK_BOX_QML="${ROOT_DIR}/contents/ui/components/PlainCheckBox.qml"
-PLAIN_COMBO_BOX_QML="${ROOT_DIR}/contents/ui/components/PlainComboBox.qml"
 PLAIN_PLASMA_LABEL_QML="${ROOT_DIR}/contents/ui/components/PlainPlasmaLabel.qml"
 PLAIN_HEADING_QML="${ROOT_DIR}/contents/ui/components/PlainHeading.qml"
-PLAIN_ITEM_DELEGATE_QML="${ROOT_DIR}/contents/ui/components/PlainItemDelegate.qml"
 PLAIN_PLACEHOLDER_MESSAGE_QML="${ROOT_DIR}/contents/ui/components/PlainPlaceholderMessage.qml"
 PLAIN_TOOL_TIP_QML="${ROOT_DIR}/contents/ui/components/PlainToolTip.qml"
 WORKFLOW="${ROOT_DIR}/.github/workflows/ci.yml"
 MAKEFILE="${ROOT_DIR}/Makefile"
 UPDATER="${ROOT_DIR}/scripts/update-widget.sh"
 FULL_REPRESENTATION_QML="${ROOT_DIR}/contents/ui/components/FullRepresentation.qml"
-PROVIDER_ACCOUNTS_PANEL_QML="${ROOT_DIR}/contents/ui/components/ProviderAccountsPanel.qml"
-COMPACT_REPRESENTATION_QML="${ROOT_DIR}/contents/ui/components/CompactRepresentation.qml"
-SPEND_VIEW_QML="${ROOT_DIR}/contents/ui/components/SpendView.qml"
-COPYABLE_VALUE_QML="${ROOT_DIR}/contents/ui/components/CopyableValue.qml"
 
 require_in_file() {
   local file="$1"
@@ -118,26 +110,30 @@ for qml_file in "$MAIN_QML" "$PROVIDERS_QML" "$POPUP_QML" "$DIAGNOSTICS_QML"; do
 done
 require_in_surface applet "SafeText.cliMessage"
 require_in_surface providers "SafeText.cliMessage"
-require_in_file "$PLAIN_INLINE_MESSAGE_QML" "text: SafeText.plainTextAsRichText(plainText)"
-require_in_file "$PLAIN_BUTTON_QML" "SafeText.plainButtonText(plainText, contentItem !== null)"
-require_in_file "$PLAIN_CHECK_BOX_QML" "text: SafeText.plainTextAsRichText(plainText)"
-require_in_file "$PLAIN_CHECK_BOX_QML" "Kirigami.MnemonicData.label: SafeText.plainTextAsMnemonicRichText(plainText)"
-require_in_file "$PLAIN_COMBO_BOX_QML" "plainText: control.textAt(index)"
-require_in_file "$PLAIN_CONTROLS_LABEL_QML" "textFormat: Text.PlainText"
-require_in_file "$PLAIN_PLASMA_LABEL_QML" "textFormat: Text.PlainText"
-require_in_file "$PLAIN_HEADING_QML" "textFormat: Text.PlainText"
-require_in_file "$PLAIN_ITEM_DELEGATE_QML" "text: SafeText.plainTextAsMnemonicRichText(plainText)"
-require_in_file "$PLAIN_PLACEHOLDER_MESSAGE_QML" "text: SafeText.plainTextAsRichText(plainText)"
-require_in_file "$PLAIN_PLACEHOLDER_MESSAGE_QML" "explanation: SafeText.plainTextAsRichText(plainExplanation)"
-require_in_file "$PLAIN_TOOL_TIP_QML" "text: SafeText.plainTextAsRichText(plainText)"
-require_in_file "$COPYABLE_VALUE_QML" 'plainText: valueRow.copyAccessibleName'
-require_in_file "$COPYABLE_VALUE_QML" 'plainText: i18n("Copied")'
+# Plain wrapper escaping is executed by tests/tst_plain_text_controls.qml
+# with hostile markup (including the styled CheckBox mnemonic label read
+# through a binding mirror, and the PlainText format of the label wrappers),
+# so the literal bindings are not pinned here. CopyableValue tooltip text and
+# anchoring are executed by tests/tst_visual_layout.qml
+# (test_copyableValueTooltipsEscapeAndAnchorToButton) with a hostile
+# accessible name.
+# The explicit tooltip anchor stays pinned here: the tooltips are declared
+# inside the copy button, so deleting the parent line changes no observable
+# behavior and no executed test can tell it apart. Reparenting to another
+# item does go red in the layout test above.
 require_in_surface applet "parent: copyButton"
-require_in_file "$PROVIDER_ACCOUNTS_PANEL_QML" "delegate: PlainButton {"
+# The accounts delegate stays the safe button: tests/tst_visual_layout.qml
+# (accountDelegatesStaySafeKeyboardButtons plus the long-account-button rows)
+# instantiates the real panel, so swapping the delegate type fails creation
+# and goes red there instead of passing vacuously.
 require_in_surface popup "Kirigami.MnemonicData.label: SafeText.plainTextAsMnemonicRichText(modelData.displayName)"
 require_in_surface panel "Kirigami.MnemonicData.label: SafeText.plainTextAsMnemonicRichText(modelData.displayName)"
-require_in_file "$COMPACT_REPRESENTATION_QML" "PlainToolTip {"
-require_in_file "$SPEND_VIEW_QML" "Components.PlainToolTip {"
+# The compact status tooltip is executed by tests/tst_visual_layout.qml
+# (test_compactStatusTooltipEscapesIncidentText): removing its PlainToolTip
+# leaves zero tooltips and goes red there.
+# The spend heatmap readout is executed by tests/test_cost_sections.py
+# (test_spendViewPresentsCostsAndControls): removing its PlainToolTip
+# leaves zero tooltips and goes red there.
 
 reject_raw_text_control() {
   local pattern="$1"

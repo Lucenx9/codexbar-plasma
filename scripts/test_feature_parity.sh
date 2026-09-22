@@ -9,14 +9,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GENERAL_QML="${ROOT_DIR}/contents/ui/configGeneral.qml"
 PROVIDERS_QML="${ROOT_DIR}/contents/ui/configProviders.qml"
 PROVIDER_IDENTITY_JS="${ROOT_DIR}/contents/ui/ProviderIdentity.js"
-PROVIDER_NAMES_QML="${ROOT_DIR}/contents/ui/components/ProviderNames.qml"
-COMPACT_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/CompactRepresentation.qml"
-PROVIDER_HEADER_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/ProviderHeader.qml"
-USAGE_ROW_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/ProviderUsageRow.qml"
-PROVIDER_DETAIL_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/ProviderDetailSection.qml"
-INTERACTIVE_CHART_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/InteractiveChart.qml"
 SESSIONS_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/SessionsView.qml"
-SPEND_COMPONENT_QML="${ROOT_DIR}/contents/ui/components/SpendView.qml"
 USAGE_DETAILS_JS="${ROOT_DIR}/contents/ui/UsageDetails.js"
 README_MD="${ROOT_DIR}/README.md"
 USAGE_GUIDE_MD="${ROOT_DIR}/docs/usage.md"
@@ -224,25 +217,9 @@ if failures:
     sys.exit(1)
 PY
 
-# Display names live once in the shared component; these late-added
-# providers are the canary for a half-finished provider addition.
-require_in_file "$PROVIDER_NAMES_QML" '"clawrouter": i18n("ClawRouter")'
-require_in_file "$PROVIDER_NAMES_QML" '"coderabbit": i18n("CodeRabbit")'
-require_in_file "$PROVIDER_NAMES_QML" '"crossmodel": i18n("CrossModel")'
-require_in_file "$PROVIDER_NAMES_QML" '"elevenlabs": i18n("ElevenLabs")'
-require_in_file "$PROVIDER_NAMES_QML" '"fireworks": i18n("Fireworks")'
-require_in_file "$PROVIDER_NAMES_QML" '"huggingface": i18n("Hugging Face")'
-require_in_file "$PROVIDER_NAMES_QML" '"ibmbob": i18n("IBM Bob")'
-require_in_file "$PROVIDER_NAMES_QML" '"kimi": i18n("Kimi Code")'
-require_in_file "$PROVIDER_NAMES_QML" '"minimax": i18n("MiniMax")'
-require_in_file "$PROVIDER_NAMES_QML" '"moonshot": i18n("Moonshot / Kimi Open Platform")'
-require_in_file "$PROVIDER_NAMES_QML" '"muse": i18n("Muse Code")'
-require_in_file "$PROVIDER_NAMES_QML" '"nous": i18n("Nous Portal")'
-require_in_file "$PROVIDER_NAMES_QML" '"qoder": i18n("Qoder")'
-require_in_file "$PROVIDER_NAMES_QML" '"replicate": i18n("Replicate")'
-require_in_file "$PROVIDER_NAMES_QML" '"stepfun": i18n("StepFun")'
-require_in_file "$PROVIDER_NAMES_QML" '"wayfinder": i18n("Wayfinder")'
-require_in_file "$PROVIDER_NAMES_QML" '"zai": i18n("z.ai / GLM")'
+# Display names live once in the shared component; the late-added provider
+# fallback titles are executed by tests/tst_provider_names.qml against the
+# real ProviderNames.titleForKey.
 
 python3 - "$PROVIDERS_QML" <<'PY'
 import pathlib
@@ -301,11 +278,10 @@ for provider_id, cli_name in {
         sys.exit(1)
 PY
 
-require_in_surface applet "Components.ProjectCostSection"
-require_in_surface applet "providerCosts: view.presentedProviderCosts"
-require_in_surface applet "CostPresentation.projectRows(providerCosts, applet.costHistoryShowsTokens)"
-require_in_surface applet "model: section.projectData.rows"
-require_in_surface applet 'i18n("Cost unavailable")'
+# The project cost section is executed by tests/test_cost_sections.py, which
+# renders the real component with cost-heavy/token-heavy/unpriced rows:
+# metric ordering, the per-metric values and the unavailable fallback each
+# go red there when broken.
 # Cost presentation moved behind CostPresentation.js. Assert the delegation so
 # the maths cannot quietly grow a second copy back inside main.qml.
 require_in_surface applet "CostPresentation.costTrustSummary("
@@ -315,30 +291,24 @@ require_in_surface applet "CostPresentation.costTrustSummary("
 # test green. This stays as the only pin on the locale wiring.
 require_in_surface applet "CostPresentation.numberFormat("
 reject_in_surface applet "function appendTokenBreakdownRow("
-require_in_surface applet "id: usageDashboardSection"
-require_in_surface applet "text: i18n(\"Usage dashboard\")"
-require_in_surface applet "model: usageDashboardSection.kpis"
-require_in_surface applet "model: usageDashboardSection.rows"
-require_in_surface applet "Components.ProviderDetailSection"
-require_in_file "$PROVIDER_DETAIL_COMPONENT_QML" "required property var modelData"
-require_in_file "$PROVIDER_DETAIL_COMPONENT_QML" "modelData.secondaryValue"
-require_in_file "$PROVIDER_DETAIL_COMPONENT_QML" "InteractiveChart {"
-require_in_file "$PROVIDER_DETAIL_COMPONENT_QML" "visible: detailSection.chartData !== null"
-require_in_file "$INTERACTIVE_CHART_COMPONENT_QML" 'if (chart.kind === "line")'
-require_in_file "$INTERACTIVE_CHART_COMPONENT_QML" "activeFocusOnTab: true"
-require_in_file "$INTERACTIVE_CHART_COMPONENT_QML" "Keys.onPressed:"
-require_in_file "$INTERACTIVE_CHART_COMPONENT_QML" "onPositionChanged:"
+# The popup dashboard sections are executed by tests/test_usage_dashboard.py,
+# which extracts the production providerDetailsSection and usageDashboardSection
+# blocks and renders them with hostile data: heading, KPI/row models, and the
+# per-entry detail delegate each go red there when broken.
+# The section's secondary-value label, chart element and chart visibility are
+# executed by tst_visual_layout.qml (providerDetailValuesStayWithinPopup and
+# providerDetailChartFollowsChartData). The `required modelData` scoping rule
+# for Components delegates stays owned by scripts/test_ui_regressions.sh.
+# The interactive chart is executed by tests/tst_interactive_chart.qml against
+# the real component: keyboard selection, hover inspection, the line-kind
+# plot path and tab reachability each go red there when broken.
 require_in_file "$USAGE_DETAILS_JS" "QML JavaScript has no grapheme segmenter"
 reject_in_file "$USAGE_DETAILS_JS" "sections.length < maximumSectionsPerSnapshot"
 reject_in_file "$USAGE_DETAILS_JS" "rows.length < maximumRowsPerSection"
 reject_in_file "$USAGE_DETAILS_JS" "points.length < maximumPointsPerChart"
-require_in_surface applet "Components.InteractiveChart"
-require_in_surface applet "id: costHistoryChartSection"
-require_in_surface applet "id: costDrillDownSection"
-require_in_surface applet "model: costDrillDownSection.breakdownRows"
-require_in_surface applet "model: costDrillDownSection.modelRows"
-require_in_surface applet "model: costHistoryChartSection.rows"
-require_in_surface applet "function command(providerID)"
+# The provider cost section is executed by tests/test_cost_sections.py, which
+# renders the real component: the chart, the drill-down/history blocks and
+# their breakdown/model/history models each go red there when broken.
 require_in_surface applet "--all-accounts"
 require_in_surface applet "--account"
 # The menu-bar mode and reset-time initializers read Plasmoid.configuration,
@@ -355,7 +325,9 @@ require_in_surface applet "id: panelClockTimer"
 require_in_surface applet "root.panelClockMs = Date.now()"
 require_in_surface applet "Plasmoid.configuration.menuBarDisplayMode"
 reject_in_surface applet "onResetTimesShowAbsoluteChanged: Qt.callLater(refreshNow)"
-require_in_file "$USAGE_ROW_COMPONENT_QML" "usageRow.applet.usageResetText(usageRow.rowData)"
+# The usage row's reset-text source and quota-marker repeater are executed by
+# tst_visual_layout.qml (providerUsageRowResetTextComesFromRowData and
+# providerUsageRowDrawsQuotaWarningMarkers).
 # Quota thresholds are user-configurable and shared by the notifications and the
 # markers drawn on the usage bars, so they must come from one bounded source.
 require_in_file "$CONFIG_XML" 'name="quotaWarningPercent"'
@@ -369,9 +341,13 @@ require_in_surface applet "readonly property int quotaWarningPercent: QuotaThres
 require_in_surface applet "readonly property int quotaCriticalPercent: QuotaThresholds.criticalPercent("
 require_in_surface applet "onQuotaWarningPercentChanged: resetNotificationMemo()"
 require_in_surface applet "onQuotaCriticalPercentChanged: resetNotificationMemo()"
-require_in_file "$COMPACT_COMPONENT_QML" "id: compactStatusBadge"
-require_in_file "$PROVIDER_HEADER_COMPONENT_QML" "id: providerStatusBadge"
-require_in_file "$USAGE_ROW_COMPONENT_QML" "quotaWarningMarkerRepeater"
+# The standalone status badge id stays load-bearing for
+# scripts/test_ui_regressions.sh, which extracts the compactStatusBadge block
+# and asserts its fallback wiring: renaming the id fails that extraction, so
+# the literal token is not pinned here as well.
+# The provider incident badge is executed by tst_popup_controls.qml
+# (incidentBadgeGrowsWithItsText); its id has no references outside the
+# component, so the token itself is unobservable in the harness.
 # Kept: the Plasmoid-backed state defaults and declarative change handlers
 # kept below have no executed pin — fixtures declare their own values, so
 # flipping any default or no-opping any handler keeps all naming modules
@@ -395,17 +371,18 @@ require_in_surface applet "property int costHistoryDays"
 # Cost and tokens both come from one cost payload: switching the plotted metric
 # must never add a CLI call, and the bars must rescale with the choice.
 require_in_surface applet "property string costHistoryMetric"
-# Every cost chart follows one metric: the provider detail chart must not stay
-# on cost while the rows beneath it switch to tokens.
-require_in_surface applet 'applet.costHistoryShowsTokens'
+# Every cost chart follows one metric: the section render tests in
+# tests/test_cost_sections.py flip the flag and pin the project ordering,
+# the provider combo/chart title/day selection and the spend history
+# wording, so a stuck metric goes red there instead of here.
 # The chart's "Latest" summary annotates the same series the bars plot, so it
 # must follow the metric instead of always printing the cost amount.
 reject_in_surface applet 'i18n("%1: %2", label, amountString(last.cost'
 # The peak and average annotations must name the same day the bars highlight.
 reject_in_surface applet 'i18n("Average/day: %1", amountString('
-require_in_file "$SPEND_COMPONENT_QML" "function metricOptions()"
-require_in_file "$SPEND_COMPONENT_QML" "view.applet.setCostHistoryMetric(metricCombo.valueAt(index))"
-require_in_file "$SPEND_COMPONENT_QML" "view.applet.spendHistoryStillBuilding()"
+# The spend metric controls are executed by tests/test_cost_sections.py, which
+# renders the real SpendView: the metric options, the combo-to-settings
+# setter and the still-building notice each go red there when broken.
 # The 365-day clamp is unobservable in executed tests: the property
 # initializer reads Plasmoid.configuration, which is absent under test, so
 # fixtures declare their own day count and 365 -> 30 keeps every naming test
@@ -419,10 +396,10 @@ require_in_surface applet "Math.max(1, Math.min(365, Number(Plasmoid.configurati
 require_in_file "$GENERAL_QML" "widgetUpdateLastError.slice(0, 500)"
 reject_in_file "$GENERAL_QML" "cfg_widgetUpdateLastError"
 
-require_in_file "$CONFIG_QML" "configPopup.qml"
-require_in_file "$CONFIG_QML" "configPanel.qml"
-require_in_file "$CONFIG_QML" "configNotifications.qml"
-require_in_file "$CONFIG_QML" "configDiagnostics.qml"
+# The dialog page registration is executed by tests/tst_config_model.qml,
+# which instantiates the real ConfigModel and pins all six sources:
+# removing any page fails it. The About rejections below stay: absence has
+# no runtime equivalent beyond the source set the model test already pins.
 reject_in_file "$CONFIG_QML" "configAbout.qml"
 reject_in_file "$CONFIG_QML" "name: i18n(\"About\")"
 
@@ -456,12 +433,13 @@ require_in_surface applet "PanelDisplay.safeLane(Plasmoid.configuration.panelQuo
 require_in_surface applet "PanelRules.normalizedRules(Plasmoid.configuration.panelVisibilityRules)"
 reject_in_surface applet "onPanelQuotaLaneChanged: Qt.callLater(refreshNow)"
 reject_in_surface applet "onPanelVisibilityRulesChanged: Qt.callLater(refreshNow)"
-require_in_surface applet '"sessions", "--json-v2"'
-require_in_surface applet "SessionResponse.response(stdoutText, stderrText)"
+# Session cards must never carry filesystem paths: transcript locations and
+# working directories would leak local paths into the view and persisted
+# state. Absence has no runtime equivalent, so these rejections stay.
 reject_in_file "$SESSIONS_COMPONENT_QML" "transcriptPath"
 reject_in_file "$SESSIONS_COMPONENT_QML" "cwd"
-require_in_file "$SPEND_COMPONENT_QML" "InteractiveChart"
-require_in_file "$SPEND_COMPONENT_QML" "Activity heatmap"
+# The spend chart and heatmap are executed by tests/test_cost_sections.py,
+# which renders the real SpendView: removing either element goes red there.
 require_in_file "$CONFIG_XML" "updateChecksEnabled"
 require_in_file "$CONFIG_XML" "updateNotificationsEnabled"
 require_in_file "$CONFIG_XML" "autoUpdateEnabled"

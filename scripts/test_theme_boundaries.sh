@@ -4,7 +4,9 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 . "${ROOT_DIR}/scripts/lib/qml_surfaces.sh"
 
-require_in_surface panel "function providerColor(value)"
+# The panel providerColor signature is owned by the Surface extraction below,
+# which fails the check when the function is renamed or removed; the literal
+# signature is not pinned here as well.
 # Kept: the ThemeContrast import is unobservable in executed tests (removing
 # it keeps every naming module green: each fixture imports the module itself,
 # and the applet is never instantiated), so no mutation can prove this pin
