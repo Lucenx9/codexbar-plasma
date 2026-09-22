@@ -95,6 +95,11 @@ when the product changes instead of adding dated before/after copies.
 - [Minimal panel](codexbar-plasma-panel-minimal.png): monochrome provider icons and dual quota capsules.
 - [Panel with usage text](codexbar-plasma-panel-information.png): selected-provider text grouped with its quota capsules.
 
+## Store artwork
+
+- [Store icon PNG](codexbar-plasma-store-icon.png): 512 × 512 image for the KDE Store listing.
+- [Store icon SVG](codexbar-plasma-store-icon.svg): editable source for the store icon.
+
 ## Historical work artifacts
 
 Past captures, completed plans, and review logs are available in

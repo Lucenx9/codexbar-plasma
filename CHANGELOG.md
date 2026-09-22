@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Add a square CodexBar icon for the KDE Store listing, with a 512-pixel PNG
+  and an editable SVG source.
 - Share the selected Usage & Spend history as a local PNG or plain-text summary,
   with a separate preview, native image clipboard and save picker, bounded
   provider/model rankings, separate currencies, partial-data notices, and a
