@@ -103,6 +103,7 @@ TestCase {
         function accountLabel(item) { return item.account || ""; }
         function tokenCostHint(provider) { return "hint"; }
         function privateErrorText(text) { return text; }
+        property double panelClockMs: 0
         function usageCountText(value) { return String(value) + " tokens"; }
         function amountString(value, currency) { return (currency || "USD") + " " + String(value); }
         function qualifiedCostValue(value) { return value; }
@@ -164,7 +165,7 @@ TestCase {
     Component {
         id: projectFactory
         ColumnLayout {
-            function i18n(source) { return testCase.i18n(source); }
+            function i18n() { return testCase.i18n.apply(testCase, arguments); }
             function i18np(one, many, count) { return testCase.i18np(one, many, count); }
             Components.ProjectCostSection {
                 applet: fakeApplet
@@ -175,7 +176,7 @@ TestCase {
     Component {
         id: providerFactory
         ColumnLayout {
-            function i18n(source) { return testCase.i18n(source); }
+            function i18n() { return testCase.i18n.apply(testCase, arguments); }
             function i18np(one, many, count) { return testCase.i18np(one, many, count); }
             Components.ProviderCostSection {
                 applet: fakeApplet
@@ -186,7 +187,7 @@ TestCase {
     Component {
         id: spendFactory
         ColumnLayout {
-            function i18n(source) { return testCase.i18n(source); }
+            function i18n() { return testCase.i18n.apply(testCase, arguments); }
             function i18np(one, many, count) { return testCase.i18np(one, many, count); }
             Components.SpendView {
                 applet: fakeApplet
@@ -296,6 +297,54 @@ class CostSectionTests(unittest.TestCase):
         compare(charts[0].accessibleTitle, "Daily token history");
         tryVerify(function() { return charts[0].selectedIndex === -1; });
         fakeApplet.costHistoryShowsTokens = false;
+    }
+    ''')
+
+    def test_provider_section_splits_cost_by_weekly_quota_window(self):
+        self.run_fixture('''
+    // The weekly usage row supplies the boundaries and the daily history the
+    // amounts. Dates are built in local time so the check holds in any time
+    // zone, and expected labels use the same formatter as the component.
+    function test_providerSectionSplitsCostByWeeklyQuotaWindow() {
+        function local(year, month, day, hour, minute) {
+            return new Date(year, month - 1, day, hour || 0, minute || 0).getTime();
+        }
+        var daily = [];
+        for (var i = 0; i < 14; i++) {
+            var date = new Date(2026, 8, 9 + i);
+            daily.push({ label: date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0")
+                + "-" + String(date.getDate()).padStart(2, "0"), cost: i + 1, tokens: (i + 1) * 100 });
+        }
+        var reset = local(2026, 9, 24, 12, 22);
+        fakeApplet.panelClockMs = local(2026, 9, 22, 12);
+        var tokenCost = Object.assign({}, testCase.providerTokenCost, { daily: daily, currency: "USD" });
+        testCase.providerData = { provider: "codex", tokenCost: tokenCost,
+            rows: [{ lane: "secondary", windowMinutes: 10080, resetsAt: new Date(reset).toISOString() }] };
+        var subject = createTemporaryObject(providerFactory, testCase);
+        verify(subject !== null);
+        var all = [];
+        walkTree(subject, all);
+        var section = all.filter(function(item) { return item.objectName === "quotaWindowSection"; })[0];
+        verify(section !== undefined);
+        compare(section.windows.length, 2);
+        // Collapsed details keep the list out of the summary view.
+        verify(!section.visible);
+        all.filter(function(item) { return item.objectName === "providerLocalCostSection"; })[0].detailsExpanded = true;
+        tryVerify(function() { return section.visible; });
+        function stamp(ms) { return Qt.formatDateTime(new Date(ms), "MMM d, hh:mm"); }
+        var texts = textsUnder(subject);
+        verify(texts.indexOf("Quota weeks") >= 0);
+        verify(texts.indexOf("Since " + stamp(reset - 7 * 86400000)) >= 0, texts.join(" | "));
+        verify(texts.indexOf(stamp(reset - 14 * 86400000) + " - " + stamp(reset - 7 * 86400000)) >= 0);
+        // A 12:22 reset splits days, so both totals are marked as estimated.
+        verify(texts.indexOf("≈ USD 60 · 6000 tokens") >= 0, texts.join(" | "));
+        verify(texts.indexOf("≈ USD 42 · 4200 tokens") >= 0);
+        verify(texts.some(function(text) { return text.indexOf("≈ The history is kept per day") === 0; }));
+
+        // Without a weekly row there is nothing honest to split.
+        testCase.providerData = { provider: "codex", tokenCost: tokenCost,
+            rows: [{ lane: "primary", windowMinutes: 300, resetsAt: new Date(reset).toISOString() }] };
+        tryVerify(function() { return section.windows.length === 0 && !section.visible; });
     }
     ''')
 

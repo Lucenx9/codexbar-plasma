@@ -201,6 +201,7 @@ msgstr ""
 #: contents/ui/components/FullRepresentation.qml
 #: contents/ui/components/OverviewProviderRow.qml
 #: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/SessionsView.qml contents/ui/main.qml
 msgid "%1 - %2"
 msgstr "%1 - %2"
@@ -531,6 +532,26 @@ msgstr "Die Modelldetails sind unvollständig."
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Models"
 msgstr "Modelle"
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Since %1"
+msgstr "Seit %1"
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "at least %1"
+msgstr "mindestens %1"
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Quota weeks"
+msgstr "Kontingentwochen"
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid ""
+"The history is kept per day, so a day containing a reset counts toward one "
+"week only."
+msgstr ""
+"Der Verlauf wird pro Tag erfasst, daher zählt ein Tag mit einer "
+"Zurücksetzung nur zu einer Woche."
 
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Cost history"

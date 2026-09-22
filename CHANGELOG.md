@@ -12,6 +12,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Show **Quota weeks** in a provider's expanded cost details: the local cost
+  and tokens of the current weekly quota window and up to three earlier ones,
+  with exact boundaries. Totals that count a whole day around a mid-day reset
+  are marked as estimated, unknown days are never counted as zero, and weeks
+  older than the scanned history are omitted. This mirrors the macOS 0.62.0
+  recent-windows list and needs no new CLI contract.
 - Bundle the fallback name, icon, documentation link, and dashboard link for
   the `Helmcode`, `v0`, and `TypeSafe` providers that official CodexBar 0.64.0
   adds to the registry. Brand colors and status links are omitted because

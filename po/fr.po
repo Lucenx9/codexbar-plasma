@@ -197,6 +197,7 @@ msgstr ""
 #: contents/ui/components/FullRepresentation.qml
 #: contents/ui/components/OverviewProviderRow.qml
 #: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/SessionsView.qml contents/ui/main.qml
 msgid "%1 - %2"
 msgstr "%1 - %2"
@@ -527,6 +528,26 @@ msgstr "Le détail par modèle est partiel."
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Models"
 msgstr "Modèles"
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Since %1"
+msgstr "Depuis %1"
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "at least %1"
+msgstr "au moins %1"
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Quota weeks"
+msgstr "Semaines de quota"
+
+#: contents/ui/components/ProviderCostSection.qml
+msgid ""
+"The history is kept per day, so a day containing a reset counts toward one "
+"week only."
+msgstr ""
+"L’historique est journalier : un jour contenant une réinitialisation ne "
+"compte que pour une seule semaine."
 
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Cost history"
