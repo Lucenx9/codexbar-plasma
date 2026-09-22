@@ -44,7 +44,8 @@ Issues linked below preserve discussion; this file owns parity status.
 - [ ] Mark the individual history and model rows whose requests the CLI
   excluded, now that the range total says how many were left out. The official
   counts also arrive per `daily[]` entry and per `daily[].modelBreakdowns[]`
-  record, while the popup rows still read as complete measurements. Done when a
+  record. Quota-week subtotals already use the daily count to mark lower bounds;
+  individual popup rows still read as complete measurements. Done when a
   row states its excluded requests without parsing display text, keeps measured
   and unknown amounts distinct, and stays legible in the narrow popup.
   Evidence: [0.60.5 review](docs/research/2026-09-18-macos-parity-0.60.5.md#linux-cli-contract-changes-since-0604).
