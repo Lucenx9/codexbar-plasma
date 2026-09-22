@@ -41,12 +41,12 @@ For those, use `make install` or `./install.sh`. Release-package users can use
 
 `scripts/update-widget.sh --setup` is also the downloadable installer documented
 in [Quick install](../README.md#quick-install-from-a-terminal). It must work as a
-single file outside a checkout. The README bootstrap downloads it to a private
-temporary directory and removes it on exit. Setup reads the installed user
-package metadata under the absolute `XDG_DATA_HOME`, falling back to
-`~/.local/share`. An absent package uses version `0.0.0` for the shared release
-validation. Setup rejects invalid existing package metadata, including an
-incorrect applet ID or package structure, before installing or running a helper.
+single file outside a checkout. The README bootstrap downloads it completely
+into a shell variable and passes it to Bash through stdin. Setup reads the
+installed user package metadata under the absolute `XDG_DATA_HOME`, falling
+back to `~/.local/share`. An absent package uses version `0.0.0` for the shared
+release validation. Setup rejects invalid existing package metadata, including
+an incorrect applet ID or package structure, before installing or running a helper.
 Setup selects `kpackagetool6 -i` for a missing package and `-u` for an existing
 one, without treating any installation failure as a reason to try the other.
 The `--check` and `--install` JSON interfaces retain their update-only behavior.
@@ -60,10 +60,11 @@ and reports CLI failure separately from successful widget installation. Shell
 installer messages are technical English; the widget's QML catalogs are unchanged.
 
 Run `make check-python-test_release_setup check-update-widget check-shellcheck`
-while editing. Setup tests run the standalone script with synthetic release
-archives, temporary user data, and recording tools; they never install into the
-real desktop or download a CLI. Run `make check` and `make package` before PR
-delivery. Keep the README command and installer help synchronized.
+while editing. Setup tests run the standalone script from a file and stdin with
+synthetic release archives, temporary user data, and recording tools; they never
+install into the real desktop or download a CLI. Run `make check` and
+`make package` before PR delivery. Keep the README command and installer help
+synchronized.
 
 ## Ownership and implementation
 

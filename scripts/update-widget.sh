@@ -28,7 +28,10 @@ WITH_CLI=false
 INSTALL_OPTION="-u"
 INSTALLED_ROOT=""
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR=""
+if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
+  ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+fi
 METADATA_PATH="${ROOT_DIR}/metadata.json"
 RELEASE_JSON=""
 TMP_DIR=""

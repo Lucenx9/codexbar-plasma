@@ -130,6 +130,15 @@ print(json.dumps({"status": os.environ.get("CLI_STATUS", "ready")}))
         self.assertIn("widget is current", result.stderr)
         self.assertEqual(before, self.calls())
 
+    def test_stdin_bootstrap_runs_setup_without_checkout_path(self):
+        result = subprocess.run([str(self.bin / "bash"), "-s", "--", "--setup", "--no-input"],
+                                env=self.env, input=SCRIPT.read_text(), text=True,
+                                capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("BASH_SOURCE", result.stderr)
+        self.assertIn("widget installed", result.stderr)
+        self.assertIn(" -i ", self.calls())
+
     def test_upgrade_never_restarts_without_consent(self):
         self.installed.mkdir(parents=True)
         (self.installed / "metadata.json").write_text(json.dumps({
