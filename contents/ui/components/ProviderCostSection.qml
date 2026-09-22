@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "." as Components
 import "../CostPresentation.js" as CostPresentation
+import "../QuotaWindowCost.js" as QuotaWindowCost
 
 ColumnLayout {
     id: tokenCostSection
@@ -408,6 +409,99 @@ ColumnLayout {
                     }
                 }
             }
+        }
+    }
+
+    ColumnLayout {
+        id: quotaWindowSection
+
+        // The weekly quota row supplies the boundaries; the local daily history
+        // supplies the amounts. Only a row that reports its window length can
+        // be split, so a restored cache row shows nothing until a live refresh.
+        readonly property var weeklyRow: {
+            var rows = tokenCostSection.providerData && Array.isArray(tokenCostSection.providerData.rows)
+                ? tokenCostSection.providerData.rows : [];
+            for (var i = 0; i < rows.length; i++) {
+                if (rows[i] && rows[i].windowMinutes === 7 * 24 * 60 && typeof rows[i].resetsAt === "string")
+                    return rows[i];
+            }
+            return null;
+        }
+        readonly property var windows: weeklyRow && tokenCostSection.tokenCost
+            ? QuotaWindowCost.windows(tokenCostSection.tokenCost.daily, Date.parse(weeklyRow.resetsAt),
+                weeklyRow.windowMinutes, applet.panelClockMs)
+            : []
+        readonly property bool anyEstimated: windows.some(function(window) {
+            return window.startEstimated || window.endEstimated;
+        })
+
+        function instantText(timestampMs) {
+            return Qt.formatDateTime(new Date(timestampMs), "MMM d, hh:mm");
+        }
+        function rangeText(window) {
+            return window.current ? i18n("Since %1", instantText(window.startMs))
+                : i18n("%1 - %2", instantText(window.startMs), instantText(window.endMs));
+        }
+        function amountText(window) {
+            var currency = tokenCostSection.tokenCost ? tokenCostSection.tokenCost.currency : "USD";
+            var cost = window.cost === null ? i18n("Cost unavailable")
+                : (window.costPartial ? i18n("at least %1", applet.amountString(window.cost, currency))
+                    : applet.amountString(window.cost, currency));
+            var tokens = window.tokens === null ? i18n("Tokens unavailable")
+                : (window.tokensPartial ? i18n("at least %1", applet.usageCountText(window.tokens, "tokens"))
+                    : applet.usageCountText(window.tokens, "tokens"));
+            // Separators and the estimate mark are symbols, composed outside the
+            // catalog like the other " · " joins in this section.
+            var text = cost + " · " + tokens;
+            return window.startEstimated || window.endEstimated ? "≈ " + text : text;
+        }
+
+        objectName: "quotaWindowSection"
+        visible: tokenCostSection.detailsExpanded && windows.length > 0
+        Layout.fillWidth: true
+        spacing: Kirigami.Units.smallSpacing / 2
+
+        PlainPlasmaLabel {
+            text: i18n("Quota weeks")
+            font.weight: Font.DemiBold
+            Layout.fillWidth: true
+            elide: Text.ElideRight
+        }
+
+        Repeater {
+            model: quotaWindowSection.windows
+
+            delegate: RowLayout {
+                required property var modelData
+
+                Layout.fillWidth: true
+                spacing: Kirigami.Units.smallSpacing
+
+                PlainPlasmaLabel {
+                    text: quotaWindowSection.rangeText(modelData)
+                    font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+                    font.weight: modelData.current ? Font.DemiBold : Font.Normal
+                    opacity: modelData.current ? 1 : applet.secondaryTextOpacity
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                }
+
+                PlainPlasmaLabel {
+                    text: quotaWindowSection.amountText(modelData)
+                    font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+                    horizontalAlignment: Text.AlignRight
+                    elide: Text.ElideLeft
+                }
+            }
+        }
+
+        PlainPlasmaLabel {
+            visible: quotaWindowSection.anyEstimated
+            text: "≈ " + i18n("The history is kept per day, so a day containing a reset counts toward one week only.")
+            font: Kirigami.Theme.smallFont
+            opacity: applet.secondaryTextOpacity
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
         }
     }
 

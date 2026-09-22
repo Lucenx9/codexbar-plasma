@@ -278,6 +278,16 @@ Provider-specific editable settings depend on the official CLI contract.
   amounts; missing amounts stay omitted. The daily average stays visible for a
   range measured as zero, and the peak still names a day only once something
   was spent.
+- **Quota weeks** in the expanded provider details split the local history by
+  the provider's weekly quota window: the current week so far and up to three
+  earlier ones, each with its exact start and end. Right after a reset the
+  current week holds no full day yet and is left out until it does. The boundaries come from the
+  weekly usage row's reset time and window length, so the list appears once a
+  live usage refresh reports them. History is kept per day, so when the reset
+  falls inside a day that whole day counts toward one week, and the totals are
+  marked `≈`. Unknown or missing days make a total read "at least"; weeks
+  reaching back before the scanned history range are left out rather than
+  shown incomplete.
 - Token, request, and point counts use the current language's singular and
   plural forms. Large counts retain compact notation such as `1K` and `4.3B`.
 - Cost totals qualified as estimated, partial, or approximate from the CLI's

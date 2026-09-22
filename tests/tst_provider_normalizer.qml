@@ -31,6 +31,27 @@ TestCase {
 
     // --- object-key guards --------------------------------------------------
 
+    function test_rateWindowKeepsOnlyAWholeBoundedLength_data() {
+        return [
+            { tag: "weekly", value: 10080, expected: 10080 },
+            { tag: "five-hour", value: 300, expected: 300 },
+            { tag: "year", value: 366 * 24 * 60, expected: 366 * 24 * 60 },
+            { tag: "over-a-year", value: 366 * 24 * 60 + 1, expected: 0 },
+            { tag: "fractional", value: 10080.5, expected: 0 },
+            { tag: "zero", value: 0, expected: 0 },
+            { tag: "negative", value: -10080, expected: 0 },
+            { tag: "string", value: "10080", expected: 0 },
+            { tag: "missing", value: undefined, expected: 0 }
+        ];
+    }
+
+    function test_rateWindowKeepsOnlyAWholeBoundedLength(data) {
+        var window = { usedPercent: 40 };
+        if (data.value !== undefined)
+            window.windowMinutes = data.value;
+        compare(Normalizer.rateWindowMetrics(window, null, true).windowMinutes, data.expected);
+    }
+
     function test_rejectsPrototypePollutingKeys() {
         var keys = unsafeKeys()
         for (var i = 0; i < keys.length; i++) {

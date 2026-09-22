@@ -251,8 +251,17 @@ function rateWindowMetrics(window, pace, usageKnown) {
         paceOnTop: !pace || pace.willLastToReset !== false,
         paceEtaSeconds: isFinite(paceEta)
             ? Math.max(0, Math.min(maximumPaceEtaSeconds, paceEta))
-            : 0
+            : 0,
+        windowMinutes: rateWindowMinutes(window.windowMinutes)
     }
+}
+
+// The window length the CLI reports beside `resetsAt` (10080 for a weekly
+// limit). Anything but a whole number of minutes up to a year is dropped to 0,
+// which consumers read as "length unknown".
+function rateWindowMinutes(value) {
+    return typeof value === "number" && isFinite(value) && Math.floor(value) === value
+        && value > 0 && value <= 366 * 24 * 60 ? value : 0
 }
 
 // CLI-controlled text that must never throw while being read. Only genuine

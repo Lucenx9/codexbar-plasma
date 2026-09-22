@@ -49,18 +49,6 @@ Issues linked below preserve discussion; this file owns parity status.
   and unknown amounts distinct, and stays legible in the narrow popup.
   Evidence: [0.60.5 review](docs/research/2026-09-18-macos-parity-0.60.5.md#linux-cli-contract-changes-since-0604).
 
-### Quota-window cost history
-
-- [ ] Show Codex and Claude cost/token subtotals per current and recent weekly
-  quota window, mirroring the macOS 0.62.0 Recent-windows list as a
-  Plasma-native view. No new CLI contract is required: the windows derive from
-  the live Weekly `resetsAt` the widget already consumes plus the local cost
-  history it already scans. Done when each window states its exact boundaries,
-  keeps measured and unknown amounts distinct, marks estimated boundaries, and
-  drops windows older than the scanned history instead of presenting truncated
-  slices as complete weeks.
-  Evidence: [0.62.0 review](docs/research/2026-09-20-macos-parity-0.62.0.md#linux-cli-contract-changes-since-0610).
-
 ### Popup usage row visibility
 
 - [ ] Hide and restore individual popup usage rows per provider, mirroring the
