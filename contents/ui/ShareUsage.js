@@ -69,13 +69,18 @@ function snapshot(costs, days, createdAt, refreshFailed) {
         var omitted = ranking ? amount(ranking.omitted) : null
         result.omittedModels += Math.max(0, rows.length - 128)
             + (omitted === null ? 0 : Math.min(1000000, Math.floor(omitted)))
-        result.partial = result.partial || (ranking ? ranking.truncated === true : item.modelsTruncated === true)
+        result.partial = result.partial || (ranking
+            ? ranking.sourceTruncated === true || ranking.hasUnknownCost === true
+            : item.modelsTruncated === true)
         for (var j = 0; j < Math.min(rows.length, 128); j++) {
             if (!record(rows[j])) continue
             var model = quantities(rows[j])
             model.label = label(rows[j].label)
             model.provider = provider
-            if (model.label && model.tokens !== null) models.push(model)
+            if (model.label && model.tokens !== null) {
+                result.partial = result.partial || model.cost === null
+                models.push(model)
+            }
         }
     }
     if (result.tokens !== null && amount(result.tokens) === null) result.partial = true
