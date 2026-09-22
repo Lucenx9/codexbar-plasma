@@ -41,10 +41,12 @@ For those, use `make install` or `./install.sh`. Release-package users can use
 
 `scripts/update-widget.sh --setup` is also the downloadable installer documented
 in [Quick install](../README.md#quick-install-from-a-terminal). It must work as a
-single file outside a checkout. Setup reads the installed user package metadata
-under the absolute `XDG_DATA_HOME`, falling back to `~/.local/share`; an absent
-package uses version `0.0.0` for the shared release validation. Existing package
-directories with invalid metadata fail rather than being overwritten blindly.
+single file outside a checkout. The README bootstrap downloads it to a private
+temporary directory and removes it on exit. Setup reads the installed user
+package metadata under the absolute `XDG_DATA_HOME`, falling back to
+`~/.local/share`. An absent package uses version `0.0.0` for the shared release
+validation. Setup rejects invalid existing package metadata, including an
+incorrect applet ID or package structure, before installing or running a helper.
 Setup selects `kpackagetool6 -i` for a missing package and `-u` for an existing
 one, without treating any installation failure as a reason to try the other.
 The `--check` and `--install` JSON interfaces retain their update-only behavior.

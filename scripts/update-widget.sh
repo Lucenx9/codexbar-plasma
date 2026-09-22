@@ -332,6 +332,12 @@ if ! jq -e 'type == "object" and (.KPlugin | type == "object") and (.KPlugin.Ver
   "$METADATA_PATH" >/dev/null; then
   fail "local_metadata_invalid" "local widget metadata does not match the expected contract"
 fi
+if [[ "$SETUP" == true && "$INSTALL_OPTION" == -u ]] \
+  && ! jq -e --arg id "$PLUGIN_ID" \
+    '.KPackageStructure == "Plasma/Applet" and .KPlugin.Id == $id' \
+    "$METADATA_PATH" >/dev/null; then
+  fail "local_metadata_invalid" "installed widget metadata has the wrong applet identity"
+fi
 local_version="$(jq -r '.KPlugin.Version' "$METADATA_PATH")"
 if [[ ! "$local_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   fail "local_metadata_invalid" "local widget version must use X.Y.Z"
@@ -481,7 +487,11 @@ timeout --kill-after="${KPACKAGE_INSTALL_KILL_AFTER_SECONDS}s" \
   kpackagetool6 -t Plasma/Applet "$INSTALL_OPTION" "$package_path" >&2 \
   || fail "package_install_failed" "failed to install widget package"
 
-emit_status "installed" "widget update installed; restart Plasma to apply the update" "$local_version" "$remote_version" "$asset_url"
+if [[ "$SETUP" == true && "$INSTALL_OPTION" == -i ]]; then
+  emit_status "installed" "widget installed" "$local_version" "$remote_version" "$asset_url"
+else
+  emit_status "installed" "widget update installed; restart Plasma to apply the update" "$local_version" "$remote_version" "$asset_url"
+fi
 
 setup_changed=true
 finish_setup

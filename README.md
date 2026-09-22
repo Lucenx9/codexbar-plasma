@@ -18,15 +18,20 @@ theme; provider accent colors stay consistent across themes.
 From your Plasma 6 desktop session, run this command as your regular user:
 
 ```sh
-curl --fail --show-error --location --proto '=https' --proto-redir '=https' \
-  --connect-timeout 10 --max-time 30 --max-filesize 65536 \
-  https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/scripts/update-widget.sh \
-  --output install-codexbar-plasma.sh && bash install-codexbar-plasma.sh --setup
+(
+  installer_dir=$(mktemp -d) || exit
+  trap 'rm -rf -- "$installer_dir"' EXIT
+  curl --fail --show-error --location --proto '=https' --proto-redir '=https' \
+    --connect-timeout 10 --max-time 30 --max-filesize 65536 \
+    https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/scripts/update-widget.sh \
+    --output "$installer_dir/install.sh" && bash "$installer_dir/install.sh" --setup
+)
 ```
 
 This downloads the installer from this repository's `main` branch before
-executing it. You can inspect `install-codexbar-plasma.sh` first by running the
-`curl` part separately. The installer downloads the latest stable **release
+executing it in a private temporary directory, then removes the script. To
+inspect it first, download the URL above to a file you choose and run that file
+with `bash FILE --setup`. The installer downloads the latest stable **release
 package**, verifies its GitHub SHA-256 digests, published checksum, applet ID and
 version, and installs or updates it for your user. No Git checkout or build
 is needed. Run it without `sudo`; missing command-line dependencies are reported
@@ -40,10 +45,9 @@ in the widget's **Providers** settings using the supported setup actions.
 
 Rerunning the command upgrades an older widget and offers to restart Plasma.
 Prompts default to No; without a terminal they are skipped. For unattended setup,
-run the downloaded script with `--setup --no-input`; add `--with-cli` to explicitly
+add `--no-input` to the final `bash` command; add `--with-cli` to explicitly
 install or reuse the private CLI too. Selecting it in widget settings is still
 required. A CLI failure leaves the widget installed and returns a nonzero status.
-You can delete `install-codexbar-plasma.sh` afterward.
 
 ### KDE Store or manual installation
 

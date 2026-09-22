@@ -120,6 +120,8 @@ print(json.dumps({"status": os.environ.get("CLI_STATUS", "ready")}))
         result = self.run_setup()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(" -i ", self.calls())
+        self.assertIn("widget installed", result.stderr)
+        self.assertNotIn("restart Plasma", result.stderr)
         self.assertIn("Install and select managed CLI", result.stdout)
         self.assertNotIn("restart", self.calls())
         before = self.calls()
@@ -130,7 +132,9 @@ print(json.dumps({"status": os.environ.get("CLI_STATUS", "ready")}))
 
     def test_upgrade_never_restarts_without_consent(self):
         self.installed.mkdir(parents=True)
-        (self.installed / "metadata.json").write_text('{"KPlugin":{"Version":"1.0.0"}}')
+        (self.installed / "metadata.json").write_text(json.dumps({
+            "KPackageStructure": "Plasma/Applet",
+            "KPlugin": {"Id": "app.codexbar.plasma", "Version": "1.0.0"}}))
         result = self.run_setup()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(" -u ", self.calls())
@@ -143,7 +147,9 @@ print(json.dumps({"status": os.environ.get("CLI_STATUS", "ready")}))
         for answer, restart in (("\n", False), ("y\n", True), ("n\n", False)):
             with self.subTest(answer=answer):
                 self.installed.mkdir(parents=True, exist_ok=True)
-                (self.installed / "metadata.json").write_text('{"KPlugin":{"Version":"1.0.0"}}')
+                (self.installed / "metadata.json").write_text(json.dumps({
+                    "KPackageStructure": "Plasma/Applet",
+                    "KPlugin": {"Id": "app.codexbar.plasma", "Version": "1.0.0"}}))
                 (self.root / "calls").write_text("")
                 result = self.run_setup(input_answers=answer)
                 self.assertEqual(result.returncode, 0, result.stderr)
@@ -173,6 +179,21 @@ print(json.dumps({"status": os.environ.get("CLI_STATUS", "ready")}))
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(metadata.read_text(), "invalid")
         self.assertEqual(self.calls(), "")
+
+    def test_wrong_existing_applet_identity_never_runs_its_cli_helper(self):
+        for metadata in (
+            {"KPackageStructure": "Plasma/Applet",
+             "KPlugin": {"Id": "another.applet", "Version": "9.9.9"}},
+            {"KPackageStructure": "Other/Package",
+             "KPlugin": {"Id": "app.codexbar.plasma", "Version": "9.9.9"}},
+        ):
+            with self.subTest(metadata=metadata):
+                self.installed.mkdir(parents=True, exist_ok=True)
+                (self.installed / "metadata.json").write_text(json.dumps(metadata))
+                result = self.run_setup("--with-cli")
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("wrong applet identity", result.stderr)
+                self.assertEqual(self.calls(), "")
 
     def test_install_failure_does_not_fall_back_or_install_cli(self):
         result = self.run_setup("--with-cli", FAIL_INSTALL="1")
