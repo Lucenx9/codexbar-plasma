@@ -70,17 +70,10 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
 
 ## Earlier CLI evidence
 
-These small reports preserve version-specific evidence used by later audits.
-They are historical comparisons, not current feature plans. Preserve their
-original findings; a new audit names the report it supersedes and its exact
-versions. Current guides describe implemented recommendations; TODO lists
-remaining Linux work.
-
-- [0.49.1](research/2026-08-10-macos-parity-progress.md)
-- [0.49.6](research/2026-08-15-macos-parity-0.49.6.md)
-- [0.50.0](research/2026-08-16-macos-parity-0.50.0.md)
-- [0.54.0](research/2026-08-20-macos-parity-0.54.0.md)
-- [0.55.0](research/2026-08-24-macos-parity-0.55.0.md)
+The 0.49.1 through 0.55.0 reports were superseded by the
+[0.56.2 audit](research/2026-09-01-macos-parity-0.56.2.md), which re-verified
+their contracts, and were removed. They remain recoverable from Git history
+at commit `ba0a0d8`.
 
 ## Product screenshots
 
