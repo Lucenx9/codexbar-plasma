@@ -1,6 +1,8 @@
 import QtQuick
 import QtTest
 import "../contents/ui/QuotaWindowCost.js" as QuotaWindowCost
+import "../contents/ui/ProviderNormalizer.js" as Normalizer
+import "../contents/ui/PrivacyPresentation.js" as Privacy
 
 // The suite runs with TZ=America/Los_Angeles, so local midnights and the
 // November daylight-saving change below are deterministic.
@@ -85,6 +87,24 @@ TestCase {
         compare(unknown[0].cost, null);
         compare(unknown[0].costPartial, false);
         verify(unknown[0].tokens > 0);
+    }
+
+    function test_mixedIncompleteDayKeepsWeeklyTotalsPartialThroughPrivacy() {
+        var source = history(2026, 9, 16, 7).map(function(row) {
+            return { date: row.label, totalCost: row.cost, totalTokens: row.tokens }
+        })
+        source[2].incompleteRequestCount = 1
+        var daily = Normalizer.normalizeCostDaily(source, "USD", 7, "2026-09-22T12:00:00Z")
+        compare(daily[2].incompleteRequests, 1)
+        var privateCost = Privacy.cost({provider: "codex", historyDays: 7, daily: daily}, true)
+        compare(privateCost.daily[2].incompleteRequests, 1)
+        var result = QuotaWindowCost.windows(privateCost.daily, local(2026, 9, 23),
+            weekMinutes, local(2026, 9, 22, 12))
+        compare(result.length, 1)
+        compare(result[0].cost, 28)
+        compare(result[0].tokens, 2800)
+        compare(result[0].costPartial, true)
+        compare(result[0].tokensPartial, true)
     }
 
     function test_missingDateMakesTheWeekPartialNotComplete() {

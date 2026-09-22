@@ -16,7 +16,7 @@ function label(value) {
     if (typeof value !== "string") return ""
     return SafeText.cliMessage(value, 120)
         .replace(/\S+@\S+|\b(?:https?|file):\S+/g, "[redacted]")
-        .replace(/(^|\s)(?:\/|~\/|[A-Za-z]:\\)\S+/g, "$1[redacted]")
+        .replace(/(^|[^\w/])(?:\/|~\/|[A-Za-z]:\\)\S+/g, "$1[redacted]")
         .replace(/[\u202a-\u202e\u2066-\u2069]/g, "")
 }
 

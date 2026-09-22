@@ -43,7 +43,10 @@ function isLocalMidnight(timestampMs) {
 function metricTotal(days, field, expectedDays) {
     var sum = 0
     var known = 0
+    var incomplete = false
     for (var i = 0; i < days.length; i++) {
+        incomplete = incomplete || (typeof days[i].incompleteRequests === "number"
+            && isFinite(days[i].incompleteRequests) && days[i].incompleteRequests > 0)
         var value = days[i][field]
         if (typeof value === "number" && isFinite(value)) {
             var next = sum + value
@@ -57,8 +60,8 @@ function metricTotal(days, field, expectedDays) {
     }
     return {
         value: known > 0 ? sum : null,
-        // Some days measured, others unknown: the sum is a lower bound.
-        partial: known > 0 && known < expectedDays
+        // Missing days or excluded requests make a measured sum a lower bound.
+        partial: known > 0 && (known < expectedDays || incomplete)
     }
 }
 
@@ -107,7 +110,8 @@ function windows(daily, resetsAtMs, windowMinutes, nowMs, limit) {
         if (!range) {
             return []
         }
-        days.push({startMs: range.startMs, cost: daily[i].cost, tokens: daily[i].tokens})
+        days.push({startMs: range.startMs, cost: daily[i].cost, tokens: daily[i].tokens,
+            incompleteRequests: daily[i].incompleteRequests})
     }
     days.sort(function(left, right) { return left.startMs - right.startMs })
     // A date reported twice cannot be attributed honestly: summing both would
