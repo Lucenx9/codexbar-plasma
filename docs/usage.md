@@ -287,7 +287,8 @@ Provider-specific editable settings depend on the official CLI contract.
   falls inside a day that whole day counts toward one week, and the totals are
   marked `≈`. Unknown or missing days make a total read "at least"; weeks
   reaching back before the scanned history range are left out rather than
-  shown incomplete.
+  shown incomplete. If the last successful cost scan is older than today,
+  unscanned trailing days also make the affected week read "at least".
 - Token, request, and point counts use the current language's singular and
   plural forms. Large counts retain compact notation such as `1K` and `4.3B`.
 - Cost totals qualified as estimated, partial, or approximate from the CLI's

@@ -13,6 +13,8 @@ retained values. A successful refresh clears the error.
   expose truncation and an explicit empty state.
 - Missing costs and token counts remain unknown. Measured zero stays zero;
   filling calendar gaps only fills metrics actually observed in the snapshot.
+  Quota-week sums mark trailing days after a stale snapshot as partial through
+  the current local date; a newer usage refresh does not make those costs known.
   Recent history rows show both available amounts, including zero, in either
   metric mode. The selected metric still controls row filtering and bar scaling.
   The daily average divides the measured days only, so a range measured as zero
