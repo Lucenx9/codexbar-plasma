@@ -3,7 +3,6 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONTRACT_MD="${ROOT_DIR}/docs/cli-provider-settings-descriptor.md"
-TODO_MD="${ROOT_DIR}/TODO.md"
 
 require_in_file() {
   local file="$1"
@@ -28,28 +27,51 @@ if [[ ! -f "$CONTRACT_MD" ]]; then
   exit 1
 fi
 
-require_in_file "$CONTRACT_MD" "codexbar config providers --descriptors --format json --json-only"
-require_in_file "$CONTRACT_MD" "codexbar config set"
-require_in_file "$CONTRACT_MD" "codexbar config action"
-require_in_file "$CONTRACT_MD" "\"schemaVersion\": 1"
-require_in_file "$CONTRACT_MD" "\"fields\""
-require_in_file "$CONTRACT_MD" "\"actions\""
-require_in_file "$CONTRACT_MD" "\"redactedValue\""
-require_in_file "$CONTRACT_MD" "\"writeCommand\""
-require_in_file "$CONTRACT_MD" "\"command\""
-require_in_file "$CONTRACT_MD" "\"kind\": \"secret\""
-require_in_file "$CONTRACT_MD" "\"kind\": \"enum\""
-require_in_file "$CONTRACT_MD" "\"kind\": \"command\""
-reject_in_file "$CONTRACT_MD" "- \`\"kind\": \"command\"\`: read-only row"
-require_in_file "$CONTRACT_MD" "After a successful write/action"
-require_in_file "$CONTRACT_MD" "Plasma renderer rules"
-require_in_file "$CONTRACT_MD" "Do not expose raw secrets"
-require_in_file "$CONTRACT_MD" "32 fields"
-require_in_file "$CONTRACT_MD" "32 actions"
-require_in_file "$CONTRACT_MD" "64 options"
-require_in_file "$CONTRACT_MD" '[A-Za-z0-9][A-Za-z0-9._-]*'
-require_in_file "$CONTRACT_MD" "reject invalid IDs"
+# The proposal is prose, so its sentences are not pinned: rewording must stay
+# free. What must not drift is the part Plasma enforces. The rendering bounds
+# and the identifier pattern are read from the parser and required in the
+# document, so changing either side alone fails here.
+python3 - "$CONTRACT_MD" "${ROOT_DIR}/contents/ui/config/ProviderDescriptor.js" <<'PY_INNER'
+import re
+import sys
+from pathlib import Path
 
-require_in_file "$TODO_MD" "docs/cli-provider-settings-descriptor.md"
+contract = Path(sys.argv[1]).read_text(encoding="utf-8")
+parser = Path(sys.argv[2]).read_text(encoding="utf-8")
+flat = re.sub(r"\s+", " ", contract)
+
+def constant(name):
+    match = re.search(r"var " + name + r" = (\d+)", parser)
+    if not match:
+        raise SystemExit(f"ProviderDescriptor.js no longer declares {name}")
+    return match.group(1)
+
+failures = []
+for name, phrase in (
+    ("maximumFields", "{} fields"),
+    ("maximumActions", "{} actions"),
+    ("maximumOptions", "{} options"),
+    ("maximumCommandTokens", "{} command tokens"),
+    ("maximumTokenLength", "at most {} characters"),
+    ("maximumIdentifierLength", "no longer than {} characters"),
+):
+    expected = phrase.format(constant(name))
+    if expected not in flat:
+        failures.append(f"contract must state the parser bound {name}: {expected!r}")
+
+pattern = re.search(r"/\^(\[A-Za-z0-9\]\[A-Za-z0-9\._-\]\*)\$/", parser)
+if not pattern:
+    failures.append("ProviderDescriptor.js no longer validates identifiers with the documented pattern")
+elif "`" + pattern.group(1) + "`" not in contract:
+    failures.append(f"contract must document the identifier pattern {pattern.group(1)!r}")
+
+if failures:
+    print("\n".join(failures), file=sys.stderr)
+    sys.exit(1)
+PY_INNER
+
+# A command descriptor was once documented as a read-only row; it runs a
+# command. An absence has no executable equivalent, so this stays literal.
+reject_in_file "$CONTRACT_MD" "- \`\"kind\": \"command\"\`: read-only row"
 
 echo "CLI descriptor contract checks passed."

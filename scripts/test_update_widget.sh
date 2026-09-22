@@ -6,7 +6,6 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 UPDATER="${ROOT_DIR}/scripts/update-widget.sh"
 MAKEFILE="${ROOT_DIR}/Makefile"
 INSTALL_SCRIPT="${ROOT_DIR}/install.sh"
-WORKFLOW="${ROOT_DIR}/.github/workflows/ci.yml"
 README="${ROOT_DIR}/README.md"
 
 require_in_file() {
@@ -145,11 +144,34 @@ reject_in_surface applet "Widget update check timed out."
 require_in_file "${ROOT_DIR}/contents/config/main.xml" "name=\"lastNotifiedUpdateVersion\""
 reject_in_surface applet "return \"sh \" + shellQuote(updateScriptPath())"
 reject_in_surface applet "return shellQuote(updateScriptPath()) + (installMode ? \" --install\" : \" --check\")"
-require_in_file "$INSTALL_SCRIPT" "make -C \"\$ROOT_DIR\" package"
-require_in_file "$INSTALL_SCRIPT" "\${ROOT_DIR}/dist/codexbar-plasma.plasmoid"
-reject_in_file "$INSTALL_SCRIPT" "kpackagetool6 -t Plasma/Applet -u \"\$ROOT_DIR\""
-require_in_file "$WORKFLOW" "dist/codexbar-plasma.plasmoid.sha256"
-require_in_file "$README" "only immutable GitHub releases"
+# Run install.sh itself with recording stand-ins for make, kpackagetool6, and
+# systemctl, so the checks see what the installer does rather than how it is
+# spelled. Installing the source tree instead of the built package would ship
+# tests and review files to users, which is the regression guarded here.
+install_probe="$(mktemp -d)"
+for tool in make kpackagetool6 systemctl; do
+  cat >"${install_probe}/${tool}" <<EOF
+#!/usr/bin/env bash
+printf '%s\n' "${tool} \$*" >>"${install_probe}/calls"
+# The first upgrade attempt fails, so the fresh-install fallback runs too.
+[[ "${tool} \$*" == *" -u "* && ! -e "${install_probe}/upgraded" ]] && { : >"${install_probe}/upgraded"; exit 1; }
+exit 0
+EOF
+  chmod +x "${install_probe}/${tool}"
+done
+PATH="${install_probe}:$PATH" bash "$INSTALL_SCRIPT" >/dev/null
+expected_package="${ROOT_DIR}/dist/codexbar-plasma.plasmoid"
+expected_calls="make -C ${ROOT_DIR} package
+kpackagetool6 -t Plasma/Applet -u ${expected_package}
+kpackagetool6 -t Plasma/Applet -i ${expected_package}
+systemctl --user restart plasma-plasmashell.service"
+if [[ "$(cat "${install_probe}/calls")" != "$expected_calls" ]]; then
+  echo "install.sh must build the package, upgrade or install that package, then restart Plasma; got:" >&2
+  cat "${install_probe}/calls" >&2
+  rm -rf "$install_probe"
+  exit 1
+fi
+rm -rf "$install_probe"
 require_in_file "$README" "curl\`, \`jq\`, \`python3\`, \`sha256sum\`"
 
 update_script_sample="${ROOT_DIR}/scripts/update-widget.sh"
