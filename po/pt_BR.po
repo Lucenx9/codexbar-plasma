@@ -210,7 +210,8 @@ msgstr "Atualizar"
 msgid "No overview data available."
 msgstr "Não há dados disponíveis para a visão geral."
 
-#: contents/ui/components/FullRepresentation.qml contents/ui/configPanel.qml
+#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/RateWindowLabels.qml contents/ui/configPanel.qml
 #: contents/ui/main.qml
 msgid "Credits"
 msgstr "Créditos"
@@ -451,12 +452,14 @@ msgid "Enable %1"
 msgstr "Ativar %1"
 
 #: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/RateWindowLabels.qml
 #: contents/ui/components/SpendView.qml contents/ui/main.qml
 msgid "Cost"
 msgstr "Custo"
 
 #: contents/ui/components/ProviderCostSection.qml
-#: contents/ui/components/SpendView.qml contents/ui/main.qml
+#: contents/ui/components/RateWindowLabels.qml
+#: contents/ui/components/SpendView.qml
 msgid "Tokens"
 msgstr "Tokens"
 
@@ -851,6 +854,154 @@ msgstr "ZenMux"
 #: contents/ui/components/ProviderNames.qml
 msgid "ZoomMate"
 msgstr "ZoomMate"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "5-hour"
+msgstr "5 horas"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Amp Free"
+msgstr "Amp Free"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Gemini Models"
+msgstr "Modelos Gemini"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Status"
+msgstr "Status"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Budget"
+msgstr "Orçamento"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Monthly credits"
+msgstr "Créditos mensais"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Premium"
+msgstr "Premium"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Total"
+msgstr "Total"
+
+#: contents/ui/components/RateWindowLabels.qml contents/ui/configPanel.qml
+msgid "Standard"
+msgstr "Padrão"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Requests"
+msgstr "Requisições"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Pro"
+msgstr "Pro"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Weekly"
+msgstr "Semanal"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Prompts"
+msgstr "Instruções"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Spend"
+msgstr "Gastos"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "API key limit"
+msgstr "Limite da chave de API"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Points"
+msgstr "Pontos"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Edit predictions"
+msgstr "Previsões de edição"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Session"
+msgstr "Sessão"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Claude and GPT"
+msgstr "Claude e GPT"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Balance"
+msgstr "Saldo"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Deployment"
+msgstr "Implantação"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Chat"
+msgstr "Conversa"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Auto"
+msgstr "Automático"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Rate limit"
+msgstr "Limite de frequência"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Flash"
+msgstr "Flash"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "On-demand"
+msgstr "Sob demanda"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Kilo Pass"
+msgstr "Kilo Pass"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Bonus"
+msgstr "Bônus"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Window"
+msgstr "Período"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Add-on credits"
+msgstr "Créditos adicionais"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Billing cycle"
+msgstr "Ciclo de faturamento"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Monthly"
+msgstr "Mensal"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Sonnet"
+msgstr "Sonnet"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "API"
+msgstr "API"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Flash Lite"
+msgstr "Flash Lite"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Opus"
+msgstr "Opus"
+
+#: contents/ui/components/RateWindowLabels.qml contents/ui/main.qml
+msgid "Usage"
+msgstr "Uso"
 
 #: contents/ui/components/SessionsView.qml
 msgid "%1 local session"
@@ -1435,10 +1586,6 @@ msgstr "Aparência"
 #: contents/ui/configPanel.qml
 msgid "Panel style:"
 msgstr "Estilo do painel:"
-
-#: contents/ui/configPanel.qml contents/ui/main.qml
-msgid "Standard"
-msgstr "Padrão"
 
 #: contents/ui/configPanel.qml
 msgid "Colored provider icons"
@@ -2493,156 +2640,12 @@ msgid "No usage yet"
 msgstr "Ainda sem uso"
 
 #: contents/ui/main.qml
-msgid "Usage"
-msgstr "Uso"
-
-#: contents/ui/main.qml
 msgid "Limits not available"
 msgstr "Limites indisponíveis"
 
 #: contents/ui/main.qml
 msgid "Extra"
 msgstr "Extra"
-
-#: contents/ui/main.qml
-msgid "5-hour"
-msgstr "5 horas"
-
-#: contents/ui/main.qml
-msgid "Amp Free"
-msgstr "Amp Free"
-
-#: contents/ui/main.qml
-msgid "Gemini Models"
-msgstr "Modelos Gemini"
-
-#: contents/ui/main.qml
-msgid "Status"
-msgstr "Status"
-
-#: contents/ui/main.qml
-msgid "Budget"
-msgstr "Orçamento"
-
-#: contents/ui/main.qml
-msgid "Monthly credits"
-msgstr "Créditos mensais"
-
-#: contents/ui/main.qml
-msgid "Premium"
-msgstr "Premium"
-
-#: contents/ui/main.qml
-msgid "Total"
-msgstr "Total"
-
-#: contents/ui/main.qml
-msgid "Requests"
-msgstr "Requisições"
-
-#: contents/ui/main.qml
-msgid "Pro"
-msgstr "Pro"
-
-#: contents/ui/main.qml
-msgid "Weekly"
-msgstr "Semanal"
-
-#: contents/ui/main.qml
-msgid "Prompts"
-msgstr "Instruções"
-
-#: contents/ui/main.qml
-msgid "Spend"
-msgstr "Gastos"
-
-#: contents/ui/main.qml
-msgid "API key limit"
-msgstr "Limite da chave de API"
-
-#: contents/ui/main.qml
-msgid "Points"
-msgstr "Pontos"
-
-#: contents/ui/main.qml
-msgid "Edit predictions"
-msgstr "Previsões de edição"
-
-#: contents/ui/main.qml
-msgid "Session"
-msgstr "Sessão"
-
-#: contents/ui/main.qml
-msgid "Claude and GPT"
-msgstr "Claude e GPT"
-
-#: contents/ui/main.qml
-msgid "Balance"
-msgstr "Saldo"
-
-#: contents/ui/main.qml
-msgid "Deployment"
-msgstr "Implantação"
-
-#: contents/ui/main.qml
-msgid "Chat"
-msgstr "Conversa"
-
-#: contents/ui/main.qml
-msgid "Auto"
-msgstr "Automático"
-
-#: contents/ui/main.qml
-msgid "Rate limit"
-msgstr "Limite de frequência"
-
-#: contents/ui/main.qml
-msgid "Flash"
-msgstr "Flash"
-
-#: contents/ui/main.qml
-msgid "On-demand"
-msgstr "Sob demanda"
-
-#: contents/ui/main.qml
-msgid "Kilo Pass"
-msgstr "Kilo Pass"
-
-#: contents/ui/main.qml
-msgid "Bonus"
-msgstr "Bônus"
-
-#: contents/ui/main.qml
-msgid "Window"
-msgstr "Período"
-
-#: contents/ui/main.qml
-msgid "Add-on credits"
-msgstr "Créditos adicionais"
-
-#: contents/ui/main.qml
-msgid "Billing cycle"
-msgstr "Ciclo de faturamento"
-
-#: contents/ui/main.qml
-msgid "Monthly"
-msgstr "Mensal"
-
-#: contents/ui/main.qml
-msgid "Sonnet"
-msgstr "Sonnet"
-
-#: contents/ui/main.qml
-msgid "API"
-msgstr "API"
-
-#: contents/ui/main.qml
-msgid "Flash Lite"
-msgstr "Flash Lite"
-
-#: contents/ui/main.qml
-msgid "Opus"
-msgstr "Opus"
 
 #: contents/ui/main.qml
 msgid "Extra usage"

@@ -78,7 +78,9 @@ TestCase {
             function commitUsageSnapshot(items) {
                 providers = UsageCache.reconcile(providers, items, panelClockMs);
             }
-            function rateWindowLabel() { return "Quota"; }
+            readonly property QtObject rateWindowLabels: QtObject {
+                function labelForLane() { return "Quota"; }
+            }
             function providerCostSection() { return null; }
             function resetCreditsSection() { return null; }
             function providerTokenCost() { return null; }
