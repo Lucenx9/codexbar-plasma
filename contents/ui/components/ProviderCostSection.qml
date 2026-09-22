@@ -443,11 +443,13 @@ ColumnLayout {
         }
         function amountText(window) {
             var currency = tokenCostSection.tokenCost ? tokenCostSection.tokenCost.currency : "USD";
+            var historyIncomplete = tokenCostSection.tokenCost
+                && tokenCostSection.tokenCost.historyCoverageEstablished === false;
             var cost = window.cost === null ? i18n("Cost unavailable")
-                : (window.costPartial ? i18n("at least %1", applet.amountString(window.cost, currency))
+                : (window.costPartial || historyIncomplete ? i18n("at least %1", applet.amountString(window.cost, currency))
                     : applet.amountString(window.cost, currency));
             var tokens = window.tokens === null ? i18n("Tokens unavailable")
-                : (window.tokensPartial ? i18n("at least %1", applet.usageCountText(window.tokens, "tokens"))
+                : (window.tokensPartial || historyIncomplete ? i18n("at least %1", applet.usageCountText(window.tokens, "tokens"))
                     : applet.usageCountText(window.tokens, "tokens"));
             // Separators and the estimate mark are symbols, composed outside the
             // catalog like the other " · " joins in this section.

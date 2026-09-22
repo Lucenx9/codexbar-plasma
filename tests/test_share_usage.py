@@ -25,6 +25,9 @@ TestCase {
         id: mockApplet
         property bool privacyMode: false
         function providerTitle(value) { return value; }
+        function providerDisplayTitle(value) {
+            return privacyMode && value === "private_provider" ? "Provider" : providerTitle(value);
+        }
         function providerColor(value) { return "#6699ff"; }
         function usageCountText(value) { return value + " tokens"; }
         function amountString(value, currency) { return currency + " " + value; }
@@ -37,8 +40,8 @@ TestCase {
             function i18np(one, many, n) { return (n === 1 ? one : many).replace("%1", n); }
         }
     }
-    function createWindow() {
-        var snapshot = ShareUsage.snapshot([{provider: "codex", historyDays: 30,
+    function createWindow(provider) {
+        var snapshot = ShareUsage.snapshot([{provider: provider || "codex", historyDays: 30,
             totals: {tokens: 100, cost: 2, currency: "USD"},
             models: [{label: "Synthetic model", tokens: 100, cost: 2, currency: "USD"}]}],
             30, "2026-09-22T12:00:00Z", false);
@@ -91,6 +94,16 @@ TestCase {
         mockApplet.privacyMode = true;
         tryCompare(window, "visible", false);
         compare(window.capturedImage, null);
+    }
+    function test_privateUnknownProviderStaysMaskedInBothExports() {
+        mockApplet.privacyMode = true;
+        var window = createWindow("private_provider");
+        verify(window.statisticsText.indexOf("private_provider") === -1);
+        verify(window.statisticsText.indexOf("Provider") !== -1);
+        var card = findChild(window, "shareUsageCard");
+        verify(card !== null);
+        verify(JSON.stringify(card.presentation).indexOf("private_provider") === -1);
+        window.close();
     }
 }
 '''
