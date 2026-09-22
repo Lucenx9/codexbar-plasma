@@ -67,7 +67,7 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   existing 60s page timeout, and systems without GNU `timeout` run the raw
   command unchanged. A command reaped by the bound reports the same timeout
   message as the page timeout instead of an exit-code line or the shell's
-   own signal notice.
+  own signal notice.
 
 ## 0.2.40 - 2026-09-20
 
