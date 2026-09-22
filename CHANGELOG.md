@@ -57,6 +57,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep a fully measured share export free of an incomplete-data warning when
+  its model ranking has more rows than the six shown, while still flagging
+  missing model costs and source scans that reached their safety bound.
 - Mask unknown provider identifiers in shared images and statistics when
   personal information is hidden, and mark quota-week amounts as partial while
   the CLI is still establishing local history coverage.

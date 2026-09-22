@@ -3,6 +3,7 @@ import QtTest
 import "../contents/ui/ShareUsage.js" as ShareUsage
 import "../contents/ui/CostResponse.js" as CostResponse
 import "../contents/ui/PrivacyPresentation.js" as Privacy
+import "../contents/ui/ProviderNormalizer.js" as Normalizer
 
 TestCase {
     name: "ShareUsage"
@@ -117,6 +118,80 @@ TestCase {
         // QML supplies anonymous localized labels after the privacy projection.
         privateCost.tokenRanking.rows.forEach(function(row, index) { row.label = "Model " + (index + 1) })
         compare(ShareUsage.snapshot([privateCost], 30, "", false).models[0].tokens, 900)
+    }
+
+    function test_hiddenModelRowsDoNotClaimIncompleteData() {
+        var models = []
+        for (var i = 0; i < 7; i++)
+            models.push({modelName: "model " + i, cost: 1, totalTokens: 10})
+        function normalizedCost(rows) {
+            var response = CostResponse.response(JSON.stringify([{provider: "codex", historyDays: 30,
+                totals: {totalCost: rows.length, totalTokens: rows.length * 10},
+                daily: [{date: "2026-09-22", modelBreakdowns: rows}]}]), "", 30)
+            return response.costs.codex
+        }
+        var complete = normalizedCost(models)
+        compare(complete.tokenRanking.omitted, 1)
+        compare(complete.tokenRanking.truncated, true)
+        compare(complete.tokenRanking.sourceTruncated, false)
+        var shared = ShareUsage.snapshot([complete], 30, "", false)
+        compare(shared.omittedModels, 1)
+        compare(shared.partial, false)
+        compare(ShareUsage.snapshot([Privacy.cost(complete, true)], 30, "", false).partial, false)
+
+        models[6].cost = null
+        var unknownHiddenCost = normalizedCost(models)
+        compare(unknownHiddenCost.tokenRanking.hasUnknownCost, true)
+        compare(ShareUsage.snapshot([unknownHiddenCost], 30, "", false).partial, true)
+        compare(ShareUsage.snapshot([Privacy.cost(unknownHiddenCost, true)], 30, "", false).partial, true)
+        models[6].cost = 1
+
+        // A source day exceeding the bounded scan genuinely loses model data.
+        for (var j = 7; j < 129; j++)
+            models.push({modelName: "model " + j, cost: 1, totalTokens: 10})
+        var incomplete = normalizedCost(models)
+        compare(incomplete.tokenRanking.sourceTruncated, true)
+        compare(ShareUsage.snapshot([incomplete], 30, "", false).partial, true)
+        compare(ShareUsage.snapshot([Privacy.cost(incomplete, true)], 30, "", false).partial, true)
+    }
+
+    function test_mixedKnownAndUnknownModelCostsStayPartial() {
+        var days = [
+            {date: "2026-09-21", modelBreakdowns: [{modelName: "model", totalTokens: 10}]},
+            {date: "2026-09-22", modelBreakdowns: [{modelName: "model", cost: 2, totalTokens: 20}]}
+        ]
+        var ranking = Normalizer.normalizeCostModels(days, "USD", 30,
+            "2026-09-22T12:00:00Z", true).tokenRanking
+        compare(ranking.rows[0].cost, 2)
+        compare(ranking.rows[0].tokens, 30)
+        compare(ranking.hasUnknownCost, true)
+        var input = cost("codex", 30, 2, "USD")
+        input.tokenRanking = ranking
+        compare(ShareUsage.snapshot([input], 30, "", false).partial, true)
+        compare(ShareUsage.snapshot([Privacy.cost(input, true)], 30, "", false).partial, true)
+    }
+
+    function test_exhaustedModelDayScanStaysPartial() {
+        var days = [{date: "2026-09-21", modelBreakdowns: [
+            {modelName: "older model", cost: 2, totalTokens: 10}]}]
+        for (var i = 0; i < Normalizer.maximumCostHistoryScanItems; i++)
+            days.push({date: "2026-08-01", modelBreakdowns: []})
+        var ranking = Normalizer.normalizeCostModels(days, "USD", 30,
+            "2026-09-22T12:00:00Z", true).tokenRanking
+        compare(ranking.rows.length, 0)
+        compare(ranking.sourceTruncated, true)
+        var input = cost("codex", 10, 2, "USD")
+        input.tokenRanking = ranking
+        compare(ShareUsage.snapshot([input], 30, "", false).partial, true)
+        compare(ShareUsage.snapshot([Privacy.cost(input, true)], 30, "", false).partial, true)
+
+        // Without a calendar anchor, the legacy contract intentionally reads
+        // only the requested tail; older rows are not scan-budget loss.
+        var legacy = Normalizer.normalizeCostModels([
+            {modelBreakdowns: [{modelName: "old", cost: 1, totalTokens: 5}]},
+            {modelBreakdowns: [{modelName: "current", cost: 2, totalTokens: 10}]}
+        ], "USD", 1, undefined, true).tokenRanking
+        compare(legacy.sourceTruncated, false)
     }
 
     function test_localPngUrl_data() {
