@@ -26,6 +26,10 @@ retained values. A successful refresh clears the error.
   the newest 365 calendar days. Legacy non-date labels retain sequence order.
 - Model names are strings. Numeric names are not coerced into display labels.
   Tied model amounts use the label as a stable ordering tiebreaker.
+- Sharing uses a separate token ranking from the full bounded period model
+  aggregation, before the existing six-row cost ranking is truncated. Cheap or
+  unpriced models remain eligible for the top-token list. Its known omitted-row
+  count and incomplete-scan flag survive privacy projection and export.
 - Standard/Fast totals remain blocked on an official CLI contract. No service
   tier is inferred from model names or amounts.
 

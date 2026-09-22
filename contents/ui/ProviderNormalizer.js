@@ -933,7 +933,7 @@ function normalizeProviderCostTotals(providerID, totals, fallbackCost,
     return result
 }
 
-function normalizeCostModels(items, currency, days, updatedAt) {
+function normalizeCostModels(items, currency, days, updatedAt, includeTokenRanking) {
     if (!items || !Array.isArray(items)) {
         return { rows: [], truncated: false }
     }
@@ -965,10 +965,10 @@ function normalizeCostModels(items, currency, days, updatedAt) {
         }
         modelDays.unshift(item)
     }
-    return costModelSummary(modelDays, currency)
+    return costModelSummary(modelDays, currency, includeTokenRanking)
 }
 
-function costModelSummary(modelDays, currency) {
+function costModelSummary(modelDays, currency, includeTokenRanking) {
     var byName = ({})
     var truncated = false
     for (var i = 0; i < modelDays.length; i++) {
@@ -1055,8 +1055,22 @@ function costModelSummary(modelDays, currency) {
         }
         return a.label === b.label ? 0 : (a.label < b.label ? -1 : 1)
     })
-    return {
+    var result = {
         rows: rows.slice(0, maximumCostModelRows),
         truncated: truncated || rows.length > maximumCostModelRows
     }
+    if (includeTokenRanking === true) {
+        // Rank the full bounded aggregation before the cost-first display cap.
+        // A cheap or unpriced model can still have the largest token count.
+        var tokenRows = rows.filter(function(row) { return row.tokens !== null })
+        tokenRows.sort(function(a, b) {
+            return b.tokens - a.tokens || (a.label === b.label ? 0 : (a.label < b.label ? -1 : 1))
+        })
+        result.tokenRanking = {
+            rows: tokenRows.slice(0, maximumCostModelRows),
+            omitted: Math.max(0, tokenRows.length - maximumCostModelRows),
+            truncated: truncated || tokenRows.length > maximumCostModelRows
+        }
+    }
+    return result
 }

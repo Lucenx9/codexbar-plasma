@@ -1,6 +1,8 @@
 import QtQuick
 import QtTest
 import "../contents/ui/ShareUsage.js" as ShareUsage
+import "../contents/ui/CostResponse.js" as CostResponse
+import "../contents/ui/PrivacyPresentation.js" as Privacy
 
 TestCase {
     name: "ShareUsage"
@@ -76,6 +78,38 @@ TestCase {
         verify(ShareUsage.snapshot([input], 30, "", false).partial)
         input.totals.tokens = Number.MAX_SAFE_INTEGER
         compare(ShareUsage.snapshot([input, input], 30, "", false).tokens, null)
+    }
+
+    function test_tokenRankingPrecedesCostCap() {
+        var models = []
+        for (var i = 0; i < 8; i++)
+            models.push({modelName: "private model " + i, cost: 8 - i, totalTokens: i + 1})
+        models.push({modelName: "unpriced leader", totalTokens: 900})
+        models.push({modelName: "unknown tokens", cost: 100})
+        var response = CostResponse.response(JSON.stringify([{provider: "codex", historyDays: 30,
+            totals: {totalCost: 136, totalTokens: 936},
+            daily: [{date: "2026-09-22", modelBreakdowns: models}]}]), "", 30)
+        var cost = response.costs.codex
+        compare(cost.models.length, 6)
+        compare(cost.models[0].label, "unknown tokens")
+        compare(cost.tokenRanking.rows.length, 6)
+        compare(cost.tokenRanking.rows[0].label, "unpriced leader")
+        compare(cost.tokenRanking.omitted, 3)
+        var shared = ShareUsage.snapshot([cost], 30, "", false)
+        compare(shared.models[0].label, "unpriced leader")
+        compare(shared.models[0].tokens, 900)
+        compare(shared.models[0].cost, null)
+        compare(shared.omittedModels, 3)
+        verify(shared.partial)
+        var privateCost = Privacy.cost(cost, true)
+        compare(privateCost.tokenRanking.rows.length, 6)
+        compare(privateCost.tokenRanking.rows[0].tokens, 900)
+        compare(privateCost.tokenRanking.omitted, 3)
+        verify(JSON.stringify(privateCost).indexOf("private model") === -1)
+        verify(JSON.stringify(privateCost).indexOf("unpriced leader") === -1)
+        // QML supplies anonymous localized labels after the privacy projection.
+        privateCost.tokenRanking.rows.forEach(function(row, index) { row.label = "Model " + (index + 1) })
+        compare(ShareUsage.snapshot([privateCost], 30, "", false).models[0].tokens, 900)
     }
 
     function test_localPngUrl_data() {

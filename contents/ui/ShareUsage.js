@@ -63,9 +63,13 @@ function snapshot(costs, days, createdAt, refreshFailed) {
                 result.currencies[index].cost += totals.cost
             }
         }
-        var rows = Array.isArray(item.models) ? item.models : []
+        var ranking = record(item.tokenRanking) ? item.tokenRanking : null
+        var rows = ranking && Array.isArray(ranking.rows) ? ranking.rows
+            : (Array.isArray(item.models) ? item.models : [])
+        var omitted = ranking ? amount(ranking.omitted) : null
         result.omittedModels += Math.max(0, rows.length - 128)
-        result.partial = result.partial || item.modelsTruncated === true
+            + (omitted === null ? 0 : Math.min(1000000, Math.floor(omitted)))
+        result.partial = result.partial || (ranking ? ranking.truncated === true : item.modelsTruncated === true)
         for (var j = 0; j < Math.min(rows.length, 128); j++) {
             if (!record(rows[j])) continue
             var model = quantities(rows[j])
