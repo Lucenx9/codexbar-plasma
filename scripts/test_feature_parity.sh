@@ -442,6 +442,9 @@ reject_in_surface applet "onPanelQuotaLaneChanged: Qt.callLater(refreshNow)"
 reject_in_surface applet "onPanelVisibilityRulesChanged: Qt.callLater(refreshNow)"
 require_in_surface applet '"sessions", "--json-v2"'
 require_in_surface applet "SessionResponse.response(stdoutText, stderrText)"
+# Session cards must never carry filesystem paths: transcript locations and
+# working directories would leak local paths into the view and persisted
+# state. Absence has no runtime equivalent, so these rejections stay.
 reject_in_file "$SESSIONS_COMPONENT_QML" "transcriptPath"
 reject_in_file "$SESSIONS_COMPONENT_QML" "cwd"
 require_in_file "$SPEND_COMPONENT_QML" "InteractiveChart"
