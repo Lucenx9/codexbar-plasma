@@ -309,7 +309,6 @@ reject_in_file "$USAGE_DETAILS_JS" "points.length < maximumPointsPerChart"
 # The provider cost section is executed by tests/test_cost_sections.py, which
 # renders the real component: the chart, the drill-down/history blocks and
 # their breakdown/model/history models each go red there when broken.
-require_in_surface applet "function command(providerID)"
 require_in_surface applet "--all-accounts"
 require_in_surface applet "--account"
 # The menu-bar mode and reset-time initializers read Plasmoid.configuration,
@@ -434,8 +433,6 @@ require_in_surface applet "PanelDisplay.safeLane(Plasmoid.configuration.panelQuo
 require_in_surface applet "PanelRules.normalizedRules(Plasmoid.configuration.panelVisibilityRules)"
 reject_in_surface applet "onPanelQuotaLaneChanged: Qt.callLater(refreshNow)"
 reject_in_surface applet "onPanelVisibilityRulesChanged: Qt.callLater(refreshNow)"
-require_in_surface applet '"sessions", "--json-v2"'
-require_in_surface applet "SessionResponse.response(stdoutText, stderrText)"
 # Session cards must never carry filesystem paths: transcript locations and
 # working directories would leak local paths into the view and persisted
 # state. Absence has no runtime equivalent, so these rejections stay.

@@ -9,8 +9,6 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # either is correct as long as the rule is still there. Assert against the
 # surface so a file split cannot silently drop a nonce, deadline, or cleanup.
 
-require_in_surface applet "running: controller.sending"
-require_in_surface applet "lifecycle.expire(Date.now())"
 # Kept: the no-poll rule is unobservable in executed tests (0 -> 200 on the
 # usage DataSource keeps every controller test green: polling an
 # already-running executable source is a logged no-op) and this existence
@@ -23,13 +21,6 @@ require_in_surface applet "lifecycle.expire(Date.now())"
 # redundant. It stays as the only pin that scope/summary updates coalesce
 # through a zero-interval restart instead of one store write per binding.
 require_in_surface applet "interval: 0"
-require_in_surface applet 'import "../AccountRequests.js" as AccountRequests'
-require_in_surface applet 'import "../SessionRefreshPolicy.js" as SessionRefreshPolicy'
-require_in_surface applet "readonly property int accountCommandTimeoutMs: 60000"
-require_in_surface applet "readonly property int sessionsCommandTimeoutMs: 60000"
-require_in_surface applet "readonly property int notificationCommandTimeoutMs: 10000"
-require_in_surface applet "readonly property int pollIntervalMs: 60000"
-require_in_surface applet "interval: controller.pollIntervalMs"
 # Kept: the hourly cost auto-refresh interval is unobservable in executed
 # tests (3600000 and 50 both keep the cost suite green: a longer wait never
 # elapses in a fast test, and rapid firing throttles to a no-op inside
