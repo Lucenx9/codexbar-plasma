@@ -52,7 +52,9 @@ TestCase {
             // above are the actual production functions, not a throwing stub.
             function resetText() { return ""; }
             function paceSummaryPartsText() { return ""; }
-            function rateWindowLabel() { return ""; }
+            readonly property QtObject rateWindowLabels: QtObject {
+                function labelForLane() { return ""; }
+            }
             function providerTitle(providerID) { return providerID; }
             function providerCostSection(providerID, cost) {
                 return null;
