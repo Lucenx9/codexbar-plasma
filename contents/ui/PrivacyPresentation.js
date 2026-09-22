@@ -148,6 +148,8 @@ function cost(snapshot, enabled) {
         var day = amounts(daily[i])
         var label = field(daily[i], "label", "")
         day.label = typeof label === "string" && /^\d{4}-\d{2}-\d{2}$/.test(label) ? label : ""
+        day.incompleteRequests = Normalizer.normalizedIncompleteRequestCount(
+            field(daily[i], "incompleteRequests", 0))
         var dayModels = modelAmounts(daily[i])
         day.models = dayModels.rows
         day.modelsTruncated = dayModels.truncated

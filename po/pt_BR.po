@@ -3073,6 +3073,9 @@ msgstr ""
 "A versão oficial %1 do CLI está disponível. Atualize usando seu método de "
 "instalação."
 
+#~ msgid "Since %1"
+#~ msgstr "Desde %1"
+
 #~ msgid ""
 #~ "Checks GitHub for official releases. The widget does not install or "
 #~ "replace the CLI."

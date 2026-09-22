@@ -876,6 +876,7 @@ function normalizeCostDaily(items, currency, days, updatedAt) {
             label: label,
             cost: isFinite(cost) ? Math.max(0, cost) : null,
             tokens: isFinite(tokens) ? Math.max(0, tokens) : null,
+            incompleteRequests: normalizedIncompleteRequestCount(item.incompleteRequestCount),
             inputTokens: isFinite(inputTokens) ? Math.max(0, inputTokens) : 0,
             outputTokens: isFinite(outputTokens) ? Math.max(0, outputTokens) : 0,
             cacheReadTokens: isFinite(cacheReadTokens) ? Math.max(0, cacheReadTokens) : 0,

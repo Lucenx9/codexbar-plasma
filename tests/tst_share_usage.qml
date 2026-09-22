@@ -46,6 +46,13 @@ TestCase {
         compare(data.models[0].tokens, 100)
     }
 
+    function test_embeddedAbsolutePathsDoNotEnterExportLabels() {
+        var input = cost("codex", 100, 1, "USD")
+        input.models[0].label = "model=/home/alice/private-project"
+        var data = ShareUsage.snapshot([input], 30, "", false)
+        verify(JSON.stringify(data).indexOf("/home/alice/private-project") === -1)
+    }
+
     function test_malformedBoundsAndRanges() {
         compare(ShareUsage.snapshot(null, NaN, {}, false).providers.length, 0)
         var wrongRange = cost("codex", 10, 2, "USD")
