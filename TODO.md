@@ -210,6 +210,18 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 These are unresolved Linux candidates, not confirmed missing features.
 
+- [ ] Adopt `qmlformat` once it can format this tree safely. Measured at
+  6.11.2 on 2026-09-22: a full run with default settings leaves all 1500
+  executed QML assertions passing, so the formatter changes no behavior, but
+  it joins wrapped expressions into lines up to 2570 characters. Setting
+  `MaxColumnWidth` to 140 or less segfaults it on
+  `tests/tst_provider_roster_controller.qml` and `scripts/smoke/Capture.qml`;
+  160 avoids the crash without fixing readability, and rewraps enough to break
+  `test_feature_parity.sh` and `test_process_lifecycle.sh`, which still match
+  source text literally. CI runs 6.11.1, and no local container runtime was
+  available to confirm the two versions format identically. Done when a
+  setting formats every file without crashing, keeps lines readable, and
+  produces the same output on the CI image.
 - [ ] Verify the 0.64.x Linux quota-window changes in official Linux output.
   0.64.0 claims Linux omits synthetic or unmeasured quota and reports only
   measured provider-specific windows (#3785); 0.64.1 claims each Antigravity

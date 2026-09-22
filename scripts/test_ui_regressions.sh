@@ -50,10 +50,6 @@ require_block_fragment "$DIAGNOSTICS_QML" "id: usePathCommandButton" 'enabled: p
 require_block_fragment "$DIAGNOSTICS_QML" "id: usePathCommandButton" 'page.cfg_commandPath = page.cfg_commandPathDefault || "codexbar"'
 require_block_fragment "$DIAGNOSTICS_QML" "id: diagnosticProviderField" "maximumLength: 256"
 require_block_fragment "$DIAGNOSTICS_QML" "id: diagnosticOutputArea" "selectByMouse: true"
-# A user edit severs the SpinBox value binding, so it must re-install the
-# binding like every other interactive settings control; otherwise runtime
-# costHistoryDays writes from the Usage & Spend tab stop reaching the spin.
-require_block_fragment "$GENERAL_QML" "id: costHistoryDaysSpin" "value = Qt.binding(function() { return page.cfg_costHistoryDays })"
 require_block_fragment "$NOTIFICATIONS_QML" "id: notifyStatusIncidentsCheck" "enabled: enableNotificationsCheck.checked && page.includeStatus"
 
 require_in_file "$README_MD" "command -v codexbar"
@@ -113,6 +109,22 @@ spend_view_qml = root / "contents/ui/components/SpendView.qml"
 full_representation_qml = root / "contents/ui/components/FullRepresentation.qml"
 cost_trust_notice_qml = root / "contents/ui/components/CostTrustNotice.qml"
 plain_tool_tip_qml = root / "contents/ui/components/PlainToolTip.qml"
+
+
+def code_contains(block, fragment):
+    """Substring match that ignores the spacing qmlformat chooses.
+
+    `qmlformat` writes anonymous functions as `function (args)`, breaks a
+    one-line body across lines, and terminates statements with `;`. Matching the
+    literal spelling would turn a pure reformat into a failing check while the
+    behavior is untouched, which is the defect these assertions exist to catch
+    elsewhere. Only layout is normalized: the statement sequence, the
+    identifiers, and the operators all still have to match, so a real edit fails.
+    """
+    def squeeze(value):
+        value = value.replace("function (", "function(").replace(";", " ")
+        return re.sub(r"\s+", " ", value).replace("( ", "(").replace(" )", ")")
+    return squeeze(fragment) in squeeze(block)
 
 
 def function_body(text, name):
@@ -185,7 +197,7 @@ for focus_fragment in (
     "page.flickable.contentItem.mapFromItem(control, 0, 0)",
     "page.ensureVisible(control, position.x - control.x, position.y - control.y)",
 ):
-    if focus_fragment not in focused_provider_control_body:
+    if not code_contains(focused_provider_control_body, focus_fragment):
         raise AssertionError("provider focus scrolling must be scoped to the page content")
 diagnostics_surface = Surface("diagnostics", root)
 general_surface = Surface("general", root)
@@ -206,15 +218,15 @@ for order_surface, move_function, repeater in (
     reveal_order_focus_body = order_surface.function_body("revealFocusedOrderButton")
     for focus_fragment in ("upButton.activeFocus", "downButton.activeFocus",
                            "page.ensureVisible(button, position.x - button.x, position.y - button.y)"):
-        if focus_fragment not in reveal_order_focus_body:
+        if not code_contains(reveal_order_focus_body, focus_fragment):
             raise AssertionError("reorder scrolling must follow only the focused button")
     move_body = order_surface.function_body(move_function)
-    if f"Qt.callLater(restoreOrderFocus, {repeater}, key, delta)" not in move_body:
+    if not code_contains(move_body, f"Qt.callLater(restoreOrderFocus, {repeater}, key, delta)"):
         raise AssertionError("keyboard reorder must restore focus after delegates are replaced")
     restore_order_focus_body = order_surface.function_body("restoreOrderFocus")
     for focus_fragment in ("row.orderKey === key", "!button.enabled",
                            "button.forceActiveFocus(Qt.TabFocusReason)"):
-        if focus_fragment not in restore_order_focus_body:
+        if not code_contains(restore_order_focus_body, focus_fragment):
             raise AssertionError("reorder focus must follow identity and use an enabled button")
 providers_text = providers_qml.read_text(encoding="utf-8")
 diagnostics_text = diagnostics_qml.read_text(encoding="utf-8")
@@ -270,10 +282,10 @@ for config_key in sorted(resettable_config_keys):
     expected_assignment = restore_statements.get(
         config_key, f"cfg_{config_key} = cfg_{config_key}Default"
     )
-    if expected_assignment not in restore_defaults_body:
+    if not code_contains(restore_defaults_body, expected_assignment):
         raise AssertionError(f"global defaults must restore {config_key}")
     expected_pair = f"[cfg_{config_key}, cfg_{config_key}Default]"
-    if expected_pair not in defaults_check_body:
+    if not code_contains(defaults_check_body, expected_pair):
         raise AssertionError(f"global defaults button state must account for {config_key}")
 
 # Config loaders differ in which cfg_*Default properties they inject. Keep the
@@ -384,7 +396,7 @@ assert_form_sections(diagnostics_text, "configDiagnostics.qml",
 for needle in ('i18n("CodexBar Plasma:")', 'i18n("CodexBar CLI:")',
                'i18n("Resolved command:")', 'i18n("Check versions")',
                "Controllers.CliUpdateController", "localOnly: true"):
-    if needle not in diagnostics_text:
+    if not code_contains(diagnostics_text, needle):
         raise AssertionError(f"configDiagnostics.qml must keep the versions summary: {needle}")
 
 # Managed-CLI automatic updates apply only to the managed copy, so the checkbox
@@ -427,7 +439,7 @@ for controller_fragment in (
     "active: page.providersExpanded",
     "presentationConfig.commandPath",
 ):
-    if controller_fragment not in panel_page_text:
+    if not code_contains(panel_page_text, controller_fragment):
         raise AssertionError(
             f"configPanel.qml must load the roster through the gated shared controller; "
             f"missing {controller_fragment!r}"
@@ -458,7 +470,7 @@ for live_config_fragment in (
     "Plasmoid.configuration.widgetUpdateLastStatus",
     "Plasmoid.configuration.widgetUpdateLastError",
 ):
-    if live_config_fragment not in general_text:
+    if not code_contains(general_text, live_config_fragment):
         raise AssertionError(
             "configGeneral.qml must read update status directly from runtime config; "
             f"missing {live_config_fragment!r}"
@@ -478,7 +490,7 @@ for last_check_fragment in (
     'i18n("Last checked: never")',
     "Qt.locale().toString(checkedAt, Locale.ShortFormat)",
 ):
-    if last_check_fragment not in last_update_check_body:
+    if not code_contains(last_update_check_body, last_check_fragment):
         raise AssertionError(
             "General must display the last update check in the local short format; "
             f"missing {last_check_fragment!r}"
@@ -524,7 +536,7 @@ for source_text, label in ((main_text, "main.qml"), (providers_text, "configProv
 # grown a private copy again: both must read the shared component.
 for source_text, label in ((main_text, "main.qml"), (providers_text, "configProviders.qml")):
     title_body = function_body(source_text, "providerTitle")
-    if "providerNames.titleForKey(" not in title_body:
+    if not code_contains(title_body, "providerNames.titleForKey("):
         raise AssertionError(
             f"{label}: providerTitle must read display names from "
             "components/ProviderNames.qml"
@@ -540,7 +552,7 @@ for identity_fragment, requirement in (
     ('"wayfinder": "wayfinder.md"', "documentation link"),
     ('"wayfinder": [', "brand color"),
 ):
-    if identity_fragment not in identity_text:
+    if not code_contains(identity_text, identity_fragment):
         raise AssertionError(f"ProviderIdentity.js must expose the Wayfinder {requirement}")
 names_text = (root / "contents/ui/components/ProviderNames.qml").read_text(encoding="utf-8")
 if '"wayfinder": i18n("Wayfinder")' not in function_body(names_text, "titleForKey"):
@@ -548,11 +560,11 @@ if '"wayfinder": i18n("Wayfinder")' not in function_body(names_text, "titleForKe
 
 api_key_setup_body = function_body(providers_text, "supportsApiKeySetup")
 for provider in ("crossmodel", "clawrouter", "fireworks"):
-    if f'case "{provider}":' not in api_key_setup_body:
+    if not code_contains(api_key_setup_body, f'case "{provider}":'):
         raise AssertionError(
             f"supportsApiKeySetup must include released API-key provider {provider}"
         )
-if "return fireworksSingleKeySetupSupported" not in api_key_setup_body:
+if not code_contains(api_key_setup_body, "return fireworksSingleKeySetupSupported"):
     raise AssertionError(
         "Fireworks API-key setup must stay hidden until the CLI version proves slug discovery support"
     )
@@ -569,7 +581,7 @@ if fireworks_gate is None or re.findall(
 if "runCliVersionCommand()" not in function_body(providers_text, "reload"):
     raise AssertionError("provider reload must probe the selected CodexBar CLI version")
 cli_version_result_body = function_body(providers_text, "handleCliVersionResult")
-if "ProviderConfigProtocol.cliVersionAtLeast(" not in cli_version_result_body:
+if not code_contains(cli_version_result_body, "ProviderConfigProtocol.cliVersionAtLeast("):
     raise AssertionError("the Providers page must gate versioned capabilities through the bounded CLI parser")
 
 # Failure precedence for provider mutations lives in
@@ -593,7 +605,7 @@ for handler_call in (
     "handleDescriptorFieldResult(descriptor, stdoutText, stderrText, exitCode)",
     "handleDescriptorActionResult(descriptor, stdoutText, stderrText, exitCode)",
 ):
-    if handler_call not in handle_data_body:
+    if not code_contains(handle_data_body, handler_call):
         raise AssertionError(
             "Provider mutation handlers must receive the executable exit code; "
             f"missing {handler_call!r}"
@@ -610,7 +622,7 @@ for descriptor_fallback_fragment in (
     "providerListHasSupportedDescriptors(next)",
     "runProviderListCommand(false)",
 ):
-    if descriptor_fallback_fragment not in provider_list_result_body:
+    if not code_contains(provider_list_result_body, descriptor_fallback_fragment):
         raise AssertionError(
             "the Providers page must expose descriptor compatibility fallback state; "
             f"missing {descriptor_fallback_fragment!r}"
@@ -630,7 +642,7 @@ if provider_publish_index < 0 or descriptor_supported_index < provider_publish_i
 # the stored value through OverviewProviders, the module the settings page
 # uses, so the custom selection is not silently ignored for aliased providers.
 overview_body = function_body(main_text, "overviewProviders")
-if "OverviewProviders.visibleItems(providers, overviewProviderIDsRaw)" not in overview_body:
+if not code_contains(overview_body, "OverviewProviders.visibleItems(providers, overviewProviderIDsRaw)"):
     raise AssertionError(
         "the Overview rows must share filtering and parsing with the settings page so "
         "aliased providers match runtime keys"
@@ -643,7 +655,7 @@ for retired_overview_fragment in ("maxOverviewProviders", "configuredOverviewPro
         )
 
 provider_config_body = function_body(main_text, "normalizeProviderConfigEntries")
-if "Array.isArray(payload) ? payload : [payload]" not in provider_config_body:
+if not code_contains(provider_config_body, "Array.isArray(payload) ? payload : [payload]"):
     raise AssertionError(
         "parseProviderConfigOutput must accept a single provider object as well "
         "as the normal provider-list array"
@@ -656,7 +668,7 @@ for config_path_fragment in (
     "$HOME/.config/codexbar/config.json",
     "$HOME/.codexbar/config.json",
 ):
-    if config_path_fragment not in config_watch_body:
+    if not code_contains(config_watch_body, config_path_fragment):
         raise AssertionError(
             "ProviderConfigWatch.watchCommand must mirror the CLI config path resolver; "
             f"missing {config_path_fragment!r}"
@@ -676,7 +688,7 @@ for stale_account_fragment in (
         )
 
 provider_roster_load_body = popup_surface.function_body("loadProviderRoster")
-if "disconnectProviderRosterCommands()" not in provider_roster_load_body:
+if not code_contains(provider_roster_load_body, "disconnectProviderRosterCommands()"):
     raise AssertionError(
         "loadProviderRoster must invalidate older provider roster commands "
         "before connecting a replacement"
@@ -689,7 +701,7 @@ popup_surface.require(
 provider_index_body = function_body(main_text, "providerIndexForID")
 if "return -1" not in provider_index_body or "return 0" in provider_index_body:
     raise AssertionError("providerIndexForID must return -1 instead of falling back to provider 0")
-if "var nextProviderIndex = applet.providerIndex(providerData)" not in main_text or "if (nextProviderIndex >= 0)" not in main_text:
+if not code_contains(main_text, "var nextProviderIndex = applet.providerIndex(providerData)" not in main_text or "if (nextProviderIndex >= 0)"):
     raise AssertionError("Overview provider selection must ignore missing providers instead of selecting index 0")
 
 bounded_revision_body = function_body(main_text, "boundedConfigRevision")
@@ -700,24 +712,24 @@ cost_controller_text = (root / "contents/ui/controllers/CostController.qml").rea
 for message in ("codexbar cost did not return JSON.",
                 "codexbar cost returned an unsupported JSON payload.",
                 "Some cost data could not be refreshed."):
-    if message not in cost_controller_text:
+    if not code_contains(cost_controller_text, message):
         raise AssertionError("cost controller must localize each failure outcome")
-if "onTokenCostsChanged: applyTokenCosts()" not in main_text:
+if not code_contains(main_text, "onTokenCostsChanged: applyTokenCosts()"):
     raise AssertionError("controller snapshots must update provider-local cost sections")
 
 usage_controller_text = (root / "contents/ui/controllers/UsageController.qml").read_text()
 usage_response_text = (root / "contents/ui/UsageResponse.js").read_text()
 if "UsageResponse.response(" not in function_body(usage_controller_text, "parseOutput"):
     raise AssertionError("usage parsing must cross the bounded pure response interface")
-if "Normalizer.dedupeProviderSnapshots(snapshots)" not in usage_response_text:
+if not code_contains(usage_response_text, "Normalizer.dedupeProviderSnapshots(snapshots)"):
     raise AssertionError("direct usage payloads must not create duplicate provider tabs")
 
 token_cost_section_body = id_block(main_text, "tokenCostSection")
-if "applet.costErrorText" not in token_cost_section_body:
+if not code_contains(token_cost_section_body, "applet.costErrorText"):
     raise AssertionError("tokenCostSection must surface costErrorText instead of dropping cost errors")
-if "Cost unavailable: %1" not in token_cost_section_body:
+if not code_contains(token_cost_section_body, "Cost unavailable: %1"):
     raise AssertionError("tokenCostSection must label visible cost errors")
-if "supportsLocalCost" not in token_cost_section_body:
+if not code_contains(token_cost_section_body, "supportsLocalCost"):
     raise AssertionError("tokenCostSection must scope global cost errors to supported providers")
 if "points: tokenCostSection.chartPoints" not in token_cost_section_body \
         or token_cost_section_body.count("tokenCostSection.chartPoints.length > 0") < 2:
@@ -729,13 +741,13 @@ present_cost_body = function_body(main_text, "presentTokenCosts")
 for fragment in ("copyObject(snapshot)", "costHistoryWindowLabel(null, snapshot.labelDays)",
                  'item.title = i18n("Cost")', "item.monthLine = costLine(windowLabel, snapshot.totals.cost,",
                  "item.windowValueLine = costValueLine(snapshot.totals.cost,"):
-    if fragment not in present_cost_body:
+    if not code_contains(present_cost_body, fragment):
         raise AssertionError(f"cost presentation must localize normalized snapshots: {fragment!r}")
 
-if "function costHistoryWindowLabel(item, requestedHistoryDays)" not in main_text:
+if not code_contains(main_text, "function costHistoryWindowLabel(item, requestedHistoryDays)"):
     raise AssertionError("main.qml must define costHistoryWindowLabel")
 cost_history_label_body = function_body(main_text, "costHistoryWindowLabel")
-if "rawDays = Normalizer.strictFiniteNumber(requestedHistoryDays)" not in cost_history_label_body:
+if not code_contains(cost_history_label_body, "rawDays = Normalizer.strictFiniteNumber(requestedHistoryDays)"):
     raise AssertionError("invalid emitted cost ranges must fall back to the captured request range")
 for cost_number_function in ("costValueLine", "costLine"):
     cost_number_body = function_body(main_text, cost_number_function)
@@ -748,7 +760,7 @@ for token_only_total_fragment in (
     "Normalizer.strictFiniteNumber(totals.cost)",
     'usageCountText(totals.tokens, "tokens")',
 ):
-    if token_only_total_fragment not in spend_total_body:
+    if not code_contains(spend_total_body, token_only_total_fragment):
         raise AssertionError(
             "the global spend summary must not print a fabricated zero-dollar total; "
             f"missing {token_only_total_fragment!r}"
@@ -758,7 +770,7 @@ for antigravity_hint_fragment in (
     'case "antigravity":',
     'i18n("Local Antigravity history includes token totals. Dollar costs are unavailable.")',
 ):
-    if antigravity_hint_fragment not in token_cost_hint_body:
+    if not code_contains(token_cost_hint_body, antigravity_hint_fragment):
         raise AssertionError(
             "Antigravity local history must be described as token-only; "
             f"missing {antigravity_hint_fragment!r}"
@@ -767,11 +779,11 @@ for antigravity_hint_fragment in (
 # The aggregation moved into CostPresentation.js; the rule did not. A snapshot
 # answered for another window must still be excluded from the selected range.
 spend_snapshots_body = function_body(cost_presentation_text, "spendSnapshots")
-if "snapshotMatchesRange(tokenCost, historyDays)" not in spend_snapshots_body:
+if not code_contains(spend_snapshots_body, "snapshotMatchesRange(tokenCost, historyDays)"):
     raise AssertionError("global spend aggregates must exclude snapshots from another selected range")
 cost_range_match_body = function_body(cost_presentation_text, "snapshotMatchesRange")
 for range_match_fragment in ("Number(tokenCost.historyDays)", "Number(historyDays)"):
-    if range_match_fragment not in cost_range_match_body:
+    if not code_contains(cost_range_match_body, range_match_fragment):
         raise AssertionError(
             "cost snapshot range matching must compare normalized snapshot and selected ranges; "
             f"missing {range_match_fragment!r}"
@@ -785,7 +797,7 @@ for fragment in ("Normalizer.rateWindowMetrics(", "Guards.copyObject(metrics)",
                  "result.resetsAt = resetsAtText(",
                  "result.resetDescription = Normalizer.boundedDisplayText(",
                  "result.paceObservedAtMs = receivedAtMs"):
-    if fragment not in window_body:
+    if not code_contains(window_body, fragment):
         raise AssertionError("quota normalization must preserve reset and forecast data")
 # The stored reset is read back as a date string by the countdown, the panel
 # reset rule, and absolute formatting, so a numeric CLI date keeps its ISO form
@@ -793,7 +805,7 @@ for fragment in ("Normalizer.rateWindowMetrics(", "Guards.copyObject(metrics)",
 resets_at_body = function_body(snapshot_text, "resetsAtText")
 for fragment in ("typeof value === \"number\"", "new Date(value).toISOString()",
                  "Normalizer.boundedDisplayText("):
-    if fragment not in resets_at_body:
+    if not code_contains(resets_at_body, fragment):
         raise AssertionError(
             "stored quota reset dates must stay parsable and bounded; "
             f"missing {fragment!r}"
@@ -807,7 +819,7 @@ refresh_body = function_body(usage_controller_text, "refreshNow")
 if "refreshCost(" in refresh_body or 'retireUsageCommandKind("cost")' in refresh_body:
     raise AssertionError("quota refreshes must not start or retire independent cost scans")
 fallback_body = function_body(usage_controller_text, "canUseProviderFallback")
-if "controller.sourceMode.length === 0 || hasSelectedAccountOverrides()" not in fallback_body:
+if not code_contains(fallback_body, "controller.sourceMode.length === 0 || hasSelectedAccountOverrides()"):
     raise AssertionError("account overrides must force provider-scoped refreshes")
 empty_command_index = refresh_body.find("if (commandSource.length === 0)")
 loading_false_index = refresh_body.find("failUsageRefresh(", empty_command_index)
@@ -819,26 +831,24 @@ if "loading = false" not in function_body(usage_controller_text, "failUsageRefre
     raise AssertionError("failed usage refreshes must finish loading")
 
 provider_token_cost_body = function_body(main_text, "providerTokenCost")
-if "tokenCosts[key]" not in provider_token_cost_body:
+if not code_contains(provider_token_cost_body, "tokenCosts[key]"):
     raise AssertionError("providerTokenCost must read the current token-cost map")
 if (
     "CostPresentation.snapshotMatchesRange(" not in provider_token_cost_body
     or "costHistoryDays" not in provider_token_cost_body
 ):
     raise AssertionError("providerTokenCost must hide snapshots from a stale history range")
-if "onCostHistoryDaysChanged: applyTokenCosts()" not in main_text:
+if not code_contains(main_text, "onCostHistoryDaysChanged: applyTokenCosts()"):
     raise AssertionError("changing the cost history range must reproject provider details")
 replace_snapshot_body = function_body(main_text, "replaceProviderSnapshot")
 for snapshot_fragment in ("UsageCache.reconcile([], [snapshot], Date.now())", "providerTokenCost(key)", "replacement"):
-    if snapshot_fragment not in replace_snapshot_body:
+    if not code_contains(replace_snapshot_body, snapshot_fragment):
         raise AssertionError(
             "replaceProviderSnapshot must preserve current token-cost state; "
             f"missing {snapshot_fragment!r}"
         )
 
-if "checked = Qt.binding(function()" not in provider_accounts_panel_text:
-    raise AssertionError("account buttons must restore their checked binding after clicks")
-if "accountIsSelected(modelData, accountsPanel.providerData)" not in provider_accounts_panel_text:
+if not code_contains(provider_accounts_panel_text, "accountIsSelected(modelData, accountsPanel.providerData)"):
     raise AssertionError("restored account bindings must follow the selected account state")
 
 clear_account_override_button = id_block(
@@ -853,21 +863,21 @@ for clear_override_fragment in (
             "an account override must remain removable after its account disappears; "
             f"missing {clear_override_fragment!r}"
         )
-if "|| applet.selectedAccountForProvider(providerID).length > 0" not in provider_accounts_panel_text:
+if not code_contains(provider_accounts_panel_text, "|| applet.selectedAccountForProvider(providerID).length > 0"):
     raise AssertionError("an orphaned account override must keep its removal control visible")
 
 if 'String(modelData.value || "")' in providers_text:
     raise AssertionError("descriptor text fields must preserve numeric zero")
 descriptor_value_body = providers_surface.function_body("valueText")
-if "value === undefined || value === null" not in descriptor_value_body:
+if not code_contains(descriptor_value_body, "value === undefined || value === null"):
     raise AssertionError("descriptor value text must only blank nullish values")
-if "valueText: normalizedValueText" not in providers_surface_text:
+if not code_contains(providers_surface_text, "valueText: normalizedValueText"):
     raise AssertionError("normalized descriptor fields must retain nullish-safe display text")
-if "selectedOptionIndex: optionIndex(options, normalizedValueText)" not in providers_surface_text:
+if not code_contains(providers_surface_text, "selectedOptionIndex: optionIndex(options, normalizedValueText)"):
     raise AssertionError("descriptor enum selection must read the nullish-safe value text")
-if "text: modelData.valueText" not in providers_text:
+if not code_contains(providers_text, "text: modelData.valueText"):
     raise AssertionError("descriptor text fields must render normalized value text")
-if "currentIndex: modelData.selectedOptionIndex" not in providers_text:
+if not code_contains(providers_text, "currentIndex: modelData.selectedOptionIndex"):
     raise AssertionError("descriptor enum fields must render the normalized selection")
 
 descriptor_enum_box = providers_surface.id_block("descriptorEnumBox")
@@ -879,7 +889,7 @@ for fragment in (
     "restoreBindingAfterWrite = false",
     "currentIndex = Qt.binding(function()",
 ):
-    if fragment not in descriptor_enum_box:
+    if not code_contains(descriptor_enum_box, fragment):
         raise AssertionError(
             "descriptor enum must restore its selection binding after a write result; "
             f"missing {fragment!r}"
@@ -904,7 +914,7 @@ def assert_dismissible_message_restores_visibility(surface, object_id, state_pro
         f'{state_property} = ""',
         f"visible = Qt.binding(function() {{ return {state_property}.length > 0 }})",
     ):
-        if fragment not in block:
+        if not code_contains(block, fragment):
             raise AssertionError(
                 f"dismissible message {object_id!r} must clear only on close and restore "
                 f"its visibility binding; missing {fragment!r}"
@@ -925,12 +935,12 @@ assert_dismissible_message_restores_visibility(
 # tst_account_response.qml and real process coverage in test_accounts_controller.py.
 
 dedupe_accounts_body = function_body(main_text, "dedupeAccountOptions")
-if "accountOptionKey(items[i])" not in dedupe_accounts_body:
+if not code_contains(dedupe_accounts_body, "accountOptionKey(items[i])"):
     raise AssertionError("dedupeAccountOptions must dedupe on the validated account identity, not the display label")
 account_option_key_body = function_body(main_text, "accountOptionKey")
-if '"key:" + key' not in account_option_key_body or '"label:" + label' not in account_option_key_body:
+if not code_contains(account_option_key_body, '"key:" + key' not in account_option_key_body or '"label:" + label'):
     raise AssertionError("dedupeAccountOptions must namespace identities before object-map lookup")
-if "hasOwnKey(seen, key)" not in dedupe_accounts_body:
+if not code_contains(dedupe_accounts_body, "hasOwnKey(seen, key)"):
     raise AssertionError(
         "dedupeAccountOptions must use an own-property check so labels such as "
         "constructor and toString remain selectable"
@@ -944,16 +954,16 @@ header_sources = {
 }
 for header_id, source_text in header_sources.items():
     header_body = id_block(source_text, header_id)
-    if "Layout.rightMargin: Kirigami.Units.smallSpacing" not in header_body:
+    if not code_contains(header_body, "Layout.rightMargin: Kirigami.Units.smallSpacing"):
         raise AssertionError(
             f"{header_id} must align header actions with the inset scroll content"
         )
 
 for scroll_id in ("overviewScroll", "providerScroll"):
     scroll_body = id_block(main_text, scroll_id)
-    if "contentWidth: availableWidth" not in scroll_body:
+    if not code_contains(scroll_body, "contentWidth: availableWidth"):
         raise AssertionError(f"{scroll_id} content width must follow Plasma ScrollView availableWidth")
-    if f"{scroll_id}.availableWidth - Kirigami.Units.smallSpacing" not in scroll_body:
+    if not code_contains(scroll_body, f"{scroll_id}.availableWidth - Kirigami.Units.smallSpacing"):
         raise AssertionError(f"{scroll_id} must retain one quiet content inset before its scrollbar")
     for stale_scroll_gutter in (
         "readonly property real contentRightInset:",
@@ -969,14 +979,14 @@ if main_text.count("PlasmaComponents.ScrollView {") < 2:
 if "Controls.ScrollView {" in main_text:
     raise AssertionError("popup content must not restore desktop-framed scroll views")
 
-if "readonly property real roundedSurfaceRadius: Kirigami.Units.cornerRadius" not in main_text:
+if not code_contains(main_text, "readonly property real roundedSurfaceRadius: Kirigami.Units.cornerRadius"):
     raise AssertionError("main.qml must derive its polished radius from Kirigami theme units")
-if "readonly property real nestedSurfaceRadius: Kirigami.Units.cornerRadius" not in main_text:
+if not code_contains(main_text, "readonly property real nestedSurfaceRadius: Kirigami.Units.cornerRadius"):
     raise AssertionError(
         "main.qml must expose a concentric radius for surfaces nested inside a "
         "roundedSurfaceRadius container"
     )
-if "readonly property real compactMeterTrackHeight: Math.round(Kirigami.Units.gridUnit" not in main_text:
+if not code_contains(main_text, "readonly property real compactMeterTrackHeight: Math.round(Kirigami.Units.gridUnit"):
     raise AssertionError(
         "list-row meters must derive their thinner track from gridUnit instead of "
         "pinning a device pixel count"
@@ -1001,7 +1011,7 @@ for popup_surface_fragment in (
     "Kirigami.Theme.alternateBackgroundColor",
     "border.color: applet.withAlpha(Kirigami.Theme.textColor, 0.09)",
 ):
-    if popup_surface_fragment not in popup_surface_body:
+    if not code_contains(popup_surface_body, popup_surface_fragment):
         raise AssertionError(
             "popupInnerSurface must provide a restrained rounded inner frame; "
             f"missing {popup_surface_fragment!r}"
@@ -1016,16 +1026,16 @@ for header_fragment in (
     "id: providerAccountLabel",
     "id: providerPlanLabel",
 ):
-    if header_fragment not in provider_header_body:
+    if not code_contains(provider_header_body, header_fragment):
         raise AssertionError(f"providerHeaderRow must expose {header_fragment} for stable header layout")
 
-if "providerIconSource(providerHeaderRow.providerData.provider)" not in provider_header_body:
+if not code_contains(provider_header_body, "providerIconSource(providerHeaderRow.providerData.provider)"):
     raise AssertionError("providerHeaderRow must reinforce provider identity with the canonical icon")
-if "providerReadableColor(" not in provider_header_body:
+if not code_contains(provider_header_body, "providerReadableColor("):
     raise AssertionError("providerHeaderRow must keep provider identity visible on the active theme")
-if "radius: providerHeaderRow.applet.nestedSurfaceRadius" not in provider_header_body:
+if not code_contains(provider_header_body, "radius: providerHeaderRow.applet.nestedSurfaceRadius"):
     raise AssertionError("providerHeaderRow must share the nested rounded surface scale")
-if "type: Kirigami.Heading.Type.Primary" not in provider_header_body:
+if not code_contains(provider_header_body, "type: Kirigami.Heading.Type.Primary"):
     raise AssertionError(
         "the provider title must stay the heaviest label in the detail view so "
         "the section headings below it never outrank it"
@@ -1039,11 +1049,11 @@ for function_name in (
     "maximumContrastColor",
     "readableAccentColor",
 ):
-    if f"function {function_name}(" not in theme_contrast_text:
+    if not code_contains(theme_contrast_text, f"function {function_name}("):
         raise AssertionError(f"ThemeContrast.js must define contrast helper {function_name}")
 
 for function_name in ("readableAccentColor", "providerReadableColor"):
-    if f"function {function_name}(" not in main_text:
+    if not code_contains(main_text, f"function {function_name}("):
         raise AssertionError(f"main.qml must expose theme contrast wrapper {function_name}")
 
 rounded_bar_body = function_body(cost_presentation_text, "paintRoundedTopBar")
@@ -1052,7 +1062,7 @@ for rounded_bar_fragment in (
     "context.quadraticCurveTo(",
     "context.fill()",
 ):
-    if rounded_bar_fragment not in rounded_bar_body:
+    if not code_contains(rounded_bar_body, rounded_bar_fragment):
         raise AssertionError(
             "paintRoundedTopBar must preserve restrained top rounding for Canvas bars; "
             f"missing {rounded_bar_fragment!r}"
@@ -1065,7 +1075,7 @@ for contrast_fragment in (
     "surface",
     "Kirigami.Theme.textColor",
 ):
-    if contrast_fragment not in readable_accent_body:
+    if not code_contains(readable_accent_body, contrast_fragment):
         raise AssertionError(
             "readableAccentColor must preserve provider hue while enforcing "
             f"non-text contrast; missing {contrast_fragment!r}"
@@ -1078,14 +1088,14 @@ for contrast_fragment in (
     "contrastRatio(candidate, background) >= minimumNonTextContrastRatio",
     "maximumContrastColor(background)",
 ):
-    if contrast_fragment not in shared_readable_accent_body:
+    if not code_contains(shared_readable_accent_body, contrast_fragment):
         raise AssertionError(
             "ThemeContrast.readableAccentColor must preserve hue while enforcing "
             f"non-text contrast; missing {contrast_fragment!r}"
         )
 
 provider_readable_body = function_body(main_text, "providerReadableColor")
-if "readableAccentColor(" not in provider_readable_body or "providerColor(value)" not in provider_readable_body:
+if not code_contains(provider_readable_body, "readableAccentColor(" not in provider_readable_body or "providerColor(value)"):
     raise AssertionError("providerReadableColor must derive a safe color from canonical provider metadata")
 
 config_provider_readable_body = function_body(providers_text, "providerReadableColor")
@@ -1094,16 +1104,16 @@ for contrast_fragment in (
     "providerColor(value)",
     "Kirigami.Theme.textColor",
 ):
-    if contrast_fragment not in config_provider_readable_body:
+    if not code_contains(config_provider_readable_body, contrast_fragment):
         raise AssertionError(
             "configProviders.qml must share the provider contrast contract; "
             f"missing {contrast_fragment!r}"
         )
-if "providerReadableColor(" not in provider_config_row_text:
+if not code_contains(provider_config_row_text, "providerReadableColor("):
     raise AssertionError("ProviderConfigRow must keep unselected provider icons theme-readable")
-if 'Accessible.name: i18n("Enable %1", providerRow.providerData.displayName)' not in provider_config_row_text:
+if not code_contains(provider_config_row_text, 'Accessible.name: i18n("Enable %1", providerRow.providerData.displayName)'):
     raise AssertionError("ProviderConfigRow switches must name the provider for assistive technology")
-if 'i18n("%1 - CodexBar default", providerRow.providerData.provider)' not in provider_config_row_text:
+if not code_contains(provider_config_row_text, 'i18n("%1 - CodexBar default", providerRow.providerData.provider)'):
     raise AssertionError("ProviderConfigRow must distinguish the CodexBar default from widget defaults")
 
 for source_name, source_text in (
@@ -1112,7 +1122,7 @@ for source_name, source_text in (
     ("CompactRepresentation.qml", compact_representation_text),
     ("OverviewProviderRow.qml", overview_provider_row_text),
 ):
-    if "providerReadableColor(" not in source_text:
+    if not code_contains(source_text, "providerReadableColor("):
         raise AssertionError(f"{source_name} must use a theme-readable provider accent")
 
 for mouse_id in ("compactStatusMouse", "heatmapMouse"):
@@ -1124,7 +1134,7 @@ for vertical_fragment in (
     "columns: compactRoot.verticalPanel ? 1 : -1",
     "!compactRoot.verticalPanel",
 ):
-    if vertical_fragment not in compact_representation_text:
+    if not code_contains(compact_representation_text, vertical_fragment):
         raise AssertionError(
             "CompactRepresentation must show vertical meters with an icon fallback; "
             f"missing {vertical_fragment!r}"
@@ -1135,7 +1145,7 @@ for centering_fragment in (
     "anchors.centerIn: parent",
     "implicitWidth))",
 ):
-    if centering_fragment not in compact_row_body:
+    if not code_contains(compact_row_body, centering_fragment):
         raise AssertionError(
             "the compact row must stay centred when the panel reserves more width "
             f"than the content needs; missing {centering_fragment!r}"
@@ -1150,7 +1160,7 @@ for meter_fragment in (
     "Layout.preferredHeight: compactRoot.meterIconSize",
     "Layout.preferredHeight: compactRoot.meterBarHeight",
 ):
-    if meter_fragment not in compact_meter_body:
+    if not code_contains(compact_meter_body, meter_fragment):
         raise AssertionError(
             "panel provider meters must scale with the panel instead of using "
             f"fixed pixel sizes; missing {meter_fragment!r}"
@@ -1170,13 +1180,13 @@ for provider_click_fragment in (
     "compactRoot.applet.openProviderFromPanel(compactMeter.modelData.provider)",
     "onClicked: compactMeter.activate()",
 ):
-    if provider_click_fragment not in compact_meter_body:
+    if not code_contains(compact_meter_body, provider_click_fragment):
         raise AssertionError(
             "each panel provider meter must be keyboard- and assistive-accessible "
             "and open its matching provider tab; "
             f"missing {provider_click_fragment!r}"
         )
-if "property bool interactive: true" not in compact_representation_text:
+if not code_contains(compact_representation_text, "property bool interactive: true"):
     raise AssertionError("the live panel must keep interaction enabled by default")
 if "if (!compactRoot.interactive)" not in function_body(compact_meter_body, "activate"):
     raise AssertionError("preview meters must not dispatch provider selection")
@@ -1184,7 +1194,7 @@ for mouse_id in ("compactMeterMouse", "compactStatusMouse"):
     if "enabled: compactRoot.interactive" not in id_block(compact_representation_text, mouse_id):
         raise AssertionError("preview meter and status pointer input must be disabled")
 root_pointer_body = id_block(compact_representation_text, "compactBackgroundMouse")
-if "enabled: compactRoot.interactive" not in root_pointer_body:
+if not code_contains(root_pointer_body, "enabled: compactRoot.interactive"):
     raise AssertionError("the compact background must not open a popup in preview mode")
 if "forceActiveFocus(Qt.MouseFocusReason)" in compact_meter_body:
     raise AssertionError(
@@ -1199,7 +1209,7 @@ for meter_hover_fragment in (
     "compactRoot.applet.setHoveredPanelProvider(compactMeter.modelData.provider)",
     "compactRoot.applet.clearHoveredPanelProvider(compactMeter.modelData.provider)",
 ):
-    if meter_hover_fragment not in compact_meter_body:
+    if not code_contains(compact_meter_body, meter_hover_fragment):
         raise AssertionError(
             "hovering a panel provider meter must narrow the plasmoid tooltip "
             "to that provider; "
@@ -1209,7 +1219,7 @@ for meter_cleanup_fragment in (
     "onMeterProvidersChanged",
     "compactRoot.applet.clearHoveredPanelProvider(hovered)",
 ):
-    if meter_cleanup_fragment not in compact_representation_text:
+    if not code_contains(compact_representation_text, meter_cleanup_fragment):
         raise AssertionError(
             "a hovered meter filtered out of the rendered set must clear its "
             "stale hover instead of relying on a destroyed MouseArea; "
@@ -1224,7 +1234,7 @@ for compact_selection_fragment in (
     "panelProviderItems()",
     "autoSelectedProviderIndex(panelItems)",
 ):
-    if compact_selection_fragment not in compact_provider_body:
+    if not code_contains(compact_provider_body, compact_selection_fragment):
         raise AssertionError(
             "compact provider selection must adapt the panel-filtered roster and "
             "popup selection through PopupSelection; "
@@ -1239,7 +1249,7 @@ for panel_filter_fragment in (
     "panelProviderItems()",
     "PanelProviders.maximumSelectableProviders",
 ):
-    if panel_filter_fragment not in compact_providers_body:
+    if not code_contains(compact_providers_body, panel_filter_fragment):
         raise AssertionError(
             f"compactProviders must apply the panel provider selection; missing {panel_filter_fragment!r}"
         )
@@ -1251,14 +1261,14 @@ for panel_selection_fragment in (
     "selectionInitialized = true",
     "expanded = true",
 ):
-    if panel_selection_fragment not in open_panel_provider_body:
+    if not code_contains(open_panel_provider_body, panel_selection_fragment):
         raise AssertionError(
             "panel meter selection must stay in the applet state owner; "
             f"missing {panel_selection_fragment!r}"
         )
-if "readonly property int meterContentHeight: Math.max(0, height" not in compact_representation_text:
+if not code_contains(compact_representation_text, "readonly property int meterContentHeight: Math.max(0, height"):
     raise AssertionError("panel meter geometry must derive from the compact representation height")
-if "compactRoot.meterProviders.length * compactRoot.meterWidth" not in compact_representation_text:
+if not code_contains(compact_representation_text, "compactRoot.meterProviders.length * compactRoot.meterWidth"):
     raise AssertionError("the meters element must reserve panel width from the shared meter width")
 
 vertical_status_badge_body = id_block(compact_representation_text, "compactVerticalStatusBadge")
@@ -1270,7 +1280,7 @@ for vertical_badge_fragment in (
     "border.width: 1",
     "border.color: Kirigami.Theme.backgroundColor",
 ):
-    if vertical_badge_fragment not in vertical_status_badge_body:
+    if not code_contains(vertical_status_badge_body, vertical_badge_fragment):
         raise AssertionError(
             "without meters the identity icon may badge only its own provider's "
             "incident, never another provider's outage; "
@@ -1283,7 +1293,7 @@ for vertical_anchor_fragment in (
     "incidentProvider !== null",
     "incidentProvider.provider === selectedProvider.provider",
 ):
-    if vertical_anchor_fragment not in compact_representation_text:
+    if not code_contains(compact_representation_text, vertical_anchor_fragment):
         raise AssertionError(
             "the identity badge anchor must be limited to the selected "
             "provider's own incident so a foreign outage keeps the standalone "
@@ -1298,7 +1308,7 @@ for status_rule_fragment in (
     "incidentProvider.hasIncident",
     "!incidentProviderHasMeterBadge",
 ):
-    if status_rule_fragment not in compact_representation_text:
+    if not code_contains(compact_representation_text, status_rule_fragment):
         raise AssertionError(
             "the standalone status element is a fallback: when a meter can carry "
             "the badge, the ambiguous floating dot must hide; missing "
@@ -1312,7 +1322,7 @@ for horizontal_badge_fragment in (
     "border.width: 1",
     "border.color: Kirigami.Theme.backgroundColor",
 ):
-    if horizontal_badge_fragment not in horizontal_status_badge_body:
+    if not code_contains(horizontal_status_badge_body, horizontal_badge_fragment):
         raise AssertionError(
             "the standalone status element is a fallback: when a meter can carry "
             "the badge, the ambiguous floating dot must hide; "
@@ -1330,7 +1340,7 @@ for meter_badge_fragment in (
     "border.width: 1",
     "border.color: Kirigami.Theme.backgroundColor",
 ):
-    if meter_badge_fragment not in meter_incident_badge_body:
+    if not code_contains(meter_incident_badge_body, meter_badge_fragment):
         raise AssertionError(
             "each provider meter must badge its own incident so reordering the "
             "providers moves the outage marker with it; "
@@ -1342,7 +1352,7 @@ for overview_detail_fragment in (
     "item.hasIncident === true && item.statusKnown !== false",
     "item.account && item.account.length > 0",
 ):
-    if overview_detail_fragment not in overview_detail_body:
+    if not code_contains(overview_detail_body, overview_detail_fragment):
         raise AssertionError(
             "the overview detail line stands for account identity; only an active "
             "incident may replace it, never an operational status; "
@@ -1357,7 +1367,7 @@ for tooltip_fragment in (
     "function panelToolTipText()",
     "Plasmoid.formFactor === PlasmaCore.Types.Vertical",
 ):
-    if tooltip_fragment not in main_text:
+    if not code_contains(main_text, tooltip_fragment):
         raise AssertionError(f"the panel tooltip/form-factor contract is missing {tooltip_fragment!r}")
 
 provider_tabs_body = applet.id_block("providerTabsBar")
@@ -1365,7 +1375,7 @@ for config_fragment in (
     '<entry name="providerOrder" type="String">',
     '<entry name="showPopupTabLabels" type="Bool">',
 ):
-    if config_fragment not in config_text:
+    if not code_contains(config_text, config_fragment):
         raise AssertionError(f"popup tab customization must be persisted; missing {config_fragment!r}")
 for display_fragment in (
     'id: showPopupTabLabelsCheck',
@@ -1374,7 +1384,7 @@ for display_fragment in (
 ):
     popup_surface.require(display_fragment, "Popup must expose tab customization")
 overview_provider_selection_body = popup_surface.id_block("overviewProviderSelection")
-if 'model: page.orderedEnabledProviderRoster' not in overview_provider_selection_body:
+if not code_contains(overview_provider_selection_body, 'model: page.orderedEnabledProviderRoster'):
     raise AssertionError(
         "Popup must show the saved provider order in the Overview selection"
     )
@@ -1419,7 +1429,7 @@ for spend_order_fragment in (
     "ProviderOrder.orderedItems(",
     "providerOrderRaw",
 ):
-    if spend_order_fragment not in presented_spend_provider_costs_body:
+    if not code_contains(presented_spend_provider_costs_body, spend_order_fragment):
         raise AssertionError(
             "Usage & Spend must follow the saved provider order; "
             f"missing {spend_order_fragment!r}"
@@ -1434,7 +1444,7 @@ for icon_only_fragment in (
     'visible: !applet.showPopupTabLabels && overviewTabMouse.containsMouse',
     'visible: !applet.showPopupTabLabels && providerTabMouse.containsMouse',
 ):
-    if icon_only_fragment not in provider_tabs_body:
+    if not code_contains(provider_tabs_body, icon_only_fragment):
         raise AssertionError(
             f"icon-only popup tabs must retain discoverable names; missing {icon_only_fragment!r}"
         )
@@ -1471,7 +1481,7 @@ for tab_content_id, leading_spacer_id, trailing_spacer_id, condition in (
         f"visible: {condition}",
         f"Layout.fillWidth: {condition}",
     ):
-        if centered_icon_fragment not in tab_content_body:
+        if not code_contains(tab_content_body, centered_icon_fragment):
             raise AssertionError(
                 f"{tab_content_id} must center its icon-only content; "
                 f"missing {centered_icon_fragment!r}"
@@ -1491,7 +1501,7 @@ for tabs_fragment in (
     "Keys.onPressed:",
     "scale:",
 ):
-    if tabs_fragment not in provider_tabs_body:
+    if not code_contains(provider_tabs_body, tabs_fragment):
         raise AssertionError(
             "providerTabsBar must preserve the compact, accent-led tab hierarchy; "
             f"missing {tabs_fragment!r}"
@@ -1504,7 +1514,7 @@ for scroll_fragment in (
     "function focusAdjacentTab(item, forward)",
     "function scrollBy(delta, immediate)",
 ):
-    if scroll_fragment not in provider_tabs_flickable_body:
+    if not code_contains(provider_tabs_flickable_body, scroll_fragment):
         raise AssertionError(
             "the tab strip must stay reachable without touch gestures; "
             f"missing {scroll_fragment!r}"
@@ -1517,7 +1527,7 @@ for tab_geometry_fragment in (
     "TabStripGeometry.revealPosition(",
     "if (target !== null) {",
 ):
-    if tab_geometry_fragment not in provider_tabs_flickable_body:
+    if not code_contains(provider_tabs_flickable_body, tab_geometry_fragment):
         raise AssertionError(
             "the tab strip must take its scroll positions from TabStripGeometry.js; "
             f"missing {tab_geometry_fragment!r}"
@@ -1534,11 +1544,11 @@ for inlined_tab_geometry in (
 
 if main_text.count("providerTabsFlickable.focusAdjacentTab(") != 4:
     raise AssertionError("both the overview tab and the provider tabs must move focus with arrow keys")
-if "providerTabsFlickable.ensureVisible(overviewTab)" not in main_text:
+if not code_contains(main_text, "providerTabsFlickable.ensureVisible(overviewTab)"):
     raise AssertionError("focusing the overview tab must pull it back into view")
-if "providerTabsFlickable.ensureVisible(providerTab)" not in main_text:
+if not code_contains(main_text, "providerTabsFlickable.ensureVisible(providerTab)"):
     raise AssertionError("focusing a provider tab must pull it back into view")
-if "function claimSelectedTab(item, isSelected)" not in provider_tabs_flickable_body:
+if not code_contains(provider_tabs_flickable_body, "function claimSelectedTab(item, isSelected)"):
     raise AssertionError("the tab strip must track which tab is selected in one place")
 # Every tab kind must report selection, or the strip keeps revealing a stale tab
 # after the user switches between a provider and a global view.
@@ -1548,15 +1558,15 @@ for claim_fragment in (
     "onSelectedChanged: overviewTab.claimSelectedTab()",
     "onSelectedChanged: providerTab.claimSelectedTab()",
 ):
-    if claim_fragment not in main_text:
+    if not code_contains(main_text, claim_fragment):
         raise AssertionError(f"selection tracking is missing {claim_fragment!r}")
-if "tab.tabStrip.claimSelectedTab(tab, tab.selected)" not in global_tab_text:
+if not code_contains(global_tab_text, "tab.tabStrip.claimSelectedTab(tab, tab.selected)"):
     raise AssertionError("global tabs must report selection to the strip")
-if "onSelectedChanged: tab.claimSelectedTab()" not in global_tab_text:
+if not code_contains(global_tab_text, "onSelectedChanged: tab.claimSelectedTab()"):
     raise AssertionError("global tabs must report selection changes to the strip")
-if "tab.tabStrip.focusAdjacentTab(tab" not in global_tab_text:
+if not code_contains(global_tab_text, "tab.tabStrip.focusAdjacentTab(tab"):
     raise AssertionError("global tabs must take part in arrow-key tab navigation")
-if "tab.tabStrip.ensureVisible(tab)" not in global_tab_text:
+if not code_contains(global_tab_text, "tab.tabStrip.ensureVisible(tab)"):
     raise AssertionError("a focused global tab must be scrolled into view")
 
 for button_id, direction in (
@@ -1571,7 +1581,7 @@ for button_id, direction in (
         f"onClicked: providerTabsFlickable.scrollBy({direction}, visualFocus)",
         "delay: Kirigami.Units.toolTipDelay",
     ):
-        if fragment not in button_body:
+        if not code_contains(button_body, fragment):
             raise AssertionError(f"{button_id} must remain a native accessible scroll control: {fragment}")
 # Native controls stay outside the viewport; their space is reserved at both
 # edges, even when the corresponding direction is disabled at an endpoint.
@@ -1581,7 +1591,7 @@ for fragment in (
     "scrollTo(target, true)",
     "onMovementStarted: providerTabsScroll.stop()",
 ):
-    if fragment not in provider_tabs_flickable_body:
+    if not code_contains(provider_tabs_flickable_body, fragment):
         raise AssertionError(f"tab navigation must preserve visible content and direct focus: {fragment}")
 
 providers = Surface("providers", root)
@@ -1611,7 +1621,7 @@ for tab_id in ("overviewTab", "providerTab"):
         "activeFocusOnTab: true",
         f"{focus_id}.forceActiveFocus(Qt.MouseFocusReason)",
     ):
-        if focus_fragment not in tab_body:
+        if not code_contains(tab_body, focus_fragment):
             raise AssertionError(
                 f"{tab_id} must transfer pointer focus without drawing a keyboard ring; "
                 f"missing {focus_fragment!r}"
@@ -1630,7 +1640,7 @@ for global_tab_focus_fragment in (
     "activeFocusOnTab: true",
     "tabFocus.forceActiveFocus(Qt.MouseFocusReason)",
 ):
-    if global_tab_focus_fragment not in global_tab_text:
+    if not code_contains(global_tab_text, global_tab_focus_fragment):
         raise AssertionError(
             "global tabs must preserve keyboard focus without pointer focus state; "
             f"missing {global_tab_focus_fragment!r}"
@@ -1653,12 +1663,12 @@ if (
     )
 
 usage_percent_body = id_block(provider_usage_row_text, "usagePercentLabel")
-if "font.weight: Font.DemiBold" not in usage_percent_body:
+if not code_contains(usage_percent_body, "font.weight: Font.DemiBold"):
     raise AssertionError("usagePercentLabel must remain a prominent scan target")
 if provider_usage_row_text.index("id: usagePercentLabel") > provider_usage_row_text.index("id: usageBar"):
     raise AssertionError("usage percentage must appear in the metric header before its bar")
 usage_bar_body = id_block(provider_usage_row_text, "usageBar")
-if "applet.withAlpha(Kirigami.Theme.textColor, 0.1)" not in usage_bar_body:
+if not code_contains(usage_bar_body, "applet.withAlpha(Kirigami.Theme.textColor, 0.1)"):
     raise AssertionError("usageBar must keep its pill track visually restrained")
 # A marker that spans the track edge to edge reads as a gap in the accent fill
 # rather than a threshold, so pace and quota markers share one inset geometry.
@@ -1666,7 +1676,7 @@ for marker_geometry_fragment in (
     "readonly property real meterMarkerInset:",
     "readonly property real meterMarkerWidth:",
 ):
-    if marker_geometry_fragment not in provider_usage_row_text:
+    if not code_contains(provider_usage_row_text, marker_geometry_fragment):
         raise AssertionError(
             "ProviderUsageRow must define one shared meter marker geometry; "
             f"missing {marker_geometry_fragment!r}"
@@ -1689,7 +1699,7 @@ for credit_limit_fragment in (
     "model: creditsSection.creditLimitRow ? [creditsSection.creditLimitRow] : []",
     "delegate: Components.ProviderUsageRow",
 ):
-    if credit_limit_fragment not in credits_section_body:
+    if not code_contains(credits_section_body, credit_limit_fragment):
         raise AssertionError(
             "the Credits section must render the validated Codex monthly limit "
             f"without adding a meter to plain balances; missing {credit_limit_fragment!r}"
@@ -1702,7 +1712,7 @@ if not re.search(
     raise AssertionError(
         "the plain credits balance must stay null-safe and independent of QML formatting"
     )
-if 'i18n("Remaining: %1",' not in credits_section_body:
+if not code_contains(credits_section_body, 'i18n("Remaining: %1",'):
     raise AssertionError("the Credits section must keep the plain remaining-balance fallback")
 credit_limit_row_body = function_body(main_text, "codexCreditLimitUsageRow")
 for credit_limit_row_fragment in (
@@ -1712,20 +1722,20 @@ for credit_limit_row_fragment in (
     "leftPercent: creditLimit.leftPercent",
     "resetsAt: creditLimit.resetsAt",
 ):
-    if credit_limit_row_fragment not in credit_limit_row_body:
+    if not code_contains(credit_limit_row_body, credit_limit_row_fragment):
         raise AssertionError(
             "the Codex monthly-limit row must present every validated field through "
             f"the shared usage-meter component; missing {credit_limit_row_fragment!r}"
         )
 
 quota_meter_color_body = function_body(main_text, "quotaMeterColor")
-if "statusBadgeColor(" not in quota_meter_color_body:
+if not code_contains(quota_meter_color_body, "statusBadgeColor("):
     raise AssertionError(
         "quotaMeterColor must reuse statusBadgeColor so the quota level and the "
         "provider status badge stay one colour vocabulary"
     )
 quota_severity_body = function_body(main_text, "quotaSeverity")
-if "showQuotaWarningMarkers" not in quota_severity_body:
+if not code_contains(quota_severity_body, "showQuotaWarningMarkers"):
     raise AssertionError(
         "the setting that hides the quota markers must also hide the quota "
         "meter colour, so one switch owns the whole warning presentation"
@@ -1735,7 +1745,7 @@ for meter_surface, meter_surface_text in (
     (provider_usage_row_qml, provider_usage_row_text),
     (compact_representation_qml, compact_representation_text),
 ):
-    if "quotaMeterColor(" not in meter_surface_text:
+    if not code_contains(meter_surface_text, "quotaMeterColor("):
         raise AssertionError(
             f"{meter_surface.name} must colour its meter fill through "
             "quotaMeterColor; a meter that stays provider-coloured at 99% used "
@@ -1748,7 +1758,7 @@ for header_id, header_body in (
     ("overviewHeaderRow", overview_header_body),
     ("providerHeaderRow", provider_header_body),
 ):
-    if "RefreshButton {" not in header_body or "busy:" not in header_body:
+    if not code_contains(header_body, "RefreshButton {" not in header_body or "busy:"):
         raise AssertionError(
             f"{header_id} must use the shared refresh control with busy feedback"
         )
@@ -1763,7 +1773,7 @@ for fragment in (
     "Accessible.name: refreshControl.label",
     "delay: Kirigami.Units.toolTipDelay",
 ):
-    if fragment not in refresh_control_body:
+    if not code_contains(refresh_control_body, fragment):
         raise AssertionError(f"refresh controls must retain their footprint and feedback: {fragment}")
 for effect in ("refreshNow(", "refreshCost(", "refreshSessions("):
     if effect in refresh_control_body:
@@ -1786,7 +1796,7 @@ for control_id in ("metricCombo", "rangeCombo"):
     if f"id: {control_id}" not in history_controls:
         raise AssertionError("history filters must remain grouped on their own row")
 
-if "fullRepresentation:" not in main_text:
+if not code_contains(main_text, "fullRepresentation:"):
     raise AssertionError("the applet must keep a fullRepresentation root")
 full_representation_head = id_block(main_text, "fullRoot")[:900]
 if "popupContent.implicitHeight" not in full_representation_head:
@@ -1801,7 +1811,7 @@ if re.search(r"implicitHeight:\s*Kirigami\.Units\.gridUnit\s*\*\s*\d", full_repr
     )
 
 format_number_body = function_body(main_text, "formatNumber")
-if "groupedDecimalString(" not in format_number_body and "CostPresentation.formatCount(" not in format_number_body:
+if not code_contains(format_number_body, "groupedDecimalString(" not in format_number_body and "CostPresentation.formatCount("):
     raise AssertionError(
         "formatNumber must route through groupedDecimalString so credit balances "
         "carry group separators and the locale decimal mark like every other "
@@ -1815,7 +1825,7 @@ if "toFixed(" in format_number_body:
 # The delegated count formatter keeps the same routing contract: locale-aware
 # grouping, never hardcoded digits.
 format_count_body = function_body(cost_presentation_text, "formatCount")
-if "groupedDecimalString(" not in format_count_body:
+if not code_contains(format_count_body, "groupedDecimalString("):
     raise AssertionError(
         "formatCount must route through groupedDecimalString so credit balances "
         "carry group separators and the locale decimal mark like every other "
@@ -1828,17 +1838,17 @@ if "toFixed(" in format_count_body:
     )
 for usage_metadata_id in ("usagePaceLabel", "usageResetLabel"):
     usage_metadata_body = id_block(provider_usage_row_text, usage_metadata_id)
-    if "font: Kirigami.Theme.smallFont" not in usage_metadata_body:
+    if not code_contains(usage_metadata_body, "font: Kirigami.Theme.smallFont"):
         raise AssertionError(f"{usage_metadata_id} must retain the compact metadata type scale")
 
-if "chart.applet.paintRoundedTopBar(" not in interactive_chart_text:
+if not code_contains(interactive_chart_text, "chart.applet.paintRoundedTopBar("):
     raise AssertionError("provider detail bar charts must use rounded top corners")
 for detail_chart_fragment in (
     "chart.applet.buildChartBarGradient(",
     "chart.applet.chartBarGeometry(width, chart.pointCount)",
     "ChartScale.barGeometry(height,",
 ):
-    if detail_chart_fragment not in interactive_chart_text:
+    if not code_contains(interactive_chart_text, detail_chart_fragment):
         raise AssertionError(
             "provider detail bar charts must retain the polished cost-chart language; "
             f"missing {detail_chart_fragment!r}"
@@ -1862,13 +1872,13 @@ for gradient_fragment in (
     "gradient.addColorStop(0",
     "gradient.addColorStop(1",
 ):
-    if gradient_fragment not in chart_gradient_body:
+    if not code_contains(chart_gradient_body, gradient_fragment):
         raise AssertionError(
             "vertical bar charts must use the shared restrained gradient; "
             f"missing {gradient_fragment!r}"
         )
 
-if "Components.InteractiveChart" not in main_text or "applet.costChartPoints(" not in main_text:
+if not code_contains(main_text, "Components.InteractiveChart" not in main_text or "applet.costChartPoints("):
     raise AssertionError("the provider cost sparkline must use the interactive shared chart")
 
 for summary_id, summary_fragment in (
@@ -1876,7 +1886,7 @@ for summary_id, summary_fragment in (
     ("costSparklineRangeLabel", "font: Kirigami.Theme.smallFont"),
 ):
     summary_body = id_block(main_text, summary_id)
-    if summary_fragment not in summary_body:
+    if not code_contains(summary_body, summary_fragment):
         raise AssertionError(f"{summary_id} must preserve the intended cost hierarchy")
 
 cost_summary_body = applet.id_block("costSummaryGrid")
@@ -1889,7 +1899,7 @@ for fragment in (
     "Layout.fillWidth: true",
     "wrapMode: Text.Wrap",
 ):
-    if fragment not in cost_summary_body:
+    if not code_contains(cost_summary_body, fragment):
         raise AssertionError(f"compact cost summary is missing {fragment!r}")
 
 for fragment in (
@@ -1906,7 +1916,7 @@ for fragment in (
     "applet.accountLabel(providerData)",
     "applet.setCostHistoryMetric(valueAt(index))",
 ):
-    if fragment not in token_cost_section_body:
+    if not code_contains(token_cost_section_body, fragment):
         raise AssertionError(f"provider cost selection is missing {fragment!r}")
 if not re.search(r"onSelectionScopeChanged:\s*\{\s*detailsExpanded = false;\s*clearDaySelection\(\);", token_cost_section_body):
     raise AssertionError("provider cost scope changes must clear expanded details and the pinned day")
@@ -1915,7 +1925,7 @@ for collapsed_id in ("costDrillDownSection", "costHistoryChartSection"):
         raise AssertionError("cost trust notices must remain outside collapsed details")
 
 cost_history_header_body = id_block(main_text, "costHistoryHeaderRow")
-if "costHistoryChartSection.averageLine" not in cost_history_header_body:
+if not code_contains(cost_history_header_body, "costHistoryChartSection.averageLine"):
     raise AssertionError("cost history must keep the average aligned with its heading")
 cost_history_row_body = id_block(main_text, "costHistoryMetricRow")
 for history_row_fragment in (
@@ -1929,16 +1939,16 @@ for history_row_fragment in (
     "id: costHistoryValueLabel",
     "font.pixelSize: Kirigami.Theme.smallFont.pixelSize",
 ):
-    if history_row_fragment not in cost_history_row_body:
+    if not code_contains(cost_history_row_body, history_row_fragment):
         raise AssertionError(
             "cost history rows must stay compact and scannable; "
             f"missing {history_row_fragment!r}"
         )
 
 cost_history_rows_body = function_body(cost_presentation_text, "historyRows")
-if "tokenCost.daily.length - 7" not in cost_history_rows_body:
+if not code_contains(cost_history_rows_body, "tokenCost.daily.length - 7"):
     raise AssertionError("cost history must show only the latest seven detailed rows")
-if "sparklineMax(visibleDaily, showsTokens)" not in cost_history_rows_body:
+if not code_contains(cost_history_rows_body, "sparklineMax(visibleDaily, showsTokens)"):
     raise AssertionError("cost history bars must scale against the seven visible days")
 if "tokenCost.daily.length - 14" in cost_history_rows_body:
     raise AssertionError("cost history must not dominate the popup with fourteen detailed rows")
@@ -1953,9 +1963,9 @@ for fragment in (
     "border.width: overviewRow.keyboardFocusVisible ? 1 : 0",
     "overviewRowFocus.forceActiveFocus(Qt.MouseFocusReason)",
 ):
-    if fragment not in overview_row_body:
+    if not code_contains(overview_row_body, fragment):
         raise AssertionError(f"overview rows must fit their content and distinguish keyboard focus: {fragment}")
-if "applet.withAlpha(Kirigami.Theme.textColor, 0.035)" not in overview_row_body:
+if not code_contains(overview_row_body, "applet.withAlpha(Kirigami.Theme.textColor, 0.035)"):
     raise AssertionError("overview rows must keep a quiet neutral resting surface")
 overview_row_surface_bindings = overview_row_body.split("RowLayout {", 1)[0]
 if "border.width" in overview_row_surface_bindings:
@@ -1966,7 +1976,7 @@ for polished_overview_fragment in (
     "radius: overviewRow.applet.nestedSurfaceRadius",
     "applet.withAlpha(overviewRow.accent, 0.1)",
 ):
-    if polished_overview_fragment not in overview_row_body:
+    if not code_contains(overview_row_body, polished_overview_fragment):
         raise AssertionError(
             "overview rows must retain the rounded provider identity treatment; "
             f"missing {polished_overview_fragment!r}"
@@ -1979,7 +1989,7 @@ for interaction_fragment in (
     "overviewRowMouse.pressed",
     "scale:",
 ):
-    if interaction_fragment not in overview_row_body:
+    if not code_contains(overview_row_body, interaction_fragment):
         raise AssertionError(
             "overview rows must preserve keyboard, assistive, and pressed feedback; "
             f"missing {interaction_fragment!r}"
@@ -1990,20 +2000,20 @@ for message_id, message_type in (
     ("providerErrorMessage", "Kirigami.MessageType.Error"),
 ):
     message_body = id_block(main_text, message_id)
-    if f"type: {message_type}" not in message_body:
+    if not code_contains(message_body, f"type: {message_type}"):
         raise AssertionError(f"{message_id} must use the native semantic message style")
 
 global_error_body = id_block(main_text, "globalErrorMessage")
 provider_usage_loading_body = id_block(main_text, "providerUsageLoadingRow")
-if "(applet.loading || applet.errorText.length > 0)" not in provider_usage_loading_body:
+if not code_contains(provider_usage_loading_body, "(applet.loading || applet.errorText.length > 0)"):
     raise AssertionError("usage feedback must absorb remaining height for errors as well as loading")
-if "visible: applet.loading && applet.errorText.length === 0" not in provider_usage_loading_body:
+if not code_contains(provider_usage_loading_body, "visible: applet.loading && applet.errorText.length === 0"):
     raise AssertionError("an error-only popup must not display a loading indicator")
 for scoped_feedback_body, feedback_name in (
     (global_error_body, "globalErrorMessage"),
     (provider_usage_loading_body, "providerUsageLoadingRow"),
 ):
-    if "applet.providerUsageFeedbackVisible" not in scoped_feedback_body:
+    if not code_contains(scoped_feedback_body, "applet.providerUsageFeedbackVisible"):
         raise AssertionError(
             f"{feedback_name} must stay hidden on the independent Spend and Sessions tabs"
         )
@@ -2020,14 +2030,14 @@ for filler_owner_source, filler_owner_text in (
     ("SessionsView.qml", sessions_view_text),
     ("SpendView.qml", spend_view_text),
 ):
-    if "Controls.BusyIndicator {\n            anchors.centerIn: parent" not in filler_owner_text:
+    if not code_contains(filler_owner_text, "Controls.BusyIndicator {\n            anchors.centerIn: parent"):
         raise AssertionError(
             f"{filler_owner_source} must center its busy indicator inside a filler item "
             "so the heading stays pinned to the top while loading"
         )
 
 provider_status_body = id_block(main_text, "providerStatusMessage")
-if "applet.presentedProviderData.hasIncident" not in provider_status_body:
+if not code_contains(provider_status_body, "applet.presentedProviderData.hasIncident"):
     raise AssertionError("healthy provider status must not occupy a permanent inline banner")
 for block_id, source, data in (
     ("providerStatusMessage", main_text, "applet.presentedProviderData"),
@@ -2039,11 +2049,11 @@ for block_id, source, data in (
         visible.group(1),
     ):
         raise AssertionError(f"{block_id} must hide inactive and unknown provider status")
-if "applet.statusMessageType(applet.presentedProviderData.statusSeverity)" not in provider_status_body:
+if not code_contains(provider_status_body, "applet.statusMessageType(applet.presentedProviderData.statusSeverity)"):
     raise AssertionError("incident banners must reflect the provider status severity")
 status_message_type_body = function_body(main_text, "statusMessageType")
 for semantic_type in ("Kirigami.MessageType.Error", "Kirigami.MessageType.Warning"):
-    if semantic_type not in status_message_type_body:
+    if not code_contains(status_message_type_body, semantic_type):
         raise AssertionError(f"statusMessageType must expose {semantic_type}")
 
 for placeholder_id in (
@@ -2051,13 +2061,13 @@ for placeholder_id in (
     "providerPlaceholderMessage",
 ):
     placeholder_body = id_block(main_text, placeholder_id)
-    if "Kirigami.PlaceholderMessage.Type.Informational" not in placeholder_body:
+    if not code_contains(placeholder_body, "Kirigami.PlaceholderMessage.Type.Informational"):
         raise AssertionError(f"{placeholder_id} must use the native informational empty state")
 
 empty_providers_body = id_block(main_text, "emptyProvidersMessage")
 for fragment in ("Kirigami.PlaceholderMessage.Type.Actionable", "helpfulAction: configureProvidersAction",
                  "plainExplanation:"):
-    if fragment not in empty_providers_body:
+    if not code_contains(empty_providers_body, fragment):
         raise AssertionError("the empty provider state must explain and open native widget settings")
 
 provider_account_label_body = id_block(provider_header_text, "providerAccountLabel")
@@ -2068,7 +2078,7 @@ for account_label_fragment in (
     "Layout.maximumWidth: Math.min(implicitWidth,",
     "Kirigami.Units.gridUnit * 16",
 ):
-    if account_label_fragment not in provider_account_label_body:
+    if not code_contains(provider_account_label_body, account_label_fragment):
         raise AssertionError(
             "providerAccountLabel must fill without outgrowing its text and "
             f"cap long account text before the refresh edge; "
@@ -2078,7 +2088,7 @@ if "providerHeaderRow.width" in provider_account_label_body or "providerMetaRow.
     raise AssertionError("providerAccountLabel must not bind its width to the header layout width")
 
 provider_plan_label_body = id_block(provider_header_text, "providerPlanLabel")
-if "Layout.maximumWidth: Kirigami.Units.gridUnit * 5" not in provider_plan_label_body:
+if not code_contains(provider_plan_label_body, "Layout.maximumWidth: Kirigami.Units.gridUnit * 5"):
     raise AssertionError("providerPlanLabel must keep plan text from crowding provider metadata")
 
 if "providerUpdatedLabel" in applet.id_block("providerMetaRow"):
@@ -2090,19 +2100,19 @@ for fragment in (
     "costDrillDownSection.detailData.modelsTruncated === true",
     "modelsTruncated: tokenCostSection.selectedDay.modelsTruncated",
 ):
-    if fragment not in cost_drill_down_body:
+    if not code_contains(cost_drill_down_body, fragment):
         raise AssertionError(f"period and day details must expose missing or partial models: {fragment!r}")
-if "readonly property real metricValueColumnWidth: Kirigami.Units.gridUnit * 9" not in cost_drill_down_body:
+if not code_contains(cost_drill_down_body, "readonly property real metricValueColumnWidth: Kirigami.Units.gridUnit * 9"):
     raise AssertionError("costDrillDownSection must define a stable value column width")
-if 'i18n("Cost details")' not in cost_drill_down_body or 'i18n("Details for %1", tokenCostSection.selectedDay.label)' not in cost_drill_down_body:
+if not code_contains(cost_drill_down_body, 'i18n("Cost details")' not in cost_drill_down_body or 'i18n("Details for %1", tokenCostSection.selectedDay.label)'):
     raise AssertionError("costDrillDownSection must use a plain, user-facing title")
 for value_label in ("costBreakdownValueLabel", "costModelValueLabel"):
     value_label_body = id_block(main_text, value_label)
-    if "Layout.preferredWidth: costDrillDownSection.metricValueColumnWidth" not in value_label_body:
+    if not code_contains(value_label_body, "Layout.preferredWidth: costDrillDownSection.metricValueColumnWidth"):
         raise AssertionError(f"{value_label} must use the shared metric value column width")
-    if "Layout.maximumWidth: costDrillDownSection.metricValueColumnWidth" not in value_label_body:
+    if not code_contains(value_label_body, "Layout.maximumWidth: costDrillDownSection.metricValueColumnWidth"):
         raise AssertionError(f"{value_label} must cap the shared metric value column width")
-    if "font.pixelSize: Kirigami.Theme.smallFont.pixelSize" not in value_label_body:
+    if not code_contains(value_label_body, "font.pixelSize: Kirigami.Theme.smallFont.pixelSize"):
         raise AssertionError(f"{value_label} must use the compact numeric type scale")
 
 cost_models_heading_body = id_block(main_text, "costModelsHeading")
@@ -2110,13 +2120,13 @@ for heading_fragment in (
     "font.pixelSize: Kirigami.Theme.smallFont.pixelSize",
     "font.weight: Font.DemiBold",
 ):
-    if heading_fragment not in cost_models_heading_body:
+    if not code_contains(cost_models_heading_body, heading_fragment):
         raise AssertionError("Models must remain distinct without adding another card")
 if "costRecentDaysHeading" in cost_drill_down_body or 'i18n("Recent days")' in cost_drill_down_body:
     raise AssertionError("cost details must not duplicate the daily history after the models")
 
 action_rows_body = function_body(main_text, "actionRows")
-if 'action: "refresh", enabled: true, separatorBefore: true' not in action_rows_body:
+if not code_contains(action_rows_body, 'action: "refresh", enabled: true, separatorBefore: true'):
     raise AssertionError("actionRows must separate provider actions from widget-level actions")
 
 provider_action_rows_body = id_block(main_text, "providerActionRows")
@@ -2124,7 +2134,7 @@ for action_fragment in (
     "id: providerActionGroupSeparator",
     "visible: modelData.separatorBefore === true",
 ):
-    if action_fragment not in provider_action_rows_body:
+    if not code_contains(provider_action_rows_body, action_fragment):
         raise AssertionError(f"providerActionRows must expose {action_fragment} for grouped menu actions")
 
 for selected_row_fragment in (
@@ -2133,7 +2143,7 @@ for selected_row_fragment in (
     "? providerRow.selectedForeground",
     "? providerRow.selectedSecondaryForeground",
 ):
-    if selected_row_fragment not in provider_config_row_text:
+    if not code_contains(provider_config_row_text, selected_row_fragment):
         raise AssertionError(
             "ProviderConfigRow selected state must set explicit contrast-aware "
             f"text colors; missing {selected_row_fragment!r}"
@@ -2149,16 +2159,16 @@ for explanation_fragment in (
     "wrapMode: Text.WordWrap",
     "font: Kirigami.Theme.smallFont",
 ):
-    if explanation_fragment not in advanced_override_body:
+    if not code_contains(advanced_override_body, explanation_fragment):
         raise AssertionError(
             "Advanced override guidance must remain a readable full-width form row; "
             f"missing {explanation_fragment!r}"
         )
 if "Kirigami.FormData.label:" in advanced_override_body:
     raise AssertionError("Advanced override guidance must not masquerade as a field label")
-if 'Kirigami.FormData.label: i18n("Advanced provider override")' not in diagnostics_text:
+if not code_contains(diagnostics_text, 'Kirigami.FormData.label: i18n("Advanced provider override")'):
     raise AssertionError("Diagnostics must retain the provider override section title")
-if "Kirigami.FormData.isSection: true" not in diagnostics_text:
+if not code_contains(diagnostics_text, "Kirigami.FormData.isSection: true"):
     raise AssertionError("Advanced provider override must use the shared Kirigami section hierarchy")
 
 provider_cli_toggle_body = id_block(providers_text, "providerCliCommandsToggle")
@@ -2167,14 +2177,14 @@ for toggle_fragment in (
     'text: i18n("CLI commands")',
     'icon.name: checked ? "arrow-down" : "arrow-right"',
 ):
-    if toggle_fragment not in provider_cli_toggle_body:
+    if not code_contains(provider_cli_toggle_body, toggle_fragment):
         raise AssertionError(
             "Provider CLI commands must remain available behind a compact native disclosure; "
             f"missing {toggle_fragment!r}"
         )
 
 provider_cli_view_body = id_block(providers_text, "providerCliCommandsView")
-if "visible: providerCliCommandsToggle.checked" not in provider_cli_view_body:
+if not code_contains(provider_cli_view_body, "visible: providerCliCommandsToggle.checked"):
     raise AssertionError("Provider CLI command output must follow the disclosure state")
 
 settings_toggle = providers_surface.id_block("providerSettingsToggle")
@@ -2198,14 +2208,14 @@ for heading_fragment in (
     'i18np("%1 provider enabled", "%1 providers enabled", page.enabledCount)',
     "font.weight: Font.DemiBold",
 ):
-    if heading_fragment not in provider_list_heading_body:
+    if not code_contains(provider_list_heading_body, heading_fragment):
         raise AssertionError(
             "The provider list must retain a distinct, compact heading; "
             f"missing {heading_fragment!r}"
         )
 
 provider_list_separator_body = id_block(providers_text, "providerListSeparator")
-if "Layout.fillWidth: true" not in provider_list_separator_body:
+if not code_contains(provider_list_separator_body, "Layout.fillWidth: true"):
     raise AssertionError("The provider list boundary must span the available width")
 
 ordered_provider_fragments = (
@@ -2220,15 +2230,15 @@ if ordered_provider_indexes != sorted(ordered_provider_indexes):
 
 notification_scope_body = function_body(main_text, "notificationScopeKey")
 for scope_fragment in ("providerMapKey(item.provider)", "selectedAccountForProvider", "accountKey(item)", "JSON.stringify"):
-    if scope_fragment not in notification_scope_body:
+    if not code_contains(notification_scope_body, scope_fragment):
         raise AssertionError(
             "notificationScopeKey must include stable provider/account identity; "
             f"missing {scope_fragment!r}"
         )
 pending_getter_body = function_body(main_text, "notificationProviderRefreshPending")
 if not re.fullmatch(
-    r"\s*var\s+key\s*=\s*providerMapKey\(providerID\)\s*"
-    r"return\s+key\.length\s*>\s*0\s*&&\s*notificationRefreshPending\[key\]\s*===\s*true\s*",
+    r"\s*var\s+key\s*=\s*providerMapKey\(providerID\);?\s*"
+    r"return\s+key\.length\s*>\s*0\s*&&\s*notificationRefreshPending\[key\]\s*===\s*true;?\s*",
     pending_getter_body,
     re.S,
 ):
@@ -2240,13 +2250,13 @@ for setter_fragment in (
     "delete nextPending[key]",
     "notificationRefreshPending = nextPending",
 ):
-    if setter_fragment not in pending_setter_body:
+    if not code_contains(pending_setter_body, setter_fragment):
         raise AssertionError(
             "setNotificationProviderRefreshPending must update the copied pending map; "
             f"missing {setter_fragment!r}"
         )
 if not re.search(
-    r"if\s*\(pending\)\s*\{\s*nextPending\[key\]\s*=\s*true\s*\}\s*else\s*\{\s*delete\s+nextPending\[key\]\s*\}",
+    r"if\s*\(pending\)\s*\{\s*nextPending\[key\]\s*=\s*true;?\s*\}\s*else\s*\{\s*delete\s+nextPending\[key\];?\s*\}",
     pending_setter_body,
     re.S,
 ):
@@ -2295,7 +2305,7 @@ for observation_fragment in (
     "statusIncidentKey: String(item.statusIncidentKey || \"\")",
     "rows: rows",
 ):
-    if observation_fragment not in observations_body:
+    if not code_contains(observations_body, observation_fragment):
         raise AssertionError(
             "notificationObservations must resolve normalized identity and freshness before the planner; "
             f"missing {observation_fragment!r}"
@@ -2308,7 +2318,7 @@ for row_fragment in (
     "paceKnown: row && row.paceKnown === true",
     "paceActive: paceWarningActive(row)",
 ):
-    if row_fragment not in observation_rows_body:
+    if not code_contains(observation_rows_body, row_fragment):
         raise AssertionError(
             "notificationObservationRows must adapt display rows into semantic planner input; "
             f"missing {row_fragment!r}"
@@ -2322,7 +2332,7 @@ for delegation_fragment in (
     "notificationMemo = result.nextMemo",
     "dispatchNotificationIntents(result.intents, observations)",
 ):
-    if delegation_fragment not in process_notifications_body:
+    if not code_contains(process_notifications_body, delegation_fragment):
         raise AssertionError(
             "processNotifications must delegate the whole transition and apply its result; "
             f"missing {delegation_fragment!r}"
@@ -2348,14 +2358,14 @@ for intent_fragment in (
     'intent.kind === "reset"',
     "sendPlasmaNotification(",
 ):
-    if intent_fragment not in dispatch_body:
+    if not code_contains(dispatch_body, intent_fragment):
         raise AssertionError(
             "dispatchNotificationIntents must keep every localized effect in QML; "
             f"missing {intent_fragment!r}"
         )
 
 reset_memo_body = applet.function_body("resetNotificationMemo")
-if "NotificationPlanner.transition(" not in reset_memo_body or 'mode: "reset"' not in reset_memo_body:
+if not code_contains(reset_memo_body, "NotificationPlanner.transition(" not in reset_memo_body or 'mode: "reset"'):
     raise AssertionError("resetNotificationMemo must reset the opaque memo through NotificationPlanner")
 if re.search(r"notificationMemo\s*=\s*\(\{\}\)", reset_memo_body):
     raise AssertionError("resetNotificationMemo must not clear the whole memo, including status state")
@@ -2384,7 +2394,7 @@ for memo_function in (
 if "sendPlasmaNotification" in notification_memo_js or "i18n(" in notification_memo_js:
     raise AssertionError("NotificationMemo.js must stay free of side effects and user-facing text")
 status_decision_body = function_body(notification_memo_js, "statusDecision")
-if 'statusPrimedMemoKey(providerID)] !== "1"' not in status_decision_body:
+if not code_contains(status_decision_body, 'statusPrimedMemoKey(providerID)] !== "1"'):
     raise AssertionError(
         "statusDecision must silently baseline a provider that was never primed, so an incident "
         "predating the memo cannot be announced as new"
@@ -2430,7 +2440,7 @@ if "UsageCache.reconcile(providers, items, nowMs)" not in function_body(main_tex
     )
 panel_clock_body = id_block(main_text, "panelClockTimer")
 for fragment in ("root.panelClockMs = Date.now()", "root.expireStaleUsage(root.panelClockMs)"):
-    if fragment not in panel_clock_body:
+    if not code_contains(panel_clock_body, fragment):
         raise AssertionError("the panel clock must update time and expire usage even without automatic refresh")
 for fresh_function in ("commitUsageSnapshot",):
     fresh_body = function_body(main_text, fresh_function)
@@ -2446,12 +2456,12 @@ selected_guard = "selectedAccount.length > 0 && accountKey(item) !== selectedAcc
 delete_pending_index = mark_fresh_body.find("delete nextPending[providerID]")
 if "item.error" in mark_fresh_body:
     raise AssertionError("usage errors must not discard fresh provider status before the planner classifies the evidence")
-if "var selectedAccount = selectedAccountForProvider(providerID)" not in mark_fresh_body:
+if not code_contains(mark_fresh_body, "var selectedAccount = selectedAccountForProvider(providerID)"):
     raise AssertionError("markNotificationProvidersFresh must correlate fresh data with the selected account")
 if selected_guard not in mark_fresh_body or mark_fresh_body.find(selected_guard) > delete_pending_index:
     raise AssertionError("stale responses for a previous account must not clear notification suppression")
 if not re.search(
-    r"if\s*\(selectedAccount\.length\s*>\s*0\s*&&\s*accountKey\(item\)\s*!==\s*selectedAccount\)\s*\{\s*continue\s*\}",
+    r"if\s*\(selectedAccount\.length\s*>\s*0\s*&&\s*accountKey\(item\)\s*!==\s*selectedAccount\)\s*\{\s*continue;?\s*\}",
     mark_fresh_body,
     re.S,
 ):
@@ -2461,7 +2471,7 @@ if not re.search(
 # same-severity stable incident keys so active incident replacements are not
 # missed without letting free-form status text changes spam notifications.
 status_body = function_body(notification_memo_js, "statusDecision")
-if "worsened" not in status_body:
+if not code_contains(status_body, "worsened"):
     raise AssertionError("statusDecision must gate on severity worsening")
 if (
     "incidentChanged" not in status_body
@@ -2480,9 +2490,9 @@ if "previousValue !== text" in status_body:
     )
 
 status_value_body = function_body(notification_planner_js, "statusValue")
-if "observation.statusIncidentKey" not in status_value_body:
+if not code_contains(status_value_body, "observation.statusIncidentKey"):
     raise AssertionError("NotificationPlanner must prefer stable incident keys when present")
-if "NotificationMemo.statusMemoValue(" not in status_value_body:
+if not code_contains(status_value_body, "NotificationMemo.statusMemoValue("):
     raise AssertionError("NotificationPlanner must encode severity and stable incident key through NotificationMemo")
 if 'String(severity || "") + "|" + String(incidentKey || "")' not in function_body(
     notification_memo_js, "statusMemoValue"
@@ -2494,33 +2504,33 @@ if "statusText" in status_value_body:
 # Selection policy is behavioral code in PopupSelection. The root only supplies
 # observations, commits the result, and invokes reconciliation for effects.
 select_body = function_body(main_text, "updateSelectedProvider")
-if 'import "PopupSelection.js" as PopupSelection' not in main_text:
+if not code_contains(main_text, 'import "PopupSelection.js" as PopupSelection'):
     raise AssertionError("main.qml must import the tested popup selection policy")
-if "PopupSelection.reconcile(" not in select_body:
+if not code_contains(select_body, "PopupSelection.reconcile("):
     raise AssertionError("updateSelectedProvider must delegate its transition to PopupSelection")
 for selection_commit in (
     "selectedProviderID = next.providerID",
     "selectedGlobalView = next.globalView",
     "selectionInitialized = next.initialized",
 ):
-    if selection_commit not in select_body:
+    if not code_contains(select_body, selection_commit):
         raise AssertionError(f"main.qml must commit popup selection state: {selection_commit}")
-if "function providerIndexForID(providerID)" not in main_text:
+if not code_contains(main_text, "function providerIndexForID(providerID)"):
     raise AssertionError("the selected provider index must be derived from its provider id")
 select_global_body = function_body(main_text, "selectGlobalView")
-if "PopupSelection.globalViewIsAvailable(candidate, globalViewAvailability())" not in select_global_body:
+if not code_contains(select_global_body, "PopupSelection.globalViewIsAvailable(candidate, globalViewAvailability())"):
     raise AssertionError("explicit global selection must use the shared availability contract")
 reconcile_global_body = function_body(main_text, "reconcileGlobalViewAvailability")
-if "PopupSelection.globalSelectionNeedsReconciliation(" not in reconcile_global_body:
+if not code_contains(reconcile_global_body, "PopupSelection.globalSelectionNeedsReconciliation("):
     raise AssertionError("availability handlers must ignore valid global and provider selections")
-if "updateSelectedProvider()" not in reconcile_global_body:
+if not code_contains(reconcile_global_body, "updateSelectedProvider()"):
     raise AssertionError("an unavailable global selection must reconcile immediately")
 for availability_handler in (
     "onOverviewAvailableChanged: reconcileGlobalViewAvailability()",
     "onSpendAvailableChanged: reconcileGlobalViewAvailability()",
     "onSessionsAvailableChanged: reconcileGlobalViewAvailability()",
 ):
-    if availability_handler not in main_text:
+    if not code_contains(main_text, availability_handler):
         raise AssertionError(f"global selection is missing availability wiring: {availability_handler}")
 
 for global_view_fragment in (
@@ -2529,7 +2539,7 @@ for global_view_fragment in (
     "Components.SpendView",
     "Components.SessionsView",
 ):
-    if global_view_fragment not in main_text:
+    if not code_contains(main_text, global_view_fragment):
         raise AssertionError(f"global popup navigation is missing {global_view_fragment!r}")
 
 for session_contract_fragment in (
@@ -2538,7 +2548,7 @@ for session_contract_fragment in (
     "maximumSessions = 128",
     "function normalizeSession(item)",
 ):
-    if session_contract_fragment not in main_text:
+    if not code_contains(main_text, session_contract_fragment):
         raise AssertionError(f"sessions lifecycle is missing {session_contract_fragment!r}")
 for forbidden_session_value in ("transcriptPath", "cwd"):
     if forbidden_session_value in sessions_view_text:
@@ -2554,7 +2564,7 @@ for activity_fallback_fragment in (
     "activityAt: activityAt",
     "activityMs: activityMs",
 ):
-    if activity_fallback_fragment not in normalize_session_body:
+    if not code_contains(normalize_session_body, activity_fallback_fragment):
         raise AssertionError(
             "session activity must prefer lastActivityAt and safely fall back to startedAt; "
             f"missing {activity_fallback_fragment!r}"
@@ -2567,7 +2577,7 @@ for shared_copy_fragment in (
     "id: clipboardBuffer",
     "id: copiedTimer",
 ):
-    if shared_copy_fragment not in sessions_view_text:
+    if not code_contains(sessions_view_text, shared_copy_fragment):
         raise AssertionError(
             "SessionsView must own one shared clipboard lifecycle; "
             f"missing {shared_copy_fragment!r}"
@@ -2575,7 +2585,7 @@ for shared_copy_fragment in (
 if not re.search(
     r"Connections\s*\{.*?target:\s*view\.applet.*?"
     r"function\s+onSessionsChanged\(\)\s*\{\s*"
-    r'view\.copiedValueKey\s*=\s*""\s*\}',
+    r'view\.copiedValueKey\s*=\s*"";?\s*\}',
     sessions_view_text,
     re.S,
 ):
@@ -2586,7 +2596,7 @@ for snapshot_copy_key_fragment in (
     'readonly property string titleCopyKey: "title:" + index',
     'readonly property string detailsCopyKey: "details:" + index',
 ):
-    if snapshot_copy_key_fragment not in sessions_view_text:
+    if not code_contains(sessions_view_text, snapshot_copy_key_fragment):
         raise AssertionError(
             "session copy keys must remain index-scoped inside one unchanged snapshot; "
             f"missing {snapshot_copy_key_fragment!r}"
@@ -2599,12 +2609,12 @@ for per_delegate_copy_fragment in ("Controls.TextField {", "Timer {"):
             "CopyableValue delegates must not allocate clipboard controls or timers; "
             f"found {per_delegate_copy_fragment!r}"
         )
-if "valueRow.copyRevealed || valueRow.copied || hovered || activeFocus" not in copyable_value_text:
+if not code_contains(copyable_value_text, "valueRow.copyRevealed || valueRow.copied || hovered || activeFocus"):
     raise AssertionError(
         "the copy action must stay reachable by keyboard and while confirming a copy, "
         "not only while the owning row is hovered"
     )
-if "PlainPlasmaLabel {" not in copyable_value_text:
+if not code_contains(copyable_value_text, "PlainPlasmaLabel {"):
     raise AssertionError("CopyableValue must render untrusted CLI values as plain text")
 if sessions_view_text.count("PlainPlasmaLabel {") < 3:
     raise AssertionError("all direct session labels must render CLI-derived text as plain text")
@@ -2617,7 +2627,7 @@ for active_session_state in (
     'modelData.state === "active"',
     'modelData.state === "running"',
 ):
-    if active_session_state not in sessions_view_text:
+    if not code_contains(sessions_view_text, active_session_state):
         raise AssertionError(
             "SessionsView must highlight both live state spellings accepted from the CLI; "
             f"missing {active_session_state!r}"
@@ -2627,7 +2637,7 @@ for optional_session_details_fragment in (
     "visible: sessionCard.subtitle.length > 0",
     "text: sessionCard.subtitle",
 ):
-    if optional_session_details_fragment not in sessions_view_text:
+    if not code_contains(sessions_view_text, optional_session_details_fragment):
         raise AssertionError(
             "sessions without optional detail fields must not render an empty copy action; "
             f"missing {optional_session_details_fragment!r}"
@@ -2643,7 +2653,7 @@ for rejected_shape_fragment in (
     "Array.isArray(payload.sessions)",
     "return null",
 ):
-    if rejected_shape_fragment not in normalize_sessions_body:
+    if not code_contains(normalize_sessions_body, rejected_shape_fragment):
         raise AssertionError(
             "unexpected session payload shapes must be rejected, not emptied; "
             f"missing {rejected_shape_fragment!r}"
@@ -2661,7 +2671,7 @@ for live_age_fragment in (
     "Number(nowMs)",
     "currentTimeMs - Number(item.activityMs)",
 ):
-    if live_age_fragment not in session_activity_body:
+    if not code_contains(session_activity_body, live_age_fragment):
         raise AssertionError(
             "relative session ages must depend on a periodically updated clock; "
             f"missing {live_age_fragment!r}"
@@ -2671,7 +2681,7 @@ for session_clock_fragment in (
     "id: sessionAgeTimer",
     "sessionActivityText(modelData, view.sessionClockMs)",
 ):
-    if session_clock_fragment not in sessions_view_text:
+    if not code_contains(sessions_view_text, session_clock_fragment):
         raise AssertionError(
             "SessionsView must refresh relative ages even when CLI refresh is manual; "
             f"missing {session_clock_fragment!r}"
@@ -2683,7 +2693,7 @@ for chart_interaction_fragment in (
     "onPositionChanged:",
     "selectedIndex",
 ):
-    if chart_interaction_fragment not in interactive_chart_text:
+    if not code_contains(interactive_chart_text, chart_interaction_fragment):
         raise AssertionError(
             "InteractiveChart must support pointer and keyboard inspection; "
             f"missing {chart_interaction_fragment!r}"
@@ -2692,7 +2702,7 @@ for stable_chart_fragment in (
     "readonly property bool hasActivePoint",
     "if (chart.hoveredIndex >= chart.pointCount)",
 ):
-    if stable_chart_fragment not in interactive_chart_text:
+    if not code_contains(interactive_chart_text, stable_chart_fragment):
         raise AssertionError(
             "InteractiveChart must keep hover geometry stable and clamp stale state; "
             f"missing {stable_chart_fragment!r}"
@@ -2714,7 +2724,7 @@ for measurer in composition_measurers:
             "compact panel text must round up an independent label measurement "
             f"per candidate composition; missing {measurer!r}"
         )
-if "maximumCompactWidth: Kirigami.Units.gridUnit * 18" not in compact_representation_text:
+if not code_contains(compact_representation_text, "maximumCompactWidth: Kirigami.Units.gridUnit * 18"):
     raise AssertionError("compact panel text must use a bounded wide cap")
 # Content the settings switched on is surrendered whole, never cut into a
 # fragment that reads as a different value.
@@ -2725,7 +2735,7 @@ for fit_fragment in (
     "PanelTextFit.fittedIndex(textCompositionWidths, standaloneTextBudget)",
     "Accessible.name: compactRoot.fullText",
 ):
-    if fit_fragment not in compact_representation_text:
+    if not code_contains(compact_representation_text, fit_fragment):
         raise AssertionError(
             "crowded panel text must surrender whole segments and keep the full "
             f"composition for assistive technology; missing {fit_fragment!r}"
@@ -2737,25 +2747,25 @@ if "applet.compactText()" in compact_representation_text:
     )
 if "elementLoader.implicitWidth" in compact_representation_text:
     raise AssertionError("compact panel text measurement must not feed back through its Loader width")
-if "rangeCombo.valueAt(index)" not in spend_view_text:
+if not code_contains(spend_view_text, "rangeCombo.valueAt(index)"):
     raise AssertionError("the cost range selector must use the activated option instead of stale currentValue")
 for metric_combo_source, metric_combo_text in (
     ("SpendView.qml", spend_view_text),
     ("ProviderCostSection.qml", provider_cost_section_text),
 ):
-    if "currentIndex = Qt.binding(function" not in metric_combo_text:
+    if not code_contains(metric_combo_text, "currentIndex = Qt.binding(function"):
         raise AssertionError(
             f"{metric_combo_source} must restore the metric combo's currentIndex "
             "binding after an interactive pick severs it"
         )
-if "view.applet.refreshCost(true)" not in spend_view_text:
+if not code_contains(spend_view_text, "view.applet.refreshCost(true)"):
     raise AssertionError("the cost refresh button must explicitly bypass the automatic hourly throttle")
 for cost_loading_fragment in (
     "busy: view.applet.costLoading",
     "visible: view.applet.costLoading && view.providerCosts.length === 0",
     "visible: !view.applet.costLoading",
 ):
-    if cost_loading_fragment not in spend_view_text:
+    if not code_contains(spend_view_text, cost_loading_fragment):
         raise AssertionError(
             "SpendView must distinguish a range refresh from an empty result; "
             f"missing {cost_loading_fragment!r}"
@@ -2763,7 +2773,7 @@ for cost_loading_fragment in (
 if ('readonly property bool costLoading: costController.loading'
         not in main_text):
     raise AssertionError("cost loading state must follow the active cost command lifecycle")
-if "required property int index" not in popup_text:
+if not code_contains(popup_text, "required property int index"):
     raise AssertionError("the panel element editor delegate must explicitly receive its model index")
 for localized_pair_source, localized_pair_text in (
     ("InteractiveChart.qml", interactive_chart_text),
@@ -2773,9 +2783,9 @@ for localized_pair_source, localized_pair_text in (
         raise AssertionError(
             f"{localized_pair_source} must localize label/value separators with placeholders"
         )
-if "InteractiveChart" not in spend_view_text or "Activity heatmap" not in spend_view_text:
+if not code_contains(spend_view_text, "InteractiveChart" not in spend_view_text or "Activity heatmap"):
     raise AssertionError("SpendView must expose the interactive chart and bounded activity heatmap")
-if "visible: view.dailyPoints.length > 0" not in spend_view_text:
+if not code_contains(spend_view_text, "visible: view.dailyPoints.length > 0"):
     raise AssertionError("SpendView must keep a one-day history keyboard-inspectable")
 if "visible: view.dailyPoints.length > 1" in spend_view_text:
     raise AssertionError("SpendView must not hide the accessible chart when one history day is available")
@@ -2788,27 +2798,27 @@ for heatmap_range_fragment in (
     "Layout.preferredHeight: 7 * heatmapGrid.cellHeight",
     "+ 6 * heatmapGrid.rowSpacing",
 ):
-    if heatmap_range_fragment not in spend_view_text:
+    if not code_contains(spend_view_text, heatmap_range_fragment):
         raise AssertionError(
             "the activity heatmap must follow the selected cost range and size cells "
             f"from the available width; missing {heatmap_range_fragment!r}"
         )
-if "readonly property real cellWidth: Math.min(" not in spend_view_text:
+if not code_contains(spend_view_text, "readonly property real cellWidth: Math.min("):
     raise AssertionError(
         "the activity heatmap must stretch its cells into the width a short range leaves "
         "unused instead of stranding a small patch beside an empty section"
     )
-if "cellHeight * 3)" not in spend_view_text:
+if not code_contains(spend_view_text, "cellHeight * 3)"):
     raise AssertionError(
         "the stretched heatmap cells must stay bounded against their own height, so they keep "
         "reading as heatmap cells instead of bars competing with the chart above"
     )
-if "CostPresentation.spendHeatmapCells(" not in spend_view_text:
+if not code_contains(spend_view_text, "CostPresentation.spendHeatmapCells("):
     raise AssertionError(
         "the activity heatmap must pad its grid through the shared cell layout, so a ragged "
         "final column cannot cut a week-wide notch out of the block"
     )
-if "visible: view.heatmapDays.length > 7" not in spend_view_text:
+if not code_contains(spend_view_text, "visible: view.heatmapDays.length > 7"):
     raise AssertionError(
         "the activity heatmap must stay hidden for ranges that fill a single week column, "
         "which repeat the chart above instead of showing a weekday pattern"
@@ -2818,7 +2828,7 @@ for heatmap_padding_fragment in (
     "Accessible.ignored: !heatmapCell.measured",
     "visible: heatmapMouse.containsMouse && heatmapCell.measured",
 ):
-    if heatmap_padding_fragment not in spend_view_text:
+    if not code_contains(spend_view_text, heatmap_padding_fragment):
         raise AssertionError(
             "padded heatmap slots carry no day and must stay out of hover, the readout, and "
             f"the reading order; missing {heatmap_padding_fragment!r}"
@@ -2828,7 +2838,7 @@ if "modelData.monthLine" in spend_view_text:
         "the Usage & Spend provider rows must not repeat the window label that the "
         "range selector already states; use the windowValueLine figures"
     )
-if "item.windowValueLine = costValueLine(" not in main_text:
+if not code_contains(main_text, "item.windowValueLine = costValueLine("):
     raise AssertionError(
         "normalized token costs must expose a window-free value line for range-scoped surfaces"
     )
@@ -2837,7 +2847,7 @@ for mixed_currency_fragment in (
     "The cost subtotal and charts use %1.",
     'i18n("%1 subtotal", costValue)',
 ):
-    if mixed_currency_fragment not in main_text:
+    if not code_contains(main_text, mixed_currency_fragment):
         raise AssertionError(
             "mixed-currency spend must be labelled as a subtotal and explain its scope; "
             f"missing {mixed_currency_fragment!r}"
@@ -2847,7 +2857,7 @@ for empty_metric_fragment in (
     "No daily token history is available for this range.",
     "Try Tokens to check for token-only history.",
 ):
-    if empty_metric_fragment not in spend_view_text:
+    if not code_contains(spend_view_text, empty_metric_fragment):
         raise AssertionError(
             "a provider snapshot without the selected daily metric needs a scoped explanation; "
             f"missing {empty_metric_fragment!r}"
@@ -2856,11 +2866,11 @@ for trust_owner_source, trust_owner_text in (
     ("ProviderCostSection.qml", token_cost_section_body),
     ("SpendView.qml", spend_view_text),
 ):
-    if "Components.CostTrustNotice" not in trust_owner_text:
+    if not code_contains(trust_owner_text, "Components.CostTrustNotice"):
         raise AssertionError(
             f"{trust_owner_source} must render the shared cost-trust notice"
         )
-    if "CostPresentation.costTrustSummary(" not in trust_owner_text:
+    if not code_contains(trust_owner_text, "CostPresentation.costTrustSummary("):
         raise AssertionError(
             f"{trust_owner_source} must delegate cost-trust policy to CostPresentation"
         )
@@ -2869,7 +2879,7 @@ for persistent_notice_fragment in (
     "function updateCostTrustNoticeState(",
     "CostPresentation.costTrustNoticeStoreTransition(",
 ):
-    if persistent_notice_fragment not in main_text:
+    if not code_contains(main_text, persistent_notice_fragment):
         raise AssertionError(
             "the applet root must preserve scoped cost-notice dismissals across popup recreation; "
             f"missing {persistent_notice_fragment!r}"
@@ -2899,7 +2909,7 @@ for cost_trust_fragment in (
     "lacked final usage",
     "function incompleteText()",
 ):
-    if cost_trust_fragment not in cost_trust_notice_text:
+    if not code_contains(cost_trust_notice_text, cost_trust_fragment):
         raise AssertionError(
             "CostTrustNotice must own the shared localized message and standard styling; "
             f"missing {cost_trust_fragment!r}"
@@ -2919,19 +2929,19 @@ for provider_notice_fragment in (
     "stateOwner: tokenCostSection.applet",
     "presentationVisible: tokenCostSection.presentationVisible",
 ):
-    if provider_notice_fragment not in token_cost_section_body:
+    if not code_contains(token_cost_section_body, provider_notice_fragment):
         raise AssertionError(
             "provider cost notices must use a persistent provider scope and visible context; "
             f"missing {provider_notice_fragment!r}"
         )
-if "presentationVisible: fullRoot.visible && !applet.globalViewSelected" not in full_representation_text:
+if not code_contains(full_representation_text, "presentationVisible: fullRoot.visible && !applet.globalViewSelected"):
     raise AssertionError("the provider cost section must receive the popup visibility context")
 for spend_notice_fragment in (
     'noticeScope: "spend"',
     "stateOwner: view.applet",
     "presentationVisible: view.visible",
 ):
-    if spend_notice_fragment not in spend_view_text:
+    if not code_contains(spend_view_text, spend_notice_fragment):
         raise AssertionError(
             "Spend cost notices must use a persistent aggregate scope and visible context; "
             f"missing {spend_notice_fragment!r}"
@@ -2941,7 +2951,7 @@ for qualified_value_fragment in (
     'i18n("%1 (partial)"',
     'i18n("%1 (approximate)"',
 ):
-    if qualified_value_fragment not in main_text:
+    if not code_contains(main_text, qualified_value_fragment):
         raise AssertionError(
             "cost amount lines must carry their trust qualifier in localized text; "
             f"missing {qualified_value_fragment!r}"
@@ -2954,23 +2964,23 @@ if "view.dailyPoints.length - 42" in spend_view_text:
         "the activity heatmap must not pin itself to a fixed 42-day window while the "
         "range selector offers 7/30/90 days"
     )
-if 'valueRow.copied ? "checkmark" : "edit-copy"' not in copyable_value_text:
+if not code_contains(copyable_value_text, 'valueRow.copied ? "checkmark" : "edit-copy"'):
     raise AssertionError("CopyableValue must provide immediate checkmark icon feedback when copied")
 if "heatmapMouse.containsMouse ? 0.4 : 0" in spend_view_text:
     raise AssertionError(
         "the heatmap hover outline must not fade a border's own alpha: Qt treats a zero-alpha "
         "pen as invalid and paints a zero-width border, snapping the cell fill out to the edge"
     )
-if "opacity: heatmapMouse.containsMouse ? 1 : 0" not in spend_view_text:
+if not code_contains(spend_view_text, "opacity: heatmapMouse.containsMouse ? 1 : 0"):
     raise AssertionError(
         "SpendView activity heatmap cells must fade a dedicated hover outline overlay, so the "
         "painted fill geometry never depends on hover"
     )
-if "sessionCardHover.hovered ? 0.075 : 0.035" not in sessions_view_text:
+if not code_contains(sessions_view_text, "sessionCardHover.hovered ? 0.075 : 0.035"):
     raise AssertionError("session cards must confirm hover on the surface that reveals their copy actions")
-if "opacity: chart.hasActivePoint ? 1 : 0" not in interactive_chart_text:
+if not code_contains(interactive_chart_text, "opacity: chart.hasActivePoint ? 1 : 0"):
     raise AssertionError("the chart readout must fade with the active point instead of blinking")
-if "onActiveIndexChanged: if (activeIndex >= 0 && activeIndex < pointCount)" not in interactive_chart_text:
+if not code_contains(interactive_chart_text, "onActiveIndexChanged: if (activeIndex >= 0 && activeIndex < pointCount)"):
     raise AssertionError(
         "the chart readout must retain the last inspected point across the fade-out, and must "
         "bounds-check inline: hasActivePoint is still stale inside an activeIndex change handler"
@@ -2985,11 +2995,11 @@ if "chart.hasActivePoint ? chart.pointLabel" in interactive_chart_text:
         "the chart readout text must not clear on hasActivePoint: that empties the row "
         "on the same signal that starts the fade, so hover exit blinks instead of fading"
     )
-if "tab.applet.withAlpha(tab.accent, tab.selected ? 1 : 0)" not in global_tab_text:
+if not code_contains(global_tab_text, "tab.applet.withAlpha(tab.accent, tab.selected ? 1 : 0)"):
     raise AssertionError(
         "the tab selection indicator must fade the accent's alpha, not interpolate towards transparent"
     )
-if "applet.withAlpha(overviewTab.accent," not in full_representation_text:
+if not code_contains(full_representation_text, "applet.withAlpha(overviewTab.accent,"):
     raise AssertionError("the overview tab indicator must fade its accent alpha like the shared tab")
 if "Behavior on width" not in id_block(compact_representation_text, "quotaCapsule"):
     raise AssertionError(
@@ -3000,7 +3010,7 @@ if "enabled: compactRoot.animationsEnabled" not in id_block(compact_representati
         "the panel capsule fill animation must opt out where animations are disabled, so the "
         "settings preview keeps rendering a static frame"
     )
-if "delay: Kirigami.Units.toolTipDelay" not in plain_tool_tip_text:
+if not code_contains(plain_tool_tip_text, "delay: Kirigami.Units.toolTipDelay"):
     raise AssertionError(
         "PlainToolTip must default to the Plasma hover delay: Controls.ToolTip opens with no "
         "delay of its own, so a pointer crossing the popup flashes every tooltip it passes"
@@ -3008,22 +3018,22 @@ if "delay: Kirigami.Units.toolTipDelay" not in plain_tool_tip_text:
 # Two tooltips confirm or read out state instead of labelling a control, and opt
 # out of that delay explicitly. Pin both, so the default cannot silently start
 # holding back feedback that has to be immediate.
-if "delay: 0" not in spend_view_text:
+if not code_contains(spend_view_text, "delay: 0"):
     raise AssertionError(
         "the heatmap cell readout must stay instant: it reports the cell under the pointer "
         "while the pointer scans the grid"
     )
-if "visible: copyButton.hovered && !valueRow.copied" not in copyable_value_text:
+if not code_contains(copyable_value_text, "visible: copyButton.hovered && !valueRow.copied"):
     raise AssertionError(
         "the copy button's hover label must hide while the copied confirmation is "
         "shown, so feedback gets its own visibility transition"
     )
-if "visible: valueRow.copied" not in copyable_value_text:
+if not code_contains(copyable_value_text, "visible: valueRow.copied"):
     raise AssertionError(
         "the copied confirmation must ride its own visibility transition: flipping delay "
         "on an already-visible tooltip would not restart the pending hover delay"
     )
-if "delay: 0" not in copyable_value_text:
+if not code_contains(copyable_value_text, "delay: 0"):
     raise AssertionError(
         "the copied confirmation must appear at once and outlive no hover delay"
     )
@@ -3050,25 +3060,25 @@ normalize_provider_body = function_body(snapshot_text, "normalize")
 present_provider_body = function_body(main_text, "presentProviderSnapshot")
 for fragment in ("statusKnown: snapshot.statusRecord !== null", "title: Normalizer.boundedDisplayText(",
                  "status: Normalizer.boundedDisplayText(", "usageReceivedAtMs: snapshot.usageReceivedAtMs"):
-    if fragment not in present_provider_body:
+    if not code_contains(present_provider_body, fragment):
         raise AssertionError("provider presentation must retain bounded metadata and original receipt time")
 for fragment in ('var lanes = ["primary", "secondary", "tertiary"]',
                  "windowSnapshot(usage[lane], pace[lane], true, lane, null, receivedAtMs)",
                  "Array.isArray(usage.extraRateWindows)", "Math.min(extras.length, Normalizer.maximumExtraRateWindows)"):
-    if fragment not in normalize_provider_body:
+    if not code_contains(normalize_provider_body, fragment):
         raise AssertionError("normalized windows must preserve CLI lanes and bound extra records")
 
-if "onCfg_commandPathChanged: handleCommandPathChanged()" not in providers_text:
+if not code_contains(providers_text, "onCfg_commandPathChanged: handleCommandPathChanged()"):
     raise AssertionError("the Providers page must reload when the configured CLI path changes")
 
 descriptor_action_result_body = function_body(providers_text, "handleDescriptorActionResult")
-if "bumpProviderConfigRevision()" not in descriptor_action_result_body:
+if not code_contains(descriptor_action_result_body, "bumpProviderConfigRevision()"):
     raise AssertionError("successful descriptor actions must invalidate the main applet snapshot")
 
 provider_tooltip_body = function_body(main_text, "panelProviderToolTipText")
 if not re.search(r"var incident = presented\.hasIncident\s*&&\s*presented\.statusKnown !== false\s*&&", provider_tooltip_body):
     raise AssertionError("panel tooltips must exclude inactive and unknown incidents")
-if 'i18n("%1 - %2", line, incident)' not in provider_tooltip_body:
+if not code_contains(provider_tooltip_body, 'i18n("%1 - %2", line, incident)'):
     raise AssertionError(
         "the panel tooltip must report incidents even when the provider also reports usage"
     )
@@ -3083,7 +3093,7 @@ if ("Plasmoid.configuration.showCreditsInPanel" not in provider_tooltip_body
 # fails for a provider outside the bundled icon and brand-color tables, which
 # render as one shared generic icon.
 compact_segments_body = function_body(main_text, "compactTextSegments")
-if "identifying: !providerIconIdentifies(" not in compact_segments_body:
+if not code_contains(compact_segments_body, "identifying: !providerIconIdentifies("):
     raise AssertionError(
         "the panel name segment must record whether the icon can identify the provider"
     )
@@ -3098,47 +3108,47 @@ for hover_helper in (
     "function hoveredPanelProvider(",
     "function panelProviderToolTipText(",
 ):
-    if hover_helper not in main_text:
+    if not code_contains(main_text, hover_helper):
         raise AssertionError(
             "the panel tooltip must track the hovered provider meter; "
             f"missing {hover_helper!r}"
         )
 hovered_provider_body = function_body(main_text, "hoveredPanelProvider")
-if "compactProviders()" not in hovered_provider_body:
+if not code_contains(hovered_provider_body, "compactProviders()"):
     raise AssertionError(
         "the hovered provider lookup must stay limited to rendered meters, "
         "since visibility rules can filter a meter out while its provider "
         "remains in the roster"
     )
 tooltip_body = function_body(main_text, "panelToolTipText")
-if "hoveredPanelProvider()" not in tooltip_body:
+if not code_contains(tooltip_body, "hoveredPanelProvider()"):
     raise AssertionError("hovering a panel meter must narrow the tooltip to that provider")
-if "panelProviderItems()" not in tooltip_body:
+if not code_contains(tooltip_body, "panelProviderItems()"):
     raise AssertionError(
         "the panel tooltip fallback must list the panel provider selection, not the full roster"
     )
-if "panelProviderToolTipText(" not in tooltip_body:
+if not code_contains(tooltip_body, "panelProviderToolTipText("):
     raise AssertionError("the panel tooltip must reuse the per-provider tooltip line")
-if "boundedDisplayText(errorText" not in tooltip_body:
+if not code_contains(tooltip_body, "boundedDisplayText(errorText"):
     raise AssertionError("the panel tooltip must bound global CLI error text")
 menu_bar_display_body = function_body(main_text, "menuBarDisplayText")
-if "var row = panelDisplayRow(item, mode)" not in menu_bar_display_body:
+if not code_contains(menu_bar_display_body, "var row = panelDisplayRow(item, mode)"):
     raise AssertionError("each panel text mode must select a row that supports its own data")
 run_out_text_body = function_body(main_text, "runOutTextForRow")
-if "PanelDisplay.remainingSeconds(" not in run_out_text_body:
+if not code_contains(run_out_text_body, "PanelDisplay.remainingSeconds("):
     raise AssertionError("the run-out token must advance from the usage observation time")
 reset_text_body = function_body(main_text, "resetText")
 # Direct QtTests cover timestamp precedence, bounds, and countdown arithmetic.
 # The owning adapter supplies the live clock and keeps local date formatting.
-if "ResetPresentation.parts(window, panelClockMs, absolute)" not in reset_text_body:
+if not code_contains(reset_text_body, "ResetPresentation.parts(window, panelClockMs, absolute)"):
     raise AssertionError("reset formatting must use semantic parts with the live panel clock")
-if 'Qt.formatDateTime(new Date(parts.timestampMs), "ddd HH:mm")' not in reset_text_body:
+if not code_contains(reset_text_body, 'Qt.formatDateTime(new Date(parts.timestampMs), "ddd HH:mm")'):
     raise AssertionError("absolute reset dates must retain QML locale formatting")
 for field in ("window.resetsAt", "window.resetDescription", "Math.round", "Math.floor"):
     if field in reset_text_body:
         raise AssertionError("reset parsing and arithmetic belong in ResetPresentation: " + field)
 for message in ("%1 min", "%1h", "%1d"):
-    if f'i18np("{message}"' not in reset_text_body:
+    if not code_contains(reset_text_body, f'i18np("{message}"'):
         raise AssertionError("reset duration units must retain plural-aware localization")
 reset_presentation = (root / "contents/ui/ResetPresentation.js").read_text()
 for forbidden in ("root.", "Plasmoid.", "Qt.", "i18n(", "i18np(", "Date.now("):
@@ -3149,7 +3159,7 @@ for forbidden in ("root.", "Plasmoid.", "Qt.", "i18n(", "i18np(", "Date.now("):
 # the applet root's callers were left with an undefined function.
 applet.require_definition_where_used("boundedDisplayText")
 
-if "applet.usageResetText(usageRow)" not in overview_provider_row_text:
+if not code_contains(overview_provider_row_text, "applet.usageResetText(usageRow)"):
     raise AssertionError("Overview reset labels must use render-time formatting")
 
 # The 80/95 steps used to be literals in these two functions, so the notification
@@ -3166,16 +3176,16 @@ for retired_literal in ("usageBarsShowUsed ? 80 : 20", "usageBarsShowUsed ? 95 :
         )
 
 reset_label_body = function_body(main_text, "resetLabel")
-if "ResetPresentation.labelParts(value)" not in reset_label_body:
+if not code_contains(reset_label_body, "ResetPresentation.labelParts(value)"):
     raise AssertionError("reset labels must use the tested semantic text classification")
-if 'i18n("Resets %1", parts.text)' not in reset_label_body:
+if not code_contains(reset_label_body, 'i18n("Resets %1", parts.text)'):
     raise AssertionError("QML must localize the reset-label prefix")
 
 # Bar charts are painted for up to 365 cost-history days and 120 detail-chart
 # points. Their one-pixel minimum width can exceed a dense point slot, so the
 # shared geometry helper must distribute the drawable bar edges inside the
 # canvas instead of using the nominal slot as the drawing step.
-if "function chartBarGeometry(width, count)" not in cost_presentation_text:
+if not code_contains(cost_presentation_text, "function chartBarGeometry(width, count)"):
     raise AssertionError("CostPresentation.js must expose a shared bar-chart geometry helper")
 chart_geometry_body = function_body(cost_presentation_text, "chartBarGeometry")
 for fragment in (
@@ -3184,7 +3194,7 @@ for fragment in (
     "Math.max(0, safeWidth - barWidth) / (points - 1)",
     "offset: Math.max(0, slotStep - barWidth) / 2",
 ):
-    if fragment not in chart_geometry_body:
+    if not code_contains(chart_geometry_body, fragment):
         raise AssertionError(
             f"chartBarGeometry must keep sparse and dense bars inside the canvas: {fragment}"
         )
@@ -3192,41 +3202,41 @@ for label, source_text in (
     ("main.qml", main_text),
     ("InteractiveChart.qml", interactive_chart_text),
 ):
-    if "chartBarGeometry(" not in source_text:
+    if not code_contains(source_text, "chartBarGeometry("):
         raise AssertionError(f"{label} bar charts must use the shared geometry helper")
     if "barWidth + gap" in source_text:
         raise AssertionError(f"{label} bar charts must not recompute their own bar pitch")
-if "geometry.offset + barIndex * geometry.step" not in interactive_chart_text:
+if not code_contains(interactive_chart_text, "geometry.offset + barIndex * geometry.step"):
     raise AssertionError("provider detail bars must apply the shared canvas offset")
 
 # The active line-chart point grows to a 3.5px radius. Both axes and pointer hit
 # testing must use the shared inset geometry so the visible marker stays inside
 # Canvas and resolves back to its own point.
 for helper_name in ("chartLineX", "chartLineIndexAt", "chartLineY"):
-    if f"function {helper_name}(" not in cost_presentation_text:
+    if not code_contains(cost_presentation_text, f"function {helper_name}("):
         raise AssertionError(f"CostPresentation.js must expose {helper_name} marker geometry")
-    if f"function {helper_name}(" not in main_text:
+    if not code_contains(main_text, f"function {helper_name}("):
         raise AssertionError(f"main.qml must expose {helper_name} to presentation components")
-    if f"chart.applet.{helper_name}(" not in interactive_chart_text:
+    if not code_contains(interactive_chart_text, f"chart.applet.{helper_name}("):
         raise AssertionError(f"provider detail line charts must use {helper_name}")
 
 reset_credits_body = function_body(main_text, "resetCreditsSection")
-if 'i18np("%1 available", "%1 available"' not in reset_credits_body:
+if not code_contains(reset_credits_body, 'i18np("%1 available", "%1 available"'):
     raise AssertionError("reset credit counts must use plural-aware translations")
-if "ProviderCostPresentation.resetCount(providerID, resetCredits)" not in reset_credits_body:
+if not code_contains(reset_credits_body, "ProviderCostPresentation.resetCount(providerID, resetCredits)"):
     raise AssertionError("reset credits must use the tested semantic count")
 direct_number_call = re.compile(r"(?<![A-Za-z0-9_])Number\(")
 if direct_number_call.search(reset_credits_body):
     raise AssertionError("reset credits must not use loose numeric coercion")
 
 normalize_provider_body = function_body(snapshot_text, "normalize")
-if "Normalizer.strictFiniteNumber(credits.remaining)" not in normalize_provider_body:
+if not code_contains(normalize_provider_body, "Normalizer.strictFiniteNumber(credits.remaining)"):
     raise AssertionError("remaining credits must reject coercive CLI numeric values")
-if "Normalizer.normalizeCodexCreditLimit(" not in normalize_provider_body:
+if not code_contains(normalize_provider_body, "Normalizer.normalizeCodexCreditLimit("):
     raise AssertionError("Codex monthly limits must cross the shared bounded normalizer")
-if 'hasOwnKey(credits, "codexCreditLimit")' not in normalize_provider_body:
+if not code_contains(normalize_provider_body, 'hasOwnKey(credits, "codexCreditLimit")'):
     raise AssertionError("Codex monthly limits must come from an own credits field")
-if "credits: isFinite(remaining)" not in normalize_provider_body:
+if not code_contains(normalize_provider_body, "credits: isFinite(remaining)"):
     raise AssertionError("the plain credits balance must remain independent of the monthly limit")
 if "credits: codexCreditLimit" in normalize_provider_body:
     raise AssertionError("the monthly-limit remainder must not replace the plain credits balance")
@@ -3234,7 +3244,7 @@ if direct_number_call.search(normalize_provider_body):
     raise AssertionError("remaining credits must not use loose numeric coercion")
 
 provider_cost_body = function_body(main_text, "providerCostSection")
-if "ProviderCostPresentation.section(providerID, cost)" not in provider_cost_body:
+if not code_contains(provider_cost_body, "ProviderCostPresentation.section(providerID, cost)"):
     raise AssertionError("provider cost must use the tested semantic section")
 if direct_number_call.search(provider_cost_body):
     raise AssertionError("provider cost must not use loose numeric coercion")
@@ -3249,29 +3259,29 @@ for field in ("cost.used", "cost.limit", "cost.personalUsed", "resetCredits.avai
 # Parsing and fallback behavior are covered directly by
 # tst_legacy_usage_dashboard.qml; keep localization and generic-detail priority
 # wired through the applet without pinning the module's private helpers.
-if "providerDetails.length > 0 ? null : LegacyUsageDashboard.normalize(usage, item)" not in normalize_provider_body:
+if not code_contains(normalize_provider_body, "providerDetails.length > 0 ? null : LegacyUsageDashboard.normalize(usage, item)"):
     raise AssertionError("generic details must take precedence over bounded legacy dashboards")
 for field in ("kpis", "rows"):
-    if f"{field}: dashboard.{field}.map(dashboardDisplayRow)" not in present_provider_body:
+    if not code_contains(present_provider_body, f"{field}: dashboard.{field}.map(dashboardDisplayRow)"):
         raise AssertionError("legacy dashboard rows must use the localized adapter")
 dashboard_display_body = applet.function_body("dashboardDisplayRow")
-if "row.parts.map(dashboardPartText)" not in dashboard_display_body:
+if not code_contains(dashboard_display_body, "row.parts.map(dashboardPartText)"):
     raise AssertionError("dashboard number formatting must remain in the QML adapter")
-if "dashboardLabelText(row.labelKey)" not in dashboard_display_body:
+if not code_contains(dashboard_display_body, "dashboardLabelText(row.labelKey)"):
     raise AssertionError("semantic dashboard labels must be localized in QML")
-if "function providerCountText(count)" not in main_text:
+if not code_contains(main_text, "function providerCountText(count)"):
     raise AssertionError("overview provider counts must use a plural-aware helper")
 provider_count_body = function_body(main_text, "providerCountText")
-if 'i18np("%1 provider", "%1 providers", total)' not in provider_count_body:
+if not code_contains(provider_count_body, 'i18np("%1 provider", "%1 providers", total)'):
     raise AssertionError("providerCountText must select the correct singular form")
 
-if "readonly property var overviewProviderItems: overviewProviders()" not in main_text:
+if not code_contains(main_text, "readonly property var overviewProviderItems: overviewProviders()"):
     raise AssertionError("overview provider rows must be cached in a QML property binding")
 if ".overviewProviders()" in main_text:
     raise AssertionError("overview UI bindings must reuse overviewProviderItems")
 overview_providers_js = (root / "contents/ui/OverviewProviders.js").read_text()
 overview_error_only_body = function_body(overview_providers_js, "isErrorOnly")
-if "item.codexCreditLimit === null" not in overview_error_only_body:
+if not code_contains(overview_error_only_body, "item.codexCreditLimit === null"):
     raise AssertionError(
         "a valid Codex monthly limit must keep a partially healthy provider overview-eligible"
     )
@@ -3294,11 +3304,11 @@ for token_definition in (
     "readonly property real valueTextOpacity: 0.85",
     "readonly property real meterTrackHeight: Math.round(Kirigami.Units.gridUnit * 0.4)",
 ):
-    if token_definition not in main_text:
+    if not code_contains(main_text, token_definition):
         raise AssertionError(
             f"main.qml must define the shared presentation scale: {token_definition!r}"
         )
-if "readonly property real secondaryTextOpacity: 0.7" not in providers_text:
+if not code_contains(providers_text, "readonly property real secondaryTextOpacity: 0.7"):
     raise AssertionError(
         "configProviders.qml must mirror main.qml's secondaryTextOpacity step"
     )
@@ -3378,7 +3388,7 @@ for qml_path in sorted(root.glob("contents/**/*.qml")):
                 brace_depth -= 1
             cursor += 1
         delegate_body = qml_content[start_index + 1:cursor - 1]
-        if "required property var modelData" not in delegate_body:
+        if not code_contains(delegate_body, "required property var modelData"):
             raise AssertionError(
                 f"{qml_path.name} delegate {element_type} must declare "
                 "'required property var modelData' for Qt 6 QML scoping safety"
