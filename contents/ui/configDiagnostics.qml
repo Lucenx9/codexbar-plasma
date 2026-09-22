@@ -35,6 +35,12 @@ KCM.SimpleKCM {
         ? String(Plasmoid.metaData.version || "") : ""
     property int commandRunSerial: 0
     readonly property int diagnosticCommandTimeoutMs: 60000
+    // Shell-side bound for every diagnostics command. disconnectSource cannot
+    // kill the child, so without this a hung `codexbar` outlives the page and
+    // the dialog. The shell timeout plus kill grace (50s + 5s = 55s) stays
+    // below diagnosticCommandTimeoutMs, keeping the QML timer the outer bound.
+    readonly property int diagnosticCommandTimeoutSeconds: 50
+    readonly property int diagnosticCommandKillAfterSeconds: 5
 
     onCommandPathChanged: {
         if (activeCommand.length > 0) {
@@ -93,11 +99,30 @@ KCM.SimpleKCM {
         if (commandPath.length > 0) systemVersions.checkNow()
     }
 
+    // Wrap the command so the shell kills a hung child on schedule, the way
+    // the provider secret commands use `timeout --kill-after`. The probe
+    // mirrors their guard: when GNU timeout is absent the raw command runs
+    // instead, so diagnostics keep working without coreutils. `sh -c` carries
+    // the conditional because the run-nonce prefix (`NAME=value` assignment)
+    // is only valid before a simple command, not before `if`.
+    function boundedDiagnosticCommand(command) {
+        if (command.length === 0) {
+            return ""
+        }
+        var bounded = "timeout --kill-after=" + shellQuote(diagnosticCommandKillAfterSeconds + "s")
+            + " " + shellQuote(diagnosticCommandTimeoutSeconds + "s")
+            + " " + command
+        var script = "if command -v timeout >/dev/null 2>&1 && timeout --kill-after=1s 1s true >/dev/null 2>&1; then "
+            + bounded + "; else " + command + "; fi"
+        return "sh -c " + shellQuote(script)
+    }
+
     function runCommand(command) {
         if (commandPath.length === 0) {
             diagnosticError = i18n("Set the codexbar command path above.")
             return
         }
+        command = boundedDiagnosticCommand(command)
         if (activeCommand.length > 0) {
             finishDiagnosticCommand(activeCommand)
         }

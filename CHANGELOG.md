@@ -28,6 +28,14 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   scripts and tests with `pyflakes`. Both are optional locally and report
   themselves as skipped when absent; CI installs them.
 
+### Fixed
+
+- Bound **Diagnostics** commands shell-side with GNU `timeout --kill-after`,
+  so a hung `codexbar diagnose` or provider list is killed instead of
+  surviving as an orphan after the page times out or the dialog closes. The
+  shell bound (50s plus a 5s kill grace) stays inside the existing 60s page
+  timeout, and systems without GNU `timeout` run the raw command unchanged.
+
 ## 0.2.40 - 2026-09-20
 
 ### Added
