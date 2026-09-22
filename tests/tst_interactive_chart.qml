@@ -178,7 +178,10 @@ TestCase {
             return
         failOnWarning(/.*/)
         verify(waitForRendering(chart))
-        verify(calls.line > 0)
+        // One render pass is not guaranteed to have painted the canvas when the
+        // runner shares a process with the rest of the suite, so wait for the
+        // line geometry to actually be asked for rather than assuming it was.
+        tryVerify(function() { return calls.line > 0 })
         compare(calls.bar, 0)
     }
 
