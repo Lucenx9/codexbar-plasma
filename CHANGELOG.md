@@ -12,6 +12,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Share the selected Usage & Spend history as a local PNG or plain-text summary,
+  with a separate preview, native image clipboard and save picker, bounded
+  provider/model rankings, separate currencies, partial-data notices, and a
+  small repository attribution. Exports exclude account and project details.
+
 - Show **Quota weeks** in a provider's expanded cost details: the local cost
   and tokens of the current weekly quota window and up to three earlier ones,
   with exact boundaries; a current week with no full day yet is omitted until it

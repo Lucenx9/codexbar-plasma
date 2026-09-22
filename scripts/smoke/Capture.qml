@@ -933,6 +933,10 @@ Item {
     }
 
     function scenarioReady() {
+        if (scenario.indexOf("share-usage") === 0)
+            return applet.shareUsageWindow && applet.shareUsageWindow.visible
+                && applet.shareUsageWindow.snapshot.providers.length > 0;
+
         if (scenario === "empty-providers") {
             var empty = findItem(applet.fullRepresentationItem, "emptyProvidersPlaceholder");
             return !applet.loading && applet.providers.length === 0 && empty && empty.visible
@@ -1593,7 +1597,18 @@ Item {
                         && !(capture.scenario === "usage-cache-restart" && capture.cacheRestart)
                         && (capture.applet.loading || capture.applet.providers.length !== capture.expectedProviderCount))
                     return;
-                if (capture.panelDefaultsScenario) {
+                if (capture.scenario.indexOf("share-usage") === 0) {
+                    if (capture.applet.costLoading || capture.applet.spendProviderCosts().length === 0)
+                        return;
+                    capture.applet.selectGlobalView("spend");
+                    capture.applet.openShareUsage();
+                    var share = capture.applet.shareUsageWindow;
+                    if (capture.scenario === "share-usage-narrow") share.width = 420;
+                    capture.verifyScenario(share.statisticsText.indexOf("github.com/Lucenx9/codexbar-plasma") !== -1,
+                        "share attribution missing");
+                    capture.verifyScenario(share.statisticsText.indexOf("demo@example.com") === -1,
+                        "share contains account identity");
+                } else if (capture.panelDefaultsScenario) {
                     if (capture.applet.costLoading || panelPreview.item === null || capture.compactPanelItem === null
                             || capture.compactPanelItem === undefined)
                         return;
@@ -1710,6 +1725,8 @@ Item {
                 : capture.scenario === "panel-rules" || capture.panelAppearanceScenario || capture.panelDefaultsScenario
                 ? panelPreview.item : (capture.scenario === "provider-settings"
                     ? providerSettingsPreview.item : capture.applet.fullRepresentationItem);
+            if (capture.scenario.indexOf("share-usage") === 0)
+                popup = capture.findItem(capture.applet.shareUsageWindow.contentItem, "shareUsageCard");
             console.log("SMOKE_CAPTURE_START:" + capture.scenario);
             var accepted = popup.grabToImage(function (result) {
                 if (result.saveToFile(capture.imagePath))

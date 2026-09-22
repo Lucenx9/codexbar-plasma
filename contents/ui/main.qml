@@ -17,6 +17,7 @@ import "PopupSelection.js" as PopupSelection
 import "ProviderAutoSelect.js" as ProviderAutoSelect
 import "ProviderSnapshot.js" as ProviderSnapshot
 import "CostPresentation.js" as CostPresentation
+import "ShareUsage.js" as ShareUsage
 import "ProviderCostPresentation.js" as ProviderCostPresentation
 import "ResetPresentation.js" as ResetPresentation
 import "OverviewProviders.js" as OverviewProviders
@@ -617,6 +618,30 @@ PlasmoidItem {
 
     function costChartPoints(points) {
         return CostPresentation.chartPoints(costNumberFormat, points, costHistoryShowsTokens)
+    }
+
+    property var shareUsageSnapshot: null
+    readonly property var shareUsageWindow: shareUsageLoader.item
+
+    function openShareUsage() {
+        var costs = spendProviderCosts()
+        if (costs.length === 0 || costLoading) return
+        if (shareUsageWindow) shareUsageWindow.close()
+        shareUsageSnapshot = ShareUsage.snapshot(costs, costHistoryDays,
+            new Date().toISOString(), costErrorText.length > 0)
+        shareUsageLoader.active = true
+        shareUsageWindow.show()
+        shareUsageWindow.raise()
+        shareUsageWindow.requestActivate()
+    }
+
+    Loader {
+        id: shareUsageLoader
+        active: false
+        sourceComponent: Components.ShareUsageWindow {
+            snapshot: root.shareUsageSnapshot
+            applet: root
+        }
     }
 
     function spendProviderCosts() {

@@ -88,6 +88,8 @@ when the product changes instead of adding dated before/after copies.
 - [Overview](codexbar-plasma-overview.png)
 - [Provider details](codexbar-plasma-codex.png)
 - [Usage and spend](codexbar-plasma-usage-spend.png)
+- [Shared usage card](codexbar-plasma-share.png): synthetic local PNG summary,
+  with separate provider/model rows and the repository attribution.
 - [Sessions](codexbar-plasma-sessions.png)
 - [Standard panel](codexbar-plasma-panel-standard.png): colored provider icons and dual quota capsules.
 - [Minimal panel](codexbar-plasma-panel-minimal.png): monochrome provider icons and dual quota capsules.

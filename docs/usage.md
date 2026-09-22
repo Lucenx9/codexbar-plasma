@@ -247,6 +247,35 @@ Provider-specific editable settings depend on the official CLI contract.
 
 ## Costs and history
 
+### Share usage
+
+![Synthetic aggregate usage card with repository attribution](codexbar-plasma-share.png)
+
+Choose **Share AI usage** in the Usage & Spend header to open a separate window.
+It uses the selected history range and freezes the currently loaded data until
+reopened. It does not start another CLI scan. Refresh history first for a newer
+snapshot; the creation timestamp is not a measurement timestamp.
+
+**Copy image** places image data on the clipboard, **Copy statistics** copies the
+same aggregate figures as plain text, and **Save PNG...** opens the platform save
+picker with overwrite confirmation. Saving supports local PNG files. The image
+uses the Plasma colors and fonts and includes a small
+`github.com/Lucenx9/codexbar-plasma` attribution in its footer.
+
+Totals include the loaded providers; at most eight provider rows and six models
+are shown, ranked by tokens, with omitted row counts. Model rows without a token
+count are excluded from the ranking. Currencies remain separate. Unknown values
+are not zero, and incomplete or estimated data retains a notice in both exports.
+Costs estimate usage, not subscription fees; subscription plans are not exported.
+
+Only aggregate fields enter the export. Account identities, projects, paths,
+raw diagnostics, and conversation content are excluded. Privacy mode keeps its
+model anonymization; changing that setting closes an open snapshot. Nothing is
+uploaded. Copying or saving is an explicit action, and the exported file or
+clipboard content remains under your control after closing the window.
+
+### History details
+
 - Local cost drill-down when the CLI exposes cost data.
 - In the verified CLI 0.56.2 contract, Antigravity supplies token-only local
   history; its dollar amounts remain unavailable. Official CLI 0.62.0 adds the

@@ -65,6 +65,8 @@ for its limits.
 ## Requirements
 
 - KDE Plasma 6, `kpackagetool6`, and the `org.kde.plasma.plasma5support` QML module.
+- `QtQuick.Dialogs` and KDE Declarative's `org.kde.kquickcontrolsaddons` QML
+  modules for the local usage-sharing window, file picker, and image clipboard.
 - A working `codexbar` CLI, available on Plasma's `PATH` or through an absolute
   path configured in the widget, including its optional managed copy. Managed
   downloads support Linux x86_64/aarch64 with glibc or musl; the downloaded
@@ -78,6 +80,10 @@ Distribution package names vary. Source builds additionally need `make`, Python
 3, and GNU gettext; see [Development](#development).
 
 ## Features
+
+Share a local usage summary from **Usage & Spend** as a PNG or copied text.
+The preview includes the selected history range, token totals, estimated usage
+costs, providers, and top models, with a small repository attribution. See [usage sharing](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#share-usage).
 
 | Standard panel | Minimal panel |
 | --- | --- |
