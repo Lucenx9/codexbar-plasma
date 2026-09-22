@@ -341,6 +341,17 @@ class CostSectionTests(unittest.TestCase):
         verify(texts.indexOf("≈ USD 42 · 4200 tokens") >= 0);
         verify(texts.some(function(text) { return text.indexOf("≈ The history is kept per day") === 0; }));
 
+        // Finite daily rows are still incomplete when the CLI says its local
+        // history scan has not established coverage for the range.
+        testCase.providerData = { provider: "codex",
+            tokenCost: Object.assign({}, tokenCost, { historyCoverageEstablished: false }),
+            rows: [{ lane: "secondary", windowMinutes: 10080, resetsAt: new Date(reset).toISOString() }] };
+        tryVerify(function() {
+            var updated = textsUnder(subject);
+            return updated.indexOf("≈ at least USD 60 · at least 6000 tokens") >= 0
+                && updated.indexOf("≈ at least USD 42 · at least 4200 tokens") >= 0;
+        });
+
         // Without a weekly row there is nothing honest to split.
         testCase.providerData = { provider: "codex", tokenCost: tokenCost,
             rows: [{ lane: "primary", windowMinutes: 300, resetsAt: new Date(reset).toISOString() }] };
