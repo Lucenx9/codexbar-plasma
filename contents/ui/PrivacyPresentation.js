@@ -124,6 +124,9 @@ function cost(snapshot, enabled) {
         return null
     }
     var models = modelAmounts(snapshot)
+    var ranking = field(snapshot, "tokenRanking", null)
+    var rankedAmounts = modelAmounts({ models: field(ranking, "rows", []),
+        modelsTruncated: field(ranking, "truncated", false) })
     var result = {
         provider: field(snapshot, "provider", ""),
         historyDays: Math.max(1, Math.min(365, Math.floor(numeric(snapshot, "historyDays", 30)))),
@@ -133,6 +136,8 @@ function cost(snapshot, enabled) {
         today: amounts(field(snapshot, "today", null)),
         daily: [],
         models: models.rows,
+        tokenRanking: { rows: rankedAmounts.rows, truncated: rankedAmounts.truncated,
+            omitted: Math.max(0, Math.min(1000000, Math.floor(numeric(ranking, "omitted", 0)))) },
         modelsTruncated: models.truncated,
         projects: { rows: [], truncated: false }
     }

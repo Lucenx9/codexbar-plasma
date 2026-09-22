@@ -100,6 +100,20 @@ ColumnLayout {
             }
         }
 
+        PlasmaComponents.ToolButton {
+            id: shareButton
+            objectName: "shareUsageButton"
+            icon.name: "document-share"
+            Accessible.name: i18n("Share AI usage")
+            enabled: view.providerCosts.length > 0 && !view.applet.costLoading
+            onClicked: view.applet.openShareUsage()
+            PlainToolTip {
+                parent: shareButton
+                visible: shareButton.hovered
+                plainText: i18n("Share AI usage")
+            }
+        }
+
         Components.RefreshButton {
             busy: view.applet.costLoading
             label: i18n("Refresh local history")

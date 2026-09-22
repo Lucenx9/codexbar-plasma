@@ -12,8 +12,8 @@ msgstr ""
 msgid "General"
 msgstr ""
 
-#: contents/config/config.qml contents/ui/components/SpendView.qml
-#: contents/ui/configProviders.qml
+#: contents/config/config.qml contents/ui/components/ShareUsageWindow.qml
+#: contents/ui/components/SpendView.qml contents/ui/configProviders.qml
 msgid "Providers"
 msgstr ""
 
@@ -49,6 +49,7 @@ msgid "Copy value"
 msgstr ""
 
 #: contents/ui/components/CopyableValue.qml
+#: contents/ui/components/ShareUsageWindow.qml
 msgid "Copied"
 msgstr ""
 
@@ -281,6 +282,7 @@ msgstr[1] ""
 
 #: contents/ui/components/PanelSettingsPreview.qml
 #: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/ShareUsageWindow.qml
 #: contents/ui/components/SpendView.qml contents/ui/configGeneral.qml
 #: contents/ui/main.qml
 msgid "%1 day"
@@ -373,12 +375,14 @@ msgid "Example data. Panel changes appear here before you apply them."
 msgstr ""
 
 #: contents/ui/components/ProjectCostSection.qml
-#: contents/ui/components/ProviderCostSection.qml scripts/smoke/Capture.qml
+#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/ShareUsageWindow.qml scripts/smoke/Capture.qml
 msgid "Cost unavailable"
 msgstr ""
 
 #: contents/ui/components/ProjectCostSection.qml
-#: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
+#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/ShareUsageWindow.qml contents/ui/main.qml
 #: scripts/smoke/Capture.qml
 msgid "Tokens unavailable"
 msgstr ""
@@ -1015,6 +1019,99 @@ msgstr ""
 
 #: contents/ui/components/SessionsView.qml
 msgid "Copy session details"
+msgstr ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid ""
+"Some data is missing, incomplete, or estimated. Unavailable amounts are not "
+"zero."
+msgstr ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid ""
+"Created locally. Only aggregate usage is included. Costs are usage "
+"estimates, not subscription fees."
+msgstr ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Created %1"
+msgstr ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Estimated usage cost"
+msgstr ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Top models by tokens"
+msgstr ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+#: contents/ui/components/SpendView.qml
+msgid "Share AI usage"
+msgstr ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Unavailable"
+msgstr ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "%1 more provider included in totals"
+msgid_plural "%1 more providers included in totals"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "%1 more model not shown"
+msgid_plural "%1 more models not shown"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Image copied"
+msgstr ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Could not create the image. Try again."
+msgstr ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Choose a local PNG file."
+msgstr ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Could not save the image. Choose another location."
+msgstr ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Image saved"
+msgstr ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Save usage image"
+msgstr ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "PNG image (*.png)"
+msgstr ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Tracked tokens"
+msgstr ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Copy image"
+msgstr ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Copy statistics"
+msgstr ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Save PNG..."
+msgstr ""
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Close"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml

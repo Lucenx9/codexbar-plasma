@@ -117,7 +117,7 @@ def stage_applet(work, scenario, image_path):
         f"[General]\nfont=Noto Sans,{size},-1,5,50,0,0,0,0,0\n"
         f"smallestReadableFont=Noto Sans,{size - 2},-1,5,50,0,0,0,0,0\n"
         "[Icons]\nTheme=breeze\n")
-    if scenario.startswith("readme-"):
+    if scenario.startswith("readme-") or scenario == "share-usage":
         palette = configparser.ConfigParser()
         palette.optionxform = str
         if not palette.read("/usr/share/color-schemes/BreezeDark.colors"):

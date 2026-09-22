@@ -11,9 +11,9 @@ apt-get update || true
 apt-get install -y --no-install-recommends \
   make cmake git curl ca-certificates gettext jq libxml2-utils shellcheck \
   python3-pyflakes \
-  qt6-base-dev-tools qt6-declarative-dev-tools qml6-module-qttest \
+  qt6-base-dev-tools qt6-declarative-dev-tools qml6-module-qttest qml6-module-qtquick-dialogs \
   plasma-workspace libplasma6 plasma5support kf6-kpackage \
-  kf6-kcmutils kf6-kirigami kf6-qqc2-desktop-style \
+  kf6-kcmutils kf6-kirigami kf6-qqc2-desktop-style kf6-kdeclarative \
   dbus-x11 xvfb xauth fonts-noto-core breeze breeze-icon-theme locales
 
 locale-gen it_IT.UTF-8 fr_FR.UTF-8 de_DE.UTF-8 es_ES.UTF-8 pt_BR.UTF-8

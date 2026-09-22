@@ -281,8 +281,10 @@ The [usage guide](docs/usage.md) describes implemented Plasma behavior, includin
 panel composition with automatic dual-quota capsules and vertical provider meters,
 settings preview/privacy, grouped panel text and expandable Panel options, local
 sessions, notifications, and
-interactive cost/token charts. Claude 0.57.0 `--breakdown` is text-only; existing
-JSON daily/model views already consume its underlying data.
+interactive cost/token charts and local aggregate usage sharing as PNG/text,
+with separate currencies and no subscription-fee inference. Claude 0.57.0
+`--breakdown` is text-only; existing JSON daily/model views already consume its
+underlying data.
 
 macOS-only features do not enter this backlog. The [release review](docs/research/2026-09-09-macos-parity-0.57.0.md#excluded-from-the-linux-backlog)
 records exclusions. Provider parsing, pricing, authentication, and scanning
