@@ -58,14 +58,10 @@ Item {
         z: 100
         sourceComponent: SettingsPreview {
             applet: capture.applet
-            width: capture.scenario === "settings-panel-narrow" ? 420 : 840
+            // Narrow variants also use 13-point text, staged by smoke_popup.py.
+            width: /-narrow$/.test(capture.scenario) ? 420 : 840
             viewportHeight: capture.scenario === "settings-panel-scrolled" ? 500 : 0
-            pageSource: ({"settings-general": "configGeneral.qml", "settings-panel": "configPanel.qml",
-                "settings-panel-advanced": "configPanel.qml", "settings-panel-narrow": "configPanel.qml",
-                "settings-panel-information": "configPanel.qml",
-                "settings-panel-scrolled": "configPanel.qml",
-                "settings-popup": "configPopup.qml", "settings-notifications": "configNotifications.qml",
-                "settings-diagnostics": "configDiagnostics.qml"})[capture.scenario]
+            pageSource: capture.settingsPageSource(capture.scenario)
         }
     }
 
@@ -119,6 +115,17 @@ Item {
                 }
             }
         }
+    }
+
+    function settingsPageSource(name) {
+        var pages = [["settings-general", "configGeneral.qml"], ["settings-providers", "configProviders.qml"],
+            ["settings-panel", "configPanel.qml"], ["settings-popup", "configPopup.qml"],
+            ["settings-notifications", "configNotifications.qml"], ["settings-diagnostics", "configDiagnostics.qml"]];
+        for (var i = 0; i < pages.length; i++) {
+            if (name.indexOf(pages[i][0]) === 0)
+                return pages[i][1];
+        }
+        return "";
     }
 
     function verifyScenario(condition, message) {
@@ -1249,7 +1256,7 @@ Item {
             var preview = configurationPreview.item as SettingsPreview;
             if (preview === null || !preview.ready)
                 return false;
-            if (scenario === "settings-general" && !navigationVerified) {
+            if (scenario.indexOf("settings-general") === 0 && !navigationVerified) {
                 verifyGeneralDefaults(preview.page);
                 var managed = findItem(preview.page, "managedCliController");
                 verifyScenario(managed !== null, "General must expose the managed CLI controller");
@@ -1269,7 +1276,25 @@ Item {
                     manager: "managed", latest: "0.62.0", tag: "v0.62.0"})});
                 navigationVerified = true;
             }
-            if (scenario === "settings-diagnostics" && !navigationVerified) {
+            if (scenario.indexOf("settings-providers") === 0) {
+                var providersPage = preview.page;
+                if (scenario === "settings-providers-error")
+                    return providersPage.errorText.length > 0 && providersPage.providers.length === 0;
+                if (providersPage.providers.length !== 12)
+                    return false;
+                if (!navigationVerified) {
+                    var settingsToggle = findItem(providersPage, "providerSettingsToggle");
+                    verifyScenario(settingsToggle !== null, "Providers must expose the provider settings toggle");
+                    providersPage.selectedProviderID = "codex";
+                    settingsToggle.expanded = true;
+                    providersPage.loadProviderSettings("codex");
+                    navigationVerified = true;
+                    return false;
+                }
+                return !providersPage.providerDiagnosticLoadingFor("codex")
+                    && providersPage.providerDiagnosticFor("codex") !== null;
+            }
+            if (scenario.indexOf("settings-diagnostics") === 0 && !navigationVerified) {
                 preview.page.cfg_commandPath = "/home/demo/.local/share/codexbar-plasma/cli/current/codexbar";
                 var versions = findItem(preview.page, "cliVersionsController");
                 verifyScenario(versions !== null, "Diagnostics must expose the local versions controller");
@@ -1277,6 +1302,11 @@ Item {
                 versions.accept("synthetic-versions", {"exit code": 0, stdout: JSON.stringify({
                     status: "local", version: "0.61.0",
                     path: "/home/demo/.local/share/codexbar-plasma/cli/current/codexbar", manager: "managed"})});
+                if (scenario === "settings-diagnostics-error") {
+                    preview.page.diagnosticOutput = JSON.stringify([{provider: "codex", source: "cli",
+                        auth: {configured: true, modes: ["oauth"]}, fetchAttempts: [{status: "timeout"}]}], null, 2);
+                    preview.page.diagnosticError = "Synthetic provider timeout. Try again.";
+                }
                 navigationVerified = true;
             }
             if (scenario.indexOf("settings-panel") === 0 && !navigationVerified) {
@@ -1288,7 +1318,6 @@ Item {
                     preview.page.cfg_showPercentInPanel = true;
                     findItem(preview.page, "panelSettingsPreview").scenario = "nearLimit";
                 } else if (scenario === "settings-panel-narrow") {
-                    preview.page.font.pointSize *= 1.3;
                     preview.page.additionalExpanded = true;
                     preview.page.cfg_showProviderInPanel = true;
                     preview.page.cfg_showPercentInPanel = true;
@@ -1593,7 +1622,8 @@ Item {
                 return;
             if (!capture.prepared) {
                 capture.applet.expanded = true;
-                if (capture.scenario !== "loading"
+                // Provider settings scenarios exercise only the page's own roster.
+                if (capture.scenario !== "loading" && capture.scenario.indexOf("settings-providers") !== 0
                         && !(capture.scenario === "usage-cache-restart" && capture.cacheRestart)
                         && (capture.applet.loading || capture.applet.providers.length !== capture.expectedProviderCount))
                     return;

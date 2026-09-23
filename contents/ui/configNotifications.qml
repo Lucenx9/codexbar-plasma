@@ -148,16 +148,20 @@ KCM.SimpleKCM {
                 text: i18n("Notify status incidents")
                 enabled: enableNotificationsCheck.checked && page.includeStatus
             }
-        }
 
-        Components.PlainControlsLabel {
-            Layout.fillWidth: true
-            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-            text: i18n("Enable provider service status in General to receive incident notifications.")
-            visible: !page.includeStatus
-            font: Kirigami.Theme.smallFont
-            wrapMode: Text.WordWrap
+            // Explains the unavailable option directly below its label text.
+            Components.PlainControlsLabel {
+                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.gridUnit
+                    + notifyStatusIncidentsCheck.indicator.width + notifyStatusIncidentsCheck.spacing
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+                text: i18n("Enable provider service status in General to receive incident notifications.")
+                visible: !page.includeStatus
+                font: Kirigami.Theme.smallFont
+                opacity: 0.7
+                wrapMode: Text.WordWrap
+            }
         }
     }
 }

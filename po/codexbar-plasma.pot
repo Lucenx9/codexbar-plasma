@@ -13,7 +13,8 @@ msgid "General"
 msgstr ""
 
 #: contents/config/config.qml contents/ui/components/ShareUsageWindow.qml
-#: contents/ui/components/SpendView.qml contents/ui/configProviders.qml
+#: contents/ui/components/SpendView.qml contents/ui/configPopup.qml
+#: contents/ui/configProviders.qml
 msgid "Providers"
 msgstr ""
 
@@ -1285,6 +1286,10 @@ msgstr ""
 msgid "Provider default (blank)"
 msgstr ""
 
+#: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
+msgid "Provider diagnostics"
+msgstr ""
+
 #: contents/ui/configDiagnostics.qml
 msgid ""
 "Run redacted CodexBar CLI diagnostics from Plasma. The diagnostic command "
@@ -2020,10 +2025,6 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "Inspect redacted settings to view source and authentication details"
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "Provider diagnostics"
 msgstr ""
 
 #: contents/ui/configProviders.qml

@@ -227,197 +227,185 @@ KCM.SimpleKCM {
         onTriggered: page.handleDiagnosticTimeout()
     }
 
-    ColumnLayout {
-        width: parent.width
-        spacing: Kirigami.Units.smallSpacing
+    Kirigami.FormLayout {
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Connection")
+            Kirigami.FormData.isSection: true
+        }
+        RowLayout {
+            id: commandPathRow
 
-        Kirigami.FormLayout {
-            Layout.fillWidth: true
-
-            Kirigami.Separator {
-                Kirigami.FormData.label: i18n("Connection")
-                Kirigami.FormData.isSection: true
-            }
-            RowLayout {
-                id: commandPathRow
-
-                Kirigami.FormData.label: i18n("Command path:")
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-                // FormLayout can stretch nested layouts as the KCM grows, so cap
-                // this row to keep its trailing action inside the viewport.
-                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-
-                Controls.TextField {
-                    id: commandPathField
-                    Layout.fillWidth: true
-                    placeholderText: "codexbar"
-                }
-
-                Controls.Button {
-                    id: usePathCommandButton
-                    text: i18n("Use PATH")
-                    enabled: page.cfg_commandPath.trim() !== (page.cfg_commandPathDefault || "codexbar")
-                    onClicked: page.cfg_commandPath = page.cfg_commandPathDefault || "codexbar"
-                }
-            }
-
-            Kirigami.Separator {
-                Kirigami.FormData.label: i18n("Versions")
-                Kirigami.FormData.isSection: true
-            }
-
-            Components.PlainControlsLabel {
-                id: widgetVersionLabel
-                objectName: "widgetVersionLabel"
-
-                Kirigami.FormData.label: i18n("CodexBar Plasma:")
-                text: page.widgetVersion.length > 0 ? page.widgetVersion : i18n("Unknown")
-            }
-
-            Components.PlainControlsLabel {
-                id: cliVersionLabel
-                objectName: "cliVersionLabel"
-
-                Kirigami.FormData.label: i18n("CodexBar CLI:")
-                text: page.cliVersionText.length > 0 ? page.cliVersionText
-                    : (versions.checked ? versions.statusText : i18n("Not checked"))
-                Layout.fillWidth: true
-                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-                wrapMode: Text.WordWrap
-            }
-
-            Components.PlainControlsLabel {
-                id: resolvedCommandLabel
-                objectName: "resolvedCommandLabel"
-
-                Kirigami.FormData.label: i18n("Resolved command:")
-                // The configured value can be a bare name; this is the absolute
-                // path Plasma actually runs, which is what a bug report needs.
-                text: page.resolvedCommandPath.length > 0 ? page.resolvedCommandPath
-                    : (page.environmentProbeFailed ? i18n("Not found") : i18n("Not checked"))
-                Layout.fillWidth: true
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
-                elide: Text.ElideMiddle
-            }
-
-            Components.PlainControlsLabel {
-                id: systemCliVersionLabel
-                objectName: "systemCliVersionLabel"
-                visible: page.systemCliDiffers
-
-                Kirigami.FormData.label: i18n("System CLI (PATH):")
-                text: systemVersions.result.version.length > 0
-                    ? i18n("%1 (%2)", systemVersions.result.version, systemVersions.result.path)
-                    : systemVersions.result.status === "unknown"
-                        ? i18n("Could not identify the installed CLI version.")
-                        : i18n("Not found")
-                Layout.fillWidth: true
-                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-                wrapMode: Text.WordWrap
-            }
-
-            RowLayout {
-                Controls.Button {
-                    id: checkEnvironmentButton
-                    objectName: "checkEnvironmentButton"
-
-                    text: i18n("Check versions")
-                    enabled: !versions.busy && !systemVersions.busy && !page.diagnosticRunning
-                    onClicked: page.runEnvironmentProbe()
-                }
-                Controls.BusyIndicator {
-                    running: versions.busy || systemVersions.busy
-                    opacity: running ? 1 : 0
-                    Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                    Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                }
-            }
-
-            Components.PlainControlsLabel {
-                objectName: "cliInstallationLabel"
-                text: versions.guidanceText
-                visible: versions.checked && versions.result.path.length > 0
-                Layout.fillWidth: true
-                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-                wrapMode: Text.WordWrap
-            }
-
-            Components.PlainControlsLabel {
-                text: i18n("This checks installed versions only. Check upstream CLI releases in General / CLI updates.")
-                font: Kirigami.Theme.smallFont
-                opacity: 0.7
-                Layout.fillWidth: true
-                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-                wrapMode: Text.WordWrap
-            }
-
-            Kirigami.Separator {
-                Kirigami.FormData.label: i18n("Advanced provider override")
-                Kirigami.FormData.isSection: true
-            }
-
-            Components.PlainControlsLabel {
-                id: advancedOverrideExplanation
-
-                Layout.fillWidth: true
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 18
-                Layout.maximumWidth: Kirigami.Units.gridUnit * 18
-                text: i18n("These options pin the widget to one provider or one source. Leave them blank to follow the providers enabled on the Providers page.")
-                font: Kirigami.Theme.smallFont
-                opacity: 0.72
-                wrapMode: Text.WordWrap
-            }
+            Kirigami.FormData.label: i18n("Command path:")
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            // FormLayout can stretch nested layouts as the KCM grows, so cap
+            // this row to keep its trailing action inside the viewport.
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
 
             Controls.TextField {
-                id: providerField
-                Kirigami.FormData.label: i18n("Provider:")
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 18
-                placeholderText: i18n("Provider id (blank = all enabled)")
+                id: commandPathField
+                Layout.fillWidth: true
+                placeholderText: "codexbar"
             }
 
-            Controls.TextField {
-                id: sourceField
-                Kirigami.FormData.label: i18n("Source:")
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 18
-                placeholderText: i18n("Provider default (blank)")
+            Controls.Button {
+                id: usePathCommandButton
+                text: i18n("Use PATH")
+                enabled: page.cfg_commandPath.trim() !== (page.cfg_commandPathDefault || "codexbar")
+                onClicked: page.cfg_commandPath = page.cfg_commandPathDefault || "codexbar"
             }
         }
 
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Versions")
+            Kirigami.FormData.isSection: true
+        }
+
         Components.PlainControlsLabel {
+            id: widgetVersionLabel
+            objectName: "widgetVersionLabel"
+
+            Kirigami.FormData.label: i18n("CodexBar Plasma:")
+            text: page.widgetVersion.length > 0 ? page.widgetVersion : i18n("Unknown")
+        }
+
+        Components.PlainControlsLabel {
+            id: cliVersionLabel
+            objectName: "cliVersionLabel"
+
+            Kirigami.FormData.label: i18n("CodexBar CLI:")
+            text: page.cliVersionText.length > 0 ? page.cliVersionText
+                : (versions.checked ? versions.statusText : i18n("Not checked"))
             Layout.fillWidth: true
-            text: i18n("Run redacted CodexBar CLI diagnostics from Plasma. The diagnostic command omits raw tokens, cookies, auth headers, emails, account IDs, org IDs, raw responses, and billing-history records.")
-            font: Kirigami.Theme.smallFont
-            opacity: 0.72
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            wrapMode: Text.WordWrap
+        }
+
+        Components.PlainControlsLabel {
+            id: resolvedCommandLabel
+            objectName: "resolvedCommandLabel"
+
+            Kirigami.FormData.label: i18n("Resolved command:")
+            // The configured value can be a bare name; this is the absolute
+            // path Plasma actually runs, which is what a bug report needs.
+            text: page.resolvedCommandPath.length > 0 ? page.resolvedCommandPath
+                : (page.environmentProbeFailed ? i18n("Not found") : i18n("Not checked"))
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            elide: Text.ElideMiddle
+        }
+
+        Components.PlainControlsLabel {
+            id: systemCliVersionLabel
+            objectName: "systemCliVersionLabel"
+            visible: page.systemCliDiffers
+
+            Kirigami.FormData.label: i18n("System CLI (PATH):")
+            text: systemVersions.result.version.length > 0
+                ? i18n("%1 (%2)", systemVersions.result.version, systemVersions.result.path)
+                : systemVersions.result.status === "unknown"
+                    ? i18n("Could not identify the installed CLI version.")
+                    : i18n("Not found")
+            Layout.fillWidth: true
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             wrapMode: Text.WordWrap
         }
 
         RowLayout {
+            Controls.Button {
+                id: checkEnvironmentButton
+                objectName: "checkEnvironmentButton"
+
+                text: i18n("Check versions")
+                icon.name: "view-refresh"
+                enabled: !versions.busy && !systemVersions.busy && !page.diagnosticRunning
+                onClicked: page.runEnvironmentProbe()
+            }
+            Controls.BusyIndicator {
+                running: versions.busy || systemVersions.busy
+                opacity: running ? 1 : 0
+                Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                Layout.preferredHeight: Kirigami.Units.iconSizes.small
+            }
+        }
+
+        Components.PlainControlsLabel {
+            objectName: "cliInstallationLabel"
+            text: versions.guidanceText
+            visible: versions.checked && versions.result.path.length > 0
             Layout.fillWidth: true
-            spacing: Kirigami.Units.smallSpacing
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            wrapMode: Text.WordWrap
+        }
 
-            Components.PlainControlsLabel {
-                id: diagnosticProviderLabel
+        Components.PlainControlsLabel {
+            text: i18n("This checks installed versions only. Check upstream CLI releases in General / CLI updates.")
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+            Layout.fillWidth: true
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            wrapMode: Text.WordWrap
+        }
 
-                text: i18n("Diagnostic provider:")
-            }
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Advanced provider override")
+            Kirigami.FormData.isSection: true
+        }
 
-            Controls.TextField {
-                id: diagnosticProviderField
-                Accessible.name: diagnosticProviderLabel.text
-                Layout.fillWidth: true
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 14
-                Layout.maximumWidth: Kirigami.Units.gridUnit * 24
-                placeholderText: i18n("all")
-                maximumLength: 256
-            }
+        Components.PlainControlsLabel {
+            id: advancedOverrideExplanation
 
-            Item {
-                Layout.fillWidth: true
-            }
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            text: i18n("These options pin the widget to one provider or one source. Leave them blank to follow the providers enabled on the Providers page.")
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+            wrapMode: Text.WordWrap
+        }
+
+        Controls.TextField {
+            id: providerField
+            Kirigami.FormData.label: i18n("Provider:")
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+            placeholderText: i18n("Provider id (blank = all enabled)")
+        }
+
+        Controls.TextField {
+            id: sourceField
+            Kirigami.FormData.label: i18n("Source:")
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+            placeholderText: i18n("Provider default (blank)")
+        }
+
+        // Redacted diagnostics share the form's sections and field column
+        // instead of a separately aligned block below it.
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Provider diagnostics")
+            Kirigami.FormData.isSection: true
+        }
+
+        Components.PlainControlsLabel {
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            text: i18n("Run redacted CodexBar CLI diagnostics from Plasma. The diagnostic command omits raw tokens, cookies, auth headers, emails, account IDs, org IDs, raw responses, and billing-history records.")
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+            wrapMode: Text.WordWrap
+        }
+
+        Controls.TextField {
+            id: diagnosticProviderField
+            Kirigami.FormData.label: i18n("Diagnostic provider:")
+            Accessible.name: i18n("Diagnostic provider:")
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 18
+            placeholderText: i18n("all")
+            maximumLength: 256
         }
 
         Flow {
             Layout.fillWidth: true
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             spacing: Kirigami.Units.smallSpacing
 
             Controls.Button {
@@ -433,18 +421,20 @@ KCM.SimpleKCM {
                 enabled: !page.diagnosticRunning
                 onClicked: page.runProviderList()
             }
-        }
 
-        Controls.BusyIndicator {
-            running: page.diagnosticRunning
-            visible: running
-            Layout.alignment: Qt.AlignHCenter
+            Controls.BusyIndicator {
+                running: page.diagnosticRunning
+                visible: running
+                width: Kirigami.Units.iconSizes.small
+                height: Kirigami.Units.iconSizes.small
+            }
         }
 
         Components.PlainInlineMessage {
             id: diagnosticErrorMessage
 
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             type: Kirigami.MessageType.Error
             plainText: page.diagnosticError
             visible: page.diagnosticError.length > 0
@@ -463,6 +453,7 @@ KCM.SimpleKCM {
 
         Controls.ScrollView {
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.preferredHeight: Kirigami.Units.gridUnit * 16
 
             Controls.TextArea {

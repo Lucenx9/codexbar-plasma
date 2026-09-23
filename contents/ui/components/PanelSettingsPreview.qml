@@ -287,6 +287,6 @@ ColumnLayout {
         text: i18n("Example data. Panel changes appear here before you apply them.")
         wrapMode: Text.WordWrap
         font: Kirigami.Theme.smallFont
-        color: Kirigami.Theme.disabledTextColor
+        opacity: 0.7
     }
 }

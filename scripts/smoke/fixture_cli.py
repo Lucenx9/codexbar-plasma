@@ -13,6 +13,9 @@ SCENARIOS = ("normal", "tabs-overflow", "provider-settings", "provider-header", 
              "localization-it", "localization-fr", "localization-de", "localization-es", "localization-pt_BR")
 SCENARIOS += ("settings-general", "settings-panel", "settings-panel-information", "settings-panel-advanced", "settings-panel-narrow", "settings-popup", "settings-notifications", "settings-diagnostics")
 SCENARIOS += ("settings-panel-scrolled",)
+SCENARIOS += ("settings-providers", "settings-providers-narrow", "settings-providers-error",
+              "settings-general-narrow", "settings-popup-narrow", "settings-notifications-narrow",
+              "settings-diagnostics-narrow", "settings-diagnostics-error")
 SCENARIOS += ("readme-overview", "readme-spend", "readme-sessions", "readme-codex")
 SCENARIOS += ("readme-panel-standard", "readme-panel-minimal")
 SCENARIOS += ("panel-information", "panel-information-minimal", "panel-information-single")
@@ -116,7 +119,7 @@ def response(args, scenario, now):
     if args == ["config", "providers", "--format", "json", "--json-only"]:
         if scenario == "empty-providers":
             return []
-        if scenario == "usage-error":
+        if scenario in ("usage-error", "settings-providers-error"):
             raise ValueError("Synthetic connection failure.")
         providers = ("codex",) if scenario in ("panel-minimal-single", "panel-default-single", "panel-information-single", "panel-matrix-one") else ("codex", "claude")
         if scenario.startswith("readme-"):
@@ -126,7 +129,18 @@ def response(args, scenario, now):
         rows = [{"provider": key, "enabled": True} for key in providers]
         if scenario == "provider-settings":
             rows.extend({"provider": key, "enabled": False} for key in ("gemini", "cursor", "openrouter"))
+        if scenario.startswith("settings-providers"):
+            # A long roster with the longest bundled title and an unknown ID.
+            rows.append({"provider": "moonshot", "enabled": True, "defaultEnabled": False})
+            rows.extend({"provider": key, "enabled": False} for key in (
+                "gemini", "cursor", "openrouter", "alibabatokenplan", "huggingface", "azureopenai",
+                "jetbrains", "perplexity", "example-provider-with-an-unusually-long-identifier"))
+            rows[0]["defaultEnabled"] = True
         return rows
+    if args == ["diagnose", "--provider", "codex", "--format", "json", "--redact"]:
+        return {"provider": "codex", "displayName": "Codex", "source": "cli", "sourceMode": "auto",
+                "auth": {"configured": True, "modes": ["oauth", "apiKey"]},
+                "settings": {"source": "auto", "usageHistory": "enabled"}, "fetchAttempts": [{}, {}]}
     if args == ["sessions", "--json-v2"]:
         if scenario.startswith("readme-"):
             return {"sessions": [

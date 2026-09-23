@@ -61,6 +61,21 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   locale and widens its cells up to a 2:1 tile, so long ranges use the width
   without stretching short ranges into bars. Rows stay unlabelled when the
   history is not calendar aligned.
+- Bring the six settings pages to the popup's visual language. Explanatory
+  text uses one quieter small style and sits under the text of the check box
+  it explains; the CLI release notification option is indented under its
+  parent like the widget update options. Panel and Providers use the popup's
+  flat details toggle, and opening Panel's quota, order and visibility options
+  no longer shifts the form sideways. The selected provider appears on one
+  borderless surface with its identity tile, and long setting names wrap.
+  Popup groups provider order and Overview providers under **Providers**,
+  Diagnostics places redacted diagnostics in the same form under **Provider
+  diagnostics**, and Notifications explains an unavailable incident option
+  directly below it. Settings, defaults and saved values are unchanged.
+- The popup smoke runner captures every settings page, including Providers
+  with a long synthetic roster, narrow pages with larger text, and error
+  states. `--theme light|dark` applies a Breeze color scheme and `--language`
+  runs any scenario in a shipped translation.
 - Keep the `Crof` fallback metadata after official CodexBar 0.64.1 retired the
   provider, so an older installed CLI that still reports it keeps showing a
   named provider instead of the unknown-provider fallback.
