@@ -230,18 +230,23 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 These are unresolved Linux candidates, not confirmed missing features.
 
-- [ ] Adopt `qmlformat` once it can format this tree safely. Measured at
-  6.11.2 on 2026-09-22: a full run with default settings leaves all 1500
-  executed QML assertions passing, so the formatter changes no behavior, but
-  it joins wrapped expressions into lines up to 2570 characters. Setting
-  `MaxColumnWidth` to 140 or less segfaults it on
-  `tests/tst_provider_roster_controller.qml` and `scripts/smoke/Capture.qml`;
-  160 avoids the crash without fixing readability, and rewraps enough to break
+- [ ] Adopt `qmlformat` once it can format this tree readably. Measured at
+  6.11.2 on 2026-09-23. With wrapping disabled, its default, it joins wrapped
+  expressions into lines up to 2570 characters. Any `MaxColumnWidth` rewraps by
+  splitting inside comparisons and aligning continuations under the open
+  parenthesis, such as `incidentProvider` and `!== null` on separate lines; at
+  120 it still leaves 359 lines over the limit, up to 241 characters. The
+  earlier segfault at 140 or less was unbounded recursion on regular expression
+  literals wider than the limit; those literals are now built from strings, and
+  every file formats at 100 or more, while four test files still crash at 80.
+  [QTBUG-131686](https://qt-project.atlassian.net/browse/QTBUG-131686) closed
+  for 6.11 with `// qmlformat off` comments only, which disable formatting
+  rather than keep line breaks. Rewrapping also breaks
   `test_feature_parity.sh` and `test_process_lifecycle.sh`, which still match
-  source text literally. CI runs 6.11.1, and no local container runtime was
-  available to confirm the two versions format identically. Done when a
-  setting formats every file without crashing, keeps lines readable, and
-  produces the same output on the CI image.
+  source text literally. CI runs 6.11.1; no running container runtime was
+  available to compare its output. Done when a release keeps or improves manual
+  expression line breaks, formats every file readably, and produces the same
+  output on the CI image.
 - [ ] Verify the 0.64.x Linux quota-window changes in official Linux output.
   0.64.0 claims Linux omits synthetic or unmeasured quota and reports only
   measured provider-specific windows (#3785); 0.64.1 claims each Antigravity
