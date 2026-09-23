@@ -31,6 +31,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   are marked as estimated, unknown days are never counted as zero, and weeks
   older than the scanned history are omitted. This mirrors the macOS 0.62.0
   recent-windows list and needs no new CLI contract.
+- Bundle the fallback name, icon, brand color, and documentation link for the
+  `Bifrost`, `Charm Hyper`, and `GitKraken AI` providers that official CodexBar
+  0.65.0 adds to the registry, plus dashboard links for Charm Hyper and
+  GitKraken AI and the `gk` alias. GitKraken AI also offers the widget's
+  API-key setup. Charm Hyper's default source and Bifrost's gateway URL
+  have no supported Linux setup path yet.
 - Bundle the fallback name, icon, documentation link, and dashboard link for
   the `Helmcode`, `v0`, and `TypeSafe` providers that official CodexBar 0.64.0
   adds to the registry. Brand colors and status links are omitted because

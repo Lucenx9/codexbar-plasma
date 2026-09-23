@@ -8,10 +8,16 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.64.1](https://github.com/steipete/CodexBar/releases/tag/v0.64.1),
-  commit `89e84ab3f243946dd914898f304410692ad5fbf7`, checked 2026-09-22.
-- Coverage: release changes from 0.63.0 through 0.64.1 against Plasma
-  `4de929a514386748e1b6870088573a196cd3196a`. The
+- Last release reviewed: [CodexBar 0.65.0](https://github.com/steipete/CodexBar/releases/tag/v0.65.0),
+  commit `20a70d955d4744c795fefd720ff617da9d18480c`, checked 2026-09-23.
+- Coverage: release changes from 0.64.1 through 0.65.0 against Plasma
+  `392eff5`. The
+  [0.65.0 review](docs/research/2026-09-23-macos-parity-0.65.0.md) verifies the
+  Bifrost, Charm Hyper, and GitKraken AI registry additions and which of them
+  Linux can reach. It uses a loopback Bifrost fixture to verify detail-row
+  `progress`/`usageValue` and unknown named windows in official Linux output,
+  and confirms that the descriptor, config-action, token-account, and Cursor
+  cost blockers are unchanged; the
   [0.64.1 review](docs/research/2026-09-22-macos-parity-0.64.1.md) verifies the
   Helmcode, v0, and TypeSafe registry additions and the Crof retirement, that
   only v0 accepts the supported `set-api-key` writer while the other two are
@@ -50,6 +56,18 @@ Issues linked below preserve discussion; this file owns parity status.
   and unknown amounts distinct, and stays legible in the narrow popup.
   Evidence: [0.60.5 review](docs/research/2026-09-18-macos-parity-0.60.5.md#linux-cli-contract-changes-since-0604).
 
+### Detail-row progress
+
+- [ ] Draw a bounded progress bar for provider detail rows that carry
+  `progress: {used, total}`, and keep `usageValue` as a numeric companion to
+  the display string. Official Linux 0.65.0 emits both on Bifrost budget rows,
+  and `progress.used` is capped at `total` while the text stays uncapped.
+  `UsageDetails.js` currently keeps only `label`, `value`, and
+  `secondaryValue`. Done when valid numeric pairs render a meter, and invalid,
+  negative, or zero-total pairs fall back to the text row. The display
+  string must never be parsed. Rows without `progress` must stay unchanged.
+  Evidence: [0.65.0 review](docs/research/2026-09-23-macos-parity-0.65.0.md#linux-cli-contract-changes-since-0641).
+
 ### Popup usage row visibility
 
 - [ ] Hide and restore individual popup usage rows per provider, mirroring the
@@ -71,11 +89,18 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider settings
 
 - [ ] Enable generic settings and token-account editing through official
-  descriptors and writes. Linux 0.64.1 still rejects `config providers
-  --descriptors` (77 records, same four keys); its provider records have no
+  descriptors and writes. Linux 0.65.0 still rejects `config providers
+  --descriptors` (80 records, same four keys); its provider records have no
   descriptor. Helmcode and TypeSafe make this concrete: both are cookie-only,
   both refuse `--source api`, and their documented `cookieSource`/`cookieHeader`
   config path has no supported writer, so they stay metadata-only on Linux.
+  0.65.0 adds three more cases. Charm Hyper stores a key, but its default
+  source demands web support on Linux, and it works only with `--source api`
+  while Plasma's source mode is global. Bifrost needs a gateway base URL
+  (`enterpriseHost`) with no CLI writer; the CLI reads `BIFROST_BASE_URL` from
+  the environment instead. The optional GitKraken organization ID has no writer
+  either. `--label` and `--workspace-id` remain z.ai-only, so the new labeled
+  Kimi, Doubao, and OpenCode Go accounts cannot be created from Linux.
   0.61.0 adds an `azureOpenAIAPIVersion` config extension value with no
   supported CLI writer, which the frontend must not reach by editing the config
   file. Keep existing enable/disable, supported single-key setup, and link
@@ -90,7 +115,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.64.1 still has no
+  flow, CLI-auth setup, and token-account actions. Linux 0.65.0 still has no
   generic `config action` command (`set-api-key` remains the sole writer; the
   `usage_updated` hook event is CLI automation surface, not a setup
   action). Done when supported actions expose validated
@@ -105,7 +130,10 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   Source-observed but unverified at 0.60.4: `creditsAvailable`/`balanceIsWorkspace`
   on `credits` and `openaiDashboard`, Copilot seat-entitlement rows with stable
   IDs, and `details` rows carrying `progress`/`usageValue` (Copilot, Antigravity).
-  Existing generic details/charts work. Done when each additional section has
+  0.65.0 verifies the detail-row numbers and `usageKnown: false` named windows
+  with reset metadata in official Linux output through Bifrost. Plasma already
+  keeps those windows unknown instead of 0%; the row numbers are tracked
+  above. Existing generic details/charts work. Done when each additional section has
   bounded official fields and tests, with unknown amounts distinct from zero.
   Plain credit balances need their own allowance before gaining a meter; the
   Codex monthly-cap denominator is not generic. [Prior discussion #169](https://github.com/Lucenx9/codexbar-plasma/issues/169).
@@ -122,7 +150,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Cursor cost
 
 - [ ] Show Cursor cost history through the generic Linux `cost` path. Linux
-  0.63.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
+  0.65.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
   Code, and Pi as supported;
   the descriptor gate keeps the new cookie-source availability errors unreachable.
   Done when a released Linux command emits supported cost data and Plasma tests
@@ -134,7 +162,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 - [ ] Show Standard/Fast totals from explicit official tier fields. The scoped
   0.56.8 daily-model check established no service-tier contract. The 0.57.0 and
   0.60.4 empty cost probes do not establish one either, and 0.62.0 computes
-  quota windows in-process without emitting tier fields. Done when official Linux output
+  quota windows in-process without emitting tier fields. The 0.65.0 Codex
+  Priority pricing fix leaves the cost key set unchanged. Done when official Linux output
   identifies tiers and bounded amounts with tested legacy fallback. Never infer
   tier from models, prices, or tokens. [Cost evidence](docs/cost-history.md#pinned-cli-evidence);
   [prior discussion #172](https://github.com/Lucenx9/codexbar-plasma/issues/172).
@@ -189,6 +218,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   At 0.60.4 the source-observed `balanceIsWorkspace`/`creditsAvailable` fields
   cover Codex workspace balances only; Copilot seat-credit data travels in
   `details` rows with stable IDs instead. Both await authenticated Linux output.
+  The 0.65.0 Charm Hyper guide describes a balance-only `details` row with a
+  bare `usageValue` and an HC display string, which is not a typed unit.
   Done when the widget can display
   that record without parsing provider text,
   overriding a real quota, or treating a balance as an allowance.
@@ -238,12 +269,11 @@ These are unresolved Linux candidates, not confirmed missing features.
   cap-only, hidden-workspace-pool, and workspace-balance data safely, then
   classify and specify the normalization change.
   [Source evidence](docs/research/2026-09-16-macos-parity-0.60.4.md#linux-cli-contract-changes-since-0580).
-- [ ] Verify `details` rows carrying `id`, `progress{used,total}`, and
-  `usageValue` in official Linux output (source-observed for Copilot
-  seat-credit rows with stable IDs and Antigravity local rows at 0.60.4).
-  Reproduce rows with and without the numeric fields safely, then specify the
-  bounded Plasma rendering (progress bars from numbers, no display-string
-  parsing) and whether stable IDs can back per-row popup visibility. macOS
+- [ ] Verify stable `details` row `id` values in official Linux output
+  (source-observed for Copilot seat-credit rows at 0.60.4). The numeric
+  `progress`/`usageValue` fields are verified at 0.65.0, but the Bifrost rows
+  used there carry no `id`. Reproduce Copilot rows safely, then decide whether
+  stable IDs can back per-row popup visibility. macOS
   0.60.5 reads the `copilot-seat-credits` row's `progress` as a switcher
   used-percent fallback, which does not establish a quota cadence.
   [Source evidence](docs/research/2026-09-16-macos-parity-0.60.4.md#linux-cli-contract-changes-since-0580).

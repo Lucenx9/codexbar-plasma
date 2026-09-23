@@ -560,6 +560,10 @@ msgid "AWS Bedrock"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Bifrost"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Chutes"
 msgstr ""
 
@@ -644,6 +648,10 @@ msgid "Gemini"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
+msgid "GitKraken AI"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Grok"
 msgstr ""
 
@@ -657,6 +665,10 @@ msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
 msgid "Hugging Face"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Charm Hyper"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml

@@ -18,7 +18,8 @@ msgid "General"
 msgstr "Geral"
 
 #: contents/config/config.qml contents/ui/components/ShareUsageWindow.qml
-#: contents/ui/components/SpendView.qml contents/ui/configProviders.qml
+#: contents/ui/components/SpendView.qml contents/ui/configPopup.qml
+#: contents/ui/configProviders.qml
 msgid "Providers"
 msgstr "Provedores"
 
@@ -306,7 +307,6 @@ msgstr[0] "%1 hora"
 msgstr[1] "%1 horas"
 
 #: contents/ui/components/PanelSettingsPreview.qml
-#: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/ShareUsageWindow.qml
 #: contents/ui/components/SpendView.qml contents/ui/configGeneral.qml
 #: contents/ui/main.qml
@@ -593,6 +593,10 @@ msgid "AWS Bedrock"
 msgstr "AWS Bedrock"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Bifrost"
+msgstr "Bifrost"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Chutes"
 msgstr "Chutes"
 
@@ -677,6 +681,10 @@ msgid "Gemini"
 msgstr "Gemini"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "GitKraken AI"
+msgstr "GitKraken AI"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Grok"
 msgstr "Grok"
 
@@ -691,6 +699,10 @@ msgstr "Helmcode"
 #: contents/ui/components/ProviderNames.qml
 msgid "Hugging Face"
 msgstr "Hugging Face"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Charm Hyper"
+msgstr "Charm Hyper"
 
 #: contents/ui/components/ProviderNames.qml
 msgid "IBM Bob"
@@ -1336,6 +1348,10 @@ msgstr "Origem:"
 #: contents/ui/configDiagnostics.qml
 msgid "Provider default (blank)"
 msgstr "Padrão do provedor (em branco)"
+
+#: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
+msgid "Provider diagnostics"
+msgstr "Diagnóstico do provedor"
 
 #: contents/ui/configDiagnostics.qml
 msgid ""
@@ -2113,10 +2129,6 @@ msgid "Inspect redacted settings to view source and authentication details"
 msgstr ""
 "Inspecionar as configurações sem dados sensíveis para ver os detalhes da "
 "origem e da autenticação"
-
-#: contents/ui/configProviders.qml
-msgid "Provider diagnostics"
-msgstr "Diagnóstico do provedor"
 
 #: contents/ui/configProviders.qml
 msgid "%1 returned an unsupported descriptor command."

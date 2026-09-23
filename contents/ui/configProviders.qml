@@ -1070,6 +1070,7 @@ KCM.SimpleKCM {
         case "deepseek":
         case "doubao":
         case "elevenlabs":
+        case "gitkraken":
         case "grok":
         case "groq":
         case "ibmbob":
