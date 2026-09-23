@@ -457,6 +457,12 @@ affect quota fetching or replace the installed version with a guessed value.
 
 ### Managed CLI
 
+The [quick terminal installer](../README.md#quick-install-from-a-terminal) can
+install or reuse the same private copy before you add the widget. It leaves
+widget settings unchanged: select **Use managed CLI** here, then **Apply**.
+The installer preserves any CLI on PATH unless you explicitly pass `--with-cli`,
+which creates or reuses the separate private copy without replacing that CLI.
+
 **General → Managed CLI → Install and select managed CLI** installs the latest
 stable official Linux release under `$XDG_DATA_HOME/codexbar-plasma/cli`, falling
 back to `~/.local/share/codexbar-plasma/cli`. When the selected command is a
