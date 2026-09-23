@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Original three-arc bridge glyph for Bifrost; no vendor mark. -->
+<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+  <path d="M1.5 17.25a10.5 10.5 0 0 1 21 0h-2.4a8.1 8.1 0 0 0-16.2 0H1.5z"/>
+  <path d="M5.2 17.25a6.8 6.8 0 0 1 13.6 0h-2.4a4.4 4.4 0 0 0-8.8 0H5.2z"/>
+  <path d="M8.9 17.25a3.1 3.1 0 0 1 6.2 0H8.9z"/>
+</svg>

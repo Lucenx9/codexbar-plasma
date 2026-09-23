@@ -149,6 +149,32 @@ TestCase {
         compare(ProviderIdentity.providerLoginUrl("typesafe"), "");
     }
 
+    function test_official0650RegistryProvidersHaveBundledMetadata() {
+        // Official 0.65.0 additions in `config providers` output. Upstream
+        // declares a brand color and a setup guide for each, and no status
+        // page for any. Bifrost is self-hosted, so it has no fixed dashboard.
+        var added = {
+            "bifrost": { dashboard: "", channels: [51 / 255, 192 / 255, 158 / 255] },
+            "gitkraken": { dashboard: "https://gitkraken.dev/account#ai-usage",
+                channels: [23 / 255, 146 / 255, 135 / 255] },
+            "hyper": { dashboard: "https://hyper.charm.land", channels: [1, 96 / 255, 1] }
+        };
+        for (var key in added) {
+            compare(ProviderIdentity.providerIconFileName(key), key + ".svg");
+            compare(ProviderIdentity.providerDocsUrl(key),
+                ProviderIdentity.documentationBaseUrl + key + ".md");
+            compare(ProviderIdentity.providerDashboardUrl(key), added[key].dashboard);
+            compare(ProviderIdentity.providerBrandColorChannels(key), added[key].channels);
+            compare(ProviderIdentity.providerStatusUrl(key), "");
+            compare(ProviderIdentity.providerLoginUrl(key), "");
+            compare(ProviderIdentity.resolveProviderKey(key), key);
+            compare(ProviderIdentity.providerCliArgument(key), key);
+        }
+        // 0.65.0 `usage --provider gk` answers as `gitkraken`.
+        compare(ProviderIdentity.resolveProviderKey("gk"), "gitkraken");
+        compare(ProviderIdentity.providerIconFileName("gk"), "gitkraken.svg");
+    }
+
     function test_retiredCrofKeepsBundledMetadataForOlderCliReleases() {
         // 0.64.1 retired Crof, but an installed 0.63.0 still emits it. Dropping
         // the metadata would turn a named provider into the unknown fallback

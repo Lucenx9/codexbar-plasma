@@ -658,6 +658,13 @@ TestCase {
         compare(supportsApiKeySetup("v0"), true);
         compare(supportsApiKeySetup("helmcode"), false);
         compare(supportsApiKeySetup("typesafe"), false);
+        // CLI 0.65.0 accepts the GitKraken token and fetches with it under the
+        // default source. Charm Hyper stores a key but its default source still
+        // demands web support on Linux, and Bifrost also needs a base URL that
+        // no CLI command writes, so neither setup would produce usage.
+        compare(supportsApiKeySetup("gitkraken"), true);
+        compare(supportsApiKeySetup("hyper"), false);
+        compare(supportsApiKeySetup("bifrost"), false);
         compare(supportsApiKeySetup("unknown-xyz"), false);
         compare(supportsApiKeySetup("fireworks"), false);
         fireworksSingleKeySetupSupported = true;

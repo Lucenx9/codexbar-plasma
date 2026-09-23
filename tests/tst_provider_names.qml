@@ -21,13 +21,16 @@ TestCase {
 
     function test_lateAddedProvidersHaveBundledFallbackTitles_data() {
         return [
+            { tag: "bifrost", key: "bifrost", title: "Bifrost" },
             { tag: "clawrouter", key: "clawrouter", title: "ClawRouter" },
             { tag: "coderabbit", key: "coderabbit", title: "CodeRabbit" },
             { tag: "crossmodel", key: "crossmodel", title: "CrossModel" },
             { tag: "elevenlabs", key: "elevenlabs", title: "ElevenLabs" },
             { tag: "fireworks", key: "fireworks", title: "Fireworks" },
+            { tag: "gitkraken", key: "gitkraken", title: "GitKraken AI" },
             { tag: "helmcode", key: "helmcode", title: "Helmcode" },
             { tag: "huggingface", key: "huggingface", title: "Hugging Face" },
+            { tag: "hyper", key: "hyper", title: "Charm Hyper" },
             { tag: "ibmbob", key: "ibmbob", title: "IBM Bob" },
             { tag: "kimi", key: "kimi", title: "Kimi Code" },
             { tag: "minimax", key: "minimax", title: "MiniMax" },

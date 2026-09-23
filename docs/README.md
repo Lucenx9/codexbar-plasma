@@ -65,6 +65,12 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   measured split between v0's supported API-key setup and the two cookie-only
   providers, and scoped official CLI probes. Provider descriptors and generic
   config actions remain unavailable.
+- [0.65.0 release review](research/2026-09-23-macos-parity-0.65.0.md): the
+  Bifrost, Charm Hyper, and GitKraken AI registry additions and their Linux
+  reachability, detail-row `progress`/`usageValue` and unknown named windows
+  verified through a loopback Bifrost fixture, and checksum-verified official
+  CLI probes. Provider descriptors, generic config actions, token-account
+  writes, and Cursor cost remain unavailable.
 - [Settings decisions](research/2026-09-08-settings-experience.md): Panel disclosure and text grouping,
   Plasma settings, privacy, refresh behavior, the macOS 0.56.8 comparison, and
   the shared settings visual conventions.
