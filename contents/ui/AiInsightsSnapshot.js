@@ -47,6 +47,13 @@ function quota(row, nowMs) {
     // Forecasts come from the CLI pace record; nothing is extrapolated here.
     if (field(row, "paceKnown") === true) {
         var eta = field(row, "paceEtaSeconds")
+        // The ETA is a duration observed with one usage snapshot, so advance
+        // it from that observation like the panel countdown. Without an
+        // observation time the raw value is the only data available.
+        var observedAt = field(row, "paceObservedAtMs")
+        if (finite(eta) && finite(observedAt) && observedAt > 0 && observedAt <= nowMs) {
+            eta = Math.max(0, eta - (nowMs - observedAt) / 1000)
+        }
         if (field(row, "paceOnTop") === false && finite(eta) && eta > 0) {
             result.forecast = "runsOutBeforeReset"
             result.runsOutInHours = hours(eta * 1000)

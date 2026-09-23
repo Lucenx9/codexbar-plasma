@@ -26,8 +26,10 @@ var reasons = ["missing_key", "secret_unavailable", "auth", "credits", "forbidde
     "rate_limited", "model", "request", "timeout", "network", "unavailable", "routing",
     "refused", "truncated", "format", "invalid_input", "endpoint"]
 // Retrying these cannot succeed until the user changes a setting or a key.
+// Malformed and cut-off answers completed and were charged, so they wait for
+// the next scheduled generation instead of an early retry.
 var permanentReasons = ["missing_key", "secret_unavailable", "auth", "credits", "forbidden",
-    "model", "request", "routing", "refused", "invalid_input", "endpoint"]
+    "model", "request", "routing", "refused", "truncated", "format", "invalid_input", "endpoint"]
 var modelPattern = new RegExp("^[A-Za-z0-9][A-Za-z0-9._:/@+-]{0,199}$")
 var controlCharacters = new RegExp("[\\u0000-\\u001f\\u007f-\\u009f\\u2028\\u2029]+", "g")
 

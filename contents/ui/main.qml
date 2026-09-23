@@ -2644,7 +2644,7 @@ PlasmoidItem {
     Controllers.AiInsightsController {
         id: aiInsightsController
 
-        enabled: root.aiInsightsEnabled
+        insightsEnabled: root.aiInsightsEnabled
         provider: Plasmoid.configuration.aiInsightsProvider || "ollama"
         model: Plasmoid.configuration.aiInsightsModel || ""
         endpoint: Plasmoid.configuration.aiInsightsOllamaEndpoint || ""

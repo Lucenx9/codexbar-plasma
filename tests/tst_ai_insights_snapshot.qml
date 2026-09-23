@@ -157,6 +157,24 @@ TestCase {
         ])
     }
 
+    function test_forecastEtaIsMeasuredFromTheObservationTime() {
+        var aged = provider("codex")
+        aged.rows[0].paceObservedAtMs = now - 1800000
+        var quotas = JSON.parse(build([aged]).text).providers[0].quotas
+        compare(quotas[0].forecast, "runsOutBeforeReset")
+        compare(quotas[0].runsOutInHours, 0.5)
+        var elapsed = provider("codex")
+        elapsed.rows[0].paceObservedAtMs = now - 2 * 3600000
+        var spent = JSON.parse(build([elapsed]).text).providers[0].quotas
+        verify(spent[0].forecast === undefined)
+        verify(spent[0].runsOutInHours === undefined)
+        var skewed = provider("codex")
+        skewed.rows[0].paceObservedAtMs = now + 3600000
+        var kept = JSON.parse(build([skewed]).text).providers[0].quotas
+        compare(kept[0].forecast, "runsOutBeforeReset")
+        compare(kept[0].runsOutInHours, 1)
+    }
+
     function test_identityTracksTheData() {
         var first = build([provider("codex")])
         compare(first.id, build([provider("codex")]).id)

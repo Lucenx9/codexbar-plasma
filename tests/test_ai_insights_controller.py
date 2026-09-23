@@ -48,7 +48,7 @@ TestCase {
 
     function init() {
         var probe = Qt.createComponent("CONTROLLER_URL");
-        if (probe.status === Component.Error && /module "org\\\\.kde\\\\.[^"]+" is not installed/.test(probe.errorString())) {
+        if (probe.status === Component.Error && /module "org\\.kde\\.[^"]+" is not installed/.test(probe.errorString())) {
             skip("AiInsightsController needs the optional KDE QML modules");
             return;
         }
@@ -70,7 +70,7 @@ TestCase {
         compare(factory.status, Component.Ready, factory.errorString());
         subject = createTemporaryObject(factory, testCase, Object.assign({
             scriptUrl: "HELPER_URL",
-            enabled: true,
+            insightsEnabled: true,
             provider: "openrouter",
             model: "ok-model",
             language: "it",
@@ -89,7 +89,7 @@ TestCase {
     }
 
     function test_1_disabledStartsNothing() {
-        var controller = create({enabled: false, intervalHours: 6});
+        var controller = create({insightsEnabled: false, intervalHours: 6});
         verify(!controller.generate());
         wait(400);
         verify(!controller.busy);
@@ -159,7 +159,7 @@ TestCase {
         controller.model = "other-model";
         verify(!controller.busy);
         verify(controller.generate());
-        controller.enabled = false;
+        controller.insightsEnabled = false;
         verify(!controller.busy);
         wait(2500);
         compare(generated.count, 0);

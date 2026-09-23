@@ -179,8 +179,9 @@ Failures map to bounded reasons: `missing_key`, `secret_unavailable`, `auth`
   feature, or destroying the widget retires the active request; its late reply
   is ignored. Stored insights from another context are not shown as current.
 - Failures never touch usage data. `rate_limited` waits for `Retry-After` (at
-  least five minutes); authentication, credit, model, and configuration failures
-  wait a full interval (24 hours in manual mode); other failures wait 30 minutes.
+  least five minutes); authentication, credit, model, malformed-answer, and
+  configuration failures wait a full interval (24 hours in manual mode); other
+  failures wait 30 minutes.
   These waits apply to automatic generation. An explicit request waits only for
   `Retry-After`, so a replaced key or a started Ollama can be retried at once.
   Nothing retries a malformed answer automatically.

@@ -10,7 +10,7 @@ import "../CommandLedger.js" as CommandLedger
 Item {
     id: controller
 
-    property bool enabled: false
+    property bool insightsEnabled: false
     property string provider: "ollama"
     property string model: ""
     property string endpoint: ""
@@ -41,8 +41,8 @@ Item {
         return lifecycle.start(true)
     }
 
-    onEnabledChanged: {
-        if (!enabled) {
+    onInsightsEnabledChanged: {
+        if (!insightsEnabled) {
             lifecycle.retire()
             lifecycle.clearFailure()
         } else {
@@ -90,7 +90,7 @@ Item {
         function checkIfDue() {
             var cache = AiInsights.parseCache(controller.cacheText)
             var due = AiInsights.automaticDue({
-                enabled: controller.enabled,
+                enabled: controller.insightsEnabled,
                 configured: controller.configured,
                 intervalHours: controller.intervalHours,
                 busy: controller.busy,
@@ -109,7 +109,7 @@ Item {
         }
 
         function start(manual) {
-            if (!controller.enabled || controller.busy || !controller.configured
+            if (!controller.insightsEnabled || controller.busy || !controller.configured
                     || controller.snapshotText.length === 0
                     || Date.now() < (manual ? rateLimitedUntilMs : retryAtMs)) {
                 return false
@@ -150,7 +150,7 @@ Item {
             var context = activeContextKey
             var snapshot = activeSnapshotId
             retire()
-            if (context !== controller.contextKey || !controller.enabled) {
+            if (context !== controller.contextKey || !controller.insightsEnabled) {
                 return
             }
             var reply = AiInsights.generationReply(data ? data["stdout"] : "")
@@ -196,7 +196,7 @@ Item {
     Timer {
         interval: 60000
         repeat: true
-        running: controller.enabled && controller.intervalHours > 0
+        running: controller.insightsEnabled && controller.intervalHours > 0
         onTriggered: lifecycle.checkIfDue()
     }
 }

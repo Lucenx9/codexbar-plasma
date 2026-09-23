@@ -29,13 +29,22 @@ def main():
         snapshot = json.loads(args.snapshot)
         leaked = any(value in args.snapshot for value in PRIVATE)
         runs_out = any(signal.get("kind") == "quotaRunsOutBeforeReset" for signal in snapshot.get("signals", []))
+        current = {provider.get("id") for provider in snapshot.get("providers", [])
+                   if provider.get("state") == "current"}
         time.sleep(0.3)
-        result = {"status": "ok",
-                  "summary": ("Synthetic insight [" + args.language + "]: Codex is on pace to use its session "
-                              "window before the reset, while Claude still has most of its weekly allowance. "
-                              "Leak check " + ("FAILED" if leaked else "passed") + "."),
-                  "highlights": ["Codex runs out in about 1 h" if runs_out else "No forecast",
-                                 "Claude weekly window at 28%"]}
+        if current == {"codex"}:
+            result = {"status": "ok",
+                      "summary": ("Synthetic insight [" + args.language + "]: Codex is on pace to use its session "
+                                  "window before the reset. "
+                                  "Leak check " + ("FAILED" if leaked else "passed") + "."),
+                      "highlights": ["Codex runs out in about 1 h" if runs_out else "No forecast"]}
+        else:
+            result = {"status": "ok",
+                      "summary": ("Synthetic insight [" + args.language + "]: Codex is on pace to use its session "
+                                  "window before the reset, while Claude still has most of its weekly allowance. "
+                                  "Leak check " + ("FAILED" if leaked else "passed") + "."),
+                      "highlights": ["Codex runs out in about 1 h" if runs_out else "No forecast",
+                                     "Claude weekly window at 28%"]}
     print(json.dumps(result))
 
 

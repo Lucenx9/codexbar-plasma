@@ -140,6 +140,8 @@ TestCase {
         compare(AiInsights.retryDelayMs("auth", 0, 6), 6 * hour)
         compare(AiInsights.retryDelayMs("credits", 0, 0), 24 * hour)
         compare(AiInsights.retryDelayMs("missing_key", 0, 12), 12 * hour)
+        compare(AiInsights.retryDelayMs("format", 0, 6), 6 * hour)
+        compare(AiInsights.retryDelayMs("truncated", 0, 6), 6 * hour)
         compare(AiInsights.retryDelayMs("rate_limited", 7200, 6), 2 * hour)
         compare(AiInsights.retryDelayMs("rate_limited", 1, 6), AiInsights.minimumRateLimitMs)
         compare(AiInsights.retryDelayMs("rate_limited", 1e12, 6), 24 * hour)
