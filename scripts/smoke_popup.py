@@ -137,7 +137,7 @@ def stage_applet(work, scenario, image_path, theme=None):
         f"[General]\nfont=Noto Sans,{size},-1,5,50,0,0,0,0,0\n"
         f"smallestReadableFont=Noto Sans,{size - 2},-1,5,50,0,0,0,0,0\n"
         "[Icons]\nTheme=breeze\n")
-    # README captures always use Breeze Dark; other scenarios follow --theme.
+    # README and share-usage captures always use Breeze Dark; others follow --theme.
     if scenario.startswith("readme-") or scenario == "share-usage":
         apply_palette(work, "dark")
     elif theme:

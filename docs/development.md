@@ -738,8 +738,9 @@ python3 scripts/smoke_popup.py --scenario readme-overview --renderer opengl --ou
 python3 scripts/smoke_popup.py --scenario settings-providers --renderer opengl --theme dark --language it
 ```
 
-`--theme light` or `--theme dark` applies the Breeze color scheme to any
-scenario; README captures always use Breeze Dark. `--language` runs the selected
+`--theme light` or `--theme dark` applies the Breeze color scheme to the
+selected scenarios, except the README and `share-usage` captures, which always
+use Breeze Dark. `--language` runs the selected
 scenarios in one of the shipped translations. Both are review aids: settings
 changes should be inspected in both themes and at least one long translation.
 
