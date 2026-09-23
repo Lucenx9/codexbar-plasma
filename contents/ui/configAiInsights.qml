@@ -319,7 +319,12 @@ KCM.SimpleKCM {
                 enabled: !page.busy
                 onClicked: {
                     page.report("", false)
-                    page.run("models")
+                    // The button is only enabled while idle, so a refused run
+                    // means the command itself is invalid (for example an
+                    // oversized Ollama endpoint), not a busy helper.
+                    if (!page.run("models")) {
+                        page.report(messages.errorText("invalid_input", page.provider), true)
+                    }
                 }
             }
         }

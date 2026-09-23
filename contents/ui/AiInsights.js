@@ -256,6 +256,10 @@ function command(scriptUrl, action, options) {
     return parts.join(" ")
 }
 
+function safeReason(value) {
+    return reasons.indexOf(value) >= 0 ? value : "unavailable"
+}
+
 function parseReply(text) {
     if (typeof text !== "string" || text.length === 0 || text.length > maximumReplyLength * 4) {
         return null
@@ -282,7 +286,7 @@ function generationReply(text) {
     var retry = Number(value.retryAfter)
     return {
         outcome: "error",
-        reason: reasons.indexOf(value.reason) >= 0 ? value.reason : "unavailable",
+        reason: safeReason(value.reason),
         retryAfterSeconds: isFinite(retry) && retry > 0 ? Math.min(retry, maximumRetryAfterSeconds) : 0
     }
 }
@@ -293,7 +297,7 @@ function modelsReply(text) {
         return {outcome: "error", reason: "format", models: [], key: ""}
     }
     if (value.status !== "ok") {
-        return {outcome: "error", reason: reasons.indexOf(value.reason) >= 0 ? value.reason : "unavailable",
+        return {outcome: "error", reason: safeReason(value.reason),
             models: [], key: ""}
     }
     var models = []

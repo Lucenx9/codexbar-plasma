@@ -193,6 +193,18 @@ TestCase {
         wait(2500);
         compare(generated.count, 0);
     }
+    function test_9_unbuildableCommandSurfacesInvalidInput() {
+        var controller = create({provider: "ollama", model: "llama3",
+            endpoint: "http://" + new Array(2050).join("x"), intervalHours: 6});
+        verify(!controller.generate());
+        compare(controller.errorReason, "invalid_input");
+        verify(controller.retryAtMs > Date.now());
+        verify(!controller.busy);
+        wait(400);
+        compare(calls().length, 0, "an invalid command must not start a helper process");
+        compare(attempts.count, 0);
+        compare(generated.count, 0);
+    }
 }
 '''
 

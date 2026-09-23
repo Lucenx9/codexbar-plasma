@@ -123,6 +123,10 @@ Item {
                 snapshot: controller.snapshotText
             })
             if (command.length === 0) {
+                // An unbuildable command (for example an oversized Ollama
+                // endpoint) is invalid input, not a silent skip: the card
+                // shows it, and automatic generation waits out the interval.
+                fail("invalid_input", 0)
                 return false
             }
             errorReason = ""

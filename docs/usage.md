@@ -590,8 +590,8 @@ never starts a cost scan.
 **Generate** defaults to **Only on request**. **Every 6 hours**, **Every 12
 hours**, and **Daily** generate in the background at most once per interval,
 counted from the last successful insight. Usage refreshes, opening the popup,
-and language changes never trigger a request, and a plasmashell restart waits
-at least 30 minutes after the last attempt. The last insight is saved with its
+and language changes never make a request due by themselves, and a plasmashell
+restart waits at least 30 minutes after the last attempt. The last insight is saved with its
 time, provider, model, and language, and **Clear saved insight** removes it.
 An insight older than the interval (a day in manual mode), or followed by a
 failed attempt, is labeled out of date.
@@ -601,7 +601,8 @@ short reason, such as Ollama not running, a rejected key, missing credits, a
 rate limit, an unsupported model, or an unreadable answer. Automatic generation
 then waits: until the provider's retry time for a rate limit, until the next
 interval (a day in manual mode) for key, credit, and model problems, and 30
-minutes otherwise. Malformed answers are never retried automatically. The
+minutes otherwise. Malformed answers wait for the next scheduled generation
+instead of an early retry. The
 generate button can retry at once, except during a provider's rate limit. Turn **Enable AI Insights**
 off to stop all AI activity; the saved insight stays hidden until you enable it
 again or clear it.

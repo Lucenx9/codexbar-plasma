@@ -60,8 +60,8 @@ command passes it as `--language`, and the helper writes it into the system
 instructions with an English language name, for example `Write every sentence
 in Italian (BCP 47 tag "it"), using that regional variety`. The language is
 part of the cache context, so an insight generated in another language is
-never shown as current. A language change does not trigger a request; the next
-insight follows the configured generation policy.
+never shown as current. A language change does not make a request due by
+itself; the next insight follows the configured generation policy.
 
 ## Snapshot contract
 
@@ -124,7 +124,7 @@ as data, never as instructions.
 
 | Provider | Endpoint | Provider-specific fields |
 | --- | --- | --- |
-| Ollama | `POST {endpoint}/api/chat` | `format` JSON Schema, `stream: false`, `num_predict: 1000`, no credentials |
+| Ollama | `POST {endpoint}/api/chat` | `format` JSON Schema, `stream: false`, `temperature: 0.2`, `num_predict: 1000`, no credentials |
 | OpenRouter | `POST https://openrouter.ai/api/v1/chat/completions` | strict `json_schema`, `max_tokens: 1000`, `provider.require_parameters`, `provider.data_collection: "deny"`, optional `provider.zdr` |
 | OpenAI | `POST https://api.openai.com/v1/chat/completions` | strict `json_schema`, `max_completion_tokens: 1000`, `store: false` |
 
@@ -184,7 +184,11 @@ Failures map to bounded reasons: `missing_key`, `secret_unavailable`, `auth`
   failures wait 30 minutes.
   These waits apply to automatic generation. An explicit request waits only for
   `Retry-After`, so a replaced key or a started Ollama can be retried at once.
-  Nothing retries a malformed answer automatically.
+  A malformed answer is never retried early: like other permanent failures, it
+  waits for the next scheduled generation.
+- The `Retry-After` wait lives only in memory; a plasmashell restart resets it
+  to the persisted 30-minute attempt guard, and the provider re-establishes the
+  backoff with its next answer.
 - An insight older than the interval (24 hours in manual mode), or followed by a
   failed attempt, stays visible and is labeled out of date.
 
@@ -205,7 +209,7 @@ Failures map to bounded reasons: `missing_key`, `secret_unavailable`, `auth`
 - `tests/test_ai_insights_controller.py`: the production controller through
   Plasma's executable DataSource with a recording helper, covering disabled,
   manual, duplicate, automatic, restart, language/model/disable changes during a
-  request, failures, and destruction.
+  request, failures, invalid commands, and destruction.
 - Smoke scenarios `ai-insights`, `ai-insights-it`, `ai-insights-mismatch`,
   `ai-insights-error`, `ai-insights-single`, `settings-ai-insights`, and
   `settings-ai-insights-narrow` run the real applet with a synthetic helper. The

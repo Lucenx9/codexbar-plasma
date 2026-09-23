@@ -219,6 +219,15 @@ TestCase {
         compare(AiInsights.statusReply(JSON.stringify({status: "sk-secret"}), ["present", "absent"]), "unavailable")
     }
 
+    function test_safeReasonBoundsHelperReasons() {
+        compare(AiInsights.safeReason("auth"), "auth")
+        compare(AiInsights.safeReason("invalid_input"), "invalid_input")
+        compare(AiInsights.safeReason("<script>"), "unavailable")
+        compare(AiInsights.safeReason(""), "unavailable")
+        compare(AiInsights.safeReason(7), "unavailable")
+        compare(AiInsights.safeReason(null), "unavailable")
+    }
+
     function test_localEndpointPresentation() {
         verify(AiInsights.isLocalEndpoint(""))
         verify(AiInsights.isLocalEndpoint("http://localhost:11434"))
