@@ -39,6 +39,12 @@ TestCase {
         return /^(?!QProcess: Destroyed while process \("\/bin\/sh"\) is still running\.$).*/;
     }
 
+    function qprocessAndAnimationDriverFilter() {
+        var qprocess = "QProcess: Destroyed while process \\(\"/bin/sh\"\\) is still running\\.";
+        var animationDriver = "QUnifiedTimer::stopAnimationDriver: driver is not running";
+        return new RegExp("^(?!" + qprocess + "$|" + animationDriver + "$).*");
+    }
+
     function test_deactivationCancelsQueuedLoad() {
         failOnWarning(/.*/);
         var controller = createController();
@@ -55,7 +61,7 @@ TestCase {
     function test_deactivationRetiresRepliesAndLoadingState() {
         // Plasma can destroy the shell while this test intentionally cancels it.
         // Keep every other warning fatal, including in the queued-load test.
-        failOnWarning(/^(?!QProcess: Destroyed while process \("\/bin\/sh"\) is still running\.$).*/);
+        failOnWarning(qprocessFilter());
         var controller = createController();
         if (!controller) return;
         controller.active = true;
@@ -188,7 +194,7 @@ TestCase {
         // Offscreen has no animation driver, so stopping the sweep timer
         // without an event-loop turn warns; that platform noise is not
         // the behavior under test.
-        failOnWarning(/^(?!QProcess: Destroyed while process \("\/bin\/sh"\) is still running\.$|QUnifiedTimer::stopAnimationDriver: driver is not running$).*/);
+        failOnWarning(qprocessAndAnimationDriverFilter());
         var controller = createController();
         if (!controller) return;
         controller.active = true;
