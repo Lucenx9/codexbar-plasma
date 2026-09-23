@@ -2,6 +2,7 @@ import QtQuick
 import QtTest
 import "../contents/ui/CostPresentation.js" as CostPresentation
 import "../contents/ui/SafeText.js" as SafeText
+import "../contents/ui/ThemeContrast.js" as ThemeContrast
 import "../contents/ui/UsageDetails.js" as UsageDetails
 
 TestCase {
@@ -22,6 +23,7 @@ TestCase {
         property int meterCount: 2
         property real firstQuota: 57
         property bool secondaryWarning: false
+        property color brandAccent: Qt.rgba(0.2, 0.6, 0.7, 1)
         property bool loading: false
         property bool expanded: false
         property bool privacyMode: false
@@ -183,7 +185,7 @@ TestCase {
             return true;
         }
         function providerReadableColor() {
-            return Qt.rgba(0.2, 0.6, 0.7, 1);
+            return brandAccent;
         }
         function statusBadgeColor() {
             return Qt.rgba(1, 0.5, 0, 1);
@@ -306,6 +308,7 @@ TestCase {
         applet.meterCount = 2;
         applet.firstQuota = 57;
         applet.secondaryWarning = false;
+        applet.brandAccent = Qt.rgba(0.2, 0.6, 0.7, 1);
         applet.minimalPanel = false;
         applet.quotaWarning = false;
         applet.verticalFormFactor = false;
@@ -352,6 +355,17 @@ TestCase {
         applet.quotaWarning = true;
         tryCompare(fill, "color", Qt.rgba(1, 0.5, 0, 1));
         verify(icon.color.toString() !== fill.color.toString());
+        // Minimal style promises capsules in the theme text color, so the
+        // warning-hue muting never rewrites them: the capsule keeps the same
+        // accent the minimal mode selected.
+        applet.quotaWarning = false;
+        applet.brandAccent = Qt.rgba(0.95, 0.45, 0.1, 1);
+        wait(0);
+        var meter = findItem(panel, item => item.modelData && item.modelData.provider === "codex");
+        verify(meter !== null);
+        compare(fill.color, meter.accent);
+        applet.brandAccent = Qt.rgba(0.2, 0.6, 0.7, 1);
+        wait(0);
         applet.minimalPanel = false;
         tryCompare(panel, "meterBarHeight", standardBarHeight);
         compare(panel.meterIconSize, standardIconSize);
@@ -685,7 +699,8 @@ TestCase {
         meter = findItem(panel, item => item.modelData && item.modelData.provider === "codex");
         track = findItem(meter, item => item.objectName === "panelMeterTrack");
         fill = findItem(track, item => item.objectName === "panelMeterFill");
-        tryVerify(() => Math.abs(fill.width / track.width - 0.01) < 0.001);
+        // A small non-zero quota stays visible as a round dot.
+        tryCompare(fill, "width", track.height);
         applet.secondaryWarning = true;
         wait(0);
         verify(fill.color.toString() !== "#ff8000");
@@ -698,6 +713,33 @@ TestCase {
         track = findItem(meter, item => item.objectName === "panelMeterTrack");
         tryVerify(() => Math.abs(track.mapToItem(meter, 0, track.height / 2).y - meter.height / 2) < 1);
         verify(meter.Accessible.description.indexOf("Primary") >= 0);
+    }
+
+    // A brand hue close to the warning color would make a healthy capsule read
+    // as an alert, so the capsule uses a muted brand color. The provider icon
+    // keeps the brand color, and distinct brand hues stay unchanged.
+    function test_capsulesMuteBrandColorsCloseToWarnings() {
+        applet.brandAccent = Qt.rgba(0.95, 0.45, 0.1, 1);
+        var panel = createControl("CompactRepresentation", {applet: applet, height: 32});
+        if (!panel) return;
+        wait(0);
+        var meter = findItem(panel, item => item.modelData && item.modelData.provider === "codex");
+        var icon = findItem(meter, item => item.objectName === "panelProviderIcon");
+        var fill = findItem(meter, item => item.objectName === "panelMeterFill");
+        compare(icon.color, applet.brandAccent);
+        verify(!Qt.colorEqual(fill.color, applet.brandAccent));
+        var muted = ThemeContrast.oklch(fill.color);
+        verify(muted.chroma < ThemeContrast.minimumHueChroma);
+        verify(ThemeContrast.hueDistance(muted.hue, ThemeContrast.oklch(applet.brandAccent).hue) < 10);
+        // A fixed reduction is not enough for very saturated brands; the
+        // panel asks ThemeContrast for the share its chroma needs.
+        applet.brandAccent = Qt.rgba(1, 0.35, 0, 1);
+        wait(0);
+        verify(ThemeContrast.oklch(fill.color).chroma < ThemeContrast.minimumHueChroma);
+        applet.brandAccent = Qt.rgba(0.2, 0.6, 0.7, 1);
+        wait(0);
+        fill = findItem(meter, item => item.objectName === "panelMeterFill");
+        compare(fill.color, applet.brandAccent);
     }
 
     function test_sessionFeedbackKeepsHeadingAtTop_data() {
