@@ -137,6 +137,8 @@ function cost(snapshot, enabled) {
         daily: [],
         models: models.rows,
         tokenRanking: { rows: rankedAmounts.rows, truncated: rankedAmounts.truncated,
+            sourceTruncated: field(ranking, "sourceTruncated", false) === true,
+            hasUnknownCost: field(ranking, "hasUnknownCost", false) === true,
             omitted: Math.max(0, Math.min(1000000, Math.floor(numeric(ranking, "omitted", 0)))) },
         modelsTruncated: models.truncated,
         projects: { rows: [], truncated: false }

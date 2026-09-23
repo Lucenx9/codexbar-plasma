@@ -22,8 +22,16 @@ MAX_PACKAGE_EXPANDED_BYTES=67108864
 MAX_PACKAGE_METADATA_BYTES=65536
 MAX_REDIRECTS=5
 MODE="check"
+SETUP=false
+NO_INPUT=false
+WITH_CLI=false
+INSTALL_OPTION="-u"
+INSTALLED_ROOT=""
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR=""
+if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
+  ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+fi
 METADATA_PATH="${ROOT_DIR}/metadata.json"
 RELEASE_JSON=""
 TMP_DIR=""
@@ -36,7 +44,11 @@ cleanup() {
 trap cleanup EXIT
 
 usage() {
-  printf '%s\n' "usage: $0 [--check|--install] [--metadata PATH] [--release-json PATH]"
+  printf '%s\n' "usage: $0 [--check|--install] [--metadata PATH] [--release-json PATH]" \
+    "       $0 --setup [--with-cli] [--no-input]" \
+    "--setup installs the latest release for this user, without a source checkout." \
+    "--with-cli also installs/reuses the private CLI; select it in widget settings." \
+    "--no-input skips optional prompts and never restarts Plasma."
 }
 
 emit_status() {
@@ -48,6 +60,10 @@ emit_status() {
   local error_code="${6:-}"
   local error_detail="${7:-}"
   local release_url="${8:-}"
+  if [[ "$SETUP" == true ]]; then
+    printf '%s\n' "$message" >&2
+    return
+  fi
   jq -n \
     --arg status "$status" \
     --arg message "$message" \
@@ -71,6 +87,55 @@ fail() {
 require_command() {
   command -v "$1" >/dev/null 2>&1 \
     || fail "missing_tool" "missing required command: $1" "$1"
+}
+
+# Setup is explicitly interactive only when stdin is a terminal. Download the
+# script completely before running it; piped/headless runs never wait for input.
+confirm_setup() {
+  local answer
+  [[ "$NO_INPUT" == false && -t 0 ]] || return 1
+  printf '%s [y/N] ' "$1" >&2
+  IFS= read -r answer || return 1
+  [[ "$answer" == y || "$answer" == Y || "$answer" == yes ]]
+}
+
+finish_setup() {
+  [[ "$SETUP" == true ]] || return 0
+  local cli_result cli_status
+  printf '%s\n' 'Add CodexBar through your panel: Add Widgets -> CodexBar.'
+  if command -v codexbar >/dev/null 2>&1 && [[ "$WITH_CLI" == false ]]; then
+    printf '%s\n' 'Found codexbar on PATH. If Plasma cannot find it, set this path in Diagnostics:'
+    command -v codexbar
+  elif [[ "$WITH_CLI" == true ]] || confirm_setup 'Install or reuse the private official CodexBar CLI?'; then
+    printf '%s\n' 'Preparing the private CLI. This can take several minutes.' >&2
+    if ! cli_result="$(timeout --kill-after=10s 610s python3 "$INSTALLED_ROOT/scripts/manage-cli.py" --action install)"; then
+      printf '%s\n' 'Widget is installed, but CLI setup failed. Retry in General -> Managed CLI.' >&2
+      return 1
+    fi
+    cli_status="$(jq -r '.status // "error"' <<< "$cli_result")"
+    case "$cli_status" in
+      ready|installed)
+        printf '%s\n' 'In widget settings, select General -> Managed CLI -> Use managed CLI, then Apply.'
+        ;;
+      *)
+        printf '%s\n' 'Widget is installed, but CLI setup failed. Retry in General -> Managed CLI.' >&2
+        return 1
+        ;;
+    esac
+  else
+    printf '%s\n' 'Set up the CLI in General -> Managed CLI -> Install and select managed CLI, then Apply.'
+  fi
+  printf '%s\n' 'Enable and configure your providers in widget settings -> Providers.'
+  if [[ "$INSTALL_OPTION" == -u && "$setup_changed" == true ]]; then
+    if command -v systemctl >/dev/null 2>&1 && confirm_setup 'Restart Plasma panels and desktop now to load the update?'; then
+      timeout --kill-after=5s 30s systemctl --user restart plasma-plasmashell.service || {
+        printf '%s\n' 'Restart failed. Log out and back in to load the update.' >&2
+        return 1
+      }
+    else
+      printf '%s\n' 'Log out and back in to load the update.'
+    fi
+  fi
 }
 
 validate_asset_record() {
@@ -180,6 +245,19 @@ while [[ $# -gt 0 ]]; do
     MODE="install"
     shift
     ;;
+  --setup)
+    SETUP=true
+    MODE="install"
+    shift
+    ;;
+  --no-input)
+    NO_INPUT=true
+    shift
+    ;;
+  --with-cli)
+    WITH_CLI=true
+    shift
+    ;;
   --metadata)
     [[ $# -ge 2 ]] || { usage >&2; exit 2; }
     METADATA_PATH="$2"
@@ -200,6 +278,23 @@ while [[ $# -gt 0 ]]; do
     ;;
   esac
 done
+
+if [[ "$SETUP" == true ]]; then
+  [[ "$MODE" == install ]] || { usage >&2; exit 2; }
+  [[ "$(uname -s)" == Linux ]] || { printf '%s\n' 'Setup requires Linux with KDE Plasma 6.' >&2; exit 1; }
+  [[ "$(id -u)" != 0 ]] || { printf '%s\n' 'Run setup as your desktop user, without sudo.' >&2; exit 1; }
+  data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+  [[ "$data_home" == /* ]] || data_home="$HOME/.local/share"
+  INSTALLED_ROOT="$data_home/plasma/plasmoids/$PLUGIN_ID"
+  METADATA_PATH="$INSTALLED_ROOT/metadata.json"
+  setup_changed=false
+  if [[ ! -e "$INSTALLED_ROOT" ]]; then
+    INSTALL_OPTION="-i"
+  fi
+elif [[ "$NO_INPUT" == true || "$WITH_CLI" == true ]]; then
+  usage >&2
+  exit 2
+fi
 
 if [[ "$MODE" != "check" && "$MODE" != "install" ]]; then
   fail "invalid_invocation" "invalid update mode: $MODE"
@@ -226,6 +321,12 @@ if [[ "$MODE" == "install" ]]; then
   require_command timeout
 fi
 
+if [[ "$SETUP" == true && "$INSTALL_OPTION" == -i ]]; then
+  TMP_DIR="$(mktemp -d)"
+  METADATA_PATH="$TMP_DIR/metadata.json"
+  printf '%s\n' '{"KPlugin":{"Version":"0.0.0"}}' > "$METADATA_PATH"
+fi
+
 if [[ ! -f "$METADATA_PATH" ]]; then
   fail "local_metadata_invalid" "metadata file not found: $METADATA_PATH"
 fi
@@ -234,13 +335,19 @@ if ! jq -e 'type == "object" and (.KPlugin | type == "object") and (.KPlugin.Ver
   "$METADATA_PATH" >/dev/null; then
   fail "local_metadata_invalid" "local widget metadata does not match the expected contract"
 fi
+if [[ "$SETUP" == true && "$INSTALL_OPTION" == -u ]] \
+  && ! jq -e --arg id "$PLUGIN_ID" \
+    '.KPackageStructure == "Plasma/Applet" and .KPlugin.Id == $id' \
+    "$METADATA_PATH" >/dev/null; then
+  fail "local_metadata_invalid" "installed widget metadata has the wrong applet identity"
+fi
 local_version="$(jq -r '.KPlugin.Version' "$METADATA_PATH")"
 if [[ ! "$local_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   fail "local_metadata_invalid" "local widget version must use X.Y.Z"
 fi
 
 if [[ -z "$RELEASE_JSON" ]]; then
-  TMP_DIR="$(mktemp -d)"
+  [[ -n "$TMP_DIR" ]] || TMP_DIR="$(mktemp -d)"
   RELEASE_JSON="${TMP_DIR}/release.json"
   release_url="https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest"
   curl --fail --location --show-error --silent \
@@ -299,6 +406,7 @@ fi
 
 if ! version_gt "$remote_version" "$local_version"; then
   emit_status "current" "widget is current" "$local_version" "$remote_version" "$asset_url"
+  finish_setup
   exit 0
 fi
 
@@ -379,7 +487,14 @@ validate_package_manifest "$package_path" "$package_version" \
   || fail "package_invalid" "widget package manifest does not match the release"
 timeout --kill-after="${KPACKAGE_INSTALL_KILL_AFTER_SECONDS}s" \
   "${KPACKAGE_INSTALL_MAX_TIME_SECONDS}s" \
-  kpackagetool6 -t Plasma/Applet -u "$package_path" >&2 \
+  kpackagetool6 -t Plasma/Applet "$INSTALL_OPTION" "$package_path" >&2 \
   || fail "package_install_failed" "failed to install widget package"
 
-emit_status "installed" "widget update installed; restart Plasma to apply the update" "$local_version" "$remote_version" "$asset_url"
+if [[ "$SETUP" == true && "$INSTALL_OPTION" == -i ]]; then
+  emit_status "installed" "widget installed" "$local_version" "$remote_version" "$asset_url"
+else
+  emit_status "installed" "widget update installed; restart Plasma to apply the update" "$local_version" "$remote_version" "$asset_url"
+fi
+
+setup_changed=true
+finish_setup

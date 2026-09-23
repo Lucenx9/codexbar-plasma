@@ -36,7 +36,8 @@ function normalizeSnapshot(item, requestedHistoryDays) {
         totals: totals,
         projects: Normalizer.normalizeCostProjects(item.projects, currency),
         models: modelSummary.rows,
-        tokenRanking: modelSummary.tokenRanking || { rows: [], omitted: 0, truncated: false },
+        tokenRanking: modelSummary.tokenRanking || { rows: [], omitted: 0, truncated: false,
+            sourceTruncated: false, hasUnknownCost: false },
         modelsTruncated: modelSummary.truncated,
         daily: Normalizer.normalizeCostDaily(item.daily, currency, historyDays, item.updatedAt)
     };

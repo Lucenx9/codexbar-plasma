@@ -266,6 +266,9 @@ Totals include the loaded providers; at most eight provider rows and six models
 are shown, ranked by tokens, with omitted row counts. Model rows without a token
 count are excluded from the ranking. Currencies remain separate. Unknown values
 are not zero, and incomplete or estimated data retains a notice in both exports.
+The ordinary six-row display limit alone does not trigger that notice.
+Missing costs on a model's measured token days and source scans that reach their
+safety bound still trigger it, including in privacy mode.
 Costs estimate usage, not subscription fees; subscription plans are not exported.
 
 Only aggregate fields enter the export. Account identities, projects, absolute
@@ -310,10 +313,11 @@ and clipboard content remain under your control after closing the window.
   was spent.
 - **Quota weeks** in the expanded provider details split the local history by
   the provider's weekly quota window: the current week so far and up to three
-  earlier ones, each with its exact start and end. Right after a reset the
-  current week holds no full day yet and is left out until it does. The boundaries come from the
-  weekly usage row's reset time and window length, so the list appears once a
-  live usage refresh reports them. History is kept per day, so when the reset
+  earlier ones. Each row shows its start and end; the current row ends at the
+  upcoming reset. Right after a reset, the current week holds no full day yet
+  and is left out until it does. The boundaries come from the weekly usage
+  row's reset time and window length, so the list appears once a live usage
+  refresh reports them. History is kept per day, so when the reset
   falls inside a day that whole day counts toward one week, and the totals are
   marked `≈`. Unknown or missing days, and days with requests excluded from
   the CLI totals, make a total read "at least". Weeks reaching back before
@@ -452,6 +456,12 @@ strings are not silently treated as older stable versions. Network errors do not
 affect quota fetching or replace the installed version with a guessed value.
 
 ### Managed CLI
+
+The [quick terminal installer](../README.md#quick-install-from-a-terminal) can
+install or reuse the same private copy before you add the widget. It leaves
+widget settings unchanged: select **Use managed CLI** here, then **Apply**.
+The installer preserves any CLI on PATH unless you explicitly pass `--with-cli`,
+which creates or reuses the separate private copy without replacing that CLI.
 
 **General → Managed CLI → Install and select managed CLI** installs the latest
 stable official Linux release under `$XDG_DATA_HOME/codexbar-plasma/cli`, falling

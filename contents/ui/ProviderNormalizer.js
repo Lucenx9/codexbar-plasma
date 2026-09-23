@@ -966,7 +966,12 @@ function normalizeCostModels(items, currency, days, updatedAt, includeTokenRanki
         }
         modelDays.unshift(item)
     }
-    return costModelSummary(modelDays, currency, includeTokenRanking)
+    var summary = costModelSummary(modelDays, currency, includeTokenRanking)
+    if (summary.tokenRanking) {
+        summary.tokenRanking.sourceTruncated = summary.tokenRanking.sourceTruncated
+            || (window !== null && firstInspectedItem > 0)
+    }
+    return summary
 }
 
 function costModelSummary(modelDays, currency, includeTokenRanking) {
@@ -1017,10 +1022,14 @@ function costModelSummary(modelDays, currency, includeTokenRanking) {
                     tokens: null,
                     currency: boundedDisplayText(currency || "USD", 12),
                     costOverflow: false,
-                    tokensOverflow: false
+                    tokensOverflow: false,
+                    unknownCost: false
                 }
             }
             var aggregate = byName[rawName]
+            if (isFinite(tokens) && !isFinite(cost)) {
+                aggregate.unknownCost = true
+            }
             // Later finite rows must not revive an overflowed sum as a partial total.
             if (isFinite(cost) && !aggregate.costOverflow) {
                 var totalCost = (aggregate.cost === null ? 0 : aggregate.cost) + Math.max(0, cost)
@@ -1036,11 +1045,13 @@ function costModelSummary(modelDays, currency, includeTokenRanking) {
     }
 
     var rows = []
+    var hasUnknownCost = false
     for (var modelName in byName) {
         if (!hasOwnKey(byName, modelName)) {
             continue
         }
         var model = byName[modelName]
+        hasUnknownCost = hasUnknownCost || (model.tokens !== null && model.unknownCost)
         rows.push({ label: model.label, cost: model.cost, tokens: model.tokens, currency: model.currency })
     }
     rows.sort(function(a, b) {
@@ -1070,7 +1081,11 @@ function costModelSummary(modelDays, currency, includeTokenRanking) {
         result.tokenRanking = {
             rows: tokenRows.slice(0, maximumCostModelRows),
             omitted: Math.max(0, tokenRows.length - maximumCostModelRows),
-            truncated: truncated || tokenRows.length > maximumCostModelRows
+            truncated: truncated || tokenRows.length > maximumCostModelRows,
+            // Display-only omissions are listed separately. Source loss and
+            // unknown costs still qualify the export's data notice.
+            sourceTruncated: truncated,
+            hasUnknownCost: hasUnknownCost || tokenRows.some(function(row) { return row.cost === null })
         }
     }
     return result
