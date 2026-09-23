@@ -10,6 +10,7 @@ Rectangle {
     property int viewportHeight: 0
     readonly property var page: pageLoader.item
     readonly property bool ready: page !== null && (typeof page.providerRosterLoading === "undefined" || !page.providerRosterLoading)
+        && (typeof page.loading === "undefined" || !page.loading)
 
     width: 840
     height: viewportHeight > 0 ? viewportHeight : Math.max(600, Math.min(6000,
@@ -21,7 +22,8 @@ Rectangle {
         anchors.fill: parent
 
         Component.onCompleted: {
-            var properties = preview.pageSource === "configPopup.qml" || preview.pageSource === "configDiagnostics.qml" ? {
+            var properties = preview.pageSource === "configPopup.qml" || preview.pageSource === "configDiagnostics.qml"
+                || preview.pageSource === "configProviders.qml" ? {
                 cfg_commandPath: preview.applet.commandPath
             } : {};
             setSource(Qt.resolvedUrl(preview.pageSource), properties);

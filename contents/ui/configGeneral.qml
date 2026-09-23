@@ -195,6 +195,11 @@ KCM.SimpleKCM {
             cfg_costHistoryMetric, costHistoryMetricEditPending, persistedCostHistoryMetric))
     }
 
+    // Aligns a hint with the label text of the check box it explains.
+    function hintIndent(control) {
+        return control.indicator ? control.indicator.width + control.spacing : 0
+    }
+
     function refreshPresetIndex(value) {
         var numeric = Number(value)
         for (var i = 0; i < refreshPresetCombo.model.length; i++) {
@@ -402,8 +407,11 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            leftPadding: LayoutMirroring.enabled ? 0 : page.hintIndent(refreshOnOpenCheck)
+            rightPadding: LayoutMirroring.enabled ? page.hintIndent(refreshOnOpenCheck) : 0
             text: i18n("Refreshes quota data when needed, including when periodic refresh is disabled.")
             font: Kirigami.Theme.smallFont
+            opacity: 0.7
             wrapMode: Text.WordWrap
         }
 
@@ -415,6 +423,8 @@ KCM.SimpleKCM {
         }
 
         Components.PlainControlsLabel {
+            leftPadding: LayoutMirroring.enabled ? 0 : page.hintIndent(includeStatusCheck)
+            rightPadding: LayoutMirroring.enabled ? page.hintIndent(includeStatusCheck) : 0
             text: i18n("Required for status incident notifications.")
             font: Kirigami.Theme.smallFont
             opacity: 0.7
@@ -441,8 +451,11 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            leftPadding: LayoutMirroring.enabled ? 0 : page.hintIndent(privacyModeCheck)
+            rightPadding: LayoutMirroring.enabled ? page.hintIndent(privacyModeCheck) : 0
             text: i18n("Hides account identities and project or session names in the panel, popup and tooltips. Saved data is unchanged.")
             font: Kirigami.Theme.smallFont
+            opacity: 0.7
             wrapMode: Text.WordWrap
         }
 
@@ -585,13 +598,17 @@ KCM.SimpleKCM {
             text: i18n("Check upstream CLI releases daily")
         }
 
-        Controls.CheckBox {
-            id: cliUpdateNotificationsEnabledCheck
-            implicitWidth: 0
+        ColumnLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: Kirigami.Units.gridUnit
-            text: i18n("Notify when a CLI release is available")
-            enabled: cliUpdateChecksEnabledCheck.checked && page.cfg_enableNotifications
+
+            Controls.CheckBox {
+                id: cliUpdateNotificationsEnabledCheck
+                implicitWidth: 0
+                Layout.fillWidth: true
+                Layout.leftMargin: Kirigami.Units.gridUnit
+                text: i18n("Notify when a CLI release is available")
+                enabled: cliUpdateChecksEnabledCheck.checked && page.cfg_enableNotifications
+            }
         }
 
         Components.PlainControlsLabel {

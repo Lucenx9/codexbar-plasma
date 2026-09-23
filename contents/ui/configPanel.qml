@@ -298,8 +298,10 @@ KCM.SimpleKCM {
                 }
                 Components.PlainControlsLabel {
                     Layout.fillWidth: true
+                    Layout.leftMargin: standardStyleButton.indicator.width + standardStyleButton.spacing
                     text: i18n("Colored provider icons")
                     font: Kirigami.Theme.smallFont
+                    opacity: 0.7
                     wrapMode: Text.WordWrap
                 }
             }
@@ -326,8 +328,10 @@ KCM.SimpleKCM {
                 }
                 Components.PlainControlsLabel {
                     Layout.fillWidth: true
+                    Layout.leftMargin: minimalStyleButton.indicator.width + minimalStyleButton.spacing
                     text: i18n("Monochrome provider icons")
                     font: Kirigami.Theme.smallFont
+                    opacity: 0.7
                     wrapMode: Text.WordWrap
                 }
             }
@@ -339,6 +343,7 @@ KCM.SimpleKCM {
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             text: i18n("Quota capsules keep their warning colors in both styles.")
             font: Kirigami.Theme.smallFont
+            opacity: 0.7
             wrapMode: Text.WordWrap
         }
 
@@ -354,13 +359,11 @@ KCM.SimpleKCM {
             text: i18n("Provider meters")
         }
 
-        Components.PlainButton {
+        Components.DisclosureButton {
             objectName: "panelAdditionalButton"
             plainText: i18n("Additional information")
-            icon.name: page.additionalExpanded ? "arrow-down" : (LayoutMirroring.enabled ? "arrow-left" : "arrow-right")
-            checkable: true
-            checked: page.additionalExpanded
-            onToggled: page.additionalExpanded = checked
+            expanded: page.additionalExpanded
+            onClicked: page.additionalExpanded = !page.additionalExpanded
             Accessible.description: page.additionalExpanded
                 ? i18n("Collapse options. %1", page.additionalSummary)
                 : i18n("Expand options. %1", page.additionalSummary)
@@ -373,6 +376,7 @@ KCM.SimpleKCM {
             text: page.additionalSummary
             visible: !page.additionalExpanded
             font: Kirigami.Theme.smallFont
+            opacity: 0.7
             wrapMode: Text.WordWrap
         }
 
@@ -389,6 +393,7 @@ KCM.SimpleKCM {
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 24
                 text: i18n("For the selected provider, in horizontal panels.")
                 font: Kirigami.Theme.smallFont
+                opacity: 0.7
                 wrapMode: Text.WordWrap
             }
 
@@ -474,13 +479,11 @@ KCM.SimpleKCM {
             }
         }
 
-        Components.PlainButton {
+        Components.DisclosureButton {
             objectName: "panelProvidersButton"
             plainText: i18n("Panel providers")
-            icon.name: page.providersExpanded ? "arrow-down" : (LayoutMirroring.enabled ? "arrow-left" : "arrow-right")
-            checkable: true
-            checked: page.providersExpanded
-            onToggled: page.providersExpanded = checked
+            expanded: page.providersExpanded
+            onClicked: page.providersExpanded = !page.providersExpanded
             Accessible.description: page.providersExpanded
                 ? i18n("Collapse options. %1", page.providersSummary)
                 : i18n("Expand options. %1", page.providersSummary)
@@ -494,6 +497,7 @@ KCM.SimpleKCM {
             text: page.providersSummary
             visible: !page.providersExpanded
             font: Kirigami.Theme.smallFont
+            opacity: 0.7
             wrapMode: Text.WordWrap
         }
 
@@ -510,6 +514,7 @@ KCM.SimpleKCM {
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 24
                 text: i18n("Choose the providers shown in the panel. The popup keeps every enabled provider.")
                 font: Kirigami.Theme.smallFont
+                opacity: 0.7
                 wrapMode: Text.WordWrap
             }
 
@@ -573,14 +578,12 @@ KCM.SimpleKCM {
             Kirigami.FormData.isSection: true
         }
 
-        Components.PlainButton {
+        Components.DisclosureButton {
             id: advancedButton
             objectName: "panelAdvancedButton"
             plainText: i18n("Quota, order and visibility")
-            icon.name: page.advancedExpanded ? "arrow-down" : (LayoutMirroring.enabled ? "arrow-left" : "arrow-right")
-            checkable: true
-            checked: page.advancedExpanded
-            onToggled: page.advancedExpanded = checked
+            expanded: page.advancedExpanded
+            onClicked: page.advancedExpanded = !page.advancedExpanded
             Accessible.description: page.advancedExpanded
                 ? i18n("Collapse options. %1", page.advancedSummary)
                 : i18n("Expand options. %1", page.advancedSummary)
@@ -593,12 +596,13 @@ KCM.SimpleKCM {
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             text: page.advancedSummary
             font: Kirigami.Theme.smallFont
+            opacity: 0.7
             wrapMode: Text.WordWrap
         }
 
         Kirigami.FormLayout {
             objectName: "panelAdvancedOptions"
-            Kirigami.FormData.isSection: true
+            wideMode: false
             Layout.fillWidth: true
             // FormLayout includes hidden children's implicit widths in its hints.
             Layout.maximumWidth: page.advancedExpanded ? Infinity : 0
@@ -722,6 +726,7 @@ KCM.SimpleKCM {
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 24
                 text: i18n("The default order groups text with its provider's meters. Custom orders place them separately.")
                 font: Kirigami.Theme.smallFont
+                opacity: 0.7
                 wrapMode: Text.WordWrap
             }
 

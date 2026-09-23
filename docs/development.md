@@ -735,7 +735,13 @@ make smoke SMOKE_ARGS='--scenario long-text'
 python3 scripts/smoke_popup.py --scenario normal --output /tmp/codexbar-preview
 python3 scripts/smoke_popup.py --scenario panel-minimal --renderer opengl
 python3 scripts/smoke_popup.py --scenario readme-overview --renderer opengl --output /tmp/codexbar-readme
+python3 scripts/smoke_popup.py --scenario settings-providers --renderer opengl --theme dark --language it
 ```
+
+`--theme light` or `--theme dark` applies the Breeze color scheme to any
+scenario; README captures always use Breeze Dark. `--language` runs the selected
+scenarios in one of the shipped translations. Both are review aids: settings
+changes should be inspected in both themes and at least one long translation.
 
 Use `--renderer opengl` on a graphical session with OpenGL for accurate provider
 icon colors. The default software renderer checks layout and behavior, but does
@@ -769,7 +775,12 @@ QtTests additionally exercise pointer/keyboard activation and resizing.
 `settings-panel`, `settings-panel-information`, `settings-panel-advanced`, and
 `settings-panel-narrow` verify pending preview changes, collapsed/expanded controls,
 rendered quota capsules, and a 420-pixel layout with larger text and all additional
-information enabled. `panel-information`, `panel-information-minimal`, and
+information enabled. Every settings page has a capture, and each `-narrow`
+variant renders at 420 pixels with 13-point text. `settings-providers` lists a
+twelve-provider synthetic roster with the longest bundled title and an unknown
+ID, then selects a provider and shows its redacted fixture diagnostics.
+`settings-providers-error` and `settings-diagnostics-error` capture failed CLI
+responses. `panel-information`, `panel-information-minimal`, and
 `panel-information-single` capture grouped text at a 24-pixel panel height, including
 selection of the second provider. QtTests exercise style selection, disclosure,
 retained hidden values, defaults, custom order and filtered-meter fallbacks,

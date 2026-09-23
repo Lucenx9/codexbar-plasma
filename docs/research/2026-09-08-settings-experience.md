@@ -140,3 +140,25 @@ gutter like Panel, and the Popup overview section carries the same 24-grid
 width bound as its provider-order sibling. Frame-based tests cover opening
 geometry on both pages, roster arrival on Popup, and mirrored padding
 restoration.
+
+## Visual consistency refinement
+
+The review against Plasma `348e733`, after the popup hierarchy refinement,
+kept every page, control, configuration key, default, and tab order. It
+captured all six pages in Breeze Light and Dark, in Italian, and at 420 pixels
+with 13-point text. It applied the popup's visual language to settings:
+
+| Before | After | Why |
+| --- | --- | --- |
+| Helper text mixed full-contrast, 70%, 72%, and disabled-color text at two widths. | Small type at the 0.7 secondary step, 24 grid units wide. | One quiet tier below every control label, readable on Breeze Light. |
+| Hints under check boxes started at the indicator. | Hints align with the check box or radio label text. | KDE KCMs use the same indent to tie a hint to its control. |
+| Disclosures were bordered buttons, a pressed flat button, or a tool button. | One flat `DisclosureButton`; the arrow carries the state and accessibility reports it as checkable. | Matches the popup's details toggle without a toggled-button look. |
+| Panel's advanced form spanned both columns with its own label column. | It stacks its labels in the parent field column. | Expanding it no longer moves the form or the button just activated. |
+| The selected provider sat between separators. | One borderless surface with the popup's identity tile. | Groups the provider's actions and details without another frame. |
+| Diagnostics ran its tools in a separately aligned block below the form. | A **Provider diagnostics** form section. | Status, configuration, actions, and results share one column. |
+
+FormLayout does not forward `Layout` margins to its item containers, so
+indented dependent options sit inside a `ColumnLayout`. The KDE desktop style
+draws button text inside its style item, so disclosure summaries stay aligned
+with the button edge rather than an estimated text offset.
+

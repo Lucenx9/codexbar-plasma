@@ -214,6 +214,11 @@ KCM.SimpleKCM {
             text: i18n("Show provider changelog links")
         }
 
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Providers")
+            Kirigami.FormData.isSection: true
+        }
+
         ColumnLayout {
             Kirigami.FormData.label: i18n("Provider order:")
             Kirigami.FormData.labelAlignment: Qt.AlignTop

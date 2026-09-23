@@ -2,10 +2,8 @@
 """Capture the real compact applet across content combinations using OpenGL."""
 
 import argparse
-import configparser
 import hashlib
 import html
-import io
 import itertools
 import json
 import os
@@ -62,21 +60,6 @@ def matrix_cases(vertical=False):
     add("order-text-only", {"showPercentInPanel": True,
         "panelElementOrder": "identity,text,status,meters", "autoSelectProvider": True}, selected="claude")
     return cases
-
-
-def apply_palette(work, theme):
-    palette = configparser.ConfigParser()
-    palette.optionxform = str
-    name = "BreezeDark" if theme == "dark" else "BreezeLight"
-    if not palette.read("/usr/share/color-schemes/" + name + ".colors"):
-        raise RuntimeError("Missing " + name + " color scheme")
-    for section in list(palette.sections()):
-        if not section.startswith(("Colors:", "ColorEffects:")):
-            palette.remove_section(section)
-    colors = io.StringIO()
-    palette.write(colors)
-    with (work / "config/kdeglobals").open("a") as config:
-        config.write("\n" + colors.getvalue())
 
 
 def validate_record(record, count):
@@ -138,7 +121,7 @@ def capture_batch(output, theme, count, vertical):
         work = Path(temporary)
         env = smoke.preview_environment(work, scenario, "opengl")
         smoke.stage_applet(work, scenario, batch)
-        apply_palette(work, theme)
+        smoke.apply_palette(work, theme)
         ui = work / "data/plasma/plasmoids" / smoke.APPLET_ID / "contents/ui"
         shutil.copyfile(smoke.ROOT / "scripts/smoke/PanelMatrixCapture.qml", ui / "SmokeCapture.qml")
         main = (ui / "main.qml").read_text()

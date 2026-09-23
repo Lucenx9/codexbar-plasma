@@ -31,7 +31,7 @@ QML_ERRORS = re.compile(
 )
 
 
-def preview_environment(work, scenario, renderer="software"):
+def preview_environment(work, scenario, renderer="software", language=None):
     # Do not inherit CLI credentials, config overrides, Qt import paths, or the
     # desktop session bus. Keep only access to the existing display socket.
     env = {key: os.environ[key] for key in
@@ -50,6 +50,7 @@ def preview_environment(work, scenario, renderer="software"):
         env["QSG_RHI_BACKEND"] = "opengl"
     if scenario.startswith("localization-"):
         language = scenario.removeprefix("localization-")
+    if language:
         env.update(LANG=LOCALES[language], LC_ALL=LOCALES[language], LANGUAGE=language)
     # Qt builds can default to xcb even with WAYLAND_DISPLAY set. Select the
     # available backend when X11 is absent without inheriting host Qt overrides.
@@ -60,7 +61,23 @@ def preview_environment(work, scenario, renderer="software"):
     return env
 
 
-def stage_applet(work, scenario, image_path):
+def apply_palette(work, theme):
+    """Append a Breeze color scheme to the isolated kdeglobals."""
+    palette = configparser.ConfigParser()
+    palette.optionxform = str
+    name = "BreezeDark" if theme == "dark" else "BreezeLight"
+    if not palette.read("/usr/share/color-schemes/" + name + ".colors"):
+        raise RuntimeError("Missing " + name + " color scheme")
+    for section in list(palette.sections()):
+        if not section.startswith(("Colors:", "ColorEffects:")):
+            palette.remove_section(section)
+    colors = io.StringIO()
+    palette.write(colors)
+    with (work / "config/kdeglobals").open("a") as config:
+        config.write("\n" + colors.getvalue())
+
+
+def stage_applet(work, scenario, image_path, theme=None):
     package = work / "data/plasma/plasmoids" / APPLET_ID
     package.mkdir(parents=True)
     shutil.copytree(ROOT / "contents", package / "contents")
@@ -111,24 +128,20 @@ def stage_applet(work, scenario, image_path):
                         + "        scenario: " + json.dumps(scenario) + "\n"
                         + "        imagePath: " + json.dumps(str(image_path)) + "\n    }\n}\n")
     # Stable default typography; long-text exercises the same doubled text size
-    # used in the existing visual review, without changing the desktop settings.
+    # used in the existing visual review, and narrow settings pages use 130%
+    # text, without changing the desktop settings.
     size = 20 if scenario in ("long-text", "project-long-text", "provider-header-large") else 10
+    if scenario.startswith("settings-") and scenario.endswith("-narrow"):
+        size = 13
     (work / "config/kdeglobals").write_text(
         f"[General]\nfont=Noto Sans,{size},-1,5,50,0,0,0,0,0\n"
         f"smallestReadableFont=Noto Sans,{size - 2},-1,5,50,0,0,0,0,0\n"
         "[Icons]\nTheme=breeze\n")
+    # README captures always use Breeze Dark; other scenarios follow --theme.
     if scenario.startswith("readme-") or scenario == "share-usage":
-        palette = configparser.ConfigParser()
-        palette.optionxform = str
-        if not palette.read("/usr/share/color-schemes/BreezeDark.colors"):
-            raise RuntimeError("README captures require the Breeze Dark color scheme")
-        for section in list(palette.sections()):
-            if not section.startswith(("Colors:", "ColorEffects:")):
-                palette.remove_section(section)
-        colors = io.StringIO()
-        palette.write(colors)
-        with (work / "config/kdeglobals").open("a") as config_file:
-            config_file.write("\n" + colors.getvalue())
+        apply_palette(work, "dark")
+    elif theme:
+        apply_palette(work, theme)
 
 
 def stop_preview(process):
@@ -180,6 +193,10 @@ def main():
                         help=f"Seconds per scenario, 1–{MAX_SCENARIO_TIMEOUT_SECONDS}")
     parser.add_argument("--renderer", choices=("software", "opengl"), default="software",
                         help="Use opengl for visual review of masked provider icons")
+    parser.add_argument("--theme", choices=("light", "dark"),
+                        help="Apply a Breeze color scheme; default: the toolkit palette")
+    parser.add_argument("--language", choices=tuple(LOCALES),
+                        help="Run every selected scenario in this translation")
     args = parser.parse_args()
     if not 1 <= args.timeout <= MAX_SCENARIO_TIMEOUT_SECONDS:
         parser.error(f"--timeout must be between 1 and {MAX_SCENARIO_TIMEOUT_SECONDS}")
@@ -204,9 +221,9 @@ def main():
         try:
             with tempfile.TemporaryDirectory(prefix="codexbar-smoke-") as temporary:
                 work = Path(temporary)
-                env = preview_environment(work, scenario, args.renderer)
+                env = preview_environment(work, scenario, args.renderer, args.language)
                 image_path = output / (scenario + ".png")
-                stage_applet(work, scenario, image_path)
+                stage_applet(work, scenario, image_path, args.theme)
                 command = [shutil.which("dbus-run-session"), "--", shutil.which("plasmawindowed"), APPLET_ID]
                 run_preview(command, env, work, output / (scenario + ".log"), scenario, args.timeout)
                 if scenario == "usage-cache-restart":

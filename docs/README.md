@@ -66,7 +66,8 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   providers, and scoped official CLI probes. Provider descriptors and generic
   config actions remain unavailable.
 - [Settings decisions](research/2026-09-08-settings-experience.md): Panel disclosure and text grouping,
-  Plasma settings, privacy, refresh behavior, and the macOS 0.56.8 comparison.
+  Plasma settings, privacy, refresh behavior, the macOS 0.56.8 comparison, and
+  the shared settings visual conventions.
 
 ## Earlier CLI evidence
 

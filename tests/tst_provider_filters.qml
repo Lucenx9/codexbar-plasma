@@ -139,7 +139,7 @@ TestCase {
         var all = [];
         walkPageObjects(page, all);
         var matches = all.filter(function(item) {
-            return item instanceof Controls.Button && item.text === "Settings and diagnostics";
+            return item instanceof Controls.Button && item.Accessible.name === "Settings and diagnostics";
         });
         return matches.length > 0 ? matches[0] : null;
     }
@@ -179,7 +179,8 @@ TestCase {
         page.selectedProviderID = "codex";
         var toggle = settingsToggle(page);
         verify(toggle !== null);
-        toggle.checked = true;
+        toggle.clicked();
+        verify(toggle.expanded);
         wait(0);
         var all = [];
         walkPageObjects(page, all);
@@ -215,7 +216,8 @@ TestCase {
         page.selectedProviderID = "openai";
         var toggle = settingsToggle(page);
         verify(toggle !== null);
-        toggle.checked = true;
+        toggle.clicked();
+        verify(toggle.expanded);
         wait(0);
         var all = [];
         walkPageObjects(page, all);
@@ -230,7 +232,7 @@ TestCase {
         });
         verify(immediate.length >= 1);
         var cli = all.filter(function(item) {
-            return item instanceof Controls.ToolButton && item.text === "CLI commands";
+            return item instanceof Controls.Button && item.Accessible.name === "CLI commands";
         });
         compare(cli.length, 1);
     }
@@ -245,15 +247,17 @@ TestCase {
         page.selectedProviderID = "openai";
         var toggle = settingsToggle(page);
         verify(toggle !== null);
-        toggle.checked = true;
+        toggle.clicked();
+        verify(toggle.expanded);
         wait(0);
         var all = [];
         walkPageObjects(page, all);
         var cli = all.filter(function(item) {
-            return item instanceof Controls.ToolButton && item.text === "CLI commands";
+            return item instanceof Controls.Button && item.Accessible.name === "CLI commands";
         });
         compare(cli.length, 1);
-        cli[0].checked = true;
+        cli[0].clicked();
+        verify(cli[0].expanded);
         wait(0);
         var areas = [];
         walkPageObjects(page, areas);
@@ -443,7 +447,8 @@ TestCase {
         page.selectedProviderID = "openai";
         var toggle = settingsToggle(page);
         verify(toggle !== null);
-        toggle.checked = true;
+        toggle.clicked();
+        verify(toggle.expanded);
         wait(0);
         page.providerDescriptorsUnavailable = false;
         wait(0);

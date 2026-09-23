@@ -232,6 +232,8 @@ Provider-specific editable settings depend on the official CLI contract.
   one-minute save timeout, followed by up to five seconds to stop the command.
 - Account discovery and selection through `codexbar usage --all-accounts`.
 - Provider docs, dashboards, login/account links, and redacted diagnostics.
+  The selected provider's links, settings and diagnostics share one surface
+  above the provider list; **Settings and diagnostics** starts collapsed.
 - With the official CLI 0.56.2 verified by this repository, the Providers page
   offers enable/disable, supported single API key setup, CLI command hints, and
   docs/dashboard/login links.
@@ -380,6 +382,10 @@ fields; track proposed extensions in the issue tracker.
 - Six settings pages: **General**, **Providers**, **Panel**, **Popup**,
   **Notifications**, and **Diagnostics**. CLI path and provider/source overrides
   sit beside redacted diagnostics; quota thresholds sit beside their alerts.
+  **Popup** groups provider order and Overview providers under **Providers**;
+  **Diagnostics** runs redacted diagnostics from its **Provider diagnostics**
+  section. Explanatory text is set in small secondary type below the control
+  it describes, and dependent options are indented under the option they need.
   **Diagnostics** also reports the widget version, and, after **Check
   versions**, the CLI version and the absolute command the shell resolved.
   Those three lines are what a bug report needs; the probe runs only when

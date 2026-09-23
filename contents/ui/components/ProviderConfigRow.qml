@@ -29,7 +29,7 @@ Controls.ItemDelegate {
     }
 
     contentItem: RowLayout {
-        spacing: Kirigami.Units.gridUnit
+        spacing: Kirigami.Units.largeSpacing
 
         Kirigami.Icon {
             source: providerRow.configPage.providerIconSource(providerRow.providerData.provider)
