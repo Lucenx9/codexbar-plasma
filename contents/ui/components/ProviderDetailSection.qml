@@ -30,56 +30,87 @@ ColumnLayout {
     Repeater {
         model: detailSection.sectionData.rows
 
-        delegate: Item {
-            id: detailRow
+        delegate: ColumnLayout {
+            id: detailEntry
 
             required property var modelData
+            readonly property var progress: detailEntry.modelData.progress || null
 
             Layout.fillWidth: true
-            implicitWidth: detailLabel.implicitWidth + Kirigami.Units.smallSpacing + detailValues.implicitWidth
-            implicitHeight: Math.max(detailLabel.implicitHeight, detailValues.implicitHeight)
+            spacing: Kirigami.Units.smallSpacing / 2
 
-            PlainPlasmaLabel {
-                id: detailLabel
+            Item {
+                id: detailRow
 
-                text: modelData.label
-                opacity: detailSection.applet.secondaryTextOpacity
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                width: Math.max(0, parent.width - detailValues.width - Kirigami.Units.smallSpacing)
-                elide: Text.ElideRight
-            }
-
-            ColumnLayout {
-                id: detailValues
-
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                // The plain Item owns geometry; width-dependent layout hints recurse.
-                width: Math.min(implicitWidth, detailRow.width / 2)
-                spacing: 0
+                Layout.fillWidth: true
+                implicitWidth: detailLabel.implicitWidth + Kirigami.Units.smallSpacing + detailValues.implicitWidth
+                implicitHeight: Math.max(detailLabel.implicitHeight, detailValues.implicitHeight)
 
                 PlainPlasmaLabel {
-                    text: modelData.value
-                    opacity: detailSection.applet.valueTextOpacity
-                    font.weight: Font.Medium
-                    horizontalAlignment: Text.AlignRight
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
-                    Layout.alignment: Qt.AlignRight
+                    id: detailLabel
+
+                    text: detailEntry.modelData.label
+                    opacity: detailSection.applet.secondaryTextOpacity
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: Math.max(0, parent.width - detailValues.width - Kirigami.Units.smallSpacing)
                     elide: Text.ElideRight
                 }
 
-                PlainPlasmaLabel {
-                    visible: modelData.secondaryValue.length > 0
-                    text: modelData.secondaryValue
-                    opacity: detailSection.applet.secondaryTextOpacity
-                    font.pixelSize: Kirigami.Theme.smallFont.pixelSize
-                    horizontalAlignment: Text.AlignRight
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
-                    Layout.alignment: Qt.AlignRight
-                    elide: Text.ElideRight
+                ColumnLayout {
+                    id: detailValues
+
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    // The plain Item owns geometry; width-dependent layout hints recurse.
+                    width: Math.min(implicitWidth, detailRow.width / 2)
+                    spacing: 0
+
+                    PlainPlasmaLabel {
+                        text: detailEntry.modelData.value
+                        opacity: detailSection.applet.valueTextOpacity
+                        font.weight: Font.Medium
+                        horizontalAlignment: Text.AlignRight
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: 0
+                        Layout.alignment: Qt.AlignRight
+                        elide: Text.ElideRight
+                    }
+
+                    PlainPlasmaLabel {
+                        visible: detailEntry.modelData.secondaryValue.length > 0
+                        text: detailEntry.modelData.secondaryValue
+                        opacity: detailSection.applet.secondaryTextOpacity
+                        font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+                        horizontalAlignment: Text.AlignRight
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: 0
+                        Layout.alignment: Qt.AlignRight
+                        elide: Text.ElideRight
+                    }
+                }
+            }
+
+            Rectangle {
+                objectName: "detailProgressMeter"
+
+                visible: detailEntry.progress !== null
+                Layout.fillWidth: true
+                Layout.preferredHeight: Math.max(2, Math.round(detailSection.applet.meterTrackHeight / 2))
+                Layout.bottomMargin: Kirigami.Units.smallSpacing / 2
+                radius: height / 2
+                color: detailSection.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
+                clip: true
+
+                Rectangle {
+                    objectName: "detailProgressFill"
+
+                    readonly property real fraction: detailEntry.progress ? detailEntry.progress.fraction : 0
+
+                    width: fraction <= 0 ? 0 : Math.max(parent.height, parent.width * fraction)
+                    height: parent.height
+                    radius: parent.radius
+                    color: detailSection.accent
                 }
             }
         }

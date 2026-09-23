@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Draw a progress meter under provider detail rows that report a used/total
+  pair, such as Bifrost budgets. Rows without one keep their text unchanged.
 - Add a square CodexBar icon for the KDE Store listing, with a 512-pixel PNG
   and an editable SVG source.
 - Install or update the latest widget release from one terminal command without
