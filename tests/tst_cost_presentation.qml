@@ -800,6 +800,59 @@ TestCase {
         compare(tokenCells[8].value, 40)
     }
 
+    function test_spendHeatmapRowWeekdaysEndOnTheNewestSlot() {
+        // 2026-09-23 is a Wednesday, so the bottom row is Wednesday and the
+        // top row is the Thursday six days earlier.
+        var days = []
+        for (var day = 17; day <= 23; day++) {
+            days.push({ label: "2026-09-" + day, value: day })
+        }
+        compare(CostPresentation.spendHeatmapRowWeekdays(days), [4, 5, 6, 0, 1, 2, 3])
+
+        // Unavailable days keep their calendar slots, including the newest one.
+        days[6] = null
+        days[2] = null
+        compare(CostPresentation.spendHeatmapRowWeekdays(days), [4, 5, 6, 0, 1, 2, 3])
+
+        var yearEnd = [{ label: "2025-12-31" }, null, { label: "2026-01-02" }]
+        compare(CostPresentation.spendHeatmapRowWeekdays(yearEnd), [6, 0, 1, 2, 3, 4, 5])
+    }
+
+    function test_spendHeatmapRowWeekdaysRejectRowsWithoutOneWeekday_data() {
+        return [
+            {tag: "empty", days: []},
+            {tag: "not-an-array", days: "2026-09-23"},
+            {tag: "only-unavailable", days: [null, null]},
+            {tag: "undated", days: [{ label: "day-0" }, { label: "day-1" }]},
+            {tag: "gap-without-slot", days: [{ label: "2026-09-01" }, { label: "2026-09-03" }]},
+            {tag: "unordered", days: [{ label: "2026-09-02" }, { label: "2026-09-01" }]},
+            {tag: "duplicate", days: [{ label: "2026-09-01" }, { label: "2026-09-01" }]},
+            {tag: "invalid-date", days: [{ label: "2026-02-30" }]},
+            {tag: "non-object", days: [7]},
+            {tag: "missing-label", days: [{ value: 1 }]}
+        ]
+    }
+
+    function test_spendHeatmapRowWeekdaysRejectRowsWithoutOneWeekday(data) {
+        compare(CostPresentation.spendHeatmapRowWeekdays(data.days), [])
+    }
+
+    function test_spendHeatmapRowWeekdaysFollowTheCalendarFallback() {
+        var daily = []
+        for (var day = 1; day <= 9; day++) {
+            daily.push(dailyPoint("2026-09-0" + day, day === 9 ? null : day, day * 10, "USD"))
+        }
+        var costs = [{ totals: { currency: "USD" }, daily: daily }]
+        var days = CostPresentation.spendHeatmapDays(
+            CostPresentation.spendDailyPoints(fmt, costs, false), costs)
+        // 2026-09-09 is a Wednesday; its unavailable slot still ends the grid.
+        compare(CostPresentation.spendHeatmapRowWeekdays(days)[6], 3)
+
+        var undated = [{ label: "day-0", value: 1 }, { label: "day-1", value: 2 }]
+        compare(CostPresentation.spendHeatmapRowWeekdays(
+            CostPresentation.spendHeatmapDays(undated, [])), [])
+    }
+
     function test_spendHeatmapDaysPreserveCalendarBoundaries_data() {
         return [
             {tag: "weekend", first: "2026-09-04", last: "2026-09-07", span: 4},

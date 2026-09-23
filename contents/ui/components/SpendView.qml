@@ -18,6 +18,7 @@ ColumnLayout {
     readonly property bool hasMixedCostCurrencies: CostPresentation.spendHasMixedCostCurrencies(providerCosts)
     readonly property real heatmapMaximum: chartMaximum(dailyPoints)
     readonly property var heatmapDays: CostPresentation.spendHeatmapDays(dailyPoints, providerCosts)
+    readonly property var heatmapRowWeekdays: CostPresentation.spendHeatmapRowWeekdays(heatmapDays)
 
     Layout.fillWidth: true
     Layout.fillHeight: true
@@ -305,121 +306,151 @@ ColumnLayout {
                 // The grid follows the selected range instead of a fixed
                 // 42-day window, and derives the cell size from the available
                 // width so the cells stay large enough to hover.
-                Item {
+                RowLayout {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 7 * heatmapGrid.cellHeight
-                        + 6 * heatmapGrid.rowSpacing
-                    clip: true
+                    spacing: Kirigami.Units.smallSpacing
 
-                    Grid {
-                        id: heatmapGrid
+                    // Without weekday names the rows are an unlabelled stripe
+                    // pattern; the labels are what make it a weekday read.
+                    Column {
+                        id: heatmapWeekdayLabels
 
-                        readonly property real cellSpacing: Math.max(1, Math.round(Kirigami.Units.smallSpacing / 2))
-                        readonly property real minimumCellSize: Kirigami.Units.gridUnit * 0.6
-                        // Kept below the chart's weight: this is the secondary
-                        // read, a weekday pattern, not the magnitude over time.
-                        readonly property real maximumCellSize: Kirigami.Units.gridUnit * 1.15
-                        readonly property int fittingColumns: Math.max(1, Math.floor(
-                            (width + cellSpacing) / (minimumCellSize + cellSpacing)))
-                        readonly property int columnCount: Math.max(1, Math.min(
-                            fittingColumns, Math.ceil(view.heatmapDays.length / 7)))
-                        readonly property real availableCellWidth: Math.max(minimumCellSize,
-                            (width - cellSpacing * (columnCount - 1)) / columnCount)
-                        readonly property real cellHeight: Math.max(minimumCellSize, Math.min(
-                            maximumCellSize, availableCellWidth))
-                        // Cells stretch into the width a short range leaves
-                        // unused, bounded so they keep reading as heatmap cells
-                        // rather than bars competing with the chart above.
-                        readonly property real cellWidth: Math.min(
-                            availableCellWidth, cellHeight * 3)
-                        readonly property var cells: CostPresentation.spendHeatmapCells(
-                            view.heatmapDays, columnCount * 7)
-
-                        width: parent.width
-                        rows: 7
-                        flow: Grid.TopToBottom
-                        columnSpacing: cellSpacing
-                        rowSpacing: cellSpacing
+                        visible: view.heatmapRowWeekdays.length === 7
+                        spacing: heatmapGrid.rowSpacing
+                        Layout.alignment: Qt.AlignTop
+                        Accessible.ignored: true
 
                         Repeater {
-                            model: heatmapGrid.cells
+                            model: view.heatmapRowWeekdays
 
-                            delegate: Rectangle {
-                                id: heatmapCell
-
+                            delegate: PlainPlasmaLabel {
                                 required property var modelData
 
-                                // Padding slots carry no day: they fill the
-                                // oldest corner of the block and stay out of
-                                // hover, the readout, and the reading order.
-                                readonly property bool measured: !!heatmapCell.modelData
-                                readonly property real fraction: heatmapCell.measured && view.heatmapMaximum > 0
-                                    ? Math.max(0, Math.min(1,
-                                        Number(heatmapCell.modelData.value) / view.heatmapMaximum))
-                                    : 0
-
-                                Accessible.role: Accessible.Graphic
-                                Accessible.ignored: !heatmapCell.measured
-                                Accessible.name: heatmapCell.measured ? heatmapCell.modelData.label : ""
-                                Accessible.description: heatmapCell.measured ? heatmapCell.modelData.displayValue : ""
-
-                                width: heatmapGrid.cellWidth
                                 height: heatmapGrid.cellHeight
-                                radius: Kirigami.Units.cornerRadius / 2
-                                color: heatmapCell.measured
-                                    ? view.applet.withAlpha(
-                                        Kirigami.Theme.highlightColor,
-                                        0.1 + heatmapCell.fraction * 0.8)
-                                    : view.applet.withAlpha(Kirigami.Theme.textColor, 0.05)
+                                text: Qt.locale().dayName(modelData, Locale.ShortFormat)
+                                font: Kirigami.Theme.smallFont
+                                opacity: view.applet.secondaryTextOpacity
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                        }
+                    }
 
-                                // The cell carries no border of its own and the
-                                // hover outline is a separate overlay. Fading a
-                                // border's own alpha does not work: Qt treats a
-                                // zero-alpha pen as invalid and paints the
-                                // rectangle with a zero-width border, so the fill
-                                // snaps out to the cell edge the moment the
-                                // highlight leaves. Grabbing the rendered pixels
-                                // confirmed it: between alpha 0 and 0.01 an edge
-                                // pixel jumped straight from the fill colour to
-                                // the background. Fading this overlay's opacity
-                                // blends that pixel instead, leaving the cell's
-                                // painted geometry untouched.
-                                Rectangle {
-                                    anchors.fill: parent
-                                    radius: parent.radius
-                                    color: "transparent"
-                                    border.width: 1
-                                    border.color: view.applet.withAlpha(
-                                        Kirigami.Theme.textColor, 0.4)
-                                    visible: heatmapCell.measured
-                                    opacity: heatmapMouse.containsMouse ? 1 : 0
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 7 * heatmapGrid.cellHeight
+                            + 6 * heatmapGrid.rowSpacing
+                        clip: true
 
-                                    Behavior on opacity {
-                                        NumberAnimation {
-                                            duration: Kirigami.Units.shortDuration
+                        Grid {
+                            id: heatmapGrid
+
+                            readonly property real cellSpacing: Math.max(1, Math.round(Kirigami.Units.smallSpacing / 2))
+                            readonly property real minimumCellSize: Kirigami.Units.gridUnit * 0.6
+                            // Kept below the chart's weight: this is the secondary
+                            // read, a weekday pattern, not the magnitude over time.
+                            readonly property real maximumCellSize: Kirigami.Units.gridUnit * 1.15
+                            readonly property int fittingColumns: Math.max(1, Math.floor(
+                                (width + cellSpacing) / (minimumCellSize + cellSpacing)))
+                            readonly property int columnCount: Math.max(1, Math.min(
+                                fittingColumns, Math.ceil(view.heatmapDays.length / 7)))
+                            readonly property real availableCellWidth: Math.max(minimumCellSize,
+                                (width - cellSpacing * (columnCount - 1)) / columnCount)
+                            readonly property real cellHeight: Math.max(minimumCellSize, Math.min(
+                                maximumCellSize, availableCellWidth))
+                            // Cells widen into spare width up to a 2:1 tile, so a
+                            // long range fills the row while a short one keeps
+                            // contribution-graph proportions instead of bars.
+                            readonly property real cellWidth: Math.min(
+                                availableCellWidth, cellHeight * 2)
+                            readonly property var cells: CostPresentation.spendHeatmapCells(
+                                view.heatmapDays, columnCount * 7)
+
+                            width: parent.width
+                            rows: 7
+                            flow: Grid.TopToBottom
+                            columnSpacing: cellSpacing
+                            rowSpacing: cellSpacing
+
+                            Repeater {
+                                model: heatmapGrid.cells
+
+                                delegate: Rectangle {
+                                    id: heatmapCell
+
+                                    required property var modelData
+
+                                    // Padding slots carry no day: they fill the
+                                    // oldest corner of the block and stay out of
+                                    // hover, the readout, and the reading order.
+                                    readonly property bool measured: !!heatmapCell.modelData
+                                    readonly property real fraction: heatmapCell.measured && view.heatmapMaximum > 0
+                                        ? Math.max(0, Math.min(1,
+                                            Number(heatmapCell.modelData.value) / view.heatmapMaximum))
+                                        : 0
+
+                                    Accessible.role: Accessible.Graphic
+                                    Accessible.ignored: !heatmapCell.measured
+                                    Accessible.name: heatmapCell.measured ? heatmapCell.modelData.label : ""
+                                    Accessible.description: heatmapCell.measured ? heatmapCell.modelData.displayValue : ""
+
+                                    width: heatmapGrid.cellWidth
+                                    height: heatmapGrid.cellHeight
+                                    radius: Kirigami.Units.cornerRadius / 2
+                                    color: heatmapCell.measured
+                                        ? view.applet.withAlpha(
+                                            Kirigami.Theme.highlightColor,
+                                            0.1 + heatmapCell.fraction * 0.8)
+                                        : view.applet.withAlpha(Kirigami.Theme.textColor, 0.05)
+
+                                    // The cell carries no border of its own and the
+                                    // hover outline is a separate overlay. Fading a
+                                    // border's own alpha does not work: Qt treats a
+                                    // zero-alpha pen as invalid and paints the
+                                    // rectangle with a zero-width border, so the fill
+                                    // snaps out to the cell edge the moment the
+                                    // highlight leaves. Grabbing the rendered pixels
+                                    // confirmed it: between alpha 0 and 0.01 an edge
+                                    // pixel jumped straight from the fill colour to
+                                    // the background. Fading this overlay's opacity
+                                    // blends that pixel instead, leaving the cell's
+                                    // painted geometry untouched.
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        radius: parent.radius
+                                        color: "transparent"
+                                        border.width: 1
+                                        border.color: view.applet.withAlpha(
+                                            Kirigami.Theme.textColor, 0.4)
+                                        visible: heatmapCell.measured
+                                        opacity: heatmapMouse.containsMouse ? 1 : 0
+
+                                        Behavior on opacity {
+                                            NumberAnimation {
+                                                duration: Kirigami.Units.shortDuration
+                                            }
                                         }
                                     }
-                                }
 
-                                Components.PlainToolTip {
-                                    // A readout for the cell under the pointer,
-                                    // not a label for a control: scanning the
-                                    // grid must not wait out a hover delay.
-                                    delay: 0
-                                    visible: heatmapMouse.containsMouse && heatmapCell.measured
-                                    plainText: heatmapCell.measured
-                                        ? i18n("%1: %2", heatmapCell.modelData.label,
-                                            heatmapCell.modelData.displayValue)
-                                        : ""
-                                }
+                                    Components.PlainToolTip {
+                                        // A readout for the cell under the pointer,
+                                        // not a label for a control: scanning the
+                                        // grid must not wait out a hover delay.
+                                        delay: 0
+                                        visible: heatmapMouse.containsMouse && heatmapCell.measured
+                                        plainText: heatmapCell.measured
+                                            ? i18n("%1: %2", heatmapCell.modelData.label,
+                                                heatmapCell.modelData.displayValue)
+                                            : ""
+                                    }
 
-                                MouseArea {
-                                    id: heatmapMouse
+                                    MouseArea {
+                                        id: heatmapMouse
 
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    // A binding avoids Qt rejecting a bare zero enum literal.
-                                    acceptedButtons: (0)
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        // A binding avoids Qt rejecting a bare zero enum literal.
+                                        acceptedButtons: (0)
+                                    }
                                 }
                             }
                         }
@@ -455,8 +486,6 @@ ColumnLayout {
                         // other highlighted surface in the popup acts on click
                         // or reveals actions, and this one does neither.
                         color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.035)
-                        border.width: 1
-                        border.color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.07)
 
                         Accessible.role: Accessible.ListItem
                         Accessible.name: view.applet.providerDisplayTitle(spendProviderCard.modelData.provider)
@@ -479,8 +508,6 @@ ColumnLayout {
                                 color: view.applet.withAlpha(view.applet.providerReadableColor(
                                     spendProviderCard.modelData.provider,
                                     Kirigami.Theme.backgroundColor), 0.12)
-                                border.width: 1
-                                border.color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
 
                                 Kirigami.Icon {
                                     anchors.centerIn: parent

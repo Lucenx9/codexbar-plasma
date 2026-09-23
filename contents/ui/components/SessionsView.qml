@@ -192,10 +192,6 @@ ColumnLayout {
                     // surface confirms the hover the same way overview rows do.
                     color: view.applet.withAlpha(Kirigami.Theme.textColor,
                         sessionCardHover.hovered ? 0.075 : 0.035)
-                    border.width: 1
-                    // The state label already carries the accent, so the card
-                    // keeps a neutral hairline: one carrier per signal.
-                    border.color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.07)
 
                     Behavior on color {
                         ColorAnimation {

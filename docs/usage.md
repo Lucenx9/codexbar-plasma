@@ -52,7 +52,8 @@ work and upstream contract requirements.
   quota choice, and visibility settings. Automatic meters gain the second quota
   without a new setting or additional CLI calls.
 - Provider tabs with usage bars, reset windows, account identity, status, and
-  credits.
+  credits. The tab surface marks the selected view; a provider tab's underline
+  is its automatic quota meter, never a selection mark.
 - A plain credit balance has no allowance denominator and stays meter-free.
   A monthly Codex credit meter appears only when the CLI provides the validated
   `credits.codexCreditLimit` record. Its limit never applies to a plain balance.
@@ -98,7 +99,8 @@ work and upstream contract requirements.
 - Global **Usage & Spend** tab with a Cost/Tokens selector, a 7/30/90-day range
   selector, interactive daily chart, activity heatmap, and provider totals that
   keep different currencies separate. The heatmap groups the range into weekday
-  rows and week columns, leaving empty cells for unavailable days in the loaded
+  rows, labelled with the system locale's short day names, and week columns
+  whose cells widen up to a 2:1 tile, leaving empty cells for unavailable days in the loaded
   calendar, including its first and last days. Measured zero remains a recorded
   day. It stays hidden for ranges that fill a single column.
 - Local **Sessions** tab backed by `sessions --json-v2`; transcript paths and
@@ -350,6 +352,9 @@ fields; track proposed extensions in the issue tracker.
 ## Status and notifications
 
 - Provider status incident badge in the panel and provider detail view. The
+  detail view states a current incident once, in the banner below the header,
+  which always names the severity even without a CLI description; the header
+  badge is only a fallback for an incident with no banner text. The
   panel badge sits on the incident provider's own meter icon, follows provider
   reordering, and stays visible while a refresh runs. The standalone
   service-status panel element remains a fallback when no meter can carry the

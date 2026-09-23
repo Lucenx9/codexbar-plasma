@@ -1170,3 +1170,42 @@ function spendHeatmapCells(points, capacity) {
     }
     return cells.concat(visible)
 }
+
+// Weekday of each heatmap row, top to bottom, as 0 (Sunday) through 6. The
+// grid ends on the newest slot, so the bottom row holds that day's weekday.
+// Rows carry one weekday only when every dated slot sits at its own calendar
+// offset; spendHeatmapDays keeps unavailable days as `null` slots, and its
+// fallback for undated or unordered points returns [] here so the caller
+// leaves the rows unlabelled rather than naming the wrong days.
+function spendHeatmapRowWeekdays(days) {
+    var items = Array.isArray(days) ? days : []
+    if (items.length === 0 || items.length > maximumCostHistoryPoints) {
+        return []
+    }
+    var dayMs = 24 * 60 * 60 * 1000
+    var newestSlotMs = null
+    for (var i = 0; i < items.length; i++) {
+        if (items[i] === null) {
+            continue
+        }
+        var date = typeof items[i] === "object" && typeof items[i].label === "string"
+            ? Normalizer.parsedCalendarDateKey(items[i].label) : null
+        if (!date) {
+            return []
+        }
+        var slotMs = date.timestampMs + (items.length - 1 - i) * dayMs
+        if (newestSlotMs !== null && slotMs !== newestSlotMs) {
+            return []
+        }
+        newestSlotMs = slotMs
+    }
+    if (newestSlotMs === null) {
+        return []
+    }
+    var newestWeekday = new Date(newestSlotMs).getUTCDay()
+    var weekdays = []
+    for (var row = 0; row < 7; row++) {
+        weekdays.push((newestWeekday + row + 1) % 7)
+    }
+    return weekdays
+}

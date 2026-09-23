@@ -286,13 +286,34 @@ TestCase {
         // The account never claims more width than its own text, so the plan
         // cannot drift away from the email it qualifies.
         verify(account.width <= account.implicitWidth + 1);
-        verify(plan.x - (account.x + account.width) <= 8);
+        var separator = findText(header, "·");
+        verify(separator !== null && separator.visible);
+        verify(separator.x - (account.x + account.width) <= 8);
+        verify(plan.x - (separator.x + separator.width) <= 8);
         // On a narrow popup the account yields first and both stay inside.
         if (data.width < 300) {
             verify(account.width < account.implicitWidth);
         }
         verify(account.mapToItem(header, account.width, 0).x <= header.width + 1);
         verify(plan.mapToItem(header, plan.width, 0).x <= header.width + 1);
+    }
+
+    function test_incidentBadgeYieldsToTheStatusBanner() {
+        var header = createControl("ProviderHeader", {
+            applet: applet, width: 540,
+            providerData: {provider: "codex", title: "Codex", account: "", planText: "",
+                hasIncident: true, statusSeverity: "minor", status: "Partial outage"}
+        });
+        if (!header)
+            return;
+        var label = findText(header, "Issue");
+        verify(label !== null);
+        // Production status text names the severity even without a CLI
+        // description, so an incident always reaches the banner instead.
+        verify(!label.parent.visible, "an incident with banner text already has its banner");
+        header.providerData = {provider: "codex", title: "Codex", account: "", planText: "",
+            hasIncident: true, statusSeverity: "minor", status: ""};
+        tryVerify(function () { return label.parent.visible; });
     }
 
     function test_incidentBadgeGrowsWithItsText() {

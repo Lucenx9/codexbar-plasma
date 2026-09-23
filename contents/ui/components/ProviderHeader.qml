@@ -29,8 +29,6 @@ RowLayout {
         Layout.preferredHeight: Layout.preferredWidth
         radius: providerHeaderRow.applet.nestedSurfaceRadius
         color: providerHeaderRow.applet.withAlpha(providerHeaderRow.brandAccent, 0.12)
-        border.width: 1
-        border.color: providerHeaderRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
 
         Kirigami.Icon {
             id: providerHeaderIcon
@@ -67,12 +65,17 @@ RowLayout {
                 elide: Text.ElideRight
             }
 
+            // The popup states the incident in a banner directly below this
+            // header, and that text always names the severity, so the badge
+            // is only a fallback for an incident that has no banner text.
             Rectangle {
                 id: providerStatusBadge
 
                 visible: providerHeaderRow.providerData
                     && providerHeaderRow.providerData.hasIncident
                     && providerHeaderRow.providerData.statusKnown !== false
+                    && !(providerHeaderRow.providerData.status
+                        && providerHeaderRow.providerData.status.length > 0)
                 Layout.preferredWidth: providerStatusBadgeLabel.implicitWidth + Kirigami.Units.smallSpacing * 2
                 Layout.preferredHeight: Math.max(Kirigami.Units.gridUnit * 1.25,
                     providerStatusBadgeLabel.implicitHeight + Kirigami.Units.smallSpacing)
@@ -123,6 +126,17 @@ RowLayout {
             }
 
             PlainPlasmaLabel {
+                id: providerMetaSeparator
+
+                Layout.alignment: Qt.AlignBaseline
+                visible: providerHeaderRow.hasAccount && providerHeaderRow.hasPlan
+                text: "·"
+                font: Kirigami.Theme.smallFont
+                opacity: providerHeaderRow.applet.secondaryTextOpacity
+                Accessible.ignored: true
+            }
+
+            PlainPlasmaLabel {
                 id: providerPlanLabel
 
                 Layout.alignment: Qt.AlignBaseline
@@ -130,7 +144,7 @@ RowLayout {
                 text: providerHeaderRow.providerData ? providerHeaderRow.providerData.planText : ""
                 font: Kirigami.Theme.smallFont
                 opacity: providerHeaderRow.applet.secondaryTextOpacity
-                horizontalAlignment: Text.AlignRight
+                horizontalAlignment: Text.AlignLeft
                 elide: Text.ElideRight
                 Layout.minimumWidth: 0
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 5

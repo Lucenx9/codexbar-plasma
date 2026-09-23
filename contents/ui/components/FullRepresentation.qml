@@ -62,25 +62,8 @@ Item {
         onTriggered: applet.performAction("settings")
     }
 
-    Rectangle {
-        id: popupInnerSurface
-
-        anchors.fill: parent
-        radius: applet.roundedSurfaceRadius
-        color: applet.withAlpha(Kirigami.Theme.alternateBackgroundColor, 0.18)
-        border.width: 1
-        border.color: applet.withAlpha(Kirigami.Theme.textColor, 0.09)
-
-        Rectangle {
-            anchors.fill: parent
-            anchors.margins: 1
-            radius: Math.max(0, parent.radius - 1)
-            color: "transparent"
-            border.width: 1
-            border.color: applet.withAlpha(Kirigami.Theme.backgroundColor, 0.28)
-        }
-    }
-
+    // Content sits directly on the Plasma dialog background. The dialog already
+    // draws the frame, so an inner outline would only nest a card inside it.
     ColumnLayout {
         id: popupContent
 
@@ -280,7 +263,7 @@ Item {
                         color: overviewTabMouse.pressed
                             ? applet.withAlpha(Kirigami.Theme.focusColor, 0.1)
                             : (selected
-                            ? applet.withAlpha(Kirigami.Theme.textColor, 0.045)
+                            ? applet.withAlpha(Kirigami.Theme.textColor, 0.1)
                             : (keyboardFocusVisible
                             ? applet.withAlpha(Kirigami.Theme.focusColor, 0.06)
                             : (overviewTabMouse.containsMouse ? applet.withAlpha(Kirigami.Theme.textColor, 0.05) : "transparent")
@@ -400,22 +383,6 @@ Item {
                             }
                         }
 
-                        Rectangle {
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.bottom: parent.bottom
-                            anchors.leftMargin: Kirigami.Units.smallSpacing
-                            anchors.rightMargin: Kirigami.Units.smallSpacing
-                            anchors.bottomMargin: 2
-                            height: 2
-                            radius: height / 2
-                            color: applet.withAlpha(overviewTab.accent,
-                                overviewTab.selected ? 1 : 0)
-
-                            Behavior on color {
-                                ColorAnimation { duration: Kirigami.Units.shortDuration }
-                            }
-                        }
                     }
 
                     Components.GlobalTab {
@@ -495,7 +462,7 @@ Item {
                             color: providerTabMouse.pressed
                                 ? applet.withAlpha(Kirigami.Theme.focusColor, 0.1)
                                 : (selected
-                                ? applet.withAlpha(Kirigami.Theme.textColor, 0.045)
+                                ? applet.withAlpha(Kirigami.Theme.textColor, 0.1)
                                 : (keyboardFocusVisible
                                 ? applet.withAlpha(Kirigami.Theme.focusColor, 0.06)
                                 : (providerTabMouse.containsMouse ? applet.withAlpha(Kirigami.Theme.textColor, 0.05) : "transparent")
@@ -617,7 +584,11 @@ Item {
                                 }
                             }
 
+                            // The underline is a quota meter, never a selection
+                            // mark: the tab surface alone carries selection, so
+                            // a partly filled bar cannot read as a selected tab.
                             Rectangle {
+                                visible: providerTab.meter >= 0
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom
@@ -626,18 +597,10 @@ Item {
                                 anchors.bottomMargin: 2
                                 height: 2
                                 radius: height / 2
-                                color: providerTab.meter >= 0
-                                    ? applet.withAlpha(Kirigami.Theme.textColor, 0.12)
-                                    : applet.withAlpha(providerTab.accent,
-                                        providerTab.selected ? 1 : 0)
+                                color: applet.withAlpha(Kirigami.Theme.textColor, 0.12)
                                 clip: true
 
-                                Behavior on color {
-                                    ColorAnimation { duration: Kirigami.Units.shortDuration }
-                                }
-
                                 Rectangle {
-                                    visible: providerTab.meter >= 0
                                     width: providerTab.meter <= 0
                                         ? 0
                                         : Math.max(parent.height, parent.width * Math.max(0, Math.min(100, providerTab.meter)) / 100)
@@ -705,11 +668,6 @@ Item {
                     delay: Kirigami.Units.toolTipDelay
                 }
             }
-        }
-
-        Kirigami.Separator {
-            visible: applet.providers.length > 0
-            Layout.fillWidth: true
         }
 
         Components.PlainInlineMessage {
