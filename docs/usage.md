@@ -352,8 +352,9 @@ fields; track proposed extensions in the issue tracker.
 ## Status and notifications
 
 - Provider status incident badge in the panel and provider detail view. The
-  detail view shows the badge only when the incident has no description;
-  a described incident appears once, as the banner below the header. The
+  detail view states a current incident once, in the banner below the header,
+  which always names the severity even without a CLI description; the header
+  badge is only a fallback for an incident with no banner text. The
   panel badge sits on the incident provider's own meter icon, follows provider
   reordering, and stays visible while a refresh runs. The standalone
   service-status panel element remains a fallback when no meter can carry the

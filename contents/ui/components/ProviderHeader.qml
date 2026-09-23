@@ -65,8 +65,9 @@ RowLayout {
                 elide: Text.ElideRight
             }
 
-            // The popup states a described incident in a banner directly below
-            // this header, so the badge stands in only without a description.
+            // The popup states the incident in a banner directly below this
+            // header, and that text always names the severity, so the badge
+            // is only a fallback for an incident that has no banner text.
             Rectangle {
                 id: providerStatusBadge
 

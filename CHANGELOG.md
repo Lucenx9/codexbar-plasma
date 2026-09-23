@@ -55,9 +55,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Keep a provider's quotas ahead of its cost history in the detail view. The
   cost section drops the day count the axis and summary already state, uses a
   flat metric selector and details toggle, and sets its estimate note in the
-  same small type as the other cost footnotes. A described incident shows only
-  its banner; the header's status badge remains for an incident without a
-  description.
+  same small type as the other cost footnotes. A current incident appears once,
+  as the severity banner below the header, instead of also as a header badge.
 - The Usage & Spend activity heatmap names each weekday row in the system
   locale and widens its cells up to a 2:1 tile, so long ranges use the width
   without stretching short ranges into bars. Rows stay unlabelled when the
