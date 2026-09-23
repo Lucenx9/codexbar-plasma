@@ -12,6 +12,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Install or update the latest widget release from one terminal command without
+  cloning or building the repository. Setup verifies the release package,
+  offers a private official CLI when needed, and asks before restarting Plasma.
+  Non-interactive setup is supported; private CLI selection remains in settings.
+
 - Share the selected Usage & Spend history as a local PNG or plain-text summary,
   with a separate preview, native image clipboard and save picker, bounded
   provider/model rankings, separate currencies, partial-data notices, and a
@@ -55,6 +60,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Align provider header identity icon tile to the top of the row, matching the
   refresh button and title heading alignment when account, plan, or update
   metadata expands the middle column.
+- Keep a fully measured share export free of an incomplete-data warning when
+  its model ranking has more rows than the six shown, while still flagging
+  missing model costs and source scans that reached their safety bound.
 - Mask unknown provider identifiers in shared images and statistics when
   personal information is hidden, and mark quota-week amounts as partial while
   the CLI is still establishing local history coverage.
