@@ -18,6 +18,7 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   cloning or building the repository. Setup verifies the release package,
   offers a private official CLI when needed, and asks before restarting Plasma.
   Non-interactive setup is supported; private CLI selection remains in settings.
+
 - Share the selected Usage & Spend history as a local PNG or plain-text summary,
   with a separate preview, native image clipboard and save picker, bounded
   provider/model rankings, separate currencies, partial-data notices, and a
