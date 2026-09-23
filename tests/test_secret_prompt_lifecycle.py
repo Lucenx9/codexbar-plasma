@@ -343,9 +343,9 @@ TestCase {
         compare(descriptorPendingKey("codex", "  apiKey  "), 'codex::"apiKey"');
         compare(descriptorPendingFieldKey(""), "");
         compare(descriptorPendingKey("codex", ""), "");
-        var long = new Array(130).join("x");
-        compare(descriptorPendingFieldKey(long), "");
-        compare(descriptorPendingKey("codex", long), "");
+        var longID = new Array(130).join("x");
+        compare(descriptorPendingFieldKey(longID), "");
+        compare(descriptorPendingKey("codex", longID), "");
     }
     // The icon file name is built from a provider-controlled key: unusable
     // keys fall back to the generic icon instead of reaching a URL.
