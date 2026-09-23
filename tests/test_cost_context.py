@@ -183,7 +183,8 @@ TestCase {
         tryCompare(subject, "loading", false, 125000);
         verify(subject.errorText.indexOf("timed out") >= 0);
         compare(subject.costs, old);
-        verify(!subject.refresh(false));
+        // The refresh policy may start a new scan at local midnight; its
+        // cooldown and day-boundary behavior have separate policy tests.
         verify(subject.refresh(true));
         completed(subject, "late 3");
         wait(300);
