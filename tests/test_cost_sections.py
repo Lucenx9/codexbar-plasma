@@ -410,6 +410,53 @@ class CostSectionTests(unittest.TestCase):
         });
         fakeApplet.costHistoryShowsTokens = false;
         verify(texts.indexOf("Activity heatmap") >= 0);
+        // Every rendered day must sit on the row whose weekday label names it.
+        var dayNames = [];
+        for (var weekday = 0; weekday < 7; weekday++)
+            dayNames.push(Qt.locale().dayName(weekday, Locale.ShortFormat));
+        var weekdayLabels = all.filter(function(item) {
+            return item.text !== undefined && dayNames.indexOf(item.text) >= 0
+                && item.visible && item.height > 0;
+        });
+        compare(weekdayLabels.length, 7);
+        // The grid recreates its cells as it sizes itself and positions them
+        // on a later polish, so collect them once seven rows are laid out.
+        function heatmapCells() {
+            var tree = [];
+            walkTree(subject, tree);
+            return tree.filter(function(item) {
+                return item.measured === true && item.modelData && item.width > 0;
+            });
+        }
+        var cells = [];
+        tryVerify(function() {
+            cells = heatmapCells();
+            var rows = [];
+            cells.forEach(function(cell) {
+                var y = Math.round(cell.mapToItem(subject, 0, 0).y);
+                if (rows.indexOf(y) < 0)
+                    rows.push(y);
+            });
+            return rows.length === 7;
+        });
+        // A narrow view keeps only the newest weeks; at least one full week
+        // must render so every weekday row is checked.
+        verify(cells.length >= 7 && cells.length <= spendPoints.length, cells.length);
+        for (var c = 0; c < cells.length; c++) {
+            var parts = cells[c].modelData.label.split("-");
+            var expected = dayNames[new Date(Date.UTC(Number(parts[0]),
+                Number(parts[1]) - 1, Number(parts[2]))).getUTCDay()];
+            var cellCenter = cells[c].mapToItem(subject, 0, cells[c].height / 2).y;
+            var rowLabel = weekdayLabels.filter(function(label) {
+                return Math.abs(label.mapToItem(subject, 0, label.height / 2).y - cellCenter) < 1;
+            });
+            compare(rowLabel.length, 1, cells[c].modelData.label);
+            compare(rowLabel[0].text, expected, cells[c].modelData.label);
+            // Cells stay tiles: never stretched into bars across the section.
+            verify(cells[c].width <= cells[c].height * 2 + 0.5, cells[c].modelData.label);
+        }
+        all = [];
+        walkTree(subject, all);
         var tips = all.filter(function(item) {
             return item.toString().indexOf("PlainToolTip") >= 0;
         });

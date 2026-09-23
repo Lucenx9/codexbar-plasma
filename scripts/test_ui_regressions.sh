@@ -1005,17 +1005,13 @@ for heading_chunk in heading_chunks:
             "popup section headings must outrank the DemiBold metric labels they "
             f"introduce; heading starting {heading_head!r} is not Primary"
         )
-popup_surface_body = id_block(main_text, "popupInnerSurface")
-for popup_surface_fragment in (
-    "radius: applet.roundedSurfaceRadius",
-    "Kirigami.Theme.alternateBackgroundColor",
-    "border.color: applet.withAlpha(Kirigami.Theme.textColor, 0.09)",
-):
-    if not code_contains(popup_surface_body, popup_surface_fragment):
-        raise AssertionError(
-            "popupInnerSurface must provide a restrained rounded inner frame; "
-            f"missing {popup_surface_fragment!r}"
-        )
+# The Plasma dialog already frames the popup. An inner outline nests a card
+# inside it, and a separator under the framed tab strip adds a third line.
+if "popupInnerSurface" in main_text:
+    raise AssertionError("the popup must sit on the native dialog background, not an inner frame")
+if main_text.split("id: providerTabsBar", 1)[1].split("id: globalErrorMessage", 1)[0].count(
+        "Kirigami.Separator {") != 0:
+    raise AssertionError("the framed tab strip must not add a separator beneath it")
 
 provider_header_body = id_block(provider_header_text, "providerHeaderRow")
 for header_fragment in (
@@ -1492,7 +1488,7 @@ for tabs_fragment in (
     "radius: applet.roundedSurfaceRadius",
     "border.color: applet.withAlpha(Kirigami.Theme.textColor, 0.06)",
     "anchors.margins: Kirigami.Units.smallSpacing / 2",
-    "applet.withAlpha(Kirigami.Theme.textColor, 0.045)",
+    "applet.withAlpha(Kirigami.Theme.textColor, 0.1)",
     "anchors.bottomMargin: 2",
     "providerReadableColor(",
     "activeFocusOnTab: true",
@@ -1653,14 +1649,17 @@ for stale_global_pointer_focus_fragment in ("focusAcquiredByPointer",):
         )
 
 provider_tab_body = id_block(main_text, "providerTab")
-if (
-    "color: providerTab.meter >= 0" not in provider_tab_body
-    or "withAlpha(providerTab.accent," not in provider_tab_body
-    or "providerTab.selected ? 1 : 0" not in provider_tab_body
+if "visible: providerTab.meter >= 0" not in provider_tab_body:
+    raise AssertionError("providerTab must draw its underline only as a quota meter")
+# The tab surface alone marks selection. A selection underline beside the
+# provider quota underline made a partly filled meter read as a selected tab.
+for underline_tab_text in (
+    global_tab_text,
+    id_block(main_text, "overviewTab"),
+    provider_tab_body,
 ):
-    raise AssertionError(
-        "providerTab must fade in the accent underline when selected for unmetered providers"
-    )
+    if "selected ? 1 : 0" in underline_tab_text:
+        raise AssertionError("tabs must mark selection with their surface, not an accent underline")
 
 usage_percent_body = id_block(provider_usage_row_text, "usagePercentLabel")
 if not code_contains(usage_percent_body, "font.weight: Font.DemiBold"):
@@ -1883,7 +1882,6 @@ if not code_contains(main_text, "Components.InteractiveChart" not in main_text o
 
 for summary_id, summary_fragment in (
     ("costSparklineSummaryLabel", "font: Kirigami.Theme.smallFont"),
-    ("costSparklineRangeLabel", "font: Kirigami.Theme.smallFont"),
 ):
     summary_body = id_block(main_text, summary_id)
     if not code_contains(summary_body, summary_fragment):
@@ -2803,16 +2801,16 @@ for heatmap_range_fragment in (
             "the activity heatmap must follow the selected cost range and size cells "
             f"from the available width; missing {heatmap_range_fragment!r}"
         )
-if not code_contains(spend_view_text, "readonly property real cellWidth: Math.min("):
-    raise AssertionError(
-        "the activity heatmap must stretch its cells into the width a short range leaves "
-        "unused instead of stranding a small patch beside an empty section"
-    )
-if not code_contains(spend_view_text, "cellHeight * 3)"):
-    raise AssertionError(
-        "the stretched heatmap cells must stay bounded against their own height, so they keep "
-        "reading as heatmap cells instead of bars competing with the chart above"
-    )
+for heatmap_weekday_fragment in (
+    "CostPresentation.spendHeatmapRowWeekdays(heatmapDays)",
+    "visible: view.heatmapRowWeekdays.length === 7",
+    "Qt.locale().dayName(modelData, Locale.ShortFormat)",
+):
+    if not code_contains(spend_view_text, heatmap_weekday_fragment):
+        raise AssertionError(
+            "the activity heatmap rows must name their weekday, and stay unlabelled when "
+            f"the days are not calendar aligned; missing {heatmap_weekday_fragment!r}"
+        )
 if not code_contains(spend_view_text, "CostPresentation.spendHeatmapCells("):
     raise AssertionError(
         "the activity heatmap must pad its grid through the shared cell layout, so a ragged "
@@ -2995,12 +2993,6 @@ if "chart.hasActivePoint ? chart.pointLabel" in interactive_chart_text:
         "the chart readout text must not clear on hasActivePoint: that empties the row "
         "on the same signal that starts the fade, so hover exit blinks instead of fading"
     )
-if not code_contains(global_tab_text, "tab.applet.withAlpha(tab.accent, tab.selected ? 1 : 0)"):
-    raise AssertionError(
-        "the tab selection indicator must fade the accent's alpha, not interpolate towards transparent"
-    )
-if not code_contains(full_representation_text, "applet.withAlpha(overviewTab.accent,"):
-    raise AssertionError("the overview tab indicator must fade its accent alpha like the shared tab")
 if "Behavior on width" not in id_block(compact_representation_text, "quotaCapsule"):
     raise AssertionError(
         "the panel capsule fill must grow into a new reading like every popup meter"

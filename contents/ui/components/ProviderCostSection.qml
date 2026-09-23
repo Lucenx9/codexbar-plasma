@@ -77,7 +77,7 @@ ColumnLayout {
 
     visible: tokenCostSection.tokenCost ? true : tokenCostSection.supportsLocalCost && tokenCostSection.costErrorText.length > 0
     Layout.fillWidth: true
-    spacing: Kirigami.Units.smallSpacing / 1.5
+    spacing: Kirigami.Units.smallSpacing
 
     Kirigami.Separator {
         Layout.fillWidth: true
@@ -97,6 +97,9 @@ ColumnLayout {
         Components.PlainComboBox {
             objectName: "providerCostMetricCombo"
             visible: tokenCostSection.tokenCost !== null
+            // A view option inside a secondary section: flat, so it does not
+            // outweigh the quota meters above it.
+            flat: true
             textRole: "text"
             valueRole: "value"
             model: [
@@ -206,34 +209,24 @@ ColumnLayout {
         Layout.topMargin: Kirigami.Units.smallSpacing / 2
     }
 
-    RowLayout {
+    // The axis already dates both ends of the range and the summary grid
+    // names the window, so only the latest day's figure remains here.
+    PlainPlasmaLabel {
+        id: costSparklineSummaryLabel
+
         visible: tokenCostSection.chartPoints.length > 0
+        text: tokenCostSection.tokenCost ? applet.costSparklineSummary(tokenCostSection.tokenCost.daily) : ""
+        font: Kirigami.Theme.smallFont
+        opacity: applet.secondaryTextOpacity
         Layout.fillWidth: true
-        spacing: Kirigami.Units.smallSpacing
-
-        PlainPlasmaLabel {
-            id: costSparklineSummaryLabel
-
-            text: tokenCostSection.tokenCost ? applet.costSparklineSummary(tokenCostSection.tokenCost.daily) : ""
-            font: Kirigami.Theme.smallFont
-            opacity: applet.secondaryTextOpacity
-            Layout.fillWidth: true
-            elide: Text.ElideRight
-        }
-
-        PlainPlasmaLabel {
-            id: costSparklineRangeLabel
-
-            text: tokenCostSection.tokenCost ? i18np("%1 day", "%1 days", tokenCostSection.tokenCost.daily.length) : ""
-            font: Kirigami.Theme.smallFont
-            opacity: applet.secondaryTextOpacity
-            horizontalAlignment: Text.AlignRight
-            elide: Text.ElideRight
-        }
+        elide: Text.ElideRight
     }
 
+    // A disclosure, not a primary action: a flat button keeps it from
+    // outweighing the figures it reveals.
     Components.PlainButton {
         objectName: "costDetailsToggle"
+        flat: true
         visible: tokenCostSection.tokenCost !== null
         plainText: tokenCostSection.hasVisibleDetails ? i18n("Hide details") : i18n("Show details")
         icon.name: tokenCostSection.hasVisibleDetails ? "arrow-up" : "arrow-down"
@@ -636,6 +629,7 @@ ColumnLayout {
     PlainPlasmaLabel {
         visible: tokenCostSection.tokenCost && tokenCostSection.tokenCost.hintLine.length > 0 ? true : false
         text: tokenCostSection.tokenCost ? tokenCostSection.tokenCost.hintLine : ""
+        font: Kirigami.Theme.smallFont
         opacity: applet.secondaryTextOpacity
         Layout.fillWidth: true
         wrapMode: Text.WordWrap

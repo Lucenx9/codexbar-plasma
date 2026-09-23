@@ -80,8 +80,6 @@ Rectangle {
             Layout.preferredHeight: Layout.preferredWidth
             radius: overviewRow.applet.nestedSurfaceRadius
             color: overviewRow.applet.withAlpha(overviewRow.accent, 0.1)
-            border.width: 1
-            border.color: overviewRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
 
             Kirigami.Icon {
                 anchors.centerIn: parent

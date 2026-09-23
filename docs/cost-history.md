@@ -24,7 +24,9 @@ retained values. A successful refresh clears the error.
   preserving unavailable days at either boundary and between measured days.
   Unavailable days occupy empty cells, so filtering missing amounts never shifts
   weekday rows. Its visible span and week count include those gaps, bounded to
-  the newest 365 calendar days. Legacy non-date labels retain sequence order.
+  the newest 365 calendar days. Legacy non-date labels retain sequence order
+  and leave the rows unlabelled, because only calendar-aligned days give each
+  row one weekday.
 - Model names are strings. Numeric names are not coerced into display labels.
   Tied model amounts use the label as a stable ordering tiebreaker.
 - Sharing uses a separate token ranking from the full bounded period model

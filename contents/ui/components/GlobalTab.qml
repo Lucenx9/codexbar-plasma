@@ -35,7 +35,7 @@ Rectangle {
     color: tabMouse.pressed
         ? applet.withAlpha(Kirigami.Theme.focusColor, 0.1)
         : (selected
-        ? applet.withAlpha(Kirigami.Theme.textColor, 0.045)
+        ? applet.withAlpha(Kirigami.Theme.textColor, 0.1)
         : (keyboardFocusVisible
         ? applet.withAlpha(Kirigami.Theme.focusColor, 0.06)
         : (tabMouse.containsMouse ? applet.withAlpha(Kirigami.Theme.textColor, 0.05) : "transparent")))
@@ -162,24 +162,6 @@ Rectangle {
             color: tab.foreground
             elide: Text.ElideRight
             Layout.fillWidth: true
-        }
-    }
-
-    Rectangle {
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.leftMargin: Kirigami.Units.smallSpacing
-        anchors.rightMargin: Kirigami.Units.smallSpacing
-        anchors.bottomMargin: 2
-        height: 2
-        radius: height / 2
-        // Fading the accent's alpha keeps the hue fixed: interpolating towards
-        // "transparent" would drag the bar through a darker colour on the way out.
-        color: tab.applet.withAlpha(tab.accent, tab.selected ? 1 : 0)
-
-        Behavior on color {
-            ColorAnimation { duration: Kirigami.Units.shortDuration }
         }
     }
 }
