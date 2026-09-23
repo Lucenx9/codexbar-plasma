@@ -104,8 +104,8 @@ for its limits.
   downloads support Linux x86_64/aarch64 with glibc or musl; the downloaded
   executable must pass a local version probe before activation.
 - `notify-send` for Plasma notifications.
-- `curl`, `jq`, `python3`, `sha256sum`, and GNU `timeout` for the bundled release
-  updater. CLI release checks and managed installs also use `python3` and GNU `timeout`. GNU `timeout`
+- `curl`, `jq`, `python3`, `sha256sum`, GNU `timeout`, and util-linux `flock` for
+  the bundled release updater. CLI release checks and managed installs also use `python3` and GNU `timeout`. GNU `timeout`
   also bounds CLI writes after a secret prompt.
 
 Distribution package names vary. Source builds additionally need `make`, Python

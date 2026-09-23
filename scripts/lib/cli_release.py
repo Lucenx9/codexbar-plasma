@@ -4,6 +4,7 @@
 Never install packages or alter the selected executable. All output is a bounded
 semantic record; command errors and remote prose are deliberately omitted.
 """
+import http.client
 import json
 import os
 from pathlib import Path
@@ -161,6 +162,6 @@ def check(command, local_only=False):
         return record
     try:
         return compare_release(record, latest_release())
-    except (OSError, ValueError):
+    except (OSError, ValueError, http.client.HTTPException):
         record["status"] = "network_error"
         return record

@@ -1,6 +1,7 @@
 """Offline private CLI installs, integrity, activation, concurrency and rollback."""
 import fcntl
 import hashlib
+import http.client
 import io
 import json
 import os
@@ -311,6 +312,10 @@ class ManagedCliTests(unittest.TestCase):
             cli.run("update", self.command)
         self.assertEqual(cli.failure_status(unsupported.exception), "unsupported")
         for error, expected in [(urllib.error.URLError("offline"), "network"),
+                                (TimeoutError("read"), "network"),
+                                (ConnectionResetError("reset"), "network"),
+                                (http.client.RemoteDisconnected("closed"), "network"),
+                                (http.client.IncompleteRead(b""), "network"),
                                 (tarfile.TarError("truncated"), "unverified"),
                                 (ValueError("asset_missing"), "unsupported"),
                                 (ValueError("state_field"), "error"),
@@ -325,15 +330,19 @@ class ManagedCliTests(unittest.TestCase):
         payload = b"verified"
         asset = dict(browser_download_url="https://github.com/steipete/CodexBar/releases/download/v0.62.0/x",
                      size=len(payload), digest="sha256:" + hashlib.sha256(payload).hexdigest())
-        for body in (b"bad", payload + b"extra", payload):
+        # A short body is a dropped connection; a longer or different one is refused.
+        for body, refusal in ((b"verifie", ConnectionError), (b"tampered", ValueError),
+                              (payload + b"extra", ValueError), (payload, None)):
             opener.open.return_value.__enter__.return_value.read.side_effect = [body, b""]
             target = self.base / "download"
             with patch.object(cli.urllib.request, "build_opener", return_value=opener):
-                if body == payload:
+                if refusal is None:
                     cli.download(asset, target)
                 else:
-                    with self.assertRaises(ValueError):
+                    with self.assertRaises(refusal) as failed:
                         cli.download(asset, target)
+                    self.assertEqual(cli.failure_status(failed.exception),
+                                     "network" if refusal is ConnectionError else "unverified")
             target.unlink()
         for url in ("http://objects.githubusercontent.com/x", "https://evil.test/x",
                     "https://user@objects.githubusercontent.com/x", "https://objects.githubusercontent.com:44/x"):

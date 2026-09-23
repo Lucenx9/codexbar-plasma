@@ -105,6 +105,14 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Serialize widget upgrades so two widget instances, setup, or `make update`
+  can no longer run overlapping `kpackagetool6` upgrades, which could delete the
+  installed widget. An instance that finds the release already installed by
+  another one reports the widget as current instead of reinstalling it.
+- Report a managed CLI download that timed out, lost its connection, or ended
+  early as an unreachable release server instead of a generic or verification
+  failure. A CLI release check interrupted mid-response keeps showing the
+  installed version.
 - Align top-right header action buttons to the top across Overview, Usage & Spend,
   and Sessions views, matching ProviderHeader alignment and avoiding vertical
   button jumps when switching popup tabs or when header subtitles expand.

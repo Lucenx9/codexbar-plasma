@@ -50,6 +50,13 @@ an incorrect applet ID or package structure, before installing or running a help
 Setup selects `kpackagetool6 -i` for a missing package and `-u` for an existing
 one, without treating any installation failure as a reason to try the other.
 The `--check` and `--install` JSON interfaces retain their update-only behavior.
+Installs take a `flock` in `$XDG_DATA_HOME/codexbar-plasma` (or
+`~/.local/share/codexbar-plasma`), the data directory `kpackagetool6` installs
+into, so panel, terminal and `make` runs share it. The lock covers only
+`kpackagetool6`: its upgrade deletes the old package
+before copying, so overlapping upgrades from several widget instances, setup,
+or `make update` could remove the widget. After the lock, the installed metadata
+is read again; a release already installed by another run reports `current`.
 
 Only setup prompts for a private CLI or a Plasma restart. `--no-input` and
 non-terminal stdin suppress prompts; `--with-cli` explicitly requests private
@@ -110,6 +117,8 @@ synchronized.
   `failure_status` maps a raised failure onto the bounded status the widget
   renders, so a refused download (`unverified`) stays distinct from an
   unreachable server (`network`) and an unsupported system (`unsupported`).
+  Timeouts, dropped connections and bodies shorter than the published size are
+  `network`: urllib wraps only connection setup in `URLError`.
   Add new helper failure codes to `UNVERIFIED` or `UNSUPPORTED`; anything
   unlisted degrades to the generic `error`.
   Tests use temporary XDG directories and synthetic archives, never host binaries

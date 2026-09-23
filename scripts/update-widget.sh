@@ -13,6 +13,7 @@ CURL_CHECKSUM_MAX_TIME_SECONDS=30
 CURL_ASSET_MAX_TIME_SECONDS=300
 KPACKAGE_INSTALL_MAX_TIME_SECONDS=120
 KPACKAGE_INSTALL_KILL_AFTER_SECONDS=10
+INSTALL_LOCK_WAIT_SECONDS=60
 MAX_RELEASE_ASSETS=64
 MAX_RELEASE_METADATA_BYTES=1048576
 MAX_CHECKSUM_BYTES=1024
@@ -221,6 +222,20 @@ except (KeyError, OSError, UnicodeDecodeError, ValueError, zipfile.BadZipFile):
 PY
 }
 
+# kpackagetool6 -u deletes the installed package before copying the new one, so
+# two overlapping upgrades (widget instances, setup, make update) can leave no
+# package at all. Serialize them per install location: the lock lives in the
+# same data directory kpackagetool6 installs into, whatever else the launching
+# environment (panel, terminal, make) sets, and outlives each package copy.
+acquire_install_lock() {
+  local lock_dir="${XDG_DATA_HOME:-}"
+  [[ "$lock_dir" == /* ]] || lock_dir="${HOME:-}/.local/share"
+  lock_dir="$lock_dir/codexbar-plasma"
+  mkdir -p "$lock_dir"
+  exec 9>>"$lock_dir/widget-update.lock"
+  flock -w "$INSTALL_LOCK_WAIT_SECONDS" 9
+}
+
 normalize_version() {
   printf '%s\n' "${1#v}"
 }
@@ -319,6 +334,8 @@ if [[ "$MODE" == "install" ]]; then
   require_command python3
   require_command sha256sum
   require_command timeout
+  require_command flock
+  require_command mkdir
 fi
 
 if [[ "$SETUP" == true && "$INSTALL_OPTION" == -i ]]; then
@@ -485,10 +502,22 @@ fi
 package_version="$(normalize_version "$remote_version")"
 validate_package_manifest "$package_path" "$package_version" \
   || fail "package_invalid" "widget package manifest does not match the release"
+acquire_install_lock \
+  || fail "package_install_failed" "another widget installation did not finish in time"
+# Another instance may have installed this release while this one downloaded it.
+installed_version="$(jq -r '.KPlugin.Version? // empty' "$METADATA_PATH" 2>/dev/null || true)"
+if [[ "$installed_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] \
+  && ! version_gt "$remote_version" "$installed_version"; then
+  emit_status "current" "widget is current" "$installed_version" "$remote_version" "$asset_url"
+  exec 9>&-
+  finish_setup
+  exit 0
+fi
 timeout --kill-after="${KPACKAGE_INSTALL_KILL_AFTER_SECONDS}s" \
   "${KPACKAGE_INSTALL_MAX_TIME_SECONDS}s" \
   kpackagetool6 -t Plasma/Applet "$INSTALL_OPTION" "$package_path" >&2 \
   || fail "package_install_failed" "failed to install widget package"
+exec 9>&-
 
 if [[ "$SETUP" == true && "$INSTALL_OPTION" == -i ]]; then
   emit_status "installed" "widget installed" "$local_version" "$remote_version" "$asset_url"

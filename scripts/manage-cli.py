@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Install or update only the widget's explicitly selected private CLI copy."""
 import argparse
+import http.client
 import json
 import signal
 import subprocess
@@ -16,7 +17,8 @@ def main():
     signal.alarm(600)
     try:
         result = run(args.action, args.command)
-    except (OSError, ValueError, tarfile.TarError, subprocess.SubprocessError) as error:
+    except (OSError, ValueError, http.client.HTTPException, tarfile.TarError,
+            subprocess.SubprocessError) as error:
         result = {"status": failure_status(error)}
     print(json.dumps(result))
 
