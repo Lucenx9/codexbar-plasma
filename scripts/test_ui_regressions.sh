@@ -951,12 +951,18 @@ if "seen[label]" in dedupe_accounts_body:
 header_sources = {
     "overviewHeaderRow": main_text,
     "providerHeaderRow": provider_header_text,
+    "spendHeaderRow": spend_view_text,
+    "sessionsHeaderRow": sessions_view_text,
 }
 for header_id, source_text in header_sources.items():
     header_body = id_block(source_text, header_id)
     if not code_contains(header_body, "Layout.rightMargin: Kirigami.Units.smallSpacing"):
         raise AssertionError(
             f"{header_id} must align header actions with the inset scroll content"
+        )
+    if not code_contains(header_body, "Layout.alignment: Qt.AlignTop"):
+        raise AssertionError(
+            f"{header_id} must align header action buttons to top"
         )
 
 for scroll_id in ("overviewScroll", "providerScroll"):

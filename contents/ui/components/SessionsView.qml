@@ -78,6 +78,8 @@ ColumnLayout {
     }
 
     RowLayout {
+        id: sessionsHeaderRow
+
         Layout.fillWidth: true
         Layout.rightMargin: Kirigami.Units.smallSpacing
         spacing: Kirigami.Units.smallSpacing
@@ -106,6 +108,7 @@ ColumnLayout {
         }
 
         Components.RefreshButton {
+            Layout.alignment: Qt.AlignTop
             busy: view.applet.sessionsLoading
             label: i18n("Refresh sessions")
             onRequested: view.applet.refreshSessions()
