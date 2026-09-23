@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="CodexBar store icon">
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#30477d"/>
+      <stop offset="1" stop-color="#172a53"/>
+    </linearGradient>
+    <linearGradient id="meter" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#67e8f9"/>
+      <stop offset="1" stop-color="#38bdf8"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="496" height="496" rx="112" fill="url(#background)"/>
+  <path d="M366 146a156 156 0 1 0 0 220" fill="none" stroke="url(#meter)" stroke-width="48" stroke-linecap="round"/>
+  <path d="M216 207h134M216 256h110" fill="none" stroke="#f8fafc" stroke-width="30" stroke-linecap="round"/>
+  <path d="M216 305h72" fill="none" stroke="#fbbf24" stroke-width="30" stroke-linecap="round"/>
+</svg>

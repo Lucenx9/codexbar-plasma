@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Add a square CodexBar icon for the KDE Store listing, with a 512-pixel PNG
+  and an editable SVG source.
 - Install or update the latest widget release from one terminal command without
   cloning or building the repository. Setup verifies the release package,
   offers a private official CLI when needed, and asks before restarting Plasma.
