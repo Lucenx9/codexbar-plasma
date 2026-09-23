@@ -477,7 +477,8 @@ Item {
                     // brand color; the icon keeps the full brand color.
                     readonly property color meterAccent: ThemeContrast.distinctAccentColor(accent,
                         [compactRoot.applet.statusBadgeColor("major"), compactRoot.applet.statusBadgeColor("minor")],
-                        ThemeContrast.desaturatedColor(accent, compactRoot.mutedMeterChromaReduction))
+                        ThemeContrast.mutedAccentColor(accent, compactRoot.mutedMeterChromaReduction,
+                            Kirigami.Theme.backgroundColor, Kirigami.Theme.textColor))
 
                     function activate() {
                         if (!compactRoot.interactive) {

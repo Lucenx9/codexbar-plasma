@@ -15,7 +15,9 @@ work and upstream contract requirements.
   When a provider's brand hue is within 20 degrees of the theme's warning or
   critical color, its capsules use a muted version of the brand color, so a
   healthy quota cannot pass for an alert; the provider icon keeps the brand
-  color. Any quota above zero keeps at least a round dot of fill, so an almost
+  color. The muted color keeps the capsule's contrast with the panel and is
+  used only when it looks less like the warning colors than the brand does,
+  so a yellow brand beside a pale cream warning keeps its color. Any quota above zero keeps at least a round dot of fill, so an almost
   exhausted quota stays distinct from an empty one.
 - Automatic panel meters show the primary quota above the secondary quota when
   both have percentages. A single available quota is centered vertically;

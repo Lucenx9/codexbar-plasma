@@ -716,9 +716,10 @@ TestCase {
         var icon = findItem(meter, item => item.objectName === "panelProviderIcon");
         var fill = findItem(meter, item => item.objectName === "panelMeterFill");
         compare(icon.color, applet.brandAccent);
-        verify(Qt.colorEqual(fill.color, ThemeContrast.desaturatedColor(
-            applet.brandAccent, panel.mutedMeterChromaReduction)));
-        verify(ThemeContrast.oklch(fill.color).chroma < ThemeContrast.minimumHueChroma);
+        verify(!Qt.colorEqual(fill.color, applet.brandAccent));
+        var muted = ThemeContrast.oklch(fill.color);
+        verify(muted.chroma < ThemeContrast.minimumHueChroma);
+        verify(ThemeContrast.hueDistance(muted.hue, ThemeContrast.oklch(applet.brandAccent).hue) < 10);
         applet.brandAccent = Qt.rgba(0.2, 0.6, 0.7, 1);
         wait(0);
         fill = findItem(meter, item => item.objectName === "panelMeterFill");

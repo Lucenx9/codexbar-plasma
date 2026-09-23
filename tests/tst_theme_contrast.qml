@@ -89,21 +89,24 @@ TestCase {
         compare(unusable, start)
     }
 
-    // Brand hues close to a theme's warning or critical color fall back;
-    // distinct hues and grays keep their own color. Colors are real Breeze,
-    // Catppuccin Mocha, and bundled provider brand values.
+    // Brand hues close to a theme's warning or critical color fall back to
+    // their muted version; distinct hues and grays keep their own color, and
+    // so does a brand whose muted version would sit closer to a pale warning.
+    // Colors are real Breeze, Catppuccin Mocha, and bundled brand values.
     function test_distinctAccentColor_data() {
         var breeze = [Qt.rgba(218 / 255, 68 / 255, 83 / 255, 1), Qt.rgba(246 / 255, 116 / 255, 0, 1)]
         var mocha = [Qt.rgba(243 / 255, 139 / 255, 168 / 255, 1), Qt.rgba(249 / 255, 226 / 255, 175 / 255, 1)]
         var zai = Qt.rgba(232 / 255, 90 / 255, 106 / 255, 1)
         var claude = Qt.rgba(217 / 255, 119 / 255, 87 / 255, 1)
         var codex = Qt.rgba(73 / 255, 163 / 255, 176 / 255, 1)
+        var huggingface = Qt.rgba(1, 210 / 255, 30 / 255, 1)
         return [
             {tag: "zai-breeze-critical", accent: zai, reserved: breeze, kept: false},
             {tag: "zai-mocha-critical", accent: zai, reserved: mocha, kept: false},
             {tag: "claude-breeze-warning", accent: claude, reserved: breeze, kept: false},
             {tag: "claude-mocha", accent: claude, reserved: mocha, kept: true},
             {tag: "codex-breeze", accent: codex, reserved: breeze, kept: true},
+            {tag: "yellow-beside-pale-cream-warning", accent: huggingface, reserved: mocha, kept: true},
             {tag: "gray-accent", accent: Qt.rgba(0.5, 0.5, 0.5, 1), reserved: breeze, kept: true},
             {tag: "gray-reserved", accent: zai, reserved: [Qt.rgba(0.8, 0.8, 0.8, 1)], kept: true},
             {tag: "hue-wraps-at-zero", accent: Qt.rgba(0.9, 0.3, 0.45, 1),
@@ -113,9 +116,19 @@ TestCase {
     }
 
     function test_distinctAccentColor(data) {
-        var fallback = Qt.rgba(0.9, 0.9, 0.9, 1)
+        var fallback = ThemeContrast.desaturatedColor(data.accent, 0.75)
         var result = ThemeContrast.distinctAccentColor(data.accent, data.reserved, fallback)
         compare(result, data.kept ? data.accent : fallback)
+    }
+
+    // A clashing hue alone does not justify a fallback that is perceptually
+    // closer to the reserved color than the accent already was.
+    function test_distinctAccentColorRejectsCloserFallback() {
+        var accent = Qt.rgba(232 / 255, 90 / 255, 106 / 255, 1)
+        var critical = Qt.rgba(218 / 255, 68 / 255, 83 / 255, 1)
+        compare(ThemeContrast.distinctAccentColor(accent, [critical], critical), accent)
+        verify(ThemeContrast.colorDistance(accent, accent) < 1e-9)
+        verify(ThemeContrast.colorDistance(accent, critical) > 0)
     }
 
     // Muting keeps lightness, hue, and alpha while removing the requested
@@ -135,6 +148,20 @@ TestCase {
             && Math.abs(same.b - zai.b) < 0.004)
         var clamped = ThemeContrast.desaturatedColor(zai, "invalid")
         verify(Math.abs(clamped.r - zai.r) < 0.004)
+    }
+
+    // Muting can lower luminance contrast on a light panel; the muted accent
+    // is corrected like any other accent. Colors are Z.ai's brand and Breeze
+    // Light, where plain desaturation measured 2.83:1.
+    function test_mutedAccentColorKeepsNonTextContrast() {
+        var background = Qt.rgba(239 / 255, 240 / 255, 241 / 255, 1)
+        var text = Qt.rgba(35 / 255, 38 / 255, 41 / 255, 1)
+        var accent = ThemeContrast.readableAccentColor(
+            Qt.rgba(232 / 255, 90 / 255, 106 / 255, 1), background, text)
+        verify(ThemeContrast.contrastRatio(ThemeContrast.desaturatedColor(accent, 0.75), background) < 3)
+        var muted = ThemeContrast.mutedAccentColor(accent, 0.75, background, text)
+        verify(ThemeContrast.contrastRatio(muted, background) >= 3)
+        verify(ThemeContrast.oklch(muted).chroma < ThemeContrast.minimumHueChroma)
     }
 }
 
