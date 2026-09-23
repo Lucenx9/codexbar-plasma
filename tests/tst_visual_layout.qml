@@ -1307,6 +1307,66 @@ TestCase {
         compare(hidden.visible, false);
     }
 
+    function test_providerDetailProgressMeterFollowsRowProgress_data() {
+        return [
+            { tag: "narrow", width: 240 },
+            { tag: "popup", width: 540 }
+        ];
+    }
+
+    function test_providerDetailProgressMeterFollowsRowProgress(data) {
+        failOnWarning(/Qt Quick Layouts: Detected recursive rearrange/);
+        var layout = createTemporaryQmlObject(
+            'import QtQuick; import QtQuick.Layouts; ColumnLayout {}',
+            testCase, String(Qt.resolvedUrl("ProviderDetailProgressTest.qml")));
+        layout.width = data.width;
+        var section = UsageDetails.normalizeSections([{
+            title: "Budget",
+            rows: [
+                { label: "Spend", value: "$2.50 / $10.00", progress: { used: 0.25, total: 1 } },
+                { label: "Over budget", value: "$14.00 / $10.00", progress: { used: 1, total: 1 } },
+                { label: "Model", value: "gpt-5", usageValue: 3 },
+                { label: "Broken", value: "25%", progress: { used: 1, total: 0 } }
+            ]
+        }])[0];
+        var view = createControl("ProviderDetailSection", {
+            applet: applet,
+            providerData: { provider: "codex" },
+            modelData: section
+        }, layout);
+        if (!view)
+            return;
+        tryCompare(view, "width", data.width);
+        var meters = [];
+        findAllItems(view, function (item) {
+            return item.objectName === "detailProgressMeter";
+        }, meters);
+        compare(meters.length, 4);
+        var shown = meters.filter(function (meter) { return meter.visible; });
+        compare(shown.length, 2);
+        for (var i = 0; i < shown.length; i++) {
+            verify(shown[i].width > 0);
+            verify(shown[i].height > 0);
+            verify(shown[i].mapToItem(view, 0, 0).x >= 0);
+            verify(shown[i].mapToItem(view, shown[i].width, 0).x <= view.width + 1,
+                "Detail meter overflows the popup");
+        }
+        var fills = shown.map(function (meter) {
+            return findItem(meter, function (item) {
+                return item.objectName === "detailProgressFill";
+            });
+        });
+        fuzzyCompare(fills[0].width, shown[0].width * 0.25, 1);
+        fuzzyCompare(fills[1].width, shown[1].width, 1);
+        // Rows without valid progress keep their text and draw no meter.
+        for (var t = 0; t < section.rows.length; t++) {
+            var expectedText = section.rows[t].value;
+            verify(findItem(view, function (item) {
+                return item.visible && item.text === expectedText;
+            }) !== null, "Missing detail value: " + expectedText);
+        }
+    }
+
     function usageRowData() {
         return {
             label: "Primary",

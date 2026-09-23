@@ -56,18 +56,6 @@ Issues linked below preserve discussion; this file owns parity status.
   and unknown amounts distinct, and stays legible in the narrow popup.
   Evidence: [0.60.5 review](docs/research/2026-09-18-macos-parity-0.60.5.md#linux-cli-contract-changes-since-0604).
 
-### Detail-row progress
-
-- [ ] Draw a bounded progress bar for provider detail rows that carry
-  `progress: {used, total}`, and keep `usageValue` as a numeric companion to
-  the display string. Official Linux 0.65.0 emits both on Bifrost budget rows,
-  and `progress.used` is capped at `total` while the text stays uncapped.
-  `UsageDetails.js` currently keeps only `label`, `value`, and
-  `secondaryValue`. Done when valid numeric pairs render a meter, and invalid,
-  negative, or zero-total pairs fall back to the text row. The display
-  string must never be parsed. Rows without `progress` must stay unchanged.
-  Evidence: [0.65.0 review](docs/research/2026-09-23-macos-parity-0.65.0.md#linux-cli-contract-changes-since-0641).
-
 ### Popup usage row visibility
 
 - [ ] Hide and restore individual popup usage rows per provider, mirroring the
@@ -131,9 +119,9 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   on `credits` and `openaiDashboard`, Copilot seat-entitlement rows with stable
   IDs, and `details` rows carrying `progress`/`usageValue` (Copilot, Antigravity).
   0.65.0 verifies the detail-row numbers and `usageKnown: false` named windows
-  with reset metadata in official Linux output through Bifrost. Plasma already
-  keeps those windows unknown instead of 0%; the row numbers are tracked
-  above. Existing generic details/charts work. Done when each additional section has
+  with reset metadata in official Linux output through Bifrost. Plasma keeps
+  those windows unknown instead of 0% and draws detail-row `progress` meters.
+  Existing generic details/charts work. Done when each additional section has
   bounded official fields and tests, with unknown amounts distinct from zero.
   Plain credit balances need their own allowance before gaining a meter; the
   Codex monthly-cap denominator is not generic. [Prior discussion #169](https://github.com/Lucenx9/codexbar-plasma/issues/169).
