@@ -1,4 +1,5 @@
 """Offline release checks, provenance and bounded executable probes."""
+import http.client
 import importlib.util
 import sys
 from pathlib import Path
@@ -67,12 +68,14 @@ class CliUpdateTests(unittest.TestCase):
 
     def test_network_failure_preserves_local_facts(self):
         record = dict(status="local", version="0.60.4", path="/usr/bin/codexbar", manager="pacman")
-        with patch.object(cli, "local_record", return_value=record), \
-                patch.object(cli, "latest_release", side_effect=OSError):
-            result = cli.check("codexbar")
-        self.assertEqual(result["status"], "network_error")
-        self.assertEqual(result["manager"], "pacman")
-        self.assertEqual(result["version"], "0.60.4")
+        for failure in (OSError, http.client.IncompleteRead(b"")):
+            with self.subTest(failure=failure), \
+                    patch.object(cli, "local_record", return_value=dict(record)), \
+                    patch.object(cli, "latest_release", side_effect=failure):
+                result = cli.check("codexbar")
+            self.assertEqual(result["status"], "network_error")
+            self.assertEqual(result["manager"], "pacman")
+            self.assertEqual(result["version"], "0.60.4")
 
     def test_package_owner_is_not_called_aur(self):
         with patch.object(cli.shutil, "which", side_effect=lambda name: "/usr/bin/" + name), \

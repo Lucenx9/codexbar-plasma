@@ -76,8 +76,10 @@ checksum_seconds = integer_constant(updater_text, "CURL_CHECKSUM_MAX_TIME_SECOND
 asset_seconds = integer_constant(updater_text, "CURL_ASSET_MAX_TIME_SECONDS")
 install_seconds = integer_constant(updater_text, "KPACKAGE_INSTALL_MAX_TIME_SECONDS")
 kill_after_seconds = integer_constant(updater_text, "KPACKAGE_INSTALL_KILL_AFTER_SECONDS")
+lock_wait_seconds = integer_constant(updater_text, "INSTALL_LOCK_WAIT_SECONDS")
 outer_seconds = integer_constant(main_qml_text, "widgetAutoUpdateTimeoutMs") / 1000
-minimum_seconds = metadata_seconds + checksum_seconds + asset_seconds + install_seconds + kill_after_seconds
+minimum_seconds = (metadata_seconds + checksum_seconds + asset_seconds + lock_wait_seconds
+                   + install_seconds + kill_after_seconds)
 required_outer_seconds = minimum_seconds + 30
 if outer_seconds < required_outer_seconds:
     raise AssertionError(
@@ -185,7 +187,9 @@ fi
 
 fixture_dir="$(mktemp -d)"
 trap 'rm -rf "$fixture_dir"' EXIT
-mkdir -p "$fixture_dir/fakebin"
+mkdir -p "$fixture_dir/fakebin" "$fixture_dir/runtime"
+# Keep the per-user install lock inside the fixture.
+export XDG_RUNTIME_DIR="$fixture_dir/runtime"
 printf '%s\n' '{"KPlugin":{"Version":"0.1.0"}}' > "$fixture_dir/metadata.json"
 mkdir -p "$fixture_dir/package-src"
 printf '%s\n' '{"KPackageStructure":"Plasma/Applet","KPlugin":{"Id":"app.codexbar.plasma","Version":"9.9.9"}}' \
@@ -423,8 +427,15 @@ SH
 cat > "$fixture_dir/fakebin/kpackagetool6" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
+if [[ -n "${TEST_UPDATE_INSTALLED_METADATA:-}" ]]; then
+  # Like the real tool, an overlapping upgrade fails and the package is replaced.
+  mkdir "${TEST_UPDATE_INSTALLED_METADATA}.active" || exit 7
+  sleep 1
+  cp "$TEST_UPDATE_FIXTURE/package-src/metadata.json" "$TEST_UPDATE_INSTALLED_METADATA"
+  rmdir "${TEST_UPDATE_INSTALLED_METADATA}.active"
+fi
 printf '%s\n' 'Successfully upgraded package.'
-printf '%s\n' "$*" > "$TEST_UPDATE_INSTALL_MARKER"
+printf '%s\n' "$*" >> "$TEST_UPDATE_INSTALL_MARKER"
 SH
 chmod +x "$fixture_dir/fakebin/curl" "$fixture_dir/fakebin/timeout" "$fixture_dir/fakebin/kpackagetool6"
 
@@ -549,6 +560,29 @@ good_output="$(
 if ! jq -e '.status == "installed"' >/dev/null <<<"$good_output" \
   || [[ ! -f "$fixture_dir/install.marker" ]]; then
   echo "a release with a valid checksum must be installed" >&2
+  exit 1
+fi
+
+# Two widget instances upgrading at once: one installs, the other waits for the
+# lock, sees the installed release and must not run a second, overlapping upgrade.
+rm -f "$fixture_dir/install.marker"
+cp "$fixture_dir/metadata.json" "$fixture_dir/installed-metadata.json"
+for instance in first second; do
+  PATH="$fixture_dir/fakebin:$PATH" \
+  TEST_UPDATE_FIXTURE="$fixture_dir" \
+  TEST_UPDATE_INSTALL_MARKER="$fixture_dir/install.marker" \
+  TEST_UPDATE_INSTALLED_METADATA="$fixture_dir/installed-metadata.json" \
+    "$UPDATER" --install \
+      --metadata "$fixture_dir/installed-metadata.json" \
+      --release-json "$fixture_dir/release.json" \
+      > "$fixture_dir/concurrent-${instance}.json" &
+done
+wait
+concurrent_statuses="$(jq -rs 'map(.status) | sort | join(",")' \
+  "$fixture_dir/concurrent-first.json" "$fixture_dir/concurrent-second.json")"
+if [[ "$concurrent_statuses" != "current,installed" ]] \
+  || [[ "$(wc -l < "$fixture_dir/install.marker")" -ne 1 ]]; then
+  echo "concurrent widget upgrades must run kpackagetool6 once; got: $concurrent_statuses" >&2
   exit 1
 fi
 

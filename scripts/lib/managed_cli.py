@@ -2,6 +2,7 @@
 import fcntl
 import hashlib
 import gzip
+import http.client
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -230,6 +231,9 @@ def download(asset, destination):
                 raise ValueError("download_size")
             digest.update(chunk)
             stream.write(chunk)
+    if size < asset["size"]:
+        # A body cut short is a dropped connection, not refused content.
+        raise ConnectionError("download_incomplete")
     if size != asset["size"] or "sha256:" + digest.hexdigest() != asset["digest"]:
         raise ValueError("checksum")
 
@@ -354,7 +358,9 @@ def failure_status(error):
     if isinstance(error, tarfile.TarError):
         # The digest already matched, so a broken archive is still content we refuse.
         return "unverified"
-    if isinstance(error, urllib.error.URLError):
+    # urllib wraps only connection setup; a timeout or disconnect while waiting
+    # for or reading the response surfaces as the underlying error.
+    if isinstance(error, (urllib.error.URLError, http.client.HTTPException, TimeoutError, ConnectionError)):
         return "network"
     code = str(error) if isinstance(error, ValueError) else ""
     if code in UNVERIFIED:

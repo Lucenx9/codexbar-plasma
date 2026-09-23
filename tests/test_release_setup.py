@@ -23,7 +23,7 @@ class ReleaseSetupTests(unittest.TestCase):
         self.bin.mkdir()
         # An explicit PATH prevents a developer's real CLI from affecting tests.
         for tool in ("bash", "dirname", "uname", "jq", "sort", "head", "tail", "grep", "wc",
-                     "python3", "sha256sum", "timeout", "mktemp", "rm"):
+                     "python3", "sha256sum", "timeout", "mktemp", "rm", "flock", "mkdir"):
             (self.bin / tool).symlink_to(shutil.which(tool))
         self.env = {"PATH": str(self.bin), "HOME": str(self.root / "home"),
                     "XDG_DATA_HOME": str(self.root / "data with spaces"), "FIXTURE": str(self.root)}
