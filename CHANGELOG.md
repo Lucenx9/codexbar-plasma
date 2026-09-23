@@ -50,8 +50,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   hue sits within 20 degrees of the theme's warning or critical color, such as
   Z.ai's red or Claude's orange in Breeze, its capsules use a muted version of
   the brand color while the icon keeps the brand color. The muted color keeps
-  the capsule's contrast and replaces the brand only when it is farther from
-  every warning color. Any quota above zero
+  the capsule's contrast and replaces the brand only when the result stays
+  farther from the warning colors than the brand was. Any quota above zero
   now fills at least a round dot, as popup meters already did, so 4% remaining
   no longer looks like an empty capsule.
 - Refine the popup's visual hierarchy. Content sits on the native Plasma dialog

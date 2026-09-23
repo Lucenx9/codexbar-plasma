@@ -5,6 +5,9 @@ var minimumNonTextContrastRatio = 3
 var minimumSeverityHueSeparationDegrees = 20
 // OKLCH chroma below this is effectively gray and carries no hue to confuse.
 var minimumHueChroma = 0.05
+// Contrast correction after muting can raise chroma again, so a reduction
+// derived from the threshold aims for this share of it as headroom.
+var hueChromaSafetyShare = 0.9
 
 function linearColorChannel(channel) {
     var numeric = Number(channel)
@@ -132,6 +135,16 @@ function mutedAccentColor(accent, amount, background, themeTextColor) {
     return readableAccentColor(desaturatedColor(accent, amount), background, themeTextColor)
 }
 
+// Share of chroma to remove so an accent keeps less than the severity hue
+// threshold after muting. Accents already below the threshold need none.
+function chromaReduction(accent) {
+    var chroma = oklch(accent).chroma
+    if (chroma <= minimumHueChroma) {
+        return 0
+    }
+    return 1 - minimumHueChroma * hueChromaSafetyShare / chroma
+}
+
 function hueDistance(first, second) {
     var difference = Math.abs(first - second) % 360
     return Math.min(difference, 360 - difference)
@@ -146,10 +159,11 @@ function minimumDistance(color, colors) {
 }
 
 // Returns the fallback when the accent's hue could be mistaken for one of the
-// reserved warning colors and the fallback is perceptually farther from all of
-// them. Gray accents and gray reserved colors never clash on hue, and a
-// fallback that would move closer, such as a muted yellow beside a pale
-// cream warning, leaves the accent unchanged.
+// reserved warning colors and the fallback keeps every reserved color farther
+// than the accent's nearest one was, so muting never trades one warning
+// resemblance for a closer one. Gray accents and gray reserved colors never
+// clash on hue, and a fallback that would move closer, such as a muted yellow
+// beside a pale cream warning, leaves the accent unchanged.
 function distinctAccentColor(accent, reservedColors, fallback) {
     var accentColor = oklch(accent)
     if (accentColor.chroma < minimumHueChroma) {

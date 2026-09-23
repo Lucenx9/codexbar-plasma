@@ -131,6 +131,55 @@ TestCase {
         verify(ThemeContrast.colorDistance(accent, critical) > 0)
     }
 
+    // A fallback that lands as close to any reserved color as the accent was
+    // to its nearest one is rejected, even when its nearest color changed.
+    // Moving away from the nearest color while staying far from every other
+    // reserved color is the muting the function exists for.
+    function test_distinctAccentColorComparesEveryReservedColor() {
+        var accent = Qt.rgba(0.86, 0.28, 0.38, 1)
+        var near = Qt.rgba(0.855, 0.27, 0.42, 1)
+        var far = Qt.rgba(0.18, 0.34, 0.62, 1)
+        compare(ThemeContrast.distinctAccentColor(accent, [near, far], far), accent)
+        var fallback = Qt.rgba(0.76, 0.18, 0.48, 1)
+        verify(ThemeContrast.hueDistance(ThemeContrast.oklch(accent).hue, ThemeContrast.oklch(near).hue)
+            < ThemeContrast.minimumSeverityHueSeparationDegrees)
+        verify(ThemeContrast.colorDistance(fallback, near) > ThemeContrast.colorDistance(accent, near))
+        verify(ThemeContrast.colorDistance(fallback, far) > ThemeContrast.colorDistance(accent, near))
+        compare(ThemeContrast.distinctAccentColor(accent, [near, far], fallback), fallback)
+    }
+
+    // A fixed reduction leaves very saturated brands such as Amp and Mistral
+    // above the severity hue threshold, so the reduction adapts to the accent.
+    // Muted results stay under the threshold and readable on real themes; the
+    // contrast correction must not raise the chroma back over it.
+    function test_verySaturatedBrandMutesBelowHueThreshold_data() {
+        var amp = Qt.rgba(220 / 255, 38 / 255, 38 / 255, 1)
+        var mistral = Qt.rgba(1, 80 / 255, 15 / 255, 1)
+        var breezeLight = {
+            tag: "amp-breeze-light", accent: amp,
+            background: Qt.rgba(239 / 255, 240 / 255, 241 / 255, 1), text: Qt.rgba(35 / 255, 38 / 255, 41 / 255, 1)
+        }
+        var breezeDark = {
+            tag: "mistral-breeze-dark", accent: mistral,
+            background: Qt.rgba(35 / 255, 38 / 255, 41 / 255, 1), text: Qt.rgba(252 / 255, 252 / 255, 252 / 255, 1)
+        }
+        var mocha = {
+            tag: "amp-catppuccin-mocha", accent: amp,
+            background: Qt.rgba(30 / 255, 30 / 255, 46 / 255, 1), text: Qt.rgba(205 / 255, 214 / 255, 244 / 255, 1)
+        }
+        return [breezeLight, breezeDark, mocha]
+    }
+
+    function test_verySaturatedBrandMutesBelowHueThreshold(data) {
+        verify(ThemeContrast.oklch(data.accent).chroma * 0.25 >= ThemeContrast.minimumHueChroma)
+        var muted = ThemeContrast.mutedAccentColor(
+            data.accent,
+            Math.max(0.75, ThemeContrast.chromaReduction(data.accent)),
+            data.background, data.text)
+        verify(ThemeContrast.oklch(muted).chroma < ThemeContrast.minimumHueChroma)
+        verify(ThemeContrast.contrastRatio(muted, data.background) >= 3)
+    }
+
     // Muting keeps lightness, hue, and alpha while removing the requested
     // share of chroma; the ends of the range are identity and gray.
     function test_desaturatedColorKeepsLightnessAndHue() {

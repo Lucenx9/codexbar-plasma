@@ -355,6 +355,17 @@ TestCase {
         applet.quotaWarning = true;
         tryCompare(fill, "color", Qt.rgba(1, 0.5, 0, 1));
         verify(icon.color.toString() !== fill.color.toString());
+        // Minimal style promises capsules in the theme text color, so the
+        // warning-hue muting never rewrites them: the capsule keeps the same
+        // accent the minimal mode selected.
+        applet.quotaWarning = false;
+        applet.brandAccent = Qt.rgba(0.95, 0.45, 0.1, 1);
+        wait(0);
+        var meter = findItem(panel, item => item.modelData && item.modelData.provider === "codex");
+        verify(meter !== null);
+        compare(fill.color, meter.accent);
+        applet.brandAccent = Qt.rgba(0.2, 0.6, 0.7, 1);
+        wait(0);
         applet.minimalPanel = false;
         tryCompare(panel, "meterBarHeight", standardBarHeight);
         compare(panel.meterIconSize, standardIconSize);
@@ -720,6 +731,11 @@ TestCase {
         var muted = ThemeContrast.oklch(fill.color);
         verify(muted.chroma < ThemeContrast.minimumHueChroma);
         verify(ThemeContrast.hueDistance(muted.hue, ThemeContrast.oklch(applet.brandAccent).hue) < 10);
+        // A fixed reduction is not enough for very saturated brands; the
+        // panel asks ThemeContrast for the share its chroma needs.
+        applet.brandAccent = Qt.rgba(1, 0.35, 0, 1);
+        wait(0);
+        verify(ThemeContrast.oklch(fill.color).chroma < ThemeContrast.minimumHueChroma);
         applet.brandAccent = Qt.rgba(0.2, 0.6, 0.7, 1);
         wait(0);
         fill = findItem(meter, item => item.objectName === "panelMeterFill");

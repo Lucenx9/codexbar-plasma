@@ -108,8 +108,9 @@ Item {
     readonly property int meterIconSize: Math.min(Kirigami.Units.iconSizes.small,
         Math.max(12, verticalPanel ? width / 3 : meterContentHeight))
     readonly property int meterSpacing: Kirigami.Units.smallSpacing
-    // Share of chroma removed from a capsule whose brand hue resembles a
-    // warning color; what remains is below ThemeContrast's hue threshold.
+    // Minimum share of chroma removed from a capsule whose brand hue
+    // resembles a warning color. ThemeContrast.chromaReduction raises it for
+    // very saturated brands so what remains carries no hue to confuse.
     readonly property real mutedMeterChromaReduction: 0.75
     readonly property int meterBarHeight: Math.max(3, Math.min(6,
         Math.round((verticalPanel ? compactExtent : meterContentHeight) / 4)))
@@ -474,11 +475,15 @@ Item {
                         : compactRoot.applet.providerReadableColor(modelData.provider, Kirigami.Theme.backgroundColor)
                     // Capsules carry no text, so a brand hue close to the warning or
                     // critical color would read as an alert. Such capsules use a muted
-                    // brand color; the icon keeps the full brand color.
-                    readonly property color meterAccent: ThemeContrast.distinctAccentColor(accent,
-                        [compactRoot.applet.statusBadgeColor("major"), compactRoot.applet.statusBadgeColor("minor")],
-                        ThemeContrast.mutedAccentColor(accent, compactRoot.mutedMeterChromaReduction,
-                            Kirigami.Theme.backgroundColor, Kirigami.Theme.textColor))
+                    // brand color; the icon keeps the full brand color. Minimal style
+                    // keeps capsules in the theme text color, so it is never muted.
+                    readonly property real meterChromaShare: Math.max(
+                        compactRoot.mutedMeterChromaReduction, ThemeContrast.chromaReduction(accent))
+                    readonly property color meterAccent: compactRoot.minimalStyle ? accent
+                        : ThemeContrast.distinctAccentColor(accent,
+                            [compactRoot.applet.statusBadgeColor("major"), compactRoot.applet.statusBadgeColor("minor")],
+                            ThemeContrast.mutedAccentColor(accent, meterChromaShare,
+                                Kirigami.Theme.backgroundColor, Kirigami.Theme.textColor))
 
                     function activate() {
                         if (!compactRoot.interactive) {
