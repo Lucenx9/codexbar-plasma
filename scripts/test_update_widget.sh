@@ -189,7 +189,7 @@ fixture_dir="$(mktemp -d)"
 trap 'rm -rf "$fixture_dir"' EXIT
 mkdir -p "$fixture_dir/fakebin" "$fixture_dir/runtime"
 # Keep the per-user install lock inside the fixture.
-export XDG_RUNTIME_DIR="$fixture_dir/runtime"
+export XDG_DATA_HOME="$fixture_dir/data"
 printf '%s\n' '{"KPlugin":{"Version":"0.1.0"}}' > "$fixture_dir/metadata.json"
 mkdir -p "$fixture_dir/package-src"
 printf '%s\n' '{"KPackageStructure":"Plasma/Applet","KPlugin":{"Id":"app.codexbar.plasma","Version":"9.9.9"}}' \
@@ -565,9 +565,14 @@ fi
 
 # Two widget instances upgrading at once: one installs, the other waits for the
 # lock, sees the installed release and must not run a second, overlapping upgrade.
+# The panel has a runtime directory while a terminal or make run may not; both
+# must still share one lock.
 rm -f "$fixture_dir/install.marker"
 cp "$fixture_dir/metadata.json" "$fixture_dir/installed-metadata.json"
 for instance in first second; do
+  runtime=(XDG_RUNTIME_DIR="$fixture_dir/runtime")
+  [[ "$instance" == first ]] || runtime=(-u XDG_RUNTIME_DIR)
+  env "${runtime[@]}" \
   PATH="$fixture_dir/fakebin:$PATH" \
   TEST_UPDATE_FIXTURE="$fixture_dir" \
   TEST_UPDATE_INSTALL_MARKER="$fixture_dir/install.marker" \

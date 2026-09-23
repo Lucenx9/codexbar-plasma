@@ -224,15 +224,15 @@ PY
 
 # kpackagetool6 -u deletes the installed package before copying the new one, so
 # two overlapping upgrades (widget instances, setup, make update) can leave no
-# package at all. Serialize them per user; the lock outlives each package copy.
+# package at all. Serialize them per install location: the lock lives in the
+# same data directory kpackagetool6 installs into, whatever else the launching
+# environment (panel, terminal, make) sets, and outlives each package copy.
 acquire_install_lock() {
-  local lock_dir="${XDG_RUNTIME_DIR:-}"
-  if [[ "$lock_dir" != /* || ! -d "$lock_dir" ]]; then
-    lock_dir="${XDG_CACHE_HOME:-}"
-    [[ "$lock_dir" == /* ]] || lock_dir="${HOME:-}/.cache"
-    mkdir -p "$lock_dir"
-  fi
-  exec 9>>"$lock_dir/codexbar-plasma-widget-update.lock"
+  local lock_dir="${XDG_DATA_HOME:-}"
+  [[ "$lock_dir" == /* ]] || lock_dir="${HOME:-}/.local/share"
+  lock_dir="$lock_dir/codexbar-plasma"
+  mkdir -p "$lock_dir"
+  exec 9>>"$lock_dir/widget-update.lock"
   flock -w "$INSTALL_LOCK_WAIT_SECONDS" 9
 }
 
@@ -509,6 +509,7 @@ installed_version="$(jq -r '.KPlugin.Version? // empty' "$METADATA_PATH" 2>/dev/
 if [[ "$installed_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] \
   && ! version_gt "$remote_version" "$installed_version"; then
   emit_status "current" "widget is current" "$installed_version" "$remote_version" "$asset_url"
+  exec 9>&-
   finish_setup
   exit 0
 fi

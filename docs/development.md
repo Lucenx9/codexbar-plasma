@@ -50,8 +50,10 @@ an incorrect applet ID or package structure, before installing or running a help
 Setup selects `kpackagetool6 -i` for a missing package and `-u` for an existing
 one, without treating any installation failure as a reason to try the other.
 The `--check` and `--install` JSON interfaces retain their update-only behavior.
-Installs take a per-user `flock` in `XDG_RUNTIME_DIR`, falling back to the user
-cache directory, around `kpackagetool6`: its upgrade deletes the old package
+Installs take a `flock` in `$XDG_DATA_HOME/codexbar-plasma` (or
+`~/.local/share/codexbar-plasma`), the data directory `kpackagetool6` installs
+into, so panel, terminal and `make` runs share it. The lock covers only
+`kpackagetool6`: its upgrade deletes the old package
 before copying, so overlapping upgrades from several widget instances, setup,
 or `make update` could remove the widget. After the lock, the installed metadata
 is read again; a release already installed by another run reports `current`.
