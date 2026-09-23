@@ -46,6 +46,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Panel quota capsules no longer borrow a warning look. When a provider's brand
+  hue sits within 20 degrees of the theme's warning or critical color, such as
+  Z.ai's red or Claude's orange in Breeze, its capsules use a muted version of
+  the brand color while the icon keeps the brand color. Any quota above zero
+  now fills at least a round dot, as popup meters already did, so 4% remaining
+  no longer looks like an empty capsule.
 - Refine the popup's visual hierarchy. Content sits on the native Plasma dialog
   background without a nested inner frame or a separator under the tab strip.
   A selected tab now has a clearly visible surface, and a provider tab's

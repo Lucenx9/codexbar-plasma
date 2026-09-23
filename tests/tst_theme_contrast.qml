@@ -88,4 +88,53 @@ TestCase {
         var unusable = ThemeContrast.interpolateColor(start, end, Number.NaN)
         compare(unusable, start)
     }
+
+    // Brand hues close to a theme's warning or critical color fall back;
+    // distinct hues and grays keep their own color. Colors are real Breeze,
+    // Catppuccin Mocha, and bundled provider brand values.
+    function test_distinctAccentColor_data() {
+        var breeze = [Qt.rgba(218 / 255, 68 / 255, 83 / 255, 1), Qt.rgba(246 / 255, 116 / 255, 0, 1)]
+        var mocha = [Qt.rgba(243 / 255, 139 / 255, 168 / 255, 1), Qt.rgba(249 / 255, 226 / 255, 175 / 255, 1)]
+        var zai = Qt.rgba(232 / 255, 90 / 255, 106 / 255, 1)
+        var claude = Qt.rgba(217 / 255, 119 / 255, 87 / 255, 1)
+        var codex = Qt.rgba(73 / 255, 163 / 255, 176 / 255, 1)
+        return [
+            {tag: "zai-breeze-critical", accent: zai, reserved: breeze, kept: false},
+            {tag: "zai-mocha-critical", accent: zai, reserved: mocha, kept: false},
+            {tag: "claude-breeze-warning", accent: claude, reserved: breeze, kept: false},
+            {tag: "claude-mocha", accent: claude, reserved: mocha, kept: true},
+            {tag: "codex-breeze", accent: codex, reserved: breeze, kept: true},
+            {tag: "gray-accent", accent: Qt.rgba(0.5, 0.5, 0.5, 1), reserved: breeze, kept: true},
+            {tag: "gray-reserved", accent: zai, reserved: [Qt.rgba(0.8, 0.8, 0.8, 1)], kept: true},
+            {tag: "hue-wraps-at-zero", accent: Qt.rgba(0.9, 0.3, 0.45, 1),
+                reserved: [Qt.rgba(0.9, 0.35, 0.3, 1)], kept: false},
+            {tag: "no-reserved-colors", accent: zai, reserved: undefined, kept: true}
+        ]
+    }
+
+    function test_distinctAccentColor(data) {
+        var fallback = Qt.rgba(0.9, 0.9, 0.9, 1)
+        var result = ThemeContrast.distinctAccentColor(data.accent, data.reserved, fallback)
+        compare(result, data.kept ? data.accent : fallback)
+    }
+
+    // Muting keeps lightness, hue, and alpha while removing the requested
+    // share of chroma; the ends of the range are identity and gray.
+    function test_desaturatedColorKeepsLightnessAndHue() {
+        var zai = Qt.rgba(232 / 255, 90 / 255, 106 / 255, 0.8)
+        var original = ThemeContrast.oklch(zai)
+        var muted = ThemeContrast.desaturatedColor(zai, 0.75)
+        var result = ThemeContrast.oklch(muted)
+        verify(Math.abs(result.lightness - original.lightness) < 0.005)
+        verify(Math.abs(result.chroma - original.chroma * 0.25) < 0.005)
+        verify(ThemeContrast.hueDistance(result.hue, original.hue) < 2)
+        compare(muted.a, zai.a)
+        verify(ThemeContrast.oklch(ThemeContrast.desaturatedColor(zai, 1)).chroma < 0.002)
+        var same = ThemeContrast.desaturatedColor(zai, 0)
+        verify(Math.abs(same.r - zai.r) < 0.004 && Math.abs(same.g - zai.g) < 0.004
+            && Math.abs(same.b - zai.b) < 0.004)
+        var clamped = ThemeContrast.desaturatedColor(zai, "invalid")
+        verify(Math.abs(clamped.r - zai.r) < 0.004)
+    }
 }
+

@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "../PanelElements.js" as PanelElements
 import "../PanelTextFit.js" as PanelTextFit
+import "../ThemeContrast.js" as ThemeContrast
 
 Item {
     id: compactRoot
@@ -107,6 +108,9 @@ Item {
     readonly property int meterIconSize: Math.min(Kirigami.Units.iconSizes.small,
         Math.max(12, verticalPanel ? width / 3 : meterContentHeight))
     readonly property int meterSpacing: Kirigami.Units.smallSpacing
+    // Share of chroma removed from a capsule whose brand hue resembles a
+    // warning color; what remains is below ThemeContrast's hue threshold.
+    readonly property real mutedMeterChromaReduction: 0.75
     readonly property int meterBarHeight: Math.max(3, Math.min(6,
         Math.round((verticalPanel ? compactExtent : meterContentHeight) / 4)))
     readonly property int meterBarWidth: verticalPanel
@@ -468,6 +472,12 @@ Item {
                         ? modelData.status : ""
                     readonly property color accent: compactRoot.minimalStyle ? Kirigami.Theme.textColor
                         : compactRoot.applet.providerReadableColor(modelData.provider, Kirigami.Theme.backgroundColor)
+                    // Capsules carry no text, so a brand hue close to the warning or
+                    // critical color would read as an alert. Such capsules use a muted
+                    // brand color; the icon keeps the full brand color.
+                    readonly property color meterAccent: ThemeContrast.distinctAccentColor(accent,
+                        [compactRoot.applet.statusBadgeColor("major"), compactRoot.applet.statusBadgeColor("minor")],
+                        ThemeContrast.desaturatedColor(accent, compactRoot.mutedMeterChromaReduction))
 
                     function activate() {
                         if (!compactRoot.interactive) {
@@ -568,7 +578,7 @@ Item {
                                     id: quotaCapsule
                                     required property var modelData
                                     readonly property real meter: compactRoot.applet.displayPercent(modelData)
-                                    readonly property color meterColor: compactRoot.applet.quotaMeterColor(modelData, compactMeter.accent)
+                                    readonly property color meterColor: compactRoot.applet.quotaMeterColor(modelData, compactMeter.meterAccent)
                                     readonly property bool warning: compactRoot.applet.quotaSeverity(modelData).length > 0
 
                                     objectName: "panelMeterTrack"
@@ -584,7 +594,11 @@ Item {
 
                                     Rectangle {
                                         objectName: "panelMeterFill"
-                                        width: parent.width * Math.max(0, Math.min(100, quotaCapsule.meter)) / 100
+                                        // Any amount above zero stays visible as at least a
+                                        // round dot, like the popup meters; zero stays empty.
+                                        width: quotaCapsule.meter > 0
+                                            ? Math.max(parent.height, parent.width * Math.min(100, quotaCapsule.meter) / 100)
+                                            : 0
                                         height: parent.height
                                         radius: Math.min(height / 2, width / 2)
                                         color: quotaCapsule.meterColor
