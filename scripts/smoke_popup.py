@@ -52,6 +52,16 @@ def preview_environment(work, scenario, renderer="software", language=None):
         language = scenario.removeprefix("localization-")
     if language:
         env.update(LANG=LOCALES[language], LC_ALL=LOCALES[language], LANGUAGE=language)
+    if scenario == "ai-insights-it":
+        # Italian interface with C numeric, time, and money formats.
+        env.pop("LC_ALL")
+        env.update(LANG=LOCALES["it"], LANGUAGE="it", LC_NUMERIC="C.UTF-8", LC_TIME="C.UTF-8",
+                   LC_MONETARY="C.UTF-8")
+    elif scenario == "ai-insights-mismatch":
+        # Qt.locale() follows LANGUAGE here while gettext ignores it under a C
+        # locale, so the two disagree; the insight must match the displayed text.
+        env.pop("LC_ALL")
+        env.update(LANG="C.UTF-8", LANGUAGE="it")
     # Qt builds can default to xcb even with WAYLAND_DISPLAY set. Select the
     # available backend when X11 is absent without inheriting host Qt overrides.
     if env.get("WAYLAND_DISPLAY") and not env.get("DISPLAY"):
@@ -86,6 +96,11 @@ def stage_applet(work, scenario, image_path, theme=None):
     (package / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     compile_catalogs(package / "contents/locale", applet_id=APPLET_ID)
 
+    # Every scenario gets the synthetic AI helper, so no smoke run can reach a
+    # real AI service or the desktop wallet even if the feature is enabled.
+    (package / "scripts").mkdir()
+    shutil.copyfile(ROOT / "scripts/smoke/fixture_ai_insights.py", package / "scripts/ai-insights.py")
+
     fixture_cli = work / "codexbar-fixture"
     fixture_source = (ROOT / "scripts/smoke/fixture_cli.py").read_text()
     fixture_cli.write_text("#!" + sys.executable + "\n" + fixture_source.split("\n", 1)[1])
@@ -99,6 +114,8 @@ def stage_applet(work, scenario, image_path, theme=None):
     defaults = {"commandPath": str(fixture_cli), "refreshInterval": "0",
                 "enableNotifications": "false", "updateChecksEnabled": "false",
                 "autoUpdateEnabled": "false", "updateNotificationsEnabled": "false"}
+    if scenario.startswith("ai-insights"):
+        defaults.update(aiInsightsEnabled="true", aiInsightsModel="fixture-model")
     for key, value in defaults.items():
         entry = config.find(f".//k:entry[@name='{key}']/k:default", ns)
         if entry is None:

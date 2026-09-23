@@ -35,9 +35,145 @@ msgstr "Janela pop-up"
 msgid "Notifications"
 msgstr "Notificações"
 
+#: contents/config/config.qml contents/ui/components/AiInsightsCard.qml
+#: contents/ui/configAiInsights.qml
+msgid "AI Insights"
+msgstr "Insights de IA"
+
 #: contents/config/config.qml
 msgid "Diagnostics"
 msgstr "Diagnóstico"
+
+#: contents/ui/components/AiInsightsCard.qml
+msgid "Choose an AI provider and model in the AI Insights settings."
+msgstr "Escolha um provedor de IA e um modelo nas configurações de Insights de IA."
+
+#: contents/ui/components/AiInsightsCard.qml
+msgid "Not enough current usage data for an insight yet."
+msgstr "Ainda não há dados de uso atuais suficientes para um insight."
+
+#: contents/ui/components/AiInsightsCard.qml
+msgid ""
+"The saved insight belongs to other settings or another language. Generate a "
+"new one when needed."
+msgstr "O insight salvo pertence a outras configurações ou a outro idioma. Gere um novo quando precisar."
+
+#: contents/ui/components/AiInsightsCard.qml
+msgid "No insight generated yet."
+msgstr "Nenhum insight gerado ainda."
+
+#: contents/ui/components/AiInsightsCard.qml
+msgid "Generated %1"
+msgstr "Gerado em %1"
+
+#: contents/ui/components/AiInsightsCard.qml
+#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/OverviewProviderRow.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/SessionsView.qml contents/ui/main.qml
+msgid "%1 - %2"
+msgstr "%1 - %2"
+
+#: contents/ui/components/AiInsightsCard.qml
+msgid "Configure..."
+msgstr "Configurar..."
+
+#: contents/ui/components/AiInsightsCard.qml
+msgid "Generate insight"
+msgstr "Gerar insight"
+
+#: contents/ui/components/AiInsightsCard.qml
+msgid "Regenerate insight"
+msgstr "Gerar insight novamente"
+
+#: contents/ui/components/AiInsightsCard.qml
+msgid "Generating insight..."
+msgstr "Gerando insight..."
+
+#: contents/ui/components/AiInsightsCard.qml
+msgid "Out of date. Generating a new insight..."
+msgstr "Desatualizado. Gerando um novo insight..."
+
+#: contents/ui/components/AiInsightsCard.qml
+msgid "Out of date. It may not reflect current usage."
+msgstr "Desatualizado. Pode não refletir o uso atual."
+
+#: contents/ui/components/AiInsightsMessages.qml
+msgid "Set an API key in the AI Insights settings."
+msgstr "Defina uma chave de API nas configurações de Insights de IA."
+
+#: contents/ui/components/AiInsightsMessages.qml
+msgid ""
+"The system wallet is unavailable. Unlock KWallet or check its Secret Service "
+"support."
+msgstr "A carteira do sistema não está disponível. Desbloqueie o KWallet ou verifique o suporte ao Secret Service."
+
+#: contents/ui/components/AiInsightsMessages.qml
+msgid "%1 rejected the API key. Update it in the AI Insights settings."
+msgstr "%1 rejeitou a chave de API. Atualize-a nas configurações de Insights de IA."
+
+#: contents/ui/components/AiInsightsMessages.qml
+msgid "The %1 account has insufficient credits or quota."
+msgstr "A conta %1 não tem créditos ou cota suficientes."
+
+#: contents/ui/components/AiInsightsMessages.qml
+msgid "%1 refused access to this model."
+msgstr "%1 recusou o acesso a este modelo."
+
+#: contents/ui/components/AiInsightsMessages.qml
+msgid "%1 is limiting requests. Try again later."
+msgstr "%1 está limitando as solicitações. Tente novamente mais tarde."
+
+#: contents/ui/components/AiInsightsMessages.qml
+msgid ""
+"The selected model is unavailable, or no endpoint meets the privacy settings."
+msgstr "O modelo selecionado não está disponível, ou nenhum endpoint atende às configurações de privacidade."
+
+#: contents/ui/components/AiInsightsMessages.qml
+msgid "The model rejected the request. It may not support structured output."
+msgstr "O modelo rejeitou a solicitação. Talvez ele não suporte saída estruturada."
+
+#: contents/ui/components/AiInsightsMessages.qml
+msgid ""
+"No OpenRouter endpoint meets the model and privacy requirements right now."
+msgstr "No momento, nenhum endpoint do OpenRouter atende aos requisitos de modelo e privacidade."
+
+#: contents/ui/components/AiInsightsMessages.qml
+msgid "The request timed out."
+msgstr "A solicitação expirou."
+
+#: contents/ui/components/AiInsightsMessages.qml
+msgid "Could not reach Ollama. Check that it is running."
+msgstr "Não foi possível acessar o Ollama. Verifique se ele está em execução."
+
+#: contents/ui/components/AiInsightsMessages.qml
+msgid "Could not reach %1."
+msgstr "Não foi possível acessar %1."
+
+#: contents/ui/components/AiInsightsMessages.qml
+msgid "The model declined to answer."
+msgstr "O modelo se recusou a responder."
+
+#: contents/ui/components/AiInsightsMessages.qml
+msgid "The answer was cut off. Try another model."
+msgstr "A resposta foi cortada. Tente outro modelo."
+
+#: contents/ui/components/AiInsightsMessages.qml
+msgid "The model returned an answer in an unexpected format."
+msgstr "O modelo retornou uma resposta em um formato inesperado."
+
+#: contents/ui/components/AiInsightsMessages.qml
+msgid "Use an https:// Ollama address, or http:// only for this computer."
+msgstr "Use um endereço do Ollama com https://, ou http:// apenas para este computador."
+
+#: contents/ui/components/AiInsightsMessages.qml
+msgid "Check the AI Insights model settings."
+msgstr "Verifique as configurações de modelo de Insights de IA."
+
+#: contents/ui/components/AiInsightsMessages.qml
+msgid "%1 is temporarily unavailable."
+msgstr "%1 está temporariamente indisponível."
 
 #: contents/ui/components/CompactRepresentation.qml
 msgid "Open %1"
@@ -194,14 +330,6 @@ msgid "Open Providers in widget settings to enable or set up a provider."
 msgstr ""
 "Abra Provedores nas configurações do widget para ativar ou configurar um "
 "provedor."
-
-#: contents/ui/components/FullRepresentation.qml
-#: contents/ui/components/OverviewProviderRow.qml
-#: contents/ui/components/PanelSettingsPreview.qml
-#: contents/ui/components/ProviderCostSection.qml
-#: contents/ui/components/SessionsView.qml contents/ui/main.qml
-msgid "%1 - %2"
-msgstr "%1 - %2"
 
 #: contents/ui/components/FullRepresentation.qml
 #: contents/ui/components/ProviderHeader.qml contents/ui/configGeneral.qml
@@ -1230,6 +1358,187 @@ msgstr ""
 msgid "Activity heatmap"
 msgstr "Mapa de calor da atividade"
 
+#: contents/ui/configAiInsights.qml
+msgid "%1 API key for CodexBar AI Insights"
+msgstr "Chave de API %1 para Insights de IA do CodexBar"
+
+#: contents/ui/configAiInsights.qml
+msgid "API key saved in the system wallet."
+msgstr "Chave de API salva na carteira do sistema."
+
+#: contents/ui/configAiInsights.qml
+msgid "The API key contains unsupported characters."
+msgstr "A chave de API contém caracteres não suportados."
+
+#: contents/ui/configAiInsights.qml
+msgid "kdialog is required to enter an API key."
+msgstr "O kdialog é necessário para inserir uma chave de API."
+
+#: contents/ui/configAiInsights.qml
+msgid "Could not save the API key. The system wallet is unavailable."
+msgstr "Não foi possível salvar a chave de API. A carteira do sistema não está disponível."
+
+#: contents/ui/configAiInsights.qml
+msgid "API key removed from the system wallet."
+msgstr "Chave de API removida da carteira do sistema."
+
+#: contents/ui/configAiInsights.qml
+msgid "Could not remove the API key. The system wallet is unavailable."
+msgstr "Não foi possível remover a chave de API. A carteira do sistema não está disponível."
+
+#: contents/ui/configAiInsights.qml
+msgid "Connection works. %1 model available."
+msgid_plural "Connection works. %1 models available."
+msgstr[0] "A conexão funciona. %1 modelo disponível."
+msgstr[1] "A conexão funciona. %1 modelos disponíveis."
+
+#: contents/ui/configAiInsights.qml
+msgid "Enable AI Insights"
+msgstr "Ativar Insights de IA"
+
+#: contents/ui/configAiInsights.qml
+msgid ""
+"Shows a short AI-generated summary of your usage in Overview. Nothing is "
+"sent and no AI service is contacted while this is off."
+msgstr "Mostra na Visão geral um breve resumo do seu uso gerado por IA. Enquanto estiver desativado, nada é enviado e nenhum serviço de IA é contatado."
+
+#: contents/ui/configAiInsights.qml
+msgid "Model"
+msgstr "Modelo"
+
+#: contents/ui/configAiInsights.qml
+msgid "AI provider:"
+msgstr "Provedor de IA:"
+
+#: contents/ui/configAiInsights.qml
+msgid "Ollama (local)"
+msgstr "Ollama (local)"
+
+#: contents/ui/configAiInsights.qml
+msgid "Ollama address:"
+msgstr "Endereço do Ollama:"
+
+#: contents/ui/configAiInsights.qml
+msgid "API key:"
+msgstr "Chave de API:"
+
+#: contents/ui/configAiInsights.qml
+msgid "Stored in the system wallet"
+msgstr "Salva na carteira do sistema"
+
+#: contents/ui/configAiInsights.qml
+msgid "Not set"
+msgstr "Não definida"
+
+#: contents/ui/configAiInsights.qml
+msgid "System wallet unavailable"
+msgstr "Carteira do sistema indisponível"
+
+#: contents/ui/configAiInsights.qml
+msgid "Replace..."
+msgstr "Substituir..."
+
+#: contents/ui/configAiInsights.qml contents/ui/configProviders.qml
+msgid "Set API key..."
+msgstr "Definir chave de API..."
+
+#: contents/ui/configAiInsights.qml
+msgid "Remove"
+msgstr "Remover"
+
+#: contents/ui/configAiInsights.qml
+msgid "Model:"
+msgstr "Modelo:"
+
+#: contents/ui/configAiInsights.qml
+msgid "Test connection"
+msgstr "Testar conexão"
+
+#: contents/ui/configAiInsights.qml
+#: contents/ui/controllers/CliUpdateController.qml
+#: contents/ui/controllers/ManagedCliController.qml
+msgid "Checking..."
+msgstr "Verificando..."
+
+#: contents/ui/configAiInsights.qml
+msgid "Waiting for the API key dialog..."
+msgstr "Aguardando a caixa de diálogo da chave de API..."
+
+#: contents/ui/configAiInsights.qml
+msgid "Use only Zero Data Retention endpoints"
+msgstr "Usar apenas endpoints com Zero Data Retention"
+
+#: contents/ui/configAiInsights.qml
+msgid ""
+"Generation uses the Ollama service on this computer. Usage statistics stay "
+"on this device."
+msgstr "A geração usa o serviço Ollama deste computador. As estatísticas de uso permanecem neste dispositivo."
+
+#: contents/ui/configAiInsights.qml
+msgid ""
+"Aggregated usage statistics are sent to the Ollama service at this address. "
+"Remote addresses must use https://."
+msgstr "Estatísticas de uso agregadas são enviadas ao serviço Ollama neste endereço. Endereços remotos devem usar https://."
+
+#: contents/ui/configAiInsights.qml
+msgid ""
+"Aggregated usage statistics are sent to %1: provider names, quota "
+"percentages, reset times, pace forecasts, and weekly spending and token "
+"totals. Account names, emails, projects, file paths, and prompts are never "
+"sent."
+msgstr "Estatísticas de uso agregadas são enviadas para %1: nomes dos provedores, porcentagens de cota, horários de redefinição, previsões de ritmo e totais semanais de gastos e tokens. Nomes de conta, e-mails, projetos, caminhos de arquivos e prompts nunca são enviados."
+
+#: contents/ui/configAiInsights.qml
+msgid ""
+"Requests are billed to your OpenAI API account. A ChatGPT subscription does "
+"not include API credits."
+msgstr "As solicitações são cobradas na sua conta de API da OpenAI. Uma assinatura do ChatGPT não inclui créditos de API."
+
+#: contents/ui/configAiInsights.qml
+msgid ""
+"Requests are billed to your OpenRouter credits, at the price of the model "
+"you choose. Providers that may collect data are never used."
+msgstr "As solicitações são descontadas dos seus créditos do OpenRouter, pelo preço do modelo escolhido. Provedores que possam coletar dados nunca são usados."
+
+#: contents/ui/configAiInsights.qml
+msgid "Generation"
+msgstr "Geração"
+
+#: contents/ui/configAiInsights.qml
+msgid "Generate:"
+msgstr "Gerar:"
+
+#: contents/ui/configAiInsights.qml
+msgid "Only on request"
+msgstr "Somente quando solicitado"
+
+#: contents/ui/configAiInsights.qml
+msgid "Every 6 hours"
+msgstr "A cada 6 horas"
+
+#: contents/ui/configAiInsights.qml
+msgid "Every 12 hours"
+msgstr "A cada 12 horas"
+
+#: contents/ui/configAiInsights.qml
+msgid "Daily"
+msgstr "Diariamente"
+
+#: contents/ui/configAiInsights.qml
+msgid ""
+"Use the button on the AI Insights card to generate on request. Automatic "
+"generation never runs more often than the chosen interval, and ordinary "
+"usage refreshes do not trigger it."
+msgstr "Use o botão no cartão Insights de IA para gerar quando quiser. A geração automática nunca é executada com mais frequência do que o intervalo escolhido, e as atualizações normais de uso não a acionam."
+
+#: contents/ui/configAiInsights.qml
+msgid "Saved insight:"
+msgstr "Insight salvo:"
+
+#: contents/ui/configAiInsights.qml
+msgid "Clear saved insight"
+msgstr "Limpar insight salvo"
+
 #: contents/ui/configDiagnostics.qml
 msgid "Set the codexbar command path above."
 msgstr "Defina acima o caminho do comando codexbar."
@@ -2040,10 +2349,6 @@ msgstr "O codexbar não retornou dados de diagnóstico."
 msgid "Could not parse codexbar diagnostics: %1"
 msgstr "Não foi possível analisar o diagnóstico do codexbar: %1"
 
-#: contents/ui/configProviders.qml
-msgid "Set API key..."
-msgstr "Definir chave de API..."
-
 #: contents/ui/configProviders.qml contents/ui/main.qml
 msgid "Docs"
 msgstr "Documentação"
@@ -2298,11 +2603,6 @@ msgstr ""
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "External installation. Update using your original installation method."
 msgstr "Instalação externa. Atualize usando o método de instalação original."
-
-#: contents/ui/controllers/CliUpdateController.qml
-#: contents/ui/controllers/ManagedCliController.qml
-msgid "Checking..."
-msgstr "Verificando..."
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "Upstream CLI %1 is available. Installed: %2."
@@ -2997,6 +3297,13 @@ msgstr "Abrir Devin..."
 #: contents/ui/main.qml
 msgid "Open Droid in Browser..."
 msgstr "Abrir Droid no navegador..."
+
+#: contents/ui/main.qml
+msgctxt ""
+"BCP 47 language tag of this translation, such as it or pt-BR. AI Insights "
+"are written in this language."
+msgid "en"
+msgstr "pt-BR"
 
 #: contents/ui/main.qml
 msgid "%1 (estimated)"

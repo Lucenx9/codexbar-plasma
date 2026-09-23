@@ -27,6 +27,9 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   upstream CLI contract for generic settings. It is not a shipped contract.
 - [Cost history](cost-history.md): daily model data, selection behavior, and
   the pinned Linux CLI evidence behind the popup.
+- [AI Insights](ai-insights.md): the optional insight card's boundary decision,
+  allowlisted snapshot, language selection, request and credential contracts,
+  scheduling, and tests.
 - [Translations](translations.md): adding and checking a language catalog.
 - [CLI 0.56.2 parity baseline](research/2026-09-01-macos-parity-0.56.2.md):
   verified official Linux contracts at that comparison date. The

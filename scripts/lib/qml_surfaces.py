@@ -63,6 +63,11 @@ SURFACES: dict[str, tuple[str, ...]] = {
         "contents/ui/controllers/ProviderRosterController.qml",
     ),
     "notifications": ("contents/ui/configNotifications.qml",),
+    "insights": (
+        "contents/ui/configAiInsights.qml",
+        "contents/ui/components/AiInsightsMessages.qml",
+        "contents/ui/AiInsights.js",
+    ),
     "diagnostics": (
         "contents/ui/configDiagnostics.qml",
         "contents/ui/controllers/CliUpdateController.qml",

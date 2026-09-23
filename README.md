@@ -104,6 +104,9 @@ for its limits.
   downloads support Linux x86_64/aarch64 with glibc or musl; the downloaded
   executable must pass a local version probe before activation.
 - `notify-send` for Plasma notifications.
+- Optional AI Insights only: `python3` and GNU `timeout`; for OpenRouter or
+  OpenAI keys also `kdialog`, `secret-tool`, and a Secret Service provider such
+  as KWallet. Nothing is required while the feature is off.
 - `curl`, `jq`, `python3`, `sha256sum`, GNU `timeout`, and util-linux `flock` for
   the bundled release updater. CLI release checks and managed installs also use `python3` and GNU `timeout`. GNU `timeout`
   also bounds CLI writes after a secret prompt.
@@ -151,6 +154,9 @@ themes.
 - A local **Sessions** tab. Transcript paths and working directories are never
   displayed or opened.
 - Refresh on popup opening, plus optional privacy mode and automatic widget updates.
+- Optional, off-by-default [AI Insights](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#ai-insights):
+  a short summary in Overview from a local Ollama model, OpenRouter, or OpenAI,
+  written in the widget's interface language from aggregated statistics only.
 - English plus Italian, French, German, Spanish, and Brazilian Portuguese,
   selected through your Plasma language preferences.
 

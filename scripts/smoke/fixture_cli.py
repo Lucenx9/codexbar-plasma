@@ -29,6 +29,8 @@ SCENARIOS += ("popup-content", "refresh-on-open", "privacy-provider", "privacy-s
 SCENARIOS += ("privacy-cost-details",)
 SCENARIOS += ("usage-retention", "usage-cache-restart")
 SCENARIOS += ("empty-providers", "usage-error", "usage-recovery")
+SCENARIOS += ("ai-insights", "ai-insights-it", "ai-insights-mismatch", "ai-insights-error", "ai-insights-single",
+              "settings-ai-insights", "settings-ai-insights-narrow")
 MAX_SCENARIO_TIMEOUT_SECONDS = 120
 MATRIX_SCENARIOS = ("panel-matrix-one", "panel-matrix-four")
 
@@ -53,6 +55,9 @@ def usage(provider, scenario, now):
                           "resetsAt": (now + timedelta(days=4)).isoformat()},
         },
     }
+    if scenario.startswith("ai-insights") and provider == "codex":
+        snapshot["pace"] = {"primary": {"stage": "ahead", "deltaPercent": 13,
+            "expectedUsedPercent": 30, "willLastToReset": False, "etaSeconds": 3600}}
     if scenario in MATRIX_SCENARIOS:
         if provider == "codex":
             snapshot["credits"] = {"remaining": 125}
@@ -121,7 +126,7 @@ def response(args, scenario, now):
             return []
         if scenario in ("usage-error", "settings-providers-error"):
             raise ValueError("Synthetic connection failure.")
-        providers = ("codex",) if scenario in ("panel-minimal-single", "panel-default-single", "panel-information-single", "panel-matrix-one") else ("codex", "claude")
+        providers = ("codex",) if scenario in ("panel-minimal-single", "panel-default-single", "panel-information-single", "panel-matrix-one", "ai-insights-single") else ("codex", "claude")
         if scenario.startswith("readme-"):
             providers += ("gemini",)
         if scenario == "panel-matrix-four":

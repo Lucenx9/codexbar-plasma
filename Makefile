@@ -1,6 +1,6 @@
 .PHONY: check todo-gate smoke install restart package translations compile-translations update
 
-PACKAGE_FILES := metadata.json contents docs/codexbar-plasma-overview.png docs/codexbar-plasma-codex.png docs/codexbar-plasma-usage-spend.png docs/codexbar-plasma-sessions.png docs/codexbar-plasma-panel-standard.png docs/codexbar-plasma-panel-minimal.png docs/codexbar-plasma-tour.gif scripts/update-widget.sh scripts/check-cli-update.py scripts/manage-cli.py scripts/lib/cli_release.py scripts/lib/managed_cli.py LICENSE NOTICE.md README.md CHANGELOG.md
+PACKAGE_FILES := metadata.json contents docs/codexbar-plasma-overview.png docs/codexbar-plasma-codex.png docs/codexbar-plasma-usage-spend.png docs/codexbar-plasma-sessions.png docs/codexbar-plasma-panel-standard.png docs/codexbar-plasma-panel-minimal.png docs/codexbar-plasma-tour.gif scripts/update-widget.sh scripts/check-cli-update.py scripts/manage-cli.py scripts/ai-insights.py scripts/lib/cli_release.py scripts/lib/managed_cli.py scripts/lib/ai_insights.py LICENSE NOTICE.md README.md CHANGELOG.md
 
 # Override on distros where Qt6 ships QML modules elsewhere (e.g. Debian/Ubuntu
 # multiarch: make check QML_IMPORT_DIR=/usr/lib/x86_64-linux-gnu/qt6/qml).

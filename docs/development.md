@@ -130,6 +130,21 @@ synchronized.
   a seven-day grace period before cleanup. A completed rollback blocks that release
   from automatic reinstall. Changing the selection retires UI replies; an already
   started install can still finish in the private directory.
+- `contents/ui/controllers/AiInsightsController.qml` owns the optional AI
+  Insights generation process: one request at a time, per-request nonce, the
+  95-second deadline, retry delays, interval scheduling, and retirement on a
+  context change, disable, or destruction. It runs nothing while disabled and
+  emits `attemptStarted`/`generated`; `main.qml` persists the attempt time and
+  cached insight and builds the snapshot only while enabled. `AiInsights.js`
+  owns the language tag, context key, cache validation, schedule, retry
+  delays, helper command, and reply validation; `AiInsightsSnapshot.js` builds
+  the allowlisted snapshot and deterministic signals. `scripts/ai-insights.py`
+  calls `scripts/lib/ai_insights.py`, which alone reads Secret Service keys,
+  prompts for them with `kdialog`, and performs the HTTPS or local Ollama
+  request. `configAiInsights.qml` owns the key-status, key, and model-discovery
+  processes; `components/AiInsightsMessages.qml` localizes helper reasons for
+  both surfaces. See the [AI Insights reference](ai-insights.md) for the
+  boundary decision and contracts; keep it current with any change.
 - `contents/ui/controllers/WidgetUpdateController.qml` owns the widget updater's
   executable source, per-request nonce, captured install mode, timeout, queued
   install request, and retry/interval timers. It receives update settings and
@@ -641,6 +656,18 @@ wiring, process ownership, and request registration/retirement ordering.
 `tests/tst_session_response.qml` directly checks bounded, redacted response
 outcomes and distinguishes failed output from a confirmed empty snapshot;
 `tests/tst_session_refresh_policy.qml` checks exact scheduling boundaries.
+
+`tests/tst_ai_insights.qml` and `tests/tst_ai_insights_snapshot.qml` cover the
+pure AI Insights policy and snapshot allowlist. `tests/test_ai_insights.py` runs
+the helper against a local HTTP server and fake `secret-tool` and `kdialog`
+executables, and compiles the catalogs to run `main.qml`'s language adapter
+through to the `--language` argument. `tests/test_ai_insights_controller.py`
+runs the production controller through Plasma's executable DataSource with a
+recording helper. None of them contacts a real AI service, wallet, or key.
+The smoke runner stages `scripts/smoke/fixture_ai_insights.py` as the package's
+`scripts/ai-insights.py` for every scenario, so previews can never reach a real
+service; the `ai-insights*` and `settings-ai-insights*` scenarios exercise the
+card, language mismatch, failure, single-provider placement, and settings page.
 
 `tests/test_widget_update_controller.py` instantiates the production updater
 module and runs temporary executable fixtures through Plasma's real DataSource.

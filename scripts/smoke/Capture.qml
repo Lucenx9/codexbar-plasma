@@ -48,6 +48,7 @@ Item {
     readonly property bool readmeScenario: scenario.indexOf("readme-") === 0
     readonly property int expectedProviderCount: scenario === "empty-providers" || scenario === "usage-error" ? 0
         : scenario === "panel-information-single" || scenario === "panel-minimal-single" || scenario === "panel-default-single"
+            || scenario === "ai-insights-single"
         ? 1 : (readmeScenario ? 3 : 2)
 
     Loader {
@@ -120,7 +121,8 @@ Item {
     function settingsPageSource(name) {
         var pages = [["settings-general", "configGeneral.qml"], ["settings-providers", "configProviders.qml"],
             ["settings-panel", "configPanel.qml"], ["settings-popup", "configPopup.qml"],
-            ["settings-notifications", "configNotifications.qml"], ["settings-diagnostics", "configDiagnostics.qml"]];
+            ["settings-notifications", "configNotifications.qml"], ["settings-diagnostics", "configDiagnostics.qml"],
+            ["settings-ai-insights", "configAiInsights.qml"]];
         for (var i = 0; i < pages.length; i++) {
             if (name.indexOf(pages[i][0]) === 0)
                 return pages[i][1];
@@ -945,7 +947,61 @@ Item {
         return true;
     }
 
+    function aiInsightsCardVisible() {
+        var popup = applet.fullRepresentationItem;
+        var cards = [];
+        (function collect(item) {
+            if (item.objectName === "aiInsightsCard")
+                cards.push(item);
+            for (var i = 0; i < item.children.length; i++)
+                collect(item.children[i]);
+        })(popup);
+        return cards.filter(function(card) {
+            for (var node = card; node; node = node.parent) {
+                if (!node.visible)
+                    return false;
+            }
+            return true;
+        }).length;
+    }
+
+    function aiInsightsReady() {
+        if (scenario === "ai-insights-error") {
+            if (applet.aiInsightsErrorReason !== "network")
+                return false;
+            var error = findItem(applet.fullRepresentationItem, "aiInsightsError");
+            verifyScenario(error !== null && error.visible && error.plainText.indexOf("Ollama") >= 0,
+                "the AI Insights failure must be visible and actionable");
+            verifyScenario(applet.providers.length === 2 && applet.providers[0].rows.length === 2,
+                "an AI Insights failure must not change usage data");
+            return aiInsightsCardVisible() === 1;
+        }
+        if (applet.aiInsightsCacheState !== "current")
+            return false;
+        var popup = applet.fullRepresentationItem;
+        var displayed = hasVisibleText(popup, "Approfondimenti IA") ? "it" : (hasVisibleText(popup, "AI Insights") ? "en" : "");
+        console.log("SMOKE_AI_LANGUAGE:" + applet.aiInsightsLanguage + " displayed:" + displayed + " locale:" + Qt.locale().name);
+        var expected = scenario === "ai-insights-it" ? "it" : (scenario === "ai-insights-mismatch" ? displayed : "en");
+        verifyScenario(displayed === expected && applet.aiInsightsLanguage === expected,
+            "insight language must follow the displayed interface language");
+        verifyScenario(applet.aiInsightsCache.summary.indexOf("[" + expected + "]") >= 0,
+            "the generation request did not carry the interface language");
+        verifyScenario(applet.aiInsightsCache.summary.indexOf("Leak check passed") >= 0,
+            "the AI snapshot contained account or provider identity");
+        if (scenario === "ai-insights-mismatch") {
+            verifyScenario(Qt.locale().name.indexOf(displayed) !== 0,
+                "the fixture must make Qt.locale() disagree with the displayed language");
+        }
+        if (scenario === "ai-insights-single") {
+            verifyScenario(!applet.overviewAvailable && applet.selectedProviderID === "codex",
+                "single-provider navigation changed");
+        }
+        return aiInsightsCardVisible() === 1;
+    }
+
     function scenarioReady() {
+        if (scenario.indexOf("ai-insights") === 0)
+            return aiInsightsReady();
         if (scenario.indexOf("share-usage") === 0)
             return applet.shareUsageWindow && applet.shareUsageWindow.visible
                 && applet.shareUsageWindow.snapshot.providers.length > 0;
@@ -1314,6 +1370,20 @@ Item {
                     preview.page.diagnosticError = "Synthetic provider timeout. Try again.";
                 }
                 navigationVerified = true;
+            }
+            if (scenario.indexOf("settings-ai-insights") === 0) {
+                var insightsPage = preview.page;
+                if (!navigationVerified) {
+                    verifyScenario(!insightsPage.cfg_aiInsightsEnabled && insightsPage.cfg_aiInsightsIntervalHours === 0
+                        && insightsPage.cfg_aiInsightsModel === "" && insightsPage.keyStatus === "",
+                        "AI Insights must default to disabled, manual, without a model or wallet lookup");
+                    insightsPage.cfg_aiInsightsEnabled = true;
+                    insightsPage.selectProvider("openrouter");
+                    navigationVerified = true;
+                    return false;
+                }
+                // The synthetic helper answers the local wallet lookup only.
+                return insightsPage.keyStatus === "absent" && !insightsPage.busy;
             }
             if (scenario.indexOf("settings-panel") === 0 && !navigationVerified) {
                 verifySettingsPanelPreview(preview.page);
@@ -1719,6 +1789,15 @@ Item {
                         if (capture.applet.costLoading || capture.applet.tokenCosts !== previousCosts)
                             console.error("SMOKE_FAILED: metric switch reloaded project history");
                     }
+                } else if (capture.scenario.indexOf("ai-insights") === 0) {
+                    popup.Window.window.height = 760;
+                    if (capture.scenario !== "ai-insights-single")
+                        capture.applet.selectGlobalView("overview");
+                    capture.verifyScenario(!capture.applet.aiInsightsBusy && capture.applet.aiInsightsCacheState === "none",
+                        "AI Insights must not generate before an explicit request in manual mode");
+                    capture.applet.generateAiInsight();
+                    capture.verifyScenario(capture.applet.aiInsightsBusy, "manual generation did not start");
+                    capture.applet.generateAiInsight();
                 } else if (capture.scenario === "normal" || capture.scenario.indexOf("localization-") === 0)
                     capture.applet.selectGlobalView("overview");
                 else if (capture.scenario === "partial-error")
@@ -1753,6 +1832,9 @@ Item {
                 return;
             }
             if (capture.scenario === "normal") {
+                capture.verifyScenario(!capture.applet.aiInsightsEnabled && capture.aiInsightsCardVisible() === 0
+                    && capture.applet.aiInsightsSnapshot.text === "" && !capture.applet.aiInsightsBusy,
+                    "AI Insights must stay hidden and idle by default");
                 var next = capture.findItem(capture.applet.fullRepresentationItem, "nextTabsButton");
                 capture.verifyScenario(next !== null && !next.visible, "scroll controls appear when tabs fit");
             }

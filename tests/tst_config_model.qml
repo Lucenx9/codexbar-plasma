@@ -21,6 +21,7 @@ TestCase {
         for (var i = 0; i < model.count; i++)
             sources.push(model.get(i).source);
         compare(sources.sort(), [
+            "configAiInsights.qml",
             "configDiagnostics.qml",
             "configGeneral.qml",
             "configNotifications.qml",

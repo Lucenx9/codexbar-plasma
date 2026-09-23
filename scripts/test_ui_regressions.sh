@@ -206,6 +206,7 @@ popup_surface = Surface("popup", root)
 popup_text = popup_surface.text
 panel_surface = Surface("panel", root)
 notifications_surface = Surface("notifications", root)
+insights_surface = Surface("insights", root)
 for order_surface, move_function, repeater in (
     (popup_surface, "moveProvider", "providerOrderRepeater"),
     (panel_surface, "movePanelElement", "panelOrderRepeater"),
@@ -259,6 +260,8 @@ internal_config_keys = {
     "widgetUpdateLastError",
     "lastNotifiedUpdateVersion",
     "providerConfigRevision",
+    "aiInsightsCache",
+    "aiInsightsLastAttempt",
 }
 all_config_keys = set(re.findall(r'<entry name="([^"]+)"', config_text))
 resettable_config_keys = all_config_keys - internal_config_keys
@@ -314,6 +317,7 @@ for settings_page_text, settings_page_name in (
     (notifications_surface.text, "configNotifications.qml"),
     (providers_text, "configProviders.qml"),
     (diagnostics_text, "configDiagnostics.qml"),
+    (insights_surface.text, "configAiInsights.qml"),
 ):
     for default_key, literal in qml_default_pattern.findall(settings_page_text):
         if default_key not in xml_defaults:

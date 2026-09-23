@@ -388,8 +388,8 @@ fields; track proposed extensions in the issue tracker.
 
 ## Settings
 
-- Six settings pages: **General**, **Providers**, **Panel**, **Popup**,
-  **Notifications**, and **Diagnostics**. CLI path and provider/source overrides
+- Seven settings pages: **General**, **Providers**, **Panel**, **Popup**,
+  **Notifications**, **AI Insights**, and **Diagnostics**. CLI path and provider/source overrides
   sit beside redacted diagnostics; quota thresholds sit beside their alerts.
   **Popup** groups provider order and Overview providers under **Providers**;
   **Diagnostics** runs redacted diagnostics from its **Provider diagnostics**
@@ -531,6 +531,81 @@ and previous copies are retained. Other versions have a seven-day grace period
 before cleanup, so recent CLI processes can finish using their resource bundles.
 A restored CLI does not roll back upstream provider configuration changes.
 
+## AI Insights
+
+AI Insights is an optional card that asks a language model for a short
+explanation of your current usage: a quota likely to run out before its reset,
+a notable change in spending or tokens between the last two complete weeks, or
+a notable difference between providers. It explains facts the widget has
+already measured; forecasts come from the CLI pace data, and comparisons appear
+only when the history supports them. It is off by default. While it is off, the
+widget builds no AI data, starts no AI process, contacts no AI service, and
+shows no card. The [AI Insights reference](ai-insights.md) documents the data
+and request contracts.
+
+Enable it in **AI Insights** settings, choose a provider and a model, and use
+**Test connection** to check the service and list available models. The card
+appears at the end of **Overview**. Without an Overview tab (one provider, or a
+fixed provider in Diagnostics), it appears in the provider view instead. The
+card's generate button creates or refreshes the insight; the Overview refresh
+button still refreshes usage only.
+
+- **Ollama** runs models on your computer. The default address is
+  `http://localhost:11434` and needs no API key. Install a model first, for
+  example `ollama pull llama3.2`. A remote Ollama service must use `https://`,
+  and the settings page states that usage statistics are sent to it.
+- **OpenRouter** needs an API key and credits. Only models that support
+  structured output are listed. Requests never use providers that may collect
+  data for training, and **Use only Zero Data Retention endpoints**, on by
+  default, restricts routing further; some models then have no endpoint.
+  Requests are billed at the price of the chosen model.
+- **OpenAI** needs an API platform key with API credits. A ChatGPT subscription
+  does not include API credits. Requests set `store: false`, so OpenAI does
+  not keep them as stored completions.
+
+**Set API key...** opens a password dialog (it requires `kdialog`) and stores
+the key in the system wallet (KWallet through Secret Service, which also needs
+`secret-tool`). The key is saved immediately, separately from any key in the
+CodexBar CLI configuration, and is never written to widget settings. **Remove**
+deletes it from the wallet. Nothing falls back to plain-text storage.
+
+Insights use the language of the widget interface: the translation Plasma
+actually shows, not the region, number format, provider, or model. An English
+interface produces English insights, an Italian one Italian insights, and a
+language without a widget translation uses English, matching the displayed
+text. Provider names, model names, and units stay unchanged. An insight
+generated in another language, or with another provider, model, address, or
+privacy setting, is not shown as current; generating a new one is up to you.
+
+Only aggregated statistics leave the device when a cloud provider is selected:
+provider identifiers, quota percentages, window lengths, time to reset, CLI pace
+forecasts, service-incident severity, and last-week versus previous-week spend
+and token totals per provider and currency. Account names, emails,
+organizations, projects, paths, sessions, prompts, model names from cost
+history, and provider messages are never sent. Measurements retained after a
+failed refresh are sent only as unavailable. Weekly spending comparisons
+require cost history already loaded in **Usage & Spend**; generating an insight
+never starts a cost scan.
+
+**Generate** defaults to **Only on request**. **Every 6 hours**, **Every 12
+hours**, and **Daily** generate in the background at most once per interval,
+counted from the last successful insight. Usage refreshes, opening the popup,
+and language changes never trigger a request, and a plasmashell restart waits
+at least 30 minutes after the last attempt. The last insight is saved with its
+time, provider, model, and language, and **Clear saved insight** removes it.
+An insight older than the interval (a day in manual mode), or followed by a
+failed attempt, is labeled out of date.
+
+When a provider is unavailable, the card keeps usage data untouched and shows a
+short reason, such as Ollama not running, a rejected key, missing credits, a
+rate limit, an unsupported model, or an unreadable answer. Automatic generation
+then waits: until the provider's retry time for a rate limit, until the next
+interval (a day in manual mode) for key, credit, and model problems, and 30
+minutes otherwise. Malformed answers are never retried automatically. The
+generate button can retry at once, except during a provider's rate limit. Turn **Enable AI Insights**
+off to stop all AI activity; the saved insight stays hidden until you enable it
+again or clear it.
+
 ## Default settings
 
 The defaults keep quota usage visible and current, and reserve notifications for
@@ -562,6 +637,7 @@ and 95% critical thresholds. Reset notifications are off until enabled.
 | Overview | First three enabled providers automatically |
 | Reset times | Relative countdown |
 | Provider changelog links | Off |
+| AI Insights | Off; once enabled, Ollama at `http://localhost:11434`, no model, generation only on request, OpenRouter Zero Data Retention routing on |
 
 These values apply to new widgets and settings without a stored override. Existing
 stored choices take precedence. **General → Restore all defaults** prepares these

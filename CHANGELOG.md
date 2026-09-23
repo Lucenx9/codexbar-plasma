@@ -12,6 +12,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Add optional AI Insights, off by default: a short Overview card that explains
+  quota risk, forecast exhaustion, and week-over-week spending or token changes
+  using a local Ollama model, OpenRouter, or OpenAI. It writes in the widget's
+  interface language, sends only aggregated statistics, keeps API keys in the
+  system wallet, and generates only on request unless an interval is chosen.
 - Draw a progress meter under provider detail rows that report a used/total
   pair, such as Bifrost budgets. Rows without one keep their text unchanged.
 - Add a square CodexBar icon for the KDE Store listing, with a 512-pixel PNG

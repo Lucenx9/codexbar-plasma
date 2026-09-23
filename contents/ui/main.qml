@@ -4,6 +4,8 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasmoid
 import "components" as Components
 import "controllers" as Controllers
+import "AiInsights.js" as AiInsights
+import "AiInsightsSnapshot.js" as AiInsightsSnapshot
 import "Guards.js" as Guards
 import "NotificationMemo.js" as NotificationMemo
 import "NotificationPlanner.js" as NotificationPlanner
@@ -56,6 +58,22 @@ PlasmoidItem {
     property bool showPopupCredits: Plasmoid.configuration.showPopupCredits !== false
     property bool showPopupProviderDetails: Plasmoid.configuration.showPopupProviderDetails !== false
     property bool privacyMode: Plasmoid.configuration.privacyMode === true
+    readonly property bool aiInsightsEnabled: Plasmoid.configuration.aiInsightsEnabled === true
+    // Translators set this marker to their catalog's language tag, so insights
+    // follow the catalog i18n() actually resolved rather than the numeric or
+    // regional locale, which can differ from the interface language.
+    readonly property string aiInsightsLanguage: aiInsightsLanguageTag()
+    // Built only while enabled; disabled installations do no AI work at all.
+    readonly property var aiInsightsSnapshot: aiInsightsEnabled
+        ? AiInsightsSnapshot.build(providers, panelClockMs, quotaWarningPercent)
+        : ({ text: "", id: "", sufficient: false })
+    readonly property var aiInsightsCache: aiInsightsEnabled
+        ? AiInsights.parseCache(Plasmoid.configuration.aiInsightsCache || "") : null
+    readonly property string aiInsightsCacheState: AiInsights.cacheState(aiInsightsCache,
+        aiInsightsController.contextKey, panelClockMs, aiInsightsController.intervalHours)
+    readonly property bool aiInsightsConfigured: aiInsightsController.configured
+    readonly property bool aiInsightsBusy: aiInsightsController.busy
+    readonly property string aiInsightsErrorReason: aiInsightsController.errorReason
     readonly property var presentedProviders: providerPresentations(providers)
     readonly property var presentedOverviewProviders: providerPresentations(overviewProviderItems)
     readonly property var presentedSessions: sessions.map(function(item) {
@@ -1831,6 +1849,23 @@ PlasmoidItem {
         }
     }
 
+    function aiInsightsLanguageTag() {
+        return AiInsights.languageTag(i18nc(
+            "BCP 47 language tag of this translation, such as it or pt-BR. AI Insights are written in this language.", "en"))
+    }
+
+    function generateAiInsight() {
+        aiInsightsController.generate()
+    }
+
+    function aiInsightsProviderName(provider) {
+        return aiInsightsMessages.providerName(provider)
+    }
+
+    function aiInsightsErrorText(reason) {
+        return aiInsightsMessages.errorText(reason, aiInsightsController.requestContext.provider)
+    }
+
     function performAction(actionRow) {
         var actionID = actionRow && actionRow.action ? actionRow.action : actionRow
         var item = selectedProviderData
@@ -2537,6 +2572,10 @@ PlasmoidItem {
         id: rateWindowLabels
     }
 
+    Components.AiInsightsMessages {
+        id: aiInsightsMessages
+    }
+
     Controllers.ProviderConfigWatcher {
         id: providerConfigWatcher
 
@@ -2600,6 +2639,28 @@ PlasmoidItem {
         commandPath: root.commandPath
         refreshIntervalSec: root.refreshIntervalSec
         active: root.expanded && root.sessionsSelected
+    }
+
+    Controllers.AiInsightsController {
+        id: aiInsightsController
+
+        enabled: root.aiInsightsEnabled
+        provider: Plasmoid.configuration.aiInsightsProvider || "ollama"
+        model: Plasmoid.configuration.aiInsightsModel || ""
+        endpoint: Plasmoid.configuration.aiInsightsOllamaEndpoint || ""
+        zdr: Plasmoid.configuration.aiInsightsOpenRouterZdr !== false
+        language: root.aiInsightsLanguage
+        intervalHours: AiInsights.intervalHours(Plasmoid.configuration.aiInsightsIntervalHours)
+        snapshotText: root.aiInsightsSnapshot.text
+        snapshotId: root.aiInsightsSnapshot.id
+        cacheText: root.aiInsightsEnabled ? (Plasmoid.configuration.aiInsightsCache || "") : ""
+        lastAttempt: Plasmoid.configuration.aiInsightsLastAttempt || ""
+        onAttemptStarted: function(timestamp) {
+            Plasmoid.configuration.aiInsightsLastAttempt = timestamp
+        }
+        onGenerated: function(text) {
+            Plasmoid.configuration.aiInsightsCache = text
+        }
     }
 
     Controllers.ManagedCliController {
