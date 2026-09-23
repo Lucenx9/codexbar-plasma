@@ -24,6 +24,7 @@ RowLayout {
     Rectangle {
         id: providerIdentitySurface
 
+        Layout.alignment: Qt.AlignTop
         Layout.preferredWidth: Kirigami.Units.iconSizes.medium + Kirigami.Units.smallSpacing * 2
         Layout.preferredHeight: Layout.preferredWidth
         radius: providerHeaderRow.applet.nestedSurfaceRadius
