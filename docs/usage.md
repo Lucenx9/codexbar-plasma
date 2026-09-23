@@ -130,7 +130,9 @@ work and upstream contract requirements.
   request, token, model, or dashboard fields through the CLI.
 - Declarative provider detail sections from the CLI `usage.details` contract,
   including labeled rows, secondary values, and keyboard/pointer-inspectable
-  bar/line charts.
+  bar/line charts. A row that carries a valid `progress` used/total pair, such
+  as a Bifrost budget, also draws a thin meter under its text; the meter fills
+  at most to the total, and rows without a valid pair keep their text alone.
 
 ## Data freshness
 

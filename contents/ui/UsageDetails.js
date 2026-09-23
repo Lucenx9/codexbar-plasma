@@ -32,6 +32,28 @@ function optionalText(value) {
         : redacted
 }
 
+function optionalNumber(value) {
+    return typeof value === "number" && isFinite(value) ? value : null
+}
+
+// The CLI caps progress.used at total while the display value stays uncapped,
+// so the pair drives the meter and the display string is never parsed.
+function optionalProgress(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return null
+    }
+    var used = optionalNumber(value.used)
+    var total = optionalNumber(value.total)
+    if (used === null || total === null || used < 0 || total <= 0) {
+        return null
+    }
+    return {
+        used: used,
+        total: total,
+        fraction: Math.min(1, used / total)
+    }
+}
+
 function normalizeSections(rawSections) {
     if (!Array.isArray(rawSections)) {
         return []
@@ -61,7 +83,9 @@ function normalizeSections(rawSections) {
             rows.push({
                 label: label,
                 value: value,
-                secondaryValue: optionalText(rawRow.secondaryValue)
+                secondaryValue: optionalText(rawRow.secondaryValue),
+                usageValue: optionalNumber(rawRow.usageValue),
+                progress: optionalProgress(rawRow.progress)
             })
         }
 

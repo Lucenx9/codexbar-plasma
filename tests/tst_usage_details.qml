@@ -35,6 +35,87 @@ TestCase {
         compare(sections[0].chart.points[1].value, 25)
     }
 
+    function test_keepsOfficialProgressAndUsageValueNumbers() {
+        // Shape verified in official Linux 0.65.0 Bifrost output: the CLI caps
+        // progress.used at total while the display value stays uncapped.
+        var sections = UsageDetails.normalizeSections([
+            {
+                title: "Budget",
+                rows: [
+                    { label: "Spend", value: "$2.50 / $10.00", usageValue: 2.5,
+                        progress: { used: 0.25, total: 1 } },
+                    { label: "Over budget", value: "$14.00 / $10.00", usageValue: 14,
+                        progress: { used: 1, total: 1 } },
+                    { label: "Uncapped", value: "12 / 10", progress: { used: 12, total: 10 } },
+                    { label: "Idle", value: "$0.00", usageValue: 0, progress: { used: 0, total: 5 } },
+                    { label: "Model", value: "gpt-5", usageValue: 3 }
+                ]
+            }
+        ])
+
+        var rows = sections[0].rows
+        compare(rows.length, 5)
+        compare(rows[0].value, "$2.50 / $10.00")
+        compare(rows[0].usageValue, 2.5)
+        compare(rows[0].progress.used, 0.25)
+        compare(rows[0].progress.total, 1)
+        compare(rows[0].progress.fraction, 0.25)
+        compare(rows[1].value, "$14.00 / $10.00")
+        compare(rows[1].usageValue, 14)
+        compare(rows[1].progress.fraction, 1)
+        compare(rows[2].progress.used, 12)
+        compare(rows[2].progress.fraction, 1)
+        compare(rows[2].usageValue, null)
+        compare(rows[3].usageValue, 0)
+        compare(rows[3].progress.fraction, 0)
+        compare(rows[4].usageValue, 3)
+        compare(rows[4].progress, null)
+    }
+
+    function test_rejectsInvalidProgressWithoutParsingDisplayText() {
+        var invalidProgress = [
+            undefined,
+            null,
+            "25%",
+            0.25,
+            [0.25, 1],
+            {},
+            { used: 1 },
+            { total: 1 },
+            { used: "1", total: "4" },
+            { used: 1, total: 0 },
+            { used: 1, total: -4 },
+            { used: -1, total: 4 },
+            { used: NaN, total: 4 },
+            { used: 1, total: Infinity },
+            { used: Infinity, total: Infinity }
+        ]
+        var rawRows = []
+        for (var i = 0; i < invalidProgress.length; i++) {
+            rawRows.push({ label: "Row " + i, value: "25%", secondaryValue: "1 / 4",
+                usageValue: "25", progress: invalidProgress[i] })
+        }
+        var sections = UsageDetails.normalizeSections([{ title: "Budget", rows: rawRows }])
+
+        compare(sections[0].rows.length, invalidProgress.length)
+        for (var rowIndex = 0; rowIndex < invalidProgress.length; rowIndex++) {
+            var row = sections[0].rows[rowIndex]
+            compare(row.progress, null, "Row " + rowIndex + " must fall back to text")
+            compare(row.usageValue, null)
+            compare(row.value, "25%")
+            compare(row.secondaryValue, "1 / 4")
+        }
+
+        var nonFinite = UsageDetails.normalizeSections([{ title: "Values", rows: [
+            { label: "NaN", value: "x", usageValue: NaN },
+            { label: "Infinity", value: "x", usageValue: -Infinity },
+            { label: "Negative", value: "x", usageValue: -2 }
+        ] }])[0].rows
+        compare(nonFinite[0].usageValue, null)
+        compare(nonFinite[1].usageValue, null)
+        compare(nonFinite[2].usageValue, -2)
+    }
+
     function test_appliesOfficialContractBounds() {
         var rawRows = []
         for (var rowIndex = 0; rowIndex < 30; rowIndex++) {
