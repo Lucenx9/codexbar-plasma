@@ -816,6 +816,7 @@ Item {
                 }
 
                 Components.RefreshButton {
+                    Layout.alignment: Qt.AlignTop
                     busy: applet.loading
                     label: i18n("Refresh")
                     onRequested: applet.refreshNow(true)

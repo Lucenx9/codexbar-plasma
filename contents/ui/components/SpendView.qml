@@ -104,6 +104,7 @@ ColumnLayout {
         PlasmaComponents.ToolButton {
             id: shareButton
             objectName: "shareUsageButton"
+            Layout.alignment: Qt.AlignTop
             icon.name: "document-share"
             Accessible.name: i18n("Share AI usage")
             enabled: view.providerCosts.length > 0 && !view.applet.costLoading
@@ -116,6 +117,7 @@ ColumnLayout {
         }
 
         Components.RefreshButton {
+            Layout.alignment: Qt.AlignTop
             busy: view.applet.costLoading
             label: i18n("Refresh local history")
             onRequested: view.applet.refreshCost(true)

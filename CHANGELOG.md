@@ -103,6 +103,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Align top-right header action buttons to the top across Overview, Usage & Spend,
+  and Sessions views, matching ProviderHeader alignment and avoiding vertical
+  button jumps when switching popup tabs or when header subtitles expand.
 - Align provider header identity icon tile to the top of the row, matching the
   refresh button and title heading alignment when account, plan, or update
   metadata expands the middle column.
