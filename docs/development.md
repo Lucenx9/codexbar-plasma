@@ -42,7 +42,9 @@ For those, use `make install` or `./install.sh`. Release-package users can use
 `scripts/update-widget.sh --setup` is also the downloadable installer documented
 in [Quick install](../README.md#quick-install-from-a-terminal). It must work as a
 single file outside a checkout. The README bootstrap downloads it completely
-into a shell variable and passes it to Bash through stdin. Setup reads the
+into a shell variable and runs it with `bash -c`, keeping the terminal as stdin
+so setup prompts work; piping the script into `bash -s` would make stdin the
+script and silently skip every prompt. Setup reads the
 installed user package metadata under the absolute `XDG_DATA_HOME`, falling
 back to `~/.local/share`. An absent package uses version `0.0.0` for the shared
 release validation. Setup rejects invalid existing package metadata, including
@@ -67,7 +69,8 @@ and reports CLI failure separately from successful widget installation. Shell
 installer messages are technical English; the widget's QML catalogs are unchanged.
 
 Run `make check-python-test_release_setup check-update-widget check-shellcheck`
-while editing. Setup tests run the standalone script from a file and stdin with
+while editing. Setup tests run the standalone script from a file, stdin, and the exact README
+command under a pseudo-terminal, with
 synthetic release archives, temporary user data, and recording tools; they never
 install into the real desktop or download a CLI. Run `make check` and
 `make package` before PR delivery. Keep the README command and installer help

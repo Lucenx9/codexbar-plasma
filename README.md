@@ -18,7 +18,7 @@ theme; provider accent colors stay consistent across themes.
 From your Plasma 6 desktop session, run this command as your regular user:
 
 ```sh
-(installer=$(curl -fsS --max-time 30 --max-filesize 65536 https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/scripts/update-widget.sh) && printf '%s\n' "$installer" | bash -s -- --setup)
+(installer=$(curl -fsS --max-time 30 --max-filesize 65536 https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/scripts/update-widget.sh) && bash -c "$installer" codexbar-setup --setup)
 ```
 
 This downloads the installer from this repository's `main` branch before

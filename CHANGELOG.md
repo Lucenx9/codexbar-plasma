@@ -105,6 +105,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Make the quick-install command's prompts reach the terminal. The documented
+  one-liner piped the installer into Bash, so it never offered the private CLI
+  or a Plasma restart. The updated command runs the downloaded installer with
+  `bash -c`; unattended runs stay non-interactive.
 - Serialize widget upgrades so two widget instances, setup, or `make update`
   can no longer run overlapping `kpackagetool6` upgrades, which could delete the
   installed widget. An instance that finds the release already installed by
