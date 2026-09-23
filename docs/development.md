@@ -424,9 +424,10 @@ clipboard interoperability with every Wayland application or portal backend.
   `required property var modelData` inside the component. An alias assignment
   from the parent does not establish the delegate's scope; `qmllint` may miss
   the resulting runtime error.
-- Use `qmlformat` for new files or a dedicated formatting change, then inspect
-  the diff. Existing files have no formatter baseline, so preserve formatting
-  during unrelated work.
+- Use the Qt 6 `qmlformat`, such as `/usr/lib/qt6/bin/qmlformat`, for new files
+  or a dedicated formatting change, then inspect the diff. Some distributions
+  put Qt 5's `qmlformat` first on `PATH`; `--version` must report 6.x. Existing
+  files have no formatter baseline, so preserve formatting during unrelated work.
 - Keep `qmlls` in the editor. Machine-specific `.qmlls.ini` files stay out of Git;
   language-server diagnostics do not replace `make check`.
 
@@ -500,12 +501,14 @@ reformats anything, so neither introduces style churn. `qmlformat` stays out of
 the suite, but no longer because the checks pin formatting: the membership
 assertions in `test_ui_regressions.sh` compare through `code_contains`, which
 ignores anonymous-function spacing, statement-terminating semicolons, and line
-breaks. Two measured problems block adoption instead, both recorded in
-[TODO.md](../TODO.md): `qmlformat` 6.11.2 segfaults on two of this repository's
-files at any `MaxColumnWidth` of 140 or less, and with wrapping disabled, its
-default, it joins wrapped expressions into lines as long as 2570 characters.
-`test_feature_parity.sh` and `test_process_lifecycle.sh` also still match
-literally, so a setting that rewraps differently breaks them.
+breaks. Readability blocks adoption instead, as recorded in
+[TODO.md](../TODO.md): with wrapping disabled, its default, `qmlformat` 6.11.2
+joins wrapped expressions into lines as long as 2570 characters, and any
+`MaxColumnWidth` splits comparisons across lines. `test_feature_parity.sh` and
+`test_process_lifecycle.sh` also still match literally, so a setting that
+rewraps differently breaks them. `qmlformat` recurses without bound on a
+regular expression literal wider than `MaxColumnWidth`, so build long patterns
+from strings with `new RegExp(...)` or match plain substrings instead.
 
 All CI container jobs pin the official KDE neon User Edition image by digest.
 Jobs install dependencies using the authenticated APT indexes already included

@@ -805,9 +805,15 @@ Item {
         if (!item || item.visible === false)
             return false;
         var values = [item.text, item.plainText, item.Accessible.name];
+        var privateTexts = ["demo@example", "Example team", "Example project", "Another project", "Documentation site",
+                            "Unpriced experiment", "Example model", "Earlier model"];
         for (var value of values) {
-            if (typeof value === "string" && /demo@example|Example team|Example project|Another project|Documentation site|Unpriced experiment|Example model|Earlier model/.test(value))
-                return true;
+            if (typeof value !== "string")
+                continue;
+            for (var privateText of privateTexts) {
+                if (value.indexOf(privateText) >= 0)
+                    return true;
+            }
         }
         for (var child of item.children) {
             if (containsPrivateText(child))
