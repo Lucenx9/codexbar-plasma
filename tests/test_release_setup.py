@@ -4,6 +4,7 @@ import json
 import os
 import pty
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import tempfile
@@ -12,6 +13,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts/update-widget.sh"
+README = ROOT / "README.md"
 
 
 class ReleaseSetupTests(unittest.TestCase):
@@ -41,6 +43,7 @@ while [[ $# -gt 0 ]]; do
 done
 case "$url" in
   */latest) file=release.json ;;
+  */main/scripts/update-widget.sh) file=update-widget.sh ;;
   *.sha256) file=codexbar-plasma.plasmoid.sha256 ;;
   *.plasmoid) file=codexbar-plasma.plasmoid ;;
   *) exit 1 ;;
@@ -138,6 +141,30 @@ print(json.dumps({"status": os.environ.get("CLI_STATUS", "ready")}))
         self.assertNotIn("BASH_SOURCE", result.stderr)
         self.assertIn("widget installed", result.stderr)
         self.assertIn(" -i ", self.calls())
+
+    def test_readme_command_prompts_from_the_terminal(self):
+        # Run the documented one-liner verbatim, with curl serving this checkout's
+        # installer. Piping the script into Bash made stdin the script itself, so
+        # a user at a real terminal never saw the CLI or restart prompts.
+        command = re.search(r"^\(installer=\$\(curl .*\)$", README.read_text(), re.M).group(0)
+        shutil.copyfile(SCRIPT, self.root / "update-widget.sh")
+        master, slave = pty.openpty()
+        try:
+            os.write(master, b"y\n")
+            result = subprocess.run([str(self.bin / "bash"), "-c", command], env=self.env, text=True,
+                                    stdin=slave, capture_output=True, timeout=30)
+        finally:
+            os.close(master)
+            os.close(slave)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Install or reuse the private official CodexBar CLI?", result.stderr)
+        self.assertIn("managed-cli", self.calls())
+        # Without a terminal the same command stays non-interactive.
+        (self.root / "calls").write_text("")
+        result = subprocess.run([str(self.bin / "bash"), "-c", command], env=self.env, text=True,
+                                input="y\n", capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("managed-cli", self.calls())
 
     def test_upgrade_never_restarts_without_consent(self):
         self.installed.mkdir(parents=True)
