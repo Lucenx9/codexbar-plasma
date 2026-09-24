@@ -74,6 +74,10 @@ msgid "%1 - %2"
 msgstr "%1 - %2"
 
 #: contents/ui/components/AiInsightsCard.qml
+msgid "Out of date"
+msgstr "Non aggiornata"
+
+#: contents/ui/components/AiInsightsCard.qml
 msgid "Out of date, %1"
 msgstr "Non aggiornata, %1"
 
@@ -180,7 +184,9 @@ msgstr "Il modello ha rifiutato di rispondere."
 msgid ""
 "The model ran out of room for its answer, often while reasoning. Try a model "
 "without reasoning."
-msgstr "Il modello ha esaurito lo spazio per la risposta, spesso ragionando. Prova un modello senza ragionamento."
+msgstr ""
+"Il modello ha esaurito lo spazio per la risposta, spesso ragionando. Prova "
+"un modello senza ragionamento."
 
 #: contents/ui/components/AiInsightsMessages.qml
 msgid "The model returned an answer in an unexpected format."

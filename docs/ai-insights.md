@@ -129,13 +129,24 @@ data is described as data, never as instructions.
 | Provider | Endpoint | Provider-specific fields |
 | --- | --- | --- |
 | Ollama | `POST {endpoint}/api/chat` | `format` JSON Schema, `stream: false`, `think: false`, `keep_alive: 0`, `temperature: 0.2`, `num_predict: 4000`, no credentials |
-| OpenRouter | `POST https://openrouter.ai/api/v1/chat/completions` | strict `json_schema`, `max_tokens: 4000`, `provider.require_parameters`, `provider.data_collection: "deny"`, optional `provider.zdr` |
+| OpenRouter | `POST https://openrouter.ai/api/v1/chat/completions` | strict `json_schema`, `max_tokens: 4000`, `provider.require_parameters`, `provider.data_collection: "deny"`, optional `provider.zdr`, `reasoning: {"effort": "none"}` for reasoning models, `HTTP-Referer` and `X-OpenRouter-Title` app attribution |
 | OpenAI | `POST https://api.openai.com/v1/chat/completions` | strict `json_schema`, `max_completion_tokens: 4000`, `store: false` |
+
+Before an OpenRouter generation, the helper reads the model's public
+`/models/{id}/endpoints` metadata without the key. Only when an endpoint lists
+`reasoning` does the request turn reasoning off: hidden reasoning is billed as
+output, and with `require_parameters` the parameter would leave a non-reasoning
+model without a route. A failed lookup sends the request without it. Measured
+with `deepseek/deepseek-v4.1-flash`, reasoning off cut output from about
+1000 tokens to about 100. Ollama's `think: false` applies only to models that
+allow it; models that always think, or accept only thinking levels, keep their
+default and may still hit the output bound.
 
 OpenRouter routing never uses `models` fallbacks, and `openrouter/*` router
 aliases are rejected, so a request cannot move to another model with weaker
 privacy terms. Model discovery lists only OpenRouter models that advertise
-`structured_outputs`, OpenAI chat model families, and installed Ollama models.
+`structured_outputs`, except `:batch` variants, which serve only the Batch
+API; OpenAI chat model families; and installed Ollama models.
 No default cloud model is chosen and no price is claimed; users pick a model.
 
 The expected answer is `{"summary": string, "highlights": [string]}`. The helper

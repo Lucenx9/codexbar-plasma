@@ -566,7 +566,10 @@ the insight's age; **Show details** expands the highlights.
   structured output are listed. Requests never use providers that may collect
   data for training, and **Use only Zero Data Retention endpoints**, on by
   default, restricts routing further; some models then have no endpoint.
-  Requests are billed at the price of the chosen model.
+  Requests are billed at the price of the chosen model. Reasoning is turned
+  off for models that support it, since it is billed and adds nothing to a
+  short summary. Batch-only variants are not listed, and requests appear as
+  **CodexBar Plasma** in OpenRouter's logs.
 - **OpenAI** needs an API platform key with API credits. A ChatGPT subscription
   does not include API credits. Requests set `store: false`, so OpenAI does
   not keep them as stored completions.

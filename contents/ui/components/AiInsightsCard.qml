@@ -35,9 +35,14 @@ Rectangle {
     readonly property string metaText: {
         if (!showsInsight)
             return ""
-        var age = applet.sessionActivityText({ activityMs: cache.generatedAtMs }, applet.panelClockMs)
+        var age = applet.elapsedText(cache.generatedAtMs, applet.panelClockMs)
         var source = i18n("%1 - %2", applet.aiInsightsProviderName(cache.provider), AiInsights.modelLabel(cache.model))
-        return i18n("%1 - %2", source, stale ? i18n("Out of date, %1", age) : age)
+        if (!stale)
+            return i18n("%1 - %2", source, age)
+        // A just-generated insight that is already out of date (a failed
+        // regeneration) needs no age: "Out of date, Just now" reads wrong.
+        var fresh = applet.panelClockMs - cache.generatedAtMs < 60000
+        return i18n("%1 - %2", source, fresh ? i18n("Out of date") : i18n("Out of date, %1", age))
     }
     readonly property int highlightCount: showsInsight ? cache.highlights.length : 0
     // Highlights stay one click away, so the card reads in a glance.

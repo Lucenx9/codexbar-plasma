@@ -38,6 +38,8 @@ INSIGHT = {"summary": "Codex esaurira la finestra prima del reset.", "highlights
 class Handler(http.server.BaseHTTPRequestHandler):
     routes = {}
     requests = []
+    # OpenRouter model metadata lookups, kept apart from the billed requests.
+    metadata = []
 
     def log_message(self, *args):
         pass
@@ -45,8 +47,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def respond(self):
         length = int(self.headers.get("Content-Length") or 0)
         body = self.rfile.read(length) if length else b""
-        Handler.requests.append({"method": self.command, "path": self.path, "headers": dict(self.headers),
-                                 "body": json.loads(body) if body else None})
+        record = {"method": self.command, "path": self.path, "headers": dict(self.headers),
+                  "body": json.loads(body) if body else None}
+        (Handler.metadata if self.path.endswith("/endpoints") else Handler.requests).append(record)
         status, payload, headers, delay = Handler.routes.get(self.path, (404, {"error": "missing"}, {}, 0))
         if delay:
             time.sleep(delay)
@@ -85,6 +88,7 @@ class HelperTestCase(unittest.TestCase):
     def setUp(self):
         Handler.routes = {}
         Handler.requests = []
+        Handler.metadata = []
         bases = {"openrouter": self.base + "/api/v1", "openai": self.base + "/v1"}
         for patcher in (patch.dict(ai.CLOUD_BASES, bases), patch.object(ai, "read_key", return_value=KEY)):
             patcher.start()
@@ -160,6 +164,39 @@ class RequestContractTests(HelperTestCase):
         Handler.requests = []
         self.generate(zdr=False)
         self.assertEqual(Handler.requests[0]["body"]["provider"], {"require_parameters": True, "data_collection": "deny"})
+
+    def test_openrouter_requests_carry_app_attribution(self):
+        Handler.routes["/api/v1/chat/completions"] = (200, chat(json.dumps(INSIGHT)), {}, 0)
+        self.assertEqual(self.generate()["status"], "ok")
+        for request in Handler.metadata + Handler.requests:
+            # Header names are case-insensitive; urllib capitalizes them.
+            headers = {name.lower(): value for name, value in request["headers"].items()}
+            self.assertEqual(headers["http-referer"], ai.APP_URL)
+            self.assertEqual(headers["x-openrouter-title"], "CodexBar Plasma")
+
+    def test_reasoning_is_turned_off_only_for_reasoning_models(self):
+        Handler.routes["/api/v1/chat/completions"] = (200, chat(json.dumps(INSIGHT)), {}, 0)
+        endpoints = "/api/v1/models/vendor/model/endpoints"
+        cases = (("reasoning model", {"data": {"endpoints": [{"supported_parameters": ["reasoning", "max_tokens"]}]}}, True),
+                 ("plain model", {"data": {"endpoints": [{"supported_parameters": ["max_tokens"]}]}}, False),
+                 ("malformed metadata", {"data": {"endpoints": "reasoning"}}, False),
+                 ("metadata unavailable", None, False))
+        for name, metadata, expected in cases:
+            with self.subTest(name):
+                Handler.requests, Handler.metadata = [], []
+                if metadata is None:
+                    Handler.routes.pop(endpoints, None)
+                else:
+                    Handler.routes[endpoints] = (200, metadata, {}, 0)
+                self.assertEqual(self.generate()["status"], "ok")
+                self.assertEqual(len(Handler.metadata), 1)
+                # The public lookup never carries the key.
+                self.assertNotIn("Authorization", Handler.metadata[0]["headers"])
+                body = Handler.requests[0]["body"]
+                if expected:
+                    self.assertEqual(body["reasoning"], {"effort": "none"})
+                else:
+                    self.assertNotIn("reasoning", body)
 
     def test_router_aliases_are_refused(self):
         self.assertEqual(self.generate(model="openrouter/auto"), {"status": "error", "reason": "model"})
@@ -327,6 +364,8 @@ class ModelDiscoveryTests(HelperTestCase):
             {"id": "a/plain", "name": "A", "supported_parameters": ["max_tokens"]},
             {"id": "openrouter/auto", "name": "Auto", "supported_parameters": ["structured_outputs"]},
             {"id": "c/model", "name": "C\u0007 model", "supported_parameters": ["structured_outputs"]},
+            # Batch variants serve only the asynchronous Batch API.
+            {"id": "b/model:batch", "name": "B (batch)", "supported_parameters": ["structured_outputs"]},
         ]}, {}, 0)
         result = ai.run("models", "openrouter")
         self.assertEqual(result["key"], "valid")

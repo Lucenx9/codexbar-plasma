@@ -20,6 +20,9 @@ import urllib.parse
 import urllib.request
 
 PROVIDERS = ("ollama", "openrouter", "openai")
+# OpenRouter attributes requests to an app only with a referring URL.
+APP_URL = "https://github.com/Lucenx9/codexbar-plasma"
+APP_TITLE = "CodexBar Plasma"
 CLOUD_BASES = {
     "openrouter": "https://openrouter.ai/api/v1",
     "openai": "https://api.openai.com/v1",
@@ -253,7 +256,9 @@ def request_json(provider, url, key="", body=None, timeout=None):
         data = json.dumps(body).encode()
         headers["Content-Type"] = "application/json"
     if provider == "openrouter":
-        headers["X-Title"] = "CodexBar Plasma"
+        headers["HTTP-Referer"] = APP_URL
+        headers["X-OpenRouter-Title"] = APP_TITLE
+        headers["X-Title"] = APP_TITLE
     request = urllib.request.Request(url, data=data, headers=headers, method="POST" if data else "GET")
     if key:
         # Unredirected headers are never copied to a follow-up request.
@@ -307,6 +312,9 @@ def model_records(provider, payload):
             if not MODEL_PATTERN.match(model_id) or not valid_model(provider, model_id):
                 continue
             if provider == "openrouter":
+                # Batch variants serve only OpenRouter's asynchronous Batch API.
+                if model_id.endswith(":batch"):
+                    continue
                 parameters = item.get("supported_parameters")
                 # require_parameters routing needs a structured-output endpoint.
                 if not isinstance(parameters, list) or "structured_outputs" not in parameters:
@@ -353,7 +361,7 @@ def decode_snapshot(text):
     return value
 
 
-def request_body(provider, model, tag, snapshot, zdr):
+def request_body(provider, model, tag, snapshot, zdr, reasoning_off=False):
     messages = [
         {"role": "system", "content": instructions(tag)},
         # Small models follow the last instruction best, so the language is
@@ -377,6 +385,11 @@ def request_body(provider, model, tag, snapshot, zdr):
         body["provider"] = {"require_parameters": True, "data_collection": "deny"}
         if zdr:
             body["provider"]["zdr"] = True
+        if reasoning_off:
+            # Hidden reasoning is billed as output and adds nothing to a short
+            # summary. Only reasoning models get the parameter: with
+            # require_parameters it would leave other models without a route.
+            body["reasoning"] = {"effort": "none"}
     return body
 
 
@@ -439,8 +452,27 @@ def generate(provider, model, endpoint, tag, snapshot_text, zdr):
     base = base_url(provider, endpoint)
     key = require_key(provider)
     url = base + ("/api/chat" if provider == "ollama" else "/chat/completions")
-    payload = request_json(provider, url, key, request_body(provider, model, tag, snapshot, zdr))
+    reasoning_off = provider == "openrouter" and openrouter_reasons(base, model)
+    payload = request_json(provider, url, key, request_body(provider, model, tag, snapshot, zdr, reasoning_off))
     return insight(completion_content(provider, payload))
+
+
+def openrouter_reasons(base, model):
+    """Whether any endpoint of the model accepts the reasoning parameter.
+
+    Public metadata, fetched without the key. Any failure means "no", which
+    keeps the request exactly as it was before this check.
+    """
+    url = base + "/models/" + urllib.parse.quote(model, safe="/:@+") + "/endpoints"
+    try:
+        payload = request_json("openrouter", url, timeout=LIST_TIMEOUT)
+    except Failure:
+        return False
+    data = payload.get("data") if isinstance(payload, dict) else None
+    endpoints = data.get("endpoints") if isinstance(data, dict) else None
+    return any(isinstance(item, dict) and isinstance(item.get("supported_parameters"), list)
+               and "reasoning" in item["supported_parameters"]
+               for item in (endpoints if isinstance(endpoints, list) else [])[:200])
 
 
 def run(action, provider, model="", endpoint="", language="", snapshot="", prompt="", zdr=True):

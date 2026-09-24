@@ -542,11 +542,16 @@ PlasmoidItem {
         if (!item || !isFinite(Number(item.activityMs)) || Number(item.activityMs) <= 0) {
             return ""
         }
+        return elapsedText(Number(item.activityMs), nowMs)
+    }
+
+    // "Just now", "5 minutes ago", "2 days ago": the popup's relative age.
+    function elapsedText(sinceMs, nowMs) {
         var currentTimeMs = Number(nowMs)
         if (!isFinite(currentTimeMs) || currentTimeMs <= 0) {
             currentTimeMs = Date.now()
         }
-        var elapsedSeconds = Math.max(0, Math.floor((currentTimeMs - Number(item.activityMs)) / 1000))
+        var elapsedSeconds = Math.max(0, Math.floor((currentTimeMs - sinceMs) / 1000))
         if (elapsedSeconds < 60) {
             return i18n("Just now")
         }

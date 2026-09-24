@@ -66,6 +66,10 @@ msgid "%1 - %2"
 msgstr ""
 
 #: contents/ui/components/AiInsightsCard.qml
+msgid "Out of date"
+msgstr ""
+
+#: contents/ui/components/AiInsightsCard.qml
 msgid "Out of date, %1"
 msgstr ""
 

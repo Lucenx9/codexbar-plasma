@@ -2676,11 +2676,14 @@ applet.require("codexbar sessions returned an unsupported JSON payload.",
 # the controller tests verify that only a successful result replaces a snapshot.
 
 session_activity_body = function_body(main_text, "sessionActivityText")
+if not code_contains(session_activity_body, "elapsedText(Number(item.activityMs), nowMs)"):
+    raise AssertionError("session ages must use the shared elapsedText helper with the live clock")
+elapsed_body = function_body(main_text, "elapsedText")
 for live_age_fragment in (
     "Number(nowMs)",
-    "currentTimeMs - Number(item.activityMs)",
+    "currentTimeMs - sinceMs",
 ):
-    if not code_contains(session_activity_body, live_age_fragment):
+    if not code_contains(elapsed_body, live_age_fragment):
         raise AssertionError(
             "relative session ages must depend on a periodically updated clock; "
             f"missing {live_age_fragment!r}"
