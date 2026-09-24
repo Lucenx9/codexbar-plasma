@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Describe popup quotas to screen readers. Overview rows now announce their
+  quota and reset beside the detail line, and provider tabs announce the quota
+  their underline draws, stale usage, and a refresh error that was previously
+  shown only by dimming the tab.
 - Add optional AI Insights (beta), off by default: a short Overview card that explains
   quota risk, forecast exhaustion, and week-over-week spending or token changes
   using a local Ollama model, OpenRouter, or OpenAI. It writes in the widget's

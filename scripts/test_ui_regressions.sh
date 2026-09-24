@@ -1553,6 +1553,21 @@ if main_text.count("providerTabsFlickable.focusAdjacentTab(") != 4:
     raise AssertionError("both the overview tab and the provider tabs must move focus with arrow keys")
 if not code_contains(main_text, "providerTabsFlickable.ensureVisible(overviewTab)"):
     raise AssertionError("focusing the overview tab must pull it back into view")
+# A provider tab shows its quota as an underline and a failure as dimming; both
+# must reach screen readers as text.
+if not code_contains(main_text, "Accessible.description: applet.switcherDescription(providerTab.modelData)"):
+    raise AssertionError("provider tabs must describe their quota and error state to assistive tools")
+for switcher_description_fragment in (
+    "function switcherDescription(item)",
+    "var row = switcherMetricRow(item)",
+    "parts.push(lastGoodUsageText(item))",
+    "parts.push(item.error)",
+):
+    if not code_contains(main_text, switcher_description_fragment):
+        raise AssertionError(
+            "the provider tab description must cover quota, stale usage, and errors; "
+            f"missing {switcher_description_fragment!r}"
+        )
 if not code_contains(main_text, "providerTabsFlickable.ensureVisible(providerTab)"):
     raise AssertionError("focusing a provider tab must pull it back into view")
 if not code_contains(provider_tabs_flickable_body, "function claimSelectedTab(item, isSelected)"):
