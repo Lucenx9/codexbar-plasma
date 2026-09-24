@@ -72,6 +72,15 @@ TestCase {
         compare(window.feedback, "Could not save the image. Choose another location.");
         window.close();
     }
+    function test_saveWhileCapturingFailsWithFeedback() {
+        var window = createWindow();
+        window.captureImage(false);
+        verify(window.capturing);
+        verify(!window.saveImage("OUTPUT_URL"));
+        compare(window.feedback, "Could not create the image. Try again.");
+        tryCompare(window, "capturing", false);
+        window.close();
+    }
     function test_copyStatisticsAction() {
         var window = createWindow();
         var button = findChild(window, "shareCopyStatisticsButton");

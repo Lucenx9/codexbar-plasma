@@ -78,13 +78,10 @@ Controls.ApplicationWindow {
         return snapshot.omittedModels > 0 ? i18np("%1 more model not shown", "%1 more models not shown", snapshot.omittedModels) : "";
     }
 
-    function captureImage(save) {
-        if (save) {
-            saveDialog.open();
-            return;
-        }
-        if (capturing || !visible || saveDialog.visible)
-            return;
+    // Runs one card capture with generation/stale retirement. The grab result
+    // is destroyed after its completion callback returns, so the caller must
+    // finish its work synchronously inside onResult.
+    function grabCard(onResult) {
         capturing = true;
         feedback = "";
         var generation = ++captureGeneration;
@@ -92,31 +89,7 @@ Controls.ApplicationWindow {
             if (generation !== window.captureGeneration || !window.visible)
                 return;
             window.capturing = false;
-            clipboard.content = result.image;
-            window.feedback = i18n("Image copied");
-        }, Qt.size(Math.ceil(card.width * 2), Math.ceil(card.height * 2)));
-        if (!accepted) {
-            capturing = false;
-            feedback = i18n("Could not create the image. Try again.");
-        }
-    }
-
-    function saveImage(url) {
-        if (!ShareUsage.localPngUrl(String(url))) {
-            feedback = i18n("Choose a local PNG file.");
-            return false;
-        }
-        if (capturing || !visible)
-            return false;
-        capturing = true;
-        feedback = "";
-        var generation = ++captureGeneration;
-        var accepted = card.grabToImage(function (result) {
-            if (generation !== window.captureGeneration || !window.visible)
-                return;
-            window.capturing = false;
-            var saved = result.saveToFile(url);
-            window.feedback = saved ? i18n("Image saved") : i18n("Could not save the image. Choose another location.");
+            onResult(result);
         }, Qt.size(Math.ceil(card.width * 2), Math.ceil(card.height * 2)));
         if (!accepted) {
             capturing = false;
@@ -124,6 +97,34 @@ Controls.ApplicationWindow {
             return false;
         }
         return true;
+    }
+
+    function captureImage(save) {
+        if (capturing || !visible || saveDialog.visible)
+            return;
+        if (save) {
+            saveDialog.open();
+            return;
+        }
+        grabCard(function (result) {
+            clipboard.content = result.image;
+            window.feedback = i18n("Image copied");
+        });
+    }
+
+    function saveImage(url) {
+        if (!ShareUsage.localPngUrl(String(url))) {
+            feedback = i18n("Choose a local PNG file.");
+            return false;
+        }
+        if (capturing || !visible) {
+            feedback = i18n("Could not create the image. Try again.");
+            return false;
+        }
+        return grabCard(function (result) {
+            var saved = result.saveToFile(url);
+            window.feedback = saved ? i18n("Image saved") : i18n("Could not save the image. Choose another location.");
+        });
     }
 
     KQuickControlsAddons.Clipboard {
