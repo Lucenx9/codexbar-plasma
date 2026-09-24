@@ -120,6 +120,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Report a fresh setup as current when another setup run installed the
+  release first. The post-lock recheck compared against the synthetic
+  `0.0.0` version instead of the installed widget, so the second run
+  reinstalled redundantly.
 - Show the date of a reset a week or more away when reset times are shown as
   clock time. A weekly limit that just reset no longer reads as resetting later
   today, and a monthly limit no longer reads as this week's weekday.
