@@ -135,6 +135,14 @@ TestCase {
         compare(cfg_aiInsightsModel, "qwen3:4b")
         compare(modelCombo.editText, "qwen3:4b")
     }
+
+    // A listing stopped by the shell bound reports a timeout, not a format error.
+    function test_stoppedListingReportsTimeout() {
+        verify(run("models"))
+        accept(helperSource.connected[0], {stdout: "", "exit code": 124})
+        compare(actionText, "error:timeout")
+        compare(availableModels, [])
+    }
 }
 '''
 
@@ -165,7 +173,7 @@ class AiInsightsSettingsTests(unittest.TestCase):
                 capture_output=True, text=True, timeout=30)
         output = result.stdout + result.stderr
         self.assertEqual(result.returncode, 0, output)
-        self.assertIn("Totals: 6 passed, 0 failed", output)
+        self.assertIn("Totals: 7 passed, 0 failed", output)
 
 
 if __name__ == "__main__":

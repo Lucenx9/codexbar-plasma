@@ -264,6 +264,10 @@ TestCase {
         compare(reply.key, "valid")
         compare(AiInsights.modelsReply(JSON.stringify({status: "error", reason: "auth"})).reason, "auth")
         compare(AiInsights.modelsReply("oops").outcome, "error")
+        // The shell bound stopped the helper before it printed a listing.
+        compare(AiInsights.modelsReply("", 124).reason, "timeout")
+        compare(AiInsights.modelsReply("", 137).reason, "timeout")
+        compare(AiInsights.modelsReply("", 1).reason, "format")
         compare(AiInsights.statusReply(JSON.stringify({status: "present"}), ["present", "absent"]), "present")
         compare(AiInsights.statusReply(JSON.stringify({status: "sk-secret"}), ["present", "absent"]), "unavailable")
     }
