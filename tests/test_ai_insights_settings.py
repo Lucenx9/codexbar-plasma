@@ -19,6 +19,7 @@ sys.path.insert(0, str(ROOT / "scripts/lib"))
 from qml_surfaces import Surface
 
 QML = '''import QtQuick
+import QtQuick.Controls
 import QtTest
 import "SOURCE_URL/AiInsights.js" as AiInsights
 import "SOURCE_URL/CommandLedger.js" as CommandLedger
@@ -58,11 +59,18 @@ TestCase {
         id: messages
         function errorText(reason, provider) { return "error:" + reason }
     }
-    QtObject {
+    // A real editable combo: replacing its model resets the edit text, which
+    // the page writes back to the model setting, as in the settings dialog.
+    ComboBox {
         id: modelCombo
-        property int currentIndex: -1
-        property string editText: ""
-        function find(model) { return page.availableModels.indexOf(model) }
+        editable: true
+        model: page.availableModels
+        onEditTextChanged: {
+            var value = editText.trim()
+            if (value !== page.cfg_aiInsightsModel) {
+                page.cfg_aiInsightsModel = value
+            }
+        }
     }
 
     SOURCE_FUNCTIONS
@@ -77,6 +85,8 @@ TestCase {
         retire()
         report("", false)
         availableModels = []
+        cfg_aiInsightsModel = "qwen3:4b"
+        modelCombo.editText = cfg_aiInsightsModel
         helperSource.connected = []
         helperSource.disconnected = []
     }
@@ -113,6 +123,18 @@ TestCase {
         compare(availableModels, [])
         compare(modelCombo.editText, "qwen3:4b")
     }
+
+    // Clearing the listed models resets the editable combo; the chosen model
+    // belongs to the settings, not to the tested address, and must survive.
+    function test_endpointChangeKeepsTheChosenModel() {
+        verify(run("models"))
+        accept(helperSource.connected[0], {stdout: listed})
+        compare(modelCombo.editText, "qwen3:4b")
+        cfg_aiInsightsOllamaEndpoint = "http://127.0.0.1:11434"
+        compare(availableModels, [])
+        compare(cfg_aiInsightsModel, "qwen3:4b")
+        compare(modelCombo.editText, "qwen3:4b")
+    }
 }
 '''
 
@@ -143,7 +165,7 @@ class AiInsightsSettingsTests(unittest.TestCase):
                 capture_output=True, text=True, timeout=30)
         output = result.stdout + result.stderr
         self.assertEqual(result.returncode, 0, output)
-        self.assertIn("Totals: 5 passed, 0 failed", output)
+        self.assertIn("Totals: 6 passed, 0 failed", output)
 
 
 if __name__ == "__main__":
