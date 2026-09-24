@@ -61,6 +61,10 @@ function quota(row, enabled, label) {
     }
 }
 
+function calendarDay(value) {
+    return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : ""
+}
+
 function amounts(value) {
     var currency = field(value, "currency", "")
     var hasCurrency = typeof currency === "string" && /^[A-Z]{3}$/.test(currency)
@@ -131,6 +135,7 @@ function cost(snapshot, enabled) {
         provider: field(snapshot, "provider", ""),
         historyDays: Math.max(1, Math.min(365, Math.floor(numeric(snapshot, "historyDays", 30)))),
         historyCoverageEstablished: field(snapshot, "historyCoverageEstablished", true) !== false,
+        scanDay: calendarDay(field(snapshot, "scanDay", "")),
         trust: costTrust(field(snapshot, "trust", null)),
         totals: amounts(field(snapshot, "totals", null)),
         today: amounts(field(snapshot, "today", null)),

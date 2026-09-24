@@ -110,6 +110,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Show a provider's **Today** cost as unavailable when the cost snapshot was
+  scanned on an earlier day, such as before midnight or before a failed refresh,
+  instead of presenting that day's spend as today's.
 - Make the quick-install command's prompts reach the terminal. The documented
   one-liner piped the installer into Bash, so it never offered the private CLI
   or a Plasma restart. The updated command runs the downloaded installer with

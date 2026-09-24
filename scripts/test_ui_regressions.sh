@@ -1901,7 +1901,7 @@ for summary_id, summary_fragment in (
 cost_summary_body = applet.id_block("costSummaryGrid")
 for fragment in (
     "columns: 2",
-    "amounts: tokenCostSection.tokenCost.today",
+    "amounts: CostPresentation.todayAmounts(tokenCostSection.tokenCost, tokenCostSection.applet.panelClockMs)",
     "amounts: tokenCostSection.tokenCost.totals",
     "tokenCostSection.amountText(modelData.amounts, modelData.valueMode)",
     "tokenCostSection.tokensText(modelData.amounts)",

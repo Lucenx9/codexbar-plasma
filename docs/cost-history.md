@@ -5,6 +5,11 @@ period models, and projects expand on demand. Cost errors and pricing notices
 remain visible when the details are collapsed, including refresh errors beside
 retained values. A successful refresh clears the error.
 
+Today is the CLI's total for the local date of the scan (`updatedAt`). A
+retained snapshot scanned on an earlier date, such as before midnight or before
+a failed refresh, shows Today as unavailable instead of that day's spend. A
+snapshot without a usable `updatedAt` keeps its Today amounts.
+
 ## Data and display rules
 
 - Day models come from the selected `cost.daily[].modelBreakdowns[]` record.
