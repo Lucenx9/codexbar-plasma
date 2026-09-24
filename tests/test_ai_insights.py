@@ -50,7 +50,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
         record = {"method": self.command, "path": self.path, "headers": dict(self.headers),
                   "body": json.loads(body) if body else None}
         (Handler.metadata if self.path.endswith("/endpoints") else Handler.requests).append(record)
-        status, payload, headers, delay = Handler.routes.get(self.path, (404, {"error": "missing"}, {}, 0))
+        route = Handler.routes.get(self.path, (404, {"error": "missing"}, {}, 0))
+        # A callable route answers according to the request body.
+        status, payload, headers, delay = route(record["body"]) if callable(route) else route
         if delay:
             time.sleep(delay)
         raw = payload if isinstance(payload, bytes) else json.dumps(payload).encode()
@@ -177,7 +179,11 @@ class RequestContractTests(HelperTestCase):
     def test_reasoning_is_turned_off_only_for_reasoning_models(self):
         Handler.routes["/api/v1/chat/completions"] = (200, chat(json.dumps(INSIGHT)), {}, 0)
         endpoints = "/api/v1/models/vendor/model/endpoints"
-        cases = (("reasoning model", {"data": {"endpoints": [{"supported_parameters": ["reasoning", "max_tokens"]}]}}, True),
+        cases = (("reasoning model", {"data": {"endpoints": [
+                     {"supported_parameters": ["reasoning", "structured_outputs", "max_tokens"]}]}}, True),
+                 # require_parameters needs both on one endpoint.
+                 ("split endpoints", {"data": {"endpoints": [{"supported_parameters": ["reasoning"]},
+                                                             {"supported_parameters": ["structured_outputs"]}]}}, False),
                  ("plain model", {"data": {"endpoints": [{"supported_parameters": ["max_tokens"]}]}}, False),
                  ("malformed metadata", {"data": {"endpoints": "reasoning"}}, False),
                  ("metadata unavailable", None, False))
@@ -197,6 +203,25 @@ class RequestContractTests(HelperTestCase):
                     self.assertEqual(body["reasoning"], {"effort": "none"})
                 else:
                     self.assertNotIn("reasoning", body)
+
+    def test_reasoning_without_a_route_is_retried_once_without_it(self):
+        Handler.routes["/api/v1/models/vendor/model/endpoints"] = (200, {"data": {"endpoints": [
+            {"supported_parameters": ["reasoning", "structured_outputs"]}]}}, {}, 0)
+        no_route = (404, {"error": {"message": "No endpoints found"}}, {}, 0)
+        Handler.routes["/api/v1/chat/completions"] = lambda body: (
+            no_route if "reasoning" in body else (200, chat(json.dumps(INSIGHT)), {}, 0))
+        self.assertEqual(self.generate()["status"], "ok")
+        self.assertEqual(["reasoning" in request["body"] for request in Handler.requests], [True, False])
+        # Any other failure, or a failure without the parameter, is not retried.
+        Handler.requests = []
+        Handler.routes["/api/v1/chat/completions"] = (401, {"error": "auth"}, {}, 0)
+        self.assertEqual(self.generate(), {"status": "error", "reason": "auth"})
+        self.assertEqual(len(Handler.requests), 1)
+        Handler.requests = []
+        Handler.routes["/api/v1/models/vendor/model/endpoints"] = (404, {"error": "missing"}, {}, 0)
+        Handler.routes["/api/v1/chat/completions"] = no_route
+        self.assertEqual(self.generate()["status"], "error")
+        self.assertEqual(len(Handler.requests), 1)
 
     def test_router_aliases_are_refused(self):
         self.assertEqual(self.generate(model="openrouter/auto"), {"status": "error", "reason": "model"})

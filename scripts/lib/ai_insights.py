@@ -453,12 +453,20 @@ def generate(provider, model, endpoint, tag, snapshot_text, zdr):
     key = require_key(provider)
     url = base + ("/api/chat" if provider == "ollama" else "/chat/completions")
     reasoning_off = provider == "openrouter" and openrouter_reasons(base, model)
-    payload = request_json(provider, url, key, request_body(provider, model, tag, snapshot, zdr, reasoning_off))
+    try:
+        payload = request_json(provider, url, key, request_body(provider, model, tag, snapshot, zdr, reasoning_off))
+    except Failure as failure:
+        # Privacy routing can still exclude the endpoints that accept
+        # reasoning. A request without a route reached no provider and was
+        # not billed, so it is retried once without the parameter.
+        if not reasoning_off or failure.args[0] not in ("model", "routing"):
+            raise
+        payload = request_json(provider, url, key, request_body(provider, model, tag, snapshot, zdr))
     return insight(completion_content(provider, payload))
 
 
 def openrouter_reasons(base, model):
-    """Whether any endpoint of the model accepts the reasoning parameter.
+    """Whether one endpoint of the model accepts reasoning with structured output.
 
     Public metadata, fetched without the key. Any failure means "no", which
     keeps the request exactly as it was before this check.
@@ -470,8 +478,9 @@ def openrouter_reasons(base, model):
         return False
     data = payload.get("data") if isinstance(payload, dict) else None
     endpoints = data.get("endpoints") if isinstance(data, dict) else None
+    # require_parameters needs one endpoint that accepts every sent parameter.
     return any(isinstance(item, dict) and isinstance(item.get("supported_parameters"), list)
-               and "reasoning" in item["supported_parameters"]
+               and all(name in item["supported_parameters"] for name in ("reasoning", "structured_outputs"))
                for item in (endpoints if isinstance(endpoints, list) else [])[:200])
 
 

@@ -133,10 +133,13 @@ data is described as data, never as instructions.
 | OpenAI | `POST https://api.openai.com/v1/chat/completions` | strict `json_schema`, `max_completion_tokens: 4000`, `store: false` |
 
 Before an OpenRouter generation, the helper reads the model's public
-`/models/{id}/endpoints` metadata without the key. Only when an endpoint lists
-`reasoning` does the request turn reasoning off: hidden reasoning is billed as
-output, and with `require_parameters` the parameter would leave a non-reasoning
-model without a route. A failed lookup sends the request without it. Measured
+`/models/{id}/endpoints` metadata without the key. Only when one endpoint lists
+both `reasoning` and `structured_outputs` does the request turn reasoning off:
+hidden reasoning is billed as output, and `require_parameters` routes only to an
+endpoint that accepts every sent parameter. A failed lookup sends the request
+without it. If privacy routing still leaves no endpoint (`model` or `routing`),
+the request is retried once without the parameter; an unrouted request reached
+no provider and was not billed. Measured
 with `deepseek/deepseek-v4.1-flash`, reasoning off cut output from about
 1000 tokens to about 100. Ollama's `think: false` applies only to models that
 allow it; models that always think, or accept only thinking levels, keep their
