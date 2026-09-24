@@ -160,7 +160,9 @@ msgid "The model declined to answer."
 msgstr ""
 
 #: contents/ui/components/AiInsightsMessages.qml
-msgid "The answer was cut off. Try another model."
+msgid ""
+"The model ran out of room for its answer, often while reasoning. Try a model "
+"without reasoning."
 msgstr ""
 
 #: contents/ui/components/AiInsightsMessages.qml

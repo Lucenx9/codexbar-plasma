@@ -249,7 +249,7 @@ function command(scriptUrl, action, options) {
     var value = options || ({})
     var provider = safeProvider(value.provider)
     // A dialog waits for the user; network actions are bounded well below it.
-    var limit = action === "set-key" ? "330s" : (action === "generate" ? "90s" : "45s")
+    var limit = action === "set-key" ? "330s" : (action === "generate" ? "180s" : "45s")
     var parts = ["timeout", "--kill-after=2s", limit, "python3", Guards.shellQuote(script),
         "--action", action, "--provider", provider]
     if (provider === "ollama" && (action === "models" || action === "generate")) {

@@ -127,9 +127,9 @@ data is described as data, never as instructions.
 
 | Provider | Endpoint | Provider-specific fields |
 | --- | --- | --- |
-| Ollama | `POST {endpoint}/api/chat` | `format` JSON Schema, `stream: false`, `temperature: 0.2`, `num_predict: 1000`, no credentials |
-| OpenRouter | `POST https://openrouter.ai/api/v1/chat/completions` | strict `json_schema`, `max_tokens: 1000`, `provider.require_parameters`, `provider.data_collection: "deny"`, optional `provider.zdr` |
-| OpenAI | `POST https://api.openai.com/v1/chat/completions` | strict `json_schema`, `max_completion_tokens: 1000`, `store: false` |
+| Ollama | `POST {endpoint}/api/chat` | `format` JSON Schema, `stream: false`, `temperature: 0.2`, `num_predict: 4000`, no credentials |
+| OpenRouter | `POST https://openrouter.ai/api/v1/chat/completions` | strict `json_schema`, `max_tokens: 4000`, `provider.require_parameters`, `provider.data_collection: "deny"`, optional `provider.zdr` |
+| OpenAI | `POST https://api.openai.com/v1/chat/completions` | strict `json_schema`, `max_completion_tokens: 4000`, `store: false` |
 
 OpenRouter routing never uses `models` fallbacks, and `openrouter/*` router
 aliases are rejected, so a request cannot move to another model with weaker
@@ -184,7 +184,9 @@ Failures map to bounded reasons: `missing_key`, `secret_unavailable`, `auth`
   provider may already have billed, also waits a full interval, including
   across plasmashell restarts.
 - One request at a time, with a per-request nonce. The helper's HTTP timeout is
-  60 seconds, the shell bound 90 seconds, and the QML deadline 95 seconds.
+  150 seconds, the shell bound 180 seconds, and the QML deadline 185 seconds,
+  which leaves room for reasoning models and slower local models. Answers may
+  use up to 4000 output tokens, including hidden reasoning tokens.
 - Changing provider, model, endpoint, privacy routing, or language, disabling the
   feature, or destroying the widget retires the active request; its late reply
   is ignored. Stored insights from another context are not shown as current.

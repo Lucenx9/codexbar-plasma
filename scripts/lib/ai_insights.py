@@ -28,7 +28,7 @@ DEFAULT_OLLAMA = "http://localhost:11434"
 SECRET_TOOL = "secret-tool"
 KDIALOG = "kdialog"
 SECRET_ATTRIBUTES = ("application", "app.codexbar.plasma", "service", "ai-insights")
-REQUEST_TIMEOUT = 60
+REQUEST_TIMEOUT = 150
 LIST_TIMEOUT = 20
 MAX_RESPONSE_BYTES = 4 * 1024 * 1024
 MAX_SNAPSHOT_BYTES = 16 * 1024
@@ -36,7 +36,9 @@ MAX_CONTENT_CHARS = 16 * 1024
 MAX_SUMMARY_CHARS = 600
 MAX_HIGHLIGHT_CHARS = 160
 MAX_HIGHLIGHTS = 3
-MAX_OUTPUT_TOKENS = 1000
+# Reasoning models spend hidden tokens before the answer, and those count
+# against this bound; billing covers only the tokens actually produced.
+MAX_OUTPUT_TOKENS = 4000
 MAX_MODELS = 500
 MAX_RETRY_AFTER = 24 * 60 * 60
 MODEL_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/@+-]{0,199}$")

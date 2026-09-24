@@ -23,7 +23,7 @@ QtObject {
         case "network": return provider === "ollama" ? i18n("Could not reach Ollama. Check that it is running.")
             : i18n("Could not reach %1.", name)
         case "refused": return i18n("The model declined to answer.")
-        case "truncated": return i18n("The answer was cut off. Try another model.")
+        case "truncated": return i18n("The model ran out of room for its answer, often while reasoning. Try a model without reasoning.")
         case "format": return i18n("The model returned an answer in an unexpected format.")
         case "endpoint": return i18n("Use an https:// Ollama address, or http:// only for this computer.")
         case "invalid_input": return i18n("Check the AI Insights model settings.")

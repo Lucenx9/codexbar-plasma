@@ -177,8 +177,10 @@ msgid "The model declined to answer."
 msgstr "Il modello ha rifiutato di rispondere."
 
 #: contents/ui/components/AiInsightsMessages.qml
-msgid "The answer was cut off. Try another model."
-msgstr "La risposta è stata troncata. Prova un altro modello."
+msgid ""
+"The model ran out of room for its answer, often while reasoning. Try a model "
+"without reasoning."
+msgstr "Il modello ha esaurito lo spazio per la risposta, spesso ragionando. Prova un modello senza ragionamento."
 
 #: contents/ui/components/AiInsightsMessages.qml
 msgid "The model returned an answer in an unexpected format."

@@ -198,7 +198,7 @@ TestCase {
         var command = AiInsights.command("file:///opt/pkg/scripts/ai-insights.py", "generate", {
             provider: "openrouter", model: "vendor/model", language: "it", zdr: true,
             snapshot: '{"providers":[{"id":"codex\'s"}]}'})
-        verify(command.indexOf("timeout --kill-after=2s 90s python3 '/opt/pkg/scripts/ai-insights.py'") === 0, command)
+        verify(command.indexOf("timeout --kill-after=2s 180s python3 '/opt/pkg/scripts/ai-insights.py'") === 0, command)
         verify(command.indexOf("--language it ") >= 0, command)
         verify(command.indexOf("--model 'vendor/model'") >= 0, command)
         verify(command.indexOf("'{\"providers\":[{\"id\":\"codex'\\''s\"}]}'") >= 0, command)

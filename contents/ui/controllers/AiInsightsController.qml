@@ -219,7 +219,7 @@ Item {
         id: deadline
 
         objectName: "aiInsightsDeadline"
-        interval: 95000
+        interval: 185000
         onTriggered: {
             lifecycle.retire()
             lifecycle.fail("timeout", 0)

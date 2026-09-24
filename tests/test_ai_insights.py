@@ -8,6 +8,7 @@ import http.server
 import importlib.util
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -119,6 +120,19 @@ class RequestContractTests(HelperTestCase):
         self.assertIn("decimal separator", system)
         self.assertIn("Write an increase above 300% as a multiple", system)
         self.assertIn("Leave them out, unless no provider has a current one", system)
+
+    def test_generation_bounds_leave_room_for_reasoning_models(self):
+        # Hidden reasoning tokens count against the output bound.
+        self.assertGreaterEqual(ai.MAX_OUTPUT_TOKENS, 4000)
+        root = Path(__file__).resolve().parents[1]
+        script = (root / "contents/ui/AiInsights.js").read_text()
+        controller = (root / "contents/ui/controllers/AiInsightsController.qml").read_text()
+        shell = int(re.search(r'action === "generate" \? "(\d+)s"', script).group(1))
+        deadline = int(re.search(r'objectName: "aiInsightsDeadline"\s+interval: (\d+)', controller).group(1))
+        # The helper reports its own timeout before the shell kills it, and the
+        # shell stops the process before the QML deadline retires the request.
+        self.assertLess(ai.REQUEST_TIMEOUT + 10, shell)
+        self.assertLess((shell + 2) * 1000, deadline)
 
     def test_unknown_or_malformed_language_is_not_sent(self):
         self.assertEqual(ai.language_name("nl"), 'the language with BCP 47 tag "nl"')
