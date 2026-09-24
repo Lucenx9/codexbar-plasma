@@ -216,6 +216,9 @@ TestCase {
         function resetLabel(value) {
             return value;
         }
+        function usagePaceText(row) {
+            return row.pace || "";
+        }
         function paceMarkerPercent(row) {
             return row.pacePercent !== undefined ? row.pacePercent : -1;
         }

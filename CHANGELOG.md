@@ -113,6 +113,14 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Count down the popup's "Runs out in" pace forecast like the panel run-out
+  text. It kept the duration received with the last usage refresh, so with no
+  periodic refresh or a long interval it still promised hours of quota after
+  the forecast time had passed, while the reset time beside it counted down.
+- Escape markup in notification bodies. Plasma renders a notification body as
+  rich text, so a provider status message or quota label containing HTML could
+  show as a clickable link to any address, or as bold text or an image, and a
+  literal `<` or `&` could disappear. Notification text is now shown as typed.
 - Make the quick-install command's prompts reach the terminal. The documented
   one-liner piped the installer into Bash, so it never offered the private CLI
   or a Plasma restart. The updated command runs the downloaded installer with

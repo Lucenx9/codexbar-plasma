@@ -90,7 +90,9 @@ synchronized.
   and emits `activated(sourceName)` only after that reply retired its ledger
   entry; read-only `sending` reports whether requests remain pending. Failed
   commands finish silently, and missing `notify-send` remains a quiet no-op.
-  `NotificationCommand.js` bounds notification text, builds the quoted command,
+  `NotificationCommand.js` bounds notification text, escapes the body's markup
+  (`&`, `<`, `>`) so CLI text stays literal while the summary stays plain text,
+  builds the quoted command,
   restricts urgency to the supported values, and probes `notify-send --help`
   for action support so older libnotify builds keep the plain send.
   The applet retains notification
@@ -664,7 +666,10 @@ the helper against a local HTTP server and fake `secret-tool` and `kdialog`
 executables, and compiles the catalogs to run `main.qml`'s language adapter
 through to the `--language` argument. `tests/test_ai_insights_controller.py`
 runs the production controller through Plasma's executable DataSource with a
-recording helper. None of them contacts a real AI service, wallet, or key.
+recording helper. `tests/test_ai_insights_settings.py` copies the settings
+page's helper-process functions into a QtTest with stubbed processes to check
+reply handling when the Ollama address changes. None of them contacts a real AI
+service, wallet, or key.
 The smoke runner stages `scripts/smoke/fixture_ai_insights.py` as the package's
 `scripts/ai-insights.py` for every scenario, so previews can never reach a real
 service; the `ai-insights*` and `settings-ai-insights*` scenarios exercise the
