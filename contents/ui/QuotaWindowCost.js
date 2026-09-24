@@ -45,8 +45,9 @@ function metricTotal(days, field, expectedDays) {
     var known = 0
     var incomplete = false
     for (var i = 0; i < days.length; i++) {
-        incomplete = incomplete || (typeof days[i].incompleteRequests === "number"
-            && isFinite(days[i].incompleteRequests) && days[i].incompleteRequests > 0)
+        incomplete = incomplete || days[i].scanIncomplete === true
+            || (typeof days[i].incompleteRequests === "number"
+                && isFinite(days[i].incompleteRequests) && days[i].incompleteRequests > 0)
         var value = days[i][field]
         if (typeof value === "number" && isFinite(value)) {
             var next = sum + value
@@ -124,6 +125,12 @@ function windows(daily, resetsAtMs, windowMinutes, nowMs, limit) {
     var scanStartMs = days[0].startMs
     var now = new Date(nowMs)
     var todayStartMs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+    // The history ends on the day it was scanned. A scan from before today,
+    // such as one taken before midnight, saw only part of that day, so its
+    // amounts are a lower bound even though the date is present.
+    if (days[days.length - 1].startMs < todayStartMs) {
+        days[days.length - 1].scanIncomplete = true
+    }
 
     var count = typeof limit === "number" && limit >= 1 ? Math.min(Math.floor(limit), maximumWindows) : maximumWindows
     var result = []

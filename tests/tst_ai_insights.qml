@@ -282,7 +282,13 @@ TestCase {
         verify(AiInsights.isLocalEndpoint("http://localhost:11434"))
         verify(AiInsights.isLocalEndpoint("http://127.0.0.1:11434/"))
         verify(AiInsights.isLocalEndpoint("http://[::1]:11434"))
+        // A loopback host stays local with a path: only the host decides
+        // whether usage statistics leave this device.
+        verify(AiInsights.isLocalEndpoint("http://localhost:11434/v1"))
+        verify(AiInsights.isLocalEndpoint("http://127.0.0.1/v1"))
+        verify(AiInsights.isLocalEndpoint("http://[::1]:11434/v1"))
         verify(!AiInsights.isLocalEndpoint("https://gpu.example:11434"))
+        verify(!AiInsights.isLocalEndpoint("https://gpu.example/v1"))
         verify(!AiInsights.isLocalEndpoint("http://localhost.example.com"))
         verify(!AiInsights.isLocalEndpoint("http://user@localhost"))
     }

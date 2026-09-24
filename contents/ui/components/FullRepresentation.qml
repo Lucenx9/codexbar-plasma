@@ -170,15 +170,56 @@ Item {
                     ensureVisible(selectedTab)
                 }
 
-                function focusAdjacentTab(item, forward) {
-                    if (!item) {
+                // The focusable tabs in strip order, read off the focus chain
+                // around the given tab. Both walks stop at the first item
+                // outside the strip, and at a tab already collected in case
+                // the chain wraps back without leaving the strip.
+                function focusableTabs(item) {
+                    var tabs = [item]
+                    var candidate = item.nextItemInFocusChain(false)
+                    while (candidate && containsTab(candidate) && tabs.indexOf(candidate) < 0) {
+                        tabs.unshift(candidate)
+                        candidate = candidate.nextItemInFocusChain(false)
+                    }
+                    candidate = item.nextItemInFocusChain(true)
+                    while (candidate && containsTab(candidate) && tabs.indexOf(candidate) < 0) {
+                        tabs.push(candidate)
+                        candidate = candidate.nextItemInFocusChain(true)
+                    }
+                    return tabs
+                }
+
+                // Arrow keys wrap around the strip and Home/End jump to its
+                // ends, as in the WAI-ARIA tabs pattern. Focus moves without
+                // selecting, so browsing tabs never switches the view.
+                function navigateFromTab(item, key) {
+                    var action = ""
+                    switch (key) {
+                    case Qt.Key_Left:
+                        action = "previous"
+                        break
+                    case Qt.Key_Right:
+                        action = "next"
+                        break
+                    case Qt.Key_Home:
+                        action = "first"
+                        break
+                    case Qt.Key_End:
+                        action = "last"
+                        break
+                    default:
                         return false
                     }
-                    var candidate = item.nextItemInFocusChain(forward)
-                    if (!candidate || !containsTab(candidate)) {
+                    if (!item || !containsTab(item)) {
                         return false
                     }
-                    candidate.forceActiveFocus(forward ? Qt.TabFocusReason : Qt.BacktabFocusReason)
+                    var tabs = focusableTabs(item)
+                    var target = TabStripGeometry.keyboardTargetIndex(action, tabs.indexOf(item), tabs.length)
+                    if (target < 0) {
+                        return false
+                    }
+                    tabs[target].forceActiveFocus(action === "next" || action === "last"
+                        ? Qt.TabFocusReason : Qt.BacktabFocusReason)
                     return true
                 }
 
@@ -315,11 +356,8 @@ Item {
                                     overviewTab.activate()
                                     event.accepted = true
                                     break
-                                case Qt.Key_Left:
-                                    event.accepted = providerTabsFlickable.focusAdjacentTab(overviewFocus, false)
-                                    break
-                                case Qt.Key_Right:
-                                    event.accepted = providerTabsFlickable.focusAdjacentTab(overviewFocus, true)
+                                default:
+                                    event.accepted = providerTabsFlickable.navigateFromTab(overviewFocus, event.key)
                                     break
                                 }
                             }
@@ -502,6 +540,7 @@ Item {
 
                                 Accessible.role: Accessible.PageTab
                                 Accessible.name: providerTab.modelData.title
+                                Accessible.description: applet.switcherDescription(providerTab.modelData)
                                 Accessible.selectable: true
                                 Accessible.selected: providerTab.selected
                                 Accessible.onPressAction: providerTab.activate()
@@ -515,11 +554,8 @@ Item {
                                         providerTab.activate()
                                         event.accepted = true
                                         break
-                                    case Qt.Key_Left:
-                                        event.accepted = providerTabsFlickable.focusAdjacentTab(providerFocus, false)
-                                        break
-                                    case Qt.Key_Right:
-                                        event.accepted = providerTabsFlickable.focusAdjacentTab(providerFocus, true)
+                                    default:
+                                        event.accepted = providerTabsFlickable.navigateFromTab(providerFocus, event.key)
                                         break
                                     }
                                 }
@@ -535,9 +571,12 @@ Item {
                                 onClicked: providerTab.activate()
                             }
 
+                            // Labelled tabs are capped in width, so a long
+                            // provider name elides; hovering then reveals it.
                             PlainToolTip {
                                 parent: providerTabMouse
-                                visible: !applet.showPopupTabLabels && providerTabMouse.containsMouse
+                                visible: (!applet.showPopupTabLabels || providerTabLabel.truncated)
+                                    && providerTabMouse.containsMouse
                                 plainText: modelData.title
                             }
 
