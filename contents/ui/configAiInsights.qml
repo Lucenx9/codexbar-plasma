@@ -74,6 +74,12 @@ KCM.SimpleKCM {
             retire()
         }
         actionText = ""
+        if (availableModels.length > 0) {
+            // A new model list resets the combo; keep the typed or saved model.
+            var model = cfg_aiInsightsModel
+            availableModels = []
+            modelCombo.editText = model
+        }
     }
     onCfg_aiInsightsEnabledChanged: Qt.callLater(refreshKeyStatus)
     // The cleared flag disables Clear at once; a newly stored insight re-arms
