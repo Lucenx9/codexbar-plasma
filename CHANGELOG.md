@@ -120,6 +120,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Saving an aggregate usage snapshot as a PNG now reliably writes the chosen
+  file instead of failing after the file picker closes.
 - Keep a provider's healthy cost data when its cost record carries a falsy
   `error` flag such as `false`, `0`, or an empty message. Only a real error
   now marks the provider failed and drops its totals from the snapshot.
