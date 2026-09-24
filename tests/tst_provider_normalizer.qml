@@ -975,6 +975,26 @@ TestCase {
         }))
         verify(!Normalizer.costRecordHasError({ provider: "codex" }))
         verify(!Normalizer.costRecordHasError(null))
+        verify(!Normalizer.costRecordHasError({
+            provider: "codex",
+            totals: { totalCost: 5, totalTokens: 10 },
+            error: false
+        }))
+        verify(!Normalizer.costRecordHasError({
+            provider: "codex",
+            totals: { totalCost: 5, totalTokens: 10 },
+            error: 0
+        }))
+        verify(!Normalizer.costRecordHasError({
+            provider: "codex",
+            totals: { totalCost: 5, totalTokens: 10 },
+            error: ""
+        }))
+        verify(!Normalizer.costRecordHasError({
+            provider: "codex",
+            totals: { totalCost: 5, totalTokens: 10 },
+            error: "   "
+        }))
     }
 
     function test_partialCostMergeKeepsOnlyExplicitlyFailedProviders() {
