@@ -291,6 +291,12 @@ TestCase {
         verify(AiInsights.isLocalEndpoint("http://localhost:11434/v1"))
         verify(AiInsights.isLocalEndpoint("http://127.0.0.1/v1"))
         verify(AiInsights.isLocalEndpoint("http://[::1]:11434/v1"))
+        // The helper accepts any textual form of ::1, so the label must too.
+        verify(AiInsights.isLocalEndpoint("http://[0:0:0:0:0:0:0:1]:11434"))
+        verify(AiInsights.isLocalEndpoint("http://[0:0:0:0:0:0:0:1]:11434/v1"))
+        verify(AiInsights.isLocalEndpoint("http://[0::1]:11434"))
+        verify(!AiInsights.isLocalEndpoint("http://[::2]:11434"))
+        verify(!AiInsights.isLocalEndpoint("http://[2001:db8::1]:11434"))
         verify(!AiInsights.isLocalEndpoint("https://gpu.example:11434"))
         verify(!AiInsights.isLocalEndpoint("https://gpu.example/v1"))
         verify(!AiInsights.isLocalEndpoint("http://localhost.example.com"))
