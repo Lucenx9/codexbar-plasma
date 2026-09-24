@@ -122,6 +122,18 @@ TestCase {
         verify(snapshot.providers[0].spend === undefined && snapshot.providers[0].tokens === undefined)
     }
 
+    function test_scanFromBeforeMidnightProducesNoComparison() {
+        // The cost history ends at the day it was scanned. A scan from before
+        // midnight, such as one taken before a suspend, saw only part of
+        // yesterday, which must not be compared as a complete day.
+        var beforeMidnight = history(20, 3, 2)
+        beforeMidnight.daily.pop()
+        var snapshot = JSON.parse(build([provider("claude", {tokenCost: beforeMidnight})]).text)
+        verify(snapshot.providers[0].spend === undefined, JSON.stringify(snapshot.providers[0].spend))
+        verify(snapshot.providers[0].tokens === undefined, JSON.stringify(snapshot.providers[0].tokens))
+        verify(JSON.parse(build([provider("claude", {tokenCost: history(20, 3, 2)})]).text).providers[0].spend)
+    }
+
     function test_completeHistoryComparesAdjacentCompleteWeeks() {
         var snapshot = JSON.parse(build([provider("claude", {tokenCost: history(20, 3, 2)})]).text)
         compare(snapshot.providers[0].spend, {last7Days: 21, previous7Days: 14, changePercent: 50,
