@@ -67,6 +67,14 @@ KCM.SimpleKCM {
         actionText = ""
         Qt.callLater(refreshKeyStatus)
     }
+    // A connection test describes the address it listed. An edited address
+    // is untested, so a running test is retired and its result cleared.
+    onCfg_aiInsightsOllamaEndpointChanged: {
+        if (activeAction === "models") {
+            retire()
+        }
+        actionText = ""
+    }
     onCfg_aiInsightsEnabledChanged: Qt.callLater(refreshKeyStatus)
     Component.onCompleted: {
         modelCombo.editText = cfg_aiInsightsModel
