@@ -1,5 +1,6 @@
 """Exercise notification delivery with synthetic transports and notify-send."""
 
+import html
 import json
 import os
 from pathlib import Path
@@ -293,8 +294,10 @@ sys.exit(1 if "synthetic failure" in sys.argv else 0)
                 urgency = message["urgency"].strip()
                 if urgency not in ("low", "normal", "critical"):
                     urgency = "normal"
+                # The body is notification markup, so its text arrives escaped.
                 expected.append(["--app-name=CodexBar", "--icon=view-statistics", "--urgency=" + urgency,
-                                 "--", message["title"].strip() or "CodexBar", message["body"].strip()])
+                                 "--", message["title"].strip() or "CodexBar",
+                                 html.escape(message["body"].strip(), quote=False)])
             self.assertCountEqual(calls, expected)
             self.assertFalse(marker.exists(), "notification text must not execute shell commands")
 
