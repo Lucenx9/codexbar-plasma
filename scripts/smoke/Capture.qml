@@ -948,6 +948,11 @@ Item {
     }
 
     function aiInsightsCardVisible() {
+        return visibleAiInsightsCards().length;
+    }
+
+    // Overview and the provider view each own a card; only one is shown.
+    function visibleAiInsightsCards() {
         var popup = applet.fullRepresentationItem;
         var cards = [];
         (function collect(item) {
@@ -962,7 +967,7 @@ Item {
                     return false;
             }
             return true;
-        }).length;
+        });
     }
 
     function aiInsightsReady() {
@@ -996,6 +1001,18 @@ Item {
             verifyScenario(!applet.overviewAvailable && applet.selectedProviderID === "codex",
                 "single-provider navigation changed");
         }
+        // Highlights start collapsed behind the details toggle.
+        var card = visibleAiInsightsCards()[0];
+        var toggle = card ? findItem(card, "aiInsightsDetailsToggle") : null;
+        verifyScenario(toggle !== null && toggle.visible, "the insight must offer a details toggle");
+        if (!card.detailsExpanded) {
+            verifyScenario(!hasVisibleText(card, applet.aiInsightsCache.highlights[0]),
+                "highlights must start collapsed");
+            toggle.clicked();
+            return false;
+        }
+        verifyScenario(hasVisibleText(card, applet.aiInsightsCache.highlights[0]),
+            "the details toggle must reveal the highlights");
         return aiInsightsCardVisible() === 1;
     }
 
@@ -1824,7 +1841,12 @@ Item {
                         capture.applet.selectGlobalView("overview");
                     capture.verifyScenario(!capture.applet.aiInsightsBusy && capture.applet.aiInsightsCacheState === "none",
                         "AI Insights must not generate before an explicit request in manual mode");
-                    capture.applet.generateAiInsight();
+                    // First use goes through the card's labeled button.
+                    var shownCard = capture.visibleAiInsightsCards()[0];
+                    var firstGenerate = shownCard ? capture.findItem(shownCard, "aiInsightsFirstGenerateButton") : null;
+                    capture.verifyScenario(firstGenerate !== null && firstGenerate.visible,
+                        "the empty card must offer a labeled generate button");
+                    firstGenerate.clicked();
                     capture.verifyScenario(capture.applet.aiInsightsBusy, "manual generation did not start");
                     capture.applet.generateAiInsight();
                 } else if (capture.scenario === "normal" || capture.scenario.indexOf("localization-") === 0)

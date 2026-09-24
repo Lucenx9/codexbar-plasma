@@ -550,8 +550,10 @@ rather than claiming it will answer; OpenRouter's Zero Data Retention routing is
 checked only when an insight is generated. The card
 appears at the end of **Overview**. Without an Overview tab (one provider, or a
 fixed provider in Diagnostics), it appears in the provider view instead. The
-card's generate button, marked with a wand icon, creates or refreshes the
-insight; the Overview refresh button still refreshes usage only.
+card's **Generate insight** button creates the first insight; afterwards the
+wand button in its header refreshes it. The Overview refresh button still
+refreshes usage only. The card shows the summary with the provider, model, and
+the insight's age; **Show details** expands the highlights.
 
 - **Ollama** runs models on your computer. The default address is
   `http://localhost:11434` and needs no API key. Install a model first, for
@@ -599,7 +601,7 @@ the interval and a provider's rate limit. The last insight is saved with its
 time, provider, model, and language, and **Clear** beside **Saved insight**
 removes it.
 An insight older than the interval (a day in manual mode), or followed by a
-failed attempt, is labeled out of date.
+failed attempt, is labeled out of date beside its age.
 
 When a provider is unavailable, the card keeps usage data untouched and shows a
 short reason, such as Ollama not running, a rejected key, missing credits, a

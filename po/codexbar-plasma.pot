@@ -57,10 +57,6 @@ msgid "No insight generated yet."
 msgstr ""
 
 #: contents/ui/components/AiInsightsCard.qml
-msgid "Generated %1"
-msgstr ""
-
-#: contents/ui/components/AiInsightsCard.qml
 #: contents/ui/components/FullRepresentation.qml
 #: contents/ui/components/OverviewProviderRow.qml
 #: contents/ui/components/PanelSettingsPreview.qml
@@ -70,10 +66,14 @@ msgid "%1 - %2"
 msgstr ""
 
 #: contents/ui/components/AiInsightsCard.qml
+msgid "Out of date, %1"
+msgstr ""
+
+#: contents/ui/components/AiInsightsCard.qml
 msgid "Configure..."
 msgstr ""
 
-#: contents/ui/components/AiInsightsCard.qml contents/ui/configAiInsights.qml
+#: contents/ui/components/AiInsightsCard.qml
 msgid "AI Insights"
 msgstr ""
 
@@ -94,11 +94,13 @@ msgid "Generating insight..."
 msgstr ""
 
 #: contents/ui/components/AiInsightsCard.qml
-msgid "Out of date. Generating a new insight..."
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Hide details"
 msgstr ""
 
 #: contents/ui/components/AiInsightsCard.qml
-msgid "Out of date. It may not reflect current usage."
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Show details"
 msgstr ""
 
 #: contents/ui/components/AiInsightsMessages.qml
@@ -598,14 +600,6 @@ msgstr ""
 #: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/SpendView.qml
 msgid "Daily token history"
-msgstr ""
-
-#: contents/ui/components/ProviderCostSection.qml
-msgid "Hide details"
-msgstr ""
-
-#: contents/ui/components/ProviderCostSection.qml
-msgid "Show details"
 msgstr ""
 
 #: contents/ui/components/ProviderCostSection.qml

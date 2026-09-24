@@ -65,10 +65,6 @@ msgid "No insight generated yet."
 msgstr "Nessuna analisi generata."
 
 #: contents/ui/components/AiInsightsCard.qml
-msgid "Generated %1"
-msgstr "Generato %1"
-
-#: contents/ui/components/AiInsightsCard.qml
 #: contents/ui/components/FullRepresentation.qml
 #: contents/ui/components/OverviewProviderRow.qml
 #: contents/ui/components/PanelSettingsPreview.qml
@@ -78,10 +74,14 @@ msgid "%1 - %2"
 msgstr "%1 - %2"
 
 #: contents/ui/components/AiInsightsCard.qml
+msgid "Out of date, %1"
+msgstr "Non aggiornata, %1"
+
+#: contents/ui/components/AiInsightsCard.qml
 msgid "Configure..."
 msgstr "Configura..."
 
-#: contents/ui/components/AiInsightsCard.qml contents/ui/configAiInsights.qml
+#: contents/ui/components/AiInsightsCard.qml
 msgid "AI Insights"
 msgstr "Analisi IA"
 
@@ -102,12 +102,14 @@ msgid "Generating insight..."
 msgstr "Generazione dell'analisi..."
 
 #: contents/ui/components/AiInsightsCard.qml
-msgid "Out of date. Generating a new insight..."
-msgstr "Non aggiornata. Generazione di una nuova analisi..."
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Hide details"
+msgstr "Nascondi dettagli"
 
 #: contents/ui/components/AiInsightsCard.qml
-msgid "Out of date. It may not reflect current usage."
-msgstr "Non aggiornata. Potrebbe non riflettere l'utilizzo attuale."
+#: contents/ui/components/ProviderCostSection.qml
+msgid "Show details"
+msgstr "Mostra dettagli"
 
 #: contents/ui/components/AiInsightsMessages.qml
 msgid "Set an API key in the AI Insights settings."
@@ -646,14 +648,6 @@ msgstr "Cronologia giornaliera dei costi"
 #: contents/ui/components/SpendView.qml
 msgid "Daily token history"
 msgstr "Cronologia giornaliera dei token"
-
-#: contents/ui/components/ProviderCostSection.qml
-msgid "Hide details"
-msgstr "Nascondi dettagli"
-
-#: contents/ui/components/ProviderCostSection.qml
-msgid "Show details"
-msgstr "Mostra dettagli"
 
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Cost details"

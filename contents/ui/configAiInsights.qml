@@ -209,12 +209,9 @@ KCM.SimpleKCM {
         }
     }
 
+    // The page title already names the feature, so the form starts with
+    // the switch instead of a repeated section heading.
     Kirigami.FormLayout {
-        Kirigami.Separator {
-            Kirigami.FormData.label: i18n("AI Insights")
-            Kirigami.FormData.isSection: true
-        }
-
         Controls.CheckBox {
             id: enabledCheck
             objectName: "aiInsightsEnabledCheck"

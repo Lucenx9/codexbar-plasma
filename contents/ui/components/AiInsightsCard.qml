@@ -30,16 +30,18 @@ Rectangle {
             return i18n("The saved insight belongs to other settings or another language. Generate a new one when needed.")
         return i18n("No insight generated yet.")
     }
+    // Relative age, like the provider rows; an out-of-date insight says so
+    // here instead of in an extra line that would lengthen the card.
     readonly property string metaText: {
         if (!showsInsight)
             return ""
-        var date = new Date(cache.generatedAtMs)
-        var today = new Date(applet.panelClockMs).toDateString() === date.toDateString()
-        var generated = i18n("Generated %1", Qt.locale().toString(date, today
-            ? Qt.locale().timeFormat(Locale.ShortFormat) : Qt.locale().dateFormat(Locale.ShortFormat)))
+        var age = applet.sessionActivityText({ activityMs: cache.generatedAtMs }, applet.panelClockMs)
         var source = i18n("%1 - %2", applet.aiInsightsProviderName(cache.provider), AiInsights.modelLabel(cache.model))
-        return i18n("%1 - %2", source, generated)
+        return i18n("%1 - %2", source, stale ? i18n("Out of date, %1", age) : age)
     }
+    readonly property int highlightCount: showsInsight ? cache.highlights.length : 0
+    // Highlights stay one click away, so the card reads in a glance.
+    property bool detailsExpanded: false
 
     Layout.fillWidth: true
     implicitHeight: content.implicitHeight + Kirigami.Units.largeSpacing * 2
@@ -152,7 +154,7 @@ Rectangle {
                 objectName: "aiInsightsGenerateButton"
                 Layout.alignment: Qt.AlignTop
                 iconName: "tools-wizard"
-                visible: applet.aiInsightsConfigured
+                visible: applet.aiInsightsConfigured && card.showsInsight
                 enabled: card.canGenerate || applet.aiInsightsBusy
                 busy: applet.aiInsightsBusy
                 label: card.showsInsight ? i18n("Regenerate insight") : i18n("Generate insight")
@@ -194,6 +196,16 @@ Rectangle {
             action: configureAction
         }
 
+        // First use: a labeled action instead of only the header icon.
+        PlasmaComponents.Button {
+            objectName: "aiInsightsFirstGenerateButton"
+            visible: applet.aiInsightsConfigured && !card.showsInsight && !applet.aiInsightsBusy
+                && applet.aiInsightsSnapshot.sufficient
+            text: i18n("Generate insight")
+            icon.name: "tools-wizard"
+            onClicked: applet.generateAiInsight()
+        }
+
         // Dims while a new insight is generated, then settles as the reply
         // replaces it. Opening the popup never animates.
         ColumnLayout {
@@ -218,8 +230,21 @@ Rectangle {
                 wrapMode: Text.Wrap
             }
 
+            // A disclosure, like the cost details: flat, so it never
+            // outweighs the summary it expands.
+            PlainButton {
+                objectName: "aiInsightsDetailsToggle"
+                flat: true
+                visible: card.highlightCount > 0
+                plainText: card.detailsExpanded ? i18n("Hide details") : i18n("Show details")
+                icon.name: card.detailsExpanded ? "arrow-up" : "arrow-down"
+                Accessible.checkable: true
+                Accessible.checked: card.detailsExpanded
+                onClicked: card.detailsExpanded = !card.detailsExpanded
+            }
+
             Repeater {
-                model: card.showsInsight ? card.cache.highlights : []
+                model: card.showsInsight && card.detailsExpanded ? card.cache.highlights : []
 
                 // A separate bullet keeps wrapped lines aligned with the text.
                 delegate: RowLayout {
@@ -255,17 +280,6 @@ Rectangle {
                     }
                 }
             }
-        }
-
-        PlainPlasmaLabel {
-            objectName: "aiInsightsStaleText"
-            visible: card.stale
-            text: applet.aiInsightsBusy ? i18n("Out of date. Generating a new insight...")
-                : i18n("Out of date. It may not reflect current usage.")
-            opacity: applet.secondaryTextOpacity
-            font: Kirigami.Theme.smallFont
-            Layout.fillWidth: true
-            wrapMode: Text.Wrap
         }
 
         PlainInlineMessage {

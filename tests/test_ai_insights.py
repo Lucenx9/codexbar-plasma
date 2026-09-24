@@ -117,6 +117,7 @@ class RequestContractTests(HelperTestCase):
         self.assertIn('"summary" with 1 or 2 short sentences', system)
         self.assertIn("Each highlight adds a fact the summary does not state", system)
         self.assertIn("decimal separator", system)
+        self.assertIn("Write an increase above 300% as a multiple", system)
         self.assertIn("Leave them out, unless no provider has a current one", system)
 
     def test_unknown_or_malformed_language_is_not_sent(self):

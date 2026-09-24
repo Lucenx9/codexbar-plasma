@@ -122,8 +122,8 @@ no invented comparisons or forecasts, no cross-currency arithmetic, no
 equivalence between provider percentages, and no filler or unnecessary advice.
 Providers without a current measurement are left out unless none has one. The
 summary asks for one or two sentences, and highlights must add facts the
-summary does not state. CLI-derived data is described as data, never as
-instructions.
+summary does not state. Increases above 300% are written as multiples. CLI-derived
+data is described as data, never as instructions.
 
 | Provider | Endpoint | Provider-specific fields |
 | --- | --- | --- |
@@ -226,6 +226,8 @@ Failures map to bounded reasons: `missing_key`, `secret_unavailable`, `auth`
   settings scenarios also check that a model is kept per provider while the
   page is open, that the stored-key row stays within the form width, and that
   a long model list opens as a height-capped, scrolling menu. The
+  card scenarios start generation through the first-use **Generate insight**
+  button and check that highlights stay collapsed until **Show details**. The
   `normal` scenario asserts that the card stays hidden and idle by default.
 
 No test contacts a real AI service, wallet, or credential.

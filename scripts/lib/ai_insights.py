@@ -97,6 +97,7 @@ def instructions(tag):
         "- Providers marked stale or unavailable have no current measurement. Leave them out, unless no provider has a current one.",
         "- Never add or compare amounts in different currencies. Say when an amount is estimated or incomplete.",
         "- Do not list every number. No greetings, filler, promotion, or advice unless a quota is at risk.",
+        "- Write an increase above 300% as a multiple, such as \"about 49 times\", not as a percentage.",
         f'Return JSON: "summary" with 1 or 2 short sentences (under {MAX_SUMMARY_CHARS // 3} characters), '
         f'and "highlights" with 0 to {MAX_HIGHLIGHTS} short items (under {MAX_HIGHLIGHT_CHARS // 2} characters each). '
         "Each highlight adds a fact the summary does not state; return no highlights when nothing else matters.",
