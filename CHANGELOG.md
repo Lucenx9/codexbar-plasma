@@ -113,6 +113,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Show a provider's **Today** cost as unavailable when the cost snapshot was
   scanned on an earlier day, such as before midnight or before a failed refresh,
   instead of presenting that day's spend as today's.
+- Count down the popup's "Runs out in" pace forecast like the panel run-out
+  text. It kept the duration received with the last usage refresh, so with no
+  periodic refresh or a long interval it still promised hours of quota after
+  the forecast time had passed, while the reset time beside it counted down.
 - Escape markup in notification bodies. Plasma renders a notification body as
   rich text, so a provider status message or quota label containing HTML could
   show as a clickable link to any address, or as bold text or an image, and a

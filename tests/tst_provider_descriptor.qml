@@ -259,6 +259,42 @@ TestCase {
         compare(normalized.fields[1].id, "healthySecret")
     }
 
+    // set-api-key stores a credential, so only the secret kind, which writes
+    // through stdin, may use it. Any other kind would put the typed key in the
+    // command line, which /proc/<pid>/cmdline exposes.
+    function test_apiKeyWritesAreSecretOnly() {
+        var mislabeled = [
+            field({ id: "textKey", writeCommand: [
+                "codexbar", "config", "set-api-key", "--provider", "openrouter", "--value", "{value}"
+            ] }),
+            field({ id: "numberKey", kind: "number", writeCommand: [
+                "codexbar", "config", "set-api-key", "{value}"
+            ] }),
+            field({ id: "enumKey", kind: "enum", options: [{ id: "a" }], writeCommand: [
+                "codexbar", "config", "set-api-key", "--key={value}"
+            ] }),
+            field({ id: "booleanKey", kind: "boolean", writeCommand: [
+                "codexbar", "config", "set-api-key", "{value}", "--stdin"
+            ] })
+        ]
+        var normalized = ProviderDescriptor.normalize(descriptor(mislabeled.concat([field({ id: "healthyText" })])))
+        compare(normalized.fields.length, 1)
+        compare(normalized.fields[0].id, "healthyText")
+
+        // The write plan is the second gate: a field mutated after
+        // normalization must not reach the command line either.
+        var key = "sk-synthetic-must-not-appear"
+        for (var i = 0; i < mislabeled.length; i++) {
+            var mutated = ProviderDescriptor.normalize(descriptor([field()])).fields[0]
+            mutated.kind = mislabeled[i].kind
+            mutated.writeCommand = mislabeled[i].writeCommand
+            var plan = ProviderDescriptor.planFieldWrite(mutated, key, "codexbar")
+            verify(!plan.ok, mislabeled[i].id)
+            compare(plan.reason, "unsupportedCommand")
+            compare(plan.commandLine.indexOf(key), -1)
+        }
+    }
+
     function test_firstAllowlistGateRejectsWrongCommands() {
         var normalized = ProviderDescriptor.normalize(descriptor([
             field({ id: "binary", writeCommand: ["other", "config", "set"] }),
