@@ -139,6 +139,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   incomplete requests, and show both boundaries of the current week.
 - Mark Quota weeks totals as partial when the cost history is older than the
   current day and has not scanned the trailing dates of a quota week.
+- Mark a quota week as partial when its last day comes from a cost scan taken
+  before midnight. After a midnight reset, the week that just closed no longer
+  shows an exact total that is missing the end of its last day.
 - Bound **Diagnostics** commands shell-side with GNU `timeout --foreground
   --kill-after`, so a hung `codexbar diagnose` or provider list is killed
   instead of surviving as an orphan after the page times out or the dialog
