@@ -190,6 +190,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   command unchanged. A command reaped by the bound reports the same timeout
   message as the page timeout instead of an exit-code line or the shell's
   own signal notice.
+- Omit the AI Insights spend or token comparison when its weekly totals
+  overflow, instead of sending `null` amounts in the request snapshot. Finite
+  daily values can still sum past the largest double, which serialized as
+  `null` and broke the documented finite-amount contract.
 
 ## 0.2.40 - 2026-09-20
 

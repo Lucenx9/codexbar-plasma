@@ -103,7 +103,13 @@ function periods(tokenCost, nowMs, metric) {
         if (!finite(value) || value < 0) {
             return null
         }
-        sums[offset <= comparisonDays ? 0 : 1] += value
+        var slot = offset <= comparisonDays ? 0 : 1
+        var next = sums[slot] + value
+        // Two finite values can still overflow; that total is unknown.
+        if (!finite(next)) {
+            return null
+        }
+        sums[slot] = next
         incomplete = incomplete || (finite(field(record, "incompleteRequests")) && record.incompleteRequests > 0)
     }
     var result = {last7Days: sums[0], previous7Days: sums[1]}
@@ -111,12 +117,18 @@ function periods(tokenCost, nowMs, metric) {
         var changePercent = Math.round((sums[0] - sums[1]) / sums[1] * 100)
         // A large increase reads better as a multiple, and small models
         // divide unreliably, so the multiple is computed here. Only one form
-        // is sent: given both, small models keep the percentage.
-        if (changePercent > 300) {
-            var ratio = sums[0] / sums[1]
-            result.changeMultiple = ratio < 10 ? Math.round(ratio * 10) / 10 : Math.round(ratio)
-        } else {
-            result.changePercent = changePercent
+        // is sent: given both, small models keep the percentage. An
+        // unrepresentable change is omitted; the honest sums stay.
+        if (finite(changePercent)) {
+            if (changePercent > 300) {
+                var ratio = sums[0] / sums[1]
+                var multiple = ratio < 10 ? Math.round(ratio * 10) / 10 : Math.round(ratio)
+                if (finite(multiple)) {
+                    result.changeMultiple = multiple
+                }
+            } else {
+                result.changePercent = changePercent
+            }
         }
     }
     if (incomplete) {
@@ -138,6 +150,10 @@ function spend(tokenCost, nowMs) {
     result.currency = currency
     result.last7Days = Math.round(result.last7Days * 100) / 100
     result.previous7Days = Math.round(result.previous7Days * 100) / 100
+    // Rounding to cents can overflow a huge-but-finite total; that amount is unknown.
+    if (!finite(result.last7Days) || !finite(result.previous7Days)) {
+        return null
+    }
     // Keep the qualifier the widget shows beside the amount. Unpriced or
     // unmetered requests make it partial, and an estimated share still makes
     // it an estimate even then.
