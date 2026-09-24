@@ -88,6 +88,28 @@ TestCase {
         verify(message.indexOf("[redacted]") !== -1)
     }
 
+    function test_redactsPasswordAndSecretCredentialShapes() {
+        var message = SafeText.cliMessage(
+            "login failed: password=hunter2 secret: hunter2 private_key=ABCDEF client_secret=ABCDEF",
+            500)
+
+        verify(message.indexOf("hunter2") === -1)
+        verify(message.indexOf("ABCDEF") === -1)
+        verify(message.indexOf("password=") !== -1)
+        compare(message.match(/\[redacted\]/g).length, 4)
+    }
+
+    function test_redactsQuotedPasswordAndSecretShapes() {
+        var diagnostic = SafeText.cliDiagnostic(
+            '{"password":"hunter2","client_secret":"ABCDEF"}\n'
+                + 'password="hunter2" secret=\'hunter2\'',
+            500)
+
+        verify(diagnostic.indexOf("hunter2") === -1)
+        verify(diagnostic.indexOf("ABCDEF") === -1)
+        compare(diagnostic.match(/\[redacted\]/g).length, 4)
+    }
+
     function test_redactsQuotedAndJsonCredentialShapes() {
         var message = SafeText.cliDiagnostic(
             "Authorization: \"Bearer header.payload.signature\"\n"

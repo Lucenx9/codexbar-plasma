@@ -120,6 +120,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Saving an aggregate usage snapshot as a PNG now reliably writes the chosen
+  file instead of failing after the file picker closes.
 - Keep a provider's healthy cost data when its cost record carries a falsy
   `error` flag such as `false`, `0`, or an empty message. Only a real error
   now marks the provider failed and drops its totals from the snapshot.
@@ -194,6 +196,14 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   overflow, instead of sending `null` amounts in the request snapshot. Finite
   daily values can still sum past the largest double, which serialized as
   `null` and broke the documented finite-amount contract.
+- Report an AI Insights **Test connection** stopped by its time bound as a
+  timeout instead of an unexpected-format error. A listing killed by the
+  shell bound arrives with an empty reply and exit code 124 or 137, which the
+  model-list path now reads like the insight-generation path does.
+- Redact `password`, `secret`, `private_key`, and `client_secret` values in
+  CLI messages and diagnostics. Previously only authorization, bearer,
+  cookie, API-key, and token shapes were masked, so a CLI error such as
+  `login failed: password=hunter2` reached the UI verbatim.
 
 ## 0.2.40 - 2026-09-20
 

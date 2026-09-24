@@ -15,7 +15,6 @@ Controls.ApplicationWindow {
     required property var snapshot
     // Formatting is supplied by the applet; the snapshot contains only exported fields.
     required property var applet
-    property var capturedImage: null
     property bool capturing: false
     property int captureGeneration: 0
     property string feedback: ""
@@ -51,7 +50,6 @@ Controls.ApplicationWindow {
     transientParent: null
     onSnapshotChanged: {
         feedback = ""
-        capturedImage = null
     }
     Connections {
         target: window.applet
@@ -60,7 +58,6 @@ Controls.ApplicationWindow {
     onClosing: {
         captureGeneration++;
         capturing = false;
-        capturedImage = null;
         saveDialog.close();
     }
 
@@ -81,9 +78,10 @@ Controls.ApplicationWindow {
         return snapshot.omittedModels > 0 ? i18np("%1 more model not shown", "%1 more models not shown", snapshot.omittedModels) : "";
     }
 
-    function captureImage(save) {
-        if (capturing || !visible || saveDialog.visible)
-            return;
+    // Runs one card capture with generation/stale retirement. The grab result
+    // is destroyed after its completion callback returns, so the caller must
+    // finish its work synchronously inside onResult.
+    function grabCard(onResult) {
         capturing = true;
         feedback = "";
         var generation = ++captureGeneration;
@@ -91,28 +89,42 @@ Controls.ApplicationWindow {
             if (generation !== window.captureGeneration || !window.visible)
                 return;
             window.capturing = false;
-            window.capturedImage = result;
-            if (save) {
-                saveDialog.open();
-            } else {
-                clipboard.content = result.image;
-                window.feedback = i18n("Image copied");
-            }
+            onResult(result);
         }, Qt.size(Math.ceil(card.width * 2), Math.ceil(card.height * 2)));
         if (!accepted) {
             capturing = false;
             feedback = i18n("Could not create the image. Try again.");
+            return false;
         }
+        return true;
+    }
+
+    function captureImage(save) {
+        if (capturing || !visible || saveDialog.visible)
+            return;
+        if (save) {
+            saveDialog.open();
+            return;
+        }
+        grabCard(function (result) {
+            clipboard.content = result.image;
+            window.feedback = i18n("Image copied");
+        });
     }
 
     function saveImage(url) {
-        if (!capturedImage || !ShareUsage.localPngUrl(String(url))) {
+        if (!ShareUsage.localPngUrl(String(url))) {
             feedback = i18n("Choose a local PNG file.");
             return false;
         }
-        var saved = capturedImage.saveToFile(url);
-        feedback = saved ? i18n("Image saved") : i18n("Could not save the image. Choose another location.");
-        return saved;
+        if (capturing || !visible) {
+            feedback = i18n("Could not create the image. Try again.");
+            return false;
+        }
+        return grabCard(function (result) {
+            var saved = result.saveToFile(url);
+            window.feedback = saved ? i18n("Image saved") : i18n("Could not save the image. Choose another location.");
+        });
     }
 
     KQuickControlsAddons.Clipboard {
