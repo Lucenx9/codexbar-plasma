@@ -206,6 +206,7 @@ popup_surface = Surface("popup", root)
 popup_text = popup_surface.text
 panel_surface = Surface("panel", root)
 notifications_surface = Surface("notifications", root)
+insights_surface = Surface("insights", root)
 for order_surface, move_function, repeater in (
     (popup_surface, "moveProvider", "providerOrderRepeater"),
     (panel_surface, "movePanelElement", "panelOrderRepeater"),
@@ -259,6 +260,9 @@ internal_config_keys = {
     "widgetUpdateLastError",
     "lastNotifiedUpdateVersion",
     "providerConfigRevision",
+    "aiInsightsCache",
+    "aiInsightsLastAttempt",
+    "aiInsightsRateLimit",
 }
 all_config_keys = set(re.findall(r'<entry name="([^"]+)"', config_text))
 resettable_config_keys = all_config_keys - internal_config_keys
@@ -314,6 +318,7 @@ for settings_page_text, settings_page_name in (
     (notifications_surface.text, "configNotifications.qml"),
     (providers_text, "configProviders.qml"),
     (diagnostics_text, "configDiagnostics.qml"),
+    (insights_surface.text, "configAiInsights.qml"),
 ):
     for default_key, literal in qml_default_pattern.findall(settings_page_text):
         if default_key not in xml_defaults:
@@ -2671,11 +2676,14 @@ applet.require("codexbar sessions returned an unsupported JSON payload.",
 # the controller tests verify that only a successful result replaces a snapshot.
 
 session_activity_body = function_body(main_text, "sessionActivityText")
+if not code_contains(session_activity_body, "elapsedText(Number(item.activityMs), nowMs)"):
+    raise AssertionError("session ages must use the shared elapsedText helper with the live clock")
+elapsed_body = function_body(main_text, "elapsedText")
 for live_age_fragment in (
     "Number(nowMs)",
-    "currentTimeMs - Number(item.activityMs)",
+    "currentTimeMs - sinceMs",
 ):
-    if not code_contains(session_activity_body, live_age_fragment):
+    if not code_contains(elapsed_body, live_age_fragment):
         raise AssertionError(
             "relative session ages must depend on a periodically updated clock; "
             f"missing {live_age_fragment!r}"

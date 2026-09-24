@@ -7,7 +7,9 @@ affect the widget itself: its QML and JavaScript, the handling of `codexbar`
 output and configuration, the install, update, and packaging scripts, the data
 the widget caches, logs, and displays, and the widget's own secret prompt and
 stdin handoff, including any exposure through command lines, logs, or the
-user interface.
+user interface. The optional AI Insights helper is in scope too: its Secret
+Service key storage, its requests to Ollama, OpenRouter, or OpenAI, and the
+usage data it sends.
 
 Provider authentication, credential storage, and quota APIs belong to the
 upstream [CodexBar CLI](https://github.com/steipete/CodexBar); report a flaw in

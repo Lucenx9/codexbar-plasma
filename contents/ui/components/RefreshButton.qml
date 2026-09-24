@@ -8,6 +8,7 @@ Item {
 
     required property string label
     property bool busy: false
+    property string iconName: "view-refresh"
 
     signal requested
 
@@ -20,7 +21,7 @@ Item {
         id: refreshButton
 
         anchors.fill: parent
-        icon.name: "view-refresh"
+        icon.name: refreshControl.iconName
         Accessible.name: refreshControl.label
         onClicked: {
             if (!refreshControl.busy) {

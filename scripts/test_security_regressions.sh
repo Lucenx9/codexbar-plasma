@@ -283,4 +283,11 @@ reject_text "Makefile" "$(cat "$MAKEFILE")" 'QML_FILES := $(shell'
 # shellcheck disable=SC2016 # Match the literal Make variable syntax.
 reject_text "Makefile" "$(cat "$MAKEFILE")" '$(QML_FILES)'
 
+# AI Insights keys are read only inside scripts/lib/ai_insights.py. No widget
+# source may query the wallet, send HTTP itself, or build an Authorization
+# header: each would bring a key into the Plasma process and its command lines.
+reject_in_surface all 'secret-tool'
+reject_in_surface all 'Authorization'
+reject_in_surface all 'XMLHttpRequest'
+
 echo "Security regression checks passed."

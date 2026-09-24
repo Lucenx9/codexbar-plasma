@@ -863,6 +863,11 @@ Item {
                             }
                         }
                     }
+
+                    Components.AiInsightsCard {
+                        visible: applet.aiInsightsEnabled
+                        applet: fullRoot.applet
+                    }
                 }
             }
         }
@@ -1228,6 +1233,13 @@ Item {
                         accountSelectionKey: applet.accountKey(applet.selectedProviderData)
                         accountSelectionLabel: applet.accountLabel(applet.selectedProviderData)
                         presentationVisible: fullRoot.visible && !applet.globalViewSelected
+                    }
+
+                    // Without an Overview tab (one provider, or a fixed provider),
+                    // the same card appears here instead, never in both places.
+                    Components.AiInsightsCard {
+                        visible: applet.aiInsightsEnabled && !applet.overviewAvailable
+                        applet: fullRoot.applet
                     }
 
                     ColumnLayout {

@@ -100,7 +100,9 @@ or **macOS-only/non-goal**. Screenshots and Swift models are not CLI contracts.
 - Secrets must never appear in command lines, even as shell positional arguments
   piped to stdin: `/proc/<pid>/cmdline` exposes them. Only
   `promptDescriptorSecret` may carry a secret; it reads the value inside the
-  script. Generic field writers must reject `kind === "secret"`.
+  script. Generic field writers must reject `kind === "secret"`. AI Insights
+  keys never enter QML: `scripts/lib/ai_insights.py` prompts, stores, and reads
+  them through Secret Service inside its own process.
 - Keep timeout, disconnect, retry, nonce, and stale-result handling beside the
   process lifecycle. Late results must not replace a newer refresh or account
   selection. Share guard implementations through `contents/ui/Guards.js`.

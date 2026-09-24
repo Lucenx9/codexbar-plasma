@@ -115,6 +115,18 @@ KCM.SimpleKCM {
     property string cfg_panelProviderIDsDefault: ""
     property bool cfg_showCreditsInPanel
     property bool cfg_showCreditsInPanelDefault: false
+    property bool cfg_aiInsightsEnabled
+    property bool cfg_aiInsightsEnabledDefault: false
+    property string cfg_aiInsightsProvider
+    property string cfg_aiInsightsProviderDefault: "ollama"
+    property string cfg_aiInsightsModel
+    property string cfg_aiInsightsModelDefault: ""
+    property string cfg_aiInsightsOllamaEndpoint
+    property string cfg_aiInsightsOllamaEndpointDefault: "http://localhost:11434"
+    property bool cfg_aiInsightsOpenRouterZdr
+    property bool cfg_aiInsightsOpenRouterZdrDefault: true
+    property int cfg_aiInsightsIntervalHours
+    property int cfg_aiInsightsIntervalHoursDefault: 0
 
     property bool defaultsActionRequested: false
     // Plasma supplies cfg_* values as creation-time properties, which replaces
@@ -277,7 +289,13 @@ KCM.SimpleKCM {
             [cfg_autoSelectProvider, cfg_autoSelectProviderDefault],
             [cfg_overviewProviderIDs, cfg_overviewProviderIDsDefault],
             [cfg_panelProviderIDs, cfg_panelProviderIDsDefault],
-            [cfg_showCreditsInPanel, cfg_showCreditsInPanelDefault]
+            [cfg_showCreditsInPanel, cfg_showCreditsInPanelDefault],
+            [cfg_aiInsightsEnabled, cfg_aiInsightsEnabledDefault],
+            [cfg_aiInsightsProvider, cfg_aiInsightsProviderDefault],
+            [cfg_aiInsightsModel, cfg_aiInsightsModelDefault],
+            [cfg_aiInsightsOllamaEndpoint, cfg_aiInsightsOllamaEndpointDefault],
+            [cfg_aiInsightsOpenRouterZdr, cfg_aiInsightsOpenRouterZdrDefault],
+            [cfg_aiInsightsIntervalHours, cfg_aiInsightsIntervalHoursDefault]
         ]
         for (var i = 0; i < pairs.length; i++) {
             if (!settingsMatch(pairs[i][0], pairs[i][1])) {
@@ -333,6 +351,12 @@ KCM.SimpleKCM {
         cfg_overviewProviderIDs = cfg_overviewProviderIDsDefault
         cfg_panelProviderIDs = cfg_panelProviderIDsDefault
         cfg_showCreditsInPanel = cfg_showCreditsInPanelDefault
+        cfg_aiInsightsEnabled = cfg_aiInsightsEnabledDefault
+        cfg_aiInsightsProvider = cfg_aiInsightsProviderDefault
+        cfg_aiInsightsModel = cfg_aiInsightsModelDefault
+        cfg_aiInsightsOllamaEndpoint = cfg_aiInsightsOllamaEndpointDefault
+        cfg_aiInsightsOpenRouterZdr = cfg_aiInsightsOpenRouterZdrDefault
+        cfg_aiInsightsIntervalHours = cfg_aiInsightsIntervalHoursDefault
         defaultsActionRequested = true
     }
 

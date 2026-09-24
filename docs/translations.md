@@ -73,6 +73,10 @@ to the QML that gives the message its context.
   as `1K` and `4.3B`. Keep those abbreviations in the numbered argument; do not
   treat the leading `1` as a singular count.
 - Keep CodexBar, provider brands, command names, paths, and URLs unchanged.
+- Translate the `msgid "en"` entry whose context starts with "BCP 47 language
+  tag of this translation" to the catalog's own tag, such as `it` or `pt-BR`.
+  AI Insights writes in the language named there, so it must match the
+  catalog's language exactly and never be left empty.
 - Use short labels for the panel and tabs. Check longer text in the popup.
 - Resolve fuzzy entries and translate empty entries before submitting.
 

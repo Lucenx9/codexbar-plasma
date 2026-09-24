@@ -227,5 +227,43 @@
       <label>Internal revision bumped when provider enablement changes.</label>
       <default>0</default>
     </entry>
+    <entry name="aiInsightsEnabled" type="Bool">
+      <label>Generate optional AI Insights; disabled means no AI requests or processes.</label>
+      <default>false</default>
+    </entry>
+    <entry name="aiInsightsProvider" type="String">
+      <label>AI Insights provider: ollama, openrouter, or openai.</label>
+      <default>ollama</default>
+    </entry>
+    <entry name="aiInsightsModel" type="String">
+      <label>AI Insights model identifier for the selected provider.</label>
+      <default></default>
+    </entry>
+    <entry name="aiInsightsOllamaEndpoint" type="String">
+      <label>Ollama base URL; plain HTTP is accepted only for this computer.</label>
+      <default>http://localhost:11434</default>
+    </entry>
+    <entry name="aiInsightsOpenRouterZdr" type="Bool">
+      <label>Route OpenRouter AI Insights only to Zero Data Retention endpoints.</label>
+      <default>true</default>
+    </entry>
+    <entry name="aiInsightsIntervalHours" type="Int">
+      <label>Automatic AI Insights interval in hours; 0 generates only on request.</label>
+      <default>0</default>
+      <min>0</min>
+      <max>24</max>
+    </entry>
+    <entry name="aiInsightsCache" type="String">
+      <label>Internal last generated AI insight with its provider, model, language, and time.</label>
+      <default></default>
+    </entry>
+    <entry name="aiInsightsLastAttempt" type="String">
+      <label>Internal timestamp of the last AI Insights generation attempt.</label>
+      <default></default>
+    </entry>
+    <entry name="aiInsightsRateLimit" type="String">
+      <label>Internal AI Insights provider rate-limit deadline and the settings it applies to.</label>
+      <default></default>
+    </entry>
   </group>
 </kcfg>
