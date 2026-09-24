@@ -107,8 +107,11 @@ function normalize(item, receivedAtMs) {
     var displayName = null;
     for (var candidate of [item.displayName, item.title]) {
         if ((typeof candidate === "string" || typeof candidate === "number" || typeof candidate === "boolean") && candidate) {
-            displayName = Normalizer.boundedDisplayText(candidate, 120);
-            break;
+            var candidateText = Normalizer.boundedDisplayText(candidate, 120);
+            if (candidateText.length > 0) {
+                displayName = candidateText;
+                break;
+            }
         }
     }
     var remaining = credits ? Normalizer.strictFiniteNumber(credits.remaining) : NaN;

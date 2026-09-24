@@ -119,14 +119,6 @@ TestCase {
             {
                 tag: "string",
                 error: "failed"
-            },
-            {
-                tag: "false",
-                error: false
-            },
-            {
-                tag: "zero",
-                error: 0
             }
         ];
     }
@@ -141,6 +133,42 @@ TestCase {
         compare(result.outcome, "partial");
         compare(result.failedProviders, ["codex"]);
         compare(result.costs, {});
+    }
+    function test_falsyErrorFlagsKeepHealthyCosts_data() {
+        return [
+            {
+                tag: "false",
+                error: false
+            },
+            {
+                tag: "zero",
+                error: 0
+            },
+            {
+                tag: "empty",
+                error: ""
+            },
+            {
+                tag: "blank",
+                error: "   "
+            }
+        ];
+    }
+    function test_falsyErrorFlagsKeepHealthyCosts(data) {
+        var result = parse([
+            {
+                provider: "codex",
+                totals: {
+                    totalCost: 5,
+                    totalTokens: 10
+                },
+                error: data.error
+            }
+        ]);
+        compare(result.outcome, "success");
+        compare(result.failedProviders, []);
+        compare(result.costs.codex.totals.cost, 5);
+        compare(result.costs.codex.totals.tokens, 10);
     }
     function test_nullErrorIsHealthyAndMessageIsBounded() {
         var result = parse([
