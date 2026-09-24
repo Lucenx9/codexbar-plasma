@@ -1210,11 +1210,11 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: contents/ui/components/ShareUsageWindow.qml
-msgid "Image copied"
+msgid "Could not create the image. Try again."
 msgstr ""
 
 #: contents/ui/components/ShareUsageWindow.qml
-msgid "Could not create the image. Try again."
+msgid "Image copied"
 msgstr ""
 
 #: contents/ui/components/ShareUsageWindow.qml
