@@ -76,6 +76,8 @@ function dateKey(date) {
 
 // Two complete, adjacent seven-day periods ending yesterday, or nothing. Today
 // is partial and a missing or unknown day would make the comparison invented.
+// The history ends at the day it was scanned, so it must reach today: a scan
+// from before midnight saw only part of yesterday.
 function periods(tokenCost, nowMs, metric) {
     var daily = field(tokenCost, "daily")
     if (!Array.isArray(daily) || field(tokenCost, "historyCoverageEstablished") === false) {
@@ -91,6 +93,9 @@ function periods(tokenCost, nowMs, metric) {
     var sums = [0, 0]
     var incomplete = false
     var now = new Date(nowMs)
+    if (!Guards.hasOwnKey(byDate, dateKey(now))) {
+        return null
+    }
     for (var offset = 1; offset <= comparisonDays * 2; offset++) {
         var day = new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset)
         var record = Guards.hasOwnKey(byDate, dateKey(day)) ? byDate[dateKey(day)] : null
@@ -133,9 +138,19 @@ function spend(tokenCost, nowMs) {
     result.currency = currency
     result.last7Days = Math.round(result.last7Days * 100) / 100
     result.previous7Days = Math.round(result.previous7Days * 100) / 100
+    // Keep the qualifier the widget shows beside the amount. Unpriced or
+    // unmetered requests make it partial, and an estimated share still makes
+    // it an estimate even then.
     var trust = field(tokenCost, "trust")
     var sourceKind = field(trust, "sourceKind")
-    if (sourceKind === "listPrice" || sourceKind === "mixed" || field(tokenCost, "valueMode") === "estimated") {
+    var coverage = field(trust, "coverage")
+    var valueMode = field(tokenCost, "valueMode")
+    if (valueMode === "partial") {
+        result.incomplete = true
+    }
+    if (sourceKind === "listPrice" || sourceKind === "mixed" || sourceKind === "unknown"
+            || valueMode === "estimated" || valueMode === "approximate"
+            || (finite(field(coverage, "estimated")) && coverage.estimated > 0)) {
         result.estimated = true
     }
     return result

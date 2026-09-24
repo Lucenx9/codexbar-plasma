@@ -90,7 +90,9 @@ synchronized.
   and emits `activated(sourceName)` only after that reply retired its ledger
   entry; read-only `sending` reports whether requests remain pending. Failed
   commands finish silently, and missing `notify-send` remains a quiet no-op.
-  `NotificationCommand.js` bounds notification text, builds the quoted command,
+  `NotificationCommand.js` bounds notification text, escapes the body's markup
+  (`&`, `<`, `>`) so CLI text stays literal while the summary stays plain text,
+  builds the quoted command,
   restricts urgency to the supported values, and probes `notify-send --help`
   for action support so older libnotify builds keep the plain send.
   The applet retains notification

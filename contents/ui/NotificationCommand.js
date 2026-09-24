@@ -19,6 +19,14 @@ function actionArgument(actionLabel) {
     return cleanLabel.length > 0 ? " --action=" + Guards.shellQuote("default=" + cleanLabel) : ""
 }
 
+// The notification body is markup: Plasma renders links, emphasis and images
+// in it. Every body here is plain widget or CLI text, so it is escaped and a
+// status message cannot become a clickable link. The summary is plain text by
+// specification and stays literal.
+function bodyText(value) {
+    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+}
+
 function notifySendArguments(urgencyQuoted, action, titleQuoted, bodyQuoted) {
     return "notify-send --app-name=CodexBar --icon=view-statistics --urgency="
         + urgencyQuoted + action + " -- " + titleQuoted + " " + bodyQuoted
@@ -29,7 +37,7 @@ function command(title, body, urgency, actionLabel) {
         return ""
     }
     var cleanTitle = boundedText(title, maximumTitleLength) || "CodexBar"
-    var cleanBody = boundedText(body, maximumBodyLength)
+    var cleanBody = bodyText(boundedText(body, maximumBodyLength))
     var cleanUrgency = typeof urgency === "string" ? urgency.trim() : "normal"
     if (cleanUrgency !== "low" && cleanUrgency !== "normal" && cleanUrgency !== "critical") {
         cleanUrgency = "normal"
