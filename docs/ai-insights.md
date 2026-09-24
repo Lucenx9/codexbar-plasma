@@ -255,7 +255,8 @@ Failures map to bounded reasons: `missing_key`, `secret_unavailable`, `auth`
   Italian regional locales.
 - `tests/test_ai_insights_settings.py`: the settings page's helper reply
   handling with stubbed processes, including an Ollama address edited during
-  or after **Test connection**.
+  or after **Test connection**, and the **Clear** button re-arming when a new
+  insight is stored after a clear.
 - `tests/test_ai_insights_controller.py`: the production controller through
   Plasma's executable DataSource with a recording helper, covering disabled,
   manual, duplicate, automatic, restart, language/model/disable changes during a

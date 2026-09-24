@@ -3,7 +3,10 @@
 The production retire/run/accept/report functions and the endpoint handler are
 copied from configAiInsights.qml into a QtTest, with the executable source,
 deadline, and model field replaced by recorders, so the page's reply handling
-runs without the KDE settings runtime.
+runs without the KDE settings runtime. A second harness mirrors the Clear
+button's enabled binding with a stubbed configuration and runs the page's
+cache re-arm handler, so the button must enable again when a new insight is
+stored after a clear.
 """
 
 import os
@@ -147,6 +150,38 @@ TestCase {
 '''
 
 
+CLEAR_QML = '''import QtQuick
+import QtTest
+TestCase {
+    id: page
+    name: "AiInsightsClearButton"
+    property bool cacheCleared: false
+    readonly property bool cacheStored: String(configuration.aiInsightsCache || "").length > 0
+    readonly property bool clearEnabled: cacheStored && !cacheCleared
+    onCacheStoredChanged: { RESET_HANDLER }
+
+    QtObject {
+        id: configuration
+        property string aiInsightsCache: ""
+    }
+
+    function pressClear() {
+        configuration.aiInsightsCache = ""
+        cacheCleared = true
+    }
+
+    function test_clearRearmsWhenANewInsightArrives() {
+        configuration.aiInsightsCache = "insight-1"
+        verify(clearEnabled)
+        pressClear()
+        verify(!clearEnabled)
+        configuration.aiInsightsCache = "insight-2"
+        verify(clearEnabled, "Clear stays disabled after a new insight arrives")
+    }
+}
+'''
+
+
 class AiInsightsSettingsTests(unittest.TestCase):
     def test_helper_replies_follow_the_tested_endpoint(self):
         insights = Surface("insights", ROOT)
@@ -174,6 +209,32 @@ class AiInsightsSettingsTests(unittest.TestCase):
         output = result.stdout + result.stderr
         self.assertEqual(result.returncode, 0, output)
         self.assertIn("Totals: 7 passed, 0 failed", output)
+
+    def test_clear_button_rearms_when_a_new_insight_arrives(self):
+        insights = Surface("insights", ROOT)
+        source = (ROOT / "contents/ui/configAiInsights.qml").read_text()
+        # Pin the production wiring this harness mirrors: the button disables
+        # through the sticky flag the moment Clear is pressed.
+        self.assertIn("enabled: page.cacheStored && !page.cacheCleared", source)
+        self.assertIn('Plasmoid.configuration.aiInsightsCache = ""', source)
+        self.assertIn("page.cacheCleared = true", source)
+        # An absent handler leaves the harness without one, so the behavior,
+        # not the handler's existence, decides the result.
+        try:
+            handler = insights.handler_body("onCacheStoredChanged")
+        except AssertionError:
+            handler = ""
+        qml = CLEAR_QML.replace("RESET_HANDLER", handler)
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = Path(directory) / "tst_ai_insights_clear_button.qml"
+            fixture.write_text(qml)
+            result = subprocess.run(
+                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                capture_output=True, text=True, timeout=30)
+        output = result.stdout + result.stderr
+        self.assertEqual(result.returncode, 0, output)
+        self.assertIn("Totals: 3 passed, 0 failed", output)
 
 
 if __name__ == "__main__":

@@ -208,6 +208,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   CLI messages and diagnostics. Previously only authorization, bearer,
   cookie, API-key, and token shapes were masked, so a CLI error such as
   `login failed: password=hunter2` reached the UI verbatim.
+- Re-enable the AI Insights settings **Clear** button when a new insight is
+  saved after a clear while the page stays open. The button stayed disabled
+  until the settings dialog was reopened.
 - Clear the AI Insights model list when the Ollama address is edited. A
   finished **Test connection** left the previous server's models selectable,
   so the untested address could present a model it never listed as working.

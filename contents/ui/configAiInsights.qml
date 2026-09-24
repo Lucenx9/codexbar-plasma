@@ -82,6 +82,13 @@ KCM.SimpleKCM {
         }
     }
     onCfg_aiInsightsEnabledChanged: Qt.callLater(refreshKeyStatus)
+    // The cleared flag disables Clear at once; a newly stored insight re-arms
+    // the button while the page stays open.
+    onCacheStoredChanged: {
+        if (cacheStored) {
+            cacheCleared = false
+        }
+    }
     Component.onCompleted: {
         modelCombo.editText = cfg_aiInsightsModel
         Qt.callLater(refreshKeyStatus)
