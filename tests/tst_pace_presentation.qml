@@ -167,4 +167,49 @@ TestCase {
         });
         verify(parts[0].text.indexOf("synthetic-test-value") === -1);
     }
+
+    function test_runOutCountsDownFromItsObservation() {
+        var observedAtMs = Date.UTC(2026, 8, 24, 12);
+        var parts = PacePresentation.summaryParts({
+            expectedUsedPercent: 40,
+            willLastToReset: false,
+            etaSeconds: 7200
+        });
+        compare(PacePresentation.advancedParts(parts, observedAtMs, observedAtMs + 90 * 60000), [
+            {
+                kind: "expected",
+                percent: 40
+            },
+            {
+                kind: "runsOut",
+                seconds: 1800
+            }
+        ]);
+        // The forecast may already have passed; it never counts below now.
+        compare(PacePresentation.advancedParts(parts, observedAtMs, observedAtMs + 3 * 3600000)[1].seconds, 0);
+        // The input parts stay untouched for the next clock tick.
+        compare(parts[1].seconds, 7200);
+    }
+
+    function test_runOutWithoutAUsableObservationKeepsItsEta_data() {
+        var observedAtMs = Date.UTC(2026, 8, 24, 12);
+        return [
+            {tag: "missing observation", observedAtMs: undefined, nowMs: observedAtMs},
+            {tag: "NaN observation", observedAtMs: NaN, nowMs: observedAtMs},
+            {tag: "string observation", observedAtMs: String(observedAtMs), nowMs: observedAtMs + 60000},
+            {tag: "missing clock", observedAtMs: observedAtMs, nowMs: NaN},
+            {tag: "clock rollback", observedAtMs: observedAtMs, nowMs: observedAtMs - 60000}
+        ];
+    }
+
+    function test_runOutWithoutAUsableObservationKeepsItsEta(data) {
+        compare(PacePresentation.advancedParts([{kind: "runsOut", seconds: 600}], data.observedAtMs, data.nowMs),
+            [{kind: "runsOut", seconds: 600}]);
+    }
+
+    function test_advancedPartsToleratesMalformedParts() {
+        compare(PacePresentation.advancedParts(null, 0, 0), []);
+        compare(PacePresentation.advancedParts([null, {kind: "lasts"}, {kind: "runsOut", seconds: "600"}], 1, 2),
+            [null, {kind: "lasts"}, {kind: "runsOut", seconds: "600"}]);
+    }
 }

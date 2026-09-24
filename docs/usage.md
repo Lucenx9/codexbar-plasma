@@ -179,7 +179,8 @@ and can trigger incident notifications independently of the retained quotas.
 Stale quotas preserve the previous quota, pace, and reset notification state,
 even when the CLI reports success with old quotas and current status. If no fresh
 quota has been seen, the first fresh measurement establishes that state silently.
-Panel run-out countdowns advance from the receipt time of their own forecast.
+Panel and popup run-out countdowns advance from the receipt time of their own
+forecast.
 Selecting a cached account preserves that time, including in privacy mode;
 a later refresh for another account cannot restart its countdown.
 Failed refreshes stop reusing measurements older than 24 hours, and a quota
@@ -381,7 +382,9 @@ fields; track proposed extensions in the issue tracker.
 - Optional quota warning markers on usage bars.
 - Optional Plasma notifications for provider status incidents, configurable
   quota crossings, predicted quota exhaustion from CLI pace data, and when a
-  heavily used limit resets back to empty.
+  heavily used limit resets back to empty. Notification text is shown
+  literally: markup in provider or status text never becomes a link, emphasis,
+  or an image.
 - Clicking the available-update notification opens that release's page on
   GitHub, addressed from the tag the updater announced. The notification stays
   non-clickable when the release address is unknown or the installed
