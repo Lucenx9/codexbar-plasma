@@ -116,7 +116,8 @@ of the text privacy mode hides.
 ## Request contract
 
 The helper sends one non-streaming request with two messages: fixed English
-instructions and `Usage data:` followed by the snapshot JSON. The instructions
+instructions and `Usage data:` followed by the snapshot JSON and a closing
+reminder of the output language, which small models otherwise ignore. The instructions
 require the selected language with its decimal separator, only provided facts,
 no invented comparisons or forecasts, no cross-currency arithmetic, no
 equivalence between provider percentages, and no filler or unnecessary advice.
@@ -127,7 +128,7 @@ data is described as data, never as instructions.
 
 | Provider | Endpoint | Provider-specific fields |
 | --- | --- | --- |
-| Ollama | `POST {endpoint}/api/chat` | `format` JSON Schema, `stream: false`, `temperature: 0.2`, `num_predict: 4000`, no credentials |
+| Ollama | `POST {endpoint}/api/chat` | `format` JSON Schema, `stream: false`, `think: false`, `keep_alive: 0`, `temperature: 0.2`, `num_predict: 4000`, no credentials |
 | OpenRouter | `POST https://openrouter.ai/api/v1/chat/completions` | strict `json_schema`, `max_tokens: 4000`, `provider.require_parameters`, `provider.data_collection: "deny"`, optional `provider.zdr` |
 | OpenAI | `POST https://api.openai.com/v1/chat/completions` | strict `json_schema`, `max_completion_tokens: 4000`, `store: false` |
 

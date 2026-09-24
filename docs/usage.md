@@ -557,8 +557,11 @@ the insight's age; **Show details** expands the highlights.
 
 - **Ollama** runs models on your computer. The default address is
   `http://localhost:11434` and needs no API key. Install a model first, for
-  example `ollama pull llama3.2`. A remote Ollama service must use `https://`,
-  and the settings page states that usage statistics are sent to it.
+  example `ollama pull qwen3:4b`. Models of about 4B parameters or more work
+  best; very small models, such as 1.5B, often ignore the interface language
+  and misstate figures. Thinking is turned off, and the model is unloaded from
+  memory as soon as the insight is written. A remote Ollama service must use
+  `https://`, and the settings page states that usage statistics are sent to it.
 - **OpenRouter** needs an API key and credits. Only models that support
   structured output are listed. Requests never use providers that may collect
   data for training, and **Use only Zero Data Retention endpoints**, on by

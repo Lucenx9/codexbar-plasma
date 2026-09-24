@@ -356,11 +356,16 @@ def decode_snapshot(text):
 def request_body(provider, model, tag, snapshot, zdr):
     messages = [
         {"role": "system", "content": instructions(tag)},
-        {"role": "user", "content": "Usage data:\n" + json.dumps(snapshot, ensure_ascii=False, separators=(",", ":"))},
+        # Small models follow the last instruction best, so the language is
+        # repeated after the data.
+        {"role": "user", "content": "Usage data:\n" + json.dumps(snapshot, ensure_ascii=False, separators=(",", ":"))
+            + "\n\nWrite the summary and highlights in " + language_name(tag) + "."},
     ]
     if provider == "ollama":
-        return {"model": model, "messages": messages, "stream": False, "format": SCHEMA,
-                "options": {"temperature": 0.2, "num_predict": MAX_OUTPUT_TOKENS}}
+        # Thinking models otherwise spend the whole output bound thinking, and a
+        # rarely generated insight should not hold GPU memory afterwards.
+        return {"model": model, "messages": messages, "stream": False, "format": SCHEMA, "think": False,
+                "keep_alive": 0, "options": {"temperature": 0.2, "num_predict": MAX_OUTPUT_TOKENS}}
     body = {"model": model, "messages": messages,
             "response_format": {"type": "json_schema", "json_schema": {"name": "ai_insight", "strict": True, "schema": SCHEMA}}}
     if provider == "openai":

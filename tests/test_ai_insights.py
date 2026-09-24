@@ -156,7 +156,7 @@ class RequestContractTests(HelperTestCase):
         self.assertTrue(body["response_format"]["json_schema"]["strict"])
         self.assertEqual(body["max_tokens"], ai.MAX_OUTPUT_TOKENS)
         user = body["messages"][1]["content"]
-        self.assertEqual(json.loads(user.split("\n", 1)[1]), json.loads(SNAPSHOT))
+        self.assertEqual(json.loads(user.split("\n")[1]), json.loads(SNAPSHOT))
         Handler.requests = []
         self.generate(zdr=False)
         self.assertEqual(Handler.requests[0]["body"]["provider"], {"require_parameters": True, "data_collection": "deny"})
@@ -182,6 +182,12 @@ class RequestContractTests(HelperTestCase):
         self.assertEqual(request["body"]["format"], ai.SCHEMA)
         self.assertFalse(request["body"]["stream"])
         self.assertIn('German (BCP 47 tag "de")', request["body"]["messages"][0]["content"])
+        # Thinking models would otherwise exhaust the output bound, and the
+        # model is unloaded as soon as the insight is written.
+        self.assertIs(request["body"]["think"], False)
+        self.assertEqual(request["body"]["keep_alive"], 0)
+        self.assertTrue(request["body"]["messages"][1]["content"].endswith(
+            "Write the summary and highlights in German."))
 
     def test_cloud_destinations_are_pinned_https(self):
         spec = importlib.util.spec_from_file_location("fresh_ai", ROOT / "scripts/lib/ai_insights.py")
