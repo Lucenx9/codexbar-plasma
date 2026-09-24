@@ -117,10 +117,13 @@ of the text privacy mode hides.
 
 The helper sends one non-streaming request with two messages: fixed English
 instructions and `Usage data:` followed by the snapshot JSON. The instructions
-require the selected language, only provided facts, no invented comparisons or
-forecasts, no cross-currency arithmetic, no equivalence between provider
-percentages, and no filler or unnecessary advice. CLI-derived data is described
-as data, never as instructions.
+require the selected language with its decimal separator, only provided facts,
+no invented comparisons or forecasts, no cross-currency arithmetic, no
+equivalence between provider percentages, and no filler or unnecessary advice.
+Providers without a current measurement are left out unless none has one. The
+summary asks for one or two sentences, and highlights must add facts the
+summary does not state. CLI-derived data is described as data, never as
+instructions.
 
 | Provider | Endpoint | Provider-specific fields |
 | --- | --- | --- |
@@ -220,6 +223,8 @@ Failures map to bounded reasons: `missing_key`, `secret_unavailable`, `auth`
 - Smoke scenarios `ai-insights`, `ai-insights-it`, `ai-insights-mismatch`,
   `ai-insights-error`, `ai-insights-single`, `settings-ai-insights`, and
   `settings-ai-insights-narrow` run the real applet with a synthetic helper. The
+  settings scenarios also check that a model is kept per provider while the
+  page is open and that the stored-key row stays within the form width. The
   `normal` scenario asserts that the card stays hidden and idle by default.
 
 No test contacts a real AI service, wallet, or credential.

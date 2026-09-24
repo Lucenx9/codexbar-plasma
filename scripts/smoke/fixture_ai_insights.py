@@ -17,7 +17,7 @@ def main():
     args = parser.parse_args()
     scenario = os.environ.get("CODEXBAR_SMOKE_SCENARIO", "")
     if args.action == "key-status":
-        result = {"status": "absent"}
+        result = {"status": "present" if scenario == "settings-ai-insights" else "absent"}
     elif args.action == "models":
         result = {"status": "ok", "key": "none", "models": [{"id": "fixture-model"}, {"id": "llama3.2:3b"}]}
     elif args.action != "generate":

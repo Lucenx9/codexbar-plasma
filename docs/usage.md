@@ -389,7 +389,7 @@ fields; track proposed extensions in the issue tracker.
 ## Settings
 
 - Seven settings pages: **General**, **Providers**, **Panel**, **Popup**,
-  **Notifications**, **AI Insights**, and **Diagnostics**. CLI path and provider/source overrides
+  **Notifications**, **AI Insights (Beta)**, and **Diagnostics**. CLI path and provider/source overrides
   sit beside redacted diagnostics; quota thresholds sit beside their alerts.
   **Popup** groups provider order and Overview providers under **Providers**;
   **Diagnostics** runs redacted diagnostics from its **Provider diagnostics**
@@ -533,7 +533,7 @@ A restored CLI does not roll back upstream provider configuration changes.
 
 ## AI Insights
 
-AI Insights is an optional card that asks a language model for a short
+AI Insights is an optional beta card that asks a language model for a short
 explanation of your current usage: a quota likely to run out before its reset,
 a notable change in spending or tokens between the last two complete weeks, or
 a notable difference between providers. It explains facts the widget has
@@ -550,8 +550,8 @@ rather than claiming it will answer; OpenRouter's Zero Data Retention routing is
 checked only when an insight is generated. The card
 appears at the end of **Overview**. Without an Overview tab (one provider, or a
 fixed provider in Diagnostics), it appears in the provider view instead. The
-card's generate button creates or refreshes the insight; the Overview refresh
-button still refreshes usage only.
+card's generate button, marked with a wand icon, creates or refreshes the
+insight; the Overview refresh button still refreshes usage only.
 
 - **Ollama** runs models on your computer. The default address is
   `http://localhost:11434` and needs no API key. Install a model first, for
@@ -590,13 +590,14 @@ failed refresh are sent only as unavailable. Weekly spending comparisons
 require cost history already loaded in **Usage & Spend**; generating an insight
 never starts a cost scan.
 
-**Generate** defaults to **Only on request**. **Every 6 hours**, **Every 12
+**Frequency** defaults to **Only on request**. **Every 6 hours**, **Every 12
 hours**, and **Daily** generate in the background at most once per interval,
 counted from the last attempt, including a failed one, and from the last
 successful insight. Usage refreshes, opening the popup, and language changes
 never make a request due by themselves, and a plasmashell restart keeps both
 the interval and a provider's rate limit. The last insight is saved with its
-time, provider, model, and language, and **Clear saved insight** removes it.
+time, provider, model, and language, and **Clear** beside **Saved insight**
+removes it.
 An insight older than the interval (a day in manual mode), or followed by a
 failed attempt, is labeled out of date.
 

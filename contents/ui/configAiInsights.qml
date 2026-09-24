@@ -51,6 +51,9 @@ KCM.SimpleKCM {
     readonly property bool cacheStored: typeof Plasmoid !== "undefined" && Plasmoid.configuration
         ? String(Plasmoid.configuration.aiInsightsCache || "").length > 0 : false
     property bool cacheCleared: false
+    // Models typed for other providers during this settings session, so
+    // trying another provider and switching back keeps the earlier model.
+    property var modelsByProvider: ({})
 
     onCfg_aiInsightsModelChanged: {
         if (modelCombo.editText.trim() !== cfg_aiInsightsModel) {
@@ -75,9 +78,12 @@ KCM.SimpleKCM {
         if (cfg_aiInsightsProvider === value) {
             return
         }
-        cfg_aiInsightsProvider = value
         // Model identifiers belong to one provider.
-        cfg_aiInsightsModel = ""
+        var models = modelsByProvider
+        models[provider] = cfg_aiInsightsModel
+        modelsByProvider = models
+        cfg_aiInsightsProvider = value
+        cfg_aiInsightsModel = models[value] || ""
     }
 
     function retire() {
@@ -269,14 +275,21 @@ KCM.SimpleKCM {
             Layout.preferredWidth: Kirigami.Units.gridUnit * 16
         }
 
+        // Capped like the model row: a wider row would re-center the whole
+        // form each time the provider changes.
         RowLayout {
+            objectName: "aiInsightsKeyRow"
             Kirigami.FormData.label: i18n("API key:")
             visible: page.cloudProvider
             enabled: enabledCheck.checked && !page.busy
             spacing: Kirigami.Units.smallSpacing
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
 
             Components.PlainControlsLabel {
                 objectName: "aiInsightsKeyStatus"
+                Layout.fillWidth: true
+                Layout.minimumWidth: Kirigami.Units.gridUnit * 4
+                wrapMode: Text.WordWrap
                 text: page.keyStatus === "present" ? i18n("Stored in the system wallet")
                     : (page.keyStatus === "absent" ? i18n("Not set")
                     : (page.keyStatus === "unavailable" ? i18n("System wallet unavailable") : ""))
@@ -375,7 +388,7 @@ KCM.SimpleKCM {
                         ? i18n("Generation uses the Ollama service on this computer. Usage statistics stay on this device.")
                         : i18n("Aggregated usage statistics are sent to the Ollama service at this address. Remote addresses must use https://.")
                 }
-                var sent = i18n("Aggregated usage statistics are sent to %1: provider names, quota percentages, reset times, pace forecasts, and weekly spending and token totals. Account names, emails, projects, file paths, and prompts are never sent.", page.providerName)
+                var sent = i18n("Only aggregated usage statistics are sent to %1: quotas, reset times, pace forecasts, and weekly spending and tokens per provider. Never account names, emails, projects, file paths, or prompts.", page.providerName)
                 var billing = page.provider === "openai"
                     ? i18n("Requests are billed to your OpenAI API account. A ChatGPT subscription does not include API credits.")
                     : i18n("Requests are billed to your OpenRouter credits, at the price of the model you choose. Providers that may collect data are never used.")
@@ -397,7 +410,7 @@ KCM.SimpleKCM {
         Controls.ComboBox {
             id: intervalCombo
             objectName: "aiInsightsIntervalCombo"
-            Kirigami.FormData.label: i18n("Generate:")
+            Kirigami.FormData.label: i18n("Frequency:")
             enabled: enabledCheck.checked
             textRole: "text"
             valueRole: "value"
@@ -432,7 +445,8 @@ KCM.SimpleKCM {
         Controls.Button {
             objectName: "aiInsightsClearButton"
             Kirigami.FormData.label: i18n("Saved insight:")
-            text: i18n("Clear saved insight")
+            text: i18n("Clear")
+            Accessible.name: i18n("Clear saved insight")
             icon.name: "edit-clear-history"
             enabled: page.cacheStored && !page.cacheCleared
             onClicked: {

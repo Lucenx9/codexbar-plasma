@@ -3,6 +3,7 @@ import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
+import "../AiInsights.js" as AiInsights
 
 // Presentation only: main.qml owns generation, persistence, and error text.
 // Generated text is untrusted and always rendered as plain text.
@@ -36,7 +37,7 @@ Rectangle {
         var today = new Date(applet.panelClockMs).toDateString() === date.toDateString()
         var generated = i18n("Generated %1", Qt.locale().toString(date, today
             ? Qt.locale().timeFormat(Locale.ShortFormat) : Qt.locale().dateFormat(Locale.ShortFormat)))
-        var source = i18n("%1 - %2", applet.aiInsightsProviderName(cache.provider), cache.model)
+        var source = i18n("%1 - %2", applet.aiInsightsProviderName(cache.provider), AiInsights.modelLabel(cache.model))
         return i18n("%1 - %2", source, generated)
     }
 
@@ -72,7 +73,7 @@ Rectangle {
                 spacing: 0
 
                 PlainHeading {
-                    text: i18n("AI Insights")
+                    text: i18n("AI Insights (Beta)")
                     level: 4
                     type: Kirigami.Heading.Type.Primary
                     Layout.fillWidth: true
@@ -89,9 +90,12 @@ Rectangle {
                 }
             }
 
+            // A distinct icon: this button calls a possibly billed AI service,
+            // while the Overview refresh button only refreshes usage.
             RefreshButton {
                 objectName: "aiInsightsGenerateButton"
                 Layout.alignment: Qt.AlignTop
+                iconName: "tools-wizard"
                 visible: applet.aiInsightsConfigured
                 enabled: card.canGenerate || applet.aiInsightsBusy
                 busy: applet.aiInsightsBusy
@@ -134,25 +138,55 @@ Rectangle {
             action: configureAction
         }
 
-        PlainPlasmaLabel {
-            objectName: "aiInsightsSummary"
+        // Dims while a new insight is generated, then settles as the reply
+        // replaces it. Opening the popup never animates.
+        ColumnLayout {
+            objectName: "aiInsightsBody"
             visible: card.showsInsight
-            text: card.showsInsight ? card.cache.summary : ""
-            opacity: card.stale ? applet.valueTextOpacity : 1
+            opacity: applet.aiInsightsBusy ? applet.secondaryTextOpacity : 1
             Layout.fillWidth: true
-            wrapMode: Text.Wrap
-        }
+            spacing: Kirigami.Units.smallSpacing
 
-        Repeater {
-            model: card.showsInsight ? card.cache.highlights : []
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: Kirigami.Units.longDuration
+                    easing.type: Easing.OutCubic
+                }
+            }
 
-            delegate: PlainPlasmaLabel {
-                required property var modelData
-
-                text: "\u2022 " + modelData
+            PlainPlasmaLabel {
+                objectName: "aiInsightsSummary"
+                text: card.showsInsight ? card.cache.summary : ""
                 opacity: card.stale ? applet.valueTextOpacity : 1
                 Layout.fillWidth: true
                 wrapMode: Text.Wrap
+            }
+
+            Repeater {
+                model: card.showsInsight ? card.cache.highlights : []
+
+                // A separate bullet keeps wrapped lines aligned with the text.
+                delegate: RowLayout {
+                    id: highlightRow
+
+                    required property var modelData
+
+                    opacity: card.stale ? applet.valueTextOpacity : 1
+                    Layout.fillWidth: true
+                    spacing: Kirigami.Units.smallSpacing
+
+                    PlainPlasmaLabel {
+                        text: "\u2022"
+                        Layout.alignment: Qt.AlignTop
+                        Accessible.ignored: true
+                    }
+
+                    PlainPlasmaLabel {
+                        text: highlightRow.modelData
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                    }
+                }
             }
         }
 

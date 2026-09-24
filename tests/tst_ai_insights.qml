@@ -186,6 +186,14 @@ TestCase {
         verify(!AiInsights.modelListed("openai", "gpt-x", ["gpt-x:latest"]))
     }
 
+    function test_modelLabelDropsTheVendorPath() {
+        compare(AiInsights.modelLabel("deepseek/deepseek-v4.1-flash"), "deepseek-v4.1-flash")
+        compare(AiInsights.modelLabel("hf.co/user/model:q4"), "model:q4")
+        compare(AiInsights.modelLabel(" llama3.2:3b "), "llama3.2:3b")
+        compare(AiInsights.modelLabel("vendor/"), "vendor/")
+        compare(AiInsights.modelLabel(null), "")
+    }
+
     function test_generateCommandCarriesLanguageAndNoSecrets() {
         var command = AiInsights.command("file:///opt/pkg/scripts/ai-insights.py", "generate", {
             provider: "openrouter", model: "vendor/model", language: "it", zdr: true,

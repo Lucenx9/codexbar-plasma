@@ -27,7 +27,7 @@ ConfigModel {
         source: "configNotifications.qml"
     }
     ConfigCategory {
-        name: i18n("AI Insights")
+        name: i18n("AI Insights (Beta)")
         icon: "tools-wizard"
         source: "configAiInsights.qml"
     }

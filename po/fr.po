@@ -36,9 +36,8 @@ msgid "Notifications"
 msgstr "Notifications"
 
 #: contents/config/config.qml contents/ui/components/AiInsightsCard.qml
-#: contents/ui/configAiInsights.qml
-msgid "AI Insights"
-msgstr "Analyses IA"
+msgid "AI Insights (Beta)"
+msgstr "Analyses IA (bêta)"
 
 #: contents/config/config.qml
 msgid "Diagnostics"
@@ -46,7 +45,8 @@ msgstr "Diagnostic"
 
 #: contents/ui/components/AiInsightsCard.qml
 msgid "Choose an AI provider and model in the AI Insights settings."
-msgstr "Choisissez un fournisseur d'IA et un modèle dans les paramètres Analyses IA."
+msgstr ""
+"Choisissez un fournisseur d'IA et un modèle dans les paramètres Analyses IA."
 
 #: contents/ui/components/AiInsightsCard.qml
 msgid "Not enough current usage data for an insight yet."
@@ -56,7 +56,9 @@ msgstr "Pas encore assez de données d'utilisation actuelles pour une analyse."
 msgid ""
 "The saved insight belongs to other settings or another language. Generate a "
 "new one when needed."
-msgstr "L'analyse enregistrée correspond à d'autres paramètres ou à une autre langue. Générez-en une nouvelle si nécessaire."
+msgstr ""
+"L'analyse enregistrée correspond à d'autres paramètres ou à une autre "
+"langue. Générez-en une nouvelle si nécessaire."
 
 #: contents/ui/components/AiInsightsCard.qml
 msgid "No insight generated yet."
@@ -107,11 +109,14 @@ msgstr "Définissez une clé API dans les paramètres Analyses IA."
 msgid ""
 "The system wallet is unavailable. Unlock KWallet or check its Secret Service "
 "support."
-msgstr "Le portefeuille système n'est pas disponible. Déverrouillez KWallet ou vérifiez sa prise en charge de Secret Service."
+msgstr ""
+"Le portefeuille système n'est pas disponible. Déverrouillez KWallet ou "
+"vérifiez sa prise en charge de Secret Service."
 
 #: contents/ui/components/AiInsightsMessages.qml
 msgid "%1 rejected the API key. Update it in the AI Insights settings."
-msgstr "%1 a refusé la clé API. Mettez-la à jour dans les paramètres Analyses IA."
+msgstr ""
+"%1 a refusé la clé API. Mettez-la à jour dans les paramètres Analyses IA."
 
 #: contents/ui/components/AiInsightsMessages.qml
 msgid "The %1 account has insufficient credits or quota."
@@ -128,16 +133,22 @@ msgstr "%1 limite les requêtes. Réessayez plus tard."
 #: contents/ui/components/AiInsightsMessages.qml
 msgid ""
 "The selected model is unavailable, or no endpoint meets the privacy settings."
-msgstr "Le modèle choisi n'est pas disponible, ou aucun point de terminaison ne respecte les paramètres de confidentialité."
+msgstr ""
+"Le modèle choisi n'est pas disponible, ou aucun point de terminaison ne "
+"respecte les paramètres de confidentialité."
 
 #: contents/ui/components/AiInsightsMessages.qml
 msgid "The model rejected the request. It may not support structured output."
-msgstr "Le modèle a rejeté la requête. Il ne prend peut-être pas en charge la sortie structurée."
+msgstr ""
+"Le modèle a rejeté la requête. Il ne prend peut-être pas en charge la sortie "
+"structurée."
 
 #: contents/ui/components/AiInsightsMessages.qml
 msgid ""
 "No OpenRouter endpoint meets the model and privacy requirements right now."
-msgstr "Aucun point de terminaison OpenRouter ne satisfait actuellement les exigences de modèle et de confidentialité."
+msgstr ""
+"Aucun point de terminaison OpenRouter ne satisfait actuellement les "
+"exigences de modèle et de confidentialité."
 
 #: contents/ui/components/AiInsightsMessages.qml
 msgid "The request timed out."
@@ -165,7 +176,9 @@ msgstr "Le modèle a renvoyé une réponse dans un format inattendu."
 
 #: contents/ui/components/AiInsightsMessages.qml
 msgid "Use an https:// Ollama address, or http:// only for this computer."
-msgstr "Utilisez une adresse Ollama en https://, ou http:// uniquement pour cet ordinateur."
+msgstr ""
+"Utilisez une adresse Ollama en https://, ou http:// uniquement pour cet "
+"ordinateur."
 
 #: contents/ui/components/AiInsightsMessages.qml
 msgid "Check the AI Insights model settings."
@@ -1379,7 +1392,9 @@ msgstr "kdialog est nécessaire pour saisir une clé API."
 
 #: contents/ui/configAiInsights.qml
 msgid "Could not save the API key. The system wallet is unavailable."
-msgstr "Impossible d'enregistrer la clé API. Le portefeuille système n'est pas disponible."
+msgstr ""
+"Impossible d'enregistrer la clé API. Le portefeuille système n'est pas "
+"disponible."
 
 #: contents/ui/configAiInsights.qml
 msgid "API key removed from the system wallet."
@@ -1387,7 +1402,9 @@ msgstr "Clé API supprimée du portefeuille système."
 
 #: contents/ui/configAiInsights.qml
 msgid "Could not remove the API key. The system wallet is unavailable."
-msgstr "Impossible de supprimer la clé API. Le portefeuille système n'est pas disponible."
+msgstr ""
+"Impossible de supprimer la clé API. Le portefeuille système n'est pas "
+"disponible."
 
 #: contents/ui/configAiInsights.qml
 msgid "Connection works. %1 model available."
@@ -1399,17 +1416,27 @@ msgstr[1] "La connexion fonctionne. %1 modèles disponibles."
 msgid ""
 "Connection works, but %1 is not in the list of models usable for AI "
 "Insights. Choose a listed model."
-msgstr "La connexion fonctionne, mais %1 ne figure pas dans la liste des modèles utilisables pour AI Insights. Choisissez un modèle de la liste."
+msgstr ""
+"La connexion fonctionne, mais %1 ne figure pas dans la liste des modèles "
+"utilisables pour AI Insights. Choisissez un modèle de la liste."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
 "Connection works, and %1 is in the list of models usable for AI Insights."
-msgstr "La connexion fonctionne et %1 figure dans la liste des modèles utilisables pour AI Insights."
+msgstr ""
+"La connexion fonctionne et %1 figure dans la liste des modèles utilisables "
+"pour AI Insights."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
 "Zero Data Retention routing is checked only when an insight is generated."
-msgstr "Le routage Zero Data Retention n'est vérifié qu'au moment de générer une analyse."
+msgstr ""
+"Le routage Zero Data Retention n'est vérifié qu'au moment de générer une "
+"analyse."
+
+#: contents/ui/configAiInsights.qml
+msgid "AI Insights"
+msgstr "Analyses IA"
 
 #: contents/ui/configAiInsights.qml
 msgid "Enable AI Insights"
@@ -1419,7 +1446,10 @@ msgstr "Activer les Analyses IA"
 msgid ""
 "Shows a short AI-generated summary of your usage in Overview. Nothing is "
 "sent and no AI service is contacted while this is off."
-msgstr "Affiche dans Vue d'ensemble un court résumé de votre utilisation généré par IA. Tant que cette option est désactivée, rien n'est envoyé et aucun service d'IA n'est contacté."
+msgstr ""
+"Affiche dans Vue d'ensemble un court résumé de votre utilisation généré par "
+"IA. Tant que cette option est désactivée, rien n'est envoyé et aucun service "
+"d'IA n'est contacté."
 
 #: contents/ui/configAiInsights.qml
 msgid "Model"
@@ -1491,41 +1521,49 @@ msgstr "Utiliser uniquement des points de terminaison Zero Data Retention"
 msgid ""
 "Generation uses the Ollama service on this computer. Usage statistics stay "
 "on this device."
-msgstr "La génération utilise le service Ollama de cet ordinateur. Les statistiques d'utilisation restent sur cet appareil."
+msgstr ""
+"La génération utilise le service Ollama de cet ordinateur. Les statistiques "
+"d'utilisation restent sur cet appareil."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
 "Aggregated usage statistics are sent to the Ollama service at this address. "
 "Remote addresses must use https://."
-msgstr "Des statistiques d'utilisation agrégées sont envoyées au service Ollama à cette adresse. Les adresses distantes doivent utiliser https://."
+msgstr ""
+"Des statistiques d'utilisation agrégées sont envoyées au service Ollama à "
+"cette adresse. Les adresses distantes doivent utiliser https://."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
-"Aggregated usage statistics are sent to %1: provider names, quota "
-"percentages, reset times, pace forecasts, and weekly spending and token "
-"totals. Account names, emails, projects, file paths, and prompts are never "
-"sent."
-msgstr "Des statistiques d'utilisation agrégées sont envoyées à %1 : noms des fournisseurs, pourcentages de quota, heures de réinitialisation, prévisions de rythme et totaux hebdomadaires de dépenses et de tokens. Les noms de compte, e-mails, projets, chemins de fichiers et prompts ne sont jamais envoyés."
+"Only aggregated usage statistics are sent to %1: quotas, reset times, pace "
+"forecasts, and weekly spending and tokens per provider. Never account names, "
+"emails, projects, file paths, or prompts."
+msgstr "Seules des statistiques d'utilisation agrégées sont envoyées à %1 : quotas, heures de réinitialisation, prévisions de rythme, dépenses et tokens hebdomadaires par provider. Jamais de noms de compte, e-mails, projets, chemins de fichiers ni prompts."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
 "Requests are billed to your OpenAI API account. A ChatGPT subscription does "
 "not include API credits."
-msgstr "Les requêtes sont facturées sur votre compte API OpenAI. Un abonnement ChatGPT n'inclut pas de crédits API."
+msgstr ""
+"Les requêtes sont facturées sur votre compte API OpenAI. Un abonnement "
+"ChatGPT n'inclut pas de crédits API."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
 "Requests are billed to your OpenRouter credits, at the price of the model "
 "you choose. Providers that may collect data are never used."
-msgstr "Les requêtes sont décomptées de vos crédits OpenRouter, au prix du modèle choisi. Les fournisseurs susceptibles de collecter des données ne sont jamais utilisés."
+msgstr ""
+"Les requêtes sont décomptées de vos crédits OpenRouter, au prix du modèle "
+"choisi. Les fournisseurs susceptibles de collecter des données ne sont "
+"jamais utilisés."
 
 #: contents/ui/configAiInsights.qml
 msgid "Generation"
 msgstr "Génération"
 
 #: contents/ui/configAiInsights.qml
-msgid "Generate:"
-msgstr "Générer :"
+msgid "Frequency:"
+msgstr "Fréquence :"
 
 #: contents/ui/configAiInsights.qml
 msgid "Only on request"
@@ -1548,11 +1586,18 @@ msgid ""
 "Use the button on the AI Insights card to generate on request. Automatic "
 "generation never runs more often than the chosen interval, and ordinary "
 "usage refreshes do not trigger it."
-msgstr "Utilisez le bouton de la carte Analyses IA pour générer sur demande. La génération automatique n'a jamais lieu plus souvent que l'intervalle choisi, et les actualisations ordinaires de l'utilisation ne la déclenchent pas."
+msgstr ""
+"Utilisez le bouton de la carte Analyses IA pour générer sur demande. La "
+"génération automatique n'a jamais lieu plus souvent que l'intervalle choisi, "
+"et les actualisations ordinaires de l'utilisation ne la déclenchent pas."
 
 #: contents/ui/configAiInsights.qml
 msgid "Saved insight:"
 msgstr "Analyse enregistrée :"
+
+#: contents/ui/configAiInsights.qml
+msgid "Clear"
+msgstr "Effacer"
 
 #: contents/ui/configAiInsights.qml
 msgid "Clear saved insight"

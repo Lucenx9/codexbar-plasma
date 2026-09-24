@@ -31,8 +31,7 @@ msgid "Notifications"
 msgstr ""
 
 #: contents/config/config.qml contents/ui/components/AiInsightsCard.qml
-#: contents/ui/configAiInsights.qml
-msgid "AI Insights"
+msgid "AI Insights (Beta)"
 msgstr ""
 
 #: contents/config/config.qml
@@ -1362,6 +1361,10 @@ msgid ""
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
+msgid "AI Insights"
+msgstr ""
+
+#: contents/ui/configAiInsights.qml
 msgid "Enable AI Insights"
 msgstr ""
 
@@ -1451,10 +1454,9 @@ msgstr ""
 
 #: contents/ui/configAiInsights.qml
 msgid ""
-"Aggregated usage statistics are sent to %1: provider names, quota "
-"percentages, reset times, pace forecasts, and weekly spending and token "
-"totals. Account names, emails, projects, file paths, and prompts are never "
-"sent."
+"Only aggregated usage statistics are sent to %1: quotas, reset times, pace "
+"forecasts, and weekly spending and tokens per provider. Never account names, "
+"emails, projects, file paths, or prompts."
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
@@ -1474,7 +1476,7 @@ msgid "Generation"
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
-msgid "Generate:"
+msgid "Frequency:"
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
@@ -1502,6 +1504,10 @@ msgstr ""
 
 #: contents/ui/configAiInsights.qml
 msgid "Saved insight:"
+msgstr ""
+
+#: contents/ui/configAiInsights.qml
+msgid "Clear"
 msgstr ""
 
 #: contents/ui/configAiInsights.qml

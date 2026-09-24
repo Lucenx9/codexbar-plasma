@@ -154,7 +154,12 @@ TestCase {
         verify(!controller.busy);
         wait(2500);
         compare(generated.count, 0, "a late Italian reply must not be stored for German");
-        compare(calls().length, 1, "changing the language must not start a paid request");
+        // Some Plasma5Support versions stop a retired process before the
+        // helper logs it, so the retired request may or may not appear.
+        var made = calls();
+        verify(made.length <= 1, "changing the language must not start a paid request");
+        verify(made.every(function(call) { return argument(call, "--language") === "it"; }),
+            "no request may run in the new language");
     }
     function test_6_modelChangeAndDisableRetireTheRequestInFlight() {
         var controller = create({model: "slow-model"});
@@ -166,7 +171,11 @@ TestCase {
         verify(!controller.busy);
         wait(2500);
         compare(generated.count, 0);
-        compare(calls().length, 2);
+        // Retired processes may be stopped before they log; none may repeat.
+        var models = calls().map(function(call) { return argument(call, "--model"); });
+        verify(models.length <= 2, "disabling must not start another request");
+        verify(models.filter(function(model) { return model === "slow-model"; }).length <= 1);
+        verify(models.filter(function(model) { return model === "other-model"; }).length <= 1);
     }
     function test_7_failuresAreReportedWithoutRetryLoops_data() {
         return [{tag: "auth", model: "auth-model", reason: "auth", manualRetry: true},

@@ -112,6 +112,13 @@ class RequestContractTests(HelperTestCase):
                     if other not in name:
                         self.assertNotIn(f"in {other} (", system)
 
+    def test_instructions_keep_the_card_short_and_local(self):
+        system = ai.instructions("it")
+        self.assertIn('"summary" with 1 or 2 short sentences', system)
+        self.assertIn("Each highlight adds a fact the summary does not state", system)
+        self.assertIn("decimal separator", system)
+        self.assertIn("Leave them out, unless no provider has a current one", system)
+
     def test_unknown_or_malformed_language_is_not_sent(self):
         self.assertEqual(ai.language_name("nl"), 'the language with BCP 47 tag "nl"')
         self.assertEqual(ai.language_name("de-AT"), "German (de-AT)")

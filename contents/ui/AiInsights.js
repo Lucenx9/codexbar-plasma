@@ -344,6 +344,13 @@ function modelListed(provider, model, models) {
         || (provider === "ollama" && value.indexOf(":") < 0 && models.indexOf(value + ":latest") >= 0)
 }
 
+// Card presentation: a "vendor/model" identifier shows only its model part.
+function modelLabel(model) {
+    var text = typeof model === "string" ? model.trim() : ""
+    var slash = text.lastIndexOf("/")
+    return slash >= 0 && slash < text.length - 1 ? text.slice(slash + 1) : text
+}
+
 function statusReply(text, allowed) {
     var value = parseReply(text)
     return value && allowed.indexOf(value.status) >= 0 ? value.status : "unavailable"

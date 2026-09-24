@@ -979,7 +979,7 @@ Item {
         if (applet.aiInsightsCacheState !== "current")
             return false;
         var popup = applet.fullRepresentationItem;
-        var displayed = hasVisibleText(popup, "Approfondimenti IA") ? "it" : (hasVisibleText(popup, "AI Insights") ? "en" : "");
+        var displayed = hasVisibleText(popup, "Analisi IA (Beta)") ? "it" : (hasVisibleText(popup, "AI Insights (Beta)") ? "en" : "");
         console.log("SMOKE_AI_LANGUAGE:" + applet.aiInsightsLanguage + " displayed:" + displayed + " locale:" + Qt.locale().name);
         var expected = scenario === "ai-insights-it" ? "it" : (scenario === "ai-insights-mismatch" ? displayed : "en");
         verifyScenario(displayed === expected && applet.aiInsightsLanguage === expected,
@@ -1378,12 +1378,26 @@ Item {
                         && insightsPage.cfg_aiInsightsModel === "" && insightsPage.keyStatus === "",
                         "AI Insights must default to disabled, manual, without a model or wallet lookup");
                     insightsPage.cfg_aiInsightsEnabled = true;
+                    insightsPage.cfg_aiInsightsModel = "llama3.2:3b";
+                    insightsPage.selectProvider("openrouter");
+                    verifyScenario(insightsPage.cfg_aiInsightsModel === "",
+                        "a model must not carry over to another AI provider");
+                    insightsPage.selectProvider("ollama");
+                    verifyScenario(insightsPage.cfg_aiInsightsModel === "llama3.2:3b",
+                        "switching back must restore the provider's model");
                     insightsPage.selectProvider("openrouter");
                     navigationVerified = true;
                     return false;
                 }
-                // The synthetic helper answers the local wallet lookup only.
-                return insightsPage.keyStatus === "absent" && !insightsPage.busy;
+                // The synthetic helper answers the local wallet lookup only;
+                // the wide scenario shows the longer stored-key row.
+                var keyExpected = scenario === "settings-ai-insights" ? "present" : "absent";
+                if (insightsPage.keyStatus !== keyExpected || insightsPage.busy)
+                    return false;
+                var keyRow = findItem(insightsPage, "aiInsightsKeyRow");
+                verifyScenario(keyRow !== null && keyRow.width <= Kirigami.Units.gridUnit * 24 + 1,
+                    "the API key row must stay within the form width so the form does not shift");
+                return true;
             }
             if (scenario.indexOf("settings-panel") === 0 && !navigationVerified) {
                 verifySettingsPanelPreview(preview.page);

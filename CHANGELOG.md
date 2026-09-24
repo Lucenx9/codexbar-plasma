@@ -12,7 +12,7 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
-- Add optional AI Insights, off by default: a short Overview card that explains
+- Add optional AI Insights (beta), off by default: a short Overview card that explains
   quota risk, forecast exhaustion, and week-over-week spending or token changes
   using a local Ollama model, OpenRouter, or OpenAI. It writes in the widget's
   interface language, sends only aggregated statistics, keeps API keys in the
