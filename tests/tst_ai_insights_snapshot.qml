@@ -122,6 +122,18 @@ TestCase {
         verify(snapshot.providers[0].spend === undefined && snapshot.providers[0].tokens === undefined)
     }
 
+    function test_scanFromBeforeMidnightProducesNoComparison() {
+        // The cost history ends at the day it was scanned. A scan from before
+        // midnight, such as one taken before a suspend, saw only part of
+        // yesterday, which must not be compared as a complete day.
+        var beforeMidnight = history(20, 3, 2)
+        beforeMidnight.daily.pop()
+        var snapshot = JSON.parse(build([provider("claude", {tokenCost: beforeMidnight})]).text)
+        verify(snapshot.providers[0].spend === undefined, JSON.stringify(snapshot.providers[0].spend))
+        verify(snapshot.providers[0].tokens === undefined, JSON.stringify(snapshot.providers[0].tokens))
+        verify(JSON.parse(build([provider("claude", {tokenCost: history(20, 3, 2)})]).text).providers[0].spend)
+    }
+
     function test_completeHistoryComparesAdjacentCompleteWeeks() {
         var snapshot = JSON.parse(build([provider("claude", {tokenCost: history(20, 3, 2)})]).text)
         compare(snapshot.providers[0].spend, {last7Days: 21, previous7Days: 14, changePercent: 50,
@@ -131,6 +143,33 @@ TestCase {
         incomplete.daily[incomplete.daily.length - 2].incompleteRequests = 4
         snapshot = JSON.parse(build([provider("claude", {tokenCost: incomplete})]).text)
         verify(snapshot.providers[0].spend.incomplete)
+    }
+
+    function test_spendKeepsTheQualifierTheWidgetShows() {
+        // Unpriced requests make the widget show "(partial)"; its estimated
+        // share still makes the amount an estimate. Both reach the model.
+        var partial = history(20, 3, 2)
+        partial.trust = {coverage: {priced: 5, unpriced: 1, unmetered: 0, estimated: 2},
+            sourceKind: "vendor", incompleteRequests: 0}
+        partial.valueMode = "partial"
+        var snapshot = JSON.parse(build([provider("claude", {tokenCost: partial})]).text)
+        compare(snapshot.providers[0].spend, {last7Days: 21, previous7Days: 14, changePercent: 50,
+            incomplete: true, currency: "USD", estimated: true})
+        // An unknown source makes the widget show "(approximate)".
+        var approximate = history(20, 3, 2)
+        approximate.trust = {coverage: null, sourceKind: "unknown", incompleteRequests: 0}
+        approximate.valueMode = "approximate"
+        snapshot = JSON.parse(build([provider("claude", {tokenCost: approximate})]).text)
+        verify(snapshot.providers[0].spend.estimated, JSON.stringify(snapshot.providers[0].spend))
+        verify(snapshot.providers[0].spend.incomplete === undefined)
+        // Vendor-metered, fully priced amounts stay unqualified.
+        var exact = history(20, 3, 2)
+        exact.trust = {coverage: {priced: 5, unpriced: 0, unmetered: 0, estimated: 0},
+            sourceKind: "vendor", incompleteRequests: 0}
+        exact.valueMode = "plain"
+        snapshot = JSON.parse(build([provider("claude", {tokenCost: exact})]).text)
+        compare(snapshot.providers[0].spend, {last7Days: 21, previous7Days: 14, changePercent: 50,
+            currency: "USD"})
     }
 
     function test_largeIncreasesCarryAPrecomputedMultiple() {
