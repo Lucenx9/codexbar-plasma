@@ -203,6 +203,8 @@ Failures map to bounded reasons: `missing_key`, `secret_unavailable`, `auth`
   models (Ollama's untagged names match `:latest`) and never presents an
   unlisted model as working. OpenRouter's list proves structured-output
   support, not Zero Data Retention routing, which is checked on generation.
+  Editing the Ollama address retires a running test and clears its result,
+  which describes only the address it listed.
 
 ## Scheduling and lifecycle
 
@@ -251,6 +253,9 @@ Failures map to bounded reasons: `missing_key`, `secret_unavailable`, `auth`
   and key handling. It also compiles the shipped catalogs and runs `main.qml`'s
   language adapter to prove the catalog tag reaches `--language` under C and
   Italian regional locales.
+- `tests/test_ai_insights_settings.py`: the settings page's helper reply
+  handling with stubbed processes, including an Ollama address edited during
+  or after **Test connection**.
 - `tests/test_ai_insights_controller.py`: the production controller through
   Plasma's executable DataSource with a recording helper, covering disabled,
   manual, duplicate, automatic, restart, language/model/disable changes during a
