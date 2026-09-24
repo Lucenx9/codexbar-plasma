@@ -100,9 +100,19 @@ work and upstream contract requirements.
   detail line shows the account identity when the CLI provides one, and an
   active service incident otherwise; an operational status or the provider's
   own source name is never presented as identity.
+- Screen readers hear what the popup draws. Overview rows describe their
+  quota, detail line, and reset; provider tabs describe the quota their
+  underline draws, a last-known-usage note, and a refresh error that only
+  dims the tab visually.
+- Hovering a provider tab whose name is cut short, or an Overview row whose
+  title or detail line is cut short in a narrow popup, shows the full text in
+  a tooltip. Text that fits gets no tooltip.
 - Overflowing popup tabs have separate scroll buttons and immediate keyboard
   focus reveal, so navigation never covers provider labels. A tab wider than the
   available area stays aligned at its start when focused or selected again.
+- Popup tabs follow the usual tab keyboard pattern: Left and Right move focus
+  between tabs and wrap around at either end, Home and End jump to the first
+  and last tab, and Enter or Space opens the focused tab.
 - Global **Usage & Spend** tab with a Cost/Tokens selector, a 7/30/90-day range
   selector, interactive daily chart, activity heatmap, and provider totals that
   keep different currencies separate. The heatmap groups the range into weekday
@@ -336,8 +346,9 @@ and clipboard content remain under your control after closing the window.
   marked `≈`. Unknown or missing days, and days with requests excluded from
   the CLI totals, make a total read "at least". Weeks reaching back before
   the scanned history range are left out rather than shown incomplete. If the
-  last successful cost scan is older than today, unscanned trailing days also
-  make the affected week read "at least". When the CLI reports that history
+  last successful cost scan is older than today, its last day was scanned only
+  in part, so that day and any unscanned trailing days also make the affected
+  week read "at least". When the CLI reports that history
   coverage is still being established, every displayed week reads "at least"
   even if its recorded days have numeric amounts.
 - Token, request, and point counts use the current language's singular and
