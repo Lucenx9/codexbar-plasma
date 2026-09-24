@@ -98,18 +98,20 @@ print(json.dumps({"status": os.environ.get("CLI_STATUS", "ready")}))
     def save_release(self):
         (self.root / "release.json").write_text(json.dumps(self.release))
 
-    def run_setup(self, *args, input_answers=None, **env):
+    def run_setup(self, *args, input_answers=None, unset=(), **env):
         # Copy only the script: setup must not depend on checkout metadata/files.
         standalone = self.root / "downloaded.sh"
         shutil.copyfile(SCRIPT, standalone)
         command = [str(self.bin / "bash"), str(standalone), "--setup", *args]
+        run_env = {key: value for key, value in {**self.env, **env}.items()
+                   if key not in unset}
         if input_answers is None:
-            return subprocess.run(command, env={**self.env, **env}, text=True,
+            return subprocess.run(command, env=run_env, text=True,
                                   input="", capture_output=True, timeout=30)
         master, slave = pty.openpty()
         try:
             os.write(master, input_answers.encode())
-            return subprocess.run(command, env={**self.env, **env}, text=True,
+            return subprocess.run(command, env=run_env, text=True,
                                   stdin=slave, capture_output=True, timeout=30)
         finally:
             os.close(master)
@@ -258,6 +260,18 @@ print(json.dumps({"status": os.environ.get("CLI_STATUS", "ready")}))
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("without sudo", result.stderr)
         self.assertEqual(self.calls(), "")
+
+    def test_setup_without_home_reports_the_data_directory(self):
+        cases = ({"unset": ("HOME", "XDG_DATA_HOME")},
+                 {"unset": ("HOME",), "XDG_DATA_HOME": "relative"})
+        for extra in cases:
+            with self.subTest(extra=extra):
+                result = self.run_setup("--no-input", **extra)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("Setup requires HOME or an absolute XDG_DATA_HOME",
+                              result.stderr)
+                self.assertNotIn("unbound variable", result.stderr)
+                self.assertEqual(self.calls(), "")
 
     def test_untrusted_packages_never_install(self):
         for fault in ("mutable", "digest", "id", "version", "tag"):

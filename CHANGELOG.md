@@ -110,6 +110,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Report a clear setup error when neither `HOME` nor an absolute
+  `XDG_DATA_HOME` locates the user data directory, instead of stopping on an
+  `unbound variable` shell error.
 - Count down the popup's "Runs out in" pace forecast like the panel run-out
   text. It kept the duration received with the last usage refresh, so with no
   periodic refresh or a long interval it still promised hours of quota after
