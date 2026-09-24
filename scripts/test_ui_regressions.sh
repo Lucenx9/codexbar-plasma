@@ -3178,8 +3178,10 @@ reset_text_body = function_body(main_text, "resetText")
 # The owning adapter supplies the live clock and keeps local date formatting.
 if not code_contains(reset_text_body, "ResetPresentation.parts(window, panelClockMs, absolute)"):
     raise AssertionError("reset formatting must use semantic parts with the live panel clock")
-if not code_contains(reset_text_body, 'Qt.formatDateTime(new Date(parts.timestampMs), "ddd HH:mm")'):
+if not code_contains(reset_text_body, "Qt.formatDateTime(new Date(parts.timestampMs),"):
     raise AssertionError("absolute reset dates must retain QML locale formatting")
+if not code_contains(reset_text_body, "ResetPresentation.absoluteShowsDate(parts.timestampMs, panelClockMs)"):
+    raise AssertionError("absolute resets beyond the next six days must show their date")
 for field in ("window.resetsAt", "window.resetDescription", "Math.round", "Math.floor"):
     if field in reset_text_body:
         raise AssertionError("reset parsing and arithmetic belong in ResetPresentation: " + field)

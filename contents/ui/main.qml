@@ -1212,7 +1212,8 @@ PlasmoidItem {
         var parts = ResetPresentation.parts(window, panelClockMs, absolute)
         switch (parts.kind) {
         case "absolute":
-            return Qt.formatDateTime(new Date(parts.timestampMs), "ddd HH:mm")
+            return Qt.formatDateTime(new Date(parts.timestampMs),
+                ResetPresentation.absoluteShowsDate(parts.timestampMs, panelClockMs) ? "MMM d, HH:mm" : "ddd HH:mm")
         case "now":
             return i18n("now")
         case "minutes":

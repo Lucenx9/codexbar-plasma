@@ -450,6 +450,9 @@ fields; track proposed extensions in the issue tracker.
 - **Popup** independently controls pace text/markers, credits/reset credits, and
   additional provider details/billing dashboards. These are visible by default;
   changing them does not refetch data or change panel metrics or alerts.
+- **Popup → Show reset times as clock time** names the weekday and time for a
+  reset within the next six days, and the date and time for one further away,
+  such as a monthly limit or a weekly limit that just reset.
 - A global, cancelable **Restore all defaults** action for user-facing widget
   settings; provider accounts and CodexBar CLI configuration are left intact.
 - Usage refresh choices: no periodic refresh, 1 min, 2 min, 5 min, 15 min, or a
