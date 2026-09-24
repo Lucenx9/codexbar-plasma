@@ -76,6 +76,8 @@ function dateKey(date) {
 
 // Two complete, adjacent seven-day periods ending yesterday, or nothing. Today
 // is partial and a missing or unknown day would make the comparison invented.
+// The history ends at the day it was scanned, so it must reach today: a scan
+// from before midnight saw only part of yesterday.
 function periods(tokenCost, nowMs, metric) {
     var daily = field(tokenCost, "daily")
     if (!Array.isArray(daily) || field(tokenCost, "historyCoverageEstablished") === false) {
@@ -91,6 +93,9 @@ function periods(tokenCost, nowMs, metric) {
     var sums = [0, 0]
     var incomplete = false
     var now = new Date(nowMs)
+    if (!Guards.hasOwnKey(byDate, dateKey(now))) {
+        return null
+    }
     for (var offset = 1; offset <= comparisonDays * 2; offset++) {
         var day = new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset)
         var record = Guards.hasOwnKey(byDate, dateKey(day)) ? byDate[dateKey(day)] : null

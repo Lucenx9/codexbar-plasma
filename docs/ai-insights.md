@@ -99,8 +99,9 @@ object from an allowlist. It never copies an input record.
   normalized by `ProviderNormalizer.rateWindowMetrics`; nothing is extrapolated.
 - Spend and token comparisons require the cost history already loaded for the
   **Usage & Spend** range: all fourteen complete days before today, each with a
-  finite amount, and established coverage. Missing, unknown, or partial days
-  produce no comparison. Amounts keep their ISO currency per provider and are
+  finite amount, and established coverage. The history must reach today: a
+  scan from before midnight, for example one kept across a suspend, saw only
+  part of yesterday. Missing, unknown, or partial days produce no comparison. Amounts keep their ISO currency per provider and are
   never summed across providers. Estimated sources and incomplete requests are
   flagged. Opening the popup or generating an insight never starts a cost scan.
 - Signals are deterministic: exhausted quota, forecast exhaustion before reset,
