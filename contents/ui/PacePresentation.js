@@ -71,3 +71,21 @@ function summaryParts(pace) {
     }
     return parts;
 }
+
+// A run-out forecast is a duration observed with one usage snapshot. Advance
+// it from that observation like the panel countdown, so the popup cannot keep
+// repeating the receipt-time ETA while the reset beside it counts down.
+// Without a usable observation time the observed value is all there is.
+function advancedParts(parts, observedAtMs, nowMs) {
+    var elapsedSeconds = typeof observedAtMs === "number" && isFinite(observedAtMs) && observedAtMs > 0
+        && typeof nowMs === "number" && isFinite(nowMs) && nowMs >= observedAtMs
+        ? (nowMs - observedAtMs) / 1000 : 0;
+    return (Array.isArray(parts) ? parts : []).map(function(part) {
+        return part && part.kind === "runsOut" && typeof part.seconds === "number" && isFinite(part.seconds)
+            ? {
+                kind: "runsOut",
+                seconds: Math.max(0, part.seconds - elapsedSeconds)
+            }
+            : part;
+    });
+}

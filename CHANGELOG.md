@@ -110,6 +110,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Count down the popup's "Runs out in" pace forecast like the panel run-out
+  text. It kept the duration received with the last usage refresh, so with no
+  periodic refresh or a long interval it still promised hours of quota after
+  the forecast time had passed, while the reset time beside it counted down.
 - Make the quick-install command's prompts reach the terminal. The documented
   one-liner piped the installer into Bash, so it never offered the private CLI
   or a Plasma restart. The updated command runs the downloaded installer with
