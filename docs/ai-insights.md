@@ -138,8 +138,10 @@ both `reasoning` and `structured_outputs` does the request turn reasoning off:
 hidden reasoning is billed as output, and `require_parameters` routes only to an
 endpoint that accepts every sent parameter. A failed lookup sends the request
 without it. If privacy routing still leaves no endpoint (`model` or `routing`),
-the request is retried once without the parameter; an unrouted request reached
-no provider and was not billed. Measured
+or the model rejects the parameter (`request`, for example a model whose
+reasoning is mandatory), the request is retried once without it while at least
+30 seconds of the time budget remain; neither failure reached a model or was
+billed. Measured
 with `deepseek/deepseek-v4.1-flash`, reasoning off cut output from about
 1000 tokens to about 100. Ollama's `think: false` applies only to models that
 allow it; models that always think, or accept only thinking levels, keep their
@@ -200,7 +202,11 @@ Failures map to bounded reasons: `missing_key`, `secret_unavailable`, `auth`
   across plasmashell restarts.
 - One request at a time, with a per-request nonce. The helper's HTTP timeout is
   150 seconds, the shell bound 180 seconds, and the QML deadline 185 seconds,
-  which leaves room for reasoning models and slower local models. Answers may
+  which leaves room for reasoning models and slower local models. The whole
+  generation, including a wallet unlock prompt, the model lookup, and a retry,
+  shares a 170-second budget: each request waits only for what remains, and no
+  request starts with less than 30 seconds left. If the shell bound still stops
+  the helper, the card reports a timeout. Answers may
   use up to 4000 output tokens, including hidden reasoning tokens.
 - Changing provider, model, endpoint, privacy routing, or language, disabling the
   feature, or destroying the widget retires the active request; its late reply

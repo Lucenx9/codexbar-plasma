@@ -135,10 +135,25 @@ class RequestContractTests(HelperTestCase):
         controller = (root / "contents/ui/controllers/AiInsightsController.qml").read_text()
         shell = int(re.search(r'action === "generate" \? "(\d+)s"', script).group(1))
         deadline = int(re.search(r'objectName: "aiInsightsDeadline"\s+interval: (\d+)', controller).group(1))
-        # The helper reports its own timeout before the shell kills it, and the
-        # shell stops the process before the QML deadline retires the request.
-        self.assertLess(ai.REQUEST_TIMEOUT + 10, shell)
+        # The whole generation, not only one HTTP call, reports its own timeout
+        # before the shell kills it, and the shell stops the process before the
+        # QML deadline retires the request.
+        self.assertLessEqual(ai.REQUEST_TIMEOUT, ai.GENERATION_BUDGET)
+        self.assertLess(ai.GENERATION_BUDGET + 5, shell)
         self.assertLess((shell + 2) * 1000, deadline)
+
+    def test_generation_shares_one_time_budget(self):
+        Handler.routes["/api/v1/chat/completions"] = (200, chat(json.dumps(INSIGHT)), {}, 0)
+        # A slow wallet unlock can use the budget up: no paid request starts.
+        with patch.object(ai, "GENERATION_BUDGET", 10):
+            self.assertEqual(self.generate(), {"status": "error", "reason": "timeout"})
+        self.assertEqual(Handler.requests, [])
+        # Each request waits only for what is left of the budget.
+        Handler.routes["/api/v1/chat/completions"] = (200, chat(json.dumps(INSIGHT)), {}, 1.5)
+        with patch.object(ai, "GENERATION_BUDGET", 0.8), patch.object(ai, "MIN_REQUEST_SECONDS", 0.1):
+            started = time.monotonic()
+            self.assertEqual(self.generate(), {"status": "error", "reason": "timeout"})
+            self.assertLess(time.monotonic() - started, 1.4)
 
     def test_unknown_or_malformed_language_is_not_sent(self):
         self.assertEqual(ai.language_name("nl"), 'the language with BCP 47 tag "nl"')
@@ -212,6 +227,22 @@ class RequestContractTests(HelperTestCase):
             no_route if "reasoning" in body else (200, chat(json.dumps(INSIGHT)), {}, 0))
         self.assertEqual(self.generate()["status"], "ok")
         self.assertEqual(["reasoning" in request["body"] for request in Handler.requests], [True, False])
+        # A model whose reasoning is mandatory rejects effort "none" with 400.
+        for status in (400, 422):
+            with self.subTest(status=status):
+                Handler.requests = []
+                rejected = (status, {"error": {"message": "Reasoning is mandatory"}}, {}, 0)
+                Handler.routes["/api/v1/chat/completions"] = lambda body, rejected=rejected: (
+                    rejected if "reasoning" in body else (200, chat(json.dumps(INSIGHT)), {}, 0))
+                self.assertEqual(self.generate()["status"], "ok")
+                self.assertEqual(["reasoning" in request["body"] for request in Handler.requests], [True, False])
+        # The retry is not started when too little of the budget is left.
+        Handler.requests = []
+        Handler.routes["/api/v1/chat/completions"] = lambda body: (
+            (404, {"error": "no route"}, {}, 0.3) if "reasoning" in body else (200, chat(json.dumps(INSIGHT)), {}, 0))
+        with patch.object(ai, "GENERATION_BUDGET", 0.5), patch.object(ai, "MIN_REQUEST_SECONDS", 0.25):
+            self.assertEqual(self.generate(), {"status": "error", "reason": "model"})
+        self.assertEqual(len(Handler.requests), 1)
         # Any other failure, or a failure without the parameter, is not retried.
         Handler.requests = []
         Handler.routes["/api/v1/chat/completions"] = (401, {"error": "auth"}, {}, 0)

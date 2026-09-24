@@ -132,7 +132,7 @@ synchronized.
   started install can still finish in the private directory.
 - `contents/ui/controllers/AiInsightsController.qml` owns the optional AI
   Insights generation process: one request at a time, per-request nonce, the
-  95-second deadline, retry delays, interval scheduling, and retirement on a
+  185-second deadline, retry delays, interval scheduling, and retirement on a
   context change, disable, or destruction. It runs nothing while disabled and
   emits `attemptStarted`/`generated`/`rateLimitStored`; `main.qml` persists the
   attempt time, rate-limit deadline, and cached insight and builds the snapshot

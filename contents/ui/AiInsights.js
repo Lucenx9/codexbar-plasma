@@ -291,7 +291,12 @@ function parseReply(text) {
     }
 }
 
-function generationReply(text) {
+// GNU timeout exits 124 when it stopped the helper and 137 when it had to kill
+// it; the helper then printed nothing, and the request may have been billed.
+function generationReply(text, exitCode) {
+    if (exitCode === 124 || exitCode === 137) {
+        return {outcome: "error", reason: "timeout", retryAfterSeconds: 0}
+    }
     var value = parseReply(text)
     if (!value) {
         return {outcome: "error", reason: "format", retryAfterSeconds: 0}

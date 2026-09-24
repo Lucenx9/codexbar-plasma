@@ -183,7 +183,8 @@ Item {
             if (context !== controller.contextKey || !controller.insightsEnabled) {
                 return
             }
-            var reply = AiInsights.generationReply(data ? data["stdout"] : "")
+            var reply = AiInsights.generationReply(data ? data["stdout"] : "",
+                data && data["exit code"] !== undefined ? Number(data["exit code"]) : NaN)
             if (reply.outcome !== "ok") {
                 fail(reply.reason, reply.retryAfterSeconds)
                 return

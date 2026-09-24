@@ -15,6 +15,7 @@ import re
 import socket
 import ssl
 import subprocess
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -33,6 +34,15 @@ KDIALOG = "kdialog"
 SECRET_ATTRIBUTES = ("application", "app.codexbar.plasma", "service", "ai-insights")
 REQUEST_TIMEOUT = 150
 LIST_TIMEOUT = 20
+# One generation, including a wallet unlock prompt, the model lookup, and a
+# retry, ends before the widget's 180-second shell bound kills the helper.
+GENERATION_BUDGET = 170
+# A paid request is never started with less time than this left to wait for it.
+MIN_REQUEST_SECONDS = 30
+# Failures raised before any model ran: OpenRouter found no route (404/503),
+# or the request was rejected (400/422), for example effort "none" on a model
+# whose reasoning is mandatory. Neither is billed.
+UNBILLED_REASONING_FAILURES = ("model", "routing", "request")
 MAX_RESPONSE_BYTES = 4 * 1024 * 1024
 MAX_SNAPSHOT_BYTES = 16 * 1024
 MAX_CONTENT_CHARS = 16 * 1024
@@ -443,7 +453,16 @@ def completion_content(provider, payload):
     return message.get("content")
 
 
+def request_timeout(deadline):
+    """Bound one paid request by the generation budget; never start one it cannot wait for."""
+    remaining = deadline - time.monotonic()
+    if remaining < MIN_REQUEST_SECONDS:
+        raise Failure("timeout")
+    return min(REQUEST_TIMEOUT, remaining)
+
+
 def generate(provider, model, endpoint, tag, snapshot_text, zdr):
+    deadline = time.monotonic() + GENERATION_BUDGET
     if not valid_model(provider, model):
         raise Failure("model")
     if not LANGUAGE_PATTERN.match(tag or ""):
@@ -454,14 +473,18 @@ def generate(provider, model, endpoint, tag, snapshot_text, zdr):
     url = base + ("/api/chat" if provider == "ollama" else "/chat/completions")
     reasoning_off = provider == "openrouter" and openrouter_reasons(base, model)
     try:
-        payload = request_json(provider, url, key, request_body(provider, model, tag, snapshot, zdr, reasoning_off))
+        payload = request_json(provider, url, key, request_body(provider, model, tag, snapshot, zdr, reasoning_off),
+                               timeout=request_timeout(deadline))
     except Failure as failure:
         # Privacy routing can still exclude the endpoints that accept
-        # reasoning. A request without a route reached no provider and was
-        # not billed, so it is retried once without the parameter.
-        if not reasoning_off or failure.args[0] not in ("model", "routing"):
+        # reasoning, and a model whose reasoning is mandatory rejects effort
+        # "none". Neither request reached a model or was billed, so it is
+        # retried once without the parameter while the budget allows.
+        if (not reasoning_off or failure.reason not in UNBILLED_REASONING_FAILURES
+                or deadline - time.monotonic() < MIN_REQUEST_SECONDS):
             raise
-        payload = request_json(provider, url, key, request_body(provider, model, tag, snapshot, zdr))
+        payload = request_json(provider, url, key, request_body(provider, model, tag, snapshot, zdr),
+                               timeout=request_timeout(deadline))
     return insight(completion_content(provider, payload))
 
 

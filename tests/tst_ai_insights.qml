@@ -236,12 +236,16 @@ TestCase {
             {tag: "auth", text: JSON.stringify({status: "error", reason: "auth"}), outcome: "error", reason: "auth"},
             {tag: "unknown reason", text: JSON.stringify({status: "error", reason: "<script>"}), outcome: "error", reason: "unavailable"},
             {tag: "rate limit", text: JSON.stringify({status: "error", reason: "rate_limited", retryAfter: 120}),
-                outcome: "error", reason: "rate_limited", retryAfterSeconds: 120}
+                outcome: "error", reason: "rate_limited", retryAfterSeconds: 120},
+            // The shell bound stopped the helper before it printed a result.
+            {tag: "shell timeout", text: "", exitCode: 124, outcome: "error", reason: "timeout"},
+            {tag: "shell kill", text: "", exitCode: 137, outcome: "error", reason: "timeout"},
+            {tag: "helper exit", text: "", exitCode: 1, outcome: "error", reason: "format"}
         ]
     }
 
     function test_generationReplyValidation(data) {
-        var reply = AiInsights.generationReply(data.text)
+        var reply = AiInsights.generationReply(data.text, data.exitCode === undefined ? 0 : data.exitCode)
         compare(reply.outcome, data.outcome)
         if (data.outcome === "ok") {
             // Markup survives only as literal text; the card renders PlainText.
