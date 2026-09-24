@@ -29,6 +29,14 @@ Rectangle {
             ? i18n("%1 - %2", primary, lastKnown)
             : (lastKnown.length > 0 ? lastKnown : primary)
     }
+    readonly property string percentText: hasUsage
+        ? i18n("%1% %2", Math.round(shownPercent), applet.percentSuffix())
+        : ""
+    // Screen readers get what the row shows beside its title: the quota the
+    // meter draws, the account or status detail, and the reset.
+    readonly property string accessibleDescription: [percentText, detail, resetText]
+        .filter(function(part) { return part.length > 0 })
+        .join(". ")
     readonly property bool keyboardFocusVisible: overviewRowFocus.visualFocus
 
     signal selected(var providerData)
@@ -109,7 +117,7 @@ Rectangle {
 
                 PlainPlasmaLabel {
                     visible: overviewRow.hasUsage
-                    text: i18n("%1% %2", Math.round(overviewRow.shownPercent), overviewRow.applet.percentSuffix())
+                    text: overviewRow.percentText
                     font.weight: Font.DemiBold
                     horizontalAlignment: Text.AlignRight
                     elide: Text.ElideRight
@@ -193,7 +201,7 @@ Rectangle {
 
         Accessible.role: Accessible.Button
         Accessible.name: overviewRow.providerData.title
-        Accessible.description: overviewRow.detail
+        Accessible.description: overviewRow.accessibleDescription
         Accessible.onPressAction: overviewRow.activate()
 
         Keys.onPressed: function(event) {

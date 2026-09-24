@@ -540,6 +540,7 @@ Item {
 
                                 Accessible.role: Accessible.PageTab
                                 Accessible.name: providerTab.modelData.title
+                                Accessible.description: applet.switcherDescription(providerTab.modelData)
                                 Accessible.selectable: true
                                 Accessible.selected: providerTab.selected
                                 Accessible.onPressAction: providerTab.activate()
