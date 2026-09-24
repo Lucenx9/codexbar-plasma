@@ -97,6 +97,7 @@ TestCase {
             {tag: "valid-display-name", field: "displayName", value: "  Custom Codex  ", used: 72, title: "Custom Codex"},
             {tag: "valid-title", field: "title", value: "Custom Codex", used: 72, title: "Custom Codex"},
             {tag: "missing-name", field: "displayName", value: null, used: 0, title: "Codex"},
+            {tag: "blank-name", field: "displayName", value: "   ", used: 72, title: "Codex"},
             {tag: "numeric-name", field: "displayName", value: 42, used: 72, title: "42"},
             {tag: "boolean-name", field: "displayName", value: true, used: 72, title: "true"},
             {tag: "zero-name", field: "displayName", value: 0, used: 72, title: "Codex"},
@@ -231,6 +232,20 @@ TestCase {
         compare(applet.providers[1].rows[0].usedPercent, 12);
         compare(item.error, "");
         verify(!applet.loading);
+    }
+
+    function test_blankDisplayNamePreservesRosterDisplayName() {
+        var applet = createTemporaryObject(harness, this, {});
+        verify(applet !== null);
+        applet.providerDisplayNames = {codex: "Configured Codex"};
+        var normalized = ProviderSnapshot.normalize({
+            provider: "codex",
+            displayName: "   ",
+            usage: {primary: {usedPercent: 50}}
+        }, 1000);
+        compare(normalized.displayName, null);
+        var presented = applet.presentProviderSnapshot(normalized);
+        compare(presented.title, "Configured Codex");
     }
 
     // Normalization stamps the live receipt clock, so per-account forecasts
