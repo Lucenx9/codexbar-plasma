@@ -298,8 +298,14 @@ if [[ "$SETUP" == true ]]; then
   [[ "$MODE" == install ]] || { usage >&2; exit 2; }
   [[ "$(uname -s)" == Linux ]] || { printf '%s\n' 'Setup requires Linux with KDE Plasma 6.' >&2; exit 1; }
   [[ "$(id -u)" != 0 ]] || { printf '%s\n' 'Run setup as your desktop user, without sudo.' >&2; exit 1; }
-  data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
-  [[ "$data_home" == /* ]] || data_home="$HOME/.local/share"
+  data_home="${XDG_DATA_HOME:-${HOME:-}/.local/share}"
+  [[ "$data_home" == /* ]] || data_home="${HOME:-}/.local/share"
+  # An empty HOME expands to "/.local/share": without HOME or an absolute
+  # XDG_DATA_HOME there is no user data directory to install into.
+  if [[ "$data_home" == "/.local/share" ]]; then
+    printf '%s\n' 'Setup requires HOME or an absolute XDG_DATA_HOME to locate the user data directory.' >&2
+    exit 1
+  fi
   INSTALLED_ROOT="$data_home/plasma/plasmoids/$PLUGIN_ID"
   METADATA_PATH="$INSTALLED_ROOT/metadata.json"
   setup_changed=false
