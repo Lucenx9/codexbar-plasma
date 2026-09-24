@@ -71,6 +71,22 @@ function parts(window, nowMs, absolute) {
     };
 }
 
+// A weekday names one date only from today through the next six days. A reset
+// further away, such as a monthly window or a weekly one that just reset and
+// falls on today's weekday again, needs its date. Without a usable clock the
+// date is the only unambiguous choice.
+function absoluteShowsDate(timestampMs, nowMs) {
+    var reset = new Date(typeof timestampMs === "number" ? timestampMs : NaN);
+    var now = new Date(typeof nowMs === "number" ? nowMs : NaN);
+    if (!isFinite(reset.getTime()) || !isFinite(now.getTime())) {
+        return true;
+    }
+    // Calendar days in local time; UTC arithmetic keeps DST days whole.
+    var days = Math.round((Date.UTC(reset.getFullYear(), reset.getMonth(), reset.getDate())
+        - Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())) / 86400000);
+    return days < 0 || days > 6;
+}
+
 function labelParts(value) {
     var text = Normalizer.boundedDisplayText(value || "", 500);
     // Split joined units (5h30m), preserving compact durations (2h 30m).
