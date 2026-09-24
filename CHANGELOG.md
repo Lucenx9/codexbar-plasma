@@ -184,6 +184,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   command unchanged. A command reaped by the bound reports the same timeout
   message as the page timeout instead of an exit-code line or the shell's
   own signal notice.
+- Hide a quota reset label when its numeric reset date is unusable instead of
+  printing the raw value. An out-of-range or infinite `resetsAt` reached the
+  quota row as digits such as `8640000000000001` or `Infinity`; it now keeps
+  the empty reset like other invalid reset metadata.
 
 ## 0.2.40 - 2026-09-20
 

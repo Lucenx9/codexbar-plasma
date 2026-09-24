@@ -97,12 +97,17 @@ TestCase {
         compare(Date.parse(result.rows[0].resetsAt), epochMs);
         compare(ResetPresentation.parts({resetsAt: result.rows[0].resetsAt},
             epochMs - 3600000, false), {kind: "hours", hours: 1, minutes: 0});
-        // Unusable numbers keep the empty reset instead of throwing.
+        // Unusable numbers keep the empty reset instead of throwing or
+        // printing raw digits in the quota row.
         for (var value of [NaN, Infinity, 8640000000000001]) {
-            compare(ProviderSnapshot.normalize({
+            var broken = ProviderSnapshot.normalize({
                 provider: "codex",
                 usage: {primary: {usedPercent: 50, resetsAt: value}}
-            }, 1000).rows[0].resetsAt, "");
+            }, 1000).rows[0];
+            compare(broken.resetsAt, "");
+            compare(broken.resetValue, "");
+            compare(ResetPresentation.parts({resetsAt: broken.resetValue,
+                resetDescription: broken.resetDescription}, 1000, false).text, "");
         }
     }
     function test_errorsAndEmptyPlaceholdersRemainDistinct() {
