@@ -208,6 +208,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   CLI messages and diagnostics. Previously only authorization, bearer,
   cookie, API-key, and token shapes were masked, so a CLI error such as
   `login failed: password=hunter2` reached the UI verbatim.
+- Re-enable the AI Insights settings **Clear** button when a new insight is
+  saved after a clear while the page stays open. The button stayed disabled
+  until the settings dialog was reopened.
 
 ## 0.2.40 - 2026-09-20
 
