@@ -192,6 +192,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   command unchanged. A command reaped by the bound reports the same timeout
   message as the page timeout instead of an exit-code line or the shell's
   own signal notice.
+- Redact `password`, `secret`, `private_key`, and `client_secret` values in
+  CLI messages and diagnostics. Previously only authorization, bearer,
+  cookie, API-key, and token shapes were masked, so a CLI error such as
+  `login failed: password=hunter2` reached the UI verbatim.
 
 ## 0.2.40 - 2026-09-20
 
