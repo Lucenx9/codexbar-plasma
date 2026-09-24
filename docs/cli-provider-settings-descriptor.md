@@ -202,7 +202,8 @@ Rules for Plasma:
   tokens; quote each token when using Plasma's executable data source.
 - Reject descriptor commands unless they start with `codexbar config` and use
   an allowed local subcommand: `set`/`set-api-key` for fields, `action` for
-  actions.
+  actions. Only a `secret` field may use `set-api-key`: it stores a
+  credential, and any other kind would put the typed value in the command line.
 - Open descriptor-returned URLs only when they are HTTPS URLs of at most 2048
   characters.
 - Keep secret fields write-only except for `redactedValue`.
