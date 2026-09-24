@@ -668,9 +668,11 @@ through to the `--language` argument. `tests/test_ai_insights_controller.py`
 runs the production controller through Plasma's executable DataSource with a
 recording helper. `tests/test_ai_insights_settings.py` copies the settings
 page's helper-process functions into a QtTest with stubbed processes to check
-reply handling when the Ollama address changes, and a second harness that
-re-arms the Clear button when a new insight is stored after a clear. None of
-them contacts a real AI service, wallet, or key.
+reply handling when the Ollama address changes, a second harness that
+re-arms the Clear button when a new insight is stored after a clear, and a
+third that creates the page's model handlers with a real editable combo, so
+opening settings keeps the stored model and a popup pick still commits. None
+of them contacts a real AI service, wallet, or key.
 The smoke runner stages `scripts/smoke/fixture_ai_insights.py` as the package's
 `scripts/ai-insights.py` for every scenario, so previews can never reach a real
 service; the `ai-insights*` and `settings-ai-insights*` scenarios exercise the

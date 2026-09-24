@@ -100,7 +100,7 @@ KCM.SimpleKCM {
     Component.onCompleted: {
         // Offer the stored model as the initial picker entry, so the menu is
         // never empty on open. A connection test replaces it with the live
-        // list; clearing the list later intentionally shows untested state.
+        // list; a provider or address change empties it until the next test.
         if (cfg_aiInsightsModel.length > 0 && availableModels.length === 0) {
             availableModels = [cfg_aiInsightsModel]
         }
@@ -379,8 +379,9 @@ KCM.SimpleKCM {
                 // A mouse selection can land while the popup holds focus, so
                 // commit it explicitly. This fires only for user interaction.
                 onActivated: {
-                    if (typeof modelCombo.currentText === "string" && modelCombo.currentText.length > 0) {
-                        page.cfg_aiInsightsModel = modelCombo.currentText.trim()
+                    var value = currentText.trim()
+                    if (value.length > 0) {
+                        page.cfg_aiInsightsModel = value
                     }
                 }
                 Accessible.name: i18n("Model")

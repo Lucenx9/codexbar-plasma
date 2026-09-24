@@ -329,6 +329,29 @@ TestCase {
         page.destroy()
     }
 
+    // Picking a listed model with the mouse commits it even though the
+    // combo never holds focus, so the unfocused guard restores the text
+    // first; the activation must still write the pick back.
+    function test_popupSelectionCommitsModel() {
+        var page = pageFactory.createObject(test, {
+            cfg_aiInsightsProvider: "ollama",
+            cfg_aiInsightsModel: "qwen3:4b",
+            cfg_aiInsightsOllamaEndpoint: "http://localhost:11434"
+        })
+        verify(page !== null)
+        page.availableModels = ["qwen3:4b", "llama3.2:3b"]
+        compare(page.combo.editText, "qwen3:4b")
+        verify(!page.combo.activeFocus)
+        page.combo.popup.open()
+        tryCompare(page.combo.popup, "opened", true)
+        var delegate = page.combo.popup.contentItem.itemAtIndex(1)
+        verify(delegate !== null)
+        mouseClick(delegate)
+        compare(page.cfg_aiInsightsModel, "llama3.2:3b")
+        compare(page.combo.editText, "llama3.2:3b")
+        page.destroy()
+    }
+
     // The provider switch still swaps the pending model: only the creation
     // reset is a bug, not the per-provider model memory. Switching clears
     // the seeded entry, since the other provider's list is untested.
@@ -410,13 +433,8 @@ class AiInsightsSettingsTests(unittest.TestCase):
         insights = Surface("insights", ROOT)
         source = (ROOT / "contents/ui/configAiInsights.qml").read_text()
         # Pin the production wiring this harness mirrors by hand: the combo
-        # shows the tested list, and only a focused edit writes back, so a
-        # control-driven reset restores the setting instead of wiping it.
-        combo = insights.id_block("modelCombo")
-        self.assertIn("model: page.availableModels", combo)
-        self.assertIn("!modelCombo.activeFocus", combo)
-        self.assertIn("page.cfg_aiInsightsModel = value", combo)
-        self.assertIn("onActivated", combo)
+        # shows the tested list. The copied handlers carry the rest.
+        self.assertIn("model: page.availableModels", insights.id_block("modelCombo"))
         functions = []
         for name in ("retire", "selectProvider"):
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
@@ -426,8 +444,13 @@ class AiInsightsSettingsTests(unittest.TestCase):
             "PROVIDER_HANDLER": insights.handler_body("onProviderChanged"),
             "COMPLETED_HANDLER": insights.handler_body("Component.onCompleted"),
             "EDIT_HANDLER": insights.handler_body("onEditTextChanged"),
-            "ACTIVATED_HANDLER": insights.handler_body("onActivated"),
         }
+        # An absent activation handler leaves the harness without one, so the
+        # popup selection test, not the handler's existence, decides the result.
+        try:
+            handlers["ACTIVATED_HANDLER"] = insights.handler_body("onActivated")
+        except AssertionError:
+            handlers["ACTIVATED_HANDLER"] = ""
         qml = CREATION_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
         for marker, body in handlers.items():
             qml = qml.replace(marker, body)
@@ -441,7 +464,7 @@ class AiInsightsSettingsTests(unittest.TestCase):
                 capture_output=True, text=True, timeout=30)
         output = result.stdout + result.stderr
         self.assertEqual(result.returncode, 0, output)
-        self.assertIn("Totals: 8 passed, 0 failed", output)
+        self.assertIn("Totals: 9 passed, 0 failed", output)
 
 
 if __name__ == "__main__":
