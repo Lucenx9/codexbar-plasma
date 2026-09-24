@@ -93,14 +93,9 @@ Rectangle {
                 tab.activated()
                 event.accepted = true
                 break
-            case Qt.Key_Left:
+            default:
                 event.accepted = tab.tabStrip
-                    ? tab.tabStrip.focusAdjacentTab(tabFocus, false)
-                    : false
-                break
-            case Qt.Key_Right:
-                event.accepted = tab.tabStrip
-                    ? tab.tabStrip.focusAdjacentTab(tabFocus, true)
+                    ? tab.tabStrip.navigateFromTab(tabFocus, event.key)
                     : false
                 break
             }

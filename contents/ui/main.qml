@@ -1114,8 +1114,18 @@ PlasmoidItem {
             resetDescription: snapshot.resetDescription}, false), 500)
         row.pace = paceSummaryPartsText(snapshot.paceParts)
         delete row.resetValue
-        delete row.paceParts
         return row
+    }
+
+    // The popup pace line. Its run-out forecast counts down from the row's
+    // observation like the panel, instead of repeating the receipt-time ETA.
+    function usagePaceText(row) {
+        if (!row || !row.pace) {
+            return ""
+        }
+        return Array.isArray(row.paceParts)
+            ? paceSummaryPartsText(PacePresentation.advancedParts(row.paceParts, row.paceObservedAtMs, panelClockMs))
+            : row.pace
     }
 
 

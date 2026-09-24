@@ -166,4 +166,26 @@ TestCase {
         // occurrence, never as a standalone command.
         compare(command.split(marker).length, 2)
     }
+
+    // A CLI status message must not turn into a link, emphasis or an image
+    // in the notification, and a literal "&" or "<" must not vanish.
+    function test_bodyMarkupStaysLiteralText() {
+        var body = 'Degraded <a href="https://example.invalid/">verify account</a> <img src="file:///tmp/x.png"> & 5 > 3 &lt;'
+        var escaped = 'Degraded &lt;a href="https://example.invalid/"&gt;verify account&lt;/a&gt; &lt;img src="file:///tmp/x.png"&gt; &amp; 5 &gt; 3 &amp;lt;'
+        var plain = NotificationCommand.command("Codex <b>status</b> & more", body, "normal")
+        var withAction = NotificationCommand.command("Codex <b>status</b> & more", body, "normal", "Open")
+        var sent = " -- " + Guards.shellQuote("Codex <b>status</b> & more") + " " + Guards.shellQuote(escaped)
+
+        verify(plain.indexOf(sent + "; fi") >= 0)
+        compare(withAction.split(sent).length, 3)
+        verify(plain.indexOf("<a href") < 0)
+        verify(withAction.indexOf("<img") < 0)
+    }
+
+    function test_bodyBoundAppliesToTheTextBeforeEscaping() {
+        var body = "&".repeat(NotificationCommand.maximumBodyLength)
+
+        verify(NotificationCommand.command("title", body + "&", "normal")
+            .endsWith(" " + Guards.shellQuote("&amp;".repeat(NotificationCommand.maximumBodyLength)) + "; fi"))
+    }
 }
