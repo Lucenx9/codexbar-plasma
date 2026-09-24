@@ -15,6 +15,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Harden the TODO gate helper: it refuses Decisions redirects instead of
   following them with the API key, rejects oversized responses, and bounds
   its git probes with a timeout.
+- Report staged checksum and VERSION files that are not decodable text as
+  unverified instead of a generic error, matching other refused downloads.
 - Keep the stored AI Insights model when opening settings. Opening and saving
   the page no longer clears the model, so AI Insights stops asking for
   reconfiguration when nothing was changed. The stored model is also offered
