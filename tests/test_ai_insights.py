@@ -29,7 +29,7 @@ ai = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(ai)
 
 KEY = "sk-test-0123456789abcdef"
-SNAPSHOT = json.dumps({"version": 1, "providers": [{"id": "codex", "state": "current", "quotas": [
+SNAPSHOT = json.dumps({"version": 1, "providers": [{"id": "codex", "quotas": [
     {"window": "primary", "usedPercent": 72, "resetsInHours": 2, "forecast": "runsOutBeforeReset",
      "runsOutInHours": 1}]}], "signals": [{"kind": "quotaRunsOutBeforeReset", "provider": "codex"}]})
 INSIGHT = {"summary": "Codex esaurira la finestra prima del reset.", "highlights": ["Codex: 72%"]}
@@ -126,9 +126,12 @@ class RequestContractTests(HelperTestCase):
         self.assertNotIn("characters", system)
         self.assertIn("Each highlight adds a fact the summary does not state", system)
         self.assertIn("decimal separator", system)
-        self.assertIn('When a change has "changeMultiple", write it as that multiple', system)
+        self.assertIn('Write a "changeMultiple" as that multiple', system)
+        # Models otherwise convert percentages themselves, and get them wrong.
+        self.assertIn("never turn a percentage into a multiple", system)
         self.assertEqual(json.loads(system.split("JSON schema: ", 1)[1]), ai.SCHEMA)
-        self.assertIn("Leave them out, unless no provider has a current one", system)
+        # The snapshot carries only current providers; no rule has to hide others.
+        self.assertNotIn("stale", system)
 
     def test_generation_bounds_leave_room_for_reasoning_models(self):
         # Hidden reasoning tokens count against the output bound.

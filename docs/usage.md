@@ -559,7 +559,8 @@ the insight's age; **Show details** expands the highlights.
   `http://localhost:11434` and needs no API key. Install a model first, for
   example `ollama pull qwen3:4b`. Models of about 4B parameters or more work
   best; very small models, such as 1.5B, often ignore the interface language
-  and misstate figures. Thinking is turned off, and the model is unloaded from
+  and misstate figures, and with many providers even 4B models can drift into
+  English. A cloud model or a larger local model is the reliable choice. Thinking is turned off, and the model is unloaded from
   memory as soon as the insight is written. A remote Ollama service must use
   `https://`, and the settings page states that usage statistics are sent to it.
 - **OpenRouter** needs an API key and credits. Only models that support
@@ -593,8 +594,9 @@ provider identifiers, quota percentages, window lengths, time to reset, CLI pace
 forecasts, service-incident severity, and last-week versus previous-week spend
 and token totals per provider and currency. Account names, emails,
 organizations, projects, paths, sessions, prompts, model names from cost
-history, and provider messages are never sent. Measurements retained after a
-failed refresh are sent only as unavailable. Weekly spending comparisons
+history, and provider messages are never sent. Only providers with current
+measurements are sent; one retained after a failed refresh, or without data,
+is left out. Weekly spending comparisons
 require cost history already loaded in **Usage & Spend**; generating an insight
 never starts a cost scan.
 

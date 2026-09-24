@@ -31,8 +31,8 @@ def main():
         snapshot = json.loads(args.snapshot)
         leaked = any(value in args.snapshot for value in PRIVATE)
         runs_out = any(signal.get("kind") == "quotaRunsOutBeforeReset" for signal in snapshot.get("signals", []))
-        current = {provider.get("id") for provider in snapshot.get("providers", [])
-                   if provider.get("state") == "current"}
+        # The snapshot lists only providers with current measurements.
+        current = {provider.get("id") for provider in snapshot.get("providers", [])}
         time.sleep(0.3)
         if current == {"codex"}:
             result = {"status": "ok",

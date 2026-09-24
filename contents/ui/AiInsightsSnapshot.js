@@ -103,12 +103,15 @@ function periods(tokenCost, nowMs, metric) {
     }
     var result = {last7Days: sums[0], previous7Days: sums[1]}
     if (sums[1] > 0) {
-        result.changePercent = Math.round((sums[0] - sums[1]) / sums[1] * 100)
+        var changePercent = Math.round((sums[0] - sums[1]) / sums[1] * 100)
         // A large increase reads better as a multiple, and small models
-        // divide unreliably, so the multiple is computed here.
-        if (result.changePercent > 300) {
+        // divide unreliably, so the multiple is computed here. Only one form
+        // is sent: given both, small models keep the percentage.
+        if (changePercent > 300) {
             var ratio = sums[0] / sums[1]
             result.changeMultiple = ratio < 10 ? Math.round(ratio * 10) / 10 : Math.round(ratio)
+        } else {
+            result.changePercent = changePercent
         }
     }
     if (incomplete) {
@@ -208,11 +211,14 @@ function signals(records, warningPercent) {
         var kinds = [["spend", "spendChange"], ["tokens", "tokenChange"]]
         for (var k = 0; k < kinds.length; k++) {
             var period = record[kinds[k][0]]
-            if (period && finite(period.changePercent) && Math.abs(period.changePercent) >= changeSignalPercent) {
-                var signal = {kind: kinds[k][1], provider: record.id, changePercent: period.changePercent}
-                if (period.changeMultiple) {
-                    signal.changeMultiple = period.changeMultiple
-                }
+            var signal = null
+            if (period && finite(period.changeMultiple)) {
+                signal = {kind: kinds[k][1], provider: record.id, changeMultiple: period.changeMultiple}
+            } else if (period && finite(period.changePercent)
+                    && Math.abs(period.changePercent) >= changeSignalPercent) {
+                signal = {kind: kinds[k][1], provider: record.id, changePercent: period.changePercent}
+            }
+            if (signal) {
                 if (period.currency) {
                     signal.currency = period.currency
                 }
@@ -241,14 +247,15 @@ function build(items, nowMs, warningPercent) {
     var seen = ({})
     for (var i = 0; Array.isArray(items) && i < items.length && records.length < maximumProviders; i++) {
         var record = providerRecord(items[i], nowMs)
-        if (record && !Guards.hasOwnKey(seen, record.id)) {
+        // Only current measurements are sent. A stale, unavailable, or empty
+        // provider has nothing to explain, and models mention it anyway.
+        if (record && record.state === "current" && !Guards.hasOwnKey(seen, record.id)) {
             seen[record.id] = true
+            delete record.state
             records.push(record)
         }
     }
-    var sufficient = records.some(function(record) {
-        return record.state === "current"
-    })
+    var sufficient = records.length > 0
     var snapshot = {
         version: 1,
         notes: "Quota percentages are per provider window. Spend and token periods are the last 7 complete days versus the 7 days before.",

@@ -112,10 +112,10 @@ def instructions(tag):
         "- Use only facts present in the data. Never calculate new forecasts, invent trends, or compare periods the data does not compare.",
         '- Start from the precomputed "signals". Explain what matters: a quota at risk before its reset, a notable change between the two measured periods, or a notable difference between providers.',
         "- Quota percentages of different providers or windows measure different allowances. Never treat them as equal amounts.",
-        "- Providers marked stale or unavailable have no current measurement. Leave them out, unless no provider has a current one.",
         "- Never add or compare amounts in different currencies. Say when an amount is estimated or incomplete.",
         "- Do not list every number. No greetings, filler, promotion, or advice unless a quota is at risk.",
-        '- When a change has "changeMultiple", write it as that multiple, such as "about 49 times", not as a percentage.',
+        '- Write a "changeMultiple" as that multiple, such as "about 49 times". Write a "changePercent" as exactly '
+        "that percentage; never turn a percentage into a multiple or a fraction such as double or triple.",
         # Models count words far better than characters.
         f'Return JSON: "summary" with 1 or 2 short sentences (at most {SUMMARY_WORDS} words), '
         f'and "highlights" with 0 to {MAX_HIGHLIGHTS} short items (at most {HIGHLIGHT_WORDS} words each). '

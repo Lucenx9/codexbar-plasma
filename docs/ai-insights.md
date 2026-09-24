@@ -73,15 +73,14 @@ object from an allowlist. It never copies an input record.
   "version": 1,
   "notes": "Quota percentages are per provider window. ...",
   "providers": [
-    {"id": "codex", "state": "current",
+    {"id": "codex",
      "quotas": [{"window": "primary", "usedPercent": 72, "windowHours": 5,
                  "resetsInHours": 2, "forecast": "runsOutBeforeReset",
                  "runsOutInHours": 1, "expectedUsedPercentNow": 40}],
      "spend": {"currency": "USD", "last7Days": 21, "previous7Days": 14,
                "changePercent": 50, "estimated": true},
      "tokens": {"last7Days": 14000, "previous7Days": 7000, "changePercent": 100},
-     "incident": "major"},
-    {"id": "claude", "state": "stale"}
+     "incident": "major"}
   ],
   "signals": [{"kind": "quotaRunsOutBeforeReset", "provider": "codex",
                "window": "primary", "runsOutInHours": 1, "resetsInHours": 2}]
@@ -91,9 +90,10 @@ object from an allowlist. It never copies an input record.
 - Provider IDs must match `^[a-z0-9][a-z0-9._-]{0,63}$`. Titles, account
   identities, organizations, login methods, CLI prose, extra-window labels,
   detail rows, model names, projects, paths, sessions, and errors are never read.
-- A stale (retained) provider carries only `{"id", "state": "stale"}`; a provider
-  without current measurements is `unavailable` or `noData`. Retained numbers are
-  never presented as current consumption.
+- Only providers with a current measurement are listed. A stale (retained),
+  unavailable, or empty provider is left out entirely, so retained numbers are
+  never presented as current consumption and a model cannot mention a provider
+  it has no data for. Without any current provider no request is made.
 - Quotas are those rows with a known percentage, at most four per provider and
   eight providers. Forecasts come only from the CLI pace record already
   normalized by `ProviderNormalizer.rateWindowMetrics`; nothing is extrapolated.
@@ -106,8 +106,8 @@ object from an allowlist. It never copies an input record.
 - Signals are deterministic: exhausted quota, forecast exhaustion before reset,
   quota at or above the warning threshold, a spend or token change of at least
   25% between the two periods, and a known service incident. An increase above
-  300% also carries `changeMultiple` (the ratio of the two periods), so the model
-  never has to divide.
+  300% carries `changeMultiple` (the ratio of the two periods) instead of
+  `changePercent`, so the model never has to divide and sees only one form.
 - The serialized snapshot is ASCII, at most 16 KiB, and identified by an FNV-1a
   hash. Automatic generation skips a request when the snapshot is identical to
   the cached insight's.
@@ -123,11 +123,11 @@ reminder of the output language, which small models otherwise ignore. The instru
 require the selected language with its decimal separator, only provided facts,
 no invented comparisons or forecasts, no cross-currency arithmetic, no
 equivalence between provider percentages, and no filler or unnecessary advice.
-Providers without a current measurement are left out unless none has one. The
-summary asks for one or two sentences of at most 30 words, and highlights of
+The summary asks for one or two sentences of at most 30 words, and highlights of
 at most 12 words must add facts the summary does not state; models count words
-far better than characters. A `changeMultiple` is written as a multiple instead
-of a percentage. The instructions end with the response JSON Schema, which
+far better than characters. A `changeMultiple` is written as that multiple and
+a `changePercent` exactly as given: models that convert percentages themselves
+get the multiple wrong. The instructions end with the response JSON Schema, which
 Ollama recommends alongside `format`. CLI-derived data is described as data,
 never as instructions.
 
@@ -237,7 +237,7 @@ Failures map to bounded reasons: `missing_key`, `secret_unavailable`, `auth`
   invalidation, schedule and restart rules, retry delays, command quoting, and
   reply validation, including markup that must stay literal.
 - `tests/tst_ai_insights_snapshot.qml`: the allowlist against injected fields,
-  stale and unavailable providers, partial and complete history, currencies,
+  that only current providers are sent, partial and complete history, currencies,
   signals, identity, and bounds.
 - `tests/test_ai_insights.py`: the helper against a local HTTP server and fake
   `secret-tool`/`kdialog` executables, covering the request language for six

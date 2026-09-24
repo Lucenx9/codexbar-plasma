@@ -64,7 +64,7 @@ TestCase {
             verify(text.indexOf(forbidden[i]) < 0, "leaked " + forbidden[i] + ": " + text)
         var snapshot = JSON.parse(text)
         compare(Object.keys(snapshot).sort(), ["notes", "providers", "signals", "version"])
-        compare(Object.keys(snapshot.providers[0]).sort(), ["id", "quotas", "spend", "state", "tokens"])
+        compare(Object.keys(snapshot.providers[0]).sort(), ["id", "quotas", "spend", "tokens"])
         compare(snapshot.providers[0].quotas, [
             {window: "primary", usedPercent: 72, windowHours: 5, resetsInHours: 2,
                 forecast: "runsOutBeforeReset", runsOutInHours: 1, expectedUsedPercentNow: 40},
@@ -85,15 +85,20 @@ TestCase {
         compare(build([provider("__proto__")]).sufficient, false)
     }
 
-    function test_staleAndUnavailableProvidersCarryNoNumbers() {
-        var snapshot = JSON.parse(build([
+    function test_onlyCurrentProvidersAreSent() {
+        // Stale, unavailable, and empty providers have nothing to explain,
+        // and models mention them when they are listed at all.
+        var text = build([
             provider("codex", {usageStale: true}),
             provider("claude", {rows: [], error: "Synthetic failure with person@example.com"}),
+            provider("antigravity", {rows: []}),
             provider("gemini")
-        ]).text)
-        compare(snapshot.providers[0], {id: "codex", state: "stale"})
-        compare(snapshot.providers[1], {id: "claude", state: "unavailable"})
-        compare(snapshot.providers[2].state, "current")
+        ]).text
+        var snapshot = JSON.parse(text)
+        compare(snapshot.providers.length, 1)
+        compare(snapshot.providers[0].id, "gemini")
+        verify(snapshot.providers[0].state === undefined)
+        verify(!/codex|claude|antigravity|stale|unavailable|noData/.test(text), text)
         compare(build([provider("codex", {usageStale: true})]).sufficient, false)
         compare(build([]).sufficient, false)
         compare(build(null).text, "")
@@ -131,10 +136,10 @@ TestCase {
     function test_largeIncreasesCarryAPrecomputedMultiple() {
         // 7 x 49 against 7 x 1: models must not divide 4800% themselves.
         var snapshot = JSON.parse(build([provider("codex", {tokenCost: history(20, 49, 1)})]).text)
-        compare(snapshot.providers[0].spend.changePercent, 4800)
+        // Only one form is sent: given both, small models keep the percentage.
         compare(snapshot.providers[0].spend.changeMultiple, 49)
-        compare(snapshot.signals[1], {kind: "spendChange", provider: "codex", changePercent: 4800,
-            changeMultiple: 49, currency: "USD"})
+        verify(snapshot.providers[0].spend.changePercent === undefined)
+        compare(snapshot.signals[1], {kind: "spendChange", provider: "codex", changeMultiple: 49, currency: "USD"})
         snapshot = JSON.parse(build([provider("codex", {tokenCost: history(20, 4.5, 1)})]).text)
         compare(snapshot.providers[0].spend.changeMultiple, 4.5)
         // At or below 300% the percentage is kept alone.
