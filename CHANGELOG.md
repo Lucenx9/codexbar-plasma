@@ -120,6 +120,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Report a fresh setup as current when another setup run installed the
+  release first. The post-lock recheck compared against the synthetic
+  `0.0.0` version instead of the installed widget, so the second run
+  reinstalled redundantly.
 - Report a clear setup error when neither `HOME` nor an absolute
   `XDG_DATA_HOME` locates the user data directory, instead of stopping on an
   `unbound variable` shell error.

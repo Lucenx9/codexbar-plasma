@@ -511,7 +511,13 @@ validate_package_manifest "$package_path" "$package_version" \
 acquire_install_lock \
   || fail "package_install_failed" "another widget installation did not finish in time"
 # Another instance may have installed this release while this one downloaded it.
-installed_version="$(jq -r '.KPlugin.Version? // empty' "$METADATA_PATH" 2>/dev/null || true)"
+# A fresh setup reads its synthetic 0.0.0 stub until here, so recheck the
+# installed metadata once it may exist.
+installed_metadata="$METADATA_PATH"
+if [[ "$SETUP" == true && "$INSTALL_OPTION" == -i && -f "$INSTALLED_ROOT/metadata.json" ]]; then
+  installed_metadata="$INSTALLED_ROOT/metadata.json"
+fi
+installed_version="$(jq -r '.KPlugin.Version? // empty' "$installed_metadata" 2>/dev/null || true)"
 if [[ "$installed_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] \
   && ! version_gt "$remote_version" "$installed_version"; then
   emit_status "current" "widget is current" "$installed_version" "$remote_version" "$asset_url"

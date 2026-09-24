@@ -273,6 +273,46 @@ print(json.dumps({"status": os.environ.get("CLI_STATUS", "ready")}))
                 self.assertNotIn("unbound variable", result.stderr)
                 self.assertEqual(self.calls(), "")
 
+    def test_concurrent_fresh_install_reports_current_after_lock(self):
+        # Another setup run installs the release after this run chose
+        # fresh-install mode but before it reaches the post-lock recheck.
+        # The recheck must read the installed metadata, not this run's
+        # synthetic 0.0.0 stub, or the second install runs redundantly.
+        self.fake("curl", '''
+output=""
+for arg in "$@"; do
+  [[ "$arg" == https://* ]] && url="$arg"
+done
+while [[ $# -gt 0 ]]; do
+  if [[ "$1" == --output ]]; then output="$2"; shift; fi
+  shift
+done
+case "$url" in
+  */latest) file=release.json ;;
+  */main/scripts/update-widget.sh) file=update-widget.sh ;;
+  *.sha256) file=codexbar-plasma.plasmoid.sha256 ;;
+  *.plasmoid) file=codexbar-plasma.plasmoid ;;
+  *) exit 1 ;;
+esac
+if [[ "$file" == codexbar-plasma.plasmoid ]]; then
+  winner="$XDG_DATA_HOME/plasma/plasmoids/app.codexbar.plasma"
+  mkdir -p "$winner"
+  printf '%s' '{"KPlugin":{"Version":"9.9.9"}}' > "$winner/metadata.json"
+fi
+python3 - "$FIXTURE/$file" "$output" <<'INNER'
+import pathlib, sys
+raw = pathlib.Path(sys.argv[1]).read_bytes()
+if sys.argv[2]:
+    pathlib.Path(sys.argv[2]).write_bytes(raw)
+else:
+    sys.stdout.buffer.write(raw)
+INNER
+''')
+        result = self.run_setup("--no-input")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("widget is current", result.stderr)
+        self.assertEqual(self.calls(), "")
+
     def test_untrusted_packages_never_install(self):
         for fault in ("mutable", "digest", "id", "version", "tag"):
             with self.subTest(fault=fault):
