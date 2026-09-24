@@ -148,7 +148,7 @@ ColumnLayout {
             model: tokenCostSection.tokenCost ? [
                 {
                     label: i18n("Today"),
-                    amounts: tokenCostSection.tokenCost.today,
+                    amounts: CostPresentation.todayAmounts(tokenCostSection.tokenCost, tokenCostSection.applet.panelClockMs),
                     valueMode: "plain"
                 },
                 {

@@ -133,6 +133,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Keep the AI Insights settings privacy note local for loopback Ollama
   addresses with a path, such as `http://localhost:11434/v1`, instead of
   warning that statistics are sent to that address.
+- Show a provider's **Today** cost as unavailable when the cost snapshot was
+  scanned on an earlier day, such as before midnight or before a failed refresh,
+  instead of presenting that day's spend as today's.
 - Count down the popup's "Runs out in" pace forecast like the panel run-out
   text. It kept the duration received with the last usage refresh, so with no
   periodic refresh or a long interval it still promised hours of quota after

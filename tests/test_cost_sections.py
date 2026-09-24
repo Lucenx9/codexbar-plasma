@@ -18,6 +18,7 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PlasmaComponents
 import "SOURCE_URL/components" as Components
 import "SOURCE_URL/CostPresentation.js" as CostPresentation
+import "SOURCE_URL/CostResponse.js" as CostResponse
 TestCase {
     id: testCase
     name: "CostSections"
@@ -356,6 +357,40 @@ class CostSectionTests(unittest.TestCase):
         testCase.providerData = { provider: "codex", tokenCost: tokenCost,
             rows: [{ lane: "primary", windowMinutes: 300, resetsAt: new Date(reset).toISOString() }] };
         tryVerify(function() { return section.windows.length === 0 && !section.visible; });
+    }
+    ''')
+
+    def test_provider_today_needs_a_scan_from_today(self):
+        self.run_fixture('''
+    // The CLI's "today" is the total of the day it scanned. A snapshot from
+    // 22:00 must not present that day's spend as today's after midnight,
+    // whether the new scan is still running or has failed.
+    function test_providerTodayNeedsAScanFromToday() {
+        var payload = [{ provider: "codex", historyDays: 30, currencyCode: "USD",
+            updatedAt: new Date(2026, 8, 23, 22).toISOString(),
+            sessionCostUSD: 1.25, sessionTokens: 1200,
+            totals: { totalCost: 9, totalTokens: 9000 }, daily: [] }];
+        var tokenCost = Object.assign({}, CostResponse.response(JSON.stringify(payload), "", 30).costs.codex,
+            { windowLabel: "30d", hintLine: "" });
+        fakeApplet.panelClockMs = new Date(2026, 8, 23, 23, 30).getTime();
+        testCase.providerData = { provider: "codex", tokenCost: tokenCost };
+        var subject = createTemporaryObject(providerFactory, testCase);
+        verify(subject !== null);
+        tryVerify(function() {
+            var texts = textsUnder(subject);
+            return texts.indexOf("Today") >= 0 && texts.indexOf("USD 1.25") >= 0
+                && texts.indexOf("1200 tokens") >= 0;
+        });
+
+        fakeApplet.panelClockMs = new Date(2026, 8, 24, 0, 30).getTime();
+        tryVerify(function() {
+            var texts = textsUnder(subject);
+            return texts.indexOf("Today") >= 0 && texts.indexOf("USD 1.25") < 0
+                && texts.indexOf("Cost unavailable") >= 0 && texts.indexOf("Tokens unavailable") >= 0;
+        });
+        // The selected period still shows the retained snapshot.
+        verify(textsUnder(subject).indexOf("USD 9") >= 0);
+        fakeApplet.panelClockMs = 0;
     }
     ''')
 

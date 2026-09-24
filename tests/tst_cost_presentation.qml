@@ -1,6 +1,8 @@
 import QtQuick
 import QtTest
 import "../contents/ui/CostPresentation.js" as CostPresentation
+import "../contents/ui/CostResponse.js" as CostResponse
+import "../contents/ui/PrivacyPresentation.js" as Privacy
 
 TestCase {
     name: "CostPresentation"
@@ -1468,5 +1470,46 @@ TestCase {
         compare(CostPresentation.spendTotals([null, { totals: { cost: 2, tokens: 40, currency: "USD" } }]).tokens, 40)
         verify(!CostPresentation.historyStillBuilding([null]))
         compare(CostPresentation.spendCurrency([null]), "USD")
+    }
+
+    // The suite runs with TZ=America/Los_Angeles. The CLI's "today" is the
+    // total of the day it scanned, so a scan from 22:00 on 09-23 still
+    // describes the 23rd after midnight.
+    function test_todayAmountsNeedAScanFromToday() {
+        var payload = [{provider: "codex", historyDays: 30, currencyCode: "USD",
+            updatedAt: new Date(2026, 8, 23, 22).toISOString(),
+            sessionCostUSD: 1.25, sessionTokens: 1200,
+            totals: {totalCost: 9, totalTokens: 9000}, daily: []}];
+        var cost = CostResponse.response(JSON.stringify(payload), "", 30).costs.codex;
+        compare(cost.scanDay, "2026-09-23");
+
+        var sameDay = CostPresentation.todayAmounts(cost, new Date(2026, 8, 23, 23, 30).getTime());
+        compare(sameDay.cost, 1.25);
+        compare(sameDay.tokens, 1200);
+
+        var nextDay = CostPresentation.todayAmounts(cost, new Date(2026, 8, 24, 0, 30).getTime());
+        compare(nextDay.cost, null);
+        compare(nextDay.tokens, null);
+        compare(nextDay.currency, "USD");
+        verify(!CostPresentation.hasMetricValue(nextDay, false));
+        verify(!CostPresentation.hasMetricValue(nextDay, true));
+        // The retained snapshot itself is untouched.
+        compare(cost.today.cost, 1.25);
+
+        // Privacy mode keeps the scan date, so it hides the same stale total.
+        var privateCost = Privacy.cost(cost, true);
+        compare(privateCost.scanDay, "2026-09-23");
+        compare(CostPresentation.todayAmounts(privateCost, new Date(2026, 8, 24, 0, 30).getTime()).cost, null);
+        compare(Privacy.cost({scanDay: {}}, true).scanDay, "");
+
+        // Without a scan date or a usable clock there is nothing to compare.
+        payload[0].updatedAt = "not a date";
+        var undated = CostResponse.response(JSON.stringify(payload), "", 30).costs.codex;
+        compare(undated.scanDay, "");
+        compare(CostPresentation.todayAmounts(undated, new Date(2026, 8, 24, 0, 30).getTime()).cost, 1.25);
+        compare(CostPresentation.todayAmounts(cost, NaN).cost, 1.25);
+        compare(CostPresentation.todayAmounts(cost, "2026-09-24").cost, 1.25);
+        compare(CostPresentation.todayAmounts(null, 0), null);
+        compare(CostPresentation.todayAmounts({scanDay: "2026-09-23"}, 0), null);
     }
 }
