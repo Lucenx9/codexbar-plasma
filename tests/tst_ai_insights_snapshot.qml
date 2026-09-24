@@ -128,6 +128,21 @@ TestCase {
         verify(snapshot.providers[0].spend.incomplete)
     }
 
+    function test_largeIncreasesCarryAPrecomputedMultiple() {
+        // 7 x 49 against 7 x 1: models must not divide 4800% themselves.
+        var snapshot = JSON.parse(build([provider("codex", {tokenCost: history(20, 49, 1)})]).text)
+        compare(snapshot.providers[0].spend.changePercent, 4800)
+        compare(snapshot.providers[0].spend.changeMultiple, 49)
+        compare(snapshot.signals[1], {kind: "spendChange", provider: "codex", changePercent: 4800,
+            changeMultiple: 49, currency: "USD"})
+        snapshot = JSON.parse(build([provider("codex", {tokenCost: history(20, 4.5, 1)})]).text)
+        compare(snapshot.providers[0].spend.changeMultiple, 4.5)
+        // At or below 300% the percentage is kept alone.
+        snapshot = JSON.parse(build([provider("codex", {tokenCost: history(20, 4, 1)})]).text)
+        compare(snapshot.providers[0].spend.changePercent, 300)
+        verify(snapshot.providers[0].spend.changeMultiple === undefined)
+    }
+
     function test_currenciesAreNeverCombined() {
         var snapshot = JSON.parse(build([
             provider("claude", {tokenCost: history(20, 3, 2, "USD")}),

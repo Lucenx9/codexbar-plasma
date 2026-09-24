@@ -49,6 +49,9 @@ MAX_CONTENT_CHARS = 16 * 1024
 MAX_SUMMARY_CHARS = 600
 MAX_HIGHLIGHT_CHARS = 160
 MAX_HIGHLIGHTS = 3
+# Word targets that stay well inside the character bounds above.
+SUMMARY_WORDS = 30
+HIGHLIGHT_WORDS = 12
 # Reasoning models spend hidden tokens before the answer, and those count
 # against this bound; billing covers only the tokens actually produced.
 MAX_OUTPUT_TOKENS = 4000
@@ -112,10 +115,13 @@ def instructions(tag):
         "- Providers marked stale or unavailable have no current measurement. Leave them out, unless no provider has a current one.",
         "- Never add or compare amounts in different currencies. Say when an amount is estimated or incomplete.",
         "- Do not list every number. No greetings, filler, promotion, or advice unless a quota is at risk.",
-        "- Write an increase above 300% as a multiple, such as \"about 49 times\", not as a percentage.",
-        f'Return JSON: "summary" with 1 or 2 short sentences (under {MAX_SUMMARY_CHARS // 3} characters), '
-        f'and "highlights" with 0 to {MAX_HIGHLIGHTS} short items (under {MAX_HIGHLIGHT_CHARS // 2} characters each). '
+        '- When a change has "changeMultiple", write it as that multiple, such as "about 49 times", not as a percentage.',
+        # Models count words far better than characters.
+        f'Return JSON: "summary" with 1 or 2 short sentences (at most {SUMMARY_WORDS} words), '
+        f'and "highlights" with 0 to {MAX_HIGHLIGHTS} short items (at most {HIGHLIGHT_WORDS} words each). '
         "Each highlight adds a fact the summary does not state; return no highlights when nothing else matters.",
+        # Ollama recommends the schema in the prompt as well as in "format".
+        "JSON schema: " + json.dumps(SCHEMA, separators=(",", ":")),
     ])
 
 
@@ -371,6 +377,17 @@ def decode_snapshot(text):
     return value
 
 
+def ollama_context(messages):
+    """Context for the whole prompt plus the output bound, in steps of 1024 tokens.
+
+    Ollama defaults to 4096 tokens on most computers and silently drops the
+    start of a longer prompt, which holds the instructions. English text and
+    JSON average about three characters per token; two keeps a margin.
+    """
+    tokens = sum(len(message["content"]) for message in messages) // 2 + MAX_OUTPUT_TOKENS
+    return -(-tokens // 1024) * 1024
+
+
 def request_body(provider, model, tag, snapshot, zdr, reasoning_off=False):
     messages = [
         {"role": "system", "content": instructions(tag)},
@@ -383,7 +400,8 @@ def request_body(provider, model, tag, snapshot, zdr, reasoning_off=False):
         # Thinking models otherwise spend the whole output bound thinking, and a
         # rarely generated insight should not hold GPU memory afterwards.
         return {"model": model, "messages": messages, "stream": False, "format": SCHEMA, "think": False,
-                "keep_alive": 0, "options": {"temperature": 0.2, "num_predict": MAX_OUTPUT_TOKENS}}
+                "keep_alive": 0, "options": {"temperature": 0, "num_predict": MAX_OUTPUT_TOKENS,
+                                             "num_ctx": ollama_context(messages)}}
     body = {"model": model, "messages": messages,
             "response_format": {"type": "json_schema", "json_schema": {"name": "ai_insight", "strict": True, "schema": SCHEMA}}}
     if provider == "openai":

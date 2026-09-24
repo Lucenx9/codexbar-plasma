@@ -105,7 +105,9 @@ object from an allowlist. It never copies an input record.
   flagged. Opening the popup or generating an insight never starts a cost scan.
 - Signals are deterministic: exhausted quota, forecast exhaustion before reset,
   quota at or above the warning threshold, a spend or token change of at least
-  25% between the two periods, and a known service incident.
+  25% between the two periods, and a known service incident. An increase above
+  300% also carries `changeMultiple` (the ratio of the two periods), so the model
+  never has to divide.
 - The serialized snapshot is ASCII, at most 16 KiB, and identified by an FNV-1a
   hash. Automatic generation skips a request when the snapshot is identical to
   the cached insight's.
@@ -122,13 +124,16 @@ require the selected language with its decimal separator, only provided facts,
 no invented comparisons or forecasts, no cross-currency arithmetic, no
 equivalence between provider percentages, and no filler or unnecessary advice.
 Providers without a current measurement are left out unless none has one. The
-summary asks for one or two sentences, and highlights must add facts the
-summary does not state. Increases above 300% are written as multiples. CLI-derived
-data is described as data, never as instructions.
+summary asks for one or two sentences of at most 30 words, and highlights of
+at most 12 words must add facts the summary does not state; models count words
+far better than characters. A `changeMultiple` is written as a multiple instead
+of a percentage. The instructions end with the response JSON Schema, which
+Ollama recommends alongside `format`. CLI-derived data is described as data,
+never as instructions.
 
 | Provider | Endpoint | Provider-specific fields |
 | --- | --- | --- |
-| Ollama | `POST {endpoint}/api/chat` | `format` JSON Schema, `stream: false`, `think: false`, `keep_alive: 0`, `temperature: 0.2`, `num_predict: 4000`, no credentials |
+| Ollama | `POST {endpoint}/api/chat` | `format` JSON Schema, `stream: false`, `think: false`, `keep_alive: 0`, `temperature: 0`, `num_predict: 4000`, `num_ctx` for the whole prompt plus the output bound, no credentials |
 | OpenRouter | `POST https://openrouter.ai/api/v1/chat/completions` | strict `json_schema`, `max_tokens: 4000`, `provider.require_parameters`, `provider.data_collection: "deny"`, optional `provider.zdr`, `reasoning: {"effort": "none"}` for reasoning models, `HTTP-Referer` and `X-OpenRouter-Title` app attribution |
 | OpenAI | `POST https://api.openai.com/v1/chat/completions` | strict `json_schema`, `max_completion_tokens: 4000`, `store: false` |
 
@@ -145,7 +150,10 @@ billed. Measured
 with `deepseek/deepseek-v4.1-flash`, reasoning off cut output from about
 1000 tokens to about 100. Ollama's `think: false` applies only to models that
 allow it; models that always think, or accept only thinking levels, keep their
-default and may still hit the output bound.
+default and may still hit the output bound. Ollama's default context is 4096 tokens
+on most computers, and a longer prompt silently loses its start, where the
+instructions are, so `num_ctx` is sized from the prompt at two characters per
+token plus the output bound.
 
 OpenRouter routing never uses `models` fallbacks, and `openrouter/*` router
 aliases are rejected, so a request cannot move to another model with weaker

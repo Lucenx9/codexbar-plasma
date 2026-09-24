@@ -121,10 +121,13 @@ class RequestContractTests(HelperTestCase):
 
     def test_instructions_keep_the_card_short_and_local(self):
         system = ai.instructions("it")
-        self.assertIn('"summary" with 1 or 2 short sentences', system)
+        self.assertIn('"summary" with 1 or 2 short sentences (at most 30 words)', system)
+        self.assertIn("(at most 12 words each)", system)
+        self.assertNotIn("characters", system)
         self.assertIn("Each highlight adds a fact the summary does not state", system)
         self.assertIn("decimal separator", system)
-        self.assertIn("Write an increase above 300% as a multiple", system)
+        self.assertIn('When a change has "changeMultiple", write it as that multiple', system)
+        self.assertEqual(json.loads(system.split("JSON schema: ", 1)[1]), ai.SCHEMA)
         self.assertIn("Leave them out, unless no provider has a current one", system)
 
     def test_generation_bounds_leave_room_for_reasoning_models(self):
@@ -281,6 +284,21 @@ class RequestContractTests(HelperTestCase):
         self.assertEqual(request["body"]["keep_alive"], 0)
         self.assertTrue(request["body"]["messages"][1]["content"].endswith(
             "Write the summary and highlights in German."))
+        options = request["body"]["options"]
+        self.assertEqual(options["temperature"], 0)
+        self.assertEqual(options["num_predict"], ai.MAX_OUTPUT_TOKENS)
+        # The context always holds the whole prompt and the output bound, so
+        # Ollama never drops the instructions at the start of the prompt.
+        prompt = sum(len(message["content"]) for message in request["body"]["messages"])
+        self.assertGreaterEqual(options["num_ctx"], prompt // 2 + ai.MAX_OUTPUT_TOKENS)
+        self.assertEqual(options["num_ctx"] % 1024, 0)
+
+    def test_ollama_context_grows_with_the_largest_snapshot(self):
+        largest = json.dumps({"providers": [{"id": "x" * 64, "pad": "y" * (ai.MAX_SNAPSHOT_BYTES - 200)}]})
+        body = ai.request_body("ollama", "m", "it", json.loads(largest), True)
+        prompt = sum(len(message["content"]) for message in body["messages"])
+        self.assertGreater(prompt, 4096 * 3)
+        self.assertGreaterEqual(body["options"]["num_ctx"], prompt // 2 + ai.MAX_OUTPUT_TOKENS)
 
     def test_cloud_destinations_are_pinned_https(self):
         spec = importlib.util.spec_from_file_location("fresh_ai", ROOT / "scripts/lib/ai_insights.py")

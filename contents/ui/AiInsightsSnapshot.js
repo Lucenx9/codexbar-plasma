@@ -104,6 +104,12 @@ function periods(tokenCost, nowMs, metric) {
     var result = {last7Days: sums[0], previous7Days: sums[1]}
     if (sums[1] > 0) {
         result.changePercent = Math.round((sums[0] - sums[1]) / sums[1] * 100)
+        // A large increase reads better as a multiple, and small models
+        // divide unreliably, so the multiple is computed here.
+        if (result.changePercent > 300) {
+            var ratio = sums[0] / sums[1]
+            result.changeMultiple = ratio < 10 ? Math.round(ratio * 10) / 10 : Math.round(ratio)
+        }
     }
     if (incomplete) {
         result.incomplete = true
@@ -204,6 +210,9 @@ function signals(records, warningPercent) {
             var period = record[kinds[k][0]]
             if (period && finite(period.changePercent) && Math.abs(period.changePercent) >= changeSignalPercent) {
                 var signal = {kind: kinds[k][1], provider: record.id, changePercent: period.changePercent}
+                if (period.changeMultiple) {
+                    signal.changeMultiple = period.changeMultiple
+                }
                 if (period.currency) {
                     signal.currency = period.currency
                 }
