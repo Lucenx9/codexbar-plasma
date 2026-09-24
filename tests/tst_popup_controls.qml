@@ -48,8 +48,17 @@ TestCase {
         function withAlpha(color, alpha) {
             return Qt.rgba(color.r, color.g, color.b, alpha);
         }
-        function switcherMetricRow() {
-            return null;
+        function switcherMetricRow(item) {
+            return item.testRow || null;
+        }
+        function displayPercent(row) {
+            return row.leftPercent;
+        }
+        function usageResetText(row) {
+            return row.reset || "";
+        }
+        function resetLabel(value) {
+            return "Resets " + value;
         }
         function overviewDetailText(item) {
             return item.account || "";
@@ -159,6 +168,63 @@ TestCase {
         mouseClick(row, row.width / 2, row.height / 2);
         compare(actionSpy.count, 2);
         tryCompare(row, "keyboardFocusVisible", false);
+    }
+
+    // The meter and reset are only visual; the row's accessible description
+    // must carry them beside the detail line, and drop what is absent.
+    function test_overviewDescribesItsQuotaToAssistiveTools() {
+        var measured = Object.assign({}, provider, {
+            testRow: {hasPercent: true, leftPercent: 42.4, reset: "in 2h"}
+        });
+        var row = createControl("OverviewProviderRow", {
+            applet: applet, modelData: measured, width: 540
+        });
+        if (!row)
+            return;
+        var focus = row.nextItemInFocusChain(true);
+        compare(focus.Accessible.name, "Codex");
+        verify(row.percentText.length > 0);
+        compare(focus.Accessible.description,
+            row.percentText + ". demo@example.com. Resets in 2h");
+        row.modelData = {provider: "claude", title: "Claude", account: ""};
+        compare(focus.Accessible.description, "");
+        row.modelData = provider;
+        compare(focus.Accessible.description, "demo@example.com");
+    }
+
+    function findToolTip(item) {
+        var data = item.data || [];
+        for (var i = 0; i < data.length; i++) {
+            if (data[i] && data[i].plainText !== undefined && data[i].delay !== undefined)
+                return data[i];
+        }
+        return null;
+    }
+
+    // Elided title or detail text must stay readable on hover, and a row whose
+    // text fits must not grow a redundant tooltip.
+    function test_overviewRevealsTruncatedTextOnHover() {
+        var longAccount = "a-very-long-account-name-that-cannot-fit@example.com";
+        var row = createControl("OverviewProviderRow", {
+            applet: applet,
+            modelData: Object.assign({}, provider, {account: longAccount}),
+            width: 180
+        });
+        if (!row)
+            return;
+        var tip = findToolTip(row);
+        verify(tip !== null);
+        tryVerify(function () { return row.textTruncated; });
+        compare(tip.plainText, "Codex\n" + longAccount);
+        mouseMove(row, row.width / 2, row.height / 2);
+        tryCompare(tip, "visible", true);
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        tryCompare(tip, "visible", false);
+        row.width = 600;
+        tryVerify(function () { return !row.textTruncated; });
+        mouseMove(row, row.width / 2, row.height / 2);
+        wait(tip.delay + 100);
+        verify(!tip.visible);
     }
 
     function test_refreshSupportsKeyboardActivation() {

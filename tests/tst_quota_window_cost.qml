@@ -137,6 +137,37 @@ TestCase {
         compare(older[0].costPartial, true);
     }
 
+    function test_preMidnightScanMakesItsLastDayPartial() {
+        // The last cost scan ran at 22:00 on 09-23, so the history ends with
+        // a row holding only part of that day. After midnight the week that
+        // closed at 09-24 00:00 has every date, but not all of the 23rd.
+        var result = QuotaWindowCost.windows(history(2026, 9, 17, 7), local(2026, 10, 1),
+            weekMinutes, local(2026, 9, 24, 1));
+        compare(result.length, 1);
+        compare(result[0].current, false);
+        compare(result[0].dayCount, 7);
+        compare(result[0].endEstimated, false);
+        compare(result[0].cost, 1 + 2 + 3 + 4 + 5 + 6 + 7);
+        compare(result[0].costPartial, true);
+        compare(result[0].tokensPartial, true);
+
+        // Only that last day is in doubt: an earlier week stays exact.
+        var earlier = QuotaWindowCost.windows(history(2026, 9, 10, 14), local(2026, 10, 1),
+            weekMinutes, local(2026, 9, 24, 1));
+        compare(earlier.length, 2);
+        compare(earlier[0].costPartial, true);
+        compare(earlier[1].costPartial, false);
+        compare(earlier[1].tokensPartial, false);
+
+        // An unknown last day is already unknown, not partly measured.
+        var unknown = history(2026, 9, 17, 7);
+        unknown[6].cost = null;
+        var unknownResult = QuotaWindowCost.windows(unknown, local(2026, 10, 1),
+            weekMinutes, local(2026, 9, 24, 1));
+        compare(unknownResult[0].cost, 1 + 2 + 3 + 4 + 5 + 6);
+        compare(unknownResult[0].costPartial, true);
+    }
+
     function test_futureHistoryDayDoesNotEnterCurrentWeek() {
         var rows = history(2026, 9, 16, 8); // includes tomorrow, 09-23
         var result = QuotaWindowCost.windows(rows, local(2026, 9, 24), weekMinutes,

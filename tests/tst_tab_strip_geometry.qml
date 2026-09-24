@@ -121,4 +121,38 @@ TestCase {
         compare(TabStripGeometry.revealPosition(100, undefined, 0, viewport, margin), null)
         compare(TabStripGeometry.revealPosition(100, 60, 0, NaN, margin), null)
     }
+
+    function test_keyboardTargetIndexWrapsTheArrowsAroundTheStrip() {
+        compare(TabStripGeometry.keyboardTargetIndex("next", 1, 4), 2)
+        compare(TabStripGeometry.keyboardTargetIndex("previous", 1, 4), 0)
+        compare(TabStripGeometry.keyboardTargetIndex("next", 3, 4), 0)
+        compare(TabStripGeometry.keyboardTargetIndex("previous", 0, 4), 3)
+    }
+
+    function test_keyboardTargetIndexJumpsToTheEnds() {
+        compare(TabStripGeometry.keyboardTargetIndex("first", 2, 4), 0)
+        compare(TabStripGeometry.keyboardTargetIndex("last", 1, 4), 3)
+        compare(TabStripGeometry.keyboardTargetIndex("first", 0, 4), 0)
+        compare(TabStripGeometry.keyboardTargetIndex("last", 3, 4), 3)
+    }
+
+    // A lone tab keeps focus on itself rather than refusing the key, so the
+    // key does not fall through to an unrelated handler.
+    function test_keyboardTargetIndexKeepsALoneTabFocused() {
+        for (var action of ["previous", "next", "first", "last"]) {
+            compare(TabStripGeometry.keyboardTargetIndex(action, 0, 1), 0, action)
+        }
+    }
+
+    function test_keyboardTargetIndexRefusesUnknownActionsAndPositions() {
+        compare(TabStripGeometry.keyboardTargetIndex("up", 1, 4), -1)
+        compare(TabStripGeometry.keyboardTargetIndex(undefined, 1, 4), -1)
+        compare(TabStripGeometry.keyboardTargetIndex("next", -1, 4), -1)
+        compare(TabStripGeometry.keyboardTargetIndex("next", 4, 4), -1)
+        compare(TabStripGeometry.keyboardTargetIndex("next", 1.5, 4), -1)
+        compare(TabStripGeometry.keyboardTargetIndex("next", 0, 0), -1)
+        compare(TabStripGeometry.keyboardTargetIndex("next", 0, 2.5), -1)
+        compare(TabStripGeometry.keyboardTargetIndex("next", "abc", 4), -1)
+        compare(TabStripGeometry.keyboardTargetIndex("next", 0, NaN), -1)
+    }
 }

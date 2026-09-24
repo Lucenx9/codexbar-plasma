@@ -1449,7 +1449,7 @@ for global_tab_id in ("spendTab", "sessionsTab"):
 for icon_only_fragment in (
     'visible: applet.showPopupTabLabels',
     'visible: !applet.showPopupTabLabels && overviewTabMouse.containsMouse',
-    'visible: !applet.showPopupTabLabels && providerTabMouse.containsMouse',
+    'visible: (!applet.showPopupTabLabels || providerTabLabel.truncated)',
 ):
     if not code_contains(provider_tabs_body, icon_only_fragment):
         raise AssertionError(
@@ -1518,7 +1518,11 @@ for scroll_fragment in (
     "WheelHandler {",
     "acceptedDevices: PointerDevice.Mouse",
     "function ensureVisible(item)",
-    "function focusAdjacentTab(item, forward)",
+    "function focusableTabs(item)",
+    "function navigateFromTab(item, key)",
+    "TabStripGeometry.keyboardTargetIndex(action, tabs.indexOf(item), tabs.length)",
+    "case Qt.Key_Home:",
+    "case Qt.Key_End:",
     "function scrollBy(delta, immediate)",
 ):
     if not code_contains(provider_tabs_flickable_body, scroll_fragment):
@@ -1549,10 +1553,36 @@ for inlined_tab_geometry in (
             f"found {inlined_tab_geometry!r}"
         )
 
-if main_text.count("providerTabsFlickable.focusAdjacentTab(") != 4:
-    raise AssertionError("both the overview tab and the provider tabs must move focus with arrow keys")
+# Arrow, Home and End keys reach the strip through one handler, so every tab
+# kind wraps and jumps the same way.
+for navigation_call in (
+    "providerTabsFlickable.navigateFromTab(overviewFocus, event.key)",
+    "providerTabsFlickable.navigateFromTab(providerFocus, event.key)",
+):
+    if not code_contains(main_text, navigation_call):
+        raise AssertionError(
+            "the overview tab and the provider tabs must navigate with arrow, Home and End keys; "
+            f"missing {navigation_call!r}"
+        )
 if not code_contains(main_text, "providerTabsFlickable.ensureVisible(overviewTab)"):
     raise AssertionError("focusing the overview tab must pull it back into view")
+# A provider tab shows its quota as an underline and a failure as dimming; both
+# must reach screen readers as text.
+if not code_contains(main_text, "Accessible.description: applet.switcherDescription(providerTab.modelData)"):
+    raise AssertionError("provider tabs must describe their quota and error state to assistive tools")
+for switcher_description_fragment in (
+    "function switcherDescription(item)",
+    "var row = switcherMetricRow(item)",
+    "parts.push(lastGoodUsageText(item))",
+    "parts.push(item.error)",
+):
+    if not code_contains(main_text, switcher_description_fragment):
+        raise AssertionError(
+            "the provider tab description must cover quota, stale usage, and errors; "
+            f"missing {switcher_description_fragment!r}"
+        )
+if not code_contains(overview_provider_row_text, "visible: overviewRow.textTruncated && overviewRowMouse.containsMouse"):
+    raise AssertionError("a truncated Overview row must reveal its full title and detail on hover")
 if not code_contains(main_text, "providerTabsFlickable.ensureVisible(providerTab)"):
     raise AssertionError("focusing a provider tab must pull it back into view")
 if not code_contains(provider_tabs_flickable_body, "function claimSelectedTab(item, isSelected)"):
@@ -1571,8 +1601,8 @@ if not code_contains(global_tab_text, "tab.tabStrip.claimSelectedTab(tab, tab.se
     raise AssertionError("global tabs must report selection to the strip")
 if not code_contains(global_tab_text, "onSelectedChanged: tab.claimSelectedTab()"):
     raise AssertionError("global tabs must report selection changes to the strip")
-if not code_contains(global_tab_text, "tab.tabStrip.focusAdjacentTab(tab"):
-    raise AssertionError("global tabs must take part in arrow-key tab navigation")
+if not code_contains(global_tab_text, "tab.tabStrip.navigateFromTab(tabFocus, event.key)"):
+    raise AssertionError("global tabs must take part in keyboard tab navigation")
 if not code_contains(global_tab_text, "tab.tabStrip.ensureVisible(tab)"):
     raise AssertionError("a focused global tab must be scrolled into view")
 
