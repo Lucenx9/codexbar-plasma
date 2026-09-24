@@ -334,6 +334,16 @@ KCM.SimpleKCM {
                     }
                 }
                 Accessible.name: i18n("Model")
+
+                // OpenRouter lists hundreds of models; without a cap the list
+                // covers the whole settings window. It scrolls past the cap,
+                // and typing still completes a model name.
+                Binding {
+                    target: modelCombo.popup
+                    when: modelCombo.popup !== null
+                    property: "height"
+                    value: Math.min(modelCombo.popup.implicitHeight, Kirigami.Units.gridUnit * 16)
+                }
             }
 
             Controls.Button {

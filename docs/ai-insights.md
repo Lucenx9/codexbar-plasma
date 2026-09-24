@@ -224,7 +224,8 @@ Failures map to bounded reasons: `missing_key`, `secret_unavailable`, `auth`
   `ai-insights-error`, `ai-insights-single`, `settings-ai-insights`, and
   `settings-ai-insights-narrow` run the real applet with a synthetic helper. The
   settings scenarios also check that a model is kept per provider while the
-  page is open and that the stored-key row stays within the form width. The
+  page is open, that the stored-key row stays within the form width, and that
+  a long model list opens as a height-capped, scrolling menu. The
   `normal` scenario asserts that the card stays hidden and idle by default.
 
 No test contacts a real AI service, wallet, or credential.

@@ -19,7 +19,9 @@ def main():
     if args.action == "key-status":
         result = {"status": "present" if scenario == "settings-ai-insights" else "absent"}
     elif args.action == "models":
-        result = {"status": "ok", "key": "none", "models": [{"id": "fixture-model"}, {"id": "llama3.2:3b"}]}
+        # Enough models to exercise the bounded model list.
+        result = {"status": "ok", "key": "none", "models": [{"id": "fixture-model"}, {"id": "llama3.2:3b"}]
+                  + [{"id": "vendor/model-%03d" % index} for index in range(60)]}
     elif args.action != "generate":
         result = {"status": "error", "reason": "invalid_input"}
     elif scenario == "ai-insights-error":

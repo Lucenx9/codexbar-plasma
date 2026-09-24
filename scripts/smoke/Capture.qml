@@ -1397,6 +1397,21 @@ Item {
                 var keyRow = findItem(insightsPage, "aiInsightsKeyRow");
                 verifyScenario(keyRow !== null && keyRow.width <= Kirigami.Units.gridUnit * 24 + 1,
                     "the API key row must stay within the form width so the form does not shift");
+                if (scenario !== "settings-ai-insights")
+                    return true;
+                // A long model list must open as a bounded, scrolling menu.
+                var modelCombo = findItem(insightsPage, "aiInsightsModelCombo");
+                if (insightsPage.availableModels.length === 0) {
+                    insightsPage.run("models");
+                    return false;
+                }
+                if (!modelCombo.popup.opened) {
+                    modelCombo.popup.open();
+                    return false;
+                }
+                verifyScenario(insightsPage.availableModels.length > 16
+                    && modelCombo.popup.height <= Kirigami.Units.gridUnit * 16 + 1,
+                    "the model list must not grow past its height cap");
                 return true;
             }
             if (scenario.indexOf("settings-panel") === 0 && !navigationVerified) {
