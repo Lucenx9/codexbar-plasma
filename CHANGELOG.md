@@ -120,6 +120,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Label a full-form IPv6 loopback Ollama endpoint such as
+  `http://[0:0:0:0:0:0:0:1]:11434` as on this computer. The settings page only
+  recognized `[::1]`, so equivalent spellings of the loopback address showed
+  the remote-address warning even though the helper accepts them as local.
 - Keep a provider's healthy cost data when its cost record carries a falsy
   `error` flag such as `false`, `0`, or an empty message. Only a real error
   now marks the provider failed and drops its totals from the snapshot.
