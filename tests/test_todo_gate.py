@@ -1,12 +1,20 @@
 """The TODO gate must send TODO.md, flag truncation, and reject malformed answers."""
 
+import http.server
+import json
 from pathlib import Path
+import subprocess
 import sys
+import threading
 import unittest
+import urllib.error
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from todo_gate import (DIFF_LIMIT, TODO_LIMIT, build_request, probability,
-                       threshold_argument, usage_line, verdict)
+import todo_gate
+from todo_gate import (DIFF_LIMIT, TODO_LIMIT, ask, build_request, main,
+                       probability, read_change, threshold_argument,
+                       usage_line, verdict)
 
 
 def answered(probability):
@@ -87,6 +95,101 @@ class UsageLineTests(unittest.TestCase):
                       {"input_tokens": "many", "cost": [1]}):
             with self.subTest(usage=usage):
                 self.assertIn("input tokens", usage_line(usage))
+
+
+class GateHandler(http.server.BaseHTTPRequestHandler):
+    mode = "ok"
+    evil_hits = 0
+    evil_authorization = None
+
+    def log_message(self, *args):
+        pass
+
+    def _send_json(self, code, payload, location=None):
+        raw = json.dumps(payload).encode()
+        self.send_response(code)
+        if location is not None:
+            self.send_header("Location", location)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(raw)))
+        self.end_headers()
+        self.wfile.write(raw)
+
+    def do_POST(self):
+        length = int(self.headers.get("Content-Length") or 0)
+        if length:
+            self.rfile.read(length)
+        if GateHandler.mode == "redirect":
+            self._send_json(302, {}, location="/evil")
+        elif GateHandler.mode == "big":
+            self._send_json(200, {"answers": {"todo": {"noul": 0.1}},
+                                  "pad": "x" * 70000})
+        else:
+            self._send_json(200, {"answers": {"todo": {"noul": 0.1}},
+                                  "usage": {}})
+
+    def do_GET(self):
+        if self.path == "/evil":
+            GateHandler.evil_hits += 1
+            GateHandler.evil_authorization = self.headers.get("Authorization")
+        self._send_json(200, {"answers": {"todo": {"noul": 0.99}},
+                              "usage": {}})
+
+
+class AskTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.server = http.server.ThreadingHTTPServer(("127.0.0.1", 0),
+                                                     GateHandler)
+        cls.thread = threading.Thread(target=cls.server.serve_forever,
+                                      daemon=True)
+        cls.thread.start()
+        cls.url = f"http://127.0.0.1:{cls.server.server_address[1]}"
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+
+    def setUp(self):
+        GateHandler.mode = "ok"
+        GateHandler.evil_hits = 0
+        GateHandler.evil_authorization = None
+        endpoint = patch.object(todo_gate, "ENDPOINT", self.url)
+        endpoint.start()
+        self.addCleanup(endpoint.stop)
+
+    def test_small_valid_response_is_accepted(self):
+        answers, usage = ask({"model": "m"}, "key")
+        self.assertEqual(answers, {"todo": {"noul": 0.1}})
+        self.assertEqual(usage, {})
+
+    def test_redirect_is_refused_without_sending_the_key(self):
+        GateHandler.mode = "redirect"
+        with self.assertRaises(urllib.error.HTTPError):
+            ask({"model": "m"}, "key")
+        self.assertEqual(GateHandler.evil_hits, 0)
+        self.assertIsNone(GateHandler.evil_authorization)
+
+    def test_oversized_response_is_rejected(self):
+        GateHandler.mode = "big"
+        with self.assertRaises(ValueError):
+            ask({"model": "m"}, "key")
+
+
+class ReadChangeTests(unittest.TestCase):
+    def test_git_calls_carry_a_timeout(self):
+        with patch("subprocess.check_output", return_value="") as git:
+            read_change("main")
+        self.assertTrue(git.called)
+        for call in git.call_args_list:
+            self.assertEqual(call.kwargs.get("timeout"), 120)
+
+    def test_git_timeout_skips_the_gate(self):
+        with patch.object(todo_gate, "read_change",
+                          side_effect=subprocess.TimeoutExpired("git", 120)), \
+                patch.dict("os.environ", {"OPENROUTER_API_KEY": "key"}):
+            self.assertEqual(main(["--base", "main"]), 0)
 
 
 if __name__ == "__main__":

@@ -14,6 +14,9 @@ ROOT = Path(__file__).resolve().parents[1]
 ENDPOINT = "https://openrouter.ai/api/alpha/decisions"
 MODEL = "~typesafe/jev-latest"
 API_KEY_ENV = "OPENROUTER_API_KEY"
+# The verdict is one float plus usage; anything larger is not an answer.
+MAX_RESPONSE_BYTES = 65536
+GIT_TIMEOUT = 120
 # Jev accepts 32k tokens. Cap both inputs well below that and mark truncation,
 # so a dropped hunk or entry is never read as absent.
 DIFF_LIMIT = 60000
@@ -89,7 +92,8 @@ def read_change(base, root=ROOT):
     """Return the committed paths, diff, and TODO.md for this branch."""
     def git(*args):
         return subprocess.check_output(["git", *args], cwd=root, text=True,
-                                       stderr=subprocess.DEVNULL)
+                                       stderr=subprocess.DEVNULL,
+                                       timeout=GIT_TIMEOUT)
 
     paths = [path for path in git("diff", "--merge-base", base, "HEAD",
                                   "--name-only").splitlines() if path]
@@ -102,14 +106,25 @@ def read_change(base, root=ROOT):
     return paths, git("diff", "--merge-base", base, "HEAD"), todo
 
 
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    """A redirect could carry the Authorization header to another host."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
 def ask(request, key):
     """Post the Decisions request and return its answers and usage."""
     call = urllib.request.Request(
         ENDPOINT, data=json.dumps(request).encode(),
         headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
     )
-    with urllib.request.urlopen(call, timeout=120) as response:
-        payload = json.load(response)
+    opener = urllib.request.build_opener(NoRedirect)
+    with opener.open(call, timeout=120) as response:
+        raw = response.read(MAX_RESPONSE_BYTES + 1)
+    if len(raw) > MAX_RESPONSE_BYTES:
+        raise ValueError("the Decisions response exceeded the supported size")
+    payload = json.loads(raw)
     if not isinstance(payload, dict) or not isinstance(payload.get("answers"), dict):
         raise ValueError("the Decisions response carried no answers")
     usage = payload.get("usage")
@@ -141,7 +156,7 @@ def main(argv=None):
         return 0
     try:
         paths, diff, todo = read_change(options.base)
-    except (OSError, subprocess.CalledProcessError):
+    except (OSError, subprocess.SubprocessError):
         print(f"cannot diff against {options.base}; skipping the TODO gate")
         return 0
     if not paths:
