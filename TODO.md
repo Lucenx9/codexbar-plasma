@@ -8,10 +8,15 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.65.0](https://github.com/steipete/CodexBar/releases/tag/v0.65.0),
-  commit `20a70d955d4744c795fefd720ff617da9d18480c`, checked 2026-09-23.
-- Coverage: release changes from 0.64.1 through 0.65.0 against Plasma
-  `392eff5`. The
+- Last release reviewed: [CodexBar 0.66.0](https://github.com/steipete/CodexBar/releases/tag/v0.66.0),
+  commit `e665cbf64976839dc947e70a942ba8226388d4c9`, checked 2026-09-25.
+- Coverage: release changes from 0.65.0 through 0.66.0 against Plasma
+  `26a877f`. The
+  [0.66.0 review](docs/research/2026-09-25-macos-parity-0.66.0.md) verifies the
+  DevPass, Atlas Cloud, Vercel AI Gateway, and llmman registry additions and
+  their API-key setup, llmman usage through a loopback daemon fixture, and that
+  CLI config writes now keep user plugin entries; the descriptor, config-action,
+  and Cursor cost blockers are unchanged. The
   [0.65.0 review](docs/research/2026-09-23-macos-parity-0.65.0.md) verifies the
   Bifrost, Charm Hyper, and GitKraken AI registry additions and which of them
   Linux can reach. It uses a loopback Bifrost fixture to verify detail-row
@@ -56,6 +61,19 @@ Issues linked below preserve discussion; this file owns parity status.
   and unknown amounts distinct, and stays legible in the narrow popup.
   Evidence: [0.60.5 review](docs/research/2026-09-18-macos-parity-0.60.5.md#linux-cli-contract-changes-since-0604).
 
+### CLI lane labels as fallback
+
+- [ ] Title a usage lane from the CLI's `rateWindowLabels` when the widget's
+  localized table has no entry for that provider. Unlisted providers get
+  the generic `Session`, `Weekly`, or `Opus`, which is wrong for balance,
+  memory, or plan-credit lanes; llmman's memory lane reached the popup as
+  `Session` until this review added a table entry. The field is present in
+  official Linux output since at least 0.65.0 (`{"primary": "Memory"}` for
+  llmman at 0.66.0). Done when a bounded, validated CLI label replaces only the
+  generic fallback, localized table entries still win, and an absent or
+  malformed label keeps today's behavior.
+  Evidence: [0.66.0 review](docs/research/2026-09-25-macos-parity-0.66.0.md#linux-cli-contract-changes-since-0650).
+
 ### Popup usage row visibility
 
 - [ ] Hide and restore individual popup usage rows per provider, mirroring the
@@ -77,8 +95,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider settings
 
 - [ ] Enable generic settings and token-account editing through official
-  descriptors and writes. Linux 0.65.0 still rejects `config providers
-  --descriptors` (80 records, same four keys); its provider records have no
+  descriptors and writes. Linux 0.66.0 still rejects `config providers
+  --descriptors` (84 records, same four keys); its provider records have no
   descriptor. Helmcode and TypeSafe make this concrete: both are cookie-only,
   both refuse `--source api`, and their documented `cookieSource`/`cookieHeader`
   config path has no supported writer, so they stay metadata-only on Linux.
@@ -87,8 +105,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   while Plasma's source mode is global. Bifrost needs a gateway base URL
   (`enterpriseHost`) with no CLI writer; the CLI reads `BIFROST_BASE_URL` from
   the environment instead. The optional GitKraken organization ID has no writer
-  either. `--label` and `--workspace-id` remain z.ai-only, so the new labeled
-  Kimi, Doubao, and OpenCode Go accounts cannot be created from Linux.
+  either, and neither has llmman's non-default base URL (`LLMMAN_HOST`, 0.66.0).
+  `--label` and `--workspace-id` remain z.ai-only, so the new labeled Kimi, Doubao, and OpenCode Go accounts cannot be created from Linux.
   0.61.0 adds an `azureOpenAIAPIVersion` config extension value with no
   supported CLI writer, which the frontend must not reach by editing the config
   file. Keep existing enable/disable, supported single-key setup, and link
@@ -103,7 +121,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.65.0 still has no
+  flow, CLI-auth setup, and token-account actions. Linux 0.66.0 still has no
   generic `config action` command (`set-api-key` remains the sole writer; the
   `usage_updated` hook event is CLI automation surface, not a setup
   action). Done when supported actions expose validated
@@ -138,7 +156,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Cursor cost
 
 - [ ] Show Cursor cost history through the generic Linux `cost` path. Linux
-  0.65.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
+  0.66.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
   Code, and Pi as supported;
   the descriptor gate keeps the new cookie-source availability errors unreachable.
   Done when a released Linux command emits supported cost data and Plasma tests
@@ -207,7 +225,9 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   cover Codex workspace balances only; Copilot seat-credit data travels in
   `details` rows with stable IDs instead. Both await authenticated Linux output.
   The 0.65.0 Charm Hyper guide describes a balance-only `details` row with a
-  bare `usageValue` and an HC display string, which is not a typed unit.
+  bare `usageValue` and an HC display string, which is not a typed unit. The
+  0.66.0 Atlas Cloud and Vercel AI Gateway plugins likewise report USD balances
+  only as `details` row text.
   Done when the widget can display
   that record without parsing provider text,
   overriding a real quota, or treating a balance as an allowance.

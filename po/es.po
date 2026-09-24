@@ -732,6 +732,10 @@ msgid "Antigravity"
 msgstr "Antigravity"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Atlas Cloud"
+msgstr "Atlas Cloud"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Augment"
 msgstr "Augment"
 
@@ -812,6 +816,10 @@ msgid "Devin"
 msgstr "Devin"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "DevPass"
+msgstr "DevPass"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Doubao"
 msgstr "Doubao"
 
@@ -882,6 +890,10 @@ msgstr "Kiro"
 #: contents/ui/components/ProviderNames.qml
 msgid "LiteLLM"
 msgstr "LiteLLM"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "llmman"
+msgstr "llmman"
 
 #: contents/ui/components/ProviderNames.qml
 msgid "LLM Proxy"
@@ -1004,6 +1016,10 @@ msgid "Venice"
 msgstr "Venice"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Vercel AI Gateway"
+msgstr "Vercel AI Gateway"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Vertex AI"
 msgstr "Vertex AI"
 
@@ -1071,6 +1087,10 @@ msgstr "Premium"
 msgid "Total"
 msgstr "Total"
 
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Plan credits"
+msgstr "Créditos del plan"
+
 #: contents/ui/components/RateWindowLabels.qml contents/ui/configPanel.qml
 msgid "Standard"
 msgstr "Estándar"
@@ -1086,6 +1106,10 @@ msgstr "Pro"
 #: contents/ui/components/RateWindowLabels.qml
 msgid "Weekly"
 msgstr "Semanal"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Memory"
+msgstr "Memoria"
 
 #: contents/ui/components/RateWindowLabels.qml
 msgid "Prompts"
@@ -1130,6 +1154,10 @@ msgstr "Chat"
 #: contents/ui/components/RateWindowLabels.qml
 msgid "Auto"
 msgstr "Auto"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Premium weekly"
+msgstr "Premium semanal"
 
 #: contents/ui/components/RateWindowLabels.qml
 msgid "Rate limit"
@@ -1264,12 +1292,12 @@ msgstr[0] "%1 modelo más no mostrado"
 msgstr[1] "%1 modelos más no mostrados"
 
 #: contents/ui/components/ShareUsageWindow.qml
-msgid "Image copied"
-msgstr "Imagen copiada"
-
-#: contents/ui/components/ShareUsageWindow.qml
 msgid "Could not create the image. Try again."
 msgstr "No se pudo crear la imagen. Inténtelo de nuevo."
+
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Image copied"
+msgstr "Imagen copiada"
 
 #: contents/ui/components/ShareUsageWindow.qml
 msgid "Choose a local PNG file."

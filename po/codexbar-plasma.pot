@@ -683,6 +683,10 @@ msgid "Antigravity"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Atlas Cloud"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Augment"
 msgstr ""
 
@@ -763,6 +767,10 @@ msgid "Devin"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
+msgid "DevPass"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Doubao"
 msgstr ""
 
@@ -832,6 +840,10 @@ msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
 msgid "LiteLLM"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
+msgid "llmman"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
@@ -955,6 +967,10 @@ msgid "Venice"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Vercel AI Gateway"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Vertex AI"
 msgstr ""
 
@@ -1022,6 +1038,10 @@ msgstr ""
 msgid "Total"
 msgstr ""
 
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Plan credits"
+msgstr ""
+
 #: contents/ui/components/RateWindowLabels.qml contents/ui/configPanel.qml
 msgid "Standard"
 msgstr ""
@@ -1036,6 +1056,10 @@ msgstr ""
 
 #: contents/ui/components/RateWindowLabels.qml
 msgid "Weekly"
+msgstr ""
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Memory"
 msgstr ""
 
 #: contents/ui/components/RateWindowLabels.qml
@@ -1080,6 +1104,10 @@ msgstr ""
 
 #: contents/ui/components/RateWindowLabels.qml
 msgid "Auto"
+msgstr ""
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Premium weekly"
 msgstr ""
 
 #: contents/ui/components/RateWindowLabels.qml

@@ -246,6 +246,9 @@ Provider-specific editable settings depend on the official CLI contract.
   immediately; Apply and Cancel cover widget settings only.
   A CLI error with an empty or malformed message shows a generic failure
   instead of confirming that the change was saved.
+  Before CLI 0.66.0, every enable, disable, or key write drops user provider
+  plugin entries, including their stored secrets (verified with 0.65.0).
+  Update the CLI before changing providers if you use user plugins.
 - API key and secret prompts stay open while you type. A prompt left open for
   about 15 minutes closes by itself, the provider's actions unlock again, and
   the prompt can be reopened. Submitting near that limit still allows the full
@@ -264,8 +267,8 @@ Provider-specific editable settings depend on the official CLI contract.
   unavailable. They require upstream CLI support.
 - Generic API key setup for Fireworks, when the selected CLI reports version
   0.54.0 or later and can discover the account slug from the key.
-- Fallback names, icons, and documentation links for all 80 providers in the
-  official CodexBar 0.65.0 registry, plus colors, links, and aliases where
+- Fallback names, icons, and documentation links for all 84 providers in the
+  official CodexBar 0.66.0 registry, plus colors, links, and aliases where
   upstream defines them; fork-only provider assets, and those for providers a
   later CLI retired, remain available for compatibility.
 

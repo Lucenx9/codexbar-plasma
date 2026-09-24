@@ -175,6 +175,33 @@ TestCase {
         compare(ProviderIdentity.providerIconFileName("gk"), "gitkraken.svg");
     }
 
+    function test_official0660RegistryProvidersHaveBundledMetadata() {
+        // Official 0.66.0 additions in `config providers` output. Vercel's
+        // upstream color is white, which would vanish on a light theme, so it
+        // keeps the theme highlight. llmman's dashboard is its local daemon.
+        var added = {
+            "atlascloud": { dashboard: "https://www.atlascloud.ai/console",
+                channels: [89 / 255, 117 / 255, 245 / 255] },
+            "devpass": { dashboard: "https://devpass.llmgateway.io/dashboard",
+                channels: [37 / 255, 99 / 255, 235 / 255] },
+            "llmman": { dashboard: "http://127.0.0.1:17434",
+                channels: [108 / 255, 197 / 255, 176 / 255] },
+            "vercel": { dashboard: "https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai-gateway",
+                channels: [] }
+        };
+        for (var key in added) {
+            compare(ProviderIdentity.providerIconFileName(key), key + ".svg");
+            compare(ProviderIdentity.providerDocsUrl(key),
+                ProviderIdentity.documentationBaseUrl + key + ".md");
+            compare(ProviderIdentity.providerDashboardUrl(key), added[key].dashboard);
+            compare(ProviderIdentity.providerBrandColorChannels(key), added[key].channels);
+            compare(ProviderIdentity.providerStatusUrl(key), "");
+            compare(ProviderIdentity.providerLoginUrl(key), "");
+            compare(ProviderIdentity.resolveProviderKey(key), key);
+            compare(ProviderIdentity.providerCliArgument(key), key);
+        }
+    }
+
     function test_retiredCrofKeepsBundledMetadataForOlderCliReleases() {
         // 0.64.1 retired Crof, but an installed 0.63.0 still emits it. Dropping
         // the metadata would turn a named provider into the unknown fallback

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Original globe-and-cloud glyph for Atlas Cloud; no vendor mark. -->
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+  <path d="M7 18.5h10.5a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.6 10 4.25 4.25 0 0 0 7 18.5z"/>
+  <path d="M12 6v12.5"/>
+  <path d="M6.6 12.5h12"/>
+</svg>

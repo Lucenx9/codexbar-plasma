@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Original gateway-arch glyph for Vercel AI Gateway; no vendor mark. -->
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+  <path d="M4 21V10a8 8 0 0 1 16 0v11"/>
+  <path d="M8.5 21v-9a3.5 3.5 0 0 1 7 0v9"/>
+  <path d="M2.5 21h19"/>
+</svg>
