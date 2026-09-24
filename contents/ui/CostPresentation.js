@@ -529,9 +529,6 @@ function perMillionAmount(tokenCost) {
     }
 }
 
-// A cached cost snapshot belongs to the selected range only when the CLI
-// answered for the same window; a stale snapshot must not be summed into a
-// range the user has since changed.
 // The CLI's "today" is the total of the day it scanned. A snapshot scanned on
 // an earlier local date, such as one taken before midnight or retained after a
 // failed refresh, holds that day's spend, so today reads as unknown until a
@@ -555,6 +552,9 @@ function todayAmounts(tokenCost, nowMs) {
     }
 }
 
+// A cached cost snapshot belongs to the selected range only when the CLI
+// answered for the same window; a stale snapshot must not be summed into a
+// range the user has since changed.
 function snapshotMatchesRange(tokenCost, historyDays) {
     if (!tokenCost) {
         return false
