@@ -192,6 +192,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   command unchanged. A command reaped by the bound reports the same timeout
   message as the page timeout instead of an exit-code line or the shell's
   own signal notice.
+- Omit the AI Insights spend or token comparison when its weekly totals
+  overflow, instead of sending `null` amounts in the request snapshot. Finite
+  daily values can still sum past the largest double, which serialized as
+  `null` and broke the documented finite-amount contract.
 - Report an AI Insights **Test connection** stopped by its time bound as a
   timeout instead of an unexpected-format error. A listing killed by the
   shell bound arrives with an empty reply and exit code 124 or 137, which the
