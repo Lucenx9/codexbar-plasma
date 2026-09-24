@@ -1,6 +1,6 @@
 # Linux parity review at CodexBar 0.66.0
 
-Checked 2026-09-25 against Plasma commit
+Checked 2026-09-24 against Plasma commit
 [`26a877f`](https://github.com/Lucenx9/codexbar-plasma/commit/26a877f).
 The macOS reference is official
 [`v0.66.0`](https://github.com/steipete/CodexBar/releases/tag/v0.66.0),
@@ -17,7 +17,7 @@ work belongs in [TODO.md](../../TODO.md).
 
 | Release | Published | Commit | Linux-relevant observations |
 | --- | --- | --- | --- |
-| [0.66.0](https://github.com/steipete/CodexBar/releases/tag/v0.66.0) | 2026-09-24 | `e665cbf64976839dc947e70a942ba8226388d4c9` | Registry adds `devpass`, `atlascloud` (Atlas Cloud), `vercel` (Vercel AI Gateway), and `llmman` for 84 records; CLI config writes keep user provider plugin entries and secrets (#3944); ten more providers run as bundled plugins; Alibaba/Qwen monthly windows (#3903) and Command Code monthly sizing (#3939). |
+| [0.66.0](https://github.com/steipete/CodexBar/releases/tag/v0.66.0) | 2026-09-24 | `e665cbf64976839dc947e70a942ba8226388d4c9` | Registry adds `devpass`, `atlascloud` (Atlas Cloud), `vercel` (Vercel AI Gateway), and `llmman` for 84 records; the tested `config disable` command keeps user provider plugin entries and secrets (#3944); ten more providers run as bundled plugins; Alibaba/Qwen monthly windows (#3903) and Command Code monthly sizing (#3939). |
 
 ## Linux CLI contract changes since 0.65.0
 
@@ -71,14 +71,14 @@ work belongs in [TODO.md](../../TODO.md).
   `Weekly`, and `Opus` for providers it does not list. That makes an English
   CLI label a better fallback than a wrong generic one; see TODO.
 
-- **User plugin entries survive CLI config writes (verified in emitted
+- **User plugin entries survive `config disable` (verified in emitted
   output).** A synthetic `{"id": "synthplug", "pluginSecrets": {...}}` entry
   added to a temporary config was removed by `config disable --provider grok`
-  on 0.65.0 and kept on 0.66.0. Plasma issues `config enable`, `config
-  disable`, and `config set-api-key`, so on 0.65.0 each toggle silently deleted
-  any user plugin configuration. The widget needs no change; the usage guide
-  now tells users of user plugins to update the CLI first. `config providers`
-  still lists built-in providers only.
+  on 0.65.0 and kept on 0.66.0. Only `config disable` was tested for plugin
+  preservation; this check does not establish the behavior of `config enable`
+  or `config set-api-key`. The widget needs no change; the usage guide now tells
+  users of user plugins to update the CLI before disabling a provider.
+  `config providers` still lists built-in providers only.
 
 - **Cost and sessions schemas are unchanged (verified in emitted output).** The
   key set of `cost --provider codex --days 45` is identical between the 0.65.0

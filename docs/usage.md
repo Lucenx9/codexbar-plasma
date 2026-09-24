@@ -246,9 +246,9 @@ Provider-specific editable settings depend on the official CLI contract.
   immediately; Apply and Cancel cover widget settings only.
   A CLI error with an empty or malformed message shows a generic failure
   instead of confirming that the change was saved.
-  Before CLI 0.66.0, every enable, disable, or key write drops user provider
-  plugin entries, including their stored secrets (verified with 0.65.0).
-  Update the CLI before changing providers if you use user plugins.
+  CLI 0.65.0 drops user provider plugin entries and their stored secrets when
+  `config disable` runs. Update to CLI 0.66.0 before disabling a provider if
+  you use user plugins.
 - API key and secret prompts stay open while you type. A prompt left open for
   about 15 minutes closes by itself, the provider's actions unlock again, and
   the prompt can be reopened. Submitting near that limit still allows the full

@@ -9,14 +9,14 @@ Issues linked below preserve discussion; this file owns parity status.
 ## Review baseline
 
 - Last release reviewed: [CodexBar 0.66.0](https://github.com/steipete/CodexBar/releases/tag/v0.66.0),
-  commit `e665cbf64976839dc947e70a942ba8226388d4c9`, checked 2026-09-25.
+  commit `e665cbf64976839dc947e70a942ba8226388d4c9`, checked 2026-09-24.
 - Coverage: release changes from 0.65.0 through 0.66.0 against Plasma
   `26a877f`. The
-  [0.66.0 review](docs/research/2026-09-25-macos-parity-0.66.0.md) verifies the
+  [0.66.0 review](docs/research/2026-09-24-macos-parity-0.66.0.md) verifies the
   DevPass, Atlas Cloud, Vercel AI Gateway, and llmman registry additions and
   their API-key setup, llmman usage through a loopback daemon fixture, and that
-  CLI config writes now keep user plugin entries; the descriptor, config-action,
-  and Cursor cost blockers are unchanged. The
+  `config disable` keeps user plugin entries on 0.66.0; the descriptor,
+  config-action, and Cursor cost blockers are unchanged. The
   [0.65.0 review](docs/research/2026-09-23-macos-parity-0.65.0.md) verifies the
   Bifrost, Charm Hyper, and GitKraken AI registry additions and which of them
   Linux can reach. It uses a loopback Bifrost fixture to verify detail-row
@@ -72,7 +72,7 @@ Issues linked below preserve discussion; this file owns parity status.
   llmman at 0.66.0). Done when a bounded, validated CLI label replaces only the
   generic fallback, localized table entries still win, and an absent or
   malformed label keeps today's behavior.
-  Evidence: [0.66.0 review](docs/research/2026-09-25-macos-parity-0.66.0.md#linux-cli-contract-changes-since-0650).
+  Evidence: [0.66.0 review](docs/research/2026-09-24-macos-parity-0.66.0.md#linux-cli-contract-changes-since-0650).
 
 ### Popup usage row visibility
 
