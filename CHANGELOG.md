@@ -211,6 +211,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Re-enable the AI Insights settings **Clear** button when a new insight is
   saved after a clear while the page stays open. The button stayed disabled
   until the settings dialog was reopened.
+- Clear the AI Insights model list when the Ollama address is edited. A
+  finished **Test connection** left the previous server's models selectable,
+  so the untested address could present a model it never listed as working.
 
 ## 0.2.40 - 2026-09-20
 
