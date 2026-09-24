@@ -110,6 +110,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Report a fresh setup as current when another setup run installed the
+  release first. The post-lock recheck compared against the synthetic
+  `0.0.0` version instead of the installed widget, so the second run
+  reinstalled redundantly.
 - Count down the popup's "Runs out in" pace forecast like the panel run-out
   text. It kept the duration received with the last usage refresh, so with no
   periodic refresh or a long interval it still promised hours of quota after
