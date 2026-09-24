@@ -107,9 +107,11 @@ TestCase {
         accept(helperSource.connected[0], {stdout: listed})
         verify(actionText.length > 0)
         compare(availableModels, ["qwen3:4b"])
+        compare(modelCombo.editText, "qwen3:4b")
         cfg_aiInsightsOllamaEndpoint = "http://127.0.0.1:11434"
         compare(actionText, "")
         compare(availableModels, [])
+        compare(modelCombo.editText, "qwen3:4b")
     }
 }
 '''
