@@ -544,7 +544,10 @@ shows no card. The [AI Insights reference](ai-insights.md) documents the data
 and request contracts.
 
 Enable it in **AI Insights** settings, choose a provider and a model, and use
-**Test connection** to check the service and list available models. The card
+**Test connection** to check the service and list available models. It sends
+no generation request, so it also says whether the chosen model is in that list
+rather than claiming it will answer; OpenRouter's Zero Data Retention routing is
+checked only when an insight is generated. The card
 appears at the end of **Overview**. Without an Overview tab (one provider, or a
 fixed provider in Diagnostics), it appears in the provider view instead. The
 card's generate button creates or refreshes the insight; the Overview refresh
@@ -589,9 +592,10 @@ never starts a cost scan.
 
 **Generate** defaults to **Only on request**. **Every 6 hours**, **Every 12
 hours**, and **Daily** generate in the background at most once per interval,
-counted from the last successful insight. Usage refreshes, opening the popup,
-and language changes never make a request due by themselves, and a plasmashell
-restart waits at least 30 minutes after the last attempt. The last insight is saved with its
+counted from the last attempt, including a failed one, and from the last
+successful insight. Usage refreshes, opening the popup, and language changes
+never make a request due by themselves, and a plasmashell restart keeps both
+the interval and a provider's rate limit. The last insight is saved with its
 time, provider, model, and language, and **Clear saved insight** removes it.
 An insight older than the interval (a day in manual mode), or followed by a
 failed attempt, is labeled out of date.
@@ -599,11 +603,10 @@ failed attempt, is labeled out of date.
 When a provider is unavailable, the card keeps usage data untouched and shows a
 short reason, such as Ollama not running, a rejected key, missing credits, a
 rate limit, an unsupported model, or an unreadable answer. Automatic generation
-then waits: until the provider's retry time for a rate limit, until the next
-interval (a day in manual mode) for key, credit, and model problems, and 30
-minutes otherwise. Malformed answers wait for the next scheduled generation
-instead of an early retry. The
-generate button can retry at once, except during a provider's rate limit. Turn **Enable AI Insights**
+then waits for the next interval, because a failed or timed-out request may
+still have been billed, and at least until the provider's retry time for a rate
+limit. The generate button can retry at once, except during a provider's rate
+limit, which it then reports. Turn **Enable AI Insights**
 off to stop all AI activity; the saved insight stays hidden until you enable it
 again or clear it.
 

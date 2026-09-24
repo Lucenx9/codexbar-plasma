@@ -134,10 +134,11 @@ synchronized.
   Insights generation process: one request at a time, per-request nonce, the
   95-second deadline, retry delays, interval scheduling, and retirement on a
   context change, disable, or destruction. It runs nothing while disabled and
-  emits `attemptStarted`/`generated`; `main.qml` persists the attempt time and
-  cached insight and builds the snapshot only while enabled. `AiInsights.js`
-  owns the language tag, context key, cache validation, schedule, retry
-  delays, helper command, and reply validation; `AiInsightsSnapshot.js` builds
+  emits `attemptStarted`/`generated`/`rateLimitStored`; `main.qml` persists the
+  attempt time, rate-limit deadline, and cached insight and builds the snapshot
+  only while enabled. `AiInsights.js` owns the language tag, context key, cache
+  validation, schedule, retry delays, rate-limit record, model-list match,
+  helper command, and reply validation; `AiInsightsSnapshot.js` builds
   the allowlisted snapshot and deterministic signals. `scripts/ai-insights.py`
   calls `scripts/lib/ai_insights.py`, which alone reads Secret Service keys,
   prompts for them with `kdialog`, and performs the HTTPS or local Ollama

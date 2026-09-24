@@ -161,8 +161,19 @@ KCM.SimpleKCM {
             // A new model list resets the combo; keep the typed or saved model.
             modelCombo.currentIndex = modelCombo.find(model)
             modelCombo.editText = model
-            report(i18np("Connection works. %1 model available.", "Connection works. %1 models available.",
-                result.models.length), false)
+            // The list proves access, not that a generation will succeed, so
+            // never report an unlisted model as working.
+            if (model.length === 0) {
+                report(i18np("Connection works. %1 model available.", "Connection works. %1 models available.",
+                    result.models.length), false)
+            } else if (!AiInsights.modelListed(provider, model, result.models)) {
+                report(i18n("Connection works, but %1 is not in the list of models usable for AI Insights. Choose a listed model.", model), true)
+            } else {
+                var listed = i18n("Connection works, and %1 is in the list of models usable for AI Insights.", model)
+                report(provider === "openrouter" && cfg_aiInsightsOpenRouterZdr
+                    ? listed + " " + i18n("Zero Data Retention routing is checked only when an insight is generated.")
+                    : listed, false)
+            }
         }
     }
 

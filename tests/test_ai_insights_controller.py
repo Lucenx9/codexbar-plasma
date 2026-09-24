@@ -26,6 +26,8 @@ if model == "auth-model":
     print(json.dumps({"status": "error", "reason": "auth"}))
 elif model == "rate-model":
     print(json.dumps({"status": "error", "reason": "rate_limited", "retryAfter": 600}))
+elif model == "net-model":
+    print(json.dumps({"status": "error", "reason": "network"}))
 elif model == "garbage-model":
     print("{not json")
 else:
@@ -81,6 +83,7 @@ TestCase {
         verify(subject !== null);
         subject.attemptStarted.connect(function(timestamp) { subject.lastAttempt = timestamp; });
         subject.generated.connect(function(text) { subject.cacheText = text; });
+        subject.rateLimitStored.connect(function(text) { subject.rateLimit = text; });
         return subject;
     }
     function argument(call, name) {
@@ -186,7 +189,52 @@ TestCase {
         wait(200);
         compare(calls().length, data.manualRetry ? 2 : 1);
     }
-    function test_8_destructionDuringGeneration() {
+    function test_8_failedAttemptsWaitTheWholeIntervalAcrossRestarts_data() {
+        return [{tag: "network", model: "net-model", reason: "network"},
+                {tag: "malformed", model: "garbage-model", reason: "format"}];
+    }
+    function test_8_failedAttemptsWaitTheWholeIntervalAcrossRestarts(data) {
+        var first = create({model: data.model, intervalHours: 6});
+        tryCompare(first, "errorReason", data.reason, 10000);
+        compare(calls().length, 1);
+        verify(first.retryAtMs >= Date.now() + 6 * 3600000 - 60000, "automatic retry waits the interval");
+        var attempt = first.lastAttempt;
+        first.destroy();
+        // A restart 31 minutes later still counts the failed, possibly billed attempt.
+        var restarted = create({model: data.model, intervalHours: 6,
+            lastAttempt: new Date(Date.parse(attempt) - 31 * 60000).toISOString()});
+        wait(400);
+        compare(calls().length, 1);
+        restarted.destroy();
+        var later = create({model: data.model, intervalHours: 6,
+            lastAttempt: new Date(Date.parse(attempt) - 6 * 3600000).toISOString()});
+        tryCompare(later, "errorReason", data.reason, 10000);
+        compare(calls().length, 2, "the next interval generates again");
+    }
+    function test_11_rateLimitSurvivesRestarts() {
+        var first = create({model: "rate-model"});
+        verify(first.generate());
+        tryCompare(first, "errorReason", "rate_limited", 10000);
+        var stored = first.rateLimit;
+        verify(stored.length > 0, "the Retry-After deadline is persisted");
+        first.destroy();
+        var restarted = create({model: "rate-model", rateLimit: stored, intervalHours: 6,
+            lastAttempt: new Date(Date.now() - 7 * 3600000).toISOString()});
+        wait(400);
+        compare(calls().length, 1, "a restart cannot lift the rate limit for automatic generation");
+        compare(restarted.errorReason, "");
+        verify(!restarted.generate(), "nor for an explicit request");
+        compare(restarted.errorReason, "rate_limited");
+        compare(calls().length, 1);
+        restarted.destroy();
+        // The deadline belongs to the settings that were limited.
+        var other = create({model: "ok-model", rateLimit: stored});
+        verify(other.generate());
+        tryCompare(generated, "count", 1, 10000);
+        compare(calls().length, 2);
+        compare(other.rateLimit, "", "a success clears the persisted deadline");
+    }
+    function test_10_destructionDuringGeneration() {
         var controller = create({model: "slow-model"});
         verify(controller.generate());
         controller.destroy();

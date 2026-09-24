@@ -1394,6 +1394,22 @@ msgstr[0] "La conexión funciona. %1 modelo disponible."
 msgstr[1] "La conexión funciona. %1 modelos disponibles."
 
 #: contents/ui/configAiInsights.qml
+msgid ""
+"Connection works, but %1 is not in the list of models usable for AI "
+"Insights. Choose a listed model."
+msgstr "La conexión funciona, pero %1 no está en la lista de modelos utilizables para AI Insights. Elija un modelo de la lista."
+
+#: contents/ui/configAiInsights.qml
+msgid ""
+"Connection works, and %1 is in the list of models usable for AI Insights."
+msgstr "La conexión funciona y %1 está en la lista de modelos utilizables para AI Insights."
+
+#: contents/ui/configAiInsights.qml
+msgid ""
+"Zero Data Retention routing is checked only when an insight is generated."
+msgstr "El enrutamiento Zero Data Retention solo se comprueba al generar un análisis."
+
+#: contents/ui/configAiInsights.qml
 msgid "Enable AI Insights"
 msgstr "Activar Análisis con IA"
 

@@ -253,7 +253,11 @@ def request_json(provider, url, key="", body=None, timeout=None):
     if key:
         # Unredirected headers are never copied to a follow-up request.
         request.add_unredirected_header("Authorization", "Bearer " + key)
-    opener = urllib.request.build_opener(NoRedirect, urllib.request.HTTPSHandler(context=ssl.create_default_context()))
+    handlers = [NoRedirect, urllib.request.HTTPSHandler(context=ssl.create_default_context())]
+    if is_loopback((urllib.parse.urlsplit(url).hostname or "").lower()):
+        # Data for a service on this computer must never go through a proxy.
+        handlers.append(urllib.request.ProxyHandler({}))
+    opener = urllib.request.build_opener(*handlers)
     try:
         with opener.open(request, timeout=timeout or REQUEST_TIMEOUT) as response:
             raw = response.read(MAX_RESPONSE_BYTES + 1)

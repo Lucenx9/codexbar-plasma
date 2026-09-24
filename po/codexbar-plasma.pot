@@ -1346,6 +1346,22 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: contents/ui/configAiInsights.qml
+msgid ""
+"Connection works, but %1 is not in the list of models usable for AI "
+"Insights. Choose a listed model."
+msgstr ""
+
+#: contents/ui/configAiInsights.qml
+msgid ""
+"Connection works, and %1 is in the list of models usable for AI Insights."
+msgstr ""
+
+#: contents/ui/configAiInsights.qml
+msgid ""
+"Zero Data Retention routing is checked only when an insight is generated."
+msgstr ""
+
+#: contents/ui/configAiInsights.qml
 msgid "Enable AI Insights"
 msgstr ""
 

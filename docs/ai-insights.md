@@ -163,32 +163,37 @@ Failures map to bounded reasons: `missing_key`, `secret_unavailable`, `auth`
   The Ollama endpoint accepts `https://` anywhere and `http://` only for
   `localhost`, `127.0.0.0/8`, or `::1`; user info, paths, queries, and fragments
   are rejected. The settings page labels a non-local endpoint as sending data
-  to that address.
+  to that address. A loopback endpoint ignores `http_proxy`/`https_proxy`, so
+  data promised to stay on this computer never reaches a proxy.
+- **Test connection** runs only the model listing (plus OpenRouter's key check):
+  no paid inference. It reports whether the configured model is in the listed
+  models (Ollama's untagged names match `:latest`) and never presents an
+  unlisted model as working. OpenRouter's list proves structured-output
+  support, not Zero Data Retention routing, which is checked on generation.
 
 ## Scheduling and lifecycle
 
 - Disabled by default; once enabled, generation is manual until the user picks
   every 6 hours, every 12 hours, or daily.
 - Usage refreshes, opening the popup, and a changed language never make a
-  request due. The interval is anchored to the last successful generation, and
-  the persisted last attempt blocks another automatic request for 30 minutes,
-  including across plasmashell restarts.
+  request due. The interval counts from both the last successful generation and
+  the persisted last attempt, so a failed or timed-out request, which the
+  provider may already have billed, also waits a full interval, including
+  across plasmashell restarts.
 - One request at a time, with a per-request nonce. The helper's HTTP timeout is
   60 seconds, the shell bound 90 seconds, and the QML deadline 95 seconds.
 - Changing provider, model, endpoint, privacy routing, or language, disabling the
   feature, or destroying the widget retires the active request; its late reply
   is ignored. Stored insights from another context are not shown as current.
-- Failures never touch usage data. `rate_limited` waits for `Retry-After` (at
-  least five minutes); authentication, credit, model, malformed-answer, and
-  configuration failures wait a full interval (24 hours in manual mode); other
-  failures wait 30 minutes.
-  These waits apply to automatic generation. An explicit request waits only for
-  `Retry-After`, so a replaced key or a started Ollama can be retried at once.
-  A malformed answer is never retried early: like other permanent failures, it
-  waits for the next scheduled generation.
-- The `Retry-After` wait lives only in memory; a plasmashell restart resets it
-  to the persisted 30-minute attempt guard, and the provider re-establishes the
-  backoff with its next answer.
+- Failures never touch usage data. Every failure waits a full interval (24
+  hours in manual mode) before automatic generation; `rate_limited` also waits
+  for `Retry-After` (at least five minutes, at most 24 hours). An explicit
+  request waits only for `Retry-After`, so a replaced key or a started Ollama
+  can be retried at once.
+- The `Retry-After` deadline is persisted in the internal
+  `aiInsightsRateLimit` key with the context it applies to, so a plasmashell
+  restart cannot lift it for automatic or explicit requests. Another context
+  ignores it, a deadline beyond 24 hours is void, and a success clears it.
 - An insight older than the interval (24 hours in manual mode), or followed by a
   failed attempt, stays visible and is labeled out of date.
 
@@ -203,13 +208,15 @@ Failures map to bounded reasons: `missing_key`, `secret_unavailable`, `auth`
 - `tests/test_ai_insights.py`: the helper against a local HTTP server and fake
   `secret-tool`/`kdialog` executables, covering the request language for six
   catalogs, OpenRouter privacy routing, OpenAI storage, Ollama requests, every
-  failure mapping, redirects, timeouts, malformed output, and key handling. It
-  also compiles the shipped catalogs and runs `main.qml`'s language adapter to
-  prove the catalog tag reaches `--language` under C and Italian regional locales.
+  failure mapping, redirects, loopback proxy bypass, timeouts, malformed output,
+  and key handling. It also compiles the shipped catalogs and runs `main.qml`'s
+  language adapter to prove the catalog tag reaches `--language` under C and
+  Italian regional locales.
 - `tests/test_ai_insights_controller.py`: the production controller through
   Plasma's executable DataSource with a recording helper, covering disabled,
   manual, duplicate, automatic, restart, language/model/disable changes during a
-  request, failures, invalid commands, and destruction.
+  request, failures, invalid commands, failed attempts and rate limits across
+  restarts, and destruction.
 - Smoke scenarios `ai-insights`, `ai-insights-it`, `ai-insights-mismatch`,
   `ai-insights-error`, `ai-insights-single`, `settings-ai-insights`, and
   `settings-ai-insights-narrow` run the real applet with a synthetic helper. The

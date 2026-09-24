@@ -277,6 +277,18 @@ class ModelDiscoveryTests(HelperTestCase):
         self.assertEqual(result, {"status": "ok", "key": "none", "models": [
             {"id": "llama3.2:3b", "label": "llama3.2:3b"}, {"id": "qwen3:8b", "label": "qwen3:8b"}]})
 
+    def test_local_ollama_never_uses_an_environment_proxy(self):
+        # A proxy would receive data the settings promise stays on this device.
+        Handler.routes["/api/tags"] = (200, {"models": [{"name": "llama3"}]}, {}, 0)
+        proxy = {"http_proxy": "http://127.0.0.1:9", "HTTP_PROXY": "http://127.0.0.1:9",
+                 "https_proxy": "http://127.0.0.1:9", "HTTPS_PROXY": "http://127.0.0.1:9"}
+        with patch.dict(os.environ, proxy):
+            for name in ("no_proxy", "NO_PROXY"):
+                os.environ.pop(name, None)
+            for endpoint in (self.base, self.base.replace("127.0.0.1", "localhost")):
+                with self.subTest(endpoint=endpoint):
+                    self.assertEqual(ai.run("models", "ollama", endpoint=endpoint)["status"], "ok")
+
     def test_ollama_not_running(self):
         self.assertEqual(ai.run("models", "ollama", endpoint="http://127.0.0.1:9"), {"status": "error", "reason": "network"})
 

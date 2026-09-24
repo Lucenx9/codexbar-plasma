@@ -9,9 +9,6 @@ var providers = ["ollama", "openrouter", "openai"]
 var intervalChoices = [0, 6, 12, 24]
 var defaultOllamaEndpoint = "http://localhost:11434"
 var hourMs = 60 * 60 * 1000
-// A failed or interrupted attempt waits this long before the next automatic
-// one, including across plasmashell restarts through the persisted attempt.
-var transientRetryMs = 30 * 60 * 1000
 var minimumRateLimitMs = 5 * 60 * 1000
 var maximumRetryAfterSeconds = 24 * 60 * 60
 var maximumSummaryLength = 600
@@ -25,11 +22,6 @@ var maximumEndpointLength = 2048
 var reasons = ["missing_key", "secret_unavailable", "auth", "credits", "forbidden",
     "rate_limited", "model", "request", "timeout", "network", "unavailable", "routing",
     "refused", "truncated", "format", "invalid_input", "endpoint"]
-// Retrying these cannot succeed until the user changes a setting or a key.
-// Malformed and cut-off answers completed and were charged, so they wait for
-// the next scheduled generation instead of an early retry.
-var permanentReasons = ["missing_key", "secret_unavailable", "auth", "credits", "forbidden",
-    "model", "request", "routing", "refused", "truncated", "format", "invalid_input", "endpoint"]
 var modelPattern = new RegExp("^[A-Za-z0-9][A-Za-z0-9._:/@+-]{0,199}$")
 var controlCharacters = new RegExp("[\\u0000-\\u001f\\u007f-\\u009f\\u2028\\u2029]+", "g")
 
@@ -178,15 +170,41 @@ function cacheState(entry, currentContextKey, nowMs, hours) {
         ? "stale" : "current"
 }
 
+// Automatic generation waits a full interval after any failure: a timed-out,
+// malformed, or cut-off request may still have been billed. A rate limit waits
+// for the provider's Retry-After, which also blocks an explicit request.
 function retryDelayMs(reason, retryAfterSeconds, hours) {
     if (reason === "rate_limited") {
         var seconds = Number(retryAfterSeconds)
         return Math.max(minimumRateLimitMs, isFinite(seconds) ? Math.min(seconds, maximumRetryAfterSeconds) * 1000 : 0)
     }
-    if (permanentReasons.indexOf(reason) >= 0) {
-        return (hours > 0 ? hours : 24) * hourMs
+    return (hours > 0 ? hours : 24) * hourMs
+}
+
+// The rate-limit deadline is persisted with the context it applies to, so a
+// plasmashell restart cannot lift it. Persisted text is untrusted: an unknown
+// shape, another context, or a deadline beyond the longest Retry-After is void.
+function rateLimitText(untilMs, contextKey) {
+    return isFinite(untilMs) && untilMs > 0
+        ? JSON.stringify({until: new Date(untilMs).toISOString(), context: contextKey}) : ""
+}
+
+function rateLimitUntilMs(text, contextKey, nowMs) {
+    if (typeof text !== "string" || text.length === 0 || text.length > 8192) {
+        return 0
     }
-    return transientRetryMs
+    var value
+    try {
+        value = JSON.parse(text)
+    } catch (error) {
+        return 0
+    }
+    if (!value || typeof value !== "object" || value.context !== contextKey) {
+        return 0
+    }
+    var untilMs = timestampMs(value.until)
+    return isFinite(untilMs) && untilMs > nowMs && untilMs <= nowMs + maximumRetryAfterSeconds * 1000
+        ? untilMs : 0
 }
 
 // Automatic generation follows the configured interval only. Opening the
@@ -200,8 +218,9 @@ function automaticDue(observation) {
     if (o.nowMs < o.retryAtMs) {
         return false
     }
-    if (isFinite(o.lastAttemptMs) && o.lastAttemptMs <= o.nowMs
-            && o.nowMs - o.lastAttemptMs < Math.min(transientRetryMs, intervalMs)) {
+    // Every attempt counts, including a failed or timed-out one: the provider
+    // may already have processed and billed it.
+    if (isFinite(o.lastAttemptMs) && o.lastAttemptMs <= o.nowMs && o.nowMs - o.lastAttemptMs < intervalMs) {
         return false
     }
     if (isFinite(o.lastSuccessMs) && o.lastSuccessMs <= o.nowMs && o.nowMs - o.lastSuccessMs < intervalMs) {
@@ -312,6 +331,17 @@ function modelsReply(text) {
     }
     return {outcome: "ok", reason: "", models: models,
         key: ["valid", "none"].indexOf(value.key) >= 0 ? value.key : ""}
+}
+
+// Whether a listed model matches the configured one. Ollama resolves an
+// untagged name to its ":latest" tag, which is how it lists that model.
+function modelListed(provider, model, models) {
+    var value = typeof model === "string" ? model.trim() : ""
+    if (value.length === 0 || !Array.isArray(models)) {
+        return false
+    }
+    return models.indexOf(value) >= 0
+        || (provider === "ollama" && value.indexOf(":") < 0 && models.indexOf(value + ":latest") >= 0)
 }
 
 function statusReply(text, allowed) {

@@ -262,6 +262,7 @@ internal_config_keys = {
     "providerConfigRevision",
     "aiInsightsCache",
     "aiInsightsLastAttempt",
+    "aiInsightsRateLimit",
 }
 all_config_keys = set(re.findall(r'<entry name="([^"]+)"', config_text))
 resettable_config_keys = all_config_keys - internal_config_keys

@@ -125,7 +125,12 @@ TestCase {
     function test_restartAndFailuresDoNotRepeatRequests() {
         // A persisted attempt from a previous plasmashell blocks an immediate retry.
         verify(!AiInsights.automaticDue(observation({lastAttemptMs: now - 10 * 60000})))
-        verify(AiInsights.automaticDue(observation({lastAttemptMs: now - 31 * 60000})))
+        // A failed or timed-out attempt may have been billed, so the next
+        // automatic one waits the whole interval, not a short retry delay.
+        verify(!AiInsights.automaticDue(observation({lastAttemptMs: now - 31 * 60000})))
+        verify(!AiInsights.automaticDue(observation({intervalHours: 24, lastAttemptMs: now - 23 * hour})))
+        verify(AiInsights.automaticDue(observation({lastAttemptMs: now - 6 * hour})))
+        verify(AiInsights.automaticDue(observation({intervalHours: 24, lastAttemptMs: now - 24 * hour})))
         verify(!AiInsights.automaticDue(observation({retryAtMs: now + 1})))
         // A language change leaves the schedule anchored at the last success.
         verify(!AiInsights.automaticDue(observation({lastSuccessMs: now - hour, cacheMatchesContext: false})))
@@ -145,8 +150,40 @@ TestCase {
         compare(AiInsights.retryDelayMs("rate_limited", 7200, 6), 2 * hour)
         compare(AiInsights.retryDelayMs("rate_limited", 1, 6), AiInsights.minimumRateLimitMs)
         compare(AiInsights.retryDelayMs("rate_limited", 1e12, 6), 24 * hour)
-        compare(AiInsights.retryDelayMs("timeout", 0, 6), AiInsights.transientRetryMs)
-        compare(AiInsights.retryDelayMs("network", 0, 6), AiInsights.transientRetryMs)
+        // A timed-out request may still have been processed and billed.
+        compare(AiInsights.retryDelayMs("timeout", 0, 6), 6 * hour)
+        compare(AiInsights.retryDelayMs("network", 0, 12), 12 * hour)
+        compare(AiInsights.retryDelayMs("unavailable", 0, 0), 24 * hour)
+    }
+
+    function test_rateLimitSurvivesRestartsOnlyForItsContext() {
+        var key = AiInsights.contextKey(contextFor())
+        var text = AiInsights.rateLimitText(now + 2 * hour, key)
+        compare(AiInsights.rateLimitUntilMs(text, key, now), now + 2 * hour)
+        compare(AiInsights.rateLimitUntilMs(text, key, now + 2 * hour), 0, "an expired deadline is void")
+        compare(AiInsights.rateLimitUntilMs(text, AiInsights.contextKey(contextFor({provider: "openai"})), now), 0)
+        compare(AiInsights.rateLimitText(0, key), "")
+        compare(AiInsights.rateLimitText(NaN, key), "")
+        // Persisted text is untrusted: no shape, date, or bound is assumed.
+        compare(AiInsights.rateLimitUntilMs("", key, now), 0)
+        compare(AiInsights.rateLimitUntilMs("{oops", key, now), 0)
+        compare(AiInsights.rateLimitUntilMs("[]", key, now), 0)
+        compare(AiInsights.rateLimitUntilMs(JSON.stringify({until: "soon", context: key}), key, now), 0)
+        compare(AiInsights.rateLimitUntilMs(AiInsights.rateLimitText(now + 25 * hour, key), key, now), 0,
+            "a deadline beyond the longest Retry-After cannot block generation")
+    }
+
+    function test_modelListedMatchesTheConfiguredModel() {
+        verify(AiInsights.modelListed("openrouter", "vendor/model", ["a/b", "vendor/model"]))
+        verify(AiInsights.modelListed("openai", " gpt-x ", ["gpt-x"]))
+        verify(!AiInsights.modelListed("openrouter", "vendor/other", ["vendor/model"]))
+        verify(!AiInsights.modelListed("openrouter", "", ["vendor/model"]))
+        verify(!AiInsights.modelListed("openai", "gpt-x", null))
+        // Ollama lists an untagged model under its default tag.
+        verify(AiInsights.modelListed("ollama", "llama3", ["llama3:latest"]))
+        verify(AiInsights.modelListed("ollama", "llama3:8b", ["llama3:8b"]))
+        verify(!AiInsights.modelListed("ollama", "llama3", ["llama3:8b"]))
+        verify(!AiInsights.modelListed("openai", "gpt-x", ["gpt-x:latest"]))
     }
 
     function test_generateCommandCarriesLanguageAndNoSecrets() {

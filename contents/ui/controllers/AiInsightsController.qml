@@ -21,6 +21,8 @@ Item {
     property string snapshotId: ""
     property string cacheText: ""
     property string lastAttempt: ""
+    // A provider's persisted Retry-After deadline; see AiInsights.rateLimitText.
+    property string rateLimit: ""
     property url scriptUrl: Qt.resolvedUrl("../../../scripts/ai-insights.py")
 
     readonly property var requestContext: AiInsights.context({provider: provider, model: model,
@@ -33,6 +35,7 @@ Item {
 
     signal attemptStarted(string timestamp)
     signal generated(string cacheText)
+    signal rateLimitStored(string text)
 
     // Manual generation is explicit and still one request at a time. It waits
     // only for a provider's Retry-After: a fixed key or a started Ollama must
@@ -78,6 +81,13 @@ Item {
             rateLimitedUntilMs = 0
         }
 
+        // The in-memory deadline, or the persisted one when this plasmashell
+        // has not seen the rate limit itself.
+        function rateLimitedUntil(nowMs) {
+            return Math.max(rateLimitedUntilMs,
+                AiInsights.rateLimitUntilMs(controller.rateLimit, controller.contextKey, nowMs))
+        }
+
         function retire() {
             var source = activeSource
             activeSource = ""
@@ -96,7 +106,7 @@ Item {
                 busy: controller.busy,
                 sufficient: controller.snapshotText.length > 0,
                 nowMs: Date.now(),
-                retryAtMs: retryAtMs,
+                retryAtMs: Math.max(retryAtMs, rateLimitedUntil(Date.now())),
                 lastAttemptMs: Date.parse(controller.lastAttempt),
                 lastSuccessMs: cache ? cache.generatedAtMs : NaN,
                 cacheMatchesContext: cache !== null && cache.contextKey === controller.contextKey,
@@ -110,8 +120,21 @@ Item {
 
         function start(manual) {
             if (!controller.insightsEnabled || controller.busy || !controller.configured
-                    || controller.snapshotText.length === 0
-                    || Date.now() < (manual ? rateLimitedUntilMs : retryAtMs)) {
+                    || controller.snapshotText.length === 0) {
+                return false
+            }
+            var nowMs = Date.now()
+            var limitedUntilMs = rateLimitedUntil(nowMs)
+            if (nowMs < limitedUntilMs) {
+                // Explain an explicit request the provider would still refuse.
+                if (manual) {
+                    errorReason = "rate_limited"
+                    rateLimitedUntilMs = limitedUntilMs
+                    retryAtMs = Math.max(retryAtMs, limitedUntilMs)
+                }
+                return false
+            }
+            if (!manual && nowMs < retryAtMs) {
                 return false
             }
             var command = AiInsights.command(controller.scriptUrl, "generate", {
@@ -145,6 +168,9 @@ Item {
             errorReason = reason
             retryAtMs = Date.now() + AiInsights.retryDelayMs(reason, retryAfterSeconds, controller.intervalHours)
             rateLimitedUntilMs = reason === "rate_limited" ? retryAtMs : 0
+            if (rateLimitedUntilMs > 0) {
+                controller.rateLimitStored(AiInsights.rateLimitText(rateLimitedUntilMs, controller.contextKey))
+            }
         }
 
         function accept(sourceName, data) {
@@ -163,6 +189,9 @@ Item {
                 return
             }
             clearFailure()
+            if (controller.rateLimit.length > 0) {
+                controller.rateLimitStored("")
+            }
             controller.generated(AiInsights.cacheText({
                 summary: reply.summary,
                 highlights: reply.highlights,

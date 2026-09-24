@@ -2655,8 +2655,12 @@ PlasmoidItem {
         snapshotId: root.aiInsightsSnapshot.id
         cacheText: root.aiInsightsEnabled ? (Plasmoid.configuration.aiInsightsCache || "") : ""
         lastAttempt: Plasmoid.configuration.aiInsightsLastAttempt || ""
+        rateLimit: Plasmoid.configuration.aiInsightsRateLimit || ""
         onAttemptStarted: function(timestamp) {
             Plasmoid.configuration.aiInsightsLastAttempt = timestamp
+        }
+        onRateLimitStored: function(text) {
+            Plasmoid.configuration.aiInsightsRateLimit = text
         }
         onGenerated: function(text) {
             Plasmoid.configuration.aiInsightsCache = text
