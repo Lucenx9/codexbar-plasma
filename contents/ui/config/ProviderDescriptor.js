@@ -127,6 +127,9 @@ function planFieldWrite(field, value, commandPath) {
     if (field.kind === "secret") {
         return rejectedPlan("secretRequiresPrompt")
     }
+    if (isApiKeyCommand(field.writeCommand)) {
+        return rejectedPlan("unsupportedCommand")
+    }
     // The writeCommand has no other value channel: without the placeholder the
     // user's edit would be silently dropped and the stored value left as-is.
     if (!fieldCommandMatchesKind(field.kind, field.writeCommand)) {
@@ -168,12 +171,18 @@ function commandTokensContainToken(commandTokens, expectedToken) {
     return false
 }
 
+// set-api-key stores a credential, so only a secret field, which writes through
+// stdin, may use it. Any other kind would put the typed key in the command line.
+function isApiKeyCommand(commandTokens) {
+    return String(commandTokens[2]) === "set-api-key"
+}
+
 function fieldCommandMatchesKind(kind, commandTokens) {
     if (kind === "secret") {
         return commandTokensContainToken(commandTokens, "--stdin")
             && !commandTokensContainValue(commandTokens)
     }
-    return commandTokensContainValue(commandTokens)
+    return !isApiKeyCommand(commandTokens) && commandTokensContainValue(commandTokens)
 }
 
 function planAction(action, commandPath) {

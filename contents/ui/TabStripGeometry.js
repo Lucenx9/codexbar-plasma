@@ -13,9 +13,8 @@
 //     edge" from "off the right edge", and answer with a position rather than
 //     scrolling twice.
 //
-// The rest of the strip stays in QML: walking the parent chain to recognise a
-// tab, and moving focus along the focus chain, both need a live scene and are
-// not arithmetic.
+// Keyboard navigation picks its target tab here too, by index; the strip
+// collects its tabs and moves focus, which need a live scene.
 
 // Flickables accept any `contentX`, including one that leaves blank space past
 // the end. Content narrower than its viewport has exactly one valid position,
@@ -58,4 +57,29 @@ function revealPosition(itemLeft, itemWidth, contentX, viewportWidth, margin) {
         return right + gap - viewport
     }
     return null
+}
+
+// Which tab keyboard navigation lands on, following the WAI-ARIA tabs
+// pattern: the arrows wrap from one end of the strip to the other, and Home
+// and End jump to the ends. Returns -1 for anything that must not move focus,
+// so the caller leaves the key to its default handling.
+function keyboardTargetIndex(action, currentIndex, count) {
+    var total = Number(count)
+    var current = Number(currentIndex)
+    if (!isFinite(total) || total < 1 || Math.floor(total) !== total
+            || !isFinite(current) || Math.floor(current) !== current
+            || current < 0 || current >= total) {
+        return -1
+    }
+    switch (action) {
+    case "previous":
+        return (current - 1 + total) % total
+    case "next":
+        return (current + 1) % total
+    case "first":
+        return 0
+    case "last":
+        return total - 1
+    }
+    return -1
 }

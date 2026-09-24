@@ -380,7 +380,9 @@ Item {
         verifyScenario(!previous.enabled && next.enabled, "incorrect controls at start of strip");
         var focus = strip.selectedTab.nextItemInFocusChain(true);
         var visited = 0;
+        var lastFocused = null;
         while (strip.containsTab(focus) && visited < 20) {
+            lastFocused = focus;
             focus.forceActiveFocus(Qt.TabFocusReason);
             var position = focus.mapToItem(strip, 0, 0);
             verifyScenario(position.x >= -1 && position.x + focus.width <= strip.width + 1,
@@ -390,6 +392,21 @@ Item {
         }
         verifyScenario(visited === 13, "not every global and provider tab is keyboard reachable");
         verifyScenario(previous.enabled && !next.enabled, "incorrect controls at end of strip");
+        var tabs = strip.focusableTabs(lastFocused);
+        var first = tabs[0];
+        var last = tabs[tabs.length - 1];
+        verifyScenario(last === lastFocused && tabs.length >= visited,
+            "the strip collected a different set of keyboard tabs");
+        verifyScenario(strip.navigateFromTab(last, Qt.Key_Right) && first.activeFocus
+            && first.mapToItem(strip, 0, 0).x >= -1, "Right on the last tab did not wrap to the first");
+        verifyScenario(strip.navigateFromTab(first, Qt.Key_Left) && last.activeFocus,
+            "Left on the first tab did not wrap to the last");
+        verifyScenario(strip.navigateFromTab(last, Qt.Key_Home) && first.activeFocus,
+            "Home did not focus the first tab");
+        verifyScenario(strip.navigateFromTab(first, Qt.Key_End) && last.activeFocus
+            && last.mapToItem(strip, 0, 0).x + last.width <= strip.width + 1, "End did not focus the last tab");
+        verifyScenario(!strip.navigateFromTab(last, Qt.Key_Up) && last.activeFocus,
+            "an unrelated key moved tab focus");
         applet.selectedProviderID = "example-7";
         applet.selectGlobalView("overview");
         verifyScenario(strip.contentX === 0, "selection was not revealed immediately");
