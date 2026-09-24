@@ -352,6 +352,28 @@ TestCase {
         });
     }
 
+    // The suite runs with TZ=America/Los_Angeles; DST ends there on 2026-11-01.
+    function test_absoluteShowsDateBeyondTheNextSixDays() {
+        function local(month, day, hour, minute) {
+            return new Date(2026, month - 1, day, hour, minute || 0).getTime();
+        }
+        var now = local(10, 25, 23, 30);
+        verify(!ResetPresentation.absoluteShowsDate(local(10, 25, 23, 45), now));
+        verify(!ResetPresentation.absoluteShowsDate(local(10, 26, 0, 5), now));
+        // Six local days ahead across the DST change is still a unique weekday.
+        verify(!ResetPresentation.absoluteShowsDate(local(10, 31, 23, 59), now));
+        // A week later falls on today's weekday again; a month later repeats it.
+        verify(ResetPresentation.absoluteShowsDate(local(11, 1, 0, 30), now));
+        verify(ResetPresentation.absoluteShowsDate(local(11, 20, 9), now));
+        // A reset already behind the clock would otherwise read as upcoming.
+        verify(ResetPresentation.absoluteShowsDate(local(10, 24, 23, 30), now));
+        // No usable clock or timestamp leaves the date as the only safe choice.
+        for (var clock of [null, undefined, NaN, Infinity, "0", {}, [], Number.MAX_VALUE])
+            verify(ResetPresentation.absoluteShowsDate(local(10, 26, 9), clock), String(clock));
+        for (var timestamp of [null, undefined, NaN, "2026-10-26T09:00:00Z", {}, Number.MAX_VALUE])
+            verify(ResetPresentation.absoluteShowsDate(timestamp, now), String(timestamp));
+    }
+
     function test_labels_data() {
         return [
             {

@@ -96,7 +96,7 @@ TestCase {
         for (var reset of data.rows)
             compare(resetText({resetsAt: panelClockMs + reset.offset}, false), reset.expected);
         for (var absolute of ABSOLUTE_CASES)
-            compare(resetText({resetsAt: absolute.timestamp}, true), absolute.expected);
+            compare(resetText({resetsAt: absolute.timestamp}, true), absolute.expected, absolute.timestamp);
         compare(resetLabel("Resets2h30m"), data.label);
         compare(resetLabel("Resets unknown future text"), "unknown future text");
 
@@ -122,9 +122,19 @@ TestCase {
             qml = qml.replace("RESET_CASES", json.dumps(cases))
             for timezone in ("UTC", "Europe/Rome", "America/Los_Angeles"):
                 with self.subTest(timezone=timezone):
-                    dates = ["2026-09-13T13:00:00Z", "2026-03-08T10:30:00Z", "2026-11-01T09:30:00Z"]
-                    absolute = [{"timestamp": value, "expected": datetime.fromisoformat(value.replace("Z", "+00:00"))
-                                 .astimezone(ZoneInfo(timezone)).strftime("%a %H:%M")} for value in dates]
+                    # A weekday names one date only within the next six days
+                    # of the 2026-09-13T12:00Z clock. A monthly reset, or a
+                    # weekly one on today's weekday, also needs its date.
+                    zone = ZoneInfo(timezone)
+                    today = datetime(2026, 9, 13, 12, tzinfo=ZoneInfo("UTC")).astimezone(zone).date()
+                    dates = ["2026-09-13T13:00:00Z", "2026-09-19T20:00:00Z", "2026-09-20T13:00:00Z",
+                             "2026-10-03T13:00:00Z", "2026-03-08T10:30:00Z", "2026-11-01T09:30:00Z"]
+                    absolute = []
+                    for value in dates:
+                        local = datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(zone)
+                        weekday = 0 <= (local.date() - today).days <= 6
+                        absolute.append({"timestamp": value, "expected": local.strftime(
+                            "%a %H:%M" if weekday else "%b " + str(local.day) + ", %H:%M")})
                     fixture = directory / "tst_reset_adapters.qml"
                     fixture.write_text(qml.replace("ABSOLUTE_CASES", json.dumps(absolute)))
                     result = subprocess.run(
