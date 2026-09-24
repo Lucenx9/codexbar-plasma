@@ -59,13 +59,57 @@ function endpointText(value) {
 // Settings presentation only; the helper validates the destination again.
 // Only the host decides locality: a loopback address with a path still
 // keeps usage statistics on this device.
+var ipv6GroupPattern = new RegExp("^[0-9a-f]{1,4}$")
+
+// The helper accepts any textual form of ::1 through ipaddress, so the
+// label expands compressed groups instead of matching "[::1]" literally.
+function isLoopbackIpv6(host) {
+    if (host.length < 3 || host.charAt(0) !== "[" || host.charAt(host.length - 1) !== "]") {
+        return false
+    }
+    var text = host.slice(1, -1)
+    if (text.indexOf(".") >= 0 || text.indexOf(":") < 0) {
+        return false
+    }
+    var halves = text.split("::")
+    if (halves.length > 2) {
+        return false
+    }
+    var head = halves[0] === "" ? [] : halves[0].split(":")
+    var tail = halves.length === 1 ? null : (halves[1] === "" ? [] : halves[1].split(":"))
+    var groups = head
+    if (tail === null) {
+        if (groups.length !== 8) {
+            return false
+        }
+    } else {
+        if (head.length + tail.length > 7) {
+            return false
+        }
+        for (var i = head.length + tail.length; i < 8; i++) {
+            groups.push("0")
+        }
+        groups = groups.concat(tail)
+    }
+    for (var j = 0; j < 8; j++) {
+        if (!ipv6GroupPattern.test(groups[j])) {
+            return false
+        }
+        var value = parseInt(groups[j], 16)
+        if (j < 7 ? value !== 0 : value !== 1) {
+            return false
+        }
+    }
+    return true
+}
+
 function isLocalEndpoint(value) {
     var match = /^https?:\/\/(\[[^\]]+\]|[^\/:?#]+)(:\d{1,5})?([/?#].*)?$/i.exec(endpointText(value))
     if (!match) {
         return false
     }
     var host = match[1].toLowerCase()
-    return host === "localhost" || host === "[::1]" || /^127(\.\d{1,3}){3}$/.test(host)
+    return host === "localhost" || isLoopbackIpv6(host) || /^127(\.\d{1,3}){3}$/.test(host)
 }
 
 function context(settings) {
