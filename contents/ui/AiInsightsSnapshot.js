@@ -138,9 +138,19 @@ function spend(tokenCost, nowMs) {
     result.currency = currency
     result.last7Days = Math.round(result.last7Days * 100) / 100
     result.previous7Days = Math.round(result.previous7Days * 100) / 100
+    // Keep the qualifier the widget shows beside the amount. Unpriced or
+    // unmetered requests make it partial, and an estimated share still makes
+    // it an estimate even then.
     var trust = field(tokenCost, "trust")
     var sourceKind = field(trust, "sourceKind")
-    if (sourceKind === "listPrice" || sourceKind === "mixed" || field(tokenCost, "valueMode") === "estimated") {
+    var coverage = field(trust, "coverage")
+    var valueMode = field(tokenCost, "valueMode")
+    if (valueMode === "partial") {
+        result.incomplete = true
+    }
+    if (sourceKind === "listPrice" || sourceKind === "mixed" || sourceKind === "unknown"
+            || valueMode === "estimated" || valueMode === "approximate"
+            || (finite(field(coverage, "estimated")) && coverage.estimated > 0)) {
         result.estimated = true
     }
     return result
