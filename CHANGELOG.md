@@ -190,6 +190,14 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   command unchanged. A command reaped by the bound reports the same timeout
   message as the page timeout instead of an exit-code line or the shell's
   own signal notice.
+- Report an AI Insights **Test connection** stopped by its time bound as a
+  timeout instead of an unexpected-format error. A listing killed by the
+  shell bound arrives with an empty reply and exit code 124 or 137, which the
+  model-list path now reads like the insight-generation path does.
+- Redact `password`, `secret`, `private_key`, and `client_secret` values in
+  CLI messages and diagnostics. Previously only authorization, bearer,
+  cookie, API-key, and token shapes were masked, so a CLI error such as
+  `login failed: password=hunter2` reached the UI verbatim.
 - Hide a quota reset label when its numeric reset date is unusable instead of
   printing the raw value. An out-of-range or infinite `resetsAt` reached the
   quota row as digits such as `8640000000000001` or `Infinity`; it now keeps
