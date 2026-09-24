@@ -192,6 +192,41 @@ TestCase {
         compare(focus.Accessible.description, "demo@example.com");
     }
 
+    function findToolTip(item) {
+        var data = item.data || [];
+        for (var i = 0; i < data.length; i++) {
+            if (data[i] && data[i].plainText !== undefined && data[i].delay !== undefined)
+                return data[i];
+        }
+        return null;
+    }
+
+    // Elided title or detail text must stay readable on hover, and a row whose
+    // text fits must not grow a redundant tooltip.
+    function test_overviewRevealsTruncatedTextOnHover() {
+        var longAccount = "a-very-long-account-name-that-cannot-fit@example.com";
+        var row = createControl("OverviewProviderRow", {
+            applet: applet,
+            modelData: Object.assign({}, provider, {account: longAccount}),
+            width: 180
+        });
+        if (!row)
+            return;
+        var tip = findToolTip(row);
+        verify(tip !== null);
+        tryVerify(function () { return row.textTruncated; });
+        compare(tip.plainText, "Codex\n" + longAccount);
+        mouseMove(row, row.width / 2, row.height / 2);
+        tryCompare(tip, "visible", true);
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        tryCompare(tip, "visible", false);
+        row.width = 600;
+        tryVerify(function () { return !row.textTruncated; });
+        mouseMove(row, row.width / 2, row.height / 2);
+        wait(tip.delay + 100);
+        verify(!tip.visible);
+    }
+
     function test_refreshSupportsKeyboardActivation() {
         var control = createControl("RefreshButton", {
             label: "Refresh"

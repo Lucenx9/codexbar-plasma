@@ -1449,7 +1449,7 @@ for global_tab_id in ("spendTab", "sessionsTab"):
 for icon_only_fragment in (
     'visible: applet.showPopupTabLabels',
     'visible: !applet.showPopupTabLabels && overviewTabMouse.containsMouse',
-    'visible: !applet.showPopupTabLabels && providerTabMouse.containsMouse',
+    'visible: (!applet.showPopupTabLabels || providerTabLabel.truncated)',
 ):
     if not code_contains(provider_tabs_body, icon_only_fragment):
         raise AssertionError(
@@ -1581,6 +1581,8 @@ for switcher_description_fragment in (
             "the provider tab description must cover quota, stale usage, and errors; "
             f"missing {switcher_description_fragment!r}"
         )
+if not code_contains(overview_provider_row_text, "visible: overviewRow.textTruncated && overviewRowMouse.containsMouse"):
+    raise AssertionError("a truncated Overview row must reveal its full title and detail on hover")
 if not code_contains(main_text, "providerTabsFlickable.ensureVisible(providerTab)"):
     raise AssertionError("focusing a provider tab must pull it back into view")
 if not code_contains(provider_tabs_flickable_body, "function claimSelectedTab(item, isSelected)"):

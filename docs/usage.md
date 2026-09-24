@@ -104,6 +104,9 @@ work and upstream contract requirements.
   quota, detail line, and reset; provider tabs describe the quota their
   underline draws, a last-known-usage note, and a refresh error that only
   dims the tab visually.
+- Hovering a provider tab whose name is cut short, or an Overview row whose
+  title or detail line is cut short in a narrow popup, shows the full text in
+  a tooltip. Text that fits gets no tooltip.
 - Overflowing popup tabs have separate scroll buttons and immediate keyboard
   focus reveal, so navigation never covers provider labels. A tab wider than the
   available area stays aligned at its start when focused or selected again.
