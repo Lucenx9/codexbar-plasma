@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Move between popup tabs with Home and End, and wrap the Left and Right arrows
+  around from the last tab to the first and back, following the common tab
+  keyboard pattern.
 - Add optional AI Insights (beta), off by default: a short Overview card that explains
   quota risk, forecast exhaustion, and week-over-week spending or token changes
   using a local Ollama model, OpenRouter, or OpenAI. It writes in the widget's
