@@ -61,7 +61,9 @@ Rectangle {
         anchors.fill: parent
         anchors.margins: Kirigami.Units.largeSpacing
         anchors.leftMargin: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
-        anchors.rightMargin: Kirigami.Units.largeSpacing
+        // Center the generate icon on the Overview rows' chevrons.
+        anchors.rightMargin: Math.max(0, Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+            + (Kirigami.Units.iconSizes.small - generateButton.implicitWidth) / 2)
         spacing: Kirigami.Units.smallSpacing
 
         RowLayout {
@@ -93,6 +95,7 @@ Rectangle {
             // A distinct icon: this button calls a possibly billed AI service,
             // while the Overview refresh button only refreshes usage.
             RefreshButton {
+                id: generateButton
                 objectName: "aiInsightsGenerateButton"
                 Layout.alignment: Qt.AlignTop
                 iconName: "tools-wizard"
