@@ -310,12 +310,20 @@ def install(root, automatic=False):
         download(assets[0], archive)
         download(assets[1], checksum)
         expected = assets[0]["digest"][7:]
-        if checksum.read_text().strip() not in (expected + "  " + assets[0]["name"], expected + " *" + assets[0]["name"]):
+        try:
+            checksum_text = checksum.read_text()
+        except UnicodeDecodeError:
+            raise ValueError("checksum_file") from None
+        if checksum_text.strip() not in (expected + "  " + assets[0]["name"], expected + " *" + assets[0]["name"]):
             raise ValueError("checksum_file")
         extracted = stage / "release"
         extracted.mkdir()
         unpack(archive, extracted)
-        if (extracted / "VERSION").read_text().strip() not in (version, "v" + version):
+        try:
+            staged_version = (extracted / "VERSION").read_text()
+        except UnicodeDecodeError:
+            raise ValueError("version_file") from None
+        if staged_version.strip() not in (version, "v" + version):
             raise ValueError("version_file")
         home = stage / "probe-home"
         home.mkdir()

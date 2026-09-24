@@ -17,10 +17,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from lib import managed_cli as cli
 
 
-def archive(path, version="0.62.0", extra=None, banner=None):
+def archive(path, version="0.62.0", extra=None, banner=None, version_bytes=None):
     with tarfile.open(path, "w:gz") as bundle:
         for name, raw in [("CodexBarCLI", ('#!/bin/sh\nprintf "CodexBar ' + (banner or version) + '\\n"\n').encode()),
-                          ("VERSION", version.encode())]:
+                          ("VERSION", version_bytes if version_bytes is not None else version.encode())]:
             item = tarfile.TarInfo(name)
             item.size = len(raw)
             bundle.addfile(item, io.BytesIO(raw))
@@ -154,6 +154,19 @@ class ManagedCliTests(unittest.TestCase):
         self.payload.with_suffix(".sha256").write_text("0" * 64)
         with self.assertRaisesRegex(ValueError, "checksum_file"):
             self.operation("update")
+        self.assertEqual(cli.status(self.root)["version"], "0.62.0")
+
+    def test_binary_staged_files_report_unverified(self):
+        self.operation("install")
+        self.publish("0.63.0")
+        self.payload.with_suffix(".sha256").write_bytes(b"\xff\xfe\x00binary")
+        with self.assertRaisesRegex(ValueError, "checksum_file") as refused:
+            self.operation("update")
+        self.assertEqual(cli.failure_status(refused.exception), "unverified")
+        self.publish("0.63.0", version_bytes=b"\xff\xfe")
+        with self.assertRaisesRegex(ValueError, "version_file") as refused:
+            self.operation("update")
+        self.assertEqual(cli.failure_status(refused.exception), "unverified")
         self.assertEqual(cli.status(self.root)["version"], "0.62.0")
 
     def test_abandoned_download_is_pruned_before_a_failed_retry(self):
