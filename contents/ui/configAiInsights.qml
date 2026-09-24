@@ -172,7 +172,8 @@ KCM.SimpleKCM {
                 : i18n("Could not remove the API key. The system wallet is unavailable."), cleared !== "cleared")
             Qt.callLater(refreshKeyStatus)
         } else if (action === "models") {
-            var result = AiInsights.modelsReply(stdout)
+            var result = AiInsights.modelsReply(stdout,
+                data && data["exit code"] !== undefined ? Number(data["exit code"]) : NaN)
             if (result.outcome !== "ok") {
                 report(messages.errorText(result.reason, provider), true)
                 return

@@ -112,6 +112,14 @@ TestCase {
         cfg_aiInsightsOllamaEndpoint = "http://127.0.0.1:11434"
         compare(actionText, "")
     }
+
+    // A listing stopped by the shell bound reports a timeout, not a format error.
+    function test_stoppedListingReportsTimeout() {
+        verify(run("models"))
+        accept(helperSource.connected[0], {stdout: "", "exit code": 124})
+        compare(actionText, "error:timeout")
+        compare(availableModels, [])
+    }
 }
 '''
 
@@ -174,7 +182,7 @@ class AiInsightsSettingsTests(unittest.TestCase):
                 capture_output=True, text=True, timeout=30)
         output = result.stdout + result.stderr
         self.assertEqual(result.returncode, 0, output)
-        self.assertIn("Totals: 5 passed, 0 failed", output)
+        self.assertIn("Totals: 6 passed, 0 failed", output)
 
     def test_clear_button_rearms_when_a_new_insight_arrives(self):
         insights = Surface("insights", ROOT)

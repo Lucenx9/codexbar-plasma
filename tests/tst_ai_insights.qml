@@ -264,6 +264,10 @@ TestCase {
         compare(reply.key, "valid")
         compare(AiInsights.modelsReply(JSON.stringify({status: "error", reason: "auth"})).reason, "auth")
         compare(AiInsights.modelsReply("oops").outcome, "error")
+        // The shell bound stopped the helper before it printed a listing.
+        compare(AiInsights.modelsReply("", 124).reason, "timeout")
+        compare(AiInsights.modelsReply("", 137).reason, "timeout")
+        compare(AiInsights.modelsReply("", 1).reason, "format")
         compare(AiInsights.statusReply(JSON.stringify({status: "present"}), ["present", "absent"]), "present")
         compare(AiInsights.statusReply(JSON.stringify({status: "sk-secret"}), ["present", "absent"]), "unavailable")
     }
@@ -287,6 +291,12 @@ TestCase {
         verify(AiInsights.isLocalEndpoint("http://localhost:11434/v1"))
         verify(AiInsights.isLocalEndpoint("http://127.0.0.1/v1"))
         verify(AiInsights.isLocalEndpoint("http://[::1]:11434/v1"))
+        // The helper accepts any textual form of ::1, so the label must too.
+        verify(AiInsights.isLocalEndpoint("http://[0:0:0:0:0:0:0:1]:11434"))
+        verify(AiInsights.isLocalEndpoint("http://[0:0:0:0:0:0:0:1]:11434/v1"))
+        verify(AiInsights.isLocalEndpoint("http://[0::1]:11434"))
+        verify(!AiInsights.isLocalEndpoint("http://[::2]:11434"))
+        verify(!AiInsights.isLocalEndpoint("http://[2001:db8::1]:11434"))
         verify(!AiInsights.isLocalEndpoint("https://gpu.example:11434"))
         verify(!AiInsights.isLocalEndpoint("https://gpu.example/v1"))
         verify(!AiInsights.isLocalEndpoint("http://localhost.example.com"))
