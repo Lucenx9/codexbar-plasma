@@ -100,6 +100,10 @@ work and upstream contract requirements.
   detail line shows the account identity when the CLI provides one, and an
   active service incident otherwise; an operational status or the provider's
   own source name is never presented as identity.
+- Screen readers hear what the popup draws. Overview rows describe their
+  quota, detail line, and reset; provider tabs describe the quota their
+  underline draws, a last-known-usage note, and a refresh error that only
+  dims the tab visually.
 - Overflowing popup tabs have separate scroll buttons and immediate keyboard
   focus reveal, so navigation never covers provider labels. A tab wider than the
   available area stays aligned at its start when focused or selected again.

@@ -2161,6 +2161,28 @@ PlasmoidItem {
         return row ? displayPercent(row) : -1
     }
 
+    // A popup tab shows its quota only as an underline and its failure only
+    // by dimming, so screen readers get both as text.
+    function switcherDescription(item) {
+        if (!item) {
+            return ""
+        }
+        var parts = []
+        var row = switcherMetricRow(item)
+        if (row && row.hasPercent) {
+            var text = i18n("%1: %2% %3", row.label, Math.round(displayPercent(row)), percentSuffix())
+            var reset = resetTextForRow(row)
+            parts.push(reset.length > 0 ? i18n("%1 - %2", text, reset) : text)
+        }
+        if (item.usageStale === true) {
+            parts.push(lastGoodUsageText(item))
+        }
+        if (item.error && item.error.length > 0) {
+            parts.push(item.error)
+        }
+        return parts.join(". ")
+    }
+
     // Eligibility, the stored selection, and the visible limit all live in
     // OverviewProviders, so the settings checkboxes and the rendered rows
     // resolve the same canonical provider IDs.
