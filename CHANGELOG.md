@@ -120,6 +120,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Report a clear setup error when neither `HOME` nor an absolute
+  `XDG_DATA_HOME` locates the user data directory, instead of stopping on an
+  `unbound variable` shell error.
 - Keep the AI Insights settings privacy note local for loopback Ollama
   addresses with a path, such as `http://localhost:11434/v1`, instead of
   warning that statistics are sent to that address.
