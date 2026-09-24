@@ -100,12 +100,19 @@ work and upstream contract requirements.
   detail line shows the account identity when the CLI provides one, and an
   active service incident otherwise; an operational status or the provider's
   own source name is never presented as identity.
+- Screen readers hear what the popup draws. Overview rows describe their
+  quota, detail line, and reset; provider tabs describe the quota their
+  underline draws, a last-known-usage note, and a refresh error that only
+  dims the tab visually.
 - Hovering a provider tab whose name is cut short, or an Overview row whose
   title or detail line is cut short in a narrow popup, shows the full text in
   a tooltip. Text that fits gets no tooltip.
 - Overflowing popup tabs have separate scroll buttons and immediate keyboard
   focus reveal, so navigation never covers provider labels. A tab wider than the
   available area stays aligned at its start when focused or selected again.
+- Popup tabs follow the usual tab keyboard pattern: Left and Right move focus
+  between tabs and wrap around at either end, Home and End jump to the first
+  and last tab, and Enter or Space opens the focused tab.
 - Global **Usage & Spend** tab with a Cost/Tokens selector, a 7/30/90-day range
   selector, interactive daily chart, activity heatmap, and provider totals that
   keep different currencies separate. The heatmap groups the range into weekday
@@ -182,7 +189,8 @@ and can trigger incident notifications independently of the retained quotas.
 Stale quotas preserve the previous quota, pace, and reset notification state,
 even when the CLI reports success with old quotas and current status. If no fresh
 quota has been seen, the first fresh measurement establishes that state silently.
-Panel run-out countdowns advance from the receipt time of their own forecast.
+Panel and popup run-out countdowns advance from the receipt time of their own
+forecast.
 Selecting a cached account preserves that time, including in privacy mode;
 a later refresh for another account cannot restart its countdown.
 Failed refreshes stop reusing measurements older than 24 hours, and a quota
@@ -383,7 +391,9 @@ fields; track proposed extensions in the issue tracker.
 - Optional quota warning markers on usage bars.
 - Optional Plasma notifications for provider status incidents, configurable
   quota crossings, predicted quota exhaustion from CLI pace data, and when a
-  heavily used limit resets back to empty.
+  heavily used limit resets back to empty. Notification text is shown
+  literally: markup in provider or status text never becomes a link, emphasis,
+  or an image.
 - Clicking the available-update notification opens that release's page on
   GitHub, addressed from the tag the updater announced. The notification stays
   non-clickable when the release address is unknown or the installed
@@ -600,8 +610,8 @@ organizations, projects, paths, sessions, prompts, model names from cost
 history, and provider messages are never sent. Only providers with current
 measurements are sent; one retained after a failed refresh, or without data,
 is left out. Weekly spending comparisons
-require cost history already loaded in **Usage & Spend**; generating an insight
-never starts a cost scan.
+require cost history already loaded in **Usage & Spend** and scanned today;
+generating an insight never starts a cost scan.
 
 **Frequency** defaults to **Only on request**. **Every 6 hours**, **Every 12
 hours**, and **Daily** generate in the background at most once per interval,

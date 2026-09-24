@@ -127,7 +127,7 @@ ColumnLayout {
             objectName: "usagePaceLabel"
 
             visible: usageRow.showPace && usageRow.rowData.pace.length > 0
-            text: usageRow.rowData.pace
+            text: usageRow.applet.usagePaceText(usageRow.rowData)
             font: Kirigami.Theme.smallFont
             opacity: usageRow.applet.secondaryTextOpacity
             Layout.alignment: Qt.AlignBaseline

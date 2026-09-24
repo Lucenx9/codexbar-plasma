@@ -1114,8 +1114,18 @@ PlasmoidItem {
             resetDescription: snapshot.resetDescription}, false), 500)
         row.pace = paceSummaryPartsText(snapshot.paceParts)
         delete row.resetValue
-        delete row.paceParts
         return row
+    }
+
+    // The popup pace line. Its run-out forecast counts down from the row's
+    // observation like the panel, instead of repeating the receipt-time ETA.
+    function usagePaceText(row) {
+        if (!row || !row.pace) {
+            return ""
+        }
+        return Array.isArray(row.paceParts)
+            ? paceSummaryPartsText(PacePresentation.advancedParts(row.paceParts, row.paceObservedAtMs, panelClockMs))
+            : row.pace
     }
 
 
@@ -2149,6 +2159,28 @@ PlasmoidItem {
     function switcherPercent(item) {
         var row = switcherMetricRow(item)
         return row ? displayPercent(row) : -1
+    }
+
+    // A popup tab shows its quota only as an underline and its failure only
+    // by dimming, so screen readers get both as text.
+    function switcherDescription(item) {
+        if (!item) {
+            return ""
+        }
+        var parts = []
+        var row = switcherMetricRow(item)
+        if (row && row.hasPercent) {
+            var text = i18n("%1: %2% %3", row.label, Math.round(displayPercent(row)), percentSuffix())
+            var reset = resetTextForRow(row)
+            parts.push(reset.length > 0 ? i18n("%1 - %2", text, reset) : text)
+        }
+        if (item.usageStale === true) {
+            parts.push(lastGoodUsageText(item))
+        }
+        if (item.error && item.error.length > 0) {
+            parts.push(item.error)
+        }
+        return parts.join(". ")
     }
 
     // Eligibility, the stored selection, and the visible limit all live in

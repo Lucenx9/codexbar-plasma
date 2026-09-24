@@ -99,10 +99,15 @@ object from an allowlist. It never copies an input record.
   normalized by `ProviderNormalizer.rateWindowMetrics`; nothing is extrapolated.
 - Spend and token comparisons require the cost history already loaded for the
   **Usage & Spend** range: all fourteen complete days before today, each with a
-  finite amount, and established coverage. Missing, unknown, or partial days
-  produce no comparison. Amounts keep their ISO currency per provider and are
-  never summed across providers. Estimated sources and incomplete requests are
-  flagged. Opening the popup or generating an insight never starts a cost scan.
+  finite amount, and established coverage. The history must reach today: a
+  scan from before midnight, for example one kept across a suspend, saw only
+  part of yesterday. Missing, unknown, or partial days produce no comparison.
+  Amounts keep their ISO currency per provider and are never summed across
+  providers. Spend keeps the qualifier the widget shows beside the amount:
+  estimated or approximate sources, including an estimated share, set
+  `estimated`, and partial amounts (unpriced or unmetered requests) or days
+  with incomplete requests set `incomplete`. Opening the popup or generating
+  an insight never starts a cost scan.
 - Signals are deterministic: exhausted quota, forecast exhaustion before reset,
   quota at or above the warning threshold, a spend or token change of at least
   25% between the two periods, and a known service incident. An increase above
@@ -198,6 +203,8 @@ Failures map to bounded reasons: `missing_key`, `secret_unavailable`, `auth`
   models (Ollama's untagged names match `:latest`) and never presents an
   unlisted model as working. OpenRouter's list proves structured-output
   support, not Zero Data Retention routing, which is checked on generation.
+  Editing the Ollama address retires a running test and clears its result,
+  which describes only the address it listed.
 
 ## Scheduling and lifecycle
 
@@ -246,6 +253,9 @@ Failures map to bounded reasons: `missing_key`, `secret_unavailable`, `auth`
   and key handling. It also compiles the shipped catalogs and runs `main.qml`'s
   language adapter to prove the catalog tag reaches `--language` under C and
   Italian regional locales.
+- `tests/test_ai_insights_settings.py`: the settings page's helper reply
+  handling with stubbed processes, including an Ollama address edited during
+  or after **Test connection**.
 - `tests/test_ai_insights_controller.py`: the production controller through
   Plasma's executable DataSource with a recording helper, covering disabled,
   manual, duplicate, automatic, restart, language/model/disable changes during a
