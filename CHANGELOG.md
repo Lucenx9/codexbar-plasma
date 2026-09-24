@@ -124,6 +124,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   `http://[0:0:0:0:0:0:0:1]:11434` as on this computer. The settings page only
   recognized `[::1]`, so equivalent spellings of the loopback address showed
   the remote-address warning even though the helper accepts them as local.
+- Saving an aggregate usage snapshot as a PNG now reliably writes the chosen
+  file instead of failing after the file picker closes.
 - Keep a provider's healthy cost data when its cost record carries a falsy
   `error` flag such as `false`, `0`, or an empty message. Only a real error
   now marks the provider failed and drops its totals from the snapshot.
@@ -194,6 +196,14 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   command unchanged. A command reaped by the bound reports the same timeout
   message as the page timeout instead of an exit-code line or the shell's
   own signal notice.
+- Omit the AI Insights spend or token comparison when its weekly totals
+  overflow, instead of sending `null` amounts in the request snapshot. Finite
+  daily values can still sum past the largest double, which serialized as
+  `null` and broke the documented finite-amount contract.
+- Report an AI Insights **Test connection** stopped by its time bound as a
+  timeout instead of an unexpected-format error. A listing killed by the
+  shell bound arrives with an empty reply and exit code 124 or 137, which the
+  model-list path now reads like the insight-generation path does.
 - Redact `password`, `secret`, `private_key`, and `client_secret` values in
   CLI messages and diagnostics. Previously only authorization, bearer,
   cookie, API-key, and token shapes were masked, so a CLI error such as

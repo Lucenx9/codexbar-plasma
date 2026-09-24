@@ -134,6 +134,28 @@ TestCase {
         verify(JSON.parse(build([provider("claude", {tokenCost: history(20, 3, 2)})]).text).providers[0].spend)
     }
 
+    function test_overflowingPeriodsProduceNoComparison() {
+        // 7 x 1e308 overflows a double; the totals are unknown, not null.
+        var overflowing = history(20, 1e308, 1e308)
+        for (var i = 0; i < overflowing.daily.length; i++)
+            overflowing.daily[i].tokens = 1e308
+        var text = build([provider("claude", {tokenCost: overflowing})]).text
+        var snapshot = JSON.parse(text)
+        verify(snapshot.providers[0].spend === undefined, JSON.stringify(snapshot.providers[0].spend))
+        verify(snapshot.providers[0].tokens === undefined, JSON.stringify(snapshot.providers[0].tokens))
+        verify(text.indexOf("null") < 0, text)
+        // 7 x 1e306 still sums exactly, but rounding it to cents overflows.
+        var unrounded = history(20, 1e306, 1e306)
+        var rounded = JSON.parse(build([provider("claude", {tokenCost: unrounded})]).text)
+        verify(rounded.providers[0].spend === undefined, JSON.stringify(rounded.providers[0].spend))
+        // A finite comparison with an unrepresentable change keeps its sums.
+        var skewed = history(20, 1, 5e-324)
+        var kept = JSON.parse(build([provider("claude", {tokenCost: skewed})]).text)
+        compare(kept.providers[0].spend.last7Days, 7)
+        verify(kept.providers[0].spend.changePercent === undefined)
+        verify(kept.providers[0].spend.changeMultiple === undefined)
+    }
+
     function test_completeHistoryComparesAdjacentCompleteWeeks() {
         var snapshot = JSON.parse(build([provider("claude", {tokenCost: history(20, 3, 2)})]).text)
         compare(snapshot.providers[0].spend, {last7Days: 21, previous7Days: 14, changePercent: 50,

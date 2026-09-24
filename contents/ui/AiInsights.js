@@ -361,7 +361,10 @@ function generationReply(text, exitCode) {
     }
 }
 
-function modelsReply(text) {
+function modelsReply(text, exitCode) {
+    if (exitCode === 124 || exitCode === 137) {
+        return {outcome: "error", reason: "timeout", models: [], key: ""}
+    }
     var value = parseReply(text)
     if (!value) {
         return {outcome: "error", reason: "format", models: [], key: ""}
