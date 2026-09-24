@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Show the full provider name when hovering a labelled popup tab whose name is
+  cut short, and the full title and detail line when hovering an Overview row
+  whose text is cut short.
 - Add optional AI Insights (beta), off by default: a short Overview card that explains
   quota risk, forecast exhaustion, and week-over-week spending or token changes
   using a local Ollama model, OpenRouter, or OpenAI. It writes in the widget's

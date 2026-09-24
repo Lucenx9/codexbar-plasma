@@ -535,9 +535,12 @@ Item {
                                 onClicked: providerTab.activate()
                             }
 
+                            // Labelled tabs are capped in width, so a long
+                            // provider name elides; hovering then reveals it.
                             PlainToolTip {
                                 parent: providerTabMouse
-                                visible: !applet.showPopupTabLabels && providerTabMouse.containsMouse
+                                visible: (!applet.showPopupTabLabels || providerTabLabel.truncated)
+                                    && providerTabMouse.containsMouse
                                 plainText: modelData.title
                             }
 

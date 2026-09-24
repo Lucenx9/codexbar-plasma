@@ -30,6 +30,9 @@ Rectangle {
             : (lastKnown.length > 0 ? lastKnown : primary)
     }
     readonly property bool keyboardFocusVisible: overviewRowFocus.visualFocus
+    // A narrow popup elides long provider names and account details.
+    readonly property bool textTruncated: overviewRowTitle.truncated
+        || (overviewRowDetail.visible && overviewRowDetail.truncated)
 
     signal selected(var providerData)
 
@@ -101,6 +104,8 @@ Rectangle {
                 spacing: Kirigami.Units.smallSpacing
 
                 PlainPlasmaLabel {
+                    id: overviewRowTitle
+
                     text: overviewRow.providerData.title
                     font.weight: Font.DemiBold
                     Layout.fillWidth: true
@@ -117,6 +122,8 @@ Rectangle {
             }
 
             PlainPlasmaLabel {
+                id: overviewRowDetail
+
                 visible: overviewRow.detail.length > 0
                 text: overviewRow.detail
                 font: Kirigami.Theme.smallFont
@@ -221,5 +228,15 @@ Rectangle {
             overviewRowFocus.forceActiveFocus(Qt.MouseFocusReason)
         }
         onClicked: overviewRow.activate()
+    }
+
+    PlainToolTip {
+        id: overviewRowToolTip
+
+        parent: overviewRowMouse
+        visible: overviewRow.textTruncated && overviewRowMouse.containsMouse
+        plainText: overviewRow.detail.length > 0
+            ? overviewRow.providerData.title + "\n" + overviewRow.detail
+            : overviewRow.providerData.title
     }
 }
