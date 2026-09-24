@@ -14,10 +14,13 @@ function message(value) {
 // live countdown, the panel "resets within" rule, and absolute formatting. A
 // numeric CLI date is epoch milliseconds, whose digits Date.parse cannot read,
 // so it is stored in its ISO form instead.
+function usableEpochMs(value) {
+    return typeof value === "number" && isFinite(value) && Math.abs(value) <= 8640000000000000;
+}
+
 function resetsAtText(value) {
     if (typeof value === "number") {
-        return isFinite(value) && Math.abs(value) <= 8640000000000000
-            ? new Date(value).toISOString() : "";
+        return usableEpochMs(value) ? new Date(value).toISOString() : "";
     }
     return Normalizer.boundedDisplayText(value === undefined || value === null ? "" : value, 128);
 }
@@ -35,7 +38,9 @@ function windowSnapshot(window, pace, usageKnown, lane, label, receivedAtMs) {
     result.resetDescription = Normalizer.boundedDisplayText(window.resetDescription || "", 500);
     // Initial reset formatting accepts numeric dates; the stored reset label
     // continues to use the bounded CLI text, as it does for live quota rows.
-    result.resetValue = typeof window.resetsAt === "number" ? window.resetsAt
+    // A number Date cannot read is dropped: it would otherwise render as raw
+    // digits in the quota row instead of the empty reset.
+    result.resetValue = usableEpochMs(window.resetsAt) ? window.resetsAt
         : (typeof window.resetsAt === "string" ? Normalizer.boundedDisplayText(window.resetsAt, 500) : "");
     result.paceParts = PacePresentation.summaryParts(pace);
     return result;

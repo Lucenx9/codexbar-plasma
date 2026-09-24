@@ -214,6 +214,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Clear the AI Insights model list when the Ollama address is edited. A
   finished **Test connection** left the previous server's models selectable,
   so the untested address could present a model it never listed as working.
+- Hide a quota reset label when its numeric reset date is unusable instead of
+  printing the raw value. An out-of-range or infinite `resetsAt` reached the
+  quota row as digits such as `8640000000000001` or `Infinity`; it now keeps
+  the empty reset like other invalid reset metadata.
 
 ## 0.2.40 - 2026-09-20
 
