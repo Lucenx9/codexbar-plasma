@@ -346,8 +346,9 @@ and clipboard content remain under your control after closing the window.
   marked `≈`. Unknown or missing days, and days with requests excluded from
   the CLI totals, make a total read "at least". Weeks reaching back before
   the scanned history range are left out rather than shown incomplete. If the
-  last successful cost scan is older than today, unscanned trailing days also
-  make the affected week read "at least". When the CLI reports that history
+  last successful cost scan is older than today, its last day was scanned only
+  in part, so that day and any unscanned trailing days also make the affected
+  week read "at least". When the CLI reports that history
   coverage is still being established, every displayed week reads "at least"
   even if its recorded days have numeric amounts.
 - Token, request, and point counts use the current language's singular and
