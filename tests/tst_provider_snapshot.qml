@@ -179,6 +179,20 @@ TestCase {
         verify(legacy.usageDashboard !== null);
         compare(legacy.placeholder, "");
     }
+    function test_blankDisplayNameFallsBackToTitleOrNull() {
+        var withTitle = ProviderSnapshot.normalize({
+            provider: "codex",
+            displayName: "   \t  \n ",
+            title: "Custom Title"
+        }, 1000);
+        compare(withTitle.displayName, "Custom Title");
+
+        var withoutTitle = ProviderSnapshot.normalize({
+            provider: "codex",
+            displayName: "   "
+        }, 1000);
+        compare(withoutTitle.displayName, null);
+    }
     function test_invalidRecords_data() {
         return [
             {

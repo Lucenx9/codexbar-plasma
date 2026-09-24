@@ -122,6 +122,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Saving an aggregate usage snapshot as a PNG now reliably writes the chosen
   file instead of failing after the file picker closes.
+- Fall back to the provider title or roster display name when a provider record
+  supplies a whitespace-only display name, instead of accepting an empty string
+  and overriding configured provider names.
 - Report a fresh setup as current when another setup run installed the
   release first. The post-lock recheck compared against the synthetic
   `0.0.0` version instead of the installed widget, so the second run
