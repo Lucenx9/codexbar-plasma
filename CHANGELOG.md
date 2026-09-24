@@ -10,6 +10,14 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Fixed
+
+- Keep the stored AI Insights model when opening settings. Opening and saving
+  the page no longer clears the model, so AI Insights stops asking for
+  reconfiguration when nothing was changed. The stored model is also offered
+  as the initial picker entry, so the menu is not empty on open before a
+  connection test lists the service.
+
 ## 0.2.41 - 2026-09-24
 
 ### Added

@@ -6,7 +6,11 @@ deadline, and model field replaced by recorders, so the page's reply handling
 runs without the KDE settings runtime. A second harness mirrors the Clear
 button's enabled binding with a stubbed configuration and runs the page's
 cache re-arm handler, so the button must enable again when a new insight is
-stored after a clear.
+stored after a clear. A third harness instantiates the page's creation path
+with stored values as creation properties, the way the KCM dialog injects
+them, with a real editable combo, so opening settings must keep the stored
+model instead of wiping it through a model-list reset, and must offer it as
+the initial picker entry.
 """
 
 import os
@@ -182,6 +186,195 @@ TestCase {
 '''
 
 
+CREATION_QML = '''import QtQuick
+import QtQuick.Controls
+import QtTest
+import "SOURCE_URL/AiInsights.js" as AiInsights
+TestCase {
+    id: test
+    name: "AiInsightsCreationKeepsModel"
+    when: windowShown
+    // The KCM dialog injects stored values as creation properties, which
+    // notifies derived properties such as provider during instantiation,
+    // even when the stored value equals the QML default.
+    Component {
+        id: pageFactory
+        Item {
+            id: page
+            property string cfg_aiInsightsProvider: "ollama"
+            property string cfg_aiInsightsModel: ""
+            property alias cfg_aiInsightsOllamaEndpoint: endpointField.text
+            readonly property string provider: AiInsights.safeProvider(cfg_aiInsightsProvider)
+            property var availableModels: []
+            property var modelsByProvider: ({})
+            property string keyStatus: ""
+            property string actionText: ""
+            property string activeSource: ""
+            property string activeAction: ""
+            property alias combo: modelCombo
+            onCfg_aiInsightsModelChanged: { MODEL_HANDLER }
+            onProviderChanged: { PROVIDER_HANDLER }
+            Component.onCompleted: { COMPLETED_HANDLER }
+
+            QtObject {
+                id: helperSource
+                function disconnectSource(source) {}
+            }
+            QtObject {
+                id: actionDeadline
+                function stop() {}
+            }
+            TextField {
+                id: endpointField
+            }
+            // A real editable combo: resetting its model resets the edit
+            // text, which the page must not mistake for a user edit.
+            ComboBox {
+                id: modelCombo
+                editable: true
+                model: page.availableModels
+                onEditTextChanged: { EDIT_HANDLER }
+                onActivated: { ACTIVATED_HANDLER }
+            }
+
+            SOURCE_FUNCTIONS
+            function refreshKeyStatus() {}
+        }
+    }
+
+    // Typing with the field focused is user intent and must reach the
+    // setting. Runs synchronously: no event-loop pump before the compare,
+    // so deferred control polish cannot interleave with the focused edit.
+    function test_focusedTypingWritesBack() {
+        var page = pageFactory.createObject(test, {
+            cfg_aiInsightsProvider: "ollama",
+            cfg_aiInsightsModel: "",
+            cfg_aiInsightsOllamaEndpoint: "http://localhost:11434"
+        })
+        verify(page !== null)
+        page.combo.forceActiveFocus()
+        verify(page.combo.activeFocus)
+        page.combo.editText = "llama3.2:3b"
+        compare(page.cfg_aiInsightsModel, "llama3.2:3b")
+        page.destroy()
+    }
+
+    // A control-driven reset without focus must restore the setting
+    // instead of adopting the reset.
+    function test_unfocusedResetRestores() {
+        var page = pageFactory.createObject(test, {
+            cfg_aiInsightsProvider: "ollama",
+            cfg_aiInsightsModel: "qwen3:4b",
+            cfg_aiInsightsOllamaEndpoint: "http://localhost:11434"
+        })
+        verify(page !== null)
+        verify(!page.combo.activeFocus)
+        page.combo.editText = ""
+        compare(page.combo.editText, "qwen3:4b")
+        compare(page.cfg_aiInsightsModel, "qwen3:4b")
+        page.destroy()
+    }
+
+    // Opening settings with a stored local model must show it, not an empty
+    // field that would persist the wipe on Apply. The stored model also seeds
+    // the picker menu, which stays settled past deferred control polish.
+    function test_openWithStoredLocalModelKeepsIt() {
+        var page = pageFactory.createObject(test, {
+            cfg_aiInsightsProvider: "ollama",
+            cfg_aiInsightsModel: "qwen3:4b",
+            cfg_aiInsightsOllamaEndpoint: "http://localhost:11434"
+        })
+        verify(page !== null)
+        compare(page.cfg_aiInsightsModel, "qwen3:4b")
+        compare(page.combo.editText, "qwen3:4b")
+        compare(page.availableModels, ["qwen3:4b"])
+        wait(250)
+        compare(page.cfg_aiInsightsModel, "qwen3:4b")
+        compare(page.combo.editText, "qwen3:4b")
+        compare(page.availableModels, ["qwen3:4b"])
+        page.destroy()
+    }
+
+    function test_openWithStoredCloudModelKeepsIt() {
+        var page = pageFactory.createObject(test, {
+            cfg_aiInsightsProvider: "openai",
+            cfg_aiInsightsModel: "gpt-4o-mini",
+            cfg_aiInsightsOllamaEndpoint: "http://localhost:11434"
+        })
+        verify(page !== null)
+        compare(page.cfg_aiInsightsModel, "gpt-4o-mini")
+        compare(page.combo.editText, "gpt-4o-mini")
+        compare(page.availableModels, ["gpt-4o-mini"])
+        wait(250)
+        compare(page.cfg_aiInsightsModel, "gpt-4o-mini")
+        compare(page.combo.editText, "gpt-4o-mini")
+        compare(page.availableModels, ["gpt-4o-mini"])
+        page.destroy()
+    }
+
+    // Without a stored model there is nothing to offer: the menu stays
+    // empty until a connection test lists the service.
+    function test_openWithoutStoredModelLeavesMenuEmpty() {
+        var page = pageFactory.createObject(test, {
+            cfg_aiInsightsProvider: "ollama",
+            cfg_aiInsightsModel: "",
+            cfg_aiInsightsOllamaEndpoint: "http://localhost:11434"
+        })
+        verify(page !== null)
+        compare(page.availableModels, [])
+        compare(page.combo.editText, "")
+        wait(250)
+        compare(page.availableModels, [])
+        compare(page.cfg_aiInsightsModel, "")
+        page.destroy()
+    }
+
+    // Picking a listed model with the mouse commits it even though the
+    // combo never holds focus, so the unfocused guard restores the text
+    // first; the activation must still write the pick back.
+    function test_popupSelectionCommitsModel() {
+        var page = pageFactory.createObject(test, {
+            cfg_aiInsightsProvider: "ollama",
+            cfg_aiInsightsModel: "qwen3:4b",
+            cfg_aiInsightsOllamaEndpoint: "http://localhost:11434"
+        })
+        verify(page !== null)
+        page.availableModels = ["qwen3:4b", "llama3.2:3b"]
+        compare(page.combo.editText, "qwen3:4b")
+        verify(!page.combo.activeFocus)
+        page.combo.popup.open()
+        tryCompare(page.combo.popup, "opened", true)
+        var delegate = page.combo.popup.contentItem.itemAtIndex(1)
+        verify(delegate !== null)
+        mouseClick(delegate)
+        compare(page.cfg_aiInsightsModel, "llama3.2:3b")
+        compare(page.combo.editText, "llama3.2:3b")
+        page.destroy()
+    }
+
+    // The provider switch still swaps the pending model: only the creation
+    // reset is a bug, not the per-provider model memory. Switching clears
+    // the seeded entry, since the other provider's list is untested.
+    function test_providerRoundTripKeepsBothModels() {
+        var page = pageFactory.createObject(test, {
+            cfg_aiInsightsProvider: "ollama",
+            cfg_aiInsightsModel: "qwen3:4b",
+            cfg_aiInsightsOllamaEndpoint: "http://localhost:11434"
+        })
+        verify(page !== null)
+        page.selectProvider("openrouter")
+        compare(page.cfg_aiInsightsModel, "")
+        compare(page.availableModels, [])
+        page.selectProvider("ollama")
+        compare(page.cfg_aiInsightsModel, "qwen3:4b")
+        compare(page.combo.editText, "qwen3:4b")
+        compare(page.availableModels, [])
+        page.destroy()
+    }
+}
+'''
+
+
 class AiInsightsSettingsTests(unittest.TestCase):
     def test_helper_replies_follow_the_tested_endpoint(self):
         insights = Surface("insights", ROOT)
@@ -235,6 +428,43 @@ class AiInsightsSettingsTests(unittest.TestCase):
         output = result.stdout + result.stderr
         self.assertEqual(result.returncode, 0, output)
         self.assertIn("Totals: 3 passed, 0 failed", output)
+
+    def test_opening_settings_keeps_the_stored_model(self):
+        insights = Surface("insights", ROOT)
+        source = (ROOT / "contents/ui/configAiInsights.qml").read_text()
+        # Pin the production wiring this harness mirrors by hand: the combo
+        # shows the tested list. The copied handlers carry the rest.
+        self.assertIn("model: page.availableModels", insights.id_block("modelCombo"))
+        functions = []
+        for name in ("retire", "selectProvider"):
+            signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
+            functions.append(signature + " {" + insights.function_body(name) + "}")
+        handlers = {
+            "MODEL_HANDLER": insights.handler_body("onCfg_aiInsightsModelChanged"),
+            "PROVIDER_HANDLER": insights.handler_body("onProviderChanged"),
+            "COMPLETED_HANDLER": insights.handler_body("Component.onCompleted"),
+            "EDIT_HANDLER": insights.handler_body("onEditTextChanged"),
+        }
+        # An absent activation handler leaves the harness without one, so the
+        # popup selection test, not the handler's existence, decides the result.
+        try:
+            handlers["ACTIVATED_HANDLER"] = insights.handler_body("onActivated")
+        except AssertionError:
+            handlers["ACTIVATED_HANDLER"] = ""
+        qml = CREATION_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
+        for marker, body in handlers.items():
+            qml = qml.replace(marker, body)
+        qml = qml.replace("SOURCE_FUNCTIONS", "\n".join(functions))
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = Path(directory) / "tst_ai_insights_creation.qml"
+            fixture.write_text(qml)
+            result = subprocess.run(
+                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                capture_output=True, text=True, timeout=30)
+        output = result.stdout + result.stderr
+        self.assertEqual(result.returncode, 0, output)
+        self.assertIn("Totals: 9 passed, 0 failed", output)
 
 
 if __name__ == "__main__":

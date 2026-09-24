@@ -62,7 +62,15 @@ KCM.SimpleKCM {
     }
     onProviderChanged: {
         retire()
-        availableModels = []
+        if (availableModels.length > 0) {
+            // A new model list resets the combo; keep the typed or saved model.
+            // This also fires during instantiation from creation properties,
+            // even when the stored provider equals the default, so an already
+            // empty list is left alone instead of churning the combo.
+            var model = cfg_aiInsightsModel
+            availableModels = []
+            modelCombo.editText = model
+        }
         keyStatus = ""
         actionText = ""
         Qt.callLater(refreshKeyStatus)
@@ -90,6 +98,12 @@ KCM.SimpleKCM {
         }
     }
     Component.onCompleted: {
+        // Offer the stored model as the initial picker entry, so the menu is
+        // never empty on open. A connection test replaces it with the live
+        // list; a provider or address change empties it until the next test.
+        if (cfg_aiInsightsModel.length > 0 && availableModels.length === 0) {
+            availableModels = [cfg_aiInsightsModel]
+        }
         modelCombo.editText = cfg_aiInsightsModel
         Qt.callLater(refreshKeyStatus)
     }
@@ -346,9 +360,27 @@ KCM.SimpleKCM {
                 implicitWidth: Kirigami.Units.gridUnit * 6
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 16
+                // The control resets its text on its own while it initializes
+                // and whenever its list changes. Only a focused edit is user
+                // intent; anything else restores the setting instead of
+                // adopting the reset, so opening the page cannot wipe it.
                 onEditTextChanged: {
+                    if (!modelCombo.activeFocus) {
+                        if (editText !== page.cfg_aiInsightsModel) {
+                            modelCombo.editText = page.cfg_aiInsightsModel
+                        }
+                        return
+                    }
                     var value = editText.trim()
                     if (value !== page.cfg_aiInsightsModel) {
+                        page.cfg_aiInsightsModel = value
+                    }
+                }
+                // A mouse selection can land while the popup holds focus, so
+                // commit it explicitly. This fires only for user interaction.
+                onActivated: {
+                    var value = currentText.trim()
+                    if (value.length > 0) {
                         page.cfg_aiInsightsModel = value
                     }
                 }
