@@ -12,6 +12,16 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Move between popup tabs with Home and End, and wrap the Left and Right arrows
+  around from the last tab to the first and back, following the common tab
+  keyboard pattern.
+- Describe popup quotas to screen readers. Overview rows now announce their
+  quota and reset beside the detail line, and provider tabs announce the quota
+  their underline draws, stale usage, and a refresh error that was previously
+  shown only by dimming the tab.
+- Show the full provider name when hovering a labelled popup tab whose name is
+  cut short, and the full title and detail line when hovering an Overview row
+  whose text is cut short.
 - Add optional AI Insights (beta), off by default: a short Overview card that explains
   quota risk, forecast exhaustion, and week-over-week spending or token changes
   using a local Ollama model, OpenRouter, or OpenAI. It writes in the widget's
@@ -110,6 +120,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep the AI Insights settings privacy note local for loopback Ollama
+  addresses with a path, such as `http://localhost:11434/v1`, instead of
+  warning that statistics are sent to that address.
 - Show a provider's **Today** cost as unavailable when the cost snapshot was
   scanned on an earlier day, such as before midnight or before a failed refresh,
   instead of presenting that day's spend as today's.
@@ -150,6 +163,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   incomplete requests, and show both boundaries of the current week.
 - Mark Quota weeks totals as partial when the cost history is older than the
   current day and has not scanned the trailing dates of a quota week.
+- Mark a quota week as partial when its last day comes from a cost scan taken
+  before midnight. After a midnight reset, the week that just closed no longer
+  shows an exact total that is missing the end of its last day.
 - Bound **Diagnostics** commands shell-side with GNU `timeout --foreground
   --kill-after`, so a hung `codexbar diagnose` or provider list is killed
   instead of surviving as an orphan after the page times out or the dialog
