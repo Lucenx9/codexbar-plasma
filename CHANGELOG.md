@@ -17,6 +17,15 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   reconfiguration when nothing was changed. The stored model is also offered
   as the initial picker entry, so the menu is not empty on open before a
   connection test lists the service.
+- Report OpenRouter failures that arrive inside a successful reply, such as a
+  rate limit or exhausted credits, with their real reason instead of an
+  unexpected-format error, so a rate limit also pauses further requests for
+  the response's `Retry-After`.
+- Leave OpenAI models that AI Insights cannot use out of the model list: the
+  Responses-only `-pro` and deep-research models; GPT-4, GPT-4 Turbo, and
+  GPT-3.5; `chatgpt-4o-latest`; and GPT-4o snapshots before `2024-08-06`,
+  which lack structured outputs. **Test connection** no longer reports them
+  as usable.
 
 ## 0.2.41 - 2026-09-24
 

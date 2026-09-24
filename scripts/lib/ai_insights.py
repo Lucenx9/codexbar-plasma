@@ -64,8 +64,13 @@ LANGUAGE_NAMES = {
     "es": "Spanish", "pt-BR": "Brazilian Portuguese", "pt": "Portuguese",
 }
 # OpenAI lists every model family; only chat-capable text models can answer.
+# Pro and deep-research models serve only the Responses API.
 OPENAI_EXCLUDED = ("audio", "realtime", "tts", "transcribe", "image", "search",
-                   "embedding", "instruct", "moderation", "codex")
+                   "embedding", "instruct", "moderation", "codex", "-pro", "deep-research")
+# GPT-4, GPT-4 Turbo, and GPT-3.5 predate json_schema structured outputs.
+OPENAI_LEGACY = re.compile(r"^gpt-(3\.5|4)(-|$)")
+# So do chatgpt-4o-latest and GPT-4o snapshots from before August 2024.
+OPENAI_NO_SCHEMA = re.compile(r"^(chatgpt-4o-latest|gpt-4o-2024-0[1-7]-[0-9]{2})$")
 SCHEMA = {
     "type": "object",
     "properties": {
@@ -236,7 +241,6 @@ def retry_after_seconds(headers):
 
 
 def http_failure(provider, error):
-    code = error.code
     body = {}
     try:
         body = json.loads(error.read(65536) or b"{}")
@@ -244,12 +248,16 @@ def http_failure(provider, error):
         pass
     detail = body.get("error") if isinstance(body, dict) else None
     error_code = detail.get("code") if isinstance(detail, dict) else None
+    return status_failure(provider, error.code, error_code, error.headers)
+
+
+def status_failure(provider, code, error_code, headers):
     if code == 401:
         return Failure("auth")
     if code == 402 or error_code == "insufficient_quota":
         return Failure("credits")
     if code == 429:
-        return Failure("rate_limited", retry_after_seconds(error.headers))
+        return Failure("rate_limited", retry_after_seconds(headers))
     if code == 403:
         return Failure("forbidden")
     if code == 404:
@@ -261,11 +269,11 @@ def http_failure(provider, error):
     if 300 <= code < 400:
         return Failure("network")
     if provider == "openrouter" and code == 503:
-        return Failure("routing", retry_after_seconds(error.headers))
-    return Failure("unavailable", retry_after_seconds(error.headers))
+        return Failure("routing", retry_after_seconds(headers))
+    return Failure("unavailable", retry_after_seconds(headers))
 
 
-def request_json(provider, url, key="", body=None, timeout=None):
+def request_json(provider, url, key="", body=None, timeout=None, return_headers=False):
     headers = {"Accept": "application/json", "User-Agent": "codexbar-plasma"}
     data = None
     if body is not None:
@@ -287,6 +295,7 @@ def request_json(provider, url, key="", body=None, timeout=None):
     try:
         with opener.open(request, timeout=timeout or REQUEST_TIMEOUT) as response:
             raw = response.read(MAX_RESPONSE_BYTES + 1)
+            headers = response.headers
     except urllib.error.HTTPError as error:
         raise http_failure(provider, error) from None
     except (socket.timeout, TimeoutError):
@@ -297,9 +306,10 @@ def request_json(provider, url, key="", body=None, timeout=None):
     if len(raw) > MAX_RESPONSE_BYTES:
         raise Failure("format")
     try:
-        return json.loads(raw)
+        payload = json.loads(raw)
     except ValueError:
         raise Failure("format") from None
+    return (payload, headers) if return_headers else payload
 
 
 def require_key(provider):
@@ -339,7 +349,9 @@ def model_records(provider, payload):
                 label = name.strip()[:120] if isinstance(name, str) and name.strip() else model_id
                 records.append({"id": model_id, "label": "".join(c for c in label if c.isprintable())})
             else:
-                if not re.match(r"^(gpt-|o[0-9]|chatgpt-)", model_id) or any(part in model_id for part in OPENAI_EXCLUDED):
+                if (not re.match(r"^(gpt-|o[0-9]|chatgpt-)", model_id) or OPENAI_LEGACY.match(model_id)
+                        or OPENAI_NO_SCHEMA.match(model_id)
+                        or any(part in model_id for part in OPENAI_EXCLUDED)):
                     continue
                 records.append({"id": model_id, "label": model_id})
     unique = {record["id"]: record for record in records}
@@ -451,7 +463,7 @@ def insight(content):
     return {"status": "ok", "summary": summary, "highlights": cleaned[:MAX_HIGHLIGHTS]}
 
 
-def completion_content(provider, payload):
+def completion_content(provider, payload, headers=None):
     if not isinstance(payload, dict):
         raise Failure("format")
     if provider == "ollama":
@@ -460,12 +472,21 @@ def completion_content(provider, payload):
             raise Failure("truncated")
         return message.get("content") if isinstance(message, dict) else None
     choices = payload.get("choices")
+    detail = payload.get("error")
+    if not choices and isinstance(detail, dict):
+        # OpenRouter reports a provider failure after the headers as 200 OK
+        # with only an error object whose code is the HTTP status.
+        code = detail.get("code")
+        raise status_failure(provider, code if type(code) is int else 0, code,
+                             headers if headers is not None else {})
     if not isinstance(choices, list) or not choices or not isinstance(choices[0], dict):
         raise Failure("format")
     choice = choices[0]
     message = choice.get("message") if isinstance(choice.get("message"), dict) else {}
     if message.get("refusal") or choice.get("finish_reason") == "content_filter":
         raise Failure("refused")
+    if choice.get("finish_reason") == "error":
+        raise Failure("unavailable")
     if choice.get("finish_reason") == "length":
         raise Failure("truncated")
     return message.get("content")
@@ -491,8 +512,8 @@ def generate(provider, model, endpoint, tag, snapshot_text, zdr):
     url = base + ("/api/chat" if provider == "ollama" else "/chat/completions")
     reasoning_off = provider == "openrouter" and openrouter_reasons(base, model)
     try:
-        payload = request_json(provider, url, key, request_body(provider, model, tag, snapshot, zdr, reasoning_off),
-                               timeout=request_timeout(deadline))
+        payload, headers = request_json(provider, url, key, request_body(provider, model, tag, snapshot, zdr, reasoning_off),
+                                        timeout=request_timeout(deadline), return_headers=True)
     except Failure as failure:
         # Privacy routing can still exclude the endpoints that accept
         # reasoning, and a model whose reasoning is mandatory rejects effort
@@ -501,9 +522,9 @@ def generate(provider, model, endpoint, tag, snapshot_text, zdr):
         if (not reasoning_off or failure.reason not in UNBILLED_REASONING_FAILURES
                 or deadline - time.monotonic() < MIN_REQUEST_SECONDS):
             raise
-        payload = request_json(provider, url, key, request_body(provider, model, tag, snapshot, zdr),
-                               timeout=request_timeout(deadline))
-    return insight(completion_content(provider, payload))
+        payload, headers = request_json(provider, url, key, request_body(provider, model, tag, snapshot, zdr),
+                                        timeout=request_timeout(deadline), return_headers=True)
+    return insight(completion_content(provider, payload, headers))
 
 
 def openrouter_reasons(base, model):

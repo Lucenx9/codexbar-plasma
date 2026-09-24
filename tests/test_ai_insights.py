@@ -386,6 +386,25 @@ class ResponseValidationTests(HelperTestCase):
         quota = {"error": {"message": "You exceeded your current quota", "code": "insufficient_quota"}}
         self.assertEqual(self.reply(quota, 429, {}, "openai"), {"status": "error", "reason": "credits"})
 
+    def test_openrouter_errors_inside_a_200_reply_keep_their_reason(self):
+        # OpenRouter reports a provider failure after the headers as 200 OK
+        # with only an error object, or as a choice that finished with "error".
+        cases = [
+            ({"error": {"message": "secret detail " + KEY, "code": 429}}, "rate_limited"),
+            ({"error": {"message": "secret detail " + KEY, "code": 402}}, "credits"),
+            ({"error": {"message": "secret detail " + KEY, "code": 502}}, "unavailable"),
+            ({"error": {"message": "secret detail " + KEY}}, "unavailable"),
+            (chat("", finish="error"), "unavailable"),
+        ]
+        for payload, reason in cases:
+            with self.subTest(payload=payload):
+                self.assertEqual(self.reply(payload), {"status": "error", "reason": reason})
+        limited = {"error": {"message": "secret detail " + KEY, "code": 429}}
+        self.assertEqual(self.reply(limited, 200, {"Retry-After": "120"}),
+                         {"status": "error", "reason": "rate_limited", "retryAfter": 120})
+        self.assertEqual(self.reply(limited, 200, {"Retry-After": "999999999"}),
+                         {"status": "error", "reason": "rate_limited", "retryAfter": ai.MAX_RETRY_AFTER})
+
     def test_redirects_are_never_followed(self):
         Handler.routes["/api/v1/chat/completions"] = (302, b"", {"Location": self.base + "/stolen"}, 0)
         self.assertEqual(self.generate(), {"status": "error", "reason": "network"})
@@ -459,8 +478,15 @@ class ModelDiscoveryTests(HelperTestCase):
     def test_openai_keeps_chat_models(self):
         Handler.routes["/v1/models"] = (200, {"data": [{"id": name} for name in (
             "gpt-4.1-mini", "gpt-4o-audio-preview", "text-embedding-3-small", "o4-mini", "dall-e-3",
-            "gpt-4o-realtime-preview", "whisper-1", "gpt-image-1")]}, {}, 0)
-        self.assertEqual([model["id"] for model in ai.run("models", "openai")["models"]], ["gpt-4.1-mini", "o4-mini"])
+            "gpt-4o-realtime-preview", "whisper-1", "gpt-image-1",
+            # Responses-only models and models without structured outputs.
+            "gpt-5-pro", "o3-pro", "o1-pro", "o3-deep-research", "gpt-4", "gpt-4-turbo",
+            "gpt-4-0613", "gpt-3.5-turbo", "gpt-3.5-turbo-0125", "chatgpt-4o-latest",
+            "gpt-4o-2024-05-13", "gpt-4o", "gpt-4o-2024-08-06", "gpt-4o-2024-11-20",
+            "gpt-4o-mini-2024-07-18", "gpt-5")]}, {}, 0)
+        self.assertEqual([model["id"] for model in ai.run("models", "openai")["models"]],
+                         ["gpt-4.1-mini", "gpt-4o", "gpt-4o-2024-08-06", "gpt-4o-2024-11-20",
+                          "gpt-4o-mini-2024-07-18", "gpt-5", "o4-mini"])
 
 
 class SecretStorageTests(unittest.TestCase):
