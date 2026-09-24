@@ -15,7 +15,6 @@ Controls.ApplicationWindow {
     required property var snapshot
     // Formatting is supplied by the applet; the snapshot contains only exported fields.
     required property var applet
-    property var capturedImage: null
     property bool capturing: false
     property int captureGeneration: 0
     property string feedback: ""
@@ -51,7 +50,6 @@ Controls.ApplicationWindow {
     transientParent: null
     onSnapshotChanged: {
         feedback = ""
-        capturedImage = null
     }
     Connections {
         target: window.applet
@@ -60,7 +58,6 @@ Controls.ApplicationWindow {
     onClosing: {
         captureGeneration++;
         capturing = false;
-        capturedImage = null;
         saveDialog.close();
     }
 
@@ -82,6 +79,10 @@ Controls.ApplicationWindow {
     }
 
     function captureImage(save) {
+        if (save) {
+            saveDialog.open();
+            return;
+        }
         if (capturing || !visible || saveDialog.visible)
             return;
         capturing = true;
@@ -91,13 +92,8 @@ Controls.ApplicationWindow {
             if (generation !== window.captureGeneration || !window.visible)
                 return;
             window.capturing = false;
-            window.capturedImage = result;
-            if (save) {
-                saveDialog.open();
-            } else {
-                clipboard.content = result.image;
-                window.feedback = i18n("Image copied");
-            }
+            clipboard.content = result.image;
+            window.feedback = i18n("Image copied");
         }, Qt.size(Math.ceil(card.width * 2), Math.ceil(card.height * 2)));
         if (!accepted) {
             capturing = false;
@@ -106,13 +102,28 @@ Controls.ApplicationWindow {
     }
 
     function saveImage(url) {
-        if (!capturedImage || !ShareUsage.localPngUrl(String(url))) {
+        if (!ShareUsage.localPngUrl(String(url))) {
             feedback = i18n("Choose a local PNG file.");
             return false;
         }
-        var saved = capturedImage.saveToFile(url);
-        feedback = saved ? i18n("Image saved") : i18n("Could not save the image. Choose another location.");
-        return saved;
+        if (capturing || !visible)
+            return false;
+        capturing = true;
+        feedback = "";
+        var generation = ++captureGeneration;
+        var accepted = card.grabToImage(function (result) {
+            if (generation !== window.captureGeneration || !window.visible)
+                return;
+            window.capturing = false;
+            var saved = result.saveToFile(url);
+            window.feedback = saved ? i18n("Image saved") : i18n("Could not save the image. Choose another location.");
+        }, Qt.size(Math.ceil(card.width * 2), Math.ceil(card.height * 2)));
+        if (!accepted) {
+            capturing = false;
+            feedback = i18n("Could not create the image. Try again.");
+            return false;
+        }
+        return true;
     }
 
     KQuickControlsAddons.Clipboard {

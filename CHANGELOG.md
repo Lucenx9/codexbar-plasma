@@ -120,6 +120,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Saving an aggregate usage snapshot as a PNG now reliably writes the chosen
+  file instead of failing after the file picker closes.
 - Report a fresh setup as current when another setup run installed the
   release first. The post-lock recheck compared against the synthetic
   `0.0.0` version instead of the installed widget, so the second run

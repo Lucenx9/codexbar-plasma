@@ -60,14 +60,15 @@ TestCase {
         verify(window.statisticsText.indexOf("github.com/Lucenx9/codexbar-plasma") !== -1);
         window.captureImage(false);
         tryCompare(window, "capturing", false);
-        verify(window.capturedImage !== null);
         verify(clipboard.formats.some(function(format) { return format.indexOf("image") !== -1; }));
         compare(window.feedback, "Image copied");
         verify(window.saveImage("OUTPUT_URL"));
+        tryCompare(window, "capturing", false);
         compare(window.feedback, "Image saved");
         verify(!window.saveImage("https://example.com/image.png"));
         compare(window.feedback, "Choose a local PNG file.");
-        verify(!window.saveImage("MISSING_URL"));
+        verify(window.saveImage("MISSING_URL"));
+        tryCompare(window, "capturing", false);
         compare(window.feedback, "Could not save the image. Choose another location.");
         window.close();
     }
@@ -86,14 +87,12 @@ TestCase {
         window.close();
         wait(100);
         compare(window.capturing, false);
-        compare(window.capturedImage, null);
         compare(clipboard.content, "untouched");
     }
     function test_privacyChangeClosesSnapshot() {
         var window = createWindow();
         mockApplet.privacyMode = true;
         tryCompare(window, "visible", false);
-        compare(window.capturedImage, null);
     }
     function test_privateUnknownProviderStaysMaskedInBothExports() {
         mockApplet.privacyMode = true;
@@ -121,7 +120,10 @@ class ShareUsageWindowTests(unittest.TestCase):
             source = source.replace("OUTPUT_URL", image.as_uri())
             source = source.replace("MISSING_URL", (work / "missing/image.png").as_uri())
             (work / "tst_export.qml").write_text(source)
-            env = dict(os.environ, QT_QPA_PLATFORM="offscreen", QT_QUICK_BACKEND="software")
+            env = dict(os.environ,
+                       QT_QPA_PLATFORM="offscreen",
+                       QT_QUICK_BACKEND="software",
+                       QT_QUICK_CONTROLS_STYLE=os.environ.get("QT_QUICK_CONTROLS_STYLE", "org.kde.desktop"))
             result = subprocess.run([runner, "-input", str(work)], env=env,
                                     capture_output=True, text=True, timeout=30, check=False)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
