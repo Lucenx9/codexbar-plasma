@@ -1057,6 +1057,7 @@ KCM.SimpleKCM {
         case "alibaba":
         case "alibabatokenplan":
         case "amp":
+        case "atlascloud":
         case "azureopenai":
         case "bedrock":
         case "chutes":
@@ -1068,6 +1069,7 @@ KCM.SimpleKCM {
         case "crossmodel":
         case "deepgram":
         case "deepseek":
+        case "devpass":
         case "doubao":
         case "elevenlabs":
         case "gitkraken":
@@ -1078,6 +1080,7 @@ KCM.SimpleKCM {
         case "kimik2":
         case "kilo":
         case "litellm":
+        case "llmman":
         case "llmproxy":
         case "manus":
         case "mimo":
@@ -1092,6 +1095,7 @@ KCM.SimpleKCM {
         case "stepfun":
         case "v0":
         case "venice":
+        case "vercel":
         case "warp":
         case "windsurf":
         case "zai":

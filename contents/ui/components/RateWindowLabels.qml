@@ -32,6 +32,8 @@ QtObject {
                 return i18n("Premium")
             case "cursor":
                 return i18n("Total")
+            case "devpass":
+                return i18n("Plan credits")
             case "factory":
                 return i18n("Standard")
             case "doubao":
@@ -49,6 +51,8 @@ QtObject {
                 return i18n("Credits")
             case "kimi":
                 return i18n("Weekly")
+            case "llmman":
+                return i18n("Memory")
             case "minimax":
                 return i18n("Prompts")
             case "openai":
@@ -77,6 +81,8 @@ QtObject {
                 return i18n("Chat")
             case "cursor":
                 return i18n("Auto")
+            case "devpass":
+                return i18n("Premium weekly")
             case "factory":
                 return i18n("Premium")
             case "doubao":

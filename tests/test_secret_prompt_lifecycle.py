@@ -665,6 +665,13 @@ TestCase {
         compare(supportsApiKeySetup("gitkraken"), true);
         compare(supportsApiKeySetup("hyper"), false);
         compare(supportsApiKeySetup("bifrost"), false);
+        // CLI 0.66.0 stores a key for each of its four additions and sends it
+        // under the default source: Atlas Cloud, DevPass, and Vercel AI Gateway
+        // reject a synthetic key, and a loopback llmman daemon accepts it.
+        compare(supportsApiKeySetup("atlascloud"), true);
+        compare(supportsApiKeySetup("devpass"), true);
+        compare(supportsApiKeySetup("llmman"), true);
+        compare(supportsApiKeySetup("vercel"), true);
         compare(supportsApiKeySetup("unknown-xyz"), false);
         compare(supportsApiKeySetup("fireworks"), false);
         fireworksSingleKeySetupSupported = true;

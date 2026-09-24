@@ -21,10 +21,12 @@ TestCase {
 
     function test_lateAddedProvidersHaveBundledFallbackTitles_data() {
         return [
+            { tag: "atlascloud", key: "atlascloud", title: "Atlas Cloud" },
             { tag: "bifrost", key: "bifrost", title: "Bifrost" },
             { tag: "clawrouter", key: "clawrouter", title: "ClawRouter" },
             { tag: "coderabbit", key: "coderabbit", title: "CodeRabbit" },
             { tag: "crossmodel", key: "crossmodel", title: "CrossModel" },
+            { tag: "devpass", key: "devpass", title: "DevPass" },
             { tag: "elevenlabs", key: "elevenlabs", title: "ElevenLabs" },
             { tag: "fireworks", key: "fireworks", title: "Fireworks" },
             { tag: "gitkraken", key: "gitkraken", title: "GitKraken AI" },
@@ -33,6 +35,7 @@ TestCase {
             { tag: "hyper", key: "hyper", title: "Charm Hyper" },
             { tag: "ibmbob", key: "ibmbob", title: "IBM Bob" },
             { tag: "kimi", key: "kimi", title: "Kimi Code" },
+            { tag: "llmman", key: "llmman", title: "llmman" },
             { tag: "minimax", key: "minimax", title: "MiniMax" },
             { tag: "moonshot", key: "moonshot", title: "Moonshot / Kimi Open Platform" },
             { tag: "muse", key: "muse", title: "Muse Code" },
@@ -42,6 +45,7 @@ TestCase {
             { tag: "stepfun", key: "stepfun", title: "StepFun" },
             { tag: "typesafe", key: "typesafe", title: "TypeSafe" },
             { tag: "v0", key: "v0", title: "v0" },
+            { tag: "vercel", key: "vercel", title: "Vercel AI Gateway" },
             { tag: "wayfinder", key: "wayfinder", title: "Wayfinder" },
             { tag: "zai", key: "zai", title: "z.ai / GLM" }
         ];

@@ -151,16 +151,19 @@ require("providerAliases", table("providerAliases"), {
 
 require("providerBrandChannels", table("providerBrandChannels"), {
     "aiand": "[226 / 255, 92 / 255, 43 / 255]",
+    "atlascloud": "[89 / 255, 117 / 255, 245 / 255]",
     "bifrost": "[51 / 255, 192 / 255, 158 / 255]",
     "clawrouter": "[89 / 255, 110 / 255, 246 / 255]",
     "coderabbit": "[1, 92 / 255, 53 / 255]",
     "crossmodel": "[124 / 255, 58 / 255, 237 / 255]",
     "commandcode": "[160 / 255, 77 / 255, 253 / 255]",
+    "devpass": "[37 / 255, 99 / 255, 235 / 255]",
     "fireworks": "[242 / 255, 91 / 255, 28 / 255]",
     "gitkraken": "[23 / 255, 146 / 255, 135 / 255]",
     "huggingface": "[1, 210 / 255, 30 / 255]",
     "hyper": "[1, 96 / 255, 1]",
     "ibmbob": "[14 / 255, 97 / 255, 250 / 255]",
+    "llmman": "[108 / 255, 197 / 255, 176 / 255]",
     "muse": "[6 / 255, 104 / 255, 225 / 255]",
     "nous": "[214 / 255, 165 / 255, 92 / 255]",
     "poe": "[93 / 255, 92 / 255, 222 / 255]",
@@ -172,6 +175,7 @@ dashboards = table("providerDashboardUrls")
 require("providerDashboardUrls", dashboards, {
     "aiand": "https://console.aiand.com",
     "amp": "https://ampcode.com/settings/usage",
+    "atlascloud": "https://www.atlascloud.ai/console",
     "clawrouter": "https://clawrouter.openclaw.ai/dashboard/access",
     "claude": "https://console.anthropic.com/settings/billing",
     "clinepass": "https://app.cline.bot/dashboard/subscription?personal=true",
@@ -179,6 +183,7 @@ require("providerDashboardUrls", dashboards, {
     "crof": "https://crof.ai/dashboard",
     "crossmodel": "https://crossmodel.ai/console/usage",
     "deepinfra": "https://deepinfra.com/dash",
+    "devpass": "https://devpass.llmgateway.io/dashboard",
     "fireworks": "https://app.fireworks.ai",
     "gitkraken": "https://gitkraken.dev/account#ai-usage",
     "groq": "https://console.groq.com/dashboard/usage",
@@ -186,6 +191,7 @@ require("providerDashboardUrls", dashboards, {
     "huggingface": "https://huggingface.co/settings/billing",
     "hyper": "https://hyper.charm.land",
     "ibmbob": "https://bob.ibm.com",
+    "llmman": "http://127.0.0.1:17434",
     "muse": "https://dev.meta.ai",
     "nous": "https://portal.nousresearch.com/usage",
     "wayfinder": "http://127.0.0.1:8088/router",
@@ -195,6 +201,7 @@ require("providerDashboardUrls", dashboards, {
     "sakana": "https://console.sakana.ai/billing",
     "typesafe": "https://console.typesafe.ai/settings/billing",
     "v0": "https://v0.app/settings/billing",
+    "vercel": "https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai-gateway",
     "xai": "https://console.x.ai",
 })
 # Dashboards that moved upstream; landing on the old page looks like working UI.

@@ -24,6 +24,11 @@ TestCase {
             { tag: "antigravity-secondary", key: "antigravity", lane: "secondary", label: "Claude and GPT" },
             { tag: "amp-secondary", key: "amp", lane: "secondary", label: "Balance" },
             { tag: "cursor-secondary", key: "cursor", lane: "secondary", label: "Auto" },
+            // Official 0.66.0 descriptors: DevPass plan credits and premium
+            // weekly lanes, and llmman's daemon memory, which is not a session.
+            { tag: "devpass-primary", key: "devpass", lane: "primary", label: "Plan credits" },
+            { tag: "devpass-secondary", key: "devpass", lane: "secondary", label: "Premium weekly" },
+            { tag: "llmman-primary", key: "llmman", lane: "primary", label: "Memory" },
             { tag: "opencodego-tertiary", key: "opencodego", lane: "tertiary", label: "Monthly" },
             { tag: "claude-tertiary", key: "claude", lane: "tertiary", label: "Sonnet" },
             { tag: "cursor-tertiary", key: "cursor", lane: "tertiary", label: "API" },

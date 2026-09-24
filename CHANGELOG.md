@@ -10,6 +10,16 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Added
+
+- Bundle the fallback name, icon, documentation link, and dashboard link for
+  the `Atlas Cloud`, `DevPass`, `Vercel AI Gateway`, and `llmman` providers
+  that official CodexBar 0.66.0 adds to the registry, plus brand colors for
+  all but Vercel AI Gateway, whose white mark would vanish on a light theme.
+  All four offer the widget's API-key setup. DevPass rows are titled
+  "Plan credits" and "Premium weekly", and llmman's daemon memory row is
+  titled "Memory" instead of "Session".
+
 ### Fixed
 
 - Harden the TODO gate helper: it refuses Decisions redirects instead of
