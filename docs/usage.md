@@ -599,8 +599,8 @@ organizations, projects, paths, sessions, prompts, model names from cost
 history, and provider messages are never sent. Only providers with current
 measurements are sent; one retained after a failed refresh, or without data,
 is left out. Weekly spending comparisons
-require cost history already loaded in **Usage & Spend**; generating an insight
-never starts a cost scan.
+require cost history already loaded in **Usage & Spend** and scanned today;
+generating an insight never starts a cost scan.
 
 **Frequency** defaults to **Only on request**. **Every 6 hours**, **Every 12
 hours**, and **Daily** generate in the background at most once per interval,
