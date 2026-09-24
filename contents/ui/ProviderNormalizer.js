@@ -740,10 +740,14 @@ function normalizeCostTrustMetadata(rawCostRecord) {
 }
 
 function costRecordHasError(item) {
-    return isCliRecord(item)
-        && hasOwnKey(item, "error")
-        && item.error !== null
-        && item.error !== undefined
+    if (!isCliRecord(item) || !hasOwnKey(item, "error")) {
+        return false
+    }
+    var error = item.error
+    if (typeof error === "string") {
+        return error.trim().length > 0
+    }
+    return Boolean(error)
 }
 
 function normalizeCostEnvelope(payload) {
