@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.41 - 2026-09-24
+
 ### Added
 
 - Move between popup tabs with Home and End, and wrap the Left and Right arrows
@@ -218,6 +220,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   printing the raw value. An out-of-range or infinite `resetsAt` reached the
   quota row as digits such as `8640000000000001` or `Infinity`; it now keeps
   the empty reset like other invalid reset metadata.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.40...v0.2.41)
 
 ## 0.2.40 - 2026-09-20
 
