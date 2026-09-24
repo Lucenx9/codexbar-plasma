@@ -57,8 +57,10 @@ function endpointText(value) {
 }
 
 // Settings presentation only; the helper validates the destination again.
+// Only the host decides locality: a loopback address with a path still
+// keeps usage statistics on this device.
 function isLocalEndpoint(value) {
-    var match = /^https?:\/\/(\[[^\]]+\]|[^\/:?#]+)(:\d{1,5})?\/?$/i.exec(endpointText(value))
+    var match = /^https?:\/\/(\[[^\]]+\]|[^\/:?#]+)(:\d{1,5})?([/?#].*)?$/i.exec(endpointText(value))
     if (!match) {
         return false
     }
