@@ -184,6 +184,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   command unchanged. A command reaped by the bound reports the same timeout
   message as the page timeout instead of an exit-code line or the shell's
   own signal notice.
+- Clear the AI Insights model list when the Ollama address is edited. A
+  finished **Test connection** left the previous server's models selectable,
+  so the untested address could present a model it never listed as working.
 
 ## 0.2.40 - 2026-09-20
 

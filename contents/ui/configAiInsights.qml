@@ -74,6 +74,7 @@ KCM.SimpleKCM {
             retire()
         }
         actionText = ""
+        availableModels = []
     }
     onCfg_aiInsightsEnabledChanged: Qt.callLater(refreshKeyStatus)
     Component.onCompleted: {
