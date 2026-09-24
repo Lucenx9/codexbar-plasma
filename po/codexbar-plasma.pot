@@ -30,7 +30,7 @@ msgstr ""
 msgid "Notifications"
 msgstr ""
 
-#: contents/config/config.qml contents/ui/components/AiInsightsCard.qml
+#: contents/config/config.qml
 msgid "AI Insights (Beta)"
 msgstr ""
 
@@ -71,6 +71,14 @@ msgstr ""
 
 #: contents/ui/components/AiInsightsCard.qml
 msgid "Configure..."
+msgstr ""
+
+#: contents/ui/components/AiInsightsCard.qml contents/ui/configAiInsights.qml
+msgid "AI Insights"
+msgstr ""
+
+#: contents/ui/components/AiInsightsCard.qml
+msgid "Beta"
 msgstr ""
 
 #: contents/ui/components/AiInsightsCard.qml
@@ -1358,10 +1366,6 @@ msgstr ""
 #: contents/ui/configAiInsights.qml
 msgid ""
 "Zero Data Retention routing is checked only when an insight is generated."
-msgstr ""
-
-#: contents/ui/configAiInsights.qml
-msgid "AI Insights"
 msgstr ""
 
 #: contents/ui/configAiInsights.qml

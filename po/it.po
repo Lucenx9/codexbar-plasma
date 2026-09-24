@@ -35,7 +35,7 @@ msgstr "Finestra a comparsa"
 msgid "Notifications"
 msgstr "Notifiche"
 
-#: contents/config/config.qml contents/ui/components/AiInsightsCard.qml
+#: contents/config/config.qml
 msgid "AI Insights (Beta)"
 msgstr "Analisi IA (Beta)"
 
@@ -49,13 +49,16 @@ msgstr "Scegli un provider IA e un modello nelle impostazioni di Analisi IA."
 
 #: contents/ui/components/AiInsightsCard.qml
 msgid "Not enough current usage data for an insight yet."
-msgstr "Non ci sono ancora abbastanza dati di utilizzo aggiornati per un'analisi."
+msgstr ""
+"Non ci sono ancora abbastanza dati di utilizzo aggiornati per un'analisi."
 
 #: contents/ui/components/AiInsightsCard.qml
 msgid ""
 "The saved insight belongs to other settings or another language. Generate a "
 "new one when needed."
-msgstr "L'analisi salvata appartiene ad altre impostazioni o a un'altra lingua. Generane una nuova quando serve."
+msgstr ""
+"L'analisi salvata appartiene ad altre impostazioni o a un'altra lingua. "
+"Generane una nuova quando serve."
 
 #: contents/ui/components/AiInsightsCard.qml
 msgid "No insight generated yet."
@@ -77,6 +80,14 @@ msgstr "%1 - %2"
 #: contents/ui/components/AiInsightsCard.qml
 msgid "Configure..."
 msgstr "Configura..."
+
+#: contents/ui/components/AiInsightsCard.qml contents/ui/configAiInsights.qml
+msgid "AI Insights"
+msgstr "Analisi IA"
+
+#: contents/ui/components/AiInsightsCard.qml
+msgid "Beta"
+msgstr "Beta"
 
 #: contents/ui/components/AiInsightsCard.qml
 msgid "Generate insight"
@@ -112,7 +123,8 @@ msgstr ""
 
 #: contents/ui/components/AiInsightsMessages.qml
 msgid "%1 rejected the API key. Update it in the AI Insights settings."
-msgstr "%1 ha rifiutato la chiave API. Aggiornala nelle impostazioni di Analisi IA."
+msgstr ""
+"%1 ha rifiutato la chiave API. Aggiornala nelle impostazioni di Analisi IA."
 
 #: contents/ui/components/AiInsightsMessages.qml
 msgid "The %1 account has insufficient credits or quota."
@@ -1426,11 +1438,9 @@ msgstr ""
 #: contents/ui/configAiInsights.qml
 msgid ""
 "Zero Data Retention routing is checked only when an insight is generated."
-msgstr "Il routing Zero Data Retention viene verificato solo quando si genera un'analisi."
-
-#: contents/ui/configAiInsights.qml
-msgid "AI Insights"
-msgstr "Analisi IA"
+msgstr ""
+"Il routing Zero Data Retention viene verificato solo quando si genera "
+"un'analisi."
 
 #: contents/ui/configAiInsights.qml
 msgid "Enable AI Insights"
@@ -1532,7 +1542,10 @@ msgid ""
 "Only aggregated usage statistics are sent to %1: quotas, reset times, pace "
 "forecasts, and weekly spending and tokens per provider. Never account names, "
 "emails, projects, file paths, or prompts."
-msgstr "A %1 vengono inviate solo statistiche di utilizzo aggregate: quote, tempi di reset, previsioni di ritmo, spesa e token settimanali per provider. Mai nomi degli account, email, progetti, percorsi di file o prompt."
+msgstr ""
+"A %1 vengono inviate solo statistiche di utilizzo aggregate: quote, tempi di "
+"reset, previsioni di ritmo, spesa e token settimanali per provider. Mai nomi "
+"degli account, email, progetti, percorsi di file o prompt."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
@@ -1580,7 +1593,10 @@ msgid ""
 "Use the button on the AI Insights card to generate on request. Automatic "
 "generation never runs more often than the chosen interval, and ordinary "
 "usage refreshes do not trigger it."
-msgstr "Usa il pulsante nella scheda Analisi IA per generare su richiesta. La generazione automatica non avviene mai più spesso dell'intervallo scelto e i normali aggiornamenti dell'utilizzo non la avviano."
+msgstr ""
+"Usa il pulsante nella scheda Analisi IA per generare su richiesta. La "
+"generazione automatica non avviene mai più spesso dell'intervallo scelto e i "
+"normali aggiornamenti dell'utilizzo non la avviano."
 
 #: contents/ui/configAiInsights.qml
 msgid "Saved insight:"

@@ -66,20 +66,73 @@ Rectangle {
             + (Kirigami.Units.iconSizes.small - generateButton.implicitWidth) / 2)
         spacing: Kirigami.Units.smallSpacing
 
+        // The header mirrors the Overview rows: an identity tile, then the
+        // title column, so the card reads as part of the same list.
         RowLayout {
             Layout.fillWidth: true
-            spacing: Kirigami.Units.smallSpacing
+            spacing: Kirigami.Units.largeSpacing + Kirigami.Units.smallSpacing
+
+            Rectangle {
+                Layout.preferredWidth: Kirigami.Units.iconSizes.medium
+                    + Kirigami.Units.smallSpacing * 2
+                Layout.preferredHeight: Layout.preferredWidth
+                Layout.alignment: Qt.AlignTop
+                radius: applet.nestedSurfaceRadius
+                color: applet.withAlpha(Kirigami.Theme.highlightColor, 0.12)
+
+                Kirigami.Icon {
+                    anchors.centerIn: parent
+                    // A hint bulb: the card's identity. The wand stays on the
+                    // generate action.
+                    source: "games-hint"
+                    fallback: "tools-wizard"
+                    isMask: true
+                    color: Kirigami.Theme.highlightColor
+                    width: Kirigami.Units.iconSizes.smallMedium
+                    height: Kirigami.Units.iconSizes.smallMedium
+                    Accessible.ignored: true
+                }
+            }
 
             ColumnLayout {
                 Layout.fillWidth: true
+                Layout.alignment: Qt.AlignVCenter
                 spacing: 0
 
-                PlainHeading {
-                    text: i18n("AI Insights (Beta)")
-                    level: 4
-                    type: Kirigami.Heading.Type.Primary
+                RowLayout {
                     Layout.fillWidth: true
-                    elide: Text.ElideRight
+                    spacing: Kirigami.Units.smallSpacing
+
+                    PlainHeading {
+                        text: i18n("AI Insights")
+                        level: 4
+                        type: Kirigami.Heading.Type.Primary
+                        Layout.minimumWidth: 0
+                        elide: Text.ElideRight
+                    }
+
+                    // A quiet badge instead of "(Beta)" in the title.
+                    Rectangle {
+                        objectName: "aiInsightsBetaBadge"
+                        implicitWidth: betaLabel.implicitWidth + Kirigami.Units.smallSpacing * 2
+                        implicitHeight: betaLabel.implicitHeight + Kirigami.Units.smallSpacing / 2
+                        Layout.alignment: Qt.AlignVCenter
+                        radius: height / 2
+                        color: applet.withAlpha(Kirigami.Theme.highlightColor, 0.14)
+
+                        PlainPlasmaLabel {
+                            id: betaLabel
+
+                            anchors.centerIn: parent
+                            text: i18n("Beta")
+                            font: Kirigami.Theme.smallFont
+                            opacity: applet.valueTextOpacity
+                        }
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                    }
                 }
 
                 PlainPlasmaLabel {
@@ -178,13 +231,24 @@ Rectangle {
                     Layout.fillWidth: true
                     spacing: Kirigami.Units.smallSpacing
 
-                    PlainPlasmaLabel {
-                        text: "\u2022"
+                    // Centered on the first line of text.
+                    Item {
                         Layout.alignment: Qt.AlignTop
-                        Accessible.ignored: true
+                        implicitWidth: Kirigami.Units.smallSpacing * 1.5
+                        implicitHeight: highlightText.implicitHeight / Math.max(1, highlightText.lineCount)
+
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: parent.implicitWidth
+                            height: width
+                            radius: width / 2
+                            color: Kirigami.Theme.highlightColor
+                        }
                     }
 
                     PlainPlasmaLabel {
+                        id: highlightText
+
                         text: highlightRow.modelData
                         Layout.fillWidth: true
                         wrapMode: Text.Wrap

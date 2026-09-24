@@ -35,7 +35,7 @@ msgstr "Fenêtre contextuelle"
 msgid "Notifications"
 msgstr "Notifications"
 
-#: contents/config/config.qml contents/ui/components/AiInsightsCard.qml
+#: contents/config/config.qml
 msgid "AI Insights (Beta)"
 msgstr "Analyses IA (bêta)"
 
@@ -80,6 +80,14 @@ msgstr "%1 - %2"
 #: contents/ui/components/AiInsightsCard.qml
 msgid "Configure..."
 msgstr "Configurer..."
+
+#: contents/ui/components/AiInsightsCard.qml contents/ui/configAiInsights.qml
+msgid "AI Insights"
+msgstr "Analyses IA"
+
+#: contents/ui/components/AiInsightsCard.qml
+msgid "Beta"
+msgstr "Bêta"
 
 #: contents/ui/components/AiInsightsCard.qml
 msgid "Generate insight"
@@ -1435,10 +1443,6 @@ msgstr ""
 "analyse."
 
 #: contents/ui/configAiInsights.qml
-msgid "AI Insights"
-msgstr "Analyses IA"
-
-#: contents/ui/configAiInsights.qml
 msgid "Enable AI Insights"
 msgstr "Activer les Analyses IA"
 
@@ -1538,7 +1542,11 @@ msgid ""
 "Only aggregated usage statistics are sent to %1: quotas, reset times, pace "
 "forecasts, and weekly spending and tokens per provider. Never account names, "
 "emails, projects, file paths, or prompts."
-msgstr "Seules des statistiques d'utilisation agrégées sont envoyées à %1 : quotas, heures de réinitialisation, prévisions de rythme, dépenses et tokens hebdomadaires par provider. Jamais de noms de compte, e-mails, projets, chemins de fichiers ni prompts."
+msgstr ""
+"Seules des statistiques d'utilisation agrégées sont envoyées à %1 : quotas, "
+"heures de réinitialisation, prévisions de rythme, dépenses et tokens "
+"hebdomadaires par provider. Jamais de noms de compte, e-mails, projets, "
+"chemins de fichiers ni prompts."
 
 #: contents/ui/configAiInsights.qml
 msgid ""

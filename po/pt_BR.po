@@ -35,7 +35,7 @@ msgstr "Janela pop-up"
 msgid "Notifications"
 msgstr "Notificações"
 
-#: contents/config/config.qml contents/ui/components/AiInsightsCard.qml
+#: contents/config/config.qml
 msgid "AI Insights (Beta)"
 msgstr "Insights de IA (Beta)"
 
@@ -80,6 +80,14 @@ msgstr "%1 - %2"
 #: contents/ui/components/AiInsightsCard.qml
 msgid "Configure..."
 msgstr "Configurar..."
+
+#: contents/ui/components/AiInsightsCard.qml contents/ui/configAiInsights.qml
+msgid "AI Insights"
+msgstr "Insights de IA"
+
+#: contents/ui/components/AiInsightsCard.qml
+msgid "Beta"
+msgstr "Beta"
 
 #: contents/ui/components/AiInsightsCard.qml
 msgid "Generate insight"
@@ -1430,10 +1438,6 @@ msgstr ""
 "O roteamento Zero Data Retention só é verificado quando um insight é gerado."
 
 #: contents/ui/configAiInsights.qml
-msgid "AI Insights"
-msgstr "Insights de IA"
-
-#: contents/ui/configAiInsights.qml
 msgid "Enable AI Insights"
 msgstr "Ativar Insights de IA"
 
@@ -1532,7 +1536,10 @@ msgid ""
 "Only aggregated usage statistics are sent to %1: quotas, reset times, pace "
 "forecasts, and weekly spending and tokens per provider. Never account names, "
 "emails, projects, file paths, or prompts."
-msgstr "Somente estatísticas de uso agregadas são enviadas para %1: cotas, horários de redefinição, previsões de ritmo, e gastos e tokens semanais por provedor. Nunca nomes de conta, e-mails, projetos, caminhos de arquivos ou prompts."
+msgstr ""
+"Somente estatísticas de uso agregadas são enviadas para %1: cotas, horários "
+"de redefinição, previsões de ritmo, e gastos e tokens semanais por provedor. "
+"Nunca nomes de conta, e-mails, projetos, caminhos de arquivos ou prompts."
 
 #: contents/ui/configAiInsights.qml
 msgid ""

@@ -35,7 +35,7 @@ msgstr "Aufklappfenster"
 msgid "Notifications"
 msgstr "Benachrichtigungen"
 
-#: contents/config/config.qml contents/ui/components/AiInsightsCard.qml
+#: contents/config/config.qml
 msgid "AI Insights (Beta)"
 msgstr "KI-Einblicke (Beta)"
 
@@ -81,6 +81,14 @@ msgstr "%1 - %2"
 #: contents/ui/components/AiInsightsCard.qml
 msgid "Configure..."
 msgstr "Einrichten..."
+
+#: contents/ui/components/AiInsightsCard.qml contents/ui/configAiInsights.qml
+msgid "AI Insights"
+msgstr "KI-Einblicke"
+
+#: contents/ui/components/AiInsightsCard.qml
+msgid "Beta"
+msgstr "Beta"
 
 #: contents/ui/components/AiInsightsCard.qml
 msgid "Generate insight"
@@ -1441,10 +1449,6 @@ msgstr ""
 "geprüft."
 
 #: contents/ui/configAiInsights.qml
-msgid "AI Insights"
-msgstr "KI-Einblicke"
-
-#: contents/ui/configAiInsights.qml
 msgid "Enable AI Insights"
 msgstr "KI-Einblicke aktivieren"
 
@@ -1544,7 +1548,11 @@ msgid ""
 "Only aggregated usage statistics are sent to %1: quotas, reset times, pace "
 "forecasts, and weekly spending and tokens per provider. Never account names, "
 "emails, projects, file paths, or prompts."
-msgstr "An %1 werden nur aggregierte Nutzungsstatistiken gesendet: Kontingente, Rücksetzzeiten, Tempoprognosen sowie wöchentliche Ausgaben und Tokens pro Provider. Niemals Kontonamen, E-Mail-Adressen, Projekte, Dateipfade oder Prompts."
+msgstr ""
+"An %1 werden nur aggregierte Nutzungsstatistiken gesendet: Kontingente, "
+"Rücksetzzeiten, Tempoprognosen sowie wöchentliche Ausgaben und Tokens pro "
+"Provider. Niemals Kontonamen, E-Mail-Adressen, Projekte, Dateipfade oder "
+"Prompts."
 
 #: contents/ui/configAiInsights.qml
 msgid ""

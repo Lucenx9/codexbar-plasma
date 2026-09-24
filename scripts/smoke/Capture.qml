@@ -979,7 +979,7 @@ Item {
         if (applet.aiInsightsCacheState !== "current")
             return false;
         var popup = applet.fullRepresentationItem;
-        var displayed = hasVisibleText(popup, "Analisi IA (Beta)") ? "it" : (hasVisibleText(popup, "AI Insights (Beta)") ? "en" : "");
+        var displayed = hasVisibleText(popup, "Analisi IA") ? "it" : (hasVisibleText(popup, "AI Insights") ? "en" : "");
         console.log("SMOKE_AI_LANGUAGE:" + applet.aiInsightsLanguage + " displayed:" + displayed + " locale:" + Qt.locale().name);
         var expected = scenario === "ai-insights-it" ? "it" : (scenario === "ai-insights-mismatch" ? displayed : "en");
         verifyScenario(displayed === expected && applet.aiInsightsLanguage === expected,

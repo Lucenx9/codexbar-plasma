@@ -35,7 +35,7 @@ msgstr "Ventana emergente"
 msgid "Notifications"
 msgstr "Notificaciones"
 
-#: contents/config/config.qml contents/ui/components/AiInsightsCard.qml
+#: contents/config/config.qml
 msgid "AI Insights (Beta)"
 msgstr "Análisis con IA (beta)"
 
@@ -80,6 +80,14 @@ msgstr "%1 - %2"
 #: contents/ui/components/AiInsightsCard.qml
 msgid "Configure..."
 msgstr "Configurar..."
+
+#: contents/ui/components/AiInsightsCard.qml contents/ui/configAiInsights.qml
+msgid "AI Insights"
+msgstr "Análisis con IA"
+
+#: contents/ui/components/AiInsightsCard.qml
+msgid "Beta"
+msgstr "Beta"
 
 #: contents/ui/components/AiInsightsCard.qml
 msgid "Generate insight"
@@ -1431,10 +1439,6 @@ msgstr ""
 "El enrutamiento Zero Data Retention solo se comprueba al generar un análisis."
 
 #: contents/ui/configAiInsights.qml
-msgid "AI Insights"
-msgstr "Análisis con IA"
-
-#: contents/ui/configAiInsights.qml
 msgid "Enable AI Insights"
 msgstr "Activar Análisis con IA"
 
@@ -1533,7 +1537,11 @@ msgid ""
 "Only aggregated usage statistics are sent to %1: quotas, reset times, pace "
 "forecasts, and weekly spending and tokens per provider. Never account names, "
 "emails, projects, file paths, or prompts."
-msgstr "Solo se envían a %1 estadísticas de uso agregadas: cuotas, horas de restablecimiento, previsiones de ritmo, y gasto y tokens semanales por proveedor. Nunca nombres de cuenta, correos electrónicos, proyectos, rutas de archivos ni prompts."
+msgstr ""
+"Solo se envían a %1 estadísticas de uso agregadas: cuotas, horas de "
+"restablecimiento, previsiones de ritmo, y gasto y tokens semanales por "
+"proveedor. Nunca nombres de cuenta, correos electrónicos, proyectos, rutas "
+"de archivos ni prompts."
 
 #: contents/ui/configAiInsights.qml
 msgid ""
