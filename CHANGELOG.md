@@ -22,6 +22,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Center content vertically in popup tab buttons (`GlobalTab.qml` and
+  `FullRepresentation.qml`) by matching top and bottom margins on inner
+  content layouts.
+
 - Codex no longer treats a reset-credits record with a missing, zero, or
   invalid count as extra popup data, so an error-only Codex card is still
   recognized and no empty extra section is reserved.

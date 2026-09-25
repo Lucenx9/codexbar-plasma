@@ -384,7 +384,6 @@ Item {
 
                             anchors.fill: parent
                             anchors.margins: Kirigami.Units.smallSpacing
-                            anchors.bottomMargin: Kirigami.Units.smallSpacing + 2
                             spacing: Kirigami.Units.smallSpacing
 
                             Item {
@@ -585,7 +584,6 @@ Item {
 
                                 anchors.fill: parent
                                 anchors.margins: Kirigami.Units.smallSpacing
-                                anchors.bottomMargin: Kirigami.Units.smallSpacing + 2
                                 spacing: Kirigami.Units.smallSpacing
 
                                 Item {

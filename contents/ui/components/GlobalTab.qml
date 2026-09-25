@@ -123,7 +123,6 @@ Rectangle {
 
         anchors.fill: parent
         anchors.margins: Kirigami.Units.smallSpacing
-        anchors.bottomMargin: Kirigami.Units.smallSpacing + 2
         spacing: Kirigami.Units.smallSpacing
 
         Item {
