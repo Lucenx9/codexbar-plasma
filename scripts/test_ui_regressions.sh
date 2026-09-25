@@ -1692,6 +1692,11 @@ for stale_global_pointer_focus_fragment in ("focusAcquiredByPointer",):
 provider_tab_body = id_block(main_text, "providerTab")
 if "visible: providerTab.meter >= 0" not in provider_tab_body:
     raise AssertionError("providerTab must draw its underline only as a quota meter")
+if not code_contains(provider_tab_body, "color: providerTab.selected ? providerTab.accent"):
+    raise AssertionError(
+        "unselected provider tabs must dim their icon while keeping the provider "
+        "hue, so selection reads the same way as on the global tabs"
+    )
 # The tab surface alone marks selection. A selection underline beside the
 # provider quota underline made a partly filled meter read as a selected tab.
 for underline_tab_text in (
@@ -1732,6 +1737,13 @@ for full_height_marker in ("height: usageBar.height\n", "y: 0\n"):
         )
 
 credits_section_body = id_block(full_representation_text, "creditsSection")
+reset_credits_section_body = id_block(full_representation_text, "resetCreditsSection")
+if "Kirigami.Separator {" in reset_credits_section_body:
+    raise AssertionError(
+        "reset credits must share the Credits separator instead of drawing their own"
+    )
+if "resetCreditsSection" not in credits_section_body:
+    raise AssertionError("reset credits must stay grouped inside the Credits section")
 for credit_limit_fragment in (
     "readonly property var creditLimit:",
     "applet.presentedProviderData.codexCreditLimit",
@@ -3360,6 +3372,10 @@ provider_cost_section_body = id_block(full_representation_text, "providerCostSec
 if provider_cost_section_body.count("Layout.preferredHeight: applet.meterTrackHeight") != 1:
     raise AssertionError(
         "the provider-cost meter must consume the shared meterTrackHeight"
+    )
+if not code_contains(provider_cost_section_body, "Behavior on color"):
+    raise AssertionError(
+        "the provider-cost meter must animate color like the quota meters"
     )
 if provider_usage_row_text.count(
     "Layout.preferredHeight: usageRow.applet.meterTrackHeight"

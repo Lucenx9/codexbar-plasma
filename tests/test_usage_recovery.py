@@ -39,6 +39,8 @@ TestCase {
             property alias placeholder: emptyProvidersPlaceholder
             property alias missingPlaceholder: missingCommandPlaceholder
             property alias missingMessage: missingCommandMessage
+            property alias loadingRow: providerUsageLoadingRow
+            property alias errorArt: providerUsageErrorIcon
             SOURCE_MISSING_PROPERTY
             property int settingsOpened: 0
             readonly property string usageRecoveryHint: "Diagnostics in widget settings"
@@ -65,6 +67,7 @@ TestCase {
                 property bool globalViewSelected: false
                 property var providers: []
                 property bool providerUsageFeedbackVisible: true
+                property real secondaryTextOpacity: 0.7
                 property var selectedProviderData: ({error: "Synthetic provider failure", rows: [{percent: 43}],
                     usageStale: true, lastGoodAtMs: 1000})
                 readonly property var presentedProviderData: selectedProviderData
@@ -79,6 +82,7 @@ TestCase {
             SOURCE_ACTIONS
             Components.PlainInlineMessage { GLOBAL_MESSAGE }
             Components.PlainInlineMessage { PROVIDER_MESSAGE }
+            Item { LOADING_ROW }
             Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 220
@@ -196,6 +200,21 @@ TestCase {
         verify(!subject.missingMessage.visible);
     }
 
+    function test_errorStateCentersAStatusGlyphWithoutALoadingIndicator() {
+        var subject = createSubject();
+        subject.applet.selectedProviderData = null;
+        subject.applet.errorText = "Synthetic connection failure";
+        verify(subject.loadingRow.visible);
+        verify(subject.globalMessage.visible);
+        verify(subject.errorArt.visible);
+        subject.applet.loading = true;
+        verify(!subject.errorArt.visible);
+        verify(subject.loadingRow.visible);
+        subject.applet.loading = false;
+        subject.applet.providers = [{provider: "codex"}];
+        verify(!subject.loadingRow.visible);
+    }
+
     function test_globalAndProviderErrorsShareOneSetOfActions() {
         var subject = createSubject();
         subject.applet.errorText = "Synthetic connection failure";
@@ -234,6 +253,8 @@ class UsageRecoveryTests(unittest.TestCase):
             # production resolves them from the same directory.
             qml = qml.replace(placeholder, surface.id_block(name).replace(
                 "PlainPlaceholderMessage {", "Components.PlainPlaceholderMessage {"))
+        qml = qml.replace("LOADING_ROW", surface.id_block("providerUsageLoadingRow").replace(
+            "PlainPlasmaLabel {", "Components.PlainPlasmaLabel {"))
         # The production condition itself, so the test cannot drift from it.
         representation = (ROOT / "contents/ui/components/FullRepresentation.qml").read_text()
         condition = re.search(

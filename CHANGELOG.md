@@ -23,6 +23,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   beside the title, and drop the copy action for the details line.
 - Session details use `·` as the separator and show the host only when
   sessions come from more than one host.
+- Provider popup polish: reset credits join the Credits group as a labeled row
+  instead of a separate section, unselected provider tabs dim their icon while
+  keeping the provider hue, the connection-error state centers a muted status
+  glyph below its banner, account buttons show a tooltip only when their label
+  is cut short, and the accounts header no longer shifts while loading.
 
 ### Fixed
 

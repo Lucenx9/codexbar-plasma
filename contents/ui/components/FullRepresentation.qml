@@ -597,7 +597,10 @@ Item {
                                     source: applet.providerIconSource(modelData.provider)
                                     fallback: "view-statistics"
                                     isMask: applet.providerIconIsMask(modelData.provider)
-                                    color: providerTab.accent
+                                    // Unselected tabs dim but keep their hue, so the
+                                    // provider stays recognizable while selection
+                                    // reads the same way as on the global tabs.
+                                    color: providerTab.selected ? providerTab.accent : applet.withAlpha(providerTab.accent, 0.6)
                                     Layout.preferredWidth: Kirigami.Units.iconSizes.small
                                     Layout.preferredHeight: Kirigami.Units.iconSizes.small
                                 }
@@ -751,6 +754,24 @@ Item {
                     Layout.fillWidth: true
                     elide: Text.ElideRight
                 }
+            }
+
+            // The error banner stays pinned under the tabs with its actions; a
+            // muted glyph fills the leftover height so the state does not read
+            // as a banner over an empty popup. The theme draws the glyph in
+            // its own colors: masking a full-color fallback would flatten it
+            // into a silhouette.
+            Kirigami.Icon {
+                id: providerUsageErrorIcon
+                objectName: "providerUsageErrorIcon"
+
+                visible: applet.errorText.length > 0 && !applet.loading
+                anchors.centerIn: parent
+                source: "dialog-error-symbolic"
+                fallback: "dialog-error"
+                width: Kirigami.Units.iconSizes.large
+                height: Kirigami.Units.iconSizes.large
+                opacity: 0.5
             }
         }
 
@@ -1002,9 +1023,10 @@ Item {
 
                         visible: applet.showPopupCredits && applet.presentedProviderData
                             && (applet.presentedProviderData.credits !== null
-                                || creditsSection.creditLimit !== null)
+                                || creditsSection.creditLimit !== null
+                                || applet.presentedProviderData.resetCredits !== null)
                         Layout.fillWidth: true
-                        spacing: Kirigami.Units.smallSpacing / 1.5
+                        spacing: Kirigami.Units.smallSpacing
 
                         Kirigami.Separator {
                             Layout.fillWidth: true
@@ -1039,35 +1061,33 @@ Item {
                                 elide: Text.ElideRight
                             }
                         }
-                    }
 
-                    ColumnLayout {
-                        id: resetCreditsSection
-                        objectName: "resetCreditsSection"
+                        // Reset credits share the Credits separator instead of taking
+                        // their own: one heading plus a labeled row reads as a
+                        // single group rather than a ladder of thin sections.
+                        RowLayout {
+                            id: resetCreditsSection
+                            objectName: "resetCreditsSection"
 
-                        readonly property var resetCredits: applet.presentedProviderData ? applet.presentedProviderData.resetCredits : null
+                            readonly property var resetCredits: applet.presentedProviderData ? applet.presentedProviderData.resetCredits : null
 
-                        visible: applet.showPopupCredits && resetCreditsSection.resetCredits ? true : false
-                        Layout.fillWidth: true
-                        spacing: Kirigami.Units.smallSpacing / 1.5
-
-                        Kirigami.Separator {
+                            visible: applet.showPopupCredits && resetCreditsSection.resetCredits ? true : false
                             Layout.fillWidth: true
-                        }
+                            spacing: Kirigami.Units.smallSpacing
 
-                        PlainHeading {
-                            text: resetCreditsSection.resetCredits ? resetCreditsSection.resetCredits.title : ""
-                            level: 4
-                            type: Kirigami.Heading.Type.Primary
-                            Layout.fillWidth: true
-                            elide: Text.ElideRight
-                        }
+                            PlainPlasmaLabel {
+                                text: resetCreditsSection.resetCredits ? resetCreditsSection.resetCredits.title : ""
+                                opacity: applet.secondaryTextOpacity
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                            }
 
-                        PlainPlasmaLabel {
-                            text: resetCreditsSection.resetCredits ? resetCreditsSection.resetCredits.line : ""
-                            opacity: applet.secondaryTextOpacity
-                            Layout.fillWidth: true
-                            elide: Text.ElideRight
+                            PlainPlasmaLabel {
+                                text: resetCreditsSection.resetCredits ? resetCreditsSection.resetCredits.line : ""
+                                opacity: applet.valueTextOpacity
+                                horizontalAlignment: Text.AlignRight
+                                elide: Text.ElideRight
+                            }
                         }
                     }
 
@@ -1081,7 +1101,7 @@ Item {
 
                         visible: applet.showPopupProviderDetails && providerCostSection.providerCost ? true : false
                         Layout.fillWidth: true
-                        spacing: Kirigami.Units.smallSpacing / 1.5
+                        spacing: Kirigami.Units.smallSpacing
 
                         Kirigami.Separator {
                             Layout.fillWidth: true
@@ -1110,6 +1130,12 @@ Item {
                                 height: parent.height
                                 radius: parent.radius
                                 color: providerCostSection.accent
+
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: Kirigami.Units.longDuration
+                                    }
+                                }
 
                                 Behavior on width {
                                     NumberAnimation {
@@ -1184,7 +1210,7 @@ Item {
 
                         visible: applet.showPopupProviderDetails && (kpis.length > 0 || rows.length > 0)
                         Layout.fillWidth: true
-                        spacing: Kirigami.Units.smallSpacing / 1.5
+                        spacing: Kirigami.Units.smallSpacing
 
                         Kirigami.Separator {
                             Layout.fillWidth: true
