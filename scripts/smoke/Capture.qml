@@ -1627,10 +1627,10 @@ Item {
                     "large count overflowed the plural argument");
             }
             var oneToken = "1 " + countLabels[0][0];
-            verifyScenario(applet.costValueLine(1, 1, "USD") === applet.amountString(1, "USD") + " - " + oneToken,
+            verifyScenario(applet.costValueLine(1, 1, "USD") === applet.amountString(1, "USD") + " \u00b7 " + oneToken,
                 "cost summary lost the singular token count");
             verifyScenario(applet.costLine("Example", 1, 1, "USD") === i18n("%1: %2", "Example",
-                applet.amountString(1, "USD") + " - " + oneToken), "labeled cost summary lost the singular token count");
+                applet.amountString(1, "USD") + " \u00b7 " + oneToken), "labeled cost summary lost the singular token count");
             verifyScenario(hasText(applet.fullRepresentationItem, expected[0]), "translated popup label missing");
             if (settingsPreview.status !== Loader.Ready)
                 return false;

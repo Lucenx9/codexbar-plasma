@@ -1178,32 +1178,44 @@ function spendHeatmapDays(points, costs) {
     return days
 }
 
-// Lays the daily points out for the activity heatmap's fixed seven rows. The
-// newest day keeps the last slot, so every row stays one weekday, and the grid
-// is padded at the oldest end with `null` placeholders: a ragged final column
-// otherwise cuts a week-wide notch out of the block. Points beyond the
+// Lays the daily points out for the activity heatmap's fixed seven rows,
+// filled top to bottom and column by column. The newest day is followed by
+// `trailingSlots` empty slots that close its week, so every row stays one
+// weekday; the oldest end is padded with `null` placeholders, which keeps a
+// ragged first column from cutting a notch out of the block. Points beyond the
 // capacity are dropped, oldest first.
-function spendHeatmapCells(points, capacity) {
+function spendHeatmapCells(points, capacity, trailingSlots) {
     var items = Array.isArray(points) ? points : []
     var slots = Math.max(0, Math.floor(Number(capacity) || 0))
-    var visible = items.slice(Math.max(0, items.length - slots))
+    var trailing = Math.max(0, Math.min(slots, Math.floor(Number(trailingSlots) || 0)))
+    var dayCapacity = slots - trailing
+    var visible = dayCapacity > 0 ? items.slice(Math.max(0, items.length - dayCapacity)) : []
     var cells = []
-    for (var i = visible.length; i < slots; i++) {
+    for (var i = visible.length; i < dayCapacity; i++) {
         cells.push(null)
     }
-    return cells.concat(visible)
+    cells = cells.concat(visible)
+    for (var j = 0; j < trailing; j++) {
+        cells.push(null)
+    }
+    return cells
 }
 
-// Weekday of each heatmap row, top to bottom, as 0 (Sunday) through 6. The
-// grid ends on the newest slot, so the bottom row holds that day's weekday.
-// Rows carry one weekday only when every dated slot sits at its own calendar
-// offset; spendHeatmapDays keeps unavailable days as `null` slots, and its
-// fallback for undated or unordered points returns [] here so the caller
-// leaves the rows unlabelled rather than naming the wrong days.
-function spendHeatmapRowWeekdays(days) {
+// QML's Locale.firstDayOfWeek counts 0 (Sunday) through 6; anything else falls
+// back to the ISO week's Monday start.
+function heatmapFirstWeekday(firstWeekday) {
+    return typeof firstWeekday === "number" && Math.floor(firstWeekday) === firstWeekday
+        && firstWeekday >= 0 && firstWeekday <= 6 ? firstWeekday : 1
+}
+
+// Weekday of the newest slot, 0 (Sunday) through 6, or -1 when the slots do not
+// carry one weekday per row. spendHeatmapDays keeps unavailable days as `null`
+// slots; its fallback for undated or unordered points returns -1 here so the
+// caller leaves the rows unlabelled rather than naming the wrong days.
+function spendHeatmapNewestWeekday(days) {
     var items = Array.isArray(days) ? days : []
     if (items.length === 0 || items.length > maximumCostHistoryPoints) {
-        return []
+        return -1
     }
     var dayMs = 24 * 60 * 60 * 1000
     var newestSlotMs = null
@@ -1214,21 +1226,41 @@ function spendHeatmapRowWeekdays(days) {
         var date = typeof items[i] === "object" && typeof items[i].label === "string"
             ? Normalizer.parsedCalendarDateKey(items[i].label) : null
         if (!date) {
-            return []
+            return -1
         }
         var slotMs = date.timestampMs + (items.length - 1 - i) * dayMs
         if (newestSlotMs !== null && slotMs !== newestSlotMs) {
-            return []
+            return -1
         }
         newestSlotMs = slotMs
     }
     if (newestSlotMs === null) {
+        return -1
+    }
+    return new Date(newestSlotMs).getUTCDay()
+}
+
+// Weekday of each heatmap row, top to bottom, as 0 (Sunday) through 6. Rows
+// start on the locale's first day of the week, so each weekday keeps its row
+// as the range moves; [] leaves undated rows unlabelled.
+function spendHeatmapRowWeekdays(days, firstWeekday) {
+    if (spendHeatmapNewestWeekday(days) < 0) {
         return []
     }
-    var newestWeekday = new Date(newestSlotMs).getUTCDay()
+    var first = heatmapFirstWeekday(firstWeekday)
     var weekdays = []
     for (var row = 0; row < 7; row++) {
-        weekdays.push((newestWeekday + row + 1) % 7)
+        weekdays.push((first + row) % 7)
     }
     return weekdays
+}
+
+// Empty slots after the newest day that close its week in the locale's row
+// order; 0 when the rows carry no weekday and the newest day simply ends the grid.
+function spendHeatmapTrailingSlots(days, firstWeekday) {
+    var newestWeekday = spendHeatmapNewestWeekday(days)
+    if (newestWeekday < 0) {
+        return 0
+    }
+    return 6 - (newestWeekday - heatmapFirstWeekday(firstWeekday) + 7) % 7
 }

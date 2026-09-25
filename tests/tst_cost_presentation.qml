@@ -802,22 +802,61 @@ TestCase {
         compare(tokenCells[8].value, 40)
     }
 
-    function test_spendHeatmapRowWeekdaysEndOnTheNewestSlot() {
-        // 2026-09-23 is a Wednesday, so the bottom row is Wednesday and the
-        // top row is the Thursday six days earlier.
+    // Rows follow the locale's week, so a weekday keeps its row from day to
+    // day instead of rotating with the newest date.
+    function test_spendHeatmapRowWeekdaysStartOnTheLocaleWeek() {
         var days = []
         for (var day = 17; day <= 23; day++) {
             days.push({ label: "2026-09-" + day, value: day })
         }
-        compare(CostPresentation.spendHeatmapRowWeekdays(days), [4, 5, 6, 0, 1, 2, 3])
+        compare(CostPresentation.spendHeatmapRowWeekdays(days, 1), [1, 2, 3, 4, 5, 6, 0])
+        compare(CostPresentation.spendHeatmapRowWeekdays(days, 0), [0, 1, 2, 3, 4, 5, 6])
+        compare(CostPresentation.spendHeatmapRowWeekdays(days, 6), [6, 0, 1, 2, 3, 4, 5])
+        // An unusable locale value falls back to the ISO Monday start.
+        compare(CostPresentation.spendHeatmapRowWeekdays(days, 7), [1, 2, 3, 4, 5, 6, 0])
+        compare(CostPresentation.spendHeatmapRowWeekdays(days, "0"), [1, 2, 3, 4, 5, 6, 0])
+        compare(CostPresentation.spendHeatmapRowWeekdays(days, 1.5), [1, 2, 3, 4, 5, 6, 0])
+        compare(CostPresentation.spendHeatmapRowWeekdays(days), [1, 2, 3, 4, 5, 6, 0])
+    }
 
-        // Unavailable days keep their calendar slots, including the newest one.
+    function test_spendHeatmapTrailingSlotsCloseTheNewestWeek() {
+        // 2026-09-23 is a Wednesday.
+        var days = []
+        for (var day = 17; day <= 23; day++) {
+            days.push({ label: "2026-09-" + day, value: day })
+        }
+        compare(CostPresentation.spendHeatmapTrailingSlots(days, 1), 4)
+        compare(CostPresentation.spendHeatmapTrailingSlots(days, 0), 3)
+        compare(CostPresentation.spendHeatmapTrailingSlots(days, 4), 0)
+        // An unavailable newest day still ends the grid in its own slot.
         days[6] = null
-        days[2] = null
-        compare(CostPresentation.spendHeatmapRowWeekdays(days), [4, 5, 6, 0, 1, 2, 3])
+        compare(CostPresentation.spendHeatmapTrailingSlots(days, 1), 4)
+        // Unlabelled rows keep the newest day last, with no trailing gap.
+        compare(CostPresentation.spendHeatmapTrailingSlots([{ label: "day-0" }], 1), 0)
+        compare(CostPresentation.spendHeatmapTrailingSlots(undefined, 1), 0)
+    }
 
-        var yearEnd = [{ label: "2025-12-31" }, null, { label: "2026-01-02" }]
-        compare(CostPresentation.spendHeatmapRowWeekdays(yearEnd), [6, 0, 1, 2, 3, 4, 5])
+    function test_spendHeatmapCellsLeaveTrailingSlotsAfterTheNewestDay() {
+        var points = []
+        for (var day = 0; day < 8; day++) {
+            points.push({ label: "day-" + day, value: day, displayValue: "" })
+        }
+        var cells = CostPresentation.spendHeatmapCells(points, 14, 4)
+        compare(cells.length, 14)
+        compare(cells[0], null)
+        compare(cells[1], null)
+        compare(cells[2].label, "day-0")
+        compare(cells[9].label, "day-7")
+        for (var slot = 10; slot < 14; slot++) {
+            compare(cells[slot], null)
+        }
+        // Capacity drops the oldest days first, never the trailing slots.
+        cells = CostPresentation.spendHeatmapCells(points, 7, 4)
+        compare(cells[0].label, "day-5")
+        compare(cells[2].label, "day-7")
+        compare(cells[6], null)
+        compare(CostPresentation.spendHeatmapCells(points, 7, 9).length, 7)
+        compare(CostPresentation.spendHeatmapCells(points, 7, -3)[6].label, "day-7")
     }
 
     function test_spendHeatmapRowWeekdaysRejectRowsWithoutOneWeekday_data() {
@@ -836,7 +875,7 @@ TestCase {
     }
 
     function test_spendHeatmapRowWeekdaysRejectRowsWithoutOneWeekday(data) {
-        compare(CostPresentation.spendHeatmapRowWeekdays(data.days), [])
+        compare(CostPresentation.spendHeatmapRowWeekdays(data.days, 1), [])
     }
 
     function test_spendHeatmapRowWeekdaysFollowTheCalendarFallback() {
@@ -848,11 +887,12 @@ TestCase {
         var days = CostPresentation.spendHeatmapDays(
             CostPresentation.spendDailyPoints(fmt, costs, false), costs)
         // 2026-09-09 is a Wednesday; its unavailable slot still ends the grid.
-        compare(CostPresentation.spendHeatmapRowWeekdays(days)[6], 3)
+        compare(CostPresentation.spendHeatmapRowWeekdays(days, 1)[0], 1)
+        compare(CostPresentation.spendHeatmapTrailingSlots(days, 1), 4)
 
         var undated = [{ label: "day-0", value: 1 }, { label: "day-1", value: 2 }]
         compare(CostPresentation.spendHeatmapRowWeekdays(
-            CostPresentation.spendHeatmapDays(undated, [])), [])
+            CostPresentation.spendHeatmapDays(undated, []), 1), [])
     }
 
     function test_spendHeatmapDaysPreserveCalendarBoundaries_data() {

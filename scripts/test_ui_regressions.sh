@@ -2837,8 +2837,7 @@ if "visible: view.dailyPoints.length > 1" in spend_view_text:
     raise AssertionError("SpendView must not hide the accessible chart when one history day is available")
 for heatmap_range_fragment in (
     "readonly property var heatmapDays: CostPresentation.spendHeatmapDays(dailyPoints, providerCosts)",
-    "Math.ceil(view.heatmapDays.length / 7)",
-    "view.heatmapDays, columnCount * 7)",
+    "Math.ceil( (view.heatmapDays.length + view.heatmapTrailingSlots) / 7)",
     "readonly property int fittingColumns",
     "readonly property real cellHeight",
     "Layout.preferredHeight: 7 * heatmapGrid.cellHeight",
@@ -2850,7 +2849,10 @@ for heatmap_range_fragment in (
             f"from the available width; missing {heatmap_range_fragment!r}"
         )
 for heatmap_weekday_fragment in (
-    "CostPresentation.spendHeatmapRowWeekdays(heatmapDays)",
+    "readonly property int heatmapFirstWeekday: Qt.locale().firstDayOfWeek",
+    "CostPresentation.spendHeatmapRowWeekdays( heatmapDays, heatmapFirstWeekday)",
+    "CostPresentation.spendHeatmapTrailingSlots( heatmapDays, heatmapFirstWeekday)",
+    "view.heatmapDays, columnCount * 7, view.heatmapTrailingSlots)",
     "visible: view.heatmapRowWeekdays.length === 7",
     "Qt.locale().dayName(modelData, Locale.ShortFormat)",
 ):

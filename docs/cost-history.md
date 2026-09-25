@@ -29,7 +29,8 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
 - The global activity heatmap uses the unfiltered history's calendar dates,
   preserving unavailable days at either boundary and between measured days.
   Unavailable days occupy empty cells, so filtering missing amounts never shifts
-  weekday rows. Its visible span and week count include those gaps, bounded to
+  weekday rows. Rows start on the locale's first day of the week, and empty
+  cells after the newest day close its week. Its visible span and week count include those gaps, bounded to
   the newest 365 calendar days. Legacy non-date labels retain sequence order
   and leave the rows unlabelled, because only calendar-aligned days give each
   row one weekday.

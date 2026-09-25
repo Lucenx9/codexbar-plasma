@@ -18,7 +18,11 @@ ColumnLayout {
     readonly property bool hasMixedCostCurrencies: CostPresentation.spendHasMixedCostCurrencies(providerCosts)
     readonly property real heatmapMaximum: chartMaximum(dailyPoints)
     readonly property var heatmapDays: CostPresentation.spendHeatmapDays(dailyPoints, providerCosts)
-    readonly property var heatmapRowWeekdays: CostPresentation.spendHeatmapRowWeekdays(heatmapDays)
+    readonly property int heatmapFirstWeekday: Qt.locale().firstDayOfWeek
+    readonly property var heatmapRowWeekdays: CostPresentation.spendHeatmapRowWeekdays(
+        heatmapDays, heatmapFirstWeekday)
+    readonly property int heatmapTrailingSlots: CostPresentation.spendHeatmapTrailingSlots(
+        heatmapDays, heatmapFirstWeekday)
 
     Layout.fillWidth: true
     Layout.fillHeight: true
@@ -271,6 +275,8 @@ ColumnLayout {
             spacing: Kirigami.Units.largeSpacing
 
             InteractiveChart {
+                id: historyChart
+
                 visible: view.dailyPoints.length > 0
                 applet: view.applet
                 points: view.dailyPoints
@@ -354,7 +360,8 @@ ColumnLayout {
                             readonly property int fittingColumns: Math.max(1, Math.floor(
                                 (width + cellSpacing) / (minimumCellSize + cellSpacing)))
                             readonly property int columnCount: Math.max(1, Math.min(
-                                fittingColumns, Math.ceil(view.heatmapDays.length / 7)))
+                                fittingColumns, Math.ceil(
+                                    (view.heatmapDays.length + view.heatmapTrailingSlots) / 7)))
                             readonly property real availableCellWidth: Math.max(minimumCellSize,
                                 (width - cellSpacing * (columnCount - 1)) / columnCount)
                             readonly property real cellHeight: Math.max(minimumCellSize, Math.min(
@@ -365,7 +372,7 @@ ColumnLayout {
                             readonly property real cellWidth: Math.min(
                                 availableCellWidth, cellHeight * 2)
                             readonly property var cells: CostPresentation.spendHeatmapCells(
-                                view.heatmapDays, columnCount * 7)
+                                view.heatmapDays, columnCount * 7, view.heatmapTrailingSlots)
 
                             width: parent.width
                             rows: 7
@@ -392,7 +399,11 @@ ColumnLayout {
 
                                     Accessible.role: Accessible.Graphic
                                     Accessible.ignored: !heatmapCell.measured
-                                    Accessible.name: heatmapCell.measured ? heatmapCell.modelData.label : ""
+                                    // Days read like the chart's, in the locale's date format.
+                                    readonly property string dayLabel: heatmapCell.measured
+                                        ? historyChart.pointLabel(heatmapCell.modelData) : ""
+
+                                    Accessible.name: heatmapCell.dayLabel
                                     Accessible.description: heatmapCell.measured ? heatmapCell.modelData.displayValue : ""
 
                                     width: heatmapGrid.cellWidth
@@ -440,7 +451,7 @@ ColumnLayout {
                                         delay: 0
                                         visible: heatmapMouse.containsMouse && heatmapCell.measured
                                         plainText: heatmapCell.measured
-                                            ? i18n("%1: %2", heatmapCell.modelData.label,
+                                            ? i18n("%1: %2", heatmapCell.dayLabel,
                                                 heatmapCell.modelData.displayValue)
                                             : ""
                                     }
