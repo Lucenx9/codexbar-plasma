@@ -640,6 +640,7 @@ KCM.SimpleKCM {
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             wrapMode: Text.WordWrap
         }
@@ -664,6 +665,7 @@ KCM.SimpleKCM {
             objectName: "cliReleaseStatusLabel"
             text: cliUpdater.statusText
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             wrapMode: Text.WordWrap
         }
@@ -674,6 +676,7 @@ KCM.SimpleKCM {
             opacity: 0.7
             visible: cliUpdater.checked && cliUpdater.result.path.length > 0
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             wrapMode: Text.WordWrap
         }
@@ -696,6 +699,7 @@ KCM.SimpleKCM {
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             wrapMode: Text.WordWrap
         }
@@ -733,6 +737,7 @@ KCM.SimpleKCM {
                 objectName: "managedInstallConfirmLabel"
                 text: i18n("The selected %1 %2 keeps working outside the widget. Installing creates a second private copy and switches the widget to it; updates through the original method will no longer affect the widget.", cliUpdater.result.path, cliUpdater.result.version)
                 Layout.fillWidth: true
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 24
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 24
                 wrapMode: Text.WordWrap
             }
@@ -758,6 +763,7 @@ KCM.SimpleKCM {
             objectName: "managedCliStatusLabel"
             text: managedCli.statusText
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             wrapMode: Text.WordWrap
         }

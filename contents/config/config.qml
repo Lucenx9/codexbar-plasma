@@ -18,7 +18,7 @@ ConfigModel {
     }
     ConfigCategory {
         name: i18n("Popup")
-        icon: "view-list-details"
+        icon: "view-preview"
         source: "configPopup.qml"
     }
     ConfigCategory {

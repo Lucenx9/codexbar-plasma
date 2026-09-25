@@ -276,6 +276,7 @@ KCM.SimpleKCM {
             text: page.cliVersionText.length > 0 ? page.cliVersionText
                 : (versions.checked ? versions.statusText : i18n("Not checked"))
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             wrapMode: Text.WordWrap
         }
@@ -306,6 +307,7 @@ KCM.SimpleKCM {
                     ? i18n("Could not identify the installed CLI version.")
                     : i18n("Not found")
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             wrapMode: Text.WordWrap
         }
@@ -333,6 +335,7 @@ KCM.SimpleKCM {
             text: versions.guidanceText
             visible: versions.checked && versions.result.path.length > 0
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             wrapMode: Text.WordWrap
         }
@@ -342,6 +345,7 @@ KCM.SimpleKCM {
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             wrapMode: Text.WordWrap
         }
