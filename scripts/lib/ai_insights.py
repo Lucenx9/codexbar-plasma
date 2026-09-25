@@ -69,8 +69,10 @@ OPENAI_EXCLUDED = ("audio", "realtime", "tts", "transcribe", "image", "search",
                    "embedding", "instruct", "moderation", "codex", "-pro", "deep-research")
 # GPT-4, GPT-4 Turbo, and GPT-3.5 predate json_schema structured outputs.
 OPENAI_LEGACY = re.compile(r"^gpt-(3\.5|4)(-|$)")
-# So do chatgpt-4o-latest and GPT-4o snapshots from before August 2024.
-OPENAI_NO_SCHEMA = re.compile(r"^(chatgpt-4o-latest|gpt-4o-2024-0[1-7]-[0-9]{2})$")
+# So do chatgpt-4o-latest, pre-August 2024 GPT-4o, and o1-preview/o1-mini snapshots.
+OPENAI_NO_SCHEMA = re.compile(
+    r"^(chatgpt-4o-latest|gpt-4o-2024-0[1-7]-[0-9]{2}|o1-(preview|mini)(-[0-9]{4}-[0-9]{2}-[0-9]{2})?)$"
+)
 SCHEMA = {
     "type": "object",
     "properties": {

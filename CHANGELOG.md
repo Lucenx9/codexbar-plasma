@@ -31,6 +31,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Exclude `o1-preview` and `o1-mini` snapshots from OpenAI model discovery:
+  they lack `json_schema` structured outputs, so selecting them always failed.
 - Give the Popup settings category its own sidebar icon instead of reusing the
   Providers icon, so the two pages are distinguishable at a glance.
 - Bound the implicit width of the CLI release, managed CLI, and version status
