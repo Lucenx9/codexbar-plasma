@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.42 - 2026-09-25
+
 ### Added
 
 - Bundle the fallback name, icon, documentation link, and dashboard link for
@@ -22,9 +24,7 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
-- Center content vertically in popup tab buttons (`GlobalTab.qml` and
-  `FullRepresentation.qml`) by matching top and bottom margins on inner
-  content layouts.
+- Center content vertically in popup tab buttons.
 
 - Codex no longer treats a reset-credits record with a missing, zero, or
   invalid count as extra popup data, so an error-only Codex card is still
@@ -48,6 +48,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   GPT-3.5; `chatgpt-4o-latest`; and GPT-4o snapshots before `2024-08-06`,
   which lack structured outputs. **Test connection** no longer reports them
   as usable.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.41...v0.2.42)
 
 ## 0.2.41 - 2026-09-24
 
