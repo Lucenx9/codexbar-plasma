@@ -93,7 +93,7 @@ Rectangle {
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 2
-                Layout.alignment: Qt.AlignVCenter
+                Layout.alignment: Qt.AlignTop
                 spacing: Kirigami.Units.smallSpacing
                 PlainPlasmaLabel {
                     text: card.presentation.costTitle
@@ -134,10 +134,10 @@ Rectangle {
                     Layout.preferredWidth: 1
                     Layout.alignment: Qt.AlignTop
                     spacing: Kirigami.Units.smallSpacing
-                    PlainHeading {
+                    PlainPlasmaLabel {
                         text: modelData.title
-                        type: Kirigami.Heading.Type.Primary
-                        level: 3
+                        color: card.secondaryInk
+                        font.weight: Font.Medium
                         wrapMode: Text.Wrap
                         Layout.fillWidth: true
                         Layout.bottomMargin: Kirigami.Units.smallSpacing
@@ -150,8 +150,7 @@ Rectangle {
                             Layout.fillWidth: true
                             implicitHeight: rowContent.implicitHeight + Kirigami.Units.largeSpacing * 2
                             radius: Kirigami.Units.cornerRadius * 1.5
-                            color: card.withAlpha(card.ink, 0.035)
-                            border.color: card.withAlpha(card.ink, 0.06)
+                            color: card.withAlpha(card.ink, 0.04)
                             Rectangle {
                                 anchors.left: parent.left
                                 anchors.top: parent.top
