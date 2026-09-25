@@ -3,7 +3,10 @@
 var keepAction = "keep"
 var startAction = "start"
 var missingCommandAction = "missingCommand"
-var defaultStaleAfterMs = 300000
+// The CLI reports a session as active only within a short activity window, so
+// an open Sessions tab rescans at this cadence, like the macOS app's local
+// session monitor, even when usage refreshes less often or not at all.
+var defaultStaleAfterMs = 30000
 
 function staleAfterMs(refreshIntervalSeconds) {
     if (typeof refreshIntervalSeconds !== "number"
@@ -11,7 +14,8 @@ function staleAfterMs(refreshIntervalSeconds) {
             || refreshIntervalSeconds <= 0) {
         return defaultStaleAfterMs
     }
-    return Math.max(1000, Math.floor(refreshIntervalSeconds * 1000))
+    return Math.min(defaultStaleAfterMs,
+        Math.max(1000, Math.floor(refreshIntervalSeconds * 1000)))
 }
 
 // A failed attempt delays automatic retries without making its snapshot fresh.

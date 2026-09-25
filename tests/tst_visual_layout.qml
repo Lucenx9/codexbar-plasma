@@ -237,6 +237,20 @@ TestCase {
         function withAlpha(c, a) {
             return Qt.rgba(c.r, c.g, c.b, a);
         }
+        property real nestedSurfaceRadius: 4
+        property bool sessionHostsVary: false
+        function sessionTitle(item) {
+            return item.projectName;
+        }
+        function sessionSubtitle(item, showHost) {
+            return showHost ? "host" : "details";
+        }
+        function sessionStateText(state) {
+            return state === "active" ? "Active" : "Idle";
+        }
+        function sessionActivityText() {
+            return "Just now";
+        }
         function openProviderFromPanel(id) {
             openedProvider = id;
             expanded = true;
@@ -304,6 +318,7 @@ TestCase {
     }
 
     function init() {
+        applet.sessions = [];
         applet.expanded = false;
         applet.openedProvider = "";
         applet.hoveredPanelProviderID = "";
@@ -794,6 +809,56 @@ TestCase {
             verify(placeholder !== null);
             compare(placeholder.height, placeholder.implicitHeight);
         }
+    }
+
+    // A session card offers one copy action, for its title, placed beside the
+    // title text. Session state reads the same for every provider: a live one
+    // uses the theme's positive color, never the provider accent.
+    function test_sessionCardCopiesTheTitleAndColorsStateByMeaning() {
+        applet.sessionsErrorText = "";
+        applet.sessionsLoading = false;
+        applet.sessions = [
+            {provider: "claude", projectName: "CodexBar Plasma", sessionName: "", host: "",
+             state: "active", source: "cli", activityMs: 1},
+            {provider: "codex", projectName: "docs", sessionName: "", host: "",
+             state: "idle", source: "cli", activityMs: 1}
+        ];
+        var view = createControl("SessionsView", {
+            applet: applet,
+            width: 540,
+            height: 300
+        });
+        if (!view)
+            return;
+        wait(0);
+        var buttons = [];
+        findAllItems(view, function (item) {
+            return item.visible && item.icon !== undefined && item.icon.name === "edit-copy";
+        }, buttons);
+        compare(buttons.length, 2);
+        var title = findItem(view, function (item) {
+            return item.visible && item.elide !== undefined && item.text === "CodexBar Plasma";
+        });
+        verify(title !== null);
+        verify(!title.truncated, "a short title was elided: " + title.width + " < " + title.implicitWidth);
+        var firstButton = buttons.filter(function (button) {
+            return Math.abs(button.mapToItem(view, 0, 0).y - title.mapToItem(view, 0, 0).y) < title.height;
+        })[0];
+        verify(firstButton !== undefined);
+        var gap = firstButton.mapToItem(view, 0, 0).x - title.mapToItem(view, title.width, 0).x;
+        verify(gap >= 0 && gap < 16, "copy action drifted away from the title: " + gap);
+
+        var theme = Qt.createQmlObject('import QtQuick; import org.kde.kirigami as Kirigami; Item { readonly property color positive: Kirigami.Theme.positiveTextColor }', view);
+        var active = findItem(view, function (item) {
+            return item.visible && item.text === "Active";
+        });
+        var idle = findItem(view, function (item) {
+            return item.visible && item.text === "Idle";
+        });
+        verify(active !== null && idle !== null);
+        compare(active.color, theme.positive);
+        verify(active.color !== applet.brandAccent);
+        compare(idle.opacity, applet.secondaryTextOpacity);
     }
 
     // CopyableValue labels its copy action through tooltips anchored to the

@@ -165,7 +165,8 @@ synchronized.
 - `contents/ui/controllers/SessionsController.qml` owns the Sessions executable
   source, request ledger, timeout, refresh timer, snapshot, and attempt/success
   timestamps. Its inputs are the CLI path, refresh interval, and whether the
-  Sessions tab is open. `refresh()` requests a manual scan; read-only outputs
+  Sessions tab is open; `SessionRefreshPolicy.staleAfterMs` caps the visible
+  rescan cadence at 30 seconds, matching the macOS local session monitor. `refresh()` requests a manual scan; read-only outputs
   expose normalized sessions, loading, error text, and the last successful
   timestamp. Hiding the tab stops automatic scheduling while an already running
   scan may finish. A command change retires the previous request and clears its

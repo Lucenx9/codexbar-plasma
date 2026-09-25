@@ -10,6 +10,21 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Changed
+
+- The Sessions tab rescans every 30 seconds while it is visible, or at the
+  refresh interval when that is shorter, so a session no longer stays marked
+  active minutes after it went idle, and ended sessions leave the list sooner.
+- Session cards mark the active state with the theme's positive color instead
+  of the provider color, and dim idle sessions. They keep one copy action,
+  beside the title, and drop the copy action for the details line.
+- Session details use `·` as the separator and show the host only when
+  sessions come from more than one host.
+
+### Fixed
+
+- OMP sessions are labelled `OMP` instead of the generic Pi provider name.
+
 ## 0.2.42 - 2026-09-25
 
 ### Added

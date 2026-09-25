@@ -60,8 +60,7 @@ msgstr ""
 #: contents/ui/components/FullRepresentation.qml
 #: contents/ui/components/OverviewProviderRow.qml
 #: contents/ui/components/PanelSettingsPreview.qml
-#: contents/ui/components/ProviderCostSection.qml
-#: contents/ui/components/SessionsView.qml contents/ui/main.qml
+#: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
 msgid "%1 - %2"
 msgstr ""
 
@@ -1186,10 +1185,6 @@ msgstr ""
 
 #: contents/ui/components/SessionsView.qml
 msgid "Copy session name"
-msgstr ""
-
-#: contents/ui/components/SessionsView.qml
-msgid "Copy session details"
 msgstr ""
 
 #: contents/ui/components/ShareUsageWindow.qml

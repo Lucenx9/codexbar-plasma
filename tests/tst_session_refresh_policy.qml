@@ -84,10 +84,19 @@ TestCase {
         })), SessionRefreshPolicy.startAction)
     }
 
-    function test_refreshIntervalFallsBackWhenAutomaticUsageRefreshIsDisabled() {
-        compare(SessionRefreshPolicy.staleAfterMs(0), 300000)
-        compare(SessionRefreshPolicy.staleAfterMs(120), 120000)
-        compare(SessionRefreshPolicy.staleAfterMs("120"), 300000)
+    // The CLI marks a session active only within a short activity window, so a
+    // visible tab rescans at the live cadence even when usage refreshes slower.
+    function test_visibleSessionsRescanAtTheLiveCadence() {
+        compare(SessionRefreshPolicy.staleAfterMs(0), 30000)
+        compare(SessionRefreshPolicy.staleAfterMs(300), 30000)
+        compare(SessionRefreshPolicy.staleAfterMs(30), 30000)
+        compare(SessionRefreshPolicy.staleAfterMs("120"), 30000)
+        compare(SessionRefreshPolicy.staleAfterMs(NaN), 30000)
+    }
+
+    function test_fasterUsageRefreshAlsoRescansSessionsFaster() {
+        compare(SessionRefreshPolicy.staleAfterMs(10), 10000)
+        compare(SessionRefreshPolicy.staleAfterMs(0.2), 1000)
     }
 
     function test_nextCheckIsScheduledFromSnapshotCompletion() {
@@ -121,10 +130,10 @@ TestCase {
         })
         compare(SessionRefreshPolicy.nextCheckDelay(current), 200000)
 
-        current.staleAfterMs = SessionRefreshPolicy.staleAfterMs(60)
+        current.staleAfterMs = 60000
         compare(SessionRefreshPolicy.refreshAction(current), SessionRefreshPolicy.startAction)
 
-        current.staleAfterMs = SessionRefreshPolicy.staleAfterMs(600)
+        current.staleAfterMs = 600000
         compare(SessionRefreshPolicy.refreshAction(current), SessionRefreshPolicy.keepAction)
         compare(SessionRefreshPolicy.nextCheckDelay(current), 500000)
 

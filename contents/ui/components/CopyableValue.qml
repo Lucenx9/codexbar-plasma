@@ -32,6 +32,11 @@ RowLayout {
         font.pixelSize: valueRow.pixelSize > 0 ? valueRow.pixelSize : Kirigami.Theme.defaultFont.pixelSize
         opacity: valueRow.textOpacity
         Layout.fillWidth: true
+        // Keep the action beside its value instead of at the row's far edge,
+        // where it would sit closer to unrelated trailing content. Layouts
+        // round sizes down to whole pixels, so a fractional text width would
+        // otherwise elide a title that fits.
+        Layout.maximumWidth: Math.ceil(implicitWidth)
         elide: Text.ElideRight
     }
 
@@ -74,5 +79,9 @@ RowLayout {
                 duration: Kirigami.Units.shortDuration
             }
         }
+    }
+
+    Item {
+        Layout.fillWidth: true
     }
 }
