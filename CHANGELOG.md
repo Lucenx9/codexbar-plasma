@@ -22,6 +22,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Codex no longer treats a reset-credits record with a missing, zero, or
+  invalid count as extra popup data, so an error-only Codex card is still
+  recognized and no empty extra section is reserved.
 - Harden the TODO gate helper: it refuses Decisions redirects instead of
   following them with the API key, rejects oversized responses, and bounds
   its git probes with a timeout.
