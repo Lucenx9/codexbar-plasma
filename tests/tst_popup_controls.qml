@@ -78,6 +78,36 @@ TestCase {
         function contrastTextColor() {
             return "white";
         }
+        property bool accountsLoading: false
+        property var accountOptions: []
+        function accountLoadingForProvider() {
+            return accountsLoading;
+        }
+        function accountOptionsForProvider() {
+            return accountOptions;
+        }
+        function accountErrorForProvider() {
+            return "";
+        }
+        function selectedAccountForProvider() {
+            return "";
+        }
+        function accountDisplayLabel(item) {
+            return item.label;
+        }
+        function accountSubtitle(item) {
+            return item.subtitle || "";
+        }
+        function accountIsSelected(item) {
+            return !!item.selected;
+        }
+        function accountKey(item) {
+            return item.key;
+        }
+        function selectAccount() {
+        }
+        function loadAccounts() {
+        }
     }
 
     SignalSpy {
@@ -107,6 +137,8 @@ TestCase {
         actionSpy.clear();
         applet.lastUpdatedText = "Updated 12:00";
         applet.providerUpdatedText = "Provider updated 11:55";
+        applet.accountsLoading = false;
+        applet.accountOptions = [];
     }
 
     function cleanupTestCase() {
@@ -419,5 +451,89 @@ TestCase {
         header.visible = true;
         compare(account.visible, true);
         compare(plan.visible, true);
+    }
+
+    function findAccountButton(item) {
+        if (item.fullLabel !== undefined)
+            return item;
+        var children = item.children || [];
+        for (var i = 0; i < children.length; i++) {
+            var found = findAccountButton(children[i]);
+            if (found)
+                return found;
+        }
+        return null;
+    }
+
+    function findByObjectName(item, name) {
+        if (item.objectName === name)
+            return item;
+        var children = item.children || [];
+        for (var i = 0; i < children.length; i++) {
+            var found = findByObjectName(children[i], name);
+            if (found)
+                return found;
+        }
+        return null;
+    }
+
+    // A truncated account label must stay readable on hover, and a label
+    // that fits must not grow a redundant tooltip.
+    function test_accountsRevealTruncatedLabelOnHover() {
+        applet.accountOptions = [{
+            key: "work",
+            label: "engineering-with-an-unusually-long-account-name@example.com",
+            subtitle: "Production",
+            provider: "codex"
+        }];
+        var panel = createControl("ProviderAccountsPanel", {
+            applet: applet, providerData: {provider: "codex"}, width: 220
+        });
+        if (!panel)
+            return;
+        var button = findAccountButton(panel);
+        verify(button !== null);
+        tryVerify(function () { return button.textTruncated; });
+        var tip = findToolTip(button);
+        verify(tip !== null);
+        compare(tip.plainText, button.fullLabel);
+        // Park the virtual mouse away first, flushing the move: back-to-back
+        // moves compress into one, which cannot be relied on to enter the
+        // button from an unknown start position.
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        wait(300);
+        mouseMove(button, button.width / 2, button.height / 2);
+        tryCompare(tip, "visible", true);
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        tryCompare(tip, "visible", false);
+        panel.width = 640;
+        tryVerify(function () { return !button.textTruncated; });
+        mouseMove(button, button.width / 2, button.height / 2);
+        wait(tip.delay + 100);
+        verify(!tip.visible);
+    }
+
+    // The loading indicator holds its place while idle so the reload action
+    // does not jump when a scan starts or finishes.
+    function test_accountsHoldTheReloadActionPlaceWhileLoading() {
+        applet.accountOptions = [{key: "work", label: "Work", provider: "codex"}];
+        var panel = createControl("ProviderAccountsPanel", {
+            applet: applet, providerData: {provider: "codex"}, width: 400
+        });
+        if (!panel)
+            return;
+        var indicator = findByObjectName(panel, "accountsBusyIndicator");
+        var reload = findByObjectName(panel, "reloadAccountsButton");
+        verify(indicator !== null && reload !== null);
+        tryVerify(function () { return indicator.width > 0 && reload.width > 0; });
+        verify(indicator.visible);
+        var idleX = reload.mapToItem(panel, 0, 0).x;
+        applet.accountsLoading = true;
+        tryVerify(function () { return indicator.running; });
+        verify(Math.abs(reload.mapToItem(panel, 0, 0).x - idleX) < 1);
+        applet.accountsLoading = false;
+        tryVerify(function () { return !indicator.running; });
+        verify(Math.abs(reload.mapToItem(panel, 0, 0).x - idleX) < 1);
+        verify(indicator.visible);
     }
 }

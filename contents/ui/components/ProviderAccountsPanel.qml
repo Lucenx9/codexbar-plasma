@@ -47,16 +47,21 @@ ColumnLayout {
             }
         }
 
+        // Always visible so the reload action keeps its place while accounts
+        // load; an idle indicator renders nothing but holds its size.
         Controls.BusyIndicator {
+            id: accountsBusyIndicator
+            objectName: "accountsBusyIndicator"
+
             running: accountsPanel.providerID.length > 0
                 && accountsPanel.applet.accountLoadingForProvider(accountsPanel.providerID)
-            visible: running
             Layout.preferredWidth: Kirigami.Units.iconSizes.small
             Layout.preferredHeight: Kirigami.Units.iconSizes.small
         }
 
         PlasmaComponents.ToolButton {
             id: reloadAccountsButton
+            objectName: "reloadAccountsButton"
 
             icon.name: "view-refresh"
             enabled: accountsPanel.providerID.length > 0
@@ -95,10 +100,13 @@ ColumnLayout {
                 readonly property bool accountSelected: accountsPanel.applet.accountIsSelected(modelData, accountsPanel.providerData)
                 readonly property string fullLabel: subtitle.length > 0 ? label + " · " + subtitle : label
                 readonly property real labelPadding: icon.width + Kirigami.Units.largeSpacing * 2
+                readonly property bool textTruncated: accountFontMetrics.advanceWidth(fullLabel)
+                    > Math.max(0, width - labelPadding)
 
                 // Measure the full label independently: measuring elided text
                 // through implicitWidth would feed the truncation back into sizing.
                 width: Math.min(accountFontMetrics.advanceWidth(fullLabel) + labelPadding, parent.width)
+                hoverEnabled: true
                 checkable: true
                 checked: accountSelected
                 plainText: accountFontMetrics.elidedText(fullLabel, Qt.ElideRight,
@@ -115,7 +123,8 @@ ColumnLayout {
                 }
 
                 PlainToolTip {
-                    visible: accountButton.hovered || accountButton.visualFocus
+                    visible: accountButton.textTruncated
+                        && (accountButton.hovered || accountButton.visualFocus)
                     plainText: accountButton.fullLabel
                 }
 
