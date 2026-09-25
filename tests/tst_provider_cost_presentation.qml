@@ -330,4 +330,16 @@ TestCase {
         compare(snapshot.credits, 30);
         compare(snapshot.codexCreditLimit, null);
     }
+
+    function test_snapshotDropsUnusableResetCredits() {
+        for (var value of [{}, { availableCount: "many" }, { availableCount: 0 },
+                { availableCount: -1 }, { availableCount: Infinity }]) {
+            var snapshot = ProviderSnapshot.normalize({
+                provider: "codex",
+                error: { message: "Codex login required" },
+                usage: { codexResetCredits: value }
+            }, 1234);
+            compare(snapshot.resetCredits, null, JSON.stringify(value));
+        }
+    }
 }
