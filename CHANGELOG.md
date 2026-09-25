@@ -28,6 +28,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   keeping the provider hue, the connection-error state centers a muted status
   glyph below its banner, account buttons show a tooltip only when their label
   is cut short, and the accounts header no longer shifts while loading.
+- The shared usage card aligns the token and cost captions on one line, uses
+  the same muted caption style for its Providers and Top models headings, and
+  drops the outline from each row so the rows no longer read as nested cards.
 
 ### Fixed
 
