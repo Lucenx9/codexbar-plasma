@@ -92,6 +92,9 @@ function normalize(item, receivedAtMs) {
     var error = Normalizer.isCliRecord(item.error) ? item.error : null;
     var errorMessage = error ? message(Normalizer.safeScalarText(error.message)) : "";
     var status = Normalizer.isCliRecord(item.status) ? item.status : null;
+    // An unusable count renders nothing, so it must not count as supplemental data.
+    var resetCount = Normalizer.isCliRecord(usage.codexResetCredits)
+        ? Normalizer.strictFiniteNumber(usage.codexResetCredits.availableCount) : Number.NaN;
     var credits = Normalizer.isCliRecord(item.credits) ? item.credits : null;
     var codexCreditLimit = Normalizer.normalizeCodexCreditLimit(providerID,
         credits && Guards.hasOwnKey(credits, "codexCreditLimit") ? credits.codexCreditLimit : null);
@@ -126,7 +129,7 @@ function normalize(item, receivedAtMs) {
         accountKey: Normalizer.accountKey({account: account, organization: organization, loginMethod: loginMethod}),
         rows: rows, providerDetails: providerDetails, usageDashboard: dashboard,
         providerCost: costFields(usage.providerCost),
-        resetCredits: usage.codexResetCredits ? {availableCount: Normalizer.strictFiniteNumber(usage.codexResetCredits.availableCount)} : null,
+        resetCredits: resetCount > 0 ? {availableCount: resetCount} : null,
         codexCreditLimit: codexCreditLimit,
         credits: isFinite(remaining) ? remaining : null,
         statusRecord: status ? {indicator: Normalizer.boundedDisplayText(Normalizer.safeScalarText(status.indicator), 500),
