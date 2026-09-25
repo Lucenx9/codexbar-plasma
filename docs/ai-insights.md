@@ -167,7 +167,8 @@ privacy terms. Model discovery lists only OpenRouter models that advertise
 API; OpenAI chat model families that accept Chat Completions with a
 `json_schema` response format, which excludes the Responses-only `-pro` and
 deep-research models, GPT-4, GPT-4 Turbo, and GPT-3.5, `chatgpt-4o-latest`,
-and GPT-4o snapshots before `2024-08-06`; and installed Ollama models.
+GPT-4o snapshots before `2024-08-06`, and `o1-preview`/`o1-mini` snapshots;
+and installed Ollama models.
 No default cloud model is chosen and no price is claimed; users pick a model.
 
 The expected answer is `{"summary": string, "highlights": [string]}`. The helper
