@@ -741,7 +741,7 @@ PlasmoidItem {
         }
         var totalText = totals.hasMixedCostCurrencies
             ? i18n("%1 subtotal", costValue) : i18n("%1 total", costValue)
-        return i18n("%1 - %2", totalText, usageCountText(totals.tokens, "tokens"))
+        return [totalText, usageCountText(totals.tokens, "tokens")].join(" \u00b7 ")
     }
 
     function updateCostTrustNoticeState(scope, summary, shouldDismiss) {
@@ -2043,7 +2043,7 @@ PlasmoidItem {
             costValue = qualifiedCostValue(costValue, valueMode)
         }
         if (isFinite(numericTokens)) {
-            return i18n("%1 - %2", costValue, usageCountText(numericTokens, "tokens"))
+            return [costValue, usageCountText(numericTokens, "tokens")].join(" \u00b7 ")
         }
         return costValue
     }
@@ -2058,7 +2058,7 @@ PlasmoidItem {
         }
         if (isFinite(numericTokens)) {
             return i18n("%1: %2", label,
-                i18n("%1 - %2", costValue, usageCountText(numericTokens, "tokens")))
+                [costValue, usageCountText(numericTokens, "tokens")].join(" \u00b7 "))
         }
         return i18n("%1: %2", label, costValue)
     }

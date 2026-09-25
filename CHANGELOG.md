@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Cost lines in Usage & Spend and provider cost sections separate the amount
+  and token count with `·`.
+
 - The Sessions tab rescans every 30 seconds while it is visible, or at the
   refresh interval when that is shorter, so a session no longer stays marked
   active minutes after it went idle, and ended sessions leave the list sooner.
@@ -23,6 +26,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- The activity heatmap's weekday rows start on the locale's first day of the
+  week and no longer rotate as days pass; empty cells close the newest week.
+- Chart axis, readout, and heatmap dates use the locale's short date format
+  instead of the CLI's `YYYY-MM-DD` keys.
 - OMP sessions are labelled `OMP` instead of the generic Pi provider name.
 
 ## 0.2.42 - 2026-09-25

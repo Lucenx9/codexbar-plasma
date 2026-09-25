@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "../ChartScale.js" as ChartScale
+import "../ProviderNormalizer.js" as Normalizer
 
 ColumnLayout {
     id: chart
@@ -43,8 +44,17 @@ ColumnLayout {
         return ChartScale.pointValue(point)
     }
 
+    // A CLI calendar key names a local day, not an instant: build the date from
+    // its parts so zones west of UTC keep the same day, then use the locale.
     function pointLabel(point) {
-        return point && point.label ? String(point.label) : ""
+        var label = point && point.label ? String(point.label) : ""
+        var calendarDate = Normalizer.parsedCalendarDateKey(label)
+        if (!calendarDate) {
+            return label
+        }
+        var utc = new Date(calendarDate.timestampMs)
+        return new Date(utc.getUTCFullYear(), utc.getUTCMonth(), utc.getUTCDate())
+            .toLocaleDateString(Qt.locale(), Locale.ShortFormat)
     }
 
     function pointDisplayValue(point) {

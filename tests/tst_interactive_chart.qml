@@ -72,6 +72,27 @@ TestCase {
         compare(plot.y, initialY)
     }
 
+    // CLI calendar keys read as local dates in the system locale. The key is a
+    // calendar day, not an instant, so a zone west of UTC must not show the
+    // previous day. Other labels stay as the CLI wrote them.
+    function test_calendarKeysUseTheLocaleShortDate() {
+        var chart = createChart({
+            applet: {secondaryTextOpacity: 0.7, canvasColor: function() { return "#000000" }},
+            width: 300,
+            points: [{label: "2026-08-25", value: 1}],
+            accent: "blue"
+        })
+        if (!chart)
+            return
+        var expected = new Date(2026, 7, 25).toLocaleDateString(Qt.locale(), Locale.ShortFormat)
+        compare(chart.pointLabel({label: "2026-08-25"}), expected)
+        verify(expected.indexOf("25") >= 0)
+        compare(chart.pointLabel({label: "Week 34"}), "Week 34")
+        compare(chart.pointLabel({label: "2026-02-30"}), "2026-02-30")
+        compare(chart.pointLabel({label: "2026-08-25T10:00:00Z"}), "2026-08-25T10:00:00Z")
+        compare(chart.pointLabel(null), "")
+    }
+
     function test_readoutPreservesNegativeDetailValues() {
         var chart = createChart({
             applet: {

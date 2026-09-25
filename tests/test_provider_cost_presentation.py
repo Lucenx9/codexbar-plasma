@@ -297,7 +297,7 @@ TestCase {
     function test_spendTotalLinePrintsSubtotalOrUnavailable() {
         root.tokenCosts = {codex: {provider: "codex", historyDays: 30,
             totals: {cost: 5, tokens: 100, currency: "USD"}}};
-        compare(root.spendTotalLine(), "$5.00 total - 100 tokens");
+        compare(root.spendTotalLine(), "$5.00 total \u00b7 100 tokens");
         root.tokenCosts = {codex: {provider: "codex", historyDays: 30,
             totals: {cost: null, tokens: null, currency: "USD"}}};
         compare(root.spendTotalLine(), "Tokens unavailable");
