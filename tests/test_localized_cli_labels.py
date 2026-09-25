@@ -20,7 +20,8 @@ class LocalizedCliLabelTests(unittest.TestCase):
     def test_session_pace_and_count_adapters_use_each_catalog(self):
         applet = Surface("applet", ROOT)
         signatures = {"sessionStateText": "state", "sessionSourceText": "source",
-                      "sessionSubtitle": "item", "capitalize": "value",
+                      "sessionSubtitle": "item, showHost", "sessionProviderText": "item",
+                      "capitalize": "value",
                       "paceSummaryText": "pace", "paceSummaryPartsText": "parts",
                       "paceEtaText": "seconds",
                       "usageCountText": "value, unit",
@@ -121,8 +122,14 @@ TestCase {
         compare(sessionSourceText("ide"), "IDE");
         compare(sessionSourceText("unknown"), i18n("Unknown"));
         compare(sessionSourceText("futureSource"), "futureSource");
-        compare(sessionSubtitle({provider: "", host: "workstation", source: "desktopApp"}),
-            "workstation - " + row.labels[4]);
+        compare(sessionSubtitle({provider: "", dialect: "", host: "workstation", source: "desktopApp"}, true),
+            "workstation \u00b7 " + row.labels[4]);
+        compare(sessionSubtitle({provider: "", dialect: "", host: "workstation", source: "desktopApp"}, false),
+            row.labels[4]);
+        compare(sessionSubtitle({provider: "pi", dialect: "omp", host: "", source: "cli"}, false),
+            "OMP \u00b7 " + row.labels[5]);
+        compare(sessionSubtitle({provider: "", dialect: "future", host: "", source: "ide"}, false),
+            "future \u00b7 IDE");
         compare(paceSummaryText({stage: "ahead", deltaPercent: 13, expectedUsedPercent: 30,
             willLastToReset: false, etaSeconds: 3600, summary: "English summary"}), row.labels[6]);
         compare(paceSummaryText({stage: "onTrack", willLastToReset: true}),
@@ -134,7 +141,10 @@ TestCase {
         privacyMode = true;
         compare(sessionStateText("futureState"), i18n("Unknown"));
         compare(sessionSourceText("futureSource"), i18n("Unknown"));
-        compare(sessionSubtitle({provider: "", host: "workstation", source: "desktopApp"}), row.labels[4]);
+        compare(sessionSubtitle({provider: "", dialect: "", host: "workstation", source: "desktopApp"}, true),
+            row.labels[4]);
+        compare(sessionSubtitle({provider: "", dialect: "future", host: "", source: "desktopApp"}, false),
+            row.labels[4]);
     }
 }
 '''

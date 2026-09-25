@@ -232,6 +232,7 @@ function session(snapshot, enabled) {
     }
     return {
         provider: field(snapshot, "provider", ""),
+        dialect: known(field(snapshot, "dialect", ""), ["pi", "omp"], ""),
         projectName: "", sessionName: "", host: "",
         state: known(field(snapshot, "state", "unknown"), ["active", "idle", "running", "working"], "unknown"),
         source: known(field(snapshot, "source", "unknown"), ["cli", "desktopApp", "ide"], "unknown"),

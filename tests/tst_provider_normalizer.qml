@@ -680,6 +680,16 @@ TestCase {
         compare(undated.activityMs, 0)
     }
 
+    // Pi-family sessions share the `pi` provider; the CLI's dialect tells an OMP
+    // session apart from a plain Pi one.
+    function test_keepsTheSessionDialect() {
+        compare(Normalizer.normalizeSession({ provider: "pi", dialect: "OMP", projectName: "p" }).dialect, "omp")
+        compare(Normalizer.normalizeSession({ provider: "pi", dialect: "pi", projectName: "p" }).dialect, "pi")
+        compare(Normalizer.normalizeSession({ provider: "codex", projectName: "p" }).dialect, "")
+        compare(Normalizer.normalizeSession({ provider: "pi", dialect: { name: "omp" }, projectName: "p" }).dialect, "")
+        compare(Normalizer.normalizeSession({ provider: "pi", dialect: "x".repeat(200), projectName: "p" }).dialect.length <= 40, true)
+    }
+
     function test_neverRetainsLocalSessionPaths() {
         var session = Normalizer.normalizeSession({
             provider: "codex",

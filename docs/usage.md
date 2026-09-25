@@ -121,13 +121,18 @@ work and upstream contract requirements.
   calendar, including its first and last days. Measured zero remains a recorded
   day. It stays hidden for ranges that fill a single column.
 - Local **Sessions** tab backed by `sessions --json-v2`; transcript paths and
-  working directories are never rendered or opened. The tab refreshes stale
-  session data while it remains visible. Failed scans also respect the refresh
-  interval from the failure or timeout (five minutes when periodic usage
-  refresh is disabled), so reopening
-  the popup or revisiting the tab does not repeat a failed scan immediately.
+  working directories are never rendered or opened. While the tab is visible,
+  it rescans every 30 seconds, or at the refresh interval when that is shorter,
+  so the CLI's active/idle state and its list of live sessions stay current even
+  when periodic usage refresh is slower or disabled. Failed scans respect the
+  same cadence from the failure or timeout, so reopening the popup or
+  revisiting the tab does not repeat a failed scan immediately.
   The Sessions refresh button can retry immediately; changing the CLI command
-  clears the retry cooldown.
+  clears the retry cooldown. Each card shows the project, a state marked with
+  the theme's positive color while active, the provider (or `OMP` for an OMP
+  Pi-family session), and the source. The host name appears only when sessions
+  come from more than one host. Hovering a card reveals a copy action beside
+  its title.
 - Overview providers can be limited to a chosen set of up to 3 providers, or
   left automatic (the first 3 eligible providers). The checkboxes recognize
   provider aliases and mixed-case IDs, like the panel provider selection.

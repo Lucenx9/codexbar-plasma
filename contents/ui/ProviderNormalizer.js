@@ -451,6 +451,7 @@ function normalizeSession(item) {
     var projectName = boundedDisplayText(item.projectName, 160)
     var sessionName = boundedDisplayText(item.sessionName, 240)
     var host = boundedDisplayText(item.host, 160)
+    var dialect = boundedDisplayText(item.dialect, 40).toLowerCase()
     var state = boundedDisplayText(item.state, 40).toLowerCase()
     var sourceName = boundedDisplayText(item.source, 80)
     var activityAt = boundedDisplayText(item.lastActivityAt, 128)
@@ -469,6 +470,7 @@ function normalizeSession(item) {
 
     return {
         provider: providerID,
+        dialect: dialect,
         projectName: projectName,
         sessionName: sessionName,
         host: host,

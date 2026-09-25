@@ -487,22 +487,56 @@ PlasmoidItem {
             : (item.sessionName.length > 0 ? item.sessionName : i18n("Untitled session"))
     }
 
-    function sessionSubtitle(item) {
+    // Every session runs on the same machine unless the CLI reports more than
+    // one host, so a repeated host name would only add noise to each card.
+    readonly property bool sessionHostsVary: {
+        var firstHost = ""
+        for (var i = 0; i < sessions.length; i++) {
+            var host = sessions[i].host
+            if (host.length === 0) {
+                continue
+            }
+            if (firstHost.length === 0) {
+                firstHost = host
+            } else if (host !== firstHost) {
+                return true
+            }
+        }
+        return false
+    }
+
+    function sessionSubtitle(item, showHost) {
         item = PrivacyPresentation.session(item, privacyMode)
         if (!item) {
             return ""
         }
         var details = []
-        if (item.provider.length > 0) {
-            details.push(providerDisplayTitle(item.provider))
+        var providerText = sessionProviderText(item)
+        if (providerText.length > 0) {
+            details.push(providerText)
         }
-        if (item.host.length > 0) {
+        if (showHost === true && item.host.length > 0) {
             details.push(item.host)
         }
         if (item.source.length > 0) {
             details.push(sessionSourceText(item.source))
         }
-        return details.join(" - ")
+        return details.join(" \u00b7 ")
+    }
+
+    // Pi-family sessions share the `pi` provider; like the macOS menu, the
+    // dialect names an OMP session instead of the provider.
+    function sessionProviderText(item) {
+        switch (item.dialect) {
+        case "omp":
+            return "OMP"
+        case "":
+        case "pi":
+        case undefined:
+            return item.provider.length > 0 ? providerDisplayTitle(item.provider) : ""
+        default:
+            return privacyMode ? "" : item.dialect
+        }
     }
 
     function sessionStateText(state) {

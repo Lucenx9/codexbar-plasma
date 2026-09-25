@@ -68,8 +68,7 @@ msgstr "Nenhum insight gerado ainda."
 #: contents/ui/components/FullRepresentation.qml
 #: contents/ui/components/OverviewProviderRow.qml
 #: contents/ui/components/PanelSettingsPreview.qml
-#: contents/ui/components/ProviderCostSection.qml
-#: contents/ui/components/SessionsView.qml contents/ui/main.qml
+#: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
 msgid "%1 - %2"
 msgstr "%1 - %2"
 
@@ -1236,10 +1235,6 @@ msgstr ""
 #: contents/ui/components/SessionsView.qml
 msgid "Copy session name"
 msgstr "Copiar nome da sessão"
-
-#: contents/ui/components/SessionsView.qml
-msgid "Copy session details"
-msgstr "Copiar detalhes da sessão"
 
 #: contents/ui/components/ShareUsageWindow.qml
 msgid ""
@@ -3485,6 +3480,9 @@ msgid "Upstream CLI %1 is available. Update using your installation method."
 msgstr ""
 "A versão oficial %1 do CLI está disponível. Atualize usando seu método de "
 "instalação."
+
+#~ msgid "Copy session details"
+#~ msgstr "Copiar detalhes da sessão"
 
 #~ msgid "Since %1"
 #~ msgstr "Desde %1"

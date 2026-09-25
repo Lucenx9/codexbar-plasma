@@ -2631,15 +2631,10 @@ if not re.search(
     raise AssertionError(
         "SessionsView must clear copy feedback when the sessions snapshot is replaced"
     )
-for snapshot_copy_key_fragment in (
-    'readonly property string titleCopyKey: "title:" + index',
-    'readonly property string detailsCopyKey: "details:" + index',
-):
-    if not code_contains(sessions_view_text, snapshot_copy_key_fragment):
-        raise AssertionError(
-            "session copy keys must remain index-scoped inside one unchanged snapshot; "
-            f"missing {snapshot_copy_key_fragment!r}"
-        )
+if not code_contains(sessions_view_text, 'readonly property string titleCopyKey: "title:" + index'):
+    raise AssertionError(
+        "session copy keys must remain index-scoped inside one unchanged snapshot"
+    )
 if sessions_view_text.count("Controls.TextField {") != 1 or sessions_view_text.count("Timer {") != 2:
     raise AssertionError("SessionsView must instantiate exactly one clipboard field and two shared timers")
 for per_delegate_copy_fragment in ("Controls.TextField {", "Timer {"):
@@ -2657,10 +2652,19 @@ if not code_contains(copyable_value_text, "PlainPlasmaLabel {"):
     raise AssertionError("CopyableValue must render untrusted CLI values as plain text")
 if sessions_view_text.count("PlainPlasmaLabel {") < 3:
     raise AssertionError("all direct session labels must render CLI-derived text as plain text")
-if sessions_view_text.count("copyRevealed: sessionCardHover.hovered") != 2:
+if sessions_view_text.count("copyRevealed: sessionCardHover.hovered") != 1:
     raise AssertionError(
-        "both session copy actions must be revealed by the shared card hover handler "
+        "the single session copy action must be revealed by the shared card hover handler "
         "instead of crowding every card permanently"
+    )
+if "Copy session details" in sessions_view_text:
+    raise AssertionError(
+        "session details are secondary metadata; only the session title offers a copy action"
+    )
+if not code_contains(sessions_view_text, "? Kirigami.Theme.positiveTextColor"):
+    raise AssertionError(
+        "session state must use the theme's meaning color, not the provider accent, "
+        "so the same state reads the same for every provider"
     )
 for active_session_state in (
     'modelData.state === "active"',
@@ -2672,13 +2676,13 @@ for active_session_state in (
             f"missing {active_session_state!r}"
         )
 for optional_session_details_fragment in (
-    "readonly property string subtitle: view.applet.sessionSubtitle(modelData)",
+    "readonly property string subtitle: view.applet.sessionSubtitle( modelData, view.applet.sessionHostsVary)",
     "visible: sessionCard.subtitle.length > 0",
     "text: sessionCard.subtitle",
 ):
     if not code_contains(sessions_view_text, optional_session_details_fragment):
         raise AssertionError(
-            "sessions without optional detail fields must not render an empty copy action; "
+            "sessions without optional detail fields must not render an empty details line; "
             f"missing {optional_session_details_fragment!r}"
         )
 

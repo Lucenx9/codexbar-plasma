@@ -97,10 +97,10 @@ ColumnLayout {
             }
 
             PlainPlasmaLabel {
-                text: view.applet.sessionsLastUpdatedText.length > 0
-                    ? i18n("%1 - %2", view.applet.sessionsLastUpdatedText,
-                        i18np("%1 local session", "%1 local sessions", view.applet.sessions.length))
-                    : i18np("%1 local session", "%1 local sessions", view.applet.sessions.length)
+                text: [view.applet.sessionsLastUpdatedText,
+                    i18np("%1 local session", "%1 local sessions", view.applet.sessions.length)]
+                    .filter(function(part) { return part.length > 0 })
+                    .join(" \u00b7 ")
                 opacity: view.applet.secondaryTextOpacity
                 Layout.fillWidth: true
                 elide: Text.ElideRight
@@ -181,9 +181,9 @@ ColumnLayout {
 
                     readonly property bool activeSession: modelData.state === "active"
                         || modelData.state === "running"
-                    readonly property string subtitle: view.applet.sessionSubtitle(modelData)
+                    readonly property string subtitle: view.applet.sessionSubtitle(
+                        modelData, view.applet.sessionHostsVary)
                     readonly property string titleCopyKey: "title:" + index
-                    readonly property string detailsCopyKey: "details:" + index
                     readonly property color accent: view.applet.providerReadableColor(
                         modelData.provider,
                         Kirigami.Theme.backgroundColor)
@@ -191,7 +191,7 @@ ColumnLayout {
                     Layout.fillWidth: true
                     Layout.preferredHeight: sessionRow.implicitHeight + Kirigami.Units.largeSpacing
                     radius: view.applet.nestedSurfaceRadius
-                    // The card reveals its copy actions on hover, so the
+                    // The card reveals its copy action on hover, so the
                     // surface confirms the hover the same way overview rows do.
                     color: view.applet.withAlpha(Kirigami.Theme.textColor,
                         sessionCardHover.hovered ? 0.075 : 0.035)
@@ -254,18 +254,13 @@ ColumnLayout {
                                 elide: Text.ElideRight
                             }
 
-                            CopyableValue {
+                            PlainPlasmaLabel {
                                 visible: sessionCard.subtitle.length > 0
                                 text: sessionCard.subtitle
-                                textOpacity: view.applet.secondaryTextOpacity
-                                pixelSize: Kirigami.Theme.smallFont.pixelSize
-                                copyAccessibleName: i18n("Copy session details")
-                                copyEnabled: !view.applet.privacyMode
-                                copyRevealed: sessionCardHover.hovered
-                                copied: view.copiedValueKey === sessionCard.detailsCopyKey
-                                onCopyRequested: function(text) {
-                                    view.copySessionValue(text, sessionCard.detailsCopyKey)
-                                }
+                                opacity: view.applet.secondaryTextOpacity
+                                font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
                             }
                         }
 
@@ -273,12 +268,15 @@ ColumnLayout {
                             spacing: 0
                             Layout.alignment: Qt.AlignTop
 
+                            // State reads the same for every provider, so it
+                            // uses the theme's meaning colors, not the accent.
                             PlainPlasmaLabel {
                                 text: view.applet.sessionStateText(modelData.state)
                                 color: sessionCard.activeSession
-                                    ? sessionCard.accent
+                                    ? Kirigami.Theme.positiveTextColor
                                     : Kirigami.Theme.textColor
-                                font.weight: Font.DemiBold
+                                opacity: sessionCard.activeSession ? 1 : view.applet.secondaryTextOpacity
+                                font.weight: sessionCard.activeSession ? Font.DemiBold : Font.Normal
                                 horizontalAlignment: Text.AlignRight
                                 // Share the title row's height so the state sits
                                 // on the title's line instead of above it.

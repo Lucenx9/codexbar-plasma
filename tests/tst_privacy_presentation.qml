@@ -89,7 +89,7 @@ TestCase {
             state: "confidential state", source: "confidential source", activityMs: 1234 }
         var before = JSON.stringify(source)
         var result = Privacy.session(source, true)
-        compare(result, { provider: "claude", projectName: "", sessionName: "", host: "",
+        compare(result, { provider: "claude", dialect: "", projectName: "", sessionName: "", host: "",
             state: "unknown", source: "unknown", activityMs: 1234 })
         compare(JSON.stringify(source), before)
         compare(Privacy.session(source, false), source)
@@ -97,6 +97,10 @@ TestCase {
         source.source = "cli"
         compare(Privacy.session(source, true).state, "active")
         compare(Privacy.session(source, true).source, "cli")
+        source.dialect = "omp"
+        compare(Privacy.session(source, true).dialect, "omp")
+        source.dialect = "confidential dialect"
+        compare(Privacy.session(source, true).dialect, "")
     }
 
     function test_quotaKeepsTheNonIdentifyingWindowLength() {
