@@ -672,7 +672,7 @@ PlasmoidItem {
         if (!summary) {
             return ""
         }
-        return i18n("%1: %2", summary.label.length > 0 ? summary.label : i18n("Latest"), summary.value)
+        return i18n("%1: %2", summary.label.length > 0 ? costDayLabel(summary.label) : i18n("Latest"), summary.value)
     }
 
     function costChartPoints(points) {
@@ -790,8 +790,19 @@ PlasmoidItem {
         })
     }
 
+    // Cost text dates a CLI calendar key like the chart does; other labels
+    // stay as sent.
+    function costDayLabel(label) {
+        var date = Normalizer.calendarKeyLocalDate(label)
+        return date ? date.toLocaleDateString(Qt.locale(), Locale.ShortFormat) : label
+    }
+
     function costHistoryRows(tokenCost) {
         return CostPresentation.historyRows(costNumberFormat, tokenCost, costHistoryShowsTokens, i18n("Latest"))
+            .map(function (row) {
+                row.label = costDayLabel(row.label)
+                return row
+            })
     }
 
     function costPeakLine(points) {
@@ -800,7 +811,7 @@ PlasmoidItem {
             return ""
         }
         return i18n("Peak: %1 - %2",
-            peak.label.length > 0 ? peak.label : i18n("Latest"),
+            peak.label.length > 0 ? costDayLabel(peak.label) : i18n("Latest"),
             costHistoryShowsTokens
                 ? CostPresentation.tokenCountString(peak.magnitude)
                 : CostPresentation.amountString(costNumberFormat, peak.magnitude, peak.currency))

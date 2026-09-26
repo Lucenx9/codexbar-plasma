@@ -564,6 +564,17 @@ function parsedCalendarDateKey(value) {
     return { key: calendarDateKey(year, month, day), timestampMs: timestampMs }
 }
 
+// A CLI calendar key names a local day, not an instant: its local midnight
+// keeps the same day in zones west of UTC. Null for any other label.
+function calendarKeyLocalDate(value) {
+    var parsed = parsedCalendarDateKey(value)
+    if (!parsed) {
+        return null
+    }
+    var utc = new Date(parsed.timestampMs)
+    return new Date(utc.getUTCFullYear(), utc.getUTCMonth(), utc.getUTCDate())
+}
+
 function localCalendarDateKey(value) {
     if (typeof value !== "string" || value.trim().length === 0 || value.length > 100) {
         return ""

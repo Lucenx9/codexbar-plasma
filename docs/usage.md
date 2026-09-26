@@ -398,6 +398,8 @@ and clipboard content remain under your control after closing the window.
 - Recent-day history rows, model rows, and a selected day in a provider's cost
   details state how many incomplete requests the CLI excluded from that row's
   amounts. The amounts themselves stay as measured.
+- A provider's cost chart, history rows, peak line, latest-day summary, and
+  selected-day title use the system locale's short date format.
 
 See [Cost history](cost-history.md) for data bounds, selection rules, and
 evidence. Dashboard extras and additional history views require official CLI

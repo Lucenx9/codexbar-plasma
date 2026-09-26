@@ -52,6 +52,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- A provider's cost history rows, **Peak** line, latest-day summary, and
+  **Details for** title use the system locale's short date, like its chart,
+  instead of the CLI's `YYYY-MM-DD` keys.
 - With CLI 0.67.0, cost ranges keep their translated title, such as
   "Ultimi 30 giorni", instead of the CLI's English "Last 30 days".
 - Align provider detail row key labels with the primary value's top line when a

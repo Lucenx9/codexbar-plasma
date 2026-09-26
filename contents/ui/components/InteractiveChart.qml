@@ -44,17 +44,11 @@ ColumnLayout {
         return ChartScale.pointValue(point)
     }
 
-    // A CLI calendar key names a local day, not an instant: build the date from
-    // its parts so zones west of UTC keep the same day, then use the locale.
+    // Calendar keys use the locale's short date; other labels stay as sent.
     function pointLabel(point) {
         var label = point && point.label ? String(point.label) : ""
-        var calendarDate = Normalizer.parsedCalendarDateKey(label)
-        if (!calendarDate) {
-            return label
-        }
-        var utc = new Date(calendarDate.timestampMs)
-        return new Date(utc.getUTCFullYear(), utc.getUTCMonth(), utc.getUTCDate())
-            .toLocaleDateString(Qt.locale(), Locale.ShortFormat)
+        var date = Normalizer.calendarKeyLocalDate(label)
+        return date ? date.toLocaleDateString(Qt.locale(), Locale.ShortFormat) : label
     }
 
     function pointDisplayValue(point) {
