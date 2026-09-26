@@ -211,7 +211,9 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   unlisted model as working. OpenRouter's list proves structured-output
   support, not Zero Data Retention routing, which is checked on generation.
   Editing the Ollama address retires a running test and clears its result,
-  which describes only the address it listed.
+  which describes only the address it listed. A cloud test reads the wallet
+  itself, so its answer also updates the API key status shown beside the key
+  buttons.
 
 ## Scheduling and lifecycle
 
@@ -262,8 +264,8 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   Italian regional locales.
 - `tests/test_ai_insights_settings.py`: the settings page's helper reply
   handling with stubbed processes, including an Ollama address edited during
-  or after **Test connection**, and the **Clear** button re-arming when a new
-  insight is stored after a clear.
+  or after **Test connection**, the key status a test reply updates, and the
+  **Clear** button re-arming when a new insight is stored after a clear.
 - `tests/test_ai_insights_controller.py`: the production controller through
   Plasma's executable DataSource with a recording helper, covering disabled,
   manual, duplicate, automatic, restart, language/model/disable changes during a
