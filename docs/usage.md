@@ -153,6 +153,10 @@ work and upstream contract requirements.
   bar/line charts. A row that carries a valid `progress` used/total pair, such
   as a Bifrost budget, also draws a thin meter under its text; the meter fills
   at most to the total, and rows without a valid pair keep their text alone.
+- Usage rows take the widget's translated title for known providers. A
+  provider without one uses the CLI's own English title from `rateWindowLabels`
+  (such as `Memory`) instead of the generic `Session`, `Weekly`, or `Opus`;
+  privacy mode and quotas restored after a restart keep the generic title.
 
 ## Data freshness
 

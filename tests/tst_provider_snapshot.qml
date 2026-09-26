@@ -184,6 +184,48 @@ TestCase {
         verify(legacy.usageDashboard !== null);
         compare(legacy.placeholder, "");
     }
+    // Official Linux output carries lane titles beside `usage` on the provider
+    // record (`{"primary": "Memory"}` for llmman at 0.67.0). Only a bounded,
+    // non-empty string for a lane that produced a row survives.
+    function test_cliLaneLabelsAreBoundedPerLane() {
+        var labels = Object.create({secondary: "Inherited"});
+        labels.primary = "  Memory  ";
+        labels.tertiary = 42;
+        labels.extra = "Ignored";
+        var result = ProviderSnapshot.normalize({
+            provider: "llmman",
+            rateWindowLabels: labels,
+            usage: {
+                primary: {usedPercent: 40},
+                secondary: {usedPercent: 10},
+                tertiary: {usedPercent: 5},
+                extraRateWindows: [{title: "Pool", window: {usedPercent: 1}}]
+            }
+        }, 1000);
+        compare(result.rows.length, 4);
+        compare(result.rows[0].cliLabel, "Memory");
+        compare(result.rows[1].cliLabel, null);
+        compare(result.rows[2].cliLabel, null);
+        compare(result.rows[3].cliLabel, undefined);
+        compare(result.rows[3].label, "Pool");
+
+        var bounded = ProviderSnapshot.normalize({
+            provider: "future",
+            rateWindowLabels: {primary: "x".repeat(500), secondary: "   "},
+            usage: {primary: {usedPercent: 1}, secondary: {usedPercent: 2}}
+        }, 1000);
+        compare(bounded.rows[0].cliLabel.length, 60);
+        compare(bounded.rows[1].cliLabel, null);
+
+        for (var malformed of [null, "Memory", ["Memory"], 7]) {
+            var plain = ProviderSnapshot.normalize({
+                provider: "future", rateWindowLabels: malformed,
+                usage: {primary: {usedPercent: 1}}
+            }, 1000);
+            compare(plain.rows[0].cliLabel, null);
+        }
+    }
+
     function test_blankDisplayNameFallsBackToTitleOrNull() {
         var withTitle = ProviderSnapshot.normalize({
             provider: "codex",

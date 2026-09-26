@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Usage rows of providers the widget has no translated title for use the
+  CLI's own lane title, such as `Memory`, instead of a generic `Session`,
+  `Weekly`, or `Opus`.
+
 - Cost lines in Usage & Spend and provider cost sections separate the amount
   and token count with `·`.
 

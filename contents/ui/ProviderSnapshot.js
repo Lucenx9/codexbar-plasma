@@ -46,6 +46,16 @@ function windowSnapshot(window, pace, usageKnown, lane, label, receivedAtMs) {
     return result;
 }
 
+// The CLI's English title for a usage lane, such as llmman's "Memory". QML uses
+// it only where its localized table has no entry for the provider.
+function cliLaneLabel(labels, lane) {
+    if (!Guards.hasOwnKey(labels, lane) || typeof labels[lane] !== "string") {
+        return null;
+    }
+    var label = Normalizer.boundedDisplayText(labels[lane].trim(), 60);
+    return label.length > 0 ? label : null;
+}
+
 function costFields(cost) {
     if (!Normalizer.isCliRecord(cost)) {
         return null;
@@ -68,12 +78,16 @@ function normalize(item, receivedAtMs) {
     var providerID = Normalizer.providerSnapshotKey(item.provider || "unknown") || "unknown";
     var usage = Normalizer.isCliRecord(item.usage) ? item.usage : {};
     var pace = Normalizer.isCliRecord(item.pace) ? item.pace : {};
+    var laneLabels = Normalizer.isCliRecord(item.rateWindowLabels) ? item.rateWindowLabels : {};
     var rows = [];
     var lanes = ["primary", "secondary", "tertiary"];
     for (var i = 0; i < lanes.length; i++) {
         var lane = lanes[i];
         var row = windowSnapshot(usage[lane], pace[lane], true, lane, null, receivedAtMs);
-        if (row) rows.push(row);
+        if (row) {
+            row.cliLabel = cliLaneLabel(laneLabels, lane);
+            rows.push(row);
+        }
     }
     var extras = Array.isArray(usage.extraRateWindows) ? usage.extraRateWindows : [];
     for (var j = 0; j < Math.min(extras.length, Normalizer.maximumExtraRateWindows); j++) {

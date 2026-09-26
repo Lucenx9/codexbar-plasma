@@ -61,19 +61,6 @@ Issues linked below preserve discussion; this file owns parity status.
   and unknown amounts distinct, and stays legible in the narrow popup.
   Evidence: [0.60.5 review](docs/research/2026-09-18-macos-parity-0.60.5.md#linux-cli-contract-changes-since-0604).
 
-### CLI lane labels as fallback
-
-- [ ] Title a usage lane from the CLI's `rateWindowLabels` when the widget's
-  localized table has no entry for that provider. Unlisted providers get
-  the generic `Session`, `Weekly`, or `Opus`, which is wrong for balance,
-  memory, or plan-credit lanes; llmman's memory lane reached the popup as
-  `Session` until this review added a table entry. The field is present in
-  official Linux output since at least 0.65.0 (`{"primary": "Memory"}` for
-  llmman at 0.66.0). Done when a bounded, validated CLI label replaces only the
-  generic fallback, localized table entries still win, and an absent or
-  malformed label keeps today's behavior.
-  Evidence: [0.66.0 review](docs/research/2026-09-24-macos-parity-0.66.0.md#linux-cli-contract-changes-since-0650).
-
 ### Popup usage row visibility
 
 - [ ] Hide and restore individual popup usage rows per provider, mirroring the

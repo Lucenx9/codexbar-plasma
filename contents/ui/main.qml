@@ -1143,7 +1143,7 @@ PlasmoidItem {
     function presentUsageWindow(snapshot, providerID) {
         var row = copyObject(snapshot)
         row.label = snapshot.label !== null ? snapshot.label
-            : (snapshot.lane === "extra" ? i18n("Extra") : rateWindowLabels.labelForLane(providerKey(providerID), snapshot.lane))
+            : (snapshot.lane === "extra" ? i18n("Extra") : rateWindowLabels.labelForLane(providerKey(providerID), snapshot.lane, snapshot.cliLabel))
         row.reset = Normalizer.boundedDisplayText(resetText({resetsAt: snapshot.resetValue,
             resetDescription: snapshot.resetDescription}, false), 500)
         row.pace = paceSummaryPartsText(snapshot.paceParts)
