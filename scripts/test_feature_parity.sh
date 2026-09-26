@@ -151,6 +151,7 @@ require("providerAliases", table("providerAliases"), {
 
 require("providerBrandChannels", table("providerBrandChannels"), {
     "aiand": "[226 / 255, 92 / 255, 43 / 255]",
+    "aixy": "[18 / 255, 54 / 255, 80 / 255]",
     "atlascloud": "[89 / 255, 117 / 255, 245 / 255]",
     "bifrost": "[51 / 255, 192 / 255, 158 / 255]",
     "clawrouter": "[89 / 255, 110 / 255, 246 / 255]",
@@ -168,12 +169,15 @@ require("providerBrandChannels", table("providerBrandChannels"), {
     "nous": "[214 / 255, 165 / 255, 92 / 255]",
     "poe": "[93 / 255, 92 / 255, 222 / 255]",
     "qoder": "[16 / 255, 185 / 255, 129 / 255]",
+    "raycast": "[1, 99 / 255, 99 / 255]",
     "replicate": "[0, 0, 0]",
+    "xkiro": "[82 / 255, 201 / 255, 155 / 255]",
 })
 
 dashboards = table("providerDashboardUrls")
 require("providerDashboardUrls", dashboards, {
     "aiand": "https://console.aiand.com",
+    "aixy": "https://dash.aixy-gateway.com",
     "amp": "https://ampcode.com/settings/usage",
     "atlascloud": "https://www.atlascloud.ai/console",
     "clawrouter": "https://clawrouter.openclaw.ai/dashboard/access",
@@ -197,12 +201,14 @@ require("providerDashboardUrls", dashboards, {
     "wayfinder": "http://127.0.0.1:8088/router",
     "notion": "https://app.notion.com/",
     "qoder": "https://qoder.com/account/usage",
+    "raycast": "https://www.raycast.com/settings",
     "replicate": "https://replicate.com/account/billing",
     "sakana": "https://console.sakana.ai/billing",
     "typesafe": "https://console.typesafe.ai/settings/billing",
     "v0": "https://v0.app/settings/billing",
     "vercel": "https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai-gateway",
     "xai": "https://console.x.ai",
+    "xkiro": "https://xkiro.com",
 })
 # Dashboards that moved upstream; landing on the old page looks like working UI.
 reject("providerDashboardUrls", dashboards, {

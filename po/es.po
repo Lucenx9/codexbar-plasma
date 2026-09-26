@@ -722,6 +722,10 @@ msgid "ai&"
 msgstr "ai&"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Aixy"
+msgstr "Aixy"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Alibaba"
 msgstr "Alibaba"
 
@@ -986,6 +990,10 @@ msgid "Qwen Cloud"
 msgstr "Qwen Cloud"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Raycast"
+msgstr "Raycast"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Replicate"
 msgstr "Replicate"
 
@@ -1044,6 +1052,10 @@ msgstr "Windsurf"
 #: contents/ui/components/ProviderNames.qml
 msgid "xAI"
 msgstr "xAI"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "xKiro"
+msgstr "xKiro"
 
 #: contents/ui/components/ProviderNames.qml
 msgid "z.ai / GLM"
@@ -1138,12 +1150,20 @@ msgid "Points"
 msgstr "Puntos"
 
 #: contents/ui/components/RateWindowLabels.qml
+msgid "Daily free tokens"
+msgstr "Tokens gratuitos diarios"
+
+#: contents/ui/components/RateWindowLabels.qml
 msgid "Edit predictions"
 msgstr "Predicciones de edición"
 
 #: contents/ui/components/RateWindowLabels.qml
 msgid "Session"
 msgstr "Sesión"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Secondary budget"
+msgstr "Presupuesto secundario"
 
 #: contents/ui/components/RateWindowLabels.qml
 msgid "Claude and GPT"
@@ -2367,7 +2387,9 @@ msgstr "Ninguna. Oculte una fila de uso con su botón en la ventana emergente."
 
 #: contents/ui/configPopup.qml
 msgid "Hidden rows stay out of the popup's provider tabs only."
-msgstr "Las filas ocultas solo se excluyen de las pestañas de proveedores de la ventana emergente."
+msgstr ""
+"Las filas ocultas solo se excluyen de las pestañas de proveedores de la "
+"ventana emergente."
 
 #: contents/ui/configPopup.qml
 msgid "Restore"

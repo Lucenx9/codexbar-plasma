@@ -724,6 +724,10 @@ msgid "ai&"
 msgstr "ai&"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Aixy"
+msgstr "Aixy"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Alibaba"
 msgstr "Alibaba"
 
@@ -988,6 +992,10 @@ msgid "Qwen Cloud"
 msgstr "Qwen Cloud"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Raycast"
+msgstr "Raycast"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Replicate"
 msgstr "Replicate"
 
@@ -1046,6 +1054,10 @@ msgstr "Windsurf"
 #: contents/ui/components/ProviderNames.qml
 msgid "xAI"
 msgstr "xAI"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "xKiro"
+msgstr "xKiro"
 
 #: contents/ui/components/ProviderNames.qml
 msgid "z.ai / GLM"
@@ -1140,12 +1152,20 @@ msgid "Points"
 msgstr "Punti"
 
 #: contents/ui/components/RateWindowLabels.qml
+msgid "Daily free tokens"
+msgstr "Token gratuiti giornalieri"
+
+#: contents/ui/components/RateWindowLabels.qml
 msgid "Edit predictions"
 msgstr "Previsioni di modifica"
 
 #: contents/ui/components/RateWindowLabels.qml
 msgid "Session"
 msgstr "Sessione"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Secondary budget"
+msgstr "Budget secondario"
 
 #: contents/ui/components/RateWindowLabels.qml
 msgid "Claude and GPT"
@@ -2370,11 +2390,15 @@ msgstr "Righe di utilizzo nascoste:"
 
 #: contents/ui/configPopup.qml
 msgid "None. Hide a usage row with its button in the popup."
-msgstr "Nessuna. Nascondi una riga di utilizzo con il suo pulsante nella finestra a comparsa."
+msgstr ""
+"Nessuna. Nascondi una riga di utilizzo con il suo pulsante nella finestra a "
+"comparsa."
 
 #: contents/ui/configPopup.qml
 msgid "Hidden rows stay out of the popup's provider tabs only."
-msgstr "Le righe nascoste sono escluse solo dalle schede dei provider nella finestra a comparsa."
+msgstr ""
+"Le righe nascoste sono escluse solo dalle schede dei provider nella finestra "
+"a comparsa."
 
 #: contents/ui/configPopup.qml
 msgid "Restore"

@@ -25,6 +25,7 @@ QtObject {
                 return i18n("Gemini Models")
             case "azureopenai":
                 return i18n("Status")
+            case "aixy":
             case "bedrock":
                 return i18n("Budget")
             case "commandcode":
@@ -63,6 +64,8 @@ QtObject {
                 return i18n("API key limit")
             case "poe":
                 return i18n("Points")
+            case "xkiro":
+                return i18n("Daily free tokens")
             case "zed":
                 return i18n("Edit predictions")
             default:
@@ -71,6 +74,8 @@ QtObject {
         }
         if (lane === "secondary") {
             switch (key) {
+            case "aixy":
+                return i18n("Secondary budget")
             case "antigravity":
                 return i18n("Claude and GPT")
             case "amp":

@@ -721,6 +721,10 @@ msgid "ai&"
 msgstr "ai&"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Aixy"
+msgstr "Aixy"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Alibaba"
 msgstr "Alibaba"
 
@@ -985,6 +989,10 @@ msgid "Qwen Cloud"
 msgstr "Qwen Cloud"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Raycast"
+msgstr "Raycast"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Replicate"
 msgstr "Replicate"
 
@@ -1043,6 +1051,10 @@ msgstr "Windsurf"
 #: contents/ui/components/ProviderNames.qml
 msgid "xAI"
 msgstr "xAI"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "xKiro"
+msgstr "xKiro"
 
 #: contents/ui/components/ProviderNames.qml
 msgid "z.ai / GLM"
@@ -1137,12 +1149,20 @@ msgid "Points"
 msgstr "Pontos"
 
 #: contents/ui/components/RateWindowLabels.qml
+msgid "Daily free tokens"
+msgstr "Tokens gratuitos diários"
+
+#: contents/ui/components/RateWindowLabels.qml
 msgid "Edit predictions"
 msgstr "Previsões de edição"
 
 #: contents/ui/components/RateWindowLabels.qml
 msgid "Session"
 msgstr "Sessão"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Secondary budget"
+msgstr "Orçamento secundário"
 
 #: contents/ui/components/RateWindowLabels.qml
 msgid "Claude and GPT"
@@ -2361,7 +2381,8 @@ msgstr "Nenhuma. Oculte uma linha de uso com o botão dela na janela pop-up."
 
 #: contents/ui/configPopup.qml
 msgid "Hidden rows stay out of the popup's provider tabs only."
-msgstr "As linhas ocultas ficam fora apenas das abas de provedores da janela pop-up."
+msgstr ""
+"As linhas ocultas ficam fora apenas das abas de provedores da janela pop-up."
 
 #: contents/ui/configPopup.qml
 msgid "Restore"

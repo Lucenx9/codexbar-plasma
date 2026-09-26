@@ -730,6 +730,10 @@ msgid "ai&"
 msgstr "ai&"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Aixy"
+msgstr "Aixy"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Alibaba"
 msgstr "Alibaba"
 
@@ -994,6 +998,10 @@ msgid "Qwen Cloud"
 msgstr "Qwen Cloud"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Raycast"
+msgstr "Raycast"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Replicate"
 msgstr "Replicate"
 
@@ -1052,6 +1060,10 @@ msgstr "Windsurf"
 #: contents/ui/components/ProviderNames.qml
 msgid "xAI"
 msgstr "xAI"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "xKiro"
+msgstr "xKiro"
 
 #: contents/ui/components/ProviderNames.qml
 msgid "z.ai / GLM"
@@ -1146,12 +1158,20 @@ msgid "Points"
 msgstr "Punkte"
 
 #: contents/ui/components/RateWindowLabels.qml
+msgid "Daily free tokens"
+msgstr "Tägliche Gratis-Tokens"
+
+#: contents/ui/components/RateWindowLabels.qml
 msgid "Edit predictions"
 msgstr "Änderungsvorschläge"
 
 #: contents/ui/components/RateWindowLabels.qml
 msgid "Session"
 msgstr "Sitzung"
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Secondary budget"
+msgstr "Zweites Budget"
 
 #: contents/ui/components/RateWindowLabels.qml
 msgid "Claude and GPT"
@@ -2379,11 +2399,14 @@ msgstr "Ausgeblendete Nutzungszeilen:"
 
 #: contents/ui/configPopup.qml
 msgid "None. Hide a usage row with its button in the popup."
-msgstr "Keine. Blenden Sie eine Nutzungszeile mit ihrer Schaltfläche im Aufklappfenster aus."
+msgstr ""
+"Keine. Blenden Sie eine Nutzungszeile mit ihrer Schaltfläche im "
+"Aufklappfenster aus."
 
 #: contents/ui/configPopup.qml
 msgid "Hidden rows stay out of the popup's provider tabs only."
-msgstr "Ausgeblendete Zeilen fehlen nur in den Anbieter-Tabs des Aufklappfensters."
+msgstr ""
+"Ausgeblendete Zeilen fehlen nur in den Anbieter-Tabs des Aufklappfensters."
 
 #: contents/ui/configPopup.qml
 msgid "Restore"

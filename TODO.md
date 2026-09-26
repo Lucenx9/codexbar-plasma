@@ -8,10 +8,16 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.66.0](https://github.com/steipete/CodexBar/releases/tag/v0.66.0),
-  commit `e665cbf64976839dc947e70a942ba8226388d4c9`, checked 2026-09-24.
-- Coverage: release changes from 0.65.0 through 0.66.0 against Plasma
-  `26a877f`. The
+- Last release reviewed: [CodexBar 0.67.0](https://github.com/steipete/CodexBar/releases/tag/v0.67.0),
+  commit `e0286a895055e60ddaefa6a5f176f246aa2f05e4`, checked 2026-09-26.
+- Coverage: release changes from 0.66.0 through 0.67.0 against Plasma
+  `5e2ebf3`. The
+  [0.67.0 review](docs/research/2026-09-26-macos-parity-0.67.0.md) verifies the
+  Aixy, Raycast, and xKiro registry additions and which of them Linux can
+  reach, Aixy output through a loopback fixture, the new `cost --period` flag
+  with its `reportingPeriod` and `historyLabel` fields, and that UI preference
+  transfer is macOS-only; the descriptor, config-action, Cursor cost, and
+  display-currency blockers are unchanged. The
   [0.66.0 review](docs/research/2026-09-24-macos-parity-0.66.0.md) verifies the
   DevPass, Atlas Cloud, Vercel AI Gateway, and llmman registry additions and
   their API-key setup, llmman usage through a loopback daemon fixture, and that
@@ -61,6 +67,19 @@ Issues linked below preserve discussion; this file owns parity status.
   providers.
   Evidence: [0.62.0 review](docs/research/2026-09-20-macos-parity-0.62.0.md#linux-cli-contract-changes-since-0610).
 
+### Cost reporting periods
+
+- [ ] Offer calendar month-to-date and all available history as cost ranges,
+  as macOS 0.67.0 does. Linux 0.67.0 accepts `cost --period
+  month-to-date|all` and reports `reportingPeriod` (`month-to-date`, `all`, or
+  `rolling:N`) with an English `historyLabel`. 0.66.0 rejects the flag with
+  `Unknown option --period`, and `--days` wins when both are passed. `--period
+  all` reports about 740,000 `historyDays`, so the range must stay bounded.
+  Done when the range setting offers both periods where the CLI supports them,
+  titles them in the user's language from `reportingPeriod`, keeps rolling
+  ranges on older CLIs, and keeps charts, averages, and sharing bounded.
+  Evidence: [0.67.0 review](docs/research/2026-09-26-macos-parity-0.67.0.md#linux-cli-contract-changes-since-0660).
+
 ## Blocked on official Linux CLI contracts
 
 These are useful Linux features once the named contract exists. Do not fill
@@ -69,8 +88,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider settings
 
 - [ ] Enable generic settings and token-account editing through official
-  descriptors and writes. Linux 0.66.0 still rejects `config providers
-  --descriptors` (84 records, same four keys); its provider records have no
+  descriptors and writes. Linux 0.67.0 still rejects `config providers
+  --descriptors` (87 records, same four keys); its provider records have no
   descriptor. Helmcode and TypeSafe make this concrete: both are cookie-only,
   both refuse `--source api`, and their documented `cookieSource`/`cookieHeader`
   config path has no supported writer, so they stay metadata-only on Linux.
@@ -80,6 +99,10 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   (`enterpriseHost`) with no CLI writer; the CLI reads `BIFROST_BASE_URL` from
   the environment instead. The optional GitKraken organization ID has no writer
   either, and neither has llmman's non-default base URL (`LLMMAN_HOST`, 0.66.0).
+  0.67.0 adds Raycast, cookie-only with a macOS-only web source; Aixy's
+  self-hosted base URL (`AIXY_BASE_URL`); and the opt-in LiteLLM model activity
+  (`LITELLM_MODEL_USAGE_ENABLED`) and Claude Admin workspace spend
+  (`ANTHROPIC_ADMIN_WORKSPACE_SPEND`), none of which has a writer.
   `--label` and `--workspace-id` remain z.ai-only, so the new labeled Kimi, Doubao, and OpenCode Go accounts cannot be created from Linux.
   0.61.0 adds an `azureOpenAIAPIVersion` config extension value with no
   supported CLI writer, which the frontend must not reach by editing the config
@@ -95,7 +118,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.66.0 still has no
+  flow, CLI-auth setup, and token-account actions. Linux 0.67.0 still has no
   generic `config action` command (`set-api-key` remains the sole writer; the
   `usage_updated` hook event is CLI automation surface, not a setup
   action). Done when supported actions expose validated
@@ -130,7 +153,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Cursor cost
 
 - [ ] Show Cursor cost history through the generic Linux `cost` path. Linux
-  0.66.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
+  0.67.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
   Code, and Pi as supported;
   the descriptor gate keeps the new cookie-source availability errors unreachable.
   Done when a released Linux command emits supported cost data and Plasma tests
@@ -183,7 +206,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 - [ ] Offer display-currency selection and conversion through an official Linux
   contract. The 0.56.2 audit records no display-currency setter or descriptor;
-  the scoped 0.57.0, 0.58.0, and 0.60.4 config probes expose neither. Plasma currently
+  the scoped 0.57.0, 0.58.0, 0.60.4, and 0.67.0 config probes expose neither,
+  although macOS 0.67.0 adds twelve spend-estimate currencies. Plasma currently
   displays the CLI-emitted currency. Done when released settings and converted
   amounts define currency, rate provenance, and unavailable-conversion behavior,
   with tested Plasma selection/display. Keep conversion and exchange-rate

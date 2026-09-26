@@ -18,6 +18,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Cost history rows, model rows, and a selected day in the provider cost
   details state how many incomplete requests the CLI excluded from their
   amounts.
+- Bundle the fallback name, icon, documentation link, dashboard link, and
+  brand color for the `Aixy`, `Raycast`, and `xKiro` providers that official
+  CodexBar 0.67.0 adds to the registry. Aixy and xKiro offer the widget's
+  API-key setup; Raycast needs a macOS-only web source. Aixy rows are titled
+  "Budget" and "Secondary budget", and xKiro's row "Daily free tokens".
 
 ### Changed
 
@@ -47,6 +52,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- With CLI 0.67.0, cost ranges keep their translated title, such as
+  "Ultimi 30 giorni", instead of the CLI's English "Last 30 days".
 - Align provider detail row key labels with the primary value's top line when a
   secondary value (subtitle) is present, so the key label no longer floats between
   the primary and secondary lines.

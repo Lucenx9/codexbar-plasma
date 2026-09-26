@@ -28,7 +28,10 @@ function normalizeSnapshot(item, requestedHistoryDays) {
         // The local date of the scan: "today" is that day's total. Empty when
         // the CLI omits a usable timestamp.
         scanDay: Normalizer.localCalendarDateKey(item.updatedAt),
-        historyLabel: item.historyLabel ? Normalizer.boundedDisplayText(item.historyLabel, 120) : null,
+        // CLI 0.67.0 titles rolling --days ranges in English. The widget
+        // titles those ranges itself in the user's language.
+        historyLabel: item.historyLabel && !/^rolling:\d+$/.test(item.reportingPeriod)
+            ? Normalizer.boundedDisplayText(item.historyLabel, 120) : null,
         labelDays: isFinite(emittedDays) && emittedDays > 0 ? Math.max(1, Math.floor(emittedDays)) : historyDays,
         trust: trust,
         valueMode: summary ? summary.valueMode : "plain",
