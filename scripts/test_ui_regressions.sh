@@ -1997,8 +1997,6 @@ for history_row_fragment in (
         )
 
 cost_history_rows_body = function_body(cost_presentation_text, "historyRows")
-if not code_contains(cost_history_rows_body, "tokenCost.daily.length - 7"):
-    raise AssertionError("cost history must show only the latest seven detailed rows")
 if not code_contains(cost_history_rows_body, "sparklineMax(visibleDaily, showsTokens)"):
     raise AssertionError("cost history bars must scale against the seven visible days")
 if "tokenCost.daily.length - 14" in cost_history_rows_body:

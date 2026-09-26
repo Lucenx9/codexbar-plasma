@@ -795,7 +795,7 @@ PlasmoidItem {
     }
 
     function costPeakLine(points) {
-        var peak = CostPresentation.peakPoint(points, costHistoryShowsTokens)
+        var peak = CostPresentation.peakPoint(CostPresentation.recentHistoryPoints(points), costHistoryShowsTokens)
         if (!peak) {
             return ""
         }

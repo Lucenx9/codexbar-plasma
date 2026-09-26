@@ -47,6 +47,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- The provider **Cost history** peak line names the day its seven rows
+  highlight, instead of an older day of the range that the rows do not show.
 - Exclude `o1-preview` and `o1-mini` snapshots from OpenAI model discovery:
   they lack `json_schema` structured outputs, so selecting them always failed.
 - Give the Popup settings category its own sidebar icon instead of reusing the
