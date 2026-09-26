@@ -18,8 +18,18 @@ TestCase {
         var model = component.createObject(this);
         verify(model !== null);
         var sources = [];
-        for (var i = 0; i < model.count; i++)
+        var icons = [];
+        for (var i = 0; i < model.count; i++) {
             sources.push(model.get(i).source);
+            icons.push(model.get(i).icon);
+        }
+        for (var j = 0; j < icons.length; j++)
+            verify(String(icons[j]).length > 0, "settings category has no icon: " + sources[j]);
+        var uniqueIcons = {};
+        for (var k = 0; k < icons.length; k++)
+            uniqueIcons[icons[k]] = true;
+        compare(Object.keys(uniqueIcons).length, icons.length,
+            "settings categories must use distinct icons: " + icons.join(", "));
         compare(sources.sort(), [
             "configAiInsights.qml",
             "configDiagnostics.qml",

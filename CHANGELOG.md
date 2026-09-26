@@ -36,6 +36,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Exclude `o1-preview` and `o1-mini` snapshots from OpenAI model discovery:
   they lack `json_schema` structured outputs, so selecting them always failed.
+- Give the Popup settings category its own sidebar icon instead of reusing the
+  Providers icon, so the two pages are distinguishable at a glance.
+- Bound the implicit width of the CLI release, managed CLI, and version status
+  text in General and Diagnostics to the same 24-grid-unit measure as the other
+  settings hints, so long status lines cannot force the form into narrow mode
+  or push content past the viewport.
 - The activity heatmap's weekday rows start on the locale's first day of the
   week and no longer rotate as days pass; empty cells close the newest week.
 - Chart axis, readout, and heatmap dates use the locale's short date format
