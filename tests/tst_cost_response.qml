@@ -239,6 +239,28 @@ TestCase {
         compare(cost.historyLabel, null);
         compare(cost.historyCoverageEstablished, true);
     }
+    function test_rollingPeriodLabelIsLeftToTheLocalizedWidgetLabel_data() {
+        // CLI 0.67.0 labels every record in English, including the rolling
+        // --days ranges the widget requests and already titles in the locale.
+        return [
+            { tag: "rolling", period: "rolling:30", label: "Last 30 days", expected: null },
+            { tag: "today", period: "rolling:1", label: "Today", expected: null },
+            { tag: "month-to-date", period: "month-to-date", label: "Month to date", expected: "Month to date" },
+            { tag: "malformed period", period: "rolling:", label: "Custom", expected: "Custom" },
+            { tag: "non-string period", period: 30, label: "Custom", expected: "Custom" },
+            { tag: "no period", period: undefined, label: "Custom", expected: "Custom" }
+        ];
+    }
+    function test_rollingPeriodLabelIsLeftToTheLocalizedWidgetLabel(data) {
+        var cost = parse({
+            provider: "codex",
+            historyDays: 30,
+            historyLabel: data.label,
+            reportingPeriod: data.period
+        }).costs.codex;
+        compare(cost.historyLabel, data.expected);
+        compare(cost.labelDays, 30);
+    }
     function test_snapshotKeepsOnlyBoundedNormalizedFields() {
         var cost = parse({
             provider: "codex",

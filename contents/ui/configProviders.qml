@@ -1054,6 +1054,7 @@ KCM.SimpleKCM {
         case "fireworks":
             return fireworksSingleKeySetupSupported
         case "abacus":
+        case "aixy":
         case "alibaba":
         case "alibabatokenplan":
         case "amp":
@@ -1098,6 +1099,7 @@ KCM.SimpleKCM {
         case "vercel":
         case "warp":
         case "windsurf":
+        case "xkiro":
         case "zai":
             return true
         default:

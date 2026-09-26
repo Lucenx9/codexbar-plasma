@@ -29,6 +29,11 @@ TestCase {
             { tag: "devpass-primary", key: "devpass", lane: "primary", label: "Plan credits" },
             { tag: "devpass-secondary", key: "devpass", lane: "secondary", label: "Premium weekly" },
             { tag: "llmman-primary", key: "llmman", lane: "primary", label: "Memory" },
+            // Official 0.67.0 descriptors: Aixy's two most constrained budgets
+            // and xKiro's daily free-token allowance.
+            { tag: "aixy-primary", key: "aixy", lane: "primary", label: "Budget" },
+            { tag: "aixy-secondary", key: "aixy", lane: "secondary", label: "Secondary budget" },
+            { tag: "xkiro-primary", key: "xkiro", lane: "primary", label: "Daily free tokens" },
             { tag: "opencodego-tertiary", key: "opencodego", lane: "tertiary", label: "Monthly" },
             { tag: "claude-tertiary", key: "claude", lane: "tertiary", label: "Sonnet" },
             { tag: "cursor-tertiary", key: "cursor", lane: "tertiary", label: "API" },

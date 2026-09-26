@@ -21,6 +21,7 @@ TestCase {
 
     function test_lateAddedProvidersHaveBundledFallbackTitles_data() {
         return [
+            { tag: "aixy", key: "aixy", title: "Aixy" },
             { tag: "atlascloud", key: "atlascloud", title: "Atlas Cloud" },
             { tag: "bifrost", key: "bifrost", title: "Bifrost" },
             { tag: "clawrouter", key: "clawrouter", title: "ClawRouter" },
@@ -41,12 +42,14 @@ TestCase {
             { tag: "muse", key: "muse", title: "Muse Code" },
             { tag: "nous", key: "nous", title: "Nous Portal" },
             { tag: "qoder", key: "qoder", title: "Qoder" },
+            { tag: "raycast", key: "raycast", title: "Raycast" },
             { tag: "replicate", key: "replicate", title: "Replicate" },
             { tag: "stepfun", key: "stepfun", title: "StepFun" },
             { tag: "typesafe", key: "typesafe", title: "TypeSafe" },
             { tag: "v0", key: "v0", title: "v0" },
             { tag: "vercel", key: "vercel", title: "Vercel AI Gateway" },
             { tag: "wayfinder", key: "wayfinder", title: "Wayfinder" },
+            { tag: "xkiro", key: "xkiro", title: "xKiro" },
             { tag: "zai", key: "zai", title: "z.ai / GLM" }
         ];
     }

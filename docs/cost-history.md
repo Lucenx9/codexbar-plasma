@@ -141,6 +141,13 @@ records the checksum-verified asset
 (`11b88fef999f18cd7fd8b52e52a7fb3eb90e84eaf9fc98a1d4bc5d4170353513`), the
 isolated probes, and the emitted keys.
 
+Linux 0.67.0 adds `reportingPeriod` (`rolling:N`, `month-to-date`, or `all`)
+and an English `historyLabel` to every record. The widget titles `rolling:N`
+ranges itself in the user's language and uses a CLI label only for other
+periods. The
+[0.67.0 review](research/2026-09-26-macos-parity-0.67.0.md#linux-cli-contract-changes-since-0660)
+records the probes.
+
 The official v0.56.8 Linux x86_64 release archive was checksum-verified with SHA-256
 `ab98788e12840e5689ae505bf62731e0ea0db1c77e63dceda1589b6e795ac5b8`.
 An isolated probe with two synthetic days and two models ran

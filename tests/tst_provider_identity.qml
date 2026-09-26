@@ -202,6 +202,30 @@ TestCase {
         }
     }
 
+    function test_official0670RegistryProvidersHaveBundledMetadata() {
+        // Official 0.67.0 additions in `config providers` output, with the
+        // upstream descriptor colors and dashboards and no status page.
+        var added = {
+            "aixy": { dashboard: "https://dash.aixy-gateway.com",
+                channels: [18 / 255, 54 / 255, 80 / 255] },
+            "raycast": { dashboard: "https://www.raycast.com/settings",
+                channels: [1, 99 / 255, 99 / 255] },
+            "xkiro": { dashboard: "https://xkiro.com",
+                channels: [82 / 255, 201 / 255, 155 / 255] }
+        };
+        for (var key in added) {
+            compare(ProviderIdentity.providerIconFileName(key), key + ".svg");
+            compare(ProviderIdentity.providerDocsUrl(key),
+                ProviderIdentity.documentationBaseUrl + key + ".md");
+            compare(ProviderIdentity.providerDashboardUrl(key), added[key].dashboard);
+            compare(ProviderIdentity.providerBrandColorChannels(key), added[key].channels);
+            compare(ProviderIdentity.providerStatusUrl(key), "");
+            compare(ProviderIdentity.providerLoginUrl(key), "");
+            compare(ProviderIdentity.resolveProviderKey(key), key);
+            compare(ProviderIdentity.providerCliArgument(key), key);
+        }
+    }
+
     function test_retiredCrofKeepsBundledMetadataForOlderCliReleases() {
         // 0.64.1 retired Crof, but an installed 0.63.0 still emits it. Dropping
         // the metadata would turn a named provider into the unknown fallback

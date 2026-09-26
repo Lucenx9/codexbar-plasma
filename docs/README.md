@@ -80,6 +80,12 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   fixture, the #3944 plugin-entry preservation in the tested `config disable`
   command, and checksum-verified official CLI probes. Provider descriptors, generic config
   actions, and Cursor cost remain unavailable.
+- [0.67.0 release review](research/2026-09-26-macos-parity-0.67.0.md): the
+  Aixy, Raycast, and xKiro registry additions and their Linux reachability,
+  Aixy output verified through a loopback fixture, the `cost --period` flag and
+  its `reportingPeriod`/`historyLabel` fields, and checksum-verified official
+  CLI probes. Provider descriptors, generic config actions, Cursor cost, and
+  display currency remain unavailable.
 - [Settings decisions](research/2026-09-08-settings-experience.md): Panel disclosure and text grouping,
   Plasma settings, privacy, refresh behavior, the macOS 0.56.8 comparison, and
   the shared settings visual conventions.

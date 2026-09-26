@@ -672,6 +672,11 @@ TestCase {
         compare(supportsApiKeySetup("devpass"), true);
         compare(supportsApiKeySetup("llmman"), true);
         compare(supportsApiKeySetup("vercel"), true);
+        // CLI 0.67.0 stores a key for Aixy and xKiro and sends it under the
+        // default source; Raycast rejects config API keys and needs macOS web.
+        compare(supportsApiKeySetup("aixy"), true);
+        compare(supportsApiKeySetup("xkiro"), true);
+        compare(supportsApiKeySetup("raycast"), false);
         compare(supportsApiKeySetup("unknown-xyz"), false);
         compare(supportsApiKeySetup("fireworks"), false);
         fireworksSingleKeySetupSupported = true;

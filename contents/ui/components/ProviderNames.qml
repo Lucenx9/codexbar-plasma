@@ -16,6 +16,7 @@ QtObject {
         var names = {
             "abacus": i18n("Abacus AI"),
             "aiand": i18n("ai&"),
+            "aixy": i18n("Aixy"),
             "alibaba": i18n("Alibaba"),
             "alibabatokenplan": i18n("Alibaba Token Plan"),
             "amp": i18n("Amp"),
@@ -82,6 +83,7 @@ QtObject {
             "poe": i18n("Poe"),
             "qoder": i18n("Qoder"),
             "qwencloud": i18n("Qwen Cloud"),
+            "raycast": i18n("Raycast"),
             "replicate": i18n("Replicate"),
             "sakana": i18n("Sakana AI"),
             "stepfun": i18n("StepFun"),
@@ -97,6 +99,7 @@ QtObject {
             "wayfinder": i18n("Wayfinder"),
             "windsurf": i18n("Windsurf"),
             "xai": i18n("xAI"),
+            "xkiro": i18n("xKiro"),
             "zai": i18n("z.ai / GLM"),
             "zed": i18n("Zed"),
             "zenmux": i18n("ZenMux"),

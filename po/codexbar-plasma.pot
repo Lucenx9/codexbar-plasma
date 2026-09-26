@@ -673,6 +673,10 @@ msgid "ai&"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Aixy"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Alibaba"
 msgstr ""
 
@@ -937,6 +941,10 @@ msgid "Qwen Cloud"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Raycast"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Replicate"
 msgstr ""
 
@@ -994,6 +1002,10 @@ msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
 msgid "xAI"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
+msgid "xKiro"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
@@ -1089,11 +1101,19 @@ msgid "Points"
 msgstr ""
 
 #: contents/ui/components/RateWindowLabels.qml
+msgid "Daily free tokens"
+msgstr ""
+
+#: contents/ui/components/RateWindowLabels.qml
 msgid "Edit predictions"
 msgstr ""
 
 #: contents/ui/components/RateWindowLabels.qml
 msgid "Session"
+msgstr ""
+
+#: contents/ui/components/RateWindowLabels.qml
+msgid "Secondary budget"
 msgstr ""
 
 #: contents/ui/components/RateWindowLabels.qml
