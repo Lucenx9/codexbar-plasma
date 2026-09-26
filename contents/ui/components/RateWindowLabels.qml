@@ -8,9 +8,11 @@ QtObject {
     id: root
 
     // Label for a usage window `lane` ("primary", "secondary", "tertiary", ...)
-    // of the provider `key`. Unknown providers fall back to the generic lane
-    // names, so a provider added upstream still gets a readable label.
-    function labelForLane(key, lane) {
+    // of the provider `key`. A provider without an entry uses the CLI's own lane
+    // title when the normalized snapshot carries one (`cliLabel`), else the
+    // generic lane name, so a provider added upstream still gets a readable label.
+    function labelForLane(key, lane, cliLabel) {
+        var fallback = typeof cliLabel === "string" && cliLabel.length > 0 ? cliLabel : ""
         if (lane === "primary") {
             switch (key) {
             case "alibaba":
@@ -64,7 +66,7 @@ QtObject {
             case "zed":
                 return i18n("Edit predictions")
             default:
-                return i18n("Session")
+                return fallback || i18n("Session")
             }
         }
         if (lane === "secondary") {
@@ -109,7 +111,7 @@ QtObject {
             case "zed":
                 return i18n("Billing cycle")
             default:
-                return i18n("Weekly")
+                return fallback || i18n("Weekly")
             }
         }
         if (lane === "tertiary") {
@@ -125,7 +127,7 @@ QtObject {
             if (key === "gemini") {
                 return i18n("Flash Lite")
             }
-            return i18n("Opus")
+            return fallback || i18n("Opus")
         }
         return i18n("Usage")
     }

@@ -54,4 +54,25 @@ TestCase {
     function test_unknownProvidersFallBackToGenericLaneNames(data) {
         compare(labels.labelForLane("future-provider", data.lane), data.label);
     }
+
+    // The CLI's English lane title replaces only the generic fallback: a
+    // localized table entry still wins, and an absent or empty title keeps
+    // the generic name.
+    function test_cliLabelReplacesOnlyTheGenericFallback_data() {
+        return [
+            { tag: "unlisted-primary", key: "future-provider", lane: "primary", cli: "Balance", label: "Balance" },
+            { tag: "unlisted-secondary", key: "future-provider", lane: "secondary", cli: "Plan", label: "Plan" },
+            { tag: "unlisted-tertiary", key: "future-provider", lane: "tertiary", cli: "Pool", label: "Pool" },
+            { tag: "table-wins", key: "llmman", lane: "primary", cli: "RAM", label: "Memory" },
+            { tag: "listed-tertiary-wins", key: "claude", lane: "tertiary", cli: "Other", label: "Sonnet" },
+            { tag: "empty", key: "future-provider", lane: "primary", cli: "", label: "Session" },
+            { tag: "null", key: "future-provider", lane: "secondary", cli: null, label: "Weekly" },
+            { tag: "non-string", key: "future-provider", lane: "tertiary", cli: 5, label: "Opus" },
+            { tag: "unknown-lane", key: "future-provider", lane: "quaternary", cli: "Ignored", label: "Usage" }
+        ];
+    }
+
+    function test_cliLabelReplacesOnlyTheGenericFallback(data) {
+        compare(labels.labelForLane(data.key, data.lane, data.cli), data.label);
+    }
 }

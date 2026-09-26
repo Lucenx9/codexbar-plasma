@@ -78,8 +78,8 @@ TestCase {
             function commitUsageSnapshot(items) {
                 providers = UsageCache.reconcile(providers, items, panelClockMs);
             }
-            readonly property QtObject rateWindowLabels: QtObject {
-                function labelForLane() { return "Quota"; }
+            readonly property QtObject rateWindowLabels: Components.RateWindowLabels {
+                function i18n(text) { return text }
             }
             function providerCostSection() { return null; }
             function resetCreditsSection() { return null; }
@@ -303,6 +303,24 @@ TestCase {
             usage: {primary: {usedPercent: 5}}}, 1234);
         normalized.statusUrl = "https://evil.example/status";
         compare(applet.presentProviderSnapshot(normalized).statusUrl, fallback);
+    }
+
+    // A CLI lane title reaches the popup row only where the localized table has
+    // no provider entry; a listed provider keeps its catalog label.
+    function test_cliLaneLabelTitlesUnlistedProviders() {
+        var applet = createTemporaryObject(harness, this, {});
+        verify(applet !== null);
+        applet.parseOutput(JSON.stringify([
+            {provider: "future-provider", rateWindowLabels: {primary: "Balance"},
+                usage: {primary: {usedPercent: 30}, secondary: {usedPercent: 10}}},
+            {provider: "llmman", rateWindowLabels: {primary: "RAM"},
+                usage: {primary: {usedPercent: 40}}}
+        ]), "");
+        var byKey = function(key) {
+            return applet.providers.filter(function(provider) { return provider.provider === key; })[0];
+        };
+        compare(byKey("future-provider").rows.map(function(row) { return row.label; }), ["Balance", "Weekly"]);
+        compare(byKey("llmman").rows[0].label, "Memory");
     }
 
     // The icon file name is built from a provider-controlled key: unusable

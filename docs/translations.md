@@ -22,7 +22,8 @@ The CLI 0.56.2 JSON contracts provide the inputs for these translations:
   bounded, redacted text as a compatibility fallback.
 
 Free-form incident descriptions, provider detail titles/rows/chart labels,
-extra-window titles, reset-description fallbacks, and CLI error messages can
+extra-window titles, CLI lane titles for providers without a translated lane
+label, reset-description fallbacks, and CLI error messages can
 still appear in English. Translating them reliably needs official CLI message
 identifiers with typed arguments, or a documented locale-aware output contract.
 Do not translate arbitrary provider text by matching English phrases. The CLI's
