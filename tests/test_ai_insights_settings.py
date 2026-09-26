@@ -143,6 +143,25 @@ TestCase {
         compare(modelCombo.editText, "qwen3:4b")
     }
 
+    // A test reads the wallet, so it corrects a status lookup that failed,
+    // while an Ollama listing, which reads no key, leaves the status alone.
+    function test_connectionTestUpdatesTheKeyStatus() {
+        var replies = [
+            [JSON.stringify({status: "ok", key: "valid", models: []}), "present"],
+            [JSON.stringify({status: "error", reason: "missing_key"}), "absent"],
+            [JSON.stringify({status: "error", reason: "secret_unavailable"}), "unavailable"],
+            [JSON.stringify({status: "error", reason: "network"}), "unavailable"],
+            [listed, "unavailable"]
+        ]
+        for (var i = 0; i < replies.length; i++) {
+            keyStatus = "unavailable"
+            verify(run("models"))
+            accept(helperSource.connected[helperSource.connected.length - 1], {stdout: replies[i][0]})
+            compare(keyStatus, replies[i][1], replies[i][0])
+        }
+        keyStatus = ""
+    }
+
     // A listing stopped by the shell bound reports a timeout, not a format error.
     function test_stoppedListingReportsTimeout() {
         verify(run("models"))
@@ -401,7 +420,7 @@ class AiInsightsSettingsTests(unittest.TestCase):
                 capture_output=True, text=True, timeout=30)
         output = result.stdout + result.stderr
         self.assertEqual(result.returncode, 0, output)
-        self.assertIn("Totals: 7 passed, 0 failed", output)
+        self.assertIn("Totals: 8 passed, 0 failed", output)
 
     def test_clear_button_rearms_when_a_new_insight_arrives(self):
         insights = Surface("insights", ROOT)

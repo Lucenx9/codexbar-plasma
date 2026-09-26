@@ -194,6 +194,15 @@ KCM.SimpleKCM {
         } else if (action === "models") {
             var result = AiInsights.modelsReply(stdout,
                 data && data["exit code"] !== undefined ? Number(data["exit code"]) : NaN)
+            // The test read the wallet itself, so its answer replaces a status
+            // lookup that failed or timed out, for example on a locked wallet.
+            if (result.key === "valid") {
+                keyStatus = "present"
+            } else if (result.reason === "missing_key") {
+                keyStatus = "absent"
+            } else if (result.reason === "secret_unavailable") {
+                keyStatus = "unavailable"
+            }
             if (result.outcome !== "ok") {
                 report(messages.errorText(result.reason, provider), true)
                 return
