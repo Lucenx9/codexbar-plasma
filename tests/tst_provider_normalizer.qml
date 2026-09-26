@@ -1464,12 +1464,12 @@ TestCase {
                 modelBreakdowns: [{ modelName: "shared", cost: 5, totalTokens: 50 }] }
         ]
         var daily = Normalizer.normalizeCostDaily(items, "EUR", 2, "2026-08-29")
-        compare(daily[0].models, [{ label: "shared", cost: 4, tokens: 40, currency: "EUR" }])
-        compare(daily[1].models, [{ label: "shared", cost: 5, tokens: 50, currency: "EUR" }])
+        compare(daily[0].models, [{ label: "shared", cost: 4, tokens: 40, currency: "EUR", incompleteRequests: 0 }])
+        compare(daily[1].models, [{ label: "shared", cost: 5, tokens: 50, currency: "EUR", incompleteRequests: 0 }])
         compare(daily[0].modelsTruncated, false)
         compare(daily[1].modelsTruncated, false)
         compare(Normalizer.normalizeCostModels(items, "EUR", 2, "2026-08-29").rows,
-            [{ label: "shared", cost: 9, tokens: 90, currency: "EUR" }])
+            [{ label: "shared", cost: 9, tokens: 90, currency: "EUR", incompleteRequests: 0 }])
         daily[0].models[0].cost = 99
         compare(daily[1].models[0].cost, 5)
         compare(items[0].modelBreakdowns[0].cost, 1)
@@ -1484,13 +1484,13 @@ TestCase {
         ] }], "USD", 1)
         var models = daily[0].models
         compare(models.slice(0, 2), [
-            { label: "alias", cost: 3, tokens: 4, currency: "USD" },
-            { label: "token-only", cost: null, tokens: 20, currency: "USD" }
+            { label: "alias", cost: 3, tokens: 4, currency: "USD", incompleteRequests: 0 },
+            { label: "token-only", cost: null, tokens: 20, currency: "USD", incompleteRequests: 0 }
         ])
         var zeroModels = models.slice(2).sort(function(a, b) { return a.label.localeCompare(b.label) })
         compare(zeroModels, [
-            { label: "negative", cost: 0, tokens: 0, currency: "USD" },
-            { label: "zero", cost: 0, tokens: 0, currency: "USD" }
+            { label: "negative", cost: 0, tokens: 0, currency: "USD", incompleteRequests: 0 },
+            { label: "zero", cost: 0, tokens: 0, currency: "USD", incompleteRequests: 0 }
         ])
     }
 
@@ -1513,7 +1513,7 @@ TestCase {
             { modelName: "prototype", cost: 2 },
             { modelName: "healthy", cost: 1 }
         ] }], "USD", 1)
-        compare(daily[0].models, [{ label: "healthy", cost: 1, tokens: null, currency: "USD" }])
+        compare(daily[0].models, [{ label: "healthy", cost: 1, tokens: null, currency: "USD", incompleteRequests: 0 }])
         compare(daily[0].modelsTruncated, false)
         compare(({}).polluted, undefined)
     }
@@ -1531,7 +1531,7 @@ TestCase {
         compare(models[1].label.length, 120)
         compare(models[2].label, "<b>literal model</b>")
         for (var i = 0; i < models.length; i++) {
-            compare(Object.keys(models[i]).sort().join(","), "cost,currency,label,tokens")
+            compare(Object.keys(models[i]).sort().join(","), "cost,currency,incompleteRequests,label,tokens")
         }
         var encoded = JSON.stringify(daily)
         verify(encoded.indexOf("synthetic-model-secret") === -1)
@@ -1601,13 +1601,13 @@ TestCase {
         ]
         var daily = Normalizer.normalizeCostDaily(items, "USD", 2)
         compare(daily[0].models, [
-            { label: "cost-only", cost: 2, tokens: null, currency: "USD" },
-            { label: "mixed", cost: 1, tokens: null, currency: "USD" }
+            { label: "cost-only", cost: 2, tokens: null, currency: "USD", incompleteRequests: 0 },
+            { label: "mixed", cost: 1, tokens: null, currency: "USD", incompleteRequests: 0 }
         ])
         compare(daily[1].models[1].tokens, 0)
         compare(Normalizer.normalizeCostModels(items, "USD", 2).rows, [
-            { label: "cost-only", cost: 4, tokens: null, currency: "USD" },
-            { label: "mixed", cost: 2, tokens: 0, currency: "USD" }
+            { label: "cost-only", cost: 4, tokens: null, currency: "USD", incompleteRequests: 0 },
+            { label: "mixed", cost: 2, tokens: 0, currency: "USD", incompleteRequests: 0 }
         ])
         items.push({ modelBreakdowns: [{ modelName: "mixed", cost: 1, totalTokens: 7 }] })
         var period = Normalizer.normalizeCostModels(items, "USD", 3).rows
@@ -1624,15 +1624,15 @@ TestCase {
         var item = { totalCost: 6, totalTokens: 6, modelBreakdowns: breakdowns }
         var dailyModels = Normalizer.normalizeCostDaily([item], "USD", 1)[0].models
         compare(dailyModels, [
-            { label: "token-overflow", cost: 6, tokens: null, currency: "USD" },
-            { label: "cost-overflow", cost: null, tokens: 6, currency: "USD" }
+            { label: "token-overflow", cost: 6, tokens: null, currency: "USD", incompleteRequests: 0 },
+            { label: "cost-overflow", cost: null, tokens: 6, currency: "USD", incompleteRequests: 0 }
         ])
         compare(Normalizer.normalizeCostModels([item], "USD", 1).rows, dailyModels)
         var period = Normalizer.normalizeCostModels([
             { modelBreakdowns: [{ modelName: "same", cost: 1e308, totalTokens: 1 }] },
             { modelBreakdowns: [{ modelName: "same", cost: 1e308, totalTokens: 2 }] }
         ], "USD", 2).rows
-        compare(period, [{ label: "same", cost: null, tokens: 3, currency: "USD" }])
+        compare(period, [{ label: "same", cost: null, tokens: 3, currency: "USD", incompleteRequests: 0 }])
     }
 
     function test_dailyCostModelsDoNotPopulateGapsOrReviveInvalidDays() {
@@ -1704,7 +1704,7 @@ TestCase {
             { model: 123, cost: 1 },
             { modelName: "123", cost: 2 }
         ] }], "USD", 1)
-        compare(summary.rows, [{ label: "123", cost: 2, tokens: null, currency: "USD" }])
+        compare(summary.rows, [{ label: "123", cost: 2, tokens: null, currency: "USD", incompleteRequests: 0 }])
     }
 
     function test_costGapFillingRequiresAnObservedMetric() {

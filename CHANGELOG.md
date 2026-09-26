@@ -10,6 +10,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Added
+
+- Cost history rows, model rows, and a selected day in the provider cost
+  details state how many incomplete requests the CLI excluded from their
+  amounts.
+
 ### Changed
 
 - Usage rows of providers the widget has no translated title for use the

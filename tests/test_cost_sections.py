@@ -394,6 +394,51 @@ class CostSectionTests(unittest.TestCase):
     }
     ''')
 
+    def test_provider_rows_state_excluded_requests(self):
+        self.run_fixture('''
+    // Official per-day and per-model incomplete-request counts reach their
+    // own rows through the production response and presentation chain, and a
+    // selected day states its count beside its amounts.
+    function test_providerRowsStateExcludedRequests() {
+        var payload = [{ provider: "codex", historyDays: 30, currencyCode: "USD",
+            totals: { totalCost: 3, totalTokens: 30 },
+            daily: [
+                { date: "2026-09-11", totalCost: 1, totalTokens: 10, incompleteRequestCount: 2,
+                    modelBreakdowns: [{ modelName: "Partial", cost: 1, totalTokens: 10, incompleteRequestCount: 2 }] },
+                { date: "2026-09-12", totalCost: 2, totalTokens: 20,
+                    modelBreakdowns: [{ modelName: "Complete", cost: 2, totalTokens: 20 }] }
+            ] }];
+        var tokenCost = Object.assign({}, CostResponse.response(JSON.stringify(payload), "", 30).costs.codex,
+            { windowLabel: "30d", hintLine: "" });
+        testCase.providerData = { provider: "codex", tokenCost: tokenCost };
+        var subject = createTemporaryObject(providerFactory, testCase);
+        verify(subject !== null);
+        var all = [];
+        walkTree(subject, all);
+        var section = all.filter(function(item) { return item.objectName === "providerLocalCostSection"; })[0];
+        section.detailsExpanded = true;
+        function visibleExcluded(name) {
+            var found = [];
+            walkTree(subject, found);
+            return found.filter(function(item) {
+                return item.objectName === name && item.visible;
+            }).map(function(item) { return item.text; });
+        }
+        tryVerify(function() {
+            return visibleExcluded("costModelExcludedRequests").join() === "2 incomplete requests excluded"
+                && visibleExcluded("costHistoryExcludedRequests").join() === "2 incomplete requests excluded";
+        });
+        var chart = all.filter(function(item) { return item.objectName === "providerCostChart"; })[0];
+        chart.selectedIndex = chart.points.map(function(point) { return point.label; }).indexOf("2026-09-11");
+        verify(chart.selectedIndex >= 0);
+        tryVerify(function() {
+            return textsUnder(subject).some(function(text) {
+                return String(text).indexOf(" \u00b7 2 incomplete requests excluded") > 0;
+            });
+        });
+    }
+    ''')
+
     def test_spend_view_presents_costs_and_controls(self):
         self.run_fixture('''
     // The spend view presents the ordered provider costs with its metric

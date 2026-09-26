@@ -83,8 +83,11 @@ partial-total marker only: sum them under the coverage bound, never fold them
 into an amount, and keep the notice semantic so a changed count cannot revive a
 dismissed warning. Quota-week subtotals carry the bounded daily count so a
 mixed day makes the affected cost and token sums lower bounds, including in
-privacy mode. Individual history and model rows still need their own
-incomplete-request indication, tracked in TODO. A day whose requests are all
+privacy mode. Each daily point and each aggregated model row also carries its
+own bounded count: a model sums its breakdown counts across the range,
+including breakdowns without measured amounts, and the provider cost section
+states the count under the history or model row and beside a selected day's
+amounts, without changing the amount text. A day whose requests are all
 incomplete arrives without `totalCost` and `totalTokens`, which daily
 normalization already keeps unknown
 instead of turning into a measured zero. Privacy mode keeps the count, which

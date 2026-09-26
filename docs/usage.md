@@ -386,6 +386,9 @@ and clipboard content remain under your control after closing the window.
   view across refreshes and popup reopenings; a materially different warning is
   shown again. A changed count of excluded requests describes the same warning
   and stays closed.
+- Recent-day history rows, model rows, and a selected day in a provider's cost
+  details state how many incomplete requests the CLI excluded from that row's
+  amounts. The amounts themselves stay as measured.
 
 See [Cost history](cost-history.md) for data bounds, selection rules, and
 evidence. Dashboard extras and additional history views require official CLI
