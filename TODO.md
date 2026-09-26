@@ -50,17 +50,6 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Implementable on Linux
 
-### Incomplete cost requests
-
-- [ ] Mark the individual history and model rows whose requests the CLI
-  excluded, now that the range total says how many were left out. The official
-  counts also arrive per `daily[]` entry and per `daily[].modelBreakdowns[]`
-  record. Quota-week subtotals already use the daily count to mark lower bounds;
-  individual popup rows still read as complete measurements. Done when a
-  row states its excluded requests without parsing display text, keeps measured
-  and unknown amounts distinct, and stays legible in the narrow popup.
-  Evidence: [0.60.5 review](docs/research/2026-09-18-macos-parity-0.60.5.md#linux-cli-contract-changes-since-0604).
-
 ### Popup usage row visibility
 
 - [ ] Hide and restore individual popup usage rows per provider, mirroring the
@@ -170,8 +159,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   none verifies that established-empty case. The 0.60.4 OpenCodex
   unpriced-instead-of-zero change affects values within the unchanged cost schema.
   Linux 0.60.5 adds verified `incompleteRequestCount` counts, which explain
-  requests excluded from an amount but do not mark an unavailable total; that
-  contract is tracked as its own implementable entry above. Linux 0.62.0 nils
+  requests excluded from an amount but do not mark an unavailable total; the
+  widget states those counts on range totals and rows. Linux 0.62.0 nils
   out invalid model-breakdown and daily totals instead of emitting them, which
   keeps unknown amounts out of the JSON without supplying an explicit
   unavailable-versus-zero field.

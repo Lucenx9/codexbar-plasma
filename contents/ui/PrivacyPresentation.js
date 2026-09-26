@@ -115,7 +115,11 @@ function modelAmounts(snapshot) {
     var result = { rows: [], truncated: field(snapshot, "modelsTruncated", false) === true
         || (Array.isArray(models) && models.length > 6) }
     for (var i = 0; Array.isArray(models) && i < Math.min(models.length, 6); i++) {
-        result.rows.push(amounts(models[i]))
+        var model = amounts(models[i])
+        // Like the daily count, a request count carries no identity.
+        model.incompleteRequests = Normalizer.normalizedIncompleteRequestCount(
+            field(models[i], "incompleteRequests", 0))
+        result.rows.push(model)
     }
     return result
 }

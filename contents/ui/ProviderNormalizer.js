@@ -982,6 +982,9 @@ function normalizeCostModels(items, currency, days, updatedAt, includeTokenRanki
 
 function costModelSummary(modelDays, currency, includeTokenRanking) {
     var byName = ({})
+    // Requests the CLI excluded from a model's amounts, counted separately so
+    // a breakdown without measured amounts still reaches the model's row.
+    var incompleteByName = ({})
     var truncated = false
     for (var i = 0; i < modelDays.length; i++) {
         var breakdowns = hasOwnKey(modelDays[i], "modelBreakdowns")
@@ -1011,6 +1014,12 @@ function costModelSummary(modelDays, currency, includeTokenRanking) {
             var name = boundedDisplayText(rawName, 120)
             if (name.length === 0) {
                 continue
+            }
+            var incomplete = normalizedIncompleteRequestCount(
+                hasOwnKey(breakdown, "incompleteRequestCount") ? breakdown.incompleteRequestCount : undefined)
+            if (incomplete > 0) {
+                incompleteByName[rawName] = Math.min(maximumCostCoverageCount,
+                    (hasOwnKey(incompleteByName, rawName) ? incompleteByName[rawName] : 0) + incomplete)
             }
             var cost = firstStrictFiniteNumber(
                 hasOwnKey(breakdown, "cost") ? breakdown.cost : undefined,
@@ -1058,7 +1067,8 @@ function costModelSummary(modelDays, currency, includeTokenRanking) {
         }
         var model = byName[modelName]
         hasUnknownCost = hasUnknownCost || (model.tokens !== null && model.unknownCost)
-        rows.push({ label: model.label, cost: model.cost, tokens: model.tokens, currency: model.currency })
+        rows.push({ label: model.label, cost: model.cost, tokens: model.tokens, currency: model.currency,
+            incompleteRequests: hasOwnKey(incompleteByName, modelName) ? incompleteByName[modelName] : 0 })
     }
     rows.sort(function(a, b) {
         var aCost = a.cost === null ? 0 : a.cost

@@ -184,6 +184,14 @@ TestCase {
         compare(Privacy.cost({
             trust: { sourceKind: "vendor", incompleteRequests: 1.5 }
         }, true).trust.incompleteRequests, 0)
+
+        // Model rows keep their own count beside the redacted amounts.
+        var models = Privacy.cost({ models: [
+            { label: "secret-model", cost: 1, tokens: 2, currency: "USD", incompleteRequests: 4 },
+            { label: "other", cost: 1, tokens: 2, currency: "USD", incompleteRequests: "4" }
+        ] }, true).models
+        compare(models.map(function(model) { return model.incompleteRequests }), [4, 0])
+        compare(models[0].label, undefined)
     }
 
     function test_invalidQuotaRowsCannotCreateFalseZeroMeters() {

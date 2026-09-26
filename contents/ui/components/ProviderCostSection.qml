@@ -42,9 +42,17 @@ ColumnLayout {
     }
 
     function daySummaryText() {
-        return CostPresentation.amountSummary(applet.costNumberFormat, selectedDay, function (tokens) {
+        var summary = CostPresentation.amountSummary(applet.costNumberFormat, selectedDay, function (tokens) {
             return applet.usageCountText(tokens, "tokens");
         });
+        var excluded = excludedRequestsText(CostPresentation.acceptedIncompleteRequests(selectedDay));
+        return excluded.length > 0 ? summary + " · " + excluded : summary;
+    }
+
+    // The CLI left these requests out of the row's amounts; the count is stated
+    // beside the row instead of being folded into a figure.
+    function excludedRequestsText(count) {
+        return count > 0 ? i18np("%1 incomplete request excluded", "%1 incomplete requests excluded", count) : "";
     }
 
     function clearDaySelection() {
@@ -374,31 +382,46 @@ ColumnLayout {
             Repeater {
                 model: costDrillDownSection.modelRows
 
-                delegate: RowLayout {
+                delegate: ColumnLayout {
                     required property var modelData
 
                     Layout.fillWidth: true
-                    spacing: Kirigami.Units.smallSpacing
+                    spacing: 0
 
-                    PlainPlasmaLabel {
-                        text: modelData.label
-                        font.pixelSize: Kirigami.Theme.smallFont.pixelSize
-                        opacity: applet.secondaryTextOpacity
+                    RowLayout {
                         Layout.fillWidth: true
-                        elide: Text.ElideRight
+                        spacing: Kirigami.Units.smallSpacing
+
+                        PlainPlasmaLabel {
+                            text: modelData.label
+                            font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+                            opacity: applet.secondaryTextOpacity
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                        }
+
+                        PlainPlasmaLabel {
+                            id: costModelValueLabel
+
+                            text: modelData.value
+                            font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+                            opacity: applet.valueTextOpacity
+                            font.weight: Font.Medium
+                            horizontalAlignment: Text.AlignRight
+                            Layout.preferredWidth: costDrillDownSection.metricValueColumnWidth
+                            Layout.maximumWidth: costDrillDownSection.metricValueColumnWidth
+                            elide: Text.ElideRight
+                        }
                     }
 
                     PlainPlasmaLabel {
-                        id: costModelValueLabel
-
-                        text: modelData.value
-                        font.pixelSize: Kirigami.Theme.smallFont.pixelSize
-                        opacity: applet.valueTextOpacity
-                        font.weight: Font.Medium
-                        horizontalAlignment: Text.AlignRight
-                        Layout.preferredWidth: costDrillDownSection.metricValueColumnWidth
-                        Layout.maximumWidth: costDrillDownSection.metricValueColumnWidth
-                        elide: Text.ElideRight
+                        objectName: "costModelExcludedRequests"
+                        visible: text.length > 0
+                        text: tokenCostSection.excludedRequestsText(modelData.incompleteRequests)
+                        font: Kirigami.Theme.smallFont
+                        opacity: applet.secondaryTextOpacity
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
                     }
                 }
             }
@@ -546,72 +569,87 @@ ColumnLayout {
         Repeater {
             model: costHistoryChartSection.rows
 
-            delegate: RowLayout {
-                id: costHistoryMetricRow
-
+            delegate: ColumnLayout {
                 required property var modelData
 
                 Layout.fillWidth: true
-                spacing: Kirigami.Units.smallSpacing
+                spacing: 0
 
-                PlainPlasmaLabel {
-                    id: costHistoryDateLabel
-
-                    text: modelData.label
-                    font.pixelSize: Kirigami.Theme.smallFont.pixelSize
-                    opacity: applet.secondaryTextOpacity
-                    Layout.preferredWidth: Kirigami.Units.gridUnit * 5
-                    elide: Text.ElideRight
-                }
-
-                Rectangle {
-                    id: costHistoryBarTrack
+                RowLayout {
+                    id: costHistoryMetricRow
 
                     Layout.fillWidth: true
-                    Layout.preferredHeight: applet.compactMeterTrackHeight
-                    radius: height / 2
-                    color: applet.withAlpha(Kirigami.Theme.textColor, 0.055)
-                    clip: true
-                    antialiasing: true
+                    spacing: Kirigami.Units.smallSpacing
+
+                    PlainPlasmaLabel {
+                        id: costHistoryDateLabel
+
+                        text: modelData.label
+                        font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+                        opacity: applet.secondaryTextOpacity
+                        Layout.preferredWidth: Kirigami.Units.gridUnit * 5
+                        elide: Text.ElideRight
+                    }
 
                     Rectangle {
-                        width: parent.width * Math.max(0, Math.min(100, modelData.percent)) / 100
-                        height: parent.height
-                        radius: parent.radius
+                        id: costHistoryBarTrack
+
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: applet.compactMeterTrackHeight
+                        radius: height / 2
+                        color: applet.withAlpha(Kirigami.Theme.textColor, 0.055)
+                        clip: true
                         antialiasing: true
-                        gradient: Gradient {
-                            orientation: Gradient.Horizontal
 
-                            GradientStop {
-                                position: 0
-                                color: applet.withAlpha(costHistoryChartSection.accent, modelData.isPeak ? 0.72 : 0.46)
+                        Rectangle {
+                            width: parent.width * Math.max(0, Math.min(100, modelData.percent)) / 100
+                            height: parent.height
+                            radius: parent.radius
+                            antialiasing: true
+                            gradient: Gradient {
+                                orientation: Gradient.Horizontal
+
+                                GradientStop {
+                                    position: 0
+                                    color: applet.withAlpha(costHistoryChartSection.accent, modelData.isPeak ? 0.72 : 0.46)
+                                }
+
+                                GradientStop {
+                                    position: 1
+                                    color: applet.withAlpha(costHistoryChartSection.accent, modelData.isPeak ? 1 : 0.8)
+                                }
                             }
 
-                            GradientStop {
-                                position: 1
-                                color: applet.withAlpha(costHistoryChartSection.accent, modelData.isPeak ? 1 : 0.8)
+                            Behavior on width {
+                                NumberAnimation {
+                                    duration: Kirigami.Units.longDuration
+                                    easing.type: Easing.OutCubic
+                                }
                             }
                         }
+                    }
 
-                        Behavior on width {
-                            NumberAnimation {
-                                duration: Kirigami.Units.longDuration
-                                easing.type: Easing.OutCubic
-                            }
-                        }
+                    PlainPlasmaLabel {
+                        id: costHistoryValueLabel
+
+                        text: modelData.value
+                        font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+                        opacity: modelData.isPeak ? applet.valueTextOpacity : applet.secondaryTextOpacity
+                        font.weight: modelData.isPeak ? Font.DemiBold : Font.Normal
+                        horizontalAlignment: Text.AlignRight
+                        Layout.preferredWidth: Kirigami.Units.gridUnit * 8
+                        elide: Text.ElideRight
                     }
                 }
 
                 PlainPlasmaLabel {
-                    id: costHistoryValueLabel
-
-                    text: modelData.value
-                    font.pixelSize: Kirigami.Theme.smallFont.pixelSize
-                    opacity: modelData.isPeak ? applet.valueTextOpacity : applet.secondaryTextOpacity
-                    font.weight: modelData.isPeak ? Font.DemiBold : Font.Normal
-                    horizontalAlignment: Text.AlignRight
-                    Layout.preferredWidth: Kirigami.Units.gridUnit * 8
-                    elide: Text.ElideRight
+                    objectName: "costHistoryExcludedRequests"
+                    visible: text.length > 0
+                    text: tokenCostSection.excludedRequestsText(modelData.incompleteRequests)
+                    font: Kirigami.Theme.smallFont
+                    opacity: applet.secondaryTextOpacity
+                    Layout.fillWidth: true
+                    wrapMode: Text.Wrap
                 }
             }
         }

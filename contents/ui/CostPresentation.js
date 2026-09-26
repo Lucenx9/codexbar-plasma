@@ -429,7 +429,8 @@ function modelRows(fmt, tokenCost, tokensTextFor) {
         }
         rows.push({
             label: item.label,
-            value: amountSummary(fmt, item, tokensTextFor)
+            value: amountSummary(fmt, item, tokensTextFor),
+            incompleteRequests: acceptedIncompleteRequests(item)
         })
     }
     return rows
@@ -458,6 +459,7 @@ function historyRows(fmt, tokenCost, showsTokens, fallbackLabel) {
         rows.push({
             label: item.label && item.label.length > 0 ? item.label : fallbackLabel,
             value: amountSummary(fmt, item),
+            incompleteRequests: acceptedIncompleteRequests(item),
             percent: maximum > 0 && magnitude > 0 ? Math.max(3, magnitude * 100 / maximum) : 0,
             isPeak: maximum > 0 && magnitude === maximum
         })
@@ -732,6 +734,7 @@ function acceptedCostCoverage(value) {
 
 // Excluded requests are counted, never summed into an amount. Keep the total
 // bounded so a saturated upstream count cannot overflow the joined notice.
+// Accepts a trust record, a daily point, or a model aggregate alike.
 function acceptedIncompleteRequests(trust) {
     if (trust === null
             || typeof trust !== "object"

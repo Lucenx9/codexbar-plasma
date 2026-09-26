@@ -614,6 +614,12 @@ msgid "Enable %1"
 msgstr "Ativar %1"
 
 #: contents/ui/components/ProviderCostSection.qml
+msgid "%1 incomplete request excluded"
+msgid_plural "%1 incomplete requests excluded"
+msgstr[0] "%1 solicitação incompleta excluída"
+msgstr[1] "%1 solicitações incompletas excluídas"
+
+#: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/RateWindowLabels.qml
 #: contents/ui/components/SpendView.qml contents/ui/main.qml
 msgid "Cost"

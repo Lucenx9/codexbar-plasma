@@ -373,6 +373,45 @@ TestCase {
         compare(many.models.length, 6);
         compare(many.modelsTruncated, true);
     }
+    // Official 0.60.5 output counts requests the CLI excluded per day and per
+    // model breakdown. A model's row sums its days, including a day whose
+    // breakdown has no measured amounts; malformed counts mean none reported.
+    function test_rowsCarryExcludedRequestCounts() {
+        var codex = parse({
+            provider: "codex",
+            daily: [
+                {
+                    date: "2026-09-11",
+                    totalCost: 1,
+                    totalTokens: 10,
+                    incompleteRequestCount: 2,
+                    modelBreakdowns: [
+                        {modelName: "Measured", cost: 1, totalTokens: 10, incompleteRequestCount: 2},
+                        {modelName: "OnlyIncomplete", incompleteRequestCount: 7},
+                        {modelName: "Clean", cost: 0.5, totalTokens: 4, incompleteRequestCount: -3}
+                    ]
+                },
+                {
+                    date: "2026-09-12",
+                    totalCost: 2,
+                    totalTokens: 20,
+                    incompleteRequestCount: "4",
+                    modelBreakdowns: [
+                        {modelName: "Measured", cost: 2, totalTokens: 20, incompleteRequestCount: 3},
+                        {modelName: "Clean", cost: 0.5, totalTokens: 4, incompleteRequestCount: 1.5},
+                        {modelName: "Saturated", cost: 0.1, totalTokens: 1, incompleteRequestCount: 1000000000},
+                        {modelName: "Saturated", cost: 0.1, totalTokens: 1, incompleteRequestCount: 1000000000}
+                    ]
+                }
+            ]
+        }).costs.codex;
+        compare(codex.daily.map(function(day) { return day.incompleteRequests; }), [2, 0]);
+        var byLabel = ({});
+        codex.models.forEach(function(model) { byLabel[model.label] = model.incompleteRequests; });
+        compare(byLabel, {Measured: 5, Clean: 0, Saturated: 1000000000});
+        compare(codex.daily[0].models.map(function(model) { return model.label + ":" + model.incompleteRequests; }),
+            ["Measured:2", "Clean:0"]);
+    }
     function test_partialMergeRetainsOnlyExplicitFailures() {
         var old = parse([
             {

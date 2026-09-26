@@ -97,6 +97,24 @@ TestCase {
         compare(rows[3].value, "-")
     }
 
+    // Rows state the requests the CLI excluded as a count beside the amount
+    // text, so the view never parses display text to find it.
+    function test_rowsKeepExcludedRequestCountsApartFromAmounts() {
+        var models = CostPresentation.modelRows(fmt, { models: [
+            { label: "Partial", cost: 1, tokens: 2, currency: "USD", incompleteRequests: 3 },
+            { label: "Complete", cost: 1, tokens: 2, currency: "USD" },
+            { label: "Malformed", cost: 1, tokens: 2, currency: "USD", incompleteRequests: -1 }
+        ] }, null)
+        compare(models.map(function(row) { return row.incompleteRequests }), [3, 0, 0])
+        compare(models[0].value, "$1.00 · 2")
+        var history = CostPresentation.historyRows(fmt, { daily: [
+            { label: "D1", cost: 1, tokens: 2, currency: "USD", incompleteRequests: 1.5 },
+            { label: "D2", cost: 2, tokens: 3, currency: "USD", incompleteRequests: 4 }
+        ] }, false, "Latest")
+        compare(history.map(function(row) { return row.label + ":" + row.incompleteRequests }), ["D2:4", "D1:0"])
+        compare(history[0].value, "$2.00 · 3")
+    }
+
     function test_projectRowsFollowProviderOrderAndSelectedMetric() {
         var costs = [{ provider: "codex", projects: { rows: [
             { label: "Token heavy", cost: 1, tokens: 9000, currency: "USD" },
