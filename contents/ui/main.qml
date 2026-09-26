@@ -83,6 +83,9 @@ PlasmoidItem {
     readonly property var presentedProviderData: providerPresentation(selectedProviderData)
     property bool costUsageEnabled: Plasmoid.configuration.costUsageEnabled !== false
     property int costHistoryDays: isFinite(Number(Plasmoid.configuration.costHistoryDays)) ? Math.max(1, Math.min(365, Number(Plasmoid.configuration.costHistoryDays))) : 30
+    // A calendar period replaces the day window until a day count is chosen
+    // again, here or in the settings.
+    readonly property string costHistoryPeriod: CostPresentation.costPeriod(Plasmoid.configuration.costHistoryPeriod)
     // The cost payload already carries per-day tokens next to per-day cost, so
     // switching the plotted metric never needs a second CLI call.
     property string costHistoryMetric: safeCostHistoryMetric(Plasmoid.configuration.costHistoryMetric)
@@ -610,7 +613,7 @@ PlasmoidItem {
             var snapshot = snapshots[keys[i]]
             var item = copyObject(snapshot)
             var windowLabel = snapshot.historyLabel !== null ? snapshot.historyLabel
-                : Normalizer.boundedDisplayText(costHistoryWindowLabel(null, snapshot.labelDays), 120)
+                : Normalizer.boundedDisplayText(costHistoryWindowLabel({ period: snapshot.period }, snapshot.labelDays), 120)
             var currency = snapshot.currency
             item.windowLabel = windowLabel
             item.title = i18n("Cost")
@@ -627,6 +630,12 @@ PlasmoidItem {
     }
 
     function costHistoryWindowLabel(item, requestedHistoryDays) {
+        switch (CostPresentation.costPeriod(item ? item.period : "")) {
+        case "month-to-date":
+            return i18n("Month to date")
+        case "all":
+            return i18n("All history")
+        }
         var rawDays = item && item.historyDays !== undefined && item.historyDays !== null
             ? Normalizer.strictFiniteNumber(item.historyDays)
             : NaN
@@ -687,7 +696,7 @@ PlasmoidItem {
         if (costs.length === 0 || costLoading) return
         if (shareUsageWindow) shareUsageWindow.close()
         shareUsageSnapshot = ShareUsage.snapshot(costs, costHistoryDays,
-            new Date().toISOString(), costErrorText.length > 0)
+            new Date().toISOString(), costErrorText.length > 0, costHistoryPeriod)
         shareUsageLoader.active = true
         shareUsageWindow.show()
         shareUsageWindow.raise()
@@ -706,7 +715,7 @@ PlasmoidItem {
     function spendProviderCosts() {
         var snapshots = CostPresentation.spendSnapshots(tokenCosts, costHistoryDays, function(providerID) {
             return providerTitle(providerID)
-        })
+        }, costHistoryPeriod)
         return snapshots.map(function(item) { return root.costPresentation(item) })
     }
 
@@ -756,6 +765,11 @@ PlasmoidItem {
     function setCostHistoryDays(days) {
         var nextDays = Math.max(1, Math.min(maximumCostHistoryPoints, Math.floor(Number(days) || 30)))
         Plasmoid.configuration.costHistoryDays = nextDays
+        Plasmoid.configuration.costHistoryPeriod = ""
+    }
+
+    function setCostHistoryPeriod(period) {
+        Plasmoid.configuration.costHistoryPeriod = CostPresentation.costPeriod(period)
     }
 
     function setCostHistoryMetric(metric) {
@@ -817,8 +831,10 @@ PlasmoidItem {
                 : CostPresentation.amountString(costNumberFormat, peak.magnitude, peak.currency))
     }
 
-    function costAverageDailyLine(points) {
-        var average = CostPresentation.averageDailyValue(points, costHistoryShowsTokens)
+    // A calendar period longer than the chart supplies its whole-range average.
+    function costAverageDailyLine(points, averageDaily) {
+        var average = averageDaily ? averageDaily[costHistoryShowsTokens ? "tokens" : "cost"]
+            : CostPresentation.averageDailyValue(points, costHistoryShowsTokens)
         if (!average) {
             return ""
         }
@@ -896,7 +912,7 @@ PlasmoidItem {
             return null
         }
         var snapshot = tokenCosts[key] || null
-        return CostPresentation.snapshotMatchesRange(snapshot, costHistoryDays)
+        return CostPresentation.snapshotMatchesRange(snapshot, costHistoryDays, costHistoryPeriod)
             ? snapshot
             : null
     }
@@ -2732,6 +2748,7 @@ PlasmoidItem {
         commandPath: root.commandPath
         provider: root.provider
         historyDays: root.costHistoryDays
+        historyPeriod: root.costHistoryPeriod
         costUsageEnabled: root.costUsageEnabled
         active: root.spendSelected && root.expanded
     }

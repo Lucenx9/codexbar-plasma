@@ -89,6 +89,7 @@ TestCase {
         id: fakeApplet
         property bool costHistoryShowsTokens: false
         property int costHistoryDays: 30
+        property string costHistoryPeriod: ""
         property string costHistoryMetric: "cost"
         property bool costLoading: false
         property string costErrorText: ""
@@ -98,6 +99,7 @@ TestCase {
         property real nestedSurfaceRadius: 4
         property string metricSet: ""
         property string daysSet: ""
+        property string periodSet: ""
         property int refreshCount: 0
         property var costNumberFormat: CostPresentation.numberFormat(",", ".")
         function accountKey(item) { return item.account || ""; }
@@ -156,7 +158,8 @@ TestCase {
         function spendTotalLine() { return "Total line"; }
         function spendHistoryStillBuilding() { return testCase.stillBuilding; }
         function setCostHistoryMetric(metric) { metricSet = metric; }
-        function setCostHistoryDays(days) { daysSet = String(days); }
+        function setCostHistoryDays(days) { daysSet = String(days); costHistoryDays = days; costHistoryPeriod = ""; }
+        function setCostHistoryPeriod(period) { periodSet = period; costHistoryPeriod = period; }
         function refreshCost(full) { refreshCount++; }
         function updateCostTrustNoticeState(scope, summary, dismiss) {
             return { key: scope, dismissed: dismiss, shouldShow: false };
@@ -459,6 +462,23 @@ class CostSectionTests(unittest.TestCase):
         compare(combos.length, 1);
         combos[0].activated(1);
         compare(fakeApplet.metricSet, "tokens");
+        // The range picker offers the day windows and the CLI's calendar
+        // periods, and follows a period chosen here or elsewhere.
+        var ranges = all.filter(function(item) {
+            return typeof item.valueAt === "function" && item.model !== undefined
+                && item.model.length === 5;
+        });
+        compare(ranges.length, 1);
+        compare(ranges[0].currentIndex, 1);
+        ranges[0].activated(3);
+        compare(fakeApplet.periodSet, "month-to-date");
+        compare(ranges[0].currentText, "Month to date");
+        ranges[0].activated(0);
+        compare(fakeApplet.daysSet, "7");
+        compare(ranges[0].currentText, "7 days");
+        fakeApplet.costHistoryPeriod = "all";
+        compare(ranges[0].currentText, "All history");
+        fakeApplet.setCostHistoryDays(30);
         var historyMsgs = all.filter(function(item) {
             return item.plainText !== undefined
                 && item.plainText.indexOf("No daily") >= 0;

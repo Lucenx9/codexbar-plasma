@@ -32,16 +32,19 @@ function rank(a, b) {
         || a.label.localeCompare(b.label)
 }
 
-function snapshot(costs, days, createdAt, refreshFailed) {
+// A calendar `period` shares only the snapshots the CLI computed for it;
+// without one, the snapshots of the rolling `days` range.
+function snapshot(costs, days, createdAt, refreshFailed, period) {
     var items = Array.isArray(costs) ? costs : []
     var result = { providers: [], models: [], currencies: [], tokens: null,
         days: typeof days === "number" && isFinite(days) ? Math.max(1, Math.min(365, Math.floor(days))) : 30,
+        period: Costs.costPeriod(period),
         createdAt: typeof createdAt === "string" && isFinite(Date.parse(createdAt)) ? createdAt : "",
         partial: refreshFailed === true || items.length > 128, omittedProviders: 0, omittedModels: 0 }
     var models = []
     for (var i = 0; i < Math.min(items.length, 128); i++) {
         var item = items[i]
-        if (!record(item) || item.historyDays !== result.days) continue
+        if (!record(item) || !Costs.snapshotMatchesRange(item, result.days, result.period)) continue
         var totals = quantities(item.totals)
         var provider = label(item.provider)
         if (!provider) continue

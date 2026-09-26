@@ -689,6 +689,27 @@ TestCase {
 
     // A snapshot answered for a different window must not be summed into the
     // range the user has since selected.
+    function test_costPeriodKeepsOnlyCliCalendarPeriods() {
+        compare(CostPresentation.costPeriod("month-to-date"), "month-to-date")
+        compare(CostPresentation.costPeriod("all"), "all")
+        compare(CostPresentation.costPeriod("rolling:30"), "")
+        compare(CostPresentation.costPeriod("ALL"), "")
+        compare(CostPresentation.costPeriod(""), "")
+        compare(CostPresentation.costPeriod(null), "")
+        compare(CostPresentation.costPeriod({}), "")
+    }
+
+    function test_snapshotMatchesRangeSeparatesPeriodsFromDays() {
+        var monthToDate = { historyDays: 26, period: "month-to-date" }
+        verify(CostPresentation.snapshotMatchesRange(monthToDate, 30, "month-to-date"))
+        verify(!CostPresentation.snapshotMatchesRange(monthToDate, 26, ""))
+        verify(!CostPresentation.snapshotMatchesRange(monthToDate, 26, "all"))
+        verify(!CostPresentation.snapshotMatchesRange({ historyDays: 30 }, 30, "all"))
+        verify(CostPresentation.snapshotMatchesRange({ historyDays: 30, period: "" }, 30, ""))
+        compare(CostPresentation.spendSnapshots({ codex: monthToDate,
+            claude: { provider: "claude", historyDays: 26 } }, 26, null, "month-to-date"), [monthToDate])
+    }
+
     function test_snapshotMatchesRangeRejectsAStaleWindow() {
         verify(CostPresentation.snapshotMatchesRange({ historyDays: 30 }, 30))
         verify(!CostPresentation.snapshotMatchesRange({ historyDays: 7 }, 30))

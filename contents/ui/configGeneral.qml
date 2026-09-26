@@ -89,6 +89,10 @@ KCM.SimpleKCM {
     // popup-owned values.
     property string cfg_costHistoryMetric: "cost"
     property string cfg_costHistoryMetricDefault: "cost"
+    // A calendar period from the Usage & Spend tab; choosing a history window
+    // here returns to the day window.
+    property string cfg_costHistoryPeriod: ""
+    property string cfg_costHistoryPeriodDefault: ""
     property bool cfg_resetTimesShowAbsolute
     property bool cfg_resetTimesShowAbsoluteDefault: false
     property bool cfg_showProviderChangelogs
@@ -141,8 +145,11 @@ KCM.SimpleKCM {
         ? Plasmoid.configuration.costHistoryDays : cfg_costHistoryDaysDefault
     readonly property string persistedCostHistoryMetric: Plasmoid.configuration
         ? Plasmoid.configuration.costHistoryMetric : cfg_costHistoryMetricDefault
+    readonly property string persistedCostHistoryPeriod: Plasmoid.configuration
+        ? Plasmoid.configuration.costHistoryPeriod : cfg_costHistoryPeriodDefault
     property bool costHistoryDaysEditPending: false
     property bool costHistoryMetricEditPending: false
+    property bool costHistoryPeriodEditPending: false
     readonly property bool defaultValuesPrepared: defaultsActionRequested
         && userSettingsAreDefault()
     readonly property string autoUpdateLastCheck: Plasmoid.configuration
@@ -175,9 +182,11 @@ KCM.SimpleKCM {
     Component.onCompleted: {
         syncCostHistoryDaysFromPersisted()
         syncCostHistoryMetricFromPersisted()
+        syncCostHistoryPeriodFromPersisted()
     }
     onPersistedCostHistoryDaysChanged: syncCostHistoryDaysFromPersisted()
     onPersistedCostHistoryMetricChanged: syncCostHistoryMetricFromPersisted()
+    onPersistedCostHistoryPeriodChanged: syncCostHistoryPeriodFromPersisted()
 
     function applyCostHistoryDaysTransition(transition) {
         costHistoryDaysEditPending = transition.hasPendingEdit
@@ -189,9 +198,20 @@ KCM.SimpleKCM {
         cfg_costHistoryMetric = transition.pendingValue
     }
 
+    function applyCostHistoryPeriodTransition(transition) {
+        costHistoryPeriodEditPending = transition.hasPendingEdit
+        cfg_costHistoryPeriod = transition.pendingValue
+    }
+
     function editCostHistoryDays(value) {
         applyCostHistoryDaysTransition(ConfigValueSync.afterUserEdit(
             value, persistedCostHistoryDays))
+        editCostHistoryPeriod("")
+    }
+
+    function editCostHistoryPeriod(value) {
+        applyCostHistoryPeriodTransition(ConfigValueSync.afterUserEdit(
+            value, persistedCostHistoryPeriod))
     }
 
     function editCostHistoryMetric(value) {
@@ -207,6 +227,11 @@ KCM.SimpleKCM {
     function syncCostHistoryMetricFromPersisted() {
         applyCostHistoryMetricTransition(ConfigValueSync.afterPersistedChange(
             cfg_costHistoryMetric, costHistoryMetricEditPending, persistedCostHistoryMetric))
+    }
+
+    function syncCostHistoryPeriodFromPersisted() {
+        applyCostHistoryPeriodTransition(ConfigValueSync.afterPersistedChange(
+            cfg_costHistoryPeriod, costHistoryPeriodEditPending, persistedCostHistoryPeriod))
     }
 
     // Aligns a hint with the label text of the check box it explains.
@@ -260,6 +285,7 @@ KCM.SimpleKCM {
             [cfg_costUsageEnabled, cfg_costUsageEnabledDefault],
             [cfg_costHistoryDays, cfg_costHistoryDaysDefault],
             [cfg_costHistoryMetric, cfg_costHistoryMetricDefault],
+            [cfg_costHistoryPeriod, cfg_costHistoryPeriodDefault],
             [cfg_usageBarsShowUsed, cfg_usageBarsShowUsedDefault],
             [cfg_showQuotaWarningMarkers, cfg_showQuotaWarningMarkersDefault],
             [cfg_quotaWarningPercent, cfg_quotaWarningPercentDefault],
@@ -322,6 +348,7 @@ KCM.SimpleKCM {
         cfg_costUsageEnabled = cfg_costUsageEnabledDefault
         editCostHistoryDays(cfg_costHistoryDaysDefault)
         editCostHistoryMetric(cfg_costHistoryMetricDefault)
+        editCostHistoryPeriod(cfg_costHistoryPeriodDefault)
         cfg_usageBarsShowUsed = cfg_usageBarsShowUsedDefault
         cfg_showQuotaWarningMarkers = cfg_showQuotaWarningMarkersDefault
         cfg_quotaWarningPercent = cfg_quotaWarningPercentDefault
@@ -367,6 +394,7 @@ KCM.SimpleKCM {
     function saveConfig() {
         applyCostHistoryDaysTransition(ConfigValueSync.afterSave(cfg_costHistoryDays))
         applyCostHistoryMetricTransition(ConfigValueSync.afterSave(cfg_costHistoryMetric))
+        applyCostHistoryPeriodTransition(ConfigValueSync.afterSave(cfg_costHistoryPeriod))
         defaultsActionRequested = false
     }
 

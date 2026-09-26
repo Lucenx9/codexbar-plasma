@@ -61,6 +61,10 @@
       <min>1</min>
       <max>365</max>
     </entry>
+    <entry name="costHistoryPeriod" type="String">
+      <label>Calendar history period: empty for the day window, month-to-date, or all.</label>
+      <default></default>
+    </entry>
     <entry name="costHistoryMetric" type="String">
       <label>Cost history chart metric: cost or tokens.</label>
       <default>cost</default>

@@ -53,6 +53,21 @@ TestCase {
         verify(JSON.stringify(data).indexOf("/home/alice/private-project") === -1)
     }
 
+    function test_calendarPeriodsShareOnlyTheirOwnSnapshots() {
+        var monthToDate = cost("codex", 10, 1, "USD")
+        monthToDate.period = "month-to-date"
+        monthToDate.historyDays = 26
+        var rolling = cost("claude", 20, 2, "USD")
+        rolling.historyDays = 26
+        var data = ShareUsage.snapshot([monthToDate, rolling], 30, "", false, "month-to-date")
+        compare(data.period, "month-to-date")
+        compare(data.providers.map(function(row) { return row.provider }), ["codex"])
+        data = ShareUsage.snapshot([monthToDate, rolling], 26, "", false)
+        compare(data.period, "")
+        compare(data.providers.map(function(row) { return row.provider }), ["claude"])
+        compare(ShareUsage.snapshot([monthToDate], 30, "", false, "quarter").period, "")
+    }
+
     function test_malformedBoundsAndRanges() {
         compare(ShareUsage.snapshot(null, NaN, {}, false).providers.length, 0)
         var wrongRange = cost("codex", 10, 2, "USD")

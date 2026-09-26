@@ -46,6 +46,7 @@ TestCase {
     property var providers: []
     property var tokenCosts: ({})
     property int costHistoryDays: 30
+    property string costHistoryPeriod: ""
 
     SOURCE_FUNCTIONS
 
@@ -332,6 +333,7 @@ TestCase {
     property var providers: []
     property var tokenCosts: ({})
     property int costHistoryDays: 30
+    property string costHistoryPeriod: ""
     property bool notificationsPrimed: false
     property var notificationMemo: ({})
     property var sentNotifications: []

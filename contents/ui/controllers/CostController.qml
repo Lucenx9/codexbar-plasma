@@ -12,6 +12,8 @@ Item {
     property string commandPath: ""
     property string provider: ""
     property int historyDays: 30
+    // "month-to-date" or "all" asks the CLI for that calendar period instead.
+    property string historyPeriod: ""
     property bool costUsageEnabled: true
     property bool active: false
 
@@ -49,7 +51,8 @@ Item {
             if (!controller.costUsageEnabled || controller.commandPath.length === 0) {
                 return "";
             }
-            var parts = [Guards.shellQuote(controller.commandPath), "cost", "--format", "json", "--json-only", "--days", String(controller.historyDays)];
+            var range = controller.historyPeriod.length > 0 ? ["--period", Guards.shellQuote(controller.historyPeriod)] : ["--days", String(controller.historyDays)];
+            var parts = [Guards.shellQuote(controller.commandPath), "cost", "--format", "json", "--json-only"].concat(range);
             if (controller.provider.length > 0) {
                 parts.push("--provider", Guards.shellQuote(controller.provider));
             }
@@ -98,6 +101,7 @@ Item {
             var source = CommandLedger.withRunNonce(commandSource, runSerial);
             var descriptor = CommandLedger.descriptor("cost", "", nowMs, commandTimeoutMs);
             descriptor.historyDays = controller.historyDays;
+            descriptor.historyPeriod = controller.historyPeriod;
             descriptor.context = commandSource;
             commands = CommandLedger.opened(commands, source, descriptor);
             costSource.connectSource(source);
@@ -138,6 +142,9 @@ Item {
                 snapshot = Normalizer.mergeCostSnapshotsAfterPartialFailure(previous, result.costs, result.failedProviders);
                 snapshotContext = descriptor.context;
                 errorText = result.outcome === "success" ? "" : (result.message.length > 0 ? result.message : i18n("Some cost data could not be refreshed."));
+                if (result.argumentsRejected && descriptor.historyPeriod.length > 0) {
+                    errorText = i18n("Month to date and All history need codexbar 0.67.0 or later.");
+                }
                 break;
             case "tooLarge":
                 errorText = i18n("codexbar response exceeded the supported size.");

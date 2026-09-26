@@ -530,10 +530,12 @@ function sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreation
     return hasObservedPart ? total : Number.NaN
 }
 
-function boundedHistoryDays(days) {
+// `maximumDays` defaults to the charted bound; aggregates over a longer
+// calendar period may pass up to the scan budget.
+function boundedHistoryDays(days, maximumDays) {
     var numericDays = strictFiniteNumber(days)
     return isFinite(numericDays)
-        ? Math.max(1, Math.min(maximumCostHistoryPoints, numericDays))
+        ? Math.max(1, Math.min(maximumDays || maximumCostHistoryPoints, numericDays))
         : 30
 }
 
@@ -590,28 +592,28 @@ function localCalendarDateKey(value) {
     return calendarDateKey(date.getFullYear(), date.getMonth() + 1, date.getDate())
 }
 
-function costHistoryCalendarWindow(days, updatedAt) {
+function costHistoryCalendarWindow(days, updatedAt, maximumDays) {
     var endDate = parsedCalendarDateKey(localCalendarDateKey(updatedAt))
     if (!endDate) {
         return null
     }
-    var historyDays = Math.floor(boundedHistoryDays(days))
+    var historyDays = Math.floor(boundedHistoryDays(days, maximumDays))
     return {
         firstTimestampMs: endDate.timestampMs - (historyDays - 1) * 24 * 60 * 60 * 1000,
         lastTimestampMs: endDate.timestampMs
     }
 }
 
-function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys) {
+function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys, maximumDays) {
     if (!rows || rows.length === 0) {
         return rows || []
     }
-    var window = costHistoryCalendarWindow(days, updatedAt)
+    var window = costHistoryCalendarWindow(days, updatedAt, maximumDays)
     if (!window) {
         return rows
     }
 
-    var historyDays = Math.floor(boundedHistoryDays(days))
+    var historyDays = Math.floor(boundedHistoryDays(days, maximumDays))
     var dayMilliseconds = 24 * 60 * 60 * 1000
     var firstTimestampMs = window.firstTimestampMs
     var byDate = ({})
@@ -856,13 +858,13 @@ function normalizeCostProjects(items, currency) {
     return result
 }
 
-function normalizeCostDaily(items, currency, days, updatedAt) {
+function normalizeCostDaily(items, currency, days, updatedAt, maximumDays) {
     var result = []
     if (!items || !Array.isArray(items)) {
         return result
     }
 
-    var historyDays = Math.floor(boundedHistoryDays(days))
+    var historyDays = Math.floor(boundedHistoryDays(days, maximumDays))
     var blockedDateKeys = ({})
     var inspectedItems = 0
     for (var i = items.length - 1; i >= 0
@@ -914,7 +916,7 @@ function normalizeCostDaily(items, currency, days, updatedAt) {
     if (i >= 0 && inspectedItems >= maximumCostHistoryScanItems) {
         return result.slice(-historyDays)
     }
-    return fillMissingCostDays(result, currency, historyDays, updatedAt, blockedDateKeys)
+    return fillMissingCostDays(result, currency, historyDays, updatedAt, blockedDateKeys, maximumDays)
         .slice(-historyDays)
 }
 
@@ -957,15 +959,15 @@ function normalizeProviderCostTotals(providerID, totals, fallbackCost,
     return result
 }
 
-function normalizeCostModels(items, currency, days, updatedAt, includeTokenRanking) {
+function normalizeCostModels(items, currency, days, updatedAt, includeTokenRanking, maximumDays) {
     if (!items || !Array.isArray(items)) {
         return { rows: [], truncated: false }
     }
 
     // Match the daily history's whole-day budget, including the legacy tail.
-    var historyDays = Math.floor(boundedHistoryDays(days))
+    var historyDays = Math.floor(boundedHistoryDays(days, maximumDays))
     var firstItem = Math.max(0, items.length - historyDays)
-    var window = costHistoryCalendarWindow(historyDays, updatedAt)
+    var window = costHistoryCalendarWindow(historyDays, updatedAt, maximumDays)
     var firstInspectedItem = window
         ? Math.max(0, items.length - maximumCostHistoryScanItems) : firstItem
     var modelDays = []

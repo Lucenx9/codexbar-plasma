@@ -22,7 +22,7 @@ SCENARIOS += ("panel-information", "panel-information-minimal", "panel-informati
 SCENARIOS += ("panel-default", "panel-default-single")
 SCENARIOS += ("panel-vertical", "panel-vertical-minimal", "panel-small", "panel-dual-edge")
 SCENARIOS += ("popup-cost-details", "popup-cost-tokens")
-SCENARIOS += ("popup-cost-refresh-error",)
+SCENARIOS += ("popup-cost-refresh-error", "cost-period")
 SCENARIOS += ("share-usage", "share-usage-narrow")
 SCENARIOS += ("popup-cost-missing-tokens", "popup-cost-partial-models")
 SCENARIOS += ("popup-content", "refresh-on-open", "privacy-provider", "privacy-spend", "privacy-sessions")
@@ -160,6 +160,18 @@ def response(args, scenario, now):
                               "state": "active", "source": "desktopApp", "lastActivityAt": now.isoformat()},
                              {"provider": "claude", "projectName": "Another project",
                               "state": "idle", "source": "cli", "lastActivityAt": now.isoformat()}]}
+    # CLI 0.67.0 calendar periods: an English label and, for all history, the
+    # days since year 1, as the official CLI reports them.
+    if (args[:5] == ["cost", "--format", "json", "--json-only", "--period"]
+            and len(args) == 6 and args[5] in ("month-to-date", "all")):
+        days = now.day if args[5] == "month-to-date" else 60
+        snapshots = [readme_cost(provider, days, now) for provider in ("codex", "claude")]
+        for snapshot in snapshots:
+            snapshot["reportingPeriod"] = args[5]
+            snapshot["historyLabel"] = "Month to date" if args[5] == "month-to-date" else "All"
+            if args[5] == "all":
+                snapshot["historyDays"] = 739887
+        return snapshots
     if (args[:5] == ["cost", "--format", "json", "--json-only", "--days"]
             and len(args) == 6 and args[5] in ("7", "30", "90")):
         days = int(args[5])

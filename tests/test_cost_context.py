@@ -48,6 +48,21 @@ TestCase {
         completed(subject, "normal 1");
         compare(subject.errorText, "");
     }
+    function test_calendarPeriodReplacesTheDayWindow() {
+        var subject = create("period", {historyPeriod: "month-to-date"});
+        tryVerify(function() {
+            return !subject.loading && subject.costs.codex && subject.costs.codex.period === "month-to-date";
+        }, 8000);
+        compare(subject.costs.codex.historyDays, 26);
+        compare(subject.costs.codex.historyLabel, null);
+        compare(subject.errorText, "");
+    }
+    function test_olderCliNamesTheReleaseThatAddsPeriods() {
+        var subject = create("oldperiod", {historyPeriod: "all"});
+        tryVerify(function() { return !subject.loading && subject.errorText.length > 0; }, 8000);
+        compare(subject.errorText, "Month to date and All history need codexbar 0.67.0 or later.");
+        compare(subject.costs, {});
+    }
     function test_disabledOrMissingCommandDoesNotStart_data() {
         return [{tag: "disabled", options: {costUsageEnabled: false}},
                 {tag: "missing", options: {commandPath: ""}}];
@@ -204,9 +219,24 @@ import time
 args = sys.argv[1:]
 name = Path(sys.argv[0]).name
 expected_provider = ["--provider", "example'; quoted provider"] if name == "batched" else ["--provider", "codex"]
-if args[:5] != ["cost", "--format", "json", "--json-only", "--days"] or args[5] not in ("7", "30", "90") or args[6:] not in ([], expected_provider):
+if name in ("period", "oldperiod"):
+    valid = (args[:5] == ["cost", "--format", "json", "--json-only", "--period"]
+             and args[5] in ("month-to-date", "all") and args[6:] in ([], expected_provider))
+else:
+    valid = (args[:5] == ["cost", "--format", "json", "--json-only", "--days"]
+             and args[5] in ("7", "30", "90") and args[6:] in ([], expected_provider))
+if not valid:
     print("unexpected CLI arguments", file=sys.stderr)
     sys.exit(1)
+if name == "oldperiod":
+    # CLI 0.66.0 rejects the option before scanning anything.
+    print(json.dumps([{"provider": "cli", "source": "cli",
+                       "error": {"kind": "args", "code": 1, "message": "Unknown option --period"}}]))
+    sys.exit(1)
+if name == "period":
+    print(json.dumps([{"provider": "codex", "reportingPeriod": args[5], "historyDays": 26,
+                       "historyLabel": "Month to date", "totals": {"totalCost": 1}}]))
+    sys.exit(0)
 run = int(os.environ["CODEXBAR_PLASMA_RUN"])
 time.sleep(0.2)
 if name == "slow":
@@ -239,7 +269,7 @@ class CostContextTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="codexbar cost 'test-") as temporary:
             directory = Path(temporary)
             for name in ("normal", "batched", "partial", "slow", "late", "failure",
-                         "malformed", "unsupported", "missing", "empty"):
+                         "malformed", "unsupported", "missing", "empty", "period", "oldperiod"):
                 script = directory / name
                 script.write_text(CLI)
                 script.chmod(0o700)

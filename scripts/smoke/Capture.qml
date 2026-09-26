@@ -1036,6 +1036,12 @@ Item {
     function scenarioReady() {
         if (scenario.indexOf("ai-insights") === 0)
             return aiInsightsReady();
+        if (scenario === "cost-period") {
+            var periodCosts = applet.spendProviderCosts();
+            return !applet.costLoading && periodCosts.length === 2 && periodCosts.every(function(item) {
+                return item.period === "month-to-date" && item.windowLabel === "Month to date";
+            });
+        }
         if (scenario.indexOf("share-usage") === 0)
             return applet.shareUsageWindow && applet.shareUsageWindow.visible
                 && applet.shareUsageWindow.snapshot.providers.length > 0;
@@ -1838,6 +1844,13 @@ Item {
                     }
                 } else if (capture.scenario === "legacy-dashboard" || capture.scenario.indexOf("provider-header") === 0) {
                     capture.applet.openProviderFromPanel("codex");
+                } else if (capture.scenario === "cost-period") {
+                    if (capture.applet.costLoading || !capture.applet.tokenCosts.codex)
+                        return;
+                    capture.applet.selectGlobalView("spend");
+                    capture.applet.setCostHistoryPeriod("month-to-date");
+                    if (capture.applet.spendProviderCosts().length !== 0)
+                        console.error("SMOKE_FAILED: the day range remained visible under a calendar period");
                 } else if (capture.scenario.indexOf("project-") === 0) {
                     if (capture.applet.costLoading || !capture.applet.tokenCosts.codex)
                         return;

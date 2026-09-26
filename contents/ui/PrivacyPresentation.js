@@ -1,5 +1,6 @@
 .pragma library
 .import "Guards.js" as Guards
+.import "CostPresentation.js" as CostPresentation
 .import "ProviderNormalizer.js" as Normalizer
 
 // This is a presentation boundary over normalized snapshots. Private mode
@@ -81,6 +82,22 @@ function amounts(value) {
     }
 }
 
+// A calendar period's whole-range daily average keeps only its numbers.
+function averageDaily(value) {
+    if (!Normalizer.isCliRecord(value)) {
+        return null
+    }
+    var average = function (entry) {
+        var amount = numeric(entry, "value", null)
+        var currency = field(entry, "currency", "")
+        return amount === null ? null : {
+            value: amount,
+            currency: typeof currency === "string" && /^[A-Z]{3}$/.test(currency) ? currency : "USD"
+        }
+    }
+    return { cost: average(field(value, "cost", null)), tokens: average(field(value, "tokens", null)) }
+}
+
 function costTrust(value) {
     if (!Normalizer.isCliRecord(value)) {
         return null
@@ -139,6 +156,7 @@ function cost(snapshot, enabled) {
         modelsTruncated: field(ranking, "truncated", false) })
     var result = {
         provider: field(snapshot, "provider", ""),
+        period: CostPresentation.costPeriod(field(snapshot, "period", "")),
         historyDays: Math.max(1, Math.min(365, Math.floor(numeric(snapshot, "historyDays", 30)))),
         historyCoverageEstablished: field(snapshot, "historyCoverageEstablished", true) !== false,
         scanDay: calendarDay(field(snapshot, "scanDay", "")),
@@ -152,6 +170,7 @@ function cost(snapshot, enabled) {
             hasUnknownCost: field(ranking, "hasUnknownCost", false) === true,
             omitted: Math.max(0, Math.min(1000000, Math.floor(numeric(ranking, "omitted", 0)))) },
         modelsTruncated: models.truncated,
+        averageDaily: averageDaily(field(snapshot, "averageDaily", null)),
         projects: { rows: [], truncated: false }
     }
     var daily = field(snapshot, "daily", [])

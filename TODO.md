@@ -67,19 +67,6 @@ Issues linked below preserve discussion; this file owns parity status.
   providers.
   Evidence: [0.62.0 review](docs/research/2026-09-20-macos-parity-0.62.0.md#linux-cli-contract-changes-since-0610).
 
-### Cost reporting periods
-
-- [ ] Offer calendar month-to-date and all available history as cost ranges,
-  as macOS 0.67.0 does. Linux 0.67.0 accepts `cost --period
-  month-to-date|all` and reports `reportingPeriod` (`month-to-date`, `all`, or
-  `rolling:N`) with an English `historyLabel`. 0.66.0 rejects the flag with
-  `Unknown option --period`, and `--days` wins when both are passed. `--period
-  all` reports about 740,000 `historyDays`, so the range must stay bounded.
-  Done when the range setting offers both periods where the CLI supports them,
-  titles them in the user's language from `reportingPeriod`, keeps rolling
-  ranges on older CLIs, and keeps charts, averages, and sharing bounded.
-  Evidence: [0.67.0 review](docs/research/2026-09-26-macos-parity-0.67.0.md#linux-cli-contract-changes-since-0660).
-
 ## Blocked on official Linux CLI contracts
 
 These are useful Linux features once the named contract exists. Do not fill
