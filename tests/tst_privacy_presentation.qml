@@ -83,6 +83,15 @@ TestCase {
         compare(Privacy.cost(source, false), source)
     }
 
+    function test_costKeepsOnlyAKnownReportingPeriod() {
+        var source = cost()
+        compare(Privacy.cost(source, true).period, "")
+        source.period = "month-to-date"
+        compare(Privacy.cost(source, true).period, "month-to-date")
+        source.period = "confidential period"
+        compare(Privacy.cost(source, true).period, "")
+    }
+
     function test_sessionHidesHostNamesAndUnknownStatesAndSources() {
         var source = { provider: "claude", projectName: "confidential project",
             sessionName: "confidential session", host: "private@example.test",

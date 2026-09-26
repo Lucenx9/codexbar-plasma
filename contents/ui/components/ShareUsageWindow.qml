@@ -19,7 +19,9 @@ Controls.ApplicationWindow {
     property int captureGeneration: 0
     property string feedback: ""
     readonly property string attribution: "github.com/Lucenx9/codexbar-plasma"
-    readonly property string periodText: i18np("%1 day", "%1 days", snapshot.days)
+    readonly property string periodText: snapshot.period === "month-to-date" ? i18n("Month to date")
+        : snapshot.period === "all" ? i18n("All history")
+        : i18np("%1 day", "%1 days", snapshot.days)
     readonly property string noticeText: snapshot.partial ? i18n("Some data is missing, incomplete, or estimated. Unavailable amounts are not zero.") : ""
     readonly property string privacyText: i18n("Created locally. Only aggregate usage is included. Costs are usage estimates, not subscription fees.")
     readonly property var providerLines: snapshot.providers.map(function (row) {

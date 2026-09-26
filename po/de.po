@@ -1277,6 +1277,16 @@ msgid "Copy session name"
 msgstr "Sitzungsnamen kopieren"
 
 #: contents/ui/components/ShareUsageWindow.qml
+#: contents/ui/components/SpendView.qml contents/ui/main.qml
+msgid "Month to date"
+msgstr "Aktueller Monat"
+
+#: contents/ui/components/ShareUsageWindow.qml
+#: contents/ui/components/SpendView.qml contents/ui/main.qml
+msgid "All history"
+msgstr "Gesamter Verlauf"
+
+#: contents/ui/components/ShareUsageWindow.qml
 msgid ""
 "Some data is missing, incomplete, or estimated. Unavailable amounts are not "
 "zero."
@@ -2803,6 +2813,10 @@ msgstr "Zeitüberschreitung beim Laden der Kostendaten. Erneut versuchen."
 #: contents/ui/controllers/CostController.qml
 msgid "Some cost data could not be refreshed."
 msgstr "Einige Kostendaten konnten nicht aktualisiert werden."
+
+#: contents/ui/controllers/CostController.qml
+msgid "Month to date and All history need codexbar 0.67.0 or later."
+msgstr "Aktueller Monat und Gesamter Verlauf erfordern codexbar 0.67.0 oder neuer."
 
 #: contents/ui/controllers/CostController.qml
 msgid "codexbar cost did not return JSON."

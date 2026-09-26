@@ -114,8 +114,8 @@ work and upstream contract requirements.
 - Popup tabs follow the usual tab keyboard pattern: Left and Right move focus
   between tabs and wrap around at either end, Home and End jump to the first
   and last tab, and Enter or Space opens the focused tab.
-- Global **Usage & Spend** tab with a Cost/Tokens selector, a 7/30/90-day range
-  selector, interactive daily chart, activity heatmap, and provider totals that
+- Global **Usage & Spend** tab with a Cost/Tokens selector, a range selector
+  (7, 30, or 90 days, **Month to date**, or **All history**), interactive daily chart, activity heatmap, and provider totals that
   keep different currencies separate. Chart and heatmap dates use the system
   locale's short date format, and cost lines separate amount and tokens with
   ` · `. The heatmap groups the range into weekday
@@ -357,6 +357,12 @@ and clipboard content remain under your control after closing the window.
   Switching the Cost/Tokens metric or inspecting a day reuses the loaded data and
   starts no scan. Cost settings applied together start a single scan using the
   final executable, provider, and history range; disabling costs starts none.
+- **Month to date** and **All history** ask CLI 0.67.0 or later for that
+  calendar period (`cost --period`); an older CLI shows a message naming the
+  required release, and the day ranges keep working. Choosing a day range in
+  **Usage & Spend**, or a history window in the settings, returns to days.
+  **All history** totals cover every recorded day; its chart and heatmap start
+  at the oldest recorded day and show at most the newest 365 days.
 - Token breakdowns, model summaries, recent daily spend, cost history bars, and
   average cost per 1M tokens, with a configurable cost history window. Recent
   history rows show measured zero costs and token counts alongside positive

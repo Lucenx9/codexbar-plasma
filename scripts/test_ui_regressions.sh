@@ -271,6 +271,7 @@ defaults_check_body = function_body(general_text, "userSettingsAreDefault")
 restore_statements = {
     "costHistoryDays": "editCostHistoryDays(cfg_costHistoryDaysDefault)",
     "costHistoryMetric": "editCostHistoryMetric(cfg_costHistoryMetricDefault)",
+    "costHistoryPeriod": "editCostHistoryPeriod(cfg_costHistoryPeriodDefault)",
 }
 for config_key in sorted(resettable_config_keys):
     property_pattern = re.compile(
@@ -743,7 +744,7 @@ if "points: tokenCostSection.chartPoints" not in token_cost_section_body \
     )
 
 present_cost_body = function_body(main_text, "presentTokenCosts")
-for fragment in ("copyObject(snapshot)", "costHistoryWindowLabel(null, snapshot.labelDays)",
+for fragment in ("copyObject(snapshot)", "costHistoryWindowLabel({ period: snapshot.period }, snapshot.labelDays)",
                  'item.title = i18n("Cost")', "item.monthLine = costLine(windowLabel, snapshot.totals.cost,",
                  "item.windowValueLine = costValueLine(snapshot.totals.cost,"):
     if not code_contains(present_cost_body, fragment):
@@ -784,7 +785,7 @@ for antigravity_hint_fragment in (
 # The aggregation moved into CostPresentation.js; the rule did not. A snapshot
 # answered for another window must still be excluded from the selected range.
 spend_snapshots_body = function_body(cost_presentation_text, "spendSnapshots")
-if not code_contains(spend_snapshots_body, "snapshotMatchesRange(tokenCost, historyDays)"):
+if not code_contains(spend_snapshots_body, "snapshotMatchesRange(tokenCost, historyDays, period)"):
     raise AssertionError("global spend aggregates must exclude snapshots from another selected range")
 cost_range_match_body = function_body(cost_presentation_text, "snapshotMatchesRange")
 for range_match_fragment in ("Number(tokenCost.historyDays)", "Number(historyDays)"):

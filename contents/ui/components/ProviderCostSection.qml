@@ -23,7 +23,7 @@ ColumnLayout {
     // privacy mode flattens it; the key additionally catches spacing-distinct
     // accounts that collapse to one label.
     readonly property string selectionScope: providerData ? JSON.stringify([providerData.provider, accountSelectionKey,
-        accountSelectionLabel, tokenCost ? tokenCost.historyDays : 0]) : ""
+        accountSelectionLabel, tokenCost ? tokenCost.historyDays : 0, tokenCost ? tokenCost.period : ""]) : ""
     readonly property var selectedDay: CostPresentation.selectedCostDay(tokenCost ? tokenCost.daily : [], chartPoints, costChart.selectedIndex)
     readonly property bool hasVisibleDetails: detailsExpanded || selectedDay !== null
 

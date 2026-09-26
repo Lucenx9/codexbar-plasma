@@ -149,7 +149,8 @@ themes.
   provider's capsules with the default order. Panel settings keep appearance and
   meters visible; additional information and quota/order/visibility options expand
   when needed.
-- **Usage & Spend** with cost/token charts, a 7/30/90-day range, an activity
+- **Usage & Spend** with cost/token charts, a 7/30/90-day, month-to-date, or
+  all-history range, an activity
   heatmap, and provider, model, and project breakdowns when the CLI supplies them.
 - A local **Sessions** tab. Transcript paths and working directories are never
   displayed or opened.

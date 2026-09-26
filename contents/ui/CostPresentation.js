@@ -560,12 +560,26 @@ function todayAmounts(tokenCost, nowMs) {
     }
 }
 
+// The calendar periods CLI 0.67.0 computes itself with `cost --period`. Any
+// other value means the rolling --days range.
+function costPeriod(value) {
+    return value === "month-to-date" || value === "all" ? value : ""
+}
+
 // A cached cost snapshot belongs to the selected range only when the CLI
 // answered for the same window; a stale snapshot must not be summed into a
-// range the user has since changed.
-function snapshotMatchesRange(tokenCost, historyDays) {
+// range the user has since changed. A calendar period matches by name, since
+// its day count changes as the month goes on.
+function snapshotMatchesRange(tokenCost, historyDays, period) {
     if (!tokenCost) {
         return false
+    }
+    var requestedPeriod = costPeriod(period)
+    if (costPeriod(tokenCost.period) !== requestedPeriod) {
+        return false
+    }
+    if (requestedPeriod.length > 0) {
+        return true
     }
     var snapshotDays = Number(tokenCost.historyDays)
     return isFinite(snapshotDays)
@@ -574,14 +588,14 @@ function snapshotMatchesRange(tokenCost, historyDays) {
 
 // `titleFor` maps a provider ID to its display title, so the sort order matches
 // what the Usage & Spend tab prints.
-function spendSnapshots(tokenCosts, historyDays, titleFor) {
+function spendSnapshots(tokenCosts, historyDays, titleFor, period) {
     var result = []
     for (var providerID in tokenCosts) {
         if (!hasOwnKey(tokenCosts, providerID)) {
             continue
         }
         var tokenCost = tokenCosts[providerID]
-        if (!snapshotMatchesRange(tokenCost, historyDays)) {
+        if (!snapshotMatchesRange(tokenCost, historyDays, period)) {
             continue
         }
         result.push(tokenCost)

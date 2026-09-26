@@ -36,12 +36,15 @@ ColumnLayout {
         return maximum
     }
 
+    // Day counts are numbers; the calendar periods are the CLI's names.
     function rangeOptions(days) {
         var values = [7, 30, 90]
         var options = [
             { text: i18n("7 days"), value: 7 },
             { text: i18n("30 days"), value: 30 },
-            { text: i18n("90 days"), value: 90 }
+            { text: i18n("90 days"), value: 90 },
+            { text: i18n("Month to date"), value: "month-to-date" },
+            { text: i18n("All history"), value: "all" }
         ]
         var currentDays = Number(days)
         if (values.indexOf(currentDays) === -1) {
@@ -53,9 +56,9 @@ ColumnLayout {
         return options
     }
 
-    function rangeIndex(options, days) {
+    function rangeIndex(options, days, period) {
         for (var i = 0; i < options.length; i++) {
-            if (Number(options[i].value) === Number(days)) {
+            if (period ? options[i].value === period : options[i].value === Number(days)) {
                 return i
             }
         }
@@ -167,14 +170,20 @@ ColumnLayout {
             textRole: "text"
             valueRole: "value"
             model: view.rangeOptions(view.applet.costHistoryDays)
-            currentIndex: view.rangeIndex(model, view.applet.costHistoryDays)
+            currentIndex: view.rangeIndex(model, view.applet.costHistoryDays, view.applet.costHistoryPeriod)
             Accessible.name: i18n("History range")
             onActivated: function(index) {
-                view.applet.setCostHistoryDays(rangeCombo.valueAt(index))
+                var value = rangeCombo.valueAt(index)
+                if (typeof value === "string") {
+                    view.applet.setCostHistoryPeriod(value)
+                } else {
+                    view.applet.setCostHistoryDays(value)
+                }
                 // Same restored binding as the metric combo: keep tracking
                 // external settings changes after a pick severs this one.
                 rangeCombo.currentIndex = Qt.binding(function() {
-                    return view.rangeIndex(rangeCombo.model, view.applet.costHistoryDays)
+                    return view.rangeIndex(rangeCombo.model, view.applet.costHistoryDays,
+                        view.applet.costHistoryPeriod)
                 })
             }
         }

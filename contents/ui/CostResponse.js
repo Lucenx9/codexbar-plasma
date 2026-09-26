@@ -7,10 +7,37 @@ function boundedMessage(value) {
     return SafeText.cliMessage(SafeText.stripLoaderDiagnostics(value), SafeText.maximumCliMessageLength);
 }
 
+// `--period all` reports the days since year 1. Size its window from the
+// oldest recorded day to the scan day instead; NaN when no day is recorded.
+function recordedHistoryDays(daily, scanDay) {
+    var first = Infinity;
+    var last = -Infinity;
+    var days = Array.isArray(daily) ? daily : [];
+    for (var i = 0; i < days.length; i++) {
+        var day = Normalizer.isCliRecord(days[i])
+            ? Normalizer.parsedCalendarDateKey(days[i].date || days[i].day || days[i].dayKey) : null;
+        if (day) {
+            first = Math.min(first, day.timestampMs);
+            last = Math.max(last, day.timestampMs);
+        }
+    }
+    var scan = Normalizer.parsedCalendarDateKey(scanDay);
+    if (scan && isFinite(first)) {
+        last = Math.max(last, scan.timestampMs);
+    }
+    return isFinite(first) ? Math.round((last - first) / 86400000) + 1 : NaN;
+}
+
 function normalizeSnapshot(item, requestedHistoryDays) {
     var provider = Normalizer.providerSnapshotKey(item.provider);
     var currency = Normalizer.boundedDisplayText(item.currencyCode || "USD", 12);
+    var period = CostPresentation.costPeriod(item.reportingPeriod);
+    var scanDay = Normalizer.localCalendarDateKey(item.updatedAt);
     var emittedDays = Normalizer.strictFiniteNumber(item.historyDays);
+    if (period === "all") {
+        var recordedDays = recordedHistoryDays(item.daily, scanDay);
+        emittedDays = isFinite(recordedDays) ? recordedDays : emittedDays;
+    }
     var fallbackDays = Normalizer.strictFiniteNumber(requestedHistoryDays);
     var historyDays = isFinite(emittedDays) && emittedDays > 0 ? emittedDays
         : (isFinite(fallbackDays) && fallbackDays > 0 ? fallbackDays : 30);
@@ -23,14 +50,15 @@ function normalizeSnapshot(item, requestedHistoryDays) {
     return {
         provider: provider,
         currency: currency,
+        period: period,
         historyDays: historyDays,
         historyCoverageEstablished: item.historyCoverageIsEstablished !== false,
         // The local date of the scan: "today" is that day's total. Empty when
         // the CLI omits a usable timestamp.
-        scanDay: Normalizer.localCalendarDateKey(item.updatedAt),
-        // CLI 0.67.0 titles rolling --days ranges in English. The widget
-        // titles those ranges itself in the user's language.
-        historyLabel: item.historyLabel && !/^rolling:\d+$/.test(item.reportingPeriod)
+        scanDay: scanDay,
+        // CLI 0.67.0 titles its ranges in English. The widget titles rolling
+        // and calendar ranges itself in the user's language.
+        historyLabel: item.historyLabel && period.length === 0 && !/^rolling:\d+$/.test(item.reportingPeriod)
             ? Normalizer.boundedDisplayText(item.historyLabel, 120) : null,
         labelDays: isFinite(emittedDays) && emittedDays > 0 ? Math.max(1, Math.floor(emittedDays)) : historyDays,
         trust: trust,
@@ -72,9 +100,13 @@ function response(stdoutValue, stderrValue, requestedHistoryDays) {
     var costs = {};
     var failedProviders = [];
     var message = "";
+    // The CLI answers an option it does not know, such as `--period` before
+    // 0.67.0, with an `args` error record instead of any provider data.
+    var argumentsRejected = false;
     for (var i = 0; i < items.length; i++) {
         var item = items[i];
         if (Normalizer.costRecordHasError(item)) {
+            argumentsRejected = argumentsRejected || (Normalizer.isCliRecord(item.error) && item.error.kind === "args");
             failedProviders.push(item.provider);
             if (message.length === 0 && item.error && item.error.message) {
                 message = boundedMessage(Normalizer.safeScalarText(item.error.message));
@@ -85,5 +117,6 @@ function response(stdoutValue, stderrValue, requestedHistoryDays) {
         }
     }
     return {outcome: failedProviders.length > 0 ? "partial" : "success",
-        costs: costs, failedProviders: failedProviders, message: message};
+        costs: costs, failedProviders: failedProviders, message: message,
+        argumentsRejected: argumentsRejected};
 }

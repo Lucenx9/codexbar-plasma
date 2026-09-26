@@ -135,7 +135,7 @@ TestCase {
         applet.files = [main]
         names = ("costBreakdownRows", "costModelRows", "costHistoryRows",
                  "costPeakLine", "costAverageDailyLine", "costPerMillionLine",
-                 "costSparklineSummary", "costDayLabel",
+                 "costSparklineSummary", "costDayLabel", "costHistoryWindowLabel",
                  "costChartPoints", "spendTotalLine", "spendProviderCosts",
                  "spendHistoryStillBuilding", "costPresentation", "providerTitle",
                  "providerKey", "amountString", "usageCountText", "tokenCountString",
@@ -164,7 +164,8 @@ TestCase {
         main = ROOT / "contents/ui/main.qml"
         applet.texts = {main: main.read_text()}
         applet.files = [main]
-        names = ("safeCostHistoryMetric", "setCostHistoryMetric")
+        names = ("safeCostHistoryMetric", "setCostHistoryMetric",
+                 "setCostHistoryDays", "setCostHistoryPeriod")
         functions = []
         for name in names:
             signature = re.search(r"function " + name + r"\([^)]*\)",
@@ -173,7 +174,8 @@ TestCase {
             # the configuration write; see the substitution below.
             functions.append((signature + " {" + applet.function_body(name) + "}")
                              .replace("Plasmoid.configuration", "costConfiguration"))
-        qml = COST_METRIC_QML.replace("SOURCE_FUNCTIONS", "\n        ".join(functions))
+        qml = (COST_METRIC_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
+               .replace("SOURCE_FUNCTIONS", "\n        ".join(functions)))
         with tempfile.TemporaryDirectory(prefix="codexbar-cost-metric-") as temporary:
             fixture = Path(temporary) / "tst_main_cost_metric.qml"
             fixture.write_text(qml)
@@ -189,12 +191,27 @@ TestCase {
 
 COST_METRIC_QML = '''import QtQuick
 import QtTest
+import "SOURCE_URL/CostPresentation.js" as CostPresentation
 TestCase {
     name: "MainCostMetric"
     // QML rejects a property named Plasmoid, so the harness rewrites the
     // configuration write; see the substitution above.
     property var costConfiguration: ({})
+    property int maximumCostHistoryPoints: 365
     SOURCE_FUNCTIONS
+    // A calendar period persists only under the CLI's names, and choosing a
+    // day count returns to the day window even when the count is unchanged.
+    function test_periodPersistsOnlyKnownNamesAndDaysClearIt() {
+        setCostHistoryPeriod("month-to-date");
+        compare(costConfiguration.costHistoryPeriod, "month-to-date");
+        setCostHistoryPeriod("bogus");
+        compare(costConfiguration.costHistoryPeriod, "");
+        setCostHistoryPeriod("all");
+        setCostHistoryDays(30);
+        compare(costConfiguration.costHistoryDays, 30);
+        compare(costConfiguration.costHistoryPeriod, "");
+        costConfiguration = ({});
+    }
     // Only the two known metrics survive: anything else persists as cost,
     // so the chart and the summary lines can never disagree.
     function test_unknownMetricsPersistAsCost() {
@@ -230,6 +247,7 @@ TestCase {
         property var costNumberFormat: CostPresentation.numberFormat(",", ".")
         property bool costHistoryShowsTokens: false
         property int costHistoryDays: 30
+        property string costHistoryPeriod: ""
         property var tokenCosts: ({})
         property bool privacyMode: false
         SOURCE_FUNCTIONS
@@ -318,6 +336,14 @@ TestCase {
         compare(root.costDayLabel("Week 34"), "Week 34");
         compare(root.costDayLabel("2026-02-30"), "2026-02-30");
         compare(root.costDayLabel(""), "");
+    }
+    // Calendar periods title themselves in the locale, never from the CLI's
+    // English label or a day count that changes through the month.
+    function test_windowLabelNamesCalendarPeriods() {
+        compare(root.costHistoryWindowLabel({period: "month-to-date"}, 26), "Month to date");
+        compare(root.costHistoryWindowLabel({period: "all"}, 365), "All history");
+        compare(root.costHistoryWindowLabel({period: "quarter"}, 30), "Last 30 days");
+        compare(root.costHistoryWindowLabel(null, 7), "Last 7 days");
     }
     // Chart points hide cost-unavailable days but keep their tokens.
     function test_chartPointsFollowTheSelectedMetric() {

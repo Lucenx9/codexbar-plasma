@@ -1,5 +1,6 @@
 .pragma library
 .import "Guards.js" as Guards
+.import "CostPresentation.js" as CostPresentation
 .import "ProviderNormalizer.js" as Normalizer
 
 // This is a presentation boundary over normalized snapshots. Private mode
@@ -139,6 +140,7 @@ function cost(snapshot, enabled) {
         modelsTruncated: field(ranking, "truncated", false) })
     var result = {
         provider: field(snapshot, "provider", ""),
+        period: CostPresentation.costPeriod(field(snapshot, "period", "")),
         historyDays: Math.max(1, Math.min(365, Math.floor(numeric(snapshot, "historyDays", 30)))),
         historyCoverageEstablished: field(snapshot, "historyCoverageEstablished", true) !== false,
         scanDay: calendarDay(field(snapshot, "scanDay", "")),

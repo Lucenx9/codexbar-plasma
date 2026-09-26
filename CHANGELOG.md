@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- **Usage & Spend** offers **Month to date** and **All history** ranges beside
+  7, 30, and 90 days, using the calendar periods of CLI 0.67.0 or later. An
+  older CLI shows which release they need, and the day ranges keep working.
+
 - Hide individual usage rows from a provider tab in the popup with the button
   beside their percentage, and restore them from **Popup → Hidden usage rows**.
   The panel, Overview, and notifications keep every row.

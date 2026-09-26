@@ -60,7 +60,8 @@ TestCase {
             outcome: "success",
             costs: {},
             failedProviders: [],
-            message: ""
+            message: "",
+            argumentsRejected: false
         });
     }
     function test_errorMessages_data() {
@@ -240,12 +241,14 @@ TestCase {
         compare(cost.historyCoverageEstablished, true);
     }
     function test_rollingPeriodLabelIsLeftToTheLocalizedWidgetLabel_data() {
-        // CLI 0.67.0 labels every record in English, including the rolling
-        // --days ranges the widget requests and already titles in the locale.
+        // CLI 0.67.0 labels every record in English, including the ranges
+        // the widget requests and titles itself in the locale.
         return [
             { tag: "rolling", period: "rolling:30", label: "Last 30 days", expected: null },
             { tag: "today", period: "rolling:1", label: "Today", expected: null },
-            { tag: "month-to-date", period: "month-to-date", label: "Month to date", expected: "Month to date" },
+            { tag: "month-to-date", period: "month-to-date", label: "Month to date", expected: null },
+            { tag: "all", period: "all", label: "All", expected: null },
+            { tag: "unknown period", period: "quarter", label: "Quarter", expected: "Quarter" },
             { tag: "malformed period", period: "rolling:", label: "Custom", expected: "Custom" },
             { tag: "non-string period", period: 30, label: "Custom", expected: "Custom" },
             { tag: "no period", period: undefined, label: "Custom", expected: "Custom" }
@@ -260,6 +263,58 @@ TestCase {
         }).costs.codex;
         compare(cost.historyLabel, data.expected);
         compare(cost.labelDays, 30);
+    }
+    function test_reportingPeriodIsKeptOnlyForCalendarPeriods_data() {
+        return [
+            { tag: "month-to-date", period: "month-to-date", expected: "month-to-date" },
+            { tag: "all", period: "all", expected: "all" },
+            { tag: "rolling", period: "rolling:30", expected: "" },
+            { tag: "absent", period: undefined, expected: "" },
+            { tag: "unknown", period: "quarter", expected: "" },
+            { tag: "non-string", period: 7, expected: "" }
+        ];
+    }
+    function test_reportingPeriodIsKeptOnlyForCalendarPeriods(data) {
+        var cost = parse({ provider: "codex", historyDays: 26, reportingPeriod: data.period }).costs.codex;
+        compare(cost.period, data.expected);
+    }
+    function test_allHistorySpansTheRecordedDaysWithinTheChartBound_data() {
+        // `--period all` reports the days since year 1. The window runs from
+        // the oldest recorded day to the scan day instead, within 365 days.
+        return [
+            { tag: "recorded span", first: "2026-03-02", last: "2026-09-19",
+                updatedAt: "2026-09-19T12:00:00Z", expected: 202 },
+            { tag: "scan after last day", first: "2026-09-10", last: "2026-09-12",
+                updatedAt: "2026-09-19T12:00:00Z", expected: 10 },
+            { tag: "no scan time", first: "2026-09-10", last: "2026-09-12",
+                updatedAt: undefined, expected: 3 },
+            { tag: "longer than the bound", first: "2024-01-01", last: "2026-09-19",
+                updatedAt: "2026-09-19T12:00:00Z", expected: 365 },
+            { tag: "no recorded day", first: null, last: null,
+                updatedAt: "2026-09-19T12:00:00Z", expected: 365 }
+        ];
+    }
+    function test_allHistorySpansTheRecordedDaysWithinTheChartBound(data) {
+        var daily = [];
+        if (data.first) {
+            daily.push({ date: "not a day", totalCost: 1 });
+            daily.push({ date: data.last, totalCost: 1 });
+            daily.push({ date: data.first, totalCost: 1 });
+        }
+        var cost = parse({ provider: "codex", historyDays: 739887, reportingPeriod: "all",
+            updatedAt: data.updatedAt, daily: daily }).costs.codex;
+        compare(cost.period, "all");
+        compare(cost.historyDays, data.expected);
+    }
+    function test_rejectedArgumentsAreReportedApartFromProviderFailures() {
+        // CLI 0.66.0 rejects `--period` with an args error record.
+        var rejected = parse([{ provider: "cli", source: "cli",
+            error: { kind: "args", code: 1, message: "Unknown option --period" } }]);
+        compare(rejected.outcome, "partial");
+        compare(rejected.argumentsRejected, true);
+        var failed = parse([{ provider: "codex", error: { kind: "provider", message: "failed" } }]);
+        compare(failed.argumentsRejected, false);
+        compare(parse([{ provider: "codex", historyDays: 30 }]).argumentsRejected, false);
     }
     function test_snapshotKeepsOnlyBoundedNormalizedFields() {
         var cost = parse({
