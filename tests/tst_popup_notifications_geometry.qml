@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls as Controls
 import QtQuick.Window
 import QtTest
+import "../contents/ui/PopupHiddenSections.js" as Sections
 
 // Opening the Popup and Notifications settings pages must not shift text or
 // controls: the ScrollView briefly reserves a scrollbar gutter after the
@@ -187,6 +188,27 @@ TestCase {
         wait(1000);
         measuredItems = [];
         verifyViewportStill(names, true);
+    }
+
+    function test_restoreAllDetailSectionsIsPendingAndProviderScoped() {
+        var key = Sections.sectionKey({title: "Budgets"});
+        var entries = Sections.hidden([], "codex", key);
+        entries = Sections.hidden(entries, "claude", key);
+        var page = createPage("../contents/ui/configPopup.qml", {
+            cfg_commandPath: "true",
+            cfg_popupHiddenDetailSections: Sections.serialize(entries)
+        });
+        if (!page)
+            return;
+        waitForRosterSettled(page);
+        compare(page.hiddenDetailProviders, ["codex", "claude"]);
+        var button = findChild(page, "restoreProviderDetailSectionsButton");
+        verify(button !== null);
+        button.clicked();
+        compare(page.hiddenDetailProviders, ["claude"]);
+        compare(Sections.parse(page.cfg_popupHiddenDetailSections), [{provider: "claude", section: key}]);
+        page.restoreProviderDetailSections("claude");
+        compare(page.cfg_popupHiddenDetailSections, "");
     }
 
     function test_popupOpeningKeepsViewportStill_data() {

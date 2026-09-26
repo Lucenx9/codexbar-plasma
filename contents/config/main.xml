@@ -223,6 +223,10 @@
       <label>Comma-separated provider ids shown in the Overview tab.</label>
       <default></default>
     </entry>
+    <entry name="popupHiddenDetailSections" type="String">
+      <label>JSON list of provider IDs and title digests for hidden popup detail sections</label>
+      <default></default>
+    </entry>
     <entry name="popupHiddenUsageRows" type="String">
       <label>JSON list of provider quota rows hidden in the popup.</label>
       <default></default>

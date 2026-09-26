@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import org.kde.plasma.components as PlasmaComponents
 import org.kde.kirigami as Kirigami
 
 ColumnLayout {
@@ -19,12 +20,43 @@ ColumnLayout {
     Layout.fillWidth: true
     spacing: Kirigami.Units.smallSpacing / 2
 
-    PlainPlasmaLabel {
+    HoverHandler { id: sectionHover }
+
+    RowLayout {
         visible: detailSection.sectionData.title.length > 0
-        text: detailSection.sectionData.title
-        font.weight: Font.DemiBold
         Layout.fillWidth: true
-        elide: Text.ElideRight
+
+        PlainPlasmaLabel {
+            text: detailSection.sectionData.title
+            font.weight: Font.DemiBold
+            Layout.fillWidth: true
+            elide: Text.ElideRight
+        }
+
+        PlasmaComponents.ToolButton {
+            id: hideSectionButton
+            objectName: "hideDetailSectionButton"
+            visible: detailSection.applet.popupDetailSectionHideable(detailSection.sectionData)
+            icon.name: "view-hidden"
+            icon.width: Kirigami.Units.iconSizes.small
+            icon.height: Kirigami.Units.iconSizes.small
+            opacity: sectionHover.hovered || hovered || activeFocus ? 1 : 0
+            Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.smallSpacing
+            Layout.preferredHeight: Layout.preferredWidth
+            Accessible.name: i18n("Hide the %1 section", detailSection.sectionData.title)
+            onClicked: detailSection.applet.hidePopupDetailSection(
+                detailSection.providerData ? detailSection.providerData.provider : "", detailSection.sectionData)
+
+            PlainToolTip {
+                parent: hideSectionButton
+                visible: hideSectionButton.hovered
+                plainText: hideSectionButton.Accessible.name
+            }
+
+            Behavior on opacity {
+                NumberAnimation { duration: Kirigami.Units.shortDuration }
+            }
+        }
     }
 
     Repeater {

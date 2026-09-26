@@ -226,6 +226,8 @@ TestCase {
             return row.warningMarkers || [];
         }
         property var hiddenUsageRowRequest: null
+        function popupDetailSectionHideable(section) { return section.title.length > 0; }
+        function hidePopupDetailSection(providerID, section) {}
         function popupUsageRowHideable(row) {
             return row.lane === "primary";
         }

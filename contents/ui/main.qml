@@ -16,6 +16,7 @@ import "PanelProviders.js" as PanelProviders
 import "PanelRules.js" as PanelRules
 import "PanelTextFit.js" as PanelTextFit
 import "PopupHiddenRows.js" as PopupHiddenRows
+import "PopupHiddenSections.js" as PopupHiddenSections
 import "PopupSelection.js" as PopupSelection
 import "ProviderAutoSelect.js" as ProviderAutoSelect
 import "ProviderSnapshot.js" as ProviderSnapshot
@@ -121,6 +122,7 @@ PlasmoidItem {
     property bool autoSelectProvider: Plasmoid.configuration.autoSelectProvider === true
     property string overviewProviderIDsRaw: Plasmoid.configuration.overviewProviderIDs || ""
     readonly property var popupHiddenUsageRows: PopupHiddenRows.parse(Plasmoid.configuration.popupHiddenUsageRows || "")
+    readonly property var popupHiddenDetailSections: PopupHiddenSections.parse(Plasmoid.configuration.popupHiddenDetailSections || "")
     property int providerConfigRevision: boundedConfigRevision(Plasmoid.configuration.providerConfigRevision)
     property var providers: []
     readonly property var providerDisplayNames: usageController.providerDisplayNames
@@ -1028,8 +1030,31 @@ PlasmoidItem {
         return result
     }
 
-    // Hidden rows filter only the provider tab; fetching, alerts, the panel and
-    // the Overview summary keep every row.
+    // Hidden rows and sections filter only the provider tab; fetching, alerts,
+    // the panel and the Overview summary keep their unfiltered data.
+    function popupDetailSections(item) {
+        return item ? PopupHiddenSections.visibleSections(item.providerDetails, popupHiddenDetailSections, item.provider) : []
+    }
+
+    function hiddenPopupDetailSections(item) {
+        return item ? PopupHiddenSections.hiddenSections(item.providerDetails, popupHiddenDetailSections, item.provider) : []
+    }
+
+    function popupDetailSectionHideable(section) {
+        return PopupHiddenSections.sectionKey(section).length > 0
+            && popupHiddenDetailSections.length < PopupHiddenSections.maximumEntries
+    }
+
+    function hidePopupDetailSection(providerID, section) {
+        Plasmoid.configuration.popupHiddenDetailSections = PopupHiddenSections.serialize(
+            PopupHiddenSections.hidden(popupHiddenDetailSections, providerID, PopupHiddenSections.sectionKey(section)))
+    }
+
+    function restorePopupDetailSection(providerID, section) {
+        Plasmoid.configuration.popupHiddenDetailSections = PopupHiddenSections.serialize(
+            PopupHiddenSections.restored(popupHiddenDetailSections, providerID, PopupHiddenSections.sectionKey(section)))
+    }
+
     function popupUsageRows(item) {
         return item ? PopupHiddenRows.visibleRows(item.rows, popupHiddenUsageRows, item.provider) : []
     }

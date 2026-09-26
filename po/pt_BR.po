@@ -382,6 +382,18 @@ msgid "Remaining: %1"
 msgstr "Restante: %1"
 
 #: contents/ui/components/FullRepresentation.qml
+msgid "Hidden detail sections"
+msgstr "Seções de detalhes ocultas"
+
+#: contents/ui/components/FullRepresentation.qml contents/ui/configPopup.qml
+msgid "Restore"
+msgstr "Restaurar"
+
+#: contents/ui/components/FullRepresentation.qml contents/ui/configPopup.qml
+msgid "Restore %1"
+msgstr "Restaurar %1"
+
+#: contents/ui/components/FullRepresentation.qml
 msgid "Usage dashboard"
 msgstr "Painel de uso"
 
@@ -707,6 +719,10 @@ msgstr ""
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Cost history"
 msgstr "Histórico de custos"
+
+#: contents/ui/components/ProviderDetailSection.qml
+msgid "Hide the %1 section"
+msgstr "Ocultar a seção %1"
 
 #: contents/ui/components/ProviderDetailSection.qml
 msgid "Usage chart"
@@ -2382,6 +2398,28 @@ msgid "Show provider changelog links"
 msgstr "Mostrar links para os registros de alterações dos provedores"
 
 #: contents/ui/configPopup.qml
+msgid "Hidden detail sections:"
+msgstr "Seções de detalhes ocultas:"
+
+#: contents/ui/configPopup.qml
+msgid "None. Hide a titled section with its button in the popup."
+msgstr "Nenhuma. Oculte uma seção com título usando o botão correspondente na janela pop-up."
+
+#: contents/ui/configPopup.qml
+msgid ""
+"Restore individual sections in the popup, or all sections for a provider "
+"here."
+msgstr "Restaure seções individuais na janela pop-up ou todas as seções de um provedor aqui."
+
+#: contents/ui/configPopup.qml
+msgid "Restore all"
+msgstr "Restaurar todas"
+
+#: contents/ui/configPopup.qml
+msgid "Restore all sections for %1"
+msgstr "Restaurar todas as seções de %1"
+
+#: contents/ui/configPopup.qml
 msgid "Hidden usage rows:"
 msgstr "Linhas de uso ocultas:"
 
@@ -2393,14 +2431,6 @@ msgstr "Nenhuma. Oculte uma linha de uso com o botão dela na janela pop-up."
 msgid "Hidden rows stay out of the popup's provider tabs only."
 msgstr ""
 "As linhas ocultas ficam fora apenas das abas de provedores da janela pop-up."
-
-#: contents/ui/configPopup.qml
-msgid "Restore"
-msgstr "Restaurar"
-
-#: contents/ui/configPopup.qml
-msgid "Restore %1"
-msgstr "Restaurar %1"
 
 #: contents/ui/configPopup.qml
 msgid "Provider order:"

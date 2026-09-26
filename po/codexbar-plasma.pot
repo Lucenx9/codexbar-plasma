@@ -342,6 +342,18 @@ msgid "Remaining: %1"
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
+msgid "Hidden detail sections"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml contents/ui/configPopup.qml
+msgid "Restore"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml contents/ui/configPopup.qml
+msgid "Restore %1"
+msgstr ""
+
+#: contents/ui/components/FullRepresentation.qml
 msgid "Usage dashboard"
 msgstr ""
 
@@ -658,6 +670,10 @@ msgstr ""
 
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Cost history"
+msgstr ""
+
+#: contents/ui/components/ProviderDetailSection.qml
+msgid "Hide the %1 section"
 msgstr ""
 
 #: contents/ui/components/ProviderDetailSection.qml
@@ -2255,6 +2271,28 @@ msgid "Show provider changelog links"
 msgstr ""
 
 #: contents/ui/configPopup.qml
+msgid "Hidden detail sections:"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "None. Hide a titled section with its button in the popup."
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid ""
+"Restore individual sections in the popup, or all sections for a provider "
+"here."
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Restore all"
+msgstr ""
+
+#: contents/ui/configPopup.qml
+msgid "Restore all sections for %1"
+msgstr ""
+
+#: contents/ui/configPopup.qml
 msgid "Hidden usage rows:"
 msgstr ""
 
@@ -2264,14 +2302,6 @@ msgstr ""
 
 #: contents/ui/configPopup.qml
 msgid "Hidden rows stay out of the popup's provider tabs only."
-msgstr ""
-
-#: contents/ui/configPopup.qml
-msgid "Restore"
-msgstr ""
-
-#: contents/ui/configPopup.qml
-msgid "Restore %1"
 msgstr ""
 
 #: contents/ui/configPopup.qml

@@ -1178,11 +1178,10 @@ Item {
                         id: providerDetailsSection
                         objectName: "providerDetailsSection"
 
-                        readonly property var details: applet.presentedProviderData
-                            ? applet.presentedProviderData.providerDetails || []
-                            : []
+                        readonly property var details: applet.popupDetailSections(applet.presentedProviderData)
+                        readonly property var hiddenDetails: applet.hiddenPopupDetailSections(applet.presentedProviderData)
 
-                        visible: applet.showPopupProviderDetails && details.length > 0
+                        visible: applet.showPopupProviderDetails && (details.length > 0 || hiddenDetails.length > 0)
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing
 
@@ -1196,6 +1195,38 @@ Item {
                             delegate: Components.ProviderDetailSection {
                                 applet: fullRoot.applet
                                 providerData: applet.presentedProviderData
+                            }
+                        }
+
+                        Components.DisclosureButton {
+                            id: hiddenSectionsToggle
+                            objectName: "hiddenDetailSectionsToggle"
+                            visible: providerDetailsSection.hiddenDetails.length > 0
+                            plainText: i18n("Hidden detail sections")
+                            onClicked: expanded = !expanded
+                        }
+
+                        Repeater {
+                            model: hiddenSectionsToggle.expanded ? providerDetailsSection.hiddenDetails : []
+
+                            delegate: RowLayout {
+                                required property var modelData
+                                Layout.fillWidth: true
+
+                                PlainPlasmaLabel {
+                                    text: modelData.title
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                }
+
+                                Components.PlainButton {
+                                    objectName: "restoreDetailSectionButton"
+                                    plainText: i18n("Restore")
+                                    icon.name: "view-visible"
+                                    Accessible.name: i18n("Restore %1", modelData.title)
+                                    onClicked: applet.restorePopupDetailSection(
+                                        applet.presentedProviderData.provider, modelData)
+                                }
                             }
                         }
                     }

@@ -384,6 +384,18 @@ msgid "Remaining: %1"
 msgstr "Restant : %1"
 
 #: contents/ui/components/FullRepresentation.qml
+msgid "Hidden detail sections"
+msgstr "Sections de détails masquées"
+
+#: contents/ui/components/FullRepresentation.qml contents/ui/configPopup.qml
+msgid "Restore"
+msgstr "Restaurer"
+
+#: contents/ui/components/FullRepresentation.qml contents/ui/configPopup.qml
+msgid "Restore %1"
+msgstr "Restaurer %1"
+
+#: contents/ui/components/FullRepresentation.qml
 msgid "Usage dashboard"
 msgstr "Tableau de bord d'utilisation"
 
@@ -709,6 +721,10 @@ msgstr ""
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Cost history"
 msgstr "Historique des coûts"
+
+#: contents/ui/components/ProviderDetailSection.qml
+msgid "Hide the %1 section"
+msgstr "Masquer la section %1"
 
 #: contents/ui/components/ProviderDetailSection.qml
 msgid "Usage chart"
@@ -2396,6 +2412,28 @@ msgid "Show provider changelog links"
 msgstr "Afficher les liens des journaux de modifications des fournisseurs"
 
 #: contents/ui/configPopup.qml
+msgid "Hidden detail sections:"
+msgstr "Sections de détails masquées :"
+
+#: contents/ui/configPopup.qml
+msgid "None. Hide a titled section with its button in the popup."
+msgstr "Aucune. Masquez une section avec un titre à l’aide de son bouton dans la fenêtre contextuelle."
+
+#: contents/ui/configPopup.qml
+msgid ""
+"Restore individual sections in the popup, or all sections for a provider "
+"here."
+msgstr "Restaurez les sections individuellement dans la fenêtre contextuelle, ou toutes les sections d’un fournisseur ici."
+
+#: contents/ui/configPopup.qml
+msgid "Restore all"
+msgstr "Tout restaurer"
+
+#: contents/ui/configPopup.qml
+msgid "Restore all sections for %1"
+msgstr "Restaurer toutes les sections de %1"
+
+#: contents/ui/configPopup.qml
 msgid "Hidden usage rows:"
 msgstr "Lignes d'utilisation masquées :"
 
@@ -2410,14 +2448,6 @@ msgid "Hidden rows stay out of the popup's provider tabs only."
 msgstr ""
 "Les lignes masquées sont exclues uniquement des onglets des fournisseurs de "
 "la fenêtre contextuelle."
-
-#: contents/ui/configPopup.qml
-msgid "Restore"
-msgstr "Restaurer"
-
-#: contents/ui/configPopup.qml
-msgid "Restore %1"
-msgstr "Restaurer %1"
 
 #: contents/ui/configPopup.qml
 msgid "Provider order:"
@@ -2811,7 +2841,8 @@ msgstr "Certaines données de coût n'ont pas pu être actualisées."
 
 #: contents/ui/controllers/CostController.qml
 msgid "Month to date and All history need codexbar 0.67.0 or later."
-msgstr "Mois en cours et Tout l'historique nécessitent codexbar 0.67.0 ou ultérieur."
+msgstr ""
+"Mois en cours et Tout l'historique nécessitent codexbar 0.67.0 ou ultérieur."
 
 #: contents/ui/controllers/CostController.qml
 msgid "codexbar cost did not return JSON."
