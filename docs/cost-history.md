@@ -24,7 +24,9 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
   costs known.
   Recent history rows show both available amounts, including zero, in either
   metric mode. The selected metric still controls row filtering and bar scaling.
-  The daily average divides the measured days only, so a range measured as zero
+  The history rows show the newest seven days, and the peak line names the
+  highest of them, the row their bars highlight. The daily average covers the
+  whole range and divides the measured days only, so a range measured as zero
   averages to zero; a range with no measured day has no average at all.
 - The global activity heatmap uses the unfiltered history's calendar dates,
   preserving unavailable days at either boundary and between measured days.

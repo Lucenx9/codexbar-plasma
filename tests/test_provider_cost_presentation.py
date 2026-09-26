@@ -283,6 +283,19 @@ TestCase {
             "Average: $2.00 / 1M tokens");
         compare(root.costPeakLine([]), "");
     }
+    // A peak older than the seven history rows is neither shown nor
+    // highlighted there, so the peak line names the highlighted row instead.
+    function test_peakLineNamesTheHighlightedHistoryRow() {
+        var daily = [{label: "D0", cost: 50, tokens: 1, currency: "USD"}];
+        for (var i = 1; i <= 7; i++)
+            daily.push({label: "D" + i, cost: i === 3 ? 9 : 1, tokens: 1, currency: "USD"});
+        var rows = root.costHistoryRows({daily: daily});
+        compare(rows.map(function(row) { return row.label; }),
+            ["D7", "D6", "D5", "D4", "D3", "D2", "D1"]);
+        var highlighted = rows.filter(function(row) { return row.isPeak; });
+        compare(highlighted.map(function(row) { return row.label; }), ["D3"]);
+        compare(root.costPeakLine(daily), "Peak: D3 - $9.00");
+    }
     // Chart points hide cost-unavailable days but keep their tokens.
     function test_chartPointsFollowTheSelectedMetric() {
         var points = [{label: "Mon", cost: null, tokens: 250, currency: "USD"}];

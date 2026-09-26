@@ -436,6 +436,12 @@ function modelRows(fmt, tokenCost, tokensTextFor) {
     return rows
 }
 
+// The history rows cover only the newest days of the range. The peak line must
+// read the same span, or it names a day the rows neither show nor highlight.
+function recentHistoryPoints(daily) {
+    return Array.isArray(daily) ? daily.slice(Math.max(0, daily.length - 7)) : []
+}
+
 // The last seven days, newest first, scaled against the peak of the selected
 // metric so the bar lengths match the figures beside them. A point whose label
 // the payload omitted gets `fallbackLabel`.
@@ -444,7 +450,7 @@ function historyRows(fmt, tokenCost, showsTokens, fallbackLabel) {
         return []
     }
 
-    var recentDaily = tokenCost.daily.slice(Math.max(0, tokenCost.daily.length - 7))
+    var recentDaily = recentHistoryPoints(tokenCost.daily)
     var visibleDaily = []
     for (var day = 0; day < recentDaily.length; day++) {
         if (hasMetricValue(recentDaily[day], showsTokens)) {

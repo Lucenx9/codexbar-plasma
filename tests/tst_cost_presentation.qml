@@ -358,6 +358,19 @@ TestCase {
         compare(CostPresentation.peakPoint(points, true).label, "Tue")
     }
 
+    function test_recentHistoryPointsKeepTheNewestSevenDays() {
+        var daily = []
+        for (var i = 0; i < 9; i++) {
+            daily.push(dailyPoint("D" + i, i, i))
+        }
+        compare(CostPresentation.recentHistoryPoints(daily).map(function(point) { return point.label }),
+            ["D2", "D3", "D4", "D5", "D6", "D7", "D8"])
+        compare(daily.length, 9)
+        compare(CostPresentation.recentHistoryPoints(daily.slice(0, 2)).length, 2)
+        compare(CostPresentation.recentHistoryPoints(null), [])
+        compare(CostPresentation.recentHistoryPoints({ length: 9 }), [])
+    }
+
     function test_peakPointIsNullWhenNothingWasSpent() {
         compare(CostPresentation.peakPoint([dailyPoint("Mon", 0, 0)], false), null)
         compare(CostPresentation.peakPoint([], false), null)
