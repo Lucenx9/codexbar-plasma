@@ -50,18 +50,16 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Implementable on Linux
 
-### Popup usage row visibility
+### Popup detail section visibility
 
-- [ ] Hide and restore individual popup usage rows per provider, mirroring the
-  macOS 0.58.0 visible-row choice as a Plasma-local display preference. Panel
-  rows already have visibility rules; popup provider cards expose only fixed
-  section toggles, and no CLI contract is required. macOS 0.62.0 extends its
-  Visible usage items to titled provider detail sections, which informs the
-  row set a Plasma equivalent should cover. Done when rows can be
-  hidden and restored without affecting fetching, alerts, or the panel, with
-  the choice persisted and previewed in settings.
-  Evidence: [0.58.0 comparison](docs/research/2026-09-11-macos-parity-0.58.0.md);
-  [0.62.0 review](docs/research/2026-09-20-macos-parity-0.62.0.md#linux-cli-contract-changes-since-0610).
+- [ ] Extend the popup's hidden usage rows to titled provider detail sections,
+  as macOS 0.62.0 does for its Visible usage items. Quota rows can already be
+  hidden per provider; detail sections only have the global **Show provider
+  details and charts** toggle. Section titles are untranslated CLI text, so
+  the stored key must not persist provider prose. Done when a titled section
+  can be hidden and restored per provider without affecting fetching or other
+  providers.
+  Evidence: [0.62.0 review](docs/research/2026-09-20-macos-parity-0.62.0.md#linux-cli-contract-changes-since-0610).
 
 ## Blocked on official Linux CLI contracts
 

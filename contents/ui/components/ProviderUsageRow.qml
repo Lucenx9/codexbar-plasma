@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
+import org.kde.plasma.components as PlasmaComponents
 
 ColumnLayout {
     id: usageRow
@@ -10,6 +11,9 @@ ColumnLayout {
     required property var modelData
     readonly property var rowData: modelData
     readonly property bool showPace: applet.showPopupPace !== false
+    readonly property bool hideable: applet.popupUsageRowHideable(rowData)
+    // Match the copy action's compact target so the header keeps its height.
+    readonly property real actionSize: Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.smallSpacing
 
     readonly property color accent: applet.providerReadableColor(
         providerData ? providerData.provider : "",
@@ -27,6 +31,10 @@ ColumnLayout {
 
     Layout.fillWidth: true
     spacing: Kirigami.Units.smallSpacing / 1.5
+
+    HoverHandler {
+        id: usageRowHover
+    }
 
     RowLayout {
         Layout.fillWidth: true
@@ -47,6 +55,36 @@ ColumnLayout {
             font.weight: Font.DemiBold
             horizontalAlignment: Text.AlignRight
             elide: Text.ElideRight
+        }
+
+        // Revealed on row hover; keyboard focus keeps it visible and reachable.
+        PlasmaComponents.ToolButton {
+            id: hideUsageRowButton
+            objectName: "hideUsageRowButton"
+
+            visible: usageRow.hideable
+            icon.name: "view-hidden"
+            icon.width: Kirigami.Units.iconSizes.small
+            icon.height: Kirigami.Units.iconSizes.small
+            opacity: usageRowHover.hovered || hovered || activeFocus ? 1 : 0
+            Layout.preferredWidth: usageRow.actionSize
+            Layout.preferredHeight: usageRow.actionSize
+            Accessible.name: i18n("Hide the %1 row", usageRow.rowData.label)
+
+            PlainToolTip {
+                parent: hideUsageRowButton
+                visible: hideUsageRowButton.hovered
+                plainText: hideUsageRowButton.Accessible.name
+            }
+
+            onClicked: usageRow.applet.hidePopupUsageRow(
+                usageRow.providerData ? usageRow.providerData.provider : "", usageRow.rowData)
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: Kirigami.Units.shortDuration
+                }
+            }
         }
     }
 

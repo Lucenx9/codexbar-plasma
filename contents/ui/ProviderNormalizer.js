@@ -29,6 +29,12 @@ var maximumAccountIdentityLength = 256
 var maximumCostSnapshots = 256
 var maximumCostProjects = 128
 var maximumExtraRateWindows = 24
+
+// The official `extraRateWindows[].id` identifies a named quota window. Only a
+// short identifier-shaped value is kept; it is matched, never displayed.
+function extraWindowID(value) {
+    return typeof value === "string" && /^[A-Za-z0-9._:-]{1,64}$/.test(value) ? value : ""
+}
 var maximumSessions = 128
 var maximumCostHistoryPoints = 365
 var maximumCostHistoryScanItems = 2048

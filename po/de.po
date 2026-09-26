@@ -214,8 +214,9 @@ msgstr "%1 öffnen"
 
 #: contents/ui/components/CompactRepresentation.qml
 #: contents/ui/components/InteractiveChart.qml
-#: contents/ui/components/SpendView.qml contents/ui/configProviders.qml
-#: contents/ui/main.qml scripts/smoke/Capture.qml
+#: contents/ui/components/SpendView.qml contents/ui/configPopup.qml
+#: contents/ui/configProviders.qml contents/ui/main.qml
+#: scripts/smoke/Capture.qml
 msgid "%1: %2"
 msgstr "%1: %2"
 
@@ -1067,6 +1068,10 @@ msgstr "ZenMux"
 #: contents/ui/components/ProviderNames.qml
 msgid "ZoomMate"
 msgstr "ZoomMate"
+
+#: contents/ui/components/ProviderUsageRow.qml
+msgid "Hide the %1 row"
+msgstr "Zeile %1 ausblenden"
 
 #: contents/ui/components/RateWindowLabels.qml
 msgid "5-hour"
@@ -2329,6 +2334,10 @@ msgid "Auto-select highest-usage provider"
 msgstr "Anbieter mit höchster Nutzung automatisch auswählen"
 
 #: contents/ui/configPopup.qml
+msgid "Extra window %1"
+msgstr "Zusätzliches Fenster %1"
+
+#: contents/ui/configPopup.qml
 msgid "Usage details"
 msgstr "Nutzungsdetails"
 
@@ -2363,6 +2372,26 @@ msgstr "Textbeschriftungen in der Reiterleiste anzeigen"
 #: contents/ui/configPopup.qml
 msgid "Show provider changelog links"
 msgstr "Links zu Anbieter-Änderungsprotokollen anzeigen"
+
+#: contents/ui/configPopup.qml
+msgid "Hidden usage rows:"
+msgstr "Ausgeblendete Nutzungszeilen:"
+
+#: contents/ui/configPopup.qml
+msgid "None. Hide a usage row with its button in the popup."
+msgstr "Keine. Blenden Sie eine Nutzungszeile mit ihrer Schaltfläche im Aufklappfenster aus."
+
+#: contents/ui/configPopup.qml
+msgid "Hidden rows stay out of the popup's provider tabs only."
+msgstr "Ausgeblendete Zeilen fehlen nur in den Anbieter-Tabs des Aufklappfensters."
+
+#: contents/ui/configPopup.qml
+msgid "Restore"
+msgstr "Wiederherstellen"
+
+#: contents/ui/configPopup.qml
+msgid "Restore %1"
+msgstr "%1 wiederherstellen"
 
 #: contents/ui/configPopup.qml
 msgid "Provider order:"

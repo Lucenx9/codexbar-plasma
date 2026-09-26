@@ -210,8 +210,9 @@ msgstr "Abrir %1"
 
 #: contents/ui/components/CompactRepresentation.qml
 #: contents/ui/components/InteractiveChart.qml
-#: contents/ui/components/SpendView.qml contents/ui/configProviders.qml
-#: contents/ui/main.qml scripts/smoke/Capture.qml
+#: contents/ui/components/SpendView.qml contents/ui/configPopup.qml
+#: contents/ui/configProviders.qml contents/ui/main.qml
+#: scripts/smoke/Capture.qml
 msgid "%1: %2"
 msgstr "%1: %2"
 
@@ -1059,6 +1060,10 @@ msgstr "ZenMux"
 #: contents/ui/components/ProviderNames.qml
 msgid "ZoomMate"
 msgstr "ZoomMate"
+
+#: contents/ui/components/ProviderUsageRow.qml
+msgid "Hide the %1 row"
+msgstr "Ocultar la fila %1"
 
 #: contents/ui/components/RateWindowLabels.qml
 msgid "5-hour"
@@ -2313,6 +2318,10 @@ msgid "Auto-select highest-usage provider"
 msgstr "Seleccionar automáticamente el proveedor con mayor uso"
 
 #: contents/ui/configPopup.qml
+msgid "Extra window %1"
+msgstr "Ventana adicional %1"
+
+#: contents/ui/configPopup.qml
 msgid "Usage details"
 msgstr "Detalles de uso"
 
@@ -2347,6 +2356,26 @@ msgstr "Mostrar etiquetas de texto en la barra de pestañas"
 #: contents/ui/configPopup.qml
 msgid "Show provider changelog links"
 msgstr "Mostrar enlaces a los registros de cambios de los proveedores"
+
+#: contents/ui/configPopup.qml
+msgid "Hidden usage rows:"
+msgstr "Filas de uso ocultas:"
+
+#: contents/ui/configPopup.qml
+msgid "None. Hide a usage row with its button in the popup."
+msgstr "Ninguna. Oculte una fila de uso con su botón en la ventana emergente."
+
+#: contents/ui/configPopup.qml
+msgid "Hidden rows stay out of the popup's provider tabs only."
+msgstr "Las filas ocultas solo se excluyen de las pestañas de proveedores de la ventana emergente."
+
+#: contents/ui/configPopup.qml
+msgid "Restore"
+msgstr "Restaurar"
+
+#: contents/ui/configPopup.qml
+msgid "Restore %1"
+msgstr "Restaurar %1"
 
 #: contents/ui/configPopup.qml
 msgid "Provider order:"

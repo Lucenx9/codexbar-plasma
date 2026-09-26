@@ -226,6 +226,25 @@ TestCase {
         }
     }
 
+    // The official extra-window ID survives only in identifier shape; it lets
+    // the popup hide that window, and it is never rendered.
+    function test_extraWindowIDsAreIdentifierShaped() {
+        var result = ProviderSnapshot.normalize({
+            provider: "claude",
+            usage: {
+                primary: {usedPercent: 1},
+                extraRateWindows: [
+                    {id: "opus-weekly", title: "Opus", window: {usedPercent: 2}},
+                    {id: "has space", title: "Spaced", window: {usedPercent: 3}},
+                    {id: 7, title: "Numeric", window: {usedPercent: 4}},
+                    {title: "Missing", window: {usedPercent: 5}}
+                ]
+            }
+        }, 1000);
+        compare(result.rows.map(function(row) { return row.windowId; }),
+            [undefined, "opus-weekly", "", "", ""]);
+    }
+
     function test_blankDisplayNameFallsBackToTitleOrNull() {
         var withTitle = ProviderSnapshot.normalize({
             provider: "codex",

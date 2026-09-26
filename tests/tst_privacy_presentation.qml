@@ -170,6 +170,18 @@ TestCase {
         compare(Privacy.cost(source, true).trust, null)
     }
 
+    // A hidden extra window stays hidden in privacy mode, so its identifier
+    // passes through the projection; the title does not.
+    function test_extraWindowIDSurvivesPrivacyProjection() {
+        var rows = Privacy.provider({ provider: "claude", rows: [
+            { lane: "extra", label: "Private title", windowId: "opus-weekly", hasPercent: true, usedPercent: 1, leftPercent: 99 },
+            { lane: "extra", label: "Other", windowId: "bad id", hasPercent: true, usedPercent: 1, leftPercent: 99 }
+        ] }, true, { usage: "Usage", title: "Claude" }).rows
+        compare(rows[0].windowId, "opus-weekly")
+        compare(rows[0].label, "Usage")
+        compare(rows[1].windowId, "")
+    }
+
     function test_excludedRequestCountSurvivesPrivacyRedaction() {
         // The count is a bounded figure with no identity, and it is the only
         // evidence that the redacted totals are partial.

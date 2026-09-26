@@ -96,7 +96,10 @@ function normalize(item, receivedAtMs) {
             var label = extra.title || extra.id;
             var extraRow = windowSnapshot(extra.window, null, extra.usageKnown !== false, "extra",
                 label ? Normalizer.boundedDisplayText(label, 120) : null, receivedAtMs);
-            if (extraRow) rows.push(extraRow);
+            if (extraRow) {
+                extraRow.windowId = Normalizer.extraWindowID(extra.id);
+                rows.push(extraRow);
+            }
         }
     }
     var identity = Normalizer.isCliRecord(usage.identity) ? usage.identity : {};
