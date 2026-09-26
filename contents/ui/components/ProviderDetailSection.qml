@@ -52,7 +52,7 @@ ColumnLayout {
                     text: detailEntry.modelData.label
                     opacity: detailSection.applet.secondaryTextOpacity
                     anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.top: parent.top
                     width: Math.max(0, parent.width - detailValues.width - Kirigami.Units.smallSpacing)
                     elide: Text.ElideRight
                 }
@@ -61,7 +61,7 @@ ColumnLayout {
                     id: detailValues
 
                     anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.top: parent.top
                     // The plain Item owns geometry; width-dependent layout hints recurse.
                     width: Math.min(implicitWidth, detailRow.width / 2)
                     spacing: 0
