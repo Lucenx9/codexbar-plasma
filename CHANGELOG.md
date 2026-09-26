@@ -91,8 +91,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Security
 
-- Redact credentials before shortening loader diagnostics, so a key crossing
-  the inspection boundary cannot leave a visible unredacted prefix.
+- Keep credential-redaction lookahead when filtering loader diagnostics, so a
+  key crossing the inspection boundary cannot leave an unredacted prefix.
+  Credential-like paths still allow nonfatal loader warnings to be filtered.
 
 ## 0.2.42 - 2026-09-25
 

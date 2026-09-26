@@ -206,6 +206,16 @@ TestCase {
         compare(SafeText.cliMessage(SafeText.stripLoaderDiagnostics(stderrText), 500), "Error: quota exceeded.")
     }
 
+    function test_loaderWarningsWithCredentialLikePathsDoNotHideTheError() {
+        var path = "/tmp/token=" + "a".repeat(600) + "/codexbar"
+        var warning = path + ": /lib/libcurl.so: no version information available (required by " + path + ")"
+        compare(SafeText.cliMessage(SafeText.stripLoaderDiagnostics(warning + "\nError: quota exceeded"), 500),
+            "Error: quota exceeded")
+        var warningOnly = SafeText.cliMessage(SafeText.stripLoaderDiagnostics(warning), 500)
+        verify(warningOnly.indexOf("a".repeat(20)) === -1)
+        verify(warningOnly.indexOf("[redacted]") !== -1)
+    }
+
     function test_keepsLoaderWarningWhenStderrCarriesNothingElse() {
         var stderrText = "/usr/bin/codexbar: /lib64/libcurl.so.4: no version information available (required by /usr/bin/codexbar)"
 
