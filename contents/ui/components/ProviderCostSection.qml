@@ -270,7 +270,7 @@ ColumnLayout {
 
             PlainPlasmaLabel {
                 objectName: "costDetailsTitle"
-                text: tokenCostSection.selectedDay ? i18n("Details for %1", tokenCostSection.selectedDay.label) : i18n("Cost details")
+                text: tokenCostSection.selectedDay ? i18n("Details for %1", applet.costDayLabel(tokenCostSection.selectedDay.label)) : i18n("Cost details")
                 font.weight: Font.DemiBold
                 Layout.fillWidth: true
                 wrapMode: Text.Wrap

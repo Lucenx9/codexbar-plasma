@@ -2153,8 +2153,10 @@ for fragment in (
         raise AssertionError(f"period and day details must expose missing or partial models: {fragment!r}")
 if not code_contains(cost_drill_down_body, "readonly property real metricValueColumnWidth: Kirigami.Units.gridUnit * 9"):
     raise AssertionError("costDrillDownSection must define a stable value column width")
-if not code_contains(cost_drill_down_body, 'i18n("Cost details")' not in cost_drill_down_body or 'i18n("Details for %1", tokenCostSection.selectedDay.label)'):
-    raise AssertionError("costDrillDownSection must use a plain, user-facing title")
+for fragment in ('i18n("Cost details")',
+                 'i18n("Details for %1", applet.costDayLabel(tokenCostSection.selectedDay.label))'):
+    if not code_contains(cost_drill_down_body, fragment):
+        raise AssertionError("costDrillDownSection must use a plain, user-facing title with a localized day")
 for value_label in ("costBreakdownValueLabel", "costModelValueLabel"):
     value_label_body = id_block(main_text, value_label)
     if not code_contains(value_label_body, "Layout.preferredWidth: costDrillDownSection.metricValueColumnWidth"):

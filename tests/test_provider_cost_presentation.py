@@ -135,6 +135,7 @@ TestCase {
         applet.files = [main]
         names = ("costBreakdownRows", "costModelRows", "costHistoryRows",
                  "costPeakLine", "costAverageDailyLine", "costPerMillionLine",
+                 "costSparklineSummary", "costDayLabel",
                  "costChartPoints", "spendTotalLine", "spendProviderCosts",
                  "spendHistoryStillBuilding", "costPresentation", "providerTitle",
                  "providerKey", "amountString", "usageCountText", "tokenCountString",
@@ -295,6 +296,28 @@ TestCase {
         var highlighted = rows.filter(function(row) { return row.isPeak; });
         compare(highlighted.map(function(row) { return row.label; }), ["D3"]);
         compare(root.costPeakLine(daily), "Peak: D3 - $9.00");
+    }
+    // History rows, the peak line, and the latest-day summary date their
+    // days like the chart, in the locale's short format, and keep any other
+    // label as the CLI sent it.
+    function test_historyTextDatesDaysInTheLocale() {
+        var day = function(key) {
+            var parts = key.split("-").map(Number);
+            return new Date(parts[0], parts[1] - 1, parts[2])
+                .toLocaleDateString(Qt.locale(), Locale.ShortFormat);
+        };
+        var daily = [
+            {label: "2026-09-23", cost: 1, tokens: 1, currency: "USD"},
+            {label: "2026-09-24", cost: 4, tokens: 1, currency: "USD"},
+            {label: "2026-09-25", cost: 2, tokens: 1, currency: "USD"}];
+        compare(root.costHistoryRows({daily: daily}).map(function(row) { return row.label; }),
+            [day("2026-09-25"), day("2026-09-24"), day("2026-09-23")]);
+        compare(root.costPeakLine(daily), "Peak: " + day("2026-09-24") + " - $4.00");
+        compare(root.costSparklineSummary(daily), day("2026-09-25") + ": $2.00");
+        compare(root.costDayLabel("2026-09-24"), day("2026-09-24"));
+        compare(root.costDayLabel("Week 34"), "Week 34");
+        compare(root.costDayLabel("2026-02-30"), "2026-02-30");
+        compare(root.costDayLabel(""), "");
     }
     // Chart points hide cost-unavailable days but keep their tokens.
     function test_chartPointsFollowTheSelectedMetric() {
