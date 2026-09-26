@@ -163,7 +163,16 @@ var loaderDiagnosticPattern = /^.*:\s*no version information available\s*\(requi
 
 function stripLoaderDiagnostics(value, maximumLength) {
     var limit = safeLimit(maximumLength, maximumCliMessageLength)
-    var text = boundedInspectionText(value, Math.min(maximumDiagnosticLength, limit * 8))
+    var inspectionLength = Math.min(maximumDiagnosticLength, limit * 8)
+    var text = boundedInspectionText(value, inspectionLength)
+    var lookaheadText = boundedInspectionText(value, inspectionLength, credentialRedactionLookaheadLength)
+    // Match original loader syntax: redacting a credential-like path first
+    // can consume the closing parenthesis. Keep lookahead through filtering
+    // so a credential crossing the retained window still cannot leak a prefix.
+    return redactCredentialWindow(filteredLoaderDiagnostics(text), filteredLoaderDiagnostics(lookaheadText))
+}
+
+function filteredLoaderDiagnostics(text) {
     if (text.indexOf(loaderDiagnosticMarker) === -1) {
         return text
     }

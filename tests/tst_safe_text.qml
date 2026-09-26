@@ -206,6 +206,16 @@ TestCase {
         compare(SafeText.cliMessage(SafeText.stripLoaderDiagnostics(stderrText), 500), "Error: quota exceeded.")
     }
 
+    function test_loaderWarningsWithCredentialLikePathsDoNotHideTheError() {
+        var path = "/tmp/token=" + "a".repeat(600) + "/codexbar"
+        var warning = path + ": /lib/libcurl.so: no version information available (required by " + path + ")"
+        compare(SafeText.cliMessage(SafeText.stripLoaderDiagnostics(warning + "\nError: quota exceeded"), 500),
+            "Error: quota exceeded")
+        var warningOnly = SafeText.cliMessage(SafeText.stripLoaderDiagnostics(warning), 500)
+        verify(warningOnly.indexOf("a".repeat(20)) === -1)
+        verify(warningOnly.indexOf("[redacted]") !== -1)
+    }
+
     function test_keepsLoaderWarningWhenStderrCarriesNothingElse() {
         var stderrText = "/usr/bin/codexbar: /lib64/libcurl.so.4: no version information available (required by /usr/bin/codexbar)"
 
@@ -279,4 +289,19 @@ TestCase {
         // pin its absolute value so a shrink cannot silently reject payloads.
         compare(SafeText.maximumCliJsonLength, 4 * 1024 * 1024)
     }
+
+    function test_loaderFilteringRedactsBeforeTruncatingCredentials_data() {
+        return [{tag: "plain", warning: ""}, {tag: "loader", warning:
+            "codexbar: libcurl.so: no version information available (required by codexbar)\n"}]
+    }
+
+    function test_loaderFilteringRedactsBeforeTruncatingCredentials(data) {
+        var input = data.warning + "token="
+            + "a".repeat(3986 - data.warning.length) + "\n:sk-1234567890-secret"
+        var result = SafeText.cliMessage(SafeText.stripLoaderDiagnostics(input), 500)
+        verify(result.indexOf("sk-123") === -1)
+        verify(result.indexOf("[redacted]") !== -1)
+        verify(result.length <= 500)
+    }
+
 }

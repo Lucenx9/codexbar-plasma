@@ -29,3 +29,20 @@ function state(pendingValue, hasPendingEdit) {
         hasPendingEdit: hasPendingEdit === true
     }
 }
+
+// Days and calendar mode select one range. Matching only one persisted field
+// must not release a pending edit while the other field still differs.
+function historyRangeAfterUserEdit(days, period, persistedDays, persistedPeriod) {
+    return historyRangeState(days, period,
+        !valuesMatch(days, persistedDays) || !valuesMatch(period, persistedPeriod))
+}
+
+function historyRangeAfterPersistedChange(days, period, hasPendingEdit, persistedDays, persistedPeriod) {
+    var pending = historyRangeAfterUserEdit(days, period, persistedDays, persistedPeriod)
+    return hasPendingEdit === true && pending.hasPendingEdit
+        ? pending : historyRangeState(persistedDays, persistedPeriod, false)
+}
+
+function historyRangeState(days, period, hasPendingEdit) {
+    return { days: days, period: period, hasPendingEdit: hasPendingEdit }
+}

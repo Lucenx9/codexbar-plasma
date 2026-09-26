@@ -268,10 +268,11 @@ all_config_keys = set(re.findall(r'<entry name="([^"]+)"', config_text))
 resettable_config_keys = all_config_keys - internal_config_keys
 restore_defaults_body = function_body(general_text, "restoreUserDefaults")
 defaults_check_body = function_body(general_text, "userSettingsAreDefault")
+# History-range defaults are exercised through the real page functions and
+# change handlers in test_general_config_sync.py, without KDE module skips.
+behaviorally_checked_defaults = {"costHistoryDays", "costHistoryPeriod"}
 restore_statements = {
-    "costHistoryDays": "editCostHistoryDays(cfg_costHistoryDaysDefault)",
     "costHistoryMetric": "editCostHistoryMetric(cfg_costHistoryMetricDefault)",
-    "costHistoryPeriod": "editCostHistoryPeriod(cfg_costHistoryPeriodDefault)",
 }
 for config_key in sorted(resettable_config_keys):
     property_pattern = re.compile(
@@ -287,7 +288,7 @@ for config_key in sorted(resettable_config_keys):
     expected_assignment = restore_statements.get(
         config_key, f"cfg_{config_key} = cfg_{config_key}Default"
     )
-    if not code_contains(restore_defaults_body, expected_assignment):
+    if config_key not in behaviorally_checked_defaults and not code_contains(restore_defaults_body, expected_assignment):
         raise AssertionError(f"global defaults must restore {config_key}")
     expected_pair = f"[cfg_{config_key}, cfg_{config_key}Default]"
     if not code_contains(defaults_check_body, expected_pair):

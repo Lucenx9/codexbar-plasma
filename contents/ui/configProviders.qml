@@ -359,7 +359,7 @@ KCM.SimpleKCM {
         }
 
         if (descriptor.kind === "list") {
-            handleListResult(descriptor, stdoutText, stderrText)
+            handleListResult(descriptor, stdoutText, stderrText, exitCode)
         } else if (descriptor.kind === "version") {
             handleCliVersionResult(stdoutText, exitCode)
         } else if (descriptor.kind === "toggle") {
@@ -380,7 +380,7 @@ KCM.SimpleKCM {
             && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 54, 0)
     }
 
-    function handleListResult(descriptor, stdoutText, stderrText) {
+    function handleListResult(descriptor, stdoutText, stderrText, exitCode) {
         if (!ProviderConfigProtocol.providerListResultIsCurrent(
                 descriptor, providerConfigRevisionValue())) {
             reload(true)
@@ -411,6 +411,15 @@ KCM.SimpleKCM {
         var parseError = ProviderConfigProtocol.commandError(payload)
         if (parseError.length > 0) {
             errorText = parseError
+            return
+        }
+
+        // An empty provider roster is valid, unlike an empty write result.
+        var outcome = ProviderConfigProtocol.commandOutcome(
+            Array.isArray(payload) && payload.length === 0 ? ({}) : payload,
+            stderrText, exitCode)
+        if (outcome.outcome !== "success") {
+            errorText = providerCommandFailureText(outcome)
             return
         }
 

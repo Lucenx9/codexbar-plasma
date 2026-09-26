@@ -351,7 +351,9 @@ clipboard interoperability with every Wayland application or portal backend.
   incident again or swallow an incident arriving during refresh. Keep these
   decisions pure and covered by `tests/tst_notification_planner.qml` and
   `tests/tst_notification_memo.qml`. Predictive warnings prime silently and fire
-  on a new projected-exhaustion transition.
+  on a new projected-exhaustion transition. Missing usage rows retain their
+  threshold state within the bounded memo; only observed rows can establish
+  recovery or consume an armed reset.
 - Sessions normalize display fields only. Discard `cwd`, `transcriptPath`, IDs,
   and PIDs; never render, open, or follow them. Remote/SSH host focus is a
   macOS-only non-goal.
@@ -419,6 +421,12 @@ clipboard interoperability with every Wayland application or portal backend.
   severity alone, an error-only provider never wins, and the first provider
   keeps a tie. The popup ranks the full roster and the panel ranks its own
   filtered selection through `PopupSelection.js`.
+- General synchronizes history days and calendar mode as one pending range.
+  External updates release an edit only when both persisted fields match;
+  metric synchronization remains independent. `ConfigValueSync.js` owns these
+  pure transitions, while the page owns pending values and Apply.
+  `tests/test_general_config_sync.py` exercises the page handlers without KDE
+  imports, including defaults and external changes during a pending edit.
 - Privacy projects display records without changing cached snapshots or account
   command keys. Preserve config keys and pending defaults across all settings
   pages. `PopupRefreshPolicy.js` handles freshness and failed-attempt cooldown,

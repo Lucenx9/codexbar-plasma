@@ -261,6 +261,9 @@ identities as usual and keeps the last-known indication visible.
 
 ## Providers and accounts
 
+A failed provider-list refresh in settings keeps the last loaded list and shows
+an error. A successful empty list clears it.
+
 Provider-specific editable settings depend on the official CLI contract.
 
 - Search providers by name or ID and filter All, Enabled, or Disabled locally.
@@ -361,6 +364,8 @@ and clipboard content remain under your control after closing the window.
   calendar period (`cost --period`); an older CLI shows a message naming the
   required release, and the day ranges keep working. Choosing a day range in
   **Usage & Spend**, or a history window in the settings, returns to days.
+  An unapplied history-window edit in General keeps its day count and day mode
+  together if the popup changes ranges; Apply saves that pending choice.
   **All history** totals cover every recorded day. Its chart, heatmap, and
   history rows start at the oldest recorded day and show at most the newest
   365 days; its model totals and daily average cover up to the newest 2,048
@@ -433,7 +438,10 @@ fields; track proposed extensions in the issue tracker.
 - Optional quota warning markers on usage bars.
 - Optional Plasma notifications for provider status incidents, configurable
   quota crossings, predicted quota exhaustion from CLI pace data, and when a
-  heavily used limit resets back to empty. Notification text is shown
+  heavily used limit resets back to empty. A temporarily omitted usage window
+  preserves its notification baseline: returning at the same threshold does
+  not repeat a warning, and a previously armed reset can still be reported.
+  Notification text is shown
   literally: markup in provider or status text never becomes a link, emphasis,
   or an image.
 - Clicking the available-update notification opens that release's page on

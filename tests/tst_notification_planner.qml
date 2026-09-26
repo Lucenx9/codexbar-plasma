@@ -649,4 +649,42 @@ TestCase {
         verify(!Object.prototype.hasOwnProperty.call(result.nextMemo, "constructor"))
         verify(!Object.prototype.hasOwnProperty.call(result.nextMemo, "prototype"))
     }
+
+    function test_missingRowRetainsThresholdState_data() {
+        return [{tag: "unchanged", used: 96, level: "major", expected: ""},
+            {tag: "reset", used: 0, level: "", expected: "reset"},
+            {tag: "recovery", used: 50, level: "", expected: ""}]
+    }
+
+    function test_missingRowRetainsThresholdState(data) {
+        var daily = usageRow("", 40, false, "Daily", "primary")
+        var initial = transition("prime", [observation("", "",
+            [daily, usageRow("major", 96, false)])])
+        var missing = transition("observe", [observation("", "", [daily])], initial.nextMemo)
+        compare(missing.intents.length, 0)
+        var returned = transition("observe", [observation("", "",
+            [daily, usageRow(data.level, data.used, false)])], missing.nextMemo)
+        compare(intentKinds(returned), data.expected)
+        var repeated = transition("observe", [observation("", "",
+            [daily, usageRow(data.level, data.used, false)])], returned.nextMemo)
+        compare(repeated.intents.length, 0)
+        if (data.used === 50) {
+            var escalated = transition("observe", [observation("", "",
+                [daily, usageRow("major", 96, false)])], repeated.nextMemo)
+            compare(intentKinds(escalated), "quota")
+        }
+    }
+
+    function test_missingRowRetainsPaceStateUntilKnownRecovery() {
+        var active = usageRow("", 50, true)
+        var initial = transition("prime", [observation("", "", [active])])
+        var missing = transition("observe", [observation("", "", [])], initial.nextMemo)
+        var returned = transition("observe", [observation("", "", [active])], missing.nextMemo)
+        compare(returned.intents.length, 0)
+        var recovered = transition("observe", [observation("", "",
+            [usageRow("", 50, false)])], returned.nextMemo)
+        var activeAgain = transition("observe", [observation("", "", [active])], recovered.nextMemo)
+        compare(intentKinds(activeAgain), "pace")
+    }
+
 }
