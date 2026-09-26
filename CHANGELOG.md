@@ -47,6 +47,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Align provider detail row key labels with the primary value's top line when a
+  secondary value (subtitle) is present, so the key label no longer floats between
+  the primary and secondary lines.
 - The provider **Cost history** peak line names the day its seven rows
   highlight, instead of an older day of the range that the rows do not show.
 - Exclude `o1-preview` and `o1-mini` snapshots from OpenAI model discovery:
