@@ -147,9 +147,8 @@ KCM.SimpleKCM {
         ? Plasmoid.configuration.costHistoryMetric : cfg_costHistoryMetricDefault
     readonly property string persistedCostHistoryPeriod: Plasmoid.configuration
         ? Plasmoid.configuration.costHistoryPeriod : cfg_costHistoryPeriodDefault
-    property bool costHistoryDaysEditPending: false
+    property bool costHistoryRangeEditPending: false
     property bool costHistoryMetricEditPending: false
-    property bool costHistoryPeriodEditPending: false
     readonly property bool defaultValuesPrepared: defaultsActionRequested
         && userSettingsAreDefault()
     readonly property string autoUpdateLastCheck: Plasmoid.configuration
@@ -180,17 +179,17 @@ KCM.SimpleKCM {
     }
 
     Component.onCompleted: {
-        syncCostHistoryDaysFromPersisted()
+        syncCostHistoryRangeFromPersisted()
         syncCostHistoryMetricFromPersisted()
-        syncCostHistoryPeriodFromPersisted()
     }
-    onPersistedCostHistoryDaysChanged: syncCostHistoryDaysFromPersisted()
+    onPersistedCostHistoryDaysChanged: syncCostHistoryRangeFromPersisted()
     onPersistedCostHistoryMetricChanged: syncCostHistoryMetricFromPersisted()
-    onPersistedCostHistoryPeriodChanged: syncCostHistoryPeriodFromPersisted()
+    onPersistedCostHistoryPeriodChanged: syncCostHistoryRangeFromPersisted()
 
-    function applyCostHistoryDaysTransition(transition) {
-        costHistoryDaysEditPending = transition.hasPendingEdit
-        cfg_costHistoryDays = transition.pendingValue
+    function applyCostHistoryRangeTransition(transition) {
+        costHistoryRangeEditPending = transition.hasPendingEdit
+        cfg_costHistoryDays = transition.days
+        cfg_costHistoryPeriod = transition.period
     }
 
     function applyCostHistoryMetricTransition(transition) {
@@ -198,20 +197,9 @@ KCM.SimpleKCM {
         cfg_costHistoryMetric = transition.pendingValue
     }
 
-    function applyCostHistoryPeriodTransition(transition) {
-        costHistoryPeriodEditPending = transition.hasPendingEdit
-        cfg_costHistoryPeriod = transition.pendingValue
-    }
-
     function editCostHistoryDays(value) {
-        applyCostHistoryDaysTransition(ConfigValueSync.afterUserEdit(
-            value, persistedCostHistoryDays))
-        editCostHistoryPeriod("")
-    }
-
-    function editCostHistoryPeriod(value) {
-        applyCostHistoryPeriodTransition(ConfigValueSync.afterUserEdit(
-            value, persistedCostHistoryPeriod))
+        applyCostHistoryRangeTransition(ConfigValueSync.historyRangeAfterUserEdit(
+            value, "", persistedCostHistoryDays, persistedCostHistoryPeriod))
     }
 
     function editCostHistoryMetric(value) {
@@ -219,19 +207,15 @@ KCM.SimpleKCM {
             value, persistedCostHistoryMetric))
     }
 
-    function syncCostHistoryDaysFromPersisted() {
-        applyCostHistoryDaysTransition(ConfigValueSync.afterPersistedChange(
-            cfg_costHistoryDays, costHistoryDaysEditPending, persistedCostHistoryDays))
+    function syncCostHistoryRangeFromPersisted() {
+        applyCostHistoryRangeTransition(ConfigValueSync.historyRangeAfterPersistedChange(
+            cfg_costHistoryDays, cfg_costHistoryPeriod, costHistoryRangeEditPending,
+            persistedCostHistoryDays, persistedCostHistoryPeriod))
     }
 
     function syncCostHistoryMetricFromPersisted() {
         applyCostHistoryMetricTransition(ConfigValueSync.afterPersistedChange(
             cfg_costHistoryMetric, costHistoryMetricEditPending, persistedCostHistoryMetric))
-    }
-
-    function syncCostHistoryPeriodFromPersisted() {
-        applyCostHistoryPeriodTransition(ConfigValueSync.afterPersistedChange(
-            cfg_costHistoryPeriod, costHistoryPeriodEditPending, persistedCostHistoryPeriod))
     }
 
     // Aligns a hint with the label text of the check box it explains.
@@ -346,9 +330,10 @@ KCM.SimpleKCM {
         cfg_refreshInterval = cfg_refreshIntervalDefault
         cfg_includeStatus = cfg_includeStatusDefault
         cfg_costUsageEnabled = cfg_costUsageEnabledDefault
-        editCostHistoryDays(cfg_costHistoryDaysDefault)
+        applyCostHistoryRangeTransition(ConfigValueSync.historyRangeAfterUserEdit(
+            cfg_costHistoryDaysDefault, cfg_costHistoryPeriodDefault,
+            persistedCostHistoryDays, persistedCostHistoryPeriod))
         editCostHistoryMetric(cfg_costHistoryMetricDefault)
-        editCostHistoryPeriod(cfg_costHistoryPeriodDefault)
         cfg_usageBarsShowUsed = cfg_usageBarsShowUsedDefault
         cfg_showQuotaWarningMarkers = cfg_showQuotaWarningMarkersDefault
         cfg_quotaWarningPercent = cfg_quotaWarningPercentDefault
@@ -392,9 +377,8 @@ KCM.SimpleKCM {
     }
 
     function saveConfig() {
-        applyCostHistoryDaysTransition(ConfigValueSync.afterSave(cfg_costHistoryDays))
+        costHistoryRangeEditPending = false
         applyCostHistoryMetricTransition(ConfigValueSync.afterSave(cfg_costHistoryMetric))
-        applyCostHistoryPeriodTransition(ConfigValueSync.afterSave(cfg_costHistoryPeriod))
         defaultsActionRequested = false
     }
 

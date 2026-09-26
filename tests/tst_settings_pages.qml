@@ -300,6 +300,8 @@ TestCase {
         compare(page.userSettingsAreDefault(), false);
         compare(page.defaultValuesPrepared, false);
 
+        page.editCostHistoryDays(90);
+        page.cfg_costHistoryPeriod = "all";
         page.restoreUserDefaults();
         // Values this page only holds so one action reaches the other pages have
         // to reach their schema default too, not just the ones with controls here.
@@ -314,6 +316,7 @@ TestCase {
         compare(page.cfg_costUsageEnabled, true);
         compare(page.cfg_costHistoryDays, 30);
         compare(page.cfg_costHistoryMetric, "cost");
+        compare(page.cfg_costHistoryPeriod, "");
         compare(page.cfg_quotaWarningPercent, 80);
         compare(page.cfg_quotaCriticalPercent, 95);
         compare(page.cfg_enableNotifications, true);
@@ -331,7 +334,7 @@ TestCase {
 
         page.saveConfig();
         compare(page.defaultValuesPrepared, false);
-        compare(page.costHistoryDaysEditPending, false);
+        compare(page.costHistoryRangeEditPending, false);
         compare(page.costHistoryMetricEditPending, false);
     }
 
@@ -711,19 +714,19 @@ TestCase {
         });
         if (!page)
             return;
-        compare(page.costHistoryDaysEditPending, false);
+        compare(page.costHistoryRangeEditPending, false);
         page.editCostHistoryDays(90);
         compare(page.cfg_costHistoryDays, 90);
-        compare(page.costHistoryDaysEditPending, true);
-        page.syncCostHistoryDaysFromPersisted();
+        compare(page.costHistoryRangeEditPending, true);
+        page.syncCostHistoryRangeFromPersisted();
         compare(page.cfg_costHistoryDays, 90);
-        compare(page.costHistoryDaysEditPending, true);
+        compare(page.costHistoryRangeEditPending, true);
         page.editCostHistoryMetric("tokens");
         compare(page.cfg_costHistoryMetric, "tokens");
         compare(page.costHistoryMetricEditPending, true);
         page.saveConfig();
         compare(page.cfg_costHistoryDays, 90);
-        compare(page.costHistoryDaysEditPending, false);
+        compare(page.costHistoryRangeEditPending, false);
         compare(page.costHistoryMetricEditPending, false);
     }
 }

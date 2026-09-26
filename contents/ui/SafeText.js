@@ -163,7 +163,9 @@ var loaderDiagnosticPattern = /^.*:\s*no version information available\s*\(requi
 
 function stripLoaderDiagnostics(value, maximumLength) {
     var limit = safeLimit(maximumLength, maximumCliMessageLength)
-    var text = boundedInspectionText(value, Math.min(maximumDiagnosticLength, limit * 8))
+    // Redact against the original source before shortening it: truncating a
+    // credential first would prevent callers from recognizing its prefix.
+    var text = redactCredentials(value, limit)
     if (text.indexOf(loaderDiagnosticMarker) === -1) {
         return text
     }

@@ -56,6 +56,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep quota warning and reset state when a refresh temporarily omits a usage
+  window, avoiding duplicate warnings and missed reset notices when it returns.
+- Preserve an unapplied history-window choice in General when the popup changes
+  its calendar period; days and calendar mode now stay pending together.
+- Keep the last provider list and show the command failure when the CLI returns
+  JSON with a nonzero exit status.
 - A provider's cost history rows, **Peak** line, latest-day summary, and
   **Details for** title use the system locale's short date, like its chart,
   instead of the CLI's `YYYY-MM-DD` keys.
@@ -82,6 +88,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Chart axis, readout, and heatmap dates use the locale's short date format
   instead of the CLI's `YYYY-MM-DD` keys.
 - OMP sessions are labelled `OMP` instead of the generic Pi provider name.
+
+### Security
+
+- Redact credentials before shortening loader diagnostics, so a key crossing
+  the inspection boundary cannot leave a visible unredacted prefix.
 
 ## 0.2.42 - 2026-09-25
 

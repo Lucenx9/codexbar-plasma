@@ -141,20 +141,14 @@ function boundedMemo(memo, observations) {
     return result
 }
 
-function clearScopeState(nextMemo, observation) {
-    var scope = String(observation.scopeID || "")
-    var quotaPrefix = "quota:" + scope + ":"
-    var resetPrefix = "reset:" + scope + ":"
-    var pacePrefix = "pace:" + scope + ":"
-    for (var key in nextMemo) {
-        if (!Guards.hasOwnKey(nextMemo, key)) {
-            continue
-        }
-        if (key.indexOf(quotaPrefix) === 0
-                || key.indexOf(resetPrefix) === 0
-                || key.indexOf(pacePrefix) === 0) {
-            delete nextMemo[key]
-        }
+// Missing rows are not evidence of recovery. Retain their bounded memo until
+// they return; clear only the keys that this observation can rebuild.
+function clearObservedRowState(nextMemo, observation) {
+    var rows = Array.isArray(observation.rows) ? observation.rows : []
+    for (var i = 0; i < rows.length; i++) {
+        delete nextMemo[quotaKey(observation, rows[i], i)]
+        delete nextMemo[resetKey(observation, rows[i], i)]
+        delete nextMemo[paceKey(observation, rows[i], i)]
     }
 }
 
@@ -355,7 +349,7 @@ function transition(observations, previousMemo, options) {
         if (item.errorPresent === true && Array.isArray(item.rows) && item.rows.length === 0) {
             continue
         }
-        clearScopeState(nextMemo, item)
+        clearObservedRowState(nextMemo, item)
         if (!previousMemo || previousMemo[scopePrimedKey(item)] !== "1") {
             primeScope(nextMemo, item, options)
             continue

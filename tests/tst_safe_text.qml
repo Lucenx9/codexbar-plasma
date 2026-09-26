@@ -279,4 +279,19 @@ TestCase {
         // pin its absolute value so a shrink cannot silently reject payloads.
         compare(SafeText.maximumCliJsonLength, 4 * 1024 * 1024)
     }
+
+    function test_loaderFilteringRedactsBeforeTruncatingCredentials_data() {
+        return [{tag: "plain", warning: ""}, {tag: "loader", warning:
+            "codexbar: libcurl.so: no version information available (required by codexbar)\n"}]
+    }
+
+    function test_loaderFilteringRedactsBeforeTruncatingCredentials(data) {
+        var input = data.warning + "token="
+            + "a".repeat(3986 - data.warning.length) + "\n:sk-1234567890-secret"
+        var result = SafeText.cliMessage(SafeText.stripLoaderDiagnostics(input), 500)
+        verify(result.indexOf("sk-123") === -1)
+        verify(result.indexOf("[redacted]") !== -1)
+        verify(result.length <= 500)
+    }
+
 }

@@ -430,12 +430,47 @@ TestCase {
         page = freshPage();
         var currentRevision = providerConfigRevisionValue();
         handleListResult({includeDescriptors: false, providerConfigRevision: currentRevision},
-            '[{"provider": "codex", "displayName": "Codex", "enabled": true}, {"provider": "claude", "displayName": "Claude", "enabled": false}]', "");
+            '[{"provider": "codex", "displayName": "Codex", "enabled": true}, {"provider": "claude", "displayName": "Claude", "enabled": false}]', "", 0);
         compare(providers.length, 2);
         compare(providers[0].provider, "codex");
         compare(selectedProviderID, "codex");
         compare(loading, false);
         compare(errorText, "");
+    }
+
+    function test_listExitStatusControlsRosterReplacement_data() {
+        return [
+            {tag: "failed-empty", output: "[]", code: 1, stderr: "synthetic failure", accepted: false},
+            {tag: "failed-populated", output: '[{"provider":"claude","enabled":true}]',
+                code: 1, stderr: "", accepted: false},
+            {tag: "timeout", output: "[]", code: 124, stderr: "", accepted: false},
+            {tag: "empty-success", output: "[]", code: 0, stderr: "", accepted: true},
+            {tag: "loader-noise", output: "[]", code: 0,
+                stderr: "codexbar: libcurl.so: no version information available (required by codexbar)", accepted: true}
+        ];
+    }
+
+    function test_listExitStatusControlsRosterReplacement(data) {
+        providers = [{provider: "codex", enabled: true}];
+        selectedProviderID = "codex";
+        loading = true;
+        errorText = "";
+        page = freshPage();
+        commands = CommandLedger.opened({}, "list-result", {
+            kind: "list", commandPathSignature: commandPath, includeDescriptors: false,
+            providerConfigRevision: providerConfigRevisionValue()});
+        handleData("list-result", data.output, data.stderr, data.code);
+        compare(loading, false);
+        compare(Object.keys(commands).length, 0);
+        if (data.accepted) {
+            compare(providers.length, 0);
+            compare(errorText, "");
+        } else {
+            compare(providers.length, 1);
+            compare(providers[0].provider, "codex");
+            compare(selectedProviderID, "codex");
+            verify(errorText.length > 0);
+        }
     }
     // An old CLI that rejects --descriptors falls back to a plain list and
     // marks descriptors unavailable, instead of leaving the page in error.
@@ -447,7 +482,7 @@ TestCase {
         loading = true;
         var currentRevision = providerConfigRevisionValue();
         handleListResult({includeDescriptors: true, providerConfigRevision: currentRevision},
-            "", "codexbar: error: unknown option '--descriptors'");
+            "", "codexbar: error: unknown option '--descriptors'", 1);
         compare(providerDescriptorsUnavailable, true);
         compare(configSource.connected.length, 1);
         verify(configSource.connected[0].indexOf("--descriptors") === -1);
@@ -724,7 +759,7 @@ WIRING_FUNCTIONS = (
     "copyObject", "hasOwnKey", "providerKey", "providerMapKey", "descriptorPendingKey",
     "descriptorPendingFieldKey", "providerIconSource", "shellQuote", "writeDescriptorField",
     "promptDescriptorSecret", "runDescriptorAction", "handleDescriptorActionResult",
-    "handleDescriptorFieldResult", "handleListResult", "handleDiagnoseResult",
+    "handleDescriptorFieldResult", "handleListResult", "handleDiagnoseResult", "handleData",
     "shouldRetryProviderListWithoutDescriptors", "descriptorListUnsupportedMessage",
     "boundedCliMessage", "providerByID", "firstSelectableProvider",
     "providerDiagnosticFor", "providerDiagnosticErrorFor", "setProviderDiagnostic",
