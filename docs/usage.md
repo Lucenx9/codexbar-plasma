@@ -157,6 +157,15 @@ work and upstream contract requirements.
   provider without one uses the CLI's own English title from `rateWindowLabels`
   (such as `Memory`) instead of the generic `Session`, `Weekly`, or `Opus`;
   privacy mode and quotas restored after a restart keep the generic title.
+- A usage row in a provider tab can be hidden with the button that appears
+  beside its percentage on hover or keyboard focus. Primary, secondary, and
+  tertiary rows and extra windows with a CLI window ID can be hidden; credit
+  rows use the **Show credits and reset credits** option instead. Hidden rows
+  leave only the provider tab: fetching, notifications, the panel, and the
+  Overview summary still use them. **Popup → Hidden usage rows** lists each
+  hidden row by provider and row name, or extra window ID, with **Restore**;
+  **Apply** saves the change. A restored cache can show a hidden extra window
+  until the next refresh, because the cache keeps no window IDs.
 
 ## Data freshness
 
@@ -427,7 +436,8 @@ fields; track proposed extensions in the issue tracker.
 - Seven settings pages: **General**, **Providers**, **Panel**, **Popup**,
   **Notifications**, **AI Insights (Beta)**, and **Diagnostics**. CLI path and provider/source overrides
   sit beside redacted diagnostics; quota thresholds sit beside their alerts.
-  **Popup** groups provider order and Overview providers under **Providers**;
+  **Popup** lists hidden usage rows under **Popup** and groups provider order
+  and Overview providers under **Providers**;
   **Diagnostics** runs redacted diagnostics from its **Provider diagnostics**
   section. Explanatory text is set in small secondary type below the control
   it describes, and dependent options are indented under the option they need.
@@ -689,6 +699,7 @@ and 95% critical thresholds. Reset notifications are off until enabled.
 | Provider selection | Keep the selected provider; automatic highest-usage selection off |
 | Popup navigation | Tab text labels on; provider order from the CLI |
 | Overview | First three enabled providers automatically |
+| Popup usage rows | All shown |
 | Reset times | Relative countdown |
 | Provider changelog links | Off |
 | AI Insights | Off; once enabled, Ollama at `http://localhost:11434`, no model, generation only on request, OpenRouter Zero Data Retention routing on |

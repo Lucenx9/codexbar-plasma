@@ -15,6 +15,7 @@ import "PanelElements.js" as PanelElements
 import "PanelProviders.js" as PanelProviders
 import "PanelRules.js" as PanelRules
 import "PanelTextFit.js" as PanelTextFit
+import "PopupHiddenRows.js" as PopupHiddenRows
 import "PopupSelection.js" as PopupSelection
 import "ProviderAutoSelect.js" as ProviderAutoSelect
 import "ProviderSnapshot.js" as ProviderSnapshot
@@ -116,6 +117,7 @@ PlasmoidItem {
     property bool showProviderChangelogs: Plasmoid.configuration.showProviderChangelogs === true
     property bool autoSelectProvider: Plasmoid.configuration.autoSelectProvider === true
     property string overviewProviderIDsRaw: Plasmoid.configuration.overviewProviderIDs || ""
+    readonly property var popupHiddenUsageRows: PopupHiddenRows.parse(Plasmoid.configuration.popupHiddenUsageRows || "")
     property int providerConfigRevision: boundedConfigRevision(Plasmoid.configuration.providerConfigRevision)
     property var providers: []
     readonly property var providerDisplayNames: usageController.providerDisplayNames
@@ -997,6 +999,24 @@ PlasmoidItem {
         })
         result.tokenCost = costPresentation(item.tokenCost)
         return result
+    }
+
+    // Hidden rows filter only the provider tab; fetching, alerts, the panel and
+    // the Overview summary keep every row.
+    function popupUsageRows(item) {
+        return item ? PopupHiddenRows.visibleRows(item.rows, popupHiddenUsageRows, item.provider) : []
+    }
+
+    function popupUsageRowHideable(row) {
+        return PopupHiddenRows.rowKey(row).length > 0
+    }
+
+    function hidePopupUsageRow(providerID, row) {
+        var key = PopupHiddenRows.rowKey(row)
+        if (key.length > 0) {
+            Plasmoid.configuration.popupHiddenUsageRows = PopupHiddenRows.serialize(
+                PopupHiddenRows.hidden(popupHiddenUsageRows, providerID, key))
+        }
     }
 
     function accountLabel(item) {

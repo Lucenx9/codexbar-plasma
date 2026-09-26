@@ -225,6 +225,13 @@ TestCase {
         function quotaWarningMarkers(row) {
             return row.warningMarkers || [];
         }
+        property var hiddenUsageRowRequest: null
+        function popupUsageRowHideable(row) {
+            return row.lane === "primary";
+        }
+        function hidePopupUsageRow(providerID, row) {
+            hiddenUsageRowRequest = {provider: providerID, label: row.label};
+        }
         function percentSuffix() {
             return "left";
         }
@@ -1468,6 +1475,42 @@ TestCase {
             return item.text === "On pace";
         });
         verify(pace !== null);
+    }
+
+    // The hide action stays out of sight until the row is hovered or the
+    // button takes focus, and asks the applet to hide this provider's row.
+    function test_providerUsageRowOffersHideAction() {
+        applet.hiddenUsageRowRequest = null;
+        var data = usageRowData();
+        data.lane = "primary";
+        var row = createControl("ProviderUsageRow", {
+            applet: applet,
+            providerData: { provider: "codex" },
+            modelData: data,
+            width: 540
+        });
+        if (!row)
+            return;
+        var button = findItem(row, function (item) {
+            return item.objectName === "hideUsageRowButton";
+        });
+        verify(button !== null);
+        compare(button.visible, true);
+        compare(button.opacity, 0);
+        button.forceActiveFocus(Qt.TabFocusReason);
+        tryCompare(button, "opacity", 1);
+        mouseClick(button);
+        compare(applet.hiddenUsageRowRequest, {provider: "codex", label: "Primary"});
+
+        var credit = createControl("ProviderUsageRow", {
+            applet: applet,
+            providerData: { provider: "codex" },
+            modelData: usageRowData(),
+            width: 540
+        });
+        compare(findItem(credit, function (item) {
+            return item.objectName === "hideUsageRowButton";
+        }).visible, false);
     }
 
     function test_providerUsageRowDrawsQuotaWarningMarkers() {

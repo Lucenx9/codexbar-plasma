@@ -403,6 +403,14 @@ clipboard interoperability with every Wayland application or portal backend.
   nothing else has no row, while any surviving quota, credit balance, Codex
   monthly limit, cost figure, or placeholder keeps the provider visible. QML
   binds the resulting rows and localizes them; the module reads no root state.
+- `PopupHiddenRows.js` owns the popup's hidden usage rows without effects.
+  Entries store a validated provider ID and a row key (`primary`, `secondary`,
+  `tertiary`, or `extra:<CLI window ID>`) and no provider prose, so the Popup
+  settings page names them from its own label tables. `main.qml` filters only
+  the provider tab's usage rows through it and writes the hide choice; the
+  panel, Overview, notifications, and fetching read unfiltered rows. Privacy
+  projection keeps the identifier-shaped `windowId` so a hidden extra window
+  stays hidden. A full list refuses new entries instead of dropping old ones.
 - `ProviderAutoSelect.js` ranks the roster for the automatic provider
   selection. Consumption decides it, taking the busiest quota row or the
   provider cost meter, whichever reports further along; incident severity only

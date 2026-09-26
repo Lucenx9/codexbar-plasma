@@ -1003,7 +1003,7 @@ Item {
                     }
 
                     Repeater {
-                        model: applet.presentedProviderData ? applet.presentedProviderData.rows : []
+                        model: applet.popupUsageRows(applet.presentedProviderData)
 
                         delegate: Components.ProviderUsageRow {
                             applet: fullRoot.applet

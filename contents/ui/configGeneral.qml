@@ -111,6 +111,8 @@ KCM.SimpleKCM {
     property bool cfg_autoSelectProviderDefault: false
     property string cfg_overviewProviderIDs
     property string cfg_overviewProviderIDsDefault: ""
+    property string cfg_popupHiddenUsageRows
+    property string cfg_popupHiddenUsageRowsDefault: ""
     property string cfg_panelProviderIDs
     property string cfg_panelProviderIDsDefault: ""
     property bool cfg_showCreditsInPanel
@@ -288,6 +290,7 @@ KCM.SimpleKCM {
             [cfg_panelVisibilityRules, cfg_panelVisibilityRulesDefault],
             [cfg_autoSelectProvider, cfg_autoSelectProviderDefault],
             [cfg_overviewProviderIDs, cfg_overviewProviderIDsDefault],
+            [cfg_popupHiddenUsageRows, cfg_popupHiddenUsageRowsDefault],
             [cfg_panelProviderIDs, cfg_panelProviderIDsDefault],
             [cfg_showCreditsInPanel, cfg_showCreditsInPanelDefault],
             [cfg_aiInsightsEnabled, cfg_aiInsightsEnabledDefault],
@@ -349,6 +352,7 @@ KCM.SimpleKCM {
         cfg_panelVisibilityRules = cfg_panelVisibilityRulesDefault
         cfg_autoSelectProvider = cfg_autoSelectProviderDefault
         cfg_overviewProviderIDs = cfg_overviewProviderIDsDefault
+        cfg_popupHiddenUsageRows = cfg_popupHiddenUsageRowsDefault
         cfg_panelProviderIDs = cfg_panelProviderIDsDefault
         cfg_showCreditsInPanel = cfg_showCreditsInPanelDefault
         cfg_aiInsightsEnabled = cfg_aiInsightsEnabledDefault

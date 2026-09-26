@@ -219,6 +219,10 @@
       <label>Comma-separated provider ids shown in the Overview tab.</label>
       <default></default>
     </entry>
+    <entry name="popupHiddenUsageRows" type="String">
+      <label>JSON list of provider quota rows hidden in the popup.</label>
+      <default></default>
+    </entry>
     <entry name="showCreditsInPanel" type="Bool">
       <label>Show credits in the panel when available.</label>
       <default>false</default>

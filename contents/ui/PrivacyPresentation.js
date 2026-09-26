@@ -55,6 +55,8 @@ function quota(row, enabled, label) {
         resetsAt: timestamp(field(row, "resetsAt", "")),
         // The window length is not identifying and lets cost split by quota week.
         windowMinutes: numeric(row, "windowMinutes", 0),
+        // Never displayed; it keeps a hidden extra window hidden in privacy mode.
+        windowId: Normalizer.extraWindowID(field(row, "windowId", "")),
         resetDescription: "",
         reset: "",
         pace: ""

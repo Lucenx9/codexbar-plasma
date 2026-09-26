@@ -11,8 +11,10 @@ TestCase {
     width: 600
     height: 900
 
-    function i18n(text, value) {
-        return value === undefined ? text : text.replace("%1", value);
+    function i18n(text) {
+        for (var i = 1; i < arguments.length; i++)
+            text = text.replace("%" + i, arguments[i]);
+        return text;
     }
 
     function i18np(singular, plural, count) {
@@ -125,6 +127,43 @@ TestCase {
         compare(page.selectedOverviewProviderCount(), 2);
         verify(providerCheck(page, "OpenAI").enabled);
         compare(OverviewProviders.configuredProviderIDs(page.cfg_overviewProviderIDs).join(","), "groq,cursor,claude,gemini,copilot");
+    }
+
+    // Rows hidden from the popup are listed by provider and row name, from
+    // the stored IDs alone, and Restore removes only its own entry.
+    function test_hiddenUsageRowsListAndRestore() {
+        var page = createPage({cfg_popupHiddenUsageRows: JSON.stringify([
+            {provider: "codex", row: "secondary"},
+            {provider: "claude", row: "extra:opus-weekly"}
+        ])});
+        if (!page)
+            return;
+        var controller = waitForRosterSettled(page);
+        controller.providerRosterError = "";
+        controller.enabledProviderRoster = [{provider: "codex", displayName: "Codex CLI"}];
+        var all = [];
+        walkObjects(page, all);
+        var texts = all.map(function(item) { return item.text; });
+        verify(texts.indexOf("Codex CLI: Weekly") >= 0, texts.join("|"));
+        verify(texts.indexOf("Claude: Extra window opus-weekly") >= 0, texts.join("|"));
+        var buttons = all.filter(function(item) { return item.objectName === "restoreHiddenUsageRowButton"; });
+        compare(buttons.length, 2);
+        compare(buttons[0].Accessible.name, "Restore Codex CLI: Weekly");
+        buttons[0].forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(JSON.parse(page.cfg_popupHiddenUsageRows), [{provider: "claude", row: "extra:opus-weekly"}]);
+        tryVerify(function() {
+            var now = [];
+            walkObjects(page, now);
+            return now.filter(function(item) { return item.objectName === "restoreHiddenUsageRowButton"; }).length === 1;
+        });
+        page.restoreHiddenUsageRow({provider: "claude", row: "extra:opus-weekly"});
+        compare(page.cfg_popupHiddenUsageRows, "");
+        tryVerify(function() {
+            var now = [];
+            walkObjects(page, now);
+            return now.some(function(item) { return item.text === "None. Hide a usage row with its button in the popup."; });
+        });
     }
 
     // The usage-details checkboxes own their configuration keys: flipping

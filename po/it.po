@@ -210,8 +210,9 @@ msgstr "Apri %1"
 
 #: contents/ui/components/CompactRepresentation.qml
 #: contents/ui/components/InteractiveChart.qml
-#: contents/ui/components/SpendView.qml contents/ui/configProviders.qml
-#: contents/ui/main.qml scripts/smoke/Capture.qml
+#: contents/ui/components/SpendView.qml contents/ui/configPopup.qml
+#: contents/ui/configProviders.qml contents/ui/main.qml
+#: scripts/smoke/Capture.qml
 msgid "%1: %2"
 msgstr "%1: %2"
 
@@ -1061,6 +1062,10 @@ msgstr "ZenMux"
 #: contents/ui/components/ProviderNames.qml
 msgid "ZoomMate"
 msgstr "ZoomMate"
+
+#: contents/ui/components/ProviderUsageRow.qml
+msgid "Hide the %1 row"
+msgstr "Nascondi la riga %1"
 
 #: contents/ui/components/RateWindowLabels.qml
 msgid "5-hour"
@@ -2320,6 +2325,10 @@ msgid "Auto-select highest-usage provider"
 msgstr "Seleziona automaticamente il provider con l'utilizzo più alto"
 
 #: contents/ui/configPopup.qml
+msgid "Extra window %1"
+msgstr "Finestra aggiuntiva %1"
+
+#: contents/ui/configPopup.qml
 msgid "Usage details"
 msgstr "Dettagli di utilizzo"
 
@@ -2354,6 +2363,26 @@ msgstr "Mostra le etichette di testo nella barra delle schede"
 #: contents/ui/configPopup.qml
 msgid "Show provider changelog links"
 msgstr "Mostra i collegamenti alle novità dei provider"
+
+#: contents/ui/configPopup.qml
+msgid "Hidden usage rows:"
+msgstr "Righe di utilizzo nascoste:"
+
+#: contents/ui/configPopup.qml
+msgid "None. Hide a usage row with its button in the popup."
+msgstr "Nessuna. Nascondi una riga di utilizzo con il suo pulsante nella finestra a comparsa."
+
+#: contents/ui/configPopup.qml
+msgid "Hidden rows stay out of the popup's provider tabs only."
+msgstr "Le righe nascoste sono escluse solo dalle schede dei provider nella finestra a comparsa."
+
+#: contents/ui/configPopup.qml
+msgid "Restore"
+msgstr "Ripristina"
+
+#: contents/ui/configPopup.qml
+msgid "Restore %1"
+msgstr "Ripristina %1"
 
 #: contents/ui/configPopup.qml
 msgid "Provider order:"

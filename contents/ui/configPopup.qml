@@ -6,6 +6,7 @@ import org.kde.kirigami as Kirigami
 import "components" as Components
 import "controllers" as Controllers
 import "OverviewProviders.js" as OverviewProviders
+import "PopupHiddenRows.js" as PopupHiddenRows
 import "ProviderIdentity.js" as ProviderIdentity
 import "ProviderOrder.js" as ProviderOrder
 import "SafeText.js" as SafeText
@@ -44,6 +45,8 @@ KCM.SimpleKCM {
     property bool cfg_showProviderChangelogsDefault: false
     property string cfg_overviewProviderIDs: ""
     property string cfg_overviewProviderIDsDefault: ""
+    property string cfg_popupHiddenUsageRows: ""
+    property string cfg_popupHiddenUsageRowsDefault: ""
 
     readonly property int maxOverviewProviders: OverviewProviders.maximumOverviewProviders
     readonly property string overviewNoneValue: OverviewProviders.noneValue
@@ -53,6 +56,37 @@ KCM.SimpleKCM {
     readonly property alias providerRosterError: providerRosterController.providerRosterError
     readonly property var orderedEnabledProviderRoster: ProviderOrder.orderedItems(
         enabledProviderRoster, cfg_providerOrder)
+    readonly property var hiddenUsageRows: PopupHiddenRows.parse(cfg_popupHiddenUsageRows)
+
+    Components.ProviderNames {
+        id: providerNames
+    }
+
+    Components.RateWindowLabels {
+        id: rateWindowLabels
+    }
+
+    function hiddenRowProviderTitle(providerID) {
+        for (var i = 0; i < enabledProviderRoster.length; i++) {
+            if (enabledProviderRoster[i].provider === providerID) {
+                return enabledProviderRoster[i].displayName
+            }
+        }
+        return providerNames.titleForKey(ProviderIdentity.resolveProviderKey(providerID), providerID)
+    }
+
+    // Rows are stored without provider prose, so an extra window is named by
+    // its CLI identifier here.
+    function hiddenRowLabel(entry) {
+        return entry.row.indexOf("extra:") === 0
+            ? i18n("Extra window %1", entry.row.slice(6))
+            : rateWindowLabels.labelForLane(ProviderIdentity.resolveProviderKey(entry.provider), entry.row)
+    }
+
+    function restoreHiddenUsageRow(entry) {
+        cfg_popupHiddenUsageRows = PopupHiddenRows.serialize(
+            PopupHiddenRows.restored(hiddenUsageRows, entry.provider, entry.row))
+    }
 
     Controllers.ProviderRosterController {
         id: providerRosterController
@@ -212,6 +246,62 @@ KCM.SimpleKCM {
             implicitWidth: 0
             Layout.fillWidth: true
             text: i18n("Show provider changelog links")
+        }
+
+        ColumnLayout {
+            id: hiddenUsageRowsSection
+            objectName: "hiddenUsageRowsSection"
+
+            Kirigami.FormData.label: i18n("Hidden usage rows:")
+            Kirigami.FormData.labelAlignment: Qt.AlignTop
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            spacing: Kirigami.Units.smallSpacing / 2
+
+            Components.PlainControlsLabel {
+                Layout.fillWidth: true
+                text: page.hiddenUsageRows.length === 0
+                    ? i18n("None. Hide a usage row with its button in the popup.")
+                    : i18n("Hidden rows stay out of the popup's provider tabs only.")
+                opacity: 0.7
+                wrapMode: Text.WordWrap
+            }
+
+            Repeater {
+                model: page.hiddenUsageRows
+
+                delegate: RowLayout {
+                    required property var modelData
+                    readonly property string rowText: i18n("%1: %2",
+                        page.hiddenRowProviderTitle(modelData.provider), page.hiddenRowLabel(modelData))
+
+                    Layout.fillWidth: true
+                    spacing: Kirigami.Units.smallSpacing
+
+                    Kirigami.Icon {
+                        source: page.providerIconSource(modelData.provider)
+                        fallback: "view-statistics"
+                        isMask: true
+                        Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                        Layout.preferredHeight: Kirigami.Units.iconSizes.small
+                    }
+
+                    Components.PlainControlsLabel {
+                        text: rowText
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                    }
+
+                    Components.PlainButton {
+                        objectName: "restoreHiddenUsageRowButton"
+                        plainText: i18n("Restore")
+                        icon.name: "view-visible"
+                        Accessible.name: i18n("Restore %1", rowText)
+                        onClicked: page.restoreHiddenUsageRow(modelData)
+                    }
+                }
+            }
         }
 
         Kirigami.Separator {
