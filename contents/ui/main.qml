@@ -831,8 +831,10 @@ PlasmoidItem {
                 : CostPresentation.amountString(costNumberFormat, peak.magnitude, peak.currency))
     }
 
-    function costAverageDailyLine(points) {
-        var average = CostPresentation.averageDailyValue(points, costHistoryShowsTokens)
+    // A calendar period longer than the chart supplies its whole-range average.
+    function costAverageDailyLine(points, averageDaily) {
+        var average = averageDaily ? averageDaily[costHistoryShowsTokens ? "tokens" : "cost"]
+            : CostPresentation.averageDailyValue(points, costHistoryShowsTokens)
         if (!average) {
             return ""
         }

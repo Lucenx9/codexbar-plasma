@@ -301,6 +301,12 @@ TestCase {
             {totals: {cost: 2, tokens: 1000000, currency: "USD"}}),
             "Average: $2.00 / 1M tokens");
         compare(root.costPeakLine([]), "");
+        // All history longer than the chart supplies its whole-range average.
+        var average = {cost: {value: 9, currency: "USD"}, tokens: null};
+        compare(root.costAverageDailyLine(twoDays(), average), "Average/day: $9.00");
+        root.costHistoryShowsTokens = true;
+        compare(root.costAverageDailyLine(twoDays(), average), "");
+        root.costHistoryShowsTokens = false;
     }
     // A peak older than the seven history rows is neither shown nor
     // highlighted there, so the peak line names the highlighted row instead.

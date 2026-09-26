@@ -90,6 +90,11 @@ TestCase {
         compare(Privacy.cost(source, true).period, "month-to-date")
         source.period = "confidential period"
         compare(Privacy.cost(source, true).period, "")
+        compare(Privacy.cost(source, true).averageDaily, null)
+        source.averageDaily = { cost: { value: 2.5, currency: "USD", label: "confidential" },
+            tokens: { value: "confidential" } }
+        compare(Privacy.cost(source, true).averageDaily,
+            { cost: { value: 2.5, currency: "USD" }, tokens: null })
     }
 
     function test_sessionHidesHostNamesAndUnknownStatesAndSources() {

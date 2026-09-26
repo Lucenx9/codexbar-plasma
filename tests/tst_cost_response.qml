@@ -306,6 +306,40 @@ TestCase {
         compare(cost.period, "all");
         compare(cost.historyDays, data.expected);
     }
+    function test_allHistoryScanStaysWithinTheInputBound() {
+        // Only the newest scan budget of records sizes the window, like the
+        // daily normalization, so an oversized payload cannot stall the UI.
+        var daily = [{ date: "2020-01-01", totalCost: 1 }];
+        for (var i = 0; i < Normalizer.maximumCostHistoryScanItems; i++)
+            daily.push({ date: "2026-09-19", totalCost: 1 });
+        var cost = parse({ provider: "codex", historyDays: 739887, reportingPeriod: "all",
+            updatedAt: "2026-09-19T12:00:00Z", daily: daily }).costs.codex;
+        compare(cost.historyDays, 1);
+    }
+    function test_allHistoryAggregatesCoverMoreThanTheChartedYear() {
+        // 400 recorded days: the chart keeps the newest 365, while the model
+        // totals and the daily average cover every recorded day.
+        var daily = [];
+        var first = Date.UTC(2025, 7, 16);
+        for (var i = 0; i < 400; i++) {
+            var day = new Date(first + i * 86400000).toISOString().slice(0, 10);
+            daily.push({ date: day, totalCost: i < 35 ? 3 : 1, totalTokens: 10,
+                modelBreakdowns: [{ modelName: "example", cost: i < 35 ? 3 : 1, totalTokens: 10 }] });
+        }
+        var cost = parse({ provider: "codex", historyDays: 739887, reportingPeriod: "all",
+            updatedAt: "2026-09-19T12:00:00Z", daily: daily }).costs.codex;
+        compare(cost.historyDays, 365);
+        compare(cost.daily.length, 365);
+        compare(cost.models.length, 1);
+        compare(cost.models[0].cost, 35 * 3 + 365);
+        compare(cost.models[0].tokens, 4000);
+        compare(cost.averageDaily.cost.value, (35 * 3 + 365) / 400);
+        compare(cost.averageDaily.tokens.value, 10);
+        var rolling = parse({ provider: "codex", historyDays: 30, reportingPeriod: "rolling:30",
+            updatedAt: "2026-09-19T12:00:00Z", daily: daily }).costs.codex;
+        compare(rolling.averageDaily, null);
+        compare(rolling.models[0].cost, 30);
+    }
     function test_rejectedArgumentsAreReportedApartFromProviderFailures() {
         // CLI 0.66.0 rejects `--period` with an args error record.
         var rejected = parse([{ provider: "cli", source: "cli",

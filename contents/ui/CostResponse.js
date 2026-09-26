@@ -9,11 +9,12 @@ function boundedMessage(value) {
 
 // `--period all` reports the days since year 1. Size its window from the
 // oldest recorded day to the scan day instead; NaN when no day is recorded.
+// Like the daily normalization, read only the newest scan budget of records.
 function recordedHistoryDays(daily, scanDay) {
     var first = Infinity;
     var last = -Infinity;
     var days = Array.isArray(daily) ? daily : [];
-    for (var i = 0; i < days.length; i++) {
+    for (var i = Math.max(0, days.length - Normalizer.maximumCostHistoryScanItems); i < days.length; i++) {
         var day = Normalizer.isCliRecord(days[i])
             ? Normalizer.parsedCalendarDateKey(days[i].date || days[i].day || days[i].dayKey) : null;
         if (day) {
@@ -34,9 +35,9 @@ function normalizeSnapshot(item, requestedHistoryDays) {
     var period = CostPresentation.costPeriod(item.reportingPeriod);
     var scanDay = Normalizer.localCalendarDateKey(item.updatedAt);
     var emittedDays = Normalizer.strictFiniteNumber(item.historyDays);
-    if (period === "all") {
-        var recordedDays = recordedHistoryDays(item.daily, scanDay);
-        emittedDays = isFinite(recordedDays) ? recordedDays : emittedDays;
+    var recordedDays = period === "all" ? recordedHistoryDays(item.daily, scanDay) : NaN;
+    if (isFinite(recordedDays)) {
+        emittedDays = recordedDays;
     }
     var fallbackDays = Normalizer.strictFiniteNumber(requestedHistoryDays);
     var historyDays = isFinite(emittedDays) && emittedDays > 0 ? emittedDays
@@ -46,7 +47,13 @@ function normalizeSnapshot(item, requestedHistoryDays) {
         item.last30DaysCostUSD, item.last30DaysTokens, currency);
     var trust = Normalizer.normalizeCostTrustMetadata(item);
     var summary = CostPresentation.costTrustSummary([{totals: totals, trust: trust}]);
-    var modelSummary = Normalizer.normalizeCostModels(item.daily, currency, historyDays, item.updatedAt, true);
+    // All history charts at most the newest year, but its model totals and
+    // daily average cover every recorded day within the scan budget.
+    var aggregateBound = Normalizer.maximumCostHistoryScanItems;
+    var aggregateDays = isFinite(recordedDays) ? Math.min(aggregateBound, recordedDays) : historyDays;
+    var modelSummary = Normalizer.normalizeCostModels(item.daily, currency, aggregateDays, item.updatedAt, true, aggregateBound);
+    var aggregateDaily = aggregateDays > historyDays
+        ? Normalizer.normalizeCostDaily(item.daily, currency, aggregateDays, item.updatedAt, aggregateBound) : null;
     return {
         provider: provider,
         currency: currency,
@@ -73,6 +80,11 @@ function normalizeSnapshot(item, requestedHistoryDays) {
         tokenRanking: modelSummary.tokenRanking || { rows: [], omitted: 0, truncated: false,
             sourceTruncated: false, hasUnknownCost: false },
         modelsTruncated: modelSummary.truncated,
+        // Null when the charted days already cover the whole range.
+        averageDaily: aggregateDaily ? {
+            cost: CostPresentation.averageDailyValue(aggregateDaily, false),
+            tokens: CostPresentation.averageDailyValue(aggregateDaily, true)
+        } : null,
         daily: Normalizer.normalizeCostDaily(item.daily, currency, historyDays, item.updatedAt)
     };
 }

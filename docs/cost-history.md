@@ -32,7 +32,9 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
   A snapshot belongs to the selected range by its `reportingPeriod`, not its
   day count, which grows through the month. `--period all` reports the days
   since year 1, so the widget sizes that window from the oldest recorded day to
-  the scan day, within 365 days; the CLI's totals still cover the whole history.
+  the scan day. The chart and daily rows keep at most 365 days, while period
+  models and the daily average cover the whole span within the 2,048-record
+  scan budget; the CLI's totals still cover the whole history.
 - The global activity heatmap uses the unfiltered history's calendar dates,
   preserving unavailable days at either boundary and between measured days.
   Unavailable days occupy empty cells, so filtering missing amounts never shifts

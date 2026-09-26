@@ -361,8 +361,10 @@ and clipboard content remain under your control after closing the window.
   calendar period (`cost --period`); an older CLI shows a message naming the
   required release, and the day ranges keep working. Choosing a day range in
   **Usage & Spend**, or a history window in the settings, returns to days.
-  **All history** totals cover every recorded day; its chart and heatmap start
-  at the oldest recorded day and show at most the newest 365 days.
+  **All history** totals cover every recorded day. Its chart, heatmap, and
+  history rows start at the oldest recorded day and show at most the newest
+  365 days; its model totals and daily average cover up to the newest 2,048
+  daily records.
 - Token breakdowns, model summaries, recent daily spend, cost history bars, and
   average cost per 1M tokens, with a configurable cost history window. Recent
   history rows show measured zero costs and token counts alongside positive

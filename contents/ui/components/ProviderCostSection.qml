@@ -527,7 +527,7 @@ ColumnLayout {
 
         readonly property var rows: applet.costHistoryRows(tokenCostSection.tokenCost)
         readonly property string peakLine: tokenCostSection.tokenCost ? applet.costPeakLine(tokenCostSection.tokenCost.daily) : ""
-        readonly property string averageLine: tokenCostSection.tokenCost ? applet.costAverageDailyLine(tokenCostSection.tokenCost.daily) : ""
+        readonly property string averageLine: tokenCostSection.tokenCost ? applet.costAverageDailyLine(tokenCostSection.tokenCost.daily, tokenCostSection.tokenCost.averageDaily) : ""
         readonly property color accent: applet.providerReadableColor(tokenCostSection.providerData ? tokenCostSection.providerData.provider : "")
 
         visible: tokenCostSection.detailsExpanded && rows.length > 1
