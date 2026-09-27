@@ -22,6 +22,7 @@ Rectangle {
     readonly property color foreground: selected
         ? Kirigami.Theme.textColor
         : applet.withAlpha(Kirigami.Theme.textColor, 0.72)
+    readonly property bool textTruncated: tabLabel.truncated
 
     signal activated()
 
@@ -31,6 +32,8 @@ Rectangle {
             tabLabel.implicitWidth + Kirigami.Units.gridUnit * 2.2)
         : tabHeight
     Layout.preferredHeight: tabHeight
+    implicitWidth: Layout.preferredWidth
+    implicitHeight: tabHeight
     radius: applet.roundedSurfaceRadius
     color: tabMouse.pressed
         ? applet.withAlpha(Kirigami.Theme.focusColor, 0.1)
@@ -114,7 +117,7 @@ Rectangle {
 
     PlainToolTip {
         parent: tabMouse
-        visible: !tab.showLabel && tabMouse.containsMouse
+        visible: (!tab.showLabel || tab.textTruncated) && tabMouse.containsMouse
         plainText: tab.title
     }
 

@@ -1460,7 +1460,6 @@ for icon_only_fragment in (
 for global_tab_fragment in (
     'property bool showLabel: true',
     'visible: tab.showLabel',
-    'visible: !tab.showLabel && tabMouse.containsMouse',
 ):
     applet.require(global_tab_fragment, "global tabs must support accessible icon-only display")
 for tab_content_id, leading_spacer_id, trailing_spacer_id, condition in (

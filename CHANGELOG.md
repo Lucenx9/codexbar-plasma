@@ -60,6 +60,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Global popup tabs reveal their title in a tooltip when their text label is
+  truncated on narrow layouts, matching provider tab behavior.
+- Hardened panel settings preview against invalid credit balances, clamped
+  preview container geometry against negative values, and ensured empty
+  provider icon fallbacks resolve to `"view-statistics"` rather than invalid
+  asset paths.
 - Name the Plasma widget's author in its metadata and license notice while
   retaining CodexBar's upstream copyright notice for reused icons. The bundled
   Poe icon now has its separate CC BY 4.0 attribution in the package.

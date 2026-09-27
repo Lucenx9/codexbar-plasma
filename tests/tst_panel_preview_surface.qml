@@ -9,8 +9,12 @@ TestCase {
     height: 300
     visible: true
 
+    function kirigamiPlatformFilter() {
+        return /^(?!.*Failed to find a Kirigami platform plugin).*$/;
+    }
+
     function init() {
-        failOnWarning(/.*/);
+        failOnWarning(kirigamiPlatformFilter());
     }
 
     function i18n(text) {
@@ -216,5 +220,48 @@ TestCase {
         settings.cfg_panelProviderIDs = "unknown";
         verify(!renderer.hasProviderMeters);
         compare(settings.orderedPanelProviderRoster[0].provider, "gemini");
+    }
+
+    function test_previewAppletIconSourceAndCreditsSafety() {
+        var settings = createTemporaryObject(settingsComponent, testCase, {
+            cfg_showCreditsInPanel: true,
+            cfg_showPercentInPanel: true,
+            cfg_showProviderInPanel: true
+        });
+        var preview = createPreview(settings);
+        if (!preview) return;
+        var renderer = findChild(preview, "panelPreviewRenderer");
+        var previewApplet = renderer.applet;
+
+        // Unknown or invalid provider should fall back to view-statistics
+        compare(previewApplet.providerIconSource("a..b"), "view-statistics");
+        compare(previewApplet.providerIconSource("constructor"), "view-statistics");
+        compare(previewApplet.providerIconSource("../../etc/passwd"), "view-statistics");
+
+        // Valid provider should resolve to url
+        verify(String(previewApplet.providerIconSource("codex")).indexOf("codex.svg") !== -1);
+
+        // Credits safety when credits is valid, undefined, null, non-numeric, or non-finite
+        var selected = preview.previewModel.selectedProvider;
+        verify(selected !== null);
+
+        selected.credits = 125;
+        var segments = previewApplet.compactTextSegments();
+        var creditsSegment = segments.find(function(s) { return s.id === "credits"; });
+        verify(creditsSegment !== undefined);
+        compare(creditsSegment.text, "125cr");
+
+        var invalidCredits = [undefined, null, "100", NaN, Infinity, -Infinity, {}];
+        for (var i = 0; i < invalidCredits.length; ++i) {
+            selected.credits = invalidCredits[i];
+            segments = previewApplet.compactTextSegments();
+            verify(segments !== null);
+            creditsSegment = segments.find(function(s) { return s.id === "credits"; });
+            verify(creditsSegment === undefined);
+        }
+
+        // Clamped width on narrow container
+        preview.width = 0;
+        verify(renderer.width >= 0);
     }
 }

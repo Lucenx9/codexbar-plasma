@@ -178,7 +178,9 @@ ColumnLayout {
             if (preview.configPage.cfg_showPercentInPanel && metric.length > 0) {
                 segments.push({ id: "usage", text: metric });
             }
-            if (preview.configPage.cfg_showCreditsInPanel && provider.credits !== null) {
+            if (preview.configPage.cfg_showCreditsInPanel
+                    && typeof provider.credits === "number"
+                    && isFinite(provider.credits)) {
                 segments.push({ id: "credits",
                     text: i18n("%1cr", provider.credits.toLocaleString(Qt.locale(), "f", 0)) });
             }
@@ -191,7 +193,10 @@ ColumnLayout {
             return preview.usageBarsShowUsed ? row.usedPercent : row.leftPercent;
         }
         function providerIconSource(providerID) {
-            return Qt.resolvedUrl("../../icons/providers/" + ProviderIdentity.providerIconFileName(providerID));
+            var fileName = ProviderIdentity.providerIconFileName(providerID);
+            return fileName.length > 0
+                ? Qt.resolvedUrl("../../icons/providers/" + fileName)
+                : "view-statistics";
         }
         function providerIconIsMask(providerID) {
             return true;
@@ -273,7 +278,7 @@ ColumnLayout {
         CompactRepresentation {
             objectName: "panelPreviewRenderer"
             anchors.centerIn: parent
-            width: Math.min(implicitWidth, parent.width - Kirigami.Units.smallSpacing * 2)
+            width: Math.max(0, Math.min(implicitWidth, parent.width - Kirigami.Units.smallSpacing * 2))
             height: implicitHeight
             applet: previewApplet
             animationsEnabled: false
