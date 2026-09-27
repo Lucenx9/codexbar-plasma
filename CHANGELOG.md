@@ -60,6 +60,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- **Diagnostics → Versions** no longer keeps showing the **System CLI (PATH)**
+  row after the command path changes, before the selected command is checked
+  again. The CLI version shows **Checking...** during its first check.
 - Applying settings no longer undoes usage rows or detail sections hidden or
   restored in the popup while the settings window was open. Plasma writes every
   value of the current page, and the General and Popup pages now follow the

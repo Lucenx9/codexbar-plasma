@@ -86,7 +86,9 @@ KCM.SimpleKCM {
         commandPath: "codexbar"
         localOnly: true
     }
-    readonly property bool systemCliDiffers: systemVersions.checked
+    // Editing the command path resets only the selected probe, so the PATH
+    // row waits for a fresh result instead of comparing against nothing.
+    readonly property bool systemCliDiffers: versions.checked && systemVersions.checked
         && systemVersions.result.path.length > 0
         && systemVersions.result.path !== versions.result.path
 
@@ -273,8 +275,7 @@ KCM.SimpleKCM {
             objectName: "cliVersionLabel"
 
             Kirigami.FormData.label: i18n("CodexBar CLI:")
-            text: page.cliVersionText.length > 0 ? page.cliVersionText
-                : (versions.checked ? versions.statusText : i18n("Not checked"))
+            text: page.cliVersionText.length > 0 ? page.cliVersionText : versions.statusText
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
