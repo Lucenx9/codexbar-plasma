@@ -39,6 +39,9 @@ TestCase {
         function providerReadableColor() {
             return providerColor();
         }
+        function readableAccentColor(accent, background) {
+            return accent;
+        }
         function providerIconSource() {
             return "view-statistics";
         }
@@ -535,5 +538,87 @@ TestCase {
         tryVerify(function () { return !indicator.running; });
         verify(Math.abs(reload.mapToItem(panel, 0, 0).x - idleX) < 1);
         verify(indicator.visible);
+    }
+
+    function test_globalTabActivationAndNavigation() {
+        var strip = {
+            claimed: null,
+            claimSelectedTab: function(tabItem, selected) {
+                if (selected)
+                    strip.claimed = tabItem;
+            },
+            ensureVisible: function(item) {}
+        };
+        var tab = createControl("GlobalTab", {
+            applet: applet,
+            title: "Sessions",
+            iconName: "system-run-symbolic",
+            tabHeight: 32,
+            width: 120,
+            height: 32,
+            tabStrip: strip
+        });
+        if (!tab)
+            return;
+        actionSpy.target = tab;
+        actionSpy.signalName = "activated";
+
+        compare(tab.selected, false);
+        compare(tab.showLabel, true);
+
+        // Click activates the tab
+        mouseClick(tab, tab.width / 2, tab.height / 2);
+        compare(actionSpy.count, 1);
+
+        // Keyboard navigation
+        var focusItem = tab.nextItemInFocusChain(true);
+        testCase.forceActiveFocus(Qt.OtherFocusReason);
+        focusItem.forceActiveFocus(Qt.TabFocusReason);
+        tryCompare(tab, "keyboardFocusVisible", true);
+        keyClick(Qt.Key_Space);
+        compare(actionSpy.count, 2);
+        keyClick(Qt.Key_Return);
+        compare(actionSpy.count, 3);
+
+        // Claim selected tab
+        tab.selected = true;
+        compare(strip.claimed, tab);
+    }
+
+    function test_globalTabRevealsTruncatedTitleOnHover() {
+        var tab = createControl("GlobalTab", {
+            applet: applet,
+            title: "Usage & Spend",
+            iconName: "office-chart-bar",
+            tabHeight: 32,
+            width: 32,
+            height: 32,
+            showLabel: false
+        });
+        if (!tab)
+            return;
+        var tip = findToolTip(tab);
+        verify(tip !== null);
+        compare(tip.plainText, "Usage & Spend");
+
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        wait(300);
+        mouseMove(tab, tab.width / 2, tab.height / 2);
+        tryCompare(tip, "visible", true);
+
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        tryCompare(tip, "visible", false);
+
+        tab.showLabel = true;
+        tab.width = 300;
+        tryVerify(function () { return !tab.textTruncated; });
+        mouseMove(tab, tab.width / 2, tab.height / 2);
+        wait(tip.delay + 100);
+        verify(!tip.visible);
+
+        tab.width = 30;
+        tryVerify(function () { return tab.textTruncated; });
+        mouseMove(tab, tab.width / 2, tab.height / 2);
+        tryCompare(tip, "visible", true);
     }
 }
