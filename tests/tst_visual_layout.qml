@@ -921,6 +921,49 @@ TestCase {
         compare(tip.text, SafeText.plainTextAsRichText(tip.plainText));
     }
 
+    // The standalone status hover target must span the full badge slot so
+    // the incident tooltip triggers anywhere in the slot, not only over
+    // the small status dot.
+    function test_compactStatusHoverTargetSpansTheBadgeSlot() {
+        applet.incidentOnMeter = false;
+        var panel = createControl("CompactRepresentation", {applet: applet, height: 44});
+        if (!panel)
+            return;
+        wait(0);
+        var dot = findItem(panel, function (item) {
+            return item.visible && item.objectName === "panelStatusDot";
+        });
+        verify(dot !== null);
+        var slot = dot.parent;
+        verify(slot !== null);
+        verify(slot.height > dot.height);
+        var areas = [];
+        findAllItems(slot, function (item) {
+            return item.containsMouse !== undefined && item.hoverEnabled === true
+                && item.acceptedButtons === 0;
+        }, areas);
+        compare(areas.length, 1);
+        var area = areas[0];
+        compare(area.width, slot.width);
+        compare(area.height, slot.height);
+        var tips = [];
+        findAllItems(panel, function (item) {
+            return item.toString().indexOf("PlainToolTip") >= 0;
+        }, tips);
+        compare(tips.length, 1);
+        var tip = tips[0];
+        var dotTop = dot.mapToItem(slot, 0, 0);
+        var hoverInSlot = {x: slot.width / 2, y: Math.max(1, dotTop.y - 2)};
+        verify(hoverInSlot.y < dotTop.y);
+        var hoverInPanel = slot.mapToItem(panel, hoverInSlot.x, hoverInSlot.y);
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        wait(300);
+        mouseMove(panel, hoverInPanel.x, hoverInPanel.y);
+        tryCompare(tip, "visible", true);
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        tryCompare(tip, "visible", false);
+    }
+
     function test_incidentDotsStaySquareAndAttributed_data() {
         return [
             {

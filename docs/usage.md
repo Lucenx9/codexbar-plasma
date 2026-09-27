@@ -105,8 +105,9 @@ work and upstream contract requirements.
   underline draws, a last-known-usage note, and a refresh error that only
   dims the tab visually.
 - Hovering a global or provider tab whose name is cut short, an Overview row whose
-  title or detail line is cut short in a narrow popup, or an account button
-  whose label is cut short, shows the full text in
+  title or detail line is cut short in a narrow popup, an account button
+  whose label is cut short, or a provider header title, account, or plan
+  that is cut short, shows the full text in
   a tooltip. Text that fits gets no tooltip.
 - Overflowing popup tabs have separate scroll buttons and immediate keyboard
   focus reveal, so navigation never covers provider labels. A tab wider than the
