@@ -417,16 +417,16 @@ Item {
                         ? i18n("%1: %2", compactRoot.incidentProvider.title, compactRoot.incidentProvider.status)
                         : ""
                 }
+            }
 
-                MouseArea {
-                    id: compactStatusMouse
+            MouseArea {
+                id: compactStatusMouse
 
-                    anchors.fill: parent
-                    enabled: compactRoot.interactive
-                    hoverEnabled: true
-                    // A binding avoids Qt rejecting a bare zero enum literal.
-                    acceptedButtons: (0)
-                }
+                anchors.fill: parent
+                enabled: compactRoot.interactive
+                hoverEnabled: true
+                // A binding avoids Qt rejecting a bare zero enum literal.
+                acceptedButtons: (0)
             }
         }
     }
