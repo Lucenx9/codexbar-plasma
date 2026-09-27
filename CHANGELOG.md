@@ -60,6 +60,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Name the Plasma widget's author in its metadata and license notice while
+  retaining CodexBar's upstream copyright notice for reused icons. The bundled
+  Poe icon now has its separate CC BY 4.0 attribution in the package.
 - **Diagnostics → Versions** no longer keeps showing the **System CLI (PATH)**
   row after the command path changes, before the selected command is checked
   again. The CLI version shows **Checking...** during its first check.
