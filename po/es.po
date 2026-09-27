@@ -384,6 +384,18 @@ msgid "Remaining: %1"
 msgstr "Restante: %1"
 
 #: contents/ui/components/FullRepresentation.qml
+msgid "Hidden detail sections"
+msgstr "Secciones de detalles ocultas"
+
+#: contents/ui/components/FullRepresentation.qml contents/ui/configPopup.qml
+msgid "Restore"
+msgstr "Restaurar"
+
+#: contents/ui/components/FullRepresentation.qml contents/ui/configPopup.qml
+msgid "Restore %1"
+msgstr "Restaurar %1"
+
+#: contents/ui/components/FullRepresentation.qml
 msgid "Usage dashboard"
 msgstr "Panel de uso"
 
@@ -708,6 +720,10 @@ msgstr ""
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Cost history"
 msgstr "Historial de costes"
+
+#: contents/ui/components/ProviderDetailSection.qml
+msgid "Hide the %1 section"
+msgstr "Ocultar la sección %1"
 
 #: contents/ui/components/ProviderDetailSection.qml
 msgid "Usage chart"
@@ -2388,6 +2404,28 @@ msgid "Show provider changelog links"
 msgstr "Mostrar enlaces a los registros de cambios de los proveedores"
 
 #: contents/ui/configPopup.qml
+msgid "Hidden detail sections:"
+msgstr "Secciones de detalles ocultas:"
+
+#: contents/ui/configPopup.qml
+msgid "None. Hide a titled section with its button in the popup."
+msgstr "Ninguna. Oculte una sección con título mediante su botón en la ventana emergente."
+
+#: contents/ui/configPopup.qml
+msgid ""
+"Restore individual sections in the popup, or all sections for a provider "
+"here."
+msgstr "Restaure secciones individuales en la ventana emergente o todas las secciones de un proveedor aquí."
+
+#: contents/ui/configPopup.qml
+msgid "Restore all"
+msgstr "Restaurar todas"
+
+#: contents/ui/configPopup.qml
+msgid "Restore all sections for %1"
+msgstr "Restaurar todas las secciones de %1"
+
+#: contents/ui/configPopup.qml
 msgid "Hidden usage rows:"
 msgstr "Filas de uso ocultas:"
 
@@ -2400,14 +2438,6 @@ msgid "Hidden rows stay out of the popup's provider tabs only."
 msgstr ""
 "Las filas ocultas solo se excluyen de las pestañas de proveedores de la "
 "ventana emergente."
-
-#: contents/ui/configPopup.qml
-msgid "Restore"
-msgstr "Restaurar"
-
-#: contents/ui/configPopup.qml
-msgid "Restore %1"
-msgstr "Restaurar %1"
 
 #: contents/ui/configPopup.qml
 msgid "Provider order:"
@@ -2803,7 +2833,8 @@ msgstr "No se han podido actualizar algunos datos de costes."
 
 #: contents/ui/controllers/CostController.qml
 msgid "Month to date and All history need codexbar 0.67.0 or later."
-msgstr "Mes en curso y Todo el historial requieren codexbar 0.67.0 o posterior."
+msgstr ""
+"Mes en curso y Todo el historial requieren codexbar 0.67.0 o posterior."
 
 #: contents/ui/controllers/CostController.qml
 msgid "codexbar cost did not return JSON."

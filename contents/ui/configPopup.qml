@@ -7,6 +7,7 @@ import "components" as Components
 import "controllers" as Controllers
 import "OverviewProviders.js" as OverviewProviders
 import "PopupHiddenRows.js" as PopupHiddenRows
+import "PopupHiddenSections.js" as PopupHiddenSections
 import "ProviderIdentity.js" as ProviderIdentity
 import "ProviderOrder.js" as ProviderOrder
 import "SafeText.js" as SafeText
@@ -45,6 +46,8 @@ KCM.SimpleKCM {
     property bool cfg_showProviderChangelogsDefault: false
     property string cfg_overviewProviderIDs: ""
     property string cfg_overviewProviderIDsDefault: ""
+    property string cfg_popupHiddenDetailSections: ""
+    property string cfg_popupHiddenDetailSectionsDefault: ""
     property string cfg_popupHiddenUsageRows: ""
     property string cfg_popupHiddenUsageRowsDefault: ""
 
@@ -56,6 +59,8 @@ KCM.SimpleKCM {
     readonly property alias providerRosterError: providerRosterController.providerRosterError
     readonly property var orderedEnabledProviderRoster: ProviderOrder.orderedItems(
         enabledProviderRoster, cfg_providerOrder)
+    readonly property var hiddenDetailSections: PopupHiddenSections.parse(cfg_popupHiddenDetailSections)
+    readonly property var hiddenDetailProviders: PopupHiddenSections.providers(hiddenDetailSections)
     readonly property var hiddenUsageRows: PopupHiddenRows.parse(cfg_popupHiddenUsageRows)
 
     Components.ProviderNames {
@@ -81,6 +86,11 @@ KCM.SimpleKCM {
         return entry.row.indexOf("extra:") === 0
             ? i18n("Extra window %1", entry.row.slice(6))
             : rateWindowLabels.labelForLane(ProviderIdentity.resolveProviderKey(entry.provider), entry.row)
+    }
+
+    function restoreProviderDetailSections(providerID) {
+        cfg_popupHiddenDetailSections = PopupHiddenSections.serialize(
+            PopupHiddenSections.restoredProvider(hiddenDetailSections, providerID))
     }
 
     function restoreHiddenUsageRow(entry) {
@@ -246,6 +256,47 @@ KCM.SimpleKCM {
             implicitWidth: 0
             Layout.fillWidth: true
             text: i18n("Show provider changelog links")
+        }
+
+        ColumnLayout {
+            objectName: "hiddenDetailSectionsSettings"
+            Kirigami.FormData.label: i18n("Hidden detail sections:")
+            Kirigami.FormData.labelAlignment: Qt.AlignTop
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            spacing: Kirigami.Units.smallSpacing / 2
+
+            Components.PlainControlsLabel {
+                Layout.fillWidth: true
+                text: page.hiddenDetailProviders.length === 0
+                    ? i18n("None. Hide a titled section with its button in the popup.")
+                    : i18n("Restore individual sections in the popup, or all sections for a provider here.")
+                opacity: 0.7
+                wrapMode: Text.WordWrap
+            }
+
+            Repeater {
+                model: page.hiddenDetailProviders
+                delegate: RowLayout {
+                    required property var modelData
+                    Layout.fillWidth: true
+
+                    Components.PlainControlsLabel {
+                        text: page.hiddenRowProviderTitle(modelData)
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                    }
+
+                    Components.PlainButton {
+                        objectName: "restoreProviderDetailSectionsButton"
+                        plainText: i18n("Restore all")
+                        icon.name: "view-visible"
+                        Accessible.name: i18n("Restore all sections for %1", page.hiddenRowProviderTitle(modelData))
+                        onClicked: page.restoreProviderDetailSections(modelData)
+                    }
+                }
+            }
         }
 
         ColumnLayout {

@@ -25,7 +25,7 @@ SCENARIOS += ("popup-cost-details", "popup-cost-tokens")
 SCENARIOS += ("popup-cost-refresh-error", "cost-period")
 SCENARIOS += ("share-usage", "share-usage-narrow")
 SCENARIOS += ("popup-cost-missing-tokens", "popup-cost-partial-models")
-SCENARIOS += ("popup-content", "refresh-on-open", "privacy-provider", "privacy-spend", "privacy-sessions")
+SCENARIOS += ("popup-content", "popup-hidden-sections", "refresh-on-open", "privacy-provider", "privacy-spend", "privacy-sessions")
 SCENARIOS += ("privacy-cost-details",)
 SCENARIOS += ("usage-retention", "usage-cache-restart")
 SCENARIOS += ("empty-providers", "usage-error", "usage-recovery")
@@ -84,7 +84,7 @@ def usage(provider, scenario, now):
         if provider == "claude":
             snapshot["usage"]["details"] = [{"title": "Generic details",
                                              "rows": [{"label": "Requests", "value": "7"}]}]
-    if scenario == "popup-content":
+    if scenario in ("popup-content", "popup-hidden-sections"):
         snapshot["credits"] = {"remaining": 125}
         snapshot["usage"]["details"] = [{"title": "Generic details",
                                           "rows": [{"label": "Requests", "value": "7"}]}]

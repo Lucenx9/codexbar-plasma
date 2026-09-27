@@ -167,6 +167,17 @@ work and upstream contract requirements.
   **Apply** saves the change. A restored cache can show a hidden extra window
   until the next refresh, because the cache keeps no window IDs.
 
+- Titled provider detail sections can also be hidden with the button beside
+  their title on hover or keyboard focus. Expand **Hidden detail sections** in
+  that provider's popup to restore one using its current CLI title. **Popup →
+  Hidden detail sections → Restore all** restores all sections for a provider
+  when you apply settings, including sections no longer returned by the CLI.
+  Only provider IDs and title digests are saved, never the titles themselves.
+  Equal titles within a provider hide and restore together; reordered sections
+  stay hidden, renamed sections appear again, and untitled sections stay visible.
+  This display choice does not change fetching, notifications, the panel, or
+  Overview. Privacy mode hides the restoration list along with provider details.
+
 ## Data freshness
 
 When no provider data is available, the popup offers **Configure providers**

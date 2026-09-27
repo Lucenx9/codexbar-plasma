@@ -13,6 +13,7 @@ Item {
     required property string imagePath
     property bool prepared: false
     property bool navigationVerified: false
+    property bool detailBeforeCaptured: false
     property bool cacheRestart: false
     property double cacheSavedAtMs: 0
     property int costDetailsStep: 0
@@ -783,6 +784,66 @@ Item {
             "pending preview changed live settings or executed a command");
     }
 
+    function verifyHiddenDetailSections() {
+        var popup = applet.fullRepresentationItem;
+        var details = findItem(popup, "providerDetailsSection");
+        var config = applet.Plasmoid.configuration;
+        if (!details || !details.visible)
+            return false;
+        if (settingsBehaviorStep === 0) {
+            settingsProviderSnapshot = applet.providers;
+            settingsCommandSerial = usageLifecycle.commandRunSerial;
+            popup.grabToImage(function(result) {
+                capture.verifyScenario(result.saveToFile(capture.imagePath.replace(/\.png$/, "-before.png")),
+                    "detail sections before capture failed");
+                capture.detailBeforeCaptured = true;
+            });
+            settingsBehaviorStep++;
+            return false;
+        }
+        if (!detailBeforeCaptured)
+            return false;
+        if (settingsBehaviorStep === 1) {
+            findItem(details, "hideDetailSectionButton").clicked();
+            settingsBehaviorStep++;
+            return false;
+        }
+        var toggle = findItem(details, "hiddenDetailSectionsToggle");
+        if (settingsBehaviorStep === 2) {
+            verifyScenario(details.details.length === 0 && details.hiddenDetails.length === 1 && toggle.visible,
+                "hiding the last section lost its restore action");
+            verifyScenario(config.popupHiddenDetailSections.indexOf("Generic details") < 0,
+                "the section title was persisted");
+            verifyScenario(applet.popupDetailSections(applet.providers[1]).length === 1,
+                "hiding a section affected another provider");
+            toggle.clicked();
+            settingsBehaviorStep++;
+            return false;
+        }
+        if (settingsBehaviorStep === 3) {
+            findItem(details, "restoreDetailSectionButton").clicked();
+            settingsBehaviorStep++;
+            return false;
+        }
+        if (settingsBehaviorStep === 4) {
+            verifyScenario(details.details.length === 1 && details.hiddenDetails.length === 0,
+                "individual restore did not restore the section");
+            findItem(details, "hideDetailSectionButton").clicked();
+            config.privacyMode = true;
+            verifyScenario(!details.visible, "privacy mode exposed hidden section titles");
+            config.privacyMode = false;
+            settingsBehaviorStep++;
+            return false;
+        }
+        verifyScenario(applet.providers === settingsProviderSnapshot
+            && usageLifecycle.commandRunSerial === settingsCommandSerial,
+            "section visibility mutated snapshots or fetched usage");
+        verifyScenario(details.details.length === 0 && details.hiddenDetails.length === 1,
+            "privacy mode lost section visibility preferences");
+        toggle.expanded = true;
+        return findItem(details, "restoreDetailSectionButton") !== null;
+    }
+
     function verifyPopupContent() {
         var popup = applet.fullRepresentationItem;
         var config = applet.Plasmoid.configuration;
@@ -1411,6 +1472,25 @@ Item {
                 }
                 navigationVerified = true;
             }
+            if (scenario.indexOf("settings-popup") === 0 && !navigationVerified) {
+                var savedSections = JSON.stringify([
+                    {provider: "codex", section: "v1:" + Qt.md5("Generic details")},
+                    {provider: "codex", section: "v1:" + Qt.md5("Older section")},
+                    {provider: "claude", section: "v1:" + Qt.md5("Generic details")}
+                ]);
+                preview.page.cfg_popupHiddenDetailSections = savedSections;
+                var restoreAll = findItem(preview.page, "restoreProviderDetailSectionsButton");
+                verifyScenario(restoreAll !== null, "hidden provider sections have no restore action");
+                restoreAll.clicked();
+                verifyScenario(preview.page.hiddenDetailProviders.length === 1
+                    && preview.page.hiddenDetailProviders[0] === "claude",
+                    "restore all did not clear only the chosen provider");
+                verifyScenario(applet.Plasmoid.configuration.popupHiddenDetailSections === "",
+                    "settings restore saved before Apply");
+                preview.page.cfg_popupHiddenDetailSections = savedSections;
+                navigationVerified = true;
+                return false;
+            }
             if (scenario.indexOf("settings-ai-insights") === 0) {
                 var insightsPage = preview.page;
                 if (!navigationVerified) {
@@ -1592,6 +1672,8 @@ Item {
             return applet.selectedProviderID === "codex" && verifyCostDetails();
         if (scenario === "popup-content")
             return verifyPopupContent();
+        if (scenario === "popup-hidden-sections")
+            return verifyHiddenDetailSections();
         if (scenario === "refresh-on-open")
             return verifyRefreshOnOpen();
         if (scenario.indexOf("privacy-") === 0)
@@ -1823,7 +1905,7 @@ Item {
                     popup.Window.window.width = 640;
                     popup.Window.window.height = 880;
                     capture.applet.openProviderFromPanel("codex");
-                } else if (capture.scenario === "popup-content") {
+                } else if (capture.scenario === "popup-content" || capture.scenario === "popup-hidden-sections") {
                     capture.applet.openProviderFromPanel("codex");
                 } else if (capture.scenario.indexOf("privacy-") === 0) {
                     if (capture.applet.costLoading || !capture.applet.tokenCosts.codex)

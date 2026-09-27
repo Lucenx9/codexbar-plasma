@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Hide titled provider detail sections in the popup. Restore individual sections
+  from the popup or all sections for a provider from Popup settings, without
+  saving CLI titles in preferences.
+
 - **Usage & Spend** offers **Month to date** and **All history** ranges beside
   7, 30, and 90 days, using the calendar periods of CLI 0.67.0 or later. An
   older CLI shows which release they need, and the day ranges keep working.

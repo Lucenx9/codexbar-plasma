@@ -62,6 +62,10 @@ TestCase {
                                 value: testCase.hostileRowValue}]
                     }
                 })
+                function popupDetailSections(item) { return item ? item.providerDetails : []; }
+                function hiddenPopupDetailSections(item) { return []; }
+                function popupDetailSectionHideable(section) { return section.title.length > 0; }
+                function hidePopupDetailSection(providerID, section) {}
                 function providerReadableColor(provider, bg) { return "#3aa655"; }
             }
             ColumnLayout {

@@ -385,6 +385,18 @@ msgid "Remaining: %1"
 msgstr "Rimanenti: %1"
 
 #: contents/ui/components/FullRepresentation.qml
+msgid "Hidden detail sections"
+msgstr "Sezioni di dettaglio nascoste"
+
+#: contents/ui/components/FullRepresentation.qml contents/ui/configPopup.qml
+msgid "Restore"
+msgstr "Ripristina"
+
+#: contents/ui/components/FullRepresentation.qml contents/ui/configPopup.qml
+msgid "Restore %1"
+msgstr "Ripristina %1"
+
+#: contents/ui/components/FullRepresentation.qml
 msgid "Usage dashboard"
 msgstr "Pannello di utilizzo"
 
@@ -710,6 +722,10 @@ msgstr ""
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Cost history"
 msgstr "Cronologia dei costi"
+
+#: contents/ui/components/ProviderDetailSection.qml
+msgid "Hide the %1 section"
+msgstr "Nascondi la sezione %1"
 
 #: contents/ui/components/ProviderDetailSection.qml
 msgid "Usage chart"
@@ -2395,6 +2411,28 @@ msgid "Show provider changelog links"
 msgstr "Mostra i collegamenti alle novità dei provider"
 
 #: contents/ui/configPopup.qml
+msgid "Hidden detail sections:"
+msgstr "Sezioni di dettaglio nascoste:"
+
+#: contents/ui/configPopup.qml
+msgid "None. Hide a titled section with its button in the popup."
+msgstr "Nessuna. Nascondi una sezione con titolo usando il relativo pulsante nella finestra a comparsa."
+
+#: contents/ui/configPopup.qml
+msgid ""
+"Restore individual sections in the popup, or all sections for a provider "
+"here."
+msgstr "Ripristina le singole sezioni nella finestra a comparsa, oppure tutte le sezioni di un provider qui."
+
+#: contents/ui/configPopup.qml
+msgid "Restore all"
+msgstr "Ripristina tutte"
+
+#: contents/ui/configPopup.qml
+msgid "Restore all sections for %1"
+msgstr "Ripristina tutte le sezioni di %1"
+
+#: contents/ui/configPopup.qml
 msgid "Hidden usage rows:"
 msgstr "Righe di utilizzo nascoste:"
 
@@ -2409,14 +2447,6 @@ msgid "Hidden rows stay out of the popup's provider tabs only."
 msgstr ""
 "Le righe nascoste sono escluse solo dalle schede dei provider nella finestra "
 "a comparsa."
-
-#: contents/ui/configPopup.qml
-msgid "Restore"
-msgstr "Ripristina"
-
-#: contents/ui/configPopup.qml
-msgid "Restore %1"
-msgstr "Ripristina %1"
 
 #: contents/ui/configPopup.qml
 msgid "Provider order:"
@@ -2809,7 +2839,8 @@ msgstr "Non è stato possibile aggiornare alcuni dati sui costi."
 
 #: contents/ui/controllers/CostController.qml
 msgid "Month to date and All history need codexbar 0.67.0 or later."
-msgstr "Mese corrente e Tutto lo storico richiedono codexbar 0.67.0 o successivo."
+msgstr ""
+"Mese corrente e Tutto lo storico richiedono codexbar 0.67.0 o successivo."
 
 #: contents/ui/controllers/CostController.qml
 msgid "codexbar cost did not return JSON."

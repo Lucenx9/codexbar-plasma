@@ -413,6 +413,21 @@ clipboard interoperability with every Wayland application or portal backend.
   panel, Overview, notifications, and fetching read unfiltered rows. Privacy
   projection keeps the identifier-shaped `windowId` so a hidden extra window
   stays hidden. A full list refuses new entries instead of dropping old ones.
+- `PopupHiddenSections.js` owns hidden detail-section preferences. It stores
+  at most 64 validated provider IDs and versioned MD5 digests of normalized
+  titles, without persisting CLI prose. The digest is a display identity, not
+  encryption. Equal titles are one group; reordering or changed values keep
+  identity, renaming resets visibility, and untitled sections cannot be hidden.
+  The official Linux CLI 0.67.0 was probed with a loopback Bifrost quota fixture
+  on 2026-09-27: `usage.details` emitted titled row groups without section IDs.
+  This extends the [0.65.0 contract evidence](research/2026-09-23-macos-parity-0.65.0.md).
+  `main.qml` writes preferences and filters only presented popup details; privacy
+  projection removes the titles before restoration UI sees them. The popup
+  restores individual current groups; Popup settings clear all saved groups for
+  one provider, including titles no longer present. General defaults clear the
+  setting. `tst_popup_hidden_sections.qml` covers persistence and identity;
+  `popup-hidden-sections` smoke coverage exercises hide/restore and privacy on
+  the real applet, saving synthetic before/after captures.
 - `ProviderAutoSelect.js` ranks the roster for the automatic provider
   selection. Consumption decides it, taking the busiest quota row or the
   provider cost meter, whichever reports further along; incident severity only
