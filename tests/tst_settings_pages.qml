@@ -223,6 +223,36 @@ TestCase {
         verify(label.text.indexOf("/usr/bin/codexbar") >= 0);
     }
 
+    function test_diagnosticsHidesStaleSystemCliAfterCommandPathEdit() {
+        var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: "/opt/codexbar"});
+        if (!page)
+            return;
+
+        var versions = findChild(page, "cliVersionsController");
+        versions.activeSource = "selected";
+        versions.accept("selected", {
+            "exit code": 0,
+            stdout: JSON.stringify({status: "local", version: "0.62.0",
+                path: "/opt/codexbar", manager: "external"})
+        });
+        var systemVersions = findChild(page, "systemCliVersionsController");
+        systemVersions.activeSource = "system";
+        systemVersions.accept("system", {
+            "exit code": 0,
+            stdout: JSON.stringify({status: "local", version: "0.60.4",
+                path: "/usr/bin/codexbar", manager: "external"})
+        });
+        var label = findChild(page, "systemCliVersionLabel");
+        verify(label.visible);
+
+        page.cfg_commandPath = "/opt/other/codexbar";
+        verify(!versions.checked);
+        verify(!label.visible);
+
+        versions.activeSource = "reprobe";
+        compare(findChild(page, "cliVersionLabel").text, "Checking...");
+    }
+
     function test_diagnosticsHidesSystemCliWhenItMatchesSelection() {
         var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: "codexbar"});
         if (!page)

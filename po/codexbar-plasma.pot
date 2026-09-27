@@ -1652,12 +1652,12 @@ msgid "CodexBar CLI:"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
-#: contents/ui/controllers/CliUpdateController.qml
-msgid "Not checked"
+msgid "Resolved command:"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
-msgid "Resolved command:"
+#: contents/ui/controllers/CliUpdateController.qml
+msgid "Not checked"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
