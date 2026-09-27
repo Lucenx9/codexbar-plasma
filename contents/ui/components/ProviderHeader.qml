@@ -58,11 +58,23 @@ RowLayout {
             spacing: Kirigami.Units.smallSpacing
 
             PlainHeading {
+                id: providerTitleLabel
+
                 text: providerHeaderRow.providerData ? providerHeaderRow.providerData.title : ""
                 level: 2
                 type: Kirigami.Heading.Type.Primary
                 Layout.fillWidth: true
                 elide: Text.ElideRight
+
+                HoverHandler {
+                    id: providerTitleHover
+                }
+
+                PlainToolTip {
+                    parent: providerTitleLabel
+                    visible: providerTitleLabel.truncated && providerTitleHover.hovered
+                    plainText: providerTitleLabel.text
+                }
             }
 
             // The popup states the incident in a banner directly below this
@@ -123,6 +135,16 @@ RowLayout {
                 Layout.minimumWidth: 0
                 Layout.maximumWidth: Math.min(implicitWidth,
                     Kirigami.Units.gridUnit * 16)
+
+                HoverHandler {
+                    id: providerAccountHover
+                }
+
+                PlainToolTip {
+                    parent: providerAccountLabel
+                    visible: providerAccountLabel.truncated && providerAccountHover.hovered
+                    plainText: providerAccountLabel.text
+                }
             }
 
             PlainPlasmaLabel {
@@ -148,6 +170,16 @@ RowLayout {
                 elide: Text.ElideRight
                 Layout.minimumWidth: 0
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 5
+
+                HoverHandler {
+                    id: providerPlanHover
+                }
+
+                PlainToolTip {
+                    parent: providerPlanLabel
+                    visible: providerPlanLabel.truncated && providerPlanHover.hovered
+                    plainText: providerPlanLabel.text
+                }
             }
 
             Item {
