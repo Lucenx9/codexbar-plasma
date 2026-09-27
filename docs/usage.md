@@ -177,6 +177,9 @@ work and upstream contract requirements.
   stay hidden, renamed sections appear again, and untitled sections stay visible.
   This display choice does not change fetching, notifications, the panel, or
   Overview. Privacy mode hides the restoration list along with provider details.
+  Rows and sections hidden or restored in the popup while settings are open
+  stay as chosen when you apply settings; the settings pages keep only their
+  own pending restores.
 
 ## Data freshness
 

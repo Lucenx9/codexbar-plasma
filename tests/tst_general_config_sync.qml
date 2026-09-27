@@ -5,6 +5,22 @@ import "../contents/ui/general/ConfigValueSync.js" as ConfigValueSync
 TestCase {
     name: "ConfigValueSync"
 
+    function test_hiddenItemsKeepPageRestoresAndAdoptPopupChanges() {
+        var a = { provider: "codex", row: "primary" }
+        var b = { provider: "codex", row: "secondary" }
+        var c = { provider: "claude", row: "primary" }
+        // No pending restore: the page follows the popup exactly.
+        compare(ConfigValueSync.hiddenItemsAfterPersistedChange([a], [a], [a, c]), [a, c])
+        compare(ConfigValueSync.hiddenItemsAfterPersistedChange([a, b], [a, b], [b]), [b])
+        // The page restored `a`; the popup hid `c` meanwhile. Apply keeps both.
+        compare(ConfigValueSync.hiddenItemsAfterPersistedChange([b], [a, b], [a, b, c]), [b, c])
+        // The popup restored `b` itself: nothing re-hides it.
+        compare(ConfigValueSync.hiddenItemsAfterPersistedChange([b], [a, b], [a]), [])
+        // Restoring everything, as the defaults do, clears only what the page saw.
+        compare(ConfigValueSync.hiddenItemsAfterPersistedChange([], [a, b], [a, b, c]), [c])
+        compare(ConfigValueSync.hiddenItemsAfterPersistedChange(null, undefined, [a]), [a])
+    }
+
     function test_userEditBecomesPendingOnlyWhenItDiffersFromPersistedState() {
         var changed = ConfigValueSync.afterUserEdit(90, 30)
         compare(changed.pendingValue, 90)

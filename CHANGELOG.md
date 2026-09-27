@@ -60,6 +60,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Applying settings no longer undoes usage rows or detail sections hidden or
+  restored in the popup while the settings window was open. Plasma writes every
+  value of the current page, and the General and Popup pages now follow the
+  popup's changes while keeping their own pending restores.
 - Keep quota warning and reset state when a refresh temporarily omits a usage
   window, avoiding duplicate warnings and missed reset notices when it returns.
 - Preserve an unapplied history-window choice in General when the popup changes

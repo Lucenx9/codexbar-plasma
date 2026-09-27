@@ -3,8 +3,10 @@ import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
+import org.kde.plasma.plasmoid
 import "components" as Components
 import "controllers" as Controllers
+import "general/ConfigValueSync.js" as ConfigValueSync
 import "OverviewProviders.js" as OverviewProviders
 import "PopupHiddenRows.js" as PopupHiddenRows
 import "PopupHiddenSections.js" as PopupHiddenSections
@@ -62,6 +64,36 @@ KCM.SimpleKCM {
     readonly property var hiddenDetailSections: PopupHiddenSections.parse(cfg_popupHiddenDetailSections)
     readonly property var hiddenDetailProviders: PopupHiddenSections.providers(hiddenDetailSections)
     readonly property var hiddenUsageRows: PopupHiddenRows.parse(cfg_popupHiddenUsageRows)
+    // The popup hides and restores rows and sections live, and Plasma writes
+    // every cfg_* value of the current page on Apply. Follow those changes
+    // while keeping this page's pending restores, so Apply never writes a
+    // stale list over them.
+    readonly property string persistedPopupHiddenUsageRows: Plasmoid.configuration
+        ? Plasmoid.configuration.popupHiddenUsageRows || "" : cfg_popupHiddenUsageRowsDefault
+    readonly property string persistedPopupHiddenDetailSections: Plasmoid.configuration
+        ? Plasmoid.configuration.popupHiddenDetailSections || "" : cfg_popupHiddenDetailSectionsDefault
+    // The stored lists this page last followed, set once on creation: a
+    // binding could update before the change handlers read it.
+    property string hiddenUsageRowsBase: ""
+    property string hiddenDetailSectionsBase: ""
+    Component.onCompleted: {
+        hiddenUsageRowsBase = persistedPopupHiddenUsageRows
+        hiddenDetailSectionsBase = persistedPopupHiddenDetailSections
+    }
+    onPersistedPopupHiddenUsageRowsChanged: syncHiddenUsageRowsFromPersisted()
+    onPersistedPopupHiddenDetailSectionsChanged: syncHiddenDetailSectionsFromPersisted()
+
+    function syncHiddenUsageRowsFromPersisted() {
+        cfg_popupHiddenUsageRows = ConfigValueSync.hiddenUsageRowsAfterPersistedChange(
+            cfg_popupHiddenUsageRows, hiddenUsageRowsBase, persistedPopupHiddenUsageRows)
+        hiddenUsageRowsBase = persistedPopupHiddenUsageRows
+    }
+
+    function syncHiddenDetailSectionsFromPersisted() {
+        cfg_popupHiddenDetailSections = ConfigValueSync.hiddenDetailSectionsAfterPersistedChange(
+            cfg_popupHiddenDetailSections, hiddenDetailSectionsBase, persistedPopupHiddenDetailSections)
+        hiddenDetailSectionsBase = persistedPopupHiddenDetailSections
+    }
 
     Components.ProviderNames {
         id: providerNames
