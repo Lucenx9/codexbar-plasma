@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.43 - 2026-09-27
+
 ### Added
 
 - Hide titled provider detail sections in the popup. Restore individual sections
@@ -123,6 +125,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Keep credential-redaction lookahead when filtering loader diagnostics, so a
   key crossing the inspection boundary cannot leave an unredacted prefix.
   Credential-like paths still allow nonfatal loader warnings to be filtered.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.42...v0.2.43)
 
 ## 0.2.42 - 2026-09-25
 
