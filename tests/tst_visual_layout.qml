@@ -1504,6 +1504,18 @@ TestCase {
         mouseClick(button);
         compare(applet.hiddenUsageRowRequest, {provider: "codex", label: "Primary"});
 
+        // The hidden action must not push the percentage away from the end
+        // of its meter: both share the row's trailing edge.
+        var percent = findItem(row, function (item) {
+            return item.objectName === "usagePercentLabel";
+        });
+        var bar = findItem(row, function (item) {
+            return item.objectName === "usageBar";
+        });
+        verify(percent !== null && bar !== null);
+        fuzzyCompare(percent.mapToItem(row, percent.width, 0).x,
+            bar.mapToItem(row, bar.width, 0).x, 0.5);
+
         var credit = createControl("ProviderUsageRow", {
             applet: applet,
             providerData: { provider: "codex" },

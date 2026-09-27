@@ -47,17 +47,9 @@ ColumnLayout {
             elide: Text.ElideRight
         }
 
-        PlainPlasmaLabel {
-            id: usagePercentLabel
-
-            visible: usageRow.rowData.hasPercent
-            text: i18n("%1% %2", Math.round(usageRow.shownPercent), usageRow.applet.percentSuffix())
-            font.weight: Font.DemiBold
-            horizontalAlignment: Text.AlignRight
-            elide: Text.ElideRight
-        }
-
         // Revealed on row hover; keyboard focus keeps it visible and reachable.
+        // It sits before the percentage so its reserved space falls in the
+        // gap after the label, keeping the value flush with the meter's end.
         PlasmaComponents.ToolButton {
             id: hideUsageRowButton
             objectName: "hideUsageRowButton"
@@ -86,10 +78,22 @@ ColumnLayout {
                 }
             }
         }
+
+        PlainPlasmaLabel {
+            id: usagePercentLabel
+            objectName: "usagePercentLabel"
+
+            visible: usageRow.rowData.hasPercent
+            text: i18n("%1% %2", Math.round(usageRow.shownPercent), usageRow.applet.percentSuffix())
+            font.weight: Font.DemiBold
+            horizontalAlignment: Text.AlignRight
+            elide: Text.ElideRight
+        }
     }
 
     Rectangle {
         id: usageBar
+        objectName: "usageBar"
 
         visible: usageRow.rowData.hasPercent
         Layout.fillWidth: true
