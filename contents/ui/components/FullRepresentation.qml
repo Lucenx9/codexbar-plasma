@@ -1201,9 +1201,22 @@ Item {
                         Components.DisclosureButton {
                             id: hiddenSectionsToggle
                             objectName: "hiddenDetailSectionsToggle"
+
+                            // Each provider's list starts collapsed, and once
+                            // the last section is restored the next hidden one
+                            // must not reappear already expanded.
+                            readonly property string providerID: applet.presentedProviderData
+                                ? applet.presentedProviderData.provider : ""
+
                             visible: providerDetailsSection.hiddenDetails.length > 0
                             plainText: i18n("Hidden detail sections")
                             onClicked: expanded = !expanded
+                            onProviderIDChanged: expanded = false
+                            onVisibleChanged: {
+                                if (!visible) {
+                                    expanded = false
+                                }
+                            }
                         }
 
                         Repeater {
