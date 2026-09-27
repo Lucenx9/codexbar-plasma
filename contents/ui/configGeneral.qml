@@ -151,6 +151,32 @@ KCM.SimpleKCM {
         ? Plasmoid.configuration.costHistoryPeriod : cfg_costHistoryPeriodDefault
     property bool costHistoryRangeEditPending: false
     property bool costHistoryMetricEditPending: false
+    // The popup hides and restores rows and sections live, and Plasma writes
+    // every cfg_* value of the current page on Apply. Follow those changes
+    // while keeping this page's pending restores, so Apply never writes a
+    // stale list over them.
+    readonly property string persistedPopupHiddenUsageRows: Plasmoid.configuration
+        ? Plasmoid.configuration.popupHiddenUsageRows || "" : cfg_popupHiddenUsageRowsDefault
+    readonly property string persistedPopupHiddenDetailSections: Plasmoid.configuration
+        ? Plasmoid.configuration.popupHiddenDetailSections || "" : cfg_popupHiddenDetailSectionsDefault
+    // The stored lists this page last followed, set once on creation: a
+    // binding could update before the change handlers read it.
+    property string hiddenUsageRowsBase: ""
+    property string hiddenDetailSectionsBase: ""
+    onPersistedPopupHiddenUsageRowsChanged: syncHiddenUsageRowsFromPersisted()
+    onPersistedPopupHiddenDetailSectionsChanged: syncHiddenDetailSectionsFromPersisted()
+
+    function syncHiddenUsageRowsFromPersisted() {
+        cfg_popupHiddenUsageRows = ConfigValueSync.hiddenUsageRowsAfterPersistedChange(
+            cfg_popupHiddenUsageRows, hiddenUsageRowsBase, persistedPopupHiddenUsageRows)
+        hiddenUsageRowsBase = persistedPopupHiddenUsageRows
+    }
+
+    function syncHiddenDetailSectionsFromPersisted() {
+        cfg_popupHiddenDetailSections = ConfigValueSync.hiddenDetailSectionsAfterPersistedChange(
+            cfg_popupHiddenDetailSections, hiddenDetailSectionsBase, persistedPopupHiddenDetailSections)
+        hiddenDetailSectionsBase = persistedPopupHiddenDetailSections
+    }
     readonly property bool defaultValuesPrepared: defaultsActionRequested
         && userSettingsAreDefault()
     readonly property string autoUpdateLastCheck: Plasmoid.configuration
@@ -183,6 +209,8 @@ KCM.SimpleKCM {
     Component.onCompleted: {
         syncCostHistoryRangeFromPersisted()
         syncCostHistoryMetricFromPersisted()
+        hiddenUsageRowsBase = persistedPopupHiddenUsageRows
+        hiddenDetailSectionsBase = persistedPopupHiddenDetailSections
     }
     onPersistedCostHistoryDaysChanged: syncCostHistoryRangeFromPersisted()
     onPersistedCostHistoryMetricChanged: syncCostHistoryMetricFromPersisted()
