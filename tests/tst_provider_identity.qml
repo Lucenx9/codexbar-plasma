@@ -77,6 +77,19 @@ TestCase {
             ProviderIdentity.documentationBaseUrl + "openrouter.md")
     }
 
+    function test_passAndGatewayProvidersKeepTheirDocsLinks() {
+        // ClinePass and LongCat ship a dashboard, brand color, and icon but
+        // their docs rows were missing, so both surfaces silently dropped the
+        // Docs menu entry. Both guides exist under the official docs tree.
+        var providers = ["clinepass", "longcat"]
+        for (var i = 0; i < providers.length; i++) {
+            compare(ProviderIdentity.providerDocsUrl(providers[i]),
+                ProviderIdentity.documentationBaseUrl + providers[i] + ".md")
+        }
+        compare(ProviderIdentity.providerDocsUrl("lc"),
+            ProviderIdentity.providerDocsUrl("longcat"))
+    }
+
     function test_brandColorsAreThreeChannelsInRange() {
         var channels = ProviderIdentity.providerBrandColorChannels("aiand")
         compare(channels.length, 3)
