@@ -410,6 +410,10 @@ TestCase {
         }
         // The meta labels cap their own width, so widening alone cannot fit
         // a long account: swap in short data for the negative case instead.
+        // Widen first: at 200px the fixed chrome (icon, Refresh button) can
+        // squeeze short labels below their implicit width on some font
+        // metrics, leaving them truncated.
+        header.width = 600;
         header.providerData = {
             provider: "codex",
             title: "Codex",
