@@ -363,6 +363,8 @@ TestCase {
         ];
     }
 
+    // Elided header labels must stay readable on hover, and labels that
+    // fit must not grow a redundant tooltip.
     function test_headerRevealsTruncatedLabelsOnHover() {
         var longAccount = "engineering-with-an-unusually-long-account-name@example.com";
         var longPlan = "Enterprise Pro Plan Extra Long";
@@ -380,26 +382,52 @@ TestCase {
         });
         if (!header)
             return;
-        var account = findText(header, longAccount);
-        verify(account !== null);
-        tryVerify(function () { return account.truncated; });
-        var accountTip = findToolTip(account);
-        verify(accountTip !== null);
-        compare(accountTip.plainText, longAccount);
-
-        var plan = findText(header, longPlan);
-        verify(plan !== null);
-        tryVerify(function () { return plan.truncated; });
-        var planTip = findToolTip(plan);
-        verify(planTip !== null);
-        compare(planTip.plainText, longPlan);
-
-        var title = findText(header, longTitle);
-        verify(title !== null);
-        tryVerify(function () { return title.truncated; });
-        var titleTip = findToolTip(title);
-        verify(titleTip !== null);
-        compare(titleTip.plainText, longTitle);
+        var texts = [longAccount, longPlan, longTitle];
+        var labels = [];
+        var tips = [];
+        for (var i = 0; i < texts.length; i++) {
+            var label = findText(header, texts[i]);
+            verify(label !== null);
+            // tryVerify runs to completion inside this iteration, so the
+            // closure below always observes the current label.
+            tryVerify(function () { return label.truncated; });
+            var tip = findToolTip(label);
+            verify(tip !== null);
+            compare(tip.plainText, texts[i]);
+            labels.push(label);
+            tips.push(tip);
+        }
+        for (var h = 0; h < labels.length; h++) {
+            // Park the virtual mouse away first, flushing the move:
+            // back-to-back moves compress into one, which cannot be relied
+            // on to enter the label from an unknown start position.
+            mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+            wait(300);
+            mouseMove(labels[h], labels[h].width / 2, labels[h].height / 2);
+            tryCompare(tips[h], "visible", true);
+            mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+            tryCompare(tips[h], "visible", false);
+        }
+        // The meta labels cap their own width, so widening alone cannot fit
+        // a long account: swap in short data for the negative case instead.
+        // Widen first: at 200px the fixed chrome (icon, Refresh button) can
+        // squeeze short labels below their implicit width on some font
+        // metrics, leaving them truncated.
+        header.width = 600;
+        header.providerData = {
+            provider: "codex",
+            title: "Codex",
+            account: "a@b.co",
+            planText: "Pro",
+            hasIncident: false
+        };
+        for (var n = 0; n < labels.length; n++) {
+            var fitted = labels[n];
+            tryVerify(function () { return !fitted.truncated; });
+            mouseMove(fitted, fitted.width / 2, fitted.height / 2);
+            wait(tips[n].delay + 100);
+            verify(!tips[n].visible);
+        }
     }
 
     function test_headerPlanStaysBesideElidedAccount(data) {
