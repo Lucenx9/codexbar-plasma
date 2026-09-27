@@ -21,8 +21,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   older CLI shows which release they need, and the day ranges keep working.
 
 - Hide individual usage rows from a provider tab in the popup with the button
-  beside their percentage, and restore them from **Popup → Hidden usage rows**.
-  The panel, Overview, and notifications keep every row.
+  that appears beside their percentage on hover or keyboard focus, and restore
+  them from **Popup → Hidden usage rows**. The hidden button does not shift the
+  percentage, which stays aligned with the end of its meter. The panel,
+  Overview, and notifications keep every row.
 - Cost history rows, model rows, and a selected day in the provider cost
   details state how many incomplete requests the CLI excluded from their
   amounts.
