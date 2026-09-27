@@ -169,7 +169,8 @@ work and upstream contract requirements.
 
 - Titled provider detail sections can also be hidden with the button beside
   their title on hover or keyboard focus. Expand **Hidden detail sections** in
-  that provider's popup to restore one using its current CLI title. **Popup →
+  that provider's popup to restore one using its current CLI title. The list
+  starts collapsed for each provider and collapses again once nothing is hidden. **Popup →
   Hidden detail sections → Restore all** restores all sections for a provider
   when you apply settings, including sections no longer returned by the CLI.
   Only provider IDs and title digests are saved, never the titles themselves.

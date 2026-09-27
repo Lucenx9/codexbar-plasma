@@ -828,7 +828,10 @@ Item {
         if (settingsBehaviorStep === 4) {
             verifyScenario(details.details.length === 1 && details.hiddenDetails.length === 0,
                 "individual restore did not restore the section");
+            verifyScenario(!toggle.expanded, "restoring the last hidden section left the list expanded");
             findItem(details, "hideDetailSectionButton").clicked();
+            verifyScenario(toggle.visible && !toggle.expanded,
+                "a newly hidden section reopened the restore list expanded");
             config.privacyMode = true;
             verifyScenario(!details.visible, "privacy mode exposed hidden section titles");
             config.privacyMode = false;
