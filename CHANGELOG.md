@@ -60,6 +60,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Reveal cut-short provider header titles, accounts, and plans in a tooltip on
+  hover, matching tab and account delegate behavior.
+- Expand the panel status dot hover target so hovering over the status
+  indicator reliably shows its incident tooltip.
 - Global popup tabs reveal their title in a tooltip when their text label is
   truncated on narrow layouts, matching provider tab behavior.
 - Hardened panel settings preview against invalid credit balances, clamped

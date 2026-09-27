@@ -363,6 +363,45 @@ TestCase {
         ];
     }
 
+    function test_headerRevealsTruncatedLabelsOnHover() {
+        var longAccount = "engineering-with-an-unusually-long-account-name@example.com";
+        var longPlan = "Enterprise Pro Plan Extra Long";
+        var longTitle = "Codex Provider Title That Is Very Long";
+        var header = createControl("ProviderHeader", {
+            applet: applet,
+            providerData: {
+                provider: "codex",
+                title: longTitle,
+                account: longAccount,
+                planText: longPlan,
+                hasIncident: false
+            },
+            width: 200
+        });
+        if (!header)
+            return;
+        var account = findText(header, longAccount);
+        verify(account !== null);
+        tryVerify(function () { return account.truncated; });
+        var accountTip = findToolTip(account);
+        verify(accountTip !== null);
+        compare(accountTip.plainText, longAccount);
+
+        var plan = findText(header, longPlan);
+        verify(plan !== null);
+        tryVerify(function () { return plan.truncated; });
+        var planTip = findToolTip(plan);
+        verify(planTip !== null);
+        compare(planTip.plainText, longPlan);
+
+        var title = findText(header, longTitle);
+        verify(title !== null);
+        tryVerify(function () { return title.truncated; });
+        var titleTip = findToolTip(title);
+        verify(titleTip !== null);
+        compare(titleTip.plainText, longTitle);
+    }
+
     function test_headerPlanStaysBesideElidedAccount(data) {
         var longAccount = "engineering-with-an-unusually-long-account-name@example.com";
         var header = createControl("ProviderHeader", {
