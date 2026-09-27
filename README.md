@@ -324,6 +324,8 @@ the repository's **Sponsor** button.
 
 ## License and attribution
 
-CodexBar Plasma is derived from [CodexBar](https://github.com/steipete/CodexBar)
-and distributed under the [MIT License](LICENSE). See [NOTICE.md](NOTICE.md) for
-attribution.
+CodexBar Plasma is a standalone frontend for the official
+[CodexBar CLI](https://github.com/steipete/CodexBar). The widget code is
+distributed under the [MIT License](LICENSE). Bundled provider artwork includes
+upstream CodexBar assets and a Poe icon under CC BY 4.0. See
+[NOTICE.md](NOTICE.md) for sources, licenses, and attribution.
