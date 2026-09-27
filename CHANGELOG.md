@@ -108,6 +108,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Chart axis, readout, and heatmap dates use the locale's short date format
   instead of the CLI's `YYYY-MM-DD` keys.
 - OMP sessions are labelled `OMP` instead of the generic Pi provider name.
+- Restore the **Docs** menu entry for the `ClinePass` and `LongCat` providers
+  in the popup and Providers settings. Both guides exist in the official docs
+  tree, but the fallback table had no rows for them.
 
 ### Security
 
