@@ -122,6 +122,16 @@ TRANSPORT_TESTS = '''
         compare(subject.sending, false);
     }
 
+    function test_plainBodyMentioningActionKeepsTheShortDeadline() {
+        var subject = create();
+        subject.send("status", "run with --action=flag for details", "normal");
+        var start = Date.now();
+        tryCompare(subject, "sending", false, 13000);
+        verify(Date.now() - start >= 9900);
+        verify(Date.now() - start < 60000);
+        compare(subject.testSource.connected, []);
+    }
+
     function test_destructionDisconnectsEveryRequest() {
         var subject = create();
         subject.send("first", "body", "normal");

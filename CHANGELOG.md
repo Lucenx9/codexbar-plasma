@@ -10,6 +10,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Fixed
+
+- Action-less notifications whose text mentions `--action=` no longer wait on
+  the clickable-notification deadline; only notifications with a real action
+  use the longer timeout.
+
 ## 0.2.43 - 2026-09-27
 
 ### Added
