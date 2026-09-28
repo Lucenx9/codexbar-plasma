@@ -15,6 +15,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Action-less notifications whose text mentions `--action=` no longer wait on
   the clickable-notification deadline; only notifications with a real action
   use the longer timeout.
+- An ongoing provider incident is no longer announced again after its status
+  page could not be reached for one refresh.
 
 ## 0.2.43 - 2026-09-27
 
