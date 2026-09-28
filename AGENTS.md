@@ -33,7 +33,8 @@ relevant sections; ordinary links here are on-demand reading, not bulk imports.
   remaining Linux/Plasma parity work; maintained guides own supported behavior.
   Read linked issues for discussion, not a second parity inventory.
 - For a new official CodexBar release or a parity review, follow
-  [upstream release maintenance](docs/development.md#upstream-release-maintenance).
+  [upstream release maintenance](docs/development.md#upstream-release-maintenance)
+  with the [`parity-review` skill](.claude/skills/parity-review/SKILL.md).
   Update TODO without a user reminder, including releases since its last review.
   Track only useful Linux/Plasma equivalents and their official CLI blockers.
 - For documentation changes, read the [documentation index](docs/README.md).
@@ -140,7 +141,8 @@ or **macOS-only/non-goal**. Screenshots and Swift models are not CLI contracts.
 - Use `codexbar` as the default executable. Discover an absolute path with
   `command -v codexbar`; do not assume an installation-specific location.
 - Publish only when authorized. A release requires green checks and
-  `make package`; its artifact is `dist/codexbar-plasma.plasmoid`.
+  `make package`; its artifact is `dist/codexbar-plasma.plasmoid`. The
+  [`release` skill](.claude/skills/release/SKILL.md) carries the command sequence.
 
 ## Documentation hygiene
 
