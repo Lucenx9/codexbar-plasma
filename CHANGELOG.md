@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Reveal full provider account text in the popup header without artificial
+  middle-elision truncation when space is available.
 - Action-less notifications whose text mentions `--action=` no longer wait on
   the clickable-notification deadline; only notifications with a real action
   use the longer timeout.
