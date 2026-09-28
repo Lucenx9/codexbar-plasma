@@ -458,7 +458,8 @@ fields; track proposed extensions in the issue tracker.
   heavily used limit resets back to empty. A temporarily omitted usage window
   preserves its notification baseline: returning at the same threshold does
   not repeat a warning, and a previously armed reset can still be reported.
-  Notification text is shown
+  A status page that briefly cannot be reached does not announce an ongoing
+  incident again once it answers. Notification text is shown
   literally: markup in provider or status text never becomes a link, emphasis,
   or an image.
 - Clicking the available-update notification opens that release's page on

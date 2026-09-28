@@ -112,6 +112,12 @@ function statusDecision(memo, providerID, value, severity) {
         return { notify: false, value: "" }
     }
     var previousValue = String(source[statusMemoKey(providerID)] || "")
+    // The CLI reports a failed status-page fetch as "unknown". It is no
+    // evidence about a known incident, so keep that baseline; replacing it
+    // would announce the same incident again once the page answers.
+    if (severity === "unknown" && previousValue.length > 0) {
+        return { notify: false, value: previousValue }
+    }
     var worsened = severityRank(severity) > severityRank(severityFromMemoValue(previousValue))
     var previousIncidentKey = incidentKeyFromMemoValue(previousValue)
     var currentIncidentKey = incidentKeyFromMemoValue(text)

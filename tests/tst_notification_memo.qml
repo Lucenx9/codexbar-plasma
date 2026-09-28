@@ -69,6 +69,20 @@ TestCase {
         compare(result.notify, false)
     }
 
+    // The CLI reports a failed status-page fetch as indicator "unknown". That
+    // says nothing about the incident, so it must not replace the known
+    // severity and make the same incident look worsened when the page returns.
+    function test_failedStatusFetchKeepsTheKnownIncident() {
+        var initial = primedMemo(incident("major", "inc-1"))
+        var unavailable = observe(initial, incident("unknown", ""), "unknown")
+        compare(unavailable.notify, false)
+        compare(unavailable.memo[NotificationMemo.statusMemoKey(provider)], incident("major", "inc-1"))
+        var restored = observe(unavailable.memo, incident("major", "inc-1"), "major")
+        compare(restored.notify, false)
+        var replaced = observe(unavailable.memo, incident("major", "inc-2"), "major")
+        compare(replaced.notify, true)
+    }
+
     function test_clearedIncidentDropsTheEntryWithoutNotifying() {
         var result = observe(primedMemo(incident("major", "inc-1")), "", "")
         compare(result.notify, false)
