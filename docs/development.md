@@ -411,8 +411,8 @@ clipboard interoperability with every Wayland application or portal backend.
   settings page names them from its own label tables. `main.qml` filters only
   the provider tab's usage rows through it and writes the hide choice; the
   panel, Overview, notifications, and fetching read unfiltered rows. Privacy
-  projection keeps the identifier-shaped `windowId` so a hidden extra window
-  stays hidden. A full list refuses new entries instead of dropping old ones.
+  projection and the quota cache keep the identifier-shaped `windowId` so a
+  hidden extra window stays hidden. A full list refuses new entries instead of dropping old ones.
 - `PopupHiddenSections.js` owns hidden detail-section preferences. It stores
   at most 64 validated provider IDs and versioned MD5 digests of normalized
   titles, without persisting CLI prose. The digest is a display identity, not

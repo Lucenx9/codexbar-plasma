@@ -12,11 +12,15 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Reveal full provider account text in the popup header without artificial
+  middle-elision truncation when space is available.
 - Action-less notifications whose text mentions `--action=` no longer wait on
   the clickable-notification deadline; only notifications with a real action
   use the longer timeout.
 - Automatic cost scans run about once an hour again; the hourly timer could
   land just short of the cooldown and skip an hour, so scans came every two.
+- Hidden extra quota windows stay hidden when quotas are restored from the
+  cache after a restart; the cache now keeps their CLI window IDs.
 
 ## 0.2.43 - 2026-09-27
 
