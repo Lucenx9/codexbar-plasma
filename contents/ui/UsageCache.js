@@ -194,6 +194,13 @@ function windowRecord(value) {
     }
 }
 
+// The identifier-shaped window ID keeps a hidden extra row hidden after a
+// restart. It is the CLI key, not prose; the title is never persisted.
+function extraRecord(id, window) {
+    var windowID = Normalizer.extraWindowID(id)
+    return windowID.length > 0 ? { id: windowID, window: window } : { window: window }
+}
+
 function encode(items, context, nowMs) {
     if (!validContext(context)) {
         return ""
@@ -213,7 +220,7 @@ function encode(items, context, nowMs) {
                     if (lanes.indexOf(row.lane) >= 0) {
                         windows[row.lane] = window
                     } else if (row.lane === "extra" && extras.length < Normalizer.maximumExtraRateWindows) {
-                        extras.push({ window: window })
+                        extras.push(extraRecord(row.windowId, window))
                     }
                 }
             }
@@ -273,7 +280,7 @@ function decode(raw, context, nowMs) {
         for (var k = 0; k < Math.min(extras.length, Normalizer.maximumExtraRateWindows); k++) {
             var extraWindow = Normalizer.isCliRecord(extras[k]) ? windowRecord(extras[k].window) : null
             if (extraWindow) {
-                restoredExtras.push({ window: extraWindow })
+                restoredExtras.push(extraRecord(extras[k].id, extraWindow))
             }
         }
         if (restoredExtras.length > 0) {
