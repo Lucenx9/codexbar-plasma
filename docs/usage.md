@@ -157,7 +157,8 @@ work and upstream contract requirements.
 - Usage rows take the widget's translated title for known providers. A
   provider without one uses the CLI's own English title from `rateWindowLabels`
   (such as `Memory`) instead of the generic `Session`, `Weekly`, or `Opus`;
-  privacy mode and quotas restored after a restart keep the generic title.
+  privacy mode and quotas restored after a restart keep the generic title. A
+  restored extra window is labeled by its CLI window ID when it has one.
 - A usage row in a provider tab can be hidden with the button that appears
   beside its percentage on hover or keyboard focus. Primary, secondary, and
   tertiary rows and extra windows with a CLI window ID can be hidden; credit
@@ -165,8 +166,8 @@ work and upstream contract requirements.
   leave only the provider tab: fetching, notifications, the panel, and the
   Overview summary still use them. **Popup → Hidden usage rows** lists each
   hidden row by provider and row name, or extra window ID, with **Restore**;
-  **Apply** saves the change. A restored cache can show a hidden extra window
-  until the next refresh, because the cache keeps no window IDs.
+  **Apply** saves the change. Restored quotas keep extra window IDs, so a
+  hidden extra window stays hidden after a restart.
 
 - Titled provider detail sections can also be hidden with the button beside
   their title on hover or keyboard focus. Expand **Hidden detail sections** in
@@ -255,8 +256,8 @@ as last known and included when the merged snapshot is saved.
 The disk cache is limited to 64 KiB of UTF-8 on both save and restore. It holds
 at most 64 providers and only their primary, secondary,
 tertiary, and up to 24 extra quota windows per provider, with only percentages,
-reset timestamps, measurement timestamps, and an opaque
-configuration fingerprint. It contains no account identities, credentials,
+reset timestamps, measurement timestamps, identifier-shaped extra window IDs,
+and an opaque configuration fingerprint. It contains no account identities, credentials,
 provider prose, cost history, session data, or paths. Entries older than 24 hours,
 future-dated entries, corrupt records, and unsupported cache versions are ignored.
 Supplemental sections (cost, credits, detail views, token costs) are hidden
