@@ -15,6 +15,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Action-less notifications whose text mentions `--action=` no longer wait on
   the clickable-notification deadline; only notifications with a real action
   use the longer timeout.
+- Automatic cost scans run about once an hour again; the hourly timer could
+  land just short of the cooldown and skip an hour, so scans came every two.
 
 ## 0.2.43 - 2026-09-27
 
