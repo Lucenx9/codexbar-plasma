@@ -21,13 +21,13 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # redundant. It stays as the only pin that scope/summary updates coalesce
 # through a zero-interval restart instead of one store write per binding.
 require_in_surface applet "interval: 0"
-# Kept: the hourly cost auto-refresh interval is unobservable in executed
+# Kept: the cost auto-refresh check interval is unobservable in executed
 # tests (3600000 and 50 both keep the cost suite green: a longer wait never
 # elapses in a fast test, and rapid firing throttles to a no-op inside
 # CostRefreshPolicy), so no mutation can prove this pin redundant. It stays
-# as the only pin that the auto-refresh timer follows the shared policy
-# instead of a hardcoded literal.
-require_in_surface applet "interval: CostRefreshPolicy.automaticRefreshIntervalMs"
+# as the only pin that the auto-refresh timer polls at the policy's check
+# cadence; tst_cost_refresh_policy.qml proves that cadence stays hourly.
+require_in_surface applet "interval: CostRefreshPolicy.automaticRefreshCheckIntervalMs"
 # Kept: the updater's initial-false flags are unobservable in executed tests
 # (flipping all three to true keeps the whole updater suite green: each flag
 # is overwritten by its request/completion decision before any effect), so no
@@ -535,7 +535,7 @@ require_all(
     cost_text,
     ('engine: "executable"', "running: controller.loading", "lifecycle.expireRequests(Date.now())",
      "Component.onDestruction: lifecycle.retireRequests()", "Loading cost data timed out. Try again.",
-     "interval: CostRefreshPolicy.automaticRefreshIntervalMs", "running: lifecycle.commandSource.length > 0",
+     "interval: CostRefreshPolicy.automaticRefreshCheckIntervalMs", "running: lifecycle.commandSource.length > 0",
      "running: controller.active", "CostRefreshPolicy.isNewBucketDay(lifecycle.lastAttemptAtMs, Date.now())",
      "snapshotContext === lifecycle.commandSource", "Qt.callLater(refreshChangedSource)"),
     "cost controller must own process cleanup, hourly scans, day rollover, and context projection",

@@ -1,6 +1,10 @@
 .pragma library
 
 var automaticRefreshIntervalMs = 60 * 60 * 1000
+// The controller's repeating timer is not aligned with the last attempt, so
+// it checks every minute and this policy decides when the hour has elapsed.
+// Checking only hourly lands just short of the cooldown and skips an hour.
+var automaticRefreshCheckIntervalMs = 60 * 1000
 var clearAction = "clear"
 var keepAction = "keep"
 var startAction = "start"

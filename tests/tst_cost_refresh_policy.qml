@@ -20,6 +20,22 @@ TestCase {
         compare(CostRefreshPolicy.refreshAction(true, false, false, 0, hourMs), "start")
     }
 
+    // The controller's repeating timer starts before the first scan records
+    // its attempt. Polling at the full interval lands just short of the
+    // cooldown and skips a whole hour; the check cadence must stay finer.
+    function test_automaticChecksStartWithinOneCheckOfTheInterval() {
+        var checkMs = CostRefreshPolicy.automaticRefreshCheckIntervalMs
+        verify(checkMs > 0)
+        var attemptMs = 5
+        var startedMs = -1
+        for (var tickMs = checkMs; tickMs <= 3 * hourMs && startedMs < 0; tickMs += checkMs) {
+            if (CostRefreshPolicy.refreshAction(true, false, false, attemptMs, tickMs) === "start")
+                startedMs = tickMs
+        }
+        verify(startedMs > 0)
+        verify(startedMs - attemptMs <= hourMs + 60 * 1000, String(startedMs))
+    }
+
     function test_automaticRefreshNeverReplacesAnActiveScan() {
         compare(CostRefreshPolicy.refreshAction(true, true, false, 0, hourMs), "keep")
     }

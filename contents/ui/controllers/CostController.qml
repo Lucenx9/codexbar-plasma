@@ -172,7 +172,7 @@ Item {
     }
 
     Timer {
-        interval: CostRefreshPolicy.automaticRefreshIntervalMs
+        interval: CostRefreshPolicy.automaticRefreshCheckIntervalMs
         repeat: true
         running: lifecycle.commandSource.length > 0
         onTriggered: lifecycle.refreshIfStale()
