@@ -17,7 +17,11 @@ one when authorization is missing.
 git fetch --tags origin
 last=$(git describe --tags --abbrev=0 origin/main)
 git log --oneline "$last"..origin/main
+git diff --stat "$last"..origin/main
 ```
+
+The log is a summary. Reconcile the changelog against the diff itself
+(`git diff "$last"..origin/main -- <path>`), including direct commits to main.
 
 Use the version the user named. Otherwise propose the next patch version, as
 the 0.2.x history does, and confirm it before editing.
@@ -28,7 +32,7 @@ the 0.2.x history does, and confirm it before editing.
 git switch -c codex/release-X.Y.Z origin/main
 ```
 
-- Compare the log with `## Unreleased`. Add missing user-visible entries and
+- Compare the diff with `## Unreleased`. Add missing user-visible entries and
   remove claims that did not ship.
 - Move the entries into `## X.Y.Z - YYYY-MM-DD` with today's date, leave an
   empty `## Unreleased` first, and end the section with

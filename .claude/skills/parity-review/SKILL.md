@@ -16,12 +16,13 @@ commands, the isolation recipe, and the note shape.
 ```sh
 git fetch origin
 git show origin/main:TODO.md | grep -m1 -A1 'Last release reviewed'
-gh release list -R steipete/CodexBar --exclude-drafts --exclude-pre-releases --limit 10
+gh release list -R steipete/CodexBar --exclude-drafts --exclude-pre-releases --limit 50
 gh pr list --state open --search 'parity in:title'
 ```
 
-Stop without a commit or notification when no stable release is newer than
-the baseline and no verification is pending. Reuse an open parity PR branch
+The list must reach the baseline tag; raise `--limit` until it does. Stop
+without a commit or notification when no stable release is newer than the
+baseline and no verification is pending. Reuse an open parity PR branch
 instead of opening a second one. For each release since the baseline:
 
 ```sh
@@ -48,20 +49,25 @@ gh release download "v$v" -R steipete/CodexBar \
 sha256sum -c "CodexBarCLI-v$v-linux-x86_64.tar.gz.sha256"
 mkdir bin home config cache
 tar -xzf "CodexBarCLI-v$v-linux-x86_64.tar.gz" -C bin
-probe() {
-  env -i PATH=/usr/bin:/bin HOME="$tmp/home" \
-    XDG_CONFIG_HOME="$tmp/config" XDG_CACHE_HOME="$tmp/cache" \
-    "$tmp/bin/codexbar" "$@"
+sandbox() {
+  bwrap --ro-bind / / --tmpfs /home --tmpfs /root --tmpfs /run --tmpfs /tmp \
+    --bind "$tmp" /tmp/probe --dev /dev --proc /proc --unshare-all \
+    --die-with-parent --clearenv --setenv PATH /usr/bin:/bin \
+    --setenv HOME /tmp/probe/home --setenv XDG_CONFIG_HOME /tmp/probe/config \
+    --setenv XDG_CACHE_HOME /tmp/probe/cache "$@"
 }
-probe --version
+sandbox /tmp/probe/bin/codexbar --version
 ```
 
-- Never replace the installed `codexbar`, and pass no credential environment.
-- Use synthetic keys only. Serve fixtures from a loopback
-  `python3 -m http.server` bound to `127.0.0.1`.
-- `cost` discovery for Codex, Claude, Antigravity, and Muse can still read
-  host history despite the temporary `HOME`. Use those runs for field shapes
-  only and record no account data.
+- Run every probe through `sandbox`. A temporary `HOME` alone is not isolation:
+  `cost` discovery for Codex, Claude, Antigravity, and Muse still finds host
+  history under `env -i`. The tmpfs mounts hide the real home directory, and
+  `--unshare-all` removes network access and host IPC.
+- Without `bwrap`, do not probe. Record the affected contracts as unverified.
+- `--unshare-all` gives each call its own network namespace. Start a loopback
+  fixture in the same call as the probe, for example
+  `sandbox sh -c 'python3 -m http.server 8765 --bind 127.0.0.1 & sleep 1; /tmp/probe/bin/codexbar ...'`.
+- Never replace the installed `codexbar`. Use synthetic keys only.
 - Record every probe you could not run, with the reason.
 
 ## 4. Write the results
@@ -70,6 +76,7 @@ probe --version
   newest note: header with Plasma commit and upstream tag, commit, and publish
   time; release coverage table; Linux CLI contract changes; carried-forward
   blockers rechecked; excluded from the Linux backlog; unverified; probe method.
+  The probe method names the `bwrap` isolation.
 - Index the note in `docs/README.md`.
 - In TODO.md, update the review baseline, add gaps with evidence and a done
   condition, remove implemented ones, and revise resolved blockers.
