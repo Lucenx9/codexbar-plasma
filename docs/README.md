@@ -23,6 +23,10 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
 - [Development](development.md): QML ownership, regression checks, runtime
   verification, PR delivery and CI follow-up, repository maintenance, and agent
   instructions. Read before code or tooling changes.
+- [Release skill](../.claude/skills/release/SKILL.md): agent command sequence
+  for a widget release, from changelog reconciliation to the verified tag run.
+- [Parity review skill](../.claude/skills/parity-review/SKILL.md): agent command
+  sequence for an upstream release review, including the isolated CLI probe.
 - [Provider settings descriptor](cli-provider-settings-descriptor.md): proposed
   upstream CLI contract for generic settings. It is not a shipped contract.
 - [Cost history](cost-history.md): daily model data, selection behavior, and
