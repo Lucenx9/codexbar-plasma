@@ -130,6 +130,20 @@ TestCase {
         compare(NotificationCommand.command("title", "body", "normal", { toString: null }), plain)
     }
 
+    // The dispatcher sizes the command deadline from this intent. Quoted
+    // title and body text may mention "--action=" literally (for example a
+    // CLI status message naming a flag) without requesting an action.
+    function test_wantsActionFollowsTheLabelOnly() {
+        verify(!NotificationCommand.wantsAction(undefined))
+        verify(!NotificationCommand.wantsAction(null))
+        verify(!NotificationCommand.wantsAction(42))
+        verify(!NotificationCommand.wantsAction(""))
+        verify(!NotificationCommand.wantsAction("   "))
+        verify(!NotificationCommand.wantsAction(["label"]))
+        verify(NotificationCommand.wantsAction("Open release page"))
+        verify(NotificationCommand.wantsAction("  Open  "))
+    }
+
     function test_actionSendRegistersTheDefaultActionAndFallsBack() {
         var command = NotificationCommand.command("title", "body", "normal", "Open release page")
 

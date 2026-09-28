@@ -36,7 +36,7 @@ Item {
                 return "";
             runSerial += 1;
             var sourceName = CommandLedger.withRunNonce(command, runSerial);
-            var timeout = command.indexOf("--action=") >= 0
+            var timeout = NotificationCommand.wantsAction(actionLabel)
                 ? notificationActionCommandTimeoutMs
                 : notificationCommandTimeoutMs;
             var descriptor = CommandLedger.descriptor("notification", "", Date.now(), timeout);

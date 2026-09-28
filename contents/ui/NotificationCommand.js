@@ -19,6 +19,14 @@ function actionArgument(actionLabel) {
     return cleanLabel.length > 0 ? " --action=" + Guards.shellQuote("default=" + cleanLabel) : ""
 }
 
+// Whether the send carries a default action. The dispatcher sizes the command
+// deadline from this intent, never by searching the rendered command text:
+// quoted title and body text may mention "--action=" literally without
+// requesting an action.
+function wantsAction(actionLabel) {
+    return actionArgument(actionLabel).length > 0
+}
+
 // The notification body is markup: Plasma renders links, emphasis and images
 // in it. Every body here is plain widget or CLI text, so it is escaped and a
 // status message cannot become a clickable link. The summary is plain text by
