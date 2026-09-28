@@ -16,7 +16,7 @@ commands, the isolation recipe, and the note shape.
 ```sh
 git fetch origin
 git show origin/main:TODO.md | grep -m1 -A1 'Last release reviewed'
-gh release list -R steipete/CodexBar --exclude-pre-releases --limit 10
+gh release list -R steipete/CodexBar --exclude-drafts --exclude-pre-releases --limit 10
 gh pr list --state open --search 'parity in:title'
 ```
 
