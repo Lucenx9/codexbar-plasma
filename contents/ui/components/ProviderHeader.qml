@@ -133,8 +133,7 @@ RowLayout {
                 // lets the account elide first on narrow popups.
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.maximumWidth: Math.min(implicitWidth,
-                    Kirigami.Units.gridUnit * 16)
+                Layout.maximumWidth: implicitWidth
 
                 HoverHandler {
                     id: providerAccountHover

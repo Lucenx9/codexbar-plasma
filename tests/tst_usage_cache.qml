@@ -2,6 +2,8 @@ import QtQuick
 import QtTest
 import "../contents/ui/UsageCache.js" as Cache
 import "../contents/ui/ProviderNormalizer.js" as Normalizer
+import "../contents/ui/ProviderSnapshot.js" as ProviderSnapshot
+import "../contents/ui/PopupHiddenRows.js" as PopupHiddenRows
 
 TestCase {
     name: "UsageCache"
@@ -238,6 +240,24 @@ TestCase {
         compare(Cache.decode(extraEncoded, context, nowMs)[0].usage.extraRateWindows[0].window.usedPercent, 90);
         for (var secret of ["Sensitive extra"])
             verify(extraEncoded.indexOf(secret) < 0, secret);
+    }
+
+    // A hidden extra window is keyed by its CLI window ID; a restored quota
+    // must keep that key or the row reappears until the next live refresh.
+    function test_extraWindowIdSurvivesRestartForHiddenRows() {
+        var live = ProviderSnapshot.normalize({ provider: "claude", usage: {
+            updatedAt: "2026-09-09T11:52:00Z",
+            extraRateWindows: [{ id: "weekly_opus", title: "Opus",
+                window: { usedPercent: 40, resetsAt: "2026-09-10T00:00:00Z" } }]
+        } }, nowMs);
+        var liveKey = PopupHiddenRows.rowKey(live.rows[0]);
+        compare(liveKey, "extra:weekly_opus");
+        var encoded = Cache.encode(Cache.reconcile([], [live], nowMs), context, nowMs);
+        verify(encoded.indexOf("Opus\"") < 0);
+        var decoded = Cache.decode(encoded, context, nowMs);
+        var restored = ProviderSnapshot.normalize(decoded[0], nowMs);
+        compare(PopupHiddenRows.rowKey(restored.rows[0]), liveKey);
+        compare(restored.rows[0].label, "weekly_opus");
     }
 
     function test_extraWindowsAreBoundedAndRebuiltWithoutProse() {
