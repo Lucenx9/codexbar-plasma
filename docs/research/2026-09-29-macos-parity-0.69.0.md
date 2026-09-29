@@ -76,7 +76,7 @@ work belongs in [TODO.md](../../TODO.md).
 - **Cost envelopes are unchanged (verified in emitted output).** Empty-history
   Pi and Claude `cost` records on 0.68.0 and 0.69.0 carry the same key sets as
   0.67.0, including `reportingPeriod` and `historyLabel`. `--period all`
-  still reports the days since year 1 as `historyDays` (739890 on 2026-09-29),
+  still reports its year-1 day count as `historyDays` (739890 on 2026-09-29),
   so the #4045 All-history fix is internal only and the widget's 365-day chart
   bound stays. The Pi `usage` record keeps the keys `provider`, `source`, and
   `usage`.
