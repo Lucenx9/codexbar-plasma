@@ -12,7 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts/lib"))
 from qml_surfaces import Surface
 
-FUNCTIONS = ("popupUsageRows", "popupUsageRowHideable", "hidePopupUsageRow")
+FUNCTIONS = ("popupUsageRows", "hiddenPopupUsageRows", "popupUsageRowHideable",
+             "hidePopupUsageRow", "restorePopupUsageRow")
 
 QML = '''import QtQuick
 import QtTest
@@ -46,9 +47,16 @@ TestCase {
         applet.hidePopupUsageRow("codex", codex.rows[2]);
         compare(JSON.parse(hostConfiguration.popupHiddenUsageRows), [{provider: "codex", row: "secondary"}]);
         compare(labels(applet.popupUsageRows(codex)), ["Session", "Unidentified"]);
+        compare(labels(applet.hiddenPopupUsageRows(codex)), ["Weekly"]);
         compare(labels(applet.popupUsageRows(claude)), ["Weekly"]);
         compare(codex.rows.length, 3);
         compare(applet.popupUsageRows(null), []);
+        compare(applet.hiddenPopupUsageRows(null), []);
+        applet.restorePopupUsageRow("claude", claude.rows[0]);
+        compare(labels(applet.hiddenPopupUsageRows(codex)), ["Weekly"]);
+        applet.restorePopupUsageRow("codex", codex.rows[1]);
+        compare(hostConfiguration.popupHiddenUsageRows, "");
+        compare(labels(applet.popupUsageRows(codex)), ["Session", "Weekly", "Unidentified"]);
         hostConfiguration.popupHiddenUsageRows = "not json";
         compare(labels(applet.popupUsageRows(codex)), ["Session", "Weekly", "Unidentified"]);
     }

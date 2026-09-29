@@ -375,6 +375,18 @@ msgid "No overview data available."
 msgstr "Nessun dato disponibile per la panoramica."
 
 #: contents/ui/components/FullRepresentation.qml
+msgid "Hidden usage rows"
+msgstr "Righe di utilizzo nascoste"
+
+#: contents/ui/components/FullRepresentation.qml contents/ui/configPopup.qml
+msgid "Restore"
+msgstr "Ripristina"
+
+#: contents/ui/components/FullRepresentation.qml contents/ui/configPopup.qml
+msgid "Restore %1"
+msgstr "Ripristina %1"
+
+#: contents/ui/components/FullRepresentation.qml
 #: contents/ui/components/RateWindowLabels.qml contents/ui/configPanel.qml
 #: contents/ui/main.qml
 msgid "Credits"
@@ -387,14 +399,6 @@ msgstr "Rimanenti: %1"
 #: contents/ui/components/FullRepresentation.qml
 msgid "Hidden detail sections"
 msgstr "Sezioni di dettaglio nascoste"
-
-#: contents/ui/components/FullRepresentation.qml contents/ui/configPopup.qml
-msgid "Restore"
-msgstr "Ripristina"
-
-#: contents/ui/components/FullRepresentation.qml contents/ui/configPopup.qml
-msgid "Restore %1"
-msgstr "Ripristina %1"
 
 #: contents/ui/components/FullRepresentation.qml
 msgid "Usage dashboard"
@@ -1746,13 +1750,13 @@ msgid "CodexBar CLI:"
 msgstr "CodexBar CLI:"
 
 #: contents/ui/configDiagnostics.qml
+msgid "Resolved command:"
+msgstr "Comando risolto:"
+
+#: contents/ui/configDiagnostics.qml
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "Not checked"
 msgstr "Non controllato"
-
-#: contents/ui/configDiagnostics.qml
-msgid "Resolved command:"
-msgstr "Comando risolto:"
 
 #: contents/ui/configDiagnostics.qml
 msgid "Not found"
@@ -2416,13 +2420,17 @@ msgstr "Sezioni di dettaglio nascoste:"
 
 #: contents/ui/configPopup.qml
 msgid "None. Hide a titled section with its button in the popup."
-msgstr "Nessuna. Nascondi una sezione con titolo usando il relativo pulsante nella finestra a comparsa."
+msgstr ""
+"Nessuna. Nascondi una sezione con titolo usando il relativo pulsante nella "
+"finestra a comparsa."
 
 #: contents/ui/configPopup.qml
 msgid ""
 "Restore individual sections in the popup, or all sections for a provider "
 "here."
-msgstr "Ripristina le singole sezioni nella finestra a comparsa, oppure tutte le sezioni di un provider qui."
+msgstr ""
+"Ripristina le singole sezioni nella finestra a comparsa, oppure tutte le "
+"sezioni di un provider qui."
 
 #: contents/ui/configPopup.qml
 msgid "Restore all"

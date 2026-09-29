@@ -1059,6 +1059,10 @@ PlasmoidItem {
         return item ? PopupHiddenRows.visibleRows(item.rows, popupHiddenUsageRows, item.provider) : []
     }
 
+    function hiddenPopupUsageRows(item) {
+        return item ? PopupHiddenRows.hiddenRows(item.rows, popupHiddenUsageRows, item.provider) : []
+    }
+
     function popupUsageRowHideable(row) {
         return PopupHiddenRows.rowKey(row).length > 0
     }
@@ -1068,6 +1072,14 @@ PlasmoidItem {
         if (key.length > 0) {
             Plasmoid.configuration.popupHiddenUsageRows = PopupHiddenRows.serialize(
                 PopupHiddenRows.hidden(popupHiddenUsageRows, providerID, key))
+        }
+    }
+
+    function restorePopupUsageRow(providerID, row) {
+        var key = PopupHiddenRows.rowKey(row)
+        if (key.length > 0) {
+            Plasmoid.configuration.popupHiddenUsageRows = PopupHiddenRows.serialize(
+                PopupHiddenRows.restored(popupHiddenUsageRows, providerID, key))
         }
     }
 

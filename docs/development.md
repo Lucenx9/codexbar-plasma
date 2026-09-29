@@ -411,10 +411,14 @@ clipboard interoperability with every Wayland application or portal backend.
   Entries store a validated provider ID and a row key (`primary`, `secondary`,
   `tertiary`, or `extra:<CLI window ID>`) and no provider prose, so the Popup
   settings page names them from its own label tables. `main.qml` filters only
-  the provider tab's usage rows through it and writes the hide choice; the
-  panel, Overview, notifications, and fetching read unfiltered rows. Privacy
+  the provider tab's usage rows through it and writes hide/restore choices;
+  a disclosure in that tab lists current hidden rows for immediate restore,
+  while settings can restore saved rows absent from the current CLI result.
+  The panel, Overview, notifications, and fetching read unfiltered rows. Privacy
   projection and the quota cache keep the identifier-shaped `windowId` so a
   hidden extra window stays hidden. A full list refuses new entries instead of dropping old ones.
+  `popup-hidden-rows` smoke coverage hides every Codex quota row and restores
+  each from the provider tab, capturing the expanded list with synthetic data.
 - `PopupHiddenSections.js` owns hidden detail-section preferences. It stores
   at most 64 validated provider IDs and versioned MD5 digests of normalized
   titles, without persisting CLI prose. The digest is a display identity, not

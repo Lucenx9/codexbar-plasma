@@ -108,4 +108,27 @@ TestCase {
         compare(PopupHiddenRows.visibleRows(null, entries, "codex"), []);
         compare(PopupHiddenRows.visibleRows(rows, null, "codex").length, rows.length);
     }
+
+    function test_hiddenRowsExposeOnlyCurrentRestorableRows() {
+        var rows = [
+            {lane: "primary", label: "Session"},
+            {lane: "secondary", label: "Weekly"},
+            {lane: "extra", windowId: "opus", label: "Opus"},
+            {lane: "extra", windowId: "", label: "Unidentified"},
+            {lane: "monthlyCredits", label: "Credits"}
+        ];
+        var entries = [
+            {provider: "codex", row: "primary"},
+            {provider: "codex", row: "extra:opus"},
+            {provider: "codex", row: "extra:old-window"},
+            {provider: "claude", row: "secondary"}
+        ];
+        compare(PopupHiddenRows.hiddenRows(rows, entries, "codex").map(function(row) { return row.label; }),
+            ["Session", "Opus"]);
+        compare(PopupHiddenRows.hiddenRows(rows, entries, "claude").map(function(row) { return row.label; }),
+            ["Weekly"]);
+        compare(PopupHiddenRows.hiddenRows(null, entries, "codex"), []);
+        compare(PopupHiddenRows.hiddenRows(rows, null, "codex"), []);
+        compare(PopupHiddenRows.hiddenRows(rows, entries, "gemini"), []);
+    }
 }

@@ -1012,6 +1012,58 @@ Item {
                     }
 
                     ColumnLayout {
+                        id: hiddenUsageRowsSection
+                        objectName: "hiddenUsageRowsSection"
+
+                        readonly property var hiddenRows: applet.hiddenPopupUsageRows(applet.presentedProviderData)
+
+                        visible: hiddenRows.length > 0
+                        Layout.fillWidth: true
+                        spacing: Kirigami.Units.smallSpacing
+
+                        Components.DisclosureButton {
+                            id: hiddenUsageRowsToggle
+                            objectName: "hiddenUsageRowsToggle"
+
+                            readonly property string providerID: applet.presentedProviderData
+                                ? applet.presentedProviderData.provider : ""
+
+                            plainText: i18n("Hidden usage rows")
+                            onClicked: expanded = !expanded
+                            onProviderIDChanged: expanded = false
+                            onVisibleChanged: {
+                                if (!visible) {
+                                    expanded = false
+                                }
+                            }
+                        }
+
+                        Repeater {
+                            model: hiddenUsageRowsToggle.expanded ? hiddenUsageRowsSection.hiddenRows : []
+
+                            delegate: RowLayout {
+                                required property var modelData
+                                Layout.fillWidth: true
+
+                                PlainPlasmaLabel {
+                                    text: modelData.label
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                }
+
+                                Components.PlainButton {
+                                    objectName: "restorePopupUsageRowButton"
+                                    plainText: i18n("Restore")
+                                    icon.name: "view-visible"
+                                    Accessible.name: i18n("Restore %1", modelData.label)
+                                    onClicked: applet.restorePopupUsageRow(
+                                        applet.presentedProviderData.provider, modelData)
+                                }
+                            }
+                        }
+                    }
+
+                    ColumnLayout {
                         id: creditsSection
                         objectName: "creditsSection"
 

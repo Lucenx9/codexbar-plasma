@@ -103,3 +103,13 @@ function visibleRows(rows, entries, providerID) {
         return key.length === 0 || !isHidden(entries, providerID, key)
     })
 }
+
+function hiddenRows(rows, entries, providerID) {
+    if (!Array.isArray(rows)) {
+        return []
+    }
+    return rows.filter(function(row) {
+        var key = rowKey(row)
+        return key.length > 0 && isHidden(entries, providerID, key)
+    })
+}

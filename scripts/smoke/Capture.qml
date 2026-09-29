@@ -14,6 +14,7 @@ Item {
     property bool prepared: false
     property bool navigationVerified: false
     property bool detailBeforeCaptured: false
+    property bool hiddenRowsCaptured: false
     property bool cacheRestart: false
     property double cacheSavedAtMs: 0
     property int costDetailsStep: 0
@@ -847,6 +848,69 @@ Item {
         return findItem(details, "restoreDetailSectionButton") !== null;
     }
 
+    function verifyHiddenUsageRows() {
+        var popup = applet.fullRepresentationItem;
+        var section = findItem(popup, "hiddenUsageRowsSection");
+        var toggle = findItem(popup, "hiddenUsageRowsToggle");
+        if (!section || !toggle)
+            return false;
+        if (settingsBehaviorStep === 0) {
+            settingsProviderSnapshot = applet.providers;
+            settingsCommandSerial = usageLifecycle.commandRunSerial;
+            popup.grabToImage(function(result) {
+                capture.verifyScenario(result.saveToFile(capture.imagePath.replace(/\.png$/, "-before.png")),
+                    "usage rows before capture failed");
+                capture.detailBeforeCaptured = true;
+            });
+            settingsBehaviorStep++;
+            return false;
+        }
+        if (!detailBeforeCaptured)
+            return false;
+        if (settingsBehaviorStep <= 2) {
+            var hide = findItem(popup, "hideUsageRowButton");
+            verifyScenario(hide && hide.visible, "usage row has no hide action");
+            hide.clicked();
+            settingsBehaviorStep++;
+            return false;
+        }
+        if (settingsBehaviorStep === 3) {
+            verifyScenario(applet.popupUsageRows(applet.presentedProviderData).length === 0
+                && section.hiddenRows.length === 2 && section.visible && toggle.visible,
+                "hiding all usage rows lost the popup restore list");
+            verifyScenario(applet.popupUsageRows(applet.providers[1]).length === 2,
+                "hiding Codex rows affected another provider");
+            toggle.clicked();
+            settingsBehaviorStep++;
+            return false;
+        }
+        if (settingsBehaviorStep === 4) {
+            verifyScenario(findItem(section, "restorePopupUsageRowButton") !== null,
+                "the expanded list has no restore action");
+            popup.grabToImage(function(result) {
+                capture.verifyScenario(result.saveToFile(capture.imagePath.replace(/\.png$/, "-hidden.png")),
+                    "hidden usage rows capture failed");
+                capture.hiddenRowsCaptured = true;
+            });
+            settingsBehaviorStep++;
+            return false;
+        }
+        if (!hiddenRowsCaptured)
+            return false;
+        if (settingsBehaviorStep <= 6) {
+            findItem(section, "restorePopupUsageRowButton").clicked();
+            settingsBehaviorStep++;
+            return false;
+        }
+        verifyScenario(applet.popupUsageRows(applet.presentedProviderData).length === 2
+            && section.hiddenRows.length === 0 && !section.visible && !toggle.expanded,
+            "restoring all usage rows left one hidden or the list expanded");
+        verifyScenario(applet.providers === settingsProviderSnapshot
+            && usageLifecycle.commandRunSerial === settingsCommandSerial,
+            "row visibility mutated snapshots or fetched usage");
+        return true;
+    }
+
     function verifyPopupContent() {
         var popup = applet.fullRepresentationItem;
         var config = applet.Plasmoid.configuration;
@@ -1675,6 +1739,8 @@ Item {
             return applet.selectedProviderID === "codex" && verifyCostDetails();
         if (scenario === "popup-content")
             return verifyPopupContent();
+        if (scenario === "popup-hidden-rows")
+            return verifyHiddenUsageRows();
         if (scenario === "popup-hidden-sections")
             return verifyHiddenDetailSections();
         if (scenario === "refresh-on-open")
@@ -1908,7 +1974,8 @@ Item {
                     popup.Window.window.width = 640;
                     popup.Window.window.height = 880;
                     capture.applet.openProviderFromPanel("codex");
-                } else if (capture.scenario === "popup-content" || capture.scenario === "popup-hidden-sections") {
+                } else if (capture.scenario === "popup-content" || capture.scenario === "popup-hidden-rows"
+                        || capture.scenario === "popup-hidden-sections") {
                     capture.applet.openProviderFromPanel("codex");
                 } else if (capture.scenario.indexOf("privacy-") === 0) {
                     if (capture.applet.costLoading || !capture.applet.tokenCosts.codex)
