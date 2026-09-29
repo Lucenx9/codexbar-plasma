@@ -18,6 +18,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Align provider cost history heading and daily average text along their text
+  baseline.
 - Reveal full provider account text in the popup header without artificial
   middle-elision truncation when space is available.
 - Action-less notifications whose text mentions `--action=` no longer wait on

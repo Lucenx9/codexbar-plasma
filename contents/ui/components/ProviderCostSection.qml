@@ -543,6 +543,7 @@ ColumnLayout {
             PlainPlasmaLabel {
                 text: i18n("Cost history")
                 font.weight: Font.DemiBold
+                Layout.alignment: Qt.AlignBaseline
                 Layout.fillWidth: true
                 elide: Text.ElideRight
             }
@@ -553,6 +554,7 @@ ColumnLayout {
                 font: Kirigami.Theme.smallFont
                 opacity: applet.secondaryTextOpacity
                 horizontalAlignment: Text.AlignRight
+                Layout.alignment: Qt.AlignBaseline
                 elide: Text.ElideRight
             }
         }
