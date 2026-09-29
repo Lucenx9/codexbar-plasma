@@ -381,6 +381,18 @@ msgid "No overview data available."
 msgstr "Keine Daten für die Übersicht verfügbar."
 
 #: contents/ui/components/FullRepresentation.qml
+msgid "Hidden usage rows"
+msgstr "Ausgeblendete Nutzungszeilen"
+
+#: contents/ui/components/FullRepresentation.qml contents/ui/configPopup.qml
+msgid "Restore"
+msgstr "Wiederherstellen"
+
+#: contents/ui/components/FullRepresentation.qml contents/ui/configPopup.qml
+msgid "Restore %1"
+msgstr "%1 wiederherstellen"
+
+#: contents/ui/components/FullRepresentation.qml
 #: contents/ui/components/RateWindowLabels.qml contents/ui/configPanel.qml
 #: contents/ui/main.qml
 msgid "Credits"
@@ -393,14 +405,6 @@ msgstr "Verbleibend: %1"
 #: contents/ui/components/FullRepresentation.qml
 msgid "Hidden detail sections"
 msgstr "Ausgeblendete Detailabschnitte"
-
-#: contents/ui/components/FullRepresentation.qml contents/ui/configPopup.qml
-msgid "Restore"
-msgstr "Wiederherstellen"
-
-#: contents/ui/components/FullRepresentation.qml contents/ui/configPopup.qml
-msgid "Restore %1"
-msgstr "%1 wiederherstellen"
 
 #: contents/ui/components/FullRepresentation.qml
 msgid "Usage dashboard"
@@ -1754,13 +1758,13 @@ msgid "CodexBar CLI:"
 msgstr "CodexBar-CLI:"
 
 #: contents/ui/configDiagnostics.qml
+msgid "Resolved command:"
+msgstr "Aufgelöster Befehl:"
+
+#: contents/ui/configDiagnostics.qml
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "Not checked"
 msgstr "Nicht geprüft"
-
-#: contents/ui/configDiagnostics.qml
-msgid "Resolved command:"
-msgstr "Aufgelöster Befehl:"
 
 #: contents/ui/configDiagnostics.qml
 msgid "Not found"
@@ -2425,13 +2429,17 @@ msgstr "Ausgeblendete Detailabschnitte:"
 
 #: contents/ui/configPopup.qml
 msgid "None. Hide a titled section with its button in the popup."
-msgstr "Keine. Blenden Sie einen Abschnitt mit Titel über seine Schaltfläche im Popup aus."
+msgstr ""
+"Keine. Blenden Sie einen Abschnitt mit Titel über seine Schaltfläche im "
+"Popup aus."
 
 #: contents/ui/configPopup.qml
 msgid ""
 "Restore individual sections in the popup, or all sections for a provider "
 "here."
-msgstr "Stellen Sie einzelne Abschnitte im Popup oder hier alle Abschnitte eines Anbieters wieder her."
+msgstr ""
+"Stellen Sie einzelne Abschnitte im Popup oder hier alle Abschnitte eines "
+"Anbieters wieder her."
 
 #: contents/ui/configPopup.qml
 msgid "Restore all"

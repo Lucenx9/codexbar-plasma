@@ -120,6 +120,7 @@ when the product changes instead of adding dated before/after copies.
   [runtime verification](development.md#runtime-verification).
 - [Overview](codexbar-plasma-overview.png)
 - [Provider details](codexbar-plasma-codex.png)
+- [Hidden usage rows](codexbar-plasma-hidden-usage-rows.png): synthetic provider tab showing the inline restore list.
 - [Usage and spend](codexbar-plasma-usage-spend.png)
 - [Shared usage card](codexbar-plasma-share.png): synthetic local PNG summary,
   with separate provider/model rows and the repository attribution.

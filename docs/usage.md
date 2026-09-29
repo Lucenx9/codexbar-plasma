@@ -164,10 +164,15 @@ work and upstream contract requirements.
   tertiary rows and extra windows with a CLI window ID can be hidden; credit
   rows use the **Show credits and reset credits** option instead. Hidden rows
   leave only the provider tab: fetching, notifications, the panel, and the
-  Overview summary still use them. **Popup → Hidden usage rows** lists each
-  hidden row by provider and row name, or extra window ID, with **Restore**;
-  **Apply** saves the change. Restored quotas keep extra window IDs, so a
-  hidden extra window stays hidden after a restart.
+  Overview summary still use them. Expand **Hidden usage rows** below the
+  provider's usage bars and select **Restore** beside a row to show it again
+  immediately, including when every bar is hidden. The list includes only
+  rows currently returned for that provider. **Settings → Popup → Hidden usage
+  rows** can also restore saved rows by provider and row name, or extra window
+  ID; **Apply** saves a settings-page restore. Restored quotas keep extra window
+  IDs, so a hidden extra window stays hidden after a restart.
+
+  ![Hidden quota rows with Restore buttons in the provider tab](codexbar-plasma-hidden-usage-rows.png)
 
 - Titled provider detail sections can also be hidden with the button beside
   their title on hover or keyboard focus. Expand **Hidden detail sections** in

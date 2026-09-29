@@ -10,6 +10,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Changed
+
+- Restore hidden usage bars directly from the provider's popup tab, even when
+  every bar is hidden. Popup settings still list saved rows that are not in the
+  current provider result.
+
 ### Fixed
 
 - Reveal full provider account text in the popup header without artificial
