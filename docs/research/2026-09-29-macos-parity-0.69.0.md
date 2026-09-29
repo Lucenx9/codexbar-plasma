@@ -49,6 +49,9 @@ work belongs in [TODO.md](../../TODO.md).
   still fails with `mistral does not support config API keys.`, and no writer
   exists for `cookieSource`/`cookieHeader`. The frontend must not write those
   fields by hand, so Mistral setup stays in the provider-settings blocker.
+  Plasma still lists `mistral` (and `abacus`) in its API-key setup allowlist,
+  offering an action the released CLI always rejects; removing those IDs is
+  tracked as implementable work in TODO.
 
 - **Setup reachability of the touched providers (verified in emitted output
   on 0.69.0, each with a fresh isolated config and a synthetic key).**
@@ -176,6 +179,7 @@ probes used synthetic isolated config files only. All keys were synthetic,
 and no account data is recorded here.
 
 One probe passed the registry ID `abacus` where the CLI allowlist expects
-`abacusai`; the CLI answered with a `codex` record instead of an error. No
-other unknown or misspelled provider name was passed, and the reachability
-table above uses the allowlist names.
+`abacusai`; the CLI answered with a `codex` record instead of an error. That
+invocation was discarded, and the abacus row in the reachability table comes
+from a separate re-run with `abacusai`. No other unknown or misspelled
+provider name was passed.
