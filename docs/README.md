@@ -90,6 +90,13 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   its `reportingPeriod`/`historyLabel` fields, and checksum-verified official
   CLI probes. Provider descriptors, generic config actions, Cursor cost, and
   display currency remain unavailable.
+- [0.69.0 release review](research/2026-09-29-macos-parity-0.69.0.md): the
+  0.68.0 and 0.69.0 delta with an unchanged 87-provider registry, the
+  Mistral manual-cookie runtime fix verified before and after, unchanged
+  setup reachability for the migrated bundled-plugin providers, the still
+  year-1 `--period all` day count, empty-config tolerance, and
+  bubblewrap-isolated official CLI probes. Provider descriptors, generic
+  config actions, Cursor cost, and display currency remain unavailable.
 - [Settings decisions](research/2026-09-08-settings-experience.md): Panel disclosure and text grouping,
   Plasma settings, privacy, refresh behavior, the macOS 0.56.8 comparison, and
   the shared settings visual conventions.

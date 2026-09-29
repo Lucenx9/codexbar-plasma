@@ -155,6 +155,12 @@ periods. The
 [0.67.0 review](research/2026-09-26-macos-parity-0.67.0.md#linux-cli-contract-changes-since-0660)
 records the probes.
 
+Linux 0.69.0 still reports the days since year 1 as `historyDays` for
+`--period all` (739890 on 2026-09-29); the 0.69.0 All-history scan fix is
+internal, so the widget's 365-day chart bound stays. The
+[0.69.0 review](research/2026-09-29-macos-parity-0.69.0.md#linux-cli-contract-changes-since-0670)
+records the probes.
+
 The official v0.56.8 Linux x86_64 release archive was checksum-verified with SHA-256
 `ab98788e12840e5689ae505bf62731e0ea0db1c77e63dceda1589b6e795ac5b8`.
 An isolated probe with two synthetic days and two models ran
