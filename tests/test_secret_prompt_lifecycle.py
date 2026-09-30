@@ -713,6 +713,11 @@ TestCase {
         compare(supportsApiKeySetup("xkiro"), true);
         compare(supportsApiKeySetup("raycast"), false);
         compare(supportsApiKeySetup("unknown-xyz"), false);
+        // CLI 0.69.0 rejects `config set-api-key` for Mistral and Abacus AI
+        // ("<provider> does not support config API keys.").
+        compare(supportsApiKeySetup("mistral"), false);
+        compare(supportsApiKeySetup("abacus"), false);
+        compare(supportsApiKeySetup("abacusai"), false);
         compare(supportsApiKeySetup("fireworks"), false);
         fireworksSingleKeySetupSupported = true;
         compare(supportsApiKeySetup("fireworks"), true);
@@ -734,6 +739,16 @@ TestCase {
         var keyed = providerActionRows({provider: "openai", enabled: true, displayName: "OpenAI"});
         var keyRow = keyed.filter(function(row) { return row.action === "set-api-key"; });
         compare(keyRow.length, 1);
+        var mistral = providerActionRows({provider: "mistral", enabled: true, displayName: "Mistral"});
+        compare(mistral.filter(function(row) { return row.action === "set-api-key"; }).length, 0);
+        var abacus = providerActionRows({provider: "abacus", enabled: true, displayName: "Abacus AI"});
+        compare(abacus.filter(function(row) { return row.action === "set-api-key"; }).length, 0);
+        var mistralSettings = providerSettingsRows({provider: "mistral", enabled: true, defaultEnabled: true});
+        var mistralApiKeyRow = mistralSettings.filter(function(row) { return row.label === "API key setup"; })[0];
+        compare(mistralApiKeyRow.value, "Use provider login/source");
+        var abacusSettings = providerSettingsRows({provider: "abacus", enabled: true, defaultEnabled: true});
+        var abacusApiKeyRow = abacusSettings.filter(function(row) { return row.label === "API key setup"; })[0];
+        compare(abacusApiKeyRow.value, "Use provider login/source");
     }
     // A failed field write unlocks the field and reports the failure without
     // reloading, so the rejected value stays on screen.

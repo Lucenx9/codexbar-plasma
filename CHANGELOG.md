@@ -18,6 +18,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Stop offering an ineffective API key setup action in provider settings for
+  Mistral and Abacus AI, whose released CLI rejects API-key configuration; they
+  fall back to documentation, dashboard, and login links.
 - Disabling AI Insights in settings retires pending connection tests and wallet
   operations. Changing the model clears the previous connection-test result.
 - Stop offering popup row hide actions when the saved hidden-row list is full;
