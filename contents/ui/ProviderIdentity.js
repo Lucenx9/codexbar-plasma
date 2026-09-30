@@ -464,10 +464,99 @@ var providerDocsPaths = {
     "zoommate": "zoommate.md"
 }
 
-// Keyed by the resolved provider key, so CLI aliases are already normalized
-// before this lookup. Only providers whose icon file name differs from their key.
+// Only bundled assets belong here. A missing local URL does not trigger
+// Kirigami.Icon's theme fallback, so unknown providers must return no file.
 var providerIconFiles = {
-    "gemini": "gemini-white.png"
+    "abacus": "abacus.svg",
+    "aiand": "aiand.svg",
+    "aixy": "aixy.svg",
+    "alibaba": "alibaba.svg",
+    "alibabatokenplan": "alibabatokenplan.svg",
+    "amp": "amp.svg",
+    "antigravity": "antigravity.svg",
+    "atlascloud": "atlascloud.svg",
+    "augment": "augment.svg",
+    "azureopenai": "azureopenai.svg",
+    "bedrock": "bedrock.svg",
+    "bifrost": "bifrost.svg",
+    "chutes": "chutes.svg",
+    "claude": "claude.svg",
+    "clawrouter": "clawrouter.svg",
+    "clinepass": "clinepass.svg",
+    "codebuff": "codebuff.svg",
+    "coderabbit": "coderabbit.svg",
+    "codex": "codex.svg",
+    "commandcode": "commandcode.svg",
+    "copilot": "copilot.svg",
+    "crof": "crof.svg",
+    "crossmodel": "crossmodel.svg",
+    "cursor": "cursor.svg",
+    "deepgram": "deepgram.svg",
+    "deepinfra": "deepinfra.svg",
+    "deepseek": "deepseek.svg",
+    "devin": "devin.svg",
+    "devpass": "devpass.svg",
+    "doubao": "doubao.svg",
+    "elevenlabs": "elevenlabs.svg",
+    "factory": "factory.svg",
+    "fireworks": "fireworks.svg",
+    "gemini": "gemini-white.png",
+    "gitkraken": "gitkraken.svg",
+    "grok": "grok.svg",
+    "groq": "groq.svg",
+    "helmcode": "helmcode.svg",
+    "huggingface": "huggingface.svg",
+    "hyper": "hyper.svg",
+    "ibmbob": "ibmbob.svg",
+    "jetbrains": "jetbrains.svg",
+    "kilo": "kilo.svg",
+    "kimi": "kimi.svg",
+    "kimik2": "kimik2.svg",
+    "kiro": "kiro.svg",
+    "litellm": "litellm.svg",
+    "llmman": "llmman.svg",
+    "llmproxy": "llmproxy.svg",
+    "longcat": "longcat.svg",
+    "manus": "manus.svg",
+    "mimo": "mimo.svg",
+    "minimax": "minimax.svg",
+    "mistral": "mistral.svg",
+    "moonshot": "moonshot.svg",
+    "muse": "muse.svg",
+    "neuralwatt": "neuralwatt.svg",
+    "notion": "notion.svg",
+    "nous": "nous.svg",
+    "ollama": "ollama.svg",
+    "openai": "openai.svg",
+    "opencode": "opencode.svg",
+    "opencodego": "opencodego.svg",
+    "openrouter": "openrouter.svg",
+    "perplexity": "perplexity.svg",
+    "pi": "pi.svg",
+    "poe": "poe.svg",
+    "qoder": "qoder.svg",
+    "qwencloud": "qwencloud.svg",
+    "raycast": "raycast.svg",
+    "replicate": "replicate.svg",
+    "sakana": "sakana.svg",
+    "stepfun": "stepfun.svg",
+    "sub2api": "sub2api.svg",
+    "synthetic": "synthetic.svg",
+    "t3chat": "t3chat.svg",
+    "typesafe": "typesafe.svg",
+    "v0": "v0.svg",
+    "venice": "venice.svg",
+    "vercel": "vercel.svg",
+    "vertexai": "vertexai.svg",
+    "warp": "warp.svg",
+    "wayfinder": "wayfinder.svg",
+    "windsurf": "windsurf.svg",
+    "xai": "xai.svg",
+    "xkiro": "xkiro.svg",
+    "zai": "zai.svg",
+    "zed": "zed.svg",
+    "zenmux": "zenmux.svg",
+    "zoommate": "zoommate.svg"
 }
 
 function resolveProviderKey(value) {
@@ -514,6 +603,5 @@ function providerIconFileName(value) {
     if (!/^[a-z0-9][a-z0-9._-]*$/.test(key) || key.indexOf("..") !== -1) {
         return ""
     }
-    var fileName = providerKey(key, providerIconFiles)
-    return fileName.indexOf(".") === -1 ? fileName + ".svg" : fileName
+    return hasOwnKey(providerIconFiles, key) ? providerIconFiles[key] : ""
 }

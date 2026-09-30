@@ -505,6 +505,9 @@ session, pace, and count adapters against all compiled catalogs. Localized smoke
 scenarios also verify these adapters through Plasma's actual translation domain.
 When changing provider identity, check keys, CLI aliases, title, color,
 docs/dashboard/login URLs, icon assets, and `scripts/test_provider_icons.sh`.
+Register bundled icon filenames in `ProviderIdentity.js`'s `providerIconFiles`
+table. Unknown providers return no asset filename so QML selects a theme icon;
+a nonexistent local file URL does not activate Kirigami's icon fallback.
 Repeat this comparison during official CLI release audits. The pinned 0.56.2
 audit found the same 69 IDs as 0.55.0; the OpenRouter fallback already uses
 `https://openrouter.ai/activity`. Treat the catalog as fallback presentation data

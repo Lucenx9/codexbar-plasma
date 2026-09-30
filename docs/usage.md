@@ -290,6 +290,7 @@ Provider-specific editable settings depend on the official CLI contract.
 
 - Search providers by name or ID and filter All, Enabled, or Disabled locally.
   Clear filters restores the list without changing selection or provider settings.
+  Hover a row whose name or ID is cut short to read both in full.
 - Provider enable/disable and setup actions write CodexBar configuration
   immediately; Apply and Cancel cover widget settings only.
   A CLI error with an empty or malformed message shows a generic failure
@@ -319,6 +320,8 @@ Provider-specific editable settings depend on the official CLI contract.
   official CodexBar 0.69.0 registry, plus colors, links, and aliases where
   upstream defines them; fork-only provider assets, and those for providers a
   later CLI retired, remain available for compatibility.
+  Providers without bundled artwork use the theme's generic statistics icon
+  in the panel, popup, and settings.
 
 ## Costs and history
 

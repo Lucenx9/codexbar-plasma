@@ -21,8 +21,8 @@ from pathlib import Path
 
 root = Path(sys.argv[1])
 
-# Both the popup and the config page resolve icons through the one alias table in
-# ProviderIdentity.js, so this check reads that module rather than a QML body.
+# Both the popup and the config page use these shared aliases and bundled
+# filenames, so this check reads ProviderIdentity.js rather than a QML body.
 text = (root / "contents/ui/ProviderIdentity.js").read_text(encoding="utf-8")
 
 for kind, table_name in (("provider", "providerAliases"), ("icon", "providerIconFiles")):
@@ -37,12 +37,11 @@ PY
 require_icon() {
   local provider="$1"
   local provider_key="${provider_key_aliases[$provider]:-$provider}"
-  local icon_key="${provider_icon_aliases[$provider_key]:-$provider_key}"
-  local icon_name
-  if [[ "$icon_key" == *.* ]]; then
-    icon_name="$icon_key"
-  else
-    icon_name="${icon_key}.svg"
+  local icon_name="${provider_icon_aliases[$provider_key]:-}"
+  if [[ -z "$icon_name" ]]; then
+    echo "missing bundled provider icon mapping: ${provider}" >&2
+    missing=1
+    return
   fi
   if [[ ! -f "${ICON_DIR}/${icon_name}" ]]; then
     echo "missing runtime provider icon: ${provider} -> ${icon_name}" >&2
