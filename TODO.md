@@ -62,15 +62,7 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Implementable on Linux
 
-- [ ] Stop offering API-key setup where the released CLI rejects it. Linux
-  0.69.0 answers `mistral does not support config API keys.` and `abacusai
-  does not support config API keys.`, but `supportsApiKeySetup` still lists
-  both, so Providers shows a "Set API key..." action that can only fail and
-  an API key setup row reading "Supported". Remove the two IDs from the
-  allowlist so they fall back to "Use provider login/source" with the
-  Docs/Dashboard/Login links, with tests covering both rows. Keep the
-  descriptor and cookie-writer blockers for real setup.
-  [Evidence](docs/research/2026-09-29-macos-parity-0.69.0.md#linux-cli-contract-changes-since-0670).
+None currently identified against the 0.69.0 baseline.
 
 ## Blocked on official Linux CLI contracts
 

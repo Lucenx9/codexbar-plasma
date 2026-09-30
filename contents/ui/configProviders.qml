@@ -1062,7 +1062,6 @@ KCM.SimpleKCM {
         switch (providerKey(providerID)) {
         case "fireworks":
             return fireworksSingleKeySetupSupported
-        case "abacus":
         case "aixy":
         case "alibaba":
         case "alibabatokenplan":
@@ -1095,7 +1094,6 @@ KCM.SimpleKCM {
         case "manus":
         case "mimo":
         case "minimax":
-        case "mistral":
         case "moonshot":
         case "ollama":
         case "openai":
