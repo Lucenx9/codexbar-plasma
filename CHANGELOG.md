@@ -18,6 +18,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Disabling AI Insights in settings retires pending connection tests and wallet
+  operations. Changing the model clears the previous connection-test result.
+- Stop offering popup row hide actions when the saved hidden-row list is full;
+  restoring a row makes the action available again.
 - Show the generic icon for providers without bundled artwork instead of a
   blank space, and reveal truncated provider names and IDs on hover in settings.
 - Align provider cost history heading and daily average text along their text

@@ -56,6 +56,7 @@ KCM.SimpleKCM {
     property var modelsByProvider: ({})
 
     onCfg_aiInsightsModelChanged: {
+        actionText = ""
         if (modelCombo.editText.trim() !== cfg_aiInsightsModel) {
             modelCombo.editText = cfg_aiInsightsModel
         }
@@ -89,7 +90,15 @@ KCM.SimpleKCM {
             modelCombo.editText = model
         }
     }
-    onCfg_aiInsightsEnabledChanged: Qt.callLater(refreshKeyStatus)
+    onCfg_aiInsightsEnabledChanged: {
+        if (!cfg_aiInsightsEnabled) {
+            retire()
+            keyStatus = ""
+            actionText = ""
+        } else {
+            Qt.callLater(refreshKeyStatus)
+        }
+    }
     // The cleared flag disables Clear at once; a newly stored insight re-arms
     // the button while the page stays open.
     onCacheStoredChanged: {
@@ -132,7 +141,7 @@ KCM.SimpleKCM {
     }
 
     function run(action) {
-        if (busy) {
+        if (!cfg_aiInsightsEnabled || busy) {
             return false
         }
         var command = AiInsights.command(scriptUrl, action, {

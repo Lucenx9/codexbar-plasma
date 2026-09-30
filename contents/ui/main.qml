@@ -1065,6 +1065,7 @@ PlasmoidItem {
 
     function popupUsageRowHideable(row) {
         return PopupHiddenRows.rowKey(row).length > 0
+            && popupHiddenUsageRows.length < PopupHiddenRows.maximumEntries
     }
 
     function hidePopupUsageRow(providerID, row) {
