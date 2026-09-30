@@ -168,7 +168,7 @@ RowLayout {
                 horizontalAlignment: Text.AlignLeft
                 elide: Text.ElideRight
                 Layout.minimumWidth: 0
-                Layout.maximumWidth: Kirigami.Units.gridUnit * 5
+                Layout.maximumWidth: implicitWidth
 
                 HoverHandler {
                     id: providerPlanHover

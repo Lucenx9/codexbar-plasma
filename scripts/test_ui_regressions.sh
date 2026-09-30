@@ -2137,7 +2137,7 @@ if "providerHeaderRow.width" in provider_account_label_body or "providerMetaRow.
     raise AssertionError("providerAccountLabel must not bind its width to the header layout width")
 
 provider_plan_label_body = id_block(provider_header_text, "providerPlanLabel")
-if not code_contains(provider_plan_label_body, "Layout.maximumWidth: Kirigami.Units.gridUnit * 5"):
+if not code_contains(provider_plan_label_body, "Layout.maximumWidth: implicitWidth"):
     raise AssertionError("providerPlanLabel must keep plan text from crowding provider metadata")
 
 if "providerUpdatedLabel" in applet.id_block("providerMetaRow"):
