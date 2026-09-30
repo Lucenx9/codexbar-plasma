@@ -18,6 +18,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Show the generic icon for providers without bundled artwork instead of a
+  blank space, and reveal truncated provider names and IDs on hover in settings.
 - Align provider cost history heading and daily average text along their text
   baseline.
 - Reveal full provider account text in the popup header without artificial

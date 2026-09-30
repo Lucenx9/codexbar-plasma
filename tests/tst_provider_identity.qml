@@ -50,6 +50,8 @@ TestCase {
     }
 
     function test_unknownProvidersDegradeInsteadOfBreaking() {
+        compare(ProviderIdentity.providerIconFileName("future-provider"), "")
+        compare(ProviderIdentity.providerIconFileName("future-provider.v2"), "")
         compare(ProviderIdentity.providerDocsUrl("future-provider"), "")
         compare(ProviderIdentity.providerDashboardUrl("future-provider"), "")
         compare(ProviderIdentity.providerLoginUrl("future-provider"), "")

@@ -955,9 +955,10 @@ TestCase {
         var dotTop = dot.mapToItem(slot, 0, 0);
         var hoverInSlot = {x: slot.width / 2, y: Math.max(1, dotTop.y - 2)};
         verify(hoverInSlot.y < dotTop.y);
-        var hoverInPanel = slot.mapToItem(panel, hoverInSlot.x, hoverInSlot.y);
         mouseMove(testCase, testCase.width - 1, testCase.height - 1);
         wait(300);
+        // The status slot can move while the panel's initial layout settles.
+        var hoverInPanel = slot.mapToItem(panel, hoverInSlot.x, hoverInSlot.y);
         mouseMove(panel, hoverInPanel.x, hoverInPanel.y);
         tryCompare(tip, "visible", true);
         mouseMove(testCase, testCase.width - 1, testCase.height - 1);
@@ -1140,6 +1141,49 @@ TestCase {
             applet.accountItems = savedItems;
             applet.selectedAccount = savedSelected;
         }
+    }
+
+    function test_providerRowRevealsTruncatedIdentityOnHover() {
+        var identity = {
+            provider: "example-provider-with-an-unusually-long-identifier",
+            displayName: "Example <provider> & an unusually long display name",
+            enabled: false,
+            defaultEnabled: false
+        };
+        var row = createControl("ProviderConfigRow", {
+            configPage: applet,
+            modelData: identity,
+            width: 300
+        });
+        if (!row)
+            return;
+        var tips = [];
+        findAllItems(row, item => item.toString().indexOf("PlainToolTip") >= 0, tips);
+        compare(tips.length, 1);
+        var tip = tips[0];
+        var title = findItem(row, item => item.text === identity.displayName);
+        verify(tip !== null && title !== null);
+        tryCompare(title, "truncated", true);
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        wait(300);
+        mouseMove(row, row.width / 2, row.height / 2);
+        tryCompare(tip, "visible", true);
+        compare(tip.plainText, identity.displayName + "\n" + identity.provider);
+        compare(tip.text, SafeText.plainTextAsRichText(tip.plainText));
+        compare(tip.parent, row);
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        tryCompare(tip, "visible", false);
+
+        // The name fits but the ID does not; it must still be discoverable.
+        row.modelData = Object.assign({}, identity, {displayName: "Example"});
+        tryCompare(title, "truncated", false);
+        mouseMove(row, row.width / 2, row.height / 2);
+        tryCompare(tip, "visible", true);
+
+        row.modelData = Object.assign({}, identity, {provider: "example", displayName: "Example"});
+        tryCompare(tip, "visible", false);
+        wait(tip.delay + 100);
+        verify(!tip.visible);
     }
 
     function test_providerRowKeyboardSelectionDoesNotToggleEnablement() {

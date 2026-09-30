@@ -28,6 +28,12 @@ Controls.ItemDelegate {
         return Qt.rgba(color.r, color.g, color.b, alpha)
     }
 
+    PlainToolTip {
+        parent: providerRow
+        visible: providerRow.hovered && (providerTitle.truncated || providerSubtitle.truncated)
+        plainText: providerTitle.text + "\n" + providerSubtitle.text
+    }
+
     contentItem: RowLayout {
         spacing: Kirigami.Units.largeSpacing
 
@@ -49,6 +55,8 @@ Controls.ItemDelegate {
             spacing: Kirigami.Units.smallSpacing / 2
 
             PlainControlsLabel {
+                id: providerTitle
+
                 text: providerRow.providerData.displayName
                 font.weight: Font.DemiBold
                 elide: Text.ElideRight
@@ -57,6 +65,8 @@ Controls.ItemDelegate {
             }
 
             PlainControlsLabel {
+                id: providerSubtitle
+
                 text: providerRow.providerData.defaultEnabled
                     ? i18n("%1 - CodexBar default", providerRow.providerData.provider)
                     : providerRow.providerData.provider
