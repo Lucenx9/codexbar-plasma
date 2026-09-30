@@ -908,6 +908,17 @@ Item {
         verifyScenario(applet.providers === settingsProviderSnapshot
             && usageLifecycle.commandRunSerial === settingsCommandSerial,
             "row visibility mutated snapshots or fetched usage");
+        var config = applet.Plasmoid.configuration;
+        var fullList = [];
+        for (var i = 0; i < 64; i++)
+            fullList.push({provider: "fixture" + i, row: "primary"});
+        config.popupHiddenUsageRows = JSON.stringify(fullList);
+        var hideAction = findItem(popup, "hideUsageRowButton");
+        verifyScenario(hideAction !== null && !hideAction.visible,
+            "a full hidden-row list still offered an ineffective hide action");
+        applet.restorePopupUsageRow("fixture0", {lane: "primary"});
+        verifyScenario(hideAction.visible, "restoring a saved row did not free the hide action");
+        config.popupHiddenUsageRows = "";
         return true;
     }
 
@@ -1590,6 +1601,22 @@ Item {
                 var modelCombo = findItem(insightsPage, "aiInsightsModelCombo");
                 if (insightsPage.availableModels.length === 0) {
                     insightsPage.run("models");
+                    return false;
+                }
+                if (settingsBehaviorStep === 0) {
+                    verifyScenario(insightsPage.actionText.length > 0, "the model listing has no verdict");
+                    insightsPage.cfg_aiInsightsModel = "unlisted-model";
+                    verifyScenario(insightsPage.actionText === "", "a model edit retained the old verdict");
+                    verifyScenario(insightsPage.run("models"), "a second model listing did not start");
+                    var retiredSource = insightsPage.activeSource;
+                    insightsPage.cfg_aiInsightsEnabled = false;
+                    verifyScenario(!insightsPage.busy && !insightsPage.run("models"),
+                        "disabled settings kept or started a helper");
+                    insightsPage.accept(retiredSource, {stdout: JSON.stringify({status: "ok", models: []})});
+                    verifyScenario(insightsPage.actionText === "", "disabled settings accepted a late verdict");
+                    insightsPage.cfg_aiInsightsModel = "";
+                    insightsPage.cfg_aiInsightsEnabled = true;
+                    settingsBehaviorStep++;
                     return false;
                 }
                 if (!modelCombo.popup.opened) {

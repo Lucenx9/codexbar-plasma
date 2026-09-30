@@ -416,9 +416,12 @@ clipboard interoperability with every Wayland application or portal backend.
   while settings can restore saved rows absent from the current CLI result.
   The panel, Overview, notifications, and fetching read unfiltered rows. Privacy
   projection and the quota cache keep the identifier-shaped `windowId` so a
-  hidden extra window stays hidden. A full list refuses new entries instead of dropping old ones.
+  hidden extra window stays hidden. A full list refuses new entries instead of
+  dropping old ones, and its hide actions stay unavailable until a row is restored.
   `popup-hidden-rows` smoke coverage hides every Codex quota row and restores
   each from the provider tab, capturing the expanded list with synthetic data.
+  It also fills the 64-entry list and checks that restoring a saved row
+  makes the hide action available again.
 - `PopupHiddenSections.js` owns hidden detail-section preferences. It stores
   at most 64 validated provider IDs and versioned MD5 digests of normalized
   titles, without persisting CLI prose. The digest is a display identity, not
@@ -709,7 +712,8 @@ through to the `--language` argument. `tests/test_ai_insights_controller.py`
 runs the production controller through Plasma's executable DataSource with a
 recording helper. `tests/test_ai_insights_settings.py` copies the settings
 page's helper-process functions into a QtTest with stubbed processes to check
-reply handling when the Ollama address changes, a second harness that
+reply handling when the Ollama address or model changes and helper retirement
+when disabled, a second harness that
 re-arms the Clear button when a new insight is stored after a clear, and a
 third that creates the page's model handlers with a real editable combo, so
 opening settings keeps the stored model and a popup pick still commits. None

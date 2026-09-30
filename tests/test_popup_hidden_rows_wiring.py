@@ -32,6 +32,9 @@ TestCase {
     function labels(rows) {
         return rows.map(function(row) { return row.label; });
     }
+    function init() {
+        hostConfiguration.popupHiddenUsageRows = "";
+    }
     // Hiding writes the stored choice, the binding reparses it, and only the
     // popup adapter for that provider drops the row.
     function test_hideWritesConfigurationAndFiltersOnlyThatProvider() {
@@ -59,6 +62,22 @@ TestCase {
         compare(labels(applet.popupUsageRows(codex)), ["Session", "Weekly", "Unidentified"]);
         hostConfiguration.popupHiddenUsageRows = "not json";
         compare(labels(applet.popupUsageRows(codex)), ["Session", "Weekly", "Unidentified"]);
+    }
+
+    function test_fullListOffersNoIneffectiveHideAction() {
+        var entries = [];
+        for (var i = 0; i < PopupHiddenRows.maximumEntries; i++)
+            entries = PopupHiddenRows.hidden(entries, "provider" + i, "primary");
+        hostConfiguration.popupHiddenUsageRows = PopupHiddenRows.serialize(entries);
+        var row = {lane: "primary", label: "Session"};
+        verify(!applet.popupUsageRowHideable(row), "a full list must not offer a hide action that does nothing");
+        applet.hidePopupUsageRow("codex", row);
+        compare(applet.popupHiddenUsageRows, entries);
+        applet.restorePopupUsageRow("provider0", row);
+        verify(applet.popupUsageRowHideable(row), "restoring a row must free the hide action again");
+        applet.hidePopupUsageRow("codex", row);
+        verify(PopupHiddenRows.isHidden(applet.popupHiddenUsageRows, "codex", "primary"));
+        hostConfiguration.popupHiddenUsageRows = "";
     }
 }
 '''

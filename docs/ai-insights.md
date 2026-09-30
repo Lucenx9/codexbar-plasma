@@ -213,7 +213,10 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   Editing the Ollama address retires a running test and clears its result,
   which describes only the address it listed. A cloud test reads the wallet
   itself, so its answer also updates the API key status shown beside the key
-  buttons.
+  buttons. Editing the model clears the old verdict without discarding the
+  model list. Disabling AI Insights in settings retires its active helper, clears the
+  status text, ignores late replies, and prevents further helper requests until
+  re-enabled.
 
 ## Scheduling and lifecycle
 
@@ -264,7 +267,8 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   Italian regional locales.
 - `tests/test_ai_insights_settings.py`: the settings page's helper reply
   handling with stubbed processes, including an Ollama address edited during
-  or after **Test connection**, the key status a test reply updates, and the
+  or after **Test connection**, a changed model, disabling and re-enabling with
+  a pending model/key operation, the key status a test reply updates, and the
   **Clear** button re-arming when a new insight is stored after a clear.
 - `tests/test_ai_insights_controller.py`: the production controller through
   Plasma's executable DataSource with a recording helper, covering disabled,
@@ -276,7 +280,9 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   `settings-ai-insights-narrow` run the real applet with a synthetic helper. The
   settings scenarios also check that a model is kept per provider while the
   page is open, that the stored-key row stays within the form width, and that
-  a long model list opens as a height-capped, scrolling menu. The
+  a long model list opens as a height-capped, scrolling menu. The wide scenario
+  also edits a tested model and disables the feature during a connection test,
+  proving that the old verdict and late replies are discarded. The
   card scenarios start generation through the first-use **Generate insight**
   button and check that highlights stay collapsed until **Show details**. The
   `normal` scenario asserts that the card stays hidden and idle by default.

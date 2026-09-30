@@ -171,6 +171,8 @@ work and upstream contract requirements.
   rows** can also restore saved rows by provider and row name, or extra window
   ID; **Apply** saves a settings-page restore. Restored quotas keep extra window
   IDs, so a hidden extra window stays hidden after a restart.
+  Up to 64 rows can be saved as hidden. At that limit the hide button disappears;
+  restore a saved row to make room for another.
 
   ![Hidden quota rows with Restore buttons in the provider tab](codexbar-plasma-hidden-usage-rows.png)
 
@@ -640,7 +642,9 @@ Enable it in **AI Insights** settings, choose a provider and a model, and use
 **Test connection** to check the service and list available models. It sends
 no generation request, so it also says whether the chosen model is in that list
 rather than claiming it will answer; OpenRouter's Zero Data Retention routing is
-checked only when an insight is generated. The card
+checked only when an insight is generated. Changing the model clears the
+previous test result. Disabling AI Insights on this settings page retires any
+pending connection test or wallet operation and ignores its late reply. The card
 appears at the end of **Overview**. Without an Overview tab (one provider, or a
 fixed provider in Diagnostics), it appears in the provider view instead. The
 card's **Generate insight** button creates the first insight; afterwards the

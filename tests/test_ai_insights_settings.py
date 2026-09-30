@@ -1,6 +1,6 @@
 """Run the AI Insights settings page's helper-process functions with stubs.
 
-The production retire/run/accept/report functions and the endpoint handler are
+The production retire/run/accept/report functions and endpoint/model/enable handlers are
 copied from configAiInsights.qml into a QtTest, with the executable source,
 deadline, and model field replaced by recorders, so the page's reply handling
 runs without the KDE settings runtime. A second harness mirrors the Clear
@@ -35,6 +35,7 @@ TestCase {
     name: "AiInsightsSettings"
     property string cfg_aiInsightsOllamaEndpoint: "http://localhost:11434"
     property string cfg_aiInsightsModel: "qwen3:4b"
+    property alias cfg_aiInsightsEnabled: enabledCheck.checked
     property bool cfg_aiInsightsOpenRouterZdr: true
     readonly property string provider: "ollama"
     readonly property string providerName: "Ollama"
@@ -48,6 +49,13 @@ TestCase {
     property int commandSerial: 0
     readonly property bool busy: activeSource.length > 0
     onCfg_aiInsightsOllamaEndpointChanged: { ENDPOINT_HANDLER }
+    ENABLED_HANDLER
+    onCfg_aiInsightsModelChanged: { MODEL_HANDLER }
+
+    QtObject {
+        id: enabledCheck
+        property bool checked: true
+    }
 
     QtObject {
         id: helperSource
@@ -88,6 +96,7 @@ TestCase {
     readonly property string listed: JSON.stringify({status: "ok", key: "none", models: [{id: "qwen3:4b"}]})
 
     function init() {
+        cfg_aiInsightsEnabled = true
         cfg_aiInsightsOllamaEndpoint = "http://localhost:11434"
         retire()
         report("", false)
@@ -103,6 +112,50 @@ TestCase {
         accept(helperSource.connected[0], {stdout: listed})
         verify(actionText.indexOf("Connection works") === 0, actionText)
         compare(availableModels, ["qwen3:4b"])
+    }
+
+    function test_disableRetiresTheRunningHelper_data() {
+        return ["models", "key-status", "set-key", "clear-key"].map(function(action) {
+            return {tag: action, action: action}
+        })
+    }
+
+    function test_disableRetiresTheRunningHelper(data) {
+        verify(run(data.action))
+        var source = helperSource.connected[0]
+        cfg_aiInsightsEnabled = false
+        verify(!busy, "disabling AI Insights must retire a running helper")
+        verify(helperSource.disconnected.indexOf(source) >= 0)
+        var reply = data.action === "models" ? listed : JSON.stringify({status: "present"})
+        accept(source, {stdout: reply})
+        compare(actionText, "")
+        compare(keyStatus, "")
+        compare(availableModels, [])
+        verify(!run("models"), "disabled settings must not start another helper")
+        compare(helperSource.connected.length, 1)
+        cfg_aiInsightsEnabled = true
+        verify(run("models"), "re-enabling settings must permit an explicit connection test")
+        accept(helperSource.connected[1], {stdout: listed})
+        verify(actionText.indexOf("Connection works") === 0)
+    }
+
+    function test_disabledSettingsStartNoHelper() {
+        cfg_aiInsightsEnabled = false
+        var actions = ["models", "key-status", "set-key", "clear-key"]
+        actions.forEach(function(action) {
+            verify(!run(action), "disabled settings started " + action)
+        })
+        compare(helperSource.connected, [])
+    }
+
+    function test_editingModelClearsThePreviousConnectionVerdict() {
+        verify(run("models"))
+        accept(helperSource.connected[0], {stdout: listed})
+        verify(actionText.indexOf("qwen3:4b") >= 0)
+        cfg_aiInsightsModel = "unlisted-model"
+        compare(actionText, "", "the old verdict must not describe the newly chosen model")
+        compare(availableModels, ["qwen3:4b"])
+        compare(cfg_aiInsightsModel, "unlisted-model")
     }
 
     // A late listing from the previous address must not claim that the new,
@@ -410,6 +463,11 @@ class AiInsightsSettingsTests(unittest.TestCase):
             handler = ""
         qml = QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
         qml = qml.replace("ENDPOINT_HANDLER", handler)
+        enabled_handler = re.search(r"^    onCfg_aiInsightsEnabledChanged:.*$", source, re.MULTILINE).group(0)
+        if enabled_handler.rstrip().endswith("{"):
+            enabled_handler += insights.handler_body("onCfg_aiInsightsEnabledChanged") + "}"
+        qml = qml.replace("ENABLED_HANDLER", enabled_handler)
+        qml = qml.replace("MODEL_HANDLER", insights.handler_body("onCfg_aiInsightsModelChanged"))
         qml = qml.replace("SOURCE_FUNCTIONS", "\n".join(functions))
         with tempfile.TemporaryDirectory() as directory:
             fixture = Path(directory) / "tst_ai_insights_settings.qml"
@@ -420,7 +478,7 @@ class AiInsightsSettingsTests(unittest.TestCase):
                 capture_output=True, text=True, timeout=30)
         output = result.stdout + result.stderr
         self.assertEqual(result.returncode, 0, output)
-        self.assertIn("Totals: 8 passed, 0 failed", output)
+        self.assertIn("Totals: 14 passed, 0 failed", output)
 
     def test_clear_button_rearms_when_a_new_insight_arrives(self):
         insights = Surface("insights", ROOT)
