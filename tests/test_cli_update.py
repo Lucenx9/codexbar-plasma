@@ -1,8 +1,11 @@
 """Offline release checks, provenance and bounded executable probes."""
 import http.client
 import importlib.util
-import sys
+import os
 from pathlib import Path
+import re
+import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -15,6 +18,106 @@ SPEC.loader.exec_module(cli)
 
 def release(tag="v0.62.0"):
     return dict(tag_name=tag, draft=False, prerelease=False, html_url=cli.RELEASE_PREFIX + tag)
+
+CLI_UPDATE_WIRING_QML = """import QtQuick
+import QtTest
+import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
+import "SOURCE_URL/Guards.js" as Guards
+TestCase {
+    name: "CliUpdateNotificationWiring"
+
+    QtObject {
+        id: root
+        property bool enableNotifications: true
+        property var pendingUpdateReleaseUrls: ({})
+        property var sentNotifications: []
+        property int sentSerial: 0
+
+        property QtObject plasmoid: QtObject {
+            property QtObject configuration: QtObject {
+                property bool cliUpdateNotificationsEnabled: true
+                property string cliUpdateLastNotifiedVersion: ""
+            }
+        }
+
+        function safeReleaseUrl(url) {
+            var candidate = typeof url === "string" ? url.trim() : ""
+            return candidate.length <= 2048 && Normalizer.httpsUrlHost(candidate) === "github.com" ? candidate : ""
+        }
+
+        function copyObject(obj) {
+            return Object.assign({}, obj)
+        }
+
+        function i18n(text, first) {
+            return text.replace("%1", first === undefined ? "%1" : first)
+        }
+
+        function sendPlasmaNotification(title, body, urgency, actionLabel) {
+            sentSerial += 1
+            var source = "source-" + sentSerial
+            sentNotifications = sentNotifications.concat([{
+                source: source,
+                title: title,
+                body: body,
+                urgency: urgency,
+                actionLabel: actionLabel
+            }])
+            return source
+        }
+
+        SOURCE_HANDLER
+    }
+
+    function init() {
+        root.enableNotifications = true
+        root.pendingUpdateReleaseUrls = ({})
+        root.sentNotifications = []
+        root.sentSerial = 0
+        root.plasmoid.configuration.cliUpdateNotificationsEnabled = true
+        root.plasmoid.configuration.cliUpdateLastNotifiedVersion = ""
+    }
+
+    function test_trustedReleaseUrlIsActionableAndEnqueued() {
+        root.onUpdateAvailable("0.62.0", "https://github.com/steipete/CodexBar/releases/tag/v0.62.0")
+        compare(root.sentNotifications.length, 1)
+        compare(root.sentNotifications[0].actionLabel, "Open release page")
+        compare(root.plasmoid.configuration.cliUpdateLastNotifiedVersion, "0.62.0")
+        compare(root.pendingUpdateReleaseUrls["source-1"], "https://github.com/steipete/CodexBar/releases/tag/v0.62.0")
+    }
+
+    function test_untrustedOrEmptyReleaseUrlStaysNonActionable() {
+        root.onUpdateAvailable("0.63.0", "")
+        compare(root.sentNotifications.length, 1)
+        compare(root.sentNotifications[0].actionLabel, "")
+        compare(root.plasmoid.configuration.cliUpdateLastNotifiedVersion, "0.63.0")
+        compare(Object.keys(root.pendingUpdateReleaseUrls).length, 0)
+
+        root.onUpdateAvailable("0.64.0", "https://example.com/releases/tag/v0.64.0")
+        compare(root.sentNotifications.length, 2)
+        compare(root.sentNotifications[1].actionLabel, "")
+        compare(root.plasmoid.configuration.cliUpdateLastNotifiedVersion, "0.64.0")
+        compare(Object.keys(root.pendingUpdateReleaseUrls).length, 0)
+    }
+
+    function test_disabledOrDuplicateNotificationsAreSkipped() {
+        root.enableNotifications = false
+        root.onUpdateAvailable("0.65.0", "https://github.com/steipete/CodexBar/releases/tag/v0.65.0")
+        compare(root.sentNotifications.length, 0)
+
+        root.enableNotifications = true
+        root.plasmoid.configuration.cliUpdateNotificationsEnabled = false
+        root.onUpdateAvailable("0.65.0", "https://github.com/steipete/CodexBar/releases/tag/v0.65.0")
+        compare(root.sentNotifications.length, 0)
+
+        root.plasmoid.configuration.cliUpdateNotificationsEnabled = true
+        root.plasmoid.configuration.cliUpdateLastNotifiedVersion = "0.65.0"
+        root.onUpdateAvailable("0.65.0", "https://github.com/steipete/CodexBar/releases/tag/v0.65.0")
+        compare(root.sentNotifications.length, 0)
+    }
+}
+"""
+
 
 
 class CliUpdateTests(unittest.TestCase):
@@ -135,9 +238,39 @@ class CliUpdateTests(unittest.TestCase):
         main = (root / "contents/ui/main.qml").read_text()
         controller = main.split("Controllers.CliUpdateController {", 1)[1].split("Controllers.WidgetUpdateController {", 1)[0]
         for guard in ("!root.enableNotifications", "cliUpdateNotificationsEnabled === false",
-                      "cliUpdateLastNotifiedVersion === version", "sourceName.length > 0"):
+                      "cliUpdateLastNotifiedVersion === version", "sourceName.length > 0",
+                      "root.safeReleaseUrl(releaseUrl)"):
             self.assertIn(guard, controller)
         for page in ("configGeneral.qml", "configDiagnostics.qml"):
             text = (root / "contents/ui" / page).read_text()
             self.assertNotIn("cfg_cliUpdateLastCheck", text)
             self.assertNotIn("cfg_cliUpdateLastNotifiedVersion", text)
+
+    def test_cli_update_notification_wiring(self):
+        root = Path(__file__).resolve().parents[1]
+        main = (root / "contents/ui/main.qml").read_text()
+        controller = main.split("Controllers.CliUpdateController {", 1)[1].split("Controllers.WidgetUpdateController {", 1)[0]
+        match = re.search(r"onUpdateAvailable:\s*function\s*\(([^)]*)\)\s*\{", controller)
+        self.assertIsNotNone(match)
+        depth = 1
+        index = match.end()
+        while index < len(controller) and depth > 0:
+            if controller[index] == "{":
+                depth += 1
+            elif controller[index] == "}":
+                depth -= 1
+            index += 1
+        self.assertEqual(depth, 0)
+        body = controller[match.end():index - 1]
+        handler = f"function onUpdateAvailable({match.group(1)}) {{{body}}}".replace("Plasmoid.", "root.plasmoid.")
+
+        qml = CLI_UPDATE_WIRING_QML.replace("SOURCE_URL", (root / "contents/ui").as_uri()).replace("SOURCE_HANDLER", handler)
+        with tempfile.TemporaryDirectory(prefix="cli-notif-") as temporary:
+            fixture = Path(temporary) / "tst_cli_notif.qml"
+            fixture.write_text(qml, encoding="utf-8")
+            result = subprocess.run(
+                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                capture_output=True, text=True, timeout=30
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

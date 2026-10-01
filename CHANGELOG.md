@@ -18,6 +18,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Validate upstream CLI update release URLs with safeReleaseUrl and suppress
+  the notification action button when the release URL is missing or untrusted.
 - Reveal full provider plan text in the popup header without artificial
   middle-elision truncation when space is available.
 - Stop offering an ineffective API key setup action in provider settings for
