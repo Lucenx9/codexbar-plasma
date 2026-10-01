@@ -2137,8 +2137,19 @@ if "providerHeaderRow.width" in provider_account_label_body or "providerMetaRow.
     raise AssertionError("providerAccountLabel must not bind its width to the header layout width")
 
 provider_plan_label_body = id_block(provider_header_text, "providerPlanLabel")
-if not code_contains(provider_plan_label_body, "Layout.maximumWidth: implicitWidth"):
-    raise AssertionError("providerPlanLabel must keep plan text from crowding provider metadata")
+for plan_label_fragment in (
+    # Filling with a cap at the label's own text lets the plan yield beside
+    # the account on narrow popups while never stretching past the plan it
+    # shows; the ceiling absorbs the fill distribution's integer rounding.
+    "Layout.fillWidth: true",
+    "Layout.maximumWidth: Math.ceil(implicitWidth)",
+):
+    if not code_contains(provider_plan_label_body, plan_label_fragment):
+        raise AssertionError(
+            "providerPlanLabel must fill without outgrowing its text and "
+            "keep plan text from crowding provider metadata; "
+            f"missing {plan_label_fragment!r}"
+        )
 
 if "providerUpdatedLabel" in applet.id_block("providerMetaRow"):
     raise AssertionError("account identity and the update timestamp must have separate lines")

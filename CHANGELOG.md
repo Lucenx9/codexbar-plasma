@@ -18,8 +18,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
-- Reveal full provider plan text in the popup header without artificial
-  middle-elision truncation when space is available.
+- Reveal full provider plan text in the popup header when space is available,
+  instead of truncating it at an artificial width. The plan still yields
+  beside the account on narrow popups.
 - Stop offering an ineffective API key setup action in provider settings for
   Mistral and Abacus AI, whose released CLI rejects API-key configuration; they
   retain Documentation and Dashboard links, while settings show “Use provider
