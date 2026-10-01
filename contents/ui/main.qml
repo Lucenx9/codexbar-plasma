@@ -2841,14 +2841,18 @@ PlasmoidItem {
         onUpdateAvailable: function(version, releaseUrl) {
             if (!root.enableNotifications || Plasmoid.configuration.cliUpdateNotificationsEnabled === false
                     || Plasmoid.configuration.cliUpdateLastNotifiedVersion === version) return
+            var releasePageUrl = root.safeReleaseUrl(releaseUrl)
+            var actionLabel = releasePageUrl.length > 0 ? i18n("Open release page") : ""
             var sourceName = root.sendPlasmaNotification(i18n("CodexBar CLI release available"),
                 i18n("Upstream CLI %1 is available. Update using your installation method.", version),
-                "normal", i18n("Open release page"))
+                "normal", actionLabel)
             if (sourceName.length > 0 && !Guards.isUnsafeObjectKey(sourceName)) {
                 Plasmoid.configuration.cliUpdateLastNotifiedVersion = version
-                var nextPending = root.copyObject(root.pendingUpdateReleaseUrls)
-                nextPending[sourceName] = releaseUrl
-                root.pendingUpdateReleaseUrls = nextPending
+                if (releasePageUrl.length > 0) {
+                    var nextPending = root.copyObject(root.pendingUpdateReleaseUrls)
+                    nextPending[sourceName] = releasePageUrl
+                    root.pendingUpdateReleaseUrls = nextPending
+                }
             }
         }
     }
