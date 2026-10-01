@@ -2137,8 +2137,10 @@ if "providerHeaderRow.width" in provider_account_label_body or "providerMetaRow.
     raise AssertionError("providerAccountLabel must not bind its width to the header layout width")
 
 provider_plan_label_body = id_block(provider_header_text, "providerPlanLabel")
-if not code_contains(provider_plan_label_body, "Layout.maximumWidth: Kirigami.Units.gridUnit * 5"):
-    raise AssertionError("providerPlanLabel must keep plan text from crowding provider metadata")
+if not code_contains(provider_plan_label_body, "Layout.fillWidth: true"):
+    raise AssertionError("providerPlanLabel must fill available space beside account")
+if not code_contains(provider_plan_label_body, "Layout.maximumWidth: Math.ceil(implicitWidth)"):
+    raise AssertionError("providerPlanLabel must cap at implicitWidth to avoid rounding false truncation")
 
 if "providerUpdatedLabel" in applet.id_block("providerMetaRow"):
     raise AssertionError("account identity and the update timestamp must have separate lines")

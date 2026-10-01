@@ -167,8 +167,9 @@ RowLayout {
                 opacity: providerHeaderRow.applet.secondaryTextOpacity
                 horizontalAlignment: Text.AlignLeft
                 elide: Text.ElideRight
+                Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.maximumWidth: Kirigami.Units.gridUnit * 5
+                Layout.maximumWidth: Math.ceil(implicitWidth)
 
                 HoverHandler {
                     id: providerPlanHover
