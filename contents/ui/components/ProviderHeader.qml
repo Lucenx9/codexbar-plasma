@@ -167,11 +167,6 @@ RowLayout {
                 opacity: providerHeaderRow.applet.secondaryTextOpacity
                 horizontalAlignment: Text.AlignLeft
                 elide: Text.ElideRight
-                // Filling lets the plan yield beside the account on narrow
-                // popups instead of crowding it out. The cap keeps the label
-                // from stretching past its own text; the ceiling absorbs the
-                // fill distribution's integer rounding so a fitting plan is
-                // never misreported as truncated.
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 Layout.maximumWidth: Math.ceil(implicitWidth)
