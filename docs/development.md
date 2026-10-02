@@ -128,9 +128,9 @@ synchronized.
   unlisted degrades to the generic `error`.
   Tests use temporary XDG directories and synthetic archives, never host binaries
   or provider configuration. The helper's 600-second alarm and QML's outer GNU
-  timeout bound downloads, including decompression. Recent inactive releases have
-  a seven-day grace period before cleanup. A completed rollback blocks that release
-  from automatic reinstall. Changing the selection retires UI replies; an already
+  timeout bound downloads, including decompression. Inactive releases other than
+  the previous one have a one-hour grace period before cleanup. A completed
+  rollback blocks that release from automatic reinstall. Changing the selection retires UI replies; an already
   started install can still finish in the private directory.
 - `contents/ui/controllers/AiInsightsController.qml` owns the optional AI
   Insights generation process: one request at a time, per-request nonce, the

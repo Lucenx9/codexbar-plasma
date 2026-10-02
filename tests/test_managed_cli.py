@@ -253,6 +253,19 @@ class ManagedCliTests(unittest.TestCase):
         self.assertFalse((self.root / first).exists())
         self.assertTrue((self.root / second).exists())
 
+    def test_prune_keeps_only_current_and_previous_after_daily_updates(self):
+        # Upstream ships near-daily, so a replaced release must not linger for days.
+        self.operation("install")
+        first = cli.installed(self.root)["target"]
+        self.publish("0.63.0")
+        self.operation("update")
+        self.publish("0.64.0")
+        self.operation("update")
+        recent = cli.time.time() - 2 * 3600
+        os.utime(self.root / first, (recent, recent))
+        cli.prune(self.root)
+        self.assertEqual(len(list((self.root / "releases").iterdir())), 2)
+
     def test_prune_removes_incomplete_orphans_but_protects_selected_paths_and_symlinks(self):
         self.operation("install")
         orphan = self.root / cli.installed(self.root)["target"]
