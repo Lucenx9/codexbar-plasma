@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.44 - 2026-10-02
+
 ### Changed
 
 - Restore hidden usage bars directly from the provider's popup tab, even when
@@ -50,6 +52,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   page could not be reached for one refresh.
 - Hidden extra quota windows stay hidden when quotas are restored from the
   cache after a restart; the cache now keeps their CLI window IDs.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.43...v0.2.44)
 
 ## 0.2.43 - 2026-09-27
 
