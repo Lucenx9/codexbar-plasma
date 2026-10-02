@@ -293,6 +293,7 @@ KCM.SimpleKCM {
                 : (page.environmentProbeFailed ? i18n("Not found") : i18n("Not checked"))
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             elide: Text.ElideMiddle
         }
 
@@ -440,6 +441,7 @@ KCM.SimpleKCM {
 
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             type: Kirigami.MessageType.Error
             plainText: page.diagnosticError
             visible: page.diagnosticError.length > 0
@@ -459,6 +461,7 @@ KCM.SimpleKCM {
         Controls.ScrollView {
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             Layout.preferredHeight: Kirigami.Units.gridUnit * 16
 
             Controls.TextArea {
