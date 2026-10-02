@@ -622,8 +622,9 @@ Reasons stay generic; command output, paths and remote text are never shown.
 **Restore previous version** switches back immediately and prevents automatic
 reinstallation of the replaced version. A newer release remains eligible;
 **Update now** explicitly permits reinstalling the skipped version. The current
-and previous copies are retained. Other versions have a seven-day grace period
-before cleanup, so recent CLI processes can finish using their resource bundles.
+and previous copies are retained. Other versions are removed by the next update
+check once they have been inactive for an hour, so recent CLI processes can
+finish using their resource bundles without old releases filling the disk.
 A restored CLI does not roll back upstream provider configuration changes.
 
 ## AI Insights

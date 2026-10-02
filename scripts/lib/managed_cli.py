@@ -345,7 +345,11 @@ def install(root, automatic=False):
 
 
 def prune(root):
-    """Keep current/previous releases and a seven-day grace period for running CLIs."""
+    """Keep current/previous releases; others get a one-hour grace period for running CLIs.
+
+    Widget-started CLI processes are bounded well below an hour, and upstream ships
+    near-daily ~170 MB builds, so a longer grace only accumulates stale copies.
+    """
     current = os.readlink(root / "current") if (root / "current").is_symlink() else ""
     state = state_record(root)
     keep = {current, state.get("previous", "")}
@@ -354,7 +358,7 @@ def prune(root):
         target = "releases/" + directory.name
         if target not in keep and RELEASE_DIRECTORY.fullmatch(target) \
                 and not directory.is_symlink() and directory.is_dir() \
-                and now - directory.stat().st_mtime > 7 * 86400:
+                and now - directory.stat().st_mtime > 3600:
             shutil.rmtree(directory)
     for directory in root.glob(".install-*"):
         if not directory.is_symlink() and directory.is_dir() and now - directory.stat().st_mtime > 86400:

@@ -18,6 +18,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Remove replaced managed CLI releases after one hour instead of seven days,
+  keeping only the current and previous copies, so near-daily upstream updates
+  no longer accumulate hundreds of megabytes on disk.
 - Bound Diagnostics resolved command label, error message, and output scroll
   view to 24 grid units, matching the form width of other settings fields.
 - Validate upstream CLI update release URLs with safeReleaseUrl and suppress
