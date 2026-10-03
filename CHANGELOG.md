@@ -14,6 +14,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Keep the first successful account record when CLI account discovery returns
   duplicates, so an earlier failed record no longer hides valid quotas.
+- Hide the empty Codex "Extra usage: Credits 0.00" section that CLI 0.67.0
+  reports for accounts without a monthly credit cap. Purchased credits still
+  appear in the Credits row, and capped accounts keep their allowance meter.
 
 ## 0.2.44 - 2026-10-02
 

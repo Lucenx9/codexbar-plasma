@@ -35,6 +35,10 @@ function section(providerID, cost) {
         titleKey = currency === "Quota" ? "quotaUsage" : "extraUsage"
     } else if (key === "litellm") {
         return null
+    } else if (key === "codex" && currency === "Credits" && used === 0) {
+        // A Codex account without a credit cap reports an empty placeholder;
+        // its purchased balance already appears in the Credits row.
+        return null
     } else if (key === "openai" || key === "claude") {
         titleKey = "apiSpend"
     }

@@ -64,6 +64,8 @@ work and upstream contract requirements.
 - A plain credit balance has no allowance denominator and stays meter-free.
   A monthly Codex credit meter appears only when the CLI provides the validated
   `credits.codexCreditLimit` record. Its limit never applies to a plain balance.
+  A Codex extra usage record with nothing used and no cap is an empty
+  placeholder and stays hidden; purchased credits remain in the Credits row.
 - Panel text modes for percent used or left, pace, usage plus pace, reset time,
   and a run-out forecast that shows the predicted duration only while the CLI
   expects the quota to run out before its reset.
