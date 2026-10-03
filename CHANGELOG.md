@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Reveal truncated Overview tab title in a tooltip on hover, matching provider
+  tabs and other global tabs.
 - Keep the first successful account record when CLI account discovery returns
   duplicates, so an earlier failed record no longer hides valid quotas.
 - Hide the empty Codex "Extra usage: Credits 0.00" section that CLI 0.67.0

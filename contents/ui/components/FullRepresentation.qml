@@ -284,6 +284,7 @@ Item {
                         readonly property color foreground: selected
                             ? Kirigami.Theme.textColor
                             : applet.withAlpha(Kirigami.Theme.textColor, 0.72)
+                        readonly property bool textTruncated: overviewTabLabel.truncated
 
                         function activate() {
                             applet.selectGlobalView("overview")
@@ -375,7 +376,8 @@ Item {
 
                         PlainToolTip {
                             parent: overviewTabMouse
-                            visible: !applet.showPopupTabLabels && overviewTabMouse.containsMouse
+                            visible: (!applet.showPopupTabLabels || overviewTab.textTruncated)
+                                && overviewTabMouse.containsMouse
                             plainText: i18n("Overview")
                         }
 
