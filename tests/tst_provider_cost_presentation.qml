@@ -245,6 +245,35 @@ TestCase {
             }).personalUsed, null);
     }
 
+    // CLI 0.67.0 emits this record for every Codex account without a monthly
+    // credit cap; the purchased balance already appears in the Credits row.
+    function test_codexEmptyCreditsPlaceholderIsHidden() {
+        for (var limit of [0, -1, null, undefined])
+            compare(Presentation.section("codex", {
+                used: 0,
+                limit: limit,
+                currencyCode: "Credits",
+                period: "Extra usage"
+            }), null);
+        compare(Presentation.section("codex", {
+            used: 3,
+            limit: 0,
+            currencyCode: "Credits",
+            period: "Extra usage"
+        }).kind, "spend");
+        compare(Presentation.section("codex", {
+            used: 0,
+            limit: 100,
+            currencyCode: "Credits",
+            period: "Monthly credit limit"
+        }).kind, "allowance");
+        compare(Presentation.section("future-provider", {
+            used: 0,
+            limit: 0,
+            currencyCode: "Credits"
+        }).kind, "spend");
+    }
+
     function test_textBoundsAndInputOwnership() {
         var cost = Object.freeze({
             used: 12,
