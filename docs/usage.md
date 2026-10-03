@@ -305,6 +305,9 @@ Provider-specific editable settings depend on the official CLI contract.
   the prompt can be reopened. Submitting near that limit still allows the full
   one-minute save timeout, followed by up to five seconds to stop the command.
 - Account discovery and selection through `codexbar usage --all-accounts`.
+  Repeated records for the same account keep the first successful read, so an
+  earlier failed record cannot hide valid quotas. Accounts retain their original
+  list order and distinct selection keys, including differences in spacing.
 - Provider docs, dashboards, login/account links, and redacted diagnostics.
   The selected provider's links, settings and diagnostics share one surface
   above the provider list; **Settings and diagnostics** starts collapsed.

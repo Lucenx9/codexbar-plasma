@@ -423,20 +423,27 @@ function accountOptionKey(item) {
     return "label:" + label
 }
 
+// Keep each account's position and first healthy record, as for provider
+// snapshots. A failed duplicate must not hide a successful account read.
 function dedupeAccountOptions(items) {
     if (!Array.isArray(items)) {
         return []
     }
-    var seen = ({})
+    var indexes = ({})
     var result = []
     var itemLimit = Math.min(items.length, maximumAccountSnapshots)
     for (var i = 0; i < itemLimit; i++) {
         var key = accountOptionKey(items[i])
-        if (key.length === 0 || hasOwnKey(seen, key)) {
+        if (key.length === 0) {
             continue
         }
-        seen[key] = true
-        result.push(items[i])
+        if (!hasOwnKey(indexes, key)) {
+            indexes[key] = result.length
+            result.push(items[i])
+        } else if (providerSnapshotHasError(result[indexes[key]])
+                && !providerSnapshotHasError(items[i])) {
+            result[indexes[key]] = items[i]
+        }
     }
     return result
 }
