@@ -718,6 +718,17 @@ TestCase {
         compare(supportsApiKeySetup("mistral"), false);
         compare(supportsApiKeySetup("abacus"), false);
         compare(supportsApiKeySetup("abacusai"), false);
+        // CLI 0.67.0 rejects ten more providers with the same message.
+        compare(supportsApiKeySetup("alibabatokenplan"), false);
+        compare(supportsApiKeySetup("bedrock"), false);
+        compare(supportsApiKeySetup("commandcode"), false);
+        compare(supportsApiKeySetup("deepseek"), false);
+        compare(supportsApiKeySetup("grok"), false);
+        compare(supportsApiKeySetup("manus"), false);
+        compare(supportsApiKeySetup("mimo"), false);
+        compare(supportsApiKeySetup("perplexity"), false);
+        compare(supportsApiKeySetup("stepfun"), false);
+        compare(supportsApiKeySetup("windsurf"), false);
         compare(supportsApiKeySetup("fireworks"), false);
         fireworksSingleKeySetupSupported = true;
         compare(supportsApiKeySetup("fireworks"), true);
@@ -749,6 +760,15 @@ TestCase {
         var abacusSettings = providerSettingsRows({provider: "abacus", enabled: true, defaultEnabled: true});
         var abacusApiKeyRow = abacusSettings.filter(function(row) { return row.label === "API key setup"; })[0];
         compare(abacusApiKeyRow.value, "Use provider login/source");
+        var rejected = ["alibabatokenplan", "bedrock", "commandcode", "deepseek", "grok",
+            "manus", "mimo", "perplexity", "stepfun", "windsurf"];
+        for (var i = 0; i < rejected.length; i++) {
+            var rejectedActions = providerActionRows({provider: rejected[i], enabled: true, displayName: rejected[i]});
+            compare(rejectedActions.filter(function(row) { return row.action === "set-api-key"; }).length, 0);
+            var rejectedSettings = providerSettingsRows({provider: rejected[i], enabled: true, defaultEnabled: true});
+            var rejectedApiKeyRow = rejectedSettings.filter(function(row) { return row.label === "API key setup"; })[0];
+            compare(rejectedApiKeyRow.value, "Use provider login/source");
+        }
     }
     // A failed field write unlocks the field and reports the failure without
     // reloading, so the rejected value stays on screen.

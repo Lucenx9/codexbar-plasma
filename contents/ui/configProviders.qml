@@ -1064,25 +1064,20 @@ KCM.SimpleKCM {
             return fireworksSingleKeySetupSupported
         case "aixy":
         case "alibaba":
-        case "alibabatokenplan":
         case "amp":
         case "atlascloud":
         case "azureopenai":
-        case "bedrock":
         case "chutes":
         case "codebuff":
         case "clawrouter":
-        case "commandcode":
         case "copilot":
         case "crof":
         case "crossmodel":
         case "deepgram":
-        case "deepseek":
         case "devpass":
         case "doubao":
         case "elevenlabs":
         case "gitkraken":
-        case "grok":
         case "groq":
         case "ibmbob":
         case "kimi":
@@ -1091,21 +1086,16 @@ KCM.SimpleKCM {
         case "litellm":
         case "llmman":
         case "llmproxy":
-        case "manus":
-        case "mimo":
         case "minimax":
         case "moonshot":
         case "ollama":
         case "openai":
         case "openrouter":
-        case "perplexity":
         case "poe":
-        case "stepfun":
         case "v0":
         case "venice":
         case "vercel":
         case "warp":
-        case "windsurf":
         case "xkiro":
         case "zai":
             return true
