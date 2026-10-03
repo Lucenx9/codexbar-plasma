@@ -46,6 +46,15 @@ TestCase {
         compare(subject.errorForProvider("codex"), "");
         compare(subject.options.codex[0].rows[0].usedPercent, 0);
     }
+    function test_duplicateAccountFailureCannotHideHealthyQuota() {
+        var subject = create("duplicate");
+        verify(subject.load("codex"));
+        completed(subject, "codex", "duplicate 1");
+        compare(subject.options.codex.length, 1);
+        compare(subject.options.codex[0].commandFailed, false);
+        compare(subject.options.codex[0].rows[0].usedPercent, 0);
+        compare(subject.errorForProvider("codex"), "");
+    }
     function test_missingCommandAndUnsafeProviderFailWithoutAProcess() {
         var subject = create("normal", {commandPath: ""});
         verify(!subject.load("codex"));
@@ -193,9 +202,14 @@ if run > 1 and provider == "codex":
         print(json.dumps([] if name == "empty" else {"error": {"message":
             "No token accounts configured for codex." if name == "missing-token" else {"toString": None}}}))
         sys.exit(0)
-print(json.dumps([{"provider": "deliberately-wrong", "account": name + " " + str(run),
+record = {"provider": "deliberately-wrong", "account": name + " " + str(run),
     "usage": {"primary": {"usedPercent": 0}},
-    "pace": {"primary": {"expectedUsedPercent": 30, "willLastToReset": False, "etaSeconds": 1800}}}]))
+    "pace": {"primary": {"expectedUsedPercent": 30, "willLastToReset": False, "etaSeconds": 1800}}}
+records = [record]
+if name == "duplicate":
+    records = [{"account": record["account"], "error": {}}, record,
+               {"account": record["account"], "error": {"message": "Synthetic later failure"}}]
+print(json.dumps(records))
 '''
 
 
@@ -203,7 +217,7 @@ class AccountsControllerTests(unittest.TestCase):
     def test_production_lifecycle_with_synthetic_cli(self):
         with tempfile.TemporaryDirectory(prefix="codexbar accounts 'test-") as temporary:
             directory = Path(temporary)
-            for name in ("normal", "flags", "slow", "late", "failure", "malformed", "unsupported", "structured", "empty", "missing-token"):
+            for name in ("normal", "flags", "slow", "late", "failure", "malformed", "unsupported", "structured", "empty", "missing-token", "duplicate"):
                 script = directory / name
                 script.write_text(CLI)
                 script.chmod(0o700)

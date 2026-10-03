@@ -121,6 +121,43 @@ TestCase {
             verify(result.message.indexOf("[redacted]") >= 0);
         }
     }
+    function test_duplicateAccountsPreferFirstHealthyRecord_data() {
+        var cases = [];
+        for (var message of ["failed", "", {toString: null}])
+            for (var failedFirst of [true, false])
+                for (var used of [0, 42])
+                    cases.push({tag: JSON.stringify(message) + "-" + failedFirst + "-" + used,
+                        message: message, failedFirst: failedFirst, used: used});
+        return cases;
+    }
+    function test_duplicateAccountsPreferFirstHealthyRecord(data) {
+        var healthy = {account: "Synthetic account", usage: {primary: {usedPercent: data.used}}};
+        var failed = {account: "Synthetic account", error: {message: data.message}};
+        var records = data.failedFirst ? [failed, healthy] : [healthy, failed];
+        records.splice(1, 0, {account: "Other account", error: {message: "Other failure"}});
+        // Later healthy and failed duplicates must not replace the first healthy record.
+        records.push({account: "Synthetic account", usage: {primary: {usedPercent: 99}}}, failed);
+        var result = parse(records);
+        compare(result.outcome, "success");
+        compare(result.options.length, 2);
+        compare(result.options[0].accountKey, "Synthetic account");
+        compare(result.options[0].commandFailed, false);
+        compare(result.options[0].rows[0].usedPercent, data.used);
+        compare(result.options[0].usageReceivedAtMs, 1000);
+        compare(result.options[1].accountKey, "Other account");
+        compare(result.options[1].commandFailed, true);
+    }
+    function test_failedDuplicatesKeepFirstErrorAndDistinctKeys() {
+        var result = parse([
+            {account: "Work  Team", error: {message: "First failure"}},
+            {account: "Work Team", usage: {primary: {usedPercent: 0}}},
+            {account: "Work  Team", error: {message: "Later failure"}}
+        ]);
+        compare(result.outcome, "success");
+        compare(result.options.map(function(item) { return item.accountKey; }), ["Work  Team", "Work Team"]);
+        compare(result.options[0].error, "First failure");
+        compare(result.options[1].rows[0].usedPercent, 0);
+    }
     function test_recordExceptionsAreContained() {
         var bad = {};
         Object.defineProperty(bad, "usage", {

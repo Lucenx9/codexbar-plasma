@@ -10,6 +10,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Fixed
+
+- Keep the first successful account record when CLI account discovery returns
+  duplicates, so an earlier failed record no longer hides valid quotas.
+
 ## 0.2.44 - 2026-10-02
 
 ### Changed

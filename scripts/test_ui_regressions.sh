@@ -941,19 +941,8 @@ assert_dismissible_message_restores_visibility(
 # Account response outcomes and empty-list semantics have direct QtTests in
 # tst_account_response.qml and real process coverage in test_accounts_controller.py.
 
-dedupe_accounts_body = function_body(main_text, "dedupeAccountOptions")
-if not code_contains(dedupe_accounts_body, "accountOptionKey(items[i])"):
-    raise AssertionError("dedupeAccountOptions must dedupe on the validated account identity, not the display label")
-account_option_key_body = function_body(main_text, "accountOptionKey")
-if not code_contains(account_option_key_body, '"key:" + key' not in account_option_key_body or '"label:" + label'):
-    raise AssertionError("dedupeAccountOptions must namespace identities before object-map lookup")
-if not code_contains(dedupe_accounts_body, "hasOwnKey(seen, key)"):
-    raise AssertionError(
-        "dedupeAccountOptions must use an own-property check so labels such as "
-        "constructor and toString remain selectable"
-    )
-if "seen[label]" in dedupe_accounts_body:
-    raise AssertionError("dedupeAccountOptions must not look up raw labels on Object.prototype")
+# Account identity and prototype-named labels have behavioral coverage in
+# tst_provider_normalizer.qml; duplicate recovery is covered by AccountResponse.
 
 header_sources = {
     "overviewHeaderRow": main_text,
