@@ -169,6 +169,13 @@ class CliUpdateTests(unittest.TestCase):
             self.assertEqual(cli.check("missing")["status"], "missing")
             remote.assert_not_called()
 
+    def test_unidentified_installation_does_not_fetch(self):
+        record = dict(status="unknown", version="", path="/usr/bin/codexbar", manager="external")
+        with patch.object(cli, "local_record", return_value=dict(record)), \
+                patch.object(cli, "latest_release") as remote:
+            self.assertEqual(cli.check("codexbar")["status"], "unknown")
+            remote.assert_not_called()
+
     def test_network_failure_preserves_local_facts(self):
         record = dict(status="local", version="0.60.4", path="/usr/bin/codexbar", manager="pacman")
         for failure in (OSError, http.client.IncompleteRead(b"")):

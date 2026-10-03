@@ -83,6 +83,12 @@ TestCase {
         compare(latest(o)[0].rows[0].usedPercent, 0);
         verify(latest(o)[0].rows[0].paceObservedAtMs > 0);
     }
+    function test_scopedProviderUsesCliArgument() {
+        // A source without account overrides has no per-provider fallback.
+        var o = create("mapped", {provider: "groq", sourceMode: "cli"});
+        completed(o, 1);
+        compare(latest(o)[0].provider, "groq");
+    }
     function test_batchedInputsStartOneReplacementAndRejectOldReply_data() {
         return [{tag: "aggregate", provider: "", sourceMode: "cli"},
             {tag: "scoped", provider: "codex", sourceMode: ""}];
@@ -318,6 +324,7 @@ if args[0] == "config":
     sys.exit(0)
 provider = args[args.index("--provider") + 1] if "--provider" in args else "codex"
 account = args[args.index("--account") + 1] if "--account" in args else "run " + str(run)
+if name == "mapped": assert provider == "groqcloud"
 if name == "flags":
     assert args[args.index("--source") + 1] == "source'; literal"
     assert account == "Work  Team'; literal" and "--status" in args
@@ -356,7 +363,7 @@ class UsageControllerTests(unittest.TestCase):
     def test_production_lifecycle_with_synthetic_cli(self):
         with tempfile.TemporaryDirectory(prefix="codexbar usage 'test-") as temporary:
             directory = Path(temporary)
-            for name in ("ancient", "normal", "slow-roster", "flags", "slow-first", "queue", "malformed", "empty",
+            for name in ("ancient", "normal", "slow-roster", "flags", "mapped", "slow-first", "queue", "malformed", "empty",
                          "no-records", "too-large", "empty-roster", "broken-roster", "timeout-aggregate",
                          "timeout-roster", "timeout-scoped"):
                 script = directory / name

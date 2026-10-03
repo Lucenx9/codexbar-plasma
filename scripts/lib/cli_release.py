@@ -158,7 +158,8 @@ def compare_release(record, release):
 
 def check(command, local_only=False):
     record = local_record(command)
-    if local_only or record["status"] == "missing":
+    # An unidentified installation cannot be compared; keep that diagnosis.
+    if local_only or record["status"] in ("missing", "unknown"):
         return record
     try:
         return compare_release(record, latest_release())

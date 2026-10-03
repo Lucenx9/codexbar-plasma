@@ -12,6 +12,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Translate the advanced provider override to its CLI name for usage and cost
+  requests. With CLI 0.67.0, an override such as `abacus` or
+  `alibabatokenplan` previously returned Codex usage instead.
+- Report an unidentified CLI installation as such in the CLI update check
+  instead of "cannot be compared automatically".
 - Keep the first successful account record when CLI account discovery returns
   duplicates, so an earlier failed record no longer hides valid quotas.
 - Hide the empty Codex "Extra usage: Credits 0.00" section that CLI 0.67.0

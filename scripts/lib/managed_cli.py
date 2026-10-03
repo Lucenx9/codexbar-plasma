@@ -261,7 +261,7 @@ def unpack(archive, destination):
         for member in bundle:
             name = member.name
             if len(seen) >= 256 or name in seen or len(name) > 200 \
-                    or str(PurePosixPath(name)) != name:
+                    or str(PurePosixPath(name)) != name or ".." in PurePosixPath(name).parts:
                 raise ValueError("archive_name")
             seen.add(name)
             is_resource = re.fullmatch(r"CodexBar_CodexBarCore\.bundle/[A-Za-z0-9_.-]+", name) is not None
