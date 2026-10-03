@@ -4,6 +4,7 @@ import "../CommandLedger.js" as CommandLedger
 import "../CostRefreshPolicy.js" as CostRefreshPolicy
 import "../CostResponse.js" as CostResponse
 import "../Guards.js" as Guards
+import "../ProviderIdentity.js" as ProviderIdentity
 import "../ProviderNormalizer.js" as Normalizer
 
 Item {
@@ -54,7 +55,7 @@ Item {
             var range = controller.historyPeriod.length > 0 ? ["--period", Guards.shellQuote(controller.historyPeriod)] : ["--days", String(controller.historyDays)];
             var parts = [Guards.shellQuote(controller.commandPath), "cost", "--format", "json", "--json-only"].concat(range);
             if (controller.provider.length > 0) {
-                parts.push("--provider", Guards.shellQuote(controller.provider));
+                parts.push("--provider", Guards.shellQuote(ProviderIdentity.providerCliArgument(controller.provider)));
             }
             return parts.join(" ");
         }

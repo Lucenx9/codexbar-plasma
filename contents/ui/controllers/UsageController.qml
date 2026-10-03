@@ -103,7 +103,7 @@ Item {
 
             if (controller.provider.length > 0) {
                 parts.push("--provider");
-                parts.push(Guards.shellQuote(controller.provider));
+                parts.push(Guards.shellQuote(ProviderIdentity.providerCliArgument(controller.provider)));
                 var selectedAccount = selectedAccountForProvider(controller.provider);
                 if (selectedAccount.length > 0) {
                     parts.push("--account");
