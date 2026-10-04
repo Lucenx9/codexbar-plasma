@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Reveal truncated Overview tab title in a tooltip on hover, matching provider
+  tabs and other global tabs.
 - Translate the advanced provider override to its CLI name for usage and cost
   requests. With CLI 0.67.0, an override such as `abacus` or
   `alibabatokenplan` previously returned Codex usage instead.

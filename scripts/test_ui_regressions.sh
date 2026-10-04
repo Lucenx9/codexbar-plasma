@@ -1439,7 +1439,7 @@ for global_tab_id in ("spendTab", "sessionsTab"):
         raise AssertionError(f"{global_tab_id} must use the popup label preference")
 for icon_only_fragment in (
     'visible: applet.showPopupTabLabels',
-    'visible: !applet.showPopupTabLabels && overviewTabMouse.containsMouse',
+    'visible: (!applet.showPopupTabLabels || overviewTab.textTruncated) && overviewTabMouse.containsMouse',
     'visible: (!applet.showPopupTabLabels || providerTabLabel.truncated)',
 ):
     if not code_contains(provider_tabs_body, icon_only_fragment):
