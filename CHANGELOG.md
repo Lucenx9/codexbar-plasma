@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Reveal truncated provider update timestamp in a tooltip on hover in the
+  provider header, matching title, account, and plan labels.
 - Reveal truncated Overview tab title in a tooltip on hover, matching provider
   tabs and other global tabs.
 - Translate the advanced provider override to its CLI name for usage and cost
