@@ -213,6 +213,7 @@ class ManagedCliTests(unittest.TestCase):
 
     def test_archive_rejects_traversal_links_devices_duplicates_and_oversize(self):
         for name, kind, link, size in [("../escape", tarfile.REGTYPE, "", 0),
+                                       ("CodexBar_CodexBarCore.bundle/..", tarfile.REGTYPE, "", 0),
                                        ("CodexBarCLI", tarfile.REGTYPE, "", 0),
                                        ("CodexBar_CodexBarCore.bundle/bad", tarfile.SYMTYPE, "/etc", 0),
                                        ("device", tarfile.CHRTYPE, "", 0),
