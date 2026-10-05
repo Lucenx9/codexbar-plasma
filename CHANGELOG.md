@@ -10,6 +10,14 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Added
+
+- Bundle fallback names, original icons, dashboards, documentation links, and
+  brand colors for the Muse, LithosAI, and WorkBuddy providers that official
+  CodexBar 0.71.0 and 0.72.0 add to the registry. All three are cookie-only
+  with a macOS-only web source on Linux, so they keep Documentation and
+  Dashboard links without an API-key setup action.
+
 ### Fixed
 
 - Keep the minus sign of a negative change at the start of an AI Insights

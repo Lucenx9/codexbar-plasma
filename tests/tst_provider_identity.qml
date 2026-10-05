@@ -241,6 +241,50 @@ TestCase {
         }
     }
 
+    function test_official0710RegistryProvidersHaveBundledMetadata() {
+        // Official 0.71.0 additions in `config providers` output, with the
+        // upstream descriptor colors and dashboards and no status page. Both
+        // are cookie-only with a macOS-only web source on Linux.
+        var added = {
+            "lithosai": { dashboard: "https://console.lithosai.cloud",
+                channels: [107 / 255, 114 / 255, 128 / 255] },
+            "museai": { dashboard: "https://muse.ai/?settings_tab=general",
+                channels: [6 / 255, 104 / 255, 225 / 255] }
+        };
+        for (var key in added) {
+            compare(ProviderIdentity.providerIconFileName(key), key + ".svg");
+            compare(ProviderIdentity.providerDocsUrl(key),
+                ProviderIdentity.documentationBaseUrl + key + ".md");
+            compare(ProviderIdentity.providerDashboardUrl(key), added[key].dashboard);
+            compare(ProviderIdentity.providerBrandColorChannels(key), added[key].channels);
+            compare(ProviderIdentity.providerStatusUrl(key), "");
+            compare(ProviderIdentity.providerLoginUrl(key), "");
+            compare(ProviderIdentity.resolveProviderKey(key), key);
+            compare(ProviderIdentity.providerCliArgument(key), key);
+        }
+    }
+
+    function test_official0720RegistryProvidersHaveBundledMetadata() {
+        // Official 0.72.0 addition in `config providers` output, with the
+        // upstream descriptor color and dashboard and no status page.
+        // WorkBuddy is cookie-only with a macOS-only web source on Linux.
+        var added = {
+            "workbuddy": { dashboard: "https://www.workbuddy.cn/profile/plans-usage",
+                channels: [13 / 255, 200 / 255, 166 / 255] }
+        };
+        for (var key in added) {
+            compare(ProviderIdentity.providerIconFileName(key), key + ".svg");
+            compare(ProviderIdentity.providerDocsUrl(key),
+                ProviderIdentity.documentationBaseUrl + key + ".md");
+            compare(ProviderIdentity.providerDashboardUrl(key), added[key].dashboard);
+            compare(ProviderIdentity.providerBrandColorChannels(key), added[key].channels);
+            compare(ProviderIdentity.providerStatusUrl(key), "");
+            compare(ProviderIdentity.providerLoginUrl(key), "");
+            compare(ProviderIdentity.resolveProviderKey(key), key);
+            compare(ProviderIdentity.providerCliArgument(key), key);
+        }
+    }
+
     function test_retiredCrofKeepsBundledMetadataForOlderCliReleases() {
         // 0.64.1 retired Crof, but an installed 0.63.0 still emits it. Dropping
         // the metadata would turn a named provider into the unknown fallback

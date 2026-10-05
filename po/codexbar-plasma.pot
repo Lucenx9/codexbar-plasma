@@ -873,6 +873,10 @@ msgid "LiteLLM"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
+msgid "LithosAI"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
 msgid "llmman"
 msgstr ""
 
@@ -906,6 +910,10 @@ msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
 msgid "Muse Code"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Muse (muse.ai)"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
@@ -1018,6 +1026,10 @@ msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
 msgid "Windsurf"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
+msgid "WorkBuddy"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml

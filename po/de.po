@@ -930,6 +930,10 @@ msgid "LiteLLM"
 msgstr "LiteLLM"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "LithosAI"
+msgstr "LithosAI"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "llmman"
 msgstr "llmman"
 
@@ -964,6 +968,10 @@ msgstr "Moonshot / Kimi Open Platform"
 #: contents/ui/components/ProviderNames.qml
 msgid "Muse Code"
 msgstr "Muse Code"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Muse (muse.ai)"
+msgstr "Muse (muse.ai)"
 
 #: contents/ui/components/ProviderNames.qml
 msgid "Neuralwatt"
@@ -1076,6 +1084,10 @@ msgstr "Wayfinder"
 #: contents/ui/components/ProviderNames.qml
 msgid "Windsurf"
 msgstr "Windsurf"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "WorkBuddy"
+msgstr "WorkBuddy"
 
 #: contents/ui/components/ProviderNames.qml
 msgid "xAI"

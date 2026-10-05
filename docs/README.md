@@ -97,6 +97,15 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   year-1 `--period all` day count, empty-config tolerance, and
   bubblewrap-isolated official CLI probes. Provider descriptors, generic
   config actions, Cursor cost, and display currency remain unavailable.
+- [0.72.0 release review](research/2026-10-05-macos-parity-0.72.0.md): the
+  0.70.0 through 0.72.0 delta with the Muse, LithosAI, and WorkBuddy
+  registry additions (90 records, same keys) and their cookie-only
+  macOS-gated Linux reachability, the Claude manual-`sessionKey` runtime
+  opening verified before and after, unchanged cost and usage envelopes
+  with the still year-1 `--period all` day count, empty-config tolerance,
+  and bubblewrap-isolated official CLI probes. Provider descriptors,
+  generic config actions, Cursor cost, and display currency remain
+  unavailable.
 - [Settings decisions](research/2026-09-08-settings-experience.md): Panel disclosure and text grouping,
   Plasma settings, privacy, refresh behavior, the macOS 0.56.8 comparison, and
   the shared settings visual conventions.
