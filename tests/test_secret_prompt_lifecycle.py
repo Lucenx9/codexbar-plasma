@@ -718,6 +718,11 @@ TestCase {
         compare(supportsApiKeySetup("mistral"), false);
         compare(supportsApiKeySetup("abacus"), false);
         compare(supportsApiKeySetup("abacusai"), false);
+        // CLI 0.71.0/0.72.0 rejects it for Muse, LithosAI, and WorkBuddy:
+        // all three are cookie-only with a macOS-only web source on Linux.
+        compare(supportsApiKeySetup("museai"), false);
+        compare(supportsApiKeySetup("lithosai"), false);
+        compare(supportsApiKeySetup("workbuddy"), false);
         // CLI 0.67.0 rejects ten more providers with the same message.
         compare(supportsApiKeySetup("alibabatokenplan"), false);
         compare(supportsApiKeySetup("bedrock"), false);

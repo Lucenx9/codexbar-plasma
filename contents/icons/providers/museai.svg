@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Original agent-bubble-with-check glyph for Muse; no vendor mark. -->
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+  <path d="M4 6a8 8 0 0 1 16 0v6a4 4 0 0 1-4 4H9l-5 4V6"/>
+  <path d="M9.5 11.5l2 2 3.5-4"/>
+</svg>

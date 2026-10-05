@@ -140,6 +140,9 @@ released_providers=(
   xkiro
   raycast
   aixy
+  museai
+  lithosai
+  workbuddy
 )
 
 # Retired upstream but still emitted by an older installed CLI. 0.64.1 removed

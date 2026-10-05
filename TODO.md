@@ -8,10 +8,17 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.69.0](https://github.com/steipete/CodexBar/releases/tag/v0.69.0),
-  commit `48ded68da6932a4fe5de9037d06c4ac48bd36e90`, checked 2026-09-29.
-- Coverage: release changes from 0.68.0 through 0.69.0 against Plasma
-  `d0a10dd`. The
+- Last release reviewed: [CodexBar 0.72.0](https://github.com/steipete/CodexBar/releases/tag/v0.72.0),
+  commit `cfee869f3181379dd074adb9feeb5f19a994356a`, checked 2026-10-05.
+- Coverage: release changes from 0.70.0 through 0.72.0 against Plasma
+  `b3edc4d`. The
+  [0.72.0 review](docs/research/2026-10-05-macos-parity-0.72.0.md) verifies the
+  Muse, LithosAI, and WorkBuddy registry additions (90 records, same four
+  keys) and their cookie-only macOS-gated Linux reachability, the Claude
+  manual-`sessionKey` runtime opening before and after, unchanged cost and
+  usage envelopes with the still year-1 `--period all` day count, and
+  empty-config tolerance; the descriptor, config-action, Cursor cost, and
+  display-currency blockers are unchanged. The
   [0.69.0 review](docs/research/2026-09-29-macos-parity-0.69.0.md) verifies the
   unchanged 87-provider registry, the Mistral manual-cookie runtime fix before
   and after, unchanged setup reachability for the bundled-plugin migrations,
@@ -62,7 +69,7 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Implementable on Linux
 
-None currently identified against the 0.69.0 baseline.
+None currently identified against the 0.72.0 baseline.
 
 ## Blocked on official Linux CLI contracts
 
@@ -72,8 +79,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider settings
 
 - [ ] Enable generic settings and token-account editing through official
-  descriptors and writes. Linux 0.69.0 still rejects `config providers
-  --descriptors` (87 records, same four keys); its provider records have no
+  descriptors and writes. Linux 0.72.0 still rejects `config providers
+  --descriptors` (90 records, same four keys); its provider records have no
   descriptor. Helmcode and TypeSafe make this concrete: both are cookie-only,
   both refuse `--source api`, and their documented `cookieSource`/`cookieHeader`
   config path has no supported writer, so they stay metadata-only on Linux.
@@ -91,7 +98,11 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   `cookieSource`/`cookieHeader` in the config file, Linux usage attempts the
   fetch instead of refusing as macOS-only (verified 0.67.0 vs 0.68.0);
   `set-api-key` still refuses mistral and no writer exists for the cookie
-  fields, so setup stays blocked.
+  fields, so setup stays blocked. 0.72.0 lifts the same gate for Claude's
+  manual `sessionKey` cookie (#4241): with a synthetic manual cookie, Linux
+  usage attempts `claude.ai` instead of reporting no available strategy
+  (verified 0.69.0 vs 0.72.0); browser import stays macOS-only and no writer
+  exists for the cookie fields, so setup stays blocked.
   `--label` and `--workspace-id` remain z.ai-only, so the new labeled Kimi, Doubao, and OpenCode Go accounts cannot be created from Linux.
   0.61.0 adds an `azureOpenAIAPIVersion` config extension value with no
   supported CLI writer, which the frontend must not reach by editing the config
@@ -107,7 +118,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.69.0 still has no
+  flow, CLI-auth setup, and token-account actions. Linux 0.72.0 still has no
   generic `config action` command (`set-api-key` remains the sole writer; the
   `usage_updated` hook event is CLI automation surface, not a setup
   action). Done when supported actions expose validated
@@ -142,7 +153,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Cursor cost
 
 - [ ] Show Cursor cost history through the generic Linux `cost` path. Linux
-  0.69.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
+  0.72.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
   Code, and Pi as supported;
   the descriptor gate keeps the new cookie-source availability errors unreachable.
   The 0.68.0 all-history date-range fix (#4028) targets macOS Usage & Spend
@@ -197,7 +208,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 - [ ] Offer display-currency selection and conversion through an official Linux
   contract. The 0.56.2 audit records no display-currency setter or descriptor;
-  the scoped 0.57.0, 0.58.0, 0.60.4, 0.67.0, and 0.69.0 config probes expose neither,
+  the scoped 0.57.0, 0.58.0, 0.60.4, 0.67.0, 0.69.0, and 0.72.0 config probes expose neither,
   although macOS 0.67.0 adds twelve spend-estimate currencies. Plasma currently
   displays the CLI-emitted currency. Done when released settings and converted
   amounts define currency, rate provenance, and unavailable-conversion behavior,
@@ -254,8 +265,12 @@ These are unresolved Linux candidates, not confirmed missing features.
   Starter allowances and explicit window cadence (#4084), still unmeasured.
   Reproduce with a signed-in Antigravity account and one
   other quota provider, then classify whether any normalization changes.
+  Cover the 0.71.0 per-account private-session quotas (#4103), the 0.72.0
+  2.19.1 OAuth client-credentials recovery (#4229), and the opt-in extra
+  profile homes (#4177) in the same reproduction.
   [Unverified at 0.64.1](docs/research/2026-09-22-macos-parity-0.64.1.md#unverified-in-this-review);
-  [0.69.0 addition](docs/research/2026-09-29-macos-parity-0.69.0.md#unverified-in-this-review).
+  [0.69.0 addition](docs/research/2026-09-29-macos-parity-0.69.0.md#unverified-in-this-review);
+  [0.72.0 shapes](docs/research/2026-10-05-macos-parity-0.72.0.md#unverified-in-this-review).
 - [ ] Verify Mistral's Included API and Vibe Monthly Plan windows in official
   Linux `usage` output. 0.68.0 lifts the macOS-only runtime gate for the
   manual-cookie path (#4024), so a subscription with `cookieSource` and
@@ -263,6 +278,21 @@ These are unresolved Linux candidates, not confirmed missing features.
   with a Mistral subscription safely, then classify the window shape against
   Plasma's generic quota rendering.
   [Unverified at 0.69.0](docs/research/2026-09-29-macos-parity-0.69.0.md#unverified-in-this-review).
+- [ ] Verify Claude web-source allowance windows in official Linux `usage`
+  output. 0.72.0 attempts the claude.ai fetch with an explicitly configured
+  manual `sessionKey` cookie (#4241), so a web subscription should now return
+  session/weekly/quota windows on Linux. Reproduce with a Claude subscription
+  and a synthetic manual cookie safely, then classify the window shape against
+  Plasma's generic quota rendering.
+  [Unverified at 0.72.0](docs/research/2026-10-05-macos-parity-0.72.0.md#unverified-in-this-review).
+- [ ] Verify the new 0.72.0 credit balance fields in official Linux `usage`
+  output: Grok purchased Extra Usage Credits, the Claude promotional
+  cloud-session credit separation from prepaid credits, and the Claude saved
+  limit-reset credits in OAuth usage (#4239, #4243, #4194, #4214, #3895,
+  #4232). Empty-history output carries none of them. Reproduce each with a
+  funded account safely, then classify whether the generic balance/details
+  path renders them or a normalization change is needed.
+  [Unverified at 0.72.0](docs/research/2026-10-05-macos-parity-0.72.0.md#unverified-in-this-review).
 - [ ] Verify whether Cursor's 0.64.1 Grok Bot allowance reaches Linux `usage`
   output, and under which key. The release adds a `Grok Bot %` menu-bar layout
   token; a corresponding rate window would be a normal extra window for Plasma,
