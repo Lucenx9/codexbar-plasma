@@ -199,6 +199,16 @@ RowLayout {
             Layout.fillWidth: true
             elide: Text.ElideRight
             maximumLineCount: 1
+
+            HoverHandler {
+                id: providerUpdatedHover
+            }
+
+            PlainToolTip {
+                parent: providerUpdatedLabel
+                visible: providerUpdatedLabel.truncated && providerUpdatedHover.hovered
+                plainText: providerUpdatedLabel.text
+            }
         }
     }
 

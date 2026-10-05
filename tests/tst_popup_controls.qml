@@ -369,6 +369,8 @@ TestCase {
         var longAccount = "engineering-with-an-unusually-long-account-name@example.com";
         var longPlan = "Enterprise Pro Plan Extra Long";
         var longTitle = "Codex Provider Title That Is Very Long";
+        var longUpdated = "Last known usage, 8 minutes ago - Stale measurement from 2026-09-27 12:34:56";
+        applet.providerUpdatedText = longUpdated;
         var header = createControl("ProviderHeader", {
             applet: applet,
             providerData: {
@@ -376,13 +378,14 @@ TestCase {
                 title: longTitle,
                 account: longAccount,
                 planText: longPlan,
-                hasIncident: false
+                hasIncident: false,
+                lastGoodAtMs: 1
             },
             width: 200
         });
         if (!header)
             return;
-        var texts = [longAccount, longPlan, longTitle];
+        var texts = [longAccount, longPlan, longTitle, longUpdated];
         var labels = [];
         var tips = [];
         for (var i = 0; i < texts.length; i++) {
@@ -419,8 +422,10 @@ TestCase {
             title: "Codex",
             account: "a@b.co",
             planText: "Pro",
-            hasIncident: false
+            hasIncident: false,
+            lastGoodAtMs: 1
         };
+        applet.providerUpdatedText = "Updated 11:55";
         for (var n = 0; n < labels.length; n++) {
             var fitted = labels[n];
             tryVerify(function () { return !fitted.truncated; });
