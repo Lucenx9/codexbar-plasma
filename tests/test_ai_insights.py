@@ -344,6 +344,10 @@ class ResponseValidationTests(HelperTestCase):
         self.assertEqual(fenced["summary"], INSIGHT["summary"])
         control = self.reply(chat(json.dumps({"summary": "a\u0000‮\nb", "highlights": []})))
         self.assertEqual(control["summary"], "a b")
+        signed = self.reply(chat(json.dumps({"summary": "-45% Codex spend than last week.",
+                                             "highlights": ["- -12% Claude", "* item", "\u2022Gemini"]})))
+        self.assertEqual(signed["summary"], "-45% Codex spend than last week.")
+        self.assertEqual(signed["highlights"], ["-12% Claude", "item", "Gemini"])
 
     def test_malformed_outputs_fail_without_retrying(self):
         cases = [

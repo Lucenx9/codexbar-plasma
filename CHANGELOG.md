@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep the minus sign of a negative change at the start of an AI Insights
+  summary or highlight instead of removing it like a list bullet, which
+  turned a drop such as "-45%" into an increase.
 - Reveal truncated Overview tab title in a tooltip on hover, matching provider
   tabs and other global tabs.
 - Translate the advanced provider override to its CLI name for usage and cost
