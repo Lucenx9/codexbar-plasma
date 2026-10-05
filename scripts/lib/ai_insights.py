@@ -439,7 +439,9 @@ def clean_text(value, limit):
     if not isinstance(value, str):
         return None
     text = " ".join("".join(c if c.isprintable() else " " for c in value).split())
-    text = re.sub(r"^(?:[-*\u2022]\s*)+", "", text).replace("**", "").strip()
+    # A Markdown bullet needs a space after "-" or "*"; without one the "-" is
+    # the sign of a value such as a negative "changePercent" and must stay.
+    text = re.sub(r"^(?:[-*](?:\s+|$)|\u2022\s*)+", "", text).replace("**", "").strip()
     if len(text) > limit:
         cut = text[:limit - 1]
         text = (cut[:cut.rfind(" ")] if " " in cut else cut).rstrip(" ,;:") + "\u2026"
