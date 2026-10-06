@@ -651,14 +651,6 @@ PlasmoidItem {
         return days === 1 ? i18n("Today") : i18np("Last %1 day", "Last %1 days", days)
     }
 
-    function costSparklineSummary(points) {
-        var summary = CostPresentation.sparklineSummary(costNumberFormat, points, costHistoryShowsTokens)
-        if (!summary) {
-            return ""
-        }
-        return i18n("%1: %2", summary.label.length > 0 ? costDayLabel(summary.label) : i18n("Latest"), summary.value)
-    }
-
     function costChartPoints(points, memo) {
         return CostPresentation.memoizedChartPoints(memo, costNumberFormat, points, costHistoryShowsTokens)
     }
@@ -756,75 +748,6 @@ PlasmoidItem {
     // rather than a spend reason.
     function spendHistoryStillBuilding() {
         return CostPresentation.historyStillBuilding(spendProviderCosts())
-    }
-
-    function costBreakdownRows(tokenCost) {
-        if (!tokenCost || !tokenCost.totals) {
-            return []
-        }
-
-        var totals = tokenCost.totals
-        return CostPresentation.breakdownRows([
-            { label: i18n("Total tokens"), tokens: totals.tokens },
-            { label: i18n("Input"), tokens: totals.inputTokens },
-            { label: i18n("Output"), tokens: totals.outputTokens },
-            { label: i18n("Cache read"), tokens: totals.cacheReadTokens },
-            { label: i18n("Cache write"), tokens: totals.cacheCreationTokens }
-        ])
-    }
-
-    function costModelRows(tokenCost) {
-        return CostPresentation.modelRows(costNumberFormat, tokenCost, function(tokens) {
-            return usageCountText(tokens, "tokens")
-        })
-    }
-
-    // Cost text dates a CLI calendar key like the chart does; other labels
-    // stay as sent.
-    function costDayLabel(label) {
-        var date = Normalizer.calendarKeyLocalDate(label)
-        return date ? date.toLocaleDateString(Qt.locale(), Locale.ShortFormat) : label
-    }
-
-    function costHistoryRows(tokenCost) {
-        return CostPresentation.historyRows(costNumberFormat, tokenCost, costHistoryShowsTokens, i18n("Latest"))
-            .map(function (row) {
-                row.label = costDayLabel(row.label)
-                return row
-            })
-    }
-
-    function costPeakLine(points) {
-        var peak = CostPresentation.peakPoint(CostPresentation.recentHistoryPoints(points), costHistoryShowsTokens)
-        if (!peak) {
-            return ""
-        }
-        return i18n("Peak: %1 - %2",
-            peak.label.length > 0 ? costDayLabel(peak.label) : i18n("Latest"),
-            costHistoryShowsTokens
-                ? CostPresentation.tokenCountString(peak.magnitude)
-                : CostPresentation.amountString(costNumberFormat, peak.magnitude, peak.currency))
-    }
-
-    // A calendar period longer than the chart supplies its whole-range average.
-    function costAverageDailyLine(points, averageDaily) {
-        var average = averageDaily ? averageDaily[costHistoryShowsTokens ? "tokens" : "cost"]
-            : CostPresentation.averageDailyValue(points, costHistoryShowsTokens)
-        if (!average) {
-            return ""
-        }
-        return i18n("Average/day: %1", costHistoryShowsTokens
-            ? CostPresentation.tokenCountString(average.value)
-            : CostPresentation.amountString(costNumberFormat, average.value, average.currency))
-    }
-
-    function costPerMillionLine(tokenCost) {
-        var perMillion = CostPresentation.perMillionAmount(tokenCost)
-        if (!perMillion) {
-            return ""
-        }
-        return i18n("Average: %1 / 1M tokens",
-            CostPresentation.amountString(costNumberFormat, perMillion.value, perMillion.currency))
     }
 
     function dashboardLabelText(labelKey) {

@@ -133,9 +133,7 @@ TestCase {
         main = ROOT / "contents/ui/main.qml"
         applet.texts = {main: main.read_text()}
         applet.files = [main]
-        names = ("costBreakdownRows", "costModelRows", "costHistoryRows",
-                 "costPeakLine", "costAverageDailyLine", "costPerMillionLine",
-                 "costSparklineSummary", "costDayLabel", "costHistoryWindowLabel",
+        names = ("costHistoryWindowLabel",
                  "costChartPoints", "spendTotalLine", "spendProviderCosts",
                  "spendHistoryStillBuilding", "costPresentation", "providerTitle",
                  "providerKey", "amountString", "usageCountText", "tokenCountString",
@@ -242,6 +240,11 @@ TestCase {
         id: providerNames
         function i18n(text) { return text }
     }
+    Components.CostLabels {
+        id: costLabels
+        applet: root
+        function i18n(source) { return root.i18n.apply(root, arguments) }
+    }
     QtObject {
         id: root
         property var costNumberFormat: CostPresentation.numberFormat(",", ".")
@@ -271,7 +274,7 @@ TestCase {
     }
     // Every token lane survives the breakdown; a zeroed lane drops out.
     function test_breakdownRowsKeepEveryLane() {
-        var rows = root.costBreakdownRows(laneTotals());
+        var rows = costLabels.costBreakdownRows(laneTotals());
         compare(rows.length, 5);
         compare(rows[0].label, "Total tokens");
         compare(rows[0].value, "1.5K");
@@ -279,12 +282,12 @@ TestCase {
     // Model and history rows follow the shared presentation module, newest
     // day first with the peak of the selected metric flagged.
     function test_modelAndHistoryRowsFollowPresentation() {
-        var models = root.costModelRows({models: [
+        var models = costLabels.costModelRows({models: [
             {label: "A", cost: 1, tokens: 1000, currency: "USD"},
             {label: "B", cost: null, tokens: 500, currency: "USD"}]});
         compare(models.length, 2);
         compare(models[1].value, "500 tokens");
-        var history = root.costHistoryRows({daily: [
+        var history = costLabels.costHistoryRows({daily: [
             {label: "Mon", cost: 1, tokens: 4000, currency: "USD"},
             {label: "Tue", cost: 4, tokens: 1000, currency: "USD"}]});
         compare(history[0].label, "Tue");
@@ -295,17 +298,17 @@ TestCase {
     // The peak, average and per-million lines word the selected metric; an
     // empty selection stays empty instead of printing a zero.
     function test_summaryLinesWordTheSelectedMetric() {
-        compare(root.costPeakLine(twoDays()), "Peak: Mon - $5.00");
-        compare(root.costAverageDailyLine(twoDays()), "Average/day: $3.50");
-        compare(root.costPerMillionLine(
+        compare(costLabels.costPeakLine(twoDays()), "Peak: Mon - $5.00");
+        compare(costLabels.costAverageDailyLine(twoDays()), "Average/day: $3.50");
+        compare(costLabels.costPerMillionLine(
             {totals: {cost: 2, tokens: 1000000, currency: "USD"}}),
             "Average: $2.00 / 1M tokens");
-        compare(root.costPeakLine([]), "");
+        compare(costLabels.costPeakLine([]), "");
         // All history longer than the chart supplies its whole-range average.
         var average = {cost: {value: 9, currency: "USD"}, tokens: null};
-        compare(root.costAverageDailyLine(twoDays(), average), "Average/day: $9.00");
+        compare(costLabels.costAverageDailyLine(twoDays(), average), "Average/day: $9.00");
         root.costHistoryShowsTokens = true;
-        compare(root.costAverageDailyLine(twoDays(), average), "");
+        compare(costLabels.costAverageDailyLine(twoDays(), average), "");
         root.costHistoryShowsTokens = false;
     }
     // A peak older than the seven history rows is neither shown nor
@@ -314,12 +317,12 @@ TestCase {
         var daily = [{label: "D0", cost: 50, tokens: 1, currency: "USD"}];
         for (var i = 1; i <= 7; i++)
             daily.push({label: "D" + i, cost: i === 3 ? 9 : 1, tokens: 1, currency: "USD"});
-        var rows = root.costHistoryRows({daily: daily});
+        var rows = costLabels.costHistoryRows({daily: daily});
         compare(rows.map(function(row) { return row.label; }),
             ["D7", "D6", "D5", "D4", "D3", "D2", "D1"]);
         var highlighted = rows.filter(function(row) { return row.isPeak; });
         compare(highlighted.map(function(row) { return row.label; }), ["D3"]);
-        compare(root.costPeakLine(daily), "Peak: D3 - $9.00");
+        compare(costLabels.costPeakLine(daily), "Peak: D3 - $9.00");
     }
     // History rows, the peak line, and the latest-day summary date their
     // days like the chart, in the locale's short format, and keep any other
@@ -334,14 +337,14 @@ TestCase {
             {label: "2026-09-23", cost: 1, tokens: 1, currency: "USD"},
             {label: "2026-09-24", cost: 4, tokens: 1, currency: "USD"},
             {label: "2026-09-25", cost: 2, tokens: 1, currency: "USD"}];
-        compare(root.costHistoryRows({daily: daily}).map(function(row) { return row.label; }),
+        compare(costLabels.costHistoryRows({daily: daily}).map(function(row) { return row.label; }),
             [day("2026-09-25"), day("2026-09-24"), day("2026-09-23")]);
-        compare(root.costPeakLine(daily), "Peak: " + day("2026-09-24") + " - $4.00");
-        compare(root.costSparklineSummary(daily), day("2026-09-25") + ": $2.00");
-        compare(root.costDayLabel("2026-09-24"), day("2026-09-24"));
-        compare(root.costDayLabel("Week 34"), "Week 34");
-        compare(root.costDayLabel("2026-02-30"), "2026-02-30");
-        compare(root.costDayLabel(""), "");
+        compare(costLabels.costPeakLine(daily), "Peak: " + day("2026-09-24") + " - $4.00");
+        compare(costLabels.costSparklineSummary(daily), day("2026-09-25") + ": $2.00");
+        compare(costLabels.costDayLabel("2026-09-24"), day("2026-09-24"));
+        compare(costLabels.costDayLabel("Week 34"), "Week 34");
+        compare(costLabels.costDayLabel("2026-02-30"), "2026-02-30");
+        compare(costLabels.costDayLabel(""), "");
     }
     // Calendar periods title themselves in the locale, never from the CLI's
     // English label or a day count that changes through the month.

@@ -2145,7 +2145,7 @@ for fragment in (
 if not code_contains(cost_drill_down_body, "readonly property real metricValueColumnWidth: Kirigami.Units.gridUnit * 9"):
     raise AssertionError("costDrillDownSection must define a stable value column width")
 for fragment in ('i18n("Cost details")',
-                 'i18n("Details for %1", applet.costDayLabel(tokenCostSection.selectedDay.label))'):
+                 'i18n("Details for %1", costLabels.costDayLabel(tokenCostSection.selectedDay.label))'):
     if not code_contains(cost_drill_down_body, fragment):
         raise AssertionError("costDrillDownSection must use a plain, user-facing title with a localized day")
 for value_label in ("costBreakdownValueLabel", "costModelValueLabel"):
