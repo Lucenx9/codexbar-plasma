@@ -10,6 +10,7 @@ ColumnLayout {
     objectName: "sessionsView"
 
     required property var applet
+    readonly property alias labels: sessionLabels
     property string copiedValueKey: ""
     property double sessionClockMs: Date.now()
 
@@ -24,6 +25,11 @@ ColumnLayout {
         if (visible) {
             sessionClockMs = Date.now()
         }
+    }
+
+    Components.SessionLabels {
+        id: sessionLabels
+        applet: view.applet
     }
 
     function copySessionValue(text, valueKey) {
@@ -181,7 +187,7 @@ ColumnLayout {
 
                     readonly property bool activeSession: modelData.state === "active"
                         || modelData.state === "running"
-                    readonly property string subtitle: view.applet.sessionSubtitle(
+                    readonly property string subtitle: sessionLabels.sessionSubtitle(
                         modelData, view.applet.sessionHostsVary)
                     readonly property string titleCopyKey: "title:" + index
                     readonly property color accent: view.applet.providerReadableColor(
@@ -203,7 +209,7 @@ ColumnLayout {
                     }
 
                     Accessible.role: Accessible.ListItem
-                    Accessible.name: view.applet.sessionTitle(modelData, index)
+                    Accessible.name: sessionLabels.sessionTitle(modelData, index)
                     Accessible.description: subtitle
 
                     HoverHandler {
@@ -234,7 +240,7 @@ ColumnLayout {
                             CopyableValue {
                                 id: sessionTitleValue
 
-                                text: view.applet.sessionTitle(modelData, index)
+                                text: sessionLabels.sessionTitle(modelData, index)
                                 fontWeight: Font.DemiBold
                                 copyAccessibleName: i18n("Copy session name")
                                 copyEnabled: !view.applet.privacyMode
@@ -247,7 +253,7 @@ ColumnLayout {
 
                             PlainPlasmaLabel {
                                 visible: modelData.sessionName.length > 0
-                                    && modelData.sessionName !== view.applet.sessionTitle(modelData, index)
+                                    && modelData.sessionName !== sessionLabels.sessionTitle(modelData, index)
                                 text: modelData.sessionName
                                 opacity: view.applet.valueTextOpacity
                                 Layout.fillWidth: true
@@ -271,7 +277,7 @@ ColumnLayout {
                             // State reads the same for every provider, so it
                             // uses the theme's meaning colors, not the accent.
                             PlainPlasmaLabel {
-                                text: view.applet.sessionStateText(modelData.state)
+                                text: sessionLabels.sessionStateText(modelData.state)
                                 color: sessionCard.activeSession
                                     ? Kirigami.Theme.positiveTextColor
                                     : Kirigami.Theme.textColor
@@ -286,7 +292,7 @@ ColumnLayout {
                             }
 
                             PlainPlasmaLabel {
-                                text: view.applet.sessionActivityText(modelData, view.sessionClockMs)
+                                text: sessionLabels.sessionActivityText(modelData, view.sessionClockMs)
                                 opacity: view.applet.secondaryTextOpacity
                                 font.pixelSize: Kirigami.Theme.smallFont.pixelSize
                                 horizontalAlignment: Text.AlignRight

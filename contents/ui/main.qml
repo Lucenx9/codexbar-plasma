@@ -482,18 +482,6 @@ PlasmoidItem {
         return accountsController.load(providerID)
     }
 
-    function sessionTitle(item, index) {
-        if (privacyMode) {
-            return i18n("Session %1", (index >= 0 ? index : 0) + 1)
-        }
-        if (!item) {
-            return i18n("Untitled session")
-        }
-        return item.projectName.length > 0
-            ? item.projectName
-            : (item.sessionName.length > 0 ? item.sessionName : i18n("Untitled session"))
-    }
-
     // Every session runs on the same machine unless the CLI reports more than
     // one host, so a repeated host name would only add noise to each card.
     readonly property bool sessionHostsVary: {
@@ -510,80 +498,6 @@ PlasmoidItem {
             }
         }
         return false
-    }
-
-    function sessionSubtitle(item, showHost) {
-        item = PrivacyPresentation.session(item, privacyMode)
-        if (!item) {
-            return ""
-        }
-        var details = []
-        var providerText = sessionProviderText(item)
-        if (providerText.length > 0) {
-            details.push(providerText)
-        }
-        if (showHost === true && item.host.length > 0) {
-            details.push(item.host)
-        }
-        if (item.source.length > 0) {
-            details.push(sessionSourceText(item.source))
-        }
-        return details.join(" \u00b7 ")
-    }
-
-    // Pi-family sessions share the `pi` provider; like the macOS menu, the
-    // dialect names an OMP session instead of the provider.
-    function sessionProviderText(item) {
-        switch (item.dialect) {
-        case "omp":
-            return "OMP"
-        case "":
-        case "pi":
-        case undefined:
-            return item.provider.length > 0 ? providerDisplayTitle(item.provider) : ""
-        default:
-            return privacyMode ? "" : item.dialect
-        }
-    }
-
-    function sessionStateText(state) {
-        switch (state) {
-        case "active":
-            return i18n("Active")
-        case "idle":
-            return i18n("Idle")
-        case "running":
-            return i18n("Running")
-        case "working":
-            return i18n("Working")
-        case "":
-        case "unknown":
-            return i18n("Unknown")
-        default:
-            return privacyMode ? i18n("Unknown") : capitalize(state)
-        }
-    }
-
-    function sessionSourceText(source) {
-        switch (source) {
-        case "cli":
-            return i18n("Command line")
-        case "desktopApp":
-            return i18n("Desktop app")
-        case "ide":
-            return i18n("IDE")
-        case "unknown":
-            return i18n("Unknown")
-        default:
-            return privacyMode ? i18n("Unknown") : source
-        }
-    }
-
-    function sessionActivityText(item, nowMs) {
-        if (!item || !isFinite(Number(item.activityMs)) || Number(item.activityMs) <= 0) {
-            return ""
-        }
-        return elapsedText(Number(item.activityMs), nowMs)
     }
 
     // "Just now", "5 minutes ago", "2 days ago": the popup's relative age.

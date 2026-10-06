@@ -248,16 +248,10 @@ TestCase {
         }
         property real nestedSurfaceRadius: 4
         property bool sessionHostsVary: false
-        function sessionTitle(item) {
-            return item.projectName;
+        function capitalize(value) {
+            return value;
         }
-        function sessionSubtitle(item, showHost) {
-            return showHost ? "host" : "details";
-        }
-        function sessionStateText(state) {
-            return state === "active" ? "Active" : "Idle";
-        }
-        function sessionActivityText() {
+        function elapsedText() {
             return "Just now";
         }
         function openProviderFromPanel(id) {

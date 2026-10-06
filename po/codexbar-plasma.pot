@@ -1262,6 +1262,47 @@ msgstr ""
 msgid "Usage"
 msgstr ""
 
+#: contents/ui/components/SessionLabels.qml
+msgid "Session %1"
+msgstr ""
+
+#: contents/ui/components/SessionLabels.qml
+msgid "Untitled session"
+msgstr ""
+
+#: contents/ui/components/SessionLabels.qml
+msgid "Command line"
+msgstr ""
+
+#: contents/ui/components/SessionLabels.qml
+msgid "Desktop app"
+msgstr ""
+
+#: contents/ui/components/SessionLabels.qml
+msgid "IDE"
+msgstr ""
+
+#: contents/ui/components/SessionLabels.qml contents/ui/configDiagnostics.qml
+#: contents/ui/main.qml
+msgid "Unknown"
+msgstr ""
+
+#: contents/ui/components/SessionLabels.qml
+msgid "Active"
+msgstr ""
+
+#: contents/ui/components/SessionLabels.qml
+msgid "Idle"
+msgstr ""
+
+#: contents/ui/components/SessionLabels.qml
+msgid "Running"
+msgstr ""
+
+#: contents/ui/components/SessionLabels.qml
+msgid "Working"
+msgstr ""
+
 #: contents/ui/components/SessionsView.qml
 msgid "%1 local session"
 msgid_plural "%1 local sessions"
@@ -1703,10 +1744,6 @@ msgstr ""
 
 #: contents/ui/configDiagnostics.qml
 msgid "CodexBar Plasma:"
-msgstr ""
-
-#: contents/ui/configDiagnostics.qml contents/ui/main.qml
-msgid "Unknown"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
@@ -2970,42 +3007,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Last known usage, %1 ago"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Session %1"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Untitled session"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Active"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Idle"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Running"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Working"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Command line"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Desktop app"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "IDE"
 msgstr ""
 
 #: contents/ui/main.qml
