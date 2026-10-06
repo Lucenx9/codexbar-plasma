@@ -63,9 +63,6 @@ TestCase {
         function resetLabel(value) {
             return "Resets " + value;
         }
-        function overviewDetailText(item) {
-            return item.account || "";
-        }
         function lastGoodUsageText() {
             return "Last known usage, 8 minutes ago";
         }

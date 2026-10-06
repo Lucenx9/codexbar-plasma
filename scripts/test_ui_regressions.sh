@@ -1347,7 +1347,7 @@ for meter_badge_fragment in (
             f"missing {meter_badge_fragment!r}"
         )
 
-overview_detail_body = function_body(main_text, "overviewDetailText")
+overview_detail_body = function_body((root / "contents/ui/OverviewProviders.js").read_text(encoding="utf-8"), "detailText")
 for overview_detail_fragment in (
     "item.hasIncident === true && item.statusKnown !== false",
     "item.account && item.account.length > 0",

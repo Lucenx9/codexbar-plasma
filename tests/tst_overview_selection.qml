@@ -248,4 +248,82 @@ TestCase {
         compare(providerIDs(OverviewProviders.visibleItems(roster, "")), "claude,gemini");
         compare(providerIDs(OverviewProviders.visibleItems(roster, "claude")), "claude");
     }
+
+    function test_account_identity_wins_over_everything() {
+        compare(OverviewProviders.detailText({
+            account: "user@example.test",
+            hasIncident: true,
+            statusKnown: true,
+            status: "Major outage",
+            placeholder: "No usage yet",
+            source: "oauth"
+        }), "user@example.test");
+    }
+
+    function test_only_an_active_incident_stands_in_for_identity() {
+        compare(OverviewProviders.detailText({
+            provider: "claude",
+            title: "Claude",
+            hasIncident: true,
+            statusKnown: true,
+            status: "Major outage: elevated errors"
+        }), "Major outage: elevated errors");
+    }
+
+    function test_operational_status_never_poses_as_identity() {
+        // Claude's CLI payload carries no account identity; a green status
+        // must not fill the line that shows an email for other providers.
+        compare(OverviewProviders.detailText({
+            provider: "claude",
+            title: "Claude",
+            hasIncident: false,
+            statusKnown: true,
+            status: "All Systems Operational",
+            source: "claude"
+        }), "");
+    }
+
+    function test_unknown_incident_status_falls_through() {
+        // A nonempty status alone must not stand in for identity: the
+        // status-known predicate has to carry the rejection on its own, so
+        // the chain falls through to the foreign source instead.
+        compare(OverviewProviders.detailText({
+            provider: "claude",
+            title: "Claude",
+            hasIncident: true,
+            statusKnown: false,
+            status: "Major outage",
+            source: "oauth"
+        }), "oauth");
+    }
+
+    function test_placeholder_and_foreign_source_fallbacks_remain() {
+        compare(OverviewProviders.detailText({
+            provider: "gemini",
+            title: "Gemini",
+            placeholder: "No usage yet"
+        }), "No usage yet");
+        compare(OverviewProviders.detailText({
+            provider: "codex",
+            title: "Codex",
+            source: "oauth"
+        }), "oauth");
+    }
+
+    function test_source_that_repeats_the_provider_is_suppressed() {
+        // Each repetition is matched independently: the source equals the
+        // title here but differs from the provider id.
+        compare(OverviewProviders.detailText({
+            provider: "claude",
+            title: "Claude Team",
+            source: "Claude Team"
+        }), "");
+        // The source equals the provider id but differs from the title.
+        compare(OverviewProviders.detailText({
+            provider: "claude",
+            title: "Claude Team",
+            source: "claude"
+        }), "");
+        compare(OverviewProviders.detailText(null), "");
+    }
 }

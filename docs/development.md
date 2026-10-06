@@ -629,12 +629,12 @@ English fallback and all five translation catalogs. Surface checks enforce
 module delegation and keep plural-aware localization in QML.
 
 `tests/tst_overview_selection.qml` directly covers Overview eligibility,
-placeholder suppression, automatic and stored selections, aliased roster IDs,
+placeholder suppression, the identity detail fallback chain, automatic and
+stored selections, aliased roster IDs,
 unusable stored values, and unusable roster entries alongside the settings-page
 toggles. `tests/tst_provider_auto_select.qml` covers malformed percentages,
 missing data, provider cost competition, fractional usage, severity tie breaks, and
-error-only providers. `tests/test_overview_detail.py` keeps exercising the owning
-QML detail chain, and surface checks pin both modules as pure.
+error-only providers. Surface checks pin both modules as pure.
 
 `tests/tst_reset_presentation.qml` directly covers timestamp precedence, malformed
 metadata, text bounds, minute/hour/day rounding, calendar and daylight-saving
