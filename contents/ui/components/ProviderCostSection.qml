@@ -33,6 +33,11 @@ ColumnLayout {
     }
     onCostHistoryShowsTokensChanged: clearDaySelection()
 
+    Components.CostLabels {
+        id: costLabels
+        applet: tokenCostSection.applet
+    }
+
     function amountText(amounts, mode) {
         return CostPresentation.hasMetricValue(amounts, false) ? applet.qualifiedCostValue(applet.amountString(amounts.cost, amounts.currency), mode) : i18n("Cost unavailable");
     }
@@ -232,7 +237,7 @@ ColumnLayout {
         objectName: "costSparklineSummaryLabel"
 
         visible: tokenCostSection.chartPoints.length > 0 && tokenCostSection.selectedDay === null
-        text: tokenCostSection.tokenCost ? applet.costSparklineSummary(tokenCostSection.tokenCost.daily) : ""
+        text: tokenCostSection.tokenCost ? costLabels.costSparklineSummary(tokenCostSection.tokenCost.daily) : ""
         font: Kirigami.Theme.smallFont
         opacity: applet.secondaryTextOpacity
         Layout.fillWidth: true
@@ -265,8 +270,8 @@ ColumnLayout {
             models: tokenCostSection.selectedDay.models,
             modelsTruncated: tokenCostSection.selectedDay.modelsTruncated
         } : tokenCostSection.tokenCost
-        readonly property var breakdownRows: applet.costBreakdownRows(detailData)
-        readonly property var modelRows: applet.costModelRows(detailData)
+        readonly property var breakdownRows: costLabels.costBreakdownRows(detailData)
+        readonly property var modelRows: costLabels.costModelRows(detailData)
         readonly property real metricValueColumnWidth: Kirigami.Units.gridUnit * 9
 
         objectName: "costDrillDownSection"
@@ -279,7 +284,7 @@ ColumnLayout {
 
             PlainPlasmaLabel {
                 objectName: "costDetailsTitle"
-                text: tokenCostSection.selectedDay ? i18n("Details for %1", applet.costDayLabel(tokenCostSection.selectedDay.label)) : i18n("Cost details")
+                text: tokenCostSection.selectedDay ? i18n("Details for %1", costLabels.costDayLabel(tokenCostSection.selectedDay.label)) : i18n("Cost details")
                 font.weight: Font.DemiBold
                 Layout.fillWidth: true
                 wrapMode: Text.Wrap
@@ -320,8 +325,8 @@ ColumnLayout {
         }
 
         PlainPlasmaLabel {
-            visible: !tokenCostSection.selectedDay && tokenCostSection.tokenCost && applet.costPerMillionLine(tokenCostSection.tokenCost).length > 0
-            text: tokenCostSection.tokenCost ? applet.costPerMillionLine(tokenCostSection.tokenCost) : ""
+            visible: !tokenCostSection.selectedDay && tokenCostSection.tokenCost && costLabels.costPerMillionLine(tokenCostSection.tokenCost).length > 0
+            text: tokenCostSection.tokenCost ? costLabels.costPerMillionLine(tokenCostSection.tokenCost) : ""
             font: Kirigami.Theme.smallFont
             opacity: applet.secondaryTextOpacity
             Layout.fillWidth: true
@@ -534,9 +539,9 @@ ColumnLayout {
     ColumnLayout {
         id: costHistoryChartSection
 
-        readonly property var rows: applet.costHistoryRows(tokenCostSection.tokenCost)
-        readonly property string peakLine: tokenCostSection.tokenCost ? applet.costPeakLine(tokenCostSection.tokenCost.daily) : ""
-        readonly property string averageLine: tokenCostSection.tokenCost ? applet.costAverageDailyLine(tokenCostSection.tokenCost.daily, tokenCostSection.tokenCost.averageDaily) : ""
+        readonly property var rows: costLabels.costHistoryRows(tokenCostSection.tokenCost)
+        readonly property string peakLine: tokenCostSection.tokenCost ? costLabels.costPeakLine(tokenCostSection.tokenCost.daily) : ""
+        readonly property string averageLine: tokenCostSection.tokenCost ? costLabels.costAverageDailyLine(tokenCostSection.tokenCost.daily, tokenCostSection.tokenCost.averageDaily) : ""
         readonly property color accent: applet.providerReadableColor(tokenCostSection.providerData ? tokenCostSection.providerData.provider : "")
 
         visible: tokenCostSection.detailsExpanded && rows.length > 1

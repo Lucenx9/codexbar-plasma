@@ -123,31 +123,6 @@ TestCase {
         function costChartPoints(points, memo) {
             return CostPresentation.memoizedChartPoints(memo, costNumberFormat, points, costHistoryShowsTokens);
         }
-        function costBreakdownRows(tokenCost) {
-            if (!tokenCost || !tokenCost.totals)
-                return [];
-            var totals = tokenCost.totals;
-            return CostPresentation.breakdownRows([
-                { label: "Total tokens", tokens: totals.tokens },
-                { label: "Input", tokens: totals.inputTokens },
-                { label: "Output", tokens: totals.outputTokens },
-                { label: "Cache read", tokens: totals.cacheReadTokens },
-                { label: "Cache write", tokens: totals.cacheCreationTokens }
-            ]);
-        }
-        function costModelRows(tokenCost) {
-            return CostPresentation.modelRows(costNumberFormat, tokenCost, function(t) {
-                return usageCountText(t);
-            });
-        }
-        function costHistoryRows(tokenCost) {
-            return CostPresentation.historyRows(costNumberFormat, tokenCost,
-                costHistoryShowsTokens, "Latest");
-        }
-        function costPeakLine(points) { return points.length > 0 ? "Peak" : ""; }
-        function costAverageDailyLine(points) { return points.length > 0 ? "Average" : ""; }
-        function costPerMillionLine(tokenCost) { return ""; }
-        function costSparklineSummary(daily) { return "summary"; }
         function spendDailyPoints() { return testCase.spendPoints; }
         function spendProviderCosts() { return testCase.spendCosts; }
         function presentedSpendProviderCosts(costs) { return testCase.presentedCosts; }

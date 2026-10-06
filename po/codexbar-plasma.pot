@@ -181,6 +181,7 @@ msgid "Open %1"
 msgstr ""
 
 #: contents/ui/components/CompactRepresentation.qml
+#: contents/ui/components/CostLabels.qml
 #: contents/ui/components/InteractiveChart.qml
 #: contents/ui/components/SpendView.qml contents/ui/configPopup.qml
 #: contents/ui/configProviders.qml contents/ui/main.qml
@@ -195,6 +196,42 @@ msgstr ""
 #: contents/ui/components/CopyableValue.qml
 #: contents/ui/components/ShareUsageWindow.qml
 msgid "Copied"
+msgstr ""
+
+#: contents/ui/components/CostLabels.qml contents/ui/main.qml
+msgid "Latest"
+msgstr ""
+
+#: contents/ui/components/CostLabels.qml
+msgid "Total tokens"
+msgstr ""
+
+#: contents/ui/components/CostLabels.qml
+msgid "Input"
+msgstr ""
+
+#: contents/ui/components/CostLabels.qml
+msgid "Output"
+msgstr ""
+
+#: contents/ui/components/CostLabels.qml
+msgid "Cache read"
+msgstr ""
+
+#: contents/ui/components/CostLabels.qml
+msgid "Cache write"
+msgstr ""
+
+#: contents/ui/components/CostLabels.qml
+msgid "Peak: %1 - %2"
+msgstr ""
+
+#: contents/ui/components/CostLabels.qml
+msgid "Average/day: %1"
+msgstr ""
+
+#: contents/ui/components/CostLabels.qml
+msgid "Average: %1 / 1M tokens"
 msgstr ""
 
 #: contents/ui/components/CostTrustNotice.qml
@@ -3004,47 +3041,11 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: contents/ui/main.qml
-msgid "Latest"
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "%1 subtotal"
 msgstr ""
 
 #: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "%1 total"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Total tokens"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Input"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Output"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Cache read"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Cache write"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Peak: %1 - %2"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Average/day: %1"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Average: %1 / 1M tokens"
 msgstr ""
 
 #: contents/ui/main.qml
