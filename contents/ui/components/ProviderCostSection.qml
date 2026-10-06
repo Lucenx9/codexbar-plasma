@@ -78,7 +78,9 @@ ColumnLayout {
     }
 
     readonly property var tokenCost: tokenCostSection.providerData ? tokenCostSection.providerData.tokenCost : null
-    readonly property var chartPoints: tokenCost ? applet.costChartPoints(tokenCost.daily) : []
+    // Mutated only by CostPresentation.memoizedChartPoints; never reassigned, so it adds no binding dependency.
+    readonly property var chartPointsMemo: ({})
+    readonly property var chartPoints: tokenCost ? applet.costChartPoints(tokenCost.daily, chartPointsMemo) : []
     readonly property var costTrustSummary: CostPresentation.costTrustSummary(tokenCost ? [tokenCost] : [])
     readonly property string costErrorText: applet.privateErrorText(applet.costErrorText)
     readonly property bool supportsLocalCost: tokenCostSection.providerData && applet.tokenCostHint(tokenCostSection.providerData.provider).length > 0
