@@ -1434,12 +1434,11 @@ for spend_order_fragment in (
         )
 if "model: view.presentedProviderCosts" not in applet.id_block("spendProviderRepeater"):
     raise AssertionError("the visible spend provider list must use presentation order")
-for global_tab_id in ("spendTab", "sessionsTab"):
+for global_tab_id in ("overviewTab", "spendTab", "sessionsTab"):
     if "showLabel: applet.showPopupTabLabels" not in applet.id_block(global_tab_id):
         raise AssertionError(f"{global_tab_id} must use the popup label preference")
 for icon_only_fragment in (
     'visible: applet.showPopupTabLabels',
-    'visible: (!applet.showPopupTabLabels || overviewTab.textTruncated) && overviewTabMouse.containsMouse',
     'visible: (!applet.showPopupTabLabels || providerTabLabel.truncated)',
 ):
     if not code_contains(provider_tabs_body, icon_only_fragment):
@@ -1449,15 +1448,10 @@ for icon_only_fragment in (
 for global_tab_fragment in (
     'property bool showLabel: true',
     'visible: tab.showLabel',
+    'visible: (!tab.showLabel || tab.textTruncated) && tabMouse.containsMouse',
 ):
     applet.require(global_tab_fragment, "global tabs must support accessible icon-only display")
 for tab_content_id, leading_spacer_id, trailing_spacer_id, condition in (
-    (
-        "overviewTabContent",
-        "overviewTabLeadingSpacer",
-        "overviewTabTrailingSpacer",
-        "!applet.showPopupTabLabels",
-    ),
     (
         "providerTabContent",
         "providerTabLeadingSpacer",
@@ -1545,17 +1539,23 @@ for inlined_tab_geometry in (
 
 # Arrow, Home and End keys reach the strip through one handler, so every tab
 # kind wraps and jumps the same way.
-for navigation_call in (
-    "providerTabsFlickable.navigateFromTab(overviewFocus, event.key)",
-    "providerTabsFlickable.navigateFromTab(providerFocus, event.key)",
+if not code_contains(main_text, "providerTabsFlickable.navigateFromTab(providerFocus, event.key)"):
+    raise AssertionError("the provider tabs must navigate with arrow, Home and End keys")
+# The Overview, Usage & Spend and Sessions tabs share GlobalTab, so its strip
+# wiring below covers navigation, reveal and selection for all three.
+overview_tab_marker = main_text.index("id: overviewTab")
+overview_tab_brace = main_text.rindex("{", 0, overview_tab_marker)
+overview_tab_type = main_text[main_text.rindex("\n", 0, overview_tab_brace) + 1:overview_tab_brace].strip()
+if overview_tab_type != "Components.GlobalTab":
+    raise AssertionError("the Overview tab must reuse GlobalTab instead of an inline copy")
+overview_tab_body = id_block(main_text, "overviewTab")
+for overview_tab_fragment in (
+    "tabStrip: providerTabsFlickable",
+    "selected: applet.overviewSelected",
+    'onActivated: applet.selectGlobalView("overview")',
 ):
-    if not code_contains(main_text, navigation_call):
-        raise AssertionError(
-            "the overview tab and the provider tabs must navigate with arrow, Home and End keys; "
-            f"missing {navigation_call!r}"
-        )
-if not code_contains(main_text, "providerTabsFlickable.ensureVisible(overviewTab)"):
-    raise AssertionError("focusing the overview tab must pull it back into view")
+    if not code_contains(overview_tab_body, overview_tab_fragment):
+        raise AssertionError(f"the Overview tab must join the tab strip; missing {overview_tab_fragment!r}")
 # A provider tab shows its quota as an underline and a failure as dimming; both
 # must reach screen readers as text.
 if not code_contains(main_text, "Accessible.description: applet.switcherDescription(providerTab.modelData)"):
@@ -1579,14 +1579,10 @@ if not code_contains(provider_tabs_flickable_body, "function claimSelectedTab(it
     raise AssertionError("the tab strip must track which tab is selected in one place")
 # Every tab kind must report selection, or the strip keeps revealing a stale tab
 # after the user switches between a provider and a global view.
-if main_text.count("providerTabsFlickable.claimSelectedTab(") != 2:
-    raise AssertionError("the overview tab and the provider tabs must both report selection")
-for claim_fragment in (
-    "onSelectedChanged: overviewTab.claimSelectedTab()",
-    "onSelectedChanged: providerTab.claimSelectedTab()",
-):
-    if not code_contains(main_text, claim_fragment):
-        raise AssertionError(f"selection tracking is missing {claim_fragment!r}")
+if main_text.count("providerTabsFlickable.claimSelectedTab(") != 1:
+    raise AssertionError("the provider tabs must report selection; global tabs report through GlobalTab")
+if not code_contains(main_text, "onSelectedChanged: providerTab.claimSelectedTab()"):
+    raise AssertionError("selection tracking is missing 'onSelectedChanged: providerTab.claimSelectedTab()'")
 if not code_contains(global_tab_text, "tab.tabStrip.claimSelectedTab(tab, tab.selected)"):
     raise AssertionError("global tabs must report selection to the strip")
 if not code_contains(global_tab_text, "onSelectedChanged: tab.claimSelectedTab()"):
@@ -1638,9 +1634,9 @@ for stale_selected_overlay in (
             "provider tabs must not restore a persistent accent capsule; "
             f"found {stale_selected_overlay!r}"
         )
-for tab_id in ("overviewTab", "providerTab"):
+for tab_id in ("providerTab",):
     tab_body = id_block(main_text, tab_id)
-    focus_id = "overviewFocus" if tab_id == "overviewTab" else "providerFocus"
+    focus_id = "providerFocus"
     for focus_fragment in (
         f"readonly property bool keyboardFocusVisible: {focus_id}.visualFocus",
         "border.width: keyboardFocusVisible ? 1 : 0",
@@ -1691,7 +1687,6 @@ if not code_contains(provider_tab_body, "color: providerTab.selected ? providerT
 # provider quota underline made a partly filled meter read as a selected tab.
 for underline_tab_text in (
     global_tab_text,
-    id_block(main_text, "overviewTab"),
     provider_tab_body,
 ):
     if "selected ? 1 : 0" in underline_tab_text:

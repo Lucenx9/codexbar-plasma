@@ -276,156 +276,18 @@ Item {
                     height: providerTabsFlickable.height
                     spacing: Kirigami.Units.smallSpacing / 2
 
-                    Rectangle {
+                    Components.GlobalTab {
                         id: overviewTab
 
-                        readonly property bool selected: applet.overviewSelected
-                        readonly property bool keyboardFocusVisible: overviewFocus.visualFocus
-                        readonly property color brandAccent: Kirigami.Theme.highlightColor
-                        readonly property color accent: applet.readableAccentColor(
-                            brandAccent,
-                            Kirigami.Theme.backgroundColor)
-                        readonly property color foreground: selected
-                            ? Kirigami.Theme.textColor
-                            : applet.withAlpha(Kirigami.Theme.textColor, 0.72)
-                        readonly property bool textTruncated: overviewTabLabel.truncated
-
-                        function activate() {
-                            applet.selectGlobalView("overview")
-                        }
-
-                        function claimSelectedTab() {
-                            providerTabsFlickable.claimSelectedTab(overviewTab, selected)
-                        }
-
                         visible: applet.overviewAvailable
-                        Layout.preferredWidth: applet.showPopupTabLabels
-                            ? Math.max(
-                                Kirigami.Units.gridUnit * 5.2,
-                                overviewTabLabel.implicitWidth + Kirigami.Units.gridUnit * 2.2)
-                            : providerTabsFlickable.height
-                        Layout.preferredHeight: providerTabsFlickable.height
-                        radius: applet.roundedSurfaceRadius
-                        color: overviewTabMouse.pressed
-                            ? applet.withAlpha(Kirigami.Theme.focusColor, 0.1)
-                            : (selected
-                            ? applet.withAlpha(Kirigami.Theme.textColor, 0.1)
-                            : (keyboardFocusVisible
-                            ? applet.withAlpha(Kirigami.Theme.focusColor, 0.06)
-                            : (overviewTabMouse.containsMouse ? applet.withAlpha(Kirigami.Theme.textColor, 0.05) : "transparent")
-                            ))
-                        border.width: keyboardFocusVisible ? 1 : 0
-                        border.color: Kirigami.Theme.focusColor
-                        scale: overviewTabMouse.pressed ? 0.985 : 1
-                        onSelectedChanged: overviewTab.claimSelectedTab()
-                        Component.onCompleted: overviewTab.claimSelectedTab()
-
-                        Behavior on color {
-                            ColorAnimation {
-                                duration: Kirigami.Units.shortDuration
-                            }
-                        }
-
-                        Behavior on scale {
-                            NumberAnimation {
-                                duration: Kirigami.Units.shortDuration
-                                easing.type: Easing.OutCubic
-                            }
-                        }
-
-                        Controls.Control {
-                            id: overviewFocus
-
-                            anchors.fill: parent
-                            activeFocusOnTab: true
-                            background: null
-
-                            onActiveFocusChanged: {
-                                if (activeFocus) {
-                                    providerTabsFlickable.ensureVisible(overviewTab)
-                                }
-                            }
-
-                            Accessible.role: Accessible.PageTab
-                            Accessible.name: i18n("Overview")
-                            Accessible.selectable: true
-                            Accessible.selected: overviewTab.selected
-                            Accessible.onPressAction: overviewTab.activate()
-
-                            Keys.onPressed: function(event) {
-                                switch (event.key) {
-                                case Qt.Key_Space:
-                                case Qt.Key_Enter:
-                                case Qt.Key_Return:
-                                case Qt.Key_Select:
-                                    overviewTab.activate()
-                                    event.accepted = true
-                                    break
-                                default:
-                                    event.accepted = providerTabsFlickable.navigateFromTab(overviewFocus, event.key)
-                                    break
-                                }
-                            }
-                        }
-
-                        MouseArea {
-                            id: overviewTabMouse
-
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onPressed: overviewFocus.forceActiveFocus(Qt.MouseFocusReason)
-                            onClicked: overviewTab.activate()
-                        }
-
-                        PlainToolTip {
-                            parent: overviewTabMouse
-                            visible: (!applet.showPopupTabLabels || overviewTab.textTruncated)
-                                && overviewTabMouse.containsMouse
-                            plainText: i18n("Overview")
-                        }
-
-                        RowLayout {
-                            id: overviewTabContent
-
-                            anchors.fill: parent
-                            anchors.margins: Kirigami.Units.smallSpacing
-                            spacing: Kirigami.Units.smallSpacing
-
-                            Item {
-                                id: overviewTabLeadingSpacer
-
-                                visible: !applet.showPopupTabLabels
-                                Layout.fillWidth: !applet.showPopupTabLabels
-                            }
-
-                            Kirigami.Icon {
-                                source: "view-grid-symbolic"
-                                isMask: true
-                                color: overviewTab.selected ? overviewTab.accent : overviewTab.foreground
-                                Layout.preferredWidth: Kirigami.Units.iconSizes.small
-                                Layout.preferredHeight: Kirigami.Units.iconSizes.small
-                            }
-
-                            Item {
-                                id: overviewTabTrailingSpacer
-
-                                visible: !applet.showPopupTabLabels
-                                Layout.fillWidth: !applet.showPopupTabLabels
-                            }
-
-                            PlainPlasmaLabel {
-                                id: overviewTabLabel
-
-                                visible: applet.showPopupTabLabels
-                                text: i18n("Overview")
-                                font.weight: overviewTab.selected ? Font.DemiBold : Font.Normal
-                                color: overviewTab.foreground
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
-                            }
-                        }
-
+                        applet: fullRoot.applet
+                        title: i18n("Overview")
+                        showLabel: applet.showPopupTabLabels
+                        tabStrip: providerTabsFlickable
+                        iconName: "view-grid-symbolic"
+                        tabHeight: providerTabsFlickable.height
+                        selected: applet.overviewSelected
+                        onActivated: applet.selectGlobalView("overview")
                     }
 
                     Components.GlobalTab {
