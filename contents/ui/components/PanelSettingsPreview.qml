@@ -63,7 +63,7 @@ ColumnLayout {
                 : i18np("%1 day", "%1 days", Math.max(1, Math.round(hours / 24)));
         case "resetTime":
             if (resetTimesShowAbsolute) {
-                return i18n("Resets %1", Qt.formatDateTime(new Date(row.resetsAt), "ddd HH:mm"));
+                return i18n("Resets %1", timeLabels.weekdayTime(Date.parse(row.resetsAt)));
             }
             var resetMinutes = Math.max(1, Math.round(row.resetMinutes));
             if (resetMinutes < 60) {
@@ -110,6 +110,10 @@ ColumnLayout {
 
     function withAlpha(color, alpha) {
         return Qt.rgba(color.r, color.g, color.b, alpha);
+    }
+
+    TimeLabels {
+        id: timeLabels
     }
 
     QtObject {

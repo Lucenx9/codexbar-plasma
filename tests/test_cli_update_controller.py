@@ -85,6 +85,18 @@ TestCase {
         verify(updater.busy);
         tryCompare(succeeded, "count", 1);
     }
+    // Diagnostics names the General page; General itself hosts the managed
+    // CLI controls and must point to that section instead of to itself.
+    function test_managedGuidanceNamesTheOwningSection() {
+        var updater = create({commandPath: "managed"}); if (!updater) return;
+        updater.checkNow(); tryCompare(succeeded, "count", 1);
+        compare(updater.result.manager, "managed");
+        compare(updater.guidanceText,
+            "Managed by this widget. Install updates or restore the previous version in General.");
+        updater.managedControlsOnPage = true;
+        compare(updater.guidanceText,
+            "Managed by this widget. Install updates or restore the previous version in Managed CLI below.");
+    }
     function test_invalidOutputDoesNotNotify() {
         var updater = create({commandPath: "bad"}); if (!updater) return;
         updater.checkNow(); tryCompare(updater, "checked", true);
@@ -106,7 +118,8 @@ if "bad" in sys.argv:
     print("malformed")
 else:
     print(json.dumps(dict(status="local" if "--local-only" in sys.argv else "available",
-        version="0.60.4", path="/usr/bin/codexbar", manager="pacman", latest="0.62.0", tag="v0.62.0")))
+        version="0.60.4", path="/usr/bin/codexbar", manager="managed" if "managed" in sys.argv else "pacman",
+        latest="0.62.0", tag="v0.62.0")))
 ''')
             qml = QML.replace("CONTROLLER", (ROOT / "contents/ui/controllers/CliUpdateController.qml").as_uri()).replace("FIXTURE", script.as_uri())
             (path / "tst_cli.qml").write_text(qml)
