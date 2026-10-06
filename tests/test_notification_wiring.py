@@ -25,6 +25,7 @@ FUNCTIONS = (
 QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/NotificationPlanner.js" as NotificationPlanner
+import "SOURCE_URL/NotificationMemo.js" as NotificationMemo
 import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
 import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/QuotaThresholds.js" as QuotaThresholds
