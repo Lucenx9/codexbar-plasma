@@ -2807,6 +2807,14 @@ msgstr "Tempo scaduto per il caricamento degli account. Riprova."
 #: contents/ui/controllers/CliUpdateController.qml
 msgid ""
 "Managed by this widget. Install updates or restore the previous version in "
+"Managed CLI below."
+msgstr ""
+"Gestita da questo widget. Installa gli aggiornamenti o ripristina la "
+"versione precedente in CLI gestita, qui sotto."
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid ""
+"Managed by this widget. Install updates or restore the previous version in "
 "General."
 msgstr ""
 "Gestita da questo widget. Installa gli aggiornamenti o ripristina la "

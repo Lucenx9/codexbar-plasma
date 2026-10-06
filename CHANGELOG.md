@@ -20,6 +20,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Point the managed CLI guidance in General to the Managed CLI section below
+  instead of telling the reader to open General, the page they are already on.
+  Diagnostics still names General.
 - Keep one standard popup height across every content section (Overview,
   provider tabs, Usage & Spend, Sessions) instead of resizing the dialog to
   each section's content. Short sections now leave scroll slack rather than
