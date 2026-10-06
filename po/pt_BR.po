@@ -65,14 +65,6 @@ msgid "No insight generated yet."
 msgstr "Nenhum insight gerado ainda."
 
 #: contents/ui/components/AiInsightsCard.qml
-#: contents/ui/components/FullRepresentation.qml
-#: contents/ui/components/OverviewProviderRow.qml
-#: contents/ui/components/PanelSettingsPreview.qml
-#: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
-msgid "%1 - %2"
-msgstr "%1 - %2"
-
-#: contents/ui/components/AiInsightsCard.qml
 msgid "Out of date"
 msgstr "Desatualizado"
 
@@ -466,6 +458,11 @@ msgstr "%1% %2 no ritmo previsto"
 #: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
 msgid "%1% %2, behind pace"
 msgstr "%1% %2, consumo muito alto"
+
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
+msgid "%1 - %2"
+msgstr "%1 - %2"
 
 #: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
 msgid "%1 minute"

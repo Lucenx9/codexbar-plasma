@@ -3182,6 +3182,10 @@ if not code_contains(menu_bar_display_body, "var row = panelDisplayRow(item, mod
 run_out_text_body = function_body(main_text, "runOutTextForRow")
 if not code_contains(run_out_text_body, "PanelDisplay.remainingSeconds("):
     raise AssertionError("the run-out token must advance from the usage observation time")
+# Popup header and detail lines share the Sessions and Usage & Spend separator.
+for popup_file in ("FullRepresentation.qml", "OverviewProviderRow.qml", "AiInsightsCard.qml"):
+    if 'i18n("%1 - %2"' in (root / "contents/ui/components" / popup_file).read_text():
+        raise AssertionError(f"{popup_file} must join popup detail lines with the middle dot separator")
 reset_text_body = function_body(main_text, "resetText")
 # Direct QtTests cover timestamp precedence, bounds, and countdown arithmetic.
 # The owning adapter supplies the live clock and keeps local date formatting.

@@ -224,11 +224,14 @@ ColumnLayout {
     }
 
     // The axis already dates both ends of the range and the summary grid
-    // names the window, so only the latest day's figure remains here.
+    // names the window, so only the latest day's figure remains here. A
+    // selected day already shows its figure in the chart readout and the
+    // drill-down heading, so the line would only repeat it a third time.
     PlainPlasmaLabel {
         id: costSparklineSummaryLabel
+        objectName: "costSparklineSummaryLabel"
 
-        visible: tokenCostSection.chartPoints.length > 0
+        visible: tokenCostSection.chartPoints.length > 0 && tokenCostSection.selectedDay === null
         text: tokenCostSection.tokenCost ? applet.costSparklineSummary(tokenCostSection.tokenCost.daily) : ""
         font: Kirigami.Theme.smallFont
         opacity: applet.secondaryTextOpacity
