@@ -12,6 +12,8 @@ import unittest
 from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
+WEEKDAY_CONTEXT = "Abbreviated weekday %1 and clock time %2, such as Wed 14:30"
+DATE_CONTEXT = "Abbreviated month %1, day of the month %2 and clock time %3, such as Oct 7, 14:30"
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "scripts/lib"))
 from compile_translations import compile_catalogs
@@ -31,6 +33,7 @@ class ResetPresentationTests(unittest.TestCase):
             directory = Path(temporary)
             compile_catalogs(directory / "locale")
             cases = []
+            absolute_formats = {}
             for language in ("en", "it", "fr", "de", "es", "pt_BR"):
                 catalog = gettext.translation("plasma_applet_app.codexbar.plasma", directory / "locale",
                                               languages=[language], fallback=language == "en")
@@ -45,6 +48,11 @@ class ResetPresentationTests(unittest.TestCase):
 
                 plurals = {source: {count: catalog.ngettext(source, source, count) for count in (1, 2, 59)}
                            for source in ("%1 min", "%1h", "%1d")}
+                # The catalog orders the parts of an absolute reset; the C
+                # locale supplies the names and the 24-hour clock.
+                absolute_formats[language] = {
+                    "weekday": catalog.pgettext(WEEKDAY_CONTEXT, "%1 %2"),
+                    "date": catalog.pgettext(DATE_CONTEXT, "%1 %2, %3")}
 
                 def plural(source, count):
                     return plurals[source][count].replace("%1", str(count))
@@ -66,6 +74,7 @@ class ResetPresentationTests(unittest.TestCase):
 import QtTest
 import "SOURCE_URL/ResetPresentation.js" as ResetPresentation
 import "SOURCE_URL/PrivacyPresentation.js" as PrivacyPresentation
+import "SOURCE_URL/components" as Components
 TestCase {
     name: "ResetAdapters"
     property var messages: ({})
@@ -84,6 +93,15 @@ TestCase {
     function i18np(one, many, count) {
         return plurals[one][count].replace("%1", String(count));
     }
+    function i18nc(context, source) {
+        var result = messages[context + "\u0004" + source] || source;
+        for (var i = 2; i < arguments.length; i++)
+            result = result.replace("%" + (i - 1), String(arguments[i]));
+        return result;
+    }
+    Components.TimeLabels {
+        id: timeLabels
+    }
     ADAPTERS
     function test_resets_data() { return RESET_CASES; }
     function test_resets(data) {
@@ -95,7 +113,7 @@ TestCase {
         panelClockMs = Date.UTC(2026, 8, 13, 12);
         for (var reset of data.rows)
             compare(resetText({resetsAt: panelClockMs + reset.offset}, false), reset.expected);
-        for (var absolute of ABSOLUTE_CASES)
+        for (var absolute of ABSOLUTE_CASES[data.tag])
             compare(resetText({resetsAt: absolute.timestamp}, true), absolute.expected, absolute.timestamp);
         compare(resetLabel("Resets2h30m"), data.label);
         compare(resetLabel("Resets unknown future text"), "unknown future text");
@@ -107,7 +125,7 @@ TestCase {
         privacyMode = true;
         compare(observedReset, data.minutes);
         resetTimesShowAbsolute = true;
-        compare(observedReset, ABSOLUTE_CASES[0].expected);
+        compare(observedReset, ABSOLUTE_CASES[data.tag][0].expected);
         compare(row.resetDescription, "stale description");
         row = {resetDescription: "Synthetic fallback"};
         compare(observedReset, "");
@@ -129,12 +147,20 @@ TestCase {
                     today = datetime(2026, 9, 13, 12, tzinfo=ZoneInfo("UTC")).astimezone(zone).date()
                     dates = ["2026-09-13T13:00:00Z", "2026-09-19T20:00:00Z", "2026-09-20T13:00:00Z",
                              "2026-10-03T13:00:00Z", "2026-03-08T10:30:00Z", "2026-11-01T09:30:00Z"]
-                    absolute = []
-                    for value in dates:
-                        local = datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(zone)
-                        weekday = 0 <= (local.date() - today).days <= 6
-                        absolute.append({"timestamp": value, "expected": local.strftime(
-                            "%a %H:%M" if weekday else "%b " + str(local.day) + ", %H:%M")})
+                    absolute = {}
+                    for language, formats in absolute_formats.items():
+                        absolute[language] = []
+                        for value in dates:
+                            local = datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(zone)
+                            weekday = 0 <= (local.date() - today).days <= 6
+                            if weekday:
+                                parts = (local.strftime("%a"), local.strftime("%H:%M"))
+                            else:
+                                parts = (local.strftime("%b"), str(local.day), local.strftime("%H:%M"))
+                            expected = formats["weekday" if weekday else "date"]
+                            for index, part in enumerate(parts, 1):
+                                expected = expected.replace("%" + str(index), part)
+                            absolute[language].append({"timestamp": value, "expected": expected})
                     fixture = directory / "tst_reset_adapters.qml"
                     fixture.write_text(qml.replace("ABSOLUTE_CASES", json.dumps(absolute)))
                     result = subprocess.run(

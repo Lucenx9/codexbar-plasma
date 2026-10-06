@@ -148,7 +148,7 @@ PlasmoidItem {
     readonly property var sessions: sessionsController.sessions
     readonly property string sessionsErrorText: sessionsController.errorText
     readonly property string sessionsLastUpdatedText: sessionsController.lastUpdatedAtMs >= 0
-        ? i18n("Updated %1", Qt.formatDateTime(new Date(sessionsController.lastUpdatedAtMs), "hh:mm")) : ""
+        ? i18n("Updated %1", timeLabels.clockTime(sessionsController.lastUpdatedAtMs)) : ""
     readonly property bool sessionsLoading: sessionsController.loading
     property string selectedProviderID: ""
     // Provider meter currently under the panel pointer. The plasmoid tooltip
@@ -379,7 +379,7 @@ PlasmoidItem {
         providers = nextProviders
         lastUpdatedText = nextProviders.some(function(item) { return item.usageStale === true })
             ? i18n("Showing last known usage")
-            : hasFreshUsage ? i18n("Updated %1", Qt.formatDateTime(new Date(nowMs), "hh:mm")) : ""
+            : hasFreshUsage ? i18n("Updated %1", timeLabels.clockTime(nowMs)) : ""
         var context = usageCacheContext()
         if (context.length > 0) {
             Plasmoid.configuration.usageCache = UsageCache.encode(nextProviders, context, nowMs)
@@ -438,7 +438,7 @@ PlasmoidItem {
             return ""
         }
         return item.usageStale === true ? lastGoodUsageText(item)
-            : i18n("Updated %1", Qt.formatDateTime(new Date(item.lastGoodAtMs), "hh:mm"))
+            : i18n("Updated %1", timeLabels.clockTime(item.lastGoodAtMs))
     }
 
     function handleProviderConfigObservation(stamp, initial) {
@@ -1331,8 +1331,9 @@ PlasmoidItem {
         var parts = ResetPresentation.parts(window, panelClockMs, absolute)
         switch (parts.kind) {
         case "absolute":
-            return Qt.formatDateTime(new Date(parts.timestampMs),
-                ResetPresentation.absoluteShowsDate(parts.timestampMs, panelClockMs) ? "MMM d, HH:mm" : "ddd HH:mm")
+            return ResetPresentation.absoluteShowsDate(parts.timestampMs, panelClockMs)
+                ? timeLabels.monthDayTime(parts.timestampMs)
+                : timeLabels.weekdayTime(parts.timestampMs)
         case "now":
             return i18n("now")
         case "minutes":
@@ -2727,6 +2728,10 @@ PlasmoidItem {
 
     Components.RateWindowLabels {
         id: rateWindowLabels
+    }
+
+    Components.TimeLabels {
+        id: timeLabels
     }
 
     Components.AiInsightsMessages {
