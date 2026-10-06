@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.45 - 2026-10-07
+
 ### Added
 
 - Bundle fallback names, original icons, dashboards, documentation links, and
@@ -63,6 +65,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   (Alibaba Token Plan, Bedrock, Command Code, DeepSeek, Grok, Manus, Mimo,
   Perplexity, StepFun, and Windsurf); they retain Documentation and Dashboard
   links, while settings show “Use provider login/source”.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.44...v0.2.45)
 
 ## 0.2.44 - 2026-10-02
 
