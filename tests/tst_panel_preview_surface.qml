@@ -26,6 +26,9 @@ TestCase {
     function i18np(singular, plural, count) {
         return i18n(count === 1 ? singular : plural, count);
     }
+    function i18nc(context, text) {
+        return i18n.apply(null, Array.prototype.slice.call(arguments, 1));
+    }
 
     Component {
         id: settingsComponent

@@ -3196,8 +3196,14 @@ reset_text_body = function_body(main_text, "resetText")
 # The owning adapter supplies the live clock and keeps local date formatting.
 if not code_contains(reset_text_body, "ResetPresentation.parts(window, panelClockMs, absolute)"):
     raise AssertionError("reset formatting must use semantic parts with the live panel clock")
-if not code_contains(reset_text_body, "Qt.formatDateTime(new Date(parts.timestampMs),"):
-    raise AssertionError("absolute reset dates must retain QML locale formatting")
+for formatter in ("timeLabels.monthDayTime(parts.timestampMs)", "timeLabels.weekdayTime(parts.timestampMs)"):
+    if not code_contains(reset_text_body, formatter):
+        raise AssertionError("absolute reset dates must use the locale-aware time labels")
+# A literal Qt.formatDateTime pattern writes English day and month names and a
+# fixed hour cycle whatever the user's regional format; TimeLabels owns them.
+for path in sorted((root / "contents/ui").rglob("*.qml")):
+    if "Qt.formatDateTime(" in path.read_text():
+        raise AssertionError(f"{path.relative_to(root)} must format times through TimeLabels")
 if not code_contains(reset_text_body, "ResetPresentation.absoluteShowsDate(parts.timestampMs, panelClockMs)"):
     raise AssertionError("absolute resets beyond the next six days must show their date")
 for field in ("window.resetsAt", "window.resetDescription", "Math.round", "Math.floor"):

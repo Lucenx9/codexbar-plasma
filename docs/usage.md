@@ -535,7 +535,9 @@ fields; track proposed extensions in the issue tracker.
   changing them does not refetch data or change panel metrics or alerts.
 - **Popup → Show reset times as clock time** names the weekday and time for a
   reset within the next six days, and the date and time for one further away,
-  such as a monthly limit or a weekly limit that just reset.
+  such as a monthly limit or a weekly limit that just reset. Day and month
+  names and the 12- or 24-hour clock follow the regional format in Plasma's
+  system settings, as does the time in "Updated" labels.
 - A global, cancelable **Restore all defaults** action for user-facing widget
   settings; provider accounts and CodexBar CLI configuration are left intact.
 - Usage refresh choices: no periodic refresh, 1 min, 2 min, 5 min, 15 min, or a
