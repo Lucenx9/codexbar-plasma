@@ -2812,6 +2812,14 @@ msgstr "Zeitüberschreitung beim Laden der Konten. Erneut versuchen."
 #: contents/ui/controllers/CliUpdateController.qml
 msgid ""
 "Managed by this widget. Install updates or restore the previous version in "
+"Managed CLI below."
+msgstr ""
+"Von diesem Widget verwaltet. Unter Verwaltete CLI weiter unten können Sie "
+"Updates installieren oder die vorherige Version wiederherstellen."
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid ""
+"Managed by this widget. Install updates or restore the previous version in "
 "General."
 msgstr ""
 "Von diesem Widget verwaltet. Unter Allgemein können Sie Updates installieren "

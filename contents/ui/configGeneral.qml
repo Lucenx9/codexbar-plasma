@@ -204,6 +204,7 @@ KCM.SimpleKCM {
         id: cliUpdater
         objectName: "cliReleaseController"
         commandPath: page.cfg_commandPath || "codexbar"
+        managedControlsOnPage: true
     }
 
     Component.onCompleted: {
