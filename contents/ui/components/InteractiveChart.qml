@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import "../ChartScale.js" as ChartScale
+import "../CostPresentation.js" as CostPresentation
 import "../ProviderNormalizer.js" as Normalizer
 
 ColumnLayout {
@@ -66,12 +67,19 @@ ColumnLayout {
         return ChartScale.fraction(value, valueDomain)
     }
 
+    function barGradient(context, baseline, topOpacity, bottomOpacity) {
+        var gradient = context.createLinearGradient(0, 0, 0, Math.max(1, baseline))
+        gradient.addColorStop(0, chart.applet.canvasColor(chart.accent, topOpacity))
+        gradient.addColorStop(1, chart.applet.canvasColor(chart.accent, bottomOpacity))
+        return gradient
+    }
+
     function indexAt(positionX) {
         if (pointCount === 0 || plot.width <= 0) {
             return -1
         }
         if (kind === "line" && pointCount > 1) {
-            return chart.applet.chartLineIndexAt(
+            return CostPresentation.chartLineIndexAt(
                 plot.width, pointCount, positionX, chart.lineMarkerInset)
         }
         return Math.max(0, Math.min(pointCount - 1,
@@ -200,7 +208,7 @@ ColumnLayout {
 
             var baseline = ChartScale.barGeometry(height, 0, chart.valueDomain).baseline
             if (chart.kind === "line" && chart.valueDomain.minimum < 0) {
-                baseline = chart.applet.chartLineY(height,
+                baseline = CostPresentation.chartLineY(height,
                     chart.chartFraction(0), chart.lineMarkerInset)
             }
             context.fillStyle = chart.applet.canvasColor(Kirigami.Theme.textColor, 0.12)
@@ -226,9 +234,9 @@ ColumnLayout {
                 context.lineJoin = "round"
                 context.beginPath()
                 for (var lineIndex = 0; lineIndex < chart.pointCount; lineIndex++) {
-                    var lineX = chart.applet.chartLineX(
+                    var lineX = CostPresentation.chartLineX(
                         width, chart.pointCount, lineIndex, chart.lineMarkerInset)
-                    var lineY = chart.applet.chartLineY(height,
+                    var lineY = CostPresentation.chartLineY(height,
                         chart.chartFraction(chart.pointValue(chart.points[lineIndex])), chart.lineMarkerInset)
                     if (lineIndex === 0) {
                         context.moveTo(lineX, lineY)
@@ -238,9 +246,9 @@ ColumnLayout {
                 }
                 context.stroke()
                 for (var dotIndex = 0; dotIndex < chart.pointCount; dotIndex++) {
-                    var dotX = chart.applet.chartLineX(
+                    var dotX = CostPresentation.chartLineX(
                         width, chart.pointCount, dotIndex, chart.lineMarkerInset)
-                    var dotY = chart.applet.chartLineY(height,
+                    var dotY = CostPresentation.chartLineY(height,
                         chart.chartFraction(chart.pointValue(chart.points[dotIndex])), chart.lineMarkerInset)
                     context.beginPath()
                     context.arc(dotX, dotY,
@@ -251,9 +259,9 @@ ColumnLayout {
                 return
             }
 
-            var geometry = chart.applet.chartBarGeometry(width, chart.pointCount)
-            var normalFill = chart.applet.buildChartBarGradient(context, chart.accent, baseline, 0.78, 0.36)
-            var activeFill = chart.applet.buildChartBarGradient(context, chart.accent, baseline, 1, 0.7)
+            var geometry = CostPresentation.chartBarGeometry(width, chart.pointCount)
+            var normalFill = chart.barGradient(context, baseline, 0.78, 0.36)
+            var activeFill = chart.barGradient(context, baseline, 1, 0.7)
             for (var barIndex = 0; barIndex < chart.pointCount; barIndex++) {
                 var bar = ChartScale.barGeometry(height,
                     chart.pointValue(chart.points[barIndex]), chart.valueDomain)
@@ -263,7 +271,7 @@ ColumnLayout {
                     context.scale(1, -1)
                 }
                 context.fillStyle = barIndex === chart.activeIndex ? activeFill : normalFill
-                chart.applet.paintRoundedTopBar(
+                CostPresentation.paintRoundedTopBar(
                     context,
                     geometry.offset + barIndex * geometry.step,
                     baseline,

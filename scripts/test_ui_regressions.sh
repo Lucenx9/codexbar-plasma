@@ -1883,11 +1883,11 @@ for usage_metadata_id in ("usagePaceLabel", "usageResetLabel"):
     if not code_contains(usage_metadata_body, "font: Kirigami.Theme.smallFont"):
         raise AssertionError(f"{usage_metadata_id} must retain the compact metadata type scale")
 
-if not code_contains(interactive_chart_text, "chart.applet.paintRoundedTopBar("):
+if not code_contains(interactive_chart_text, "CostPresentation.paintRoundedTopBar("):
     raise AssertionError("provider detail bar charts must use rounded top corners")
 for detail_chart_fragment in (
-    "chart.applet.buildChartBarGradient(",
-    "chart.applet.chartBarGeometry(width, chart.pointCount)",
+    "chart.barGradient(",
+    "CostPresentation.chartBarGeometry(width, chart.pointCount)",
     "ChartScale.barGeometry(height,",
 ):
     if not code_contains(interactive_chart_text, detail_chart_fragment):
@@ -1908,7 +1908,7 @@ for signed_chart_fragment in (
 ):
     applet.require(signed_chart_fragment, "detail charts must retain signed values and their zero baseline")
 
-chart_gradient_body = function_body(main_text, "buildChartBarGradient")
+chart_gradient_body = function_body(interactive_chart_text, "barGradient")
 for gradient_fragment in (
     "context.createLinearGradient",
     "gradient.addColorStop(0",
@@ -3256,10 +3256,9 @@ for fragment in (
             f"chartBarGeometry must keep sparse and dense bars inside the canvas: {fragment}"
         )
 for label, source_text in (
-    ("main.qml", main_text),
     ("InteractiveChart.qml", interactive_chart_text),
 ):
-    if not code_contains(source_text, "chartBarGeometry("):
+    if not code_contains(source_text, "CostPresentation.chartBarGeometry("):
         raise AssertionError(f"{label} bar charts must use the shared geometry helper")
     if "barWidth + gap" in source_text:
         raise AssertionError(f"{label} bar charts must not recompute their own bar pitch")
@@ -3272,9 +3271,7 @@ if not code_contains(interactive_chart_text, "geometry.offset + barIndex * geome
 for helper_name in ("chartLineX", "chartLineIndexAt", "chartLineY"):
     if not code_contains(cost_presentation_text, f"function {helper_name}("):
         raise AssertionError(f"CostPresentation.js must expose {helper_name} marker geometry")
-    if not code_contains(main_text, f"function {helper_name}("):
-        raise AssertionError(f"main.qml must expose {helper_name} to presentation components")
-    if not code_contains(interactive_chart_text, f"chart.applet.{helper_name}("):
+    if not code_contains(interactive_chart_text, f"CostPresentation.{helper_name}("):
         raise AssertionError(f"provider detail line charts must use {helper_name}")
 
 reset_credits_body = function_body(main_text, "resetCreditsSection")
