@@ -120,12 +120,6 @@ TestCase {
         function providerIconSource(provider) { return ""; }
         function providerIconIsMask(provider) { return false; }
         function canvasColor(color, alpha) { return "#000000"; }
-        function chartLineIndexAt(w, n, x, inset) { return 0; }
-        function chartLineX(w, n, i, inset) { return i * 10; }
-        function chartLineY(h, f, inset) { return h * (1 - f); }
-        function chartBarGeometry(w, n) { return { offset: 0, step: 10, barWidth: 8 }; }
-        function buildChartBarGradient(ctx, accent, base, a, b) { return "#000000"; }
-        function paintRoundedTopBar(ctx, x, y, w, h, r) {}
         function costChartPoints(points, memo) {
             return CostPresentation.memoizedChartPoints(memo, costNumberFormat, points, costHistoryShowsTokens);
         }

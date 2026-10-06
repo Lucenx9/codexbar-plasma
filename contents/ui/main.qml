@@ -651,33 +651,6 @@ PlasmoidItem {
         return days === 1 ? i18n("Today") : i18np("Last %1 day", "Last %1 days", days)
     }
 
-    function paintRoundedTopBar(context, x, baseline, width, height, radius) {
-        CostPresentation.paintRoundedTopBar(context, x, baseline, width, height, radius)
-    }
-
-    function chartBarGeometry(width, count) {
-        return CostPresentation.chartBarGeometry(width, count)
-    }
-
-    function chartLineX(width, count, index, inset) {
-        return CostPresentation.chartLineX(width, count, index, inset)
-    }
-
-    function chartLineIndexAt(width, count, positionX, inset) {
-        return CostPresentation.chartLineIndexAt(width, count, positionX, inset)
-    }
-
-    function chartLineY(height, fraction, inset) {
-        return CostPresentation.chartLineY(height, fraction, inset)
-    }
-
-    function buildChartBarGradient(context, accent, baseline, topOpacity, bottomOpacity) {
-        var gradient = context.createLinearGradient(0, 0, 0, Math.max(1, baseline))
-        gradient.addColorStop(0, canvasColor(accent, topOpacity))
-        gradient.addColorStop(1, canvasColor(accent, bottomOpacity))
-        return gradient
-    }
-
     function costSparklineSummary(points) {
         var summary = CostPresentation.sparklineSummary(costNumberFormat, points, costHistoryShowsTokens)
         if (!summary) {

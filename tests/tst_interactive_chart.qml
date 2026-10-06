@@ -176,19 +176,14 @@ TestCase {
         waitForRendering(plot)
     }
 
-    // A line chart plots through the applet's line geometry, not the bar
-    // path: usage detail sections feed kind "line" from the CLI payload.
+    // A line chart strokes a line instead of filling bar gradients: usage
+    // detail sections feed kind "line" from the CLI payload.
     function test_lineKindPlotsThroughLineGeometry() {
-        var calls = { line: 0, bar: 0 };
+        var opacities = [];
         var chart = createChart({
             applet: {
                 secondaryTextOpacity: 0.7,
-                canvasColor: function() { return "#000000"; },
-                chartLineX: function(width, count, index, inset) { calls.line++; return index * 10; },
-                chartLineY: function(height, fraction, inset) { return height * (1 - fraction); },
-                chartBarGeometry: function() { calls.bar++; return { offset: 0, step: 10, barWidth: 8 }; },
-                buildChartBarGradient: function() { return "#000000"; },
-                paintRoundedTopBar: function() {}
+                canvasColor: function(color, alpha) { opacities.push(alpha); return "#000000"; }
             },
             width: 300,
             points: [{ label: "First", value: 1 }, { label: "Last", value: 2 }],
@@ -201,9 +196,9 @@ TestCase {
         verify(waitForRendering(chart))
         // One render pass is not guaranteed to have painted the canvas when the
         // runner shares a process with the rest of the suite, so wait for the
-        // line geometry to actually be asked for rather than assuming it was.
-        tryVerify(function() { return calls.line > 0 })
-        compare(calls.bar, 0)
+        // line stroke to actually be asked for rather than assuming it was.
+        tryVerify(function() { return opacities.indexOf(0.9) >= 0 })
+        compare(opacities.indexOf(0.78), -1)
     }
 
     // The plot stays in the tab chain so keyboard inspection needs no mouse.

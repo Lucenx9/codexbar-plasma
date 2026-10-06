@@ -283,27 +283,6 @@ TestCase {
         function canvasColor(c, a) {
             return Qt.rgba(c.r, c.g, c.b, a).toString();
         }
-        function chartLineX(w, n, i, inset) {
-            return CostPresentation.chartLineX(w, n, i, inset);
-        }
-        function chartLineIndexAt(w, n, x, inset) {
-            return CostPresentation.chartLineIndexAt(w, n, x, inset);
-        }
-        function chartLineY(h, v, inset) {
-            return CostPresentation.chartLineY(h, v, inset);
-        }
-        function chartBarGeometry(w, n) {
-            return CostPresentation.chartBarGeometry(w, n);
-        }
-        function paintRoundedTopBar(ctx, x, y, w, h, r) {
-            CostPresentation.paintRoundedTopBar(ctx, x, y, w, h, r);
-        }
-        function buildChartBarGradient(ctx, c, y, a, b) {
-            var gradient = ctx.createLinearGradient(0, 0, 0, Math.max(1, y));
-            gradient.addColorStop(0, canvasColor(c, a));
-            gradient.addColorStop(1, canvasColor(c, b));
-            return gradient;
-        }
     }
 
     function createControl(type, properties, parent) {
