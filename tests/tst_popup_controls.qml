@@ -66,6 +66,9 @@ TestCase {
         function overviewDetailText(item) {
             return item.account || "";
         }
+        function lastGoodUsageText() {
+            return "Last known usage, 8 minutes ago";
+        }
         function percentSuffix() {
             return "left";
         }
@@ -225,6 +228,21 @@ TestCase {
         compare(focus.Accessible.description, "");
         row.modelData = provider;
         compare(focus.Accessible.description, "demo@example.com");
+    }
+
+    // A stale row keeps its account beside the freshness note, joined with
+    // the separator the other popup header lines use.
+    function test_overviewStaleDetailKeepsItsContext() {
+        var row = createControl("OverviewProviderRow", {
+            applet: applet, modelData: Object.assign({}, provider, {usageStale: true}), width: 540
+        });
+        if (!row)
+            return;
+        compare(row.detail, "demo@example.com \u00b7 Last known usage, 8 minutes ago");
+        row.modelData = Object.assign({}, provider, {account: "", usageStale: true});
+        compare(row.detail, "Last known usage, 8 minutes ago");
+        row.modelData = provider;
+        compare(row.detail, "demo@example.com");
     }
 
     function findToolTip(item) {

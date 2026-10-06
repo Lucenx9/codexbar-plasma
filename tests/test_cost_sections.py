@@ -294,8 +294,16 @@ class CostSectionTests(unittest.TestCase):
         compare(metricCombos.length, 1);
         compare(metricCombos[0].currentIndex, 0);
         compare(charts[0].accessibleTitle, "Daily cost history");
+        // The latest-day line stays until a day is selected; the readout and
+        // drill-down heading then name that day, so the line would repeat it.
+        var summaries = all.filter(function(item) {
+            return item.objectName === "costSparklineSummaryLabel";
+        });
+        compare(summaries.length, 1);
+        verify(summaries[0].visible);
         charts[0].selectedIndex = 0;
         compare(charts[0].selectedIndex, 0);
+        tryVerify(function() { return !summaries[0].visible; });
         fakeApplet.costHistoryShowsTokens = true;
         tryVerify(function() { return metricCombos[0].currentIndex === 1; });
         compare(charts[0].accessibleTitle, "Daily token history");

@@ -870,9 +870,10 @@ Item {
                     PlainPlasmaLabel {
                         readonly property int providerCount: applet.overviewProviderItems.length
 
-                        text: applet.lastUpdatedText.length > 0
-                            ? i18n("%1 - %2", applet.lastUpdatedText, applet.providerCountText(providerCount))
-                            : applet.providerCountText(providerCount)
+                        // Same separator as the Sessions and Usage & Spend headers.
+                        text: [applet.lastUpdatedText, applet.providerCountText(providerCount)]
+                            .filter(function(part) { return part.length > 0 })
+                            .join(" \u00b7 ")
                         opacity: applet.secondaryTextOpacity
                         Layout.fillWidth: true
                         elide: Text.ElideRight

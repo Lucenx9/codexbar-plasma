@@ -18,6 +18,15 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   with a macOS-only web source on Linux, so they keep Documentation and
   Dashboard links without an API-key setup action.
 
+### Changed
+
+- Join the Overview header, an Overview row's account and freshness note, and
+  the AI Insights source line with the same "·" separator the Sessions and
+  Usage & Spend headers already use, instead of a hyphen.
+- Hide the latest-day summary under a provider's cost chart while a day is
+  selected: the chart readout and the "Details for" heading already name that
+  day and its amount.
+
 ### Fixed
 
 - Keep one standard popup height across every content section (Overview,

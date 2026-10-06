@@ -60,7 +60,8 @@ These rules are implemented in
 ## Selection rules
 
 Hover previews stay inside the chart. Pointer or keyboard selection pins a day
-without fetching data. A background refresh retains the pinned date even when
+without fetching data. While a day is pinned, the chart readout and the
+drill-down heading name it, so the latest-day summary under the chart is hidden. A background refresh retains the pinned date even when
 its chart position changes; a missing or ambiguous date clears the pin.
 `sourceIndex` cannot identify a day across different snapshots.
 

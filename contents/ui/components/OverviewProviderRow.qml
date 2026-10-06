@@ -25,9 +25,9 @@ Rectangle {
         var lastKnown = applet.lastGoodUsageText(providerData)
         // A stale row must keep its account/status context; the freshness
         // note augments the detail instead of replacing it.
-        return primary.length > 0 && lastKnown.length > 0
-            ? i18n("%1 - %2", primary, lastKnown)
-            : (lastKnown.length > 0 ? lastKnown : primary)
+        return [primary, lastKnown]
+            .filter(function(part) { return part.length > 0 })
+            .join(" \u00b7 ")
     }
     readonly property string percentText: hasUsage
         ? i18n("%1% %2", Math.round(shownPercent), applet.percentSuffix())

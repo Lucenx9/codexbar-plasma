@@ -1169,6 +1169,8 @@ Item {
         }
         verifyScenario(hasVisibleText(card, applet.aiInsightsCache.highlights[0]),
             "the details toggle must reveal the highlights");
+        verifyScenario(card.metaText.split(" \u00b7 ").length === 3 && card.metaText.indexOf(" - ") < 0,
+            "the insight source line must join provider, model and age like the other headers");
         return aiInsightsCardVisible() === 1;
     }
 
