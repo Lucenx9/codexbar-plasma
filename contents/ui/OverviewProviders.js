@@ -140,6 +140,37 @@ function placeholderText(item) {
     return item.placeholder;
 }
 
+// The line under a provider's Overview title: its account identity, or what
+// stands in for it when the CLI reports none.
+function detailText(item) {
+    if (!item) {
+        return "";
+    }
+    if (item.account && item.account.length > 0) {
+        return item.account;
+    }
+    // Only an active incident may stand in for a missing account: an
+    // operational status is service state, not identity information.
+    if (item.hasIncident === true && item.statusKnown !== false
+            && item.status && item.status.length > 0) {
+        return item.status;
+    }
+    var placeholder = placeholderText(item);
+    if (placeholder.length > 0) {
+        return placeholder;
+    }
+    if (item.source && item.source.length > 0) {
+        var source = String(item.source).trim().toLowerCase();
+        var providerID = String(item.provider || "").trim().toLowerCase();
+        var title = String(item.title || "").trim().toLowerCase();
+        // Repeating the provider's own name adds nothing under its title.
+        if (source !== providerID && source !== title) {
+            return item.source;
+        }
+    }
+    return "";
+}
+
 // A snapshot that carries an error and nothing else. Any surviving quota row,
 // credit balance, Codex monthly limit, cost figure, or placeholder keeps the
 // provider eligible, so a failed enrichment never hides healthy data.

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
+import "../OverviewProviders.js" as OverviewProviders
 
 Rectangle {
     id: overviewRow
@@ -18,7 +19,7 @@ Rectangle {
     readonly property real shownPercent: hasUsage ? applet.displayPercent(usageRow) : -1
     readonly property string resetText: usageRow ? applet.resetLabel(applet.usageResetText(usageRow)) : ""
     readonly property string detail: {
-        var primary = applet.overviewDetailText(providerData)
+        var primary = OverviewProviders.detailText(providerData)
         if (providerData.usageStale !== true) {
             return primary
         }
