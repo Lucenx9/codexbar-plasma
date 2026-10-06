@@ -19,9 +19,7 @@ from qml_surfaces import Surface
 class LocalizedCliLabelTests(unittest.TestCase):
     def test_session_pace_and_count_adapters_use_each_catalog(self):
         applet = Surface("applet", ROOT)
-        signatures = {"sessionStateText": "state", "sessionSourceText": "source",
-                      "sessionSubtitle": "item, showHost", "sessionProviderText": "item",
-                      "capitalize": "value",
+        signatures = {"capitalize": "value",
                       "paceSummaryText": "pace", "paceSummaryPartsText": "parts",
                       "paceEtaText": "seconds",
                       "usageCountText": "value, unit",
@@ -71,7 +69,9 @@ import QtTest
 import PACE_PATH as PacePresentation
 import PRIVACY_PATH as PrivacyPresentation
 import COST_PATH as CostPresentation
+import COMPONENTS_PATH as Components
 TestCase {
+    id: testCase
     name: "LocalizedCliLabels"
     property var messages: ({})
     property var pluralMessages: ({})
@@ -88,6 +88,11 @@ TestCase {
         return i18n(count === 1 ? one : many, count);
     }
     ADAPTERS
+    Components.SessionLabels {
+        id: sessionLabels
+        applet: testCase
+        function i18n() { return testCase.i18n.apply(testCase, arguments) }
+    }
     function test_labels_data() { return CASES; }
     function test_labels(row) {
         privacyMode = false;
@@ -113,22 +118,22 @@ TestCase {
         compare(dashboardPartText({kind: "text", value: "Future label"}), "Future label");
         var states = ["active", "idle", "running", "working"];
         for (var i = 0; i < states.length; i++)
-            compare(sessionStateText(states[i]), row.labels[i]);
-        compare(sessionStateText(""), i18n("Unknown"));
-        compare(sessionStateText("unknown"), i18n("Unknown"));
-        compare(sessionStateText("futureState"), "FutureState");
-        compare(sessionSourceText("desktopApp"), row.labels[4]);
-        compare(sessionSourceText("cli"), row.labels[5]);
-        compare(sessionSourceText("ide"), "IDE");
-        compare(sessionSourceText("unknown"), i18n("Unknown"));
-        compare(sessionSourceText("futureSource"), "futureSource");
-        compare(sessionSubtitle({provider: "", dialect: "", host: "workstation", source: "desktopApp"}, true),
+            compare(sessionLabels.sessionStateText(states[i]), row.labels[i]);
+        compare(sessionLabels.sessionStateText(""), i18n("Unknown"));
+        compare(sessionLabels.sessionStateText("unknown"), i18n("Unknown"));
+        compare(sessionLabels.sessionStateText("futureState"), "FutureState");
+        compare(sessionLabels.sessionSourceText("desktopApp"), row.labels[4]);
+        compare(sessionLabels.sessionSourceText("cli"), row.labels[5]);
+        compare(sessionLabels.sessionSourceText("ide"), "IDE");
+        compare(sessionLabels.sessionSourceText("unknown"), i18n("Unknown"));
+        compare(sessionLabels.sessionSourceText("futureSource"), "futureSource");
+        compare(sessionLabels.sessionSubtitle({provider: "", dialect: "", host: "workstation", source: "desktopApp"}, true),
             "workstation \u00b7 " + row.labels[4]);
-        compare(sessionSubtitle({provider: "", dialect: "", host: "workstation", source: "desktopApp"}, false),
+        compare(sessionLabels.sessionSubtitle({provider: "", dialect: "", host: "workstation", source: "desktopApp"}, false),
             row.labels[4]);
-        compare(sessionSubtitle({provider: "pi", dialect: "omp", host: "", source: "cli"}, false),
+        compare(sessionLabels.sessionSubtitle({provider: "pi", dialect: "omp", host: "", source: "cli"}, false),
             "OMP \u00b7 " + row.labels[5]);
-        compare(sessionSubtitle({provider: "", dialect: "future", host: "", source: "ide"}, false),
+        compare(sessionLabels.sessionSubtitle({provider: "", dialect: "future", host: "", source: "ide"}, false),
             "future \u00b7 IDE");
         compare(paceSummaryText({stage: "ahead", deltaPercent: 13, expectedUsedPercent: 30,
             willLastToReset: false, etaSeconds: 3600, summary: "English summary"}), row.labels[6]);
@@ -139,11 +144,11 @@ TestCase {
         compare(paceSummaryText({summary: "Legacy forecast"}), "Legacy forecast");
         compare(paceSummaryText(null), "");
         privacyMode = true;
-        compare(sessionStateText("futureState"), i18n("Unknown"));
-        compare(sessionSourceText("futureSource"), i18n("Unknown"));
-        compare(sessionSubtitle({provider: "", dialect: "", host: "workstation", source: "desktopApp"}, true),
+        compare(sessionLabels.sessionStateText("futureState"), i18n("Unknown"));
+        compare(sessionLabels.sessionSourceText("futureSource"), i18n("Unknown"));
+        compare(sessionLabels.sessionSubtitle({provider: "", dialect: "", host: "workstation", source: "desktopApp"}, true),
             row.labels[4]);
-        compare(sessionSubtitle({provider: "", dialect: "future", host: "", source: "desktopApp"}, false),
+        compare(sessionLabels.sessionSubtitle({provider: "", dialect: "future", host: "", source: "desktopApp"}, false),
             row.labels[4]);
     }
 }
@@ -152,6 +157,7 @@ TestCase {
             fixture.write_text(qml.replace("PACE_PATH", json.dumps((ROOT / "contents/ui/PacePresentation.js").as_uri()))
                                .replace("PRIVACY_PATH", json.dumps((ROOT / "contents/ui/PrivacyPresentation.js").as_uri()))
                                .replace("COST_PATH", json.dumps((ROOT / "contents/ui/CostPresentation.js").as_uri()))
+                               .replace("COMPONENTS_PATH", json.dumps((ROOT / "contents/ui/components").as_uri()))
                                .replace("ADAPTERS", adapters).replace("CASES", json.dumps(cases)), encoding="utf-8")
             result = subprocess.run(
                 [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],

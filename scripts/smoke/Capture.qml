@@ -1855,8 +1855,9 @@ Item {
                 if (!hasText(applet.fullRepresentationItem, sessionLabels[labelIndex]))
                     return false;
             }
-            verifyScenario(applet.sessionSourceText("desktopApp") === sessionLabels[2], "desktop source did not translate");
-            verifyScenario(applet.sessionSourceText("cli") === sessionLabels[3], "command line source did not translate");
+            var cardLabels = findItem(applet.fullRepresentationItem, "sessionsView").labels;
+            verifyScenario(cardLabels.sessionSourceText("desktopApp") === sessionLabels[2], "desktop source did not translate");
+            verifyScenario(cardLabels.sessionSourceText("cli") === sessionLabels[3], "command line source did not translate");
             return true;
         }
         if (scenario === "legacy-dashboard") {

@@ -104,6 +104,7 @@ compact_representation_qml = root / "contents/ui/components/CompactRepresentatio
 global_tab_qml = root / "contents/ui/components/GlobalTab.qml"
 interactive_chart_qml = root / "contents/ui/components/InteractiveChart.qml"
 sessions_view_qml = root / "contents/ui/components/SessionsView.qml"
+session_labels_qml = root / "contents/ui/components/SessionLabels.qml"
 copyable_value_qml = root / "contents/ui/components/CopyableValue.qml"
 spend_view_qml = root / "contents/ui/components/SpendView.qml"
 full_representation_qml = root / "contents/ui/components/FullRepresentation.qml"
@@ -174,8 +175,8 @@ from qml_surfaces import Surface
 # specifically, so read the surface as one text. Extracting the popup into a
 # component keeps these assertions meaningful instead of silently unhooking them.
 applet = Surface("applet", root)
-applet.require("text: view.applet.sessionStateText(modelData.state)", "session states must use localized labels")
-applet.require("details.push(sessionSourceText(item.source))", "session sources must use localized labels")
+applet.require("text: sessionLabels.sessionStateText(modelData.state)", "session states must use localized labels")
+applet.require("details.push(root.sessionSourceText(item.source))", "session sources must use localized labels")
 applet.require("row.pace = paceSummaryPartsText(snapshot.paceParts)", "usage rows must localize structured pace fields")
 applet.require_definition_where_used("sessionStateText")
 applet.require_definition_where_used("sessionSourceText")
@@ -245,6 +246,7 @@ compact_representation_text = compact_representation_qml.read_text(encoding="utf
 global_tab_text = global_tab_qml.read_text(encoding="utf-8")
 interactive_chart_text = interactive_chart_qml.read_text(encoding="utf-8")
 sessions_view_text = sessions_view_qml.read_text(encoding="utf-8")
+session_labels_text = session_labels_qml.read_text(encoding="utf-8")
 copyable_value_text = copyable_value_qml.read_text(encoding="utf-8")
 spend_view_text = spend_view_qml.read_text(encoding="utf-8")
 full_representation_text = full_representation_qml.read_text(encoding="utf-8")
@@ -2679,7 +2681,7 @@ for active_session_state in (
             f"missing {active_session_state!r}"
         )
 for optional_session_details_fragment in (
-    "readonly property string subtitle: view.applet.sessionSubtitle( modelData, view.applet.sessionHostsVary)",
+    "readonly property string subtitle: sessionLabels.sessionSubtitle( modelData, view.applet.sessionHostsVary)",
     "visible: sessionCard.subtitle.length > 0",
     "text: sessionCard.subtitle",
 ):
@@ -2712,8 +2714,8 @@ applet.require("codexbar sessions returned an unsupported JSON payload.",
 # SessionResponse QtTests distinguish failed output from confirmed empty data;
 # the controller tests verify that only a successful result replaces a snapshot.
 
-session_activity_body = function_body(main_text, "sessionActivityText")
-if not code_contains(session_activity_body, "elapsedText(Number(item.activityMs), nowMs)"):
+session_activity_body = function_body(session_labels_text, "sessionActivityText")
+if not code_contains(session_activity_body, "root.applet.elapsedText(Number(item.activityMs), nowMs)"):
     raise AssertionError("session ages must use the shared elapsedText helper with the live clock")
 elapsed_body = function_body(main_text, "elapsedText")
 for live_age_fragment in (
