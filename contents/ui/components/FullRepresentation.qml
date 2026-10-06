@@ -11,18 +11,22 @@ Item {
 
     required property var applet
 
-    // A fixed popup height left the Overview half empty whenever few
-    // providers were configured. The content drives the height instead,
-    // clamped so a long provider list still scrolls rather than growing
-    // without bound, and so a nearly empty popup keeps a usable shape.
+    // Every content section shares one standard height, so switching tabs
+    // never resizes the dialog. Only the content-less states (loading,
+    // empty setup, missing CLI) stay compact and content-driven.
     readonly property int maximumPopupHeight: Kirigami.Units.gridUnit * 38
     readonly property int minimumPopupHeight: Kirigami.Units.gridUnit * 20
     readonly property int popupContentHeight: Math.ceil(popupContent.implicitHeight)
         + Kirigami.Units.largeSpacing * 2
+    // Provider and Overview tabs imply a non-empty roster.
+    readonly property bool standardHeightActive: applet.providers.length > 0
+        || applet.spendSelected || applet.sessionsSelected
 
     implicitWidth: Kirigami.Units.gridUnit * 34
-    implicitHeight: Math.max(minimumPopupHeight,
-        Math.min(maximumPopupHeight, popupContentHeight))
+    implicitHeight: standardHeightActive
+        ? maximumPopupHeight
+        : Math.max(minimumPopupHeight,
+            Math.min(maximumPopupHeight, popupContentHeight))
     Layout.minimumWidth: Kirigami.Units.gridUnit * 30
     Layout.minimumHeight: Math.min(Kirigami.Units.gridUnit * 28, implicitHeight)
     Layout.preferredWidth: implicitWidth

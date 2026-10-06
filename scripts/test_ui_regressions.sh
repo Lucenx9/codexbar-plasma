@@ -1841,15 +1841,20 @@ for control_id in ("metricCombo", "rangeCombo"):
 if not code_contains(main_text, "fullRepresentation:"):
     raise AssertionError("the applet must keep a fullRepresentation root")
 full_representation_head = id_block(main_text, "fullRoot")[:900]
+if "standardHeightActive" not in full_representation_head:
+    raise AssertionError(
+        "every popup content section must share one standard height; "
+        "per-section content heights resize the dialog on each tab switch"
+    )
 if "popupContent.implicitHeight" not in full_representation_head:
     raise AssertionError(
-        "the popup height must follow its content; a fixed height leaves the "
-        "Overview half empty whenever few providers are configured"
+        "the content-less popup states must stay compact and content-driven "
+        "instead of inheriting the standard section height"
     )
 if re.search(r"implicitHeight:\s*Kirigami\.Units\.gridUnit\s*\*\s*\d", full_representation_head):
     raise AssertionError(
-        "the popup must not pin implicitHeight to a constant again; the "
-        "constants belong in the clamp around the content height"
+        "the popup must not pin implicitHeight to a grid-unit constant; the "
+        "constants belong in the named minimum/maximum height properties"
     )
 
 format_number_body = function_body(main_text, "formatNumber")

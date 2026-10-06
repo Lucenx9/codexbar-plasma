@@ -20,6 +20,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep one standard popup height across every content section (Overview,
+  provider tabs, Usage & Spend, Sessions) instead of resizing the dialog to
+  each section's content. Short sections now leave scroll slack rather than
+  shrinking the window; the loading, empty-setup, and missing-CLI states
+  stay compact.
 - Keep the minus sign of a negative change at the start of an AI Insights
   summary or highlight instead of removing it like a list bullet, which
   turned a drop such as "-45%" into an increase.
