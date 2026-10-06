@@ -36,6 +36,9 @@ TestCase {
     function i18np(one, many, count) {
         return String(count === 1 ? one : many).replace("%1", String(count));
     }
+    function i18nc(context) {
+        return i18n.apply(testCase, Array.prototype.slice.call(arguments, 1));
+    }
 
     property bool stillBuilding: true
     property var projectCosts: [{
@@ -171,6 +174,7 @@ TestCase {
         ColumnLayout {
             function i18n() { return testCase.i18n.apply(testCase, arguments); }
             function i18np(one, many, count) { return testCase.i18np(one, many, count); }
+            function i18nc() { return testCase.i18nc.apply(testCase, arguments); }
             Components.ProjectCostSection {
                 applet: fakeApplet
                 providerCosts: testCase.projectCosts
@@ -182,6 +186,7 @@ TestCase {
         ColumnLayout {
             function i18n() { return testCase.i18n.apply(testCase, arguments); }
             function i18np(one, many, count) { return testCase.i18np(one, many, count); }
+            function i18nc() { return testCase.i18nc.apply(testCase, arguments); }
             Components.ProviderCostSection {
                 applet: fakeApplet
                 providerData: testCase.providerData
@@ -193,6 +198,7 @@ TestCase {
         ColumnLayout {
             function i18n() { return testCase.i18n.apply(testCase, arguments); }
             function i18np(one, many, count) { return testCase.i18np(one, many, count); }
+            function i18nc() { return testCase.i18nc.apply(testCase, arguments); }
             Components.SpendView {
                 applet: fakeApplet
             }
@@ -335,7 +341,13 @@ class CostSectionTests(unittest.TestCase):
         verify(!section.visible);
         all.filter(function(item) { return item.objectName === "providerLocalCostSection"; })[0].detailsExpanded = true;
         tryVerify(function() { return section.visible; });
-        function stamp(ms) { return Qt.formatDateTime(new Date(ms), "MMM d, hh:mm"); }
+        // Month names and the hour cycle follow the regional format; the
+        // catalog stub keeps the English word order.
+        function stamp(ms) {
+            var date = new Date(ms);
+            return Qt.locale().toString(date, "MMM") + " " + date.getDate() + ", "
+                + date.toLocaleTimeString(Qt.locale(), Locale.ShortFormat);
+        }
         var texts = textsUnder(subject);
         verify(texts.indexOf("Quota weeks") >= 0);
         verify(texts.indexOf(stamp(reset - 7 * 86400000) + " - " + stamp(reset)) >= 0, texts.join(" | "));

@@ -20,6 +20,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Write reset clock times, cost quota weeks, and "Updated" times in the
+  regional format: translated day and month names, the locale's 12- or
+  24-hour clock, and each translation's word order, instead of English names
+  such as "Wed 14:30" or "Oct 7, 14:30" in every language.
 - Keep one standard popup height across every content section (Overview,
   provider tabs, Usage & Spend, Sessions) instead of resizing the dialog to
   each section's content. Short sections now leave scroll slack rather than

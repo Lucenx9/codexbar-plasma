@@ -89,6 +89,10 @@ ColumnLayout {
     Layout.fillWidth: true
     spacing: Kirigami.Units.smallSpacing
 
+    Components.TimeLabels {
+        id: timeLabels
+    }
+
     Kirigami.Separator {
         Layout.fillWidth: true
     }
@@ -454,7 +458,7 @@ ColumnLayout {
         })
 
         function instantText(timestampMs) {
-            return Qt.formatDateTime(new Date(timestampMs), "MMM d, hh:mm");
+            return timeLabels.monthDayTime(timestampMs);
         }
         function rangeText(window) {
             return i18n("%1 - %2", instantText(window.startMs), instantText(window.endMs));
