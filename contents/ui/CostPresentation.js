@@ -315,6 +315,23 @@ function chartPoints(fmt, points, showsTokens) {
     return result
 }
 
+// Returns the previous points while the daily rows, format, and metric are the
+// same objects. Qt 6.8 re-notifies a var binding that re-evaluates to an equal
+// object, so a shallow provider copy would otherwise hand the chart a new array
+// for an unchanged snapshot. Writes only into the caller-owned memo.
+function memoizedChartPoints(memo, fmt, points, showsTokens) {
+    if (!memo || typeof memo !== "object") {
+        return chartPoints(fmt, points, showsTokens)
+    }
+    if (!memo.result || memo.points !== points || memo.fmt !== fmt || memo.showsTokens !== showsTokens) {
+        memo.points = points
+        memo.fmt = fmt
+        memo.showsTokens = showsTokens
+        memo.result = chartPoints(fmt, points, showsTokens)
+    }
+    return memo.result
+}
+
 // Chart points omit unavailable amounts. Their index is not a daily-row index.
 function selectedCostDay(daily, points, activeIndex) {
     if (!Array.isArray(daily) || !Array.isArray(points)

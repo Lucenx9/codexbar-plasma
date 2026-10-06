@@ -686,8 +686,8 @@ PlasmoidItem {
         return i18n("%1: %2", summary.label.length > 0 ? costDayLabel(summary.label) : i18n("Latest"), summary.value)
     }
 
-    function costChartPoints(points) {
-        return CostPresentation.chartPoints(costNumberFormat, points, costHistoryShowsTokens)
+    function costChartPoints(points, memo) {
+        return CostPresentation.memoizedChartPoints(memo, costNumberFormat, points, costHistoryShowsTokens)
     }
 
     property var shareUsageSnapshot: null

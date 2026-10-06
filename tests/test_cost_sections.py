@@ -123,8 +123,8 @@ TestCase {
         function chartBarGeometry(w, n) { return { offset: 0, step: 10, barWidth: 8 }; }
         function buildChartBarGradient(ctx, accent, base, a, b) { return "#000000"; }
         function paintRoundedTopBar(ctx, x, y, w, h, r) {}
-        function costChartPoints(points) {
-            return CostPresentation.chartPoints(costNumberFormat, points, costHistoryShowsTokens);
+        function costChartPoints(points, memo) {
+            return CostPresentation.memoizedChartPoints(memo, costNumberFormat, points, costHistoryShowsTokens);
         }
         function costBreakdownRows(tokenCost) {
             if (!tokenCost || !tokenCost.totals)

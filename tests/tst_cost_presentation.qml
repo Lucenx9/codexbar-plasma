@@ -656,6 +656,24 @@ TestCase {
         compare(CostPresentation.modelRows(fmt, { models: [null, "invalid", 42] }, null).length, 0)
     }
 
+    // Qt 6.8 re-notifies a var binding that re-evaluates to the same object, so
+    // a shallow provider copy must not rebuild the points the chart reconciles.
+    function test_memoizedChartPointsKeepIdentityForSameInputs() {
+        var memo = ({})
+        var daily = [dailyPoint("Mon", 1, 100), dailyPoint("Tue", 2, 200)]
+        var first = CostPresentation.memoizedChartPoints(memo, fmt, daily, false)
+        compare(first.length, 2)
+        verify(CostPresentation.memoizedChartPoints(memo, fmt, daily, false) === first)
+        var copy = daily.slice()
+        var rebuilt = CostPresentation.memoizedChartPoints(memo, fmt, copy, false)
+        verify(rebuilt !== first)
+        verify(CostPresentation.memoizedChartPoints(memo, fmt, copy, true) !== rebuilt)
+        var otherFormat = CostPresentation.numberFormat(".", ",")
+        verify(CostPresentation.memoizedChartPoints(memo, otherFormat, copy, true) !== rebuilt)
+        compare(CostPresentation.memoizedChartPoints(memo, fmt, null, false).length, 0)
+        compare(CostPresentation.memoizedChartPoints(null, fmt, daily, false).length, 2)
+    }
+
     function test_chartPointsAndSparklineMaxSurviveNonArrayInputs() {
         compare(CostPresentation.chartPoints(fmt, null, false).length, 0)
         compare(CostPresentation.chartPoints(fmt, "invalid", false).length, 0)
