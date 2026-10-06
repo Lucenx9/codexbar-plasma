@@ -24,9 +24,14 @@ Item {
     signal checkedRelease(string timestamp)
     signal updateAvailable(string version, string releaseUrl)
 
+    // General hosts the managed CLI controls itself, so its guidance points to
+    // that section instead of naming the page the reader is already on.
+    property bool managedControlsOnPage: false
     readonly property string guidanceText: {
         if (result.manager === "managed")
-            return i18n("Managed by this widget. Install updates or restore the previous version in General.")
+            return managedControlsOnPage
+                ? i18n("Managed by this widget. Install updates or restore the previous version in Managed CLI below.")
+                : i18n("Managed by this widget. Install updates or restore the previous version in General.")
         if (result.manager === "homebrew")
             return i18n("Managed by Homebrew. Update through Homebrew.")
         if (result.manager !== "external")
