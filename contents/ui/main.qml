@@ -1237,13 +1237,6 @@ PlasmoidItem {
     }
 
     function primaryIncidentProvider() {
-        var ranked = {
-            "critical": 5,
-            "major": 4,
-            "minor": 3,
-            "maintenance": 2,
-            "unknown": 1
-        }
         var best = null
         var bestRank = 0
         for (var i = 0; i < providers.length; i++) {
@@ -1251,7 +1244,7 @@ PlasmoidItem {
             if (!item || item.statusKnown === false || item.hasIncident !== true) {
                 continue
             }
-            var rank = item.statusSeverity ? ranked[item.statusSeverity] || 0 : 0
+            var rank = NotificationMemo.severityRank(item.statusSeverity)
             if (rank > bestRank) {
                 best = item
                 bestRank = rank
