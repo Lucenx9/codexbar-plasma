@@ -54,8 +54,21 @@ TestCase {
         compare(american.monthDayTime(sample), "Oct 7, " + time);
     }
 
+    Components.TimeLabels {
+        id: posix
+
+        locale: Qt.locale("C")
+    }
+
     function test_catalogOrdersTheParts() {
         compare(reordered.weekdayTime(sample), "14:30 mer");
         compare(reordered.monthDayTime(sample), "7 ott, 14:30");
+    }
+
+    // C's ShortFormat is HH:mm:ss; compact labels still omit seconds.
+    function test_posixShortClockOmitsSeconds() {
+        compare(posix.clockTime(sample), "14:30");
+        compare(posix.weekdayTime(sample), "Wed 14:30");
+        compare(posix.monthDayTime(sample), "Oct 7, 14:30");
     }
 }

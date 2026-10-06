@@ -345,8 +345,9 @@ class CostSectionTests(unittest.TestCase):
         // catalog stub keeps the English word order.
         function stamp(ms) {
             var date = new Date(ms);
-            return Qt.locale().toString(date, "MMM") + " " + date.getDate() + ", "
-                + date.toLocaleTimeString(Qt.locale(), Locale.ShortFormat);
+            var locale = Qt.locale();
+            var time = locale.toString(date, locale.timeFormat(Locale.ShortFormat).replace(/:?ss/, ""));
+            return locale.toString(date, "MMM") + " " + date.getDate() + ", " + time;
         }
         var texts = textsUnder(subject);
         verify(texts.indexOf("Quota weeks") >= 0);

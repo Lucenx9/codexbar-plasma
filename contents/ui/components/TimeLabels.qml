@@ -10,7 +10,11 @@ QtObject {
     property var locale: Qt.locale()
 
     function clockTime(timestampMs) {
-        return new Date(timestampMs).toLocaleTimeString(root.locale, Locale.ShortFormat)
+        // ShortFormat follows the regional 12/24-hour clock. Drop seconds so
+        // compact labels stay HH:mm / h:mm AP even when a locale's short form
+        // is HH:mm:ss (notably C).
+        var format = root.locale.timeFormat(Locale.ShortFormat).replace(/:?ss/, "")
+        return root.locale.toString(new Date(timestampMs), format)
     }
 
     function weekdayTime(timestampMs) {
