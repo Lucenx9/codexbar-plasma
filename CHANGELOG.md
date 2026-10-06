@@ -24,6 +24,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   regional format: translated day and month names, the locale's 12- or
   24-hour clock, and each translation's word order, instead of English names
   such as "Wed 14:30" or "Oct 7, 14:30" in every language.
+- Point the managed CLI guidance in General to the Managed CLI section below
+  instead of telling the reader to open General, the page they are already on.
+  Diagnostics still names General.
 - Keep one standard popup height across every content section (Overview,
   provider tabs, Usage & Spend, Sessions) instead of resizing the dialog to
   each section's content. Short sections now leave scroll slack rather than

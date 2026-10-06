@@ -2800,6 +2800,14 @@ msgstr "O carregamento das contas excedeu o tempo limite. Tente novamente."
 #: contents/ui/controllers/CliUpdateController.qml
 msgid ""
 "Managed by this widget. Install updates or restore the previous version in "
+"Managed CLI below."
+msgstr ""
+"Gerenciada por este widget. Instale atualizações ou restaure a versão "
+"anterior em CLI gerenciada, abaixo."
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid ""
+"Managed by this widget. Install updates or restore the previous version in "
 "General."
 msgstr ""
 "Gerenciada por este widget. Instale atualizações ou restaure a versão "

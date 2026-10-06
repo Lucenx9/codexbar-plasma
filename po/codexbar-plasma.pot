@@ -2656,6 +2656,12 @@ msgstr ""
 #: contents/ui/controllers/CliUpdateController.qml
 msgid ""
 "Managed by this widget. Install updates or restore the previous version in "
+"Managed CLI below."
+msgstr ""
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid ""
+"Managed by this widget. Install updates or restore the previous version in "
 "General."
 msgstr ""
 
