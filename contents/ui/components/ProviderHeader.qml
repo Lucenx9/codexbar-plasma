@@ -77,9 +77,9 @@ RowLayout {
                 }
             }
 
-            // The popup states the incident in a banner directly below this
+            // The popup states the incident in a pill directly below this
             // header, and that text always names the severity, so the badge
-            // is only a fallback for an incident that has no banner text.
+            // is only a fallback for an incident that has no pill text.
             Rectangle {
                 id: providerStatusBadge
 

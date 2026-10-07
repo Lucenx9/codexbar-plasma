@@ -899,19 +899,63 @@ Item {
                         providerData: applet.selectedProviderData
                     }
 
-                    Components.PlainInlineMessage {
+                    // A compact pill that hugs its text, tinted with the same
+                    // severity color as the header badge and the panel dot.
+                    Rectangle {
                         id: providerStatusMessage
+                        objectName: "providerStatusMessage"
+
+                        readonly property color tone: applet.presentedProviderData
+                            ? applet.statusBadgeColor(applet.presentedProviderData.statusSeverity)
+                            : "transparent"
+                        readonly property real horizontalPadding: Kirigami.Units.smallSpacing * 2.5
+                        readonly property real verticalPadding: Kirigami.Units.smallSpacing
+                        readonly property real chromeWidth: horizontalPadding * 2
+                            + providerStatusDot.width + Kirigami.Units.smallSpacing * 1.5
 
                         visible: applet.presentedProviderData
                             && applet.presentedProviderData.hasIncident
                             && applet.presentedProviderData.statusKnown !== false
                             && applet.presentedProviderData.status
                             && applet.presentedProviderData.status.length > 0
-                        plainText: applet.presentedProviderData ? applet.presentedProviderData.status : ""
-                        type: applet.presentedProviderData
-                            ? applet.statusMessageType(applet.presentedProviderData.statusSeverity)
-                            : Kirigami.MessageType.Information
-                        Layout.fillWidth: true
+                        Layout.preferredWidth: Math.min(parent.width,
+                            providerStatusLabel.implicitWidth + chromeWidth)
+                        implicitHeight: providerStatusLabel.height + verticalPadding * 2
+                        radius: providerStatusLabel.lineCount > 1
+                            ? Kirigami.Units.cornerRadius * 2
+                            : height / 2
+                        color: applet.withAlpha(tone, 0.14)
+                        border.width: 1
+                        border.color: applet.withAlpha(tone, 0.32)
+
+                        Rectangle {
+                            id: providerStatusDot
+
+                            x: providerStatusMessage.horizontalPadding
+                            // Centered on the first line, sized to the text.
+                            y: providerStatusLabel.y + (providerStatusMetrics.height - height) / 2
+                            width: Math.round(providerStatusMetrics.height * 0.4)
+                            height: width
+                            radius: width / 2
+                            color: providerStatusMessage.tone
+                        }
+
+                        FontMetrics {
+                            id: providerStatusMetrics
+
+                            font: providerStatusLabel.font
+                        }
+
+                        PlainPlasmaLabel {
+                            id: providerStatusLabel
+
+                            x: providerStatusDot.x + providerStatusDot.width + Kirigami.Units.smallSpacing * 1.5
+                            y: providerStatusMessage.verticalPadding
+                            width: providerStatusMessage.width - providerStatusMessage.chromeWidth
+                            text: applet.presentedProviderData ? applet.presentedProviderData.status : ""
+                            font: Kirigami.Theme.smallFont
+                            wrapMode: Text.Wrap
+                        }
                     }
 
                     Components.PlainInlineMessage {

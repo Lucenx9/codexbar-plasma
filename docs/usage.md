@@ -464,16 +464,17 @@ fields; track proposed extensions in the issue tracker.
 ## Status and notifications
 
 - Provider status incident badge in the panel and provider detail view. The
-  detail view states a current incident once, in the banner below the header,
-  which always names the severity even without a CLI description; the header
-  badge is only a fallback for an incident with no banner text. The
+  detail view states a current incident once, in a compact pill below the
+  header tinted with the severity color, which always names the severity even
+  without a CLI description; the header badge is only a fallback for an
+  incident with no pill text. The
   panel badge sits on the incident provider's own meter icon, follows provider
   reordering, and stays visible while a refresh runs. The standalone
   service-status panel element remains a fallback when no meter can carry the
   badge, such as hidden meters or an incident provider without meters. When
   meters are hidden in a vertical panel, the identity icon carries a badge only
   for its own provider's incident; an incident on another provider keeps the
-  standalone fallback. Incident selection, badges, banners, and tooltips ignore
+  standalone fallback. Incident selection, badges, pills, and tooltips ignore
   a provider whose current status is unknown or has no active incident. When a
   refresh omits status, a previously retained outage is hidden; this is not
   evidence of recovery. Current status can still report an incident when quota
