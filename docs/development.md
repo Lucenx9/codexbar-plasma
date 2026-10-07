@@ -589,21 +589,21 @@ regular expression literal wider than `MaxColumnWidth`, so build long patterns
 from strings with `new RegExp(...)` or match plain substrings instead.
 
 All CI container jobs pin the official KDE neon User Edition image by digest.
-Jobs install dependencies using the authenticated APT indexes already included
-in that pinned image; they do not run `apt-get update` against a mutable archive.
-APT still checks downloaded packages against those indexes. This avoids making
-an otherwise reproducible job depend on the availability of the archive's
-current Release metadata. If a package from that snapshot is removed, update
-the image pin and revalidate the full toolchain; do not disable authentication
-or substitute unverified packages.
+The initial checkout prerequisites use the authenticated APT indexes included
+in that image. `scripts/install-ci-dependencies.sh` then attempts
+`apt-get update` and retains the available indexes if the refresh fails.
+APT authenticates indexes and verifies package hashes. The image digest
+fixes the starting environment, but refreshed indexes can select newer packages.
+If installation fails because an indexed package is unavailable, refresh the
+image pin and revalidate the full toolchain. Keep package authentication enabled.
 If the registry removes that manifest, resolve the official `user` tag again,
 verify its Linux/amd64 Ubuntu 24.04 image metadata, and update every container
 pin together. Validate the replacement through the full check and smoke jobs.
 
-`actionlint` has no package in that snapshot, so
-[`scripts/install-ci-dependencies.sh`](../scripts/install-ci-dependencies.sh)
-downloads the official release binary and verifies it against a pinned SHA-256
-before installing it. Update the version and the checksum together, taking the
+Both the static checks and the Plasma jobs use
+[`scripts/install-actionlint.sh`](../scripts/install-actionlint.sh) to download
+the official release binary and verify its pinned SHA-256 before installation.
+Update the version and the checksum together, taking the
 new value from that release's `checksums.txt`. An unverified or unreachable
 archive fails the job instead of leaving the workflow lint silently skipped.
 
@@ -794,12 +794,25 @@ QML_TEST_REQUIRE_NO_SKIPS=1 make check QMLLINT_FLAGS='--import warning --unquali
 
 CI also runs smoke scenarios under Xvfb and retains screenshots and logs as
 workflow artifacts. Release publication requires both check and smoke jobs.
-The `check` job always runs `make check` and `make package`. A lightweight
-`scope` job compares the tested PR merge tree with its base parent, or the full
+The `check` job always runs `make check` and `make package`. The independent
+`lint` job reports static failures before the Plasma environment is ready.
+It runs ShellCheck, actionlint, Python lint, changelog and documentation checks,
+and XML and JSON validation. These checks also remain in the full suite.
+
+CI runs on every PR, push to `main`, and version tag. It also runs the full
+suite and graphical smoke tests each Monday at 07:23 UTC and on manual runs.
+To start a manual run after the workflow is available on `main`, use:
+
+```sh
+gh workflow run ci.yml --ref main
+```
+
+A lightweight `scope` job compares the tested PR merge tree with its base parent, or the full
 before/after range for a push to `main`. Only changes limited to the editorial
 Markdown allowlist in `scripts/ci_scope.py` omit the `smoke-runtime` job.
 Images, translations, code, tests, packaging, CI files, unknown paths, missing
-history, and empty diffs keep graphical coverage. Tags always run it.
+history, and empty diffs keep graphical coverage. Tags, scheduled runs, and
+manual runs always run it.
 
 The required `smoke` job reports either successful graphical tests or an explicit
 documentation-only omission in its summary. It fails if scope detection fails,
