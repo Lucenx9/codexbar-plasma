@@ -16,9 +16,14 @@ QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/PanelProviders.js" as PanelProviders
 import "SOURCE_URL/PanelRules.js" as PanelRules
-import "SOURCE_URL/PanelTextFit.js" as PanelTextFit
+import "SOURCE_URL/components" as Components
 TestCase {
     name: "PanelSelectionText"
+    Components.PanelText {
+        id: panelText
+        loading: applet.loading
+        function i18n(text) { return text; }
+    }
     QtObject {
         id: applet
         property string panelProviderIDsRaw: ""
