@@ -155,7 +155,10 @@ class PopupLayoutTest(unittest.TestCase):
             ("overviewHeaderRow", overview_header_body),
             ("providerHeaderRow", provider_header_body),
         ):
-            if not code_contains(header_body, "RefreshButton {" not in header_body or "busy:"):
+            if not (
+                code_contains(header_body, "RefreshButton {")
+                and code_contains(header_body, "busy:")
+            ):
                 raise AssertionError(
                     f"{header_id} must use the shared refresh control with busy feedback"
                 )
@@ -418,7 +421,10 @@ class PopupLayoutTest(unittest.TestCase):
                 )
 
         format_number_body = function_body(main_text, "formatNumber")
-        if not code_contains(format_number_body, "groupedDecimalString(" not in format_number_body and "CostPresentation.formatCount("):
+        if not (
+            code_contains(format_number_body, "groupedDecimalString(")
+            or code_contains(format_number_body, "CostPresentation.formatCount(")
+        ):
             raise AssertionError(
                 "formatNumber must route through groupedDecimalString so credit balances "
                 "carry group separators and the locale decimal mark like every other "

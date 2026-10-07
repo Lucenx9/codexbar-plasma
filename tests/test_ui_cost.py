@@ -234,7 +234,10 @@ class CostTest(unittest.TestCase):
                     f"missing {gradient_fragment!r}"
                 )
 
-        if not code_contains(main_text, "Components.InteractiveChart" not in main_text or "applet.costChartPoints("):
+        if not (
+            code_contains(main_text, "Components.InteractiveChart")
+            and code_contains(main_text, "applet.costChartPoints(")
+        ):
             raise AssertionError("the provider cost sparkline must use the interactive shared chart")
 
         # Bar charts are painted for up to 365 cost-history days and 120 detail-chart
@@ -432,7 +435,10 @@ class CostTest(unittest.TestCase):
                 )
 
     def test_spend_view_heatmap(self):
-        if not code_contains(spend_view_text, "InteractiveChart" not in spend_view_text or "Activity heatmap"):
+        if not (
+            code_contains(spend_view_text, "InteractiveChart")
+            and code_contains(spend_view_text, "Activity heatmap")
+        ):
             raise AssertionError("SpendView must expose the interactive chart and bounded activity heatmap")
         if not code_contains(spend_view_text, "visible: view.dailyPoints.length > 0"):
             raise AssertionError("SpendView must keep a one-day history keyboard-inspectable")

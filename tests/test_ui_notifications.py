@@ -159,7 +159,10 @@ class NotificationsTest(unittest.TestCase):
                 )
 
         reset_memo_body = applet.function_body("resetNotificationMemo")
-        if not code_contains(reset_memo_body, "NotificationPlanner.transition(" not in reset_memo_body or 'mode: "reset"'):
+        if not (
+            code_contains(reset_memo_body, "NotificationPlanner.transition(")
+            and code_contains(reset_memo_body, 'mode: "reset"')
+        ):
             raise AssertionError("resetNotificationMemo must reset the opaque memo through NotificationPlanner")
         if re.search(r"notificationMemo\s*=\s*\(\{\}\)", reset_memo_body):
             raise AssertionError("resetNotificationMemo must not clear the whole memo, including status state")
