@@ -89,6 +89,24 @@ TestCase {
         }
     }
 
+    function test_statusLabelLookup_data() {
+        return [
+            {tag: "constructor", indicator: "constructor", description: "", expected: "constructor"},
+            {tag: "prototype", indicator: "__proto__", description: "Synthetic incident", expected: "__proto__: Synthetic incident"},
+            {tag: "inherited-method", indicator: "toString", description: "", expected: "toString"},
+            {tag: "future-indicator", indicator: "future-state", description: "", expected: "future-state"},
+            {tag: "known-indicator", indicator: "minor", description: " Synthetic incident ", expected: "Partial outage: Synthetic incident"},
+            {tag: "no-incident", indicator: "none", description: "Healthy", expected: "Healthy"},
+            {tag: "structured-indicator", indicator: {toString: null}, description: "Synthetic incident", expected: "Synthetic incident"}
+        ];
+    }
+
+    function test_statusLabelLookup(data) {
+        var applet = createTemporaryObject(harness, this, {});
+        verify(applet !== null);
+        compare(applet.statusText({indicator: data.indicator, description: data.description}), data.expected);
+    }
+
     function test_optionalNameKeepsQuota_data() {
         return [
             {tag: "structured-display-name", field: "displayName", value: {toString: null}, used: 72, title: "Codex"},

@@ -1187,7 +1187,7 @@ PlasmoidItem {
             "maintenance": i18n("Maintenance"),
             "unknown": i18n("Status unknown")
         }
-        var text = labels[indicator] || indicator
+        var text = Guards.hasOwnKey(labels, indicator) ? labels[indicator] : indicator
         return description.length > 0 ? text + ": " + description : text
     }
 
