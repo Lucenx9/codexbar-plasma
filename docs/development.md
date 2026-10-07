@@ -657,7 +657,10 @@ docker run --rm --init --cpus 4 -v "$PWD:/workspace" -w /workspace \
 Run [CI image](../.github/workflows/ci-image.yml) manually on `main`, selecting
 the trusted recipe branch or commit in its `revision` input, to build and
 validate the full suite, packaging and graphics, then publish a candidate to
-`ghcr.io/lucenx9/codexbar-plasma-ci`. It uses unique build tags and reports the
+`ghcr.io/lucenx9/codexbar-plasma-ci-amd64`. It publishes the Linux/amd64 platform manifest with `docker push --platform
+linux/amd64`, excluding the multi-platform index and attestation manifests.
+This keeps the source-labelled runtime image as the initial package publication.
+It uses unique build tags and reports the
 registry digest in its summary; it never automatically changes consumer pins.
 Once the workflow exists on `main`, a recipe PR can publish its candidate with:
 

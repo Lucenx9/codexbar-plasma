@@ -64,13 +64,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/codexbar-plasma-ci"
+          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/codexbar-plasma-ci-amd64"
           revision="$(git rev-parse HEAD)"
           tag="build-${revision}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           trap 'docker logout ghcr.io' EXIT
           docker tag codexbar-plasma-ci:candidate "${image}:${tag}"
-          docker push "${image}:${tag}" | tee /tmp/ci-image-push.log
+          docker push --platform linux/amd64 "${image}:${tag}" | tee /tmp/ci-image-push.log
           digest="$(sed -n 's/.*digest: \(sha256:[a-f0-9]\{64\}\).*/\1/p' /tmp/ci-image-push.log)"
           test -n "$digest"
           # shellcheck disable=SC2016 # Markdown backticks are literal.
