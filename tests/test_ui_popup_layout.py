@@ -155,12 +155,13 @@ class PopupLayoutTest(unittest.TestCase):
             ("overviewHeaderRow", overview_header_body),
             ("providerHeaderRow", provider_header_body),
         ):
-            if not (
-                code_contains(header_body, "RefreshButton {")
-                and code_contains(header_body, "busy:")
-            ):
+            if not code_contains(header_body, "RefreshButton {"):
                 raise AssertionError(
-                    f"{header_id} must use the shared refresh control with busy feedback"
+                    f"{header_id} must use the shared refresh control; missing 'RefreshButton {{'"
+                )
+            if not code_contains(header_body, "busy:"):
+                raise AssertionError(
+                    f"{header_id} must give the shared refresh control busy feedback; missing 'busy:'"
                 )
 
         refresh_control_body = applet.id_block("refreshControl")
@@ -426,9 +427,9 @@ class PopupLayoutTest(unittest.TestCase):
             or code_contains(format_number_body, "CostPresentation.formatCount(")
         ):
             raise AssertionError(
-                "formatNumber must route through groupedDecimalString so credit balances "
-                "carry group separators and the locale decimal mark like every other "
-                "figure in the popup"
+                "formatNumber must format through groupedDecimalString or CostPresentation.formatCount "
+                "so credit balances carry group separators and the locale decimal mark like every "
+                "other figure in the popup"
             )
         if "toFixed(" in format_number_body:
             raise AssertionError(

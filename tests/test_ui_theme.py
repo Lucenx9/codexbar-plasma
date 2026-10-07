@@ -74,11 +74,16 @@ class ThemeTest(unittest.TestCase):
                 )
 
         provider_readable_body = function_body(main_text, "providerReadableColor")
-        if not (
-            code_contains(provider_readable_body, "readableAccentColor(")
-            and code_contains(provider_readable_body, "providerColor(value)")
-        ):
-            raise AssertionError("providerReadableColor must derive a safe color from canonical provider metadata")
+        if not code_contains(provider_readable_body, "readableAccentColor("):
+            raise AssertionError(
+                "providerReadableColor must derive a safe color through readableAccentColor; "
+                "missing 'readableAccentColor('"
+            )
+        if not code_contains(provider_readable_body, "providerColor(value)"):
+            raise AssertionError(
+                "providerReadableColor must start from the canonical provider metadata color; "
+                "missing 'providerColor(value)'"
+            )
 
     def test_provider_accents(self):
         config_provider_readable_body = function_body(providers_text, "providerReadableColor")
