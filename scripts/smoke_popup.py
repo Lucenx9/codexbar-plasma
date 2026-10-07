@@ -124,7 +124,8 @@ def stage_applet(work, scenario, image_path, theme=None):
     config.write(config_path, encoding="utf-8", xml_declaration=True)
 
     ui = package / "contents/ui"
-    shutil.copyfile(ROOT / "scripts/smoke/Capture.qml", ui / "SmokeCapture.qml")
+    capture_source = "PopupScrollProbe.qml" if scenario in ("popup-scroll", "popup-scroll-large") else "Capture.qml"
+    shutil.copyfile(ROOT / "scripts/smoke" / capture_source, ui / "SmokeCapture.qml")
     shutil.copyfile(ROOT / "scripts/smoke/SettingsPreview.qml", ui / "SettingsPreview.qml")
     main_path = ui / "main.qml"
     main = main_path.read_text().rstrip()
@@ -147,7 +148,7 @@ def stage_applet(work, scenario, image_path, theme=None):
     # Stable default typography; long-text exercises the same doubled text size
     # used in the existing visual review, and narrow settings pages use 130%
     # text, without changing the desktop settings.
-    size = 20 if scenario in ("long-text", "project-long-text", "provider-header-large") else 10
+    size = 20 if scenario in ("long-text", "project-long-text", "provider-header-large", "popup-scroll-large") else 10
     if scenario.startswith("settings-") and scenario.endswith("-narrow"):
         size = 13
     (work / "config/kdeglobals").write_text(

@@ -17,6 +17,7 @@ import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import QtTest
 import org.kde.kirigami as Kirigami
+import org.kde.plasma.components as PlasmaComponents
 import "SOURCE_URL/components" as Components
 TestCase {
     id: testCase
@@ -41,6 +42,8 @@ TestCase {
             property alias missingMessage: missingCommandMessage
             property alias loadingRow: providerUsageLoadingRow
             property alias errorArt: providerUsageErrorIcon
+            property alias errorScroll: emptyErrorScroll
+            SOURCE_ERROR_PROPERTY
             SOURCE_MISSING_PROPERTY
             property int settingsOpened: 0
             readonly property string usageRecoveryHint: "Diagnostics in widget settings"
@@ -65,6 +68,7 @@ TestCase {
                 property bool commandPathFailed: false
                 property string commandPath: "codexbar"
                 property bool globalViewSelected: false
+                property bool overviewSelected: false
                 property var providers: []
                 property bool providerUsageFeedbackVisible: true
                 property real secondaryTextOpacity: 0.7
@@ -83,6 +87,7 @@ TestCase {
             Components.PlainInlineMessage { GLOBAL_MESSAGE }
             Components.PlainInlineMessage { PROVIDER_MESSAGE }
             Item { LOADING_ROW }
+            PlasmaComponents.ScrollView { EMPTY_ERROR }
             Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 220
@@ -200,16 +205,18 @@ TestCase {
         verify(!subject.missingMessage.visible);
     }
 
-    function test_errorStateCentersAStatusGlyphWithoutALoadingIndicator() {
+    function test_errorStateKeepsScrollableRecoveryAndAStatusGlyph() {
         var subject = createSubject();
         subject.applet.selectedProviderData = null;
         subject.applet.errorText = "Synthetic connection failure";
-        verify(subject.loadingRow.visible);
+        verify(!subject.loadingRow.visible);
+        verify(subject.errorScroll.visible);
         verify(subject.globalMessage.visible);
         verify(subject.errorArt.visible);
         subject.applet.loading = true;
         verify(!subject.errorArt.visible);
-        verify(subject.loadingRow.visible);
+        verify(!subject.loadingRow.visible);
+        verify(subject.errorScroll.visible);
         subject.applet.loading = false;
         subject.applet.providers = [{provider: "codex"}];
         verify(!subject.loadingRow.visible);
@@ -248,7 +255,8 @@ class UsageRecoveryTests(unittest.TestCase):
         for placeholder, name in (("GLOBAL_MESSAGE", "globalErrorMessage"),
                                   ("PROVIDER_MESSAGE", "providerErrorMessage"),
                                   ("EMPTY_MESSAGE", "emptyProvidersPlaceholder"),
-                                  ("MISSING_MESSAGE", "missingCommandMessage")):
+                                  ("MISSING_MESSAGE", "missingCommandMessage"),
+                                  ("EMPTY_ERROR", "emptyErrorScroll")):
             # The harness imports the shared components under a namespace, while
             # production resolves them from the same directory.
             qml = qml.replace(placeholder, surface.id_block(name).replace(
@@ -261,6 +269,14 @@ class UsageRecoveryTests(unittest.TestCase):
             r"readonly property bool commandPathMissing:.*?(?=\n\n)", representation, re.S)
         assert condition, "commandPathMissing must stay a single readonly property"
         qml = qml.replace("SOURCE_MISSING_PROPERTY", condition.group(0))
+        error_condition = re.search(
+            r"readonly property bool globalErrorActive:.*?(?=\n\n)", representation, re.S)
+        assert error_condition
+        qml = qml.replace("SOURCE_ERROR_PROPERTY", error_condition.group(0))
+        qml = qml.replace(
+            "parent: applet.presentedProviderData ? providerErrorSlot\n"
+            "            : applet.overviewSelected ? overviewErrorSlot : emptyErrorSlot",
+            "parent: emptyErrorSlot")
         # The provider setup state is rendered outside this harness, so assert at
         # the source that it also stands aside for an unreachable command.
         self.assertIn("!fullRoot.commandPathMissing", surface.id_block("emptyProvidersMessage"))

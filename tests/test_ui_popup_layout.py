@@ -240,7 +240,7 @@ class PopupLayoutTest(unittest.TestCase):
         # inside it, and a separator under the framed tab strip adds a third line.
         if "popupInnerSurface" in main_text:
             raise AssertionError("the popup must sit on the native dialog background, not an inner frame")
-        if main_text.split("id: providerTabsBar", 1)[1].split("id: globalErrorMessage", 1)[0].count(
+        if id_block(main_text, "providerTabsBar").count(
                 "Kirigami.Separator {") != 0:
             raise AssertionError("the framed tab strip must not add a separator beneath it")
 
@@ -473,14 +473,11 @@ class PopupLayoutTest(unittest.TestCase):
             if not code_contains(message_body, f"type: {message_type}"):
                 raise AssertionError(f"{message_id} must use the native semantic message style")
 
-        global_error_body = id_block(main_text, "globalErrorMessage")
         provider_usage_loading_body = id_block(main_text, "providerUsageLoadingRow")
-        if not code_contains(provider_usage_loading_body, "(applet.loading || applet.errorText.length > 0)"):
-            raise AssertionError("usage feedback must absorb remaining height for errors as well as loading")
         if not code_contains(provider_usage_loading_body, "visible: applet.loading && applet.errorText.length === 0"):
             raise AssertionError("an error-only popup must not display a loading indicator")
         for scoped_feedback_body, feedback_name in (
-            (global_error_body, "globalErrorMessage"),
+            (id_block(main_text, "emptyErrorScroll"), "emptyErrorScroll"),
             (provider_usage_loading_body, "providerUsageLoadingRow"),
         ):
             if not code_contains(scoped_feedback_body, "applet.providerUsageFeedbackVisible"):
@@ -500,7 +497,7 @@ class PopupLayoutTest(unittest.TestCase):
             ("SessionsView.qml", sessions_view_text),
             ("SpendView.qml", spend_view_text),
         ):
-            if not code_contains(filler_owner_text, "Controls.BusyIndicator {\n            anchors.centerIn: parent"):
+            if not re.search(r"Controls\.BusyIndicator\s*\{\s*(?:id:\s*\w+\s*)?anchors\.centerIn:\s*parent", filler_owner_text):
                 raise AssertionError(
                     f"{filler_owner_source} must center its busy indicator inside a filler item "
                     "so the heading stays pinned to the top while loading"
