@@ -100,9 +100,9 @@ require_text "release job" "$RELEASE_JOB" "jq -r '.KPlugin.Version // empty' met
 # shellcheck disable=SC2016 # Match the literal shell expression in the workflow.
 require_text "release job" "$RELEASE_JOB" '"v${metadata_version}" != "$GITHUB_REF_NAME"'
 for job in check-runtime smoke-runtime; do
-  require_text "$job job" "$(workflow_job_block "$job")" "image: ghcr.io/lucenx9/codexbar-plasma-ci-amd64@sha256:"
+  require_text "$job job" "$(workflow_job_block "$job")" "image: ghcr.io/lucenx9/codexbar-plasma-ci-runtime@sha256:"
 done
-if sed -n 's/^[[:space:]]*image: //p' "$WORKFLOW" | grep -Evq '^ghcr\.io/lucenx9/codexbar-plasma-ci-amd64@sha256:[0-9a-f]{64}$'; then
+if sed -n 's/^[[:space:]]*image: //p' "$WORKFLOW" | grep -Evq '^ghcr\.io/lucenx9/codexbar-plasma-ci-runtime@sha256:[0-9a-f]{64}$'; then
   echo "CI container images must pin the validated Plasma toolchain by SHA-256 digest" >&2
   exit 1
 fi

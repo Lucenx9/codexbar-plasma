@@ -657,7 +657,7 @@ docker run --rm --init --cpus 4 -v "$PWD:/workspace" -w /workspace \
 Run [CI image](../.github/workflows/ci-image.yml) manually on `main`, selecting
 the trusted recipe branch or commit in its `revision` input, to build and
 validate the full suite, packaging and graphics, then publish a candidate to
-`ghcr.io/lucenx9/codexbar-plasma-ci-amd64`. It publishes the Linux/amd64 platform manifest with `docker push --platform
+`ghcr.io/lucenx9/codexbar-plasma-ci-runtime`. It publishes the Linux/amd64 platform manifest with `docker push --platform
 linux/amd64`, excluding the multi-platform index and attestation manifests.
 This keeps the source-labelled runtime image as the initial package publication.
 It uses unique build tags and reports the
@@ -668,8 +668,14 @@ Once the workflow exists on `main`, a recipe PR can publish its candidate with:
 gh workflow run ci-image.yml --ref main -f revision=codex/update-ci-image
 ```
 
-The image source label links the package to this repository before publication,
-so it inherits repository access and grants its workflows access. Runtime jobs
+Create the initial package through the repository image workflow with
+`GITHUB_TOKEN` so Actions access is assigned to this repository. The source
+label records its repository association. A CLI publication alone did not grant
+the runtime token access during bootstrap; do not assume that label presence
+proves token access. Verify both GitHub runtime jobs after publication. If a
+package was created outside Actions, grant this repository access under
+[Manage Actions access](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility#ensuring-workflow-access-to-your-package)
+in its package settings. Runtime jobs
 pull with the ephemeral `GITHUB_TOKEN` and only `contents: read` and
 `packages: read`; they need no PAT secret. Fork workflows retain read
 permissions under [GitHub's token permission rules](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions).

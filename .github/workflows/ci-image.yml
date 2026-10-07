@@ -2,8 +2,6 @@ name: CI image
 
 # Building and publishing infrastructure is an explicit maintenance operation.
 on:
-  push:
-    branches: [codex/speed-up-ci]
   workflow_dispatch:
     inputs:
       revision:
@@ -21,7 +19,7 @@ concurrency:
 
 jobs:
   build:
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/codex/speed-up-ci'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
