@@ -278,7 +278,7 @@ baselines unchanged, even when the CLI reports no error. Stale observations do
 not prime a new quota scope; its first fresh measurement primes silently.
 Retaining or expiring quotas must preserve that current status; a
 later response without status marks the retained incident as unknown to the planner.
-Incident selection, tooltips, and provider badges/banners also exclude unknown
+Incident selection, tooltips, and provider badges/pills also exclude unknown
 status instead of presenting a retained outage as current.
 
 Before changing behavior, identify its owning QML page, config entry, CLI input,
