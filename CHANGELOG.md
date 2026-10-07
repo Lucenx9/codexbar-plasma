@@ -15,6 +15,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Treat only valid 127/8 IPv4 addresses as local in the AI Insights Ollama
   privacy hint, so malformed numeric hosts are no longer described as keeping
   usage statistics on this device.
+- Reject non-finite managed CLI state timestamps so corrupted `NaN` or infinity
+  values cannot bypass the daily automatic-update throttle.
 
 ## 0.2.45 - 2026-10-07
 

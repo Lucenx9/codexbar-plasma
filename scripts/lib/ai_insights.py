@@ -144,7 +144,7 @@ def is_loopback(host):
 def ollama_base(endpoint):
     """Validate the configured Ollama URL; plain HTTP is accepted only on loopback."""
     value = (endpoint or DEFAULT_OLLAMA).strip()
-    if len(value) > 2048 or any(ord(character) < 33 or ord(character) == 127 for character in value):
+    if len(value) > 2048 or re.search(r"[\x00-\x20\x7f]", value):
         raise Failure("endpoint")
     parsed = urllib.parse.urlsplit(value)
     try:
