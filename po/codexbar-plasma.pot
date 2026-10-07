@@ -183,9 +183,11 @@ msgstr ""
 #: contents/ui/components/CompactRepresentation.qml
 #: contents/ui/components/CostLabels.qml
 #: contents/ui/components/InteractiveChart.qml
-#: contents/ui/components/PanelText.qml contents/ui/components/SpendView.qml
-#: contents/ui/configPopup.qml contents/ui/configProviders.qml
-#: contents/ui/main.qml scripts/smoke/Capture.qml
+#: contents/ui/components/PanelText.qml
+#: contents/ui/components/ProviderCostDetails.qml
+#: contents/ui/components/SpendView.qml contents/ui/configPopup.qml
+#: contents/ui/configProviders.qml contents/ui/main.qml
+#: scripts/smoke/Capture.qml
 msgid "%1: %2"
 msgstr ""
 
@@ -373,8 +375,8 @@ msgid "Restore %1"
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/ProviderCostDetails.qml
 #: contents/ui/components/RateWindowLabels.qml contents/ui/configPanel.qml
-#: contents/ui/main.qml
 msgid "Credits"
 msgstr ""
 
@@ -638,6 +640,71 @@ msgstr ""
 msgid "Enable %1"
 msgstr ""
 
+#: contents/ui/components/ProviderCostDetails.qml
+msgid "Extra usage"
+msgstr ""
+
+#: contents/ui/components/ProviderCostDetails.qml
+msgid "Zen balance"
+msgstr ""
+
+#: contents/ui/components/ProviderCostDetails.qml
+msgid "Quota usage"
+msgstr ""
+
+#: contents/ui/components/ProviderCostDetails.qml
+msgid "API spend"
+msgstr ""
+
+#: contents/ui/components/ProviderCostDetails.qml
+msgid "Balance: %1"
+msgstr ""
+
+#: contents/ui/components/ProviderCostDetails.qml contents/ui/main.qml
+msgid "This month"
+msgstr ""
+
+#: contents/ui/components/ProviderCostDetails.qml
+msgid "%1: %2 / %3"
+msgstr ""
+
+#: contents/ui/components/ProviderCostDetails.qml
+#: contents/ui/configNotifications.qml
+#, kde-format
+msgid "%1% used"
+msgstr ""
+
+#: contents/ui/components/ProviderCostDetails.qml
+msgid "Your spend: %1"
+msgstr ""
+
+#: contents/ui/components/ProviderCostDetails.qml
+msgid "Reset credits"
+msgstr ""
+
+#: contents/ui/components/ProviderCostDetails.qml
+msgid "%1 available"
+msgid_plural "%1 available"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/components/ProviderCostDetails.qml
+msgid "Monthly credit limit"
+msgstr ""
+
+#: contents/ui/components/ProviderCostDetails.qml
+msgid "Used: %1, remaining: %2 of %3"
+msgstr ""
+
+#: contents/ui/components/ProviderCostDetails.qml contents/ui/main.qml
+msgid "Last 30 days"
+msgstr ""
+
+#: contents/ui/components/ProviderCostDetails.qml
+#: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
+msgid "Today"
+msgstr ""
+
 #: contents/ui/components/ProviderCostSection.qml
 msgid "%1 incomplete request excluded"
 msgid_plural "%1 incomplete requests excluded"
@@ -668,10 +735,6 @@ msgstr ""
 
 #: contents/ui/components/ProviderCostSection.qml
 msgid "Cost unavailable: %1"
-msgstr ""
-
-#: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
-msgid "Today"
 msgstr ""
 
 #: contents/ui/components/ProviderCostSection.qml
@@ -2070,11 +2133,6 @@ msgstr ""
 msgid "Quota warning at:"
 msgstr ""
 
-#: contents/ui/configNotifications.qml contents/ui/main.qml
-#, kde-format
-msgid "%1% used"
-msgstr ""
-
 #: contents/ui/configNotifications.qml
 msgid "Quota critical at:"
 msgstr ""
@@ -3048,10 +3106,6 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: contents/ui/main.qml
-msgid "Last 30 days"
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "Last %1 day"
 msgid_plural "Last %1 days"
 msgstr[0] ""
@@ -3106,10 +3160,6 @@ msgid "30d"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "This month"
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "Top model"
 msgstr ""
 
@@ -3156,52 +3206,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Extra"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Extra usage"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Zen balance"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Quota usage"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "API spend"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Balance: %1"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1: %2 / %3"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Your spend: %1"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Reset credits"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 available"
-msgid_plural "%1 available"
-msgstr[0] ""
-msgstr[1] ""
-
-#: contents/ui/main.qml
-msgid "Monthly credit limit"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Used: %1, remaining: %2 of %3"
 msgstr ""
 
 #: contents/ui/main.qml

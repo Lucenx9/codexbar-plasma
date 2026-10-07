@@ -407,7 +407,7 @@ class PopupLayoutTest(unittest.TestCase):
             )
         if not code_contains(credits_section_body, 'i18n("Remaining: %1",'):
             raise AssertionError("the Credits section must keep the plain remaining-balance fallback")
-        credit_limit_row_body = function_body(main_text, "codexCreditLimitUsageRow")
+        credit_limit_row_body = applet.function_body("creditLimitRow")
         for credit_limit_row_fragment in (
             'i18n("Monthly credit limit")',
             'i18n("Used: %1, remaining: %2 of %3"',
@@ -455,7 +455,7 @@ class PopupLayoutTest(unittest.TestCase):
             if not code_contains(usage_metadata_body, "font: Kirigami.Theme.smallFont"):
                 raise AssertionError(f"{usage_metadata_id} must retain the compact metadata type scale")
 
-        reset_credits_body = function_body(main_text, "resetCreditsSection")
+        reset_credits_body = applet.function_body("resetSection")
         if not code_contains(reset_credits_body, 'i18np("%1 available", "%1 available"'):
             raise AssertionError("reset credit counts must use plural-aware translations")
         if not code_contains(reset_credits_body, "ProviderCostPresentation.resetCount(providerID, resetCredits)"):

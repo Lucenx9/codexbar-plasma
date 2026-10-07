@@ -25,7 +25,7 @@ class ProviderCostPresentationTests(unittest.TestCase):
         applet.files = [main]
         signatures = {"providerCostSection": "providerID, cost",
                       "resetCreditsSection": "providerID, resetCredits",
-                      "localizedPeriod": "value", "amountString": "value, currency"}
+                      "codexCreditLimitUsageRow": "creditLimit"}
         adapters = "\n".join(f"function {name}({args}) {{ {applet.function_body(name)} }}"
                              for name, args in signatures.items())
         with tempfile.TemporaryDirectory(prefix="codexbar-cost-labels-") as temporary:
@@ -83,13 +83,22 @@ class ProviderCostPresentationTests(unittest.TestCase):
                             "line": plural_messages[rounded].replace("%1", str(rounded))}}
                           for count, rounded in ((1, 1), ("2", 2), (1.6, 2), (0.2, 0))]
                 cases.append({"tag": language, "messages": messages, "plurals": plural_messages,
-                              "rows": rows, "counts": counts})
+                              "rows": rows, "counts": counts,
+                              "monthlyTitle": text("Monthly credit limit"),
+                              "monthlySummary": text("Used: %1, remaining: %2 of %3", "0", "1,000", "1,000")})
             qml = '''import QtQuick
 import QtTest
-import "SOURCE_URL/ProviderCostPresentation.js" as ProviderCostPresentation
 import "SOURCE_URL/CostPresentation.js" as CostPresentation
+import "SOURCE_URL/components" as Components
 TestCase {
+    id: testCase
     name: "ProviderCostAdapters"
+    Components.ProviderCostDetails {
+        id: providerCostDetails
+        numberFormat: testCase.costNumberFormat
+        function i18n(source) { return testCase.i18n.apply(testCase, arguments); }
+        function i18np(one, many, count) { return testCase.i18np(one, many, count); }
+    }
     property var messages: ({})
     property var plurals: ({})
     property var costNumberFormat: CostPresentation.numberFormat(",", ".")
@@ -113,6 +122,13 @@ TestCase {
             compare(resetCreditsSection("codex", {availableCount: count.input}), count.expected);
         compare(resetCreditsSection("claude", {availableCount: 2}), null);
         compare(resetCreditsSection("codex", {availableCount: 0}), null);
+        var monthly = codexCreditLimitUsageRow({title: "", used: 0, remaining: 1000,
+            limit: 1000, usedPercent: 0, leftPercent: 100, resetsAt: "future-reset"});
+        compare(monthly.label, data.monthlyTitle);
+        compare(monthly.summaryText, data.monthlySummary);
+        compare(monthly.usedPercent, 0);
+        compare(monthly.leftPercent, 100);
+        compare(monthly.resetsAt, "future-reset");
     }
 }
 '''
@@ -137,9 +153,15 @@ TestCase {
         qml = r'''import QtQuick
 import QtTest
 import "SOURCE_URL/components" as Components
+import "SOURCE_URL/CostPresentation.js" as CostPresentation
 TestCase {
     id: testCase
     name: "CreditUsageRow"
+    Components.ProviderCostDetails {
+        id: providerCostDetails
+        numberFormat: CostPresentation.numberFormat(",", ".")
+        function i18n(source) { return applet.i18n.apply(applet, arguments); }
+    }
     when: windowShown
     visible: true
     width: 540
@@ -154,7 +176,6 @@ TestCase {
                 source = source.replace("%" + i, String(arguments[i]));
             return source;
         }
-        function formatNumber(value) { return String(value); }
         function codexCreditLimitUsageRow(creditLimit) { ADAPTER }
         function popupUsageRowHideable() { return false; }
         function providerReadableColor() { return "blue"; }

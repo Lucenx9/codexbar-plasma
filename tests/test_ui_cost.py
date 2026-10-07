@@ -651,8 +651,20 @@ class CostTest(unittest.TestCase):
                          r'snapshot.sessionTokens, currency\)', present_cost_body):
             raise AssertionError("Today must not inherit history-level trust qualifiers")
 
+    def test_provider_cost_details_keep_explicit_inputs_and_effects_in_the_applet(self):
+        source = (root / "contents/ui/main.qml").read_text()
+        for name, call in (("providerCostSection", "providerCostDetails.costSection(providerID, cost)"),
+                           ("resetCreditsSection", "providerCostDetails.resetSection(providerID, resetCredits)"),
+                           ("codexCreditLimitUsageRow", "providerCostDetails.creditLimitRow(creditLimit)")):
+            self.assertIn(call, function_body(source, name))
+        self.assertIn("numberFormat: root.costNumberFormat", applet.id_block("providerCostDetails"))
+        details = (root / "contents/ui/components/ProviderCostDetails.qml").read_text()
+        for forbidden in ("Plasmoid.configuration", "property var applet", "DataSource", "Timer {",
+                          "Connections {", "Qt.openUrlExternally"):
+            self.assertFalse(code_contains(details, forbidden), forbidden)
+
     def test_provider_cost_section(self):
-        provider_cost_body = function_body(main_text, "providerCostSection")
+        provider_cost_body = applet.function_body("costSection")
         if not code_contains(provider_cost_body, "ProviderCostPresentation.section(providerID, cost)"):
             raise AssertionError("provider cost must use the tested semantic section")
         direct_number_call = re.compile(r"(?<![A-Za-z0-9_])Number\(")
@@ -662,7 +674,7 @@ class CostTest(unittest.TestCase):
         for forbidden in ("root.", "Plasmoid.", "i18n(", "i18np(", "Qt."):
             if forbidden in provider_cost_presentation:
                 raise AssertionError("provider cost decisions must be pure: " + forbidden)
-        reset_credits_body = function_body(main_text, "resetCreditsSection")
+        reset_credits_body = applet.function_body("resetSection")
         for field in ("cost.used", "cost.limit", "cost.personalUsed", "resetCredits.availableCount"):
             if field in provider_cost_body + reset_credits_body:
                 raise AssertionError("numeric cost/credit decisions must stay in the semantic module: " + field)
