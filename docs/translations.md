@@ -73,6 +73,9 @@ to the QML that gives the message its context.
   `%1 tokens`, `%1 requests`, and `%1 points` entries format compact counts such
   as `1K` and `4.3B`. Keep those abbreviations in the numbered argument; do not
   treat the leading `1` as a singular count.
+  `components/CostText.qml` owns these counts, cost-period and qualification
+  labels, spend totals, and semantic legacy-dashboard text. Number formatting
+  comes from the applet; free-form CLI labels keep their existing text.
 - Keep CodexBar, provider brands, command names, paths, and URLs unchanged.
 - Translate the `msgid "en"` entry whose context starts with "BCP 47 language
   tag of this translation" to the catalog's own tag, such as `it` or `pt-BR`.

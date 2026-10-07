@@ -82,6 +82,17 @@ synchronized.
 - `contents/ui/main.qml` owns provider notification policy and routing,
   account coordination, selected state, quota-cache persistence, configuration updates, and external
   effects. Its adapters supply the panel and popup.
+- `contents/ui/components/CostText.qml` localizes normalized token-cost snapshots,
+  history labels, qualified cost values, count plurals, spend totals and legacy
+  dashboard rows. It receives regional number formatting explicitly and takes
+  already selected costs for totals. `CostPresentation.js` retains number and
+  aggregation logic; the applet retains range selection, privacy projection,
+  provider attachment, trust-notice state, configuration and refresh effects.
+  Root adapters preserve the existing popup and chart interfaces. Executed
+  tests in `tests/tst_cost_text.qml` cover snapshot immutability, period-label
+  precedence, totals, qualifiers, count plurals, dashboard bounds and regional
+  format changes. Catalog and integration fixtures exercise the production
+  component through its root adapters, including all six shipped languages.
 - `contents/ui/components/ProviderNotificationText.qml` builds localized status,
   quota, predictive pace and reset messages from a planner intent, normalized
   provider/row and preformatted reset/ETA labels. It returns title/body/urgency
@@ -334,7 +345,8 @@ request shows it should change.
 context, and the independent hourly/day-aware refresh policy. Source changes
 retire obsolete commands synchronously and coalesce settings through
 `Qt.callLater`. Only snapshots for the current command context reach `main.qml`,
-which localizes them and attaches them to fresh provider usage. `CostResponse.js`
+which supplies them to `CostText` for localization and attaches them to fresh
+provider usage. `CostResponse.js`
 returns bounded snapshots and semantic failure outcomes without effects or
 localization. `tests/test_cost_context.py` exercises the production controller
 with isolated CLI processes; `tests/tst_cost_response.qml` covers adversarial

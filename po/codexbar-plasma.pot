@@ -181,13 +181,12 @@ msgid "Open %1"
 msgstr ""
 
 #: contents/ui/components/CompactRepresentation.qml
-#: contents/ui/components/CostLabels.qml
+#: contents/ui/components/CostLabels.qml contents/ui/components/CostText.qml
 #: contents/ui/components/InteractiveChart.qml
 #: contents/ui/components/PanelText.qml
 #: contents/ui/components/ProviderCostDetails.qml
 #: contents/ui/components/SpendView.qml contents/ui/configPopup.qml
-#: contents/ui/configProviders.qml contents/ui/main.qml
-#: scripts/smoke/Capture.qml
+#: contents/ui/configProviders.qml scripts/smoke/Capture.qml
 msgid "%1: %2"
 msgstr ""
 
@@ -200,7 +199,7 @@ msgstr ""
 msgid "Copied"
 msgstr ""
 
-#: contents/ui/components/CostLabels.qml contents/ui/main.qml
+#: contents/ui/components/CostLabels.qml contents/ui/components/CostText.qml
 msgid "Latest"
 msgstr ""
 
@@ -234,6 +233,195 @@ msgstr ""
 
 #: contents/ui/components/CostLabels.qml
 msgid "Average: %1 / 1M tokens"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/RateWindowLabels.qml
+#: contents/ui/components/SpendView.qml contents/ui/main.qml
+msgid "Cost"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+#: contents/ui/components/ProviderCostDetails.qml
+#: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
+msgid "Today"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+#: contents/ui/components/ShareUsageWindow.qml
+#: contents/ui/components/SpendView.qml
+msgid "Month to date"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+#: contents/ui/components/ShareUsageWindow.qml
+#: contents/ui/components/SpendView.qml
+msgid "All history"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+#: contents/ui/components/ProviderCostDetails.qml
+msgid "Last 30 days"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "Last %1 day"
+msgid_plural "Last %1 days"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/components/CostText.qml
+#: contents/ui/components/ProjectCostSection.qml
+#: contents/ui/components/ProviderCostSection.qml
+#: contents/ui/components/ShareUsageWindow.qml scripts/smoke/Capture.qml
+msgid "Tokens unavailable"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "%1 subtotal"
+msgstr ""
+
+#: contents/ui/components/CostText.qml scripts/smoke/Capture.qml
+msgid "%1 total"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "Codex dashboard"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "OpenAI API"
+msgstr ""
+
+#: contents/ui/components/CostText.qml contents/ui/components/ProviderNames.qml
+msgid "OpenRouter"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "Claude Admin"
+msgstr ""
+
+#: contents/ui/components/CostText.qml contents/ui/components/ProviderNames.qml
+msgid "Poe"
+msgstr ""
+
+#: contents/ui/components/CostText.qml contents/ui/components/ProviderNames.qml
+msgid "DeepSeek"
+msgstr ""
+
+#: contents/ui/components/CostText.qml contents/ui/components/ProviderNames.qml
+msgid "MiniMax"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "Z.ai"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "Code review remaining"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "Credits remaining"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "Plan"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "Signed in"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "7d"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "30d"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+#: contents/ui/components/ProviderCostDetails.qml
+msgid "This month"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "Top model"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "Usage mix"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "Latest dashboard day"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+#, kde-format
+msgid "%1%"
+msgstr ""
+
+#: contents/ui/components/CostText.qml contents/ui/configDiagnostics.qml
+msgid "%1 (%2)"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "%1 (estimated)"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "%1 (partial)"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "%1 (approximate)"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "%1 token"
+msgid_plural "%1 tokens"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/components/CostText.qml
+msgid "%1 tokens"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "%1 request"
+msgid_plural "%1 requests"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/components/CostText.qml
+msgid "%1 requests"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "%1 point"
+msgid_plural "%1 points"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/components/CostText.qml
+msgid "%1 points"
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid ""
+"Local Antigravity history includes token totals. Dollar costs are "
+"unavailable."
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "Estimated from local Codex logs for the selected account."
+msgstr ""
+
+#: contents/ui/components/CostText.qml
+msgid "Estimated from local Claude logs."
 msgstr ""
 
 #: contents/ui/components/CostTrustNotice.qml
@@ -604,13 +792,6 @@ msgid "Cost unavailable"
 msgstr ""
 
 #: contents/ui/components/ProjectCostSection.qml
-#: contents/ui/components/ProviderCostSection.qml
-#: contents/ui/components/ShareUsageWindow.qml contents/ui/main.qml
-#: scripts/smoke/Capture.qml
-msgid "Tokens unavailable"
-msgstr ""
-
-#: contents/ui/components/ProjectCostSection.qml
 msgid "Projects"
 msgstr ""
 
@@ -668,10 +849,6 @@ msgstr ""
 msgid "Balance: %1"
 msgstr ""
 
-#: contents/ui/components/ProviderCostDetails.qml contents/ui/main.qml
-msgid "This month"
-msgstr ""
-
 #: contents/ui/components/ProviderCostDetails.qml
 msgid "%1: %2 / %3"
 msgstr ""
@@ -704,26 +881,11 @@ msgstr ""
 msgid "Used: %1, remaining: %2 of %3"
 msgstr ""
 
-#: contents/ui/components/ProviderCostDetails.qml contents/ui/main.qml
-msgid "Last 30 days"
-msgstr ""
-
-#: contents/ui/components/ProviderCostDetails.qml
-#: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
-msgid "Today"
-msgstr ""
-
 #: contents/ui/components/ProviderCostSection.qml
 msgid "%1 incomplete request excluded"
 msgid_plural "%1 incomplete requests excluded"
 msgstr[0] ""
 msgstr[1] ""
-
-#: contents/ui/components/ProviderCostSection.qml
-#: contents/ui/components/RateWindowLabels.qml
-#: contents/ui/components/SpendView.qml contents/ui/main.qml
-msgid "Cost"
-msgstr ""
 
 #: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/RateWindowLabels.qml
@@ -913,10 +1075,6 @@ msgstr ""
 msgid "DeepInfra"
 msgstr ""
 
-#: contents/ui/components/ProviderNames.qml contents/ui/main.qml
-msgid "DeepSeek"
-msgstr ""
-
 #: contents/ui/components/ProviderNames.qml
 msgid "Devin"
 msgstr ""
@@ -1021,10 +1179,6 @@ msgstr ""
 msgid "Xiaomi MiMo"
 msgstr ""
 
-#: contents/ui/components/ProviderNames.qml contents/ui/main.qml
-msgid "MiniMax"
-msgstr ""
-
 #: contents/ui/components/ProviderNames.qml
 msgid "Mistral"
 msgstr ""
@@ -1069,20 +1223,12 @@ msgstr ""
 msgid "OpenCode Go"
 msgstr ""
 
-#: contents/ui/components/ProviderNames.qml contents/ui/main.qml
-msgid "OpenRouter"
-msgstr ""
-
 #: contents/ui/components/ProviderNames.qml
 msgid "Perplexity"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
 msgid "Pi"
-msgstr ""
-
-#: contents/ui/components/ProviderNames.qml contents/ui/main.qml
-msgid "Poe"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
@@ -1446,16 +1592,6 @@ msgstr ""
 
 #: contents/ui/components/SessionsView.qml
 msgid "Copy session name"
-msgstr ""
-
-#: contents/ui/components/ShareUsageWindow.qml
-#: contents/ui/components/SpendView.qml contents/ui/main.qml
-msgid "Month to date"
-msgstr ""
-
-#: contents/ui/components/ShareUsageWindow.qml
-#: contents/ui/components/SpendView.qml contents/ui/main.qml
-msgid "All history"
 msgstr ""
 
 #: contents/ui/components/ShareUsageWindow.qml
@@ -1919,10 +2055,6 @@ msgstr ""
 
 #: contents/ui/configDiagnostics.qml
 msgid "System CLI (PATH):"
-msgstr ""
-
-#: contents/ui/configDiagnostics.qml contents/ui/main.qml
-msgid "%1 (%2)"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
@@ -3218,77 +3350,6 @@ msgid_plural "%1 days ago"
 msgstr[0] ""
 msgstr[1] ""
 
-#: contents/ui/main.qml
-msgid "Last %1 day"
-msgid_plural "Last %1 days"
-msgstr[0] ""
-msgstr[1] ""
-
-#: contents/ui/main.qml
-msgid "%1 subtotal"
-msgstr ""
-
-#: contents/ui/main.qml scripts/smoke/Capture.qml
-msgid "%1 total"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Codex dashboard"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "OpenAI API"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Claude Admin"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Z.ai"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Code review remaining"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Credits remaining"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Plan"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Signed in"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "7d"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "30d"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Top model"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Usage mix"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Latest dashboard day"
-msgstr ""
-
-#: contents/ui/main.qml
-#, kde-format
-msgid "%1%"
-msgstr ""
-
 #: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "Details hidden by privacy mode."
 msgstr ""
@@ -3406,62 +3467,6 @@ msgctxt ""
 "BCP 47 language tag of this translation, such as it or pt-BR. AI Insights "
 "are written in this language."
 msgid "en"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 (estimated)"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 (partial)"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 (approximate)"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 token"
-msgid_plural "%1 tokens"
-msgstr[0] ""
-msgstr[1] ""
-
-#: contents/ui/main.qml
-msgid "%1 tokens"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 request"
-msgid_plural "%1 requests"
-msgstr[0] ""
-msgstr[1] ""
-
-#: contents/ui/main.qml
-msgid "%1 requests"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 point"
-msgid_plural "%1 points"
-msgstr[0] ""
-msgstr[1] ""
-
-#: contents/ui/main.qml
-msgid "%1 points"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid ""
-"Local Antigravity history includes token totals. Dollar costs are "
-"unavailable."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Estimated from local Codex logs for the selected account."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Estimated from local Claude logs."
 msgstr ""
 
 #: contents/ui/main.qml
