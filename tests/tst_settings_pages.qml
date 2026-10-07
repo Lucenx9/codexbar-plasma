@@ -161,6 +161,21 @@ TestCase {
         tryVerify(function() { return !managed.busy; });
     }
 
+    function test_diagnosticsCommandPathHasAccessibleName() {
+        var page = createPage("../contents/ui/configDiagnostics.qml", {
+            cfg_commandPath: "/opt/codexbar"
+        });
+        if (!page)
+            return;
+        var all = [];
+        walkPageObjects(page, all);
+        var fields = all.filter(function(item) {
+            return item instanceof Controls.TextField && item.text === "/opt/codexbar";
+        });
+        compare(fields.length, 1);
+        compare(fields[0].Accessible.name, "Command path:");
+    }
+
     function test_diagnosticsRejectsBlankPath() {
         var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: "   "});
         if (!page) return;
