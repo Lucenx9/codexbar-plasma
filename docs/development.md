@@ -1073,8 +1073,9 @@ gh api repos/Lucenx9/codexbar-plasma/rulesets
 ```
 
 Workflow actions stay pinned by commit SHA; the repository requires SHA pinning,
-and [Dependabot](../.github/dependabot.yml) proposes one grouped update PR each
-month. Review the referenced release before merging such a PR, and keep the
+and [Dependabot](../.github/dependabot.yml) checks for updates each Monday at
+09:00 in the `Europe/Rome` time zone, grouping available updates into one PR.
+Review the referenced release before merging such a PR, and keep the
 version comment beside each pinned SHA.
 
 The agent owns delivery through these completion criteria:

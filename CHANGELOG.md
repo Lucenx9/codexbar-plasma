@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Check for GitHub Actions updates with Dependabot every Monday at 09:00
+  (`Europe/Rome`) instead of monthly, keeping updates grouped in one PR.
 - Show provider incidents in the popup as a compact pill tinted with the
   severity color instead of a full-width banner.
 - Show cost-trust and Spend information notes as quiet footnotes with a small
