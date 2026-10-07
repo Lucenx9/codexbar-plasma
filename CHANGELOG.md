@@ -12,6 +12,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep account lists, incident notices, and error messages scrollable in the
+  popup so many accounts, long messages, or larger fonts cannot hide quotas
+  and recovery actions outside the window.
+- Start provider details at the top after switching provider or account,
+  while keeping the scroll position during a refresh of the same account.
+- Keep monthly credit amounts visible when popup pace text is disabled.
 - Reject non-finite managed CLI state timestamps so corrupted `NaN` or infinity
   values cannot bypass the daily automatic-update throttle.
 - Preserve unknown CLI status indicators such as `constructor` as literal status

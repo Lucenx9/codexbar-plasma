@@ -121,60 +121,64 @@ ColumnLayout {
         }
     }
 
-    Components.PlainInlineMessage {
-        visible: view.applet.sessionsErrorText.length > 0
-        plainText: view.applet.privateErrorText(view.applet.sessionsErrorText)
-        type: Kirigami.MessageType.Error
-        Layout.fillWidth: true
-    }
-
-    // Mirrors SpendView: one filler item owns the leftover height so the
-    // heading stays pinned to the top while sessions load or an error is shown.
-    Item {
-        visible: view.applet.sessions.length === 0
-            && (view.applet.sessionsLoading || view.applet.sessionsErrorText.length > 0)
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-
-        Controls.BusyIndicator {
-            anchors.centerIn: parent
-            running: parent.visible && view.applet.sessionsLoading
-            visible: running
-        }
-    }
-
-    Item {
-        visible: !view.applet.sessionsLoading
-            && view.applet.sessions.length === 0
-            && view.applet.sessionsErrorText.length === 0
-        implicitHeight: emptySessionsPlaceholder.implicitHeight
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-
-        // Keep the native placeholder together while this item fills the view.
-        PlainPlaceholderMessage {
-            id: emptySessionsPlaceholder
-
-            anchors.centerIn: parent
-            width: parent.width
-            plainText: i18n("No local agent sessions found.")
-            plainExplanation: i18n("Sessions appear after a supported local CLI starts recording them.")
-            icon.name: "system-run-symbolic"
-            type: Kirigami.PlaceholderMessage.Type.Informational
-        }
-    }
-
     PlasmaComponents.ScrollView {
-        visible: view.applet.sessions.length > 0
+        id: sessionsBodyScroll
+        objectName: "sessionsBodyScroll"
         Layout.fillWidth: true
         Layout.fillHeight: true
+        Layout.minimumHeight: 0
         contentWidth: availableWidth
         clip: true
         PlasmaComponents.ScrollBar.horizontal.policy: PlasmaComponents.ScrollBar.AlwaysOff
 
         ColumnLayout {
             width: Math.max(0, parent.width - Kirigami.Units.smallSpacing)
+            height: view.applet.sessions.length > 0
+                ? implicitHeight : Math.max(implicitHeight, sessionsBodyScroll.availableHeight)
             spacing: Kirigami.Units.smallSpacing
+
+            Components.PlainInlineMessage {
+                visible: view.applet.sessionsErrorText.length > 0
+                plainText: view.applet.privateErrorText(view.applet.sessionsErrorText)
+                type: Kirigami.MessageType.Error
+                Layout.fillWidth: true
+            }
+
+            Item {
+                visible: view.applet.sessions.length === 0
+                    && (view.applet.sessionsLoading || view.applet.sessionsErrorText.length > 0)
+                implicitHeight: sessionsBusyIndicator.visible ? sessionsBusyIndicator.implicitHeight : 0
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+
+                Controls.BusyIndicator {
+                    id: sessionsBusyIndicator
+                    anchors.centerIn: parent
+                    running: parent.visible && view.applet.sessionsLoading
+                    visible: running
+                }
+            }
+
+            Item {
+                visible: !view.applet.sessionsLoading
+                    && view.applet.sessions.length === 0
+                    && view.applet.sessionsErrorText.length === 0
+                implicitHeight: emptySessionsPlaceholder.implicitHeight
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+
+                // Keep the native placeholder together while this item fills the view.
+                PlainPlaceholderMessage {
+                    id: emptySessionsPlaceholder
+
+                    anchors.centerIn: parent
+                    width: parent.width
+                    plainText: i18n("No local agent sessions found.")
+                    plainExplanation: i18n("Sessions appear after a supported local CLI starts recording them.")
+                    icon.name: "system-run-symbolic"
+                    type: Kirigami.PlaceholderMessage.Type.Informational
+                }
+            }
 
             Repeater {
                 model: view.applet.presentedSessions

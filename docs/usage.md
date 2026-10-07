@@ -61,9 +61,15 @@ work and upstream contract requirements.
 - Provider tabs with usage bars, reset windows, account identity, status, and
   credits. The tab surface marks the selected view; a provider tab's underline
   is its automatic quota meter, never a selection mark.
+  The provider header and tab navigation stay visible while account choices,
+  incident notices, errors, and usage details scroll below them. Switching
+  provider or account starts the details at the top; refreshing the same account
+  keeps the scroll position.
 - A plain credit balance has no allowance denominator and stays meter-free.
   A monthly Codex credit meter appears only when the CLI provides the validated
   `credits.codexCreditLimit` record. Its limit never applies to a plain balance.
+  The monthly used, remaining, and limit amounts stay visible when popup pace
+  text is disabled.
   A Codex extra usage record with nothing used and no cap is an empty
   placeholder and stays hidden; purchased credits remain in the Credits row.
 - Panel text modes for percent used or left, pace, usage plus pace, reset time,
@@ -201,6 +207,11 @@ enabled providers uses this setup state and still clears previous quotas and
 their cache. Global and provider usage errors offer **Retry** and **Settings**,
 with a hint to open **Diagnostics** for
 connection checks.
+
+Long error messages scroll with the view's content, including when no data is
+available. The tab navigation and each view's header remain reachable with
+larger fonts. Usage & Spend also keeps its history selectors above the scroll
+area.
 
 A command Plasma cannot run at all takes a separate state. When the shell
 reports that the configured command was not found or is not executable, the
