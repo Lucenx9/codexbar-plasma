@@ -142,7 +142,7 @@ TestCase {
             expectedUsedPercent: 40, willLastToReset: false, etaSeconds: 7200
         }, true, "primary", "Session", applet.receivedAtMs), "codex");
         applet.panelClockMs = applet.receivedAtMs + data.elapsedMinutes * 60000;
-        var usageRow = {applet: applet, rowData: row, showPace: true};
+        var usageRow = {applet: applet, rowData: row, showPace: true, summaryText: ""};
         compare((function() { return PACE_LABEL_TEXT; })(), data.expected);
     }
 }
@@ -184,7 +184,9 @@ class ForecastClockTests(unittest.TestCase):
         # Evaluate the popup label's own text binding, not a copy of it.
         label = Surface("applet", ROOT)
         label.texts = {row_file: label.texts[row_file]}
-        binding = re.search(r"^\s*text:\s*(.+)$", label.id_block("usagePaceLabel"), re.M).group(1)
+        binding = re.search(
+            r"^\s*text:\s*(.+?)(?=\n\s*[A-Za-z_][\w.]*\s*:)",
+            label.id_block("usagePaceLabel"), re.M | re.S).group(1)
         applet.texts = {main: source}
         functions = []
         for name in ("presentUsageWindow", "paceSummaryPartsText", "paceEtaText", "copyObject", "usagePaceText"):

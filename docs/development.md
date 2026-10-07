@@ -917,6 +917,17 @@ The `popup-cost-refresh-error` scenario checks that failed cost refreshes keep
 their error visible beside cached values, with details collapsed or expanded,
 and exercises privacy, an initial failure without a cache, and recovery.
 
+`popup-scroll` and `popup-scroll-large` exercise long account lists, provider
+and global error messages, and scroll resets after provider or account changes
+on the real applet. Same-account refreshes and privacy changes retain the
+position. The larger variant doubles the font size. Both verify that recovery
+actions and the final account remain reachable, and that a global error stays
+first in each view's scroll area. `tst_global_view_errors.qml` covers long
+Spend/Sessions errors with retained data and empty/loading states, keyboard
+refresh, privacy, and pinned headers. The monthly credit regression in
+`test_provider_cost_presentation.py` checks that the production adapter and
+usage-row component keep amounts visible independently of popup pace.
+
 `make check` covers the runner's portable isolation and failure-handling tests
 and lints the capture QML.
 `make smoke` additionally requires the graphical environment and reports a

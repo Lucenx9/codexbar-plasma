@@ -1130,7 +1130,8 @@ PlasmoidItem {
             resetsAt: creditLimit.resetsAt,
             resetDescription: "",
             reset: "",
-            pace: i18n("Used: %1, remaining: %2 of %3",
+            pace: "",
+            summaryText: i18n("Used: %1, remaining: %2 of %3",
                 formatNumber(creditLimit.used),
                 formatNumber(creditLimit.remaining),
                 formatNumber(creditLimit.limit))

@@ -128,6 +128,97 @@ TestCase {
             self.assertNotIn("SKIP", output)
             self.assertNotIn("QWARN", output)
 
+    def test_monthly_credit_amounts_remain_visible_without_pace(self):
+        applet = Surface("applet", ROOT)
+        main = ROOT / "contents/ui/main.qml"
+        applet.texts = {main: main.read_text()}
+        applet.files = [main]
+        adapter = applet.function_body("codexCreditLimitUsageRow")
+        qml = r'''import QtQuick
+import QtTest
+import "SOURCE_URL/components" as Components
+TestCase {
+    id: testCase
+    name: "CreditUsageRow"
+    when: windowShown
+    visible: true
+    width: 540
+    height: 300
+    QtObject {
+        id: applet
+        property bool showPopupPace: true
+        property real secondaryTextOpacity: 0.7
+        property int meterTrackHeight: 7
+        function i18n(source) {
+            for (var i = 1; i < arguments.length; i++)
+                source = source.replace("%" + i, String(arguments[i]));
+            return source;
+        }
+        function formatNumber(value) { return String(value); }
+        function codexCreditLimitUsageRow(creditLimit) { ADAPTER }
+        function popupUsageRowHideable() { return false; }
+        function providerReadableColor() { return "blue"; }
+        function displayPercent(row) { return row.leftPercent; }
+        function paceMarkerPercent() { return -1; }
+        function resetLabel(value) { return value; }
+        function usageResetText(row) { return row.resetsAt || ""; }
+        function withAlpha(color, alpha) { return Qt.rgba(0, 0, 1, alpha); }
+        function percentSuffix() { return "left"; }
+        function quotaMeterColor() { return "blue"; }
+        function quotaWarningMarkers() { return []; }
+        function usagePaceText(row) { return row.pace; }
+    }
+    Component {
+        id: usageComponent
+        Components.ProviderUsageRow {
+            function i18n(text) { return text; }
+        }
+    }
+    function hasVisibleText(item, text) {
+        if (!item.visible) return false;
+        if (item.text === text) return true;
+        for (var child of item.children)
+            if (hasVisibleText(child, text)) return true;
+        return false;
+    }
+    function test_summaryAndForecastSettingsAreIndependent() {
+        var limit = {title: "Monthly credit limit", used: 15, remaining: 85,
+            limit: 100, usedPercent: 15, leftPercent: 85, resetsAt: "in 7d"};
+        var row = createTemporaryObject(usageComponent, testCase,
+            {applet: applet, providerData: {provider: "codex"},
+                modelData: applet.codexCreditLimitUsageRow(limit), width: 500});
+        verify(row !== null);
+        wait(0);
+        verify(hasVisibleText(row, "Used: 15, remaining: 85 of 100"));
+        applet.showPopupPace = false;
+        verify(hasVisibleText(row, "Used: 15, remaining: 85 of 100"));
+        verify(hasVisibleText(row, "in 7d"));
+        row.modelData = {label: "Session", hasPercent: true, usedPercent: 15,
+            leftPercent: 85, pace: "Runs out in 1h", resetsAt: "in 7d"};
+        verify(!hasVisibleText(row, "Used: 15, remaining: 85 of 100"));
+        verify(!hasVisibleText(row, "Runs out in 1h"));
+        verify(hasVisibleText(row, "in 7d"));
+        applet.showPopupPace = true;
+        verify(hasVisibleText(row, "Runs out in 1h"));
+        row.modelData = {label: "Session", hasPercent: true, usedPercent: 15,
+            leftPercent: 85, pace: "", resetsAt: ""};
+        verify(!hasVisibleText(row, "Runs out in 1h"));
+    }
+}
+'''
+        with tempfile.TemporaryDirectory(prefix="codexbar-credit-row-") as temporary:
+            fixture = Path(temporary) / "tst_credit_usage_row.qml"
+            fixture.write_text(qml.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
+                               .replace("ADAPTER", adapter))
+            result = subprocess.run(
+                [os.environ.get("QMLTESTRUNNER", "/usr/lib/qt6/bin/qmltestrunner"), "-input", str(fixture)],
+                env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+                capture_output=True, text=True, timeout=30)
+            output = result.stdout + result.stderr
+            self.assertEqual(result.returncode, 0, output)
+            self.assertNotIn("SKIP", output)
+            self.assertNotIn("QWARN", output)
+
     def test_main_cost_wrappers_delegate_to_presentation(self):
         applet = Surface("applet", ROOT)
         main = ROOT / "contents/ui/main.qml"

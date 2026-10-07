@@ -189,99 +189,104 @@ ColumnLayout {
         }
     }
 
-    Components.PlainInlineMessage {
-        visible: view.applet.costErrorText.length > 0
-        plainText: view.providerCosts.length > 0
-            ? i18n("Some local history is unavailable: %1", view.applet.privateErrorText(view.applet.costErrorText))
-            : i18n("Local history is unavailable: %1", view.applet.privateErrorText(view.applet.costErrorText))
-        type: Kirigami.MessageType.Warning
-        Layout.fillWidth: true
-    }
-
-    Components.PlainInlineMessage {
-        visible: view.hasMixedCostCurrencies
-        plainText: i18n("The cost subtotal and charts use %1. Providers reporting another currency remain separate below. Token figures include every provider.", view.spendCurrency)
-        type: Kirigami.MessageType.Information
-        Layout.fillWidth: true
-    }
-
-    Components.PlainInlineMessage {
-        // Distinguishes "you spent little" from "the local scan has not reached
-        // that far back yet", which otherwise look identical on the chart.
-        visible: view.providerCosts.length > 0 && view.applet.spendHistoryStillBuilding()
-        plainText: i18n("Local history is still being collected, so early days may be incomplete.")
-        type: Kirigami.MessageType.Information
-        Layout.fillWidth: true
-    }
-
-    Components.CostTrustNotice {
-        noticeScope: "spend"
-        stateOwner: view.applet
-        presentationVisible: view.visible
-        summary: view.costTrustSummary
-    }
-
-    Components.PlainInlineMessage {
-        visible: view.providerCosts.length > 0 && view.dailyPoints.length === 0
-        plainText: view.applet.costHistoryShowsTokens
-            ? i18n("No daily token history is available for this range.")
-            : i18n("No daily cost history is available for this range. Try Tokens to check for token-only history.")
-        type: Kirigami.MessageType.Information
-        Layout.fillWidth: true
-    }
-
-    Item {
-        visible: !view.applet.costLoading
-            && view.providerCosts.length === 0
-            && view.applet.costErrorText.length === 0
-        implicitHeight: emptySpendPlaceholder.implicitHeight
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-
-        // Keep the native placeholder together while this item fills the view.
-        PlainPlaceholderMessage {
-            id: emptySpendPlaceholder
-
-            anchors.centerIn: parent
-            width: parent.width
-            plainText: i18n("No local token or cost history.")
-            plainExplanation: i18n("History appears for providers supported by the codexbar cost command.")
-            icon.name: "view-statistics-symbolic"
-            type: Kirigami.PlaceholderMessage.Type.Informational
-        }
-    }
-
-    Item {
-        visible: view.applet.costLoading && view.providerCosts.length === 0
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-
-        Controls.BusyIndicator {
-            anchors.centerIn: parent
-            running: parent.visible
-        }
-    }
-
-    Item {
-        visible: !view.applet.costLoading
-            && view.providerCosts.length === 0
-            && view.applet.costErrorText.length > 0
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-    }
-
     PlasmaComponents.ScrollView {
+        id: spendHistoryScroll
         objectName: "spendHistoryScroll"
-        visible: view.providerCosts.length > 0
         Layout.fillWidth: true
         Layout.fillHeight: true
+        Layout.minimumHeight: 0
         contentWidth: availableWidth
         clip: true
         PlasmaComponents.ScrollBar.horizontal.policy: PlasmaComponents.ScrollBar.AlwaysOff
 
         ColumnLayout {
             width: Math.max(0, parent.width - Kirigami.Units.smallSpacing)
+            height: view.providerCosts.length > 0
+                ? implicitHeight : Math.max(implicitHeight, spendHistoryScroll.availableHeight)
             spacing: Kirigami.Units.largeSpacing
+
+            Components.PlainInlineMessage {
+                visible: view.applet.costErrorText.length > 0
+                plainText: view.providerCosts.length > 0
+                    ? i18n("Some local history is unavailable: %1", view.applet.privateErrorText(view.applet.costErrorText))
+                    : i18n("Local history is unavailable: %1", view.applet.privateErrorText(view.applet.costErrorText))
+                type: Kirigami.MessageType.Warning
+                Layout.fillWidth: true
+            }
+
+            Components.PlainInlineMessage {
+                visible: view.hasMixedCostCurrencies
+                plainText: i18n("The cost subtotal and charts use %1. Providers reporting another currency remain separate below. Token figures include every provider.", view.spendCurrency)
+                type: Kirigami.MessageType.Information
+                Layout.fillWidth: true
+            }
+
+            Components.PlainInlineMessage {
+                // Distinguishes "you spent little" from "the local scan has not reached
+                // that far back yet", which otherwise look identical on the chart.
+                visible: view.providerCosts.length > 0 && view.applet.spendHistoryStillBuilding()
+                plainText: i18n("Local history is still being collected, so early days may be incomplete.")
+                type: Kirigami.MessageType.Information
+                Layout.fillWidth: true
+            }
+
+            Components.CostTrustNotice {
+                noticeScope: "spend"
+                stateOwner: view.applet
+                presentationVisible: view.visible
+                summary: view.costTrustSummary
+            }
+
+            Components.PlainInlineMessage {
+                visible: view.providerCosts.length > 0 && view.dailyPoints.length === 0
+                plainText: view.applet.costHistoryShowsTokens
+                    ? i18n("No daily token history is available for this range.")
+                    : i18n("No daily cost history is available for this range. Try Tokens to check for token-only history.")
+                type: Kirigami.MessageType.Information
+                Layout.fillWidth: true
+            }
+
+            Item {
+                visible: !view.applet.costLoading
+                    && view.providerCosts.length === 0
+                    && view.applet.costErrorText.length === 0
+                implicitHeight: emptySpendPlaceholder.implicitHeight
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+
+                // Keep the native placeholder together while this item fills the view.
+                PlainPlaceholderMessage {
+                    id: emptySpendPlaceholder
+
+                    anchors.centerIn: parent
+                    width: parent.width
+                    plainText: i18n("No local token or cost history.")
+                    plainExplanation: i18n("History appears for providers supported by the codexbar cost command.")
+                    icon.name: "view-statistics-symbolic"
+                    type: Kirigami.PlaceholderMessage.Type.Informational
+                }
+            }
+
+            Item {
+                visible: view.applet.costLoading && view.providerCosts.length === 0
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                implicitHeight: spendBusyIndicator.implicitHeight
+
+                Controls.BusyIndicator {
+                    id: spendBusyIndicator
+                    anchors.centerIn: parent
+                    running: parent.visible
+                }
+            }
+
+            Item {
+                visible: !view.applet.costLoading
+                    && view.providerCosts.length === 0
+                    && view.applet.costErrorText.length > 0
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
 
             InteractiveChart {
                 id: historyChart
@@ -481,6 +486,7 @@ ColumnLayout {
             }
 
             ColumnLayout {
+                visible: view.providerCosts.length > 0
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing
 

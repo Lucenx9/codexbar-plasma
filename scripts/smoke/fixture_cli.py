@@ -25,6 +25,7 @@ SCENARIOS += ("popup-cost-details", "popup-cost-tokens")
 SCENARIOS += ("popup-cost-refresh-error", "cost-period")
 SCENARIOS += ("share-usage", "share-usage-narrow")
 SCENARIOS += ("popup-cost-missing-tokens", "popup-cost-partial-models")
+SCENARIOS += ("popup-scroll", "popup-scroll-large")
 SCENARIOS += ("popup-content", "popup-hidden-rows", "popup-hidden-sections", "refresh-on-open", "privacy-provider", "privacy-spend", "privacy-sessions")
 SCENARIOS += ("privacy-cost-details",)
 SCENARIOS += ("usage-retention", "usage-cache-restart")
@@ -249,6 +250,13 @@ def response(args, scenario, now):
             return [usage(provider, scenario, now)]
         if args == prefix + ["--all-accounts", "--format", "json", "--json-only"]:
             first = usage(provider, scenario, now)
+            if scenario in ("popup-scroll", "popup-scroll-large"):
+                accounts = []
+                for index in range(20):
+                    account = copy.deepcopy(first)
+                    account["account"] = f"synthetic-engineering-account-with-a-long-label-{index}@example.com"
+                    accounts.append(account)
+                return accounts
             second = copy.deepcopy(first)
             second["account"] = "second-demo@example.com"
             return [first, second]

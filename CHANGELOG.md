@@ -12,6 +12,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep account lists, incident notices, and error messages scrollable in the
+  popup so many accounts, long messages, or larger fonts cannot hide quotas
+  and recovery actions outside the window.
+- Start provider details at the top after switching provider or account,
+  while keeping the scroll position during a refresh of the same account.
+- Keep monthly credit amounts visible when popup pace text is disabled.
 - Show the installed widget version in Diagnostics instead of "Unknown", and
   give its command-path field an accessible label and keyboard label target.
 - Treat only valid 127/8 IPv4 addresses as local in the AI Insights Ollama

@@ -11,6 +11,8 @@ ColumnLayout {
     required property var modelData
     readonly property var rowData: modelData
     readonly property bool showPace: applet.showPopupPace !== false
+    readonly property string summaryText: typeof rowData.summaryText === "string"
+        ? rowData.summaryText : ""
     readonly property bool hideable: applet.popupUsageRowHideable(rowData)
     // Match the copy action's compact target so the header keeps its height.
     readonly property real actionSize: Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.smallSpacing
@@ -159,7 +161,8 @@ ColumnLayout {
     }
 
     RowLayout {
-        visible: (usageRow.showPace && usageRow.rowData.pace.length > 0)
+        visible: usageRow.summaryText.length > 0
+            || (usageRow.showPace && usageRow.rowData.pace.length > 0)
             || usageRow.resetText.length > 0
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
@@ -168,8 +171,10 @@ ColumnLayout {
             id: usagePaceLabel
             objectName: "usagePaceLabel"
 
-            visible: usageRow.showPace && usageRow.rowData.pace.length > 0
-            text: usageRow.applet.usagePaceText(usageRow.rowData)
+            visible: usageRow.summaryText.length > 0
+                || (usageRow.showPace && usageRow.rowData.pace.length > 0)
+            text: usageRow.summaryText.length > 0 ? usageRow.summaryText
+                : usageRow.applet.usagePaceText(usageRow.rowData)
             font: Kirigami.Theme.smallFont
             opacity: usageRow.applet.secondaryTextOpacity
             Layout.alignment: Qt.AlignBaseline

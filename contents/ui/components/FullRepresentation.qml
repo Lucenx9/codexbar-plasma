@@ -41,6 +41,10 @@ Item {
         && applet.providers.length === 0
         && !applet.loading
 
+    readonly property bool globalErrorActive: applet.providerUsageFeedbackVisible && applet.errorText.length > 0
+        && !fullRoot.commandPathMissing
+        && (!applet.selectedProviderData || applet.selectedProviderData.error !== applet.errorText)
+
     Controls.Action {
         id: retryUsageAction
 
@@ -64,6 +68,20 @@ Item {
         text: i18n("Configure providers...")
         icon.name: "configure"
         onTriggered: applet.performAction("settings")
+    }
+
+    Components.PlainInlineMessage {
+        id: globalErrorMessage
+        parent: applet.presentedProviderData ? providerErrorSlot
+            : applet.overviewSelected ? overviewErrorSlot : emptyErrorSlot
+        objectName: "globalErrorMessage"
+
+        visible: fullRoot.globalErrorActive
+        plainText: applet.privateErrorText(applet.errorText) + "\n\n" + fullRoot.usageRecoveryHint
+        type: Kirigami.MessageType.Error
+        actions: [retryUsageAction, usageSettingsAction]
+        width: parent.width
+        height: implicitHeight
     }
 
     // Content sits directly on the Plasma dialog background. The dialog already
@@ -578,19 +596,6 @@ Item {
             }
         }
 
-        Components.PlainInlineMessage {
-            id: globalErrorMessage
-            objectName: "globalErrorMessage"
-
-            visible: applet.providerUsageFeedbackVisible && applet.errorText.length > 0
-                && !fullRoot.commandPathMissing
-                && (!applet.selectedProviderData || applet.selectedProviderData.error !== applet.errorText)
-            plainText: applet.privateErrorText(applet.errorText) + "\n\n" + fullRoot.usageRecoveryHint
-            type: Kirigami.MessageType.Error
-            actions: [retryUsageAction, usageSettingsAction]
-            Layout.fillWidth: true
-        }
-
         // A plain Item absorbs the leftover popup height; a RowLayout here
         // inherits its children's maximum height, so the layout engine would
         // spread the slack across every row and push the tab bar downwards.
@@ -600,7 +605,8 @@ Item {
             visible: applet.providerUsageFeedbackVisible
                 && applet.providers.length === 0
                 && !fullRoot.commandPathMissing
-                && (applet.loading || applet.errorText.length > 0)
+                && applet.loading
+                && applet.errorText.length === 0
             Layout.fillWidth: true
             Layout.fillHeight: true
 
@@ -623,23 +629,53 @@ Item {
                     elide: Text.ElideRight
                 }
             }
+        }
 
-            // The error banner stays pinned under the tabs with its actions; a
-            // muted glyph fills the leftover height so the state does not read
-            // as a banner over an empty popup. The theme draws the glyph in
-            // its own colors: masking a full-color fallback would flatten it
-            // into a silhouette.
-            Kirigami.Icon {
-                id: providerUsageErrorIcon
-                objectName: "providerUsageErrorIcon"
+        PlasmaComponents.ScrollView {
+            id: emptyErrorScroll
+            objectName: "emptyErrorScroll"
 
-                visible: applet.errorText.length > 0 && !applet.loading
-                anchors.centerIn: parent
-                source: "dialog-error-symbolic"
-                fallback: "dialog-error"
-                width: Kirigami.Units.iconSizes.large
-                height: Kirigami.Units.iconSizes.large
-                opacity: 0.5
+            visible: applet.providerUsageFeedbackVisible
+                && applet.providers.length === 0
+                && !fullRoot.commandPathMissing
+                && applet.errorText.length > 0
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            contentWidth: availableWidth
+            clip: true
+            PlasmaComponents.ScrollBar.horizontal.policy: PlasmaComponents.ScrollBar.AlwaysOff
+
+            ColumnLayout {
+                width: Math.max(0, emptyErrorScroll.availableWidth - Kirigami.Units.smallSpacing)
+                height: Math.max(implicitHeight, emptyErrorScroll.availableHeight)
+                spacing: Kirigami.Units.largeSpacing
+
+                Item {
+                    id: emptyErrorSlot
+
+                    visible: globalErrorMessage.parent === emptyErrorSlot && fullRoot.globalErrorActive
+                    implicitHeight: fullRoot.globalErrorActive ? globalErrorMessage.implicitHeight : 0
+                    Layout.fillWidth: true
+                }
+
+                Item {
+                    visible: applet.errorText.length > 0 && !applet.loading
+                    implicitHeight: Kirigami.Units.iconSizes.large
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    Kirigami.Icon {
+                        id: providerUsageErrorIcon
+                        objectName: "providerUsageErrorIcon"
+
+                        anchors.centerIn: parent
+                        source: "dialog-error-symbolic"
+                        fallback: "dialog-error"
+                        width: Kirigami.Units.iconSizes.large
+                        height: Kirigami.Units.iconSizes.large
+                        opacity: 0.5
+                    }
+                }
             }
         }
 
@@ -752,6 +788,7 @@ Item {
 
             PlasmaComponents.ScrollView {
                 id: overviewScroll
+                objectName: "overviewScroll"
 
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -764,6 +801,14 @@ Item {
                         0,
                         overviewScroll.availableWidth - Kirigami.Units.smallSpacing)
                     spacing: Kirigami.Units.smallSpacing
+
+                    Item {
+                        id: overviewErrorSlot
+
+                        visible: globalErrorMessage.parent === overviewErrorSlot && fullRoot.globalErrorActive
+                        implicitHeight: fullRoot.globalErrorActive ? globalErrorMessage.implicitHeight : 0
+                        Layout.fillWidth: true
+                    }
 
                     PlainPlaceholderMessage {
                         id: overviewPlaceholderMessage
@@ -810,43 +855,24 @@ Item {
                 providerData: applet.presentedProviderData
             }
 
-            Components.ProviderAccountsPanel {
-                applet: fullRoot.applet
-                providerData: applet.selectedProviderData
-            }
-
-            Components.PlainInlineMessage {
-                id: providerStatusMessage
-
-                visible: applet.presentedProviderData
-                    && applet.presentedProviderData.hasIncident
-                    && applet.presentedProviderData.statusKnown !== false
-                    && applet.presentedProviderData.status
-                    && applet.presentedProviderData.status.length > 0
-                plainText: applet.presentedProviderData ? applet.presentedProviderData.status : ""
-                type: applet.presentedProviderData
-                    ? applet.statusMessageType(applet.presentedProviderData.statusSeverity)
-                    : Kirigami.MessageType.Information
-                Layout.fillWidth: true
-            }
-
-            Components.PlainInlineMessage {
-                id: providerErrorMessage
-                objectName: "providerErrorMessage"
-
-                visible: applet.presentedProviderData
-                    && applet.presentedProviderData.error
-                    && applet.presentedProviderData.error.length > 0
-                plainText: (applet.presentedProviderData ? applet.presentedProviderData.error : "")
-                    + (globalErrorMessage.visible ? "" : "\n\n" + fullRoot.usageRecoveryHint)
-                type: Kirigami.MessageType.Error
-                actions: globalErrorMessage.visible ? [] : [retryUsageAction, usageSettingsAction]
-                Layout.fillWidth: true
-            }
-
             PlasmaComponents.ScrollView {
                 id: providerScroll
                 objectName: "providerScroll"
+
+                readonly property string selectionKey: JSON.stringify([
+                    applet.selectedProviderData ? applet.selectedProviderData.provider : "",
+                    applet.selectedProviderData
+                        ? applet.selectedAccountForProvider(applet.selectedProviderData.provider) : "",
+                    applet.accountKey(applet.selectedProviderData)
+                ])
+
+                onSelectionKeyChanged: {
+                    var flickable = contentItem as Flickable
+                    if (flickable) {
+                        flickable.cancelFlick()
+                        flickable.contentY = 0
+                    }
+                }
 
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -859,6 +885,48 @@ Item {
                         0,
                         providerScroll.availableWidth - Kirigami.Units.smallSpacing)
                     spacing: Kirigami.Units.largeSpacing
+
+                    Item {
+                        id: providerErrorSlot
+
+                        visible: globalErrorMessage.parent === providerErrorSlot && fullRoot.globalErrorActive
+                        implicitHeight: fullRoot.globalErrorActive ? globalErrorMessage.implicitHeight : 0
+                        Layout.fillWidth: true
+                    }
+
+                    Components.ProviderAccountsPanel {
+                        applet: fullRoot.applet
+                        providerData: applet.selectedProviderData
+                    }
+
+                    Components.PlainInlineMessage {
+                        id: providerStatusMessage
+
+                        visible: applet.presentedProviderData
+                            && applet.presentedProviderData.hasIncident
+                            && applet.presentedProviderData.statusKnown !== false
+                            && applet.presentedProviderData.status
+                            && applet.presentedProviderData.status.length > 0
+                        plainText: applet.presentedProviderData ? applet.presentedProviderData.status : ""
+                        type: applet.presentedProviderData
+                            ? applet.statusMessageType(applet.presentedProviderData.statusSeverity)
+                            : Kirigami.MessageType.Information
+                        Layout.fillWidth: true
+                    }
+
+                    Components.PlainInlineMessage {
+                        id: providerErrorMessage
+                        objectName: "providerErrorMessage"
+
+                        visible: applet.presentedProviderData
+                            && applet.presentedProviderData.error
+                            && applet.presentedProviderData.error.length > 0
+                        plainText: (applet.presentedProviderData ? applet.presentedProviderData.error : "")
+                            + (globalErrorMessage.visible ? "" : "\n\n" + fullRoot.usageRecoveryHint)
+                        type: Kirigami.MessageType.Error
+                        actions: globalErrorMessage.visible ? [] : [retryUsageAction, usageSettingsAction]
+                        Layout.fillWidth: true
+                    }
 
                     PlainPlaceholderMessage {
                         id: providerPlaceholderMessage
