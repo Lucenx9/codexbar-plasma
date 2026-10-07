@@ -23,6 +23,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Allow CI Plasma jobs enough time to download their pinned image and install
+  test tooling before running the checks and graphical smoke suites.
 - Keep account lists, incident notices, and error messages scrollable in the
   popup so many accounts, long messages, or larger fonts cannot hide quotas
   and recovery actions outside the window.

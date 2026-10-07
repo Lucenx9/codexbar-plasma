@@ -632,6 +632,11 @@ regular expression literal wider than `MaxColumnWidth`, so build long patterns
 from strings with `new RegExp(...)` or match plain substrings instead.
 
 All CI container jobs pin the official KDE neon User Edition image by digest.
+The full check and graphical smoke jobs each allow 60 minutes, including image
+download and dependency installation. The pinned image occupies 9.83 GB locally;
+the former 20-minute limit could expire during setup before any test ran.
+Keep cancelled setup runs unresolved rather than treating local checks as a
+replacement for required GitHub validation.
 The initial checkout prerequisites use the authenticated APT indexes included
 in that image. `scripts/install-ci-dependencies.sh` then attempts
 `apt-get update` and retains the available indexes if the refresh fails.
