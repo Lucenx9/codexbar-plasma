@@ -111,6 +111,45 @@ class ScopeGitTests(unittest.TestCase):
         self.commit()
         self.assertTrue(self.required())
 
+    def test_periodic_and_manual_events_keep_full_coverage_after_docs_only_change(self):
+        self.write("README.md", "Documentation only\n")
+        self.commit()
+        self.assertFalse(self.required())
+        for event, ref in itertools.product(("schedule", "workflow_dispatch"),
+                                            ("refs/heads/main", "refs/tags/v1.0.0")):
+            with self.subTest(event=event, ref=ref):
+                self.assertTrue(self.required(event=event, ref=ref))
+
+    def test_periodic_and_manual_scope_and_gate_cli(self):
+        self.write("scripts/ci_scope.py", (ROOT / "scripts/ci_scope.py").read_text())
+        self.commit()
+        before = self.git("rev-parse", "HEAD").strip()
+        self.write("README.md", "Documentation only\n")
+        self.commit()
+        event_file = self.root / "event.json"
+        event_file.write_text(json.dumps({"before": before}))
+        command = [sys.executable, str(self.root / "scripts/ci_scope.py")]
+        for event, ref in itertools.product(("schedule", "workflow_dispatch"),
+                                            ("refs/heads/main", "refs/tags/v1.0.0")):
+            with self.subTest(event=event, ref=ref):
+                output, summary = self.root / "output", self.root / "summary"
+                output.write_text("")
+                summary.write_text("")
+                env = {**os.environ, "GITHUB_EVENT_PATH": str(event_file),
+                       "GITHUB_EVENT_NAME": event, "GITHUB_REF": ref,
+                       "GITHUB_OUTPUT": str(output), "GITHUB_STEP_SUMMARY": str(summary)}
+                subprocess.run(command, env=env, capture_output=True, text=True, check=True)
+                self.assertEqual(output.read_text(), "run_smoke=true\n")
+                env.update(SCOPE_RESULT="success", RUN_SMOKE="true", RUNTIME_RESULT="skipped")
+                rejected = subprocess.run(command + ["--gate"], env=env,
+                                          capture_output=True, text=True)
+                self.assertNotEqual(rejected.returncode, 0)
+                self.assertIn("unresolved or failed", rejected.stderr)
+                env["RUNTIME_RESULT"] = "success"
+                subprocess.run(command + ["--gate"], env=env, capture_output=True,
+                               text=True, check=True)
+                self.assertIn("Graphical smoke tests passed.", summary.read_text())
+
     def test_rename_from_runtime_to_docs_keeps_full_coverage(self):
         (self.root / "docs").mkdir()
         self.git("mv", "contents/ui/main.qml", "docs/renamed.md")

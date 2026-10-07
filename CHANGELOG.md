@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Report CI static checks before the Plasma environment is ready, and run
+  the full check and graphical smoke suites weekly and on manual requests.
 - Check for GitHub Actions updates with Dependabot every Monday at 09:00
   (`Europe/Rome`) instead of monthly, keeping updates grouped in one PR.
 - Show provider incidents in the popup as a compact pill tinted with the

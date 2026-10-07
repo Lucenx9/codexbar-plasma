@@ -1,15 +1,18 @@
 name: CI
 
-# Runs the full `make check` on every PR and push to main, and on version tags
+# Runs the full `make check` on PRs, main pushes, weekly and manual runs; on version tags
 # (`vX.Y.Z`) additionally builds the `.plasmoid` and publishes a GitHub Release.
 #
-# Checks and smoke tests use the full Plasma toolchain inside the supported KDE neon image.
+# Runtime checks and smoke tests use the Plasma toolchain inside the supported KDE neon image.
 
 on:
   push:
     branches: [main]
     tags: ['v*']
   pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 7 * * 1'
 
 # Only superseded PR runs are cancelled. Each main push and release keeps its run.
 concurrency:
@@ -27,6 +30,27 @@ env:
   QML_TEST_REQUIRE_NO_SKIPS: '1'
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install lightweight check tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            make shellcheck jq libxml2-utils python3-pyflakes curl ca-certificates
+          sudo bash scripts/install-actionlint.sh
+      - name: Run fast checks
+        run: |
+          command -v actionlint
+          python3 -c 'import pyflakes'
+          make check-shellcheck check-workflows check-python-lint check-changelog \
+            check-python-test_documentation check-config-schema check-metadata
+
   scope:
     runs-on: ubuntu-latest
     timeout-minutes: 5
