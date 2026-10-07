@@ -106,7 +106,6 @@ PlasmoidItem {
     property bool notifyQuotaWarnings: Plasmoid.configuration.notifyQuotaWarnings !== false
     property bool notifyPredictivePaceWarnings: Plasmoid.configuration.notifyPredictivePaceWarnings === true
     property bool notifyLimitResets: Plasmoid.configuration.notifyLimitResets === true
-    property bool updateNotificationsEnabled: Plasmoid.configuration.updateNotificationsEnabled !== false
     property string menuBarDisplayMode: safeMenuBarDisplayMode(Plasmoid.configuration.menuBarDisplayMode)
     property bool showPopupTabLabels: Plasmoid.configuration.showPopupTabLabels !== false
     property string providerOrderRaw: Plasmoid.configuration.providerOrder || ""
@@ -160,11 +159,6 @@ PlasmoidItem {
     property var notificationMemo: ({})
     property var notificationRefreshPending: ({})
     property bool notificationsPrimed: false
-    property string lastNotifiedUpdateVersion: Plasmoid.configuration.lastNotifiedUpdateVersion || ""
-    // Keyed by notification source name: queued actionable update
-    // notifications stay independently clickable, and entries leave only with
-    // their own activation.
-    property var pendingUpdateReleaseUrls: ({})
     readonly property bool verticalFormFactor: Plasmoid.formFactor === PlasmaCore.Types.Vertical
     readonly property var overviewProviderItems: overviewProviders()
     readonly property bool globalNavigationAvailable: provider.length === 0
@@ -1487,63 +1481,15 @@ PlasmoidItem {
     }
 
     function sendPlasmaNotification(title, body, urgency, actionLabel) {
-        var cleanTitle = privacyMode ? "CodexBar" : String(title || "CodexBar").trim()
-        var cleanBody = privacyMode ? i18n("Usage or status changed. Open CodexBar for details.") : String(body || "").trim()
-        return notificationDispatcher.send(cleanTitle, cleanBody, urgency, actionLabel)
-    }
-
-    function safeReleaseUrl(url) {
-        var candidate = typeof url === "string" ? url.trim() : ""
-        return candidate.length <= 2048 && Normalizer.httpsUrlHost(candidate) === "github.com" ? candidate : ""
+        return updateNotifications.send(title, body, urgency, actionLabel)
     }
 
     function notifyAvailableUpdate(version, url, releaseUrl) {
-        if (!enableNotifications || !updateNotificationsEnabled) {
-            return
-        }
-        var cleanVersion = String(version || "").trim()
-        var memoKey = cleanVersion.length > 0 ? cleanVersion : url
-        if (memoKey.length === 0 || memoKey === lastNotifiedUpdateVersion) {
-            return
-        }
-        lastNotifiedUpdateVersion = memoKey
-        Plasmoid.configuration.lastNotifiedUpdateVersion = memoKey
-        var title = i18n("CodexBar widget update available")
-        var body = cleanVersion.length > 0
-            ? i18n("Version %1 is available.", cleanVersion)
-            : i18n("A new widget version is available.")
-        var releasePageUrl = safeReleaseUrl(releaseUrl)
-        var actionLabel = releasePageUrl.length > 0 ? i18n("Open release page") : ""
-        var sourceName = sendPlasmaNotification(title, body, "normal", actionLabel)
-        if (releasePageUrl.length > 0 && sourceName.length > 0 && !Guards.isUnsafeObjectKey(sourceName)) {
-            var nextPending = copyObject(pendingUpdateReleaseUrls)
-            nextPending[sourceName] = releasePageUrl
-            pendingUpdateReleaseUrls = nextPending
-        }
-    }
-
-    function handleUpdateNotificationActivated(sourceName) {
-        if (sourceName.length === 0 || !hasOwnKey(pendingUpdateReleaseUrls, sourceName)) {
-            return
-        }
-        var nextPending = copyObject(pendingUpdateReleaseUrls)
-        var releasePageUrl = nextPending[sourceName]
-        delete nextPending[sourceName]
-        pendingUpdateReleaseUrls = nextPending
-        Qt.openUrlExternally(releasePageUrl)
+        updateNotifications.notifyAvailableUpdate(version, url, releaseUrl)
     }
 
     function notifyInstalledUpdate(version) {
-        if (!enableNotifications || !updateNotificationsEnabled) {
-            return
-        }
-        var cleanVersion = String(version || "").trim()
-        var title = i18n("CodexBar widget update installed")
-        var restartText = i18n("Restart Plasma to apply the new widget version.")
-        var body = cleanVersion.length > 0
-            ? i18n("Version %1 was installed. %2", cleanVersion, restartText)
-            : i18n("A widget update was installed. %1", restartText)
-        sendPlasmaNotification(title, body, "normal")
+        updateNotifications.notifyInstalledUpdate(version)
     }
 
     function planText(providerID, method) {
@@ -2349,11 +2295,14 @@ PlasmoidItem {
         }
     }
 
-    Controllers.NotificationDispatcher {
-        id: notificationDispatcher
+    Controllers.UpdateNotificationsController {
+        id: updateNotifications
 
-        onActivated: function(sourceName) {
-            root.handleUpdateNotificationActivated(sourceName)
+        configuration: Plasmoid.configuration
+        enableNotifications: root.enableNotifications
+        privacyMode: root.privacyMode
+        onReleasePageRequested: function(url) {
+            Qt.openUrlExternally(url)
         }
     }
 
@@ -2446,21 +2395,7 @@ PlasmoidItem {
             Plasmoid.configuration.cliUpdateLastCheck = timestamp
         }
         onUpdateAvailable: function(version, releaseUrl) {
-            if (!root.enableNotifications || Plasmoid.configuration.cliUpdateNotificationsEnabled === false
-                    || Plasmoid.configuration.cliUpdateLastNotifiedVersion === version) return
-            var releasePageUrl = root.safeReleaseUrl(releaseUrl)
-            var actionLabel = releasePageUrl.length > 0 ? i18n("Open release page") : ""
-            var sourceName = root.sendPlasmaNotification(i18n("CodexBar CLI release available"),
-                i18n("Upstream CLI %1 is available. Update using your installation method.", version),
-                "normal", actionLabel)
-            if (sourceName.length > 0 && !Guards.isUnsafeObjectKey(sourceName)) {
-                Plasmoid.configuration.cliUpdateLastNotifiedVersion = version
-                if (releasePageUrl.length > 0) {
-                    var nextPending = root.copyObject(root.pendingUpdateReleaseUrls)
-                    nextPending[sourceName] = releasePageUrl
-                    root.pendingUpdateReleaseUrls = nextPending
-                }
-            }
+            updateNotifications.notifyAvailableCliUpdate(version, releaseUrl)
         }
     }
 

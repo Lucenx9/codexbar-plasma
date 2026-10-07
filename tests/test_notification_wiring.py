@@ -314,6 +314,7 @@ import "SOURCE_URL/CostPresentation.js" as CostPresentation
 import "SOURCE_URL/UsageCache.js" as UsageCache
 import "SOURCE_URL/PrivacyPresentation.js" as PrivacyPresentation
 import "SOURCE_URL/ResetPresentation.js" as ResetPresentation
+import "SOURCE_URL/controllers" as Controllers
 TestCase {
     name: "NotificationPipeline"
     property bool enableNotifications: true
@@ -346,6 +347,13 @@ TestCase {
             return "source-" + sentNotifications.length;
         }
     })
+
+    Controllers.UpdateNotificationsController {
+        id: updateNotifications
+        configuration: ({})
+        privacyMode: parent.privacyMode
+        dispatcher: parent.notificationDispatcher
+    }
 
     SOURCE_FUNCTIONS
 
@@ -463,24 +471,22 @@ TestCase {
 
 
 class UpdateNotificationWiringTests(unittest.TestCase):
-    UPDATE_FUNCTIONS = (
-        "hasOwnKey", "copyObject", "safeReleaseUrl", "sendPlasmaNotification",
-        "notifyAvailableUpdate", "handleUpdateNotificationActivated",
-        "notifyInstalledUpdate",
-    )
-
     UPDATE_QML = '''import QtQuick
 import QtTest
-import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
-import "SOURCE_URL/Guards.js" as Guards
+import "SOURCE_URL/controllers" as Controllers
 TestCase {
+    id: testCase
     name: "UpdateNotificationWiring"
     property bool enableNotifications: true
-    property bool updateNotificationsEnabled: true
     property bool privacyMode: false
-    property string lastNotifiedUpdateVersion: ""
-    property var pendingUpdateReleaseUrls: ({})
-    property var notificationPlasmoidConfiguration: ({})
+    property alias lastNotifiedUpdateVersion: updateNotifications.lastNotifiedUpdateVersion
+    property alias pendingUpdateReleaseUrls: updateNotifications.pendingUpdateReleaseUrls
+    property QtObject notificationPlasmoidConfiguration: QtObject {
+        property bool updateNotificationsEnabled: true
+        property bool cliUpdateNotificationsEnabled: true
+        property string lastNotifiedUpdateVersion: ""
+        property string cliUpdateLastNotifiedVersion: ""
+    }
     property var sentNotifications: []
     property int sentSerial: 0
     property var openedReleaseUrls: []
@@ -502,15 +508,30 @@ TestCase {
         openedReleaseUrls = openedReleaseUrls.concat([url]);
     }
 
-    SOURCE_FUNCTIONS
+    Controllers.UpdateNotificationsController {
+        id: updateNotifications
+        configuration: testCase.notificationPlasmoidConfiguration
+        enableNotifications: testCase.enableNotifications
+        privacyMode: testCase.privacyMode
+        dispatcher: testCase.notificationDispatcher
+        onReleasePageRequested: function(url) { testCase.recordOpenedReleaseUrl(url); }
+    }
+    function notifyAvailableUpdate(version, url, releaseUrl) {
+        updateNotifications.notifyAvailableUpdate(version, url, releaseUrl);
+    }
+    function notifyInstalledUpdate(version) { updateNotifications.notifyInstalledUpdate(version); }
+    function handleUpdateNotificationActivated(sourceName) {
+        updateNotifications.handleUpdateNotificationActivated(sourceName);
+    }
+
 
     function init() {
         enableNotifications = true;
-        updateNotificationsEnabled = true;
         privacyMode = false;
         lastNotifiedUpdateVersion = "";
         pendingUpdateReleaseUrls = ({});
-        notificationPlasmoidConfiguration = ({});
+        notificationPlasmoidConfiguration.lastNotifiedUpdateVersion = "";
+        notificationPlasmoidConfiguration.updateNotificationsEnabled = true;
         sentNotifications = [];
         sentSerial = 0;
         openedReleaseUrls = [];
@@ -577,7 +598,7 @@ TestCase {
         announce("v0.2.40");
         compare(sentNotifications.length, 0);
         enableNotifications = true;
-        updateNotificationsEnabled = false;
+        notificationPlasmoidConfiguration.updateNotificationsEnabled = false;
         announce("v0.2.41");
         compare(sentNotifications.length, 0);
         compare(pendingUpdateReleaseUrls, ({}));
@@ -608,20 +629,7 @@ TestCase {
 '''
 
     def test_update_notification_adapters_keep_activations_source_scoped(self):
-        applet = Surface("applet", ROOT)
-        main = ROOT / "contents/ui/main.qml"
-        source = applet.texts[main]
-        applet.texts = {main: source}
-        functions = []
-        for name in self.UPDATE_FUNCTIONS:
-            signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
-            functions.append(signature + " {" + applet.function_body(name) + "}")
         qml = self.UPDATE_QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
-        qml = qml.replace("SOURCE_FUNCTIONS", "\n".join(functions))
-        # A property named Plasmoid is not addressable in QML, so route the
-        # configuration write and the external open through harness-owned names.
-        qml = qml.replace("Plasmoid.configuration", "notificationPlasmoidConfiguration")
-        qml = qml.replace("Qt.openUrlExternally(releasePageUrl)", "recordOpenedReleaseUrl(releasePageUrl)")
         with tempfile.TemporaryDirectory(prefix="codexbar-update-notification-") as temporary:
             fixture = Path(temporary) / "tst_update_notifications.qml"
             fixture.write_text(qml, encoding="utf-8")

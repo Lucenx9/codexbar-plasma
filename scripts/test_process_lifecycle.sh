@@ -257,7 +257,7 @@ require_ordered(notification.id_block("notificationSource"),
                 ("lifecycle.finish(sourceName)", "controller.activated(sourceName)"),
                 "notification activation must follow retirement")
 require_all(applet.function_body("sendPlasmaNotification"),
-            ("notificationDispatcher.send(cleanTitle, cleanBody, urgency, actionLabel)",),
+            ("updateNotifications.send(title, body, urgency, actionLabel)",),
             "the applet must delegate notification delivery")
 for forbidden in ("Plasma5Support", "CommandLedger", "activeCommandDescriptors", "commandTimeoutTimer"):
     if forbidden in main_text:

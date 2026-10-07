@@ -269,10 +269,8 @@ reject_text "main.qml" "$(cat "$MAIN_QML")" '"sh", "-lc"'
 reject_text "configProviders.qml" "$(cat "$PROVIDERS_QML")" '"sh", "-lc"'
 require_in_file "${ROOT_DIR}/contents/ui/ProviderConfigWatch.js" '["sh", "-c", Guards.shellQuote(script)]'
 
-# Kept: the pending-update URL map declaration is unobservable in executed
-# tests (deleting it keeps the whole updater suite green: every fixture
-# declares its own map, and the applet is never instantiated), so no mutation
-# can prove this pin redundant. It stays as the only pin that the queue exists.
+# The production notification owner keeps the queued update actions. Direct
+# QtTests exercise the map and source retirement in that component.
 require_in_surface applet "property var pendingUpdateReleaseUrls: ({})"
 
 require_in_file "${ROOT_DIR}/contents/ui/NotificationCommand.js" 'Guards.shellQuote(cleanTitle), Guards.shellQuote(cleanBody)'
