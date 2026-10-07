@@ -239,9 +239,15 @@ synchronized.
 - `ProviderCostPresentation.js` classifies provider costs as balances, points,
   allowances, or spend, and validates reset-credit counts. It preserves the
   established provider exceptions, bounds display metadata, and keeps plain
-  balances separate from allowance percentages. `main.qml` localizes these
-  semantic sections and formats their amounts. The Codex monthly-credit limit
-  retains its dedicated `ProviderNormalizer.js` contract and existing row adapter.
+  balances separate from allowance percentages. `components/ProviderCostDetails.qml`
+  localizes those semantic sections, reset-credit counts, and the Codex monthly
+  credit-limit row, using an explicit regional number format. Its cost/reset
+  inputs pass through the existing pure module; monthly credit limits retain
+  the dedicated `ProviderNormalizer.js` contract. The applet keeps snapshot
+  coordination and privacy; the popup owns section visibility. Direct component
+  tests cover formatting, optional fields and normalized limits, and the root
+  adapters are exercised with all six catalogs in
+  `tests/test_provider_cost_presentation.py`.
 - `ResetPresentation.js` parses bounded reset metadata, splits countdowns into
   semantic units using an explicit clock, and classifies existing reset-label
   compatibility text. `main.qml` supplies the live panel clock, translates the
