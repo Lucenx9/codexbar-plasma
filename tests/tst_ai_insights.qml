@@ -292,6 +292,7 @@ TestCase {
         verify(AiInsights.isLocalEndpoint("http://127.0.0.1/v1"))
         verify(AiInsights.isLocalEndpoint("http://127.255.255.255:11434"))
         verify(!AiInsights.isLocalEndpoint("http://127.256.0.1:11434"))
+        verify(!AiInsights.isLocalEndpoint("http://127.00.0.1:11434"))
         verify(!AiInsights.isLocalEndpoint("http://127.999.999.999:11434"))
         verify(AiInsights.isLocalEndpoint("http://[::1]:11434/v1"))
         // The helper accepts any textual form of ::1, so the label must too.
