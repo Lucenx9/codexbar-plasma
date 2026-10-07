@@ -18,20 +18,8 @@ apt-get install -y --no-install-recommends \
 
 locale-gen it_IT.UTF-8 fr_FR.UTF-8 de_DE.UTF-8 es_ES.UTF-8 pt_BR.UTF-8
 
-# actionlint has no Ubuntu 24.04 package, so install the official release binary
-# pinned by version and SHA-256. The checksum makes the download reproducible
-# the way the digest-pinned image and the APT indexes make the rest of the job
-# reproducible; an altered or truncated archive fails here instead of running.
-# Update both values together from the release's checksums.txt when bumping.
-ACTIONLINT_VERSION=1.7.12
-ACTIONLINT_SHA256=8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
-actionlint_dir="$(mktemp -d)"
-trap 'rm -rf "$actionlint_dir"' EXIT
-curl -fsSL --retry 3 -o "${actionlint_dir}/actionlint.tar.gz" \
-  "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
-printf '%s  %s\n' "$ACTIONLINT_SHA256" "${actionlint_dir}/actionlint.tar.gz" \
-  | sha256sum --check --strict -
-tar -xzf "${actionlint_dir}/actionlint.tar.gz" -C /usr/local/bin actionlint
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+bash "${script_dir}/install-actionlint.sh"
 
 # Fail before the tests if packaging, linting, or preview support is absent.
 command -v kpackagetool6
