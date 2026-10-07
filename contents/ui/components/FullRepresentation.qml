@@ -927,8 +927,6 @@ Item {
                         color: applet.withAlpha(tone, 0.14)
                         border.width: 1
                         border.color: applet.withAlpha(tone, 0.32)
-                        Accessible.role: Accessible.StaticText
-                        Accessible.name: providerStatusLabel.text
 
                         Rectangle {
                             id: providerStatusDot
