@@ -78,9 +78,19 @@ synchronized.
 
 ## Ownership and implementation
 
-- `contents/ui/main.qml` owns provider notification policy and text,
+- `contents/ui/main.qml` owns provider notification policy and routing,
   account coordination, selected state, quota-cache persistence, configuration updates, and external
   effects. Its adapters supply the panel and popup.
+- `contents/ui/components/ProviderNotificationText.qml` builds localized status,
+  quota, predictive pace and reset messages from a planner intent, normalized
+  provider/row and preformatted reset/ETA labels. It returns title/body/urgency
+  without reading applet state or dispatching. `main.qml` resolves observation
+  indexes, supplies labels and sends the result through the shared privacy owner.
+  Planner transitions, account freshness and memo commit ordering stay in their
+  existing owners. Direct QtTests and the executed notification pipeline cover
+  text, severity, missing rows and effect ordering; catalog tests exercise all
+  six shipped languages. The usage-retention smoke checks the localized retained
+  label in the panel tooltip, so it also runs with `--language it`.
 - `contents/ui/controllers/NotificationDispatcher.qml` owns notification
   execution, per-send nonces, the request ledger, the 10-second deadline, the
   2-minute deadline for clickable notifications, and

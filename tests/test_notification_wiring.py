@@ -18,7 +18,6 @@ FUNCTIONS = (
     "markNotificationProvidersFresh", "notificationProviderRefreshPending",
     "notificationScopeKey", "notificationObservationRows", "notificationObservations",
     "quotaNotificationLevel", "paceWarningActive", "notificationPlannerOptions",
-    "notificationUrgency",
     "applyTokenCosts", "providerTokenCost", "primaryIncidentProvider",
 )
 
@@ -31,8 +30,10 @@ import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/QuotaThresholds.js" as QuotaThresholds
 import "SOURCE_URL/CostPresentation.js" as CostPresentation
 import "SOURCE_URL/UsageCache.js" as UsageCache
+import "SOURCE_URL/components" as Components
 TestCase {
     name: "NotificationWiring"
+    Components.ProviderNotificationText { id: providerNotificationText }
     property bool includeStatus: true
     property bool notifyStatusIncidents: true
     property bool notifyQuotaWarnings: true
@@ -206,11 +207,11 @@ TestCase {
     function test_notificationUrgencyFollowsSeverity() {
         // The dispatcher urgency is the only thing distinguishing a critical
         // quota breach from a routine warning once the planner has spoken.
-        compare(notificationUrgency("critical"), "critical");
-        compare(notificationUrgency("major"), "critical");
-        compare(notificationUrgency("unknown"), "low");
-        compare(notificationUrgency("minor"), "normal");
-        compare(notificationUrgency(""), "normal");
+        compare(providerNotificationText.urgency("critical"), "critical");
+        compare(providerNotificationText.urgency("major"), "critical");
+        compare(providerNotificationText.urgency("unknown"), "low");
+        compare(providerNotificationText.urgency("minor"), "normal");
+        compare(providerNotificationText.urgency(""), "normal");
     }
     function test_primaryIncidentProviderIgnoresUnknownOrInactiveStatus() {
         providers = [
@@ -315,6 +316,7 @@ import "SOURCE_URL/UsageCache.js" as UsageCache
 import "SOURCE_URL/PrivacyPresentation.js" as PrivacyPresentation
 import "SOURCE_URL/ResetPresentation.js" as ResetPresentation
 import "SOURCE_URL/controllers" as Controllers
+import "SOURCE_URL/components" as Components
 TestCase {
     name: "NotificationPipeline"
     property bool enableNotifications: true
@@ -347,6 +349,10 @@ TestCase {
             return "source-" + sentNotifications.length;
         }
     })
+
+    Components.ProviderNotificationText {
+        id: providerNotificationText
+    }
 
     Controllers.UpdateNotificationsController {
         id: updateNotifications
@@ -431,6 +437,43 @@ TestCase {
         // percentage; the label wrapper owns the "Resets" prefix.
         verify(sentNotifications[0].body.indexOf("96") >= 0);
         verify(sentNotifications[0].body.indexOf("Resets") >= 0);
+    }
+    function test_allIntentKindsRouteInOrderWithTheirOriginalText() {
+        var item = quotaItem(95.6, "major");
+        item.rows[0].paceEtaSeconds = 3600;
+        providers = [item];
+        dispatchNotificationIntents([
+            {kind: "status", severity: "unknown", observationIndex: 0},
+            {kind: "quota", severity: "major", observationIndex: 0, rowIndex: 0},
+            {kind: "pace", observationIndex: 0, rowIndex: 0},
+            {kind: "reset", observationIndex: 0, rowIndex: 0},
+            {kind: "future", observationIndex: 0, rowIndex: 0},
+            {kind: "quota", observationIndex: 0, rowIndex: 4},
+            {kind: "status", observationIndex: 9}
+        ], [{providerIndex: 0}]);
+        compare(sentNotifications.map(function(value) { return value.title; }), [
+            "Codex status issue", "Codex quota critical", "Codex pace warning", "Codex limit reset"
+        ]);
+        compare(sentNotifications.map(function(value) { return value.urgency; }), [
+            "low", "critical", "normal", "low"
+        ]);
+        compare(sentNotifications[1].body, "Session is 96% used");
+        compare(sentNotifications[2].body, "Session may run out in 1 hour");
+        compare(sentNotifications[3].body, "Session is back to 96% used");
+    }
+    function test_statusWithoutUsageRowsAndPrivacyStaySupported() {
+        var item = quotaItem(85, "major");
+        item.rows = [];
+        providers = [item];
+        dispatchNotificationIntents([{kind: "status", severity: "major", observationIndex: 0}],
+            [{providerIndex: 0}]);
+        compare(sentNotifications[0].body, "Service degraded");
+        privacyMode = true;
+        dispatchNotificationIntents([{kind: "status", severity: "major", observationIndex: 0}],
+            [{providerIndex: 0}]);
+        compare(sentNotifications[1].title, "CodexBar");
+        compare(sentNotifications[1].body, "Usage or status changed. Open CodexBar for details.");
+        privacyMode = false;
     }
     function test_statusIncidentDispatchesWithMappedUrgency() {
         providers = [quotaItem(40, "")];

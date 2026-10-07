@@ -1304,7 +1304,7 @@ Item {
                 "a failed refresh changed the measurement time");
             verifyScenario(applet.notificationObservations().every(function(item) { return item.pending; }),
                 "retained usage is eligible for notifications");
-            verifyScenario(applet.panelToolTipText().indexOf("Last known usage") >= 0,
+            verifyScenario(applet.panelToolTipText().indexOf(applet.lastGoodUsageText(applet.providers[0])) >= 0,
                 "panel tooltip presents retained usage as current");
             var emptyMeter = applet.normalizeProvider({provider: "codex"});
             emptyMeter.usageStale = true;
