@@ -20,6 +20,7 @@ FUNCTIONS = (
 
 QML = '''import QtQuick
 import QtTest
+import "SOURCE_URL/components" as Components
 import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
 import "SOURCE_URL/ProviderSnapshot.js" as ProviderSnapshot
 import "SOURCE_URL/UsageResponse.js" as UsageResponse
@@ -34,6 +35,10 @@ TestCase {
         id: harness
         QtObject {
             id: root
+            property QtObject usageWindowText: Components.UsageWindowText {
+                function i18n() { return root.i18n.apply(root, arguments); }
+                function i18np(one, many, count) { return root.i18np(one, many, count); }
+            }
             property var providers: []
             property var providerDisplayNames: ({})
             property string providerOrderRaw: ""
@@ -152,6 +157,7 @@ class QuotaMarkerTests(unittest.TestCase):
 
     MARK_QML = '''import QtQuick
 import QtTest
+import "SOURCE_URL/components" as Components
 import org.kde.kirigami as Kirigami
 import "SOURCE_URL/QuotaThresholds.js" as QuotaThresholds
 TestCase {
@@ -226,6 +232,7 @@ class ProviderColorTests(unittest.TestCase):
 
     COLOR_QML = '''import QtQuick
 import QtTest
+import "SOURCE_URL/components" as Components
 import org.kde.kirigami as Kirigami
 import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
 import "SOURCE_URL/ThemeContrast.js" as ThemeContrast

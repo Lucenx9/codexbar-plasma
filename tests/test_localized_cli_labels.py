@@ -19,6 +19,9 @@ from qml_surfaces import Surface
 class LocalizedCliLabelTests(unittest.TestCase):
     def test_session_pace_and_count_adapters_use_each_catalog(self):
         applet = Surface("applet", ROOT)
+        main = ROOT / "contents/ui/main.qml"
+        applet.texts = {main: main.read_text()}
+        applet.files = [main]
         signatures = {"capitalize": "value",
                       "paceSummaryText": "pace", "paceSummaryPartsText": "parts",
                       "paceEtaText": "seconds",
@@ -27,6 +30,8 @@ class LocalizedCliLabelTests(unittest.TestCase):
         adapters = "\n".join(f"function {name}({args}) {{ {applet.function_body(name)} }}"
                              for name, args in signatures.items())
         expected = {
+            "en": ["Active", "Idle", "Running", "Working", "Desktop app", "Command line",
+                   "13% in deficit | Expected 30% used | Runs out in 1 hour"],
             "it": ["Attiva", "Inattiva", "In esecuzione", "Al lavoro", "Applicazione desktop",
                    "Riga di comando", "13% oltre il previsto | Utilizzo previsto: 30% | Esaurimento previsto tra 1 ora"],
             "fr": ["Active", "Inactive", "En cours", "Au travail", "Application de bureau",
@@ -39,6 +44,7 @@ class LocalizedCliLabelTests(unittest.TestCase):
                       "Linha de comando", "13% acima do previsto | Uso previsto: 30% | Esgotamento previsto em 1 hora"],
         }
         count_labels = {
+            "en": [["token", "tokens"], ["request", "requests"], ["point", "points"]],
             "it": [["token", "token"], ["richiesta", "richieste"], ["punto", "punti"]],
             "fr": [["jeton", "jetons"], ["requête", "requêtes"], ["point", "points"]],
             "de": [["Token", "Tokens"], ["Anfrage", "Anfragen"], ["Punkt", "Punkte"]],
@@ -51,17 +57,30 @@ class LocalizedCliLabelTests(unittest.TestCase):
             cases = []
             for language, labels in expected.items():
                 catalog = gettext.translation("plasma_applet_app.codexbar.plasma", directory / "locale",
-                                              languages=[language])
-                messages = {key: value for key, value in catalog._catalog.items() if isinstance(key, str)}
+                                              languages=[language], fallback=language == "en")
+                messages = {key: value for key, value in getattr(catalog, "_catalog", {}).items() if isinstance(key, str)}
                 messages["%1 hour"] = catalog.ngettext("%1 hour", "%1 hours", 1)
                 plural_messages = {
                     "%1 " + unit: {count: catalog.ngettext("%1 " + unit, "%1 " + unit + "s", count)
                                   for count in (0, 1, 2, 50, 999)}
                     for unit in ("token", "request", "point")
                 }
+                duration_rows = []
+                for seconds, unit, count in (
+                    (0.1, "minute", 1), (29, "minute", 1), (89, "minute", 1),
+                    (90, "minute", 2), (3569, "minute", 59), (3570, "hour", 1),
+                    (5369, "hour", 1), (5370, "hour", 2),
+                    (170969, "hour", 47), (170970, "day", 2),
+                    (172800, "day", 2), (604800, "day", 7), ("3600", "hour", 1),
+                ):
+                    source = "%1 " + unit
+                    plural_messages.setdefault(source, {})[count] = catalog.ngettext(
+                        source, source + "s", count)
+                    duration_rows.append({"seconds": seconds, "expected":
+                        plural_messages[source][count].replace("%1", str(count))})
                 cases.append({"tag": language, "messages": messages, "labels": labels,
                               "plurals": plural_messages, "counts": count_labels[language],
-                              "singularZero": language in ("fr", "pt_BR")})
+                              "durations": duration_rows, "singularZero": language in ("fr", "pt_BR")})
             # The real Plasma/KI18n domain lookup is covered by the graphical
             # smoke scenario. Here only that lookup is replaced with GNU gettext.
             qml = '''import QtQuick
@@ -87,6 +106,11 @@ TestCase {
             return pluralMessages[one][count].replace("%1", String(count));
         return i18n(count === 1 ? one : many, count);
     }
+    Components.UsageWindowText {
+        id: usageWindowText
+        function i18n() { return testCase.i18n.apply(testCase, arguments); }
+        function i18np(one, many, count) { return testCase.i18np(one, many, count); }
+    }
     ADAPTERS
     Components.SessionLabels {
         id: sessionLabels
@@ -98,6 +122,10 @@ TestCase {
         privacyMode = false;
         messages = row.messages;
         pluralMessages = row.plurals;
+        for (var duration of row.durations)
+            compare(paceEtaText(duration.seconds), duration.expected, String(duration.seconds));
+        for (var invalid of [null, false, 0, -1, "invalid", NaN, Infinity, -Infinity])
+            compare(paceEtaText(invalid), i18n("now"));
         var units = ["tokens", "requests", "points"];
         for (var u = 0; u < units.length; u++) {
             var singular = row.counts[u][0];

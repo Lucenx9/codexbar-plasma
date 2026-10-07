@@ -17,8 +17,8 @@ The CLI 0.56.2 JSON contracts provide the inputs for these translations:
 - [`CLIRenderer.pacePayload`](https://github.com/steipete/CodexBar/blob/v0.56.2/Sources/CodexBarCLI/CLIRenderer.swift)
   emits `stage`, `deltaPercent`, `expectedUsedPercent`, `willLastToReset`, and
   `etaSeconds`. `PacePresentation.js` validates these fields and returns semantic
-  parts; `main.qml` translates them. The widget does not parse the English
-  `summary` or recalculate the CLI forecast. A summary-only payload retains its
+  parts; `components/UsageWindowText.qml` translates them. The widget does not
+  parse the English `summary` or recalculate the CLI forecast. A summary-only payload retains its
   bounded, redacted text as a compatibility fallback.
 
 Free-form incident descriptions, provider detail titles/rows/chart labels,

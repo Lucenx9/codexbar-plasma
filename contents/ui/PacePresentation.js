@@ -89,3 +89,20 @@ function advancedParts(parts, observedAtMs, nowMs) {
             : part;
     });
 }
+
+// Preserve the duration rounding used by the panel, popup and notifications.
+function etaParts(seconds) {
+    var numericSeconds = Number(seconds);
+    if (!isFinite(numericSeconds) || numericSeconds <= 0) {
+        return {kind: "now"};
+    }
+    var minutes = Math.max(1, Math.round(numericSeconds / 60));
+    if (minutes < 60) {
+        return {kind: "minutes", count: minutes};
+    }
+    var hours = Math.max(1, Math.round(minutes / 60));
+    if (hours < 48) {
+        return {kind: "hours", count: hours};
+    }
+    return {kind: "days", count: Math.max(1, Math.round(hours / 24))};
+}

@@ -5,6 +5,28 @@ import "../contents/ui/PacePresentation.js" as PacePresentation
 TestCase {
     name: "PacePresentation"
 
+    function test_etaParts_data() {
+        return [
+            {tag: "missing", seconds: undefined, expected: {kind: "now"}},
+            {tag: "null", seconds: null, expected: {kind: "now"}},
+            {tag: "negative", seconds: -1, expected: {kind: "now"}},
+            {tag: "invalid", seconds: "invalid", expected: {kind: "now"}},
+            {tag: "infinite", seconds: Infinity, expected: {kind: "now"}},
+            {tag: "nan", seconds: NaN, expected: {kind: "now"}},
+            {tag: "small", seconds: 0.1, expected: {kind: "minutes", count: 1}},
+            {tag: "minutes", seconds: 3569, expected: {kind: "minutes", count: 59}},
+            {tag: "hour-boundary", seconds: 3570, expected: {kind: "hours", count: 1}},
+            {tag: "hour-rounding", seconds: 5370, expected: {kind: "hours", count: 2}},
+            {tag: "last-hour", seconds: 170969, expected: {kind: "hours", count: 47}},
+            {tag: "day-boundary", seconds: 170970, expected: {kind: "days", count: 2}},
+            {tag: "numeric-string", seconds: "3600", expected: {kind: "hours", count: 1}}
+        ];
+    }
+
+    function test_etaParts(data) {
+        compare(PacePresentation.etaParts(data.seconds), data.expected);
+    }
+
     function test_structuredFieldsReplaceEnglishSummary() {
         compare(PacePresentation.summaryParts({
             stage: "ahead",

@@ -49,6 +49,10 @@ TestCase {
         id: harness
         QtObject {
             id: root
+            property QtObject usageWindowText: Components.UsageWindowText {
+                function i18n() { return root.i18n.apply(root, arguments); }
+                function i18np(one, many, count) { return root.i18np(one, many, count); }
+            }
             property var providers: []
             property var providerDisplayNames: ({})
             property string providerOrderRaw: ""

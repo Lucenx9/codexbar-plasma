@@ -76,6 +76,7 @@ import "SOURCE_URL/ResetPresentation.js" as ResetPresentation
 import "SOURCE_URL/PrivacyPresentation.js" as PrivacyPresentation
 import "SOURCE_URL/components" as Components
 TestCase {
+    id: testCase
     name: "ResetAdapters"
     property var messages: ({})
     property var plurals: ({})
@@ -101,6 +102,12 @@ TestCase {
     }
     Components.TimeLabels {
         id: timeLabels
+    }
+    Components.UsageWindowText {
+        id: usageWindowText
+        dateLabels: timeLabels
+        function i18n() { return testCase.i18n.apply(testCase, arguments); }
+        function i18np(one, many, count) { return testCase.i18np(one, many, count); }
     }
     ADAPTERS
     function test_resets_data() { return RESET_CASES; }
