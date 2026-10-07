@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasma5support as Plasma5Support
+import org.kde.plasma.plasmoid
 import "components" as Components
 import "Guards.js" as Guards
 import "SafeText.js" as SafeText
@@ -29,10 +30,11 @@ KCM.SimpleKCM {
     readonly property string resolvedCommandPath: versions.result.path
     readonly property string cliVersionText: versions.result.version
     readonly property bool environmentProbeFailed: versions.checked && versions.result.version.length === 0
-    // `Plasmoid` is an attached name, so a bare reference throws wherever the
-    // page is loaded outside an applet, such as the settings smoke capture.
-    readonly property string widgetVersion: typeof Plasmoid !== "undefined" && Plasmoid.metaData
-        ? String(Plasmoid.metaData.version || "") : ""
+    // Plasma exposes KPluginMetaData at runtime without a declarative QML type.
+    // Keep its attached context dynamic and tolerate standalone page tests.
+    readonly property var appletContext: Plasmoid
+    readonly property string widgetVersion: appletContext && appletContext.metaData
+        ? String(appletContext.metaData.version || "") : ""
     property int commandRunSerial: 0
     readonly property int diagnosticCommandTimeoutMs: 60000
     // Shell-side bound for every diagnostics command. disconnectSource cannot
@@ -238,6 +240,7 @@ KCM.SimpleKCM {
             id: commandPathRow
 
             Kirigami.FormData.label: i18n("Command path:")
+            Kirigami.FormData.buddyFor: commandPathField
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             // FormLayout can stretch nested layouts as the KCM grows, so cap
             // this row to keep its trailing action inside the viewport.
@@ -245,6 +248,8 @@ KCM.SimpleKCM {
 
             Controls.TextField {
                 id: commandPathField
+                objectName: "commandPathField"
+                Accessible.name: commandPathRow.Kirigami.FormData.label
                 Layout.fillWidth: true
                 placeholderText: "codexbar"
             }

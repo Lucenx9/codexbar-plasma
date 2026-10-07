@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Show the installed widget version in Diagnostics instead of "Unknown", and
+  give its command-path field an accessible label and keyboard label target.
 - Reject non-finite managed CLI state timestamps so corrupted `NaN` or infinity
   values cannot bypass the daily automatic-update throttle.
 

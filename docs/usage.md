@@ -496,6 +496,8 @@ fields; track proposed extensions in the issue tracker.
   versions**, the CLI version and the absolute command the shell resolved.
   Those three lines are what a bug report needs; the probe runs only when
   asked, and a changed command path clears the previous result.
+  The widget version is available as soon as Diagnostics opens. The command
+  path has a screen-reader label and supports the form label's keyboard shortcut.
   **Popup** and **Notifications** keep their text and controls still while the
   page opens, including while the Popup provider list arrives.
 - **Panel** starts with the preview, side-by-side Standard/Minimal choices, and
