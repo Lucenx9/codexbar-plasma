@@ -230,7 +230,9 @@ class ManagedCliTests(unittest.TestCase):
     def test_state_shapes_are_bounded_before_mutation(self):
         cli.private_directory(self.root)
         for state in ({"previous": []}, {"blockedVersion": {}}, {"lastAttempt": "today"},
-                      {"activation": {"target": []}}, {"activation": []}):
+                      {"lastAttempt": float("nan")}, {"lastAttempt": float("inf")},
+                      {"lastAttempt": float("-inf")}, {"activation": {"target": []}},
+                      {"activation": []}):
             (self.root / "state.json").write_text(json.dumps(state))
             with self.subTest(state=state), self.assertRaises(ValueError):
                 cli.status(self.root)

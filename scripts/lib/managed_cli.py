@@ -4,6 +4,7 @@ import hashlib
 import gzip
 import http.client
 import json
+import math
 import os
 from pathlib import Path, PurePosixPath
 import platform
@@ -106,7 +107,8 @@ def state_record(root):
         pattern = RELEASE_DIRECTORY if key == "previous" else re.compile(cli_release.VERSION)
         if not isinstance(value, str) or (value and not pattern.fullmatch(value)):
             raise ValueError("state_field")
-    if type(state.get("lastAttempt", 0)) not in (int, float):
+    last_attempt = state.get("lastAttempt", 0)
+    if type(last_attempt) not in (int, float) or not math.isfinite(last_attempt):
         raise ValueError("state_time")
     activation = state.pop("activation", None)
     if activation is not None:
