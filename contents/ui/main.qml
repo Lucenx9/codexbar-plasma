@@ -1224,19 +1224,6 @@ PlasmoidItem {
         }
     }
 
-    function statusMessageType(severity) {
-        switch (String(severity || "")) {
-        case "critical":
-        case "major":
-            return Kirigami.MessageType.Error
-        case "minor":
-        case "maintenance":
-            return Kirigami.MessageType.Warning
-        default:
-            return Kirigami.MessageType.Information
-        }
-    }
-
     function primaryIncidentProvider() {
         var best = null
         var bestRank = 0

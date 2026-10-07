@@ -516,12 +516,8 @@ class PopupLayoutTest(unittest.TestCase):
                 visible.group(1),
             ):
                 raise AssertionError(f"{block_id} must hide inactive and unknown provider status")
-        if not code_contains(provider_status_body, "applet.statusMessageType(applet.presentedProviderData.statusSeverity)"):
-            raise AssertionError("incident banners must reflect the provider status severity")
-        status_message_type_body = function_body(main_text, "statusMessageType")
-        for semantic_type in ("Kirigami.MessageType.Error", "Kirigami.MessageType.Warning"):
-            if not code_contains(status_message_type_body, semantic_type):
-                raise AssertionError(f"statusMessageType must expose {semantic_type}")
+        if not code_contains(provider_status_body, "applet.statusBadgeColor(applet.presentedProviderData.statusSeverity)"):
+            raise AssertionError("incident pills must reflect the provider status severity")
 
         for placeholder_id in (
             "overviewPlaceholderMessage",

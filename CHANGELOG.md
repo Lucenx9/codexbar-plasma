@@ -10,6 +10,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Changed
+
+- Show provider incidents in the popup as a compact pill tinted with the
+  severity color instead of a full-width banner.
+
 ### Fixed
 
 - Keep account lists, incident notices, and error messages scrollable in the
