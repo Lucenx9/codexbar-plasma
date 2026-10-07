@@ -10,6 +10,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Fixed
+
+- Reject non-finite managed CLI state timestamps so corrupted `NaN` or infinity
+  values cannot bypass the daily automatic-update throttle.
+
 ## 0.2.45 - 2026-10-07
 
 ### Added
