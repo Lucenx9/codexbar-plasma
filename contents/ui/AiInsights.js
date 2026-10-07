@@ -109,7 +109,7 @@ function isLoopbackIpv4(host) {
         return false
     }
     for (var i = 0; i < octets.length; i++) {
-        if (!/^\d{1,3}$/.test(octets[i]) || Number(octets[i]) > 255) {
+        if (!/^(0|[1-9]\d{0,2})$/.test(octets[i]) || Number(octets[i]) > 255) {
             return false
         }
     }
