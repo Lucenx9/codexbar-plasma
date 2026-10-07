@@ -365,6 +365,13 @@ TestCase {
         property string costHistoryPeriod: ""
         property var tokenCosts: ({})
         property bool privacyMode: false
+        // QtObject has no default property, so the copied wrappers reach the
+        // real component through this property.
+        property QtObject costText: Components.CostText {
+            numberFormat: root.costNumberFormat
+            function i18n() { return root.i18n.apply(root, arguments); }
+            function i18np(one, many, count) { return root.i18np(one, many, count); }
+        }
         SOURCE_FUNCTIONS
         function i18n(source) {
             var text = source;

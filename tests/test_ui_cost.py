@@ -28,6 +28,8 @@ interactive_chart_text = interactive_chart_qml.read_text(encoding="utf-8")
 spend_view_text = spend_view_qml.read_text(encoding="utf-8")
 full_representation_text = full_representation_qml.read_text(encoding="utf-8")
 cost_trust_notice_text = cost_trust_notice_qml.read_text(encoding="utf-8")
+main_qml_text = (root / "contents/ui/main.qml").read_text(encoding="utf-8")
+cost_text = (root / "contents/ui/components/CostText.qml").read_text(encoding="utf-8")
 
 
 class CostTest(unittest.TestCase):
@@ -55,25 +57,25 @@ class CostTest(unittest.TestCase):
                 "provider cost charts must use the points available for the selected metric"
             )
 
-        present_cost_body = function_body(main_text, "presentTokenCosts")
-        for fragment in ("copyObject(snapshot)", "costHistoryWindowLabel({ period: snapshot.period }, snapshot.labelDays)",
+        present_cost_body = function_body(cost_text, "presentTokenCosts")
+        for fragment in ("Guards.copyObject(snapshot)", "costHistoryWindowLabel({ period: snapshot.period }, snapshot.labelDays)",
                          'item.title = i18n("Cost")', "item.monthLine = costLine(windowLabel, snapshot.totals.cost,",
                          "item.windowValueLine = costValueLine(snapshot.totals.cost,"):
             if not code_contains(present_cost_body, fragment):
                 raise AssertionError(f"cost presentation must localize normalized snapshots: {fragment!r}")
 
-        if not code_contains(main_text, "function costHistoryWindowLabel(item, requestedHistoryDays)"):
+        if not code_contains(main_qml_text, "function costHistoryWindowLabel(item, requestedHistoryDays)"):
             raise AssertionError("main.qml must define costHistoryWindowLabel")
-        cost_history_label_body = function_body(main_text, "costHistoryWindowLabel")
+        cost_history_label_body = function_body(cost_text, "costHistoryWindowLabel")
         if not code_contains(cost_history_label_body, "rawDays = Normalizer.strictFiniteNumber(requestedHistoryDays)"):
             raise AssertionError("invalid emitted cost ranges must fall back to the captured request range")
         for cost_number_function in ("costValueLine", "costLine"):
-            cost_number_body = function_body(main_text, cost_number_function)
+            cost_number_body = function_body(cost_text, cost_number_function)
             if cost_number_body.count("Normalizer.strictFiniteNumber(") < 2:
                 raise AssertionError(
                     f"{cost_number_function} must reject coercive cost and token values"
                 )
-        spend_total_body = function_body(main_text, "spendTotalLine")
+        spend_total_body = function_body(cost_text, "spendTotalLine")
         for token_only_total_fragment in (
             "Normalizer.strictFiniteNumber(totals.cost)",
             'usageCountText(totals.tokens, "tokens")',
@@ -83,7 +85,12 @@ class CostTest(unittest.TestCase):
                     "the global spend summary must not print a fabricated zero-dollar total; "
                     f"missing {token_only_total_fragment!r}"
                 )
-        token_cost_hint_body = function_body(main_text, "tokenCostHint")
+        if not code_contains(function_body(main_qml_text, "spendTotalLine"),
+                             "return costText.spendTotalLine(spendProviderCosts())"):
+            raise AssertionError("the root spend total must pass already filtered provider costs to CostText")
+        token_cost_hint_body = function_body(cost_text, "tokenCostHint")
+        if "ProviderIdentity.resolveProviderKey(" not in token_cost_hint_body:
+            raise AssertionError("token cost hints must resolve provider identity aliases")
         for antigravity_hint_fragment in (
             'case "antigravity":',
             'i18n("Local Antigravity history includes token totals. Dollar costs are unavailable.")',
@@ -527,14 +534,15 @@ class CostTest(unittest.TestCase):
             )
 
     def test_cost_trust_notices(self):
-        if not code_contains(main_text, "item.windowValueLine = costValueLine("):
+        if not code_contains(function_body(cost_text, "presentTokenCosts"), "item.windowValueLine = costValueLine("):
             raise AssertionError(
                 "normalized token costs must expose a window-free value line for range-scoped surfaces"
             )
+        if not code_contains(function_body(cost_text, "spendTotalLine"), 'i18n("%1 subtotal", costValue)'):
+            raise AssertionError("mixed-currency spend text must label the selected currency as a subtotal")
         for mixed_currency_fragment in (
             "CostPresentation.spendHasMixedCostCurrencies(providerCosts)",
             "The cost subtotal and charts use %1.",
-            'i18n("%1 subtotal", costValue)',
         ):
             if not code_contains(main_text, mixed_currency_fragment):
                 raise AssertionError(
@@ -636,17 +644,18 @@ class CostTest(unittest.TestCase):
                     "Spend cost notices must use a persistent aggregate scope and visible context; "
                     f"missing {spend_notice_fragment!r}"
                 )
+        qualified_value_body = function_body(cost_text, "qualifiedCostValue")
         for qualified_value_fragment in (
             'i18n("%1 (estimated)"',
             'i18n("%1 (partial)"',
             'i18n("%1 (approximate)"',
         ):
-            if not code_contains(main_text, qualified_value_fragment):
+            if not code_contains(qualified_value_body, qualified_value_fragment):
                 raise AssertionError(
                     "cost amount lines must carry their trust qualifier in localized text; "
                     f"missing {qualified_value_fragment!r}"
                 )
-        present_cost_body = function_body(main_text, "presentTokenCosts")
+        present_cost_body = function_body(cost_text, "presentTokenCosts")
         if not re.search(r'item.sessionLine = costLine\(i18n\("Today"\), snapshot.sessionCost,\s*'
                          r'snapshot.sessionTokens, currency\)', present_cost_body):
             raise AssertionError("Today must not inherit history-level trust qualifiers")
@@ -678,6 +687,31 @@ class CostTest(unittest.TestCase):
         for field in ("cost.used", "cost.limit", "cost.personalUsed", "resetCredits.availableCount"):
             if field in provider_cost_body + reset_credits_body:
                 raise AssertionError("numeric cost/credit decisions must stay in the semantic module: " + field)
+
+    def test_root_cost_text_wrappers_delegate_filtered_costs(self):
+        binding = id_block(main_qml_text, "costText")
+        if not code_contains(binding, "numberFormat: root.costNumberFormat"):
+            raise AssertionError("CostText must receive the applet number format explicitly")
+        delegations = (
+            ("presentTokenCosts", "return costText.presentTokenCosts(snapshots)"),
+            ("costHistoryWindowLabel", "return costText.costHistoryWindowLabel(item, requestedHistoryDays)"),
+            ("spendTotalLine", "return costText.spendTotalLine(spendProviderCosts())"),
+            ("dashboardLabelText", "return costText.dashboardLabelText(labelKey)"),
+            ("dashboardPartText", "return costText.dashboardPartText(part)"),
+            ("dashboardDisplayRow", "return costText.dashboardDisplayRow(row)"),
+            ("qualifiedCostValue", "return costText.qualifiedCostValue(value, valueMode)"),
+            ("costValueLine", "return costText.costValueLine(cost, tokens, currency, valueMode)"),
+            ("costLine", "return costText.costLine(label, cost, tokens, currency, valueMode)"),
+            ("usageCountText", "return costText.usageCountText(value, unit)"),
+            ("tokenCostHint", "return costText.tokenCostHint(providerID)"),
+        )
+        for name, fragment in delegations:
+            if not code_contains(function_body(main_qml_text, name), fragment):
+                raise AssertionError(f"{name} must delegate to CostText: {fragment}")
+        for forbidden in ("Plasmoid.", "privacyMode", "Date.now(", "Timer {", "DataSource",
+                          "Connections {", "Qt.openUrlExternally"):
+            if forbidden in cost_text:
+                raise AssertionError("CostText must not own applet state or effects: " + forbidden)
 
 
 if __name__ == "__main__":

@@ -60,10 +60,24 @@ class LocalizedCliLabelTests(unittest.TestCase):
                                               languages=[language], fallback=language == "en")
                 messages = {key: value for key, value in getattr(catalog, "_catalog", {}).items() if isinstance(key, str)}
                 messages["%1 hour"] = catalog.ngettext("%1 hour", "%1 hours", 1)
+
+                def translated(source, *values):
+                    result = catalog.gettext(source)
+                    for index, value in enumerate(values, 1):
+                        result = result.replace("%" + str(index), str(value))
+                    return result
+
+                def plural(one, many, count):
+                    return catalog.ngettext(one, many, count).replace("%1", str(count))
+
                 plural_messages = {
                     "%1 " + unit: {count: catalog.ngettext("%1 " + unit, "%1 " + unit + "s", count)
                                   for count in (0, 1, 2, 50, 999)}
                     for unit in ("token", "request", "point")
+                }
+                plural_messages["Last %1 day"] = {
+                    count: catalog.ngettext("Last %1 day", "Last %1 days", count)
+                    for count in (1, 7, 30)
                 }
                 duration_rows = []
                 for seconds, unit, count in (
@@ -80,7 +94,18 @@ class LocalizedCliLabelTests(unittest.TestCase):
                         plural_messages[source][count].replace("%1", str(count))})
                 cases.append({"tag": language, "messages": messages, "labels": labels,
                               "plurals": plural_messages, "counts": count_labels[language],
-                              "durations": duration_rows, "singularZero": language in ("fr", "pt_BR")})
+                              "durations": duration_rows, "singularZero": language in ("fr", "pt_BR"),
+                              "periods": {
+                                  "month": translated("Month to date"),
+                                  "all": translated("All history"),
+                                  "rolled": plural("Last %1 day", "Last %1 days", 30),
+                                  "staticFallback": translated("Last 30 days"),
+                                  "today": translated("Today"),
+                                  "week": plural("Last %1 day", "Last %1 days", 7),
+                                  "estimated": translated("%1 (estimated)", "$1.00"),
+                                  "partial": translated("%1 (partial)", "$1.00"),
+                                  "approximate": translated("%1 (approximate)", "$1.00"),
+                              }})
             # The real Plasma/KI18n domain lookup is covered by the graphical
             # smoke scenario. Here only that lookup is replaced with GNU gettext.
             qml = '''import QtQuick
@@ -108,6 +133,12 @@ TestCase {
     }
     Components.UsageWindowText {
         id: usageWindowText
+        function i18n() { return testCase.i18n.apply(testCase, arguments); }
+        function i18np(one, many, count) { return testCase.i18np(one, many, count); }
+    }
+    Components.CostText {
+        id: costText
+        numberFormat: CostPresentation.numberFormat(",", ".")
         function i18n() { return testCase.i18n.apply(testCase, arguments); }
         function i18np(one, many, count) { return testCase.i18np(one, many, count); }
     }
@@ -144,6 +175,17 @@ TestCase {
             compare(dashboardPartText({kind: units[u], value: 1}), "1 " + singular);
         }
         compare(dashboardPartText({kind: "text", value: "Future label"}), "Future label");
+        compare(costText.costHistoryWindowLabel({period: "month-to-date", historyDays: 7}, 26), row.periods.month);
+        compare(costText.costHistoryWindowLabel({period: "all"}, 365), row.periods.all);
+        compare(costText.costHistoryWindowLabel({period: "quarter"}, 30), row.periods.rolled);
+        compare(costText.costHistoryWindowLabel(null, 0), row.periods.staticFallback);
+        compare(costText.costHistoryWindowLabel(null, 1), row.periods.today);
+        compare(costText.costHistoryWindowLabel({historyDays: 7}, 30), row.periods.week);
+        compare(costText.qualifiedCostValue("$1.00", "estimated"), row.periods.estimated);
+        compare(costText.qualifiedCostValue("$1.00", "partial"), row.periods.partial);
+        compare(costText.qualifiedCostValue("$1.00", "approximate"), row.periods.approximate);
+        compare(costText.qualifiedCostValue("$1.00", "plain"), "$1.00");
+        compare(costText.qualifiedCostValue("$1.00", "future-mode"), "$1.00");
         var states = ["active", "idle", "running", "working"];
         for (var i = 0; i < states.length; i++)
             compare(sessionLabels.sessionStateText(states[i]), row.labels[i]);

@@ -60,6 +60,13 @@ TestCase {
             property double panelClockMs: Date.UTC(2026, 8, 11, 12)
             property int maximumProviderSnapshots: Normalizer.maximumProviderSnapshots
             property var costNumberFormat: CostPresentation.numberFormat(",", ".")
+            // QtObject has no default property, so the component is a property,
+            // the same way UsageWindowText is supplied to the copied wrappers.
+            property QtObject costText: Components.CostText {
+                numberFormat: root.costNumberFormat
+                function i18n() { return root.i18n.apply(root, arguments); }
+                function i18np(one, many, count) { return root.i18np(one, many, count); }
+            }
 
             SOURCE_FUNCTIONS
 
@@ -366,6 +373,7 @@ class ProviderMetadataTests(unittest.TestCase):
         main = ROOT / "contents/ui/main.qml"
         source = applet.texts[main]
         applet.texts = {main: source}
+        applet.files = [main]
         functions = []
         for name in FUNCTIONS:
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)

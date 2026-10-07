@@ -559,11 +559,26 @@ class PopupLayoutTest(unittest.TestCase):
         for field in ("kpis", "rows"):
             if not code_contains(present_provider_body, f"{field}: dashboard.{field}.map(dashboardDisplayRow)"):
                 raise AssertionError("legacy dashboard rows must use the localized adapter")
-        dashboard_display_body = applet.function_body("dashboardDisplayRow")
-        if not code_contains(dashboard_display_body, "row.parts.map(dashboardPartText)"):
+        # The applet surface contains the same method on the root wrapper and
+        # CostText. Read the component for the formatting rules.
+        cost_text = (root / "contents/ui/components/CostText.qml").read_text(encoding="utf-8")
+        main_qml_text = (root / "contents/ui/main.qml").read_text(encoding="utf-8")
+        dashboard_display_body = function_body(cost_text, "dashboardDisplayRow")
+        if not code_contains(dashboard_display_body, "row.parts.map(root.dashboardPartText)"):
             raise AssertionError("dashboard number formatting must remain in the QML adapter")
         if not code_contains(dashboard_display_body, "dashboardLabelText(row.labelKey)"):
             raise AssertionError("semantic dashboard labels must be localized in QML")
+        if not code_contains(dashboard_display_body, 'i18n("%1 (%2)", row.name, parts[0])'):
+            raise AssertionError("a named dashboard row must show its name with the first part")
+        if not code_contains(dashboard_display_body, 'Normalizer.boundedDisplayText(parts.join(" · "), 500)'):
+            raise AssertionError("dashboard row text must stay bounded in the QML adapter")
+        root_surface = Surface("applet", root)
+        main = root / "contents/ui/main.qml"
+        root_surface.texts = {main: main_qml_text}
+        root_surface.files = [main]
+        if not code_contains(root_surface.function_body("dashboardDisplayRow"),
+                             "return costText.dashboardDisplayRow(row)"):
+            raise AssertionError("the root dashboard row wrapper must delegate to CostText")
         if not code_contains(main_text, "function providerCountText(count)"):
             raise AssertionError("overview provider counts must use a plural-aware helper")
         provider_count_body = function_body(main_text, "providerCountText")
