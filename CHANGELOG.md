@@ -18,6 +18,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Start provider details at the top after switching provider or account,
   while keeping the scroll position during a refresh of the same account.
 - Keep monthly credit amounts visible when popup pace text is disabled.
+- Treat only valid 127/8 IPv4 addresses as local in the AI Insights Ollama
+  privacy hint, so malformed numeric hosts are no longer described as keeping
+  usage statistics on this device.
 - Reject non-finite managed CLI state timestamps so corrupted `NaN` or infinity
   values cannot bypass the daily automatic-update throttle.
 - Preserve unknown CLI status indicators such as `constructor` as literal status

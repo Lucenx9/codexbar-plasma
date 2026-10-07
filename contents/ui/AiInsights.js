@@ -103,13 +103,26 @@ function isLoopbackIpv6(host) {
     return true
 }
 
+function isLoopbackIpv4(host) {
+    var octets = host.split(".")
+    if (octets.length !== 4 || octets[0] !== "127") {
+        return false
+    }
+    for (var i = 0; i < octets.length; i++) {
+        if (!/^(0|[1-9]\d{0,2})$/.test(octets[i]) || Number(octets[i]) > 255) {
+            return false
+        }
+    }
+    return true
+}
+
 function isLocalEndpoint(value) {
     var match = /^https?:\/\/(\[[^\]]+\]|[^\/:?#]+)(:\d{1,5})?([/?#].*)?$/i.exec(endpointText(value))
     if (!match) {
         return false
     }
     var host = match[1].toLowerCase()
-    return host === "localhost" || isLoopbackIpv6(host) || /^127(\.\d{1,3}){3}$/.test(host)
+    return host === "localhost" || isLoopbackIpv6(host) || isLoopbackIpv4(host)
 }
 
 function context(settings) {
