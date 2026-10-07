@@ -18,6 +18,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   (`Europe/Rome`) instead of monthly, keeping updates grouped in one PR.
 - Show provider incidents in the popup as a compact pill tinted with the
   severity color instead of a full-width banner.
+- Show cost-trust and Spend information notes as quiet footnotes with a small
+  icon instead of colored banners; errors with recovery actions are unchanged.
 
 ### Fixed
 

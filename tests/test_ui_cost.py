@@ -575,7 +575,7 @@ class CostTest(unittest.TestCase):
                     f"missing {persistent_notice_fragment!r}"
                 )
         for cost_trust_fragment in (
-            "PlainInlineMessage",
+            "PlainNote {",
             "property var summary: null",
             "property var stateOwner: null",
             'property string noticeScope: ""',

@@ -205,7 +205,7 @@ ColumnLayout {
                 ? implicitHeight : Math.max(implicitHeight, spendHistoryScroll.availableHeight)
             spacing: Kirigami.Units.largeSpacing
 
-            Components.PlainInlineMessage {
+            Components.PlainNote {
                 visible: view.applet.costErrorText.length > 0
                 plainText: view.providerCosts.length > 0
                     ? i18n("Some local history is unavailable: %1", view.applet.privateErrorText(view.applet.costErrorText))
@@ -214,14 +214,14 @@ ColumnLayout {
                 Layout.fillWidth: true
             }
 
-            Components.PlainInlineMessage {
+            Components.PlainNote {
                 visible: view.hasMixedCostCurrencies
                 plainText: i18n("The cost subtotal and charts use %1. Providers reporting another currency remain separate below. Token figures include every provider.", view.spendCurrency)
                 type: Kirigami.MessageType.Information
                 Layout.fillWidth: true
             }
 
-            Components.PlainInlineMessage {
+            Components.PlainNote {
                 // Distinguishes "you spent little" from "the local scan has not reached
                 // that far back yet", which otherwise look identical on the chart.
                 visible: view.providerCosts.length > 0 && view.applet.spendHistoryStillBuilding()
@@ -237,7 +237,7 @@ ColumnLayout {
                 summary: view.costTrustSummary
             }
 
-            Components.PlainInlineMessage {
+            Components.PlainNote {
                 visible: view.providerCosts.length > 0 && view.dailyPoints.length === 0
                 plainText: view.applet.costHistoryShowsTokens
                     ? i18n("No daily token history is available for this range.")
