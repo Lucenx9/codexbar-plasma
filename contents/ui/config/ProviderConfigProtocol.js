@@ -12,6 +12,7 @@
 var maximumProviderItems = 256
 var maximumDiagnosticListItems = 64
 var maximumCliVersionTextLength = 128
+var unsupportedDescriptorPattern = /(?:unknown|unrecognized|unexpected|unsupported)\s+(?:option|argument)|invalid option/
 
 function providerListResultIsCurrent(descriptor, currentRevision) {
     if (!isCliRecord(descriptor)
@@ -281,15 +282,7 @@ function isDescriptorUnsupportedMessage(message) {
     if (text.indexOf("descriptor") === -1) {
         return false
     }
-    return text.indexOf("unknown option") !== -1
-        || text.indexOf("unknown argument") !== -1
-        || text.indexOf("unrecognized option") !== -1
-        || text.indexOf("unrecognized argument") !== -1
-        || text.indexOf("unexpected option") !== -1
-        || text.indexOf("unexpected argument") !== -1
-        || text.indexOf("unsupported option") !== -1
-        || text.indexOf("unsupported argument") !== -1
-        || text.indexOf("invalid option") !== -1
+    return unsupportedDescriptorPattern.test(text)
 }
 
 function ownDiagnosticKeys(item) {
