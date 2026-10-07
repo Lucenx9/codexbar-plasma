@@ -8,6 +8,12 @@ See the [pinned audit](research/2026-09-01-macos-parity-0.56.2.md). The scoped
 confirm descriptor absence and the unchanged generic-command gap.
 Track [settings delivery](../TODO.md#provider-settings) and
 [onboarding actions](../TODO.md#provider-onboarding) in TODO.
+The scoped [0.73.0 review](research/2026-10-07-macos-parity-0.73.0.md)
+rechecks descriptor/action absence. Linux now supports the separate
+`config set-source --provider <id> --source auto|web|cli|oauth|api` writer;
+`auto` clears the override without changing enablement or credentials. This
+is a shipped command, not the generic descriptor or `config set` proposal.
+ClinePass labeled-key writes still fail with the z.ai-only restriction.
 All command examples and payloads below describe the proposed contract.
 
 This document defines the CLI contract Plasma needs before it can render real

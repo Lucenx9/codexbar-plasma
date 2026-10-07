@@ -329,9 +329,12 @@ Provider-specific editable settings depend on the official CLI contract.
   docs/dashboard/login links.
 - The widget also has a renderer for the proposed
   [provider settings descriptor](cli-provider-settings-descriptor.md).
-  CLI 0.56.2 does not expose that contract, so source, cookie, base URL,
-  workspace/project, region, and other descriptor-backed editors remain
-  unavailable. They require upstream CLI support.
+  Scoped checks through CLI 0.73.0 still find no descriptors, so cookie, base
+  URL, workspace/project, region, and other descriptor-backed editors remain
+  unavailable. CLI 0.73.0 separately supports persistent source writes through
+  `codexbar config set-source --provider <id> --source <mode>`; `auto` clears
+  the saved override. The widget has no per-provider source editor yet, and
+  General's source override still applies globally to widget requests.
 - Generic API key setup for Fireworks, when the selected CLI reports version
   0.54.0 or later and can discover the account slug from the key.
 - Fallback names, icons, and documentation links for all 90 providers in the

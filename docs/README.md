@@ -106,6 +106,12 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   and bubblewrap-isolated official CLI probes. Provider descriptors,
   generic config actions, Cursor cost, and display currency remain
   unavailable.
+- [0.73.0 release review](research/2026-10-07-macos-parity-0.73.0.md): verified
+  persistent provider-source writes, the 91-provider registry and Langdock's
+  macOS-only reachability, ClinePass labeled-write rejection, unchanged empty
+  cost/usage envelopes, and scoped bubblewrap-isolated official CLI probes.
+  Distinguishes private Linux desktop snapshots from standard CLI usage and
+  carries the unverified reset-credit and partial-priced output candidates.
 - [Settings decisions](research/2026-09-08-settings-experience.md): Panel disclosure and text grouping,
   Plasma settings, privacy, refresh behavior, the macOS 0.56.8 comparison, and
   the shared settings visual conventions.

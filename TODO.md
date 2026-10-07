@@ -8,10 +8,16 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.72.0](https://github.com/steipete/CodexBar/releases/tag/v0.72.0),
-  commit `cfee869f3181379dd074adb9feeb5f19a994356a`, checked 2026-10-05.
-- Coverage: release changes from 0.70.0 through 0.72.0 against Plasma
-  `b3edc4d`. The
+- Last release reviewed: [CodexBar 0.73.0](https://github.com/steipete/CodexBar/releases/tag/v0.73.0),
+  commit `1d313fe50a361fc0a12383da0cdc11a75f59daa5`, checked 2026-10-07.
+- Coverage: the 0.73.0 release delta against Plasma `6879315`. The
+  [0.73.0 review](docs/research/2026-10-07-macos-parity-0.73.0.md) verifies
+  persistent source writes and clearing through `config set-source`, the
+  91-provider registry with Langdock still macOS-gated, and the unchanged
+  empty cost/usage envelopes. ClinePass labeled writes still fail on Linux
+  despite the release claim. Descriptors, generic actions, Cursor cost, and
+  display currency remain blocked. This scoped review does not replace the
+  full 0.56.2 contract audit. The
   [0.72.0 review](docs/research/2026-10-05-macos-parity-0.72.0.md) verifies the
   Muse, LithosAI, and WorkBuddy registry additions (90 records, same four
   keys) and their cookie-only macOS-gated Linux reachability, the Claude
@@ -69,7 +75,22 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Implementable on Linux
 
-None currently identified against the 0.72.0 baseline.
+- [ ] Offer persistent per-provider source selection through Linux 0.73.0
+  `config set-source --provider <id> --source <mode>`. Successful JSON names
+  `provider`, `displayName`, `enabled`, `source`, and `configPath`; `auto`
+  clears the override, unsupported modes fail, and enablement/credentials
+  remain intact. The current General source override is global and passed per request.
+  Done when version-gated controls use the supported command, handle unknown
+  provider/source combinations without inventing support, preserve the global
+  override, and test failure, clearing, cancellation, and stale replies.
+  Generic descriptors remain unavailable; this writer resolves only source
+  persistence. [Verified contract](docs/research/2026-10-07-macos-parity-0.73.0.md#linux-cli-contract-changes-since-0720).
+- [ ] Bundle Langdock fallback name, original icon, links, and brand color from
+  official 0.73.0. The CLI supplies its name in the 91-provider registry and
+  Plasma accepts unknown providers with a generic icon; Langdock's fetch and
+  browser-profile setup remain macOS-only. Done when static metadata is tested
+  and documented without exposing an unsupported API-key action.
+  [Verified reachability](docs/research/2026-10-07-macos-parity-0.73.0.md#linux-cli-contract-changes-since-0720).
 
 ## Blocked on official Linux CLI contracts
 
@@ -79,8 +100,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider settings
 
 - [ ] Enable generic settings and token-account editing through official
-  descriptors and writes. Linux 0.72.0 still rejects `config providers
-  --descriptors` (90 records, same four keys); its provider records have no
+  descriptors and writes. Linux 0.73.0 still rejects `config providers
+  --descriptors` (91 records, same four keys); its provider records have no
   descriptor. Helmcode and TypeSafe make this concrete: both are cookie-only,
   both refuse `--source api`, and their documented `cookieSource`/`cookieHeader`
   config path has no supported writer, so they stay metadata-only on Linux.
@@ -103,7 +124,11 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   usage attempts `claude.ai` instead of reporting no available strategy
   (verified 0.69.0 vs 0.72.0); browser import stays macOS-only and no writer
   exists for the cookie fields, so setup stays blocked.
-  `--label` and `--workspace-id` remain z.ai-only, so the new labeled Kimi, Doubao, and OpenCode Go accounts cannot be created from Linux.
+  `--label` and `--workspace-id` remain z.ai-only: Linux 0.73.0 rejects
+  `set-api-key --provider clinepass --label` despite the release claim (#4305),
+  and labeled Kimi, Doubao, and OpenCode Go accounts remain blocked too.
+  Source persistence now has the supported 0.73.0 `set-source` writer and is
+  tracked above; generic source descriptors and other field writers are absent.
   0.61.0 adds an `azureOpenAIAPIVersion` config extension value with no
   supported CLI writer, which the frontend must not reach by editing the config
   file. Keep existing enable/disable, supported single-key setup, and link
@@ -118,9 +143,9 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.72.0 still has no
-  generic `config action` command (`set-api-key` remains the sole writer; the
-  `usage_updated` hook event is CLI automation surface, not a setup
+  flow, CLI-auth setup, and token-account actions. Linux 0.73.0 still has no
+  generic `config action` command (`set-api-key` and `set-source` are field
+  writers; the `usage_updated` hook event is CLI automation surface, not a setup
   action). Done when supported actions expose validated
   prompts/results and handle cancellation, failure, and stale responses in
   Plasma. Preserve current key/link setup. [Prior discussion #168](https://github.com/Lucenx9/codexbar-plasma/issues/168).
@@ -153,7 +178,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Cursor cost
 
 - [ ] Show Cursor cost history through the generic Linux `cost` path. Linux
-  0.72.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
+  0.73.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
   Code, and Pi as supported;
   the descriptor gate keeps the new cookie-source availability errors unreachable.
   The 0.68.0 all-history date-range fix (#4028) targets macOS Usage & Spend
@@ -208,7 +233,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 - [ ] Offer display-currency selection and conversion through an official Linux
   contract. The 0.56.2 audit records no display-currency setter or descriptor;
-  the scoped 0.57.0, 0.58.0, 0.60.4, 0.67.0, 0.69.0, and 0.72.0 config probes expose neither,
+  the scoped 0.57.0, 0.58.0, 0.60.4, 0.67.0, 0.69.0, 0.72.0, and 0.73.0
+  config probes expose neither,
   although macOS 0.67.0 adds twelve spend-estimate currencies. Plasma currently
   displays the CLI-emitted currency. Done when released settings and converted
   amounts define currency, rate provenance, and unavailable-conversion behavior,
@@ -238,6 +264,21 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 These are unresolved Linux candidates, not confirmed missing features.
 
+- [ ] Verify the 0.73.0 top-level `resetCredits` usage record on Linux. Source
+  adds Codex `available` and optional `nextExpiresAt` projected from live
+  inventory, while Plasma reads `usage.codexResetCredits.availableCount`.
+  Empty Pi usage has neither field. Reproduce nonzero, zero, and expired
+  inventory in an isolated official CLI before deciding how to normalize the
+  new shape and preserve legacy fallback. Private `codexbar-linux --snapshot`
+  fields belong to the separate desktop app and are not evidence for standard
+  `usage` output. [Source and limits](docs/research/2026-10-07-macos-parity-0.73.0.md#unverified-in-this-review).
+- [ ] Verify 0.73.0 partial-priced Codex daily/model output and imported
+  incomplete model rows (#4273, #4278, #4279, #4299) against Plasma's cost trust
+  and sharing rules. Empty cost envelopes are unchanged; they cannot establish
+  how priced subtotals and request counts survive mixed unpriced requests.
+  Use synthetic recorded history with known and unknown pricing, then accept
+  a frontend change only for a demonstrated mismatch; keep pricing in the CLI.
+  [Review limits](docs/research/2026-10-07-macos-parity-0.73.0.md#unverified-in-this-review).
 - [ ] Adopt `qmlformat` once it can format this tree readably. Measured at
   6.11.2 on 2026-09-23. With wrapping disabled, its default, it joins wrapped
   expressions into lines up to 2570 characters. Any `MaxColumnWidth` rewraps by
@@ -261,13 +302,16 @@ These are unresolved Linux candidates, not confirmed missing features.
   quota pool is listed once with its family label (#3799). Both would change
   the window array the popup renders, and Plasma currently renders whatever
   windows arrive. The probe account has no enabled provider returning quota, so
-  neither was observed. 0.69.0 adds grouped OAuth quotas with weekly-only
+  neither was observed. 0.73.0 also changes Kimi contradictory-window
+  reconciliation and its Monthly Total pool (#4306), Ollama Free monthly usage
+  (#4308), and JetBrains top-up credit/log quota fallback (#4287, #4288); include these providers in the
+  measured-window comparison. 0.69.0 adds grouped OAuth quotas with weekly-only
   Starter allowances and explicit window cadence (#4084), still unmeasured.
   Reproduce with a signed-in Antigravity account and one
   other quota provider, then classify whether any normalization changes.
-  Cover the 0.71.0 per-account private-session quotas (#4103), the 0.72.0
-  2.19.1 OAuth client-credentials recovery (#4229), and the opt-in extra
-  profile homes (#4177) in the same reproduction.
+  Cover the 0.73.0 consumer OAuth client change (#4293), the 0.71.0 per-account
+  private-session quotas (#4103), the 0.72.0 2.19.1 OAuth client-credentials
+  recovery (#4229), and the opt-in extra profile homes (#4177) in the same reproduction.
   [Unverified at 0.64.1](docs/research/2026-09-22-macos-parity-0.64.1.md#unverified-in-this-review);
   [0.69.0 addition](docs/research/2026-09-29-macos-parity-0.69.0.md#unverified-in-this-review);
   [0.72.0 shapes](docs/research/2026-10-05-macos-parity-0.72.0.md#unverified-in-this-review).
