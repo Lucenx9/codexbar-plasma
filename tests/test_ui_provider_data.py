@@ -277,6 +277,14 @@ class ProviderDataTest(unittest.TestCase):
                          "status: Normalizer.boundedDisplayText(", "usageReceivedAtMs: snapshot.usageReceivedAtMs"):
             if not code_contains(present_provider_body, fragment):
                 raise AssertionError("provider presentation must retain bounded metadata and original receipt time")
+
+        status_text_body = function_body(main_text, "statusText")
+        if not code_contains(
+                status_text_body,
+                "Guards.hasOwnKey(labels, indicator) ? labels[indicator] : indicator"):
+            raise AssertionError(
+                "unknown CLI status indicators must not resolve inherited label-map properties"
+            )
         for fragment in ('var lanes = ["primary", "secondary", "tertiary"]',
                          "windowSnapshot(usage[lane], pace[lane], true, lane, null, receivedAtMs)",
                          "Array.isArray(usage.extraRateWindows)", "Math.min(extras.length, Normalizer.maximumExtraRateWindows)"):
