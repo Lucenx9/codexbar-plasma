@@ -1538,6 +1538,15 @@ Item {
                     && providersPage.providerDiagnosticFor("codex") !== null;
             }
             if (scenario.indexOf("settings-diagnostics") === 0 && !navigationVerified) {
+                var widgetVersionLabel = findItem(preview.page, "widgetVersionLabel");
+                verifyScenario(widgetVersionLabel !== null
+                    && widgetVersionLabel.text === String(applet.Plasmoid.metaData.version),
+                    "Diagnostics must display the installed widget version");
+                var commandPathField = findItem(preview.page, "commandPathField");
+                verifyScenario(commandPathField !== null
+                    && commandPathField.Accessible.name.length > 0
+                    && commandPathField.parent.Kirigami.FormData.buddyFor === commandPathField,
+                    "Diagnostics must label the command path and target the field with its label");
                 preview.page.cfg_commandPath = "/home/demo/.local/share/codexbar-plasma/cli/current/codexbar";
                 var versions = findItem(preview.page, "cliVersionsController");
                 verifyScenario(versions !== null, "Diagnostics must expose the local versions controller");

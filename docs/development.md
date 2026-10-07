@@ -777,6 +777,11 @@ guard their applied-configuration reads, as Notifications already did, so a page
 built outside a plasmoid resolves those bindings instead of raising a TypeError
 that `failOnWarning` reports as a failure.
 
+The same QtTest checks the accessible name of Diagnostics' command-path field.
+The `settings-diagnostics*` smoke scenarios run that page inside an applet and
+assert that it displays the package metadata version and associates the command
+path's form label with the editable field.
+
 `make check` disables unqualified-name warnings because Plasma injects helpers
 such as `i18n()` as context properties. It validates AppStream metadata when
 `kpackagetool6` is available and reports a skip otherwise. On older local Plasma
