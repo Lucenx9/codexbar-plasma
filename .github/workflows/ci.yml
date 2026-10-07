@@ -1,9 +1,9 @@
 name: CI
 
-# Runs the full `make check` on PRs, main pushes, weekly and manual runs; on version tags
+# Runs full Plasma coverage except for proven editorial-only PR/main changes; on version tags
 # (`vX.Y.Z`) additionally builds the `.plasmoid` and publishes a GitHub Release.
 #
-# Runtime checks and smoke tests use the Plasma toolchain inside the supported KDE neon image.
+# Runtime checks and smoke tests use the prebuilt Ubuntu/Neon CI image.
 
 on:
   push:
@@ -42,53 +42,53 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            make shellcheck jq libxml2-utils python3-pyflakes curl ca-certificates
+            make shellcheck jq libxml2-utils python3-pyflakes curl ca-certificates gettext zip
           sudo bash scripts/install-actionlint.sh
       - name: Run fast checks
         run: |
           command -v actionlint
           python3 -c 'import pyflakes'
           make check-shellcheck check-workflows check-python-lint check-changelog \
-            check-python-test_documentation check-config-schema check-metadata
+            check-python-test_documentation check-python-test_ci_scope check-config-schema check-metadata
+          make package
 
   scope:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      run_smoke: ${{ steps.scope.outputs.run_smoke }}
+      run_runtime: ${{ steps.scope.outputs.run_runtime }}
     steps:
       - name: Checkout comparison history
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 0
-      - name: Select smoke coverage
+      - name: Select Plasma coverage
         id: scope
         run: python3 scripts/ci_scope.py
 
-  check:
+  check-runtime:
+    needs: scope
+    if: needs.scope.outputs.run_runtime == 'true'
     runs-on: ubuntu-latest
-    # Includes downloading the 9.83 GB Plasma image and installing test tooling.
-    timeout-minutes: 60
+    timeout-minutes: 20
     container:
-      # KDE neon User Edition, Ubuntu 24.04; resolved on 2026-09-12.
-      image: invent-registry.kde.org/neon/docker-images/plasma@sha256:f58f9b97f218ee976cf928f6fe00abb929a644aded8c9dfb02f77a9b2a6e1732
+      image: ghcr.io/lucenx9/codexbar-plasma-ci-runtime@sha256:581a1870084038e88c12808e1cac44dee715259567de11abe67eb3d4e9694b14
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ github.token }}
       options: --user 0
     permissions:
       contents: read
+      packages: read
     steps:
-      - name: Install checkout prerequisites
-        run: |
-          # Use the signed package indexes shipped in the pinned image.
-          apt-get install -y --no-install-recommends ca-certificates git
-
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Install Plasma and test tooling
-        run: bash scripts/install-ci-dependencies.sh
+      - name: Verify image matches its checked-in recipe
+        run: sha256sum --check --strict /usr/local/share/ci-inputs.sha256
 
       - name: make check
         run: make check
@@ -98,26 +98,26 @@ jobs:
 
   smoke-runtime:
     needs: scope
-    if: needs.scope.outputs.run_smoke == 'true'
+    if: needs.scope.outputs.run_runtime == 'true'
     runs-on: ubuntu-latest
-    # Includes downloading the 9.83 GB Plasma image and installing test tooling.
-    timeout-minutes: 60
+    timeout-minutes: 20
     container:
-      image: invent-registry.kde.org/neon/docker-images/plasma@sha256:f58f9b97f218ee976cf928f6fe00abb929a644aded8c9dfb02f77a9b2a6e1732
+      image: ghcr.io/lucenx9/codexbar-plasma-ci-runtime@sha256:581a1870084038e88c12808e1cac44dee715259567de11abe67eb3d4e9694b14
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ github.token }}
       options: --user 0
+    permissions:
+      contents: read
+      packages: read
     steps:
-      - name: Install checkout prerequisites
-        run: |
-          # Use the signed package indexes shipped in the pinned image.
-          apt-get install -y --no-install-recommends ca-certificates git
-
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Install Plasma and test tooling
-        run: bash scripts/install-ci-dependencies.sh
+      - name: Verify image matches its checked-in recipe
+        run: sha256sum --check --strict /usr/local/share/ci-inputs.sha256
 
       - name: Exercise the popup on a virtual display
         run: xvfb-run -a -s '-screen 0 1280x1024x24' make smoke SMOKE_ARGS='--output dist/smoke/ci'
@@ -143,6 +143,26 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+  check:
+    if: always()
+    needs: [scope, lint, check-runtime]
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout coverage validator
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Report required check result
+        env:
+          SCOPE_RESULT: ${{ needs.scope.result }}
+          RUN_RUNTIME: ${{ needs.scope.outputs.run_runtime }}
+          RUNTIME_RESULT: ${{ needs.check-runtime.result }}
+          LINT_RESULT: ${{ needs.lint.result }}
+        run: python3 scripts/ci_scope.py --gate check
+
   smoke:
     if: always()
     needs: [scope, smoke-runtime]
@@ -156,26 +176,23 @@ jobs:
       - name: Report required smoke result
         env:
           SCOPE_RESULT: ${{ needs.scope.result }}
-          RUN_SMOKE: ${{ needs.scope.outputs.run_smoke }}
+          RUN_RUNTIME: ${{ needs.scope.outputs.run_runtime }}
           RUNTIME_RESULT: ${{ needs.smoke-runtime.result }}
-        run: python3 scripts/ci_scope.py --gate
+        run: python3 scripts/ci_scope.py --gate smoke
 
   release:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs: [check, smoke]
     runs-on: ubuntu-latest
-    container:
-      # KDE neon User Edition, Ubuntu 24.04; resolved on 2026-09-12.
-      image: invent-registry.kde.org/neon/docker-images/plasma@sha256:f58f9b97f218ee976cf928f6fe00abb929a644aded8c9dfb02f77a9b2a6e1732
-      options: --user 0
+    timeout-minutes: 10
     permissions:
       contents: write
     steps:
       - name: Install build-only tooling
         run: |
-          # Use the signed package indexes shipped in the pinned image.
-          apt-get install -y --no-install-recommends \
-            make cmake git ca-certificates jq gettext python3
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            make git ca-certificates jq gettext python3 zip
 
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

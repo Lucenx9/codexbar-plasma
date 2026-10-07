@@ -70,15 +70,23 @@ if ! awk '
   exit 1
 fi
 
-CHECK_JOB="$(workflow_job_block check)"
+CHECK_JOB="$(workflow_job_block check-runtime)"
+CHECK_GATE="$(workflow_job_block check)"
 SMOKE_JOB="$(workflow_job_block smoke-runtime)"
 SMOKE_GATE="$(workflow_job_block smoke)"
 RELEASE_JOB="$(workflow_job_block release)"
 require_text "check job" "$CHECK_JOB" "contents: read"
+require_text "check job" "$CHECK_JOB" "packages: read"
 require_text "check job" "$CHECK_JOB" "persist-credentials: false"
 reject_text "check job" "$CHECK_JOB" "contents: write"
+reject_text "check job" "$CHECK_JOB" "packages: write"
 require_text "smoke job" "$SMOKE_JOB" "persist-credentials: false"
+require_text "smoke job" "$SMOKE_JOB" "packages: read"
 reject_text "smoke job" "$SMOKE_JOB" "contents: write"
+reject_text "smoke job" "$SMOKE_JOB" "packages: write"
+require_text "check gate" "$CHECK_GATE" "if: always()"
+require_text "check gate" "$CHECK_GATE" "needs: [scope, lint, check-runtime]"
+require_text "check gate" "$CHECK_GATE" "python3 scripts/ci_scope.py --gate check"
 require_text "smoke gate" "$SMOKE_GATE" "if: always()"
 require_text "smoke gate" "$SMOKE_GATE" "needs: [scope, smoke-runtime]"
 require_text "smoke gate" "$SMOKE_GATE" "python3 scripts/ci_scope.py --gate"
@@ -91,11 +99,19 @@ require_text "release job" "$RELEASE_JOB" "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
 require_text "release job" "$RELEASE_JOB" "jq -r '.KPlugin.Version // empty' metadata.json"
 # shellcheck disable=SC2016 # Match the literal shell expression in the workflow.
 require_text "release job" "$RELEASE_JOB" '"v${metadata_version}" != "$GITHUB_REF_NAME"'
-for job in check smoke-runtime release; do
-  require_text "$job job" "$(workflow_job_block "$job")" "image: invent-registry.kde.org/neon/docker-images/plasma@sha256:"
+for job in check-runtime smoke-runtime; do
+  require_text "$job job" "$(workflow_job_block "$job")" "image: ghcr.io/lucenx9/codexbar-plasma-ci-runtime@sha256:"
 done
-if sed -n 's/^[[:space:]]*image: //p' "$WORKFLOW" | grep -Evq '^invent-registry\.kde\.org/neon/docker-images/plasma@sha256:[0-9a-f]{64}$'; then
-  echo "CI container images must pin the official KDE neon image by SHA-256 digest" >&2
+if sed -n 's/^[[:space:]]*image: //p' "$WORKFLOW" | grep -Evq '^ghcr\.io/lucenx9/codexbar-plasma-ci-runtime@sha256:[0-9a-f]{64}$'; then
+  echo "CI container images must pin the validated Plasma toolchain by SHA-256 digest" >&2
+  exit 1
+fi
+if [[ "$(sed -n 's/^[[:space:]]*image: //p' "$WORKFLOW" | sort -u | wc -l)" -ne 1 ]]; then
+  echo "Plasma runtime jobs must use the same validated image" >&2
+  exit 1
+fi
+if grep '^FROM ' "$ROOT_DIR/ci/Dockerfile" | grep -Evq '^FROM [^ ]+@sha256:[0-9a-f]{64}( AS [A-Za-z0-9_-]+)?$'; then
+  echo "CI image base stages must be pinned by SHA-256 digest" >&2
   exit 1
 fi
 # A mutable tag lets a compromised action release run in CI with repository

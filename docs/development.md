@@ -16,9 +16,10 @@ Install `make`, Python 3, GNU gettext, and the Plasma runtime requirements in
 [the README](../README.md#requirements). The check suite also needs Qt 6 QML
 lint/test tools, ShellCheck, `xmllint`, and `jq`. `actionlint`, `pyflakes`, and
 `kpackagetool6` are optional locally: each check reports itself as skipped when
-its tool is absent, and CI installs all three. The pinned
-[CI workflow](../.github/workflows/ci.yml) lists the complete test environment;
-package names vary by distribution.
+its tool is absent, and the CI image includes all three. The
+[CI workflow](../.github/workflows/ci.yml) selects coverage and strict settings;
+[the image installer](../scripts/install-ci-dependencies.sh) lists its Plasma
+toolchain dependencies. Package names vary by distribution.
 
 ```sh
 git clone https://github.com/Lucenx9/codexbar-plasma.git
@@ -631,29 +632,75 @@ rewraps differently breaks them. `qmlformat` recurses without bound on a
 regular expression literal wider than `MaxColumnWidth`, so build long patterns
 from strings with `new RegExp(...)` or match plain substrings instead.
 
-All CI container jobs pin the official KDE neon User Edition image by digest.
-The full check and graphical smoke jobs each allow 60 minutes, including image
-download and dependency installation. The pinned image occupies 9.83 GB locally;
-the former 20-minute limit could expire during setup before any test ran.
-Keep cancelled setup runs unresolved rather than treating local checks as a
-replacement for required GitHub validation.
-The initial checkout prerequisites use the authenticated APT indexes included
-in that image. `scripts/install-ci-dependencies.sh` then attempts
-`apt-get update` and retains the available indexes if the refresh fails.
-APT authenticates indexes and verifies package hashes. The image digest
-fixes the starting environment, but refreshed indexes can select newer packages.
-If installation fails because an indexed package is unavailable, refresh the
-image pin and revalidate the full toolchain. Keep package authentication enabled.
-If the registry removes that manifest, resolve the official `user` tag again,
-verify its Linux/amd64 Ubuntu 24.04 image metadata, and update every container
-pin together. Validate the replacement through the full check and smoke jobs.
+The `check-runtime` and `smoke-runtime` jobs pin a prebuilt Linux/amd64
+Ubuntu 24.04/Neon toolchain by digest. [The image recipe](../ci/Dockerfile)
+copies only the signed Neon repository configuration, archive key, CA bundle
+and package priorities from the pinned official image into the pinned Ubuntu base, then
+installs the explicit Qt/Plasma modules, tools, Mesa renderer and locales.
+It does not carry the full Neon desktop. Archives use HTTPS; APT authenticates
+indexes and package
+hashes; failed refreshes stop image builds. PR jobs neither refresh APT nor
+install dependencies. `/usr/local/share/ci-packages.txt` records installed
+versions. `sha256sum --check --strict /usr/local/share/ci-inputs.sha256` verifies the
+recipe and installer hashes against the checkout, so changing an input requires a new
+validated image and matching pins in the same PR.
 
-Both the static checks and the Plasma jobs use
+To rebuild locally from the repository root (add `--no-cache` when refreshing
+packages without changing the recipe):
+
+```sh
+docker build --platform linux/amd64 -f ci/Dockerfile -t codexbar-plasma-ci:candidate .
+docker run --rm --init --cpus 4 -v "$PWD:/workspace" -w /workspace \
+  -e QMLLINT_FLAGS='--import warning --unqualified disable' \
+  -e QML_TEST_REQUIRE_NO_SKIPS=1 codexbar-plasma-ci:candidate \
+  bash -c 'sha256sum --check --strict /usr/local/share/ci-inputs.sha256 && make check JOBS=4 && make package'
+docker run --rm --init --cpus 4 -v "$PWD:/workspace" -w /workspace \
+  codexbar-plasma-ci:candidate bash -c \
+  "xvfb-run -a -s '-screen 0 1280x1024x24' make smoke SMOKE_ARGS='--output dist/review/ci-image/smoke' && xvfb-run -a -s '-screen 0 1280x1024x24' python3 scripts/panel_matrix.py --output dist/review/ci-image/panel-matrix"
+```
+
+Run [CI image](../.github/workflows/ci-image.yml) manually on `main`, selecting
+the trusted recipe branch or commit in its `revision` input, to build and
+validate the full suite, packaging and graphics, then publish a candidate to
+`ghcr.io/lucenx9/codexbar-plasma-ci-runtime`. It publishes the Linux/amd64 platform manifest with `docker push --platform
+linux/amd64`, excluding the multi-platform index and attestation manifests.
+This keeps the source-labelled runtime image as the initial package publication.
+It uses unique build tags and reports the
+registry digest in its summary; it never automatically changes consumer pins.
+Once the workflow exists on `main`, a recipe PR can publish its candidate with:
+
+```sh
+gh workflow run ci-image.yml --ref main -f revision=codex/update-ci-image
+```
+
+Create the initial package through the repository image workflow with
+`GITHUB_TOKEN` so Actions access is assigned to this repository. The source
+label records its repository association. A CLI publication alone did not grant
+the runtime token access during bootstrap; do not assume that label presence
+proves token access. Verify both GitHub runtime jobs after publication. If a
+package was created outside Actions, grant this repository access under
+[Manage Actions access](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility#ensuring-workflow-access-to-your-package)
+in its package settings. Runtime jobs
+pull with the ephemeral `GITHUB_TOKEN` and only `contents: read` and
+`packages: read`; they need no PAT secret. Fork workflows retain read
+permissions under [GitHub's token permission rules](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions).
+[Repository-linked package access](https://docs.github.com/en/packages/learn-github-packages/about-permissions-for-github-packages#visibility-and-access-permissions-for-packages)
+allows that token to download the image. The
+package can remain private; making it public later enables anonymous local
+pulls but is not required for CI. Publication is a maintenance operation
+requiring authorization, separate from a widget release. Update both runtime job pins in
+a PR and verify their GitHub results before merging. Rebuild when a recipe,
+installer, base pin, or required toolchain changes; periodically refresh the
+image for security fixes. Ordinary weekly CI validates the pinned environment
+without publishing anything. Image builds still pull the large official Neon
+source stage, but only rebuilds need it.
+
+The lightweight lint job and the image builder use
 [`scripts/install-actionlint.sh`](../scripts/install-actionlint.sh) to download
 the official release binary and verify its pinned SHA-256 before installation.
-Update the version and the checksum together, taking the
-new value from that release's `checksums.txt`. An unverified or unreachable
-archive fails the job instead of leaving the workflow lint silently skipped.
+Update the version and checksum together from the release's `checksums.txt`.
+An unverified or unreachable archive fails installation. The prebuilt runtime
+image carries this verified binary, so PR runtime jobs need no download.
 
 `tests/test_account_refresh.py` runs production account-selection functions
 against the real usage controller and an isolated CLI in Qt's event loop. It
@@ -851,33 +898,41 @@ supplies the metadata. To require CI's strict checks locally:
 QML_TEST_REQUIRE_NO_SKIPS=1 make check QMLLINT_FLAGS='--import warning --unqualified disable'
 ```
 
-CI also runs smoke scenarios under Xvfb and retains screenshots and logs as
-workflow artifacts. Release publication requires both check and smoke jobs.
-The `check` job always runs `make check` and `make package`. The independent
-`lint` job reports static failures before the Plasma environment is ready.
-It runs ShellCheck, actionlint, Python lint, changelog and documentation checks,
-and XML and JSON validation. These checks also remain in the full suite.
+CI runs smoke scenarios under Xvfb and retains screenshots and logs as
+workflow artifacts. Popup `results.json` also records seconds per scenario,
+including failures, for identifying expensive coverage before changing tests.
+The independent `lint` job reports static failures before the Plasma image is
+ready: ShellCheck, actionlint, Python lint, changelog, documentation and scope
+policy tests, XML/JSON validation, and `make package`. The full suite retains
+these checks too. The release publishing job uses the Ubuntu runner's build
+tools without downloading Plasma; publication still requires both `check`
+and `smoke` to succeed.
 
 CI runs on every PR, push to `main`, and version tag. It also runs the full
-suite and graphical smoke tests each Monday at 07:23 UTC and on manual runs.
-To start a manual run after the workflow is available on `main`, use:
+suite and graphical smoke tests each Monday at 07:23 UTC and on manual runs:
 
 ```sh
 gh workflow run ci.yml --ref main
 ```
 
-A lightweight `scope` job compares the tested PR merge tree with its base parent, or the full
-before/after range for a push to `main`. Only changes limited to the editorial
-Markdown allowlist in `scripts/ci_scope.py` omit the `smoke-runtime` job.
+The lightweight `scope` job compares the tested PR merge tree with its base
+parent, or the full before/after range for a push to `main`. Only changes limited
+to the editorial Markdown allowlist in `scripts/ci_scope.py` omit both Plasma
+jobs (`check-runtime` and `smoke-runtime`). Fast checks and packaging still run.
 Images, translations, code, tests, packaging, CI files, unknown paths, missing
-history, and empty diffs keep graphical coverage. Tags, scheduled runs, and
-manual runs always run it.
+history, and empty diffs keep full coverage. Tags, scheduled runs, and manual
+runs always use the complete toolchain and graphics.
 
-The required `smoke` job reports either successful graphical tests or an explicit
-documentation-only omission in its summary. It fails if scope detection fails,
-the runtime result is missing, or required smoke tests fail or are cancelled.
-The workflow itself has no path filter, so required checks still report a result.
-This follows [GitHub's required-check guidance](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks).
+Required `check` and `smoke` jobs report either successful runtime tests or an
+explicit editorial-only omission. `check` also requires successful fast checks.
+Scope failures, missing results, cancelled required tests, and unexpected skips
+fail their gates. Neither required check name nor branch protection changes.
+The workflow has no path filter, so required checks always report a result,
+following [GitHub's required-check guidance](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks).
+Keep PR supersession cancellation, parallel `make check`, and separate runtime
+jobs: splitting into more runners before measuring test bottlenecks would
+repeat image pulls. Compare container startup, test durations and total workflow
+wall time on the same coverage; concurrent job durations are not additive.
 
 `tests/tst_interactive_chart.qml` checks that first pointer and keyboard
 inspection preserve the plot position and chart height. It also checks that
