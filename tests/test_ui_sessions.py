@@ -84,6 +84,8 @@ class SessionsTest(unittest.TestCase):
 
         applet.require("codexbar sessions returned an unsupported JSON payload.",
                        "unsupported Sessions output must have a localized error")
+        # SessionResponse QtTests distinguish failed output from confirmed empty data;
+        # the controller tests verify that only a successful result replaces a snapshot.
 
     def test_session_clipboard(self):
         for shared_copy_fragment in (

@@ -198,6 +198,10 @@ class ProviderDataTest(unittest.TestCase):
         if direct_number_call.search(normalize_provider_body):
             raise AssertionError("remaining credits must not use loose numeric coercion")
 
+    # Account response outcomes and empty-list semantics have direct QtTests in
+    # tst_account_response.qml and real process coverage in test_accounts_controller.py.
+    # Account identity and prototype-named labels have behavioral coverage in
+    # tst_provider_normalizer.qml; duplicate recovery is covered by AccountResponse.
     def test_account_selection_and_cache_restore(self):
         if not code_contains(provider_accounts_panel_text, "accountIsSelected(modelData, accountsPanel.providerData)"):
             raise AssertionError("restored account bindings must follow the selected account state")

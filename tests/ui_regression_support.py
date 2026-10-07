@@ -74,7 +74,15 @@ plain_tool_tip_qml = root / "contents/ui/components/PlainToolTip.qml"
 
 
 def code_contains(block, fragment):
-    """Substring match that ignores the spacing qmlformat chooses."""
+    """Substring match that ignores the spacing qmlformat chooses.
+
+    `qmlformat` writes anonymous functions as `function (args)`, breaks a
+    one-line body across lines, and terminates statements with `;`. Matching the
+    literal spelling would turn a pure reformat into a failing check while the
+    behavior is untouched, which is the defect these assertions exist to catch
+    elsewhere. Only layout is normalized: the statement sequence, the
+    identifiers, and the operators all still have to match, so a real edit fails.
+    """
     def squeeze(value):
         value = value.replace("function (", "function(").replace(";", " ")
         return re.sub(r"\s+", " ", value).replace("( ", "(").replace(" )", ")")
