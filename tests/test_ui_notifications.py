@@ -145,18 +145,18 @@ class NotificationsTest(unittest.TestCase):
                 raise AssertionError("processNotifications must not reimplement planner policy in QML")
 
         dispatch_body = applet.function_body("dispatchNotificationIntents")
-        for intent_fragment in (
-            'intent.kind === "status"',
-            'intent.kind === "quota"',
-            'intent.kind === "pace"',
-            'intent.kind === "reset"',
-            "sendPlasmaNotification(",
-        ):
-            if not code_contains(dispatch_body, intent_fragment):
-                raise AssertionError(
-                    "dispatchNotificationIntents must keep every localized effect in QML; "
-                    f"missing {intent_fragment!r}"
-                )
+        for effect_fragment in ("providers[observation.providerIndex]", "rows[intent.rowIndex]",
+                                "providerNotificationText.message(", "sendPlasmaNotification("):
+            self.assertIn(effect_fragment, dispatch_body)
+        text_path = root / "contents/ui/components/ProviderNotificationText.qml"
+        text_source = text_path.read_text()
+        text_body = function_body(text_source, "message")
+        for kind in ("status", "quota", "pace", "reset"):
+            self.assertIn('intent.kind === "' + kind + '"', text_body)
+        for forbidden in ("root.", "Plasmoid.", "NotificationPlanner", "sendPlasmaNotification",
+                          "connectSource", "Qt.openUrlExternally", "Timer {", "Connections {"):
+            self.assertNotIn(forbidden, text_source)
+        applet.require("Components.ProviderNotificationText {", "provider notification text owner")
 
         reset_memo_body = applet.function_body("resetNotificationMemo")
         if not code_contains(reset_memo_body, "NotificationPlanner.transition("):

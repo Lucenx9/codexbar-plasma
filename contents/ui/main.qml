@@ -1409,45 +1409,13 @@ PlasmoidItem {
             var intent = intents[i]
             var observation = observations[intent.observationIndex]
             var item = observation ? providers[observation.providerIndex] : null
-            if (!item) {
-                continue
-            }
-            if (intent.kind === "status") {
-                sendPlasmaNotification(
-                    i18n("%1 status issue", item.title),
-                    item.status,
-                    notificationUrgency(intent.severity))
-                continue
-            }
-
+            if (!item) continue
             var rows = Array.isArray(item.rows) ? item.rows : []
             var row = rows[intent.rowIndex]
-            if (!row) {
-                continue
-            }
-            if (intent.kind === "quota") {
-                var body = i18n("%1 is %2% used", row.label, Math.round(row.usedPercent))
-                var resetLine = resetLabel(usageResetText(row))
-                if (resetLine.length > 0) {
-                    body += ". " + resetLine
-                }
-                sendPlasmaNotification(
-                    intent.severity === "major"
-                        ? i18n("%1 quota critical", item.title)
-                        : i18n("%1 quota warning", item.title),
-                    body,
-                    notificationUrgency(intent.severity))
-            } else if (intent.kind === "pace") {
-                sendPlasmaNotification(
-                    i18n("%1 pace warning", item.title),
-                    i18n("%1 may run out in %2", row.label, paceEtaText(row.paceEtaSeconds)),
-                    "normal")
-            } else if (intent.kind === "reset") {
-                sendPlasmaNotification(
-                    i18n("%1 limit reset", item.title),
-                    i18n("%1 is back to %2% used", row.label, Math.round(row.usedPercent)),
-                    "low")
-            }
+            var resetLine = row && intent.kind === "quota" ? resetLabel(usageResetText(row)) : ""
+            var paceEta = row && intent.kind === "pace" ? paceEtaText(row.paceEtaSeconds) : ""
+            var message = providerNotificationText.message(intent, item, row, resetLine, paceEta)
+            if (message) sendPlasmaNotification(message.title, message.body, message.urgency)
         }
     }
 
@@ -1466,18 +1434,6 @@ PlasmoidItem {
         notificationMemo = result.nextMemo
         notificationsPrimed = true
         dispatchNotificationIntents(result.intents, observations)
-    }
-
-    function notificationUrgency(severity) {
-        switch (String(severity || "")) {
-        case "critical":
-        case "major":
-            return "critical"
-        case "unknown":
-            return "low"
-        default:
-            return "normal"
-        }
     }
 
     function sendPlasmaNotification(title, body, urgency, actionLabel) {
@@ -2251,6 +2207,10 @@ PlasmoidItem {
             root.panelClockMs = Date.now()
             root.expireStaleUsage(root.panelClockMs)
         }
+    }
+
+    Components.ProviderNotificationText {
+        id: providerNotificationText
     }
 
     Components.ProviderCostDetails {

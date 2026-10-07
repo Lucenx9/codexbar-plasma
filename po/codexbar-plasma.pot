@@ -1173,6 +1173,38 @@ msgstr ""
 msgid "ZoomMate"
 msgstr ""
 
+#: contents/ui/components/ProviderNotificationText.qml
+msgid "%1 status issue"
+msgstr ""
+
+#: contents/ui/components/ProviderNotificationText.qml
+msgid "%1 is %2% used"
+msgstr ""
+
+#: contents/ui/components/ProviderNotificationText.qml
+msgid "%1 quota critical"
+msgstr ""
+
+#: contents/ui/components/ProviderNotificationText.qml
+msgid "%1 quota warning"
+msgstr ""
+
+#: contents/ui/components/ProviderNotificationText.qml
+msgid "%1 pace warning"
+msgstr ""
+
+#: contents/ui/components/ProviderNotificationText.qml
+msgid "%1 may run out in %2"
+msgstr ""
+
+#: contents/ui/components/ProviderNotificationText.qml
+msgid "%1 limit reset"
+msgstr ""
+
+#: contents/ui/components/ProviderNotificationText.qml
+msgid "%1 is back to %2% used"
+msgstr ""
+
 #: contents/ui/components/ProviderUsageRow.qml
 msgid "Hide the %1 row"
 msgstr ""
@@ -3315,38 +3347,6 @@ msgstr ""
 
 #: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "Runs out in %1"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 status issue"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 is %2% used"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 quota critical"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 quota warning"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 pace warning"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 may run out in %2"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 limit reset"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "%1 is back to %2% used"
 msgstr ""
 
 #: contents/ui/main.qml
