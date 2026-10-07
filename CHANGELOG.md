@@ -14,6 +14,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Reject non-finite managed CLI state timestamps so corrupted `NaN` or infinity
   values cannot bypass the daily automatic-update throttle.
+- Preserve unknown CLI status indicators such as `constructor` as literal status
+  text instead of resolving inherited object properties while localizing known
+  incident labels.
 
 ## 0.2.45 - 2026-10-07
 
