@@ -444,7 +444,9 @@ and clipboard content remain under your control after closing the window.
   0.56.2 exposes project data for Codex. Missing amounts remain unavailable;
   project paths and nested source records are discarded. The bounded list
   signals omitted projects and does not change provider or global totals.
-- Cost-trust notices explain why a range is incomplete or estimated, including
+- Cost-trust notices appear as quiet footnotes with a small icon, like the
+  other informational notes in Spend; errors with recovery actions keep the
+  standard message. They explain why a range is incomplete or estimated, including
   how many requests the CLI excluded from the displayed totals because they
   lacked final usage. Closing a
   notice suppresses the same meaning for that provider or the aggregate Spend

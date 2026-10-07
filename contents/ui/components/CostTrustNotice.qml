@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
-PlainInlineMessage {
+PlainNote {
     id: noticeRoot
 
     property var stateOwner: null
@@ -22,15 +22,15 @@ PlainInlineMessage {
     onSummaryChanged: scheduleRefreshNoticeState()
     onNoticeScopeChanged: scheduleRefreshNoticeState()
     onStateOwnerChanged: scheduleRefreshNoticeState()
-    onTextChanged: syncVisibility()
+    onPlainTextChanged: syncVisibility()
     onVisibleChanged: {
-        // Kirigami's close button hides the message directly. Convert that
+        // The close button hides the note directly. Convert that
         // effect into semantic state before a refresh can show it again. An
         // invisible presentation means ordinary tab navigation, not a close
         // action.
         if (!visible
                 && presentationVisible
-                && text.length > 0
+                && plainText.length > 0
                 && noticeState.shouldShow === true) {
             dismissNotice()
         }
@@ -76,7 +76,7 @@ PlainInlineMessage {
     }
 
     function syncVisibility() {
-        visible = noticeState.shouldShow === true && text.length > 0
+        visible = noticeState.shouldShow === true && plainText.length > 0
     }
 
     function coverageText() {

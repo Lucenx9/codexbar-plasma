@@ -567,6 +567,11 @@ msgstr ""
 msgid "Example data. Panel changes appear here before you apply them."
 msgstr ""
 
+#: contents/ui/components/PlainNote.qml
+#: contents/ui/components/ShareUsageWindow.qml
+msgid "Close"
+msgstr ""
+
 #: contents/ui/components/ProjectCostSection.qml
 #: contents/ui/components/ProviderCostSection.qml
 #: contents/ui/components/ShareUsageWindow.qml scripts/smoke/Capture.qml
@@ -1422,10 +1427,6 @@ msgstr ""
 
 #: contents/ui/components/ShareUsageWindow.qml
 msgid "Save PNG..."
-msgstr ""
-
-#: contents/ui/components/ShareUsageWindow.qml
-msgid "Close"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml

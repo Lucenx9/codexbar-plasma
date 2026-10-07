@@ -6,6 +6,18 @@ import "../contents/ui/SafeText.js" as SafeText
 
 TestCase {
     name: "PlainTextControls"
+    when: windowShown
+    visible: true
+
+    function i18n(text) {
+        for (var i = 1; i < arguments.length; ++i) {
+            text = text.replace("%" + i, arguments[i]);
+        }
+        return text;
+    }
+    function i18np(singular, plural, count) {
+        return i18n(count === 1 ? singular : plural, count);
+    }
 
     readonly property string activeMarkup: "Status <img src=\"http://127.0.0.1/probe\"> & <test-org>"
 
@@ -42,6 +54,11 @@ TestCase {
     Component {
         id: inlineMessageComponent
         Components.PlainInlineMessage {}
+    }
+
+    Component {
+        id: noteComponent
+        Components.PlainNote {}
     }
 
     Component {
@@ -128,6 +145,20 @@ TestCase {
 
         compare(message.text, SafeText.plainTextAsRichText(activeMarkup))
         compare(message.Accessible.name, activeMarkup)
+    }
+
+    function test_noteShowsPlainTextAndCloses() {
+        var note = createTemporaryObject(noteComponent, this, {
+            plainText: activeMarkup, showCloseButton: true
+        })
+        var label = findChild(note, "plainNoteLabel")
+        var close = findChild(note, "plainNoteCloseButton")
+
+        compare(label.textFormat, Text.PlainText)
+        compare(label.text, activeMarkup)
+        verify(close.visible)
+        close.clicked()
+        verify(!note.visible)
     }
 
     function test_placeholderMessageEscapesMarkup() {
