@@ -19,7 +19,7 @@ KCM.SimpleKCM {
     // config dialog injects cfg_<key>Default over these initializers
     // (plasma-workspace 6.7.4); they stay the portable fallback for loaders that
     // do not, and the restore-defaults action reads them either way.
-    // scripts/test_ui_regressions.sh checks them against main.xml for drift.
+    // tests/test_ui_settings_pages.py checks them against main.xml for drift.
     property string cfg_commandPathDefault: "codexbar"
     property alias cfg_refreshOnOpen: refreshOnOpenCheck.checked
     property bool cfg_refreshOnOpenDefault: true

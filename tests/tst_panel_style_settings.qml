@@ -205,7 +205,7 @@ TestCase {
         if (!page) return;
         // The roster loads only while the selection is expanded; these checks
         // inject the roster directly so no CLI process is spawned here. The
-        // expansion gating itself is asserted by scripts/test_ui_regressions.sh.
+        // expansion gating itself is asserted by tests/test_ui_settings_pages.py.
         var controller = findChild(page, "panelProviderRosterController");
         verify(controller);
         verify(!controller.active);
