@@ -1,11 +1,14 @@
 version: 2
 updates:
   # Workflow actions are pinned by commit SHA, so only Dependabot keeps them
-  # current. One grouped pull request per month keeps the noise low.
+  # current. One grouped pull request per week keeps the noise low.
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: monthly
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Europe/Rome
     commit-message:
       prefix: ci
     groups:
