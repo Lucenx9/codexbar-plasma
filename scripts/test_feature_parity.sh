@@ -325,7 +325,7 @@ reject_in_surface applet "function appendTokenBreakdownRow("
 # The section's secondary-value label, chart element and chart visibility are
 # executed by tst_visual_layout.qml (providerDetailValuesStayWithinPopup and
 # providerDetailChartFollowsChartData). The `required modelData` scoping rule
-# for Components delegates stays owned by scripts/test_ui_regressions.sh.
+# for Components delegates stays owned by tests/test_ui_qml_conventions.py.
 # The interactive chart is executed by tests/tst_interactive_chart.qml against
 # the real component: keyboard selection, hover inspection, the line-kind
 # plot path and tab reachability each go red there when broken.
@@ -369,7 +369,7 @@ require_in_surface applet "readonly property int quotaCriticalPercent: QuotaThre
 require_in_surface applet "onQuotaWarningPercentChanged: resetNotificationMemo()"
 require_in_surface applet "onQuotaCriticalPercentChanged: resetNotificationMemo()"
 # The standalone status badge id stays load-bearing for
-# scripts/test_ui_regressions.sh, which extracts the compactStatusBadge block
+# tests/test_ui_panel.py, which extracts the compactStatusBadge block
 # and asserts its fallback wiring: renaming the id fails that extraction, so
 # the literal token is not pinned here as well.
 # The provider incident badge is executed by tst_popup_controls.qml

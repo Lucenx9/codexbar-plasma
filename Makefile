@@ -40,7 +40,6 @@ CHECK_TARGETS := \
 	check-feature-parity \
 	check-refresh-nonce \
 	check-process-lifecycle \
-	check-ui-regressions \
 	check-provider-icons \
 	check-security-regressions \
 	check-update-widget \
@@ -91,9 +90,6 @@ check-refresh-nonce:
 
 check-process-lifecycle:
 	scripts/test_process_lifecycle.sh
-
-check-ui-regressions:
-	scripts/test_ui_regressions.sh
 
 check-provider-icons:
 	scripts/test_provider_icons.sh

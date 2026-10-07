@@ -577,7 +577,7 @@ over `.github/workflows`, and `make check-python-lint` runs `pyflakes` over
 `scripts` and `tests` for undefined names and unused imports. Neither
 reformats anything, so neither introduces style churn. `qmlformat` stays out of
 the suite, but no longer because the checks pin formatting: the membership
-assertions in `test_ui_regressions.sh` compare through `code_contains`, which
+assertions in `tests/test_ui_*.py` compare through `code_contains`, which
 ignores anonymous-function spacing, statement-terminating semicolons, and line
 breaks. Readability blocks adoption instead, as recorded in
 [TODO.md](../TODO.md): with wrapping disabled, its default, `qmlformat` 6.11.2
@@ -983,7 +983,7 @@ this warning as a failed page. Keep default initializers aligned with
 `contents/config/main.xml` for loaders that do not inject them.
 Do not add dummy `cfg_*` properties to silence these warnings: Plasma saves
 declared properties on Apply, which can overwrite unrelated or runtime-owned
-state. The ownership checks in `scripts/test_ui_regressions.sh` protect this
+state. The ownership checks in `tests/test_ui_settings_pages.py` protect this
 boundary. See KDE's [configuration contract](https://develop.kde.org/docs/plasma/widget/configuration/).
 
 For a panel smoke check when plasma-sdk is installed:
