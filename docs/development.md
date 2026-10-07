@@ -271,9 +271,14 @@ synchronized.
   `tests/test_provider_cost_presentation.py`.
 - `ResetPresentation.js` parses bounded reset metadata, splits countdowns into
   semantic units using an explicit clock, and classifies existing reset-label
-  compatibility text. `main.qml` supplies the live panel clock, translates the
-  units and prefix, and formats absolute dates in the local timezone through
-  `components/TimeLabels.qml`. That component owns every displayed clock time
+  compatibility text. `components/UsageWindowText.qml` localizes reset units,
+  prefixes, structured pace parts and forecast durations. Its reset method takes
+  an explicit clock and its date formatter is the shared `TimeLabels` instance.
+  `main.qml` supplies these inputs, applies privacy and advances forecasts from
+  each row's observation time. `PacePresentation.etaParts` preserves duration
+  rounding in the pure module; QML owns plural selection. No timer, state write
+  or dispatch belongs to the text component.
+  `components/TimeLabels.qml` owns every displayed clock time
   and short date: it takes names and the hour cycle from the regional format,
   and its catalog strings let a translation order the parts. A literal
   `Qt.formatDateTime` pattern would always write English names. Valid
@@ -677,10 +682,15 @@ error-only providers. Surface checks pin both modules as pure.
 `tests/tst_reset_presentation.qml` directly covers timestamp precedence, malformed
 metadata, text bounds, minute/hour/day rounding, calendar and daylight-saving
 boundaries, and compact reset labels. `tests/test_reset_presentation.py` exercises
-the owning QML adapters with all compiled catalogs in UTC, Rome, and Los Angeles.
+the root adapters and production `UsageWindowText` component with all compiled
+catalogs in UTC, Rome, and Los Angeles.
 It checks local absolute dates in each catalog's word order and reactive clock,
 display-mode, and privacy
-bindings. The quota-reset and provider-metadata integration tests keep their
+bindings. `tests/tst_usage_window_text.qml` covers input preservation, pace-part
+ordering, reset precedence and compatibility fallbacks. The localized CLI-label
+adapter tests exercise ETA boundaries in all six catalogs; direct
+`PacePresentation` QtTests cover the semantic duration results. The quota-reset
+and provider-metadata integration tests keep their
 production parsing path; surface checks enforce QML clock/localization ownership.
 `tests/tst_time_labels.qml` checks Italian names, a 12-hour regional clock, and a
 translated part order with explicit locales, and a surface check rejects literal

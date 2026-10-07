@@ -20,6 +20,7 @@ FUNCTIONS = (
 
 QML = '''import QtQuick
 import QtTest
+import "SOURCE_URL/components" as Components
 import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
 import "SOURCE_URL/ProviderSnapshot.js" as ProviderSnapshot
 import "SOURCE_URL/AccountResponse.js" as AccountResponse
@@ -34,6 +35,10 @@ TestCase {
         id: harness
         QtObject {
             id: root
+            property QtObject usageWindowText: Components.UsageWindowText {
+                function i18n() { return root.i18n.apply(root, arguments); }
+                function i18np(one, many, count) { return root.i18np(one, many, count); }
+            }
             property var providers: []
             property var selectedAccounts: ({})
             property var accountOptions: ({})
@@ -103,6 +108,7 @@ TestCase {
 
 POPUP_PACE_QML = '''import QtQuick
 import QtTest
+import "SOURCE_URL/components" as Components
 import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
 import "SOURCE_URL/ProviderSnapshot.js" as ProviderSnapshot
 import "SOURCE_URL/PacePresentation.js" as PacePresentation
@@ -113,6 +119,10 @@ TestCase {
         id: harness
         QtObject {
             id: root
+            property QtObject usageWindowText: Components.UsageWindowText {
+                function i18n() { return root.i18n.apply(root, arguments); }
+                function i18np(one, many, count) { return root.i18np(one, many, count); }
+            }
             property double receivedAtMs: Date.UTC(2026, 8, 24, 12)
             property double panelClockMs: receivedAtMs
 

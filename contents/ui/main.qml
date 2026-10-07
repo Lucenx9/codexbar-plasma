@@ -21,7 +21,6 @@ import "ProviderAutoSelect.js" as ProviderAutoSelect
 import "ProviderSnapshot.js" as ProviderSnapshot
 import "CostPresentation.js" as CostPresentation
 import "ShareUsage.js" as ShareUsage
-import "ResetPresentation.js" as ResetPresentation
 import "OverviewProviders.js" as OverviewProviders
 import "ProviderIdentity.js" as ProviderIdentity
 import "PrivacyPresentation.js" as PrivacyPresentation
@@ -1063,23 +1062,7 @@ PlasmoidItem {
     }
 
     function resetText(window, absolute) {
-        var parts = ResetPresentation.parts(window, panelClockMs, absolute)
-        switch (parts.kind) {
-        case "absolute":
-            return ResetPresentation.absoluteShowsDate(parts.timestampMs, panelClockMs)
-                ? timeLabels.monthDayTime(parts.timestampMs)
-                : timeLabels.weekdayTime(parts.timestampMs)
-        case "now":
-            return i18n("now")
-        case "minutes":
-            return i18np("%1 min", "%1 min", parts.minutes)
-        case "hours":
-            return parts.minutes > 0 ? i18n("%1h %2m", parts.hours, parts.minutes) : i18np("%1h", "%1h", parts.hours)
-        case "days":
-            return parts.hours > 0 ? i18n("%1d %2h", parts.days, parts.hours) : i18np("%1d", "%1d", parts.days)
-        default:
-            return parts.text
-        }
+        return usageWindowText.resetText(window, panelClockMs, absolute)
     }
 
     function usageResetText(row) {
@@ -1270,52 +1253,11 @@ PlasmoidItem {
     }
 
     function paceSummaryPartsText(parts) {
-        var labels = []
-        for (var i = 0; i < parts.length; i++) {
-            var part = parts[i]
-            switch (part.kind) {
-            case "onTrack":
-                labels.push(i18n("On pace"))
-                break
-            case "deficit":
-                labels.push(i18n("%1% in deficit", part.percent))
-                break
-            case "reserve":
-                labels.push(i18n("%1% in reserve", part.percent))
-                break
-            case "expected":
-                labels.push(i18n("Expected %1% used", part.percent))
-                break
-            case "lasts":
-                labels.push(i18n("Lasts until reset"))
-                break
-            case "runsOut":
-                labels.push(part.seconds === 0 ? i18n("Runs out now")
-                    : i18n("Runs out in %1", paceEtaText(part.seconds)))
-                break
-            case "fallback":
-                labels.push(part.text)
-                break
-            }
-        }
-        return labels.join(" | ")
+        return usageWindowText.paceSummaryPartsText(parts)
     }
 
     function paceEtaText(seconds) {
-        var numericSeconds = Number(seconds)
-        if (!isFinite(numericSeconds) || numericSeconds <= 0) {
-            return i18n("now")
-        }
-        var minutes = Math.max(1, Math.round(numericSeconds / 60))
-        if (minutes < 60) {
-            return i18np("%1 minute", "%1 minutes", minutes)
-        }
-        var hours = Math.max(1, Math.round(minutes / 60))
-        if (hours < 48) {
-            return i18np("%1 hour", "%1 hours", hours)
-        }
-        var days = Math.max(1, Math.round(hours / 24))
-        return i18np("%1 day", "%1 days", days)
+        return usageWindowText.paceEtaText(seconds)
     }
 
     // Usage at or above this percent arms a row for reset detection; once armed,
@@ -1971,8 +1913,7 @@ PlasmoidItem {
     }
 
     function resetLabel(value) {
-        var parts = ResetPresentation.labelParts(value)
-        return parts.isTime ? i18n("Resets %1", parts.text) : parts.text
+        return usageWindowText.resetLabel(value)
     }
 
     function providerCountText(count) {
@@ -2207,6 +2148,11 @@ PlasmoidItem {
             root.panelClockMs = Date.now()
             root.expireStaleUsage(root.panelClockMs)
         }
+    }
+
+    Components.UsageWindowText {
+        id: usageWindowText
+        dateLabels: timeLabels
     }
 
     Components.ProviderNotificationText {

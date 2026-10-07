@@ -469,14 +469,16 @@ msgstr ""
 msgid "%1 - %2"
 msgstr ""
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/UsageWindowText.qml
 msgid "%1 minute"
 msgid_plural "%1 minutes"
 msgstr[0] ""
 msgstr[1] ""
 
 #: contents/ui/components/PanelSettingsPreview.qml
-#: contents/ui/configGeneral.qml contents/ui/main.qml scripts/smoke/Capture.qml
+#: contents/ui/components/UsageWindowText.qml contents/ui/configGeneral.qml
+#: scripts/smoke/Capture.qml
 msgid "%1 hour"
 msgid_plural "%1 hours"
 msgstr[0] ""
@@ -484,38 +486,44 @@ msgstr[1] ""
 
 #: contents/ui/components/PanelSettingsPreview.qml
 #: contents/ui/components/ShareUsageWindow.qml
-#: contents/ui/components/SpendView.qml contents/ui/configGeneral.qml
-#: contents/ui/main.qml
+#: contents/ui/components/SpendView.qml
+#: contents/ui/components/UsageWindowText.qml contents/ui/configGeneral.qml
 msgid "%1 day"
 msgid_plural "%1 days"
 msgstr[0] ""
 msgstr[1] ""
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/UsageWindowText.qml
 msgid "Resets %1"
 msgstr ""
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/UsageWindowText.qml
 msgid "%1 min"
 msgid_plural "%1 min"
 msgstr[0] ""
 msgstr[1] ""
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/UsageWindowText.qml
 msgid "%1h %2m"
 msgstr ""
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/UsageWindowText.qml
 msgid "%1h"
 msgid_plural "%1h"
 msgstr[0] ""
 msgstr[1] ""
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/UsageWindowText.qml
 msgid "%1d %2h"
 msgstr ""
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/UsageWindowText.qml
 #, kde-format
 msgid "%1d"
 msgid_plural "%1d"
@@ -1610,6 +1618,41 @@ msgctxt ""
 "Abbreviated month %1, day of the month %2 and clock time %3, such as Oct 7, "
 "14:30"
 msgid "%1 %2, %3"
+msgstr ""
+
+#: contents/ui/components/UsageWindowText.qml
+msgid "now"
+msgstr ""
+
+#: contents/ui/components/UsageWindowText.qml
+msgid "On pace"
+msgstr ""
+
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
+#, kde-format
+msgid "%1% in deficit"
+msgstr ""
+
+#: contents/ui/components/UsageWindowText.qml
+#, kde-format
+msgid "%1% in reserve"
+msgstr ""
+
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
+#, kde-format
+msgid "Expected %1% used"
+msgstr ""
+
+#: contents/ui/components/UsageWindowText.qml
+msgid "Lasts until reset"
+msgstr ""
+
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
+msgid "Runs out in %1"
+msgstr ""
+
+#: contents/ui/components/UsageWindowText.qml
+msgid "Runs out now"
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
@@ -3279,10 +3322,6 @@ msgid "Extra"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "now"
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "Partial outage"
 msgstr ""
 
@@ -3316,37 +3355,6 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Maint."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "On pace"
-msgstr ""
-
-#: contents/ui/main.qml scripts/smoke/Capture.qml
-#, kde-format
-msgid "%1% in deficit"
-msgstr ""
-
-#: contents/ui/main.qml
-#, kde-format
-msgid "%1% in reserve"
-msgstr ""
-
-#: contents/ui/main.qml scripts/smoke/Capture.qml
-#, kde-format
-msgid "Expected %1% used"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Lasts until reset"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Runs out now"
-msgstr ""
-
-#: contents/ui/main.qml scripts/smoke/Capture.qml
-msgid "Runs out in %1"
 msgstr ""
 
 #: contents/ui/main.qml

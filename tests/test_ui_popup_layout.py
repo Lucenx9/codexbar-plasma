@@ -576,36 +576,23 @@ class PopupLayoutTest(unittest.TestCase):
             if 'i18n("%1 - %2"' in (root / "contents/ui/components" / popup_file).read_text():
                 raise AssertionError(f"{popup_file} must join popup detail lines with the middle dot separator")
         reset_text_body = function_body(main_text, "resetText")
-        # Direct QtTests cover timestamp precedence, bounds, and countdown arithmetic.
-        # The owning adapter supplies the live clock and keeps local date formatting.
-        if not code_contains(reset_text_body, "ResetPresentation.parts(window, panelClockMs, absolute)"):
-            raise AssertionError("reset formatting must use semantic parts with the live panel clock")
-        for formatter in ("timeLabels.monthDayTime(parts.timestampMs)", "timeLabels.weekdayTime(parts.timestampMs)"):
-            if not code_contains(reset_text_body, formatter):
-                raise AssertionError("absolute reset dates must use the locale-aware time labels")
+        # The root supplies the live clock and the shared regional date formatter.
+        if not code_contains(reset_text_body, "usageWindowText.resetText(window, panelClockMs, absolute)"):
+            raise AssertionError("reset presentation must receive the live panel clock")
+        applet.require("dateLabels: timeLabels", "reset presentation must use the shared regional formatter")
+        usage_text = (root / "contents/ui/components/UsageWindowText.qml").read_text()
+        for forbidden in ("Plasmoid.", "applet.", "Date.now(", "Timer {", "DataSource"):
+            if forbidden in usage_text:
+                raise AssertionError("usage text must not own applet state or effects: " + forbidden)
         # A literal Qt.formatDateTime pattern writes English day and month names and a
         # fixed hour cycle whatever the user's regional format; TimeLabels owns them.
         for path in sorted((root / "contents/ui").rglob("*.qml")):
             if "Qt.formatDateTime(" in path.read_text():
                 raise AssertionError(f"{path.relative_to(root)} must format times through TimeLabels")
-        if not code_contains(reset_text_body, "ResetPresentation.absoluteShowsDate(parts.timestampMs, panelClockMs)"):
-            raise AssertionError("absolute resets beyond the next six days must show their date")
-        for field in ("window.resetsAt", "window.resetDescription", "Math.round", "Math.floor"):
-            if field in reset_text_body:
-                raise AssertionError("reset parsing and arithmetic belong in ResetPresentation: " + field)
-        for message in ("%1 min", "%1h", "%1d"):
-            if not code_contains(reset_text_body, f'i18np("{message}"'):
-                raise AssertionError("reset duration units must retain plural-aware localization")
         reset_presentation = (root / "contents/ui/ResetPresentation.js").read_text()
         for forbidden in ("root.", "Plasmoid.", "Qt.", "i18n(", "i18np(", "Date.now("):
             if forbidden in reset_presentation:
                 raise AssertionError("reset decisions must be pure and use the caller's clock: " + forbidden)
-
-        reset_label_body = function_body(main_text, "resetLabel")
-        if not code_contains(reset_label_body, "ResetPresentation.labelParts(value)"):
-            raise AssertionError("reset labels must use the tested semantic text classification")
-        if not code_contains(reset_label_body, 'i18n("Resets %1", parts.text)'):
-            raise AssertionError("QML must localize the reset-label prefix")
 
 
 if __name__ == "__main__":

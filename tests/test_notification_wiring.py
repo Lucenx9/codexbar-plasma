@@ -33,6 +33,12 @@ import "SOURCE_URL/UsageCache.js" as UsageCache
 import "SOURCE_URL/components" as Components
 TestCase {
     name: "NotificationWiring"
+    Components.UsageWindowText {
+        id: usageWindowText
+        function i18n() { return testCase.i18n.apply(testCase, arguments); }
+        function i18np(one, many, count) { return testCase.i18np(one, many, count); }
+    }
+
     Components.ProviderNotificationText { id: providerNotificationText }
     property bool includeStatus: true
     property bool notifyStatusIncidents: true
@@ -318,6 +324,7 @@ import "SOURCE_URL/ResetPresentation.js" as ResetPresentation
 import "SOURCE_URL/controllers" as Controllers
 import "SOURCE_URL/components" as Components
 TestCase {
+    id: testCase
     name: "NotificationPipeline"
     property bool enableNotifications: true
     property bool includeStatus: true
@@ -349,6 +356,12 @@ TestCase {
             return "source-" + sentNotifications.length;
         }
     })
+
+    Components.UsageWindowText {
+        id: usageWindowText
+        function i18n() { return testCase.i18n.apply(testCase, arguments); }
+        function i18np(one, many, count) { return testCase.i18np(one, many, count); }
+    }
 
     Components.ProviderNotificationText {
         id: providerNotificationText
