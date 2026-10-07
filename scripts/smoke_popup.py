@@ -236,6 +236,7 @@ def main():
     print(f"Smoke artifacts: {output}", flush=True)
     results = []
     for scenario in scenarios:
+        started = time.monotonic()
         try:
             with tempfile.TemporaryDirectory(prefix="codexbar-smoke-") as temporary:
                 work = Path(temporary)
@@ -256,10 +257,12 @@ def main():
                     run_preview(command, env, work, output / (scenario + "-restarted.log"), scenario, args.timeout)
                 if not image_path.is_file() or image_path.read_bytes()[:8] != b"\x89PNG\r\n\x1a\n":
                     raise RuntimeError("Missing or invalid screenshot")
-            results.append({"scenario": scenario, "passed": True})
-            print(f"PASS {scenario}", flush=True)
+            elapsed = round(time.monotonic() - started, 3)
+            results.append({"scenario": scenario, "passed": True, "seconds": elapsed})
+            print(f"PASS {scenario} ({elapsed:.3f}s)", flush=True)
         except (OSError, RuntimeError, ValueError, subprocess.CalledProcessError) as error:
-            results.append({"scenario": scenario, "passed": False, "error": str(error)})
+            results.append({"scenario": scenario, "passed": False, "error": str(error),
+                            "seconds": round(time.monotonic() - started, 3)})
             print(f"FAIL {scenario}: {error}", file=sys.stderr, flush=True)
     (output / "results.json").write_text(json.dumps(results, indent=2) + "\n")
     return 0 if all(result["passed"] for result in results) else 1

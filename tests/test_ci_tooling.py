@@ -51,5 +51,38 @@ if [ "$TEST_DOWNLOAD_FAIL" = 1 ]; then exit 22; fi
                 self.assertEqual(list(downloads.iterdir()), [], "Download temporary files leaked")
 
 
+class DependencyInstallerTests(unittest.TestCase):
+    def test_archive_failures_stop_before_installation_or_locale_generation(self):
+        for failure_stage in ("update", "install"):
+            with self.subTest(stage=failure_stage), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                apt = root / "apt-get"
+                apt.write_text("""#!/bin/sh
+printf '%s\\n' "$*" >> "$APT_TEST_CALLS"
+case " $* " in
+  *" $APT_TEST_FAILURE_STAGE "*) exit 42 ;;
+esac
+""")
+                locale = root / "locale-gen"
+                locale.write_text('#!/bin/sh\nexit 99\n')
+                apt.chmod(0o755)
+                locale.chmod(0o755)
+                calls = root / "calls"
+                result = subprocess.run(
+                    ["bash", str(ROOT / "scripts/install-ci-dependencies.sh")],
+                    env={**os.environ, "PATH": f"{root}:{os.environ['PATH']}",
+                         "APT_TEST_CALLS": str(calls), "APT_TEST_FAILURE_STAGE": failure_stage},
+                    capture_output=True, text=True, timeout=10,
+                )
+                self.assertEqual(result.returncode, 42)
+                commands = calls.read_text().splitlines()
+                self.assertEqual(len(commands), 1 if failure_stage == "update" else 2)
+                self.assertIn("APT::Update::Error-Mode=any", commands[0])
+                for command in commands:
+                    self.assertIn("Acquire::Retries=3", command)
+                    self.assertIn("Acquire::http::Timeout=30", command)
+                    self.assertIn("Acquire::https::Timeout=30", command)
+
+
 if __name__ == "__main__":
     unittest.main()

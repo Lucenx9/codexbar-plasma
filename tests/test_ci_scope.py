@@ -1,4 +1,4 @@
-"""Documentation-only changes may omit graphics, never hide missing coverage."""
+"""Editorial-only changes may omit Plasma, never hide missing coverage."""
 
 import itertools
 import json
@@ -10,7 +10,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from ci_scope import ROOT, docs_only, select_smoke, smoke_result
+from ci_scope import ROOT, docs_only, select_runtime, coverage_result
 
 
 class ScopePolicyTests(unittest.TestCase):
@@ -28,27 +28,56 @@ class ScopePolicyTests(unittest.TestCase):
 
     def test_gate_accepts_only_proven_coverage_or_explicit_doc_omission(self):
         states = ("success", "failure", "cancelled", "skipped", "", None)
-        for scope, required, runtime in itertools.product(states, ("true", "false", "", None), states):
+        for kind, scope, required, runtime in itertools.product(
+                ("check", "smoke"), states, ("true", "false", "", None), states):
             accepted = (scope, required, runtime) in {
                 ("success", "true", "success"), ("success", "false", "skipped"),
             }
-            with self.subTest(scope=scope, required=required, runtime=runtime):
+            with self.subTest(kind=kind, scope=scope, required=required, runtime=runtime):
                 if accepted:
-                    self.assertTrue(smoke_result(scope, required, runtime))
+                    self.assertTrue(coverage_result(scope, required, runtime, kind, "success"))
                 else:
                     with self.assertRaises(ValueError):
-                        smoke_result(scope, required, runtime)
+                        coverage_result(scope, required, runtime, kind, "success")
+
+    def test_check_gate_requires_successful_fast_checks_for_every_coverage_mode(self):
+        for required, runtime in (("true", "success"), ("false", "skipped")):
+            for lint in ("failure", "cancelled", "skipped", "", None):
+                with self.subTest(required=required, lint=lint):
+                    with self.assertRaises(ValueError):
+                        coverage_result("success", required, runtime, "check", lint)
+            self.assertTrue(coverage_result("success", required, runtime, "check", "success"))
+        for runtime in ("failure", "cancelled", "skipped", "", None):
+            with self.assertRaises(ValueError):
+                coverage_result("success", "true", runtime, "check", "success")
+        with self.assertRaises(ValueError):
+            coverage_result("success", "false", "skipped", "unknown", "success")
 
     def test_gate_cli_returns_failure_for_missing_runtime(self):
         with tempfile.TemporaryDirectory() as temp:
             result = subprocess.run(
-                [sys.executable, str(ROOT / "scripts/ci_scope.py"), "--gate"],
-                env={**os.environ, "SCOPE_RESULT": "success", "RUN_SMOKE": "true",
+                [sys.executable, str(ROOT / "scripts/ci_scope.py"), "--gate", "smoke"],
+                env={**os.environ, "SCOPE_RESULT": "success", "RUN_RUNTIME": "true",
                      "RUNTIME_RESULT": "skipped", "GITHUB_STEP_SUMMARY": str(Path(temp) / "summary")},
                 capture_output=True, text=True,
             )
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("unresolved or failed", result.stderr)
+
+    def test_check_gate_cli_reports_editorial_omission_only_after_fast_checks_pass(self):
+        with tempfile.TemporaryDirectory() as temp:
+            for lint in ("success", "failure", "cancelled", "skipped"):
+                with self.subTest(lint=lint):
+                    result = subprocess.run(
+                        [sys.executable, str(ROOT / "scripts/ci_scope.py"), "--gate", "check"],
+                        env={**os.environ, "SCOPE_RESULT": "success", "RUN_RUNTIME": "false",
+                             "RUNTIME_RESULT": "skipped", "LINT_RESULT": lint,
+                             "GITHUB_STEP_SUMMARY": str(Path(temp) / "summary")},
+                        capture_output=True, text=True,
+                    )
+                    self.assertEqual(result.returncode == 0, lint == "success")
+                    if lint == "success":
+                        self.assertIn("Plasma checks intentionally omitted", result.stdout)
 
 
 class ScopeGitTests(unittest.TestCase):
@@ -77,7 +106,7 @@ class ScopeGitTests(unittest.TestCase):
         self.git("-c", "commit.gpgsign=false", "commit", "-m", "test change")
 
     def required(self, event="push", ref="refs/heads/main", before=None):
-        return select_smoke(event, ref, {"before": before or self.base}, self.root)[0]
+        return select_runtime(event, ref, {"before": before or self.base}, self.root)[0]
 
     def test_markdown_push_omits_graphics_but_tags_always_run(self):
         self.write("README.md", "Updated docs\n")
@@ -99,9 +128,9 @@ class ScopeGitTests(unittest.TestCase):
                "GITHUB_STEP_SUMMARY": str(summary)}
         command = [sys.executable, str(self.root / "scripts/ci_scope.py")]
         subprocess.run(command, env=env, capture_output=True, text=True, check=True)
-        self.assertEqual(output.read_text(), "run_smoke=false\n")
-        env.update(SCOPE_RESULT="success", RUN_SMOKE="false", RUNTIME_RESULT="skipped")
-        subprocess.run(command + ["--gate"], env=env, capture_output=True, text=True, check=True)
+        self.assertEqual(output.read_text(), "run_runtime=false\n")
+        env.update(SCOPE_RESULT="success", RUN_RUNTIME="false", RUNTIME_RESULT="skipped")
+        subprocess.run(command + ["--gate", "smoke"], env=env, capture_output=True, text=True, check=True)
         self.assertIn("intentionally omitted", summary.read_text())
 
     def test_full_push_range_includes_earlier_runtime_commit(self):
@@ -139,14 +168,14 @@ class ScopeGitTests(unittest.TestCase):
                        "GITHUB_EVENT_NAME": event, "GITHUB_REF": ref,
                        "GITHUB_OUTPUT": str(output), "GITHUB_STEP_SUMMARY": str(summary)}
                 subprocess.run(command, env=env, capture_output=True, text=True, check=True)
-                self.assertEqual(output.read_text(), "run_smoke=true\n")
-                env.update(SCOPE_RESULT="success", RUN_SMOKE="true", RUNTIME_RESULT="skipped")
-                rejected = subprocess.run(command + ["--gate"], env=env,
+                self.assertEqual(output.read_text(), "run_runtime=true\n")
+                env.update(SCOPE_RESULT="success", RUN_RUNTIME="true", RUNTIME_RESULT="skipped")
+                rejected = subprocess.run(command + ["--gate", "smoke"], env=env,
                                           capture_output=True, text=True)
                 self.assertNotEqual(rejected.returncode, 0)
                 self.assertIn("unresolved or failed", rejected.stderr)
                 env["RUNTIME_RESULT"] = "success"
-                subprocess.run(command + ["--gate"], env=env, capture_output=True,
+                subprocess.run(command + ["--gate", "smoke"], env=env, capture_output=True,
                                text=True, check=True)
                 self.assertIn("Graphical smoke tests passed.", summary.read_text())
 

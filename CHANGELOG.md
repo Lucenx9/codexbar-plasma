@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Use a prebuilt minimal Plasma CI toolchain, skip runtime jobs for verified
+  editorial-only changes while retaining fast checks and packaging, and build
+  release archives without downloading the desktop image.
 - Report CI static checks before the Plasma environment is ready, and run
   the full check and graphical smoke suites weekly and on manual requests.
 - Check for GitHub Actions updates with Dependabot every Monday at 09:00

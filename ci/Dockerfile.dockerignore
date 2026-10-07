@@ -1,0 +1,6 @@
+**
+!scripts/
+!scripts/install-ci-dependencies.sh
+!scripts/install-actionlint.sh
+!ci/
+!ci/Dockerfile

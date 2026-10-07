@@ -1,0 +1,78 @@
+name: CI image
+
+# Building and publishing infrastructure is an explicit maintenance operation.
+on:
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: Trusted branch or commit containing the image recipe to validate
+        required: true
+        default: main
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-image
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.revision }}
+
+      - name: Build the Linux amd64 toolchain
+        run: |
+          docker build --platform linux/amd64 -f ci/Dockerfile -t codexbar-plasma-ci:candidate .
+          docker image inspect codexbar-plasma-ci:candidate --format 'Image bytes: {{.Size}}' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate strict checks and packaging
+        run: |
+          docker run --rm --init --cpus 4 -v "$GITHUB_WORKSPACE:/workspace" -w /workspace \
+            -e QMLLINT_FLAGS='--import warning --unqualified disable' \
+            -e QML_TEST_REQUIRE_NO_SKIPS=1 codexbar-plasma-ci:candidate \
+            bash -c 'sha256sum --check --strict /usr/local/share/ci-inputs.sha256 && make check JOBS=4 && make package'
+
+      - name: Validate graphical coverage
+        run: |
+          docker run --rm --init --cpus 4 -v "$GITHUB_WORKSPACE:/workspace" -w /workspace \
+            codexbar-plasma-ci:candidate bash -c \
+            "xvfb-run -a -s '-screen 0 1280x1024x24' make smoke SMOKE_ARGS='--output dist/review/ci-image/smoke' && xvfb-run -a -s '-screen 0 1280x1024x24' python3 scripts/panel_matrix.py --output dist/review/ci-image/panel-matrix"
+
+      - name: Upload validation evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ci-image-validation
+          path: dist/review/ci-image
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Publish the validated candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/codexbar-plasma-ci"
+          revision="$(git rev-parse HEAD)"
+          tag="build-${revision}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          trap 'docker logout ghcr.io' EXIT
+          docker tag codexbar-plasma-ci:candidate "${image}:${tag}"
+          docker push "${image}:${tag}" | tee /tmp/ci-image-push.log
+          digest="$(sed -n 's/.*digest: \(sha256:[a-f0-9]\{64\}\).*/\1/p' /tmp/ci-image-push.log)"
+          test -n "$digest"
+          # shellcheck disable=SC2016 # Markdown backticks are literal.
+          printf 'Validated image: `%s@%s`\n\nUpdate both runtime job pins in a PR; published candidates do not change CI automatically.\n' \
+            "$image" "$digest" >> "$GITHUB_STEP_SUMMARY"
