@@ -27,11 +27,14 @@ class SettingsWiringTests(unittest.TestCase):
         self.assertIn("usageLastCompletedAtMs = Date.now()", controller.function_body("finishProviderFallback"))
 
     def test_privacy_masks_notification_text_before_the_external_effect(self):
-        body = Surface("applet").function_body("sendPlasmaNotification")
+        path = Path(__file__).resolve().parents[1] / "contents/ui/controllers/UpdateNotificationsController.qml"
+        surface = Surface("applet")
+        surface.texts = {path: path.read_text()}
+        body = surface.function_body("send")
         self.assertIn('cleanTitle = privacyMode ? "CodexBar"', body)
         self.assertIn('cleanBody = privacyMode ? i18n(', body)
-        self.assertIn("notificationDispatcher.send(cleanTitle, cleanBody, urgency, actionLabel)", body)
-        self.assertLess(body.index("cleanBody ="), body.index("notificationDispatcher.send("))
+        self.assertIn("dispatcher.send(cleanTitle, cleanBody, urgency, actionLabel)", body)
+        self.assertLess(body.index("cleanBody ="), body.index("dispatcher.send("))
         self.assertNotIn("notify-send", body)
 
     def test_privacy_stops_session_copy_before_touching_the_clipboard(self):

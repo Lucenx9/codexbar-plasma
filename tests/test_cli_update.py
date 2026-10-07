@@ -21,36 +21,24 @@ def release(tag="v0.62.0"):
 
 CLI_UPDATE_WIRING_QML = """import QtQuick
 import QtTest
-import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
-import "SOURCE_URL/Guards.js" as Guards
+import "SOURCE_URL/controllers" as Controllers
 TestCase {
     name: "CliUpdateNotificationWiring"
 
     QtObject {
         id: root
         property bool enableNotifications: true
-        property var pendingUpdateReleaseUrls: ({})
+        property alias pendingUpdateReleaseUrls: updateNotifications.pendingUpdateReleaseUrls
         property var sentNotifications: []
         property int sentSerial: 0
 
         property QtObject plasmoid: QtObject {
             property QtObject configuration: QtObject {
+                property bool updateNotificationsEnabled: true
+                property string lastNotifiedUpdateVersion: ""
                 property bool cliUpdateNotificationsEnabled: true
                 property string cliUpdateLastNotifiedVersion: ""
             }
-        }
-
-        function safeReleaseUrl(url) {
-            var candidate = typeof url === "string" ? url.trim() : ""
-            return candidate.length <= 2048 && Normalizer.httpsUrlHost(candidate) === "github.com" ? candidate : ""
-        }
-
-        function copyObject(obj) {
-            return Object.assign({}, obj)
-        }
-
-        function i18n(text, first) {
-            return text.replace("%1", first === undefined ? "%1" : first)
         }
 
         function sendPlasmaNotification(title, body, urgency, actionLabel) {
@@ -68,6 +56,14 @@ TestCase {
 
         SOURCE_HANDLER
     }
+
+    Controllers.UpdateNotificationsController {
+        id: updateNotifications
+        configuration: root.plasmoid.configuration
+        enableNotifications: root.enableNotifications
+        dispatcher: ({ send: root.sendPlasmaNotification })
+    }
+    function i18n(text, first) { return text.replace("%1", first === undefined ? "%1" : first); }
 
     function init() {
         root.enableNotifications = true
@@ -244,10 +240,12 @@ class CliUpdateTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1]
         main = (root / "contents/ui/main.qml").read_text()
         controller = main.split("Controllers.CliUpdateController {", 1)[1].split("Controllers.WidgetUpdateController {", 1)[0]
-        for guard in ("!root.enableNotifications", "cliUpdateNotificationsEnabled === false",
-                      "cliUpdateLastNotifiedVersion === version", "sourceName.length > 0",
-                      "root.safeReleaseUrl(releaseUrl)"):
-            self.assertIn(guard, controller)
+        self.assertIn("updateNotifications.notifyAvailableCliUpdate(version, releaseUrl)", controller)
+        owner = (root / "contents/ui/controllers/UpdateNotificationsController.qml").read_text()
+        for guard in ("!enableNotifications", "cliUpdateNotificationsEnabled === false",
+                      "cliUpdateLastNotifiedVersion === version", "UpdateNotificationState.usableSource(sourceName)",
+                      "UpdateNotificationState.safeReleaseUrl(releaseUrl)"):
+            self.assertIn(guard, owner)
         for page in ("configGeneral.qml", "configDiagnostics.qml"):
             text = (root / "contents/ui" / page).read_text()
             self.assertNotIn("cfg_cliUpdateLastCheck", text)

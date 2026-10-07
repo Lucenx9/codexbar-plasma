@@ -2056,7 +2056,8 @@ msgstr ""
 msgid "Check CLI releases now"
 msgstr ""
 
-#: contents/ui/configGeneral.qml contents/ui/main.qml
+#: contents/ui/configGeneral.qml
+#: contents/ui/controllers/UpdateNotificationsController.qml
 msgid "Open release page"
 msgstr ""
 
@@ -2931,6 +2932,47 @@ msgstr ""
 msgid "codexbar sessions returned an unsupported JSON payload."
 msgstr ""
 
+#: contents/ui/controllers/UpdateNotificationsController.qml
+msgid "Usage or status changed. Open CodexBar for details."
+msgstr ""
+
+#: contents/ui/controllers/UpdateNotificationsController.qml
+msgid "CodexBar widget update available"
+msgstr ""
+
+#: contents/ui/controllers/UpdateNotificationsController.qml
+msgid "Version %1 is available."
+msgstr ""
+
+#: contents/ui/controllers/UpdateNotificationsController.qml
+msgid "A new widget version is available."
+msgstr ""
+
+#: contents/ui/controllers/UpdateNotificationsController.qml
+msgid "CodexBar widget update installed"
+msgstr ""
+
+#: contents/ui/controllers/UpdateNotificationsController.qml
+#: contents/ui/controllers/WidgetUpdateController.qml
+msgid "Restart Plasma to apply the new widget version."
+msgstr ""
+
+#: contents/ui/controllers/UpdateNotificationsController.qml
+msgid "Version %1 was installed. %2"
+msgstr ""
+
+#: contents/ui/controllers/UpdateNotificationsController.qml
+msgid "A widget update was installed. %1"
+msgstr ""
+
+#: contents/ui/controllers/UpdateNotificationsController.qml
+msgid "CodexBar CLI release available"
+msgstr ""
+
+#: contents/ui/controllers/UpdateNotificationsController.qml
+msgid "Upstream CLI %1 is available. Update using your installation method."
+msgstr ""
+
 #: contents/ui/controllers/UsageController.qml
 msgid "codexbar did not return JSON."
 msgstr ""
@@ -3033,10 +3075,6 @@ msgstr ""
 
 #: contents/ui/controllers/WidgetUpdateController.qml
 msgid "Widget update %1 is available."
-msgstr ""
-
-#: contents/ui/controllers/WidgetUpdateController.qml contents/ui/main.qml
-msgid "Restart Plasma to apply the new widget version."
 msgstr ""
 
 #: contents/ui/controllers/WidgetUpdateController.qml
@@ -3312,34 +3350,6 @@ msgid "%1 is back to %2% used"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Usage or status changed. Open CodexBar for details."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "CodexBar widget update available"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Version %1 is available."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "A new widget version is available."
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "CodexBar widget update installed"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Version %1 was installed. %2"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "A widget update was installed. %1"
-msgstr ""
-
-#: contents/ui/main.qml
 msgid "Provider"
 msgstr ""
 
@@ -3455,11 +3465,3 @@ msgid "%1 provider"
 msgid_plural "%1 providers"
 msgstr[0] ""
 msgstr[1] ""
-
-#: contents/ui/main.qml
-msgid "CodexBar CLI release available"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Upstream CLI %1 is available. Update using your installation method."
-msgstr ""

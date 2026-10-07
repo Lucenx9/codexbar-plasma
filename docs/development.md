@@ -78,8 +78,8 @@ synchronized.
 
 ## Ownership and implementation
 
-- `contents/ui/main.qml` owns notification policy and text, account coordination,
-  selected state, quota-cache persistence, configuration updates, and external
+- `contents/ui/main.qml` owns provider notification policy and text,
+  account coordination, selected state, quota-cache persistence, configuration updates, and external
   effects. Its adapters supply the panel and popup.
 - `contents/ui/controllers/NotificationDispatcher.qml` owns notification
   execution, per-send nonces, the request ledger, the 10-second deadline, the
@@ -95,16 +95,26 @@ synchronized.
   builds the quoted command,
   restricts urgency to the supported values, and probes `notify-send --help`
   for action support so older libnotify builds keep the plain send.
-  The applet retains notification
-  settings, privacy, deduplication, account freshness, and update-notification
-  persistence, and owns what an activation opens: the applet itself no longer owns an executable DataSource or
-  command ledger.
+  `UpdateNotificationsController.qml` supplies privacy-filtered text to this
+  single dispatcher for both provider and update notifications. The applet
+  retains provider policy and account freshness and opens requested release
+  pages; it owns no executable notification DataSource or command ledger.
+- `contents/ui/controllers/UpdateNotificationsController.qml` owns widget/CLI
+  notification switches, localization, persisted version deduplication and the
+  pending release actions. It receives the configuration object, global enable
+  flag and privacy mode explicitly. Widget versions are saved before sending;
+  CLI versions are saved only after a safe source starts, preserving retry
+  behavior. Its `send()` method also applies privacy to provider notifications.
+  `UpdateNotificationState.js` validates release URLs, chooses the widget memo
+  key and copies/registers/consumes source-specific actions without effects.
+  Activations retire their action before emitting `releasePageRequested(url)`;
+  the applet opens that URL. Update process lifecycles remain independent.
 - `contents/ui/controllers/CliUpdateController.qml` owns the read-only CLI
   version/release process, nonce, deadline, stale-reply retirement and optional
   daily scheduling. General runs manual release checks; Diagnostics uses its
-  local-only mode; `main.qml` persists background check timestamps and notification
-  deduplication. `CliUpdate.js` bounds results and constructs host-pinned release
-  links. `scripts/check-cli-update.py` probes `--version` and positive package
+  local-only mode; `main.qml` persists background check timestamps, while
+  `UpdateNotificationsController.qml` persists notification deduplication.
+  `CliUpdate.js` bounds results and constructs host-pinned release links. `scripts/check-cli-update.py` probes `--version` and positive package
   ownership, then optionally reads the official GitHub latest-release metadata.
   This read-only entry point never installs or changes the CLI. Shared probes and
   release validation live in `scripts/lib/cli_release.py`. Its subprocesses have output/deadline
@@ -155,11 +165,12 @@ synchronized.
   respects disabled checks. Enabled startup still forces a check even with a
   recent saved timestamp, preserving the previous startup behavior.
   `main.qml` persists its status and successful-check
-  signals and delivers its available/installed notifications, preserving the
-  existing privacy and notification-deduplication rules. The available-update
+  signals and forwards available/installed events to
+  `UpdateNotificationsController.qml`, preserving the existing privacy and
+  notification-deduplication rules. The available-update
   notification carries a host-pinned release-page URL derived from the
-  updater's validated tag; `main.qml` stores the pending source and opens that
-  URL when the dispatcher reports the notification's activation. The module never reads
+  updater's validated tag; the notification controller stores the pending source
+  and asks `main.qml` to open that URL after activation. The updater never reads
   the applet root or writes configuration. `UpdateLogic.js` keeps the pure
   scheduling and result decisions shared with settings.
 - `contents/ui/controllers/SessionsController.qml` owns the Sessions executable
@@ -673,8 +684,14 @@ exercises synchronous and retired replies, reentrant completion, destruction,
 and the production 10-second timer. The pure command interface has adversarial
 QtTests in `tests/tst_notification_command.qml`. Surface checks keep notification
 policy and privacy in the applet and enforce registration and retirement ordering.
-Missing optional KDE modules are reported as local skips and rejected by
-`QML_TEST_REQUIRE_NO_SKIPS=1`.
+`tests/tst_update_notification_state.qml` covers trusted URLs, immutable action
+maps, unsafe sources and replay. `tests/tst_update_notifications_controller.qml`
+executes the production policy owner with a recording dispatcher, checking
+privacy, independent switches, persistence order and source retirement. Existing
+widget/CLI wiring tests exercise the same owner, and
+`tests/test_update_notifications_controller.py` checks mixed update activations
+through the real dispatcher with synthetic `notify-send` and privacy.
+Missing optional KDE modules are reported as local skips and rejected by `QML_TEST_REQUIRE_NO_SKIPS=1`.
 
 `tests/test_usage_controller.py` exercises the production executable source,
 provider discovery/cache, bounded fallback concurrency, exact account/source

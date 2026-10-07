@@ -91,6 +91,28 @@ def handler_source(text, name):
 
 
 class WidgetUpdateWiringTests(unittest.TestCase):
+    def test_notification_owner_is_wired_to_configuration_privacy_and_url_opening(self):
+        surface = Surface("applet", ROOT)
+        main = ROOT / "contents/ui/main.qml"
+        source = surface.texts[main]
+        surface.texts = {main: source}
+        block = surface.id_block("updateNotifications")
+        for binding in ("configuration: Plasmoid.configuration",
+                        "enableNotifications: root.enableNotifications",
+                        "privacyMode: root.privacyMode", "Qt.openUrlExternally(url)"):
+            self.assertIn(binding, block)
+        self.assertIn("updateNotifications.notifyAvailableUpdate(version, url, releaseUrl)",
+                      surface.function_body("notifyAvailableUpdate"))
+        self.assertIn("updateNotifications.notifyInstalledUpdate(version)",
+                      surface.function_body("notifyInstalledUpdate"))
+        self.assertNotIn("property var pendingUpdateReleaseUrls", source)
+        owner = (ROOT / "contents/ui/controllers/UpdateNotificationsController.qml").read_text()
+        for forbidden in ("root.", "Plasmoid.", "Qt.openUrlExternally", "connectSource("):
+            self.assertNotIn(forbidden, owner)
+        logic = (ROOT / "contents/ui/UpdateNotificationState.js").read_text()
+        for forbidden in ("i18n(", "Qt.", "configuration.", "dispatcher."):
+            self.assertNotIn(forbidden, logic)
+
     def test_updater_results_reach_the_persisted_configuration(self):
         applet = Surface("applet", ROOT)
         source = applet.texts[ROOT / "contents/ui/main.qml"]
