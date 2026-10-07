@@ -14,6 +14,7 @@ Item {
     property int step: 0
     property var refreshedProvider
     property real savedScroll: 0
+    property int settleTicks: 0
 
     Rectangle {
         parent: probe.applet.fullRepresentationItem
@@ -92,7 +93,17 @@ Item {
         scroll.contentItem.cancelFlick();
         scroll.contentItem.contentY = Math.max(0, Math.min(scroll.contentItem.contentHeight - scroll.contentItem.height, bottom - scroll.contentItem.height));
         var top = item.mapToItem(scroll.contentItem, 0, 0).y;
-        verify(top >= -1 && top + item.height <= scroll.contentItem.height + 1, "the complete final control cannot be reached by scrolling");
+        var reachable = top >= -1 && top + item.height <= scroll.contentItem.height + 1;
+        // A view that just became visible reflows long text over several
+        // frames; give layout a bounded number of ticks before failing.
+        if (!reachable && settleTicks < 10) {
+            settleTicks++;
+            scroll.contentItem.contentY = 0;
+            return false;
+        }
+        verify(reachable, "the complete final control cannot be reached by scrolling");
+        settleTicks = 0;
+        return true;
     }
 
     function verifyGlobalBanner(popup, scroll) {
@@ -100,8 +111,10 @@ Item {
         verify(banner.visible && banner.actions.length === 2, "the global error lost its recovery actions");
         verify(Math.abs(banner.mapToItem(scroll.contentItem, 0, 0).y) < 1, "the global error did not precede the scrollable content");
         verifyViewport(popup, scroll);
-        revealAndVerify(scroll, buttonWithText(banner, banner.actions[1].text));
+        if (!revealAndVerify(scroll, buttonWithText(banner, banner.actions[1].text)))
+            return false;
         scroll.contentItem.contentY = 0;
+        return true;
     }
 
     Component.onCompleted: applet.expanded = true
@@ -133,7 +146,8 @@ Item {
                 probe.verify(scroll.contentItem.contentHeight > scroll.height, "the long account list cannot be scrolled");
                 var buttons = probe.accountButtons(popup);
                 probe.verify(buttons.length === 20, "not every discovered account received a button");
-                probe.revealAndVerify(scroll, buttons[buttons.length - 1]);
+                if (!probe.revealAndVerify(scroll, buttons[buttons.length - 1]))
+                    return;
                 scroll.contentItem.contentY = 400;
                 probe.savedScroll = scroll.contentItem.contentY;
                 probe.verify(probe.savedScroll >= 399, "the accounts did not create scrollable content");
@@ -176,32 +190,38 @@ Item {
                 probe.verifyViewport(popup, scroll);
                 var banner = probe.find(popup, "providerErrorMessage");
                 probe.verify(banner.visible && banner.actions.length === 2, "the provider error lost recovery actions");
-                probe.revealAndVerify(scroll, probe.buttonWithText(banner, banner.actions[1].text));
+                if (!probe.revealAndVerify(scroll, probe.buttonWithText(banner, banner.actions[1].text)))
+                    return;
                 scroll.contentItem.contentY = 0;
                 applet.replaceProviderSnapshot("claude", probe.longProvider("claude", "second@example.com"));
                 usageLifecycle.errorText = new Array(17).join("Synthetic bounded global error. ");
             } else if (probe.step === 11) {
-                probe.verifyGlobalBanner(popup, scroll);
+                if (!probe.verifyGlobalBanner(popup, scroll))
+                    return;
                 applet.selectGlobalView("overview");
             } else if (probe.step === 12) {
                 var overview = probe.find(popup, "overviewScroll");
-                probe.verifyGlobalBanner(popup, overview);
+                if (!probe.verifyGlobalBanner(popup, overview))
+                    return;
                 applet.selectGlobalView("spend");
             } else if (probe.step === 13) {
                 probe.verify(!probe.find(popup, "globalErrorMessage").visible, "provider errors leaked into the independent Spend view");
                 applet.selectGlobalView("overview");
             } else if (probe.step === 14) {
-                probe.verifyGlobalBanner(popup, probe.find(popup, "overviewScroll"));
+                if (!probe.verifyGlobalBanner(popup, probe.find(popup, "overviewScroll")))
+                    return;
                 applet.providers = [];
                 applet.selectedProviderID = "";
             } else if (probe.step === 15) {
-                probe.verifyGlobalBanner(popup, probe.find(popup, "emptyErrorScroll"));
+                if (!probe.verifyGlobalBanner(popup, probe.find(popup, "emptyErrorScroll")))
+                    return;
                 usageLifecycle.errorText = "";
             } else if (probe.step === 16) {
                 probe.verify(!probe.find(popup, "globalErrorMessage").visible, "a cleared error remained visible");
                 usageLifecycle.errorText = new Array(17).join("Synthetic bounded global error. ");
             } else {
-                probe.verifyGlobalBanner(popup, probe.find(popup, "emptyErrorScroll"));
+                if (!probe.verifyGlobalBanner(popup, probe.find(popup, "emptyErrorScroll")))
+                    return;
                 console.log("SMOKE_CAPTURE_START:" + probe.scenario);
                 var accepted = popup.grabToImage(function (result) {
                     probe.verify(result.saveToFile(probe.imagePath), "could not save popup screenshot");
