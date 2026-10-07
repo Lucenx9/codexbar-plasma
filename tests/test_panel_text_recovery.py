@@ -25,8 +25,21 @@ import "SOURCE_URL/PanelProviders.js" as PanelProviders
 import "SOURCE_URL/PanelRules.js" as PanelRules
 import "SOURCE_URL/PanelTextFit.js" as PanelTextFit
 import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
+import "SOURCE_URL/components" as Components
+import "SOURCE_URL/CostPresentation.js" as CostPresentation
 TestCase {
     name: "PanelTextRecovery"
+    Components.PanelText {
+        id: panelText
+        showProvider: true
+        showPercent: true
+        showCredits: applet.showCreditsInPanel
+        loading: applet.loading
+        numberFormat: CostPresentation.numberFormat(",", ".")
+        function i18n(text, a, b) {
+            return text.replace("%1", a === undefined ? "" : a).replace("%2", b === undefined ? "" : b);
+        }
+    }
     QtObject {
         id: applet
         property string panelProviderIDsRaw: ""
@@ -36,12 +49,6 @@ TestCase {
         property var panelVisibilityRules: PanelRules.normalizedRules("{}")
         property real panelClockMs: Date.now()
         property var selected: null
-        // QML rejects a property named Plasmoid, so the harness rewrites the
-        // configuration reads; see the substitution below.
-        readonly property var panelConfiguration: ({
-            showProviderInPanel: true, showPercentInPanel: true,
-            showCreditsInPanel: applet.showCreditsInPanel
-        })
         function selectedCompactProvider() { return selected; }
         function providerPresentation(item) { return item; }
         function panelDisplayRow(item, mode) { return item ? {hasPercent: true} : null; }
@@ -107,10 +114,7 @@ class PanelTextRecoveryTests(unittest.TestCase):
         for name in ("compactTextSegments", "providerIconIdentifies", "panelProviderToolTipText"):
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
             body = surface.function_body(name)
-            # A property named Plasmoid is not addressable in QML, so the stub
-            # exposes the same keys under a name the harness can declare.
-            functions.append((signature + " {" + body + "}")
-                             .replace("Plasmoid.configuration", "panelConfiguration"))
+            functions.append(signature + " {" + body + "}")
         qml = QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
         qml = qml.replace("SOURCE_FUNCTIONS", "\n        ".join(functions))
         with tempfile.TemporaryDirectory(prefix="codexbar-panel-text-") as temporary:
@@ -131,7 +135,7 @@ class PanelTextRecoveryTests(unittest.TestCase):
         for name in ("menuBarDisplayText", "safeMenuBarDisplayMode", "panelDisplayRow",
                      "switcherCandidateRows", "usageRowForLane", "appendUniqueUsageRow",
                      "clamp", "providerKey", "displayPercent", "percentSuffix",
-                     "paceMarkerPercent", "percentTextForRow", "paceTextForRow",
+                     "paceMarkerPercent",
                      "paceWarningActive", "paceEtaText", "runOutTextForRow",
                      "resetTextForRow", "usageResetText", "resetText", "resetLabel"):
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
@@ -163,8 +167,19 @@ import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
 import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
 import "SOURCE_URL/PrivacyPresentation.js" as PrivacyPresentation
 import "SOURCE_URL/ResetPresentation.js" as ResetPresentation
+import "SOURCE_URL/components" as Components
 TestCase {
     name: "MenuBarText"
+    Components.PanelText {
+        id: panelText
+        usageBarsShowUsed: root.usageBarsShowUsed
+        function i18n(source) {
+            var text = source;
+            for (var i = 1; i < arguments.length; i++)
+                text = text.replace("%" + i, String(arguments[i]));
+            return text;
+        }
+    }
     QtObject {
         id: root
         property string menuBarDisplayMode: "percent"

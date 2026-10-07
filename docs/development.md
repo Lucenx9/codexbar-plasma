@@ -208,6 +208,17 @@ synchronized.
   classifies replies; `ProviderSnapshot.js` shares pure quota normalization with
   usage refreshes. Cached account quotas and forecasts keep their receipt time
   through presentation, unrelated loads, and later selection.
+- `contents/ui/components/PanelText.qml` localizes the panel's optional name,
+  usage and credit segments, percent/pace display modes, per-provider tooltip
+  lines, and loading/error fallback. It accepts explicit display inputs and settings, without accessing
+  the applet or configuration. `PanelText.js` owns the pure segment composition
+  and incident/balance projection; `PanelTextFit.js` still owns fitting and
+  surrender order. `main.qml` supplies privacy-filtered provider data, selects
+  rows, applies visibility rules, limits tooltip roster lines, and narrows the
+  tooltip only to a hovered meter that remains rendered. Shared quota selection,
+  pace forecasts, reset labels and number formatting stay available to the popup. Direct QtTests in
+  `tests/tst_panel_text.qml` exercise the production component and pure plans;
+  the existing panel adapter tests also exercise their wiring.
 - `contents/ui/components/CompactRepresentation.qml` renders the panel;
   `FullRepresentation.qml` in the same directory renders the popup. Components
   are presentation-only and receive normalized data plus an explicit parent API

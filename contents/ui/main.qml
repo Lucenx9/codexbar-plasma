@@ -14,7 +14,6 @@ import "PanelDisplay.js" as PanelDisplay
 import "PanelElements.js" as PanelElements
 import "PanelProviders.js" as PanelProviders
 import "PanelRules.js" as PanelRules
-import "PanelTextFit.js" as PanelTextFit
 import "PopupHiddenRows.js" as PopupHiddenRows
 import "PopupHiddenSections.js" as PopupHiddenSections
 import "PopupSelection.js" as PopupSelection
@@ -2271,38 +2270,15 @@ PlasmoidItem {
     function compactTextSegments() {
         var item = providerPresentation(selectedCompactProvider())
         var row = panelDisplayRow(item, menuBarDisplayMode)
-        if (!PanelRules.matches(panelVisibilityRules.text, row, panelClockMs)) {
-            return []
-        }
-        if (!item) {
-            if (PanelProviders.selectionActive(panelProviderIDsRaw)) {
-                return []
-            }
-            // The standalone identity fallback names the widget itself, so it
-            // carries no droppable segment: it is the usage slot or nothing.
-            return [{ id: "usage", text: loading ? i18n("Loading") : "CodexBar" }]
-        }
-
-        var segments = []
-        if (Plasmoid.configuration.showProviderInPanel) {
-            segments.push({ id: "name", text: item.title,
-                identifying: !providerIconIdentifies(item.provider) })
-        }
-
-        var display = menuBarDisplayText(item)
-        if (Plasmoid.configuration.showPercentInPanel && display.length > 0) {
-            segments.push({ id: "usage", text: display })
-        }
-
-        if (Plasmoid.configuration.showCreditsInPanel && item.credits !== null) {
-            segments.push({ id: "credits", text: i18n("%1cr", formatNumber(item.credits)) })
-        }
-
-        return segments
+        return panelText.segments(item,
+            PanelRules.matches(panelVisibilityRules.text, row, panelClockMs),
+            PanelProviders.selectionActive(panelProviderIDsRaw),
+            item ? menuBarDisplayText(item) : "",
+            item ? providerIconIdentifies(item.provider) : false)
     }
 
     function compactText() {
-        return PanelTextFit.fullText(compactTextSegments())
+        return panelText.fullText(compactTextSegments())
     }
 
     function setHoveredPanelProvider(providerID) {
@@ -2341,43 +2317,14 @@ PlasmoidItem {
 
     function panelProviderToolTipText(item) {
         var presented = providerPresentation(item)
-        if (!presented) {
-            return ""
-        }
-        // Keep incidents in the tooltip even when quota meters are available.
-        var incident = presented.hasIncident && presented.statusKnown !== false && presented.status.length > 0 ? presented.status : ""
-        var details = []
-        var description = panelMeterDescription(presented)
-        if (description.length > 0) {
-            details.push(description)
-        }
-        // A crowded panel surrenders the credit balance before the usage
-        // figure, and no meter carries it, so the tooltip is where a pointer
-        // user recovers what the panel had no room to draw.
-        if (Plasmoid.configuration.showCreditsInPanel && presented.credits !== null
-                && presented.credits !== undefined) {
-            details.push(i18n("%1cr", formatNumber(presented.credits)))
-        }
-        if (details.length > 0) {
-            var line = i18n("%1: %2", presented.title, details.join(". "))
-            if (incident.length > 0) {
-                return i18n("%1 - %2", line, incident)
-            }
-            return line
-        }
-        if (incident.length > 0) {
-            return i18n("%1: %2", presented.title, incident)
-        }
-        return ""
+        return panelText.providerToolTipText(presented, panelMeterDescription(presented))
     }
 
     function panelToolTipText() {
         var hovered = hoveredPanelProvider()
-        if (hovered) {
-            var hoveredLine = panelProviderToolTipText(hovered)
-            if (hoveredLine.length > 0) {
-                return hoveredLine
-            }
+        var hoveredLine = hovered ? panelProviderToolTipText(hovered) : ""
+        if (hoveredLine.length > 0) {
+            return hoveredLine
         }
         var lines = []
         var roster = panelProviderItems()
@@ -2387,60 +2334,19 @@ PlasmoidItem {
                 lines.push(line)
             }
         }
-        if (loading) {
-            lines.push(i18n("Refreshing usage..."))
-        }
-        if (lines.length === 0 && errorText.length > 0) {
-            return privateErrorText(Normalizer.boundedDisplayText(errorText, 500))
-        }
-        return lines.join("\n")
+        return panelText.toolTipText(lines,
+            privateErrorText(Normalizer.boundedDisplayText(errorText, 500)))
     }
 
     function menuBarDisplayText(item) {
         if (!item) {
             return ""
         }
-
         var mode = String(menuBarDisplayMode || "percent")
         var row = panelDisplayRow(item, mode)
-        if (mode === "pace") {
-            return paceTextForRow(row)
-        }
-        if (mode === "both") {
-            var percentText = percentTextForRow(row)
-            var paceText = paceTextForRow(row)
-            if (percentText.length > 0 && paceText.length > 0) {
-                return i18n("%1 - %2", percentText, paceText)
-            }
-            return percentText.length > 0 ? percentText : paceText
-        }
-        if (mode === "resetTime") {
-            return resetTextForRow(row)
-        }
-        if (mode === "runOut") {
-            return runOutTextForRow(row)
-        }
-        return percentTextForRow(row)
-    }
-
-    function percentTextForRow(row) {
-        if (!row || !row.hasPercent) {
-            return ""
-        }
-        return i18n("%1% %2", Math.round(displayPercent(row)), percentSuffix())
-    }
-
-    function paceTextForRow(row) {
-        if (!row || row.pacePercent < 0) {
-            return ""
-        }
-        var shownPace = paceMarkerPercent(row)
-        if (shownPace < 0) {
-            return ""
-        }
-        return row.paceOnTop
-            ? i18n("%1% %2 at pace", Math.round(shownPace), percentSuffix())
-            : i18n("%1% %2, behind pace", Math.round(shownPace), percentSuffix())
+        return panelText.displayText(row, mode,
+            mode === "resetTime" ? resetTextForRow(row) : "",
+            mode === "runOut" ? runOutTextForRow(row) : "")
     }
 
     // Duration-only forecast token. It stays empty unless the CLI actually
@@ -2482,6 +2388,17 @@ PlasmoidItem {
             root.panelClockMs = Date.now()
             root.expireStaleUsage(root.panelClockMs)
         }
+    }
+
+    Components.PanelText {
+        id: panelText
+
+        loading: root.loading
+        usageBarsShowUsed: root.usageBarsShowUsed
+        showProvider: Plasmoid.configuration.showProviderInPanel
+        showPercent: Plasmoid.configuration.showPercentInPanel
+        showCredits: Plasmoid.configuration.showCreditsInPanel
+        numberFormat: root.costNumberFormat
     }
 
     Components.ProviderNames {

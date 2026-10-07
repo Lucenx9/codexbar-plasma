@@ -183,9 +183,9 @@ msgstr ""
 #: contents/ui/components/CompactRepresentation.qml
 #: contents/ui/components/CostLabels.qml
 #: contents/ui/components/InteractiveChart.qml
-#: contents/ui/components/SpendView.qml contents/ui/configPopup.qml
-#: contents/ui/configProviders.qml contents/ui/main.qml
-#: scripts/smoke/Capture.qml
+#: contents/ui/components/PanelText.qml contents/ui/components/SpendView.qml
+#: contents/ui/configPopup.qml contents/ui/configProviders.qml
+#: contents/ui/main.qml scripts/smoke/Capture.qml
 msgid "%1: %2"
 msgstr ""
 
@@ -396,7 +396,8 @@ msgstr ""
 
 #: contents/ui/components/OverviewProviderRow.qml
 #: contents/ui/components/PanelSettingsPreview.qml
-#: contents/ui/components/ProviderUsageRow.qml contents/ui/main.qml
+#: contents/ui/components/PanelText.qml
+#: contents/ui/components/ProviderUsageRow.qml
 msgid "%1% %2"
 msgstr ""
 
@@ -440,23 +441,28 @@ msgstr ""
 msgid "min"
 msgstr ""
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/PanelText.qml contents/ui/main.qml
 msgid "left"
 msgstr ""
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/PanelText.qml contents/ui/main.qml
 msgid "used"
 msgstr ""
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/PanelText.qml
 msgid "%1% %2 at pace"
 msgstr ""
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/PanelText.qml
 msgid "%1% %2, behind pace"
 msgstr ""
 
 #: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/PanelText.qml
 #: contents/ui/components/ProviderCostSection.qml contents/ui/main.qml
 msgid "%1 - %2"
 msgstr ""
@@ -538,7 +544,8 @@ msgstr ""
 msgid "%1: %2% %3"
 msgstr ""
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/PanelText.qml
 #, kde-format
 msgid "%1cr"
 msgstr ""
@@ -565,6 +572,14 @@ msgstr ""
 
 #: contents/ui/components/PanelSettingsPreview.qml
 msgid "Example data. Panel changes appear here before you apply them."
+msgstr ""
+
+#: contents/ui/components/PanelText.qml
+msgid "Loading"
+msgstr ""
+
+#: contents/ui/components/PanelText.qml
+msgid "Refreshing usage..."
 msgstr ""
 
 #: contents/ui/components/PlainNote.qml
@@ -3436,14 +3451,6 @@ msgid "%1 provider"
 msgid_plural "%1 providers"
 msgstr[0] ""
 msgstr[1] ""
-
-#: contents/ui/main.qml
-msgid "Loading"
-msgstr ""
-
-#: contents/ui/main.qml
-msgid "Refreshing usage..."
-msgstr ""
 
 #: contents/ui/main.qml
 msgid "CodexBar CLI release available"

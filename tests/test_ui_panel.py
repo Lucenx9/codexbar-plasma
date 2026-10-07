@@ -259,28 +259,24 @@ class PanelTest(unittest.TestCase):
             if not code_contains(main_text, tooltip_fragment):
                 raise AssertionError(f"the panel tooltip/form-factor contract is missing {tooltip_fragment!r}")
 
-        provider_tooltip_body = function_body(main_text, "panelProviderToolTipText")
-        if not re.search(r"var incident = presented\.hasIncident\s*&&\s*presented\.statusKnown !== false\s*&&", provider_tooltip_body):
+        provider_tooltip_body = applet.function_body("providerToolTipText")
+        tooltip_plan = applet.function_body("providerTooltip")
+        if not re.search(r"item\.hasIncident\s*&&\s*item\.statusKnown !== false\s*&&", tooltip_plan):
             raise AssertionError("panel tooltips must exclude inactive and unknown incidents")
-        if not code_contains(provider_tooltip_body, 'i18n("%1 - %2", line, incident)'):
-            raise AssertionError(
-                "the panel tooltip must report incidents even when the provider also reports usage"
-            )
-        # A crowded panel surrenders the credit balance before the usage figure and no
-        # meter carries it, so the tooltip is the pointer user's only way back to it.
-        if ("Plasmoid.configuration.showCreditsInPanel" not in provider_tooltip_body
-                or 'i18n("%1cr"' not in provider_tooltip_body):
-            raise AssertionError(
-                "the panel tooltip must report the credit balance the panel can surrender"
-            )
-        # The name leads the surrender order because the icon names the provider. That
-        # fails for a provider outside the bundled icon and brand-color tables, which
-        # render as one shared generic icon.
+        if not code_contains(provider_tooltip_body, 'i18n("%1 - %2", line, parts.incident)'):
+            raise AssertionError("panel tooltip localization must retain current incidents")
+        panel_text = applet.id_block("panelText")
+        if not code_contains(panel_text, "showCredits: Plasmoid.configuration.showCreditsInPanel"):
+            raise AssertionError("panel text must follow the configured credit visibility")
+        if not code_contains(provider_tooltip_body, 'i18n("%1cr"'):
+            raise AssertionError("the tooltip must report the balance the panel can surrender")
         compact_segments_body = function_body(main_text, "compactTextSegments")
-        if not code_contains(compact_segments_body, "identifying: !providerIconIdentifies("):
-            raise AssertionError(
-                "the panel name segment must record whether the icon can identify the provider"
-            )
+        if not code_contains(compact_segments_body, "providerIconIdentifies(item.provider)"):
+            raise AssertionError("segment identity must follow the selected provider's icon")
+        applet.require("identifying: !options.iconIdentifies", "unidentified names remain recoverable")
+        if not code_contains(function_body(main_text, "panelProviderToolTipText"),
+                             "panelText.providerToolTipText(presented, panelMeterDescription(presented))"):
+            raise AssertionError("tooltip presentation must receive the privacy-filtered provider")
         if "providerBrandColorChannels" not in function_body(main_text, "providerIconIdentifies"):
             raise AssertionError(
                 "icon identification must follow the bundled provider tables, not a guess"
