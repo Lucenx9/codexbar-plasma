@@ -18,18 +18,10 @@ function globalSelectionNeedsReconciliation(current, globalViews) {
         && !globalViewIsAvailable(current.globalView, globalViews)
 }
 
-function compactProviderIndex(autoSelect, selectedProviderIndex, automaticProviderIndex) {
-    if (autoSelect !== true) {
-        return 0
-    }
-    // Global popup views have no selected provider. Their selection must not
-    // replace the panel's highest-usage provider with the first roster entry.
-    return selectedProviderIndex >= 0 ? selectedProviderIndex : automaticProviderIndex
-}
-
 // The provider that drives the panel text and identity. `panelItems` is the
 // roster already restricted to the configured panel selection; with no stored
-// selection it is the full roster and this reduces to compactProviderIndex.
+// selection it is the full roster. Global popup views have no selected provider
+// and retain the automatic panel provider rather than the first roster entry.
 // A popup selection outside the panel set falls back to the automatic panel
 // provider, so panel text never describes a provider the panel does not show.
 function compactPanelProvider(autoSelect, selectedProvider, panelItems, automaticPanelIndex) {
