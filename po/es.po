@@ -2014,7 +2014,7 @@ msgstr "Buscar versiones del CLI ahora"
 msgid "Open release page"
 msgstr "Abrir la página de la versión"
 
-#: contents/ui/configGeneral.qml
+#: contents/ui/configGeneral.qml scripts/smoke/Capture.qml
 msgid "Managed CLI"
 msgstr "CLI gestionada"
 

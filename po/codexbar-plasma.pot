@@ -2324,7 +2324,7 @@ msgstr ""
 msgid "Open release page"
 msgstr ""
 
-#: contents/ui/configGeneral.qml
+#: contents/ui/configGeneral.qml scripts/smoke/Capture.qml
 msgid "Managed CLI"
 msgstr ""
 

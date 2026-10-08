@@ -2019,7 +2019,7 @@ msgstr "Controlla ora le release della CLI"
 msgid "Open release page"
 msgstr "Apri la pagina della release"
 
-#: contents/ui/configGeneral.qml
+#: contents/ui/configGeneral.qml scripts/smoke/Capture.qml
 msgid "Managed CLI"
 msgstr "CLI gestita"
 

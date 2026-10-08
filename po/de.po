@@ -2029,7 +2029,7 @@ msgstr "Jetzt nach CLI-Versionen suchen"
 msgid "Open release page"
 msgstr "Release-Seite öffnen"
 
-#: contents/ui/configGeneral.qml
+#: contents/ui/configGeneral.qml scripts/smoke/Capture.qml
 msgid "Managed CLI"
 msgstr "Verwaltete CLI"
 

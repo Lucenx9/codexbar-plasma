@@ -2020,7 +2020,7 @@ msgstr "Vérifier les versions du CLI maintenant"
 msgid "Open release page"
 msgstr "Ouvrir la page de la version"
 
-#: contents/ui/configGeneral.qml
+#: contents/ui/configGeneral.qml scripts/smoke/Capture.qml
 msgid "Managed CLI"
 msgstr "CLI gérée"
 

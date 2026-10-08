@@ -2011,7 +2011,7 @@ msgstr "Verificar versões do CLI agora"
 msgid "Open release page"
 msgstr "Abrir a página da versão"
 
-#: contents/ui/configGeneral.qml
+#: contents/ui/configGeneral.qml scripts/smoke/Capture.qml
 msgid "Managed CLI"
 msgstr "CLI gerenciada"
 
