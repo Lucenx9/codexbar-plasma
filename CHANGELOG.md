@@ -37,6 +37,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Avoid premature account-label truncation in provider headers by rounding
+  its maximum width up to a whole pixel, consistently with the plan label.
 - Stop AI Insights helpers and their wallet/dialog children when a request is
   cancelled, enforce HTTP deadlines even for trickled responses, and reject
   excessively nested JSON and malformed Ollama addresses with bounded errors.
