@@ -921,7 +921,18 @@ guard their applied-configuration reads, as Notifications already did, so a page
 built outside a plasmoid resolves those bindings instead of raising a TypeError
 that `failOnWarning` reports as a failure.
 
-The same QtTest checks the accessible name of Diagnostics' command-path field.
+The same QtTest checks Diagnostics report collection/copy, explicit partial
+results after timeouts, command-path reset and stale-source rejection, alongside
+the accessible name of its command-path field. `SupportReport.js` accepts
+explicit facts and produces a bounded English technical Markdown report; QML
+owns module probes, localization, processes, clipboard and feedback. The offline
+`collect-support-report.py` helper reuses CLI version/ownership probes. Its only
+CLI commands are `--version` and `config providers --format json --json-only`
+(verified on official Linux CLI 0.67.0 and 0.73.0); the provider list discards
+every field except enabled provider IDs.
+`tests/test_support_report.py` and `tests/tst_support_report.qml` cover trust
+boundaries, missing tools, privacy and fixed probes. No `diagnose`, raw config,
+provider fetching, hardware/hostname fields or network requests enter collection.
 The `settings-diagnostics*` smoke scenarios run that page inside an applet and
 assert that it displays the package metadata version and associates the command
 path's form label with the editable field.

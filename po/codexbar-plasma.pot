@@ -196,6 +196,7 @@ msgstr ""
 
 #: contents/ui/components/CopyableValue.qml
 #: contents/ui/components/ShareUsageWindow.qml
+#: contents/ui/configDiagnostics.qml
 msgid "Copied"
 msgstr ""
 
@@ -2014,6 +2015,14 @@ msgid "Set the codexbar command path above."
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
+msgid "Support checks timed out. Partial results remain available."
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "Support checks failed. Partial results remain available."
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
 msgid "Diagnostic command timed out. Try again."
 msgstr ""
 
@@ -2032,6 +2041,34 @@ msgstr ""
 
 #: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
 msgid "codexbar exited with code %1"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "Support report"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid ""
+"Collect an offline report to paste into an issue. Includes versions, CLI "
+"paths, enabled provider IDs, the latest Diagnostics error and module checks. "
+"Home usernames and credentials are redacted; review the preview before "
+"sharing."
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "Collect support report"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "Collecting..."
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "Copy report"
+msgstr ""
+
+#: contents/ui/configDiagnostics.qml
+msgid "Report preview"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml

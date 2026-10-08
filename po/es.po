@@ -3656,3 +3656,35 @@ msgid "%2 of %1 provider"
 msgid_plural "%2 of %1 providers"
 msgstr[0] "%2 de %1 proveedor"
 msgstr[1] "%2 de %1 proveedores"
+
+#: contents/ui/configDiagnostics.qml
+msgid "Support checks failed. Partial results remain available."
+msgstr "Las comprobaciones de soporte fallaron. Los resultados parciales siguen disponibles."
+
+#: contents/ui/configDiagnostics.qml
+msgid "Support checks timed out. Partial results remain available."
+msgstr "Las comprobaciones de soporte agotaron el tiempo. Los resultados parciales siguen disponibles."
+
+#: contents/ui/configDiagnostics.qml
+msgid "Support report"
+msgstr "Informe de soporte"
+
+#: contents/ui/configDiagnostics.qml
+msgid "Collect an offline report to paste into an issue. Includes versions, CLI paths, enabled provider IDs, the latest Diagnostics error and module checks. Home usernames and credentials are redacted; review the preview before sharing."
+msgstr "Recopile un informe sin conexión para pegarlo en una incidencia. Incluye versiones, rutas CLI, ID de proveedores habilitados, el último error de Diagnóstico y comprobaciones de módulos. Se ocultan los nombres de usuario en rutas personales y las credenciales; revise la vista previa antes de compartir."
+
+#: contents/ui/configDiagnostics.qml
+msgid "Collect support report"
+msgstr "Recopilar informe de soporte"
+
+#: contents/ui/configDiagnostics.qml
+msgid "Collecting..."
+msgstr "Recopilando..."
+
+#: contents/ui/configDiagnostics.qml
+msgid "Copy report"
+msgstr "Copiar informe"
+
+#: contents/ui/configDiagnostics.qml
+msgid "Report preview"
+msgstr "Vista previa del informe"

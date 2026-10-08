@@ -101,6 +101,8 @@ def stage_applet(work, scenario, image_path, theme=None):
     (package / "scripts").mkdir()
     shutil.copyfile(ROOT / "scripts/smoke/fixture_ai_insights.py", package / "scripts/ai-insights.py")
 
+    shutil.copyfile(ROOT / "scripts/smoke/fixture_support_report.py", package / "scripts/collect-support-report.py")
+
     fixture_cli = work / "codexbar-fixture"
     fixture_source = (ROOT / "scripts/smoke/fixture_cli.py").read_text()
     fixture_cli.write_text("#!" + sys.executable + "\n" + fixture_source.split("\n", 1)[1])

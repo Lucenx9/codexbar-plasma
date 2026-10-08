@@ -10,6 +10,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Added
+
+- Collect and copy an offline Diagnostics support report with installed widget,
+  Plasma/Frameworks/Qt and CLI versions, selected/system CLI paths and management,
+  enabled provider IDs, the latest Diagnostics error, and module/tool checks.
+  Preview the report before sharing; home usernames and credentials are redacted.
+
 ### Changed
 
 - Collapse popup account lists longer than three choices behind an Accounts
