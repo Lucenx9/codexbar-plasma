@@ -123,6 +123,37 @@ TestCase {
         compare(labels.length, 4);
     }
 
+    function test_longDashboardValueStaysInsidePopup_data() {
+        return [{tag: "narrow", width: 240}, {tag: "normal", width: 540}];
+    }
+
+    function test_longDashboardValueStaysInsidePopup(data) {
+        var subject = createSubject();
+        subject.width = data.width;
+        var longValue = new Array(121).join("M");
+        subject.applet.presentedProviderData = {
+            provider: "codex", providerDetails: [],
+            usageDashboard: {kpis: [], rows: [{label: "Top model", value: longValue}]}
+        };
+        var all = [];
+        walkTree(subject, all);
+        var value = all.filter(function(item) {
+            return item.objectName === "usageDashboardValue0";
+        })[0];
+        verify(value !== undefined);
+        tryVerify(function() { return value.width > 0 && value.truncated; });
+        verify(value.width <= value.parent.width / 2 + 1);
+        verify(value.mapToItem(subject, 0, 0).x >= 0);
+        verify(value.mapToItem(subject, value.width, 0).x <= subject.width + 1);
+        var tip = value.data.filter(function(item) { return item.plainText !== undefined; })[0];
+        verify(tip !== undefined);
+        compare(tip.plainText, longValue);
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        wait(100);
+        mouseMove(value, value.width / 2, value.height / 2);
+        tryCompare(tip, "visible", true);
+    }
+
     // Each reported detail entry gets its own detail section.
     function test_detailsEntriesEachGetASection() {
         var subject = createSubject();
@@ -185,7 +216,8 @@ class UsageDashboardTests(unittest.TestCase):
             "PlainPlasmaLabel {", "Components.PlainPlasmaLabel {"))
         qml = qml.replace("DASHBOARD_BLOCK", dashboard.replace(
             "PlainHeading {", "Components.PlainHeading {").replace(
-            "PlainPlasmaLabel {", "Components.PlainPlasmaLabel {"))
+            "PlainPlasmaLabel {", "Components.PlainPlasmaLabel {").replace(
+            "PlainToolTip {", "Components.PlainToolTip {"))
         with tempfile.TemporaryDirectory(prefix="codexbar-dashboard-") as temporary:
             fixture = Path(temporary) / "tst_dashboard.qml"
             fixture.write_text(qml)

@@ -117,7 +117,7 @@ Rectangle {
 
     PlainToolTip {
         parent: tabMouse
-        visible: (!tab.showLabel || tab.textTruncated) && tabMouse.containsMouse
+        visible: (!tab.showLabel || tab.textTruncated) && (tabMouse.containsMouse || tabFocus.visualFocus)
         plainText: tab.title
     }
 

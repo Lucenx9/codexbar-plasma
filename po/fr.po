@@ -3655,3 +3655,9 @@ msgstr ""
 #~ msgstr ""
 #~ "Consulte les versions officielles sur GitHub. Le widget n’installe ni ne "
 #~ "remplace le CLI."
+
+#: contents/ui/components/FullRepresentation.qml scripts/smoke/Capture.qml
+msgid "%2 of %1 provider"
+msgid_plural "%2 of %1 providers"
+msgstr[0] "%2 sur %1 fournisseur"
+msgstr[1] "%2 sur %1 fournisseurs"

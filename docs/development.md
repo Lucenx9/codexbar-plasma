@@ -978,6 +978,12 @@ leaving the plot or clearing its points preserves the reserved readout space.
 
 ## Popup smoke tests
 
+`tabs-overflow` checks the Overview subset count and keyboard tooltips for a
+long provider title, alongside navigation across the overflowing strip.
+`legacy-dashboard` checks a long top-model value stays within half its row,
+elides, and retains its complete tooltip text. `test_usage_dashboard.py` also
+executes the production block at 240 and 540 pixels and checks full-text hover.
+
 `empty-providers` and `usage-error` exercise the popup's setup and recovery
 actions. `usage-recovery` retries a failed refresh with retained quotas, checks
 that repeated activation cannot start another request, and waits for fresh
@@ -1085,9 +1091,11 @@ and exercises privacy, an initial failure without a cache, and recovery.
 `popup-scroll` and `popup-scroll-large` exercise long account lists, provider
 and global error messages, and scroll resets after provider or account changes
 on the real applet. Same-account refreshes and privacy changes retain the
-position. The larger variant doubles the font size. Both verify that recovery
-actions and the final account remain reachable, and that a global error stays
-first in each view's scroll area. `tst_global_view_errors.qml` covers long
+position. The larger variant doubles the font size. Both verify that the first
+quota is visible with twenty account choices collapsed and that the disclosure
+opens the full list. Recovery actions and the final account remain reachable,
+and a global error stays first in each view's scroll area.
+`tst_global_view_errors.qml` covers long
 Spend/Sessions errors with retained data and empty/loading states, keyboard
 refresh, privacy, and pinned headers. The monthly credit regression in
 `test_provider_cost_presentation.py` checks that the production adapter and

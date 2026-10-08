@@ -457,11 +457,11 @@ Item {
                             }
 
                             // Labelled tabs are capped in width, so a long
-                            // provider name elides; hovering then reveals it.
+                            // provider name elides; hover or keyboard focus reveals it.
                             PlainToolTip {
                                 parent: providerTabMouse
                                 visible: (!applet.showPopupTabLabels || providerTabLabel.truncated)
-                                    && providerTabMouse.containsMouse
+                                    && (providerTabMouse.containsMouse || providerFocus.visualFocus)
                                 plainText: modelData.title
                             }
 
@@ -766,10 +766,15 @@ Item {
                     }
 
                     PlainPlasmaLabel {
+                        objectName: "overviewProviderCountLabel"
                         readonly property int providerCount: applet.overviewProviderItems.length
+                        readonly property int totalProviderCount: applet.providers.length
+                        readonly property string countText: providerCount < totalProviderCount
+                            ? i18np("%2 of %1 provider", "%2 of %1 providers", totalProviderCount, providerCount)
+                            : applet.providerCountText(providerCount)
 
                         // Same separator as the Sessions and Usage & Spend headers.
-                        text: [applet.lastUpdatedText, applet.providerCountText(providerCount)]
+                        text: [applet.lastUpdatedText, countText]
                             .filter(function(part) { return part.length > 0 })
                             .join(" \u00b7 ")
                         opacity: applet.secondaryTextOpacity
@@ -1343,24 +1348,41 @@ Item {
                             Repeater {
                                 model: usageDashboardSection.rows
 
-                                delegate: RowLayout {
+                                delegate: Item {
                                     required property var modelData
+                                    required property int index
 
                                     Layout.fillWidth: true
-                                    spacing: Kirigami.Units.smallSpacing
+                                    implicitHeight: Math.max(dashboardRowLabel.implicitHeight,
+                                        dashboardRowValue.implicitHeight)
 
                                     PlainPlasmaLabel {
+                                        id: dashboardRowLabel
                                         text: modelData.label
                                         opacity: applet.secondaryTextOpacity
-                                        Layout.fillWidth: true
+                                        width: Math.max(0, parent.width - dashboardRowValue.width
+                                            - Kirigami.Units.smallSpacing)
                                         elide: Text.ElideRight
                                     }
 
                                     PlainPlasmaLabel {
+                                        id: dashboardRowValue
+                                        objectName: "usageDashboardValue" + index
                                         text: modelData.value
                                         opacity: applet.valueTextOpacity
+                                        anchors.right: parent.right
+                                        width: Math.min(implicitWidth, parent.width / 2)
                                         horizontalAlignment: Text.AlignRight
                                         elide: Text.ElideRight
+
+                                        HoverHandler {
+                                            id: dashboardValueHover
+                                        }
+
+                                        PlainToolTip {
+                                            visible: dashboardRowValue.truncated && dashboardValueHover.hovered
+                                            plainText: dashboardRowValue.text
+                                        }
                                     }
                                 }
                             }

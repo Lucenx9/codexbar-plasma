@@ -540,6 +540,12 @@ msgstr ""
 msgid "Open Providers in widget settings to enable or set up a provider."
 msgstr ""
 
+#: contents/ui/components/FullRepresentation.qml scripts/smoke/Capture.qml
+msgid "%2 of %1 provider"
+msgid_plural "%2 of %1 providers"
+msgstr[0] ""
+msgstr[1] ""
+
 #: contents/ui/components/FullRepresentation.qml
 #: contents/ui/components/ProviderHeader.qml contents/ui/configGeneral.qml
 #: contents/ui/main.qml

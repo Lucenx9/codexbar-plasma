@@ -61,7 +61,6 @@ class PopupTabsTest(unittest.TestCase):
         for global_tab_fragment in (
             'property bool showLabel: true',
             'visible: tab.showLabel',
-            'visible: (!tab.showLabel || tab.textTruncated) && tabMouse.containsMouse',
         ):
             applet.require(global_tab_fragment, "global tabs must support accessible icon-only display")
 
