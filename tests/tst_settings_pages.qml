@@ -176,6 +176,66 @@ TestCase {
         compare(fields[0].Accessible.name, "Command path:");
     }
 
+    function test_supportReportCollectionAndCopy() {
+        var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: "codexbar"});
+        if (!page) return;
+        page.supportScriptUrl = Qt.resolvedUrl("../scripts/smoke/fixture_support_report.py");
+        page.diagnosticError = "Error Bearer private-secret /home/private/config user@example.com";
+        page.diagnosticOutput = "RAW_OUTPUT_MUST_NOT_COPY";
+        page.collectSupportReport();
+        verify(page.supportBusy);
+        verify(!findChild(page, "copySupportReportButton").enabled);
+        tryVerify(function() { return !page.supportBusy; }, 5000);
+        verify(page.supportFacts.valid);
+        compare(page.moduleChecks["QtQuick"], true);
+        compare(page.moduleChecks["org.kde.plasma.plasma5support"], true);
+        verify(page.supportReport.indexOf("codex, claude") >= 0);
+        verify(page.supportReport.indexOf("0.73.0") >= 0);
+        for (var secret of ["private-secret", "/home/private", "user@example.com", "RAW_OUTPUT_MUST_NOT_COPY"])
+            verify(page.supportReport.indexOf(secret) === -1, secret);
+        findChild(page, "supportPreviewDisclosure").expanded = true;
+        var preview = findChild(page, "supportReportScrollView");
+        verify(preview.clip);
+        tryVerify(function() { return preview.height <= preview.implicitHeight + 1; });
+        page.copySupportReport();
+        verify(page.supportCopied);
+        compare(findChild(page, "supportClipboard").text, "");
+        var pasted = createTemporaryQmlObject("import QtQuick; import QtQuick.Controls; TextArea { textFormat: TextEdit.PlainText }", testCase);
+        pasted.paste();
+        compare(pasted.text, page.supportReport);
+        page.cfg_commandPath = "/different/cli";
+        compare(page.supportReport, "");
+        compare(page.supportTimestamp, "");
+        verify(!page.supportCopied);
+    }
+
+    function test_supportReportRetiresStaleRepliesAndTimeout() {
+        var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: "codexbar"});
+        if (!page) return;
+        page.supportSource = "old-run";
+        page.supportTimestamp = "2026-10-08T09:00:00Z";
+        page.cfg_commandPath = "/different/cli";
+        page.acceptSupport("old-run", {"exit code": 0, stdout: "{}"});
+        verify(!page.supportFacts.valid);
+        compare(page.supportReport, "");
+        page.supportSource = "new-run";
+        page.supportTimestamp = "2026-10-08T09:01:00Z";
+        findChild(page, "supportDeadline").triggered();
+        verify(!page.supportBusy);
+        verify(page.supportError.indexOf("timed out") >= 0);
+        verify(page.supportReport.indexOf("timed out") >= 0);
+        verify(findChild(page, "copySupportReportButton").enabled);
+        page.acceptSupport("new-run", {"exit code": 0, stdout: "{}"});
+        verify(!page.supportFacts.valid);
+        for (var exitCode of [124, 137]) {
+            page.supportSource = "timeout-run";
+            page.acceptSupport("timeout-run", {"exit code": exitCode});
+            verify(page.supportError.indexOf("timed out") >= 0);
+            verify(page.supportReport.indexOf("timed out") >= 0);
+            verify(!page.supportBusy);
+        }
+    }
+
     function test_diagnosticsRejectsBlankPath() {
         var page = createPage("../contents/ui/configDiagnostics.qml", {cfg_commandPath: "   "});
         if (!page) return;
@@ -447,13 +507,7 @@ TestCase {
     }
 
     function diagnosticTimeoutTimer(page) {
-        var all = [];
-        walkPageObjects(page, all);
-        var found = all.filter(function(item) {
-            return item.toString().indexOf("Timer") >= 0 && item.repeat === false
-                && item.interval > 0 && item.toString().indexOf("cliUpdateDeadline") < 0;
-        });
-        return found.length === 1 ? found[0] : null;
+        return findChild(page, "diagnosticCommandTimeoutTimer");
     }
 
     function diagnosticProviderField(page) {
@@ -580,14 +634,10 @@ TestCase {
         page.runDiagnostic();
         tryVerify(function() { return !page.diagnosticRunning; }, 5000);
 
-        var all = [];
-        walkPageObjects(page, all);
-        var areas = all.filter(function(item) {
-            return item.toString().indexOf("TextArea") >= 0;
-        });
-        compare(areas.length, 1);
-        compare(areas[0].text, page.diagnosticOutput);
-        verify(areas[0].text.indexOf("diagnose --provider all") >= 0);
+        var area = findChild(page, "diagnosticOutputArea");
+        verify(area !== null);
+        compare(area.text, page.diagnosticOutput);
+        verify(area.text.indexOf("diagnose --provider all") >= 0);
     }
 
     // The timeout timer must retire a hung command through the handler: with

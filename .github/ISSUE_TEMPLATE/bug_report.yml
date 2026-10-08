@@ -27,26 +27,18 @@ body:
         3. Observe ...
     validations:
       required: true
-  - type: input
-    id: widget-version
+  - type: textarea
+    id: support-report
     attributes:
-      label: Widget version
-      description: Shown in the widget's About settings, or `metadata.json` in a checkout.
-      placeholder: "0.2.36"
-    validations:
-      required: true
-  - type: input
-    id: cli-version
-    attributes:
-      label: CodexBar CLI version
-      description: Output of `codexbar --version`.
-    validations:
-      required: true
-  - type: input
-    id: environment
-    attributes:
-      label: Plasma version and distribution
-      placeholder: "Plasma 6.4.4, Qt 6.9.1, Fedora 42"
+      label: Diagnostics support report
+      description: |
+        In widget settings, open Diagnostics → Support report → Collect support report.
+        Review Report preview, then use Copy report and paste it here.
+        Unknown or unavailable fields are useful too. If Diagnostics cannot open or
+        your widget predates this action, enter the widget version, `codexbar --version`,
+        Plasma/Qt versions and the configured CLI path manually.
+        Add your distribution if it helps reproduce the issue. Review all text for
+        personal information before sharing; do not paste raw provider diagnostics.
     validations:
       required: true
   - type: textarea

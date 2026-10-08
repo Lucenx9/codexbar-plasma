@@ -104,6 +104,8 @@ for its limits.
   downloads support Linux x86_64/aarch64 with glibc or musl; the downloaded
   executable must pass a local version probe before activation.
 - `notify-send` for Plasma notifications.
+- Offline Diagnostics support-report collection: `python3` and GNU `timeout`.
+  Other Diagnostics controls remain available without this report helper.
 - Optional AI Insights only: `python3` and GNU `timeout`; for OpenRouter or
   OpenAI keys also `kdialog`, `secret-tool`, and a Secret Service provider such
   as KWallet. Nothing is required while the feature is off.
@@ -115,6 +117,11 @@ Distribution package names vary. Source builds additionally need `make`, Python
 3, and GNU gettext; see [Development](#development).
 
 ## Features
+
+Collect an offline support report in **Diagnostics**, review its preview, and
+copy it into a bug report. It includes installed versions, selected/system CLI
+paths and ownership, enabled provider IDs and module checks, with home usernames
+and credentials redacted.
 
 Share a local usage summary from **Usage & Spend** as a PNG or copied text.
 The preview includes the selected history range, token totals, estimated usage

@@ -9,6 +9,8 @@ import "components" as Components
 import "Guards.js" as Guards
 import "SafeText.js" as SafeText
 import "controllers" as Controllers
+import "SupportReport.js" as SupportReport
+import "CommandLedger.js" as CommandLedger
 
 KCM.SimpleKCM {
     id: page
@@ -26,6 +28,142 @@ KCM.SimpleKCM {
     property string diagnosticOutput: ""
     property string diagnosticError: ""
     property string activeCommand: ""
+    property url supportScriptUrl: Qt.resolvedUrl("../../scripts/collect-support-report.py")
+    property string supportSource: ""
+    property int supportSerial: 0
+    property var supportFacts: SupportReport.response("")
+    property var moduleChecks: ({})
+    property string supportTimestamp: ""
+    property string supportError: ""
+    property string lastDiagnosticError: ""
+    property bool supportCopied: false
+    readonly property bool supportBusy: supportSource.length > 0
+    property string supportReport: ""
+    function updateSupportReport() {
+        supportReport = SupportReport.markdown({
+            facts: supportFacts, modules: moduleChecks, timestamp: supportTimestamp,
+            widgetVersion: widgetVersion, commandPath: commandPath,
+            providerOverride: cfg_provider, sourceOverride: cfg_source,
+            lastError: lastDiagnosticError, checkError: supportError
+        })
+    }
+
+    onDiagnosticErrorChanged: {
+        if (diagnosticError.length > 0) lastDiagnosticError = diagnosticError
+    }
+    onSupportReportChanged: supportCopied = false
+    onCfg_providerChanged: resetSupport()
+    onCfg_sourceChanged: resetSupport()
+
+    function retireSupport() {
+        var source = supportSource
+        supportSource = ""
+        supportDeadline.stop()
+        if (source.length > 0) supportDataSource.disconnectSource(source)
+    }
+
+    function resetSupport() {
+        retireSupport()
+        supportReport = ""
+        supportFacts = SupportReport.response("")
+        moduleChecks = ({})
+        supportTimestamp = ""
+        supportError = ""
+        lastDiagnosticError = ""
+    }
+
+    function collectSupportReport() {
+        if (supportBusy) return
+        supportError = ""
+        supportTimestamp = new Date().toISOString()
+        supportFacts = SupportReport.response("")
+        var checks = {}
+        for (var i = 0; i < SupportReport.modules.length; i++) {
+            var module = SupportReport.modules[i]
+            // PlasmaCore initializes a shell theme singleton.
+            // Avoid initializing another shell theme solely for a KCM probe.
+            // Metadata alone cannot prove the module loaded; leave it explicitly
+            // not checked rather than inventing an availability result.
+            if (module === "org.kde.plasma.core") continue
+            try {
+                var probe = Qt.createQmlObject("import QtQuick; import " + module + " as Checked; QtObject {}", page, "support-module-probe")
+                checks[module] = probe !== null
+                if (probe) probe.destroy()
+            } catch (error) {
+                checks[module] = false
+            }
+        }
+        moduleChecks = checks
+        updateSupportReport()
+        var command = SupportReport.command(supportScriptUrl, commandPath)
+        if (!command) {
+            supportError = i18n("Set the codexbar command path above.")
+            updateSupportReport()
+            return
+        }
+        supportSerial += 1
+        supportSource = CommandLedger.withRunNonce(command, supportSerial)
+        supportDeadline.restart()
+        supportDataSource.connectSource(supportSource)
+    }
+
+    function acceptSupport(sourceName, data) {
+        if (sourceName !== supportSource || sourceName.length === 0) return
+        retireSupport()
+        if (!data || Number(data["exit code"]) !== 0) {
+            // Helper stderr is deliberately excluded from shareable reports.
+            var exitCode = data ? Number(data["exit code"]) : -1
+            supportError = exitCode === 124 || exitCode === 137
+                ? i18n("Support checks timed out. Partial results remain available.")
+                : i18n("Support checks failed. Partial results remain available.")
+            updateSupportReport()
+            return
+        }
+        supportFacts = SupportReport.response(data["stdout"])
+        if (!supportFacts.valid) supportError = i18n("Support checks failed. Partial results remain available.")
+        updateSupportReport()
+    }
+
+    function copySupportReport() {
+        if (supportBusy || supportTimestamp.length === 0) return
+        supportClipboard.text = supportReport
+        supportClipboard.selectAll()
+        supportClipboard.copy()
+        supportClipboard.deselect()
+        supportClipboard.text = ""
+        supportCopied = true
+        supportCopyFeedback.restart()
+    }
+
+    Plasma5Support.DataSource {
+        id: supportDataSource
+        engine: "executable"
+        interval: 0
+        onNewData: function(sourceName, data) { page.acceptSupport(sourceName, data) }
+    }
+    Timer {
+        id: supportDeadline
+        objectName: "supportDeadline"
+        interval: 95000
+        onTriggered: {
+            page.retireSupport()
+            page.supportError = i18n("Support checks timed out. Partial results remain available.")
+            page.updateSupportReport()
+        }
+    }
+    Timer {
+        id: supportCopyFeedback
+        interval: 2000
+        onTriggered: page.supportCopied = false
+    }
+    Controls.TextArea {
+        id: supportClipboard
+        objectName: "supportClipboard"
+        visible: false
+        textFormat: TextEdit.PlainText
+    }
+    Component.onDestruction: retireSupport()
+
     // Reported environment, filled by the versions probe. Empty until it runs.
     readonly property string resolvedCommandPath: versions.result.path
     readonly property string cliVersionText: versions.result.version
@@ -45,6 +183,7 @@ KCM.SimpleKCM {
     readonly property int diagnosticCommandKillAfterSeconds: 5
 
     onCommandPathChanged: {
+        resetSupport()
         if (activeCommand.length > 0) {
             finishDiagnosticCommand(activeCommand)
         }
@@ -225,6 +364,7 @@ KCM.SimpleKCM {
 
     Timer {
         id: diagnosticCommandTimeoutTimer
+        objectName: "diagnosticCommandTimeoutTimer"
 
         interval: page.diagnosticCommandTimeoutMs
         repeat: false
@@ -232,6 +372,72 @@ KCM.SimpleKCM {
     }
 
     Kirigami.FormLayout {
+        Kirigami.Separator {
+            Kirigami.FormData.label: i18n("Support report")
+            Kirigami.FormData.isSection: true
+        }
+        Components.PlainControlsLabel {
+            text: i18n("Collect an offline report to paste into an issue. Includes versions, CLI paths, enabled provider IDs, the latest Diagnostics error and module checks. Home usernames and credentials are redacted; review the preview before sharing.")
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            wrapMode: Text.WordWrap
+        }
+        Flow {
+            Layout.fillWidth: true
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            spacing: Kirigami.Units.smallSpacing
+            Controls.Button {
+                objectName: "collectSupportReportButton"
+                text: page.supportBusy ? i18n("Collecting...") : i18n("Collect support report")
+                icon.name: "view-refresh"
+                enabled: !page.supportBusy && !page.diagnosticRunning && !versions.busy && !systemVersions.busy
+                onClicked: page.collectSupportReport()
+            }
+            Controls.Button {
+                objectName: "copySupportReportButton"
+                text: page.supportCopied ? i18n("Copied") : i18n("Copy report")
+                icon.name: "edit-copy"
+                enabled: !page.supportBusy && page.supportTimestamp.length > 0
+                onClicked: page.copySupportReport()
+            }
+        }
+        Components.PlainInlineMessage {
+            plainText: page.supportError
+            type: Kirigami.MessageType.Warning
+            visible: page.supportError.length > 0
+            Layout.fillWidth: true
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+        }
+        Components.DisclosureButton {
+            id: supportPreviewDisclosure
+            objectName: "supportPreviewDisclosure"
+            text: i18n("Report preview")
+            expanded: false
+            visible: page.supportTimestamp.length > 0
+            onClicked: expanded = !expanded
+        }
+        Controls.ScrollView {
+            objectName: "supportReportScrollView"
+            // Kirigami FormLayout reads implicitHeight when sizing its row;
+            // preferredHeight alone leaves ScrollView at its full text height.
+            implicitHeight: Kirigami.Units.gridUnit * 14
+            clip: true
+            visible: supportPreviewDisclosure.visible && supportPreviewDisclosure.expanded
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            Layout.preferredHeight: Kirigami.Units.gridUnit * 14
+            Controls.TextArea {
+                objectName: "supportReportPreview"
+                text: page.supportReport
+                textFormat: TextEdit.PlainText
+                readOnly: true
+                selectByMouse: true
+                wrapMode: TextEdit.Wrap
+                Accessible.name: i18n("Report preview")
+            }
+        }
         Kirigami.Separator {
             Kirigami.FormData.label: i18n("Connection")
             Kirigami.FormData.isSection: true
@@ -464,6 +670,8 @@ KCM.SimpleKCM {
         }
 
         Controls.ScrollView {
+            implicitHeight: Kirigami.Units.gridUnit * 16
+            clip: true
             Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
@@ -471,6 +679,7 @@ KCM.SimpleKCM {
 
             Controls.TextArea {
                 id: diagnosticOutputArea
+                objectName: "diagnosticOutputArea"
                 readOnly: true
                 selectByMouse: true
                 wrapMode: TextEdit.NoWrap

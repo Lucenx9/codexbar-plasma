@@ -1568,7 +1568,27 @@ Item {
                         auth: {configured: true, modes: ["oauth"]}, fetchAttempts: [{status: "timeout"}]}], null, 2);
                     preview.page.diagnosticError = "Synthetic provider timeout. Try again.";
                 }
+                preview.page.collectSupportReport();
                 navigationVerified = true;
+                return false;
+            }
+            if (scenario.indexOf("settings-diagnostics") === 0) {
+                if (preview.page.supportBusy) return false;
+                verifyScenario(preview.page.supportFacts.valid, "support report did not accept the synthetic offline facts");
+                verifyScenario(preview.page.supportReport.indexOf("0.73.0") >= 0
+                    && preview.page.supportReport.indexOf("codex, claude") >= 0
+                    && preview.page.supportReport.indexOf("/home/demo") < 0,
+                    "support report must include allowlisted facts and redact the home username");
+                var copyReport = findItem(preview.page, "copySupportReportButton");
+                verifyScenario(copyReport !== null && copyReport.enabled, "support report has no ready copy action");
+                var reportViewport = findItem(preview.page, "supportReportScrollView");
+                verifyScenario(reportViewport !== null && reportViewport.clip
+                    && reportViewport.height <= Kirigami.Units.gridUnit * 14 + 1,
+                    "support preview must clip its scrollable text before other form sections");
+                if (scenario !== "settings-diagnostics-narrow") {
+                    var reportPreview = findItem(preview.page, "supportPreviewDisclosure");
+                    if (reportPreview !== null) reportPreview.expanded = true;
+                }
             }
             if (scenario.indexOf("settings-popup") === 0 && !navigationVerified) {
                 var savedSections = JSON.stringify([

@@ -524,8 +524,28 @@ fields; track proposed extensions in the issue tracker.
   it describes, and dependent options are indented under the option they need.
   **Diagnostics** also reports the widget version, and, after **Check
   versions**, the CLI version and the absolute command the shell resolved.
-  Those three lines are what a bug report needs; the probe runs only when
-  asked, and a changed command path clears the previous result.
+  **Support report → Collect support report** gathers an offline Markdown
+  report, ready to paste into an issue with **Copy report**. Expand **Report
+  preview** to review it first. It includes the installed widget and
+  Plasma/KDE Frameworks/Qt versions, selected and PATH CLI version/path/manager,
+  enabled provider IDs, the current Diagnostics form overrides, the latest
+  error observed in this Diagnostics session, and QML module/supporting-tool
+  availability.
+  The report uses English technical labels for support across languages.
+  It does not run provider diagnostics, fetch usage, check upstream releases,
+  or include diagnostic output, account labels, credentials or config dumps.
+  Home-directory usernames and recognized credentials/identifiers are redacted.
+  Versions come from offline `kinfo`, installed Debian package metadata when
+  available, `kf6-config`, and Qt 6 `qtpaths`; unavailable versions remain unknown.
+  Module checks use this QML engine; PlasmaCore remains explicitly **not
+  checked** to avoid initializing another shell theme solely for the probe.
+  Tool presence is not a functional test.
+  Collection requires `python3` and GNU `timeout`. Partial results can still be
+  copied if the helper fails or times out. No popup error history is read from
+  another process; the error section explicitly names its Diagnostics source.
+  Collect again after changing provider settings. Editing the command path or
+  widget overrides discards the previous report. The separate **Check versions**
+  probe runs only when asked; a changed command path clears its previous result.
   The widget version is available as soon as Diagnostics opens. The command
   path has a screen-reader label and supports the form label's keyboard shortcut.
   **Popup** and **Notifications** keep their text and controls still while the
