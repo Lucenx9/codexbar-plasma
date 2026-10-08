@@ -592,10 +592,12 @@ effect ownership, and lifecycle ordering statically. Use runtime checks where
 static checks cannot establish the behavior. Avoid assertions on private helper
 names or body decomposition when public behavior is already covered.
 
-Provider alias, documentation, dashboard, login, status and brand-color fallback
-contracts run through the public `ProviderIdentity` functions in
-`tests/tst_provider_metadata.qml`. Keep these expected outputs independent of
+Provider alias, CLI argument, documentation, dashboard, login, status and
+brand-color fallback contracts run through the public `ProviderIdentity`
+functions in `tests/tst_provider_metadata.qml`. Keep these expected outputs independent of
 the production tables; do not parse their source layout in parity checks.
+Required colors must expose three finite numeric channels in `0..1`; QML theme
+ownership, delegation and fallback checks remain in `test_theme_boundaries.sh`.
 
 Before adding a static assertion, and before keeping an existing one, break the
 behavior it describes and confirm a QtTest or Python test goes red. A fragment

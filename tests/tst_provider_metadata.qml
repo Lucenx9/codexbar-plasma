@@ -6,7 +6,7 @@ TestCase {
     name: "ProviderMetadata"
 
     // Expected fallback metadata is independent of the production table layout.
-    // Preserve the contracts formerly checked by test_feature_parity.sh.
+    // Preserve the contracts formerly checked by parity and theme scripts.
 
     function test_docs_data() {
         return [
@@ -195,5 +195,56 @@ TestCase {
     }
     function test_statusUrls(data) {
         compare(ProviderIdentity.providerStatusUrl(data.provider), data.expected);
+    }
+
+    function test_cliArguments_data() {
+        var overrides = [
+            {provider: "abacus", alias: "abacus-ai", expected: "abacusai"},
+            {provider: "alibaba", alias: "bailian", expected: "alibaba-coding-plan"},
+            {provider: "alibabatokenplan", alias: "bailian-token-plan", expected: "alibaba-token-plan"},
+            {provider: "azureopenai", alias: "aoai", expected: "azure-openai"},
+            {provider: "groq", alias: "groq-api", expected: "groqcloud"},
+            {provider: "qwencloud", alias: "qwen", expected: "qwen-cloud"}
+        ];
+        var cases = [];
+        for (var row of overrides) {
+            for (var input of [row.provider, row.alias, row.provider.toUpperCase()]) {
+                cases.push({tag: input, provider: input, expected: row.expected});
+            }
+        }
+        return cases;
+    }
+    function test_cliArguments(data) {
+        compare(ProviderIdentity.providerCliArgument(data.provider), data.expected);
+    }
+
+    function test_requiredBrandColors_data() {
+        // Retain the existing official and compatibility color-presence set.
+        var providers = [
+            "codex", "openai", "azureopenai", "claude", "clinepass", "cursor", "opencode",
+            "opencodego", "alibaba", "alibabatokenplan", "qwencloud", "factory", "fireworks", "gemini",
+            "antigravity", "copilot", "devin", "zai", "minimax", "manus", "kimi",
+            "kilo", "kiro", "vertexai", "augment", "jetbrains", "kimik2", "crossmodel",
+            "moonshot", "amp", "t3chat", "ollama", "synthetic", "warp", "openrouter",
+            "elevenlabs", "windsurf", "zed", "perplexity", "mimo", "doubao", "abacus",
+            "mistral", "deepseek", "codebuff", "crof", "venice", "commandcode", "qoder",
+            "stepfun", "bedrock", "grok", "groq", "llmproxy", "litellm", "deepgram",
+            "poe", "chutes", "clawrouter", "sakana", "deepinfra", "neuralwatt", "longcat",
+            "sub2api", "zenmux", "aiand", "zoommate", "wayfinder", "xai", "notion",
+            "ibmbob"
+        ];
+        return providers.map(function(provider) {
+            return {tag: provider, provider: provider};
+        });
+    }
+    function test_requiredBrandColors(data) {
+        var channels = ProviderIdentity.providerBrandColorChannels(data.provider);
+        verify(Array.isArray(channels));
+        compare(channels.length, 3);
+        for (var channel of channels) {
+            compare(typeof channel, "number");
+            verify(isFinite(channel));
+            verify(channel >= 0 && channel <= 1);
+        }
     }
 }
