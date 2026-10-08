@@ -5,10 +5,14 @@ and no real credential or wallet is used.
 """
 import gettext
 import http.server
+import io
 import importlib.util
 import json
 import os
 import re
+import shlex
+import signal
+import socket
 from pathlib import Path
 import subprocess
 import sys
@@ -53,6 +57,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
         route = Handler.routes.get(self.path, (404, {"error": "missing"}, {}, 0))
         # A callable route answers according to the request body.
         status, payload, headers, delay = route(record["body"]) if callable(route) else route
+        if headers.get("X-Test-Disconnect"):
+            self.connection.shutdown(socket.SHUT_RDWR)
+            self.connection.close()
+            return
         if delay:
             time.sleep(delay)
         raw = payload if isinstance(payload, bytes) else json.dumps(payload).encode()
@@ -62,8 +70,16 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(raw)))
         self.end_headers()
         try:
-            self.wfile.write(raw)
-        except BrokenPipeError:
+            if headers.get("X-Test-Partial"):
+                self.wfile.write(raw[:len(raw) // 2])
+            elif headers.get("X-Test-Trickle"):
+                for byte in raw:
+                    self.wfile.write(bytes([byte]))
+                    self.wfile.flush()
+                    time.sleep(float(headers["X-Test-Trickle"]))
+            else:
+                self.wfile.write(raw)
+        except (BrokenPipeError, ConnectionResetError):
             pass
 
     do_GET = respond
@@ -323,6 +339,16 @@ class RequestContractTests(HelperTestCase):
             with self.subTest(value=value), self.assertRaises(ai.Failure):
                 ai.ollama_base(value)
 
+    def test_malformed_ollama_hosts_return_a_bounded_reason(self):
+        for endpoint in ("http://[::1", "https://[not-ipv6]", "http://localhost:bad"):
+            with self.subTest(endpoint=endpoint):
+                self.assertEqual(ai.run("models", "ollama", endpoint=endpoint),
+                                 {"status": "error", "reason": "endpoint"})
+                self.assertEqual(ai.run("generate", "ollama", model="llama3", endpoint=endpoint,
+                                        language="en", snapshot=SNAPSHOT),
+                                 {"status": "error", "reason": "endpoint"})
+        self.assertEqual(Handler.requests, [])
+
 
 class ResponseValidationTests(HelperTestCase):
     def reply(self, payload, status=200, headers=None, provider="openrouter"):
@@ -355,12 +381,26 @@ class ResponseValidationTests(HelperTestCase):
             chat(json.dumps({"summary": 3})), chat(json.dumps({"highlights": []})),
             chat(json.dumps({"summary": "x", "highlights": "y"})), chat("x" * (ai.MAX_CONTENT_CHARS + 1)),
             {"choices": []}, {"unexpected": True}, b"<html>", b"",
+            b"[" * 2000 + b"0" + b"]" * 2000,
+            chat("[" * 2000 + "0" + "]" * 2000),
+            b"x" * (ai.MAX_RESPONSE_BYTES + 1),
         ]
         for payload in cases:
             with self.subTest(payload=str(payload)[:60]):
                 Handler.requests = []
                 self.assertEqual(self.reply(payload), {"status": "error", "reason": "format"})
                 self.assertEqual(len(Handler.requests), 1)
+
+    def test_nesting_guard_preserves_brackets_and_escaped_quotes_in_prose(self):
+        summary = 'Quoted "text" and \\ path ' + "[{]}" * 80
+        self.assertEqual(self.reply(chat(json.dumps({"summary": summary, "highlights": []}))),
+                         {"status": "ok", "summary": summary, "highlights": []})
+
+    def test_nesting_guard_preserves_json_encoding_detection(self):
+        for encoding in ("utf-8-sig", "utf-16", "utf-32"):
+            with self.subTest(encoding=encoding):
+                self.assertEqual(self.reply(json.dumps(chat(json.dumps(INSIGHT))).encode(encoding)),
+                                 {"status": "ok", **INSIGHT})
 
     def test_refusal_and_truncation(self):
         self.assertEqual(self.reply(chat(None, refusal="I can't")), {"status": "error", "reason": "refused"})
@@ -421,8 +461,36 @@ class ResponseValidationTests(HelperTestCase):
         with patch.dict(ai.CLOUD_BASES, {"openrouter": "http://127.0.0.1:9/api/v1"}):
             self.assertEqual(self.generate(), {"status": "error", "reason": "network"})
 
+    def test_trickled_success_and_error_bodies_share_a_wall_clock_bound(self):
+        previous_handler = signal.getsignal(signal.SIGALRM)
+        for status in (200, 429):
+            with self.subTest(status=status):
+                Handler.routes["/api/chat"] = (status, b" " * 50,
+                                               {"X-Test-Trickle": "0.05"}, 0)
+                with patch.object(ai, "REQUEST_TIMEOUT", 0.3):
+                    started = time.monotonic()
+                    self.assertEqual(self.generate(provider="ollama", model="llama3"),
+                                     {"status": "error", "reason": "timeout"})
+                    self.assertLess(time.monotonic() - started, 0.9)
+                self.assertEqual(signal.getsignal(signal.SIGALRM), previous_handler)
+                self.assertEqual(signal.getitimer(signal.ITIMER_REAL), (0, 0))
+
+    def test_server_disappears_and_removed_ollama_model_fail_without_retry(self):
+        for status, payload, headers, reason in (
+                (200, {}, {"X-Test-Disconnect": "1"}, "network"),
+                (200, {"message": {"content": json.dumps(INSIGHT)}}, {"X-Test-Partial": "1"}, "format"),
+                (404, {"error": "removed model " + KEY}, {}, "model"),
+                (500, b"[" * 2000 + b"0" + b"]" * 2000, {}, "unavailable")):
+            with self.subTest(reason=reason):
+                Handler.requests = []
+                Handler.routes["/api/chat"] = (status, payload, headers, 0)
+                self.assertEqual(self.generate(provider="ollama", model="llama3"),
+                                 {"status": "error", "reason": reason})
+                self.assertEqual(len(Handler.requests), 1)
+
     def test_invalid_snapshots_are_rejected_before_any_request(self):
-        for snapshot in ("", "{", "[]", json.dumps({"providers": {}}), json.dumps({"providers": ["x" * 20000]})):
+        for snapshot in ("", "{", "[]", json.dumps({"providers": {}}), json.dumps({"providers": ["x" * 20000]}),
+                         '{"providers":' + "[" * 2000 + "0" + "]" * 2000 + "}"):
             with self.subTest(snapshot=snapshot[:20]):
                 self.assertEqual(self.generate(snapshot=snapshot), {"status": "error", "reason": "invalid_input"})
         self.assertEqual(Handler.requests, [])
@@ -583,6 +651,65 @@ print(os.environ.get("FAKE_DIALOG_VALUE", {KEY!r}))
         rejected = subprocess.run([sys.executable, str(ROOT / "scripts/ai-insights.py"), "--action", "run",
                                    "--provider", "openai"], capture_output=True, text=True, timeout=30)
         self.assertNotEqual(rejected.returncode, 0)
+        unsupervised = subprocess.run([sys.executable, str(ROOT / "scripts/ai-insights.py"),
+                                       "--action", "key-status", "--provider", "openai", "--supervised"],
+                                      capture_output=True, text=True, env=environment, timeout=30, check=True,
+                                      start_new_session=True)
+        self.assertEqual(json.loads(unsupervised.stdout), {"status": "error", "reason": "unavailable"})
+
+    def test_supervised_parent_death_stops_wallet_children(self):
+        tool = self.path / "secret-tool"
+        release = self.path / "release"
+        tool.write_text(f"""#!{sys.executable}
+import time
+from pathlib import Path
+with open({str(self.log)!r}, "a") as log:
+    log.write("started\\n")
+while not Path({str(release)!r}).exists():
+    time.sleep(0.02)
+with open({str(self.log)!r}, "a") as log:
+    log.write("finished\\n")
+""")
+        command = ["timeout", "--kill-after=2s", "10s", sys.executable,
+                   str(ROOT / "scripts/ai-insights.py"), "--action", "key-status",
+                   "--provider", "openai", "--supervised"]
+        process = subprocess.Popen(["/bin/sh", "-c", "exec " + shlex.join(command)],
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   env={**os.environ, "PATH": f"{self.path}:{os.environ.get('PATH', '')}"})
+        try:
+            deadline = time.monotonic() + 5
+            while not self.log.exists() and time.monotonic() < deadline:
+                time.sleep(0.02)
+            self.assertTrue(self.log.exists(), "the production helper must start its wallet child")
+            process.kill()
+            stdout, stderr = process.communicate(timeout=3)
+            release.touch()
+            time.sleep(0.3)
+            self.assertEqual(self.log.read_text(), "started\n", "the wallet child must stop too")
+            self.assertEqual(stdout, b"")
+            self.assertEqual(stderr, b"")
+        finally:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            process.communicate(timeout=3)
+
+    def test_supervised_guard_rejects_a_non_timeout_group_owner(self):
+        launcher = "import subprocess, sys; result = subprocess.run(sys.argv[1:], capture_output=True, text=True); print(result.stdout, end='')"
+        result = subprocess.run([sys.executable, "-c", launcher, sys.executable,
+                                 str(ROOT / "scripts/ai-insights.py"), "--action", "key-status",
+                                 "--provider", "openai", "--supervised"], start_new_session=True,
+                                capture_output=True, text=True, timeout=30, check=True,
+                                env={**os.environ, "PATH": f"{self.path}:{os.environ.get('PATH', '')}"})
+        self.assertEqual(json.loads(result.stdout), {"status": "error", "reason": "unavailable"})
+        self.assertEqual(self.entries(), [], "a rejected supervisor cannot start a wallet action")
+
+    def test_supervised_guard_fails_closed_without_parent_death_api(self):
+        with patch.object(ai.os, "getppid", return_value=42), patch.object(ai.os, "getpgrp", return_value=42), \
+                patch("builtins.open", return_value=io.StringIO("timeout\n")), \
+                patch.object(ai.ctypes, "CDLL", return_value=object()):
+            self.assertFalse(ai.supervise_parent())
 
 
 LANGUAGE_QML = '''import QtQuick

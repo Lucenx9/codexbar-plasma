@@ -779,6 +779,10 @@ limit. The generate button can retry at once, except during a provider's rate
 limit, which it then reports. Turn **Enable AI Insights**
 off to stop all AI activity; the saved insight stays hidden until you enable it
 again or clear it.
+Changing the provider, model, Ollama address, privacy routing, or language during
+generation stops the local helper and discards its reply. Network deadlines
+also apply when a server keeps sending small pieces of a response. Stopping the
+helper cannot undo a request already received or billed by a remote service.
 
 ## Default settings
 

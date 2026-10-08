@@ -14,14 +14,23 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 
-HELPER = '''import json, sys, time
+HELPER = '''import json, os, signal, sys, time
 arguments = sys.argv[1:]
 with open(LOG_PATH, "a") as log:
     log.write(json.dumps(arguments) + "\\n")
 values = dict(zip(arguments[::2], arguments[1::2]))
 model = values.get("--model", "")
+if model == "killed-model":
+    os.killpg(os.getpgrp(), signal.SIGKILL)
 if model == "slow-model":
     time.sleep(1.5)
+if model == "cancellation-model":
+    while not os.path.exists(LOG_PATH + ".release"):
+        time.sleep(0.02)
+    with open(LOG_PATH, "a") as log:
+        log.write(json.dumps(["completed"]) + "\\n")
+if model == "release-model":
+    open(LOG_PATH + ".release", "w").close()
 if model == "auth-model":
     print(json.dumps({"status": "error", "reason": "auth"}))
 elif model == "rate-model":
@@ -37,6 +46,7 @@ else:
 
 QML = '''import QtQuick
 import QtTest
+import "INSIGHTS_URL" as AiInsights
 TestCase {
     id: testCase
     name: "AiInsightsController"
@@ -180,6 +190,7 @@ TestCase {
     function test_7_failuresAreReportedWithoutRetryLoops_data() {
         return [{tag: "auth", model: "auth-model", reason: "auth", manualRetry: true},
                 {tag: "rate limit", model: "rate-model", reason: "rate_limited", manualRetry: false},
+                {tag: "killed owner", model: "killed-model", reason: "timeout", manualRetry: true},
                 {tag: "malformed", model: "garbage-model", reason: "format", manualRetry: true}];
     }
     function test_7_failuresAreReportedWithoutRetryLoops(data) {
@@ -250,6 +261,70 @@ TestCase {
         wait(2500);
         compare(generated.count, 0);
     }
+    function test_12_contextChangesRetirePendingReplies_data() {
+        return [{tag: "endpoint", provider: "ollama", field: "endpoint", value: "http://localhost:12345"},
+                {tag: "privacy routing", provider: "openrouter", field: "zdr", value: false},
+                {tag: "provider", provider: "openrouter", field: "provider", value: "openai"}];
+    }
+    function test_12_contextChangesRetirePendingReplies(data) {
+        var controller = create({provider: data.provider, model: "slow-model"});
+        verify(controller.generate());
+        tryVerify(function() { return calls().length === 1; }, 10000);
+        controller[data.field] = data.value;
+        verify(!controller.busy);
+        wait(2000);
+        compare(generated.count, 0);
+        compare(calls().length, 1, "a settings change never starts another manual request");
+        controller.model = "ok-model";
+        verify(controller.generate());
+        tryCompare(generated, "count", 1, 10000);
+        verify(controller.cacheText.indexOf("ok-model") >= 0);
+    }
+    function test_13_retirementStopsTheHelper() {
+        var controller = create({model: "cancellation-model"});
+        verify(controller.generate());
+        tryVerify(function() { return calls().length === 1; }, 10000);
+        controller.insightsEnabled = false;
+        compare(generated.count, 0);
+        controller.model = "release-model";
+        controller.insightsEnabled = true;
+        verify(controller.generate());
+        tryCompare(generated, "count", 1, 10000);
+        wait(500);
+        compare(calls().length, 2, "a retired helper must not continue when its gate opens");
+    }
+    function test_14_deadlineRetiresAndAllowsManualRecovery() {
+        var controller = create({model: "slow-model"});
+        verify(controller.generate());
+        tryVerify(function() { return calls().length === 1; }, 10000);
+        var deadline = findChild(controller, "aiInsightsDeadline");
+        verify(deadline !== null);
+        deadline.interval = 100;
+        deadline.restart();
+        tryCompare(controller, "errorReason", "timeout", 10000);
+        verify(!controller.busy);
+        deadline.interval = 185000;
+        controller.model = "ok-model";
+        verify(controller.generate());
+        tryCompare(generated, "count", 1, 10000);
+        wait(2000);
+        compare(generated.count, 1, "an expired reply cannot replace the recovered request");
+        compare(controller.errorReason, "");
+    }
+    function test_15_supervisedGnuTimeoutReportsNativeCrash() {
+        var source = Qt.createQmlObject('import QtQuick; import org.kde.plasma.plasma5support; DataSource { engine: "executable"; interval: 0 }', testCase);
+        var reply = null;
+        source.newData.connect(function(name, data) { reply = data; source.disconnectSource(name); });
+        var command = AiInsights.command("HELPER_URL", "generate", {provider: "openrouter",
+            model: "slow-model", language: "it", snapshot: snapshot}).replace(" 180s ", " 1s ");
+        source.connectSource(command);
+        tryVerify(function() { return reply !== null; }, 10000);
+        compare(Number(reply["exit code"]), 9);
+        compare(Number(reply["exit status"]), 1);
+        compare(AiInsights.generationReply(reply.stdout, Number(reply["exit code"]), Number(reply["exit status"])).reason, "timeout");
+        compare(AiInsights.modelsReply(reply.stdout, Number(reply["exit code"]), Number(reply["exit status"])).reason, "timeout");
+        source.destroy();
+    }
     function test_9_unbuildableCommandSurfacesInvalidInput() {
         var controller = create({provider: "ollama", model: "llama3",
             endpoint: "http://" + new Array(2050).join("x"), intervalHours: 6});
@@ -272,8 +347,11 @@ class AiInsightsControllerTests(unittest.TestCase):
             directory = Path(temporary)
             log = directory / "calls.jsonl"
             helper = directory / "ai-insights.py"
-            helper.write_text("LOG_PATH = " + json.dumps(str(log)) + "\n" + HELPER)
+            helper.write_text("import sys\nsys.path.insert(0, " + json.dumps(str(ROOT / "scripts"))
+                              + ")\nfrom lib.ai_insights import supervise_parent\n"
+                              + "assert supervise_parent()\nLOG_PATH = " + json.dumps(str(log)) + "\n" + HELPER)
             qml = (QML.replace("CONTROLLER_URL", (ROOT / "contents/ui/controllers/AiInsightsController.qml").as_uri())
+                   .replace("INSIGHTS_URL", (ROOT / "contents/ui/AiInsights.js").as_uri())
                    .replace("HELPER_URL", helper.as_uri()).replace("LOG_URL", log.as_uri()))
             fixture = directory / "tst_ai_insights_controller.qml"
             fixture.write_text(qml)

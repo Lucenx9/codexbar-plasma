@@ -177,6 +177,8 @@ most three 160-character highlights, strips control characters and Markdown
 emphasis, and rejects malformed JSON, wrong types, empty or oversized content,
 refusals, and truncation (`finish_reason`/`done_reason` `length`). QML validates
 the reply again and renders it only through plain-text labels.
+Snapshot, HTTP, error-body, and model-content JSON nesting is limited to 32
+levels before parsing; brackets and escaped quotes inside strings do not count.
 
 Failures map to bounded reasons: `missing_key`, `secret_unavailable`, `auth`
 (401), `credits` (402, or OpenAI `insufficient_quota`), `forbidden` (403),
@@ -216,7 +218,8 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   buttons. Editing the model clears the old verdict without discarding the
   model list. Disabling AI Insights in settings retires its active helper, clears the
   status text, ignores late replies, and prevents further helper requests until
-  re-enabled.
+  re-enabled. A wallet-status deadline reports the wallet as unavailable rather
+  than leaving its status blank; a late status cannot replace that verdict.
 
 ## Scheduling and lifecycle
 
@@ -233,11 +236,20 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   generation, including a wallet unlock prompt, the model lookup, and a retry,
   shares a 170-second budget: each request waits only for what remains, and no
   request starts with less than 30 seconds left. If the shell bound still stops
-  the helper, the card reports a timeout. Answers may
+  the helper, the card reports a timeout, including Qt's native SIGKILL crash
+  result for an exec'd timeout owner. Answers may
   use up to 4000 output tokens, including hidden reasoning tokens.
+  Each HTTP operation has a wall-clock deadline covering connection, headers,
+  and success/error bodies, so trickled bytes cannot extend its timeout.
 - Changing provider, model, endpoint, privacy routing, or language, disabling the
   feature, or destroying the widget retires the active request; its late reply
-  is ignored. Stored insights from another context are not shown as current.
+  is ignored. Commands replace their shell with GNU `timeout`; the supervised
+  Linux helper uses a parent-death signal to kill its own timeout-owned process
+  group, including wallet/dialog children, when Plasma kills that owner. The
+  guard fails closed if its parent is not named `timeout`, does not own the group,
+  or the parent-death API is unavailable. An already submitted
+  remote request may still complete or be billed. Stored insights from another
+  context are not shown as current.
 - Failures never touch usage data. Every failure waits a full interval (24
   hours in manual mode) before automatic generation; `rate_limited` also waits
   for `Retry-After` (at least five minutes, at most 24 hours). An explicit
