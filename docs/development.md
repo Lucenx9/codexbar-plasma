@@ -166,7 +166,9 @@ synchronized.
   only Apply saves its command path. `ManagedCli.js` validates results and quotes
   allowlisted operations. General waits for the independent offline CLI probe
   before offering a first install, clears confirmation on command changes, and
-  does not require a GitHub check. `test_managed_cli_install_confirmation.py`
+  does not require a GitHub check. Only a confirmed missing command or an identified
+  local CLI enables first installation; failed probes show an offline Retry action.
+  `test_managed_cli_install_confirmation.py`
   exercises these page interactions with real synthetic CLI version banners.
   `scripts/manage-cli.py` calls `scripts/lib/managed_cli.py`
   for per-user locking, daily throttling, bounded official asset downloads, strict

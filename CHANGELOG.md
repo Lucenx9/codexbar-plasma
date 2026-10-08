@@ -47,6 +47,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Probe the selected CLI offline before offering its first managed installation,
   so a working external copy receives the promised confirmation without a prior
   release check. Changing the command dismisses stale confirmation details.
+  Failed or unrecognized probes keep the first install disabled with an offline
+  retry action.
 - Retry failed CLI release checks after one hour even when a recent successful
   check belongs to the previous command, including malformed replies and timeouts.
 - Avoid premature account-label truncation in provider headers by rounding

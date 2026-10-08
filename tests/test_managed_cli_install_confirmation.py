@@ -39,7 +39,8 @@ TestCase {
         // All managed actions are synthetic, including a mistakenly started install.
         managed.scriptUrl = "MANAGED_URL";
         tryVerify(function() { return managed.result.status === "absent" && !managed.busy; });
-        tryVerify(function() { return findChild(page, "installManagedCliButton").enabled; });
+        var probe = findChild(page, "installedCliProbe");
+        tryVerify(function() { return probe.checked && !probe.busy; });
         return page;
     }
     function test_firstClickConfirmsWithoutCheckingReleases() {
@@ -81,6 +82,42 @@ TestCase {
         verify(managed.busy);
         compare(managed.activeAction, "install");
         tryVerify(function() { return !managed.busy; });
+    }
+    function test_failedProbeBlocksInstallation_data() {
+        return [{tag: "helper failure", code: 1, stdout: ""},
+                {tag: "malformed reply", code: 0, stdout: "invalid"},
+                {tag: "unknown version", code: 0, stdout: JSON.stringify({status: "unknown"})},
+                {tag: "missing local path", code: 0,
+                 stdout: JSON.stringify({status: "local", version: "0.73.0"})}];
+    }
+    function test_failedProbeBlocksInstallation(data) {
+        var page = create("CLI_PATH"); if (!page) return;
+        var probe = findChild(page, "installedCliProbe");
+        probe.activeSource = "synthetic";
+        probe.accept("synthetic", {"exit code": data.code, stdout: data.stdout});
+        verify(!findChild(page, "installManagedCliButton").enabled);
+        verify(!findChild(page, "managedCliController").busy);
+        var retry = findChild(page, "retryInstalledCliProbeButton");
+        verify(retry.visible && retry.enabled);
+        retry.clicked();
+        tryVerify(function() { return probe.checked && !probe.busy; });
+        verify(findChild(page, "installManagedCliButton").enabled);
+        verify(!retry.visible);
+        findChild(page, "installManagedCliButton").clicked();
+        verify(page.managedInstallConfirming);
+    }
+    function test_existingManagedCopyCanBeSelectedAfterFailedProbe() {
+        var page = create("CLI_PATH"); if (!page) return;
+        var probe = findChild(page, "installedCliProbe");
+        probe.activeSource = "synthetic";
+        probe.accept("synthetic", {"exit code": 1, stdout: ""});
+        var managed = findChild(page, "managedCliController");
+        managed.activeSource = "managed synthetic";
+        managed.accept("managed synthetic", {"exit code": 0, stdout: JSON.stringify({
+            status: "ready", version: "0.73.0", path: "/fixture/codexbar-plasma/cli/current/codexbar"
+        })});
+        verify(findChild(page, "installManagedCliButton").enabled);
+        verify(!findChild(page, "retryInstalledCliProbeButton").visible);
     }
 }
 '''

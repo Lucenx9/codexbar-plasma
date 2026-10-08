@@ -216,6 +216,13 @@ KCM.SimpleKCM {
         Component.onCompleted: Qt.callLater(checkNow)
     }
 
+    readonly property bool installedCliProbeReady: installedCliProbe.checked && !installedCliProbe.busy
+        && (installedCliProbe.result.status === "missing"
+            || (installedCliProbe.result.status === "local" && installedCliProbe.result.path.length > 0
+                && installedCliProbe.result.version.length > 0))
+    readonly property bool installedCliProbeFailed: installedCliProbe.checked && !installedCliProbe.busy
+        && !installedCliProbeReady && managedCli.result.version.length === 0
+
     onCfg_commandPathChanged: {
         managedInstallConfirming = false
         Qt.callLater(installedCliProbe.checkNow)
@@ -775,7 +782,7 @@ KCM.SimpleKCM {
                 icon.name: managedCli.selected ? "view-refresh"
                     : managedCli.result.version.length > 0 ? "dialog-ok-apply" : "download"
                 enabled: !managedCli.busy && (managedCli.result.version.length > 0
-                    || (installedCliProbe.checked && !installedCliProbe.busy))
+                    || page.installedCliProbeReady)
                 onClicked: {
                     if (managedCli.selected) managedCli.run("update")
                     else if (managedCli.result.version.length > 0) page.cfg_commandPath = managedCli.result.path
@@ -792,6 +799,24 @@ KCM.SimpleKCM {
                 Layout.preferredWidth: Kirigami.Units.iconSizes.small
                 Layout.preferredHeight: Kirigami.Units.iconSizes.small
             }
+        }
+
+        Components.PlainControlsLabel {
+            visible: page.installedCliProbeFailed
+            text: i18n("Could not identify the installed CLI version.")
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            wrapMode: Text.WordWrap
+        }
+
+        Controls.Button {
+            objectName: "retryInstalledCliProbeButton"
+            visible: page.installedCliProbeFailed
+            text: i18n("Retry")
+            icon.name: "view-refresh"
+            enabled: !managedCli.busy && !installedCliProbe.busy
+            onClicked: installedCliProbe.checkNow()
         }
 
         ColumnLayout {

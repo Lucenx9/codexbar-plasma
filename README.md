@@ -226,7 +226,9 @@ resolved command, and recognized installation manager.
 it immediately, or restore its previous version. An existing managed copy can be
 selected offline with **Use managed CLI**. Before a first install, an offline
 probe identifies the selected CLI so a working external copy receives a
-confirmation without needing a GitHub release check. **Automatically update the
+confirmation without needing a GitHub release check.
+If the probe cannot identify the CLI, installation waits until **Retry** succeeds
+or the selected command is confirmed missing. **Automatically update the
 managed CLI daily** is optional and off by default; it acts only while the
 managed command path is selected. Downloads match the host architecture/libc,
 verify GitHub SHA-256 metadata and the published checksum, and switch atomically

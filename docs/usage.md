@@ -663,6 +663,9 @@ that copy for outside use but creates a second private copy, and later updates
 through the original method no longer affect the widget. General probes the
 selected CLI offline when opened and after command changes; the first-install
 button waits for that probe, independently of manual GitHub release checks.
+An unrecognized version or failed probe keeps the first installation disabled
+and shows **Retry** to repeat the offline check. Selecting an already installed
+managed copy remains available without a successful probe.
 Changing the command dismisses a pending confirmation. Installation happens
 immediately;
 **Apply** or **OK** saves its `current/codexbar` path as the widget command.
