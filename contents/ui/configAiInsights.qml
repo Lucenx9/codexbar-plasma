@@ -202,7 +202,8 @@ KCM.SimpleKCM {
             Qt.callLater(refreshKeyStatus)
         } else if (action === "models") {
             var result = AiInsights.modelsReply(stdout,
-                data && data["exit code"] !== undefined ? Number(data["exit code"]) : NaN)
+                data && data["exit code"] !== undefined ? Number(data["exit code"]) : NaN,
+                data && data["exit status"] !== undefined ? Number(data["exit status"]) : NaN)
             // The test read the wallet itself, so its answer replaces a status
             // lookup that failed or timed out, for example on a locked wallet.
             if (result.key === "valid") {

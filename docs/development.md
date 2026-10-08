@@ -867,7 +867,8 @@ that killing its timeout owner also stops its wallet child.
 `tests/test_ai_insights_controller.py`
 runs the production controller through Plasma's executable DataSource with a
 recording helper, including actual helper cancellation, endpoint/privacy/provider
-changes in flight, and deadline recovery. `tests/test_ai_insights_settings.py`
+changes in flight, deadline recovery, and GNU timeout's native Qt crash result.
+`tests/test_ai_insights_settings.py`
 copies the settings page's helper-process functions into a QtTest with stubbed
 processes to check
 reply handling when the Ollama address or model changes and helper retirement

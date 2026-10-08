@@ -236,7 +236,8 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   generation, including a wallet unlock prompt, the model lookup, and a retry,
   shares a 170-second budget: each request waits only for what remains, and no
   request starts with less than 30 seconds left. If the shell bound still stops
-  the helper, the card reports a timeout. Answers may
+  the helper, the card reports a timeout, including Qt's native SIGKILL crash
+  result for an exec'd timeout owner. Answers may
   use up to 4000 output tokens, including hidden reasoning tokens.
   Each HTTP operation has a wall-clock deadline covering connection, headers,
   and success/error bodies, so trickled bytes cannot extend its timeout.

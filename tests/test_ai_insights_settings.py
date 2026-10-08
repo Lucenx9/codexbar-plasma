@@ -232,6 +232,9 @@ TestCase {
         verify(run("models"))
         accept(helperSource.connected[0], {stdout: "", "exit code": 124})
         compare(actionText, "error:timeout")
+        verify(run("models"))
+        accept(activeSource, {stdout: "", "exit code": 9, "exit status": 1})
+        compare(actionText, "error:timeout")
         compare(availableModels, [])
     }
 }

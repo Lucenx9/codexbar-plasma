@@ -241,12 +241,15 @@ TestCase {
             // The shell bound stopped the helper before it printed a result.
             {tag: "shell timeout", text: "", exitCode: 124, outcome: "error", reason: "timeout"},
             {tag: "shell kill", text: "", exitCode: 137, outcome: "error", reason: "timeout"},
+            {tag: "native kill", text: "", exitCode: 9, exitStatus: 1, outcome: "error", reason: "timeout"},
+            {tag: "normal exit 9", text: "", exitCode: 9, exitStatus: 0, outcome: "error", reason: "format"},
             {tag: "helper exit", text: "", exitCode: 1, outcome: "error", reason: "format"}
         ]
     }
 
     function test_generationReplyValidation(data) {
-        var reply = AiInsights.generationReply(data.text, data.exitCode === undefined ? 0 : data.exitCode)
+        var reply = AiInsights.generationReply(data.text, data.exitCode === undefined ? 0 : data.exitCode,
+            data.exitStatus === undefined ? 0 : data.exitStatus)
         compare(reply.outcome, data.outcome)
         if (data.outcome === "ok") {
             // Markup survives only as literal text; the card renders PlainText.
@@ -268,6 +271,8 @@ TestCase {
         // The shell bound stopped the helper before it printed a listing.
         compare(AiInsights.modelsReply("", 124).reason, "timeout")
         compare(AiInsights.modelsReply("", 137).reason, "timeout")
+        compare(AiInsights.modelsReply("", 9, 1).reason, "timeout")
+        compare(AiInsights.modelsReply("", 9, 0).reason, "format")
         compare(AiInsights.modelsReply("", 1).reason, "format")
         compare(AiInsights.statusReply(JSON.stringify({status: "present"}), ["present", "absent"]), "present")
         compare(AiInsights.statusReply(JSON.stringify({status: "sk-secret"}), ["present", "absent"]), "unavailable")
