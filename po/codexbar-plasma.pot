@@ -483,7 +483,7 @@ msgstr ""
 msgid "For connection checks, open Diagnostics in widget settings."
 msgstr ""
 
-#: contents/ui/components/FullRepresentation.qml
+#: contents/ui/components/FullRepresentation.qml contents/ui/configGeneral.qml
 msgid "Retry"
 msgstr ""
 
@@ -2113,7 +2113,7 @@ msgstr ""
 msgid "System CLI (PATH):"
 msgstr ""
 
-#: contents/ui/configDiagnostics.qml
+#: contents/ui/configDiagnostics.qml contents/ui/configGeneral.qml
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "Could not identify the installed CLI version."
 msgstr ""
