@@ -90,4 +90,11 @@ TestCase {
             verify(!SupportReport.providerID(id))
         }
     }
+
+    function test_overridesMatchWidgetWhitespaceNormalization() {
+        var text = SupportReport.markdown({providerOverride: "  codex  ", sourceOverride: " cli "})
+        verify(text.indexOf("Provider override (Diagnostics form): codex") >= 0)
+        verify(text.indexOf("Source override (Diagnostics form): cli") >= 0)
+        verify(text.indexOf("invalid/omitted") === -1)
+    }
 }

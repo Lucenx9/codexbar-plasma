@@ -203,6 +203,17 @@ TestCase {
         var pasted = createTemporaryQmlObject("import QtQuick; import QtQuick.Controls; TextArea { textFormat: TextEdit.PlainText }", testCase);
         pasted.paste();
         compare(pasted.text, page.supportReport);
+        var timestamp = page.supportTimestamp;
+        page.diagnosticError = "New Diagnostics failure Bearer another-private-secret";
+        verify(page.supportReport.indexOf("New Diagnostics failure") >= 0);
+        verify(page.supportReport.indexOf("another-private-secret") === -1);
+        verify(page.supportReport.indexOf("Error Bearer") === -1);
+        compare(page.supportTimestamp, timestamp);
+        verify(!page.supportCopied);
+        page.copySupportReport();
+        pasted.text = "";
+        pasted.paste();
+        compare(pasted.text, page.supportReport);
         page.cfg_commandPath = "/different/cli";
         compare(page.supportReport, "");
         compare(page.supportTimestamp, "");

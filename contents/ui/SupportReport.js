@@ -102,6 +102,8 @@ function cliLines(title, value) {
 
 function markdown(input) {
     var facts = input.facts || response("")
+    var providerOverride = typeof input.providerOverride === "string" ? input.providerOverride.trim() : ""
+    var sourceOverride = typeof input.sourceOverride === "string" ? input.sourceOverride.trim() : ""
     var lines = ["## CodexBar Plasma support report", "", "Collected: " + sharedText(input.timestamp, 64),
         "", "### Environment", "- Widget: " + version(input.widgetVersion),
         "- KDE Plasma: " + (facts.environment.plasma || "not checked"),
@@ -116,8 +118,8 @@ function markdown(input) {
         ? (facts.selected.path === facts.system.path ? "yes" : "no") : "unknown"))
     lines.push("", "### Providers", "- Enabled IDs: " + (facts.providers.status !== "checked" ? "unavailable"
         : facts.providers.enabled.length ? facts.providers.enabled.join(", ") : "none"))
-    lines.push("- Provider override (Diagnostics form): " + (providerID(input.providerOverride) ? input.providerOverride : input.providerOverride ? "invalid/omitted" : "none"),
-        "- Source override (Diagnostics form): " + (["auto", "web", "cli", "oauth", "api"].indexOf(input.sourceOverride) >= 0 ? input.sourceOverride : input.sourceOverride ? "invalid/omitted" : "none"),
+    lines.push("- Provider override (Diagnostics form): " + (providerID(providerOverride) ? providerOverride : providerOverride ? "invalid/omitted" : "none"),
+        "- Source override (Diagnostics form): " + (["auto", "web", "cli", "oauth", "api"].indexOf(sourceOverride) >= 0 ? sourceOverride : sourceOverride ? "invalid/omitted" : "none"),
         "", "### Support collection", sharedText(input.checkError, 500) || (facts.valid ? "Offline facts collected; unknown fields could not be identified." : "Offline facts unavailable; module checks may still be available."),
         "", "### Latest Diagnostics error", sharedText(input.lastError, 1024) || "None observed in this Diagnostics session.",
         "", "### Required QML modules")

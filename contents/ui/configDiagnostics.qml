@@ -49,7 +49,10 @@ KCM.SimpleKCM {
     }
 
     onDiagnosticErrorChanged: {
-        if (diagnosticError.length > 0) lastDiagnosticError = diagnosticError
+        if (diagnosticError.length > 0) {
+            lastDiagnosticError = diagnosticError
+            if (supportTimestamp.length > 0) updateSupportReport()
+        }
     }
     onSupportReportChanged: supportCopied = false
     onCfg_providerChanged: resetSupport()

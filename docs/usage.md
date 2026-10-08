@@ -543,6 +543,8 @@ fields; track proposed extensions in the issue tracker.
   Collection requires `python3` and GNU `timeout`. Partial results can still be
   copied if the helper fails or times out. No popup error history is read from
   another process; the error section explicitly names its Diagnostics source.
+  A subsequent Diagnostics failure refreshes the report's error section without
+  rerunning the offline checks; form overrides use the widget's whitespace trimming.
   Collect again after changing provider settings. Editing the command path or
   widget overrides discards the previous report. The separate **Check versions**
   probe runs only when asked; a changed command path clears its previous result.
