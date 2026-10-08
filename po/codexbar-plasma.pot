@@ -2015,11 +2015,11 @@ msgid "Set the codexbar command path above."
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
-msgid "Support checks failed. Partial results remain available."
+msgid "Support checks timed out. Partial results remain available."
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
-msgid "Support checks timed out. Partial results remain available."
+msgid "Support checks failed. Partial results remain available."
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
