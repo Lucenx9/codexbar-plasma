@@ -184,7 +184,8 @@ Item {
                 return
             }
             var reply = AiInsights.generationReply(data ? data["stdout"] : "",
-                data && data["exit code"] !== undefined ? Number(data["exit code"]) : NaN)
+                data && data["exit code"] !== undefined ? Number(data["exit code"]) : NaN,
+                data && data["exit status"] !== undefined ? Number(data["exit status"]) : NaN)
             if (reply.outcome !== "ok") {
                 fail(reply.reason, reply.retryAfterSeconds)
                 return

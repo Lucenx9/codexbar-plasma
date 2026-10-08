@@ -9,9 +9,13 @@ command line. Every result is a bounded semantic record; remote prose, headers,
 and raw error bodies are deliberately omitted.
 """
 import http.client
+from contextlib import contextmanager
+import ctypes
 import ipaddress
 import json
+import os
 import re
+import signal
 import socket
 import ssl
 import subprocess
@@ -44,6 +48,7 @@ MIN_REQUEST_SECONDS = 30
 # whose reasoning is mandatory. Neither is billed.
 UNBILLED_REASONING_FAILURES = ("model", "routing", "request")
 MAX_RESPONSE_BYTES = 4 * 1024 * 1024
+MAX_JSON_DEPTH = 32
 MAX_SNAPSHOT_BYTES = 16 * 1024
 MAX_CONTENT_CHARS = 16 * 1024
 MAX_SUMMARY_CHARS = 600
@@ -98,6 +103,39 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
+def supervise_parent():
+    """Stop this timeout-owned Linux process group when Plasma kills its owner.
+
+    The command uses `exec timeout`, so disconnecting Plasma's QProcess kills
+    timeout itself. Its children (including wallet/dialog processes) would
+    otherwise survive. Never signal a group unless our parent owns that group.
+    """
+    parent = os.getppid()
+    group = os.getpgrp()
+    if parent <= 1 or group != parent:
+        return False
+    try:
+        with open(f"/proc/{parent}/comm", encoding="utf-8") as name:
+            if name.read(32).strip() != "timeout":
+                return False
+        prctl = ctypes.CDLL(None, use_errno=True).prctl
+    except (AttributeError, OSError):
+        return False
+
+    def stop(_signum=None, _frame=None):
+        os.killpg(group, signal.SIGKILL)
+
+    previous = signal.signal(signal.SIGTERM, stop)
+    # PR_SET_PDEATHSIG: Linux delivers SIGTERM when the parent exits, even
+    # when QProcess used SIGKILL and timeout could not forward a signal.
+    if prctl(1, signal.SIGTERM, 0, 0, 0) != 0:
+        signal.signal(signal.SIGTERM, previous)
+        return False
+    if os.getppid() != parent:
+        stop()
+    return True
+
+
 def language_name(tag):
     if tag in LANGUAGE_NAMES:
         return LANGUAGE_NAMES[tag]
@@ -146,8 +184,8 @@ def ollama_base(endpoint):
     value = (endpoint or DEFAULT_OLLAMA).strip()
     if len(value) > 2048 or re.search(r"[\x00-\x20\x7f]", value):
         raise Failure("endpoint")
-    parsed = urllib.parse.urlsplit(value)
     try:
+        parsed = urllib.parse.urlsplit(value)
         port = parsed.port
     except ValueError:
         raise Failure("endpoint") from None
@@ -242,11 +280,37 @@ def retry_after_seconds(headers):
     return max(0, min(MAX_RETRY_AFTER, value))
 
 
+def bounded_json(text):
+    """Reject excessive nesting before decoding, independent of Python's stack limit."""
+    if isinstance(text, bytes):
+        text = text.decode(json.detect_encoding(text))
+    depth = 0
+    quoted = False
+    escaped = False
+    for character in text:
+        if quoted:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                quoted = False
+        elif character == '"':
+            quoted = True
+        elif character in "[{":
+            depth += 1
+            if depth > MAX_JSON_DEPTH:
+                raise ValueError("JSON nesting limit")
+        elif character in "]}":
+            depth -= 1
+    return json.loads(text)
+
+
 def http_failure(provider, error):
     body = {}
     try:
-        body = json.loads(error.read(65536) or b"{}")
-    except (ValueError, OSError, http.client.HTTPException):
+        body = bounded_json(error.read(65536) or b"{}")
+    except (ValueError, RecursionError, OSError, http.client.HTTPException):
         pass
     detail = body.get("error") if isinstance(body, dict) else None
     error_code = detail.get("code") if isinstance(detail, dict) else None
@@ -275,6 +339,30 @@ def status_failure(provider, code, error_code, headers):
     return Failure("unavailable", retry_after_seconds(headers))
 
 
+@contextmanager
+def request_deadline(seconds):
+    """Wall-clock bound for the Linux helper's synchronous HTTP operations.
+
+    Socket timeouts bound inactivity, so trickled headers/body bytes otherwise
+    keep a request alive indefinitely. Include HTTP error-body reads as well.
+    """
+    def expired(_signum, _frame):
+        raise Failure("timeout")
+
+    started = time.monotonic()
+    previous_handler = signal.signal(signal.SIGALRM, expired)
+    previous_timer = signal.setitimer(signal.ITIMER_REAL, seconds)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous_handler)
+        if previous_timer[0] > 0:
+            signal.setitimer(signal.ITIMER_REAL,
+                             max(0.000001, previous_timer[0] - (time.monotonic() - started)),
+                             previous_timer[1])
+
+
 def request_json(provider, url, key="", body=None, timeout=None, return_headers=False):
     headers = {"Accept": "application/json", "User-Agent": "codexbar-plasma"}
     data = None
@@ -294,22 +382,24 @@ def request_json(provider, url, key="", body=None, timeout=None, return_headers=
         # Data for a service on this computer must never go through a proxy.
         handlers.append(urllib.request.ProxyHandler({}))
     opener = urllib.request.build_opener(*handlers)
-    try:
-        with opener.open(request, timeout=timeout or REQUEST_TIMEOUT) as response:
-            raw = response.read(MAX_RESPONSE_BYTES + 1)
-            headers = response.headers
-    except urllib.error.HTTPError as error:
-        raise http_failure(provider, error) from None
-    except (socket.timeout, TimeoutError):
-        raise Failure("timeout") from None
-    except (urllib.error.URLError, OSError, http.client.HTTPException) as error:
-        reason = getattr(error, "reason", None)
-        raise Failure("timeout" if isinstance(reason, (socket.timeout, TimeoutError)) else "network") from None
+    with request_deadline(timeout or REQUEST_TIMEOUT):
+        try:
+            with opener.open(request, timeout=timeout or REQUEST_TIMEOUT) as response:
+                raw = response.read(MAX_RESPONSE_BYTES + 1)
+                headers = response.headers
+        except urllib.error.HTTPError as error:
+            with error:
+                raise http_failure(provider, error) from None
+        except (socket.timeout, TimeoutError):
+            raise Failure("timeout") from None
+        except (urllib.error.URLError, OSError, http.client.HTTPException) as error:
+            reason = getattr(error, "reason", None)
+            raise Failure("timeout" if isinstance(reason, (socket.timeout, TimeoutError)) else "network") from None
     if len(raw) > MAX_RESPONSE_BYTES:
         raise Failure("format")
     try:
-        payload = json.loads(raw)
-    except ValueError:
+        payload = bounded_json(raw)
+    except (ValueError, RecursionError):
         raise Failure("format") from None
     return (payload, headers) if return_headers else payload
 
@@ -383,8 +473,8 @@ def decode_snapshot(text):
     if not isinstance(text, str) or len(text.encode()) > MAX_SNAPSHOT_BYTES:
         raise Failure("invalid_input")
     try:
-        value = json.loads(text)
-    except ValueError:
+        value = bounded_json(text)
+    except (ValueError, RecursionError):
         raise Failure("invalid_input") from None
     if not isinstance(value, dict) or not isinstance(value.get("providers"), list):
         raise Failure("invalid_input")
@@ -454,8 +544,8 @@ def insight(content):
     text = content.strip()
     fenced = re.match(r"^```(?:json)?\s*(.*?)\s*```$", text, re.S)
     try:
-        value = json.loads(fenced.group(1) if fenced else text)
-    except ValueError:
+        value = bounded_json(fenced.group(1) if fenced else text)
+    except (ValueError, RecursionError):
         raise Failure("format") from None
     if not isinstance(value, dict):
         raise Failure("format")

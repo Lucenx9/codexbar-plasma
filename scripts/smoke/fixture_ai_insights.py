@@ -14,6 +14,7 @@ def main():
     for name in ("--action", "--provider", "--model", "--endpoint", "--language", "--prompt", "--snapshot"):
         parser.add_argument(name, default="")
     parser.add_argument("--no-zdr", action="store_true")
+    parser.add_argument("--supervised", action="store_true")
     args = parser.parse_args()
     scenario = os.environ.get("CODEXBAR_SMOKE_SCENARIO", "")
     if args.action == "key-status":

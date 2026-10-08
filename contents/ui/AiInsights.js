@@ -309,7 +309,7 @@ function command(scriptUrl, action, options) {
     var provider = safeProvider(value.provider)
     // A dialog waits for the user; network actions are bounded well below it.
     var limit = action === "set-key" ? "330s" : (action === "generate" ? "180s" : "45s")
-    var parts = ["timeout", "--kill-after=2s", limit, "python3", Guards.shellQuote(script),
+    var parts = ["exec", "timeout", "--kill-after=2s", limit, "python3", Guards.shellQuote(script),
         "--action", action, "--provider", provider]
     if (provider === "ollama" && (action === "models" || action === "generate")) {
         if (typeof value.endpoint === "string" && value.endpoint.length > maximumEndpointLength) {
@@ -331,6 +331,7 @@ function command(scriptUrl, action, options) {
     if (action === "set-key") {
         parts.push("--prompt", Guards.shellQuote(plainText(value.prompt, 200)))
     }
+    parts.push("--supervised")
     return parts.join(" ")
 }
 
@@ -350,10 +351,14 @@ function parseReply(text) {
     }
 }
 
-// GNU timeout exits 124 when it stopped the helper and 137 when it had to kill
-// it; the helper then printed nothing, and the request may have been billed.
-function generationReply(text, exitCode) {
-    if (exitCode === 124 || exitCode === 137) {
+// GNU timeout's normal deadline is 124; shell-wrapped SIGKILL is 137.
+// With exec, Qt reports a killed owner as signal 9 with CrashExit (1).
+function timeoutExit(exitCode, exitStatus) {
+    return exitCode === 124 || exitCode === 137 || (exitCode === 9 && exitStatus === 1)
+}
+
+function generationReply(text, exitCode, exitStatus) {
+    if (timeoutExit(exitCode, exitStatus)) {
         return {outcome: "error", reason: "timeout", retryAfterSeconds: 0}
     }
     var value = parseReply(text)
@@ -374,8 +379,8 @@ function generationReply(text, exitCode) {
     }
 }
 
-function modelsReply(text, exitCode) {
-    if (exitCode === 124 || exitCode === 137) {
+function modelsReply(text, exitCode, exitStatus) {
+    if (timeoutExit(exitCode, exitStatus)) {
         return {outcome: "error", reason: "timeout", models: [], key: ""}
     }
     var value = parseReply(text)
