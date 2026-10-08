@@ -82,6 +82,14 @@ synchronized.
 - `contents/ui/main.qml` owns provider notification policy and routing,
   account coordination, selected state, quota-cache persistence, configuration updates, and external
   effects. Its adapters supply the panel and popup.
+- `contents/ui/PanelDisplay.js` constructs compact quota candidates from explicit
+  normalized rows, canonical provider identity, optional provider cost and a
+  QML-localized included-plan label. It preserves provider preference order and
+  row identity while constructing a fresh Cursor fallback. Capability and lane
+  selection remain shared by panel text, meters and popup tabs. Direct QtTests
+  cover ordering, duplicate references, missing lanes, exhausted quotas, cost
+  fallback coercion and input immutability; executed root fixtures cover aliases
+  and the localized label adapter. Configuration and effects stay in QML.
 - `contents/ui/components/CostText.qml` localizes normalized token-cost snapshots,
   history labels, qualified cost values, count plurals, spend totals and legacy
   dashboard rows. It receives regional number formatting explicitly and takes
