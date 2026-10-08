@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.46 - 2026-10-08
+
 ### Added
 
 - Collect and copy an offline Diagnostics support report with installed widget,
@@ -37,6 +39,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Show reset clocks, cost dates, and "Updated" times as formatted text again
+  instead of the literal "[object Object]".
 - Restore the previous widget package after a failed upgrade or invalid installed
   metadata, preserving the bundled helper needed to retry.
 - Keep actionable CLI installation guidance visible across popup tabs when the
@@ -80,6 +84,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Preserve unknown CLI status indicators such as `constructor` as literal status
   text instead of resolving inherited object properties while localizing known
   incident labels.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.45...v0.2.46)
 
 ## 0.2.45 - 2026-10-07
 
