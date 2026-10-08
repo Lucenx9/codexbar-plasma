@@ -151,11 +151,12 @@ Item {
                     probe.verify(quotaTop >= 0 && quotaTop + quota.height <= scroll.height,
                         "the first quota is not visible before opening accounts");
                     probe.accountPreviewStage = -1;
-                    popup.grabToImage(function(result) {
+                    var accountPreviewAccepted = popup.grabToImage(function(result) {
                         probe.verify(result.saveToFile(probe.imagePath.replace(".png", "-accounts.png")),
                             "the collapsed account preview could not be saved");
                         probe.accountPreviewStage = 1;
                     });
+                    probe.verify(accountPreviewAccepted, "could not capture collapsed account preview");
                     return;
                 }
                 if (probe.accountPreviewStage === -1)
