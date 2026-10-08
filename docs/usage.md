@@ -395,6 +395,9 @@ and clipboard content remain under your control after closing the window.
   today arrives. Malformed provider error messages use a generic
   warning while healthy providers update and failed providers keep their
   previous costs.
+- Dated history stays inside the selected period even when duplicate or
+  malformed records prevent filling gaps. Incomplete scans retain observed
+  days without inventing zero activity; undated legacy history keeps its order.
 - Click a day in the provider chart or select it with the keyboard to see that
   day's model costs and tokens. Hover previews stay inside the chart, keeping
   the layout steady. The cost/token selector reuses the loaded data.

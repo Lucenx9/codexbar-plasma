@@ -26,6 +26,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep dated cost-history rows inside the selected period when duplicate dates,
+  malformed records or an incomplete scan disable calendar gap filling.
 - Keep account lists, incident notices, and error messages scrollable in the
   popup so many accounts, long messages, or larger fonts cannot hide quotas
   and recovery actions outside the window.
