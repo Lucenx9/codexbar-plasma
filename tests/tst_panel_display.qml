@@ -23,6 +23,137 @@ TestCase {
         return row;
     }
 
+    function test_candidatePreference_data() {
+        return [
+            {tag: "generic", key: "codex", exhausted: false, order: "primary,secondary,tertiary,extra"},
+            {tag: "unknown", key: "future-provider", exhausted: true, order: "primary,secondary,tertiary,extra"},
+            {tag: "factory", key: "factory", exhausted: false, order: "secondary,primary,extra,tertiary"},
+            {tag: "factory-exhausted", key: "factory", exhausted: true, order: "secondary,primary,extra,tertiary"},
+            {tag: "perplexity-healthy", key: "perplexity", exhausted: false, order: "primary,secondary,tertiary,extra"},
+            {tag: "perplexity-exhausted", key: "perplexity", exhausted: true, order: "secondary,tertiary,primary,extra"}
+        ];
+    }
+    function test_candidatePreference(data) {
+        var primary = usageRow({lane: "primary", hasPercent: true, usedPercent: data.exhausted ? 100 : 40,
+            leftPercent: data.exhausted ? 0 : 60});
+        var secondary = usageRow({lane: "secondary", hasPercent: true, usedPercent: 100, leftPercent: 0});
+        var tertiary = usageRow({lane: "tertiary"});
+        var extra = usageRow({lane: "extra"});
+        var input = [extra, tertiary, null, secondary, primary, secondary];
+        var before = JSON.stringify(input);
+        var result = PanelDisplay.candidateRows(input, data.key, null, "Translated plan");
+        compare(result.map(function(row) { return row.lane; }).join(","), data.order);
+        compare(result.length, 4);
+        compare(result[result.indexOf(extra)], extra);
+        compare(JSON.stringify(input), before);
+        verify(result !== input);
+    }
+    function test_missingLanesAndReferenceDeduplication() {
+        compare(PanelDisplay.candidateRows(null, "factory", null, "Plan"), []);
+        compare(PanelDisplay.candidateRows(undefined, "cursor", {percentUsed: 0}, "Plan"), []);
+        compare(PanelDisplay.candidateRows([], "cursor", {percentUsed: 0}, "Plan"), []);
+        var first = usageRow({lane: "secondary"});
+        var second = usageRow({lane: "secondary"});
+        var result = PanelDisplay.candidateRows([null, first, first, second], "factory", null, "Plan");
+        compare(result.length, 2);
+        compare(result[0], first);
+        compare(result[1], second);
+        var primary = usageRow({lane: "primary", hasPercent: false, leftPercent: 0});
+        compare(PanelDisplay.candidateRows([primary, first], "perplexity", null, "Plan")[0], primary);
+        compare(PanelDisplay.candidateRows([primary], "cursor", {percentUsed: 30}, "Plan"), [primary]);
+    }
+    function test_cursorFallback_data() {
+        return [
+            {tag: "zero", value: 0, expected: 0},
+            {tag: "fraction", value: 32.5, expected: 32.5},
+            {tag: "over-limit", value: 130, expected: 100},
+            {tag: "numeric-string", value: "42", expected: 42},
+            {tag: "null-compatibility", value: null, expected: 0},
+            {tag: "boolean-compatibility", value: true, expected: 1},
+            {tag: "infinity-compatibility", value: Infinity, expected: 100}
+        ];
+    }
+    function test_cursorFallback(data) {
+        var primary = usageRow({lane: "primary", hasPercent: true, usedPercent: 100, leftPercent: 0});
+        var secondary = usageRow({lane: "secondary", hasPercent: true, usedPercent: 20, leftPercent: 80});
+        var input = [primary, secondary];
+        var cost = {percentUsed: data.value};
+        var before = JSON.stringify({rows: input, cost: cost});
+        var result = PanelDisplay.candidateRows(input, "cursor", cost, "Translated plan");
+        compare(result.length, 3);
+        compare(result[0], {lane: "providerCost", label: "Translated plan", hasPercent: true,
+            usedPercent: data.expected, leftPercent: 100 - data.expected, pacePercent: -1,
+            paceOnTop: true, reset: "", pace: ""});
+        verify(result[1] === primary);
+        verify(result[2] === secondary);
+        compare(PanelDisplay.rowForMode(result, "percent"), result[0]);
+        compare(PanelDisplay.meterRows(result), [primary, secondary]);
+        compare(PanelDisplay.rowForMode(result, "percent", "primary"), primary);
+        compare(JSON.stringify({rows: input, cost: cost}), before);
+        var again = PanelDisplay.candidateRows(input, "cursor", cost, "Translated plan");
+        verify(again[0] !== result[0]);
+    }
+    function test_cursorWithoutEligibleCost_data() {
+        return [
+            {tag: "missing", cost: null},
+            {tag: "missing-value", cost: {}},
+            {tag: "negative", cost: {percentUsed: -1}},
+            {tag: "nan", cost: {percentUsed: NaN}},
+            {tag: "invalid-string", cost: {percentUsed: "invalid"}}
+        ];
+    }
+    function test_cursorWithoutEligibleCost(data) {
+        var primary = usageRow({lane: "primary", hasPercent: true, usedPercent: 100, leftPercent: 0});
+        compare(PanelDisplay.candidateRows([primary], "cursor", data.cost, "Plan"), [primary]);
+        primary.leftPercent = 1;
+        compare(PanelDisplay.candidateRows([primary], "cursor", {percentUsed: 50}, "Plan"), [primary]);
+    }
+    function test_firstPrimaryControlsExhaustionAndDuplicatesKeepIdentity() {
+        var first = usageRow({lane: "primary", hasPercent: true, leftPercent: 40, usedPercent: 60});
+        var second = usageRow({lane: "primary", hasPercent: true, leftPercent: 0, usedPercent: 100});
+        var secondary = usageRow({lane: "secondary"});
+        var extra = usageRow({lane: "extra"});
+        var input = [extra, first, second, secondary];
+        var result = PanelDisplay.candidateRows(input, "perplexity", null, "Plan");
+        verify(result[0] === first);
+        verify(result[1] === secondary);
+        verify(result[2] === extra);
+        verify(result[3] === second);
+        first.leftPercent = 0;
+        result = PanelDisplay.candidateRows(input, "perplexity", null, "Plan");
+        verify(result[0] === secondary);
+        verify(result[1] === first);
+        verify(result[3] === second);
+        compare(input.length, 4);
+    }
+    function test_cursorMissingPrimaryDoesNotInventIncludedPlan() {
+        var secondary = usageRow({lane: "secondary", hasPercent: true, usedPercent: 100, leftPercent: 0});
+        var result = PanelDisplay.candidateRows([secondary], "cursor", {percentUsed: 20}, "Plan");
+        compare(result.length, 1);
+        verify(result[0] === secondary);
+    }
+    function test_cursorPercentageAndPaceSelectIndependentCandidates() {
+        var primary = usageRow({lane: "primary", hasPercent: true, usedPercent: 100,
+            leftPercent: 0, pacePercent: 50});
+        var secondary = usageRow({lane: "secondary", hasPercent: true, usedPercent: 40, leftPercent: 60});
+        var result = PanelDisplay.candidateRows([primary, secondary], "cursor", {percentUsed: 32}, "Plan");
+        verify(PanelDisplay.rowForMode(result, "percent") === result[0]);
+        verify(PanelDisplay.rowForMode(result, "both") === primary);
+        verify(PanelDisplay.rowForMode(result, "pace") === primary);
+        compare(PanelDisplay.meterRows(result), [primary, secondary]);
+    }
+
+    function test_candidatesRetainNonPercentageCapabilities() {
+        var primary = usageRow({lane: "primary", hasPercent: true, usedPercent: 100, leftPercent: 0});
+        var secondary = usageRow({lane: "secondary", pacePercent: 60, resetsAt: "2026-10-08T12:00:00Z",
+            paceOnTop: false, paceEtaSeconds: 3600});
+        var result = PanelDisplay.candidateRows([primary, secondary], "perplexity", null, "Plan");
+        compare(PanelDisplay.rowForMode(result, "percent"), primary);
+        compare(PanelDisplay.rowForMode(result, "pace"), secondary);
+        compare(PanelDisplay.rowForMode(result, "resetTime"), secondary);
+        compare(PanelDisplay.rowForMode(result, "runOut"), secondary);
+    }
+
     function test_safeModeFallsBackToPercent() {
         compare(PanelDisplay.safeMode("pace"), "pace");
         compare(PanelDisplay.safeMode("unknown"), "percent");

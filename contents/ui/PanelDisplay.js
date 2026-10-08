@@ -57,6 +57,65 @@ function rowSupportsMode(row, value) {
     }
 }
 
+// Inputs are normalized usage rows and a canonical provider key. QML supplies
+// the localized label; this module only constructs and orders quota candidates.
+function candidateRows(rows, providerKey, providerCost, includedPlanLabel) {
+    if (!rows || rows.length === 0) {
+        return [];
+    }
+    var primary = rowForLane(rows, "primary");
+    var secondary = rowForLane(rows, "secondary");
+    var tertiary = rowForLane(rows, "tertiary");
+    var preferred = [];
+    if (providerKey === "factory") {
+        appendUniqueRow(preferred, secondary);
+        appendUniqueRow(preferred, primary);
+    } else if (providerKey === "perplexity" && primary && primary.hasPercent
+            && primary.leftPercent <= 0) {
+        appendUniqueRow(preferred, secondary);
+        appendUniqueRow(preferred, tertiary);
+        appendUniqueRow(preferred, primary);
+    } else {
+        appendUniqueRow(preferred, primary);
+        appendUniqueRow(preferred, secondary);
+        appendUniqueRow(preferred, tertiary);
+    }
+    if (providerKey === "cursor" && primary && primary.hasPercent && primary.leftPercent <= 0
+            && providerCost && providerCost.percentUsed >= 0) {
+        var used = Math.max(0, Math.min(100, Number(providerCost.percentUsed)));
+        preferred.unshift({
+            lane: "providerCost",
+            label: includedPlanLabel,
+            hasPercent: true,
+            usedPercent: used,
+            leftPercent: Math.max(0, Math.min(100, 100 - used)),
+            pacePercent: -1,
+            paceOnTop: true,
+            reset: "",
+            pace: ""
+        });
+    }
+    for (var i = 0; i < rows.length; i++) {
+        appendUniqueRow(preferred, rows[i]);
+    }
+    return preferred;
+}
+
+function rowForLane(rows, lane) {
+    for (var i = 0; i < rows.length; i++) {
+        if (rows[i] && rows[i].lane === lane) {
+            return rows[i];
+        }
+    }
+    return null;
+}
+
+function appendUniqueRow(rows, row) {
+    if (row && rows.indexOf(row) === -1) {
+        rows.push(row);
+    }
+}
+
 // The caller supplies provider-specific preference order. This function only
 // decides whether a row carries the data required by the selected mode.
 function rowForMode(rows, value, laneValue) {

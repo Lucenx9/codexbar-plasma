@@ -86,8 +86,8 @@ class CompactProvidersTests(unittest.TestCase):
     # its provider instead of printing a row the user asked to hide.
     COMPACT_FUNCTIONS = (
         "compactProviders", "panelProviderItems", "panelMeterRows",
-        "switcherCandidateRows", "usageRowForLane", "appendUniqueUsageRow",
-        "providerKey", "clamp",
+        "switcherCandidateRows",
+        "providerKey",
     )
 
     COMPACT_QML = '''import QtQuick
@@ -109,6 +109,24 @@ TestCase {
     property var hostConfiguration: ({showMultiProviderInPanel: true})
     function providerPresentation(item) { return item; }
     SOURCE_FUNCTIONS
+    function i18n(text) {
+        return text === "Included plan" ? "Localized included plan" : text;
+    }
+    function test_candidateAdapterResolvesAliasesAndLocalizesFallback() {
+        var primary = {lane: "primary", hasPercent: true, usedPercent: 100, leftPercent: 0};
+        var secondary = {lane: "secondary", hasPercent: true, usedPercent: 20, leftPercent: 80};
+        var factory = switcherCandidateRows({provider: "DROID", rows: [primary, secondary]});
+        compare(factory[0], secondary);
+        compare(factory[1], primary);
+        var cursor = switcherCandidateRows({provider: "CURSOR", rows: [primary, secondary],
+            providerCost: {percentUsed: 32}});
+        compare(cursor[0].lane, "providerCost");
+        compare(cursor[0].label, "Localized included plan");
+        compare(cursor[0].usedPercent, 32);
+        compare(panelMeterRows({provider: "CURSOR", rows: [primary, secondary],
+            providerCost: {percentUsed: 32}})[0], primary);
+        compare(switcherCandidateRows(null), []);
+    }
     function meterItem(used) {
         return {provider: "codex", rows: [{lane: "primary", hasPercent: true,
             usedPercent: used, leftPercent: 100 - used}]};

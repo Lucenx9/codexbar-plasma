@@ -1585,70 +1585,10 @@ PlasmoidItem {
         return costText.tokenCostHint(providerID)
     }
 
-    function usageRowForLane(item, lane) {
-        if (!item || !item.rows) {
-            return null
-        }
-        for (var i = 0; i < item.rows.length; i++) {
-            if (item.rows[i] && item.rows[i].lane === lane) {
-                return item.rows[i]
-            }
-        }
-        return null
-    }
-
-    function appendUniqueUsageRow(rows, row) {
-        if (row && rows.indexOf(row) === -1) {
-            rows.push(row)
-        }
-    }
-
-    // Preserve each provider's compact-row preference, then let PanelDisplay
-    // choose by capability. A pace or reset mode must not discard a useful row
-    // merely because that row has no percentage.
     function switcherCandidateRows(item) {
-        if (!item || !item.rows || item.rows.length === 0) {
-            return []
-        }
-
-        var key = providerKey(item.provider)
-        var primary = usageRowForLane(item, "primary")
-        var secondary = usageRowForLane(item, "secondary")
-        var tertiary = usageRowForLane(item, "tertiary")
-        var preferred = []
-        if (key === "factory") {
-            appendUniqueUsageRow(preferred, secondary)
-            appendUniqueUsageRow(preferred, primary)
-        } else if (key === "perplexity" && primary && primary.hasPercent
-                && primary.leftPercent <= 0) {
-            appendUniqueUsageRow(preferred, secondary)
-            appendUniqueUsageRow(preferred, tertiary)
-            appendUniqueUsageRow(preferred, primary)
-        } else {
-            appendUniqueUsageRow(preferred, primary)
-            appendUniqueUsageRow(preferred, secondary)
-            appendUniqueUsageRow(preferred, tertiary)
-        }
-        if (key === "cursor" && primary && primary.hasPercent && primary.leftPercent <= 0
-                && item.providerCost && item.providerCost.percentUsed >= 0) {
-            var used = clamp(Number(item.providerCost.percentUsed), 0, 100)
-            preferred.unshift({
-                lane: "providerCost",
-                label: i18n("Included plan"),
-                hasPercent: true,
-                usedPercent: used,
-                leftPercent: clamp(100 - used, 0, 100),
-                pacePercent: -1,
-                paceOnTop: true,
-                reset: "",
-                pace: ""
-            })
-        }
-
-        for (var i = 0; i < item.rows.length; i++) {
-            appendUniqueUsageRow(preferred, item.rows[i])
-        }
-        return preferred
+        return PanelDisplay.candidateRows(item ? item.rows : null,
+            item ? providerKey(item.provider) : "", item ? item.providerCost : null,
+            i18n("Included plan"))
     }
 
     function panelDisplayRow(item, mode) {

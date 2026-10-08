@@ -133,7 +133,7 @@ class PanelTextRecoveryTests(unittest.TestCase):
         surface.texts = {main: source}
         functions = []
         for name in ("menuBarDisplayText", "safeMenuBarDisplayMode", "panelDisplayRow",
-                     "switcherCandidateRows", "usageRowForLane", "appendUniqueUsageRow",
+                     "switcherCandidateRows",
                      "clamp", "providerKey", "displayPercent", "percentSuffix",
                      "paceMarkerPercent",
                      "paceWarningActive", "paceEtaText", "runOutTextForRow",
