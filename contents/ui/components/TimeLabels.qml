@@ -14,13 +14,13 @@ QtObject {
         // compact labels stay HH:mm / h:mm AP even when a locale's short form
         // is HH:mm:ss (notably C).
         var format = root.locale.timeFormat(Locale.ShortFormat).replace(/:?ss/, "")
-        return root.locale.toString(new Date(timestampMs), format)
+        return new Date(timestampMs).toLocaleString(root.locale, format)
     }
 
     function weekdayTime(timestampMs) {
         return i18nc("Abbreviated weekday %1 and clock time %2, such as Wed 14:30",
             "%1 %2",
-            root.locale.toString(new Date(timestampMs), "ddd"),
+            new Date(timestampMs).toLocaleString(root.locale, "ddd"),
             root.clockTime(timestampMs))
     }
 
@@ -28,8 +28,8 @@ QtObject {
         var date = new Date(timestampMs)
         return i18nc("Abbreviated month %1, day of the month %2 and clock time %3, such as Oct 7, 14:30",
             "%1 %2, %3",
-            root.locale.toString(date, "MMM"),
-            root.locale.toString(date, "d"),
+            date.toLocaleString(root.locale, "MMM"),
+            date.toLocaleString(root.locale, "d"),
             root.clockTime(timestampMs))
     }
 }
