@@ -323,7 +323,7 @@ class PopupLayoutTest(unittest.TestCase):
             # Filling with a cap at the label's own text lets the account elide on
             # narrow popups while never stretching past the email it shows.
             "Layout.fillWidth: true",
-            "Layout.maximumWidth: implicitWidth",
+            "Layout.maximumWidth: Math.ceil(implicitWidth)",
         ):
             if not code_contains(provider_account_label_body, account_label_fragment):
                 raise AssertionError(
