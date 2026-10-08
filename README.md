@@ -52,6 +52,8 @@ required. A CLI failure leaves the widget installed and returns a nonzero status
    Alternatively, install the widget first and use **General → Managed CLI →
    Install and select managed CLI**, then **Apply**. This downloads an official
    Linux binary to a private directory without replacing a system installation.
+   If the CLI is missing, the popup shows this setup route even after switching
+   to Usage & Spend or Sessions.
    Use the resolved path from **Diagnostics → Check versions** for terminal commands.
    Set up your provider using the upstream instructions, then verify usage:
 
@@ -199,8 +201,10 @@ systemctl --user restart plasma-plasmashell.service
 ```
 
 In **General → Updates**, **Check for widget updates** and update notifications
-are enabled by default. Clicking an update notification opens that release's
-page on GitHub where the installed `notify-send` supports notification actions.
+are enabled by default. Checks run every 24 hours by default; restarting Plasma
+respects the last successful check, while first use or an overdue check runs
+immediately. Manual checks bypass the interval. Clicking an update notification
+opens that release's page on GitHub where the installed `notify-send` supports notification actions.
 **Install widget updates automatically** is opt-in.
 
 The widget-update helper accepts only immutable GitHub releases. It binds assets to

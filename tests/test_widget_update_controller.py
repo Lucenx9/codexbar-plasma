@@ -56,24 +56,38 @@ TestCase {
         verify(!updater.busy);
         compare(recorded.count, 0);
     }
-    function test_recentStartupStillChecksAndCoalescesRequests() {
-        var updater = create("normal", {updateChecksEnabled: true,
-            autoUpdateLastCheck: new Date().toISOString()});
+    function test_startupChecksWhenDue_data() {
+        return [{tag: "first", timestamp: ""},
+                {tag: "overdue", timestamp: new Date(Date.now() - 25 * 3600000).toISOString()},
+                {tag: "invalid", timestamp: "not-a-date"},
+                {tag: "clock-rollback", timestamp: new Date(Date.now() + 3600000).toISOString()}];
+    }
+    function test_startupChecksWhenDue(data) {
+        create("normal", {updateChecksEnabled: true, autoUpdateLastCheck: data.timestamp});
         tryCompare(succeeded, "count", 1);
         compare(available.count, 1);
         compare(available.signalArguments[0][0], "2.0");
         compare(available.signalArguments[0][2], "https://github.com/Lucenx9/codexbar-plasma/releases/tag/v2.0");
+    }
+    function test_recentStartupWaitsButManualChecksCoalesce() {
+        var updater = create("normal", {updateChecksEnabled: true,
+            autoUpdateLastCheck: new Date().toISOString()});
+        wait(350);
+        verify(!updater.busy);
+        compare(succeeded.count, 0);
+        compare(available.count, 0);
+        compare(recorded.count, 0);
         updater.checkNow();
         updater.checkNow();
         verify(updater.busy);
+        tryCompare(succeeded, "count", 1);
+        compare(available.count, 1);
+        compare(recorded.count, 1);
+        compare(updater.errorText, "");
+        updater.checkNow();
         tryCompare(succeeded, "count", 2);
         compare(available.count, 2);
         compare(recorded.count, 2);
-        compare(updater.errorText, "");
-        updater.checkNow();
-        tryCompare(succeeded, "count", 3);
-        compare(available.count, 3);
-        compare(recorded.count, 3);
     }
     function test_installQueuedDuringCheckKeepsRequestModes() {
         var updater = create("queued", {updateChecksEnabled: true});

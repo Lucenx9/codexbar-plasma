@@ -91,6 +91,17 @@ class SmokePopupTests(unittest.TestCase):
             self.assertIn(json.dumps(str(image)), (package / "contents/ui/main.qml").read_text())
         self.assertEqual(before, {name: (smoke.ROOT / name).read_bytes() for name in sources})
 
+    def test_missing_cli_preview_uses_a_nonexistent_isolated_command(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            work = Path(temporary)
+            smoke.preview_environment(work, "cli-missing")
+            smoke.stage_applet(work, "cli-missing", work / "capture.png")
+            tree = ET.parse(work / "data/plasma/plasmoids" / smoke.APPLET_ID / "contents/config/main.xml")
+            ns = {"k": "http://www.kde.org/standards/kcfg/1.0"}
+            command = tree.find(".//k:entry[@name='commandPath']/k:default", ns).text
+            self.assertEqual(command, str(work / "codexbar-not-installed"))
+            self.assertFalse(Path(command).exists())
+
     def test_wayland_only_preview_selects_a_graphical_backend(self):
         for display in (None, ""):
             host = {"WAYLAND_DISPLAY": "wayland-test", "QT_QPA_PLATFORM": "offscreen"}

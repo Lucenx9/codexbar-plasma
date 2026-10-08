@@ -302,6 +302,11 @@ identities as usual and keeps the last-known indication visible.
 
 ## Providers and accounts
 
+If Plasma cannot run the CLI, the popup keeps its installation guidance visible
+when switching to Usage & Spend or Sessions. Open **General → Managed CLI** in
+widget settings to install and select a private CLI, then **Apply**. For an
+existing installation, use **Diagnostics** to set the absolute executable path.
+
 A failed provider-list refresh in settings keeps the last loaded list and shows
 an error. A successful empty list clears it.
 
@@ -355,6 +360,11 @@ Provider-specific editable settings depend on the official CLI contract.
   in the panel, popup, and settings.
 
 ## Costs and history
+
+With local history enabled, the widget scans it at startup and about once per
+hour, including while the popup is closed, so provider cost summaries are ready.
+Opening Usage & Spend also refreshes stale history. Sessions are loaded only
+while their tab is open.
 
 ### Share usage
 
@@ -599,7 +609,9 @@ fields; track proposed extensions in the issue tracker.
 - Configurable order for the provider identity, service status, usage text, and
   provider meters shown in the panel.
 - Check for widget updates, notify when an update is available, and opt in to
-  silent automatic widget installation. The update notification opens the
+  silent automatic widget installation. Startup respects the interval since the
+  last successful check; first use and overdue checks run immediately. Manual
+  checks bypass that interval. The update notification opens the
   release page on GitHub when clicked, where supported.
 
 ### CLI release checks and installed versions

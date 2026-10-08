@@ -116,6 +116,8 @@ def stage_applet(work, scenario, image_path, theme=None):
     defaults = {"commandPath": str(fixture_cli), "refreshInterval": "0",
                 "enableNotifications": "false", "updateChecksEnabled": "false",
                 "autoUpdateEnabled": "false", "updateNotificationsEnabled": "false"}
+    if scenario == "cli-missing":
+        defaults["commandPath"] = str(work / "codexbar-not-installed")
     if scenario.startswith("ai-insights"):
         defaults.update(aiInsightsEnabled="true", aiInsightsModel="fixture-model")
     for key, value in defaults.items():

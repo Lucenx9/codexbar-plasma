@@ -29,7 +29,7 @@ SCENARIOS += ("popup-scroll", "popup-scroll-large")
 SCENARIOS += ("popup-content", "popup-hidden-rows", "popup-hidden-sections", "refresh-on-open", "privacy-provider", "privacy-spend", "privacy-sessions")
 SCENARIOS += ("privacy-cost-details",)
 SCENARIOS += ("usage-retention", "usage-cache-restart")
-SCENARIOS += ("empty-providers", "usage-error", "usage-recovery")
+SCENARIOS += ("empty-providers", "usage-error", "usage-recovery", "cli-missing")
 SCENARIOS += ("ai-insights", "ai-insights-it", "ai-insights-mismatch", "ai-insights-error", "ai-insights-single",
               "settings-ai-insights", "settings-ai-insights-narrow")
 MAX_SCENARIO_TIMEOUT_SECONDS = 120
