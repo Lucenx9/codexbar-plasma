@@ -3630,3 +3630,9 @@ msgstr ""
 #~ msgstr ""
 #~ "Busca versões oficiais no GitHub. O widget não instala nem substitui o "
 #~ "CLI."
+
+#: contents/ui/components/FullRepresentation.qml scripts/smoke/Capture.qml
+msgid "%2 of %1 provider"
+msgid_plural "%2 of %1 providers"
+msgstr[0] "%2 de %1 provedor"
+msgstr[1] "%2 de %1 provedores"

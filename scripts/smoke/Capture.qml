@@ -13,6 +13,8 @@ Item {
     required property string imagePath
     property bool prepared: false
     property bool navigationVerified: false
+    property var navigationTooltip: null
+    property bool navigationTooltipVerified: false
     property bool detailBeforeCaptured: false
     property bool hiddenRowsCaptured: false
     property bool cacheRestart: false
@@ -376,6 +378,9 @@ Item {
         var previous = findItem(popup, "previousTabsButton");
         var next = findItem(popup, "nextTabsButton");
         verifyScenario(strip && previous && next, "tab navigation controls missing");
+        var countLabel = findItem(popup, "overviewProviderCountLabel");
+        verifyScenario(countLabel.text.indexOf(i18np("%2 of %1 provider", "%2 of %1 providers",
+            applet.providers.length, 3)) >= 0, "Overview did not identify its subset of the provider roster");
         verifyScenario(previous.visible && next.visible, "overflow controls are hidden");
         verifyScenario(previous.x + previous.width <= strip.x
             && next.x >= strip.x + strip.width, "scroll controls overlap tabs");
@@ -394,6 +399,10 @@ Item {
         }
         verifyScenario(visited === 13, "not every global and provider tab is keyboard reachable");
         verifyScenario(previous.enabled && !next.enabled, "incorrect controls at end of strip");
+        var focusedTip = findToolTip(lastFocused.parent);
+        verifyScenario(focusedTip !== null && focusedTip.plainText === lastFocused.parent.modelData.title,
+            "a truncated provider name lost its complete tooltip text");
+        navigationTooltip = focusedTip;
         var tabs = strip.focusableTabs(lastFocused);
         var first = tabs[0];
         var last = tabs[tabs.length - 1];
@@ -1726,8 +1735,16 @@ Item {
             var next = findItem(applet.fullRepresentationItem, "nextTabsButton");
             if (!strip || !strip.interactive || !next || !next.visible)
                 return false;
-            if (!navigationVerified)
+            if (!navigationVerified) {
                 verifyTabNavigation();
+                return false;
+            }
+            if (!navigationTooltipVerified) {
+                if (!navigationTooltip.visible)
+                    return false;
+                navigationTooltipVerified = true;
+                applet.fullRepresentationItem.forceActiveFocus(Qt.OtherFocusReason);
+            }
             return true;
         }
         if (scenario === "loading")
@@ -1878,7 +1895,17 @@ Item {
             verifyScenario(dashboard.kpis[0].value === "0", "legacy dashboard lost explicit zero");
             verifyScenario(dashboard.rows[0].label === "Credits remaining", "legacy label adapter failed");
             verifyScenario(dashboard.rows[1].value === "$1.25 · 1.2K tokens", "legacy period formatting changed");
-            verifyScenario(dashboard.rows[2].value === "Example model (0 requests)", "legacy top model formatting changed");
+            verifyScenario(dashboard.rows[2].value === new Array(9).join("Example model ").trim()
+                + " (0 requests)", "legacy top model formatting changed");
+            var topModel = findItem(dashboardSection, "usageDashboardValue2");
+            verifyScenario(topModel !== null && topModel.truncated,
+                "the long dashboard value was not elided");
+            verifyScenario(topModel.width <= topModel.parent.width / 2 + 1
+                && topModel.mapToItem(dashboardSection, topModel.width, 0).x <= dashboardSection.width + 1,
+                "the dashboard value escaped the popup width");
+            var modelTip = findToolTip(topModel);
+            verifyScenario(modelTip !== null && modelTip.plainText === topModel.text,
+                "the elided dashboard value lost its complete text");
             verifyScenario(claude.usageDashboard === null && claude.providerDetails.length === 1,
                 "legacy dashboard overrode generic details");
             return dashboardSection !== null && dashboardSection.visible && dashboardSection.rows.length === 3;
@@ -1919,6 +1946,20 @@ Item {
             return item;
         for (var i = 0; i < item.children.length; i++) {
             var found = findItem(item.children[i], name);
+            if (found)
+                return found;
+        }
+        return null;
+    }
+
+    function findToolTip(item) {
+        var data = item.data || [];
+        for (var entry of data) {
+            if (entry && entry.plainText !== undefined && entry.delay !== undefined)
+                return entry;
+        }
+        for (var child of item.children) {
+            var found = findToolTip(child);
             if (found)
                 return found;
         }
@@ -1995,7 +2036,7 @@ Item {
                     for (var i = 0; i < 8; i++) {
                         var provider = Object.assign({}, providers[0]);
                         provider.provider = "example-" + i;
-                        provider.title = "Example " + (i + 1);
+                        provider.title = i === 7 ? "Example provider with a long display name" : "Example " + (i + 1);
                         providers.push(provider);
                     }
                     capture.applet.providers = providers;

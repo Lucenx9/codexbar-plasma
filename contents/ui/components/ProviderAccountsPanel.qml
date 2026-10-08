@@ -11,10 +11,20 @@ ColumnLayout {
     required property var providerData
 
     readonly property string providerID: providerData ? providerData.provider : ""
+    readonly property var accountOptions: providerID.length > 0
+        ? applet.accountOptionsForProvider(providerID) : []
+    readonly property bool largeAccountList: accountOptions.length > 3
+    property bool accountsExpanded: false
+
+    onProviderIDChanged: accountsExpanded = false
+    onLargeAccountListChanged: {
+        if (!largeAccountList)
+            accountsExpanded = false
+    }
 
     visible: providerID.length > 0
         && (applet.accountLoadingForProvider(providerID)
-            || applet.accountOptionsForProvider(providerID).length > 0
+            || accountOptions.length > 0
             || applet.accountErrorForProvider(providerID).length > 0
             || applet.selectedAccountForProvider(providerID).length > 0)
     Layout.fillWidth: true
@@ -25,23 +35,44 @@ ColumnLayout {
         spacing: Kirigami.Units.smallSpacing
 
         PlainPlasmaLabel {
+            visible: !accountsPanel.largeAccountList
             text: i18n("Accounts")
             font.weight: Font.DemiBold
             Layout.fillWidth: true
             elide: Text.ElideRight
         }
 
+        DisclosureButton {
+            id: accountsDisclosure
+            objectName: "accountsDisclosureButton"
+            visible: accountsPanel.largeAccountList
+            plainText: i18n("Accounts")
+            expanded: accountsPanel.accountsExpanded
+            onClicked: accountsPanel.accountsExpanded = !accountsPanel.accountsExpanded
+        }
+
+        Item {
+            visible: accountsPanel.largeAccountList
+            Layout.fillWidth: true
+        }
+
         PlasmaComponents.ToolButton {
             id: clearAccountOverrideButton
+            objectName: "clearAccountOverrideButton"
 
             visible: accountsPanel.applet.selectedAccountForProvider(accountsPanel.providerID).length > 0
             enabled: !accountsPanel.applet.accountLoadingForProvider(accountsPanel.providerID)
             icon.name: "edit-clear"
             Accessible.name: i18n("Use default account")
-            onClicked: accountsPanel.applet.selectAccount(accountsPanel.providerID, "")
+            onClicked: {
+                if (accountsPanel.largeAccountList && activeFocus)
+                    accountsDisclosure.forceActiveFocus(visualFocus ? Qt.TabFocusReason : Qt.OtherFocusReason)
+                accountsPanel.applet.selectAccount(accountsPanel.providerID, "")
+                accountsPanel.accountsExpanded = false
+            }
 
             PlainToolTip {
-                visible: clearAccountOverrideButton.hovered
+                visible: clearAccountOverrideButton.hovered || clearAccountOverrideButton.visualFocus
                 delay: Kirigami.Units.toolTipDelay
                 plainText: clearAccountOverrideButton.Accessible.name
             }
@@ -74,7 +105,7 @@ ColumnLayout {
             }
 
             PlainToolTip {
-                visible: reloadAccountsButton.hovered
+                visible: reloadAccountsButton.hovered || reloadAccountsButton.visualFocus
                 delay: Kirigami.Units.toolTipDelay
                 plainText: reloadAccountsButton.Accessible.name
             }
@@ -82,13 +113,13 @@ ColumnLayout {
     }
 
     Flow {
+        objectName: "accountChoices"
+        visible: !accountsPanel.largeAccountList || accountsPanel.accountsExpanded
         Layout.fillWidth: true
         spacing: Kirigami.Units.smallSpacing
 
         Repeater {
-            model: accountsPanel.providerID.length > 0
-                ? accountsPanel.applet.accountOptionsForProvider(accountsPanel.providerID)
-                : []
+            model: accountsPanel.accountOptions
 
             delegate: PlainButton {
                 id: accountButton
@@ -131,6 +162,9 @@ ColumnLayout {
                 onClicked: {
                     accountsPanel.applet.selectAccount(modelData.provider, accountsPanel.applet.accountKey(modelData))
                     checked = Qt.binding(function() { return accountSelected })
+                    if (accountsPanel.largeAccountList && activeFocus)
+                        accountsDisclosure.forceActiveFocus(visualFocus ? Qt.TabFocusReason : Qt.OtherFocusReason)
+                    accountsPanel.accountsExpanded = false
                 }
             }
         }

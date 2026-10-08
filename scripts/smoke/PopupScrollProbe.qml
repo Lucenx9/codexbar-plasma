@@ -15,6 +15,7 @@ Item {
     property var refreshedProvider
     property real savedScroll: 0
     property int settleTicks: 0
+    property int accountPreviewStage: 0
 
     Rectangle {
         parent: probe.applet.fullRepresentationItem
@@ -142,6 +143,29 @@ Item {
             } else if (probe.step === 1) {
                 if (applet.accountLoadingForProvider("codex") || applet.accountOptionsForProvider("codex").length !== 20)
                     return;
+                if (probe.accountPreviewStage === 0) {
+                    var choices = probe.find(popup, "accountChoices");
+                    probe.verify(!choices.visible, "a long account list opened above the quotas");
+                    var quota = probe.find(popup, "usageBar");
+                    var quotaTop = quota.mapToItem(scroll.contentItem, 0, 0).y;
+                    probe.verify(quotaTop >= 0 && quotaTop + quota.height <= scroll.height,
+                        "the first quota is not visible before opening accounts");
+                    probe.accountPreviewStage = -1;
+                    var accountPreviewAccepted = popup.grabToImage(function(result) {
+                        probe.verify(result.saveToFile(probe.imagePath.replace(".png", "-accounts.png")),
+                            "the collapsed account preview could not be saved");
+                        probe.accountPreviewStage = 1;
+                    });
+                    probe.verify(accountPreviewAccepted, "could not capture collapsed account preview");
+                    return;
+                }
+                if (probe.accountPreviewStage === -1)
+                    return;
+                if (probe.accountPreviewStage === 1) {
+                    probe.find(popup, "accountsDisclosureButton").clicked();
+                    probe.accountPreviewStage = 2;
+                    return;
+                }
                 probe.verifyViewport(popup, scroll);
                 probe.verify(scroll.contentItem.contentHeight > scroll.height, "the long account list cannot be scrolled");
                 var buttons = probe.accountButtons(popup);

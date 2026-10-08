@@ -83,6 +83,8 @@ TestCase {
         }
         property bool accountsLoading: false
         property var accountOptions: []
+        property string accountsError: ""
+        property string selectedAccountKey: ""
         function accountLoadingForProvider() {
             return accountsLoading;
         }
@@ -90,10 +92,10 @@ TestCase {
             return accountOptions;
         }
         function accountErrorForProvider() {
-            return "";
+            return accountsError;
         }
         function selectedAccountForProvider() {
-            return "";
+            return selectedAccountKey;
         }
         function accountDisplayLabel(item) {
             return item.label;
@@ -107,7 +109,8 @@ TestCase {
         function accountKey(item) {
             return item.key;
         }
-        function selectAccount() {
+        function selectAccount(providerID, key) {
+            selectedAccountKey = key;
         }
         function loadAccounts() {
         }
@@ -142,6 +145,8 @@ TestCase {
         applet.providerUpdatedText = "Provider updated 11:55";
         applet.accountsLoading = false;
         applet.accountOptions = [];
+        applet.accountsError = "";
+        applet.selectedAccountKey = "";
     }
 
     function cleanupTestCase() {
@@ -627,6 +632,109 @@ TestCase {
         verify(indicator.visible);
     }
 
+    function test_largeAccountListsStartCollapsed_data() {
+        return [{tag: "four", count: 4}, {tag: "twenty", count: 20}];
+    }
+
+    function test_largeAccountListsStartCollapsed(data) {
+        var options = [];
+        for (var index = 0; index < data.count; index++)
+            options.push({key: "account-" + index, label: "Account " + index, provider: "codex"});
+        applet.accountOptions = options;
+        var panel = createControl("ProviderAccountsPanel", {
+            applet: applet, providerData: {provider: "codex"}, width: 220
+        });
+        if (!panel)
+            return;
+        var toggle = findByObjectName(panel, "accountsDisclosureButton");
+        var choices = findByObjectName(panel, "accountChoices");
+        tryCompare(toggle, "visible", true);
+        compare(choices.visible, false);
+        var collapsedHeight = panel.implicitHeight;
+        toggle.forceActiveFocus();
+        keyClick(Qt.Key_Space);
+        tryCompare(choices, "visible", true);
+        verify(toggle.Accessible.checked);
+        tryVerify(function() { return panel.implicitHeight > collapsedHeight; });
+
+        // Refreshing the same roster must not interrupt account browsing.
+        applet.accountOptions = options.slice();
+        compare(choices.visible, true);
+        var buttons = [];
+        for (var child of choices.children) {
+            if (child.fullLabel !== undefined)
+                buttons.push(child);
+        }
+        compare(buttons.length, data.count);
+        buttons[buttons.length - 1].forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        tryCompare(applet, "selectedAccountKey", "account-" + (data.count - 1));
+        compare(choices.visible, false);
+        compare(toggle.Accessible.checked, false);
+        verify(toggle.activeFocus);
+        verify(toggle.visualFocus);
+
+        // Collapsing never hides account errors or the reload action.
+        applet.accountsError = "Synthetic account discovery error";
+        tryCompare(findText(panel, applet.accountsError), "visible", true);
+        verify(findByObjectName(panel, "reloadAccountsButton").visible);
+        toggle.clicked();
+        compare(choices.visible, true);
+        var useDefault = findByObjectName(panel, "clearAccountOverrideButton");
+        useDefault.forceActiveFocus(Qt.TabFocusReason);
+        keyClick(Qt.Key_Space);
+        compare(applet.selectedAccountKey, "");
+        compare(choices.visible, false);
+        verify(toggle.activeFocus);
+        verify(toggle.visualFocus);
+        toggle.clicked();
+        panel.providerData = {provider: "claude"};
+        compare(choices.visible, false);
+    }
+
+    function test_smallAccountListsRemainInlineAndDoNotKeepExpansion() {
+        applet.accountOptions = [{key: "one", label: "One", provider: "codex"}];
+        var panel = createControl("ProviderAccountsPanel", {
+            applet: applet, providerData: {provider: "codex"}, width: 220
+        });
+        if (!panel)
+            return;
+        var choices = findByObjectName(panel, "accountChoices");
+        var toggle = findByObjectName(panel, "accountsDisclosureButton");
+        compare(choices.visible, true);
+        compare(toggle.visible, false);
+        applet.accountOptions = new Array(3).fill(applet.accountOptions[0]);
+        compare(choices.visible, true);
+        applet.accountOptions = new Array(4).fill(applet.accountOptions[0]);
+        compare(choices.visible, false);
+        toggle.clicked();
+        compare(choices.visible, true);
+        applet.accountOptions = applet.accountOptions.slice(0, 3);
+        compare(choices.visible, true);
+        compare(toggle.visible, false);
+        applet.accountOptions = new Array(20).fill(applet.accountOptions[0]);
+        compare(choices.visible, false);
+    }
+
+    function test_accountActionsExplainKeyboardFocus() {
+        applet.selectedAccountKey = "work";
+        var panel = createControl("ProviderAccountsPanel", {
+            applet: applet, providerData: {provider: "codex"}, width: 400
+        });
+        if (!panel)
+            return;
+        for (var name of ["clearAccountOverrideButton", "reloadAccountsButton"]) {
+            var button = findByObjectName(panel, name);
+            var tip = findToolTip(button);
+            verify(tip !== null);
+            button.forceActiveFocus(Qt.TabFocusReason);
+            tryCompare(tip, "visible", true);
+            compare(tip.plainText, button.Accessible.name);
+            testCase.forceActiveFocus(Qt.OtherFocusReason);
+            tryCompare(tip, "visible", false);
+        }
+    }
+
     function test_globalTabActivationAndNavigation() {
         var strip = {
             claimed: null,
@@ -687,6 +795,12 @@ TestCase {
         var tip = findToolTip(tab);
         verify(tip !== null);
         compare(tip.plainText, "Usage & Spend");
+
+        var focusItem = tab.nextItemInFocusChain(true);
+        focusItem.forceActiveFocus(Qt.TabFocusReason);
+        tryCompare(tip, "visible", true);
+        testCase.forceActiveFocus(Qt.OtherFocusReason);
+        tryCompare(tip, "visible", false);
 
         mouseMove(testCase, testCase.width - 1, testCase.height - 1);
         wait(300);

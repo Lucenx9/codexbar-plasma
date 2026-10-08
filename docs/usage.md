@@ -116,7 +116,8 @@ work and upstream contract requirements.
   title or detail line is cut short in a narrow popup, an account button
   whose label is cut short, or a provider header title, account, or plan
   that is cut short, shows the full text in
-  a tooltip. Text that fits gets no tooltip.
+  a tooltip. Keyboard focus also reveals the name of a truncated or icon-only
+  tab. Text that fits gets no tooltip.
 - Overflowing popup tabs have separate scroll buttons and immediate keyboard
   focus reveal, so navigation never covers provider labels. A tab wider than the
   available area stays aligned at its start when focused or selected again.
@@ -153,10 +154,13 @@ work and upstream contract requirements.
   Disabled providers keep their saved selection without occupying one of the
   three slots. If more than three selected providers become available again,
   Overview shows the first three eligible providers in the saved provider order.
+  Its header reports the shown count out of the full provider roster whenever
+  Overview displays a subset, for example **3 of 20 providers**.
   Provider selection checkboxes preserve literal characters such as `&`, `<`,
   and `>` in display names, including with KDE desktop styles.
 - Usage dashboard summaries for provider payloads that expose API spend,
-  request, token, model, or dashboard fields through the CLI.
+  request, token, model, or dashboard fields through the CLI. Long values stay
+  within half the row and show their full text on hover.
 - Declarative provider detail sections from the CLI `usage.details` contract,
   including labeled rows, secondary values, and keyboard/pointer-inspectable
   bar/line charts. A row that carries a valid `progress` used/total pair, such
@@ -321,6 +325,12 @@ Provider-specific editable settings depend on the official CLI contract.
   Repeated records for the same account keep the first successful read, so an
   earlier failed record cannot hide valid quotas. Accounts retain their original
   list order and distinct selection keys, including differences in spacing.
+  Up to three account choices stay inline. Longer lists start behind the
+  **Accounts** disclosure so quotas remain visible; selecting an account closes
+  the list, and switching providers resets it. Refreshing the same list keeps
+  it open. Reload, default-account selection, and discovery errors remain
+  available while the list is collapsed. Keyboard focus on the reload and
+  default-account buttons reveals their labels in tooltips.
 - Provider docs, dashboards, login/account links, and redacted diagnostics.
   The selected provider's links, settings and diagnostics share one surface
   above the provider list; **Settings and diagnostics** starts collapsed.

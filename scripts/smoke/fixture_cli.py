@@ -80,7 +80,7 @@ def usage(provider, scenario, now):
         snapshot["openaiDashboard"] = {
             "creditsRemaining": 0,
             "currentDay": {"costUSD": 1.25, "totalTokens": 1200},
-            "topModels": [{"name": "Example model", "requests": 0}],
+            "topModels": [{"name": ("Example model " * 8).strip(), "requests": 0}],
         }
         if provider == "claude":
             snapshot["usage"]["details"] = [{"title": "Generic details",

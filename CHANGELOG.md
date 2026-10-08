@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Collapse popup account lists longer than three choices behind an Accounts
+  disclosure, keeping quotas visible and closing the list after selection.
+  Account action tooltips also appear on keyboard focus.
+
 - Use a prebuilt minimal Plasma CI toolchain, skip runtime jobs for verified
   editorial-only changes while retaining fast checks and packaging, and build
   release archives without downloading the desktop image.
@@ -25,6 +29,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   icon instead of colored banners; errors with recovery actions are unchanged.
 
 ### Fixed
+
+- Reveal truncated and icon-only popup tab names on keyboard focus, identify
+  the Overview subset out of the full provider roster, and keep long legacy
+  usage-dashboard values inside the popup with full-text hover tooltips.
 
 - Keep dated cost-history rows inside the selected period when duplicate dates,
   malformed records or an incomplete scan disable calendar gap filling.
