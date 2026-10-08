@@ -32,7 +32,9 @@ TestCase {
             return null;
         }
         compare(component.status, Component.Ready, component.errorString());
-        failOnWarning(/.*/);
+        // Fusion has no Kirigami platform plugin on some local Qt stacks;
+        // keep every other warning fatal, including binding/layout errors.
+        failOnWarning(/^(?!Failed to find a Kirigami platform plugin for style "Fusion"$).*/);
         var item = createTemporaryObject(component, testCase, {
             modelData: field(kind, 0), providerAvailable: true, writePending: false,
             secondaryTextOpacity: 0.7, width: 620
