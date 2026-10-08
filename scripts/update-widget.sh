@@ -236,6 +236,69 @@ acquire_install_lock() {
   flock -w "$INSTALL_LOCK_WAIT_SECONDS" 9
 }
 
+installed_widget_matches() {
+  local path="$1"
+  local version="${2:-}"
+  [[ -d "$path" && ! -L "$path" && -f "$path/metadata.json" && ! -L "$path/metadata.json" ]] || return 1
+  [[ "$(wc -c < "$path/metadata.json")" -le "$MAX_PACKAGE_METADATA_BYTES" ]] || return 1
+  jq -e --arg id "$PLUGIN_ID" --arg version "$version" '
+    .KPackageStructure == "Plasma/Applet" and .KPlugin.Id == $id
+    and (.KPlugin.Version | type == "string" and test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))
+    and ($version == "" or .KPlugin.Version == $version)
+  ' "$path/metadata.json" >/dev/null 2>&1
+}
+
+snapshot_widget_package() {
+  python3 - "$1" <<'PY'
+import os
+from pathlib import Path
+import shutil
+import sys
+import tempfile
+
+root = Path(sys.argv[1])
+if not os.path.lexists(root):
+    sys.exit(0)
+backup = None
+try:
+    backup = Path(tempfile.mkdtemp(prefix=".codexbar-update-", dir=root.parent))
+    shutil.copytree(root, backup / "package", symlinks=True)
+except OSError:
+    if backup:
+        shutil.rmtree(backup, ignore_errors=True)
+    sys.exit(1)
+print(backup)
+PY
+}
+
+restore_widget_package() {
+  python3 - "$1" "$2" <<'PY'
+import os
+from pathlib import Path
+import shutil
+import sys
+
+root = Path(sys.argv[1])
+backup = Path(sys.argv[2]) if sys.argv[2] else None
+try:
+    if backup:
+        # Preserve a partial copy until the previous package is back in place.
+        if os.path.lexists(root):
+            os.replace(root, backup / "failed")
+        os.replace(backup / "package", root)
+        shutil.rmtree(backup, ignore_errors=True)
+    elif os.path.lexists(root):
+        # A failed first install has no previous package; allow setup to retry.
+        if root.is_symlink():
+            root.unlink()
+        else:
+            shutil.rmtree(root)
+except OSError:
+    # Keep the sibling backup for recovery if the filesystem refuses restoration.
+    sys.exit(1)
+PY
+}
+
 normalize_version() {
   printf '%s\n' "${1#v}"
 }
@@ -525,10 +588,35 @@ if [[ "$installed_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] \
   finish_setup
   exit 0
 fi
-timeout --kill-after="${KPACKAGE_INSTALL_KILL_AFTER_SECONDS}s" \
+
+# Snapshot the actual per-user install, including when this helper runs from a
+# checkout. A sibling backup permits an atomic restore on the same filesystem.
+install_data_home="${XDG_DATA_HOME:-}"
+[[ "$install_data_home" == /* ]] || install_data_home="${HOME:-}/.local/share"
+installed_widget_root="$install_data_home/plasma/plasmoids/$PLUGIN_ID"
+if [[ -e "$installed_widget_root" || -L "$installed_widget_root" ]]; then
+  installed_widget_matches "$installed_widget_root" \
+    || fail "local_metadata_invalid" "installed widget cannot be safely backed up"
+fi
+widget_backup="$(snapshot_widget_package "$installed_widget_root")" \
+  || fail "package_install_failed" "could not back up installed widget; update stopped"
+install_succeeded=false
+if timeout --kill-after="${KPACKAGE_INSTALL_KILL_AFTER_SECONDS}s" \
   "${KPACKAGE_INSTALL_MAX_TIME_SECONDS}s" \
-  kpackagetool6 -t Plasma/Applet "$INSTALL_OPTION" "$package_path" >&2 \
-  || fail "package_install_failed" "failed to install widget package"
+  kpackagetool6 -t Plasma/Applet "$INSTALL_OPTION" "$package_path" >&2; then
+  install_succeeded=true
+fi
+if [[ "$install_succeeded" != true ]] || ! installed_widget_matches "$installed_widget_root" "$package_version"; then
+  restore_widget_package "$installed_widget_root" "$widget_backup" \
+    || fail "package_install_failed" "widget update failed; recover the retained sibling backup before retrying"
+  if [[ -z "$widget_backup" ]]; then
+    fail "package_install_failed" "widget installation failed; partial package removed"
+  fi
+  fail "package_install_failed" "widget update failed; previous installation restored"
+fi
+if [[ -n "$widget_backup" ]]; then
+  rm -rf -- "$widget_backup" || true
+fi
 exec 9>&-
 
 if [[ "$SETUP" == true && "$INSTALL_OPTION" == -i ]]; then

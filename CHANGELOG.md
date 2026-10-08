@@ -37,6 +37,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Restore the previous widget package after a failed upgrade or invalid installed
+  metadata, preserving the bundled helper needed to retry.
 - Keep actionable CLI installation guidance visible across popup tabs when the
   executable is missing, including the Managed CLI setup route.
 - Respect the widget update-check interval after restarting Plasma instead of

@@ -55,11 +55,18 @@ one, without treating any installation failure as a reason to try the other.
 The `--check` and `--install` JSON interfaces retain their update-only behavior.
 Installs take a `flock` in `$XDG_DATA_HOME/codexbar-plasma` (or
 `~/.local/share/codexbar-plasma`), the data directory `kpackagetool6` installs
-into, so panel, terminal and `make` runs share it. The lock covers only
-`kpackagetool6`: its upgrade deletes the old package
-before copying, so overlapping upgrades from several widget instances, setup,
+into, so panel, terminal and `make` runs share it. The lock covers the backup,
+`kpackagetool6`, installed metadata validation, and recovery: its upgrade deletes
+the old package before copying, so overlapping upgrades from several widget instances, setup,
 or `make update` could remove the widget. After the lock, the installed metadata
 is read again; a release already installed by another run reports `current`.
+Before upgrading, a valid existing package is copied into a sibling
+`.codexbar-update-*` directory. Nonzero installation exits, including timeout,
+or a wrong installed applet ID/version restore that package, including helpers
+and permissions. Failed fresh installs remove the partial package. If filesystem
+errors prevent recovery, the sibling backup is retained with its `package/`
+copy for manual recovery. Abrupt termination of the updater itself can also
+leave this backup; it cannot guarantee recovery after a kill or power loss.
 
 Only setup prompts for a private CLI or a Plasma restart. `--no-input` and
 non-terminal stdin suppress prompts; `--with-cli` explicitly requests private

@@ -30,6 +30,8 @@ TestCase {
     }
 
     function createPage(source, properties) {
+        if (source.endsWith("configGeneral.qml"))
+            properties = Object.assign({cfg_commandPath: "/nonexistent-codexbar-settings-test"}, properties || {});
         var component = Qt.createComponent(source);
         if (component.status === Component.Error
                 && /module "org\.kde\.[^"]+" is not installed/.test(component.errorString())) {
@@ -157,7 +159,7 @@ TestCase {
     }
 
     function test_installWithoutKnownExternalCliStartsImmediately() {
-        var page = createPage("../contents/ui/configGeneral.qml", {cfg_commandPath: "/usr/bin/codexbar"});
+        var page = createPage("../contents/ui/configGeneral.qml", {});
         if (!page) return;
         var managed = findChild(page, "managedCliController");
         managed.activeAction = "status";

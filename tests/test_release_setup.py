@@ -238,6 +238,66 @@ print(json.dumps({"status": os.environ.get("CLI_STATUS", "ready")}))
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(len(self.calls().splitlines()), 1)
 
+    def test_failed_upgrade_restores_the_entire_previous_package(self):
+        for failure, installed_helper in (("exit 1", False), ("exit 124", False),
+                                          ("exit 0", False), ("exit 1", True)):
+            with self.subTest(failure=failure, installed_helper=installed_helper):
+                self.installed.mkdir(parents=True, exist_ok=True)
+                metadata = self.installed / "metadata.json"
+                metadata.write_text(json.dumps({"KPackageStructure": "Plasma/Applet",
+                    "KPlugin": {"Id": "app.codexbar.plasma", "Version": "1.0.0"}}))
+                previous = metadata.read_bytes()
+                script = self.installed / "scripts/update-widget.sh"
+                script.parent.mkdir(exist_ok=True)
+                script.write_text("#!/bin/sh\n# previous updater\n")
+                if installed_helper:
+                    shutil.copyfile(SCRIPT, script)
+                script.chmod(0o755)
+                previous_script = script.read_bytes()
+                self.fake("kpackagetool6", '''
+echo "$*" >> "$FIXTURE/calls"
+python3 - <<'INNER'
+import os, pathlib, shutil
+root = pathlib.Path(os.environ["XDG_DATA_HOME"]) / "plasma/plasmoids/app.codexbar.plasma"
+shutil.rmtree(root)
+root.mkdir()
+(root / "partial").write_text("incomplete update")
+INNER
+''' + failure)
+                if installed_helper:
+                    result = subprocess.run([str(self.bin / "bash"), str(script), "--install",
+                                             "--release-json", str(self.root / "release.json")],
+                                            env=self.env, text=True, capture_output=True, timeout=30)
+                else:
+                    result = self.run_setup("--with-cli")
+                self.assertNotEqual(result.returncode, 0, result.stderr)
+                self.assertTrue(metadata.is_file(), "Failed upgrade deleted the old widget metadata")
+                self.assertEqual(metadata.read_bytes(), previous)
+                self.assertEqual(script.read_bytes(), previous_script)
+                self.assertEqual(script.stat().st_mode & 0o777, 0o755)
+                self.assertFalse((self.installed / "partial").exists())
+                self.assertNotIn("managed-cli", self.calls())
+                self.assertEqual(list(self.installed.parent.glob(".codexbar-update-*")), [])
+
+    def test_failed_first_install_removes_partial_package_and_can_retry(self):
+        original_tool = (self.bin / "kpackagetool6").read_text()
+        self.fake("kpackagetool6", '''
+python3 - <<'INNER'
+import os, pathlib
+root = pathlib.Path(os.environ["XDG_DATA_HOME"]) / "plasma/plasmoids/app.codexbar.plasma"
+root.mkdir(parents=True)
+(root / "partial").write_text("incomplete installation")
+INNER
+exit 1
+''')
+        result = self.run_setup()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(self.installed.exists())
+        (self.bin / "kpackagetool6").write_text(original_tool)
+        result = self.run_setup()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("-i", self.calls())
+
     def test_existing_cli_is_preserved(self):
         self.fake("codexbar", 'echo "unexpected CLI invocation" >> "$FIXTURE/calls"')
         result = self.run_setup()

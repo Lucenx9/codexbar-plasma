@@ -210,7 +210,8 @@ opens that release's page on GitHub where the installed `notify-send` supports n
 The widget-update helper accepts only immutable GitHub releases. It binds assets to
 the advertised tag, verifies SHA-256 digests and the published checksum, and
 checks the applet ID and version before installation. A validation mismatch
-aborts the update.
+aborts the update. Before upgrading, the helper backs up the installed widget
+and restores it if installation fails or the installed metadata is invalid.
 
 **General → CLI updates** offers a manual check of official CodexBar releases
 and optional daily checks, off by default. Notifications can be enabled separately.

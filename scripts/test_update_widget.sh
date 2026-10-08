@@ -87,7 +87,7 @@ if outer_seconds < required_outer_seconds:
         f"{outer_seconds:g}s < {required_outer_seconds}s"
     )
 install_timeout = re.search(
-    r'(?m)^[ \t]*timeout[ \t]+--kill-after="\$\{KPACKAGE_INSTALL_KILL_AFTER_SECONDS\}s"[ \t]*\\\n'
+    r'(?m)^[ \t]*(?:if )?timeout[ \t]+--kill-after="\$\{KPACKAGE_INSTALL_KILL_AFTER_SECONDS\}s"[ \t]*\\\n'
     r'[ \t]*"\$\{KPACKAGE_INSTALL_MAX_TIME_SECONDS\}s"[ \t]*\\\n'
     r'[ \t]*kpackagetool6\b',
     updater_text,
@@ -434,6 +434,15 @@ if [[ -n "${TEST_UPDATE_INSTALLED_METADATA:-}" ]]; then
   cp "$TEST_UPDATE_FIXTURE/package-src/metadata.json" "$TEST_UPDATE_INSTALLED_METADATA"
   rmdir "${TEST_UPDATE_INSTALLED_METADATA}.active"
 fi
+python3 - "$4" <<'PY'
+import os
+from pathlib import Path
+import sys
+import zipfile
+root = Path(os.environ["XDG_DATA_HOME"]) / "plasma/plasmoids/app.codexbar.plasma"
+with zipfile.ZipFile(sys.argv[1]) as archive:
+    archive.extractall(root)
+PY
 printf '%s\n' 'Successfully upgraded package.'
 printf '%s\n' "$*" >> "$TEST_UPDATE_INSTALL_MARKER"
 SH
@@ -569,6 +578,8 @@ fi
 # must still share one lock.
 rm -f "$fixture_dir/install.marker"
 cp "$fixture_dir/metadata.json" "$fixture_dir/installed-metadata.json"
+printf '%s\n' '{"KPackageStructure":"Plasma/Applet","KPlugin":{"Id":"app.codexbar.plasma","Version":"0.1.0"}}' \
+  > "$XDG_DATA_HOME/plasma/plasmoids/app.codexbar.plasma/metadata.json"
 for instance in first second; do
   runtime=(XDG_RUNTIME_DIR="$fixture_dir/runtime")
   [[ "$instance" == first ]] || runtime=(-u XDG_RUNTIME_DIR)

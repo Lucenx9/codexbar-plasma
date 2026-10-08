@@ -613,6 +613,8 @@ fields; track proposed extensions in the issue tracker.
   last successful check; first use and overdue checks run immediately. Manual
   checks bypass that interval. The update notification opens the
   release page on GitHub when clicked, where supported.
+  Failed upgrades restore the previous widget package so installation can be
+  retried. A failed first installation removes its partial package.
 
 ### CLI release checks and installed versions
 
