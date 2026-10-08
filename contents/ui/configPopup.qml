@@ -54,7 +54,6 @@ KCM.SimpleKCM {
     property string cfg_popupHiddenUsageRowsDefault: ""
 
     readonly property int maxOverviewProviders: OverviewProviders.maximumOverviewProviders
-    readonly property string overviewNoneValue: OverviewProviders.noneValue
     readonly property string commandPath: (cfg_commandPath || "codexbar").trim()
     readonly property alias enabledProviderRoster: providerRosterController.enabledProviderRoster
     readonly property alias providerRosterLoading: providerRosterController.providerRosterLoading

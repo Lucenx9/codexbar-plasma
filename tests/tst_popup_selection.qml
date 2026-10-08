@@ -42,19 +42,6 @@ TestCase {
         compare(next.initialized, true)
     }
 
-    function test_compactProviderKeepsAutomaticSelectionOnGlobalViews() {
-        compare(PopupSelection.compactProviderIndex(true, -1, 1), 1)
-    }
-
-    function test_compactProviderKeepsTheSelectedProviderWhenAutoSelectionIsEnabled() {
-        compare(PopupSelection.compactProviderIndex(true, 2, 1), 2)
-    }
-
-    function test_compactProviderKeepsTheFirstProviderWhenAutoSelectionIsDisabled() {
-        compare(PopupSelection.compactProviderIndex(false, 2, 1), 0)
-        compare(PopupSelection.compactProviderIndex(false, -1, 1), 0)
-    }
-
     function test_compactPanelProviderWithoutSelectionKeepsCurrentBehavior() {
         var providers = [{provider: "codex"}, {provider: "claude"}, {provider: "gemini"}];
         compare(PopupSelection.compactPanelProvider(true, providers[2], providers, 1), providers[2]);

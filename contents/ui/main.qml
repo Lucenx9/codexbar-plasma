@@ -1533,13 +1533,6 @@ PlasmoidItem {
         return Guards.copyObject(item)
     }
 
-    function hasAdditionalSections(item) {
-        return item && ((showPopupCredits && (item.credits !== null || item.codexCreditLimit || item.resetCredits))
-            || (showPopupProviderDetails && (item.usageDashboard || item.providerCost
-                || (item.providerDetails && item.providerDetails.length > 0)))
-            || item.tokenCost) ? true : false
-    }
-
     function capitalize(value) {
         var text = String(value || "")
         if (text.length === 0) {
@@ -1713,10 +1706,6 @@ PlasmoidItem {
 
     function clamp(value, minimum, maximum) {
         return Normalizer.clamp(value, minimum, maximum)
-    }
-
-    function primaryProvider() {
-        return providers.length > 0 ? providers[0] : null
     }
 
     function selectedCompactProvider() {
