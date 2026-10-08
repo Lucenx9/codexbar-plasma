@@ -1415,6 +1415,49 @@ TestCase {
         compare(rows[0].label, "2026-08-28");
         compare(rows[0].cost, 3);
     }
+    function test_costHistoryScanCapFiltersBeforeSelectingTheTail() {
+        var daily = [null];
+        while (daily.length < Normalizer.maximumCostHistoryScanItems - 1) daily.push(null);
+        daily.push({date: "2026-08-29", totalCost: 3});
+        daily.push({date: "2026-08-30", totalCost: 100});
+        var rows = Normalizer.normalizeCostDaily(daily, "USD", 1, "2026-08-29");
+        compare(rows.length, 1);
+        compare(rows[0].label, "2026-08-29");
+        compare(rows[0].cost, 3);
+    }
+    function test_costHistoryFallbackPreservesStrictLegacyLabels_data() {
+        return [
+            {tag: "invalid-calendar-date", date: "2026-02-31", label: "2026-02-31"},
+            {tag: "timestamp-label", date: "2026-08-30T00:00:00Z", label: "2026-08-30T00:00:00Z"},
+            {tag: "non-string-date", date: {value: "2026-08-30"}, label: ""}
+        ];
+    }
+    function test_costHistoryFallbackPreservesStrictLegacyLabels(data) {
+        var rows = Normalizer.normalizeCostDaily([
+            {date: "2026-08-29", totalCost: 3},
+            {date: data.date, totalCost: 2},
+            {date: "2026-08-30", totalCost: 100}
+        ], "USD", 2, "2026-08-29");
+        compare(rows.length, 2);
+        compare(rows[0].label, "2026-08-29");
+        compare(rows[1].label, data.label);
+        compare(rows[1].cost, 2);
+    }
+    function test_oneDayDuplicateDailyAndModelsSelectTheSameNewestRecord() {
+        var daily = [
+            {date: "2026-08-29", totalCost: 1, modelBreakdowns: [{modelName: "model", cost: 1}]},
+            {date: "2026-08-29", totalCost: 2, modelBreakdowns: [{modelName: "model", cost: 2}]},
+            {date: "2026-08-30", totalCost: 100, modelBreakdowns: [{modelName: "model", cost: 100}]}
+        ];
+        var rows = Normalizer.normalizeCostDaily(daily, "USD", 1, "2026-08-29");
+        var models = Normalizer.normalizeCostModels(daily, "USD", 1, "2026-08-29");
+        compare(rows.length, 1);
+        compare(rows[0].label, "2026-08-29");
+        compare(rows[0].cost, 2);
+        compare(models.rows.length, 1);
+        compare(models.rows[0].cost, 2);
+    }
+
     function test_duplicateDailyAndPeriodModelsExcludeTheSameFutureDate() {
         var daily = [
             {date: "2026-08-29", totalCost: 1, modelBreakdowns: [{modelName: "model", cost: 1}]},
