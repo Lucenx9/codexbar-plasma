@@ -292,8 +292,10 @@ These are unresolved Linux candidates, not confirmed missing features.
   for 6.11 with `// qmlformat off` comments only, which disable formatting
   rather than keep line breaks. Rewrapping also breaks
   `test_feature_parity.sh` and `test_process_lifecycle.sh`, which still match
-  source text literally. CI runs 6.11.1; no running container runtime was
-  available to compare its output. Done when a release keeps or improves manual
+  source text literally. Provider metadata expectations now run through public
+  Qt/QML interfaces instead of parsing JavaScript tables; the remaining wiring
+  checks and formatter readability blockers are still open. At that measurement,
+  CI ran 6.11.1 and no container runtime was available to compare its output. Done when a release keeps or improves manual
   expression line breaks, formats every file readably, and produces the same
   output on the CI image.
 - [ ] Verify the 0.64.x Linux quota-window changes in official Linux output.
