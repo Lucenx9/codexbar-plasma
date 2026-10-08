@@ -204,7 +204,7 @@ TestCase {
             {provider: "alibabatokenplan", alias: "bailian-token-plan", expected: "alibaba-token-plan"},
             {provider: "azureopenai", alias: "aoai", expected: "azure-openai"},
             {provider: "groq", alias: "groq-api", expected: "groqcloud"},
-            {provider: "qwencloud", alias: "qwen-cloud", expected: "qwen-cloud"}
+            {provider: "qwencloud", alias: "qwen", expected: "qwen-cloud"}
         ];
         var cases = [];
         for (var row of overrides) {
