@@ -37,6 +37,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Stop AI Insights helpers and their wallet/dialog children when a request is
+  cancelled, enforce HTTP deadlines even for trickled responses, and reject
+  excessively nested JSON and malformed Ollama addresses with bounded errors.
+  Report an unavailable wallet when its settings status check times out.
+
 - Reveal truncated and icon-only popup tab names on keyboard focus, identify
   the Overview subset out of the full provider roster, and keep long legacy
   usage-dashboard values inside the popup with full-text hover tooltips.

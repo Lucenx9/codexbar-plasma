@@ -309,7 +309,7 @@ function command(scriptUrl, action, options) {
     var provider = safeProvider(value.provider)
     // A dialog waits for the user; network actions are bounded well below it.
     var limit = action === "set-key" ? "330s" : (action === "generate" ? "180s" : "45s")
-    var parts = ["timeout", "--kill-after=2s", limit, "python3", Guards.shellQuote(script),
+    var parts = ["exec", "timeout", "--kill-after=2s", limit, "python3", Guards.shellQuote(script),
         "--action", action, "--provider", provider]
     if (provider === "ollama" && (action === "models" || action === "generate")) {
         if (typeof value.endpoint === "string" && value.endpoint.length > maximumEndpointLength) {
@@ -331,6 +331,7 @@ function command(scriptUrl, action, options) {
     if (action === "set-key") {
         parts.push("--prompt", Guards.shellQuote(plainText(value.prompt, 200)))
     }
+    parts.push("--supervised")
     return parts.join(" ")
 }
 

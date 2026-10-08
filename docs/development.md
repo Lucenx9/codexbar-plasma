@@ -860,12 +860,18 @@ outcomes and distinguishes failed output from a confirmed empty snapshot;
 pure AI Insights policy and snapshot allowlist. `tests/test_ai_insights.py` runs
 the helper against a local HTTP server and fake `secret-tool` and `kdialog`
 executables, and compiles the catalogs to run `main.qml`'s language adapter
-through to the `--language` argument. `tests/test_ai_insights_controller.py`
+through to the `--language` argument. Adversarial HTTP fixtures cover trickled
+success/error bodies, disconnects, removed models, oversized/deeply nested JSON,
+and malformed destinations. A supervised production-helper fixture verifies
+that killing its timeout owner also stops its wallet child.
+`tests/test_ai_insights_controller.py`
 runs the production controller through Plasma's executable DataSource with a
-recording helper. `tests/test_ai_insights_settings.py` copies the settings
-page's helper-process functions into a QtTest with stubbed processes to check
+recording helper, including actual helper cancellation, endpoint/privacy/provider
+changes in flight, and deadline recovery. `tests/test_ai_insights_settings.py`
+copies the settings page's helper-process functions into a QtTest with stubbed
+processes to check
 reply handling when the Ollama address or model changes and helper retirement
-when disabled, a second harness that
+when disabled, wallet-status deadline handling, a second harness that
 re-arms the Clear button when a new insight is stored after a clear, and a
 third that creates the page's model handlers with a real editable combo, so
 opening settings keeps the stored model and a popup pick still commits. None

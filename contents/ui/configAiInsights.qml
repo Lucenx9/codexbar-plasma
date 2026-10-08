@@ -257,7 +257,9 @@ KCM.SimpleKCM {
         onTriggered: {
             var action = page.activeAction
             page.retire()
-            if (action !== "key-status") {
+            if (action === "key-status") {
+                page.keyStatus = "unavailable"
+            } else {
                 page.report(messages.errorText("timeout", page.provider), true)
             }
         }

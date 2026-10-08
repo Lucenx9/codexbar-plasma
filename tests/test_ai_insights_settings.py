@@ -69,6 +69,7 @@ TestCase {
         property int interval: 0
         function restart() {}
         function stop() {}
+        function trigger() { TIMEOUT_HANDLER }
     }
     QtObject {
         id: messages
@@ -112,6 +113,17 @@ TestCase {
         accept(helperSource.connected[0], {stdout: listed})
         verify(actionText.indexOf("Connection works") === 0, actionText)
         compare(availableModels, ["qwen3:4b"])
+    }
+
+    function test_walletDeadlineReportsUnavailableAndDropsLateStatus() {
+        verify(run("key-status"))
+        var source = activeSource
+        actionDeadline.trigger()
+        verify(!busy)
+        compare(keyStatus, "unavailable")
+        verify(helperSource.disconnected.indexOf(source) >= 0)
+        accept(source, {stdout: JSON.stringify({status: "present"})})
+        compare(keyStatus, "unavailable")
     }
 
     function test_disableRetiresTheRunningHelper_data() {
@@ -468,6 +480,7 @@ class AiInsightsSettingsTests(unittest.TestCase):
             enabled_handler += insights.handler_body("onCfg_aiInsightsEnabledChanged") + "}"
         qml = qml.replace("ENABLED_HANDLER", enabled_handler)
         qml = qml.replace("MODEL_HANDLER", insights.handler_body("onCfg_aiInsightsModelChanged"))
+        qml = qml.replace("TIMEOUT_HANDLER", insights.handler_body("onTriggered"))
         qml = qml.replace("SOURCE_FUNCTIONS", "\n".join(functions))
         with tempfile.TemporaryDirectory() as directory:
             fixture = Path(directory) / "tst_ai_insights_settings.qml"
@@ -478,7 +491,7 @@ class AiInsightsSettingsTests(unittest.TestCase):
                 capture_output=True, text=True, timeout=30)
         output = result.stdout + result.stderr
         self.assertEqual(result.returncode, 0, output)
-        self.assertIn("Totals: 14 passed, 0 failed", output)
+        self.assertIn("Totals: 15 passed, 0 failed", output)
 
     def test_clear_button_rearms_when_a_new_insight_arrives(self):
         insights = Surface("insights", ROOT)
