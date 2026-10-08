@@ -18,6 +18,10 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
   expose truncation and an explicit empty state.
 - Missing costs and token counts remain unknown. Measured zero stays zero;
   filling calendar gaps only fills metrics actually observed in the snapshot.
+  Valid calendar dates remain inside the selected window even when duplicate
+  dates, malformed records or the scan budget prevent gap filling. Those
+  fallbacks retain observed rows without inventing zero days. Undated legacy
+  labels keep their bounded sequence behavior.
   Quota-week sums mark trailing days after a stale snapshot, the last scanned
   day of a snapshot taken before today, and measured days with excluded
   incomplete requests as partial; a newer usage refresh does not make those
@@ -186,7 +190,10 @@ The `popup-cost-refresh-error` scenario covers retained costs through empty,
 malformed, unsupported, and partial error replies, collapsed/expanded details,
 privacy, an initial failure without cached costs, and recovery.
 [Cost response tests](../tests/tst_cost_response.qml) exercise malformed error
-messages and bounded normalization. [Controller tests](../tests/test_cost_context.py)
+messages and bounded normalization, including matching daily and model costs
+when duplicate dates disable gap filling. Normalizer cases keep older and future
+dates outside the period across duplicate, malformed, blocked-day and incomplete
+scan fallbacks without manufacturing zero values. [Controller tests](../tests/test_cost_context.py)
 use real CLI processes to check healthy provider updates, same-context retention,
 command changes, forced refreshes, and timeouts.
 Run `make check` for logic and wiring, and `make smoke` for the real applet with

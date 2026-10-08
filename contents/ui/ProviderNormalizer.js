@@ -611,6 +611,19 @@ function costHistoryCalendarWindow(days, updatedAt, maximumDays) {
     }
 }
 
+// Gap filling may be unsafe, but valid calendar labels must still stay inside
+// the selected window. Undated legacy rows retain their bounded tail behavior.
+function costHistoryRowsWithinWindow(rows, window) {
+    if (!window) {
+        return rows
+    }
+    return rows.filter(function(row) {
+        var parsed = parsedCalendarDateKey(row.label)
+        return !parsed || (parsed.timestampMs >= window.firstTimestampMs
+            && parsed.timestampMs <= window.lastTimestampMs)
+    })
+}
+
 function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys, maximumDays) {
     if (!rows || rows.length === 0) {
         return rows || []
@@ -632,7 +645,7 @@ function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys, m
             // Preserve malformed labels in the retained tail, but older labels
             // discovered by the extended scan must not suppress a healthy window.
             if (i >= rows.length - historyDays) {
-                return rows
+                return costHistoryRowsWithinWindow(rows, window)
             }
             continue
         }
@@ -640,7 +653,7 @@ function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys, m
             continue
         }
         if (hasOwnKey(byDate, parsed.key)) {
-            return rows
+            return costHistoryRowsWithinWindow(rows, window)
         }
         byDate[parsed.key] = rows[i]
         hasObservedCost = hasObservedCost
@@ -659,7 +672,7 @@ function fillMissingCostDays(rows, currency, days, updatedAt, blockedDateKeys, m
         var key = calendarDateKey(
             date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate())
         if (hasOwnKey(blockedDateKeys, key) && !hasOwnKey(byDate, key)) {
-            return rows
+            return costHistoryRowsWithinWindow(rows, window)
         }
         if (hasOwnKey(byDate, key)) {
             result.push(byDate[key])
@@ -921,7 +934,8 @@ function normalizeCostDaily(items, currency, days, updatedAt, maximumDays) {
     // Inspect beyond the display limit: earlier records may contain valid or
     // malformed days inside the window, so they must be known before filling.
     if (i >= 0 && inspectedItems >= maximumCostHistoryScanItems) {
-        return result.slice(-historyDays)
+        return costHistoryRowsWithinWindow(result,
+            costHistoryCalendarWindow(historyDays, updatedAt, maximumDays)).slice(-historyDays)
     }
     return fillMissingCostDays(result, currency, historyDays, updatedAt, blockedDateKeys, maximumDays)
         .slice(-historyDays)

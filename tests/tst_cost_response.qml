@@ -10,6 +10,22 @@ TestCase {
     function parse(payload, days) {
         return CostResponse.response(JSON.stringify(payload), "", days === undefined ? 30 : days);
     }
+    function test_duplicateDateFallbackKeepsDailyAndModelCostsInsidePeriod() {
+        var result = parse([{provider: "codex", updatedAt: "2026-08-29", daily: [
+            {date: "2026-08-28", totalCost: 1, modelBreakdowns: [{modelName: "synthetic", cost: 1}]},
+            {date: "2026-08-28", totalCost: 2, modelBreakdowns: [{modelName: "synthetic", cost: 2}]},
+            {date: "2026-08-30", totalCost: 100, modelBreakdowns: [{modelName: "synthetic", cost: 100}]}
+        ]}], 2);
+        compare(result.outcome, "success");
+        var snapshot = result.costs.codex;
+        compare(snapshot.daily.length, 2);
+        compare(snapshot.daily[0].label, "2026-08-28");
+        compare(snapshot.daily[1].label, "2026-08-28");
+        compare(snapshot.daily[0].cost + snapshot.daily[1].cost, 3);
+        compare(snapshot.models.length, 1);
+        compare(snapshot.models[0].cost, 3);
+    }
+
     function test_failuresNeverSupplyReplacementData_data() {
         return [
             {
