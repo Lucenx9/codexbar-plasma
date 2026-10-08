@@ -37,6 +37,7 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Ceiling provider header account label maximum width calculation to match plan label integer rounding, preventing premature account text truncation on fractional pixel bounds.
 - Reveal truncated and icon-only popup tab names on keyboard focus, identify
   the Overview subset out of the full provider roster, and keep long legacy
   usage-dashboard values inside the popup with full-text hover tooltips.

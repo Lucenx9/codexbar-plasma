@@ -133,7 +133,7 @@ RowLayout {
                 // lets the account elide first on narrow popups.
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                Layout.maximumWidth: implicitWidth
+                Layout.maximumWidth: Math.ceil(implicitWidth)
 
                 HoverHandler {
                     id: providerAccountHover
