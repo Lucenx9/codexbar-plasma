@@ -76,27 +76,9 @@ for function_name in ("setEnabled", "setApiKey", "loadProviderSettings", "provid
         print(f"{function_name} does not convert the provider ID to its CLI argument", file=sys.stderr)
         sys.exit(1)
 
-# The provider ID the CLI accepts is not always the canonical key, and both the
-# popup and this page must send the same one, so the overrides live once in
-# ProviderIdentity.js.
-identity = pathlib.Path(sys.argv[1]).parent / "ProviderIdentity.js"
-cli_body = identity.read_text(encoding="utf-8")
-cli_table = re.search(r"var providerCliArguments = \{(.*?)\n\}", cli_body, re.S)
-if not cli_table:
-    print("missing providerCliArguments table in ProviderIdentity.js", file=sys.stderr)
-    sys.exit(1)
-cli_arguments = dict(re.findall(r'"([^"]+)":\s*"([^"]+)"', cli_table.group(1)))
-for provider_id, cli_name in {
-    "abacus": "abacusai",
-    "alibaba": "alibaba-coding-plan",
-    "alibabatokenplan": "alibaba-token-plan",
-    "azureopenai": "azure-openai",
-    "groq": "groqcloud",
-    "qwencloud": "qwen-cloud",
-}.items():
-    if cli_arguments.get(provider_id) != cli_name:
-        print(f"missing CLI argument mapping for {provider_id}", file=sys.stderr)
-        sys.exit(1)
+# CLI argument outputs run through ProviderIdentity in
+# tests/tst_provider_metadata.qml; QML command delegation stays checked above.
+
 PY
 
 # The project cost section is executed by tests/test_cost_sections.py, which

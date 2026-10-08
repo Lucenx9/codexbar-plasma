@@ -34,20 +34,8 @@ patterns = [
     re.compile(r"#[0-9A-Fa-f]{3,8}"),
     re.compile(r'"(?:black|white)"'),
 ]
-# Brand coverage follows the shared table in ProviderIdentity.js, which also
-# carries fork-only compatibility entries (crossmodel, kimik2) alongside the
-# official registry. The check below fails on any required color missing from
-# that table, so this list must stay in sync with it.
-required_provider_colors = """
-codex openai azureopenai claude clinepass cursor opencode opencodego alibaba
-alibabatokenplan qwencloud factory fireworks gemini antigravity copilot devin zai minimax
-manus kimi kilo kiro vertexai augment jetbrains kimik2 crossmodel moonshot amp
-t3chat ollama synthetic warp openrouter elevenlabs windsurf zed
-perplexity mimo doubao abacus mistral deepseek codebuff crof venice
-commandcode qoder stepfun bedrock grok groq llmproxy litellm deepgram poe
-chutes clawrouter sakana deepinfra neuralwatt longcat sub2api zenmux aiand zoommate
-wayfinder xai notion ibmbob
-""".split()
+# Required provider colors are exercised through the public lookup in
+# tests/tst_provider_metadata.qml. This check owns QML theme boundaries.
 
 def current_function(text, index):
     for match in re.finditer(r"\n    function ([A-Za-z0-9_]+)\(", text[:index]):
@@ -86,20 +74,6 @@ def function_body(text, name):
             if depth == 0:
                 return text[brace + 1:index]
     raise ValueError(f"unterminated function {name}")
-
-# Brand colors live once, as channel triples in ProviderIdentity.js, because the
-# popup and the config page must not drift apart on what a provider looks like.
-identity_text = (root / "contents/ui/ProviderIdentity.js").read_text(encoding="utf-8")
-channels = re.search(r"var providerBrandChannels = \{(.*?)\n\}", identity_text, re.S)
-if not channels:
-    print("missing providerBrandChannels table in ProviderIdentity.js", file=sys.stderr)
-    sys.exit(1)
-branded = set(re.findall(r'"([^"]+)":\s*\[', channels.group(1)))
-missing = [provider for provider in required_provider_colors if provider not in branded]
-if missing:
-    joined = ", ".join(missing)
-    print(f"missing provider brand color in ProviderIdentity.js: {joined}", file=sys.stderr)
-    sys.exit(1)
 
 # Every surface must read that one table instead of growing a local palette.
 for surface_name in ("applet", "providers", "panel"):
