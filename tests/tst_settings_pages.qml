@@ -16,6 +16,7 @@ TestCase {
     visible: true
 
     property bool mirroredPage: false
+    property var openedPages: []
 
     LayoutMirroring.enabled: mirroredPage
     LayoutMirroring.childrenInherit: true
@@ -42,14 +43,26 @@ TestCase {
             height: testCase.height
         }, properties || {}));
         verify(page !== null);
+        openedPages.push(page);
         var managed = findChild(page, "managedCliController");
         if (managed) {
             tryVerify(function() { return managed.activeAction === "status" && !managed.busy; });
+        }
+        var installedProbe = findChild(page, "installedCliProbe");
+        if (installedProbe) {
+            tryVerify(function() { return installedProbe.checked && !installedProbe.busy; });
         }
         return page;
     }
 
     function cleanup() {
+        // Command changes schedule a fresh offline probe before the page is destroyed.
+        wait(0);
+        for (var page of openedPages) {
+            var probe = findChild(page, "installedCliProbe");
+            if (probe) tryVerify(function() { return probe.checked && !probe.busy; });
+        }
+        openedPages = [];
         mirroredPage = false;
     }
 
@@ -114,7 +127,7 @@ TestCase {
         managed.activeAction = "status";
         managed.activeSource = "synthetic";
         managed.accept("synthetic", {"exit code": 0, stdout: JSON.stringify({status: "absent"})});
-        var updater = findChild(page, "cliReleaseController");
+        var updater = findChild(page, "installedCliProbe");
         updater.activeSource = "manual";
         updater.accept("manual", {"exit code": 0, stdout: JSON.stringify({status: "local",
             version: "0.60.4", path: "/usr/bin/codexbar", manager: "external"})});

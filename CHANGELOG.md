@@ -42,6 +42,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Respect the widget update-check interval after restarting Plasma instead of
   forcing another check when the last successful check is still recent.
 
+- Probe the selected CLI offline before offering its first managed installation,
+  so a working external copy receives the promised confirmation without a prior
+  release check. Changing the command dismisses stale confirmation details.
+- Retry failed CLI release checks after one hour even when a recent successful
+  check belongs to the previous command, including malformed replies and timeouts.
 - Avoid premature account-label truncation in provider headers by rounding
   its maximum width up to a whole pixel, consistently with the plan label.
 - Stop AI Insights helpers and their wallet/dialog children when a request is

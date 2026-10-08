@@ -619,7 +619,9 @@ fields; track proposed extensions in the issue tracker.
 In **General → CLI updates**, **Check CLI releases now** compares the selected
 executable's `--version` with the latest stable official GitHub release. The
 manual check works even when daily checks are disabled. Daily checks are opt-in,
-run independently of quota refreshes, and retry failures after one hour. CLI
+run independently of quota refreshes, and retry failures after one hour.
+Failures after changing the selected command also retry after one hour, even
+if the previous command was checked recently. CLI
 release notifications have their own switch, respect the global notification
 setting and privacy mode, and announce each version once per widget instance.
 Clicking a notification opens the corresponding official release page where
@@ -656,7 +658,10 @@ stable official Linux release under `$XDG_DATA_HOME/codexbar-plasma/cli`, fallin
 back to `~/.local/share/codexbar-plasma/cli`. When the selected command is a
 working external copy, the widget first asks for confirmation: installing keeps
 that copy for outside use but creates a second private copy, and later updates
-through the original method no longer affect the widget. Installation happens
+through the original method no longer affect the widget. General probes the
+selected CLI offline when opened and after command changes; the first-install
+button waits for that probe, independently of manual GitHub release checks.
+Changing the command dismisses a pending confirmation. Installation happens
 immediately;
 **Apply** or **OK** saves its `current/codexbar` path as the widget command.
 **Cancel** leaves the downloaded copy unused and preserves the saved command.

@@ -207,6 +207,20 @@ KCM.SimpleKCM {
         managedControlsOnPage: true
     }
 
+    // Installation confirmation needs local facts even before a manual release check.
+    Controllers.CliUpdateController {
+        id: installedCliProbe
+        objectName: "installedCliProbe"
+        commandPath: page.cfg_commandPath || "codexbar"
+        localOnly: true
+        Component.onCompleted: Qt.callLater(checkNow)
+    }
+
+    onCfg_commandPathChanged: {
+        managedInstallConfirming = false
+        Qt.callLater(installedCliProbe.checkNow)
+    }
+
     Component.onCompleted: {
         syncCostHistoryRangeFromPersisted()
         syncCostHistoryMetricFromPersisted()
@@ -760,19 +774,20 @@ KCM.SimpleKCM {
                     : managedCli.result.version.length > 0 ? i18n("Use managed CLI") : i18n("Install and select managed CLI")
                 icon.name: managedCli.selected ? "view-refresh"
                     : managedCli.result.version.length > 0 ? "dialog-ok-apply" : "download"
-                enabled: !managedCli.busy
+                enabled: !managedCli.busy && (managedCli.result.version.length > 0
+                    || (installedCliProbe.checked && !installedCliProbe.busy))
                 onClicked: {
                     if (managedCli.selected) managedCli.run("update")
                     else if (managedCli.result.version.length > 0) page.cfg_commandPath = managedCli.result.path
                     else if (ManagedCli.needsInstallConfirmation(managedCli.result, {
-                            checked: cliUpdater.checked,
-                            path: cliUpdater.result.path, version: cliUpdater.result.version
+                            checked: installedCliProbe.checked,
+                            path: installedCliProbe.result.path, version: installedCliProbe.result.version
                         })) page.managedInstallConfirming = true
                     else managedCli.run("install")
                 }
             }
             Controls.BusyIndicator {
-                running: managedCli.busy
+                running: managedCli.busy || (managedCli.result.version.length === 0 && installedCliProbe.busy)
                 opacity: running ? 1 : 0
                 Layout.preferredWidth: Kirigami.Units.iconSizes.small
                 Layout.preferredHeight: Kirigami.Units.iconSizes.small
@@ -784,7 +799,7 @@ KCM.SimpleKCM {
                 && !managedCli.selected && managedCli.result.version.length === 0
             Components.PlainControlsLabel {
                 objectName: "managedInstallConfirmLabel"
-                text: i18n("The selected %1 %2 keeps working outside the widget. Installing creates a second private copy and switches the widget to it; updates through the original method will no longer affect the widget.", cliUpdater.result.path, cliUpdater.result.version)
+                text: i18n("The selected %1 %2 keeps working outside the widget. Installing creates a second private copy and switches the widget to it; updates through the original method will no longer affect the widget.", installedCliProbe.result.path, installedCliProbe.result.version)
                 Layout.fillWidth: true
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 24
                 Layout.maximumWidth: Kirigami.Units.gridUnit * 24
