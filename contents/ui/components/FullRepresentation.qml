@@ -737,7 +737,6 @@ Item {
         }
 
         Components.SessionsView {
-            objectName: "popupSessionsView"
             visible: applet.sessionsSelected && !fullRoot.commandPathMissing
             applet: fullRoot.applet
         }

@@ -1201,13 +1201,15 @@ Item {
             if (applet.loading || !applet.commandPathFailed)
                 return false;
             var missing = findItem(applet.fullRepresentationItem, "missingCommandPlaceholder");
-            verifyScenario(missing && missing.visible && missing.helpfulAction && missing.helpfulAction.enabled,
+            verifyScenario(missing && missing.visible && missing.parent.visible
+                && missing.helpfulAction && missing.helpfulAction.enabled,
                 "missing CLI guidance must remain actionable on every tab");
             verifyScenario(missing.plainExplanation.indexOf(applet.commandPath) >= 0
-                && missing.plainExplanation.indexOf("command -v codexbar") >= 0,
+                && missing.plainExplanation.indexOf("command -v codexbar") >= 0
+                && missing.plainExplanation.indexOf(i18n("Managed CLI")) >= 0,
                 "missing CLI guidance must identify the command and existing-install recovery");
             verifyScenario(!findItem(applet.fullRepresentationItem, "popupSpendView").visible
-                && !findItem(applet.fullRepresentationItem, "popupSessionsView").visible,
+                && !findItem(applet.fullRepresentationItem, "sessionsView").visible,
                 "generic cost/session errors must not replace missing CLI guidance");
             if (missingCliStep < 2) {
                 applet.selectGlobalView(missingCliStep === 0 ? "spend" : "sessions");

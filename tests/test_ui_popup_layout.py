@@ -539,6 +539,7 @@ class PopupLayoutTest(unittest.TestCase):
         self.assertNotIn("!applet.globalViewSelected", missing)
         self.assertIn("General > Managed CLI", missing)
         self.assertIn("helpfulAction: usageSettingsAction", missing)
+        self.assertNotIn('objectName: "popupSessionsView"', full_representation_text)
         for view in ("SpendView", "SessionsView"):
             self.assertIn("visible: applet." + ("spendSelected" if view == "SpendView" else "sessionsSelected")
                           + " && !fullRoot.commandPathMissing", full_representation_text)
