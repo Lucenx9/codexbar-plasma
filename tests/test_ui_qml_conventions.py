@@ -9,7 +9,6 @@ from ui_regression_support import (
     copyable_value_qml,
     enclosing_element,
     plain_tool_tip_qml,
-    providers_qml,
     root,
 )
 
@@ -17,7 +16,7 @@ from ui_regression_support import (
 # specifically, so read the surface as one text. Extracting the popup into a
 # component keeps these assertions meaningful instead of silently unhooking them.
 applet = Surface("applet", root)
-providers_text = providers_qml.read_text(encoding="utf-8")
+providers = Surface("providers", root)
 copyable_value_text = copyable_value_qml.read_text(encoding="utf-8")
 plain_tool_tip_text = plain_tool_tip_qml.read_text(encoding="utf-8")
 
@@ -35,7 +34,9 @@ class QmlConventionsTest(unittest.TestCase):
         # translation or a CLI-supplied title otherwise widens the row past the popup
         # instead of eliding, and the popup cannot grow to meet it.
         plain_label_component = re.compile(r"(?:Components\.)?Plain(?:PlasmaLabel|ControlsLabel|Heading)\s*\{")
-        for component_path in sorted((root / "contents/ui/components").glob("*.qml")):
+        component_paths = set((root / "contents/ui/components").glob("*.qml"))
+        component_paths.update((root / "contents/ui/config").glob("*.qml"))
+        for component_path in sorted(component_paths):
             component_text = component_path.read_text(encoding="utf-8")
             for match in plain_label_component.finditer(component_text):
                 body = Surface._match_braces(component_text, match.end() - 1)
@@ -81,7 +82,9 @@ class QmlConventionsTest(unittest.TestCase):
         # add it here. JS helpers are excluded: these rules are about QML elements.
         popup_and_provider_surfaces = tuple(
             (path, applet.texts[path]) for path in applet.files if path.suffix == ".qml"
-        ) + ((providers_qml, providers_text),)
+        ) + tuple(
+            (path, providers.texts[path]) for path in providers.files if path.suffix == ".qml"
+        )
 
         for surface, surface_text in popup_and_provider_surfaces:
             surface_lines = surface_text.splitlines()
@@ -109,11 +112,18 @@ class QmlConventionsTest(unittest.TestCase):
     def test_delegates_declare_model_data(self):
         for qml_path in sorted(root.glob("contents/**/*.qml")):
             qml_content = qml_path.read_text(encoding="utf-8")
+            local_imports = {
+                alias: qml_path.parent / directory
+                for directory, alias in re.findall(
+                    r'^import "([^"]+)" as (\w+)', qml_content, re.MULTILINE
+                )
+                if not directory.endswith(".js")
+            }
             for match in re.finditer(r"delegate:\s*([A-Za-z0-9_.]+)\s*\{", qml_content):
                 element_type = match.group(1)
-                if element_type.startswith("Components."):
-                    component_name = element_type.split(".", 1)[1]
-                    component_path = root / "contents/ui/components" / f"{component_name}.qml"
+                alias, separator, component_name = element_type.partition(".")
+                if separator and alias in local_imports:
+                    component_path = local_imports[alias] / f"{component_name}.qml"
                     if not component_path.exists():
                         raise AssertionError(f"missing external component delegate file: {component_path}")
                     component_content = component_path.read_text(encoding="utf-8")

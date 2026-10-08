@@ -1791,6 +1791,18 @@ msgstr ""
 msgid "Runs out now"
 msgstr ""
 
+#: contents/ui/config/ProviderDescriptorField.qml
+msgid "Not configured"
+msgstr ""
+
+#: contents/ui/config/ProviderDescriptorField.qml
+msgid "Set..."
+msgstr ""
+
+#: contents/ui/config/ProviderDescriptorField.qml
+msgid "Save"
+msgstr ""
+
 #: contents/ui/configAiInsights.qml
 msgid "%1 API key for CodexBar AI Insights"
 msgstr ""
@@ -2938,18 +2950,6 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "Provider options"
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "Not configured"
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "Set..."
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "Save"
 msgstr ""
 
 #: contents/ui/configProviders.qml
