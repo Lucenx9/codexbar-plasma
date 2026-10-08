@@ -144,7 +144,7 @@ KCM.SimpleKCM {
     Timer {
         id: supportDeadline
         objectName: "supportDeadline"
-        interval: 95000
+        interval: 125000
         onTriggered: {
             page.retireSupport()
             page.supportError = i18n("Support checks timed out. Partial results remain available.")

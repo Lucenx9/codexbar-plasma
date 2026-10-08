@@ -17,7 +17,9 @@ function command(scriptUrl, commandPath) {
     catch (error) { return "" }
     if (!script || typeof commandPath !== "string" || !commandPath.trim()
             || commandPath.length > 4096 || /[\x00-\x1f\x7f]/.test(commandPath)) return ""
-    return "timeout --kill-after=2s 90s python3 " + Guards.shellQuote(script)
+    // Leave time for both CLI ownership probes and every bounded offline probe
+    // to retire their process groups before the outer fallback kills Python.
+    return "timeout --kill-after=2s 120s python3 " + Guards.shellQuote(script)
         + " --command " + Guards.shellQuote(commandPath.trim())
 }
 
