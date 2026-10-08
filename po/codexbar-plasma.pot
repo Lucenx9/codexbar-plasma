@@ -528,9 +528,10 @@ msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
 msgid ""
-"Plasma could not run '%1'. Install the CodexBar CLI, or find it with "
-"'command -v codexbar' in a terminal and paste the absolute path into "
-"Diagnostics in widget settings."
+"Plasma could not run '%1'. In widget settings, open General > Managed CLI to "
+"install and select the CodexBar CLI, then Apply. If it is already installed, "
+"find it with 'command -v codexbar' in a terminal and paste the absolute path "
+"into Diagnostics."
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml

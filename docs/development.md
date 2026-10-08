@@ -192,8 +192,9 @@ synchronized.
   executable source, per-request nonce, captured install mode, timeout, queued
   install request, and retry/interval timers. It receives update settings and
   the last successful check timestamp. Its `checkNow()` entry point still
-  respects disabled checks. Enabled startup still forces a check even with a
-  recent saved timestamp, preserving the previous startup behavior.
+  respects disabled checks. Startup checks respect the saved successful-check
+  timestamp and configured interval; first use and overdue checks run immediately.
+  Manual checks still bypass the interval while coalescing active requests.
   `main.qml` persists its status and successful-check
   signals and forwards available/installed events to
   `UpdateNotificationsController.qml`, preserving the existing privacy and
@@ -1003,8 +1004,10 @@ elides, and retains its complete tooltip text. `test_usage_dashboard.py` also
 executes the production block at 240 and 540 pixels and checks full-text hover.
 
 `empty-providers` and `usage-error` exercise the popup's setup and recovery
-actions. `usage-recovery` retries a failed refresh with retained quotas, checks
-that repeated activation cannot start another request, and waits for fresh
+actions. `cli-missing` uses a nonexistent executable in the isolated temporary
+directory and verifies actionable CLI guidance across Usage & Spend and Sessions,
+without rendering their generic errors. `usage-recovery` retries a failed refresh
+with retained quotas, checks that repeated activation cannot start another request, and waits for fresh
 usage without rescanning cost history. `tests/test_usage_recovery.py` exercises
 the production action handlers and message controls with keyboard activation,
 observing refresh and native configuration actions at their effect boundaries.

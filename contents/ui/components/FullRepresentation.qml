@@ -683,7 +683,7 @@ Item {
             id: missingCommandMessage
 
             implicitHeight: missingCommandPlaceholder.implicitHeight
-            visible: fullRoot.commandPathMissing && !applet.globalViewSelected
+            visible: fullRoot.commandPathMissing
             Layout.fillWidth: true
             Layout.fillHeight: true
 
@@ -696,7 +696,7 @@ Item {
                 plainText: i18n("CodexBar CLI not found.")
                 // The configured value is named because it is what the user has
                 // to correct, and a bare "codexbar" hides a PATH problem.
-                plainExplanation: i18n("Plasma could not run '%1'. Install the CodexBar CLI, or find it with 'command -v codexbar' in a terminal and paste the absolute path into Diagnostics in widget settings.", applet.commandPath)
+                plainExplanation: i18n("Plasma could not run '%1'. In widget settings, open General > Managed CLI to install and select the CodexBar CLI, then Apply. If it is already installed, find it with 'command -v codexbar' in a terminal and paste the absolute path into Diagnostics.", applet.commandPath)
                 icon.name: "dialog-error-symbolic"
                 type: Kirigami.PlaceholderMessage.Type.Actionable
                 helpfulAction: usageSettingsAction
@@ -731,12 +731,14 @@ Item {
         }
 
         Components.SpendView {
-            visible: applet.spendSelected
+            objectName: "popupSpendView"
+            visible: applet.spendSelected && !fullRoot.commandPathMissing
             applet: fullRoot.applet
         }
 
         Components.SessionsView {
-            visible: applet.sessionsSelected
+            objectName: "popupSessionsView"
+            visible: applet.sessionsSelected && !fullRoot.commandPathMissing
             applet: fullRoot.applet
         }
 

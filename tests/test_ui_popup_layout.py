@@ -533,6 +533,16 @@ class PopupLayoutTest(unittest.TestCase):
             if not code_contains(empty_providers_body, fragment):
                 raise AssertionError("the empty provider state must explain and open native widget settings")
 
+    def test_missing_cli_guidance_takes_priority_on_global_tabs(self):
+        missing = id_block(main_text, "missingCommandMessage")
+        self.assertIn("visible: fullRoot.commandPathMissing", missing)
+        self.assertNotIn("!applet.globalViewSelected", missing)
+        self.assertIn("General > Managed CLI", missing)
+        self.assertIn("helpfulAction: usageSettingsAction", missing)
+        for view in ("SpendView", "SessionsView"):
+            self.assertIn("visible: applet." + ("spendSelected" if view == "SpendView" else "sessionsSelected")
+                          + " && !fullRoot.commandPathMissing", full_representation_text)
+
     def test_provider_actions(self):
         action_rows_body = function_body(main_text, "actionRows")
         if not code_contains(action_rows_body, 'action: "refresh", enabled: true, separatorBefore: true'):

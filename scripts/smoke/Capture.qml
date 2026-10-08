@@ -35,6 +35,7 @@ Item {
     property int settingsCommandSerial: 0
     property var settingsCostSnapshot
     property var settingsProviderSnapshot
+    property int missingCliStep: 0
     property int recoveryStep: 0
     property var recoveryUsageSnapshot
     property var recoveryCostSnapshot
@@ -50,7 +51,7 @@ Item {
     readonly property bool panelAppearanceScenario: scenario === "panel-standard" || scenario === "panel-minimal"
         || scenario === "panel-minimal-single" || readmePanelScenario || capsulePanelScenario || panelInformationScenario
     readonly property bool readmeScenario: scenario.indexOf("readme-") === 0
-    readonly property int expectedProviderCount: scenario === "empty-providers" || scenario === "usage-error" ? 0
+    readonly property int expectedProviderCount: scenario === "empty-providers" || scenario === "usage-error" || scenario === "cli-missing" ? 0
         : scenario === "panel-information-single" || scenario === "panel-minimal-single" || scenario === "panel-default-single"
             || scenario === "ai-insights-single"
         ? 1 : (readmeScenario ? 3 : 2)
@@ -1196,6 +1197,25 @@ Item {
             return applet.shareUsageWindow && applet.shareUsageWindow.visible
                 && applet.shareUsageWindow.snapshot.providers.length > 0;
 
+        if (scenario === "cli-missing") {
+            if (applet.loading || !applet.commandPathFailed)
+                return false;
+            var missing = findItem(applet.fullRepresentationItem, "missingCommandPlaceholder");
+            verifyScenario(missing && missing.visible && missing.helpfulAction && missing.helpfulAction.enabled,
+                "missing CLI guidance must remain actionable on every tab");
+            verifyScenario(missing.plainExplanation.indexOf(applet.commandPath) >= 0
+                && missing.plainExplanation.indexOf("command -v codexbar") >= 0,
+                "missing CLI guidance must identify the command and existing-install recovery");
+            verifyScenario(!findItem(applet.fullRepresentationItem, "popupSpendView").visible
+                && !findItem(applet.fullRepresentationItem, "popupSessionsView").visible,
+                "generic cost/session errors must not replace missing CLI guidance");
+            if (missingCliStep < 2) {
+                applet.selectGlobalView(missingCliStep === 0 ? "spend" : "sessions");
+                missingCliStep++;
+                return false;
+            }
+            return applet.sessionsSelected;
+        }
         if (scenario === "empty-providers") {
             var empty = findItem(applet.fullRepresentationItem, "emptyProvidersPlaceholder");
             return !applet.loading && applet.providers.length === 0 && empty && empty.visible

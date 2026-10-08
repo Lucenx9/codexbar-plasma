@@ -66,7 +66,7 @@ Item {
         if (updateChecksEnabled) {
             lifecycle.scheduleNextUpdateCheck();
             Qt.callLater(function () {
-                lifecycle.checkForWidgetUpdate(true);
+                lifecycle.checkForWidgetUpdate(false);
             });
         }
     }

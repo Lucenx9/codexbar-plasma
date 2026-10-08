@@ -37,6 +37,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep actionable CLI installation guidance visible across popup tabs when the
+  executable is missing, including the Managed CLI setup route.
+- Respect the widget update-check interval after restarting Plasma instead of
+  forcing another check when the last successful check is still recent.
+
 - Stop AI Insights helpers and their wallet/dialog children when a request is
   cancelled, enforce HTTP deadlines even for trickled responses, and reject
   excessively nested JSON and malformed Ollama addresses with bounded errors.

@@ -335,13 +335,16 @@ msgstr "CLI do CodexBar não encontrada."
 
 #: contents/ui/components/FullRepresentation.qml
 msgid ""
-"Plasma could not run '%1'. Install the CodexBar CLI, or find it with "
-"'command -v codexbar' in a terminal and paste the absolute path into "
-"Diagnostics in widget settings."
+"Plasma could not run '%1'. In widget settings, open General > Managed "
+"CLI to install and select the CodexBar CLI, then Apply. If it is "
+"already installed, find it with 'command -v codexbar' in a terminal "
+"and paste the absolute path into Diagnostics."
 msgstr ""
-"O Plasma não conseguiu executar “%1”. Instale a CLI do CodexBar, ou localize-"
-"a com “command -v codexbar” em um terminal e cole o caminho absoluto em "
-"Diagnóstico nas configurações do widget."
+"O Plasma não conseguiu executar “%1”. Nas configurações do widget, "
+"abra Geral > CLI gerenciada para instalar e selecionar a CLI do "
+"CodexBar e clique em Aplicar. Se ela já estiver instalada, encontre-a "
+"com “command -v codexbar” em um terminal e cole o caminho absoluto em "
+"Diagnóstico."
 
 #: contents/ui/components/FullRepresentation.qml
 msgid "No provider data."
