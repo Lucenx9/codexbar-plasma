@@ -149,36 +149,21 @@ class ProviderSettingsTest(unittest.TestCase):
             raise AssertionError("normalized descriptor fields must retain nullish-safe display text")
         if not code_contains(providers_surface_text, "selectedOptionIndex: optionIndex(options, normalizedValueText)"):
             raise AssertionError("descriptor enum selection must read the nullish-safe value text")
-        if not code_contains(providers_text, "text: modelData.valueText"):
-            raise AssertionError("descriptor text fields must render normalized value text")
-        if not code_contains(providers_text, "currentIndex: modelData.selectedOptionIndex"):
-            raise AssertionError("descriptor enum fields must render the normalized selection")
-
-        descriptor_enum_box = providers_surface.id_block("descriptorEnumBox")
+        # Runtime field interactions and pending-driven binding restoration are
+        # covered by tst_provider_descriptor_field.qml. Keep only effect-owner
+        # wiring here; the component cannot execute a CLI command or prompt.
         for fragment in (
-            "property bool restoreBindingAfterWrite: false",
-            "readonly property bool descriptorWritePending:",
-            "onDescriptorWritePendingChanged:",
-            "if (descriptorWritePending || !restoreBindingAfterWrite)",
-            "restoreBindingAfterWrite = false",
-            "currentIndex = Qt.binding(function()",
+            "delegate: ProviderConfig.ProviderDescriptorField",
+            "page.writeDescriptorField(page.selectedProvider.provider, field, value)",
+            "page.optionIDAt(field.options, optionIndex)",
+            "page.promptDescriptorSecret(page.selectedProvider.provider, field)",
         ):
-            if not code_contains(descriptor_enum_box, fragment):
-                raise AssertionError(
-                    "descriptor enum must restore its selection binding after a write result; "
-                    f"missing {fragment!r}"
-                )
-        if "onActivated:" in descriptor_enum_box:
-            raise AssertionError("descriptor enum activation must preserve the user's choice until Save")
-        descriptor_enum_save = providers_surface.id_block("descriptorEnumSaveButton")
-        descriptor_write_index = descriptor_enum_save.find("page.writeDescriptorField(")
-        descriptor_restore_arm_index = descriptor_enum_save.find(
-            "descriptorEnumBox.restoreBindingAfterWrite ="
-        )
-        if descriptor_write_index < 0 or descriptor_restore_arm_index < descriptor_write_index:
-            raise AssertionError(
-                "descriptor enum Save must submit the selected value before arming binding restore"
-            )
+            providers_surface.require(fragment, "descriptor requests must reach the owning page")
+        field_component = root / "contents/ui/config/ProviderDescriptorField.qml"
+        text = field_component.read_text(encoding="utf-8")
+        for effect in ("DataSource", "Plasmoid.configuration", "Qt.openUrlExternally", "runCommand("):
+            if effect in text:
+                raise AssertionError("descriptor field rendering must remain effect-free")
 
     def test_provider_filters(self):
         providers.require("ProviderList.filteredProviders(providers, filterText, filterScope)",

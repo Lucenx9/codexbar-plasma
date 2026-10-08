@@ -378,6 +378,17 @@ For repeated JavaScript in delegates, timers, or callbacks, use named helpers.
 For repeated or bulky UI blocks, use small presentation-only components.
 Extraction must hide complexity, not merely reduce line count.
 
+`config/ProviderDescriptorField.qml` renders one normalized provider setting
+as a secret prompt button, text/number editor, enum selector or boolean checkbox.
+It receives provider availability, write-pending state and secondary text opacity
+explicitly and emits write, enum-selection or secret-prompt requests.
+`configProviders.qml` resolves enum IDs and owns validation, credential prompts,
+CLI execution, pending state and configuration revisions. Credential entry stays
+inside the page's prompt script. Its enum selection restores the saved-value binding
+after a started write completes; rejected requests preserve the choice for retry.
+Direct interaction tests in `tests/tst_provider_descriptor_field.qml` cover these
+transitions, boolean binding restoration, numeric zero and control availability.
+
 ## Usage sharing
 
 `ShareUsage.js` projects range-matched cost snapshots into bounded aggregate

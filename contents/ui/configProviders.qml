@@ -13,6 +13,7 @@ import "ProviderIdentity.js" as ProviderIdentity
 import "ProviderOrder.js" as ProviderOrder
 import "SafeText.js" as SafeText
 import "ThemeContrast.js" as ThemeContrast
+import "config" as ProviderConfig
 import "config/ProviderConfigProtocol.js" as ProviderConfigProtocol
 import "config/ProviderDescriptor.js" as ProviderDescriptor
 import "config/ProviderList.js" as ProviderList
@@ -1543,177 +1544,23 @@ KCM.SimpleKCM {
                         Repeater {
                             model: page.descriptorFieldRows(page.selectedProvider)
 
-                            delegate: ColumnLayout {
-                                required property var modelData
-
-                                Layout.fillWidth: true
-                                spacing: Kirigami.Units.smallSpacing
-
-                                RowLayout {
-                                    Layout.fillWidth: true
-                                    spacing: Kirigami.Units.smallSpacing
-                                    visible: modelData.kind === "secret"
-
-                                    Components.PlainControlsLabel {
-                                        text: modelData.title
-                                        opacity: page.secondaryTextOpacity
-                                        Layout.preferredWidth: Kirigami.Units.gridUnit * 7
-                                        elide: Text.ElideRight
-                                    }
-
-                                    Components.PlainControlsLabel {
-                                        text: modelData.redactedValue.length > 0 ? modelData.redactedValue : i18n("Not configured")
-                                        Layout.fillWidth: true
-                                        elide: Text.ElideRight
-                                    }
-
-                                    Controls.Button {
-                                        text: i18n("Set...")
-                                        icon.name: "password-show-off"
-                                        enabled: page.selectedProvider
-                                            && !page.isFieldPending(page.selectedProvider.provider, modelData.id)
-                                        onClicked: if (page.selectedProvider) page.promptDescriptorSecret(page.selectedProvider.provider, modelData)
-                                    }
+                            delegate: ProviderConfig.ProviderDescriptorField {
+                                providerAvailable: page.selectedProvider !== null
+                                writePending: page.selectedProvider !== null
+                                    && page.isFieldPending(page.selectedProvider.provider, modelData.id)
+                                secondaryTextOpacity: page.secondaryTextOpacity
+                                onWriteRequested: function(field, value) {
+                                    if (page.selectedProvider)
+                                        page.writeDescriptorField(page.selectedProvider.provider, field, value)
                                 }
-
-                                RowLayout {
-                                    Layout.fillWidth: true
-                                    spacing: Kirigami.Units.smallSpacing
-                                    visible: modelData.kind === "text" || modelData.kind === "number"
-
-                                    Components.PlainControlsLabel {
-                                        text: modelData.title
-                                        opacity: page.secondaryTextOpacity
-                                        Layout.preferredWidth: Kirigami.Units.gridUnit * 7
-                                        elide: Text.ElideRight
-                                    }
-
-                                    Controls.TextField {
-                                        id: descriptorTextField
-                                        Layout.fillWidth: true
-                                        text: modelData.valueText
-                                        placeholderText: SafeText.plainTextAsRichText(modelData.description)
-                                        Accessible.description: modelData.description
-                                        inputMethodHints: modelData.kind === "number" ? Qt.ImhDigitsOnly : Qt.ImhNone
-                                        enabled: page.selectedProvider
-                                            && !page.isFieldPending(page.selectedProvider.provider, modelData.id)
-                                    }
-
-                                    Controls.Button {
-                                        text: i18n("Save")
-                                        icon.name: "document-save"
-                                        enabled: page.selectedProvider
-                                            && !page.isFieldPending(page.selectedProvider.provider, modelData.id)
-                                        onClicked: if (page.selectedProvider) page.writeDescriptorField(page.selectedProvider.provider, modelData, descriptorTextField.text)
-                                    }
+                                onEnumWriteRequested: function(field, optionIndex) {
+                                    if (page.selectedProvider)
+                                        page.writeDescriptorField(page.selectedProvider.provider, field,
+                                            page.optionIDAt(field.options, optionIndex))
                                 }
-
-                                RowLayout {
-                                    Layout.fillWidth: true
-                                    spacing: Kirigami.Units.smallSpacing
-                                    visible: modelData.kind === "enum"
-
-                                    Components.PlainControlsLabel {
-                                        text: modelData.title
-                                        opacity: page.secondaryTextOpacity
-                                        Layout.preferredWidth: Kirigami.Units.gridUnit * 7
-                                        elide: Text.ElideRight
-                                    }
-
-                                    Components.PlainComboBox {
-                                        id: descriptorEnumBox
-
-                                        property bool restoreBindingAfterWrite: false
-                                        readonly property bool descriptorWritePending: page.selectedProvider
-                                            && page.isFieldPending(page.selectedProvider.provider, modelData.id)
-
-                                        Layout.fillWidth: true
-                                        model: modelData.options
-                                        textRole: "title"
-                                        valueRole: "id"
-                                        currentIndex: modelData.selectedOptionIndex
-                                        enabled: page.selectedProvider
-                                            && modelData.options.length > 0
-                                            && !descriptorWritePending
-                                        onDescriptorWritePendingChanged: {
-                                            if (descriptorWritePending || !restoreBindingAfterWrite) {
-                                                return
-                                            }
-                                            restoreBindingAfterWrite = false
-                                            currentIndex = Qt.binding(function() {
-                                                return modelData.selectedOptionIndex
-                                            })
-                                        }
-                                    }
-
-                                    Controls.Button {
-                                        id: descriptorEnumSaveButton
-
-                                        text: i18n("Save")
-                                        icon.name: "document-save"
-                                        enabled: page.selectedProvider
-                                            && descriptorEnumBox.currentIndex >= 0
-                                            && !page.isFieldPending(page.selectedProvider.provider, modelData.id)
-                                        onClicked: {
-                                            if (!page.selectedProvider) {
-                                                return
-                                            }
-                                            page.writeDescriptorField(
-                                                page.selectedProvider.provider,
-                                                modelData,
-                                                page.optionIDAt(modelData.options, descriptorEnumBox.currentIndex))
-                                            // A rejected plan never enters the pending state,
-                                            // so it keeps the user's choice available to retry.
-                                            // A started write restores the binding only when its
-                                            // result clears the pending state.
-                                            descriptorEnumBox.restoreBindingAfterWrite =
-                                                descriptorEnumBox.descriptorWritePending
-                                        }
-                                    }
-                                }
-
-                                RowLayout {
-                                    Layout.fillWidth: true
-                                    spacing: Kirigami.Units.smallSpacing
-                                    visible: modelData.kind === "boolean"
-
-                                    Components.PlainControlsLabel {
-                                        text: modelData.title
-                                        opacity: page.secondaryTextOpacity
-                                        Layout.preferredWidth: Kirigami.Units.gridUnit * 7
-                                        elide: Text.ElideRight
-                                    }
-
-                                    Components.PlainCheckBox {
-                                        checked: modelData.value === true || String(modelData.value).toLowerCase() === "true"
-                                        plainText: modelData.description
-                                        implicitWidth: 0
-                                        Layout.fillWidth: true
-                                        enabled: page.selectedProvider
-                                            && !page.isFieldPending(page.selectedProvider.provider, modelData.id)
-                                        onClicked: {
-                                            if (page.selectedProvider) {
-                                                page.writeDescriptorField(page.selectedProvider.provider, modelData, checked ? "true" : "false")
-                                            }
-                                            // Restore the binding the click severed so the box reflects the
-                                            // saved value (and reverts on a failed write).
-                                            checked = Qt.binding(function() {
-                                                return modelData.value === true || String(modelData.value).toLowerCase() === "true"
-                                            })
-                                        }
-                                    }
-                                }
-
-                                Components.PlainControlsLabel {
-                                    Layout.fillWidth: true
-                                    text: modelData.description
-                                    opacity: page.secondaryTextOpacity
-                                    font: Kirigami.Theme.smallFont
-                                    wrapMode: Text.WordWrap
-                                    visible: modelData.description.length > 0
-                                        && modelData.kind !== "boolean"
-                                        && modelData.kind !== "text"
-                                        && modelData.kind !== "number"
+                                onSecretPromptRequested: function(field) {
+                                    if (page.selectedProvider)
+                                        page.promptDescriptorSecret(page.selectedProvider.provider, field)
                                 }
                             }
                         }
