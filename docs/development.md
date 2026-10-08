@@ -55,11 +55,18 @@ one, without treating any installation failure as a reason to try the other.
 The `--check` and `--install` JSON interfaces retain their update-only behavior.
 Installs take a `flock` in `$XDG_DATA_HOME/codexbar-plasma` (or
 `~/.local/share/codexbar-plasma`), the data directory `kpackagetool6` installs
-into, so panel, terminal and `make` runs share it. The lock covers only
-`kpackagetool6`: its upgrade deletes the old package
-before copying, so overlapping upgrades from several widget instances, setup,
+into, so panel, terminal and `make` runs share it. The lock covers the backup,
+`kpackagetool6`, installed metadata validation, and recovery: its upgrade deletes
+the old package before copying, so overlapping upgrades from several widget instances, setup,
 or `make update` could remove the widget. After the lock, the installed metadata
 is read again; a release already installed by another run reports `current`.
+Before upgrading, a valid existing package is copied into a sibling
+`.codexbar-update-*` directory. Nonzero installation exits, including timeout,
+or a wrong installed applet ID/version restore that package, including helpers
+and permissions. Failed fresh installs remove the partial package. If filesystem
+errors prevent recovery, the sibling backup is retained with its `package/`
+copy for manual recovery. Abrupt termination of the updater itself can also
+leave this backup; it cannot guarantee recovery after a kill or power loss.
 
 Only setup prompts for a private CLI or a Plasma restart. `--no-input` and
 non-terminal stdin suppress prompts; `--with-cli` explicitly requests private
@@ -141,7 +148,8 @@ synchronized.
   the applet opens that URL. Update process lifecycles remain independent.
 - `contents/ui/controllers/CliUpdateController.qml` owns the read-only CLI
   version/release process, nonce, deadline, stale-reply retirement and optional
-  daily scheduling. General runs manual release checks; Diagnostics uses its
+  daily scheduling. General runs manual release checks and a separate local-only
+  probe on opening/command changes for managed-install confirmation; Diagnostics uses its
   local-only mode; `main.qml` persists background check timestamps, while
   `UpdateNotificationsController.qml` persists notification deduplication.
   `CliUpdate.js` bounds results and constructs host-pinned release links. `scripts/check-cli-update.py` probes `--version` and positive package
@@ -150,12 +158,19 @@ synchronized.
   release validation live in `scripts/lib/cli_release.py`. Its subprocesses have output/deadline
   bounds, and the QML command has an outer GNU timeout. Tests cover numeric
   version comparison, unsupported banners, package provenance, network failure,
-  process retirement, manual checks, and the offline Diagnostics boundary.
+  process retirement, manual checks, one-hour retries after a failed retargeted
+  check despite a recent prior timestamp, and the offline Diagnostics boundary.
 - `contents/ui/controllers/ManagedCliController.qml` owns private CLI installation
   processes, per-request nonces, deadlines, stale-result retirement and optional
   background scheduling. General owns the explicit installation/selection action;
   only Apply saves its command path. `ManagedCli.js` validates results and quotes
-  allowlisted operations. `scripts/manage-cli.py` calls `scripts/lib/managed_cli.py`
+  allowlisted operations. General waits for the independent offline CLI probe
+  before offering a first install, clears confirmation on command changes, and
+  does not require a GitHub check. Only a confirmed missing command or an identified
+  local CLI enables first installation; failed probes show an offline Retry action.
+  `test_managed_cli_install_confirmation.py`
+  exercises these page interactions with real synthetic CLI version banners.
+  `scripts/manage-cli.py` calls `scripts/lib/managed_cli.py`
   for per-user locking, daily throttling, bounded official asset downloads, strict
   archive extraction, isolated-environment version probes, atomic activation and
   rollback. Only the exact managed command is eligible for update/rollback.

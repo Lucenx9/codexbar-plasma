@@ -210,7 +210,8 @@ opens that release's page on GitHub where the installed `notify-send` supports n
 The widget-update helper accepts only immutable GitHub releases. It binds assets to
 the advertised tag, verifies SHA-256 digests and the published checksum, and
 checks the applet ID and version before installation. A validation mismatch
-aborts the update.
+aborts the update. Before upgrading, the helper backs up the installed widget
+and restores it if installation fails or the installed metadata is invalid.
 
 **General → CLI updates** offers a manual check of official CodexBar releases
 and optional daily checks, off by default. Notifications can be enabled separately.
@@ -223,7 +224,11 @@ resolved command, and recognized installation manager.
 
 **General → Managed CLI** can install and select a separate private CLI, update
 it immediately, or restore its previous version. An existing managed copy can be
-selected offline with **Use managed CLI**. **Automatically update the
+selected offline with **Use managed CLI**. Before a first install, an offline
+probe identifies the selected CLI so a working external copy receives a
+confirmation without needing a GitHub release check.
+If the probe cannot identify the CLI, installation waits until **Retry** succeeds
+or the selected command is confirmed missing. **Automatically update the
 managed CLI daily** is optional and off by default; it acts only while the
 managed command path is selected. Downloads match the host architecture/libc,
 verify GitHub SHA-256 metadata and the published checksum, and switch atomically

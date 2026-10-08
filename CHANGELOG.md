@@ -37,11 +37,20 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Restore the previous widget package after a failed upgrade or invalid installed
+  metadata, preserving the bundled helper needed to retry.
 - Keep actionable CLI installation guidance visible across popup tabs when the
   executable is missing, including the Managed CLI setup route.
 - Respect the widget update-check interval after restarting Plasma instead of
   forcing another check when the last successful check is still recent.
 
+- Probe the selected CLI offline before offering its first managed installation,
+  so a working external copy receives the promised confirmation without a prior
+  release check. Changing the command dismisses stale confirmation details.
+  Failed or unrecognized probes keep the first install disabled with an offline
+  retry action.
+- Retry failed CLI release checks after one hour even when a recent successful
+  check belongs to the previous command, including malformed replies and timeouts.
 - Avoid premature account-label truncation in provider headers by rounding
   its maximum width up to a whole pixel, consistently with the plan label.
 - Stop AI Insights helpers and their wallet/dialog children when a request is

@@ -91,6 +91,7 @@ Item {
             checked = true
             result = CliUpdate.response(commandPath.trim().length === 0
                 ? '{"status":"missing"}' : "")
+            forceNextCheck = true
             retryAfter = Date.now() + 60 * 60 * 1000
             return
         }
@@ -106,7 +107,10 @@ Item {
         checked = true
         result = CliUpdate.response(data && Number(data["exit code"]) === 0 ? data["stdout"] : "")
         retryAfter = Date.now() + 60 * 60 * 1000
-        if (["available", "current", "uncomparable"].indexOf(result.status) >= 0) {
+        var successfulReleaseCheck = ["available", "current", "uncomparable"].indexOf(result.status) >= 0
+        // A failed early/retargeted check must retry even if the prior daily check is recent.
+        forceNextCheck = !successfulReleaseCheck
+        if (successfulReleaseCheck) {
             completedCheck = new Date().toISOString()
             checkedRelease(completedCheck)
             if (result.status === "available") updateAvailable(result.latest, result.releaseUrl)
@@ -126,6 +130,7 @@ Item {
             controller.retire()
             controller.checked = true
             controller.result = CliUpdate.response("")
+            controller.forceNextCheck = true
             controller.retryAfter = Date.now() + 60 * 60 * 1000
         }
     }

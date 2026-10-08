@@ -103,6 +103,33 @@ TestCase {
         compare(updater.result.status, "error");
         compare(available.count, 0); compare(succeeded.count, 0);
     }
+    function test_failedRetargetRetriesBeforeTheOldDailyTimestampIsDue_data() {
+        return [{tag: "network", command: "network", status: "network_error"},
+                {tag: "malformed", command: "bad", status: "error"},
+                {tag: "timeout", command: "changed", status: "error", timeout: true}];
+    }
+    function test_failedRetargetRetriesBeforeTheOldDailyTimestampIsDue(data) {
+        var updater = create({automaticChecks: true, lastCheck: new Date().toISOString()});
+        if (!updater) return;
+        wait(100); verify(!updater.busy);
+        updater.commandPath = data.command;
+        if (data.timeout) {
+            tryCompare(updater, "busy", true);
+            findChild(updater, "cliUpdateDeadline").triggered();
+        }
+        tryCompare(updater, "checked", true);
+        compare(updater.result.status, data.status);
+        compare(succeeded.count, 0);
+        updater.checkIfDue(); verify(!updater.busy);
+        // Advance the retry gate; the prior command's daily timestamp is still recent.
+        updater.retryAfter = 0;
+        updater.checkIfDue();
+        verify(updater.busy);
+        tryCompare(updater, "busy", false);
+        compare(updater.result.status, data.timeout ? "available" : data.status);
+        compare(succeeded.count, data.timeout ? 1 : 0);
+        compare(available.count, data.timeout ? 1 : 0);
+    }
 }
 '''
 
@@ -116,6 +143,8 @@ class CliUpdateControllerTests(unittest.TestCase):
 time.sleep(0.2)
 if "bad" in sys.argv:
     print("malformed")
+elif "network" in sys.argv:
+    print(json.dumps(dict(status="network_error", version="0.60.4", path="/usr/bin/codexbar", manager="external")))
 else:
     print(json.dumps(dict(status="local" if "--local-only" in sys.argv else "available",
         version="0.60.4", path="/usr/bin/codexbar", manager="managed" if "managed" in sys.argv else "pacman",
