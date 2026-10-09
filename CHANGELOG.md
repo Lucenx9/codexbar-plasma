@@ -30,6 +30,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Spell out and pluralize usage refresh intervals in General settings, such as
   "1 minute", "5 minutes", and "120 seconds", matching the "Check every" hours
   field instead of the abbreviated "5 min" and "120 s".
+- Quiet days in the Usage & Spend activity heatmap no longer look emptier than
+  the padded no-data cells: every slot shares the faint no-data base and a
+  recorded day tints it, in light and dark themes.
 
 ## 0.2.46 - 2026-10-08
 
