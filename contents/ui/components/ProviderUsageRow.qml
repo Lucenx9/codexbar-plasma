@@ -32,7 +32,7 @@ ColumnLayout {
     readonly property real meterMarkerWidth: Math.max(2, Math.round(applet.meterTrackHeight / 3.5))
 
     Layout.fillWidth: true
-    spacing: Kirigami.Units.smallSpacing / 1.5
+    spacing: Math.round(Kirigami.Units.smallSpacing / 1.5)
 
     HoverHandler {
         id: usageRowHover
