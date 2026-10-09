@@ -210,6 +210,7 @@ TestCase {
         }
         property bool showPopupPace: true
         property real meterTrackHeight: 8
+        property real compactMeterTrackHeight: 5
         function usageResetText(row) {
             return row.reset || "";
         }
