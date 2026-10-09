@@ -423,11 +423,21 @@ ColumnLayout {
                                     width: heatmapGrid.cellWidth
                                     height: heatmapGrid.cellHeight
                                     radius: Kirigami.Units.cornerRadius / 2
-                                    color: heatmapCell.measured
-                                        ? view.applet.withAlpha(
+                                    // Every slot shares the faint no-data base and a
+                                    // measured day tints it. Painting a measured day
+                                    // with the tint alone let a quiet day fall below
+                                    // the base: on a dark theme it read darker than
+                                    // the padded no-data corners around it.
+                                    color: view.applet.withAlpha(Kirigami.Theme.textColor, 0.05)
+
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        radius: parent.radius
+                                        visible: heatmapCell.measured
+                                        color: view.applet.withAlpha(
                                             Kirigami.Theme.highlightColor,
                                             0.1 + heatmapCell.fraction * 0.8)
-                                        : view.applet.withAlpha(Kirigami.Theme.textColor, 0.05)
+                                    }
 
                                     // The cell carries no border of its own and the
                                     // hover outline is a separate overlay. Fading a
