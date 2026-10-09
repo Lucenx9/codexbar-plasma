@@ -1891,22 +1891,6 @@ msgid "No periodic refresh"
 msgstr "Nessun aggiornamento periodico"
 
 #: contents/ui/configGeneral.qml
-msgid "1 min"
-msgstr "1 min"
-
-#: contents/ui/configGeneral.qml
-msgid "2 min"
-msgstr "2 min"
-
-#: contents/ui/configGeneral.qml
-msgid "5 min"
-msgstr "5 min"
-
-#: contents/ui/configGeneral.qml
-msgid "15 min"
-msgstr "15 min"
-
-#: contents/ui/configGeneral.qml
 msgid "Custom"
 msgstr "Personalizzato"
 
@@ -1915,8 +1899,10 @@ msgid "Custom interval:"
 msgstr "Intervallo personalizzato:"
 
 #: contents/ui/configGeneral.qml
-msgid "%1 s"
-msgstr "%1 s"
+msgid "%1 second"
+msgid_plural "%1 seconds"
+msgstr[0] "%1 secondo"
+msgstr[1] "%1 secondi"
 
 #: contents/ui/configGeneral.qml
 msgid "Refresh when opening the popup"

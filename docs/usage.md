@@ -604,8 +604,9 @@ fields; track proposed extensions in the issue tracker.
   system settings, as does the time in "Updated" labels.
 - A global, cancelable **Restore all defaults** action for user-facing widget
   settings; provider accounts and CodexBar CLI configuration are left intact.
-- Usage refresh choices: no periodic refresh, 1 min, 2 min, 5 min, 15 min, or a
-  custom interval. Provider service status remains opt-in.
+- Usage refresh choices: no periodic refresh, 1 minute, 2 minutes, 5 minutes,
+  15 minutes, or a custom interval in seconds. Provider service status remains
+  opt-in.
 - Configurable order for the provider identity, service status, usage text, and
   provider meters shown in the panel.
 - Check for widget updates, notify when an update is available, and opt in to

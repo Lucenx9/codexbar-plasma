@@ -452,10 +452,10 @@ KCM.SimpleKCM {
             valueRole: "value"
             model: [
                 { text: i18n("No periodic refresh"), value: 0 },
-                { text: i18n("1 min"), value: 60 },
-                { text: i18n("2 min"), value: 120 },
-                { text: i18n("5 min"), value: 300 },
-                { text: i18n("15 min"), value: 900 },
+                { text: i18np("%1 minute", "%1 minutes", 1), value: 60 },
+                { text: i18np("%1 minute", "%1 minutes", 2), value: 120 },
+                { text: i18np("%1 minute", "%1 minutes", 5), value: 300 },
+                { text: i18np("%1 minute", "%1 minutes", 15), value: 900 },
                 { text: i18n("Custom"), value: -1 }
             ]
             Layout.preferredWidth: Kirigami.Units.gridUnit * 12
@@ -477,7 +477,7 @@ KCM.SimpleKCM {
             editable: true
             visible: refreshPresetCombo.currentValue < 0
             textFromValue: function(value, locale) {
-                return value <= 0 ? i18n("No periodic refresh") : i18n("%1 s", value)
+                return value <= 0 ? i18n("No periodic refresh") : i18np("%1 second", "%1 seconds", value)
             }
             // "No periodic refresh" and cleared text carry no digits. Keeping the
             // current value leaves the stored interval alone instead of writing

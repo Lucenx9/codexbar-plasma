@@ -666,7 +666,7 @@ msgid "%1 - %2"
 msgstr ""
 
 #: contents/ui/components/PanelSettingsPreview.qml
-#: contents/ui/components/UsageWindowText.qml
+#: contents/ui/components/UsageWindowText.qml contents/ui/configGeneral.qml
 msgid "%1 minute"
 msgid_plural "%1 minutes"
 msgstr[0] ""
@@ -2202,22 +2202,6 @@ msgid "No periodic refresh"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
-msgid "1 min"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "2 min"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "5 min"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "15 min"
-msgstr ""
-
-#: contents/ui/configGeneral.qml
 msgid "Custom"
 msgstr ""
 
@@ -2226,8 +2210,10 @@ msgid "Custom interval:"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
-msgid "%1 s"
-msgstr ""
+msgid "%1 second"
+msgid_plural "%1 seconds"
+msgstr[0] ""
+msgstr[1] ""
 
 #: contents/ui/configGeneral.qml
 msgid "Refresh when opening the popup"
