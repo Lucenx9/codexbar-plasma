@@ -146,6 +146,16 @@ ColumnLayout {
         Layout.preferredHeight: chart.plotHeight
         activeFocusOnTab: true
 
+        // Arrow keys inspect points, so tab focus needs a visible ring.
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: -1
+            color: "transparent"
+            radius: Kirigami.Units.cornerRadius / 2
+            border.width: plot.activeFocus ? 1 : 0
+            border.color: Kirigami.Theme.focusColor
+        }
+
         Accessible.role: Accessible.Graphic
         Accessible.name: chart.accessibleTitle
         Accessible.description: chart.hasActivePoint

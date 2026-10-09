@@ -26,9 +26,10 @@ ColumnLayout {
         visible: detailSection.sectionData.title.length > 0
         Layout.fillWidth: true
 
-        PlainPlasmaLabel {
+        PlainHeading {
             text: detailSection.sectionData.title
-            font.weight: Font.DemiBold
+            level: 4
+            type: Kirigami.Heading.Type.Primary
             Layout.fillWidth: true
             elide: Text.ElideRight
         }
@@ -128,7 +129,7 @@ ColumnLayout {
 
                 visible: detailEntry.progress !== null
                 Layout.fillWidth: true
-                Layout.preferredHeight: Math.max(2, Math.round(detailSection.applet.meterTrackHeight / 2))
+                Layout.preferredHeight: detailSection.applet.compactMeterTrackHeight
                 Layout.bottomMargin: Kirigami.Units.smallSpacing / 2
                 radius: height / 2
                 color: detailSection.applet.withAlpha(Kirigami.Theme.textColor, 0.1)

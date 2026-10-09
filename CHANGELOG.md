@@ -10,6 +10,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Changed
+
+- Polish popup visuals: provider detail section titles use the same heading
+  style as sibling sections, detail meters use the compact meter height, usage
+  rows keep whole-pixel spacing, Spend history menus use the plain-text menu
+  items, and the cost chart shows a focus ring when reached with Tab.
+
 ## 0.2.46 - 2026-10-08
 
 ### Added

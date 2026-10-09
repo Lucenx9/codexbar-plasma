@@ -145,7 +145,7 @@ ColumnLayout {
             elide: Text.ElideRight
         }
 
-        Controls.ComboBox {
+        Components.PlainComboBox {
             id: metricCombo
 
             textRole: "text"
@@ -164,7 +164,7 @@ ColumnLayout {
             }
         }
 
-        Controls.ComboBox {
+        Components.PlainComboBox {
             id: rangeCombo
 
             textRole: "text"
