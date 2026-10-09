@@ -48,6 +48,7 @@ ColumnLayout {
             visible: accountsPanel.largeAccountList
             plainText: i18n("Accounts")
             expanded: accountsPanel.accountsExpanded
+            Layout.alignment: Qt.AlignVCenter
             onClicked: accountsPanel.accountsExpanded = !accountsPanel.accountsExpanded
         }
 

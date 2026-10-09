@@ -22,6 +22,7 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Keep a custom usage refresh interval of 1000 seconds or more. The settings
   field shows it with a locale group separator, such as "1,200 s", and leaving
   the field read only the leading "1", so the widget refreshed every second.
+- Align disclosure button vertically in the provider accounts header panel.
 
 ## 0.2.46 - 2026-10-08
 
