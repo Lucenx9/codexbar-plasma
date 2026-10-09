@@ -402,7 +402,7 @@ KCM.SimpleKCM {
             Components.PlainControlsLabel {
                 Layout.fillWidth: true
                 visible: page.providerRosterLoading
-                text: i18n("Loading providers...")
+                text: i18n("Loading providers…")
                 opacity: 0.7
             }
 
@@ -509,7 +509,7 @@ KCM.SimpleKCM {
             Components.PlainControlsLabel {
                 Layout.fillWidth: true
                 visible: page.providerRosterLoading
-                text: i18n("Loading providers...")
+                text: i18n("Loading providers…")
                 opacity: 0.7
             }
 

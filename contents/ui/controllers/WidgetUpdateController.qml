@@ -171,7 +171,7 @@ Item {
             }
             var installMode = requestDecision.installMode;
             updateCheckTimer.stop();
-            setWidgetUpdateState(i18n("Checking for widget updates..."), "", false);
+            setWidgetUpdateState(i18n("Checking for widget updates…"), "", false);
             connectedUpdateInstallMode = installMode;
             commandRunSerial += 1;
             connectedUpdateCommandSource = CommandLedger.withRunNonce(buildUpdateCommand(installMode), commandRunSerial);

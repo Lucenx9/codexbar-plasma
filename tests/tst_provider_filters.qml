@@ -190,7 +190,7 @@ TestCase {
         });
         compare(optionsLabels.length, 1);
         var setButtons = all.filter(function(item) {
-            return item instanceof Controls.Button && item.text === "Set..."
+            return item instanceof Controls.Button && item.text === "Set…"
                 && controlVisibleInRow(item);
         });
         compare(setButtons.length, 1);

@@ -521,7 +521,7 @@ KCM.SimpleKCM {
             Components.PlainControlsLabel {
                 Layout.fillWidth: true
                 visible: page.panelProviderRosterLoading
-                text: i18n("Loading providers...")
+                text: i18n("Loading providers…")
                 opacity: 0.7
             }
 

@@ -351,7 +351,7 @@ TestCase {
         verify(!label.visible);
 
         versions.activeSource = "reprobe";
-        compare(findChild(page, "cliVersionLabel").text, "Checking...");
+        compare(findChild(page, "cliVersionLabel").text, "Checking…");
     }
 
     function test_diagnosticsHidesSystemCliWhenItMatchesSelection() {

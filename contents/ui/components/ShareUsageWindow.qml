@@ -213,7 +213,7 @@ Controls.ApplicationWindow {
                     }
                 }
                 Controls.Button {
-                    text: i18n("Save PNG...")
+                    text: i18n("Save PNG…")
                     icon.name: "document-save-as"
                     enabled: !window.capturing && !saveDialog.visible
                     onClicked: window.captureImage(true)

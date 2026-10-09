@@ -57,7 +57,7 @@ Item {
     Controls.Action {
         id: usageSettingsAction
 
-        text: i18n("Settings...")
+        text: i18n("Settings…")
         icon.name: "configure"
         onTriggered: applet.performAction("settings")
     }
@@ -65,7 +65,7 @@ Item {
     Controls.Action {
         id: configureProvidersAction
 
-        text: i18n("Configure providers...")
+        text: i18n("Configure providers…")
         icon.name: "configure"
         onTriggered: applet.performAction("settings")
     }
@@ -623,7 +623,7 @@ Item {
                 }
 
                 PlainPlasmaLabel {
-                    text: i18n("Loading usage...")
+                    text: i18n("Loading usage…")
                     opacity: applet.secondaryTextOpacity
                     Layout.fillWidth: true
                     elide: Text.ElideRight
@@ -722,7 +722,7 @@ Item {
 
                 anchors.centerIn: parent
                 width: parent.width
-                plainText: i18n("No provider data.")
+                plainText: i18n("No provider data")
                 plainExplanation: i18n("Open Providers in widget settings to enable or set up a provider.")
                 icon.name: "view-statistics-symbolic"
                 type: Kirigami.PlaceholderMessage.Type.Actionable

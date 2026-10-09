@@ -1401,7 +1401,7 @@ PlasmoidItem {
         // Titles are local literals; never render identity or provider prose here.
         var rows = []
         rows.push({
-            title: accountLoadingForProvider(item.provider) ? i18n("Loading accounts...") : i18n("Accounts..."),
+            title: accountLoadingForProvider(item.provider) ? i18n("Loading accounts…") : i18n("Accounts…"),
             icon: "user-identity",
             action: "accounts",
             enabled: !accountLoadingForProvider(item.provider)
@@ -1427,19 +1427,19 @@ PlasmoidItem {
         }
 
         rows.push({ title: i18n("Refresh"), icon: "view-refresh", action: "refresh", enabled: true, separatorBefore: true })
-        rows.push({ title: i18n("Settings..."), icon: "configure", action: "settings", enabled: true })
+        rows.push({ title: i18n("Settings…"), icon: "configure", action: "settings", enabled: true })
         rows.push({ title: i18n("About CodexBar"), icon: "help-about", action: "about", enabled: true })
         return rows
     }
 
     function providerAccountAction(item) {
-        var title = item.account && item.account.length > 0 ? i18n("Switch Account...") : i18n("Add Account...")
+        var title = item.account && item.account.length > 0 ? i18n("Switch Account…") : i18n("Add Account…")
         var loginUrl = providerLoginUrl(item.provider)
         switch (providerKey(item.provider)) {
         case "devin":
-            return { title: i18n("Open Devin..."), icon: "internet-services", action: "account-url", url: "https://app.devin.ai/settings/usage", enabled: true }
+            return { title: i18n("Open Devin…"), icon: "internet-services", action: "account-url", url: "https://app.devin.ai/settings/usage", enabled: true }
         case "factory":
-            return { title: i18n("Open Droid in Browser..."), icon: "internet-services", action: "account-url", url: "https://app.factory.ai", enabled: true }
+            return { title: i18n("Open Droid in Browser…"), icon: "internet-services", action: "account-url", url: "https://app.factory.ai", enabled: true }
         case "manus":
             return { title: title, icon: "internet-services", action: "account-url", url: "https://manus.im", enabled: true }
         case "mimo":
