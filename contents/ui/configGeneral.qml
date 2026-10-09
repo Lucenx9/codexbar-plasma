@@ -482,9 +482,13 @@ KCM.SimpleKCM {
             // "No periodic refresh" and cleared text carry no digits. Keeping the
             // current value leaves the stored interval alone instead of writing
             // an unrelated preset over it.
+            // i18n() localizes "%1", so values from 1000 up render with a group
+            // separator ("1,200 s", "1.200 s", "1 200 s"). Read the separated
+            // groups as one number; otherwise leaving the field would parse
+            // only the leading "1" and refresh every second.
             valueFromText: function(text, locale) {
-                var match = text.match(/\d+/)
-                return match ? parseInt(match[0], 10) : value
+                var match = text.match(/\d{1,3}(?:[\s.,'\u00a0\u202f]\d{3})+(?!\d)|\d+/)
+                return match ? parseInt(match[0].replace(/\D/g, ""), 10) : value
             }
             Layout.preferredWidth: Kirigami.Units.gridUnit * 12
         }

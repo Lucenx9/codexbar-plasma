@@ -492,6 +492,12 @@ TestCase {
         compare(intervalSpin.valueFromText("", Qt.locale()), 900);
         compare(intervalSpin.valueFromText("No periodic refresh", Qt.locale()), 900);
         compare(intervalSpin.valueFromText("120 s", Qt.locale()), 120);
+        // Localized values from 1000 up carry a group separator.
+        compare(intervalSpin.valueFromText("1,200 s", Qt.locale()), 1200);
+        compare(intervalSpin.valueFromText("1.200 s", Qt.locale()), 1200);
+        compare(intervalSpin.valueFromText("1\u202f200 s", Qt.locale()), 1200);
+        compare(intervalSpin.valueFromText("3600 s", Qt.locale()), 3600);
+        compare(intervalSpin.valueFromText(intervalSpin.textFromValue(1200, Qt.locale()), Qt.locale()), 1200);
         // The history window mirrors the applied configuration rather than the
         // injected pending value, which resolves to the schema default here.
         compare(daysSpin.value, 30);
