@@ -20,6 +20,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   report progress use the "…" character instead of three periods, the provider
   search field reads "Search providers", and the empty popup heading drops its
   trailing period. Existing translations keep matching.
+- Popup placeholder titles drop their trailing period too: "CodexBar CLI not
+  found", "No overview data available", "No local token or cost history", and
+  "No local agent sessions found". The General settings CLI status sentence
+  keeps its period.
 
 ### Fixed
 

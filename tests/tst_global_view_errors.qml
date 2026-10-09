@@ -258,12 +258,12 @@ TestCase {
             {
                 tag: "spend",
                 type: "SpendView",
-                emptyText: "No local token or cost history."
+                emptyText: "No local token or cost history"
             },
             {
                 tag: "sessions",
                 type: "SessionsView",
-                emptyText: "No local agent sessions found."
+                emptyText: "No local agent sessions found"
             }
         ];
     }

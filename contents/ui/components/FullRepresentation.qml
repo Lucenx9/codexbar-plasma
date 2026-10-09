@@ -693,7 +693,7 @@ Item {
 
                 anchors.centerIn: parent
                 width: parent.width
-                plainText: i18n("CodexBar CLI not found.")
+                plainText: i18n("CodexBar CLI not found")
                 // The configured value is named because it is what the user has
                 // to correct, and a bare "codexbar" hides a PATH problem.
                 plainExplanation: i18n("Plasma could not run '%1'. In widget settings, open General > Managed CLI to install and select the CodexBar CLI, then Apply. If it is already installed, find it with 'command -v codexbar' in a terminal and paste the absolute path into Diagnostics.", applet.commandPath)
@@ -820,7 +820,7 @@ Item {
                         id: overviewPlaceholderMessage
 
                         visible: applet.overviewProviderItems.length === 0
-                        plainText: i18n("No overview data available.")
+                        plainText: i18n("No overview data available")
                         icon.name: "view-grid-symbolic"
                         type: Kirigami.PlaceholderMessage.Type.Informational
                         Layout.fillWidth: true

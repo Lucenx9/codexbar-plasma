@@ -787,7 +787,7 @@ TestCase {
             verify(error.mapToItem(view, 0, 0).y < 100);
         } else if (!data.loading) {
             var placeholder = findItem(view, function (item) {
-                return item.visible && item.plainText === "No local agent sessions found.";
+                return item.visible && item.plainText === "No local agent sessions found";
             });
             verify(placeholder !== null);
             compare(placeholder.height, placeholder.implicitHeight);
