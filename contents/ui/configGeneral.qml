@@ -482,8 +482,8 @@ KCM.SimpleKCM {
             // "No periodic refresh" and cleared text carry no digits. Keeping the
             // current value leaves the stored interval alone instead of writing
             // an unrelated preset over it.
-            // i18n() localizes "%1", so values from 1000 up render with a group
-            // separator ("1,200 s", "1.200 s", "1 200 s"). Read the separated
+            // i18np() localizes "%1", so values from 1000 up render with a group
+            // separator ("1,200 seconds", "1.200 seconds", "1 200 seconds"). Read the separated
             // groups as one number; otherwise leaving the field would parse
             // only the leading "1" and refresh every second.
             valueFromText: function(text, locale) {
