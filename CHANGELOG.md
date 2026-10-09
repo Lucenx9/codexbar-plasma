@@ -20,8 +20,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 ### Fixed
 
 - Keep a custom usage refresh interval of 1000 seconds or more. The settings
-  field shows it with a locale group separator, such as "1,200 s", and leaving
-  the field read only the leading "1", so the widget refreshed every second.
+  field shows it with a locale group separator, such as "1,200 seconds", and
+  leaving the field read only the leading "1", so the widget refreshed every
+  second.
+- Spell out and pluralize usage refresh intervals in General settings, such as
+  "1 minute", "5 minutes", and "120 seconds", matching the "Check every" hours
+  field instead of the abbreviated "5 min" and "120 s".
 
 ## 0.2.46 - 2026-10-08
 
