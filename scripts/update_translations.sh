@@ -62,6 +62,9 @@ msgstr ""
 HEADER
     # These are KDE positional arguments, not JavaScript printf conversions.
     # compile_translations.py also checks unflagged messages and every plural.
+    # Keep xgettext's own header and drop it afterwards: with --omit-header
+    # xgettext has no output charset and silently strips non-ASCII characters,
+    # such as the "…" ellipsis, from msgids. The header above replaces it.
     (
       cd "$ROOT_DIR"
       LC_ALL=C.utf8 xgettext \
@@ -73,10 +76,9 @@ HEADER
         --keyword=i18ncp:1c,2,3 \
         --add-location=file \
         --sort-by-file \
-        --omit-header \
         -o - \
         "${QML_SOURCES[@]}" \
-        | sed 's/^#, javascript-format$/#, kde-format/'
+        | sed -e '1,/^$/d' -e 's/^#, javascript-format$/#, kde-format/'
     )
   } > "$output"
 }

@@ -41,7 +41,7 @@ ColumnLayout {
 
         Controls.Button {
             objectName: "descriptorSecretButton"
-            text: i18n("Set...")
+            text: i18n("Set…")
             icon.name: "password-show-off"
             enabled: fieldRoot.providerAvailable && !fieldRoot.writePending
             onClicked: if (fieldRoot.providerAvailable) fieldRoot.secretPromptRequested(modelData)

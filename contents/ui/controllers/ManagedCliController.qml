@@ -19,7 +19,7 @@ Item {
     signal changed()
 
     readonly property string statusText: {
-        if (busy) return activeAction === "status" ? i18n("Checking...") : i18n("Preparing the managed CLI...")
+        if (busy) return activeAction === "status" ? i18n("Checking…") : i18n("Preparing the managed CLI…")
         switch (result.status) {
         case "ready": return i18n("Managed CLI %1 is installed.", result.version)
         case "installed": return i18n("Managed CLI %1 is ready.", result.version)

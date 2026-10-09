@@ -73,8 +73,8 @@ msgid "Out of date, %1"
 msgstr "Desatualizado, %1"
 
 #: contents/ui/components/AiInsightsCard.qml
-msgid "Configure..."
-msgstr "Configurar..."
+msgid "Configure…"
+msgstr "Configurar…"
 
 #: contents/ui/components/AiInsightsCard.qml
 msgid "AI Insights"
@@ -93,8 +93,8 @@ msgid "Regenerate insight"
 msgstr "Gerar insight novamente"
 
 #: contents/ui/components/AiInsightsCard.qml
-msgid "Generating insight..."
-msgstr "Gerando insight..."
+msgid "Generating insight…"
+msgstr "Gerando insight…"
 
 #: contents/ui/components/AiInsightsCard.qml
 #: contents/ui/components/ProviderCostSection.qml
@@ -295,12 +295,12 @@ msgid "Retry"
 msgstr "Tentar novamente"
 
 #: contents/ui/components/FullRepresentation.qml contents/ui/main.qml
-msgid "Settings..."
-msgstr "Configurações..."
+msgid "Settings…"
+msgstr "Configurações…"
 
 #: contents/ui/components/FullRepresentation.qml
-msgid "Configure providers..."
-msgstr "Configurar provedores..."
+msgid "Configure providers…"
+msgstr "Configurar provedores…"
 
 #: contents/ui/components/FullRepresentation.qml scripts/smoke/Capture.qml
 msgid "Overview"
@@ -325,8 +325,8 @@ msgid "Show more tabs"
 msgstr "Mostrar mais abas"
 
 #: contents/ui/components/FullRepresentation.qml
-msgid "Loading usage..."
-msgstr "Carregando o uso..."
+msgid "Loading usage…"
+msgstr "Carregando o uso…"
 
 #: contents/ui/components/FullRepresentation.qml
 #: contents/ui/controllers/CliUpdateController.qml
@@ -347,8 +347,8 @@ msgstr ""
 "Diagnóstico."
 
 #: contents/ui/components/FullRepresentation.qml
-msgid "No provider data."
-msgstr "Sem dados dos provedores."
+msgid "No provider data"
+msgstr "Sem dados dos provedores"
 
 #: contents/ui/components/FullRepresentation.qml
 msgid "Open Providers in widget settings to enable or set up a provider."
@@ -1399,8 +1399,8 @@ msgid "Copy statistics"
 msgstr "Copiar estatísticas"
 
 #: contents/ui/components/ShareUsageWindow.qml
-msgid "Save PNG..."
-msgstr "Salvar PNG..."
+msgid "Save PNG…"
+msgstr "Salvar PNG…"
 
 #: contents/ui/components/ShareUsageWindow.qml
 msgid "Close"
@@ -1592,12 +1592,12 @@ msgid "System wallet unavailable"
 msgstr "Carteira do sistema indisponível"
 
 #: contents/ui/configAiInsights.qml
-msgid "Replace..."
-msgstr "Substituir..."
+msgid "Replace…"
+msgstr "Substituir…"
 
 #: contents/ui/configAiInsights.qml contents/ui/configProviders.qml
-msgid "Set API key..."
-msgstr "Definir chave de API..."
+msgid "Set API key…"
+msgstr "Definir chave de API…"
 
 #: contents/ui/configAiInsights.qml
 msgid "Remove"
@@ -1614,12 +1614,12 @@ msgstr "Testar conexão"
 #: contents/ui/configAiInsights.qml
 #: contents/ui/controllers/CliUpdateController.qml
 #: contents/ui/controllers/ManagedCliController.qml
-msgid "Checking..."
-msgstr "Verificando..."
+msgid "Checking…"
+msgstr "Verificando…"
 
 #: contents/ui/configAiInsights.qml
-msgid "Waiting for the API key dialog..."
-msgstr "Aguardando a caixa de diálogo da chave de API..."
+msgid "Waiting for the API key dialog…"
+msgstr "Aguardando a caixa de diálogo da chave de API…"
 
 #: contents/ui/configAiInsights.qml
 msgid "Use only Zero Data Retention endpoints"
@@ -2290,8 +2290,8 @@ msgstr ""
 "todos os provedores ativados."
 
 #: contents/ui/configPanel.qml contents/ui/configPopup.qml
-msgid "Loading providers..."
-msgstr "Carregando os provedores..."
+msgid "Loading providers…"
+msgstr "Carregando os provedores…"
 
 #: contents/ui/configPanel.qml contents/ui/configPopup.qml
 msgid "No enabled providers available."
@@ -2655,8 +2655,8 @@ msgid "Clear filters"
 msgstr "Limpar filtros"
 
 #: contents/ui/configProviders.qml
-msgid "Search providers..."
-msgstr "Buscar provedores..."
+msgid "Search providers"
+msgstr "Buscar provedores"
 
 #: contents/ui/configProviders.qml
 msgid "Reload"
@@ -2722,8 +2722,8 @@ msgid "Not configured"
 msgstr "Não configurado"
 
 #: contents/ui/configProviders.qml
-msgid "Set..."
-msgstr "Definir..."
+msgid "Set…"
+msgstr "Definir…"
 
 #: contents/ui/configProviders.qml
 msgid "Save"
@@ -2862,8 +2862,8 @@ msgid "codexbar cost returned an unsupported JSON payload."
 msgstr "O comando codexbar cost retornou dados JSON não suportados."
 
 #: contents/ui/controllers/ManagedCliController.qml
-msgid "Preparing the managed CLI..."
-msgstr "Preparando a CLI gerenciada..."
+msgid "Preparing the managed CLI…"
+msgstr "Preparando a CLI gerenciada…"
 
 #: contents/ui/controllers/ManagedCliController.qml
 msgid "Managed CLI %1 is installed."
@@ -3012,8 +3012,8 @@ msgid "Widget update check failed."
 msgstr "A procura de atualizações do widget falhou."
 
 #: contents/ui/controllers/WidgetUpdateController.qml
-msgid "Checking for widget updates..."
-msgstr "Procurando atualizações do widget..."
+msgid "Checking for widget updates…"
+msgstr "Procurando atualizações do widget…"
 
 #: contents/ui/controllers/WidgetUpdateController.qml
 msgid "Widget update failed."
@@ -3474,12 +3474,12 @@ msgid "Provider"
 msgstr "Provedor"
 
 #: contents/ui/main.qml
-msgid "Accounts..."
-msgstr "Contas..."
+msgid "Accounts…"
+msgstr "Contas…"
 
 #: contents/ui/main.qml
-msgid "Loading accounts..."
-msgstr "Carregando as contas..."
+msgid "Loading accounts…"
+msgstr "Carregando as contas…"
 
 #: contents/ui/main.qml
 msgid "Usage Dashboard"
@@ -3498,20 +3498,20 @@ msgid "About CodexBar"
 msgstr "Sobre o CodexBar"
 
 #: contents/ui/main.qml
-msgid "Add Account..."
-msgstr "Adicionar conta..."
+msgid "Add Account…"
+msgstr "Adicionar conta…"
 
 #: contents/ui/main.qml
-msgid "Switch Account..."
-msgstr "Trocar de conta..."
+msgid "Switch Account…"
+msgstr "Trocar de conta…"
 
 #: contents/ui/main.qml
-msgid "Open Devin..."
-msgstr "Abrir Devin..."
+msgid "Open Devin…"
+msgstr "Abrir Devin…"
 
 #: contents/ui/main.qml
-msgid "Open Droid in Browser..."
-msgstr "Abrir Droid no navegador..."
+msgid "Open Droid in Browser…"
+msgstr "Abrir Droid no navegador…"
 
 #: contents/ui/main.qml
 msgctxt ""
@@ -3594,8 +3594,8 @@ msgid "Loading"
 msgstr "Carregando"
 
 #: contents/ui/main.qml
-msgid "Refreshing usage..."
-msgstr "Atualizando o uso..."
+msgid "Refreshing usage…"
+msgstr "Atualizando o uso…"
 
 #: contents/ui/main.qml
 msgid "CodexBar CLI release available"
@@ -3647,8 +3647,8 @@ msgid "Collect support report"
 msgstr "Coletar relatório de suporte"
 
 #: contents/ui/configDiagnostics.qml
-msgid "Collecting..."
-msgstr "Coletando..."
+msgid "Collecting…"
+msgstr "Coletando…"
 
 #: contents/ui/configDiagnostics.qml
 msgid "Copy report"

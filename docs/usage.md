@@ -376,7 +376,7 @@ reopened. It does not start another CLI scan. Refresh history first for a newer
 snapshot; the creation timestamp is not a measurement timestamp.
 
 **Copy image** places image data on the clipboard, **Copy statistics** copies the
-same aggregate figures as plain text, and **Save PNG...** opens the platform save
+same aggregate figures as plain text, and **Save PNG…** opens the platform save
 picker with overwrite confirmation. Saving supports local PNG files. The image
 uses the Plasma colors and fonts and includes a small
 `github.com/Lucenx9/codexbar-plasma` attribution in its footer.
@@ -757,7 +757,7 @@ the insight's age; **Show details** expands the highlights.
   does not include API credits. Requests set `store: false`, so OpenAI does
   not keep them as stored completions.
 
-**Set API key...** opens a password dialog (it requires `kdialog`) and stores
+**Set API key…** opens a password dialog (it requires `kdialog`) and stores
 the key in the system wallet (KWallet through Secret Service, which also needs
 `secret-tool`). The key is saved immediately, separately from any key in the
 CodexBar CLI configuration, and is never written to widget settings. **Remove**

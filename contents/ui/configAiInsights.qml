@@ -351,7 +351,7 @@ KCM.SimpleKCM {
             }
 
             Controls.Button {
-                text: page.keyStatus === "present" ? i18n("Replace...") : i18n("Set API key...")
+                text: page.keyStatus === "present" ? i18n("Replace…") : i18n("Set API key…")
                 icon.name: "document-encrypt"
                 onClicked: page.run("set-key")
             }
@@ -437,7 +437,7 @@ KCM.SimpleKCM {
 
         Components.PlainControlsLabel {
             visible: page.busy && page.activeAction !== "key-status"
-            text: page.activeAction === "set-key" ? i18n("Waiting for the API key dialog...") : i18n("Checking...")
+            text: page.activeAction === "set-key" ? i18n("Waiting for the API key dialog…") : i18n("Checking…")
             opacity: 0.7
             Layout.fillWidth: true
         }

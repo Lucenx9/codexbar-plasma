@@ -16,6 +16,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   style as sibling sections, detail meters use the compact meter height, usage
   rows keep whole-pixel spacing, Spend history menus use the plain-text menu
   items, and the cost chart shows a focus ring when reached with Tab.
+- Follow the KDE text guidelines for ellipses: labels that open a dialog or
+  report progress use the "…" character instead of three periods, the provider
+  search field reads "Search providers", and the empty popup heading drops its
+  trailing period. Existing translations keep matching.
 
 ### Fixed
 

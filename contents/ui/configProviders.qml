@@ -803,7 +803,7 @@ KCM.SimpleKCM {
             })
         }
         if (supportsApiKeySetup(item.provider) && !descriptorHasField(item, "apiKey")) {
-            rows.push({ title: i18n("Set API key..."), icon: "password-show-off", action: "set-api-key", enabled: !isPending(item.provider) })
+            rows.push({ title: i18n("Set API key…"), icon: "password-show-off", action: "set-api-key", enabled: !isPending(item.provider) })
         }
         var docs = providerDocsUrl(item.provider)
         if (docs.length > 0) {
@@ -1252,7 +1252,7 @@ KCM.SimpleKCM {
                 id: searchField
                 objectName: "providerSearchField"
                 Layout.fillWidth: true
-                placeholderText: i18n("Search providers...")
+                placeholderText: i18n("Search providers")
                 maximumLength: 256
                 Accessible.name: placeholderText
                 onTextChanged: page.filterText = text

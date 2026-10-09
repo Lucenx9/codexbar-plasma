@@ -98,7 +98,7 @@ QtObject {
     function toolTipText(providerLines, errorText) {
         var lines = providerLines.slice(0, 6)
         if (root.loading) {
-            lines.push(i18n("Refreshing usage..."))
+            lines.push(i18n("Refreshing usage…"))
         }
         return lines.length === 0 && errorText.length > 0 ? errorText : lines.join("\n")
     }

@@ -39,7 +39,7 @@ Item {
         return i18n("External installation. Update using your original installation method.")
     }
     readonly property string statusText: {
-        if (busy) return i18n("Checking...")
+        if (busy) return i18n("Checking…")
         if (!checked) return i18n("Not checked")
         switch (result.status) {
         case "available": return i18n("Upstream CLI %1 is available. Installed: %2.", result.latest, result.version)

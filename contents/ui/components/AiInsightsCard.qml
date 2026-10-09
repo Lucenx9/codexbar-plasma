@@ -58,7 +58,7 @@ Rectangle {
     Controls.Action {
         id: configureAction
 
-        text: i18n("Configure...")
+        text: i18n("Configure…")
         icon.name: "configure"
         onTriggered: applet.performAction("settings")
     }
@@ -175,13 +175,13 @@ Rectangle {
 
             Controls.BusyIndicator {
                 running: parent.visible
-                Accessible.name: i18n("Generating insight...")
+                Accessible.name: i18n("Generating insight…")
                 Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
                 Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
             }
 
             PlainPlasmaLabel {
-                text: i18n("Generating insight...")
+                text: i18n("Generating insight…")
                 opacity: applet.secondaryTextOpacity
                 Layout.fillWidth: true
                 wrapMode: Text.Wrap

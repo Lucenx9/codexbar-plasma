@@ -65,7 +65,7 @@ msgid "Out of date, %1"
 msgstr ""
 
 #: contents/ui/components/AiInsightsCard.qml
-msgid "Configure..."
+msgid "Configure…"
 msgstr ""
 
 #: contents/ui/components/AiInsightsCard.qml
@@ -85,7 +85,7 @@ msgid "Regenerate insight"
 msgstr ""
 
 #: contents/ui/components/AiInsightsCard.qml
-msgid "Generating insight..."
+msgid "Generating insight…"
 msgstr ""
 
 #: contents/ui/components/AiInsightsCard.qml
@@ -488,11 +488,11 @@ msgid "Retry"
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml contents/ui/main.qml
-msgid "Settings..."
+msgid "Settings…"
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
-msgid "Configure providers..."
+msgid "Configure providers…"
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml scripts/smoke/Capture.qml
@@ -518,7 +518,7 @@ msgid "Show more tabs"
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
-msgid "Loading usage..."
+msgid "Loading usage…"
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
@@ -535,7 +535,7 @@ msgid ""
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
-msgid "No provider data."
+msgid "No provider data"
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
@@ -785,7 +785,7 @@ msgid "Loading"
 msgstr ""
 
 #: contents/ui/components/PanelText.qml
-msgid "Refreshing usage..."
+msgid "Refreshing usage…"
 msgstr ""
 
 #: contents/ui/components/PlainNote.qml
@@ -1688,7 +1688,7 @@ msgid "Copy statistics"
 msgstr ""
 
 #: contents/ui/components/ShareUsageWindow.qml
-msgid "Save PNG..."
+msgid "Save PNG…"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
@@ -1804,7 +1804,7 @@ msgid "Not configured"
 msgstr ""
 
 #: contents/ui/config/ProviderDescriptorField.qml
-msgid "Set..."
+msgid "Set…"
 msgstr ""
 
 #: contents/ui/config/ProviderDescriptorField.qml
@@ -1904,11 +1904,11 @@ msgid "System wallet unavailable"
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
-msgid "Replace..."
+msgid "Replace…"
 msgstr ""
 
 #: contents/ui/configAiInsights.qml contents/ui/configProviders.qml
-msgid "Set API key..."
+msgid "Set API key…"
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
@@ -1926,11 +1926,11 @@ msgstr ""
 #: contents/ui/configAiInsights.qml
 #: contents/ui/controllers/CliUpdateController.qml
 #: contents/ui/controllers/ManagedCliController.qml
-msgid "Checking..."
+msgid "Checking…"
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
-msgid "Waiting for the API key dialog..."
+msgid "Waiting for the API key dialog…"
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
@@ -2061,7 +2061,7 @@ msgid "Collect support report"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
-msgid "Collecting..."
+msgid "Collecting…"
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml
@@ -2579,7 +2579,7 @@ msgid ""
 msgstr ""
 
 #: contents/ui/configPanel.qml contents/ui/configPopup.qml
-msgid "Loading providers..."
+msgid "Loading providers…"
 msgstr ""
 
 #: contents/ui/configPanel.qml contents/ui/configPopup.qml
@@ -2928,7 +2928,7 @@ msgid "Clear filters"
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "Search providers..."
+msgid "Search providers"
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -3105,7 +3105,7 @@ msgid "codexbar cost returned an unsupported JSON payload."
 msgstr ""
 
 #: contents/ui/controllers/ManagedCliController.qml
-msgid "Preparing the managed CLI..."
+msgid "Preparing the managed CLI…"
 msgstr ""
 
 #: contents/ui/controllers/ManagedCliController.qml
@@ -3287,7 +3287,7 @@ msgid "Widget update check failed."
 msgstr ""
 
 #: contents/ui/controllers/WidgetUpdateController.qml
-msgid "Checking for widget updates..."
+msgid "Checking for widget updates…"
 msgstr ""
 
 #: contents/ui/controllers/WidgetUpdateController.qml
@@ -3453,11 +3453,11 @@ msgid "Provider"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Accounts..."
+msgid "Accounts…"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Loading accounts..."
+msgid "Loading accounts…"
 msgstr ""
 
 #: contents/ui/main.qml
@@ -3477,19 +3477,19 @@ msgid "About CodexBar"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Add Account..."
+msgid "Add Account…"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Switch Account..."
+msgid "Switch Account…"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Open Devin..."
+msgid "Open Devin…"
 msgstr ""
 
 #: contents/ui/main.qml
-msgid "Open Droid in Browser..."
+msgid "Open Droid in Browser…"
 msgstr ""
 
 #: contents/ui/main.qml

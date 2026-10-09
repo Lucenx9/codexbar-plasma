@@ -392,7 +392,7 @@ KCM.SimpleKCM {
             spacing: Kirigami.Units.smallSpacing
             Controls.Button {
                 objectName: "collectSupportReportButton"
-                text: page.supportBusy ? i18n("Collecting...") : i18n("Collect support report")
+                text: page.supportBusy ? i18n("Collecting…") : i18n("Collect support report")
                 icon.name: "view-refresh"
                 enabled: !page.supportBusy && !page.diagnosticRunning && !versions.busy && !systemVersions.busy
                 onClicked: page.collectSupportReport()

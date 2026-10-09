@@ -84,7 +84,7 @@ TestCase {
         compare(liveTooltip, "Error");
         presentation.loading = true;
         compare(liveText, "Loading");
-        compare(liveTooltip, "Refreshing usage...");
+        compare(liveTooltip, "Refreshing usage…");
         currentItem = item(125);
         compare(liveText, "Example 43% used 125cr");
         presentation.showCredits = false;
@@ -157,8 +157,8 @@ TestCase {
         compare(presentation.toolTipText(lines, "Error"), "One\nTwo\nThree\nFour\nFive\nSix");
         presentation.loading = true;
         compare(presentation.toolTipText(lines, "Error"),
-            "One\nTwo\nThree\nFour\nFive\nSix\nRefreshing usage...");
-        compare(presentation.toolTipText([], "Error"), "Refreshing usage...");
+            "One\nTwo\nThree\nFour\nFive\nSix\nRefreshing usage…");
+        compare(presentation.toolTipText([], "Error"), "Refreshing usage…");
         presentation.loading = false;
         compare(presentation.toolTipText([], "Error"), "Error");
         compare(presentation.toolTipText([], ""), "");
