@@ -522,8 +522,7 @@ msgid "Loading usage…"
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
-#: contents/ui/controllers/CliUpdateController.qml
-msgid "CodexBar CLI not found."
+msgid "CodexBar CLI not found"
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
@@ -555,7 +554,7 @@ msgid "Refresh"
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
-msgid "No overview data available."
+msgid "No overview data available"
 msgstr ""
 
 #: contents/ui/components/FullRepresentation.qml
@@ -1591,7 +1590,7 @@ msgid "Refresh sessions"
 msgstr ""
 
 #: contents/ui/components/SessionsView.qml
-msgid "No local agent sessions found."
+msgid "No local agent sessions found"
 msgstr ""
 
 #: contents/ui/components/SessionsView.qml
@@ -1741,7 +1740,7 @@ msgid ""
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
-msgid "No local token or cost history."
+msgid "No local token or cost history"
 msgstr ""
 
 #: contents/ui/components/SpendView.qml
@@ -3068,6 +3067,10 @@ msgstr ""
 
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "CLI %1 is current or newer than the latest stable release."
+msgstr ""
+
+#: contents/ui/controllers/CliUpdateController.qml
+msgid "CodexBar CLI not found."
 msgstr ""
 
 #: contents/ui/controllers/CliUpdateController.qml

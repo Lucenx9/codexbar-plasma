@@ -173,7 +173,7 @@ ColumnLayout {
 
                     anchors.centerIn: parent
                     width: parent.width
-                    plainText: i18n("No local agent sessions found.")
+                    plainText: i18n("No local agent sessions found")
                     plainExplanation: i18n("Sessions appear after a supported local CLI starts recording them.")
                     icon.name: "system-run-symbolic"
                     type: Kirigami.PlaceholderMessage.Type.Informational

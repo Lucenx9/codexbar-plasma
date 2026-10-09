@@ -260,7 +260,7 @@ ColumnLayout {
 
                     anchors.centerIn: parent
                     width: parent.width
-                    plainText: i18n("No local token or cost history.")
+                    plainText: i18n("No local token or cost history")
                     plainExplanation: i18n("History appears for providers supported by the codexbar cost command.")
                     icon.name: "view-statistics-symbolic"
                     type: Kirigami.PlaceholderMessage.Type.Informational

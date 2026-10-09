@@ -331,6 +331,9 @@ msgid "Loading usage…"
 msgstr "Chargement de l'utilisation…"
 
 #: contents/ui/components/FullRepresentation.qml
+msgid "CodexBar CLI not found"
+msgstr "CLI CodexBar introuvable"
+
 #: contents/ui/controllers/CliUpdateController.qml
 msgid "CodexBar CLI not found."
 msgstr "CLI CodexBar introuvable."
@@ -365,8 +368,8 @@ msgid "Refresh"
 msgstr "Actualiser"
 
 #: contents/ui/components/FullRepresentation.qml
-msgid "No overview data available."
-msgstr "Aucune donnée disponible pour la vue d'ensemble."
+msgid "No overview data available"
+msgstr "Aucune donnée disponible pour la vue d'ensemble"
 
 #: contents/ui/components/FullRepresentation.qml
 msgid "Hidden usage rows"
@@ -1289,8 +1292,8 @@ msgid "Refresh sessions"
 msgstr "Actualiser les sessions"
 
 #: contents/ui/components/SessionsView.qml
-msgid "No local agent sessions found."
-msgstr "Aucune session d'agent locale trouvée."
+msgid "No local agent sessions found"
+msgstr "Aucune session d'agent locale trouvée"
 
 #: contents/ui/components/SessionsView.qml
 msgid "Sessions appear after a supported local CLI starts recording them."
@@ -1467,8 +1470,8 @@ msgstr ""
 "Essayez Jetons pour rechercher un historique limité aux jetons."
 
 #: contents/ui/components/SpendView.qml
-msgid "No local token or cost history."
-msgstr "Aucun historique local de jetons ou de coûts."
+msgid "No local token or cost history"
+msgstr "Aucun historique local de jetons ou de coûts"
 
 #: contents/ui/components/SpendView.qml
 msgid "History appears for providers supported by the codexbar cost command."
