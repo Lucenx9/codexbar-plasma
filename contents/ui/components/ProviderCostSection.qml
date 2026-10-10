@@ -246,12 +246,11 @@ ColumnLayout {
 
     // A disclosure, not a primary action: a flat button keeps it from
     // outweighing the figures it reveals.
-    Components.PlainButton {
+    Components.DisclosureButton {
         objectName: "costDetailsToggle"
-        flat: true
         visible: tokenCostSection.tokenCost !== null
+        expanded: tokenCostSection.hasVisibleDetails
         plainText: tokenCostSection.hasVisibleDetails ? i18n("Hide details") : i18n("Show details")
-        icon.name: tokenCostSection.hasVisibleDetails ? "arrow-up" : "arrow-down"
         onClicked: {
             if (tokenCostSection.hasVisibleDetails) {
                 tokenCostSection.detailsExpanded = false;
