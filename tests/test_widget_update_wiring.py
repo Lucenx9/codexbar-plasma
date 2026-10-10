@@ -55,6 +55,7 @@ TestCase {
                     runs = runs.concat([install]);
                     busy = startable;
                 }
+                BUSY_HANDLER
             }
 
             SOURCE_HANDLERS
@@ -97,6 +98,42 @@ TestCase {
         applet.serviceWidgetUpdateRequest();
         compare(config.widgetUpdateRequest, "");
         compare(applet.widgetUpdater.runs.length, 1);
+    }
+
+    // The controller drops `busy` inside its own completion handling, so the
+    // deferred clear is the only path that releases the marker a real run left
+    // behind. Without it the marker stays non-empty, which is exactly what the
+    // Updates page binds its busy state and both button states to.
+    function test_finishedRunReleasesTheMarkerThroughTheBusyHandler() {
+        var applet = createTemporaryObject(harness, this);
+        applet.plasmoid.configuration.widgetUpdateRequest = "check";
+        applet.serviceWidgetUpdateRequest();
+        compare(applet.plasmoid.configuration.widgetUpdateRequest, "running:check");
+        verify(applet.widgetUpdater.busy);
+        // Drain anything a handler could have queued while the run started. The
+        // marker must survive that: only the falling edge may release it.
+        wait(100);
+        compare(applet.plasmoid.configuration.widgetUpdateRequest, "running:check");
+        applet.widgetUpdater.busy = false;
+        wait(100);
+        compare(applet.plasmoid.configuration.widgetUpdateRequest, "");
+        compare(applet.widgetUpdater.runs, [false]);
+    }
+
+    // A coalesced request waits behind the running command and must still start
+    // once, through the same deferred clear, when that command finishes.
+    function test_queuedRequestStartsOnceWhenTheBusyHandlerReleasesIt() {
+        var applet = createTemporaryObject(harness, this);
+        applet.widgetUpdater.busy = true;
+        applet.plasmoid.configuration.widgetUpdateRequest = "install";
+        applet.serviceWidgetUpdateRequest();
+        compare(applet.widgetUpdater.runs.length, 0);
+        wait(100);
+        compare(applet.widgetUpdater.runs.length, 0);
+        applet.widgetUpdater.busy = false;
+        wait(100);
+        compare(applet.widgetUpdater.runs, [true]);
+        compare(applet.plasmoid.configuration.widgetUpdateRequest, "running:install");
     }
 
     function test_requestWaitsForAnAutomaticRun() {
@@ -143,6 +180,21 @@ TestCase {
 '''
 
 
+def balanced_body(text, start):
+    """Return the text inside the braces whose opening brace is at `start`."""
+    assert text[start] == "{", "balanced_body expects an opening brace"
+    depth = 1
+    index = start + 1
+    while index < len(text) and depth > 0:
+        if text[index] == "{":
+            depth += 1
+        elif text[index] == "}":
+            depth -= 1
+        index += 1
+    assert depth == 0, "unterminated handler body"
+    return text[start + 1:index - 1]
+
+
 def handler_source(text, name):
     """Return `function name(args) { body }` for a function-form QML handler.
 
@@ -151,17 +203,21 @@ def handler_source(text, name):
     """
     match = re.search(name + r":\s*function\s*\(([^)]*)\)\s*\{", text)
     assert match, f"no function-form handler named {name} in main.qml"
-    depth = 1
-    index = match.end()
-    while index < len(text) and depth > 0:
-        if text[index] == "{":
-            depth += 1
-        elif text[index] == "}":
-            depth -= 1
-        index += 1
-    assert depth == 0, f"unterminated handler body for {name}"
-    body = text[match.end():index - 1]
+    body = balanced_body(text, match.end() - 1)
     return f"function {name}({match.group(1)}) {{{body}}}"
+
+
+def shorthand_handler(text, name):
+    """Return the `on<Name>: <statement>` line for a handler with no block.
+
+    `onBusyChanged: if (!busy) Qt.callLater(...)` carries no braces, so it stays
+    bound to the object that owns `busy` instead of becoming a function. It is
+    copied verbatim rather than asserted, so the test still runs main.qml's own
+    condition and target.
+    """
+    match = re.search(r"^[ \t]*" + name + r":[ \t]*(.+?)[ \t]*$", text, re.MULTILINE)
+    assert match, f"no shorthand handler named {name} in main.qml"
+    return f"{name}: {match.group(1)}"
 
 
 class WidgetUpdateWiringTests(unittest.TestCase):
@@ -203,7 +259,8 @@ class WidgetUpdateWiringTests(unittest.TestCase):
                             + applet.function_body(name).replace("Plasmoid.", "plasmoid.")
                             + "}")
         qml = (QML.replace("SOURCE_HANDLERS", "\n            ".join(handlers))
-               .replace("UPDATE_LOGIC_URL", (ROOT / "contents/ui/UpdateLogic.js").as_uri()))
+               .replace("UPDATE_LOGIC_URL", (ROOT / "contents/ui/UpdateLogic.js").as_uri())
+               .replace("BUSY_HANDLER", shorthand_handler(source, "onBusyChanged")))
         with tempfile.TemporaryDirectory(prefix="codexbar-update-wiring-") as temporary:
             fixture = Path(temporary) / "tst_widget_update_wiring.qml"
             fixture.write_text(qml)
