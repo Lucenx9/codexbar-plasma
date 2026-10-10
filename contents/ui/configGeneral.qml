@@ -207,6 +207,19 @@ KCM.SimpleKCM {
         managedControlsOnPage: true
     }
 
+    // Manual widget updates; automatic checks and installs stay with the applet.
+    Controllers.WidgetUpdateController {
+        id: widgetUpdater
+        objectName: "manualWidgetUpdater"
+        onStatusRecorded: function(statusText, errorText) {
+            Plasmoid.configuration.widgetUpdateLastStatus = statusText
+            Plasmoid.configuration.widgetUpdateLastError = errorText
+        }
+        onCheckSucceeded: function(timestamp) {
+            Plasmoid.configuration.autoUpdateLastCheck = timestamp
+        }
+    }
+
     // Installation confirmation needs local facts even before a manual release check.
     Controllers.CliUpdateController {
         id: installedCliProbe
@@ -649,6 +662,24 @@ KCM.SimpleKCM {
             }
         }
 
+        RowLayout {
+            Controls.Button {
+                objectName: "widgetUpdateNowButton"
+                text: widgetUpdater.availableVersion.length > 0
+                    ? i18n("Install update %1", widgetUpdater.availableVersion)
+                    : i18n("Check for widget updates now")
+                icon.name: widgetUpdater.availableVersion.length > 0 ? "download" : "view-refresh"
+                enabled: !widgetUpdater.busy
+                onClicked: widgetUpdater.runNow(widgetUpdater.availableVersion.length > 0)
+            }
+            Controls.BusyIndicator {
+                running: widgetUpdater.busy
+                opacity: running ? 1 : 0
+                Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                Layout.preferredHeight: Kirigami.Units.iconSizes.small
+            }
+        }
+
         Components.PlainControlsLabel {
             id: lastUpdateCheckLabel
 
@@ -666,7 +697,8 @@ KCM.SimpleKCM {
             id: lastUpdateStatusLabel
 
             text: i18n("Last update status: %1", widgetUpdateLastStatus)
-            visible: updateChecksEnabledCheck.checked && widgetUpdateLastStatus.length > 0
+            visible: (updateChecksEnabledCheck.checked || widgetUpdater.statusText.length > 0)
+                && widgetUpdateLastStatus.length > 0
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true
@@ -681,7 +713,8 @@ KCM.SimpleKCM {
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             type: Kirigami.MessageType.Error
             plainText: widgetUpdateLastError.slice(0, 500)
-            visible: updateChecksEnabledCheck.checked && widgetUpdateLastError.length > 0
+            visible: (updateChecksEnabledCheck.checked || widgetUpdater.statusText.length > 0)
+                && widgetUpdateLastError.length > 0
         }
 
         Kirigami.Separator {

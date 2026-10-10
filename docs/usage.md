@@ -611,8 +611,10 @@ fields; track proposed extensions in the issue tracker.
   provider meters shown in the panel.
 - Check for widget updates, notify when an update is available, and opt in to
   silent automatic widget installation. Startup respects the interval since the
-  last successful check; first use and overdue checks run immediately. Manual
-  checks bypass that interval. The update notification opens the
+  last successful check; first use and overdue checks run immediately.
+  **Check for widget updates now** checks on demand, even with automatic checks
+  off; once a newer release is found the button becomes **Install update**,
+  which installs it like an automatic update. The update notification opens the
   release page on GitHub when clicked, where supported.
   Failed upgrades restore the previous widget package so installation can be
   retried. A failed first installation removes its partial package.

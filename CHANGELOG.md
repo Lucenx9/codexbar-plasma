@@ -10,6 +10,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Added
+
+- **General → Updates** has a **Check for widget updates now** button that
+  works even with automatic checks off. When a newer release is found it turns
+  into **Install update**, so an outdated widget can be updated by hand.
+
 ### Changed
 
 - Polish popup visuals: provider detail section titles use the same heading

@@ -56,6 +56,23 @@ TestCase {
         verify(!updater.busy);
         compare(recorded.count, 0);
     }
+    // Manual runs work with every automatic setting off and never schedule more work.
+    function test_manualRunsIgnoreDisabledChecks() {
+        var updater = create("normal");
+        updater.runNow(false);
+        verify(updater.busy);
+        tryCompare(available, "count", 1);
+        tryCompare(updater, "busy", false);
+        compare(updater.availableVersion, "2.0");
+        updater.runNow(true);
+        tryCompare(installed, "count", 1);
+        tryCompare(updater, "busy", false);
+        compare(updater.availableVersion, "");
+        compare(succeeded.count, 2);
+        compare(updater.statusText, "Widget update 2.0 installed. Restart Plasma to apply the new widget version.");
+        wait(350);
+        compare(succeeded.count, 2);
+    }
     function test_startupChecksWhenDue_data() {
         return [{tag: "first", timestamp: ""},
                 {tag: "overdue", timestamp: new Date(Date.now() - 25 * 3600000).toISOString()},

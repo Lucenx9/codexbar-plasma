@@ -294,6 +294,14 @@ class SettingsPagesTest(unittest.TestCase):
         last_update_check_label = id_block(general_text, "lastUpdateCheckLabel")
         if "page.lastUpdateCheckText(autoUpdateLastCheck)" not in last_update_check_label:
             raise AssertionError("the last update check label must use the bounded local formatter")
+        # The manual updater records results where the applet's automatic updater does.
+        for fragment in (
+            "widgetUpdater.runNow(widgetUpdater.availableVersion.length > 0)",
+            "Plasmoid.configuration.widgetUpdateLastStatus = statusText",
+            "Plasmoid.configuration.autoUpdateLastCheck = timestamp",
+        ):
+            if not code_contains(general_text, fragment):
+                raise AssertionError(f"General must offer a manual widget update; missing {fragment!r}")
 
     def test_diagnostics_controls(self):
         require_block_fragment(diagnostics_qml, "id: usePathCommandButton", 'text: i18n("Use PATH")')

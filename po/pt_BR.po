@@ -1969,6 +1969,14 @@ msgid "Install widget updates automatically"
 msgstr "Instalar automaticamente as atualizações do widget"
 
 #: contents/ui/configGeneral.qml
+msgid "Install update %1"
+msgstr "Instalar atualização %1"
+
+#: contents/ui/configGeneral.qml
+msgid "Check for widget updates now"
+msgstr "Procurar atualizações do widget agora"
+
+#: contents/ui/configGeneral.qml
 msgid "Last update status: %1"
 msgstr "Status da última atualização: %1"
 

@@ -18,6 +18,7 @@ Item {
     readonly property bool busy: lifecycle.connectedUpdateCommandSource.length > 0
     readonly property string statusText: lifecycle.updateStatusText
     readonly property string errorText: lifecycle.updateErrorText
+    readonly property string availableVersion: lifecycle.availableVersion
 
     signal statusRecorded(string statusText, string errorText)
     signal checkSucceeded(string timestamp)
@@ -27,6 +28,14 @@ Item {
     function checkNow() {
         if (lifecycle.initialized) {
             lifecycle.checkForWidgetUpdate(true);
+        }
+    }
+
+    // Manual runs ignore the check and auto-install settings, so a user can
+    // update on demand; "install" only installs when a newer release exists.
+    function runNow(install) {
+        if (lifecycle.initialized) {
+            lifecycle.checkForWidgetUpdate(true, install === true ? "install" : "check");
         }
     }
 
@@ -89,6 +98,7 @@ Item {
         property bool updateRetryPending: false
         property string updateStatusText: ""
         property string updateErrorText: ""
+        property string availableVersion: ""
 
         function shellQuote(value) {
             return Guards.shellQuote(value);
@@ -159,13 +169,14 @@ Item {
             return UpdateLogic.updateCheckDue(controller.updateChecksEnabled, controller.autoUpdateLastCheck, controller.autoUpdateIntervalHours, Date.now(), forceCheck === true);
         }
 
-        function checkForWidgetUpdate(forceCheck) {
-            var requestDecision = UpdateLogic.updateRequestDecision(connectedUpdateCommandSource.length > 0, connectedUpdateInstallMode, pendingAutomaticUpdateCheck, controller.autoUpdateEnabled);
+        function checkForWidgetUpdate(forceCheck, manualMode) {
+            var manual = manualMode === "check" || manualMode === "install";
+            var requestDecision = UpdateLogic.updateRequestDecision(connectedUpdateCommandSource.length > 0, connectedUpdateInstallMode, pendingAutomaticUpdateCheck, manual ? manualMode === "install" : controller.autoUpdateEnabled);
             pendingAutomaticUpdateCheck = requestDecision.pendingAutomaticCheck;
             if (!requestDecision.startNow) {
                 return;
             }
-            if (!updateCheckDue(forceCheck)) {
+            if (!manual && !updateCheckDue(forceCheck)) {
                 scheduleNextUpdateCheck();
                 return;
             }
@@ -282,6 +293,7 @@ Item {
         }
 
         function applyUpdateResultIntent(intent) {
+            availableVersion = intent.kind === "available" ? intent.version : "";
             switch (intent.kind) {
             case "error":
                 setWidgetUpdateState(i18n("Widget update check failed."), widgetUpdateErrorText(intent.errorCode, intent.errorDetail));
