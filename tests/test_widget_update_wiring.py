@@ -25,6 +25,7 @@ HANDLERS = ("onStatusRecorded", "onCheckSucceeded")
 
 QML = '''import QtQuick
 import QtTest
+import "UPDATE_LOGIC_URL" as UpdateLogic
 TestCase {
     name: "WidgetUpdateWiring"
     Component {
@@ -44,6 +45,7 @@ TestCase {
                 }
             }
             readonly property string widgetUpdateRequest: plasmoid.configuration.widgetUpdateRequest
+            property string installedWidgetVersion: "0.2.47"
             // Stands in for the applet's WidgetUpdateController.
             property QtObject widgetUpdater: QtObject {
                 property bool busy: false
@@ -107,6 +109,21 @@ TestCase {
         applet.widgetUpdater.busy = false;
         applet.serviceWidgetUpdateRequest();
         compare(applet.widgetUpdater.runs, [false]);
+    }
+
+    // Upgrading another way must not leave an Install button for that release.
+    function test_startupForgetsAReleaseThatIsAlreadyInstalled_data() {
+        return [{tag: "installed", persisted: "0.2.47", expected: ""},
+                {tag: "older", persisted: "0.2.46", expected: ""},
+                {tag: "newer", persisted: "0.2.48", expected: "0.2.48"},
+                {tag: "none", persisted: "", expected: ""}];
+    }
+    function test_startupForgetsAReleaseThatIsAlreadyInstalled(data) {
+        var applet = createTemporaryObject(harness, this);
+        applet.plasmoid.configuration.widgetUpdateAvailableVersion = data.persisted;
+        applet.forgetInstalledWidgetUpdate();
+        compare(applet.plasmoid.configuration.widgetUpdateAvailableVersion, data.expected);
+        compare(applet.restoredWidgetUpdateVersion(), data.expected);
     }
 
     function test_staleOrInvalidRequestsAreClearedWithoutRunning_data() {
@@ -181,7 +198,12 @@ class WidgetUpdateWiringTests(unittest.TestCase):
         handlers.append("function serviceWidgetUpdateRequest() {"
                         + applet.function_body("serviceWidgetUpdateRequest").replace("Plasmoid.", "plasmoid.")
                         + "}")
-        qml = QML.replace("SOURCE_HANDLERS", "\n            ".join(handlers))
+        for name in ("restoredWidgetUpdateVersion", "forgetInstalledWidgetUpdate"):
+            handlers.append(f"function {name}() {{"
+                            + applet.function_body(name).replace("Plasmoid.", "plasmoid.")
+                            + "}")
+        qml = (QML.replace("SOURCE_HANDLERS", "\n            ".join(handlers))
+               .replace("UPDATE_LOGIC_URL", (ROOT / "contents/ui/UpdateLogic.js").as_uri()))
         with tempfile.TemporaryDirectory(prefix="codexbar-update-wiring-") as temporary:
             fixture = Path(temporary) / "tst_widget_update_wiring.qml"
             fixture.write_text(qml)
