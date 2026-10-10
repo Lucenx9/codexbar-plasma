@@ -39,6 +39,19 @@ TestCase {
                     property string widgetUpdateLastStatus: "stale status"
                     property string widgetUpdateLastError: "stale error"
                     property double autoUpdateLastCheck: -1
+                    property string widgetUpdateAvailableVersion: "stale version"
+                    property string widgetUpdateRequest: ""
+                }
+            }
+            readonly property string widgetUpdateRequest: plasmoid.configuration.widgetUpdateRequest
+            // Stands in for the applet's WidgetUpdateController.
+            property QtObject widgetUpdater: QtObject {
+                property bool busy: false
+                property bool startable: true
+                property var runs: []
+                function runNow(install) {
+                    runs = runs.concat([install]);
+                    busy = startable;
                 }
             }
 
@@ -48,22 +61,66 @@ TestCase {
 
     function test_recordedStatusReachesThePersistedConfiguration() {
         var applet = createTemporaryObject(harness, this);
-        applet.onStatusRecorded("Up to date", "");
+        applet.onStatusRecorded("Up to date", "", "");
         compare(applet.plasmoid.configuration.widgetUpdateLastStatus, "Up to date");
         compare(applet.plasmoid.configuration.widgetUpdateLastError, "");
+        compare(applet.plasmoid.configuration.widgetUpdateAvailableVersion, "");
     }
 
     function test_recordedFailureKeepsBothHalvesOfTheResult() {
         var applet = createTemporaryObject(harness, this);
-        applet.onStatusRecorded("Update failed", "checksum mismatch");
+        applet.onStatusRecorded("Update failed", "checksum mismatch", "2.0");
         compare(applet.plasmoid.configuration.widgetUpdateLastStatus, "Update failed");
         compare(applet.plasmoid.configuration.widgetUpdateLastError, "checksum mismatch");
+        compare(applet.plasmoid.configuration.widgetUpdateAvailableVersion, "2.0");
     }
 
     function test_successfulCheckPersistsItsTimestamp() {
         var applet = createTemporaryObject(harness, this);
         applet.onCheckSucceeded(1758547200000);
         compare(applet.plasmoid.configuration.autoUpdateLastCheck, 1758547200000);
+    }
+
+    // Settings only write a request; the applet runs it and clears it when done.
+    function test_settingsRequestRunsOnceAndClearsWhenFinished() {
+        var applet = createTemporaryObject(harness, this);
+        var config = applet.plasmoid.configuration;
+        config.widgetUpdateRequest = "install";
+        applet.serviceWidgetUpdateRequest();
+        compare(applet.widgetUpdater.runs, [true]);
+        compare(config.widgetUpdateRequest, "running:install");
+        applet.serviceWidgetUpdateRequest();
+        compare(applet.widgetUpdater.runs.length, 1);
+        applet.widgetUpdater.busy = false;
+        applet.serviceWidgetUpdateRequest();
+        compare(config.widgetUpdateRequest, "");
+        compare(applet.widgetUpdater.runs.length, 1);
+    }
+
+    function test_requestWaitsForAnAutomaticRun() {
+        var applet = createTemporaryObject(harness, this);
+        applet.widgetUpdater.busy = true;
+        applet.plasmoid.configuration.widgetUpdateRequest = "check";
+        applet.serviceWidgetUpdateRequest();
+        compare(applet.widgetUpdater.runs.length, 0);
+        compare(applet.plasmoid.configuration.widgetUpdateRequest, "check");
+        applet.widgetUpdater.busy = false;
+        applet.serviceWidgetUpdateRequest();
+        compare(applet.widgetUpdater.runs, [false]);
+    }
+
+    function test_staleOrInvalidRequestsAreClearedWithoutRunning_data() {
+        return [{tag: "stale-marker", request: "running:install", startable: true},
+                {tag: "junk", request: "rm -rf ~", startable: true},
+                {tag: "not-started", request: "install", startable: false}];
+    }
+    function test_staleOrInvalidRequestsAreClearedWithoutRunning(data) {
+        var applet = createTemporaryObject(harness, this);
+        applet.widgetUpdater.startable = data.startable;
+        applet.plasmoid.configuration.widgetUpdateRequest = data.request;
+        applet.serviceWidgetUpdateRequest();
+        compare(applet.plasmoid.configuration.widgetUpdateRequest, "");
+        verify(!applet.widgetUpdater.busy);
     }
 }
 '''
@@ -121,6 +178,9 @@ class WidgetUpdateWiringTests(unittest.TestCase):
             # Only the attached-object name is rewritten; the writes themselves
             # run exactly as main.qml declares them.
             handlers.append(handler_source(source, name).replace("Plasmoid.", "plasmoid."))
+        handlers.append("function serviceWidgetUpdateRequest() {"
+                        + applet.function_body("serviceWidgetUpdateRequest").replace("Plasmoid.", "plasmoid.")
+                        + "}")
         qml = QML.replace("SOURCE_HANDLERS", "\n            ".join(handlers))
         with tempfile.TemporaryDirectory(prefix="codexbar-update-wiring-") as temporary:
             fixture = Path(temporary) / "tst_widget_update_wiring.qml"

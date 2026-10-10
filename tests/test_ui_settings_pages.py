@@ -67,6 +67,8 @@ class SettingsPagesTest(unittest.TestCase):
             "cliUpdateLastNotifiedVersion",
             "widgetUpdateLastStatus",
             "widgetUpdateLastError",
+            "widgetUpdateAvailableVersion",
+            "widgetUpdateRequest",
             "lastNotifiedUpdateVersion",
             "providerConfigRevision",
             "aiInsightsCache",
@@ -294,11 +296,13 @@ class SettingsPagesTest(unittest.TestCase):
         last_update_check_label = id_block(general_text, "lastUpdateCheckLabel")
         if "page.lastUpdateCheckText(autoUpdateLastCheck)" not in last_update_check_label:
             raise AssertionError("the last update check label must use the bounded local formatter")
-        # The manual updater records results where the applet's automatic updater does.
+        # Settings only request manual updates; the applet owns the process.
+        if "WidgetUpdateController" in general_text:
+            raise AssertionError("closing settings must not be able to cut a widget update short")
         for fragment in (
-            "widgetUpdater.runNow(widgetUpdater.availableVersion.length > 0)",
-            "Plasmoid.configuration.widgetUpdateLastStatus = statusText",
-            "Plasmoid.configuration.autoUpdateLastCheck = timestamp",
+            'Plasmoid.configuration.widgetUpdateRequest = "check"',
+            'Plasmoid.configuration.widgetUpdateRequest = "install"',
+            "Plasmoid.configuration.widgetUpdateAvailableVersion",
         ):
             if not code_contains(general_text, fragment):
                 raise AssertionError(f"General must offer a manual widget update; missing {fragment!r}")

@@ -64,6 +64,7 @@ TestCase {
         tryCompare(available, "count", 1);
         tryCompare(updater, "busy", false);
         compare(updater.availableVersion, "2.0");
+        compare(recorded.signalArguments[0][2], "2.0");
         updater.runNow(true);
         tryCompare(installed, "count", 1);
         tryCompare(updater, "busy", false);
@@ -72,6 +73,18 @@ TestCase {
         compare(updater.statusText, "Widget update 2.0 installed. Restart Plasma to apply the new widget version.");
         wait(350);
         compare(succeeded.count, 2);
+    }
+    function test_failedManualInstallKeepsTheFoundRelease() {
+        var updater = create("installfail");
+        updater.runNow(false);
+        tryCompare(available, "count", 1);
+        tryCompare(updater, "busy", false);
+        updater.runNow(true);
+        tryCompare(recorded, "count", 2);
+        tryCompare(updater, "busy", false);
+        verify(updater.errorText.length > 0);
+        compare(updater.availableVersion, "2.0");
+        compare(recorded.signalArguments[1][2], "2.0");
     }
     function test_startupChecksWhenDue_data() {
         return [{tag: "first", timestamp: ""},
@@ -211,6 +224,8 @@ class WidgetUpdateControllerTests(unittest.TestCase):
             directory = Path(temporary)
             scripts = {
                 "normal": NORMAL, "queued": NORMAL, "disable": NORMAL,
+                "installfail": NORMAL.replace('{"status":"installed","remoteVersion":"2.0"}',
+                                              '{"status":"error","errorCode":"release_download_failed"}'),
                 "captured": '#!/bin/sh\nsleep 0.2\nprintf \'%s\\n\' \'{"status":"available","remoteVersion":"2.0"}\'\n',
                 "malformed": '#!/bin/sh\nprintf \'%s\\n\' \'{broken\'\n',
                 "structured": '#!/bin/sh\nprintf \'%s\\n\' \'{"status":"error","errorCode":"missing_tool","errorDetail":"jq"}\'\n',

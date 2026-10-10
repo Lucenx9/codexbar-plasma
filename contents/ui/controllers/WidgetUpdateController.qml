@@ -20,7 +20,7 @@ Item {
     readonly property string errorText: lifecycle.updateErrorText
     readonly property string availableVersion: lifecycle.availableVersion
 
-    signal statusRecorded(string statusText, string errorText)
+    signal statusRecorded(string statusText, string errorText, string availableVersion)
     signal checkSucceeded(string timestamp)
     signal updateAvailable(string version, string assetUrl, string releaseUrl)
     signal updateInstalled(string version)
@@ -33,6 +33,7 @@ Item {
 
     // Manual runs ignore the check and auto-install settings, so a user can
     // update on demand; "install" only installs when a newer release exists.
+    // Persisted results keep the found version across a restart.
     function runNow(install) {
         if (lifecycle.initialized) {
             lifecycle.checkForWidgetUpdate(true, install === true ? "install" : "check");
@@ -262,7 +263,7 @@ Item {
             if (persistState === false) {
                 return;
             }
-            controller.statusRecorded(updateStatusText, updateErrorText);
+            controller.statusRecorded(updateStatusText, updateErrorText, availableVersion);
         }
 
         function handleUpdateData(sourceName, stdoutText, stderrText) {
@@ -293,7 +294,10 @@ Item {
         }
 
         function applyUpdateResultIntent(intent) {
-            availableVersion = intent.kind === "available" ? intent.version : "";
+            // A failed run keeps the known release so its install can be retried.
+            if (intent.kind !== "error" && intent.kind !== "unknown") {
+                availableVersion = intent.kind === "available" ? intent.version : "";
+            }
             switch (intent.kind) {
             case "error":
                 setWidgetUpdateState(i18n("Widget update check failed."), widgetUpdateErrorText(intent.errorCode, intent.errorDetail));

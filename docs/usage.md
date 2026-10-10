@@ -613,8 +613,9 @@ fields; track proposed extensions in the issue tracker.
   silent automatic widget installation. Startup respects the interval since the
   last successful check; first use and overdue checks run immediately.
   **Check for widget updates now** checks on demand, even with automatic checks
-  off; once a newer release is found the button becomes **Install update**,
-  which installs it like an automatic update. The update notification opens the
+  off. When a check finds a newer release, **Install update** installs it like
+  an automatic update; it stays available after a failed attempt. The applet
+  runs both actions, so closing the settings window does not stop them. The update notification opens the
   release page on GitHub when clicked, where supported.
   Failed upgrades restore the previous widget package so installation can be
   retried. A failed first installation removes its partial package.
