@@ -68,7 +68,7 @@ KCM.SimpleKCM {
             // This also fires during instantiation from creation properties,
             // even when the stored provider equals the default, so an already
             // empty list is left alone instead of churning the combo.
-            var model = cfg_aiInsightsModel
+            const model = cfg_aiInsightsModel
             availableModels = []
             modelCombo.editText = model
         }
@@ -85,7 +85,7 @@ KCM.SimpleKCM {
         actionText = ""
         if (availableModels.length > 0) {
             // A new model list resets the combo; keep the typed or saved model.
-            var model = cfg_aiInsightsModel
+            const model = cfg_aiInsightsModel
             availableModels = []
             modelCombo.editText = model
         }
@@ -184,7 +184,7 @@ KCM.SimpleKCM {
         if (action === "key-status") {
             keyStatus = AiInsights.statusReply(stdout, ["present", "absent", "unavailable"])
         } else if (action === "set-key") {
-            var saved = AiInsights.statusReply(stdout, ["saved", "cancelled", "invalid", "dialog_missing", "unavailable"])
+            const saved = AiInsights.statusReply(stdout, ["saved", "cancelled", "invalid", "dialog_missing", "unavailable"])
             if (saved === "saved") {
                 report(i18n("API key saved in the system wallet."), false)
             } else if (saved === "invalid") {
@@ -196,12 +196,12 @@ KCM.SimpleKCM {
             }
             Qt.callLater(refreshKeyStatus)
         } else if (action === "clear-key") {
-            var cleared = AiInsights.statusReply(stdout, ["cleared", "unavailable"])
+            const cleared = AiInsights.statusReply(stdout, ["cleared", "unavailable"])
             report(cleared === "cleared" ? i18n("API key removed from the system wallet.")
                 : i18n("Could not remove the API key. The system wallet is unavailable."), cleared !== "cleared")
             Qt.callLater(refreshKeyStatus)
         } else if (action === "models") {
-            var result = AiInsights.modelsReply(stdout,
+            const result = AiInsights.modelsReply(stdout,
                 data && data["exit code"] !== undefined ? Number(data["exit code"]) : NaN,
                 data && data["exit status"] !== undefined ? Number(data["exit status"]) : NaN)
             // The test read the wallet itself, so its answer replaces a status
@@ -217,7 +217,7 @@ KCM.SimpleKCM {
                 report(messages.errorText(result.reason, provider), true)
                 return
             }
-            var model = cfg_aiInsightsModel
+            const model = cfg_aiInsightsModel
             availableModels = result.models
             // A new model list resets the combo; keep the typed or saved model.
             modelCombo.currentIndex = modelCombo.find(model)
@@ -230,7 +230,7 @@ KCM.SimpleKCM {
             } else if (!AiInsights.modelListed(provider, model, result.models)) {
                 report(i18n("Connection works, but %1 is not in the list of models usable for AI Insights. Choose a listed model.", model), true)
             } else {
-                var listed = i18n("Connection works, and %1 is in the list of models usable for AI Insights.", model)
+                const listed = i18n("Connection works, and %1 is in the list of models usable for AI Insights.", model)
                 report(provider === "openrouter" && cfg_aiInsightsOpenRouterZdr
                     ? listed + " " + i18n("Zero Data Retention routing is checked only when an insight is generated.")
                     : listed, false)

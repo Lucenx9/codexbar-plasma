@@ -94,7 +94,7 @@ ColumnLayout {
             Layout.fillWidth: true
             spacing: Kirigami.Units.smallSpacing / 2
 
-            PlainHeading {
+            Components.PlainHeading {
                 text: i18n("Sessions")
                 level: 2
                 type: Kirigami.Heading.Type.Primary
@@ -102,7 +102,7 @@ ColumnLayout {
                 elide: Text.ElideRight
             }
 
-            PlainPlasmaLabel {
+            Components.PlainPlasmaLabel {
                 text: [view.applet.sessionsLastUpdatedText,
                     i18np("%1 local session", "%1 local sessions", view.applet.sessions.length)]
                     .filter(function(part) { return part.length > 0 })
@@ -168,7 +168,7 @@ ColumnLayout {
                 Layout.fillHeight: true
 
                 // Keep the native placeholder together while this item fills the view.
-                PlainPlaceholderMessage {
+                Components.PlainPlaceholderMessage {
                     id: emptySessionsPlaceholder
 
                     anchors.centerIn: parent
@@ -241,7 +241,7 @@ ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 0
 
-                            CopyableValue {
+                            Components.CopyableValue {
                                 id: sessionTitleValue
 
                                 text: sessionLabels.sessionTitle(modelData, index)
@@ -255,7 +255,7 @@ ColumnLayout {
                                 }
                             }
 
-                            PlainPlasmaLabel {
+                            Components.PlainPlasmaLabel {
                                 visible: modelData.sessionName.length > 0
                                     && modelData.sessionName !== sessionLabels.sessionTitle(modelData, index)
                                 text: modelData.sessionName
@@ -264,7 +264,7 @@ ColumnLayout {
                                 elide: Text.ElideRight
                             }
 
-                            PlainPlasmaLabel {
+                            Components.PlainPlasmaLabel {
                                 visible: sessionCard.subtitle.length > 0
                                 text: sessionCard.subtitle
                                 opacity: view.applet.secondaryTextOpacity
@@ -280,7 +280,7 @@ ColumnLayout {
 
                             // State reads the same for every provider, so it
                             // uses the theme's meaning colors, not the accent.
-                            PlainPlasmaLabel {
+                            Components.PlainPlasmaLabel {
                                 text: sessionLabels.sessionStateText(modelData.state)
                                 color: sessionCard.activeSession
                                     ? Kirigami.Theme.positiveTextColor
@@ -295,7 +295,7 @@ ColumnLayout {
                                 Layout.alignment: Qt.AlignRight
                             }
 
-                            PlainPlasmaLabel {
+                            Components.PlainPlasmaLabel {
                                 text: sessionLabels.sessionActivityText(modelData, view.sessionClockMs)
                                 opacity: view.applet.secondaryTextOpacity
                                 font.pixelSize: Kirigami.Theme.smallFont.pixelSize

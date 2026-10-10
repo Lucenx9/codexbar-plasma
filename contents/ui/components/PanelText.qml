@@ -21,8 +21,8 @@ QtObject {
             return paceText(row)
         }
         if (mode === "both") {
-            var percent = percentText(row)
-            var pace = paceText(row)
+            const percent = percentText(row)
+            const pace = paceText(row)
             return percent.length > 0 && pace.length > 0
                 ? i18n("%1 - %2", percent, pace) : (percent.length > 0 ? percent : pace)
         }
@@ -89,7 +89,7 @@ QtObject {
             details.push(i18n("%1cr", CostPresentation.formatCount(root.numberFormat, parts.credits)))
         }
         if (details.length > 0) {
-            var line = i18n("%1: %2", parts.title, details.join(". "))
+            const line = i18n("%1: %2", parts.title, details.join(". "))
             return parts.incident.length > 0 ? i18n("%1 - %2", line, parts.incident) : line
         }
         return parts.incident.length > 0 ? i18n("%1: %2", parts.title, parts.incident) : ""

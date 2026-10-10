@@ -14,7 +14,7 @@ QtObject {
         }
         if (!row) return null
         if (intent.kind === "quota") {
-            var body = i18n("%1 is %2% used", row.label, Math.round(row.usedPercent))
+            let body = i18n("%1 is %2% used", row.label, Math.round(row.usedPercent))
             if (resetLine.length > 0) body += ". " + resetLine
             return {
                 title: intent.severity === "major"

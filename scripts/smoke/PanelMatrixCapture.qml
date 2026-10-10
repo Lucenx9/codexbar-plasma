@@ -37,8 +37,6 @@ Item {
             height: capture.currentCase.vertical ? (compactItem ? compactItem.implicitHeight : 0) : (capture.currentCase.extent || 32)
             onLoaded: {
                 capture.compactPanelItem = item;
-                item.animationsEnabled = false;
-                item.interactive = false;
             }
         }
     }
