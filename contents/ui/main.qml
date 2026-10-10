@@ -1611,7 +1611,7 @@ PlasmoidItem {
     }
 
     function tokenCountString(tokens) {
-        return CostPresentation.tokenCountString(tokens)
+        return CostPresentation.tokenCountString(tokens, costNumberFormat)
     }
 
     function usageCountText(value, unit) {
