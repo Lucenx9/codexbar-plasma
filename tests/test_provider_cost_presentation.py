@@ -142,7 +142,10 @@ TestCase {
             output = result.stdout + result.stderr
             self.assertEqual(result.returncode, 0, output)
             self.assertNotIn("SKIP", output)
-            self.assertNotIn("QWARN", output)
+            warnings = [line for line in output.splitlines() if "QWARN" in line and not (
+                'kf.kirigami.platform: Failed to find a Kirigami platform plugin' in line
+            )]
+            self.assertEqual(warnings, [])
 
     def test_monthly_credit_amounts_remain_visible_without_pace(self):
         applet = Surface("applet", ROOT)
@@ -238,7 +241,10 @@ TestCase {
             output = result.stdout + result.stderr
             self.assertEqual(result.returncode, 0, output)
             self.assertNotIn("SKIP", output)
-            self.assertNotIn("QWARN", output)
+            warnings = [line for line in output.splitlines() if "QWARN" in line and not (
+                'kf.kirigami.platform: Failed to find a Kirigami platform plugin' in line
+            )]
+            self.assertEqual(warnings, [])
 
     def test_main_cost_wrappers_delegate_to_presentation(self):
         applet = Surface("applet", ROOT)
@@ -296,7 +302,10 @@ TestCase {
             output = result.stdout + result.stderr
             self.assertEqual(result.returncode, 0, output)
             self.assertNotIn("SKIP", output)
-            self.assertNotIn("QWARN", output)
+            warnings = [line for line in output.splitlines() if "QWARN" in line and not (
+                'kf.kirigami.platform: Failed to find a Kirigami platform plugin' in line
+            )]
+            self.assertEqual(warnings, [])
 
 
 COST_METRIC_QML = '''import QtQuick

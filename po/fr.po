@@ -922,6 +922,10 @@ msgid "Kiro"
 msgstr "Kiro"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Langdock"
+msgstr "Langdock"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "LiteLLM"
 msgstr "LiteLLM"
 

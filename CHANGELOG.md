@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Bundle a fallback name, an original icon, the dashboard and documentation
+  links, and the brand color for Langdock, which official CodexBar 0.73.0 adds
+  to the registry. It needs a macOS-only browser-profile web source on Linux,
+  so it has no API-key setup action.
 - **General → Updates** has a **Check for widget updates now** button that
   works even with automatic checks off, and an **Install update** button once a
   newer release is known, so an outdated widget can be updated by hand. The

@@ -143,6 +143,7 @@ released_providers=(
   museai
   lithosai
   workbuddy
+  langdock
 )
 
 # Retired upstream but still emitted by an older installed CLI. 0.64.1 removed

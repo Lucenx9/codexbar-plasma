@@ -51,6 +51,7 @@ TestCase {
             { tag: "v0", key: "v0", title: "v0" },
             { tag: "vercel", key: "vercel", title: "Vercel AI Gateway" },
             { tag: "wayfinder", key: "wayfinder", title: "Wayfinder" },
+            { tag: "langdock", key: "langdock", title: "Langdock" },
             { tag: "workbuddy", key: "workbuddy", title: "WorkBuddy" },
             { tag: "xkiro", key: "xkiro", title: "xKiro" },
             { tag: "zai", key: "zai", title: "z.ai / GLM" }
