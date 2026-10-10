@@ -24,8 +24,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Polish popup visuals: provider detail section titles use the same heading
   style as sibling sections, detail meters use the compact meter height, usage
   rows keep whole-pixel spacing, Spend history menus use the plain-text menu
-  items, the cost chart shows a focus ring when reached with Tab, and the provider
-  cost section details toggle uses the standard disclosure button primitive.
+  items, the cost chart shows a focus ring when reached with Tab, and the cost
+  "Show details" toggle uses the same disclosure arrow as the other popup
+  sections.
 - Follow the KDE text guidelines for ellipses: labels that open a dialog or
   report progress use the "…" character instead of three periods, the provider
   search field reads "Search providers", and the empty popup heading drops its
