@@ -364,6 +364,13 @@ TestCase {
         compare(subject.spendTotalLine([
             { totals: { cost: 1234.5, tokens: null, currency: "USD" } }
         ]), "$1.234,50 total");
+        // Compact token counts share the cost's decimal mark, so one line
+        // never mixes "1.234,50" with "1.5K".
+        compare(subject.costLine("Today", 1234.5, 1500, "USD", "plain"), "Today: $1.234,50 \u00b7 1,5K tokens");
+        compare(subject.usageCountText(2500000, "requests"), "2,5M requests");
+        compare(subject.usageCountText(999, "tokens"), "999 tokens");
+        compare(subject.dashboardPartText({ kind: "future", value: 1500 }), "1,5K");
+        compare(subject.tokenCountString(15000), "15K");
         regionalFormat = ({});
         compare(subject.amountString(1234.5, "USD"), "$1,234.50");
         regionalFormat = CostPresentation.numberFormat(",", ".");
