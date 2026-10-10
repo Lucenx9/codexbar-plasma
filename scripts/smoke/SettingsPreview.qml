@@ -35,14 +35,10 @@ Rectangle {
             }
             // General only edits a pending text field; other pages keep the
             // synthetic executable supplied before Component.onCompleted.
-            // This dynamic property is set at runtime on the loaded config page.
-            if (preview.pageSource === "configDiagnostics.qml") {
-                var itemRef = item;
-                Qt.callLater(function() {
-                    if (itemRef)
-                        itemRef.cfg_commandPath = "codexbar";
-                });
-            }
+            // Set it before `ready` can be observed; `page` is untyped, so the
+            // page's own property needs no cast.
+            if (preview.pageSource === "configDiagnostics.qml")
+                preview.page.cfg_commandPath = "codexbar";
         }
     }
 }

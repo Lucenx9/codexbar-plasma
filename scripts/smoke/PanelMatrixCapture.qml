@@ -37,6 +37,10 @@ Item {
             height: capture.currentCase.vertical ? (compactItem ? compactItem.implicitHeight : 0) : (capture.currentCase.extent || 32)
             onLoaded: {
                 capture.compactPanelItem = item;
+                // Loader.item is typed QObject; the untyped property reaches
+                // CompactRepresentation's own switches without a lint warning.
+                capture.compactPanelItem.animationsEnabled = false;
+                capture.compactPanelItem.interactive = false;
             }
         }
     }
