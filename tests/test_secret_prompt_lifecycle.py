@@ -184,18 +184,13 @@ class SecretPromptLifecycleTests(unittest.TestCase):
                 self.assertEqual(process.returncode, 0, stderr)
                 self.assertEqual(json.loads(stdout), {"ok": True} if mode == "late" else {"cancelled": True})
             self.assertEqual((self.directory / "received").exists(), mode == "late" or mode.startswith("cli-"))
-            # In cli-kill and cli-term modes the child CLI script ignores SIGTERM and
-            # sleeps for 30s to simulate a hung command; the parent times out and kills
-            # the process group, so the child is still running (state R) when we check.
-            # Only verify zombie state for modes where the child should have exited cleanly.
-            if not mode.startswith("cli-"):
-                for marker in self.directory.glob("*.pid"):
-                    status = Path("/proc") / marker.read_text() / "stat"
-                    try:
-                        state = status.read_text().rsplit(")", 1)[1].split()[0]
-                    except FileNotFoundError:
-                        continue
-                    self.assertEqual(state, "Z", marker.name)
+            for marker in self.directory.glob("*.pid"):
+                status = Path("/proc") / marker.read_text() / "stat"
+                try:
+                    state = status.read_text().rsplit(")", 1)[1].split()[0]
+                except FileNotFoundError:
+                    continue
+                self.assertEqual(state, "Z", marker.name)
         finally:
             for marker in self.directory.glob("*.pid"):
                 try:
