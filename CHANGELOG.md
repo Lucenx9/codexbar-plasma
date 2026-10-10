@@ -15,7 +15,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - **General → Updates** has a **Check for widget updates now** button that
   works even with automatic checks off, and an **Install update** button once a
   newer release is known, so an outdated widget can be updated by hand. The
-  last status and check time stay visible with automatic checks off.
+  button disappears after a restart once the widget runs that release or a newer
+  one, however it was installed. The last status and check time stay visible
+  with automatic checks off.
 
 ### Changed
 

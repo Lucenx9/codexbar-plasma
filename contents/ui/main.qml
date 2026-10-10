@@ -30,6 +30,7 @@ import "UsageCache.js" as UsageCache
 import "QuotaThresholds.js" as QuotaThresholds
 import "SafeText.js" as SafeText
 import "ThemeContrast.js" as ThemeContrast
+import "UpdateLogic.js" as UpdateLogic
 
 PlasmoidItem {
     id: root
@@ -236,6 +237,7 @@ PlasmoidItem {
 
     Component.onCompleted: {
         usageLifecycleInitialized = true
+        forgetInstalledWidgetUpdate()
         Qt.callLater(serviceWidgetUpdateRequest)
     }
 
@@ -1291,6 +1293,25 @@ PlasmoidItem {
     readonly property string widgetUpdateRequest: Plasmoid.configuration.widgetUpdateRequest || ""
     onWidgetUpdateRequestChanged: serviceWidgetUpdateRequest()
 
+    // Plasma exposes KPluginMetaData at runtime without a declarative QML type.
+    readonly property var appletContext: Plasmoid
+    readonly property string installedWidgetVersion: appletContext && appletContext.metaData
+        ? String(appletContext.metaData.version || "") : ""
+
+    // A found release stays offered only while it is newer than this widget,
+    // so upgrading another way does not leave an Install button for it.
+    function restoredWidgetUpdateVersion() {
+        return UpdateLogic.restoredAvailableVersion(
+            Plasmoid.configuration.widgetUpdateAvailableVersion || "", installedWidgetVersion)
+    }
+
+    function forgetInstalledWidgetUpdate() {
+        var restored = restoredWidgetUpdateVersion()
+        if (restored !== (Plasmoid.configuration.widgetUpdateAvailableVersion || "")) {
+            Plasmoid.configuration.widgetUpdateAvailableVersion = restored
+        }
+    }
+
     function serviceWidgetUpdateRequest() {
         var request = widgetUpdateRequest
         if (widgetUpdater.busy || request.length === 0) {
@@ -2119,7 +2140,7 @@ PlasmoidItem {
         autoUpdateIntervalHours: isFinite(Number(Plasmoid.configuration.autoUpdateIntervalHours))
             ? Math.max(1, Math.min(168, Number(Plasmoid.configuration.autoUpdateIntervalHours))) : 24
         autoUpdateLastCheck: Plasmoid.configuration.autoUpdateLastCheck || ""
-        initialAvailableVersion: Plasmoid.configuration.widgetUpdateAvailableVersion || ""
+        initialAvailableVersion: root.restoredWidgetUpdateVersion()
 
         onStatusRecorded: function(statusText, errorText, availableVersion) {
             Plasmoid.configuration.widgetUpdateLastStatus = statusText
