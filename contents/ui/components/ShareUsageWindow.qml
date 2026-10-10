@@ -163,7 +163,7 @@ Controls.ApplicationWindow {
             presentation: ({
                 period: window.periodText,
                 tokensTitle: i18n("Tracked tokens"),
-                tokens: window.snapshot.tokens === null ? "-" : Costs.tokenCountString(window.snapshot.tokens),
+                tokens: window.snapshot.tokens === null ? "-" : Costs.tokenCountString(window.snapshot.tokens, window.applet.costNumberFormat),
                 costTitle: i18n("Estimated usage cost"),
                 cost: window.costText,
                 sections: [

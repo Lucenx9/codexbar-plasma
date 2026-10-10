@@ -32,7 +32,7 @@ QtObject {
             { label: i18n("Output"), tokens: totals.outputTokens },
             { label: i18n("Cache read"), tokens: totals.cacheReadTokens },
             { label: i18n("Cache write"), tokens: totals.cacheCreationTokens }
-        ])
+        ], root.numberFormat)
     }
 
     function costModelRows(tokenCost) {
@@ -64,7 +64,7 @@ QtObject {
         return i18n("Peak: %1 - %2",
             peak.label.length > 0 ? root.costDayLabel(peak.label) : i18n("Latest"),
             root.showsTokens
-                ? CostPresentation.tokenCountString(peak.magnitude)
+                ? CostPresentation.tokenCountString(peak.magnitude, root.numberFormat)
                 : CostPresentation.amountString(root.numberFormat, peak.magnitude, peak.currency))
     }
 
@@ -76,7 +76,7 @@ QtObject {
             return ""
         }
         return i18n("Average/day: %1", root.showsTokens
-            ? CostPresentation.tokenCountString(average.value)
+            ? CostPresentation.tokenCountString(average.value, root.numberFormat)
             : CostPresentation.amountString(root.numberFormat, average.value, average.currency))
     }
 

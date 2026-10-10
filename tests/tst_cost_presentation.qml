@@ -323,6 +323,20 @@ TestCase {
         compare(CostPresentation.tokenCountString("abc"), "-")
     }
 
+    function test_tokenCountStringUsesTheCallerDecimalMark() {
+        var comma = CostPresentation.numberFormat(".", ",")
+        compare(CostPresentation.tokenCountString(1500, comma), "1,5K")
+        compare(CostPresentation.tokenCountString(-2500000, comma), "-2,5M")
+        compare(CostPresentation.tokenCountString(4294967297, comma), "4,3B")
+        compare(CostPresentation.tokenCountString(1000, comma), "1K")
+        compare(CostPresentation.tokenCountString(15000, comma), "15K")
+        compare(CostPresentation.tokenCountString(999, comma), "999")
+        compare(CostPresentation.tokenCountString(1500, ({})), "1.5K")
+        compare(CostPresentation.metricText(comma, 1500, "USD", true), "1,5K")
+        compare(CostPresentation.breakdownRows([{ label: "Input", tokens: 1500 }], comma)[0].value, "1,5K")
+        compare(CostPresentation.amountSummary(comma, { cost: 1.5, tokens: 1500, currency: "USD" }), "$1,50 · 1,5K")
+    }
+
     // A value that rounds up across a unit boundary must promote to the larger
     // unit instead of printing an overflowing one ("1000K", "1000M").
     function test_tokenCountStringPromotesAtRoundedBoundaries() {

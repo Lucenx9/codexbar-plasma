@@ -37,6 +37,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Compact token counts use the regional decimal mark, like the costs beside
+  them: an Italian, German, French, Spanish, or Brazilian Portuguese locale
+  shows "1,5K tokens" next to "$1.234,50" instead of "1.5K tokens".
 - Keep a custom usage refresh interval of 1000 seconds or more. The settings
   field shows it with a locale group separator, such as "1,200 seconds", and
   leaving the field read only the leading "1", so the widget refreshed every
