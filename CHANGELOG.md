@@ -15,14 +15,18 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - **General → Updates** has a **Check for widget updates now** button that
   works even with automatic checks off, and an **Install update** button once a
   newer release is known, so an outdated widget can be updated by hand. The
-  last status and check time stay visible with automatic checks off.
+  button disappears after a restart once the widget runs that release or a newer
+  one, however it was installed. The last status and check time stay visible
+  with automatic checks off.
 
 ### Changed
 
 - Polish popup visuals: provider detail section titles use the same heading
   style as sibling sections, detail meters use the compact meter height, usage
   rows keep whole-pixel spacing, Spend history menus use the plain-text menu
-  items, and the cost chart shows a focus ring when reached with Tab.
+  items, the cost chart shows a focus ring when reached with Tab, and the cost
+  "Show details" toggle uses the same disclosure arrow as the other popup
+  sections.
 - Follow the KDE text guidelines for ellipses: labels that open a dialog or
   report progress use the "…" character instead of three periods, the provider
   search field reads "Search providers", and the empty popup heading drops its
@@ -34,6 +38,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Compact token counts use the regional decimal mark, like the costs beside
+  them: an Italian, German, French, Spanish, or Brazilian Portuguese locale
+  shows "1,5K tokens" next to "$1.234,50" instead of "1.5K tokens".
 - Keep a custom usage refresh interval of 1000 seconds or more. The settings
   field shows it with a locale group separator, such as "1,200 seconds", and
   leaving the field read only the leading "1", so the widget refreshed every

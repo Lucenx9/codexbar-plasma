@@ -1877,7 +1877,7 @@ Item {
                     "singular dashboard count translation failed");
                 verifyScenario(applet.usageCountText(2, unit) === "2 " + plural, "plural count translation failed");
                 verifyScenario(applet.usageCountText(1000, unit) === "1K " + plural, "compact count translation failed");
-                verifyScenario(applet.usageCountText(4294967297, unit) === "4.3B " + plural,
+                verifyScenario(applet.usageCountText(4294967297, unit) === "4" + Qt.locale().decimalPoint + "3B " + plural,
                     "large count overflowed the plural argument");
             }
             var oneToken = "1 " + countLabels[0][0];

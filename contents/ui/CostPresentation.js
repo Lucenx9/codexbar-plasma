@@ -112,11 +112,15 @@ function amountString(fmt, value, currency) {
     return (negative ? "-" : "") + code + " " + amount
 }
 
-function scaledTokenCount(value) {
+// Compact counts use the caller's decimal mark, like costs on the same line:
+// "1,5K" beside "1.234,50" instead of the C-locale "1.5K".
+function scaledTokenCount(value, fmt) {
     if (value >= 10) {
         return Number(value).toFixed(0)
     }
-    return Number(value).toFixed(1).replace(/\.0$/, "")
+    var f = fmt && typeof fmt === "object" ? fmt : numberFormat()
+    var decPoint = typeof f.decimal === "string" ? f.decimal : "."
+    return Number(value).toFixed(1).replace(/\.0$/, "").replace(".", decPoint)
 }
 
 // Credit balances are plain counts: a whole balance keeps no fractional part,
@@ -144,7 +148,7 @@ function formatCount(fmt, value) {
     return (numeric < 0 && text !== "0" ? "-" : "") + text
 }
 
-function tokenCountString(tokens) {
+function tokenCountString(tokens, fmt) {
     var value = Number(tokens)
     if (!isFinite(value)) {
         return "-"
@@ -155,13 +159,13 @@ function tokenCountString(tokens) {
     // across a threshold promotes ("1M") instead of printing an overflowing
     // unit ("1000K").
     if (Math.round(absValue / 1000000) >= 1000) {
-        return sign + scaledTokenCount(absValue / 1000000000) + "B"
+        return sign + scaledTokenCount(absValue / 1000000000, fmt) + "B"
     }
     if (Math.round(absValue / 1000) >= 1000) {
-        return sign + scaledTokenCount(absValue / 1000000) + "M"
+        return sign + scaledTokenCount(absValue / 1000000, fmt) + "M"
     }
     if (Math.round(absValue) >= 1000) {
-        return sign + scaledTokenCount(absValue / 1000) + "K"
+        return sign + scaledTokenCount(absValue / 1000, fmt) + "K"
     }
     return Math.round(value).toString()
 }
@@ -290,7 +294,7 @@ function sparklineMax(points, showsTokens) {
 
 function metricText(fmt, magnitude, currency, showsTokens) {
     return showsTokens
-        ? tokenCountString(magnitude)
+        ? tokenCountString(magnitude, fmt)
         : amountString(fmt, magnitude, currency || "USD")
 }
 
@@ -399,7 +403,7 @@ function sparklineSummary(fmt, points, showsTokens) {
 
 // `entries` is an ordered list of `{ label, tokens }`. Rows with no positive
 // token count are dropped rather than printed as zero.
-function breakdownRows(entries) {
+function breakdownRows(entries, fmt) {
     var rows = []
     if (!Array.isArray(entries)) {
         return rows
@@ -415,7 +419,7 @@ function breakdownRows(entries) {
         }
         rows.push({
             label: entry.label,
-            value: tokenCountString(value)
+            value: tokenCountString(value, fmt)
         })
     }
     return rows
@@ -428,7 +432,7 @@ function amountSummary(fmt, amounts, tokensTextFor) {
         values.push(amountString(fmt, amounts.cost, amounts.currency))
     }
     if (hasMetricValue(amounts, true)) {
-        values.push(tokensTextFor ? tokensTextFor(amounts.tokens) : tokenCountString(amounts.tokens))
+        values.push(tokensTextFor ? tokensTextFor(amounts.tokens) : tokenCountString(amounts.tokens, fmt))
     }
     return values.length > 0 ? values.join(" · ") : "-"
 }

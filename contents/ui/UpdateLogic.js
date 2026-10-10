@@ -37,6 +37,55 @@ function lastCheckMs(value) {
     return isFinite(parsed) ? parsed : NaN
 }
 
+function normalizedVersion(value) {
+    var text = typeof value === "string" ? value.trim() : ""
+    return text.charAt(0) === "v" || text.charAt(0) === "V" ? text.substring(1) : text
+}
+
+// Numeric dotted versions compare like the updater's `sort -V`; anything else
+// returns null so callers do not guess an order for custom version strings.
+function compareNumericVersions(left, right) {
+    var pattern = /^[0-9]+(\.[0-9]+)*$/
+    if (!pattern.test(left) || !pattern.test(right)) {
+        return null
+    }
+    var leftParts = left.split(".")
+    var rightParts = right.split(".")
+    var length = Math.max(leftParts.length, rightParts.length)
+    for (var index = 0; index < length; ++index) {
+        if (index >= leftParts.length) {
+            return -1
+        }
+        if (index >= rightParts.length) {
+            return 1
+        }
+        var difference = Number(leftParts[index]) - Number(rightParts[index])
+        if (difference !== 0) {
+            return difference < 0 ? -1 : 1
+        }
+    }
+    return 0
+}
+
+// Restores a persisted "update available" version only while it is still newer
+// than the running widget, so a release installed another way is not offered.
+function restoredAvailableVersion(persistedVersion, installedVersion) {
+    var persisted = boundedString(persistedVersion, maximumVersionLength).trim()
+    if (persisted.length === 0) {
+        return ""
+    }
+    var installed = normalizedVersion(boundedString(installedVersion, maximumVersionLength))
+    if (installed.length === 0) {
+        return persisted
+    }
+    var candidate = normalizedVersion(persisted)
+    if (candidate === installed) {
+        return ""
+    }
+    var order = compareNumericVersions(candidate, installed)
+    return order !== null && order <= 0 ? "" : persisted
+}
+
 function updateCheckDue(updateChecksEnabled, lastCheck, intervalHours, nowMs, forceCheck) {
     if (!updateChecksEnabled) {
         return false

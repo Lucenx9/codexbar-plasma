@@ -71,7 +71,8 @@ to the QML that gives the message its context.
   language's `Plural-Forms` header accurate.
 - Integer token, request, and point counts use plural messages. The separate
   `%1 tokens`, `%1 requests`, and `%1 points` entries format compact counts such
-  as `1K` and `4.3B`. Keep those abbreviations in the numbered argument; do not
+  as `1K` and `4.3B` (`4,3B` with a comma decimal mark). Keep those
+  abbreviations in the numbered argument; do not
   treat the leading `1` as a singular count.
   `components/CostText.qml` owns these counts, cost-period and qualification
   labels, spend totals, and semantic legacy-dashboard text. Number formatting
