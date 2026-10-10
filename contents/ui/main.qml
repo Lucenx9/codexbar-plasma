@@ -2119,6 +2119,7 @@ PlasmoidItem {
         autoUpdateIntervalHours: isFinite(Number(Plasmoid.configuration.autoUpdateIntervalHours))
             ? Math.max(1, Math.min(168, Number(Plasmoid.configuration.autoUpdateIntervalHours))) : 24
         autoUpdateLastCheck: Plasmoid.configuration.autoUpdateLastCheck || ""
+        initialAvailableVersion: Plasmoid.configuration.widgetUpdateAvailableVersion || ""
 
         onStatusRecorded: function(statusText, errorText, availableVersion) {
             Plasmoid.configuration.widgetUpdateLastStatus = statusText

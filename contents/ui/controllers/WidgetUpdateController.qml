@@ -13,6 +13,8 @@ Item {
     property bool autoUpdateEnabled: false
     property int autoUpdateIntervalHours: 24
     property string autoUpdateLastCheck: ""
+    // Restores the persisted release so a failed install after a restart keeps it.
+    property string initialAvailableVersion: ""
     property url scriptUrl: Qt.resolvedUrl("../../../scripts/update-widget.sh")
 
     readonly property bool busy: lifecycle.connectedUpdateCommandSource.length > 0
@@ -72,6 +74,7 @@ Item {
         }
     }
     Component.onCompleted: {
+        lifecycle.availableVersion = initialAvailableVersion;
         lifecycle.initialized = true;
         if (updateChecksEnabled) {
             lifecycle.scheduleNextUpdateCheck();
