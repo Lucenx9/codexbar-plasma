@@ -205,11 +205,21 @@ synchronized.
   boundary decision and contracts; keep it current with any change.
 - `contents/ui/controllers/WidgetUpdateController.qml` owns the widget updater's
   executable source, per-request nonce, captured install mode, timeout, queued
-  install request, and retry/interval timers. It receives update settings and
-  the last successful check timestamp. Its `checkNow()` entry point still
-  respects disabled checks. Startup checks respect the saved successful-check
+  install request, and retry/interval timers. It receives update settings, the
+  last successful check timestamp, and `initialAvailableVersion`, which restores
+  a persisted release so a failed install stays retryable after a restart.
+  `checkNow()` is the forced automatic entry point and still respects disabled
+  checks; `runNow(install)` is the manual one and deliberately ignores both
+  check and auto-install settings, so a user can update on demand while
+  automatic checks are off. Startup checks respect the saved successful-check
   timestamp and configured interval; first use and overdue checks run immediately.
   Manual checks still bypass the interval while coalescing active requests.
+  The applet services the settings page's `widgetUpdateRequest` runtime key
+  through `runNow()`, marks an accepted request `running:<mode>`, and clears it
+  when the controller's `busy` drops through `onBusyChanged`, because the
+  controller settles `busy` inside its own completion handling. That deferred
+  clear is the only path that releases a finished run's marker, and the settings
+  page binds both update buttons to that key being empty.
   `main.qml` persists its status and successful-check
   signals and forwards available/installed events to
   `UpdateNotificationsController.qml`, preserving the existing privacy and
@@ -908,9 +918,10 @@ substitute is the script URL; it neither contacts GitHub nor installs a release.
 Missing optional KDE QML modules produce an explicit local test skip;
 `QML_TEST_REQUIRE_NO_SKIPS=1` rejects that skip in CI. A runner failure remains
 a failure even if its output also contains a skip.
-The module's interface is settings, `checkNow()`, read-only runtime status, and
-result signals. The script URL is a local executable dependency, not a widget
-setting. Internal request state and timers remain inside the module.
+The module's interface is settings, `checkNow()`, `runNow(install)`, read-only
+runtime status, and result signals. The script URL is a local executable
+dependency, not a widget setting. Internal request state and timers remain
+inside the module.
 
 The panel mirror check waits for a rendered frame before and after direction
 changes. Fixture cleanup also waits for the KDE style transition duration before
