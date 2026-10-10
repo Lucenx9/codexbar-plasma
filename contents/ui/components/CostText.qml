@@ -174,7 +174,7 @@ QtObject {
     }
 
     function usageCountText(value, unit) {
-        var text = CostPresentation.tokenCountString(value)
+        var text = CostPresentation.tokenCountString(value, root.numberFormat)
         var count = Number(text)
         // Compact counts such as 1K keep their own translation. Only the small
         // displayed integers go through KI18n's integer plural argument.
@@ -209,6 +209,6 @@ QtObject {
     }
 
     function tokenCountString(tokens) {
-        return CostPresentation.tokenCountString(tokens)
+        return CostPresentation.tokenCountString(tokens, root.numberFormat)
     }
 }

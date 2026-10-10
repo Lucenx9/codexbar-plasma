@@ -462,7 +462,8 @@ and clipboard content remain under your control after closing the window.
   coverage is still being established, every displayed week reads "at least"
   even if its recorded days have numeric amounts.
 - Token, request, and point counts use the current language's singular and
-  plural forms. Large counts retain compact notation such as `1K` and `4.3B`.
+  plural forms. Large counts retain compact notation such as `1K` and `4.3B`,
+  with the regional decimal mark that costs use, such as `4,3B` in Italian.
 - Cost totals qualified as estimated, partial, or approximate from the CLI's
   bounded pricing coverage and provenance metadata.
 - Project cost and token totals in **Usage & Spend**, ranked within each provider
@@ -614,9 +615,10 @@ fields; track proposed extensions in the issue tracker.
   last successful check; first use and overdue checks run immediately.
   **Check for widget updates now** checks on demand, even with automatic checks
   off. When a check finds a newer release, **Install update** installs it like
-  an automatic update; it stays available after a failed attempt. The applet
-  runs both actions, so closing the settings window does not stop them. The update notification opens the
-  release page on GitHub when clicked, where supported.
+  an automatic update; it stays available after a failed attempt, until the
+  widget runs that release or a newer one after a restart. The applet runs both
+  actions, so closing the settings window does not stop them. The update
+  notification opens the release page on GitHub when clicked, where supported.
   Failed upgrades restore the previous widget package so installation can be
   retried. A failed first installation removes its partial package.
 

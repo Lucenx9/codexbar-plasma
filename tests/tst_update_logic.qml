@@ -298,4 +298,26 @@ TestCase {
             assetUrl: "file:///tmp/widget"
         }, false).assetUrl, "")
     }
+
+    // A release installed outside the updater must not keep offering itself.
+    function test_restoredAvailableVersionDropsReleasesThatAreNotNewer_data() {
+        return [
+            {tag: "same", persisted: "0.2.47", installed: "0.2.47", expected: ""},
+            {tag: "same-with-prefix", persisted: "v0.2.47", installed: "0.2.47", expected: ""},
+            {tag: "older", persisted: "0.2.47", installed: "0.2.48", expected: ""},
+            {tag: "numeric-not-lexical", persisted: "0.2.9", installed: "0.2.10", expected: ""},
+            {tag: "newer", persisted: "0.2.47", installed: "0.2.46", expected: "0.2.47"},
+            {tag: "newer-numeric", persisted: "0.2.10", installed: "0.2.9", expected: "0.2.10"},
+            {tag: "longer-newer", persisted: "0.2.46.1", installed: "0.2.46", expected: "0.2.46.1"},
+            {tag: "unknown-installed", persisted: "0.2.47", installed: "", expected: "0.2.47"},
+            {tag: "custom-installed", persisted: "0.2.47", installed: "0.2.46-dev", expected: "0.2.47"},
+            {tag: "blank", persisted: "   ", installed: "0.2.46", expected: ""},
+            {tag: "not-a-string", persisted: {version: "0.2.47"}, installed: "0.2.46", expected: ""},
+            {tag: "oversized", persisted: "9".repeat(129), installed: "0.2.46", expected: ""}
+        ]
+    }
+
+    function test_restoredAvailableVersionDropsReleasesThatAreNotNewer(data) {
+        compare(UpdateLogic.restoredAvailableVersion(data.persisted, data.installed), data.expected)
+    }
 }
