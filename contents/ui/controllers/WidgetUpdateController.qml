@@ -306,14 +306,14 @@ Item {
                 setWidgetUpdateState(i18n("Widget update check failed."), widgetUpdateErrorText(intent.errorCode, intent.errorDetail));
                 return;
             case "available":
-                var availableStatus = intent.version.length > 0 ? i18n("Widget update %1 is available.", intent.version) : i18n("A widget update is available.");
+                const availableStatus = intent.version.length > 0 ? i18n("Widget update %1 is available.", intent.version) : i18n("A widget update is available.");
                 setWidgetUpdateState(availableStatus, "");
                 if (intent.notificationKind === "available") {
                     controller.updateAvailable(intent.version, intent.assetUrl, intent.releaseUrl);
                 }
                 return;
             case "installed":
-                var restartText = i18n("Restart Plasma to apply the new widget version.");
+                const restartText = i18n("Restart Plasma to apply the new widget version.");
                 setWidgetUpdateState(intent.version.length > 0 ? i18n("Widget update %1 installed. %2", intent.version, restartText) : i18n("Widget update installed. %1", restartText), "");
                 if (intent.notificationKind === "installed") {
                     controller.updateInstalled(intent.version);

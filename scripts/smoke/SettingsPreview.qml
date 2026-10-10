@@ -35,8 +35,10 @@ Rectangle {
             }
             // General only edits a pending text field; other pages keep the
             // synthetic executable supplied before Component.onCompleted.
+            // Set it before `ready` can be observed; `page` is untyped, so the
+            // page's own property needs no cast.
             if (preview.pageSource === "configDiagnostics.qml")
-                item.cfg_commandPath = "codexbar";
+                preview.page.cfg_commandPath = "codexbar";
         }
     }
 }

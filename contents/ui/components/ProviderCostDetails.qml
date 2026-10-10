@@ -41,7 +41,7 @@ QtObject {
             result.spendLine = i18n("Balance: %1", section.kind === "pointsBalance"
                 ? Math.round(section.used) : amountString(section.used, section.currency))
         } else {
-            var period = section.period === null ? i18n("This month") : localizedPeriod(section.period)
+            const period = section.period === null ? i18n("This month") : localizedPeriod(section.period)
             if (section.kind === "allowance") {
                 result.spendLine = i18n("%1: %2 / %3", period,
                     amountString(section.used, section.currency), amountString(section.limit, section.currency))
