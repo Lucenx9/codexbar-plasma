@@ -353,7 +353,7 @@ Provider-specific editable settings depend on the official CLI contract.
 - Generic API key setup for Fireworks, when the selected CLI reports version
   0.54.0 or later and can discover the account slug from the key.
 - Fallback names, icons, and documentation links for all 91 providers in the
-  official CodexBar 0.72.0 registry, plus colors, links, and aliases where
+  official CodexBar 0.73.0 registry, plus colors, links, and aliases where
   upstream defines them; fork-only provider assets, and those for providers a
   later CLI retired, remain available for compatibility.
   Providers without bundled artwork use the theme's generic statistics icon

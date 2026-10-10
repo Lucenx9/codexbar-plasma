@@ -60,6 +60,7 @@ QtObject {
             "kimi": i18n("Kimi Code"),
             "kimik2": i18n("Kimi K2 (unofficial)"),
             "kiro": i18n("Kiro"),
+            "langdock": i18n("Langdock"),
             "litellm": i18n("LiteLLM"),
             "lithosai": i18n("LithosAI"),
             "llmman": i18n("llmman"),

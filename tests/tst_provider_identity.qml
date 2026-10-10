@@ -285,6 +285,27 @@ TestCase {
         }
     }
 
+    function test_official0730RegistryProviderHasBundledMetadata() {
+        // Official 0.73.0 addition in `config providers` output, with the
+        // upstream descriptor color and dashboard and no status page.
+        // Langdock is browser-profile only with a macOS-only web source on Linux.
+        var added = {
+            "langdock": { dashboard: "https://app.langdock.com/settings/account/usage",
+                channels: [90 / 255, 74 / 255, 231 / 255] }
+        };
+        for (var key in added) {
+            compare(ProviderIdentity.providerIconFileName(key), key + ".svg");
+            compare(ProviderIdentity.providerDocsUrl(key),
+                ProviderIdentity.documentationBaseUrl + key + ".md");
+            compare(ProviderIdentity.providerDashboardUrl(key), added[key].dashboard);
+            compare(ProviderIdentity.providerBrandColorChannels(key), added[key].channels);
+            compare(ProviderIdentity.providerStatusUrl(key), "");
+            compare(ProviderIdentity.providerLoginUrl(key), "");
+            compare(ProviderIdentity.resolveProviderKey(key), key);
+            compare(ProviderIdentity.providerCliArgument(key), key);
+        }
+    }
+
     function test_retiredCrofKeepsBundledMetadataForOlderCliReleases() {
         // 0.64.1 retired Crof, but an installed 0.63.0 still emits it. Dropping
         // the metadata would turn a named provider into the unknown fallback

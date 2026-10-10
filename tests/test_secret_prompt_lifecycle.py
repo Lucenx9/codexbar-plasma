@@ -723,6 +723,9 @@ TestCase {
         compare(supportsApiKeySetup("museai"), false);
         compare(supportsApiKeySetup("lithosai"), false);
         compare(supportsApiKeySetup("workbuddy"), false);
+        // CLI 0.73.0 refuses config API keys for Langdock, which needs a
+        // macOS-only browser-profile web source on Linux.
+        compare(supportsApiKeySetup("langdock"), false);
         // CLI 0.67.0 rejects ten more providers with the same message.
         compare(supportsApiKeySetup("alibabatokenplan"), false);
         compare(supportsApiKeySetup("bedrock"), false);

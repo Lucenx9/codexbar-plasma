@@ -1,4 +1,8 @@
-<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="100" height="100" rx="20" fill="currentColor"/>
-<text x="50" y="65" font-family="system-ui, sans-serif" font-size="40" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">LD</text>
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Original speech-bubble-over-a-dock glyph for Langdock; no vendor mark. -->
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+  <path d="M6 3h12a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-7l-4 3v-3H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
+  <path d="M2 19h20"/>
+  <path d="M6 19v2"/>
+  <path d="M18 19v2"/>
 </svg>

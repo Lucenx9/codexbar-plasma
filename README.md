@@ -171,7 +171,7 @@ themes.
   selected through your Plasma language preferences.
 
 Provider authentication and data support come from the CLI. The widget includes
-fallback metadata for all 91 providers in the official CodexBar 0.72.0 registry,
+fallback metadata for all 91 providers in the official CodexBar 0.73.0 registry,
 covering names, icons, and documentation links, with brand colors and dashboard
 and status links where upstream defines them. Available metrics and setup
 actions vary by provider. The proposed generic provider-settings descriptor is

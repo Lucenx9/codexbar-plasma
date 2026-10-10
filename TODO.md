@@ -85,12 +85,6 @@ Issues linked below preserve discussion; this file owns parity status.
   override, and test failure, clearing, cancellation, and stale replies.
   Generic descriptors remain unavailable; this writer resolves only source
   persistence. [Verified contract](docs/research/2026-10-07-macos-parity-0.73.0.md#linux-cli-contract-changes-since-0720).
-- [ ] Bundle Langdock fallback name, original icon, links, and brand color from
-  official 0.73.0. The CLI supplies its name in the 91-provider registry and
-  Plasma accepts unknown providers with a generic icon; Langdock's fetch and
-  browser-profile setup remain macOS-only. Done when static metadata is tested
-  and documented without exposing an unsupported API-key action.
-  [Verified reachability](docs/research/2026-10-07-macos-parity-0.73.0.md#linux-cli-contract-changes-since-0720).
 
 ## Blocked on official Linux CLI contracts
 
