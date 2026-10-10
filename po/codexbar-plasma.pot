@@ -2279,6 +2279,14 @@ msgid "Install widget updates automatically"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
+msgid "Check for widget updates now"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Install update %1"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
 msgid "Last update status: %1"
 msgstr ""
 

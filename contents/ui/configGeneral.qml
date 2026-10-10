@@ -185,6 +185,11 @@ KCM.SimpleKCM {
         ? Plasmoid.configuration.widgetUpdateLastStatus || "" : ""
     readonly property string widgetUpdateLastError: Plasmoid.configuration
         ? Plasmoid.configuration.widgetUpdateLastError || "" : ""
+    readonly property string widgetUpdateAvailableVersion: Plasmoid.configuration
+        ? Plasmoid.configuration.widgetUpdateAvailableVersion || "" : ""
+    // The applet runs manual updates and clears this request when it finishes.
+    readonly property bool widgetUpdateBusy: Plasmoid.configuration
+        ? (Plasmoid.configuration.widgetUpdateRequest || "").length > 0 : false
     // Two-step install confirmation; the confirm block hides itself once the
     // install starts or the selection leaves the install state.
     property bool managedInstallConfirming: false
@@ -649,11 +654,35 @@ KCM.SimpleKCM {
             }
         }
 
+        RowLayout {
+            Controls.Button {
+                objectName: "checkWidgetUpdateButton"
+                text: i18n("Check for widget updates now")
+                icon.name: "view-refresh"
+                enabled: !page.widgetUpdateBusy
+                onClicked: Plasmoid.configuration.widgetUpdateRequest = "check"
+            }
+            Controls.Button {
+                objectName: "installWidgetUpdateButton"
+                text: i18n("Install update %1", page.widgetUpdateAvailableVersion)
+                icon.name: "download"
+                visible: page.widgetUpdateAvailableVersion.length > 0
+                enabled: !page.widgetUpdateBusy
+                onClicked: Plasmoid.configuration.widgetUpdateRequest = "install"
+            }
+            Controls.BusyIndicator {
+                running: page.widgetUpdateBusy
+                opacity: running ? 1 : 0
+                Layout.preferredWidth: Kirigami.Units.iconSizes.small
+                Layout.preferredHeight: Kirigami.Units.iconSizes.small
+            }
+        }
+
         Components.PlainControlsLabel {
             id: lastUpdateCheckLabel
 
             text: page.lastUpdateCheckText(autoUpdateLastCheck)
-            visible: updateChecksEnabledCheck.checked
+            visible: updateChecksEnabledCheck.checked || autoUpdateLastCheck.length > 0
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true
@@ -666,7 +695,7 @@ KCM.SimpleKCM {
             id: lastUpdateStatusLabel
 
             text: i18n("Last update status: %1", widgetUpdateLastStatus)
-            visible: updateChecksEnabledCheck.checked && widgetUpdateLastStatus.length > 0
+            visible: widgetUpdateLastStatus.length > 0
             font: Kirigami.Theme.smallFont
             opacity: 0.7
             Layout.fillWidth: true
@@ -681,7 +710,7 @@ KCM.SimpleKCM {
             Layout.maximumWidth: Kirigami.Units.gridUnit * 24
             type: Kirigami.MessageType.Error
             plainText: widgetUpdateLastError.slice(0, 500)
-            visible: updateChecksEnabledCheck.checked && widgetUpdateLastError.length > 0
+            visible: widgetUpdateLastError.length > 0
         }
 
         Kirigami.Separator {

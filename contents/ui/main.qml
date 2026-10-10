@@ -236,6 +236,7 @@ PlasmoidItem {
 
     Component.onCompleted: {
         usageLifecycleInitialized = true
+        Qt.callLater(serviceWidgetUpdateRequest)
     }
 
     function safeMenuBarDisplayMode(value) {
@@ -1285,6 +1286,28 @@ PlasmoidItem {
         return updateNotifications.send(title, body, urgency, actionLabel)
     }
 
+    // Settings request manual widget updates through this runtime key, and the
+    // applet runs them, so closing the dialog cannot cut an install short.
+    readonly property string widgetUpdateRequest: Plasmoid.configuration.widgetUpdateRequest || ""
+    onWidgetUpdateRequestChanged: serviceWidgetUpdateRequest()
+
+    function serviceWidgetUpdateRequest() {
+        var request = widgetUpdateRequest
+        if (widgetUpdater.busy || request.length === 0) {
+            return
+        }
+        if (request === "check" || request === "install") {
+            // Start first: busy then keeps the marker write below from re-entering.
+            widgetUpdater.runNow(request === "install")
+            if (widgetUpdater.busy) {
+                Plasmoid.configuration.widgetUpdateRequest = "running:" + request
+                return
+            }
+        }
+        // A finished run, a stale marker from a previous session, or junk.
+        Plasmoid.configuration.widgetUpdateRequest = ""
+    }
+
     function notifyAvailableUpdate(version, url, releaseUrl) {
         updateNotifications.notifyAvailableUpdate(version, url, releaseUrl)
     }
@@ -2090,16 +2113,21 @@ PlasmoidItem {
     }
 
     Controllers.WidgetUpdateController {
+        id: widgetUpdater
         updateChecksEnabled: Plasmoid.configuration.updateChecksEnabled !== false
         autoUpdateEnabled: Plasmoid.configuration.autoUpdateEnabled === true
         autoUpdateIntervalHours: isFinite(Number(Plasmoid.configuration.autoUpdateIntervalHours))
             ? Math.max(1, Math.min(168, Number(Plasmoid.configuration.autoUpdateIntervalHours))) : 24
         autoUpdateLastCheck: Plasmoid.configuration.autoUpdateLastCheck || ""
+        initialAvailableVersion: Plasmoid.configuration.widgetUpdateAvailableVersion || ""
 
-        onStatusRecorded: function(statusText, errorText) {
+        onStatusRecorded: function(statusText, errorText, availableVersion) {
             Plasmoid.configuration.widgetUpdateLastStatus = statusText
             Plasmoid.configuration.widgetUpdateLastError = errorText
+            Plasmoid.configuration.widgetUpdateAvailableVersion = availableVersion
         }
+        // Deferred: busy drops inside the controller's own completion handling.
+        onBusyChanged: if (!busy) Qt.callLater(root.serviceWidgetUpdateRequest)
         onCheckSucceeded: function(timestamp) {
             Plasmoid.configuration.autoUpdateLastCheck = timestamp
         }

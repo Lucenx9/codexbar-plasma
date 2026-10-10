@@ -930,7 +930,7 @@ require_all(updater_text, (
     "CommandLedger.withRunNonce(buildUpdateCommand(installMode), commandRunSerial)",
     "if (sourceName !== connectedUpdateCommandSource)",
     "SafeText.cliJsonText(rawStdoutText)",
-    "controller.statusRecorded(updateStatusText, updateErrorText)",
+    "controller.statusRecorded(updateStatusText, updateErrorText, availableVersion)",
     "controller.updateAvailable(intent.version, intent.assetUrl, intent.releaseUrl)",
     "controller.updateInstalled(intent.version)",
 ), "the updater must preserve its packaged script, request identity, validation, and events")

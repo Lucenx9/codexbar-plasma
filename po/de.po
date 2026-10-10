@@ -1987,6 +1987,14 @@ msgid "Install widget updates automatically"
 msgstr "Miniprogramm automatisch aktualisieren"
 
 #: contents/ui/configGeneral.qml
+msgid "Install update %1"
+msgstr "Aktualisierung %1 installieren"
+
+#: contents/ui/configGeneral.qml
+msgid "Check for widget updates now"
+msgstr "Jetzt nach Aktualisierungen des Miniprogramms suchen"
+
+#: contents/ui/configGeneral.qml
 msgid "Last update status: %1"
 msgstr "Letzter Aktualisierungsstatus: %1"
 

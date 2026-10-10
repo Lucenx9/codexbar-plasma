@@ -56,6 +56,35 @@ TestCase {
         verify(!updater.busy);
         compare(recorded.count, 0);
     }
+    // Manual runs work with every automatic setting off and never schedule more work.
+    function test_manualRunsIgnoreDisabledChecks() {
+        var updater = create("normal");
+        updater.runNow(false);
+        verify(updater.busy);
+        tryCompare(available, "count", 1);
+        tryCompare(updater, "busy", false);
+        compare(updater.availableVersion, "2.0");
+        compare(recorded.signalArguments[0][2], "2.0");
+        updater.runNow(true);
+        tryCompare(installed, "count", 1);
+        tryCompare(updater, "busy", false);
+        compare(updater.availableVersion, "");
+        compare(succeeded.count, 2);
+        compare(updater.statusText, "Widget update 2.0 installed. Restart Plasma to apply the new widget version.");
+        wait(350);
+        compare(succeeded.count, 2);
+    }
+    // The release found before a restart stays installable after a failed attempt.
+    function test_failedManualInstallKeepsTheFoundRelease() {
+        var updater = create("installfail", {initialAvailableVersion: "2.0"});
+        compare(updater.availableVersion, "2.0");
+        updater.runNow(true);
+        tryCompare(recorded, "count", 1);
+        tryCompare(updater, "busy", false);
+        verify(updater.errorText.length > 0);
+        compare(updater.availableVersion, "2.0");
+        compare(recorded.signalArguments[0][2], "2.0");
+    }
     function test_startupChecksWhenDue_data() {
         return [{tag: "first", timestamp: ""},
                 {tag: "overdue", timestamp: new Date(Date.now() - 25 * 3600000).toISOString()},
@@ -194,6 +223,8 @@ class WidgetUpdateControllerTests(unittest.TestCase):
             directory = Path(temporary)
             scripts = {
                 "normal": NORMAL, "queued": NORMAL, "disable": NORMAL,
+                "installfail": NORMAL.replace('{"status":"installed","remoteVersion":"2.0"}',
+                                              '{"status":"error","errorCode":"release_download_failed"}'),
                 "captured": '#!/bin/sh\nsleep 0.2\nprintf \'%s\\n\' \'{"status":"available","remoteVersion":"2.0"}\'\n',
                 "malformed": '#!/bin/sh\nprintf \'%s\\n\' \'{broken\'\n',
                 "structured": '#!/bin/sh\nprintf \'%s\\n\' \'{"status":"error","errorCode":"missing_tool","errorDetail":"jq"}\'\n',

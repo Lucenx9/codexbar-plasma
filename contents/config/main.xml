@@ -159,6 +159,14 @@
       <label>Last widget update error.</label>
       <default></default>
     </entry>
+    <entry name="widgetUpdateAvailableVersion" type="String">
+      <label>Newer widget version found by the last update check.</label>
+      <default></default>
+    </entry>
+    <entry name="widgetUpdateRequest" type="String">
+      <label>Manual widget update requested from settings: check, install, or running:mode.</label>
+      <default></default>
+    </entry>
     <entry name="lastNotifiedUpdateVersion" type="String">
       <label>Last widget version the user was notified about.</label>
       <default></default>
