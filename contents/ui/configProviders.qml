@@ -65,6 +65,8 @@ KCM.SimpleKCM {
     property bool providerSourceSetupSupported: false
     // provider id -> true while an enable/disable command is in flight
     property var pending: ({})
+    // A roster reload requested while a source write runs waits for it to finish.
+    property bool reloadDeferredBySourceWrite: false
     // provider id -> desired enabled value while the CLI command is in flight
     property var pendingDesired: ({})
     property var providerFieldPending: ({})
@@ -120,8 +122,10 @@ KCM.SimpleKCM {
 
     function reload(preserveMessages) {
         if (CommandLedger.hasKind(commands, "setSource")) {
+            reloadDeferredBySourceWrite = true
             return
         }
+        reloadDeferredBySourceWrite = false
         disconnectCommandsByKind("list")
         disconnectCommandsByKind("version")
         fireworksSingleKeySetupSupported = false
@@ -323,7 +327,21 @@ KCM.SimpleKCM {
         pendingDesired = ({})
         providerFieldPending = ({})
         providerDiagnosticLoading = ({})
+        reloadDeferredBySourceWrite = false
         loading = false
+    }
+
+    function runReloadDeferredBySourceWrite() {
+        if (!reloadDeferredBySourceWrite || CommandLedger.hasKind(commands, "setSource")) {
+            return
+        }
+        // Deferred reloads come from completed writes, so keep the source
+        // write's own error visible while the roster refreshes.
+        var sourceWriteError = errorText
+        reload(true)
+        if (errorText.length === 0) {
+            errorText = sourceWriteError
+        }
     }
 
     function runCommand(command, descriptor) {
@@ -381,6 +399,9 @@ KCM.SimpleKCM {
         } else if (descriptor.kind === "setApiKey" || descriptor.kind === "setSource") {
             markPending(descriptor.provider, false)
             errorText = i18n("%1 command timed out. Try again.", displayNameForProvider(descriptor.provider))
+            if (descriptor.kind === "setSource") {
+                runReloadDeferredBySourceWrite()
+            }
         } else if (descriptor.kind === "descriptorField" || descriptor.kind === "descriptorAction") {
             var fieldID = descriptor.kind === "descriptorField" ? descriptor.fieldID : descriptor.actionID
             markFieldPending(descriptor.provider, fieldID, false)
@@ -425,6 +446,11 @@ KCM.SimpleKCM {
     }
 
     function handleSetSourceResult(descriptor, stdoutText, stderrText, exitCode) {
+        applySetSourceResult(descriptor, stdoutText, stderrText, exitCode)
+        runReloadDeferredBySourceWrite()
+    }
+
+    function applySetSourceResult(descriptor, stdoutText, stderrText, exitCode) {
         markPending(descriptor.provider, false)
         var result = parseCommandPayload(stdoutText, stderrText, exitCode)
         if (result.cancelled) {
@@ -867,7 +893,7 @@ KCM.SimpleKCM {
                 icon: descriptorActionIcon(actions[i]),
                 action: "descriptor-action",
                 descriptorAction: actions[i],
-                enabled: !isFieldPending(item.provider, actions[i].id)
+                enabled: !isPending(item.provider) && !isFieldPending(item.provider, actions[i].id)
             })
         }
         if (supportsApiKeySetup(item.provider) && !descriptorHasField(item, "apiKey")) {
@@ -1002,7 +1028,8 @@ KCM.SimpleKCM {
     }
 
     function writeDescriptorField(providerID, field, value) {
-        if (!field || !field.writeCommand || field.writeCommand.length === 0 || isFieldPending(providerID, field.id)) {
+        if (!field || !field.writeCommand || field.writeCommand.length === 0 || isPending(providerID)
+                || isFieldPending(providerID, field.id)) {
             return
         }
         // Every value written here ends up inside a shell command line, and
@@ -1030,7 +1057,8 @@ KCM.SimpleKCM {
     }
 
     function promptDescriptorSecret(providerID, field) {
-        if (!field || !field.writeCommand || field.writeCommand.length === 0 || isFieldPending(providerID, field.id)) {
+        if (!field || !field.writeCommand || field.writeCommand.length === 0 || isPending(providerID)
+                || isFieldPending(providerID, field.id)) {
             return
         }
         var plan = ProviderDescriptor.planSecretPrompt(field, commandPath)
@@ -1068,7 +1096,8 @@ KCM.SimpleKCM {
     }
 
     function runDescriptorAction(providerID, action) {
-        if (!action || !action.command || action.command.length === 0 || isFieldPending(providerID, action.id)) {
+        if (!action || !action.command || action.command.length === 0 || isPending(providerID)
+                || isFieldPending(providerID, action.id)) {
             return
         }
         var plan = ProviderDescriptor.planAction(action, commandPath)
@@ -1671,7 +1700,8 @@ KCM.SimpleKCM {
                             delegate: ProviderConfig.ProviderDescriptorField {
                                 providerAvailable: page.selectedProvider !== null
                                 writePending: page.selectedProvider !== null
-                                    && page.isFieldPending(page.selectedProvider.provider, modelData.id)
+                                    && (page.isPending(page.selectedProvider.provider)
+                                        || page.isFieldPending(page.selectedProvider.provider, modelData.id))
                                 secondaryTextOpacity: page.secondaryTextOpacity
                                 onWriteRequested: function(field, value) {
                                     if (page.selectedProvider)

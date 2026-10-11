@@ -17,6 +17,7 @@ import "SOURCE_URL/config/ProviderSource.js" as ProviderSource
 import "SOURCE_URL/config/ProviderConfigProtocol.js" as ProviderConfigProtocol
 import "SOURCE_URL/CommandLedger.js" as CommandLedger
 import "SOURCE_URL/Guards.js" as Guards
+import "SOURCE_URL/config/ProviderDescriptor.js" as ProviderDescriptor
 TestCase {
     name: "ProviderSourceWrites"
     Component {
@@ -26,6 +27,11 @@ TestCase {
             property bool providerSourceSetupSupported: true
             property bool fireworksSingleKeySetupSupported: false
             property int configCommandTimeoutMs: 60000
+            property int configSecretPromptTimeoutMs: 60000
+            property real configSecretPromptDialogTimeoutSeconds: 30
+            property real configSecretPromptDialogKillAfterSeconds: 1
+            property real configSecretCommandTimeoutSeconds: 20
+            property real configSecretCommandKillAfterSeconds: 1
             property int commandRunSerial: 0
             property var commands: ({})
             property var pending: ({})
@@ -33,6 +39,7 @@ TestCase {
             property var providerFieldPending: ({})
             property var providerDiagnosticLoading: ({})
             property bool loading: false
+            property bool reloadDeferredBySourceWrite: false
             property var providers: [{provider: "codex", enabled: false}, {provider: "future", enabled: true}]
             property string selectedProviderID: "codex"
             property string errorText: ""
@@ -190,6 +197,73 @@ TestCase {
         page.handleData(source, JSON.stringify([{error: {message: "Unsupported source"}}]), "", 1);
         compare(page.errorText, "codex: Unsupported source");
     }
+    function sourceResult(mode) {
+        return JSON.stringify({provider: "codex", enabled: false, source: mode});
+    }
+    function textField(provider) {
+        return {id: "name", kind: "text", title: "Name",
+            writeCommand: ["codexbar", "config", "set", "--provider", provider, "{value}"]};
+    }
+    function test_reloadRequestedDuringSourceWriteRunsAfterIt() {
+        var page = createTemporaryObject(harness, this);
+        var source = start(page, "api");
+        // Another provider's descriptor write finished and asked for a roster refresh.
+        page.reload(true);
+        compare(Object.keys(page.commands).length, 1);
+        page.handleData(source, sourceResult("api"), "", 0);
+        compare(CommandLedger.sourcesOfKind(page.commands, "list").length, 1);
+        compare(CommandLedger.sourcesOfKind(page.commands, "version").length, 1);
+        verify(page.loading);
+        compare(page.statusText, "codex setting saved");
+        verify(!page.reloadDeferredBySourceWrite);
+    }
+    function test_deferredReloadKeepsSourceWriteError() {
+        var page = createTemporaryObject(harness, this);
+        var source = start(page, "api");
+        page.reload(true);
+        page.handleData(source, JSON.stringify([{error: {message: "Unsupported source"}}]), "", 1);
+        compare(CommandLedger.sourcesOfKind(page.commands, "list").length, 1);
+        compare(page.errorText, "codex: Unsupported source");
+    }
+    function test_deferredReloadRunsAfterSourceWriteTimeout() {
+        var page = createTemporaryObject(harness, this);
+        start(page, "api");
+        page.reload(true);
+        page.expireConfigCommands(Date.now() + 61000);
+        compare(CommandLedger.sourcesOfKind(page.commands, "list").length, 1);
+        verify(page.errorText.indexOf("timed out") >= 0);
+    }
+    function test_deferredReloadWaitsForEverySourceWrite() {
+        var page = createTemporaryObject(harness, this);
+        var codex = start(page, "api");
+        page.setProviderSource("future", "web");
+        var future = Object.keys(page.commands).filter(function(name) { return name !== codex; })[0];
+        page.reload(true);
+        page.handleData(codex, sourceResult("api"), "", 0);
+        compare(CommandLedger.sourcesOfKind(page.commands, "list").length, 0);
+        page.handleData(future, JSON.stringify({provider: "future", enabled: true, source: "web"}), "", 0);
+        compare(CommandLedger.sourcesOfKind(page.commands, "list").length, 1);
+    }
+    function test_sourceWriteWithoutDeferredReloadDoesNotReload() {
+        var page = createTemporaryObject(harness, this);
+        var source = start(page, "api");
+        page.handleData(source, sourceResult("api"), "", 0);
+        compare(Object.keys(page.commands).length, 0);
+        verify(!page.loading);
+    }
+    function test_sourceWriteBlocksOnlyItsProvidersDescriptorWrites() {
+        var page = createTemporaryObject(harness, this);
+        start(page, "api");
+        page.writeDescriptorField("codex", textField("codex"), "abc");
+        page.promptDescriptorSecret("codex", {id: "apiKey", title: "API key", kind: "secret",
+            writeCommand: ["codexbar", "config", "set-api-key", "--provider", "codex", "--stdin"]});
+        page.runDescriptorAction("codex", {id: "login", command: ["codexbar", "config", "action", "login"]});
+        compare(Object.keys(page.commands).length, 1);
+        compare(Object.keys(page.providerFieldPending).length, 0);
+        page.writeDescriptorField("future", textField("future"), "abc");
+        compare(Object.keys(page.commands).length, 2);
+        verify(page.isFieldPending("future", "name"));
+    }
 }
 '''
 
@@ -199,10 +273,13 @@ class ProviderSourceTests(unittest.TestCase):
         surface = Surface("providers", ROOT)
         names = ("setProviderSource", "handleSetSourceResult", "parseCommandPayload",
                  "providerCommandFailureText", "handleCliVersionResult", "handleData",
+                 "applySetSourceResult", "runReloadDeferredBySourceWrite",
                  "providerByID", "markPending", "isPending", "runCommand", "copyObject",
                  "hasOwnKey", "expireConfigCommands", "handleConfigCommandTimeout",
                  "retireAllConfigCommands", "reload", "disconnectCommandsByKind",
-                 "runProviderListCommand", "runCliVersionCommand")
+                 "runProviderListCommand", "runCliVersionCommand", "writeDescriptorField",
+                 "promptDescriptorSecret", "runDescriptorAction", "isFieldPending",
+                 "markFieldPending", "descriptorPendingKey", "descriptorPendingFieldKey")
         functions = []
         for name in names:
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
