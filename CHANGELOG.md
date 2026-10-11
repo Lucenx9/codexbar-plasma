@@ -16,7 +16,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   with official CLI 0.73.0 or later. Automatic clears its saved override;
   unsupported modes show the CLI error, and General's global override keeps
   precedence for widget requests. Source saves wait for provider-list reloads
-  and pending descriptor operations for the same provider.
+  and pending descriptor operations for the same provider; that provider's
+  descriptor edits and actions wait for its source save, and a provider-list
+  reload requested during a source save runs once the save finishes.
 - Bundle a fallback name, an original icon, the dashboard and documentation
   links, and the brand color for Langdock, which official CodexBar 0.73.0 adds
   to the registry. It needs a macOS-only browser-profile web source on Linux,

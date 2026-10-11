@@ -218,6 +218,7 @@ TestCase {
     property string errorText: ""
     property string statusText: ""
     property bool loading: false
+    property bool reloadDeferredBySourceWrite: false
     property var providers: []
     property var providerDiagnostics: ({})
     property var providerDiagnosticErrors: ({})
