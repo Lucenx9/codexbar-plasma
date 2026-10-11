@@ -115,9 +115,13 @@ work and upstream contract requirements.
 - Hovering a global or provider tab whose name is cut short, an Overview row whose
   title or detail line is cut short in a narrow popup, an account button
   whose label is cut short, or a provider header title, account, or plan
-  that is cut short, shows the full text in
+  that is cut short, or a provider detail section title, row label or value
+  that is cut short, shows the full displayed text in
   a tooltip. Keyboard focus also reveals the name of a truncated or icon-only
   tab. Text that fits gets no tooltip.
+- Refresh, copy, share, hide and tab-scroll icon buttons show their action
+  labels on keyboard focus as well as hover. The copy confirmation takes
+  precedence over its action label.
 - Overflowing popup tabs have separate scroll buttons and immediate keyboard
   focus reveal, so navigation never covers provider labels. A tab wider than the
   available area stays aligned at its start when focused or selected again.
@@ -563,6 +567,9 @@ fields; track proposed extensions in the issue tracker.
   path has a screen-reader label and supports the form label's keyboard shortcut.
   **Popup** and **Notifications** keep their text and controls still while the
   page opens, including while the Popup provider list arrives.
+- **Popup** helper notes use smaller secondary text beneath the controls.
+  The reorder buttons in **Panel** and **Popup**, and the reload button in
+  **Providers**, reveal their labels on keyboard focus as well as hover.
 - **Panel** starts with the preview, side-by-side Standard/Minimal choices, and
   provider meters. Text and controls keep their horizontal position as the page
   opens. **Additional information** contains the selected provider's

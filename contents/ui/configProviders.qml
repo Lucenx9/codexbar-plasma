@@ -1270,7 +1270,7 @@ KCM.SimpleKCM {
                 Components.PlainToolTip {
                     parent: reloadProvidersButton
                     plainText: reloadProvidersButton.Accessible.name
-                    visible: reloadProvidersButton.hovered
+                    visible: reloadProvidersButton.hovered || reloadProvidersButton.visualFocus
                     delay: Kirigami.Units.toolTipDelay
                 }
 

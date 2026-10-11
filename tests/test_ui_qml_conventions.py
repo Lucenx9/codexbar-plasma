@@ -61,9 +61,10 @@ class QmlConventionsTest(unittest.TestCase):
         if not code_contains(copyable_value_text, 'valueRow.copied ? "checkmark" : "edit-copy"'):
             raise AssertionError("CopyableValue must provide immediate checkmark icon feedback when copied")
 
-        if not code_contains(copyable_value_text, "visible: copyButton.hovered && !valueRow.copied"):
+        if not code_contains(copyable_value_text,
+                             "visible: (copyButton.hovered || copyButton.visualFocus) && !valueRow.copied"):
             raise AssertionError(
-                "the copy button's hover label must hide while the copied confirmation is "
+                "the copy button's hover/focus label must hide while the copied confirmation is "
                 "shown, so feedback gets its own visibility transition"
             )
         if not code_contains(copyable_value_text, "visible: valueRow.copied"):

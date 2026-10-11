@@ -692,7 +692,7 @@ KCM.SimpleKCM {
                                 Components.PlainToolTip {
                                     parent: panelMoveUp
                                     plainText: panelMoveUp.Accessible.name
-                                    visible: panelMoveUp.hovered
+                                    visible: panelMoveUp.hovered || panelMoveUp.visualFocus
                                     delay: Kirigami.Units.toolTipDelay
                                 }
 
@@ -709,7 +709,7 @@ KCM.SimpleKCM {
                                 Components.PlainToolTip {
                                     parent: panelMoveDown
                                     plainText: panelMoveDown.Accessible.name
-                                    visible: panelMoveDown.hovered
+                                    visible: panelMoveDown.hovered || panelMoveDown.visualFocus
                                     delay: Kirigami.Units.toolTipDelay
                                 }
 

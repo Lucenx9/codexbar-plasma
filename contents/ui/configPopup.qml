@@ -303,6 +303,7 @@ KCM.SimpleKCM {
                 text: page.hiddenDetailProviders.length === 0
                     ? i18n("None. Hide a titled section with its button in the popup.")
                     : i18n("Restore individual sections in the popup, or all sections for a provider here.")
+                font: Kirigami.Theme.smallFont
                 opacity: 0.7
                 wrapMode: Text.WordWrap
             }
@@ -346,6 +347,7 @@ KCM.SimpleKCM {
                 text: page.hiddenUsageRows.length === 0
                     ? i18n("None. Hide a usage row with its button in the popup.")
                     : i18n("Hidden rows stay out of the popup's provider tabs only.")
+                font: Kirigami.Theme.smallFont
                 opacity: 0.7
                 wrapMode: Text.WordWrap
             }
@@ -403,6 +405,7 @@ KCM.SimpleKCM {
                 Layout.fillWidth: true
                 visible: page.providerRosterLoading
                 text: i18n("Loading providers…")
+                font: Kirigami.Theme.smallFont
                 opacity: 0.7
             }
 
@@ -412,6 +415,7 @@ KCM.SimpleKCM {
                     && page.orderedEnabledProviderRoster.length === 0
                     && page.providerRosterError.length === 0
                 text: i18n("No enabled providers available.")
+                font: Kirigami.Theme.smallFont
                 opacity: 0.7
                 wrapMode: Text.WordWrap
             }
@@ -463,7 +467,7 @@ KCM.SimpleKCM {
 
                         Components.PlainToolTip {
                             plainText: providerMoveUp.Accessible.name
-                            visible: providerMoveUp.hovered
+                            visible: providerMoveUp.hovered || providerMoveUp.visualFocus
                             delay: Kirigami.Units.toolTipDelay
                         }
 
@@ -479,7 +483,7 @@ KCM.SimpleKCM {
 
                         Components.PlainToolTip {
                             plainText: providerMoveDown.Accessible.name
-                            visible: providerMoveDown.hovered
+                            visible: providerMoveDown.hovered || providerMoveDown.visualFocus
                             delay: Kirigami.Units.toolTipDelay
                         }
 
@@ -502,6 +506,7 @@ KCM.SimpleKCM {
             Components.PlainControlsLabel {
                 Layout.fillWidth: true
                 text: i18np("Choose up to %1 provider", "Choose up to %1 providers", page.maxOverviewProviders)
+                font: Kirigami.Theme.smallFont
                 opacity: 0.7
                 wrapMode: Text.WordWrap
             }
@@ -510,6 +515,7 @@ KCM.SimpleKCM {
                 Layout.fillWidth: true
                 visible: page.providerRosterLoading
                 text: i18n("Loading providers…")
+                font: Kirigami.Theme.smallFont
                 opacity: 0.7
             }
 
@@ -517,6 +523,7 @@ KCM.SimpleKCM {
                 Layout.fillWidth: true
                 visible: !page.providerRosterLoading && page.enabledProviderRoster.length === 0 && page.providerRosterError.length === 0
                 text: i18n("No enabled providers available for Overview.")
+                font: Kirigami.Theme.smallFont
                 opacity: 0.7
                 wrapMode: Text.WordWrap
             }

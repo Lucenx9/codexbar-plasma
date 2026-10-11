@@ -57,7 +57,7 @@ RowLayout {
         PlainToolTip {
             parent: copyButton
             // A hover label for the button; it keeps the shared delay.
-            visible: copyButton.hovered && !valueRow.copied
+            visible: (copyButton.hovered || copyButton.visualFocus) && !valueRow.copied
             plainText: valueRow.copyAccessibleName
         }
 

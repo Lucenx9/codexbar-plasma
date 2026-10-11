@@ -30,7 +30,7 @@ Item {
         }
 
         PlainToolTip {
-            visible: refreshButton.hovered
+            visible: refreshButton.hovered || refreshButton.visualFocus
             delay: Kirigami.Units.toolTipDelay
             plainText: refreshControl.label
         }

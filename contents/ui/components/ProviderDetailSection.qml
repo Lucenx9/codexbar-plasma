@@ -27,11 +27,19 @@ ColumnLayout {
         Layout.fillWidth: true
 
         PlainHeading {
+            id: sectionTitle
             text: detailSection.sectionData.title
             level: 4
             type: Kirigami.Heading.Type.Primary
             Layout.fillWidth: true
             elide: Text.ElideRight
+
+            HoverHandler { id: sectionTitleHover }
+
+            PlainToolTip {
+                visible: sectionTitle.truncated && sectionTitleHover.hovered
+                plainText: sectionTitle.text
+            }
         }
 
         PlasmaComponents.ToolButton {
@@ -50,7 +58,7 @@ ColumnLayout {
 
             PlainToolTip {
                 parent: hideSectionButton
-                visible: hideSectionButton.hovered
+                visible: hideSectionButton.hovered || hideSectionButton.visualFocus
                 plainText: hideSectionButton.Accessible.name
             }
 
@@ -88,6 +96,13 @@ ColumnLayout {
                     anchors.top: parent.top
                     width: Math.max(0, parent.width - detailValues.width - Kirigami.Units.smallSpacing)
                     elide: Text.ElideRight
+
+                    HoverHandler { id: detailLabelHover }
+
+                    PlainToolTip {
+                        visible: detailLabel.truncated && detailLabelHover.hovered
+                        plainText: detailLabel.text
+                    }
                 }
 
                 ColumnLayout {
@@ -100,6 +115,7 @@ ColumnLayout {
                     spacing: 0
 
                     PlainPlasmaLabel {
+                        id: detailValue
                         text: detailEntry.modelData.value
                         opacity: detailSection.applet.valueTextOpacity
                         font.weight: Font.Medium
@@ -108,9 +124,17 @@ ColumnLayout {
                         Layout.minimumWidth: 0
                         Layout.alignment: Qt.AlignRight
                         elide: Text.ElideRight
+
+                        HoverHandler { id: detailValueHover }
+
+                        PlainToolTip {
+                            visible: detailValue.truncated && detailValueHover.hovered
+                            plainText: detailValue.text
+                        }
                     }
 
                     PlainPlasmaLabel {
+                        id: detailSecondaryValue
                         visible: detailEntry.modelData.secondaryValue.length > 0
                         text: detailEntry.modelData.secondaryValue
                         opacity: detailSection.applet.secondaryTextOpacity
@@ -120,6 +144,13 @@ ColumnLayout {
                         Layout.minimumWidth: 0
                         Layout.alignment: Qt.AlignRight
                         elide: Text.ElideRight
+
+                        HoverHandler { id: detailSecondaryValueHover }
+
+                        PlainToolTip {
+                            visible: detailSecondaryValue.truncated && detailSecondaryValueHover.hovered
+                            plainText: detailSecondaryValue.text
+                        }
                     }
                 }
             }

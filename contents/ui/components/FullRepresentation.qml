@@ -566,7 +566,7 @@ Item {
 
                 PlainToolTip {
                     plainText: previousTabsButton.text
-                    visible: previousTabsButton.hovered
+                    visible: previousTabsButton.hovered || previousTabsButton.visualFocus
                     delay: Kirigami.Units.toolTipDelay
                 }
             }
@@ -590,7 +590,7 @@ Item {
 
                 PlainToolTip {
                     plainText: nextTabsButton.text
-                    visible: nextTabsButton.hovered
+                    visible: nextTabsButton.hovered || nextTabsButton.visualFocus
                     delay: Kirigami.Units.toolTipDelay
                 }
             }

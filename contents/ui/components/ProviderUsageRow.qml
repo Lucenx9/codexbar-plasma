@@ -67,7 +67,7 @@ ColumnLayout {
 
             PlainToolTip {
                 parent: hideUsageRowButton
-                visible: hideUsageRowButton.hovered
+                visible: hideUsageRowButton.hovered || hideUsageRowButton.visualFocus
                 plainText: hideUsageRowButton.Accessible.name
             }
 

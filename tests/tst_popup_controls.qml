@@ -316,6 +316,37 @@ TestCase {
         verify(!button.activeFocus);
     }
 
+    function test_iconActionLabelsFollowKeyboardFocus_data() {
+        return [
+            {tag: "refresh", type: "RefreshButton", properties: {label: "Refresh usage"}, label: "Refresh usage"},
+            {tag: "copy", type: "CopyableValue", properties: {text: "42", copyAccessibleName: "Copy quota"}, label: "Copy quota"}
+        ];
+    }
+
+    function test_iconActionLabelsFollowKeyboardFocus(data) {
+        var control = createControl(data.type, data.properties);
+        if (!control)
+            return;
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        var button = control.nextItemInFocusChain(true);
+        var tip = findToolTip(button);
+        verify(tip !== null);
+        compare(tip.plainText, data.label);
+        button.forceActiveFocus(Qt.TabFocusReason);
+        tryCompare(tip, "visible", true, tip.delay + 1000);
+        testCase.forceActiveFocus(Qt.TabFocusReason);
+        tryCompare(tip, "visible", false);
+        // Pointer focus alone must not leave the keyboard label open.
+        button.forceActiveFocus(Qt.MouseFocusReason);
+        wait(tip.delay + 100);
+        verify(!tip.visible);
+        if (data.type === "CopyableValue") {
+            button.forceActiveFocus(Qt.TabFocusReason);
+            control.copied = true;
+            tryCompare(tip, "visible", false);
+        }
+    }
+
     function test_overviewPointerSelectionMovesKeyboardFocusToTheClickedRow() {
         var first = createControl("OverviewProviderRow", {
             applet: applet, modelData: provider, width: 260
