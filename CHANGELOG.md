@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.47 - 2026-10-11
+
 ### Added
 
 - **Providers → Settings and diagnostics** can save a provider's source mode
@@ -55,8 +57,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
-- Give the provider header icon surface visual definition with a subtle theme-aware
-  border, matching the identity tile styling in `OverviewProviderRow.qml`.
+- Give the provider header icon surface visual definition with a subtle
+  theme-aware border, matching the identity tile styling in
+  `OverviewProviderRow.qml`.
 - Keep the Panel settings preview's scenario selector aligned with the rendered
   scenario after a keyboard or mouse choice followed by an external change.
 - Compact token counts use the regional decimal mark, like the costs beside
@@ -72,6 +75,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Quiet days in the Usage & Spend activity heatmap no longer look emptier than
   the padded no-data cells: every slot shares the faint no-data base and a
   recorded day tints it, in light and dark themes.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.46...v0.2.47)
 
 ## 0.2.46 - 2026-10-08
 
