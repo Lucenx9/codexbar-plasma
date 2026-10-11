@@ -215,7 +215,9 @@ synchronized.
   timestamp and configured interval; first use and overdue checks run immediately.
   Manual checks still bypass the interval while coalescing active requests.
   The applet services the settings page's `widgetUpdateRequest` runtime key
-  through `runNow()`, marks an accepted request `running:<mode>`, and clears it
+  through `runNow()` from a deferred change handler, because servicing rewrites
+  the key its own binding reads; a synchronous write is dropped as a binding
+  loop. It marks an accepted request `running:<mode>`, and clears it
   when the controller's `busy` drops through `onBusyChanged`, because the
   controller settles `busy` inside its own completion handling. That deferred
   clear is the only path that releases a finished run's marker, and the settings
