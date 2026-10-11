@@ -443,6 +443,10 @@ TestCase {
         verify(!save.enabled);
         box.currentIndex = 1;
         verify(save.enabled);
+        page.loading = true;
+        verify(!box.enabled && !save.enabled);
+        page.loading = false;
+        verify(save.enabled);
         page.markPending("codex", true, false);
         verify(!box.enabled && !save.enabled);
         page.markPending("codex", false);

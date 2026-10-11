@@ -119,6 +119,9 @@ KCM.SimpleKCM {
     }
 
     function reload(preserveMessages) {
+        if (CommandLedger.hasKind(commands, "setSource")) {
+            return
+        }
         disconnectCommandsByKind("list")
         disconnectCommandsByKind("version")
         fireworksSingleKeySetupSupported = false
@@ -249,7 +252,7 @@ KCM.SimpleKCM {
     }
 
     function setProviderSource(providerID, mode) {
-        if (!providerSourceSetupSupported || !providerByID(providerID) || isPending(providerID)) {
+        if (loading || !providerSourceSetupSupported || !providerByID(providerID) || isPending(providerID)) {
             return
         }
         var plan = ProviderSource.planWrite(commandPath, providerCliArgument(providerID), mode)
@@ -1328,7 +1331,7 @@ KCM.SimpleKCM {
                 icon.name: "view-refresh"
                 text: i18n("Reload")
                 display: Controls.AbstractButton.IconOnly
-                enabled: !page.loading
+                enabled: !page.loading && !CommandLedger.hasKind(page.commands, "setSource")
                 Accessible.name: i18n("Reload provider list")
 
                 Components.PlainToolTip {
@@ -1596,6 +1599,7 @@ KCM.SimpleKCM {
                                 currentIndex: -1
                                 Accessible.name: i18n("Source mode")
                                 enabled: page.selectedProvider !== null
+                                    && !page.loading
                                     && !page.isPending(page.selectedProvider.provider)
                             }
 
@@ -1604,6 +1608,7 @@ KCM.SimpleKCM {
                                 text: i18n("Save")
                                 icon.name: "document-save"
                                 enabled: page.selectedProvider !== null
+                                    && !page.loading
                                     && providerSourceBox.currentIndex >= 0
                                     && !page.isPending(page.selectedProvider.provider)
                                 onClicked: if (page.selectedProvider) page.setProviderSource(

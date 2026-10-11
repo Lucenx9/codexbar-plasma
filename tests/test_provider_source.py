@@ -57,6 +57,8 @@ TestCase {
             function bumpProviderConfigRevision() { revisions++; }
             function setProviderDiagnostic(provider, value) { diagnosticsCleared++; }
             function setProviderDiagnosticLoading(provider, value) {}
+            function providerConfigRevisionValue() { return revisions; }
+            function shellQuote(value) { return Guards.shellQuote(value); }
         }
     }
     function start(page, mode) {
@@ -158,6 +160,26 @@ TestCase {
         verify(page.pending.codex);
         compare(page.revisions, 0);
     }
+    function test_reloadAndSourceWritesCannotOverlap() {
+        var page = createTemporaryObject(harness, this);
+        page.reload();
+        verify(page.loading);
+        compare(Object.keys(page.commands).length, 2);
+        // Version can complete before the retained provider list refresh.
+        page.handleCliVersionResult("CodexBar 0.73.0", 0);
+        verify(page.providerSourceSetupSupported);
+        page.setProviderSource("codex", "web");
+        compare(Object.keys(page.commands).length, 2);
+        verify(!page.pending.codex);
+        page.retireAllConfigCommands();
+        var source = start(page, "web");
+        page.reload();
+        compare(Object.keys(page.commands).length, 1);
+        verify(page.commands[source] !== undefined);
+        verify(!page.loading);
+        page.handleData(source, JSON.stringify([{error: {message: "Unsupported source"}}]), "", 1);
+        compare(page.errorText, "codex: Unsupported source");
+    }
 }
 '''
 
@@ -169,7 +191,8 @@ class ProviderSourceTests(unittest.TestCase):
                  "providerCommandFailureText", "handleCliVersionResult", "handleData",
                  "providerByID", "markPending", "isPending", "runCommand", "copyObject",
                  "hasOwnKey", "expireConfigCommands", "handleConfigCommandTimeout",
-                 "retireAllConfigCommands")
+                 "retireAllConfigCommands", "reload", "disconnectCommandsByKind",
+                 "runProviderListCommand", "runCliVersionCommand")
         functions = []
         for name in names:
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
