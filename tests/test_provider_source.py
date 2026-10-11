@@ -23,6 +23,7 @@ TestCase {
     Component {
         id: harness
         QtObject {
+            id: page
             property string commandPath: "codexbar"
             property bool providerSourceSetupSupported: true
             property bool fireworksSingleKeySetupSupported: false
@@ -40,6 +41,7 @@ TestCase {
             property var providerDiagnosticLoading: ({})
             property bool loading: false
             property bool reloadDeferredBySourceWrite: false
+            property bool providerDescriptorsUnavailable: false
             property var providers: [{provider: "codex", enabled: false}, {provider: "future", enabled: true}]
             property string selectedProviderID: "codex"
             property string errorText: ""
@@ -59,6 +61,7 @@ TestCase {
             }
             function providerCliArgument(provider) { return provider; }
             function displayNameForProvider(provider) { return provider; }
+            function providerTitle(provider) { return provider; }
             function providerMapKey(provider) { return provider; }
             function updateProviderEnabled(provider, enabled) { writes++; }
             function bumpProviderConfigRevision() { revisions++; }
@@ -217,6 +220,15 @@ TestCase {
         compare(page.statusText, "codex setting saved");
         verify(!page.reloadDeferredBySourceWrite);
     }
+    function rosterResult() {
+        return JSON.stringify([{provider: "codex", enabled: false}, {provider: "future", enabled: true}]);
+    }
+    function finishList(page) {
+        var lists = CommandLedger.sourcesOfKind(page.commands, "list");
+        compare(lists.length, 1);
+        page.handleData(lists[0], rosterResult(), "", 0);
+        verify(!page.loading);
+    }
     function test_deferredReloadKeepsSourceWriteError() {
         var page = createTemporaryObject(harness, this);
         var source = start(page, "api");
@@ -224,6 +236,14 @@ TestCase {
         page.handleData(source, JSON.stringify([{error: {message: "Unsupported source"}}]), "", 1);
         compare(CommandLedger.sourcesOfKind(page.commands, "list").length, 1);
         compare(page.errorText, "codex: Unsupported source");
+        // A successful roster refresh must not clear the write's error.
+        finishList(page);
+        compare(page.errorText, "codex: Unsupported source");
+        // The retained error belongs to that one refresh, not to later reloads.
+        page.reload(true);
+        compare(page.errorText, "");
+        finishList(page);
+        compare(page.errorText, "");
     }
     function test_deferredReloadRunsAfterSourceWriteTimeout() {
         var page = createTemporaryObject(harness, this);
@@ -231,6 +251,8 @@ TestCase {
         page.reload(true);
         page.expireConfigCommands(Date.now() + 61000);
         compare(CommandLedger.sourcesOfKind(page.commands, "list").length, 1);
+        verify(page.errorText.indexOf("timed out") >= 0);
+        finishList(page);
         verify(page.errorText.indexOf("timed out") >= 0);
     }
     function test_deferredReloadWaitsForEverySourceWrite() {
@@ -279,7 +301,9 @@ class ProviderSourceTests(unittest.TestCase):
                  "retireAllConfigCommands", "reload", "disconnectCommandsByKind",
                  "runProviderListCommand", "runCliVersionCommand", "writeDescriptorField",
                  "promptDescriptorSecret", "runDescriptorAction", "isFieldPending",
-                 "markFieldPending", "descriptorPendingKey", "descriptorPendingFieldKey")
+                 "markFieldPending", "descriptorPendingKey", "descriptorPendingFieldKey",
+                 "handleListResult", "shouldRetryProviderListWithoutDescriptors",
+                 "descriptorListUnsupportedMessage", "firstSelectableProvider")
         functions = []
         for name in names:
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)

@@ -118,7 +118,7 @@ class ProviderSettingsTest(unittest.TestCase):
         for descriptor_fallback_fragment in (
             "providerDescriptorsUnavailable = true",
             "providerListHasSupportedDescriptors(next)",
-            "runProviderListCommand(false)",
+            "runProviderListCommand(false, descriptor.retainedErrorText)",
         ):
             if not code_contains(provider_list_result_body, descriptor_fallback_fragment):
                 raise AssertionError(

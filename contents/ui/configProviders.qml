@@ -120,7 +120,7 @@ KCM.SimpleKCM {
         Qt.callLater(reload)
     }
 
-    function reload(preserveMessages) {
+    function reload(preserveMessages, retainedErrorText) {
         if (CommandLedger.hasKind(commands, "setSource")) {
             reloadDeferredBySourceWrite = true
             return
@@ -137,11 +137,11 @@ KCM.SimpleKCM {
             return
         }
         loading = true
-        errorText = ""
+        errorText = retainedErrorText ? String(retainedErrorText) : ""
         if (preserveMessages !== true) {
             statusText = ""
         }
-        runProviderListCommand(true)
+        runProviderListCommand(true, errorText)
         runCliVersionCommand()
     }
 
@@ -169,7 +169,9 @@ KCM.SimpleKCM {
         }
     }
 
-    function runProviderListCommand(includeDescriptors) {
+    // retainedErrorText is an earlier write's error that a successful roster
+    // refresh must leave visible instead of clearing.
+    function runProviderListCommand(includeDescriptors, retainedErrorText) {
         var command = [
             shellQuote(commandPath),
             "config",
@@ -184,6 +186,7 @@ KCM.SimpleKCM {
         runCommand(command.join(" "), {
             kind: "list",
             includeDescriptors: includeDescriptors === true,
+            retainedErrorText: retainedErrorText ? String(retainedErrorText) : "",
             providerConfigRevision: providerConfigRevisionValue(),
             timeoutMs: configCommandTimeoutMs
         })
@@ -336,12 +339,8 @@ KCM.SimpleKCM {
             return
         }
         // Deferred reloads come from completed writes, so keep the source
-        // write's own error visible while the roster refreshes.
-        var sourceWriteError = errorText
-        reload(true)
-        if (errorText.length === 0) {
-            errorText = sourceWriteError
-        }
+        // write's own error visible while and after the roster refreshes.
+        reload(true, errorText)
     }
 
     function runCommand(command, descriptor) {
@@ -478,12 +477,12 @@ KCM.SimpleKCM {
     function handleListResult(descriptor, stdoutText, stderrText, exitCode) {
         if (!ProviderConfigProtocol.providerListResultIsCurrent(
                 descriptor, providerConfigRevisionValue())) {
-            reload(true)
+            reload(true, descriptor.retainedErrorText)
             return
         }
         if (descriptor.includeDescriptors === true && shouldRetryProviderListWithoutDescriptors(stdoutText, stderrText)) {
             providerDescriptorsUnavailable = true
-            runProviderListCommand(false)
+            runProviderListCommand(false, descriptor.retainedErrorText)
             return
         }
         loading = false
@@ -529,7 +528,7 @@ KCM.SimpleKCM {
             providerDescriptorsUnavailable = !ProviderConfigProtocol
                 .providerListHasSupportedDescriptors(next)
         }
-        errorText = ""
+        errorText = descriptor.retainedErrorText ? String(descriptor.retainedErrorText) : ""
     }
 
     function shouldRetryProviderListWithoutDescriptors(stdoutText, stderrText) {
