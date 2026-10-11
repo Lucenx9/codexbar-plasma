@@ -8,9 +8,17 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.73.0](https://github.com/steipete/CodexBar/releases/tag/v0.73.0),
-  commit `1d313fe50a361fc0a12383da0cdc11a75f59daa5`, checked 2026-10-07.
-- Coverage: the 0.73.0 release delta against Plasma `6879315`. The
+- Last release reviewed: [CodexBar 0.74.0](https://github.com/steipete/CodexBar/releases/tag/v0.74.0),
+  commit `c2f22ccf8751efc8fe697bfe4714769107965274`, checked 2026-10-11.
+- Coverage: the 0.74.0 release delta against Plasma `7a5945a`. The
+  [0.74.0 review](docs/research/2026-10-11-macos-parity-0.74.0.md) verifies the
+  100-provider registry (nine bundled-plugin additions, same four keys) and
+  which of them Linux can set up, subscription renewal/expiration dates in
+  Linux usage output through a loopback sub2api fixture, the Cursor
+  `cursor-agent` login opening before and after, unchanged `--all-accounts`
+  records, and the new `serve` account discovery. Descriptors, generic
+  actions, ClinePass labels, Cursor cost, and display currency remain
+  blocked; empty cost/usage envelopes and `set-source` are unchanged. The
   [0.73.0 review](docs/research/2026-10-07-macos-parity-0.73.0.md) verifies
   persistent source writes and clearing through `config set-source`, the
   91-provider registry with Langdock still macOS-gated, and the unchanged
@@ -84,7 +92,29 @@ Issues linked below preserve discussion; this file owns parity status.
   provider/source combinations without inventing support, preserve the global
   override, and test failure, clearing, cancellation, and stale replies.
   Generic descriptors remain unavailable; this writer resolves only source
-  persistence. [Verified contract](docs/research/2026-10-07-macos-parity-0.73.0.md#linux-cli-contract-changes-since-0720).
+  persistence; 0.74.0 behaves identically. [Verified contract](docs/research/2026-10-07-macos-parity-0.73.0.md#linux-cli-contract-changes-since-0720).
+- [ ] Bundle fallback names, original icons, links, and brand colors for the
+  nine providers added in official 0.74.0: Tavily, Linkup, TinyApi, Exa,
+  Cosmic AI, Aerostack, Sail Research, Sofya, and X API. Plasma covers the
+  0.73.0 registry and shows generic artwork for these IDs. Tavily, Linkup,
+  Aerostack, Sail Research, and Sofya accept `set-api-key --stdin` and then
+  attempt their APIs, so they can join the API-key setup allowlist. Exa and
+  Cosmic AI store a key but need an API key ID or project ID that has only an
+  environment fallback; TinyApi and X API refuse config keys and are
+  macOS-web-only. Done when static metadata is tested and documented, the
+  five complete single-key providers offer key setup, and the other four
+  expose no dead key action.
+  [Verified reachability](docs/research/2026-10-11-macos-parity-0.74.0.md#linux-cli-contract-changes-since-0730).
+- [ ] Show plan renewal and expiration dates from official
+  `usage.subscriptionRenewsAt` and `usage.subscriptionExpiresAt`. A loopback
+  sub2api fixture emits `subscriptionExpiresAt` as ISO-8601 on Linux 0.73.0 and
+  0.74.0; Plasma reads neither field. 0.74.0 adds Claude dates and
+  `subscriptionRenewsAtIsDateOnly`/`subscriptionExpiresAtIsDateOnly`, encoded
+  only when `true` (source-observed). Done when the popup shows these dates
+  separately from quota resets, renders date-only values without a time or
+  time-zone day shift, omits missing or invalid values, follows privacy
+  settings, and tests old payloads without the fields. Never infer dates from
+  reset windows. [Verified contract](docs/research/2026-10-11-macos-parity-0.74.0.md#linux-cli-contract-changes-since-0730).
 
 ## Blocked on official Linux CLI contracts
 
@@ -94,8 +124,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider settings
 
 - [ ] Enable generic settings and token-account editing through official
-  descriptors and writes. Linux 0.73.0 still rejects `config providers
-  --descriptors` (91 records, same four keys); its provider records have no
+  descriptors and writes. Linux 0.74.0 still rejects `config providers
+  --descriptors` (100 records, same four keys); its provider records have no
   descriptor. Helmcode and TypeSafe make this concrete: both are cookie-only,
   both refuse `--source api`, and their documented `cookieSource`/`cookieHeader`
   config path has no supported writer, so they stay metadata-only on Linux.
@@ -118,7 +148,11 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   usage attempts `claude.ai` instead of reporting no available strategy
   (verified 0.69.0 vs 0.72.0); browser import stays macOS-only and no writer
   exists for the cookie fields, so setup stays blocked.
-  `--label` and `--workspace-id` remain z.ai-only: Linux 0.73.0 rejects
+  0.74.0 adds Exa's API key ID (`EXA_API_KEY_ID`) and Cosmic AI's project ID
+  (`COSMIC_PROJECT_ID`): both providers store a key, then refuse to fetch
+  until that environment-only field is set, and `--workspace-id` is refused.
+  TinyApi and X API are cookie-only with a macOS-only web source.
+  `--label` and `--workspace-id` remain z.ai-only: Linux 0.74.0 rejects
   `set-api-key --provider clinepass --label` despite the release claim (#4305),
   and labeled Kimi, Doubao, and OpenCode Go accounts remain blocked too.
   Source persistence now has the supported 0.73.0 `set-source` writer and is
@@ -137,7 +171,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.73.0 still has no
+  flow, CLI-auth setup, and token-account actions. Linux 0.74.0 still has no
   generic `config action` command (`set-api-key` and `set-source` are field
   writers; the `usage_updated` hook event is CLI automation surface, not a setup
   action). Done when supported actions expose validated
@@ -172,8 +206,9 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Cursor cost
 
 - [ ] Show Cursor cost history through the generic Linux `cost` path. Linux
-  0.73.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
-  Code, and Pi as supported;
+  0.74.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
+  Code, and Pi as supported; its new `cursor-agent` login (#4397) changes
+  usage authentication only;
   the descriptor gate keeps the new cookie-source availability errors unreachable.
   The 0.68.0 all-history date-range fix (#4028) targets macOS Usage & Spend
   refreshes, not the Linux cost allowlist.
@@ -227,8 +262,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 - [ ] Offer display-currency selection and conversion through an official Linux
   contract. The 0.56.2 audit records no display-currency setter or descriptor;
-  the scoped 0.57.0, 0.58.0, 0.60.4, 0.67.0, 0.69.0, 0.72.0, and 0.73.0
-  config probes expose neither,
+  the scoped 0.57.0, 0.58.0, 0.60.4, 0.67.0, 0.69.0, 0.72.0, 0.73.0, and
+  0.74.0 config probes expose neither,
   although macOS 0.67.0 adds twelve spend-estimate currencies. Plasma currently
   displays the CLI-emitted currency. Done when released settings and converted
   amounts define currency, rate provenance, and unavailable-conversion behavior,
@@ -247,7 +282,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   The 0.65.0 Charm Hyper guide describes a balance-only `details` row with a
   bare `usageValue` and an HC display string, which is not a typed unit. The
   0.66.0 Atlas Cloud and Vercel AI Gateway plugins likewise report USD balances
-  only as `details` row text.
+  only as `details` row text, as do the 0.74.0 Linkup, Sail Research, Sofya,
+  Exa, and Ollama API-key credit rows (source-observed).
   Done when the widget can display
   that record without parsing provider text,
   overriding a real quota, or treating a balance as an allowance.
@@ -265,7 +301,8 @@ These are unresolved Linux candidates, not confirmed missing features.
   inventory in an isolated official CLI before deciding how to normalize the
   new shape and preserve legacy fallback. Private `codexbar-linux --snapshot`
   fields belong to the separate desktop app and are not evidence for standard
-  `usage` output. [Source and limits](docs/research/2026-10-07-macos-parity-0.73.0.md#unverified-in-this-review).
+  `usage` output. The payload source is unchanged at 0.74.0.
+  [Source and limits](docs/research/2026-10-07-macos-parity-0.73.0.md#unverified-in-this-review).
 - [ ] Verify 0.73.0 partial-priced Codex daily/model output and imported
   incomplete model rows (#4273, #4278, #4279, #4299) against Plasma's cost trust
   and sharing rules. Empty cost envelopes are unchanged; they cannot establish
@@ -307,6 +344,8 @@ These are unresolved Linux candidates, not confirmed missing features.
   Starter allowances and explicit window cadence (#4084), still unmeasured.
   Reproduce with a signed-in Antigravity account and one
   other quota provider, then classify whether any normalization changes.
+  0.74.0 moves Ollama API-key mode to `/api/balance` with a monthly window
+  (#4399) and adds Qwen Cloud Team windows (#3711); include them too.
   Cover the 0.73.0 consumer OAuth client change (#4293), the 0.71.0 per-account
   private-session quotas (#4103), the 0.72.0 2.19.1 OAuth client-credentials
   recovery (#4229), and the opt-in extra profile homes (#4177) in the same reproduction.
@@ -331,7 +370,9 @@ These are unresolved Linux candidates, not confirmed missing features.
   output: Grok purchased Extra Usage Credits, the Claude promotional
   cloud-session credit separation from prepaid credits, and the Claude saved
   limit-reset credits in OAuth usage (#4239, #4243, #4194, #4214, #3895,
-  #4232). Empty-history output carries none of them. Reproduce each with a
+  #4232), plus the 0.74.0 JetBrains top-up credits (#4372) and Ollama
+  purchased-credit and wallet rows (#4399, #4370). Empty-history output
+  carries none of them. Reproduce each with a
   funded account safely, then classify whether the generic balance/details
   path renders them or a normalization change is needed.
   [Unverified at 0.72.0](docs/research/2026-10-05-macos-parity-0.72.0.md#unverified-in-this-review).
@@ -340,6 +381,14 @@ These are unresolved Linux candidates, not confirmed missing features.
   token; a corresponding rate window would be a normal extra window for Plasma,
   while a macOS-only token is a non-goal. Unmeasured without a Cursor account.
   [Unverified at 0.64.1](docs/research/2026-09-22-macos-parity-0.64.1.md#unverified-in-this-review).
+- [ ] Verify Cursor usage through a Linux `cursor-agent` login (#4397). With a
+  synthetic JWT in `$XDG_CONFIG_HOME/cursor/auth.json`, 0.74.0 attempts
+  cursor.com where 0.73.0 reports no session. Without network, about half of
+  fresh 0.74.0 runs stalled idle past 20–30 seconds, even with
+  `--web-timeout 5`; Plasma's 120-second command bound still applies. Reproduce
+  with a real login, offline and online, then classify the windows and
+  whether the stall needs an upstream report or a Plasma message.
+  [Evidence](docs/research/2026-10-11-macos-parity-0.74.0.md#linux-cli-contract-changes-since-0730).
 - [ ] Verify `credits.balanceReadSucceeded`, `creditsAvailable`, and
   `balanceIsWorkspace` (also on `openaiDashboard` with `accountID`) in official
   Linux output. 0.60.4 source widens the flag to cap-only/omitted balances and
@@ -367,7 +416,9 @@ These are unresolved Linux candidates, not confirmed missing features.
   [Source evidence](docs/research/2026-09-18-macos-parity-0.61.0.md#linux-cli-contract-changes-since-0605).
 - [ ] Compare exhausted automatic text/popup quota selection with the exact
   0.56.6 cases. Automatic panel capsules already show primary and secondary.
-  Keep direct lane choices and independent quota pools. Accept a change only
+  Keep direct lane choices and independent quota pools. Include OpenCode Go,
+  whose macOS 0.74.0 automatic text picks the most constrained five-hour,
+  weekly, or monthly window (#3349). Accept a change only
   after reproducing a useful difference with existing Linux fields.
   [Comparison](docs/research/2026-09-09-macos-parity-0.57.0.md#review-automatic-exhausted-quota-selection).
 - [ ] Verify account identity and stale-data behavior against the 0.56.3–0.57.0
