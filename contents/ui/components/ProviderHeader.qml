@@ -29,6 +29,8 @@ RowLayout {
         Layout.preferredHeight: Layout.preferredWidth
         radius: providerHeaderRow.applet.nestedSurfaceRadius
         color: providerHeaderRow.applet.withAlpha(providerHeaderRow.brandAccent, 0.12)
+        border.width: 1
+        border.color: providerHeaderRow.applet.withAlpha(Kirigami.Theme.textColor, 0.1)
 
         Kirigami.Icon {
             id: providerHeaderIcon

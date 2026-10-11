@@ -55,6 +55,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Give the provider header icon surface visual definition with a subtle theme-aware
+  border, matching the identity tile styling in `OverviewProviderRow.qml`.
 - Keep the Panel settings preview's scenario selector aligned with the rendered
   scenario after a keyboard or mouse choice followed by an external change.
 - Compact token counts use the regional decimal mark, like the costs beside
