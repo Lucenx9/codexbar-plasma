@@ -262,7 +262,15 @@ ColumnLayout {
             textRole: "label"
             valueRole: "value"
             currentIndex: Math.max(0, PanelPreview.scenarios.indexOf(preview.scenario))
-            onActivated: preview.scenario = currentValue
+            onActivated: {
+                preview.scenario = currentValue
+                // A user selection overwrites the declarative currentIndex
+                // binding. Restore it so external scenario changes keep the
+                // selector aligned with the rendered preview.
+                currentIndex = Qt.binding(function() {
+                    return Math.max(0, PanelPreview.scenarios.indexOf(preview.scenario))
+                })
+            }
             Accessible.name: i18n("Preview scenario")
         }
     }
