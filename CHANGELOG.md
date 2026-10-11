@@ -42,6 +42,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep the Panel settings preview's scenario selector aligned with the rendered
+  scenario after a keyboard or mouse choice followed by an external change.
 - Compact token counts use the regional decimal mark, like the costs beside
   them: an Italian, German, French, Spanish, or Brazilian Portuguese locale
   shows "1,5K tokens" next to "$1.234,50" instead of "1.5K tokens".

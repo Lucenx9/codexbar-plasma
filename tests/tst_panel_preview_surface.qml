@@ -182,6 +182,34 @@ TestCase {
         compare(settings.cfg_panelVisibilityRules, '{"text":{"condition":"usageAtLeast","usedPercent":80},"meters":{"condition":"usageAtLeast","usedPercent":80}}');
     }
 
+    function test_scenarioSelectorFollowsExternalChangesAfterKeyboardPick() {
+        var settings = createTemporaryObject(settingsComponent, testCase);
+        var preview = createPreview(settings);
+        if (!preview) return;
+
+        var combo = findChild(preview, "panelPreviewScenario");
+        verify(combo !== null);
+        compare(combo.currentIndex, 0);
+
+        combo.forceActiveFocus();
+        keyClick(Qt.Key_Down);
+        tryCompare(preview, "scenario", "nearLimit");
+        compare(combo.currentIndex, 1);
+
+        // Picking an option must not disconnect currentIndex from the
+        // externally driven preview scenario.
+        preview.scenario = "missing";
+        tryCompare(combo, "currentIndex", 3);
+        compare(combo.currentValue, "missing");
+
+        keyClick(Qt.Key_Up);
+        tryCompare(preview, "scenario", "incident");
+        compare(combo.currentIndex, 2);
+
+        preview.scenario = "normal";
+        tryCompare(combo, "currentIndex", 0);
+    }
+
     function test_runOutRequiresAForecastAndDurationsUseWholeUnits() {
         var settings = createTemporaryObject(settingsComponent, testCase, {
             cfg_showPercentInPanel: true, cfg_menuBarDisplayMode: "runOut"
