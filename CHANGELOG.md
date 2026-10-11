@@ -26,6 +26,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Changed
 
+- Popup settings use small secondary text for helper notes. Icon actions in
+  Panel, Popup and Providers settings and popup refresh, copy, share, hide and
+  tab scrolling show their labels on keyboard focus as well as hover. Truncated
+  provider detail section titles, row labels and values reveal their complete
+  displayed text on hover.
 - Polish popup visuals: provider detail section titles use the same heading
   style as sibling sections, detail meters use the compact meter height, usage
   rows keep whole-pixel spacing, Spend history menus use the plain-text menu

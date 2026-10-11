@@ -1377,6 +1377,58 @@ TestCase {
         }
     }
 
+    function test_providerDetailRevealsTruncatedText_data() {
+        return [
+            {tag: "title", field: "title"},
+            {tag: "label", field: "label"},
+            {tag: "value", field: "value"},
+            {tag: "secondary", field: "secondaryValue"}
+        ];
+    }
+
+    function test_providerDetailRevealsTruncatedText(data) {
+        var longText = "Long <model> & account name ".repeat(4).trim();
+        var raw = {title: "Details", rows: [{label: "Model", value: "42", secondaryValue: "Included"}]};
+        if (data.field === "title")
+            raw.title = longText;
+        else
+            raw.rows[0][data.field] = longText;
+        var view = createControl("ProviderDetailSection", {
+            applet: applet, providerData: {provider: "codex"},
+            modelData: UsageDetails.normalizeSections([raw])[0], width: 240
+        });
+        if (!view)
+            return;
+        var label = findItem(view, item => item.text === longText);
+        verify(label !== null);
+        tryCompare(label, "truncated", true);
+        var tips = [];
+        findAllItems(label, item => item.plainText === longText && item.delay !== undefined, tips);
+        compare(tips.length, 1);
+        var tip = tips[0];
+        mouseMove(label, label.width / 2, label.height / 2);
+        tryCompare(tip, "visible", true, tip.delay + 1000);
+        verify(tip.text.indexOf("&lt;model&gt;") >= 0);
+        mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        tryCompare(tip, "visible", false);
+        // Values which fit should not acquire an unnecessary tooltip.
+        view.modelData = UsageDetails.normalizeSections([{
+            title: "Details", rows: [{label: "Model", value: "42", secondaryValue: "Included"}]
+        }])[0];
+        var shortText = data.field === "title" ? "Details"
+            : data.field === "label" ? "Model" : data.field === "value" ? "42" : "Included";
+        label = findItem(view, item => item.text === shortText);
+        verify(label !== null);
+        tryCompare(label, "truncated", false);
+        tips = [];
+        findAllItems(label, item => item.plainText === shortText && item.delay !== undefined, tips);
+        compare(tips.length, 1);
+        tip = tips[0];
+        mouseMove(label, label.width / 2, label.height / 2);
+        wait(tip.delay + 100);
+        verify(!tip.visible);
+    }
+
     function test_providerDetailNestedLayoutDoesNotRearrangeRecursively() {
         failOnWarning(/Qt Quick Layouts: Detected recursive rearrange/);
         var layout = createTemporaryQmlObject(

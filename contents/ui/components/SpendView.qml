@@ -118,7 +118,7 @@ ColumnLayout {
             onClicked: view.applet.openShareUsage()
             PlainToolTip {
                 parent: shareButton
-                visible: shareButton.hovered
+                visible: shareButton.hovered || shareButton.visualFocus
                 plainText: i18n("Share AI usage")
             }
         }
