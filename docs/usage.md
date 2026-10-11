@@ -348,7 +348,7 @@ Provider-specific editable settings depend on the official CLI contract.
   docs/dashboard/login links.
 - The widget also has a renderer for the proposed
   [provider settings descriptor](cli-provider-settings-descriptor.md).
-  Scoped checks through CLI 0.73.0 still find no descriptors, so cookie, base
+  Scoped checks through CLI 0.74.0 still find no descriptors, so cookie, base
   URL, workspace/project, region, and other descriptor-backed editors remain
   unavailable. CLI 0.73.0 separately supports persistent source writes through
   `codexbar config set-source --provider <id> --source <mode>`; `auto` clears

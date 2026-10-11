@@ -14,6 +14,9 @@ rechecks descriptor/action absence. Linux now supports the separate
 `auto` clears the override without changing enablement or credentials. This
 is a shipped command, not the generic descriptor or `config set` proposal.
 ClinePass labeled-key writes still fail with the z.ai-only restriction.
+The scoped [0.74.0 review](research/2026-10-11-macos-parity-0.74.0.md) finds
+the same absence; Exa's API key ID and Cosmic AI's project ID add two more
+fields with only environment fallbacks and no writer.
 All command examples and payloads below describe the proposed contract.
 
 This document defines the CLI contract Plasma needs before it can render real

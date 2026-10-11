@@ -175,7 +175,7 @@ fallback metadata for all 91 providers in the official CodexBar 0.73.0 registry,
 covering names, icons, and documentation links, with brand colors and dashboard
 and status links where upstream defines them. Available metrics and setup
 actions vary by provider. The proposed generic provider-settings descriptor is
-not available in CLI 0.72.0; its additional editors remain unavailable.
+not available in CLI 0.74.0; its additional editors remain unavailable.
 
 <!-- Web links to guides also work in the installed package, which omits those files. -->
 See the [usage and settings guide](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md)
