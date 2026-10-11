@@ -1237,6 +1237,13 @@ in ignored `dist/review/` or the OS temp directory.
 
 ## CLI probes and packaging
 
+`config/ProviderSource.js` plans allowlisted source-mode writes and validates
+matching provider/source result records. The Providers page owns the CLI 0.73.0
+capability gate, execution, deadlines, pending state, revision writes and
+diagnostic invalidation. `tests/tst_provider_source.qml` covers its pure boundary;
+`tests/test_provider_source.py` executes the production page handlers for
+clearing, failure, cancellation, timeout, command retirement and selection changes.
+
 The widget expects a working `codexbar`. Probe the selected official version
 when investigating a contract; keep raw account output out of logs and commits.
 

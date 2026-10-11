@@ -3672,3 +3672,20 @@ msgstr "Copiar relatório"
 #: contents/ui/configDiagnostics.qml
 msgid "Report preview"
 msgstr "Prévia do relatório"
+
+#: contents/ui/configProviders.qml
+msgid ""
+"Other editable provider options require CodexBar descriptors, which this "
+"version does not expose."
+msgstr "As outras opções editáveis do provedor exigem descritores do CodexBar, que esta versão não fornece."
+
+#: contents/ui/configProviders.qml
+msgid "Web"
+msgstr "Web"
+
+#: contents/ui/configProviders.qml
+msgid ""
+"Choose a source to save. CodexBar validates support for this provider; "
+"Automatic clears its saved override. General's source override takes "
+"precedence in the widget."
+msgstr "Escolha uma fonte para salvar. O CodexBar verifica o suporte deste provedor; Automático remove sua fonte forçada salva. A fonte forçada em Geral tem prioridade no widget."

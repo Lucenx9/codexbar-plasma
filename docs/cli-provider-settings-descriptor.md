@@ -13,6 +13,9 @@ rechecks descriptor/action absence. Linux now supports the separate
 `config set-source --provider <id> --source auto|web|cli|oauth|api` writer;
 `auto` clears the override without changing enablement or credentials. This
 is a shipped command, not the generic descriptor or `config set` proposal.
+Plasma offers version-gated controls for this separate writer under
+**Providers → Settings and diagnostics**; General's global override retains
+precedence for widget requests.
 ClinePass labeled-key writes still fail with the z.ai-only restriction.
 The scoped [0.74.0 review](research/2026-10-11-macos-parity-0.74.0.md) finds
 the same absence; Exa's API key ID and Cosmic AI's project ID add two more

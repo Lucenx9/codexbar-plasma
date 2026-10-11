@@ -17,6 +17,7 @@ import "config" as ProviderConfig
 import "config/ProviderConfigProtocol.js" as ProviderConfigProtocol
 import "config/ProviderDescriptor.js" as ProviderDescriptor
 import "config/ProviderList.js" as ProviderList
+import "config/ProviderSource.js" as ProviderSource
 
 KCM.SimpleKCM {
     id: page
@@ -61,6 +62,7 @@ KCM.SimpleKCM {
     property string statusText: ""
     property bool providerDescriptorsUnavailable: false
     property bool fireworksSingleKeySetupSupported: false
+    property bool providerSourceSetupSupported: false
     // provider id -> true while an enable/disable command is in flight
     property var pending: ({})
     // provider id -> desired enabled value while the CLI command is in flight
@@ -102,6 +104,7 @@ KCM.SimpleKCM {
     // creation, so opening the page spawns one CLI list command, not two.
     Component.onCompleted: Qt.callLater(reload)
     onCfg_commandPathChanged: handleCommandPathChanged()
+    onSelectedProviderIDChanged: providerSourceBox.currentIndex = -1
 
     function handleCommandPathChanged() {
         retireAllConfigCommands()
@@ -111,6 +114,7 @@ KCM.SimpleKCM {
         selectedProviderID = ""
         providerDescriptorsUnavailable = false
         fireworksSingleKeySetupSupported = false
+        providerSourceSetupSupported = false
         Qt.callLater(reload)
     }
 
@@ -118,6 +122,7 @@ KCM.SimpleKCM {
         disconnectCommandsByKind("list")
         disconnectCommandsByKind("version")
         fireworksSingleKeySetupSupported = false
+        providerSourceSetupSupported = false
         if (commandPath.length === 0) {
             errorText = i18n("Set the codexbar command path in Diagnostics.")
             providers = []
@@ -243,8 +248,37 @@ KCM.SimpleKCM {
         })
     }
 
+    function setProviderSource(providerID, mode) {
+        if (!providerSourceSetupSupported || !providerByID(providerID) || isPending(providerID)) {
+            return
+        }
+        var plan = ProviderSource.planWrite(commandPath, providerCliArgument(providerID), mode)
+        if (!plan.ok) {
+            return
+        }
+        // A diagnostic started before this write can describe the old source.
+        for (var sourceName in commands) {
+            if (hasOwnKey(commands, sourceName) && commands[sourceName].kind === "diagnose"
+                    && commands[sourceName].provider === providerID) {
+                configSource.disconnectSource(sourceName)
+                commands = CommandLedger.closed(commands, sourceName)
+            }
+        }
+        setProviderDiagnosticLoading(providerID, false)
+        errorText = ""
+        statusText = ""
+        markPending(providerID, true, providerByID(providerID).enabled)
+        runCommand(plan.commandLine, {
+            kind: "setSource",
+            provider: providerID,
+            sourceMode: mode,
+            timeoutMs: configCommandTimeoutMs
+        })
+    }
+
     function loadProviderSettings(providerID) {
-        if (commandPath.length === 0 || providerID.length === 0 || providerDiagnosticLoadingFor(providerID)) {
+        if (commandPath.length === 0 || providerID.length === 0 || isPending(providerID)
+                || providerDiagnosticLoadingFor(providerID)) {
             return
         }
         setProviderDiagnosticLoading(providerID, true)
@@ -333,13 +367,14 @@ KCM.SimpleKCM {
             errorText = i18n("Loading providers timed out. Try again.")
         } else if (descriptor.kind === "version") {
             fireworksSingleKeySetupSupported = false
+            providerSourceSetupSupported = false
         } else if (descriptor.kind === "diagnose") {
             setProviderDiagnosticLoading(descriptor.provider, false)
             setProviderDiagnosticError(descriptor.provider, i18n("Loading provider diagnostics timed out. Try again."))
         } else if (descriptor.kind === "toggle") {
             markPending(descriptor.provider, false)
             errorText = i18n("%1 command timed out. Try again.", displayNameForProvider(descriptor.provider))
-        } else if (descriptor.kind === "setApiKey") {
+        } else if (descriptor.kind === "setApiKey" || descriptor.kind === "setSource") {
             markPending(descriptor.provider, false)
             errorText = i18n("%1 command timed out. Try again.", displayNameForProvider(descriptor.provider))
         } else if (descriptor.kind === "descriptorField" || descriptor.kind === "descriptorAction") {
@@ -367,6 +402,8 @@ KCM.SimpleKCM {
             handleToggleResult(descriptor, stdoutText, stderrText, exitCode)
         } else if (descriptor.kind === "setApiKey") {
             handleSetApiKeyResult(descriptor, stdoutText, stderrText, exitCode)
+        } else if (descriptor.kind === "setSource") {
+            handleSetSourceResult(descriptor, stdoutText, stderrText, exitCode)
         } else if (descriptor.kind === "descriptorField") {
             handleDescriptorFieldResult(descriptor, stdoutText, stderrText, exitCode)
         } else if (descriptor.kind === "descriptorAction") {
@@ -379,6 +416,33 @@ KCM.SimpleKCM {
     function handleCliVersionResult(stdoutText, exitCode) {
         fireworksSingleKeySetupSupported = Number(exitCode) === 0
             && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 54, 0)
+        providerSourceSetupSupported = Number(exitCode) === 0
+            && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 73, 0)
+    }
+
+    function handleSetSourceResult(descriptor, stdoutText, stderrText, exitCode) {
+        markPending(descriptor.provider, false)
+        var result = parseCommandPayload(stdoutText, stderrText, exitCode)
+        if (result.cancelled) {
+            return
+        }
+        if (result.errorMessage.length > 0) {
+            errorText = i18n("%1: %2", displayNameForProvider(descriptor.provider), result.errorMessage)
+            return
+        }
+        if (!ProviderSource.resultMatches(result.value,
+                providerCliArgument(descriptor.provider), descriptor.sourceMode)) {
+            errorText = i18n("codexbar did not return command data.")
+            return
+        }
+        updateProviderEnabled(descriptor.provider, result.value.enabled)
+        bumpProviderConfigRevision()
+        setProviderDiagnostic(descriptor.provider, null)
+        errorText = ""
+        statusText = i18n("%1 setting saved", displayNameForProvider(descriptor.provider))
+        if (selectedProviderID === descriptor.provider) {
+            providerSourceBox.currentIndex = -1
+        }
     }
 
     function handleListResult(descriptor, stdoutText, stderrText, exitCode) {
@@ -1485,6 +1549,7 @@ KCM.SimpleKCM {
                         icon.name: "view-refresh"
                         visible: providerSettingsToggle.expanded
                         enabled: page.selectedProvider
+                            && !page.isPending(page.selectedProvider.provider)
                             && !page.providerDiagnosticLoadingFor(page.selectedProvider.provider)
                         onClicked: if (page.selectedProvider) page.loadProviderSettings(page.selectedProvider.provider)
                     }
@@ -1499,12 +1564,61 @@ KCM.SimpleKCM {
 
                     Components.PlainControlsLabel {
                         Layout.fillWidth: true
-                        text: page.providerDescriptorsUnavailable
+                        text: page.providerDescriptorsUnavailable && page.providerSourceSetupSupported
+                            ? i18n("Other editable provider options require CodexBar descriptors, which this version does not expose.")
+                            : page.providerDescriptorsUnavailable
                             ? i18n("This CodexBar version does not expose editable provider options. Enable/disable, supported API key setup, provider links, and redacted diagnostics remain available.")
                             : i18n("Editable provider options come from CodexBar. Redacted source and authentication details are available on request.")
                         opacity: page.secondaryTextOpacity
                         font: Kirigami.Theme.smallFont
                         wrapMode: Text.WordWrap
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: Kirigami.Units.smallSpacing
+                        visible: page.providerSourceSetupSupported
+
+                        Components.PlainControlsLabel {
+                            text: i18n("Source mode")
+                            font.weight: Font.DemiBold
+                            Layout.fillWidth: true
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+
+                            Components.PlainComboBox {
+                                id: providerSourceBox
+                                objectName: "providerSourceBox"
+                                Layout.fillWidth: true
+                                model: [i18n("Automatic"), "API", "CLI", "OAuth", i18n("Web")]
+                                currentIndex: -1
+                                Accessible.name: i18n("Source mode")
+                                enabled: page.selectedProvider !== null
+                                    && !page.isPending(page.selectedProvider.provider)
+                            }
+
+                            Controls.Button {
+                                objectName: "providerSourceSaveButton"
+                                text: i18n("Save")
+                                icon.name: "document-save"
+                                enabled: page.selectedProvider !== null
+                                    && providerSourceBox.currentIndex >= 0
+                                    && !page.isPending(page.selectedProvider.provider)
+                                onClicked: if (page.selectedProvider) page.setProviderSource(
+                                    page.selectedProvider.provider,
+                                    ProviderSource.modes[providerSourceBox.currentIndex])
+                            }
+                        }
+
+                        Components.PlainControlsLabel {
+                            Layout.fillWidth: true
+                            text: i18n("Choose a source to save. CodexBar validates support for this provider; Automatic clears its saved override. General's source override takes precedence in the widget.")
+                            opacity: page.secondaryTextOpacity
+                            font: Kirigami.Theme.smallFont
+                            wrapMode: Text.WordWrap
+                        }
                     }
 
                     Components.PlainInlineMessage {

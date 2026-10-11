@@ -352,8 +352,17 @@ Provider-specific editable settings depend on the official CLI contract.
   URL, workspace/project, region, and other descriptor-backed editors remain
   unavailable. CLI 0.73.0 separately supports persistent source writes through
   `codexbar config set-source --provider <id> --source <mode>`; `auto` clears
-  the saved override. The widget has no per-provider source editor yet, and
-  General's source override still applies globally to widget requests.
+  the saved override. With CLI 0.73.0 or later, open **Providers → Settings and
+  diagnostics**, choose a **Source mode**, and select **Save**. The choices
+  are Automatic, API, CLI, OAuth, and Web; CodexBar validates which modes
+  the provider supports. Unsupported choices show an error without confirming
+  a save. The selector starts blank because the provider registry does not
+  expose the saved mode; inspect redacted settings to request source details.
+  Changes are saved immediately, independently of Apply and Cancel. A successful
+  save preserves provider enablement and credentials and invalidates cached
+  usage through the existing provider-config revision. General's source override
+  still takes precedence globally for widget requests. Older or unrecognized
+  CLI versions omit the editor.
 - Generic API key setup for Fireworks, when the selected CLI reports version
   0.54.0 or later and can discover the account slug from the key.
 - Fallback names, icons, and documentation links for all 91 providers in the

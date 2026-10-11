@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- **Providers → Settings and diagnostics** can save a provider's source mode
+  with official CLI 0.73.0 or later. Automatic clears its saved override;
+  unsupported modes show the CLI error, and General's global override keeps
+  precedence for widget requests.
 - Bundle a fallback name, an original icon, the dashboard and documentation
   links, and the brand color for Langdock, which official CodexBar 0.73.0 adds
   to the registry. It needs a macOS-only browser-profile web source on Linux,
