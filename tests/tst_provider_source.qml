@@ -33,4 +33,14 @@ TestCase {
         for (var payload of invalid)
             verify(!Source.resultMatches(payload, "codex", "api"))
     }
+    function test_pendingFieldsAreProviderScopedAndOwnBooleans() {
+        verify(Source.hasPendingFields({'codex::"key"': true}, "codex"))
+        verify(!Source.hasPendingFields({'codex-other::"key"': true}, "codex"))
+        verify(!Source.hasPendingFields({'codex::"key"': "true"}, "codex"))
+        verify(!Source.hasPendingFields(Object.create({'codex::"key"': true}), "codex"))
+        for (var pending of [null, [], "codex", {}])
+            verify(!Source.hasPendingFields(pending, "codex"))
+        verify(!Source.hasPendingFields({'constructor::"key"': true}, "constructor"))
+    }
+
 }

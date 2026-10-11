@@ -447,6 +447,12 @@ TestCase {
         verify(!box.enabled && !save.enabled);
         page.loading = false;
         verify(save.enabled);
+        page.markFieldPending("codex", "key", true);
+        verify(!box.enabled && !save.enabled);
+        page.markFieldPending("codex", "key", false);
+        page.markFieldPending("future", "action", true);
+        verify(save.enabled);
+        page.markFieldPending("future", "action", false);
         page.markPending("codex", true, false);
         verify(!box.enabled && !save.enabled);
         page.markPending("codex", false);

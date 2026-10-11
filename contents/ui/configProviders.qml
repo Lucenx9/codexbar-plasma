@@ -252,7 +252,8 @@ KCM.SimpleKCM {
     }
 
     function setProviderSource(providerID, mode) {
-        if (loading || !providerSourceSetupSupported || !providerByID(providerID) || isPending(providerID)) {
+        if (loading || !providerSourceSetupSupported || !providerByID(providerID) || isPending(providerID)
+                || ProviderSource.hasPendingFields(providerFieldPending, providerMapKey(providerID))) {
             return
         }
         var plan = ProviderSource.planWrite(commandPath, providerCliArgument(providerID), mode)
@@ -1601,6 +1602,8 @@ KCM.SimpleKCM {
                                 enabled: page.selectedProvider !== null
                                     && !page.loading
                                     && !page.isPending(page.selectedProvider.provider)
+                                    && !ProviderSource.hasPendingFields(page.providerFieldPending,
+                                        page.providerMapKey(page.selectedProvider.provider))
                             }
 
                             Controls.Button {
@@ -1611,6 +1614,8 @@ KCM.SimpleKCM {
                                     && !page.loading
                                     && providerSourceBox.currentIndex >= 0
                                     && !page.isPending(page.selectedProvider.provider)
+                                    && !ProviderSource.hasPendingFields(page.providerFieldPending,
+                                        page.providerMapKey(page.selectedProvider.provider))
                                 onClicked: if (page.selectedProvider) page.setProviderSource(
                                     page.selectedProvider.provider,
                                     ProviderSource.modes[providerSourceBox.currentIndex])

@@ -160,6 +160,16 @@ TestCase {
         verify(page.pending.codex);
         compare(page.revisions, 0);
     }
+    function test_descriptorPendingBlocksOnlyItsProvidersSource() {
+        var page = createTemporaryObject(harness, this);
+        page.providerFieldPending = {'codex::"key"': true, 'future::"action"': true};
+        page.setProviderSource("codex", "api");
+        compare(Object.keys(page.commands).length, 0);
+        verify(!page.pending.codex);
+        page.providerFieldPending = {'future::"action"': true};
+        start(page, "api");
+        verify(page.pending.codex);
+    }
     function test_reloadAndSourceWritesCannotOverlap() {
         var page = createTemporaryObject(harness, this);
         page.reload();

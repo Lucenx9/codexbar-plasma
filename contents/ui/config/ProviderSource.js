@@ -31,3 +31,17 @@ function resultMatches(payload, provider, mode) {
         && modes.indexOf(mode) >= 0
         && Guards.hasOwnKey(payload, "enabled") && typeof payload.enabled === "boolean"
 }
+
+// Keys use the page's canonical provider plus a JSON-quoted field/action ID.
+function hasPendingFields(pending, provider) {
+    var key = Identity.providerMapKey(provider)
+    if (!Protocol.isCliRecord(pending) || key.length === 0)
+        return false
+    var prefix = key + "::"
+    for (var field in pending) {
+        if (Guards.hasOwnKey(pending, field) && field.indexOf(prefix) === 0
+                && pending[field] === true)
+            return true
+    }
+    return false
+}

@@ -1243,7 +1243,8 @@ capability gate, execution, deadlines, pending state, revision writes and
 diagnostic invalidation. `tests/tst_provider_source.qml` covers its pure boundary;
 `tests/test_provider_source.py` executes the production page handlers for
 clearing, failure, cancellation, timeout, command retirement, selection changes,
-and serialization of source writes with provider-list reloads.
+serialization of source writes with provider-list reloads, and exclusion while
+a descriptor field or action is pending for the same provider.
 
 The widget expects a working `codexbar`. Probe the selected official version
 when investigating a contract; keep raw account output out of logs and commits.
