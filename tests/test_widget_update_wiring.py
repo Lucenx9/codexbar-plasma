@@ -58,6 +58,7 @@ TestCase {
                 BUSY_HANDLER
             }
 
+            REQUEST_HANDLER
             SOURCE_HANDLERS
         }
     }
@@ -134,6 +135,27 @@ TestCase {
         wait(100);
         compare(applet.widgetUpdater.runs, [true]);
         compare(applet.plasmoid.configuration.widgetUpdateRequest, "running:install");
+    }
+
+    // The settings page only writes the key; main.qml's change handler services
+    // it. Writing the marker synchronously inside that handler re-entered the
+    // property's own binding, so Qt reported a binding loop and kept the mirror
+    // at "check". Every finished run then started another one, forever.
+    function test_requestWrittenBySettingsRunsOnlyOnce() {
+        var applet = createTemporaryObject(harness, this);
+        var config = applet.plasmoid.configuration;
+        config.widgetUpdateRequest = "check";
+        wait(100);
+        compare(applet.widgetUpdater.runs, [false]);
+        compare(config.widgetUpdateRequest, "running:check");
+        compare(applet.widgetUpdateRequest, "running:check");
+        for (var finished = 0; finished < 3; ++finished) {
+            applet.widgetUpdater.busy = false;
+            wait(100);
+        }
+        compare(applet.widgetUpdater.runs, [false]);
+        compare(config.widgetUpdateRequest, "");
+        verify(!applet.widgetUpdater.busy);
     }
 
     function test_requestWaitsForAnAutomaticRun() {
@@ -260,7 +282,8 @@ class WidgetUpdateWiringTests(unittest.TestCase):
                             + "}")
         qml = (QML.replace("SOURCE_HANDLERS", "\n            ".join(handlers))
                .replace("UPDATE_LOGIC_URL", (ROOT / "contents/ui/UpdateLogic.js").as_uri())
-               .replace("BUSY_HANDLER", shorthand_handler(source, "onBusyChanged")))
+               .replace("BUSY_HANDLER", shorthand_handler(source, "onBusyChanged"))
+               .replace("REQUEST_HANDLER", shorthand_handler(source, "onWidgetUpdateRequestChanged")))
         with tempfile.TemporaryDirectory(prefix="codexbar-update-wiring-") as temporary:
             fixture = Path(temporary) / "tst_widget_update_wiring.qml"
             fixture.write_text(qml)

@@ -1291,7 +1291,10 @@ PlasmoidItem {
     // Settings request manual widget updates through this runtime key, and the
     // applet runs them, so closing the dialog cannot cut an install short.
     readonly property string widgetUpdateRequest: Plasmoid.configuration.widgetUpdateRequest || ""
-    onWidgetUpdateRequestChanged: serviceWidgetUpdateRequest()
+    // Deferred: servicing rewrites the key this binding reads. A synchronous
+    // write re-enters the binding, which Qt drops as a loop, leaving a stale
+    // "check"/"install" that restarts the updater after every finished run.
+    onWidgetUpdateRequestChanged: Qt.callLater(root.serviceWidgetUpdateRequest)
 
     // Plasma exposes KPluginMetaData at runtime without a declarative QML type.
     readonly property var appletContext: Plasmoid
