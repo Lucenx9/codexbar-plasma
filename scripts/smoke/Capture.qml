@@ -1556,6 +1556,13 @@ Item {
                     return providersPage.errorText.length > 0 && providersPage.providers.length === 0;
                 if (providersPage.providers.length !== 12)
                     return false;
+                if (!providersPage.providerSourceSetupSupported)
+                    return false;
+                var sourceBox = findItem(providersPage, "providerSourceBox");
+                var sourceSave = findItem(providersPage, "providerSourceSaveButton");
+                verifyScenario(sourceBox !== null && sourceSave !== null
+                    && sourceBox.currentIndex === -1 && !sourceSave.enabled,
+                    "Provider source selection must start without claiming a saved value");
                 if (!navigationVerified) {
                     var settingsToggle = findItem(providersPage, "providerSettingsToggle");
                     verifyScenario(settingsToggle !== null, "Providers must expose the provider settings toggle");

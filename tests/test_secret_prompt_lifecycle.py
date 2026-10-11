@@ -224,6 +224,7 @@ TestCase {
     property string selectedProviderID: ""
     property bool providerDescriptorsUnavailable: false
     property bool fireworksSingleKeySetupSupported: false
+    property bool providerSourceSetupSupported: false
     property var pending: ({})
     property var providerFieldPending: ({})
     property var providerDiagnosticLoading: ({})

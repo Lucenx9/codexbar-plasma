@@ -424,6 +424,46 @@ TestCase {
         page.retireAllConfigCommands();
     }
 
+    function test_sourceEditorGateSelectionAndPendingState() {
+        var page = createProvidersPage();
+        if (!page)
+            return;
+        page.providers = [{provider: "codex", displayName: "Codex", enabled: false},
+            {provider: "future", displayName: "Future", enabled: true}];
+        page.selectedProviderID = "codex";
+        settingsToggle(page).expanded = true;
+        var box = findChild(page, "providerSourceBox");
+        var save = findChild(page, "providerSourceSaveButton");
+        verify(box !== null && save !== null);
+        page.handleCliVersionResult("CodexBar 0.72.0", 0);
+        verify(!box.visible);
+        page.handleCliVersionResult("CodexBar 0.73.0", 0);
+        verify(box.visible);
+        compare(box.currentIndex, -1);
+        verify(!save.enabled);
+        box.currentIndex = 1;
+        verify(save.enabled);
+        page.loading = true;
+        verify(!box.enabled && !save.enabled);
+        page.loading = false;
+        verify(save.enabled);
+        page.markFieldPending("codex", "key", true);
+        verify(!box.enabled && !save.enabled);
+        page.markFieldPending("codex", "key", false);
+        page.markFieldPending("future", "action", true);
+        verify(save.enabled);
+        page.markFieldPending("future", "action", false);
+        page.markPending("codex", true, false);
+        verify(!box.enabled && !save.enabled);
+        page.markPending("codex", false);
+        verify(save.enabled);
+        page.selectedProviderID = "future";
+        compare(box.currentIndex, -1);
+        verify(!save.enabled);
+        page.handleCliVersionResult("unknown", 0);
+        verify(!box.visible);
+    }
+
     function optionsNoticeText(page) {
         var all = [];
         walkPageObjects(page, all);

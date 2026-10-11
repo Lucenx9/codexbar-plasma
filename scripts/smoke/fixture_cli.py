@@ -121,6 +121,8 @@ def response(args, scenario, now):
     if args == ["config", "providers", "--descriptors", "--format", "json", "--json-only"]:
         raise ValueError("Unknown option --descriptors")
     if args == ["--version"]:
+        if scenario.startswith("settings-providers"):
+            return "CodexBar 0.73.0 (synthetic smoke fixture)"
         return "CodexBar 0.56.2 (synthetic smoke fixture)"
     if args == ["config", "providers", "--format", "json", "--json-only"]:
         if scenario == "empty-providers":

@@ -83,16 +83,6 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Implementable on Linux
 
-- [ ] Offer persistent per-provider source selection through Linux 0.73.0
-  `config set-source --provider <id> --source <mode>`. Successful JSON names
-  `provider`, `displayName`, `enabled`, `source`, and `configPath`; `auto`
-  clears the override, unsupported modes fail, and enablement/credentials
-  remain intact. The current General source override is global and passed per request.
-  Done when version-gated controls use the supported command, handle unknown
-  provider/source combinations without inventing support, preserve the global
-  override, and test failure, clearing, cancellation, and stale replies.
-  Generic descriptors remain unavailable; this writer resolves only source
-  persistence; 0.74.0 behaves identically. [Verified contract](docs/research/2026-10-07-macos-parity-0.73.0.md#linux-cli-contract-changes-since-0720).
 - [ ] Bundle fallback names, original icons, links, and brand colors for the
   nine providers added in official 0.74.0: Tavily, Linkup, TinyApi, Exa,
   Cosmic AI, Aerostack, Sail Research, Sofya, and X API. Plasma covers the
@@ -131,7 +121,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   config path has no supported writer, so they stay metadata-only on Linux.
   0.65.0 adds three more cases. Charm Hyper stores a key, but its default
   source demands web support on Linux, and it works only with `--source api`
-  while Plasma's source mode is global. Bifrost needs a gateway base URL
+  and Plasma now supports a persistent per-provider source choice. Bifrost
+  needs a gateway base URL
   (`enterpriseHost`) with no CLI writer; the CLI reads `BIFROST_BASE_URL` from
   the environment instead. The optional GitKraken organization ID has no writer
   either, and neither has llmman's non-default base URL (`LLMMAN_HOST`, 0.66.0).
@@ -155,8 +146,9 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   `--label` and `--workspace-id` remain z.ai-only: Linux 0.74.0 rejects
   `set-api-key --provider clinepass --label` despite the release claim (#4305),
   and labeled Kimi, Doubao, and OpenCode Go accounts remain blocked too.
-  Source persistence now has the supported 0.73.0 `set-source` writer and is
-  tracked above; generic source descriptors and other field writers are absent.
+  Source persistence has the supported 0.73.0 `set-source` writer and
+  version-gated Plasma controls; generic source descriptors and other field
+  writers are absent.
   0.61.0 adds an `azureOpenAIAPIVersion` config extension value with no
   supported CLI writer, which the frontend must not reach by editing the config
   file. Keep existing enable/disable, supported single-key setup, and link

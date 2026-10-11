@@ -1811,6 +1811,7 @@ msgid "Set…"
 msgstr ""
 
 #: contents/ui/config/ProviderDescriptorField.qml
+#: contents/ui/configProviders.qml
 msgid "Save"
 msgstr ""
 
@@ -2609,7 +2610,7 @@ msgstr ""
 msgid "Panel quota:"
 msgstr ""
 
-#: contents/ui/configPanel.qml
+#: contents/ui/configPanel.qml contents/ui/configProviders.qml
 msgid "Automatic"
 msgstr ""
 
@@ -2798,6 +2799,14 @@ msgid "%1 command timed out. Try again."
 msgstr ""
 
 #: contents/ui/configProviders.qml
+msgid "codexbar did not return command data."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "%1 setting saved"
+msgstr ""
+
+#: contents/ui/configProviders.qml
 #: contents/ui/controllers/ProviderRosterController.qml
 msgid "Could not parse codexbar provider JSON: %1"
 msgstr ""
@@ -2815,19 +2824,11 @@ msgid "%1 API key saved"
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "%1 setting saved"
-msgstr ""
-
-#: contents/ui/configProviders.qml
 msgid "%1 returned an unsupported URL."
 msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "%1 action completed"
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "codexbar did not return command data."
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -2978,6 +2979,12 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid ""
+"Other editable provider options require CodexBar descriptors, which this "
+"version does not expose."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid ""
 "This CodexBar version does not expose editable provider options. Enable/"
 "disable, supported API key setup, provider links, and redacted diagnostics "
 "remain available."
@@ -2987,6 +2994,17 @@ msgstr ""
 msgid ""
 "Editable provider options come from CodexBar. Redacted source and "
 "authentication details are available on request."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Web"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid ""
+"Choose a source to save. CodexBar validates support for this provider; "
+"Automatic clears its saved override. General's source override takes "
+"precedence in the widget."
 msgstr ""
 
 #: contents/ui/configProviders.qml
