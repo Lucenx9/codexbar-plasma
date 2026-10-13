@@ -10,6 +10,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Fixed
+
+- Keep hidden popup row and detail-section choices when long provider IDs
+  require JSON escaping. A valid saved list could previously exceed the read
+  limit and make every saved choice disappear.
+
 ## 0.2.47 - 2026-10-11
 
 ### Added

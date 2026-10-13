@@ -48,6 +48,22 @@ TestCase {
         hostConfiguration.popupHiddenDetailSections = "not json";
         compare(applet.popupDetailSections(codex), [section]);
     }
+
+    function test_hideRetainsLongEscapedProviderChoices() {
+        hostConfiguration.popupHiddenDetailSections = "";
+        var section = {title: "Budgets", rows: [{value: "25"}]};
+        var first = {provider: '"'.repeat(125) + "000", providerDetails: [section]};
+        for (var i = 0; i < PopupHiddenSections.maximumEntries; i++) {
+            applet.hidePopupDetailSection('"'.repeat(125) + String(i).padStart(3, "0"), section);
+            compare(applet.popupHiddenDetailSections.length, i + 1);
+        }
+        compare(applet.popupDetailSections(first), []);
+        compare(applet.hiddenPopupDetailSections(first), [section]);
+        verify(!applet.popupDetailSectionHideable(section));
+        applet.restorePopupDetailSection(first.provider, section);
+        compare(applet.popupHiddenDetailSections.length, PopupHiddenSections.maximumEntries - 1);
+        compare(applet.popupDetailSections(first), [section]);
+    }
 }
 '''
 
