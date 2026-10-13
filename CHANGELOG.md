@@ -12,7 +12,17 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
-- Add explicit icon dimensions (`icon.width` and `icon.height`) to the clear-override and reload account tool buttons in `ProviderAccountsPanel.qml`, aligning them with the adjacent busy indicator and preventing inconsistent button sizing.
+- Keep the default-account and reload button icons consistently sized beside
+  the account loading indicator.
+- Keep cost refreshes and legacy range labels usable when the CLI reports
+  object or array period metadata. Healthy provider costs continue to update.
+- Preserve cost refreshes when All history contains object or array date fields.
+  Malformed dates no longer interrupt healthy providers or expand the range.
+- Ignore dates after the reported scan day when sizing All history, so future
+  cost records cannot add empty days or lower the daily cost and token averages.
+- Keep hidden popup row and detail-section choices when long provider IDs
+  require JSON escaping. A valid saved list could previously exceed the read
+  limit and make every saved choice disappear.
 
 ## 0.2.47 - 2026-10-11
 

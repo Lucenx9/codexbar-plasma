@@ -553,7 +553,10 @@ function calendarDateKey(year, month, day) {
 }
 
 function parsedCalendarDateKey(value) {
-    var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ""))
+    if (typeof value !== "string") {
+        return null
+    }
+    var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
     if (!match) {
         return null
     }

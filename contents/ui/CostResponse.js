@@ -8,21 +8,22 @@ function boundedMessage(value) {
 }
 
 // `--period all` reports the days since year 1. Size its window from the
-// oldest recorded day to the scan day instead; NaN when no day is recorded.
+// oldest recorded day to the scan day instead; dates after a known scan day
+// cannot extend that span. NaN when no eligible day is recorded.
 // Like the daily normalization, read only the newest scan budget of records.
 function recordedHistoryDays(daily, scanDay) {
     var first = Infinity;
     var last = -Infinity;
+    var scan = Normalizer.parsedCalendarDateKey(scanDay);
     var days = Array.isArray(daily) ? daily : [];
     for (var i = Math.max(0, days.length - Normalizer.maximumCostHistoryScanItems); i < days.length; i++) {
         var day = Normalizer.isCliRecord(days[i])
             ? Normalizer.parsedCalendarDateKey(days[i].date || days[i].day || days[i].dayKey) : null;
-        if (day) {
+        if (day && (!scan || day.timestampMs <= scan.timestampMs)) {
             first = Math.min(first, day.timestampMs);
             last = Math.max(last, day.timestampMs);
         }
     }
-    var scan = Normalizer.parsedCalendarDateKey(scanDay);
     if (scan && isFinite(first)) {
         last = Math.max(last, scan.timestampMs);
     }
@@ -32,7 +33,8 @@ function recordedHistoryDays(daily, scanDay) {
 function normalizeSnapshot(item, requestedHistoryDays) {
     var provider = Normalizer.providerSnapshotKey(item.provider);
     var currency = Normalizer.boundedDisplayText(item.currencyCode || "USD", 12);
-    var period = CostPresentation.costPeriod(item.reportingPeriod);
+    var reportingPeriod = typeof item.reportingPeriod === "string" ? item.reportingPeriod : "";
+    var period = CostPresentation.costPeriod(reportingPeriod);
     var scanDay = Normalizer.localCalendarDateKey(item.updatedAt);
     var emittedDays = Normalizer.strictFiniteNumber(item.historyDays);
     var recordedDays = period === "all" ? recordedHistoryDays(item.daily, scanDay) : NaN;
@@ -65,7 +67,7 @@ function normalizeSnapshot(item, requestedHistoryDays) {
         scanDay: scanDay,
         // CLI 0.67.0 titles its ranges in English. The widget titles rolling
         // and calendar ranges itself in the user's language.
-        historyLabel: item.historyLabel && period.length === 0 && !/^rolling:\d+$/.test(item.reportingPeriod)
+        historyLabel: item.historyLabel && period.length === 0 && !/^rolling:\d+$/.test(reportingPeriod)
             ? Normalizer.boundedDisplayText(item.historyLabel, 120) : null,
         labelDays: isFinite(emittedDays) && emittedDays > 0 ? Math.max(1, Math.floor(emittedDays)) : historyDays,
         trust: trust,

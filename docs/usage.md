@@ -188,7 +188,8 @@ work and upstream contract requirements.
   ID; **Apply** saves a settings-page restore. Restored quotas keep extra window
   IDs, so a hidden extra window stays hidden after a restart.
   Up to 64 rows can be saved as hidden. At that limit the hide button disappears;
-  restore a saved row to make room for another.
+  restore a saved row to make room for another. Long provider IDs that require
+  JSON escaping retain their saved choices too.
 
   ![Hidden quota rows with Restore buttons in the provider tab](codexbar-plasma-hidden-usage-rows.png)
 
@@ -199,6 +200,8 @@ work and upstream contract requirements.
   Hidden detail sections → Restore all** restores all sections for a provider
   when you apply settings, including sections no longer returned by the CLI.
   Only provider IDs and title digests are saved, never the titles themselves.
+  Up to 64 section choices are retained, including for long provider IDs that
+  require JSON escaping.
   Equal titles within a provider hide and restore together; reordered sections
   stay hidden, renamed sections appear again, and untitled sections stay visible.
   This display choice does not change fetching, notifications, the panel, or
@@ -427,10 +430,13 @@ and clipboard content remain under your control after closing the window.
   snapshot scanned before midnight shows today as unavailable until a scan from
   today arrives. Malformed provider error messages use a generic
   warning while healthy providers update and failed providers keep their
-  previous costs.
+  previous costs. Malformed period metadata also keeps the day-range fallback
+  and any legacy range label usable while healthy providers update.
 - Dated history stays inside the selected period even when duplicate or
   malformed records prevent filling gaps. Incomplete scans retain observed
   days without inventing zero activity; undated legacy history keeps its order.
+  Object and array date fields cannot expand **All history** or prevent healthy
+  providers from updating.
 - Click a day in the provider chart or select it with the keyboard to see that
   day's model costs and tokens. Hover previews stay inside the chart, keeping
   the layout steady. The cost/token selector reuses the loaded data.
@@ -451,7 +457,8 @@ and clipboard content remain under your control after closing the window.
   **All history** totals cover every recorded day. Its chart, heatmap, and
   history rows start at the oldest recorded day and show at most the newest
   365 days; its model totals and daily average cover up to the newest 2,048
-  daily records.
+  daily records. Dates after a snapshot's scan day do not extend that history
+  or lower its daily cost and token averages.
 - Token breakdowns, model summaries, recent daily spend, cost history bars, and
   average cost per 1M tokens, with a configurable cost history window. Recent
   history rows show measured zero costs and token counts alongside positive
