@@ -10,6 +10,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Fixed
+
+- Add explicit icon dimensions (`icon.width` and `icon.height`) to the clear-override and reload account tool buttons in `ProviderAccountsPanel.qml`, aligning them with the adjacent busy indicator and preventing inconsistent button sizing.
+
 ## 0.2.47 - 2026-10-11
 
 ### Added

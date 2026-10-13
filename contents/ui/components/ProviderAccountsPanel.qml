@@ -63,6 +63,8 @@ ColumnLayout {
             visible: accountsPanel.applet.selectedAccountForProvider(accountsPanel.providerID).length > 0
             enabled: !accountsPanel.applet.accountLoadingForProvider(accountsPanel.providerID)
             icon.name: "edit-clear"
+            icon.width: Kirigami.Units.iconSizes.small
+            icon.height: Kirigami.Units.iconSizes.small
             Accessible.name: i18n("Use default account")
             onClicked: {
                 if (accountsPanel.largeAccountList && activeFocus)
@@ -95,6 +97,8 @@ ColumnLayout {
             objectName: "reloadAccountsButton"
 
             icon.name: "view-refresh"
+            icon.width: Kirigami.Units.iconSizes.small
+            icon.height: Kirigami.Units.iconSizes.small
             enabled: accountsPanel.providerID.length > 0
                 && !accountsPanel.applet.accountLoadingForProvider(accountsPanel.providerID)
             Accessible.name: i18n("Reload accounts")
