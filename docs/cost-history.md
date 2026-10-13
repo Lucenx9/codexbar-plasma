@@ -36,7 +36,10 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
   A snapshot belongs to the selected range by its `reportingPeriod`, not its
   day count, which grows through the month. `--period all` reports the days
   since year 1, so the widget sizes that window from the oldest recorded day to
-  the scan day. The chart and daily rows keep at most 365 days, while period
+  the scan day. Dates after a known scan day do not extend that window or lower
+  its daily averages; the daily and model filters already exclude those records.
+  Without a usable scan date, the window keeps spanning the recorded dates.
+  The chart and daily rows keep at most 365 days, while period
   models and the daily average cover the whole span within the 2,048-record
   scan budget; the CLI's totals still cover the whole history.
 - The global activity heatmap uses the unfiltered history's calendar dates,
@@ -191,7 +194,9 @@ malformed, unsupported, and partial error replies, collapsed/expanded details,
 privacy, an initial failure without cached costs, and recovery.
 [Cost response tests](../tests/tst_cost_response.qml) exercise malformed error
 messages and bounded normalization, including matching daily and model costs
-when duplicate dates disable gap filling. Normalizer cases keep older and future
+when duplicate dates disable gap filling. All-history cases exclude future dates
+when sizing short and multi-year windows and their averages, retaining the
+missing-scan-time fallback and input scan bound. Normalizer cases keep older and future
 dates outside the period across duplicate, malformed, blocked-day and incomplete
 scan fallbacks without manufacturing zero values. [Controller tests](../tests/test_cost_context.py)
 use real CLI processes to check healthy provider updates, same-context retention,
