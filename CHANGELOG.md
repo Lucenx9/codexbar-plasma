@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep the default-account and reload button icons consistently sized beside
+  the account loading indicator.
 - Keep cost refreshes and legacy range labels usable when the CLI reports
   object or array period metadata. Healthy provider costs continue to update.
 - Preserve cost refreshes when All history contains object or array date fields.
