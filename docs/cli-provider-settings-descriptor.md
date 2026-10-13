@@ -20,6 +20,9 @@ ClinePass labeled-key writes still fail with the z.ai-only restriction.
 The scoped [0.74.0 review](research/2026-10-11-macos-parity-0.74.0.md) finds
 the same absence; Exa's API key ID and Cosmic AI's project ID add two more
 fields with only environment fallbacks and no writer.
+The scoped [0.74.1 review](research/2026-10-14-macos-parity-0.74.1.md)
+rechecks descriptor/action absence and the ClinePass labeled-write restriction;
+registry and command help are unchanged.
 All command examples and payloads below describe the proposed contract.
 
 This document defines the CLI contract Plasma needs before it can render real

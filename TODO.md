@@ -8,9 +8,16 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.74.0](https://github.com/steipete/CodexBar/releases/tag/v0.74.0),
-  commit `c2f22ccf8751efc8fe697bfe4714769107965274`, checked 2026-10-11.
-- Coverage: the 0.74.0 release delta against Plasma `7a5945a`. The
+- Last release reviewed: [CodexBar 0.74.1](https://github.com/steipete/CodexBar/releases/tag/v0.74.1),
+  commit `7c08c0ae783b72040b728757eb85a6cfe4fc2443`, checked 2026-10-14.
+- Coverage: the 0.74.1 release delta against Plasma `abe8f7d`. The
+  [0.74.1 review](docs/research/2026-10-14-macos-parity-0.74.1.md) verifies
+  unchanged registry/help and empty envelopes, rechecks descriptor/action,
+  Cursor cost, currency, and ClinePass-label blockers, and confirms OpenCode
+  Go local estimated percentages in official Linux output and the discarded
+  confidence in Plasma. xAI detail-row compatibility is tested with a
+  synthetic shape; authenticated xAI and Command Code changes remain
+  unverified. The
   [0.74.0 review](docs/research/2026-10-11-macos-parity-0.74.0.md) verifies the
   100-provider registry (nine bundled-plugin additions, same four keys) and
   which of them Linux can set up, subscription renewal/expiration dates in
@@ -83,10 +90,23 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Implementable on Linux
 
+- [ ] Preserve `usage.dataConfidence` and qualify estimated quota percentages.
+  Official Linux 0.74.0 and 0.74.1 emit OpenCode Go local cost-derived windows
+  with `source: "local"` and `dataConfidence: "estimated"`; Plasma preserves
+  the percentages but discards confidence. These fixed denominators do not
+  establish account quota or billing-cycle headroom. Done when bounded generic
+  confidence survives normalization, panel/popup estimates are visibly
+  qualified, quota/pace/reset notifications and automatic provider selection
+  do not treat estimates as authoritative quota, and direct tests cover
+  estimated, exact, missing, and unknown confidence without breaking old
+  payloads. Keep scanning and estimate arithmetic in the CLI.
+  [Verified mismatch](docs/research/2026-10-14-macos-parity-0.74.1.md#linux-cli-contract-changes-since-0740).
+
 - [ ] Bundle fallback names, original icons, links, and brand colors for the
   nine providers added in official 0.74.0: Tavily, Linkup, TinyApi, Exa,
   Cosmic AI, Aerostack, Sail Research, Sofya, and X API. Plasma covers the
-  0.73.0 registry and shows generic artwork for these IDs. Tavily, Linkup,
+  0.73.0 registry and shows generic artwork for these IDs. The live icon
+  check fails for all nine with installed CLI 0.74.1. Tavily, Linkup,
   Aerostack, Sail Research, and Sofya accept `set-api-key --stdin` and then
   attempt their APIs, so they can join the API-key setup allowlist. Exa and
   Cosmic AI store a key but need an API key ID or project ID that has only an
@@ -114,7 +134,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider settings
 
 - [ ] Enable generic settings and token-account editing through official
-  descriptors and writes. Linux 0.74.0 still rejects `config providers
+  descriptors and writes. Linux 0.74.1 still rejects `config providers
   --descriptors` (100 records, same four keys); its provider records have no
   descriptor. Helmcode and TypeSafe make this concrete: both are cookie-only,
   both refuse `--source api`, and their documented `cookieSource`/`cookieHeader`
@@ -143,7 +163,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   (`COSMIC_PROJECT_ID`): both providers store a key, then refuse to fetch
   until that environment-only field is set, and `--workspace-id` is refused.
   TinyApi and X API are cookie-only with a macOS-only web source.
-  `--label` and `--workspace-id` remain z.ai-only: Linux 0.74.0 rejects
+  `--label` and `--workspace-id` remain z.ai-only: Linux 0.74.1 rejects
   `set-api-key --provider clinepass --label` despite the release claim (#4305),
   and labeled Kimi, Doubao, and OpenCode Go accounts remain blocked too.
   Source persistence has the supported 0.73.0 `set-source` writer and
@@ -163,7 +183,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.74.0 still has no
+  flow, CLI-auth setup, and token-account actions. Linux 0.74.1 still has no
   generic `config action` command (`set-api-key` and `set-source` are field
   writers; the `usage_updated` hook event is CLI automation surface, not a setup
   action). Done when supported actions expose validated
@@ -198,8 +218,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Cursor cost
 
 - [ ] Show Cursor cost history through the generic Linux `cost` path. Linux
-  0.74.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
-  Code, and Pi as supported; its new `cursor-agent` login (#4397) changes
+  0.74.1 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
+  Code, and Pi as supported; the 0.74.0 `cursor-agent` login (#4397) changes
   usage authentication only;
   the descriptor gate keeps the new cookie-source availability errors unreachable.
   The 0.68.0 all-history date-range fix (#4028) targets macOS Usage & Spend
@@ -254,8 +274,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 - [ ] Offer display-currency selection and conversion through an official Linux
   contract. The 0.56.2 audit records no display-currency setter or descriptor;
-  the scoped 0.57.0, 0.58.0, 0.60.4, 0.67.0, 0.69.0, 0.72.0, 0.73.0, and
-  0.74.0 config probes expose neither,
+  the scoped 0.57.0, 0.58.0, 0.60.4, 0.67.0, 0.69.0, 0.72.0, 0.73.0,
+  0.74.0, and 0.74.1 config probes expose neither,
   although macOS 0.67.0 adds twelve spend-estimate currencies. Plasma currently
   displays the CLI-emitted currency. Done when released settings and converted
   amounts define currency, rate provenance, and unavailable-conversion behavior,
@@ -293,7 +313,7 @@ These are unresolved Linux candidates, not confirmed missing features.
   inventory in an isolated official CLI before deciding how to normalize the
   new shape and preserve legacy fallback. Private `codexbar-linux --snapshot`
   fields belong to the separate desktop app and are not evidence for standard
-  `usage` output. The payload source is unchanged at 0.74.0.
+  `usage` output. The payload source is unchanged through 0.74.1.
   [Source and limits](docs/research/2026-10-07-macos-parity-0.73.0.md#unverified-in-this-review).
 - [ ] Verify 0.73.0 partial-priced Codex daily/model output and imported
   incomplete model rows (#4273, #4278, #4279, #4299) against Plasma's cost trust

@@ -121,6 +121,11 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   and `serve` account discovery, with bubblewrap-isolated official CLI
   probes. Provider descriptors, generic config actions, Cursor cost, and
   display currency remain unavailable.
+- [0.74.1 release review](research/2026-10-14-macos-parity-0.74.1.md): the
+  OpenCode Go estimated-confidence mismatch verified with isolated local
+  history and the Plasma normalizer, xAI generic detail-row compatibility,
+  CLI-owned Command Code fixes, unchanged registry/help and empty envelopes,
+  and carried blockers rechecked with bubblewrap-isolated official binaries.
 - [Settings decisions](research/2026-09-08-settings-experience.md): Panel disclosure and text grouping,
   Plasma settings, privacy, refresh behavior, the macOS 0.56.8 comparison, and
   the shared settings visual conventions.
