@@ -434,6 +434,8 @@ and clipboard content remain under your control after closing the window.
 - Dated history stays inside the selected period even when duplicate or
   malformed records prevent filling gaps. Incomplete scans retain observed
   days without inventing zero activity; undated legacy history keeps its order.
+  Object and array date fields cannot expand **All history** or prevent healthy
+  providers from updating.
 - Click a day in the provider chart or select it with the keyboard to see that
   day's model costs and tokens. Hover previews stay inside the chart, keeping
   the layout steady. The cost/token selector reuses the loaded data.

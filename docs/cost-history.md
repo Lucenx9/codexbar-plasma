@@ -22,6 +22,8 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
   dates, malformed records or the scan budget prevent gap filling. Those
   fallbacks retain observed rows without inventing zero days. Undated legacy
   labels keep their bounded sequence behavior.
+  Calendar keys accept only strings in `YYYY-MM-DD` form. Object and array
+  date fields cannot extend All history or interrupt healthy provider snapshots.
   Quota-week sums mark trailing days after a stale snapshot, the last scanned
   day of a snapshot taken before today, and measured days with excluded
   incomplete requests as partial; a newer usage refresh does not make those

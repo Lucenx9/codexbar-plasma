@@ -11,6 +11,35 @@ TestCase {
     function parse(payload, days) {
         return CostResponse.response(JSON.stringify(payload), "", days === undefined ? 30 : days);
     }
+    function test_structuredHistoryDatesPreserveHealthyProviders_data() {
+        var cases = [];
+        var fields = ["date", "day", "dayKey"];
+        var values = [{toString: null}, {toString: "2020-01-01", valueOf: null}, ["2020-01-01"]];
+        for (var i = 0; i < fields.length; i++) {
+            for (var j = 0; j < values.length; j++) {
+                cases.push({tag: fields[i] + "-" + j, field: fields[i], value: values[j]});
+            }
+        }
+        return cases;
+    }
+    function test_structuredHistoryDatesPreserveHealthyProviders(data) {
+        var invalid = {};
+        invalid[data.field] = data.value;
+        var valid = {date: "2026-10-01", totalCost: 13, totalTokens: 130};
+        var sibling = {provider: "claude", sessionCostUSD: 7, sessionTokens: 70};
+        var baseline = parse([{provider: "codex", reportingPeriod: "all",
+            updatedAt: "2026-10-13", daily: [valid]}, sibling]);
+        var actual = parse([{provider: "codex", reportingPeriod: "all",
+            updatedAt: "2026-10-13", daily: [valid, invalid]}, sibling]);
+        compare(actual.outcome, "success");
+        compare(actual.costs.claude, baseline.costs.claude);
+        compare(actual.costs.codex.historyDays, 13);
+        compare(actual.costs.codex.labelDays, 13);
+        compare(actual.costs.codex.models, baseline.costs.codex.models);
+        compare(CostPresentation.averageDailyValue(actual.costs.codex.daily, false),
+            CostPresentation.averageDailyValue(baseline.costs.codex.daily, false));
+    }
+
     function test_duplicateDateFallbackKeepsDailyAndModelCostsInsidePeriod() {
         var result = parse([{provider: "codex", updatedAt: "2026-08-29", daily: [
             {date: "2026-08-28", totalCost: 1, modelBreakdowns: [{modelName: "synthetic", cost: 1}]},
