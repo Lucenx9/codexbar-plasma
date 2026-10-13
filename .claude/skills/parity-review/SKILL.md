@@ -42,16 +42,15 @@ blockers in TODO and the unresolved findings of the newest note under
 ```sh
 v=A.B.C
 tmp=$(mktemp -d)
-cd "$tmp"
-gh release download "v$v" -R steipete/CodexBar \
+gh release download "v$v" -R steipete/CodexBar -D "$tmp" \
   -p "CodexBarCLI-v$v-linux-x86_64.tar.gz" \
   -p "CodexBarCLI-v$v-linux-x86_64.tar.gz.sha256"
-sha256sum -c "CodexBarCLI-v$v-linux-x86_64.tar.gz.sha256"
-mkdir bin home config cache
-tar -xzf "CodexBarCLI-v$v-linux-x86_64.tar.gz" -C bin
+(cd "$tmp" && sha256sum -c "CodexBarCLI-v$v-linux-x86_64.tar.gz.sha256")
+mkdir -p "$tmp/bin" "$tmp/home" "$tmp/config" "$tmp/cache"
+tar -xzf "$tmp/CodexBarCLI-v$v-linux-x86_64.tar.gz" -C "$tmp/bin"
 sandbox() {
   bwrap --ro-bind / / --tmpfs /home --tmpfs /root --tmpfs /run --tmpfs /tmp \
-    --bind "$tmp" /tmp/probe --dev /dev --proc /proc --unshare-all \
+    --bind "$tmp" /tmp/probe --chdir /tmp/probe --dev /dev --proc /proc --unshare-all \
     --die-with-parent --clearenv --setenv PATH /usr/bin:/bin \
     --setenv HOME /tmp/probe/home --setenv XDG_CONFIG_HOME /tmp/probe/config \
     --setenv XDG_CACHE_HOME /tmp/probe/cache "$@"
@@ -69,6 +68,7 @@ sandbox /tmp/probe/bin/codexbar --version
   `sandbox sh -c 'python3 -m http.server 8765 --bind 127.0.0.1 & sleep 1; /tmp/probe/bin/codexbar ...'`.
 - Never replace the installed `codexbar`. Use synthetic keys only.
 - Record every probe you could not run, with the reason.
+- Clean up `$tmp` with `rm -rf "$tmp"` when probing finishes.
 
 ## 4. Write the results
 

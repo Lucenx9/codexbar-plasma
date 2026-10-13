@@ -79,6 +79,7 @@ gh run watch <tag-run-id> --exit-status
 tmp=$(mktemp -d)
 gh release download vX.Y.Z -D "$tmp"
 (cd "$tmp" && sha256sum -c codexbar-plasma.plasmoid.sha256)
+rm -rf "$tmp"
 ```
 
 The tag run is the one whose `headBranch` is the tag. It must publish
