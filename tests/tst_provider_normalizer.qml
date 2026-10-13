@@ -2154,6 +2154,30 @@ TestCase {
 
     // --- bounded display text ----------------------------------------------
 
+    function test_calendarKeysRejectNonStringValues_data() {
+        return [
+            {tag: "null", value: null},
+            {tag: "undefined", value: undefined},
+            {tag: "number", value: 20261001},
+            {tag: "boolean", value: true},
+            {tag: "object", value: {}},
+            {tag: "shadowed-conversion", value: {toString: null}},
+            {tag: "string-array", value: ["2026-10-01"]},
+            {tag: "nested-array", value: [["2026-10-01"]]}
+        ];
+    }
+    function test_calendarKeysRejectNonStringValues(data) {
+        compare(Normalizer.parsedCalendarDateKey(data.value), null);
+        compare(Normalizer.calendarKeyLocalDate(data.value), null);
+    }
+    function test_calendarKeysKeepValidDatesAndRejectInvalidStrings() {
+        compare(Normalizer.parsedCalendarDateKey("2024-02-29").key, "2024-02-29");
+        compare(Normalizer.calendarKeyLocalDate("2026-10-01").getDate(), 1);
+        compare(Normalizer.parsedCalendarDateKey("2026-02-29"), null);
+        compare(Normalizer.parsedCalendarDateKey("2026-10-01T00:00:00Z"), null);
+        compare(Normalizer.parsedCalendarDateKey(" 2026-10-01 "), null);
+    }
+
     function test_boundedDisplayTextBlanksNullishValues() {
         compare(Normalizer.boundedDisplayText(null, 120), "")
         compare(Normalizer.boundedDisplayText(undefined, 120), "")

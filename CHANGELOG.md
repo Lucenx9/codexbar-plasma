@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve cost refreshes when All history contains object or array date fields.
+  Malformed dates no longer interrupt healthy providers or expand the range.
 - Ignore dates after the reported scan day when sizing All history, so future
   cost records cannot add empty days or lower the daily cost and token averages.
 - Keep hidden popup row and detail-section choices when long provider IDs
