@@ -17,7 +17,7 @@ TestCase {
     }
 
     function test_untrustedStorage() {
-        [null, 42, "", "{", "{}", "[" + " ".repeat(16400) + "]"].forEach(function(raw) {
+        [null, 42, "", "{", "{}", "[" + " ".repeat(32768) + "]"].forEach(function(raw) {
             compare(Sections.parse(raw), []);
         });
         var key = Sections.sectionKey({title: "Budgets"});
@@ -75,5 +75,26 @@ TestCase {
         compare(Sections.parse(JSON.stringify(oversized)), entries);
         var restored = Sections.restoredProvider(entries, "provider0");
         compare(Sections.hidden(restored, "newprovider", key).length, Sections.maximumEntries);
+    }
+
+    function test_capacityRoundTripWithEscapedProviderIDs_data() {
+        return [{tag: "quotes", character: '"'}, {tag: "backslashes", character: "\\"}];
+    }
+
+    function test_capacityRoundTripWithEscapedProviderIDs(data) {
+        var entries = [];
+        var key = Sections.sectionKey({title: "Budgets"});
+        for (var i = 0; i < Sections.maximumEntries; i++)
+            entries = Sections.hidden(entries, data.character.repeat(125) + String(i).padStart(3, "0"), key);
+        compare(entries.length, Sections.maximumEntries);
+        compare(Sections.parse(Sections.serialize(entries)), entries);
+    }
+
+    function test_storageLengthBoundary() {
+        var entries = [{provider: "codex", section: Sections.sectionKey({title: "Budgets"})}];
+        var stored = Sections.serialize(entries);
+        stored += " ".repeat(Sections.maximumStorageLength - stored.length);
+        compare(Sections.parse(stored), entries);
+        compare(Sections.parse(stored + " "), []);
     }
 }

@@ -5,6 +5,9 @@
 // Only provider IDs and title digests are persisted. Equal current titles form
 // one group; a renamed title is visible again. Untitled sections stay visible.
 var maximumEntries = 64
+// JSON escaping can double a validated 128-character provider ID. Allow the
+// complete 64-entry list and its title digests on read.
+var maximumStorageLength = 32768
 
 function sectionKey(section) {
     if (!Normalizer.isCliRecord(section) || typeof section.title !== "string"
@@ -25,7 +28,7 @@ function sameEntry(a, b) {
 // Stored text is untrusted: keep only well-formed, unique entries, in order.
 function parse(raw) {
     var result = []
-    if (typeof raw !== "string" || raw.length === 0 || raw.length > 16384) {
+    if (typeof raw !== "string" || raw.length === 0 || raw.length > maximumStorageLength) {
         return result
     }
     var entries

@@ -25,7 +25,7 @@ TestCase {
             {tag: "empty", raw: "", count: 0},
             {tag: "not-json", raw: "{", count: 0},
             {tag: "object", raw: "{\"provider\":\"codex\",\"row\":\"primary\"}", count: 0},
-            {tag: "oversized", raw: "[" + " ".repeat(16400) + "]", count: 0},
+            {tag: "oversized", raw: "[" + " ".repeat(32768) + "]", count: 0},
             {tag: "non-string", raw: 42, count: 0}
         ];
     }
@@ -75,6 +75,27 @@ TestCase {
         entries = PopupHiddenRows.restored(entries, "codex", "secondary");
         compare(entries, [{provider: "claude", row: "extra:opus"}]);
         compare(PopupHiddenRows.serialize(PopupHiddenRows.restored(entries, "claude", "extra:opus")), "");
+    }
+
+    function test_capacityRoundTripWithEscapedProviderIDs_data() {
+        return [{tag: "quotes", character: '"'}, {tag: "backslashes", character: "\\"}];
+    }
+
+    function test_capacityRoundTripWithEscapedProviderIDs(data) {
+        var entries = [];
+        var row = "extra:" + "w".repeat(64);
+        for (var i = 0; i < PopupHiddenRows.maximumEntries; i++)
+            entries = PopupHiddenRows.hidden(entries, data.character.repeat(125) + String(i).padStart(3, "0"), row);
+        compare(entries.length, PopupHiddenRows.maximumEntries);
+        compare(PopupHiddenRows.parse(PopupHiddenRows.serialize(entries)), entries);
+    }
+
+    function test_storageLengthBoundary() {
+        var entries = [{provider: "codex", row: "primary"}];
+        var stored = PopupHiddenRows.serialize(entries);
+        stored += " ".repeat(PopupHiddenRows.maximumStorageLength - stored.length);
+        compare(PopupHiddenRows.parse(stored), entries);
+        compare(PopupHiddenRows.parse(stored + " "), []);
     }
 
     // A full list refuses a new entry rather than silently forgetting an

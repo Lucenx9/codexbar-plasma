@@ -188,7 +188,8 @@ work and upstream contract requirements.
   ID; **Apply** saves a settings-page restore. Restored quotas keep extra window
   IDs, so a hidden extra window stays hidden after a restart.
   Up to 64 rows can be saved as hidden. At that limit the hide button disappears;
-  restore a saved row to make room for another.
+  restore a saved row to make room for another. Long provider IDs that require
+  JSON escaping retain their saved choices too.
 
   ![Hidden quota rows with Restore buttons in the provider tab](codexbar-plasma-hidden-usage-rows.png)
 
@@ -199,6 +200,8 @@ work and upstream contract requirements.
   Hidden detail sections → Restore all** restores all sections for a provider
   when you apply settings, including sections no longer returned by the CLI.
   Only provider IDs and title digests are saved, never the titles themselves.
+  Up to 64 section choices are retained, including for long provider IDs that
+  require JSON escaping.
   Equal titles within a provider hide and restore together; reordered sections
   stay hidden, renamed sections appear again, and untitled sections stay visible.
   This display choice does not change fetching, notifications, the panel, or

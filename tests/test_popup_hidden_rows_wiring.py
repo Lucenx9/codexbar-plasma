@@ -79,6 +79,21 @@ TestCase {
         verify(PopupHiddenRows.isHidden(applet.popupHiddenUsageRows, "codex", "primary"));
         hostConfiguration.popupHiddenUsageRows = "";
     }
+
+    function test_hideRetainsLongEscapedProviderChoices() {
+        var row = {lane: "extra", windowId: "w".repeat(64)};
+        var first = {provider: '"'.repeat(125) + "000", rows: [row]};
+        for (var i = 0; i < PopupHiddenRows.maximumEntries; i++) {
+            applet.hidePopupUsageRow('"'.repeat(125) + String(i).padStart(3, "0"), row);
+            compare(applet.popupHiddenUsageRows.length, i + 1);
+        }
+        compare(applet.popupUsageRows(first), []);
+        compare(applet.hiddenPopupUsageRows(first), [row]);
+        verify(!applet.popupUsageRowHideable(row));
+        applet.restorePopupUsageRow(first.provider, row);
+        compare(applet.popupHiddenUsageRows.length, PopupHiddenRows.maximumEntries - 1);
+        compare(applet.popupUsageRows(first), [row]);
+    }
 }
 '''
 

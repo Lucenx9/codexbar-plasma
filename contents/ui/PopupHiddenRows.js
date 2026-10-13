@@ -9,6 +9,9 @@
 // no provider prose, so a stored entry cannot carry text into the settings page.
 
 var maximumEntries = 64
+// JSON escaping can double a validated 128-character provider ID. Allow the
+// complete 64-entry list, including 64-character extra window IDs, on read.
+var maximumStorageLength = 32768
 var laneKeys = ["primary", "secondary", "tertiary"]
 
 // The key of a normalized popup row, or "" when the row cannot be hidden.
@@ -39,7 +42,7 @@ function sameEntry(a, b) {
 // Stored text is untrusted: keep only well-formed, unique entries, in order.
 function parse(raw) {
     var result = []
-    if (typeof raw !== "string" || raw.length === 0 || raw.length > 16384) {
+    if (typeof raw !== "string" || raw.length === 0 || raw.length > maximumStorageLength) {
         return result
     }
     var entries

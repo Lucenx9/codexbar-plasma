@@ -525,6 +525,10 @@ clipboard interoperability with every Wayland application or portal backend.
   projection and the quota cache keep the identifier-shaped `windowId` so a
   hidden extra window stays hidden. A full list refuses new entries instead of
   dropping old ones, and its hide actions stay unavailable until a row is restored.
+  Both hidden-preference readers allow at most 32768 UTF-16 code units of JSON,
+  enough for 64 entries even when 128-character provider IDs need escaping.
+  Direct QtTests cover escaped IDs and the exact read limit; executed applet
+  adapters verify that saving and reparsing retain earlier hide choices.
   `popup-hidden-rows` smoke coverage hides every Codex quota row and restores
   each from the provider tab, capturing the expanded list with synthetic data.
   It also fills the 64-entry list and checks that restoring a saved row
