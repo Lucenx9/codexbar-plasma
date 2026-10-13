@@ -8,21 +8,22 @@ function boundedMessage(value) {
 }
 
 // `--period all` reports the days since year 1. Size its window from the
-// oldest recorded day to the scan day instead; NaN when no day is recorded.
+// oldest recorded day to the scan day instead; dates after a known scan day
+// cannot extend that span. NaN when no eligible day is recorded.
 // Like the daily normalization, read only the newest scan budget of records.
 function recordedHistoryDays(daily, scanDay) {
     var first = Infinity;
     var last = -Infinity;
+    var scan = Normalizer.parsedCalendarDateKey(scanDay);
     var days = Array.isArray(daily) ? daily : [];
     for (var i = Math.max(0, days.length - Normalizer.maximumCostHistoryScanItems); i < days.length; i++) {
         var day = Normalizer.isCliRecord(days[i])
             ? Normalizer.parsedCalendarDateKey(days[i].date || days[i].day || days[i].dayKey) : null;
-        if (day) {
+        if (day && (!scan || day.timestampMs <= scan.timestampMs)) {
             first = Math.min(first, day.timestampMs);
             last = Math.max(last, day.timestampMs);
         }
     }
-    var scan = Normalizer.parsedCalendarDateKey(scanDay);
     if (scan && isFinite(first)) {
         last = Math.max(last, scan.timestampMs);
     }

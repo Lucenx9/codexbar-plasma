@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Ignore dates after the reported scan day when sizing All history, so future
+  cost records cannot add empty days or lower the daily cost and token averages.
 - Keep hidden popup row and detail-section choices when long provider IDs
   require JSON escaping. A valid saved list could previously exceed the read
   limit and make every saved choice disappear.

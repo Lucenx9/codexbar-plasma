@@ -1,6 +1,7 @@
 import QtQuick
 import QtTest
 import "../contents/ui/CostResponse.js" as CostResponse
+import "../contents/ui/CostPresentation.js" as CostPresentation
 import "../contents/ui/ProviderNormalizer.js" as Normalizer
 import "../contents/ui/SafeText.js" as SafeText
 
@@ -332,6 +333,42 @@ TestCase {
             updatedAt: "2026-09-19T12:00:00Z", daily: daily }).costs.codex;
         compare(cost.historyDays, 1);
     }
+    function test_futureDatesDoNotExpandAllHistory_data() {
+        return [
+            {tag: "next day", futureDate: "2026-10-14", futureFirst: false},
+            {tag: "distant future", futureDate: "2035-01-01", futureFirst: false},
+            {tag: "future first", futureDate: "2026-10-14", futureFirst: true}
+        ];
+    }
+    function test_futureDatesDoNotExpandAllHistory(data) {
+        var payload = {provider: "codex", reportingPeriod: "all", historyDays: 739911,
+            updatedAt: "2026-10-13", daily: [
+                {date: "2026-10-01", totalCost: 13, totalTokens: 130,
+                    modelBreakdowns: [{modelName: "observed", cost: 13, totalTokens: 130}]}
+            ]};
+        var baseline = parse(payload).costs.codex;
+        var future = {date: data.futureDate, totalCost: 999, totalTokens: 9990,
+            modelBreakdowns: [{modelName: "future", cost: 999, totalTokens: 9990}]};
+        if (data.futureFirst)
+            payload.daily.unshift(future);
+        else
+            payload.daily.push(future);
+        var actual = parse(payload).costs.codex;
+        compare(actual.historyDays, 13);
+        compare(actual.labelDays, 13);
+        compare(actual.daily, baseline.daily);
+        compare(actual.models, baseline.models);
+        compare(actual.tokenRanking, baseline.tokenRanking);
+        compare(CostPresentation.averageDailyValue(actual.daily, false).value, 1);
+        compare(CostPresentation.averageDailyValue(actual.daily, true).value, 10);
+    }
+    function test_allFutureDatesKeepTheEmptyHistoryFallback() {
+        var payload = {provider: "codex", reportingPeriod: "all", historyDays: 739911,
+            updatedAt: "2026-10-13", daily: []};
+        var baseline = parse(payload).costs.codex;
+        payload.daily = [{date: "2026-10-14", totalCost: 13, totalTokens: 130}];
+        compare(parse(payload).costs.codex, baseline);
+    }
     function test_allHistoryAggregatesCoverMoreThanTheChartedYear() {
         // 400 recorded days: the chart keeps the newest 365, while the model
         // totals and the daily average cover every recorded day.
@@ -351,6 +388,14 @@ TestCase {
         compare(cost.models[0].tokens, 4000);
         compare(cost.averageDaily.cost.value, (35 * 3 + 365) / 400);
         compare(cost.averageDaily.tokens.value, 10);
+        daily.push({date: "2026-09-20", totalCost: 999, totalTokens: 9990,
+            modelBreakdowns: [{modelName: "future", cost: 999, totalTokens: 9990}]});
+        var withFuture = parse({provider: "codex", historyDays: 739887, reportingPeriod: "all",
+            updatedAt: "2026-09-19T12:00:00Z", daily: daily}).costs.codex;
+        compare(withFuture.labelDays, 400);
+        compare(withFuture.averageDaily, cost.averageDaily);
+        compare(withFuture.daily, cost.daily);
+        compare(withFuture.models, cost.models);
         var rolling = parse({ provider: "codex", historyDays: 30, reportingPeriod: "rolling:30",
             updatedAt: "2026-09-19T12:00:00Z", daily: daily }).costs.codex;
         compare(rolling.averageDaily, null);
