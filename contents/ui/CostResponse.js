@@ -33,7 +33,8 @@ function recordedHistoryDays(daily, scanDay) {
 function normalizeSnapshot(item, requestedHistoryDays) {
     var provider = Normalizer.providerSnapshotKey(item.provider);
     var currency = Normalizer.boundedDisplayText(item.currencyCode || "USD", 12);
-    var period = CostPresentation.costPeriod(item.reportingPeriod);
+    var reportingPeriod = typeof item.reportingPeriod === "string" ? item.reportingPeriod : "";
+    var period = CostPresentation.costPeriod(reportingPeriod);
     var scanDay = Normalizer.localCalendarDateKey(item.updatedAt);
     var emittedDays = Normalizer.strictFiniteNumber(item.historyDays);
     var recordedDays = period === "all" ? recordedHistoryDays(item.daily, scanDay) : NaN;
@@ -66,7 +67,7 @@ function normalizeSnapshot(item, requestedHistoryDays) {
         scanDay: scanDay,
         // CLI 0.67.0 titles its ranges in English. The widget titles rolling
         // and calendar ranges itself in the user's language.
-        historyLabel: item.historyLabel && period.length === 0 && !/^rolling:\d+$/.test(item.reportingPeriod)
+        historyLabel: item.historyLabel && period.length === 0 && !/^rolling:\d+$/.test(reportingPeriod)
             ? Normalizer.boundedDisplayText(item.historyLabel, 120) : null,
         labelDays: isFinite(emittedDays) && emittedDays > 0 ? Math.max(1, Math.floor(emittedDays)) : historyDays,
         trust: trust,

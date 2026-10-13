@@ -310,6 +310,32 @@ TestCase {
         compare(cost.historyLabel, data.expected);
         compare(cost.labelDays, 30);
     }
+    function test_malformedPeriodPreservesLegacyLabelsAndHealthyProviders_data() {
+        return [
+            {tag: "shadowed-conversion", period: {toString: null}},
+            {tag: "non-callable-conversion", period: {toString: 0, valueOf: null}},
+            {tag: "object", period: {}},
+            {tag: "rolling-array", period: ["rolling:30"]},
+            {tag: "calendar-array", period: ["all"]},
+            {tag: "nested-array", period: [["rolling:30"]]},
+            {tag: "boolean", period: true},
+            {tag: "null", period: null}
+        ];
+    }
+    function test_malformedPeriodPreservesLegacyLabelsAndHealthyProviders(data) {
+        var payload = [{provider: "codex", historyLabel: "Legacy range", historyDays: 7,
+            updatedAt: "2026-10-13", sessionCostUSD: 3, sessionTokens: 30,
+            daily: [{date: "2026-10-13", totalCost: 3, totalTokens: 30}]},
+            {provider: "claude", sessionCostUSD: 7}];
+        var baseline = parse(payload, 7);
+        payload[0].reportingPeriod = data.period;
+        var actual = parse(payload, 7);
+        compare(actual.outcome, "success");
+        compare(actual.costs.codex.period, "");
+        compare(actual.costs.codex.historyLabel, "Legacy range");
+        compare(actual.costs, baseline.costs);
+    }
+
     function test_reportingPeriodIsKeptOnlyForCalendarPeriods_data() {
         return [
             { tag: "month-to-date", period: "month-to-date", expected: "month-to-date" },

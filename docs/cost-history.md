@@ -35,6 +35,8 @@ snapshot without a usable `updatedAt` keeps its Today amounts.
   whole range and divides the measured days only, so a range measured as zero
   averages to zero; a range with no measured day has no average at all.
 - **Month to date** and **All history** come from the CLI's `cost --period`.
+  Period identifiers accept only strings; malformed values use the existing
+  day-range fallback and preserve a bounded legacy label when supplied.
   A snapshot belongs to the selected range by its `reportingPeriod`, not its
   day count, which grows through the month. `--period all` reports the days
   since year 1, so the widget sizes that window from the oldest recorded day to

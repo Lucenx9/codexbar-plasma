@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep cost refreshes and legacy range labels usable when the CLI reports
+  object or array period metadata. Healthy provider costs continue to update.
 - Preserve cost refreshes when All history contains object or array date fields.
   Malformed dates no longer interrupt healthy providers or expand the range.
 - Ignore dates after the reported scan day when sizing All history, so future
