@@ -366,7 +366,8 @@ synchronized.
   Privacy and stale quota projection remove subscription enrichment; it never
   enters the persisted quota cache. `tst_subscription_dates.qml` covers these
   public normalization, response, account, privacy, retention, and Overview paths.
-  `make check-qml-logic` runs it in UTC, Europe/Rome, and America/Los_Angeles.
+  `make check-qml-logic` runs it in UTC, Europe/Rome, America/Los_Angeles, and
+  Pacific/Apia, including a valid calendar day skipped by the local time zone.
   The `subscription-dates` smoke scenario verifies the real popup,
   privacy toggle, failed refresh, quota-empty snapshot, and cached account path.
 - Pure applet modules live in `contents/ui/*.js`; their public interfaces have

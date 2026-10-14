@@ -83,14 +83,17 @@ TestCase {
                     compare(timeLabels.subscriptionDate(date), new Date(date.timestampMs).toLocaleDateString(Qt.locale("en_US"), Locale.ShortFormat)
                         + ", " + timeLabels.clockTime(date.timestampMs));
                 } else {
-                    var calendar = new Date(0);
-                    calendar.setFullYear(Number(data.day.slice(0, 4)), Number(data.day.slice(5, 7)) - 1, Number(data.day.slice(8, 10)));
-                    calendar.setHours(12, 0, 0, 0);
-                    compare(timeLabels.subscriptionDate(date), calendar.toLocaleDateString(Qt.locale("en_US"), Locale.ShortFormat));
+                    compare(timeLabels.subscriptionDate(date), Qt.formatDate(data.day, Qt.locale("en_US"), Locale.ShortFormat));
                 }
             }
             compare(JSON.stringify(usage), before);
         }
+    }
+    function test_calendarDaySkippedByTimezone() {
+        var dates = normalized({subscriptionExpiresAt: "2011-12-30T00:00:00Z",
+            subscriptionExpiresAtIsDateOnly: true}).subscriptionDates;
+        compare(dates[0].calendarDay, "2011-12-30");
+        compare(timeLabels.subscriptionDate(dates[0]), "12/30/11");
     }
     function test_bothFieldsAndOldPayloads() {
         var dates = normalized({subscriptionRenewsAt: "2026-11-01T08:30:00Z",

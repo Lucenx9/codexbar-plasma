@@ -12,11 +12,7 @@ QtObject {
     function subscriptionDate(value) {
         var date
         if (value.calendarDay.length > 0) {
-            var parts = value.calendarDay.split("-")
-            date = new Date(0)
-            date.setFullYear(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]))
-            date.setHours(12, 0, 0, 0)
-            return date.toLocaleDateString(root.locale, Locale.ShortFormat)
+            return Qt.formatDate(value.calendarDay, root.locale, Locale.ShortFormat)
         }
         date = new Date(value.timestampMs)
         return i18nc("Full regional date %1 and clock time %2 for a subscription renewal or expiration",
