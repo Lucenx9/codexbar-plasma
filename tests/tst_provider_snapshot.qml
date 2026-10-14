@@ -12,6 +12,8 @@ TestCase {
             {tag: "estimated", confidence: "estimated", expected: "estimated", authoritative: false},
             {tag: "exact", confidence: "exact", expected: "exact", authoritative: true},
             {tag: "missing", confidence: undefined, expected: "", authoritative: true},
+            {tag: "empty", confidence: "", expected: "unknown", authoritative: false},
+            {tag: "explicit-undefined", confidence: undefined, explicit: true, expected: "unknown", authoritative: false},
             {tag: "null", confidence: null, expected: "unknown", authoritative: false},
             {tag: "boolean", confidence: false, expected: "unknown", authoritative: false},
             {tag: "array", confidence: ["exact"], expected: "unknown", authoritative: false},
@@ -26,6 +28,9 @@ TestCase {
             primary: {usedPercent: 95, resetsAt: "2026-10-14T14:00:00Z", windowMinutes: 300},
             extraRateWindows: [{id: "extra", window: {usedPercent: 20}}]
         }, pace: {primary: {expectedUsedPercent: 50, willLastToReset: false, etaSeconds: 60}}};
+        if (data.confidence === undefined && data.explicit !== true) {
+            delete input.usage.dataConfidence;
+        }
         var before = JSON.stringify(input);
         var result = ProviderSnapshot.normalize(input, 1000);
         compare(result.dataConfidence, data.expected);

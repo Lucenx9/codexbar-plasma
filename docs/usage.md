@@ -69,7 +69,8 @@ work and upstream contract requirements.
   percentages say "estimated" in panel text, tooltips, Overview, and provider
   details. A `~` badge marks estimated panel meters when text is hidden. The
   provider detail explains that these values are not measured account quotas.
-  Unknown confidence has a `?` badge and an unverified-quota label.
+  Unknown confidence, including an explicitly empty CLI/cache value, has a `?`
+  badge and an unverified-quota label.
   These rows have no quota warning colors, threshold or pace markers, reset
   countdowns, run-out forecasts, or quota/pace/reset notifications. They do not
   rank automatic provider selection by consumption or satisfy conditional panel

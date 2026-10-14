@@ -87,8 +87,7 @@ function normalize(item, receivedAtMs) {
     }
     var providerID = Normalizer.providerSnapshotKey(item.provider || "unknown") || "unknown";
     var usage = Normalizer.isCliRecord(item.usage) ? item.usage : {};
-    var confidence = Normalizer.usageConfidence(Guards.hasOwnKey(usage, "dataConfidence")
-        ? usage.dataConfidence : undefined);
+    var confidence = Normalizer.usageConfidenceField(usage);
     var pace = Normalizer.isCliRecord(item.pace) ? item.pace : {};
     var laneLabels = Normalizer.isCliRecord(item.rateWindowLabels) ? item.rateWindowLabels : {};
     var rows = [];

@@ -29,7 +29,7 @@ TestCase {
     }
 
     function provider(confidence, percent) {
-        var result = Snapshot.normalize({
+        var input = {
             provider: "opencodego",
             source: "local",
             usage: {
@@ -48,7 +48,11 @@ TestCase {
                     etaSeconds: 60
                 }
             }
-        }, nowMs);
+        };
+        if (confidence === "" || confidence === undefined) {
+            delete input.usage.dataConfidence;
+        }
+        var result = Snapshot.normalize(input, nowMs);
         result.error = "";
         result.primaryRow = result.rows[0];
         return result;
@@ -177,7 +181,7 @@ TestCase {
         var encoded = Cache.encode(fresh, context, nowMs);
         verify(encoded.length > 0);
         var decoded = Cache.decode(encoded, context, nowMs);
-        compare(decoded[0].usage.dataConfidence, data.confidence);
+        compare(decoded[0].usage.dataConfidence, data.confidence || undefined);
         compare(Snapshot.normalize(decoded[0], nowMs).rows[0].dataConfidence, data.confidence);
         var hostile = JSON.parse(encoded);
         hostile.snapshots[0].dataConfidence = {
@@ -186,8 +190,14 @@ TestCase {
         var sanitized = Cache.decode(JSON.stringify(hostile), context, nowMs);
         compare(sanitized[0].usage.dataConfidence, "unknown");
         verify(JSON.stringify(sanitized).indexOf("private-token") < 0);
+        hostile.snapshots[0].dataConfidence = "";
+        var empty = Cache.decode(JSON.stringify(hostile), context, nowMs);
+        compare(empty[0].usage.dataConfidence, "unknown");
+        compare(Snapshot.normalize(empty[0], nowMs).rows[0].dataConfidence, "unknown");
+        var saved = JSON.parse(encoded).snapshots[0];
+        compare(Object.prototype.hasOwnProperty.call(saved, "dataConfidence"), data.confidence.length > 0);
         delete hostile.snapshots[0].dataConfidence;
-        compare(Cache.decode(JSON.stringify(hostile), context, nowMs)[0].usage.dataConfidence, "");
+        compare(Cache.decode(JSON.stringify(hostile), context, nowMs)[0].usage.dataConfidence, undefined);
         compare(JSON.stringify(item), before);
     }
 

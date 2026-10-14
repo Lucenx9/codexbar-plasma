@@ -230,6 +230,13 @@ function usageConfidence(value) {
     return value === "exact" || value === "estimated" ? value : "unknown"
 }
 
+// CLI and persisted records use field absence for legacy confidence. The empty
+// marker belongs only to normalized in-memory snapshots, never to raw input.
+function usageConfidenceField(record) {
+    return hasOwnKey(record, "dataConfidence")
+        ? (usageConfidence(record.dataConfidence) || "unknown") : ""
+}
+
 function authoritativeQuota(row) {
     var confidence = usageConfidence(row && row.dataConfidence)
     return confidence === "" || confidence === "exact"

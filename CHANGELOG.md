@@ -14,6 +14,7 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Qualify CLI-estimated usage percentages in the panel and popup, preserving
   confidence through privacy mode, failed refreshes, and new quota caches.
+  Treat explicitly empty confidence as unknown.
   Estimated and unknown-confidence rows no longer drive quota alerts, warning
   colors, reset/pace forecasts, conditional visibility, or automatic provider
   ranking; AI Insights omits them from account-quota facts.

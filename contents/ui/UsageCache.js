@@ -230,8 +230,11 @@ function encode(items, context, nowMs) {
         }
         if (Object.keys(windows).length > 0) {
             var confidence = Normalizer.usageConfidence(item.dataConfidence)
-            snapshots.push({ provider: item.provider, measuredAt: item.lastGoodAtMs,
-                dataConfidence: confidence, windows: windows })
+            var saved = { provider: item.provider, measuredAt: item.lastGoodAtMs, windows: windows }
+            if (confidence.length > 0) {
+                saved.dataConfidence = confidence
+            }
+            snapshots.push(saved)
         }
     }
     if (snapshots.length === 0) {
@@ -267,8 +270,11 @@ function decode(raw, context, nowMs) {
                 || !recent(item.measuredAt, nowMs) || !Normalizer.isCliRecord(item.windows)) {
             continue
         }
-        var usage = { updatedAt: new Date(item.measuredAt).toISOString(),
-            dataConfidence: Normalizer.usageConfidence(item.dataConfidence) }
+        var usage = { updatedAt: new Date(item.measuredAt).toISOString() }
+        var confidence = Normalizer.usageConfidenceField(item)
+        if (confidence.length > 0) {
+            usage.dataConfidence = confidence
+        }
         var count = 0
         for (var j = 0; j < lanes.length; j++) {
             var lane = lanes[j]

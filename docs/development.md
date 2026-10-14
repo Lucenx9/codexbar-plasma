@@ -577,10 +577,12 @@ clipboard interoperability with every Wayland application or portal backend.
 - `ProviderSnapshot.js` preserves usage confidence as `exact`, `estimated`,
   `unknown`, or empty for legacy payloads, stamping every quota row. The shared
   `ProviderNormalizer.authoritativeQuota` guard gates quota decisions; unknown
-  or malformed confidence never becomes measured quota. Privacy and the quota
-  cache retain this semantic value. `tst_usage_confidence.qml` exercises display,
-  retention, ranking, visibility, notifications, and AI Insights at public
-  interfaces. The `estimated-usage` and `estimated-panel` smoke scenarios verify
+  or malformed confidence never becomes measured quota. Raw CLI/cache fields
+  use `usageConfidenceField`: only an absent field gets the legacy empty marker;
+  explicitly empty or undefined values become unknown. Cache writes omit the
+  legacy marker and restore field absence. Privacy retains the semantic value.
+  `tst_usage_confidence.qml` exercises display, retention, ranking, visibility,
+  notifications, and AI Insights at public interfaces. The `estimated-usage` and `estimated-panel` smoke scenarios verify
   the root adapters, rendered qualifier, and panel badge with synthetic data.
 - `ProviderAutoSelect.js` ranks the roster for the automatic provider
   selection. Measured consumption decides it, taking the busiest authoritative quota row or the
