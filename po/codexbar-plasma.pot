@@ -2045,6 +2045,7 @@ msgid "No diagnostic output."
 msgstr ""
 
 #: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
+#: contents/ui/controllers/ProviderRosterController.qml
 msgid "codexbar exited with code %1"
 msgstr ""
 

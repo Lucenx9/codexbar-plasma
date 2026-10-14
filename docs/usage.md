@@ -557,7 +557,10 @@ fields; track proposed extensions in the issue tracker.
   **Popup** lists hidden usage rows under **Popup** and groups provider order
   and Overview providers under **Providers**;
   **Diagnostics** runs redacted diagnostics from its **Provider diagnostics**
-  section. Explanatory text is set in small secondary type below the control
+  section. The provider lists in **Popup** and **Panel** settings require a
+  successful CLI process. Failed loads show the CLI error or exit code even
+  when the process writes valid provider JSON.
+  Explanatory text is set in small secondary type below the control
   it describes, and dependent options are indented under the option they need.
   **Diagnostics** also reports the widget version, and, after **Check
   versions**, the CLI version and the absolute command the shell resolved.

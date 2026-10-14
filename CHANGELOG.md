@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Reject enabled-provider lists from failed CLI processes in Popup and Panel
+  settings, and show the CLI error or exit code instead of selectable providers.
 - Keep popup refreshes, update checks, and settings requests independent across
   widget instances and reopened pages. Matching local counters could make
   Plasma reuse another request's process and return its older result.
