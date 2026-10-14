@@ -1795,6 +1795,13 @@ msgid "Activity heatmap"
 msgstr ""
 
 #: contents/ui/components/TimeLabels.qml
+msgctxt ""
+"Full regional date %1 and clock time %2 for a subscription renewal or "
+"expiration"
+msgid "%1, %2"
+msgstr ""
+
+#: contents/ui/components/TimeLabels.qml
 msgctxt "Abbreviated weekday %1 and clock time %2, such as Wed 14:30"
 msgid "%1 %2"
 msgstr ""
@@ -3491,6 +3498,14 @@ msgstr ""
 
 #: contents/ui/main.qml
 msgid "Limits not available"
+msgstr ""
+
+#: contents/ui/main.qml scripts/smoke/Capture.qml
+msgid "Plan expires on %1"
+msgstr ""
+
+#: contents/ui/main.qml
+msgid "Plan renews on %1"
 msgstr ""
 
 #: contents/ui/main.qml

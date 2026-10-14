@@ -3728,6 +3728,19 @@ msgstr "Utilisation estimée ; ce n’est pas un quota de compte mesuré."
 msgid "Usage confidence is unknown; account quota is unverified."
 msgstr "La fiabilité de l’utilisation est inconnue ; le quota du compte n’est pas vérifié."
 
+#: contents/ui/main.qml
+msgid "Plan renews on %1"
+msgstr "Le forfait se renouvelle le %1"
+
+#: contents/ui/main.qml
+msgid "Plan expires on %1"
+msgstr "Le forfait expire le %1"
+
+#: contents/ui/components/TimeLabels.qml
+msgctxt "Full regional date %1 and clock time %2 for a subscription renewal or expiration"
+msgid "%1, %2"
+msgstr "%1, %2"
+
 #: contents/ui/components/ProviderNames.qml
 msgid "Aerostack"
 msgstr "Aerostack"

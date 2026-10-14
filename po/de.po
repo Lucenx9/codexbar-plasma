@@ -3750,6 +3750,19 @@ msgstr "Geschätzte Nutzung; kein gemessenes Kontokontingent."
 msgid "Usage confidence is unknown; account quota is unverified."
 msgstr "Die Verlässlichkeit der Nutzung ist unbekannt; das Kontokontingent ist nicht bestätigt."
 
+#: contents/ui/main.qml
+msgid "Plan renews on %1"
+msgstr "Tarif verlängert sich am %1"
+
+#: contents/ui/main.qml
+msgid "Plan expires on %1"
+msgstr "Tarif läuft am %1 ab"
+
+#: contents/ui/components/TimeLabels.qml
+msgctxt "Full regional date %1 and clock time %2 for a subscription renewal or expiration"
+msgid "%1, %2"
+msgstr "%1, %2"
+
 #: contents/ui/components/ProviderNames.qml
 msgid "Aerostack"
 msgstr "Aerostack"

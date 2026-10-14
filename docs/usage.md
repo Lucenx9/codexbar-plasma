@@ -65,6 +65,16 @@ work and upstream contract requirements.
   incident notices, errors, and usage details scroll below them. Switching
   provider or account starts the details at the top; refreshing the same account
   keeps the scroll position.
+- Provider tabs show **Plan renews on** and **Plan expires on** separately from
+  quota resets when the CLI supplies valid subscription dates. Datetimes follow
+  your regional date and clock format; dates marked as calendar-only keep their
+  day without a time or time-zone conversion. Missing or invalid dates are
+  omitted. Privacy mode hides them, and failed-refresh quota retention and the
+  disk quota cache omit them. Dates alone remain useful even without quota rows.
+  No subscription date is inferred from a quota window. The
+  [pinned Linux evidence](research/2026-10-11-macos-parity-0.74.0.md#linux-cli-contract-changes-since-0730)
+  verifies emitted dates in official 0.73.0/0.74.0 output; the date-only flags
+  remain source-observed at 0.74.0.
 - CLI usage marked `dataConfidence: "estimated"` keeps its numeric meters, but
   percentages say "estimated" in panel text, tooltips, Overview, and provider
   details. A `~` badge marks estimated panel meters when text is hidden. The
@@ -292,8 +302,8 @@ account, so an early failed refresh keeps them only for a provider whose
 explicit account selection the cache fingerprint already covers. The existing minute
 timer also removes expired retained data when automatic refresh is disabled;
 the error remains visible and healthy providers are unaffected. Successful
-responses without measured quotas keep their valid credits or details even when
-their supplemental timestamp is old; they do not enter quota retention or expiry.
+responses without measured quotas keep their valid credits, subscription dates,
+or details even when their supplemental timestamp is old; they do not enter quota retention or expiry.
 
 The widget automatically saves a small quota cache in its Plasma configuration.
 After a restart it verifies the CLI configuration fingerprint before restoring

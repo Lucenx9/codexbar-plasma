@@ -912,6 +912,7 @@ PlasmoidItem {
             // Nested signal values can be Qt sequences; the pure visibility
             // filters consume JavaScript arrays, as do freshly parsed snapshots.
             providerDetails: Array.from(snapshot.providerDetails),
+            subscriptionDates: Array.from(snapshot.subscriptionDates),
             usageDashboard: dashboard ? {kpis: dashboard.kpis.map(dashboardDisplayRow), rows: dashboard.rows.map(dashboardDisplayRow)} : null,
             providerCost: providerCostSection(providerID, snapshot.providerCost),
             resetCredits: resetCreditsSection(providerID, snapshot.resetCredits),
@@ -933,6 +934,11 @@ PlasmoidItem {
             usageReceivedAtMs: snapshot.usageReceivedAtMs,
             updatedAt: snapshot.updatedAt
         }
+    }
+
+    function subscriptionDateText(date) {
+        var value = timeLabels.subscriptionDate(date)
+        return date.kind === "renews" ? i18n("Plan renews on %1", value) : i18n("Plan expires on %1", value)
     }
 
     function presentUsageWindow(snapshot, providerID) {

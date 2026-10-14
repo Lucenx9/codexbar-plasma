@@ -1051,6 +1051,34 @@ Item {
                     }
 
                     ColumnLayout {
+                        id: subscriptionDatesSection
+                        objectName: "subscriptionDatesSection"
+
+                        readonly property var dates: applet.presentedProviderData
+                            ? (applet.presentedProviderData.subscriptionDates || []) : []
+
+                        visible: dates.length > 0
+                        Layout.fillWidth: true
+                        spacing: Kirigami.Units.smallSpacing
+
+                        Kirigami.Separator {
+                            Layout.fillWidth: true
+                        }
+
+                        Repeater {
+                            model: subscriptionDatesSection.dates
+
+                            delegate: PlainPlasmaLabel {
+                                required property var modelData
+                                objectName: "subscriptionDateLabel"
+                                text: applet.subscriptionDateText(modelData)
+                                Layout.fillWidth: true
+                                wrapMode: Text.Wrap
+                            }
+                        }
+                    }
+
+                    ColumnLayout {
                         id: creditsSection
                         objectName: "creditsSection"
 

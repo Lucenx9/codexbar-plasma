@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Show official CLI plan renewal and expiration dates separately from quota
+  resets. Date-only values keep their calendar day without a time; privacy mode
+  and retained quotas hide subscription dates. Missing or invalid dates stay omitted.
 - Complete fallback names, provider artwork, colors, documentation and dashboard
   links for the nine providers added in CodexBar 0.74.0. Offer supported single
   API-key setup for Tavily, Linkup, Aerostack, Sail Research, and Sofya; keep

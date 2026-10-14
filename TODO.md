@@ -90,16 +90,6 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Implementable on Linux
 
-- [ ] Show plan renewal and expiration dates from official
-  `usage.subscriptionRenewsAt` and `usage.subscriptionExpiresAt`. A loopback
-  sub2api fixture emits `subscriptionExpiresAt` as ISO-8601 on Linux 0.73.0 and
-  0.74.0; Plasma reads neither field. 0.74.0 adds Claude dates and
-  `subscriptionRenewsAtIsDateOnly`/`subscriptionExpiresAtIsDateOnly`, encoded
-  only when `true` (source-observed). Done when the popup shows these dates
-  separately from quota resets, renders date-only values without a time or
-  time-zone day shift, omits missing or invalid values, follows privacy
-  settings, and tests old payloads without the fields. Never infer dates from
-  reset windows. [Verified contract](docs/research/2026-10-11-macos-parity-0.74.0.md#linux-cli-contract-changes-since-0730).
 
 ## Blocked on official Linux CLI contracts
 

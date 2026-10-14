@@ -109,6 +109,7 @@ function reconcile(previous, incoming, nowMs, pinnedAccounts) {
                 return copy
             })
             next.primaryRow = next.rows.filter(function(row) { return row.lane === "primary" })[0] || null
+            next.subscriptionDates = []
             next.providerDetails = []
             next.usageDashboard = null
             next.providerCost = null

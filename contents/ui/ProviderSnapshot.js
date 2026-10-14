@@ -5,6 +5,7 @@
 .import "LegacyUsageDashboard.js" as LegacyUsageDashboard
 .import "PacePresentation.js" as PacePresentation
 .import "SafeText.js" as SafeText
+.import "SubscriptionDates.js" as SubscriptionDates
 
 function message(value) {
     return SafeText.cliMessage(SafeText.stripLoaderDiagnostics(value), SafeText.maximumCliMessageLength);
@@ -128,7 +129,9 @@ function normalize(item, receivedAtMs) {
         credits && Guards.hasOwnKey(credits, "codexCreditLimit") ? credits.codexCreditLimit : null);
     var providerDetails = UsageDetails.normalizeSections(usage.details);
     var dashboard = providerDetails.length > 0 ? null : LegacyUsageDashboard.normalize(usage, item);
-    var hasSupplementalUsage = providerDetails.length > 0 || dashboard !== null || codexCreditLimit !== null;
+    var subscriptionDates = SubscriptionDates.normalize(usage);
+    var hasSupplementalUsage = providerDetails.length > 0 || dashboard !== null || codexCreditLimit !== null
+        || subscriptionDates.length > 0;
     var placeholder = "";
     if (rows.length === 0 && !hasSupplementalUsage && (!error || errorMessage === "Found sessions, but no rate limit events yet.")) {
         var hasIdentity = account.length > 0 || organization.length > 0 || loginMethod.length > 0;
@@ -156,6 +159,7 @@ function normalize(item, receivedAtMs) {
         planMethod: Normalizer.boundedDisplayText(loginMethod, Normalizer.maximumAccountIdentityLength),
         accountKey: Normalizer.accountKey({account: account, organization: organization, loginMethod: loginMethod}),
         rows: rows, providerDetails: providerDetails, usageDashboard: dashboard,
+        subscriptionDates: subscriptionDates,
         providerCost: costFields(usage.providerCost),
         resetCredits: resetCount > 0 ? {availableCount: resetCount} : null,
         codexCreditLimit: codexCreditLimit,

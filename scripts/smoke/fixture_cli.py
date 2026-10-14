@@ -30,6 +30,8 @@ SCENARIOS += ("popup-content", "popup-hidden-rows", "popup-hidden-sections", "re
 SCENARIOS += ("privacy-cost-details",)
 SCENARIOS += ("usage-retention", "usage-cache-restart")
 SCENARIOS += ("estimated-usage", "estimated-panel")
+SCENARIOS += ("subscription-dates",)
+
 SCENARIOS += ("providers-0740",)
 SCENARIOS += ("empty-providers", "usage-error", "usage-recovery", "cli-missing")
 SCENARIOS += ("ai-insights", "ai-insights-it", "ai-insights-mismatch", "ai-insights-error", "ai-insights-single",
@@ -58,6 +60,10 @@ def usage(provider, scenario, now):
                           "resetsAt": (now + timedelta(days=4)).isoformat()},
         },
     }
+    if scenario == "subscription-dates":
+        snapshot["usage"].update(subscriptionRenewsAt="2026-11-01T08:30:00Z",
+                                 subscriptionExpiresAt="2026-11-30T00:00:00Z",
+                                 subscriptionExpiresAtIsDateOnly=True)
     if scenario.startswith("ai-insights") and provider == "codex":
         snapshot["pace"] = {"primary": {"stage": "ahead", "deltaPercent": 13,
             "expectedUsedPercent": 30, "willLastToReset": False, "etaSeconds": 3600}}

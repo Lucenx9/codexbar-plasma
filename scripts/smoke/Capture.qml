@@ -11,6 +11,7 @@ Item {
     required property var applet
     required property string scenario
     required property string imagePath
+    property int subscriptionDatesStep: 0
     property bool prepared: false
     property bool navigationVerified: false
     property var navigationTooltip: null
@@ -1186,6 +1187,63 @@ Item {
         return aiInsightsCardVisible() === 1;
     }
 
+    function verifySubscriptionDates() {
+        var popup = applet.fullRepresentationItem;
+        var section = findItem(popup, "subscriptionDatesSection");
+        if (subscriptionDatesStep === 0) {
+            var dates = applet.presentedProviderData.subscriptionDates;
+            verifyScenario(dates.length === 2 && section && section.visible,
+                "subscription dates disappeared in the popup adapter");
+            verifyScenario(hasVisibleText(section, applet.subscriptionDateText(dates[0]))
+                && hasVisibleText(section, i18n("Plan expires on %1", new Date(2026, 10, 30, 12).toLocaleDateString(Qt.locale(), Locale.ShortFormat))),
+                "subscription labels are missing or a calendar date gained a time/day shift");
+            settingsProviderSnapshot = applet.providers;
+            applet.Plasmoid.configuration.privacyMode = true;
+            subscriptionDatesStep = 1;
+            return false;
+        }
+        if (subscriptionDatesStep === 1) {
+            verifyScenario(!section.visible && applet.presentedProviderData.subscriptionDates.length === 0
+                && applet.providers === settingsProviderSnapshot,
+                "privacy exposed subscription dates or mutated live snapshots");
+            applet.Plasmoid.configuration.privacyMode = false;
+            subscriptionDatesStep = 2;
+            return false;
+        }
+        if (subscriptionDatesStep === 2) {
+            applet.failUsageRefresh("Synthetic subscription refresh timeout");
+            verifyScenario(applet.providers[0].usageStale && applet.providers[0].rows.length === 2
+                && applet.providers[0].subscriptionDates.length === 0,
+                "failed refresh retained subscription enrichment or dropped healthy quotas");
+            applet.commitUsageSnapshot(settingsProviderSnapshot);
+            var datesOnly = applet.normalizeProvider({provider: "codex", usage: {
+                updatedAt: "2020-01-01T00:00:00Z", subscriptionExpiresAt: "2026-11-30T00:00:00Z"}});
+            applet.replaceProviderSnapshot("codex", datesOnly);
+            verifyScenario(applet.providers[0].rows.length === 0 && applet.providers[0].placeholder === ""
+                && applet.providers[0].subscriptionDates.length === 1 && !applet.providers[0].usageStale
+                && applet.overviewProviders().length === 2,
+                "useful quota-empty subscription snapshot was suppressed");
+            applet.commitUsageSnapshot(settingsProviderSnapshot);
+            applet.loadAccounts("codex");
+            subscriptionDatesStep = 3;
+            return false;
+        }
+        if (subscriptionDatesStep === 3) {
+            if (applet.accountLoadingForProvider("codex")) return false;
+            var options = applet.accountOptionsForProvider("codex");
+            verifyScenario(options.length === 2 && options[1].subscriptionDates.length === 2,
+                "account discovery dropped subscription dates");
+            applet.replaceProviderSnapshot("codex", options[1]);
+            verifyScenario(applet.providers[0].account === "second-demo@example.com"
+                && applet.providers[0].subscriptionDates.length === 2,
+                "cached account selection lost subscription dates");
+            applet.commitUsageSnapshot(settingsProviderSnapshot);
+            subscriptionDatesStep = 4;
+            return false;
+        }
+        return section && section.visible && applet.presentedProviderData.subscriptionDates.length === 2;
+    }
+
     function scenarioReady() {
         if (scenario === "providers-0740") {
             var page = providerSettingsPage;
@@ -1875,6 +1933,8 @@ Item {
             return verifyCostCoverage();
         if (scenario.indexOf("popup-cost-") === 0)
             return applet.selectedProviderID === "codex" && verifyCostDetails();
+        if (scenario === "subscription-dates")
+            return applet.selectedProviderID === "codex" && verifySubscriptionDates();
         if (scenario === "estimated-usage") {
             verifyScenario(codex.rows[0].dataConfidence === "estimated", "confidence disappeared in the root adapter");
             verifyScenario(applet.quotaSeverity(codex.rows[0]) === "" && applet.quotaWarningMarkers(codex.rows[0]).length === 0,
@@ -2149,7 +2209,7 @@ Item {
                     popup.Window.window.width = 640;
                     popup.Window.window.height = 880;
                     capture.applet.openProviderFromPanel("codex");
-                } else if (capture.scenario === "estimated-usage" || capture.scenario === "popup-content" || capture.scenario === "popup-hidden-rows"
+                } else if (capture.scenario === "subscription-dates" || capture.scenario === "estimated-usage" || capture.scenario === "popup-content" || capture.scenario === "popup-hidden-rows"
                         || capture.scenario === "popup-hidden-sections") {
                     capture.applet.openProviderFromPanel("codex");
                 } else if (capture.scenario.indexOf("privacy-") === 0) {

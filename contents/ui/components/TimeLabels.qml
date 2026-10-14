@@ -9,6 +9,16 @@ QtObject {
 
     property var locale: Qt.locale()
 
+    function subscriptionDate(value) {
+        var date
+        if (value.calendarDay.length > 0) {
+            return Qt.formatDate(value.calendarDay, root.locale, Locale.ShortFormat)
+        }
+        date = new Date(value.timestampMs)
+        return i18nc("Full regional date %1 and clock time %2 for a subscription renewal or expiration",
+            "%1, %2", date.toLocaleDateString(root.locale, Locale.ShortFormat), root.clockTime(value.timestampMs))
+    }
+
     function clockTime(timestampMs) {
         // ShortFormat follows the regional 12/24-hour clock. Drop seconds so
         // compact labels stay HH:mm / h:mm AP even when a locale's short form
