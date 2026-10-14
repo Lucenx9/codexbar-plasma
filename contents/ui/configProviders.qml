@@ -1157,6 +1157,11 @@ KCM.SimpleKCM {
         switch (providerKey(providerID)) {
         case "fireworks":
             return fireworksSingleKeySetupSupported
+        case "aerostack":
+        case "linkup":
+        case "sailresearch":
+        case "sofya":
+        case "tavily":
         case "aixy":
         case "alibaba":
         case "amp":

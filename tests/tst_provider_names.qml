@@ -21,6 +21,15 @@ TestCase {
 
     function test_lateAddedProvidersHaveBundledFallbackTitles_data() {
         return [
+            { tag: "aerostack", key: "aerostack", title: "Aerostack" },
+            { tag: "cosmic", key: "cosmic", title: "Cosmic AI" },
+            { tag: "exa", key: "exa", title: "Exa" },
+            { tag: "linkup", key: "linkup", title: "Linkup" },
+            { tag: "sailresearch", key: "sailresearch", title: "Sail Research" },
+            { tag: "sofya", key: "sofya", title: "Sofya" },
+            { tag: "tavily", key: "tavily", title: "Tavily" },
+            { tag: "tinyapi", key: "tinyapi", title: "TinyApi" },
+            { tag: "xapi", key: "xapi", title: "X API" },
             { tag: "aixy", key: "aixy", title: "Aixy" },
             { tag: "atlascloud", key: "atlascloud", title: "Atlas Cloud" },
             { tag: "bifrost", key: "bifrost", title: "Bifrost" },

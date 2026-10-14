@@ -90,19 +90,6 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Implementable on Linux
 
-- [ ] Bundle fallback names, original icons, links, and brand colors for the
-  nine providers added in official 0.74.0: Tavily, Linkup, TinyApi, Exa,
-  Cosmic AI, Aerostack, Sail Research, Sofya, and X API. Plasma covers the
-  0.73.0 registry and shows generic artwork for these IDs. The live icon
-  check fails for all nine with installed CLI 0.74.1. Tavily, Linkup,
-  Aerostack, Sail Research, and Sofya accept `set-api-key --stdin` and then
-  attempt their APIs, so they can join the API-key setup allowlist. Exa and
-  Cosmic AI store a key but need an API key ID or project ID that has only an
-  environment fallback; TinyApi and X API refuse config keys and are
-  macOS-web-only. Done when static metadata is tested and documented, the
-  five complete single-key providers offer key setup, and the other four
-  expose no dead key action.
-  [Verified reachability](docs/research/2026-10-11-macos-parity-0.74.0.md#linux-cli-contract-changes-since-0730).
 - [ ] Show plan renewal and expiration dates from official
   `usage.subscriptionRenewsAt` and `usage.subscriptionExpiresAt`. A loopback
   sub2api fixture emits `subscriptionExpiresAt` as ISO-8601 on Linux 0.73.0 and

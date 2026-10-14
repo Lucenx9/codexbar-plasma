@@ -112,6 +112,24 @@ TestCase {
         compare(page.providers[0].enabled, true);
         compare(page.providers[1].enabled, false);
     }
+    function test_official074SetupOffersOnlyCompleteLinuxKeyFlows() {
+        var page = createProvidersPage();
+        if (!page) return;
+        var supported = ["tavily", "linkup", "aerostack", "sailresearch", "sofya"];
+        var blocked = ["exa", "cosmic", "tinyapi", "xapi", "future-provider"];
+        for (var provider of supported.concat(blocked)) {
+            var item = {provider: provider, enabled: false};
+            var before = JSON.stringify(item);
+            var actions = page.providerActionRows(item);
+            compare(actions.filter(function(action) { return action.action === "set-api-key"; }).length,
+                supported.indexOf(provider) >= 0 ? 1 : 0, provider);
+            if (provider !== "future-provider") {
+                compare(actions.filter(function(action) { return action.action === "docs"; }).length, 1);
+                compare(actions.filter(function(action) { return action.action === "dashboard"; }).length, 1);
+            }
+            compare(JSON.stringify(item), before);
+        }
+    }
 
     // The reload tooltip speaks the button's accessible name through the safe
     // wrapper, so assistive technology and the visible tip never disagree.

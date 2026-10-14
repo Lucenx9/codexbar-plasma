@@ -49,7 +49,7 @@ require_icon() {
   fi
 }
 
-# Released official CodexBar provider registry through v0.67.0. The live CLI
+# Released official CodexBar provider registry through v0.74.0. The live CLI
 # probe below adds an early warning when a newer installed release introduces
 # another provider.
 released_providers=(
@@ -144,6 +144,15 @@ released_providers=(
   lithosai
   workbuddy
   langdock
+  aerostack
+  cosmic
+  exa
+  linkup
+  sailresearch
+  sofya
+  tavily
+  tinyapi
+  xapi
 )
 
 # Retired upstream but still emitted by an older installed CLI. 0.64.1 removed
