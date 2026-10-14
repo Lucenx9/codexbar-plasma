@@ -109,8 +109,8 @@ function commandError(payload) {
     return ""
 }
 
-// Classified result of one finished provider command run (enable/disable,
-// set-api-key, descriptor field or action). `payload` is the already-parsed
+// Classified result of one finished provider command run (configuration write
+// or redacted diagnostic). `payload` is the already-parsed
 // stdout JSON, or undefined when stdout was empty; `stderrText` and
 // `exitCode` are the raw process results.
 //

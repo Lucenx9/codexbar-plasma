@@ -322,6 +322,9 @@ existing installation, use **Diagnostics** to set the absolute executable path.
 
 A failed provider-list refresh in settings keeps the last loaded list and shows
 an error. A successful empty list clears it.
+Provider settings diagnostics also keep their last successful result and show
+an error when the CLI process fails or returns an invalid response. A failed
+process cannot replace the result even when it prints valid diagnostic JSON.
 
 Provider-specific editable settings depend on the official CLI contract.
 

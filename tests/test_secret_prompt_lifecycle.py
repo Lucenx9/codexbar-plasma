@@ -515,7 +515,7 @@ TestCase {
         providerDiagnosticErrors = ({});
         providerDiagnosticLoading = JSON.parse('{"codex": true}');
         handleDiagnoseResult({provider: "codex"},
-            '{"provider": "codex", "source": "config.toml", "auth": {"configured": true, "modes": ["api-key"]}, "settings": {"model": {}}}', "");
+            '{"provider": "codex", "source": "config.toml", "auth": {"configured": true, "modes": ["api-key"]}, "settings": {"model": {}}}', "", 0);
         var diagnostic = providerDiagnosticFor("codex");
         verify(diagnostic !== null);
         compare(diagnostic.source, "config.toml");
@@ -530,7 +530,7 @@ TestCase {
         providerDiagnostics = ({});
         providerDiagnosticErrors = ({});
         providerDiagnosticLoading = JSON.parse('{"codex": true}');
-        handleDiagnoseResult({provider: "codex"}, '{"error": {"message": "boom"}}', "");
+        handleDiagnoseResult({provider: "codex"}, '{"error": {"message": "boom"}}', "", 0);
         verify(providerDiagnosticFor("codex") === null);
         verify(providerDiagnosticErrorFor("codex").length > 0);
         compare(providerDiagnosticLoadingFor("codex"), false);

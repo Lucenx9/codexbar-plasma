@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep the last successful provider settings diagnostic and show an error when
+  its CLI process fails, times out, or returns an invalid response.
 - Keep the Diagnostics command path and Use PATH button inside narrow settings
   pages with larger text, so the form's explanations and fields are not clipped.
 - Reject enabled-provider lists from failed CLI processes in Popup and Panel

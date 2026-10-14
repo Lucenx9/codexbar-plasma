@@ -433,7 +433,7 @@ KCM.SimpleKCM {
         } else if (descriptor.kind === "descriptorAction") {
             handleDescriptorActionResult(descriptor, stdoutText, stderrText, exitCode)
         } else if (descriptor.kind === "diagnose") {
-            handleDiagnoseResult(descriptor, stdoutText, stderrText)
+            handleDiagnoseResult(descriptor, stdoutText, stderrText, exitCode)
         }
     }
 
@@ -694,28 +694,26 @@ KCM.SimpleKCM {
         return { value: payload, cancelled: false, errorMessage: "" }
     }
 
-    function handleDiagnoseResult(descriptor, stdoutText, stderrText) {
+    function handleDiagnoseResult(descriptor, stdoutText, stderrText, exitCode) {
         setProviderDiagnosticLoading(descriptor.provider, false)
 
         var trimmed = stdoutText.trim()
-        if (trimmed.length === 0) {
-            setProviderDiagnosticError(
-                descriptor.provider,
-                stderrText.trim().length > 0 ? boundedCliMessage(stderrText) : i18n("codexbar did not return diagnostics."))
-            return
-        }
-
         var payload
-        try {
-            payload = JSON.parse(trimmed)
-        } catch (error) {
-            setProviderDiagnosticError(descriptor.provider, i18n("Could not parse codexbar diagnostics: %1", error.message))
-            return
+        if (trimmed.length > 0) {
+            try {
+                payload = JSON.parse(trimmed)
+            } catch (error) {
+                setProviderDiagnosticError(descriptor.provider, i18n("Could not parse codexbar diagnostics: %1", error.message))
+                return
+            }
         }
 
-        var message = ProviderConfigProtocol.commandError(payload)
-        if (message.length > 0) {
-            setProviderDiagnosticError(descriptor.provider, message)
+        var result = ProviderConfigProtocol.commandOutcome(payload, stderrText, exitCode)
+        if (result.outcome !== "success") {
+            setProviderDiagnosticError(descriptor.provider,
+                result.outcome === "empty" || result.outcome === "invalidPayload"
+                    ? i18n("codexbar did not return diagnostics.")
+                    : providerCommandFailureText(result))
             return
         }
 
