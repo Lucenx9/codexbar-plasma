@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve the last successful session list when a failed CLI scan writes valid
+  JSON, and reject widget updater success reports from failed processes.
 - Keep provider detail sections visible and restorable when live usage arrives
   through Qt's native list representation.
 - Draw the peak reference line for provider detail bar charts, matching local

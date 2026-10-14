@@ -231,6 +231,9 @@ synchronized.
   and asks `main.qml` to open that URL after activation. The updater never reads
   the applet root or writes configuration. `UpdateLogic.js` keeps the pure
   scheduling and result decisions shared with settings.
+  Success intents also require a zero process exit code before changing the
+  available version, recording a successful check or emitting notifications.
+  Structured updater errors remain readable when the process exits nonzero.
 - `contents/ui/controllers/SessionsController.qml` owns the Sessions executable
   source, request ledger, timeout, refresh timer, snapshot, and attempt/success
   timestamps. Its inputs are the CLI path, refresh interval, and whether the
@@ -243,6 +246,8 @@ synchronized.
   inputs and adapts the outputs for the existing view and privacy presentation.
   `SessionRefreshPolicy.js` owns pure scheduling decisions; `SessionResponse.js`
   bounds and classifies CLI output through the existing session normalizer.
+  The DataSource adapter admits session stdout only after a zero exit code;
+  failed scans retain the previous successful snapshot and timestamp.
 - `contents/ui/controllers/ProviderConfigWatcher.qml` owns the read-only config
   checksum command, minute polling, connection changes, and retired replies.
   It starts after the applet initializes and emits accepted checksum changes;
@@ -878,7 +883,8 @@ with temporary synthetic CLI executables and real Plasma DataSource/timers.
 It checks visible refresh scheduling, interval changes, hidden and queued work,
 duplicate requests, command isolation, retained snapshots, successful empty
 responses, and the production 60-second timeout followed by recovery. Failed
-scans record attempt completion separately from successful snapshot completion;
+processes with valid empty or populated JSON also preserve the last snapshot.
+Failed scans record attempt completion separately from successful snapshot completion;
 the full retry cooldown starts at the reply or timeout, even after a long scan.
 Manual retry bypasses that cooldown, and a command change clears it. The test
 adds about 80 seconds to `make check`, without changing private timers/state or

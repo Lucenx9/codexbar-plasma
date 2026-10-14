@@ -103,7 +103,9 @@ TestCase {
     }
     function test_failedRefreshPreservesTheSnapshotAndTimestamp_data() {
         return [{tag: "stderr", script: "failure"}, {tag: "invalid-json", script: "malformed"},
-                {tag: "unsupported", script: "unsupported"}, {tag: "empty-stdout", script: "missing"}];
+                {tag: "unsupported", script: "unsupported"}, {tag: "empty-stdout", script: "missing"},
+                {tag: "failed-empty-json", script: "failed-empty-json"},
+                {tag: "failed-valid-json", script: "failed-valid-json"}];
     }
     function test_failedRefreshPreservesTheSnapshotAndTimestamp(data) {
         var subject = create(data.script);
@@ -245,6 +247,11 @@ if name in ("retry", "slow-failure") and run == 1:
     print("synthetic scan failure", file=sys.stderr)
     sys.exit(1)
 if run > 1:
+    if name in ("failed-empty-json", "failed-valid-json"):
+        print(json.dumps([] if name == "failed-empty-json" else
+                         [{"provider": "codex", "projectName": "failed scan", "state": "active"}]))
+        print("synthetic scan failure", file=sys.stderr)
+        sys.exit(1)
     if name == "failure":
         print("synthetic scan failure", file=sys.stderr)
         sys.exit(1)
@@ -269,7 +276,7 @@ class SessionsControllerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="codexbar sessions 'test-") as temporary:
             directory = Path(temporary)
             for name in ("normal", "slow", "late", "retry", "slow-failure", "failure",
-                         "malformed", "unsupported", "missing", "empty"):
+                         "malformed", "unsupported", "missing", "empty", "failed-empty-json", "failed-valid-json"):
                 script = directory / name
                 script.write_text(CLI)
                 script.chmod(0o700)
