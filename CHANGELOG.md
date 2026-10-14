@@ -14,6 +14,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Reject enabled-provider lists from failed CLI processes in Popup and Panel
   settings, and show the CLI error or exit code instead of selectable providers.
+- Reveal truncated AI Insights metadata on hover and provider identities in
+  settings on keyboard focus. Align the AI Insights enable hint with its label.
 - Keep popup refreshes, update checks, and settings requests independent across
   widget instances and reopened pages. Matching local counters could make
   Plasma reuse another request's process and return its older result.
