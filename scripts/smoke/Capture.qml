@@ -1603,6 +1603,12 @@ Item {
             }
             if (scenario.indexOf("settings-diagnostics") === 0) {
                 if (preview.page.supportBusy) return false;
+                var commandField = findItem(preview.page, "commandPathField");
+                var pathRowBounds = commandField.parent.mapToItem(preview.page, 0, 0);
+                verifyScenario(pathRowBounds.x >= -1
+                    && pathRowBounds.x + commandField.parent.width <= preview.page.width + 1
+                    && commandField.parent.width <= Kirigami.Units.gridUnit * 24 + 1,
+                    "Diagnostics must keep the command path and Use PATH inside the page");
                 verifyScenario(preview.page.supportFacts.valid, "support report did not accept the synthetic offline facts");
                 verifyScenario(preview.page.supportReport.indexOf("0.73.0") >= 0
                     && preview.page.supportReport.indexOf("codex, claude") >= 0

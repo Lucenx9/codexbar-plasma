@@ -330,14 +330,6 @@ class SettingsPagesTest(unittest.TestCase):
             if stale_readme_fragment in readme_text:
                 raise AssertionError(f"README.md must not suggest {stale_readme_fragment!r}")
 
-        command_path_row_body = diagnostics_surface.id_block("commandPathRow")
-        command_path_row_layout = command_path_row_body.split("Controls.TextField {", 1)[0]
-        if "Layout.maximumWidth: Kirigami.Units.gridUnit * 24" not in command_path_row_layout:
-            raise AssertionError(
-                "the command path row must stay bounded in the FormLayout control column so resizing "
-                "cannot push Use PATH outside the visible page"
-            )
-
         advanced_override_body = id_block(diagnostics_text, "advancedOverrideExplanation")
         for explanation_fragment in (
             "Layout.fillWidth: true",
