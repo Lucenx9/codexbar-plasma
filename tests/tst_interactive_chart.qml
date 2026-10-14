@@ -37,6 +37,33 @@ TestCase {
         return [{tag: "hover", keyboard: false}, {tag: "keyboard", keyboard: true}]
     }
 
+    function test_detailBarsKeepPeakGuideline_data() {
+        return [{tag: "cost-bars", kind: "bar", guide: true},
+            {tag: "detail-bars", kind: "bars", guide: true},
+            {tag: "detail-line", kind: "line", guide: false}]
+    }
+
+    function test_detailBarsKeepPeakGuideline(data) {
+        var chart = createChart({
+            applet: {secondaryTextOpacity: 0.7, canvasColor: function() { return "#000000" }},
+            width: 300,
+            points: [{label: "First", value: 1}, {label: "Peak", value: 10}],
+            accent: "blue",
+            kind: data.kind
+        })
+        if (!chart)
+            return
+        var plot = chart.nextItemInFocusChain(true)
+        verify(waitForRendering(chart))
+        // The peak is at y=2; x=0 is outside both bars and line markers.
+        // Read the actual canvas so a missing guide cannot pass on geometry alone.
+        tryCompare(plot, "available", true)
+        plot.requestPaint()
+        verify(waitForRendering(plot))
+        var alpha = plot.getContext("2d").getImageData(0, 2, 1, 1).data[3]
+        compare(alpha > 0, data.guide)
+    }
+
     function test_firstInspectionKeepsPlotGeometry(data) {
         var chart = createChart({
             applet: {secondaryTextOpacity: 0.7, canvasColor: function() { return "#000000" }},

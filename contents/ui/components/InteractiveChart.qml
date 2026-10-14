@@ -227,7 +227,7 @@ ColumnLayout {
                 return
             }
 
-            if (chart.kind === "bar" && chart.valueDomain.maximum > 0) {
+            if ((chart.kind === "bar" || chart.kind === "bars") && chart.valueDomain.maximum > 0) {
                 var peakBar = ChartScale.barGeometry(height, chart.valueDomain.maximum, chart.valueDomain)
                 var peakY = Math.round(peakBar.baseline - peakBar.height)
                 if (baseline - peakY >= Kirigami.Units.gridUnit) {

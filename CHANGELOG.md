@@ -14,6 +14,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 - Keep provider detail sections visible and restorable when live usage arrives
   through Qt's native list representation.
+- Draw the peak reference line for provider detail bar charts, matching local
+  cost charts.
 - Keep the default-account and reload button icons consistently sized beside
   the account loading indicator.
 - Keep cost refreshes and legacy range labels usable when the CLI reports
