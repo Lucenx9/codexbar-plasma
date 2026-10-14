@@ -86,6 +86,19 @@ synchronized.
 
 ## Ownership and implementation
 
+- Plasma's executable engine shares source names across DataSources. For each
+  one-shot request, its QML owner supplies both the local serial and a fresh
+  request nonce from the timestamp and `Math.random()` to
+  `CommandLedger.withRunNonce`. The pure module quotes the
+  nonce as a separate environment assignment; it never generates identities.
+  Keep the serial numeric for existing CLI fixtures. Local serials alone
+  collide across controllers and recreated settings pages, allowing one request
+  to reuse another's process or cached result. `test_command_source_isolation.py`
+  runs paired widget/CLI updaters, usage/cost/session refreshes and settings
+  roster controllers through the real Plasma executable engine. A file-locked
+  synthetic helper gives each actual execution a different result.
+  The continuous provider-configuration watcher deliberately shares its polling
+  source and does not use a one-shot nonce.
 - `contents/ui/main.qml` owns provider notification policy and routing,
   account coordination, selected state, quota-cache persistence, configuration updates, and external
   effects. Its adapters supply the panel and popup.

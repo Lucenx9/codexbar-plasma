@@ -67,7 +67,7 @@ Item {
             "--json-only"
         ].join(" ")
         commandRunSerial += 1
-        var sourceName = CommandLedger.withRunNonce(command, commandRunSerial)
+        var sourceName = CommandLedger.withRunNonce(command, commandRunSerial, Date.now() + "-" + Math.random())
         var descriptor = CommandLedger.descriptor(
             "enabledProviderRoster", "", Date.now(),
             providerRosterCommandTimeoutMs, providerRosterCommandTimeoutMs)

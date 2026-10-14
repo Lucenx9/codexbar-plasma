@@ -37,15 +37,16 @@ function copyCommands(commands) {
     return copy
 }
 
-// Every command carries a per-run nonce so Plasma treats each start as a new
-// source and a late reply from a previous run arrives under a name the ledger
-// has already dropped. The caller owns the serial, because incrementing it is
-// the side effect this module does not take.
-function withRunNonce(command, serial) {
-    if (!command || String(command).length === 0) {
+// Plasma shares executable sources across DataSources. A local serial alone
+// repeats in another controller or reopened settings page. QML supplies a
+// fresh request nonce as well, keeping generation and serial writes in its owner.
+function withRunNonce(command, serial, nonce) {
+    if (!command || String(command).length === 0
+            || typeof nonce !== "string" || nonce.length === 0) {
         return ""
     }
-    return "CODEXBAR_PLASMA_RUN=" + serial + " " + command
+    return "CODEXBAR_PLASMA_RUN=" + serial
+        + " CODEXBAR_PLASMA_REQUEST=" + Guards.shellQuote(nonce) + " " + command
 }
 
 // `timeoutMs` falls back to `fallbackTimeoutMs` when it is missing or not a
