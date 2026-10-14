@@ -85,6 +85,10 @@ work and upstream contract requirements.
   countdowns, run-out forecasts, or quota/pace/reset notifications. They do not
   rank automatic provider selection by consumption or satisfy conditional panel
   visibility rules other than Always. Provider status remains independent.
+  A previously notified quota threshold survives these unverified readings, so
+  returning measured usage at the same threshold does not repeat the warning.
+  A measured recovery clears that threshold, and a later measured crossing can
+  notify again. Unverified readings disarm pending limit-reset notifications.
   Confidence survives privacy mode, failed-refresh retention, and newly saved
   quota caches. Older CLI payloads and caches without the field keep their
   existing behavior; OpenCode Go estimates already saved by an older widget

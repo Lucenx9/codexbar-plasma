@@ -594,6 +594,9 @@ clipboard interoperability with every Wayland application or portal backend.
   use `usageConfidenceField`: only an absent field gets the legacy empty marker;
   explicitly empty or undefined values become unknown. Cache writes omit the
   legacy marker and restore field absence. Privacy retains the semantic value.
+  The notification planner preserves an already notified quota severity across
+  nonauthoritative observations while disarming resets; only authoritative quota
+  observations can clear that severity or escalate it.
   `tst_usage_confidence.qml` exercises display, retention, ranking, visibility,
   notifications, and AI Insights at public interfaces. The `estimated-usage` and `estimated-panel` smoke scenarios verify
   the root adapters, rendered qualifier, and panel badge with synthetic data.
