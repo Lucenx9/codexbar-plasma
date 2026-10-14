@@ -201,10 +201,14 @@ function processQuota(previousMemo, nextMemo, observation, observationIndex, int
     for (var i = 0; i < rows.length; i++) {
         var level = String(rows[i] && rows[i].quotaLevel || "")
         var key = quotaKey(observation, rows[i], i)
+        var previousLevel = String(previousMemo && previousMemo[key] || "")
         if (!Normalizer.authoritativeQuota(rows[i])) {
+            // Unverified usage cannot establish recovery from a notified quota.
+            if (previousLevel.length > 0) {
+                nextMemo[key] = previousLevel
+            }
             continue
         }
-        var previousLevel = String(previousMemo && previousMemo[key] || "")
         if (level.length > 0
                 && NotificationMemo.severityRank(level) > NotificationMemo.severityRank(previousLevel)) {
             intents.push({

@@ -22,6 +22,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve the last notified quota threshold across estimated or unknown-confidence
+  usage, so unchanged measured usage does not repeat a quota warning.
 - Qualify CLI-estimated usage percentages in the panel and popup, preserving
   confidence through privacy mode, failed refreshes, and new quota caches.
   Treat explicitly empty confidence as unknown.

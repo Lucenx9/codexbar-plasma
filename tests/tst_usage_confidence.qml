@@ -280,6 +280,45 @@ TestCase {
         }
     }
 
+    function test_degradedConfidenceKeepsNotifiedQuotaLevel_data() {
+        return [
+            {tag: "estimated-low", confidence: "estimated", used: 0},
+            {tag: "estimated-high", confidence: "estimated", used: 100},
+            {tag: "unknown-low", confidence: "unknown", used: 0},
+            {tag: "unknown-high", confidence: "unknown", used: 100}
+        ];
+    }
+    function test_degradedConfidenceKeepsNotifiedQuotaLevel(data) {
+        var options = {mode: "prime", quotaEnabled: true, paceEnabled: false,
+            resetEnabled: false, statusEnabled: false};
+        var result = Notifications.transition([observation("exact", 85, "minor", false)], {}, options);
+        options.mode = "observe";
+        for (var i = 0; i < 3; i++) {
+            var before = JSON.stringify(result.nextMemo);
+            var degraded = Notifications.transition(
+                [observation(data.confidence, data.used, "", false)], result.nextMemo, options);
+            compare(degraded.intents.length, 0);
+            compare(JSON.stringify(result.nextMemo), before);
+            result = Notifications.transition(
+                [observation("exact", 85, "minor", false)], degraded.nextMemo, options);
+            compare(result.intents.length, 0);
+        }
+        // Real measured escalation still notifies once.
+        result = Notifications.transition([observation("exact", 95, "major", false)], result.nextMemo, options);
+        compare(result.intents.length, 1);
+        compare(result.intents[0].kind, "quota");
+        compare(result.intents[0].severity, "major");
+        result = Notifications.transition([observation("exact", 95, "major", false)], result.nextMemo, options);
+        compare(result.intents.length, 0);
+        // A measured recovery clears the baseline so a later crossing notifies.
+        result = Notifications.transition([observation("exact", 20, "", false)], result.nextMemo, options);
+        compare(result.intents.length, 0);
+        result = Notifications.transition([observation("exact", 95, "major", false)], result.nextMemo, options);
+        compare(result.intents.length, 1);
+        compare(result.intents[0].kind, "quota");
+        compare(result.intents[0].severity, "major");
+    }
+
     function test_insightsDoNotClaimEstimatedAccountHeadroom() {
         var estimated = provider("estimated", 95);
         var measured = provider("exact", 50);
