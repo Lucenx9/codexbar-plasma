@@ -242,6 +242,14 @@ TestCase {
             {tag: "shell timeout", text: "", exitCode: 124, outcome: "error", reason: "timeout"},
             {tag: "shell kill", text: "", exitCode: 137, outcome: "error", reason: "timeout"},
             {tag: "native kill", text: "", exitCode: 9, exitStatus: 1, outcome: "error", reason: "timeout"},
+            {tag: "failed process with success JSON", text: JSON.stringify({status: "ok", summary: "Unconfirmed insight"}),
+                exitCode: 1, outcome: "error", reason: "unavailable"},
+            {tag: "crashed process with success JSON", text: JSON.stringify({status: "ok", summary: "Unconfirmed insight"}),
+                exitCode: 11, exitStatus: 1, outcome: "error", reason: "unavailable"},
+            {tag: "crash with zero code", text: JSON.stringify({status: "ok", summary: "Unconfirmed insight"}),
+                exitCode: 0, exitStatus: 1, outcome: "error", reason: "unavailable"},
+            {tag: "unknown process result", text: JSON.stringify({status: "ok", summary: "Unconfirmed insight"}),
+                exitCode: NaN, outcome: "error", reason: "unavailable"},
             {tag: "normal exit 9", text: "", exitCode: 9, exitStatus: 0, outcome: "error", reason: "format"},
             {tag: "helper exit", text: "", exitCode: 1, outcome: "error", reason: "format"}
         ]
@@ -263,7 +271,7 @@ TestCase {
 
     function test_modelsReplyValidation() {
         var reply = AiInsights.modelsReply(JSON.stringify({status: "ok", key: "valid",
-            models: [{id: "a/b"}, {id: "a/b"}, {id: "bad id"}, {id: 3}, null, {id: "llama3:8b"}]}))
+            models: [{id: "a/b"}, {id: "a/b"}, {id: "bad id"}, {id: 3}, null, {id: "llama3:8b"}]}), 0)
         compare(reply.models, ["a/b", "llama3:8b"])
         compare(reply.key, "valid")
         compare(AiInsights.modelsReply(JSON.stringify({status: "error", reason: "auth"})).reason, "auth")
@@ -274,8 +282,29 @@ TestCase {
         compare(AiInsights.modelsReply("", 9, 1).reason, "timeout")
         compare(AiInsights.modelsReply("", 9, 0).reason, "format")
         compare(AiInsights.modelsReply("", 1).reason, "format")
-        compare(AiInsights.statusReply(JSON.stringify({status: "present"}), ["present", "absent"]), "present")
-        compare(AiInsights.statusReply(JSON.stringify({status: "sk-secret"}), ["present", "absent"]), "unavailable")
+        compare(AiInsights.statusReply(JSON.stringify({status: "present"}), ["present", "absent"], 0), "present")
+        compare(AiInsights.statusReply(JSON.stringify({status: "sk-secret"}), ["present", "absent"], 0), "unavailable")
+    }
+
+    function test_failedProcessCannotConfirmModelsOrWalletState_data() {
+        return [
+            {tag: "failed", exitCode: 1, exitStatus: 0},
+            {tag: "crashed", exitCode: 11, exitStatus: 1},
+            {tag: "crash with zero code", exitCode: 0, exitStatus: 1},
+            {tag: "unknown process result", exitCode: NaN, exitStatus: 0}
+        ]
+    }
+
+    function test_failedProcessCannotConfirmModelsOrWalletState(data) {
+        var reply = AiInsights.modelsReply(JSON.stringify({status: "ok", key: "valid",
+            models: [{id: "qwen3:4b"}]}), data.exitCode, data.exitStatus)
+        compare(reply.outcome, "error")
+        compare(reply.models, [])
+        compare(reply.key, "")
+        for (var status of ["present", "saved", "cleared"]) {
+            compare(AiInsights.statusReply(JSON.stringify({status: status}), [status],
+                data.exitCode, data.exitStatus), "unavailable")
+        }
     }
 
     function test_safeReasonBoundsHelperReasons() {

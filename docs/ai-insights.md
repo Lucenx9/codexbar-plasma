@@ -250,6 +250,11 @@ table, honoring the response's `Retry-After`, and a choice that finished with
   or the parent-death API is unavailable. An already submitted
   remote request may still complete or be billed. Stored insights from another
   context are not shown as current.
+- Successful generation, model-list and wallet-operation replies require a
+  zero process exit code and a normal exit. A failed or crashed helper cannot
+  replace the cached insight, populate the model list, or confirm a wallet
+  operation even if its stdout contains success JSON. Structured error reasons
+  and the existing timeout classification remain available.
 - Failures never touch usage data. Every failure waits a full interval (24
   hours in manual mode) before automatic generation; `rate_limited` also waits
   for `Retry-After` (at least five minutes, at most 24 hours). An explicit
@@ -266,7 +271,8 @@ table, honoring the response's `Retry-After`, and a choice that finished with
 
 - `tests/tst_ai_insights.qml`: language tags, context keys, cache validation and
   invalidation, schedule and restart rules, retry delays, command quoting, and
-  reply validation, including markup that must stay literal.
+  reply validation, including markup that must stay literal and success JSON
+  from failed, crashed or unconfirmed processes.
 - `tests/tst_ai_insights_snapshot.qml`: the allowlist against injected fields,
   that only current providers are sent, partial and complete history, currencies,
   signals, identity, and bounds.
@@ -280,12 +286,14 @@ table, honoring the response's `Retry-After`, and a choice that finished with
 - `tests/test_ai_insights_settings.py`: the settings page's helper reply
   handling with stubbed processes, including an Ollama address edited during
   or after **Test connection**, a changed model, disabling and re-enabling with
-  a pending model/key operation, the key status a test reply updates, and the
+  a pending model/key operation, rejection of failed model-list and wallet
+  operations, the key status a test reply updates, and the
   **Clear** button re-arming when a new insight is stored after a clear.
 - `tests/test_ai_insights_controller.py`: the production controller through
   Plasma's executable DataSource with a recording helper, covering disabled,
   manual, duplicate, automatic, restart, language/model/disable changes during a
-  request, failures, invalid commands, failed attempts and rate limits across
+  request, failures (including success JSON followed by exit 1), invalid commands,
+  failed attempts and rate limits across
   restarts, and destruction.
 - Smoke scenarios `ai-insights`, `ai-insights-it`, `ai-insights-mismatch`,
   `ai-insights-error`, `ai-insights-single`, `settings-ai-insights`, and

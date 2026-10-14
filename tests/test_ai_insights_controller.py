@@ -42,6 +42,8 @@ elif model == "garbage-model":
 else:
     print(json.dumps({"status": "ok", "summary": "Insight [" + values.get("--language", "") + "] <b>plain</b>",
                       "highlights": ["One", 2, "Two"]}))
+if model == "failed-success-model":
+    sys.exit(1)
 '''
 
 QML = '''import QtQuick
@@ -139,6 +141,21 @@ TestCase {
         compare(calls().length, 1);
         compare(attempts.count, 1);
     }
+    function test_failedSuccessReplyPreservesTheConfirmedInsight() {
+        var controller = create({model: "failed-success-model"});
+        var cached = AiInsights.cacheText({summary: "Previously confirmed insight", highlights: [],
+            generatedAtMs: Date.now() - 60000, contextKey: controller.contextKey,
+            provider: controller.provider, model: controller.model, language: controller.language,
+            snapshotId: "0000abcd"});
+        verify(cached.length > 0);
+        controller.cacheText = cached;
+        verify(controller.generate());
+        tryCompare(controller, "errorReason", "unavailable", 10000);
+        verify(!controller.busy);
+        compare(generated.count, 0);
+        compare(controller.cacheText, cached);
+        compare(calls().length, 1);
+    }
     function test_4_automaticGenerationRespectsTheScheduleAndRestarts() {
         var recent = create({intervalHours: 6, lastAttempt: new Date(Date.now() - 60000).toISOString()});
         wait(400);
@@ -191,6 +208,7 @@ TestCase {
         return [{tag: "auth", model: "auth-model", reason: "auth", manualRetry: true},
                 {tag: "rate limit", model: "rate-model", reason: "rate_limited", manualRetry: false},
                 {tag: "killed owner", model: "killed-model", reason: "timeout", manualRetry: true},
+                {tag: "success JSON from failed process", model: "failed-success-model", reason: "unavailable", manualRetry: true},
                 {tag: "malformed", model: "garbage-model", reason: "format", manualRetry: true}];
     }
     function test_7_failuresAreReportedWithoutRetryLoops(data) {

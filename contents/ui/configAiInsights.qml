@@ -181,10 +181,13 @@ KCM.SimpleKCM {
         var action = activeAction
         retire()
         var stdout = data ? data["stdout"] : ""
+        var exitCode = data && data["exit code"] !== undefined ? Number(data["exit code"]) : NaN
+        var exitStatus = data && data["exit status"] !== undefined ? Number(data["exit status"]) : NaN
         if (action === "key-status") {
-            keyStatus = AiInsights.statusReply(stdout, ["present", "absent", "unavailable"])
+            keyStatus = AiInsights.statusReply(stdout, ["present", "absent", "unavailable"], exitCode, exitStatus)
         } else if (action === "set-key") {
-            const saved = AiInsights.statusReply(stdout, ["saved", "cancelled", "invalid", "dialog_missing", "unavailable"])
+            const saved = AiInsights.statusReply(stdout,
+                ["saved", "cancelled", "invalid", "dialog_missing", "unavailable"], exitCode, exitStatus)
             if (saved === "saved") {
                 report(i18n("API key saved in the system wallet."), false)
             } else if (saved === "invalid") {
@@ -196,14 +199,12 @@ KCM.SimpleKCM {
             }
             Qt.callLater(refreshKeyStatus)
         } else if (action === "clear-key") {
-            const cleared = AiInsights.statusReply(stdout, ["cleared", "unavailable"])
+            const cleared = AiInsights.statusReply(stdout, ["cleared", "unavailable"], exitCode, exitStatus)
             report(cleared === "cleared" ? i18n("API key removed from the system wallet.")
                 : i18n("Could not remove the API key. The system wallet is unavailable."), cleared !== "cleared")
             Qt.callLater(refreshKeyStatus)
         } else if (action === "models") {
-            const result = AiInsights.modelsReply(stdout,
-                data && data["exit code"] !== undefined ? Number(data["exit code"]) : NaN,
-                data && data["exit status"] !== undefined ? Number(data["exit status"]) : NaN)
+            const result = AiInsights.modelsReply(stdout, exitCode, exitStatus)
             // The test read the wallet itself, so its answer replaces a status
             // lookup that failed or timed out, for example on a locked wallet.
             if (result.key === "valid") {

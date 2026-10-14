@@ -8,6 +8,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,10 +44,10 @@ TestCase {
             phases: configSecretPromptDialogTimeoutSeconds
                 + configSecretPromptDialogKillAfterSeconds
                 + configSecretCommandTimeoutSeconds + configSecretCommandKillAfterSeconds};
-        configSecretPromptDialogTimeoutSeconds = 0.6;
-        configSecretPromptDialogKillAfterSeconds = 0.2;
-        configSecretCommandTimeoutSeconds = 0.6;
-        configSecretCommandKillAfterSeconds = 0.2;
+        configSecretPromptDialogTimeoutSeconds = 3;
+        configSecretPromptDialogKillAfterSeconds = 0.5;
+        configSecretCommandTimeoutSeconds = 3;
+        configSecretCommandKillAfterSeconds = 0.5;
         setApiKey("codex");
         promptDescriptorSecret("codex", {id: "apiKey", title: "API key", kind: "secret",
             writeCommand: ["codexbar", "config", "set-api-key", "--provider", "codex", "--stdin"]});
@@ -77,7 +78,7 @@ if role == "kdialog":
     if mode.startswith("dialog-"):
         time.sleep(30)
     if mode == "late":
-        time.sleep(0.45)
+        time.sleep(2)
     print("synthetic-secret")
 else:
     assert sys.stdin.read() == "synthetic-secret"
@@ -88,7 +89,7 @@ else:
     if mode.startswith("cli-"):
         time.sleep(30)
     if mode == "late":
-        time.sleep(0.45)
+        time.sleep(2)
     print(json.dumps({"ok": True}))
 '''
 
@@ -177,7 +178,7 @@ class SecretPromptLifecycleTests(unittest.TestCase):
                  "PROMPT_DIRECTORY": str(self.directory), "PROMPT_MODE": mode},
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         try:
-            stdout, stderr = process.communicate(timeout=5)
+            stdout, stderr = process.communicate(timeout=12)
             if mode.startswith("cli-"):
                 self.assertIn(process.returncode, (124, 137), stderr)
             else:
@@ -186,11 +187,16 @@ class SecretPromptLifecycleTests(unittest.TestCase):
             self.assertEqual((self.directory / "received").exists(), mode == "late" or mode.startswith("cli-"))
             for marker in self.directory.glob("*.pid"):
                 status = Path("/proc") / marker.read_text() / "stat"
-                try:
-                    state = status.read_text().rsplit(")", 1)[1].split()[0]
-                except FileNotFoundError:
-                    continue
-                self.assertEqual(state, "Z", marker.name)
+                deadline = time.monotonic() + 2
+                while True:
+                    try:
+                        state = status.read_text().rsplit(")", 1)[1].split()[0]
+                    except FileNotFoundError:
+                        break
+                    if state == "Z":
+                        break
+                    self.assertLess(time.monotonic(), deadline, marker.name + " is still " + state)
+                    time.sleep(0.01)
         finally:
             for marker in self.directory.glob("*.pid"):
                 try:

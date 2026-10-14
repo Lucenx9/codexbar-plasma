@@ -357,6 +357,10 @@ function timeoutExit(exitCode, exitStatus) {
     return exitCode === 124 || exitCode === 137 || (exitCode === 9 && exitStatus === 1)
 }
 
+function successfulExit(exitCode, exitStatus) {
+    return exitCode === 0 && (exitStatus === undefined || exitStatus === 0)
+}
+
 function generationReply(text, exitCode, exitStatus) {
     if (timeoutExit(exitCode, exitStatus)) {
         return {outcome: "error", reason: "timeout", retryAfterSeconds: 0}
@@ -366,6 +370,9 @@ function generationReply(text, exitCode, exitStatus) {
         return {outcome: "error", reason: "format", retryAfterSeconds: 0}
     }
     if (value.status === "ok") {
+        if (!successfulExit(exitCode, exitStatus)) {
+            return {outcome: "error", reason: "unavailable", retryAfterSeconds: 0}
+        }
         var summary = plainText(value.summary, maximumSummaryLength)
         return summary.length > 0
             ? {outcome: "ok", summary: summary, highlights: highlights(value.highlights)}
@@ -390,6 +397,9 @@ function modelsReply(text, exitCode, exitStatus) {
     if (value.status !== "ok") {
         return {outcome: "error", reason: safeReason(value.reason),
             models: [], key: ""}
+    }
+    if (!successfulExit(exitCode, exitStatus)) {
+        return {outcome: "error", reason: "unavailable", models: [], key: ""}
     }
     var models = []
     var seen = ({})
@@ -423,7 +433,10 @@ function modelLabel(model) {
     return slash >= 0 && slash < text.length - 1 ? text.slice(slash + 1) : text
 }
 
-function statusReply(text, allowed) {
+function statusReply(text, allowed, exitCode, exitStatus) {
+    if (!successfulExit(exitCode, exitStatus)) {
+        return "unavailable"
+    }
     var value = parseReply(text)
     return value && allowed.indexOf(value.status) >= 0 ? value.status : "unavailable"
 }
