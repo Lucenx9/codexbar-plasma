@@ -237,7 +237,7 @@ require_all(notification.text, ("readonly property int notificationCommandTimeou
             "running: controller.sending", "lifecycle.expire(Date.now())",
             "Component.onDestruction: lifecycle.retire()"), "notification deadline and destruction cleanup")
 require_ordered(notification.function_body("dispatch"),
-                ("CommandLedger.withRunNonce(command, runSerial)",
+                ("CommandLedger.withRunNonce(",
                  "commands = CommandLedger.opened(commands, sourceName, descriptor)",
                  "notificationSource.connectSource(sourceName)"),
                 "notifications must be registered before synchronous cached replies")
@@ -368,7 +368,7 @@ if 'case "sessions"' in applet.id_block("usageSource"):
     raise AssertionError("Sessions replies must leave the shared usage source")
 require_all(
     sessions_text,
-    ("CommandLedger.withRunNonce(commandSource, runSerial)",
+    ("CommandLedger.withRunNonce(",
      'engine: "executable"', "running: controller.loading",
      "lifecycle.expireRequests(Date.now())", "Component.onDestruction: lifecycle.retireRequests()",
      "Loading sessions timed out. Try again."),
@@ -543,7 +543,7 @@ require_all(
 require_ordered(
     controller_function(cost_text, "requestRefresh"),
     ("CostRefreshPolicy.refreshAction(", "retireRequests()", "lastAttemptAtMs = nowMs",
-     "CommandLedger.withRunNonce(commandSource, runSerial)", "descriptor.historyDays = controller.historyDays",
+     "CommandLedger.withRunNonce(", "descriptor.historyDays = controller.historyDays",
      "descriptor.context = commandSource", "CommandLedger.opened(", "connectSource("),
     "cost runs must capture their context, replace older runs, and register before connecting",
 )
@@ -571,7 +571,7 @@ require_all(applet.function_body("selectGlobalView"),
 require_all(
     providers.function_body("runCommand"),
     (
-        "CommandLedger.withRunNonce(command, commandRunSerial)",
+        "CommandLedger.withRunNonce(",
         "nextDescriptor.timeoutMs",
         "nextDescriptor.deadlineMs",
         "nextDescriptor.commandPathSignature = commandPath",
@@ -740,7 +740,7 @@ require_all(
 require_all(
     popup.function_body("loadProviderRoster"),
     (
-        "CommandLedger.withRunNonce(command, commandRunSerial)",
+        "CommandLedger.withRunNonce(",
         "CommandLedger.descriptor(",
         "providerRosterCommands = CommandLedger.opened(",
     ),
@@ -927,7 +927,7 @@ for forbidden in ("id: updateSource", "id: updateCheckTimer", "id: updateCommand
         raise AssertionError(f"main must not retain updater lifecycle state: {forbidden}")
 require_all(updater_text, (
     'Qt.resolvedUrl("../../../scripts/update-widget.sh")',
-    "CommandLedger.withRunNonce(buildUpdateCommand(installMode), commandRunSerial)",
+    "CommandLedger.withRunNonce(",
     "if (sourceName !== connectedUpdateCommandSource)",
     "SafeText.cliJsonText(rawStdoutText)",
     "controller.statusRecorded(updateStatusText, updateErrorText, availableVersion)",

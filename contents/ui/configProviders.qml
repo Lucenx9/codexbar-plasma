@@ -345,7 +345,7 @@ KCM.SimpleKCM {
 
     function runCommand(command, descriptor) {
         commandRunSerial += 1
-        var sourceName = CommandLedger.withRunNonce(command, commandRunSerial)
+        var sourceName = CommandLedger.withRunNonce(command, commandRunSerial, Date.now() + "-" + Math.random())
         var nextDescriptor = copyObject(descriptor)
         nextDescriptor.commandPathSignature = commandPath
         // Fail closed like CommandLedger.descriptor: an entry without a usable

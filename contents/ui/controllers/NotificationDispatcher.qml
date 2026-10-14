@@ -35,7 +35,7 @@ Item {
             if (command.length === 0)
                 return "";
             runSerial += 1;
-            var sourceName = CommandLedger.withRunNonce(command, runSerial);
+            var sourceName = CommandLedger.withRunNonce(command, runSerial, Date.now() + "-" + Math.random());
             var timeout = NotificationCommand.wantsAction(actionLabel)
                 ? notificationActionCommandTimeoutMs
                 : notificationCommandTimeoutMs;

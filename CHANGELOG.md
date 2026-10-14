@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep popup refreshes, update checks, and settings requests independent across
+  widget instances and reopened pages. Matching local counters could make
+  Plasma reuse another request's process and return its older result.
 - Preserve the last successful session list when a failed CLI scan writes valid
   JSON, and reject widget updater success reports from failed processes.
 - Keep provider detail sections visible and restorable when live usage arrives

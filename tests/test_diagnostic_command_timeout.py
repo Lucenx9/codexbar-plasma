@@ -33,6 +33,7 @@ from qml_surfaces import Surface
 QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/Guards.js" as Guards
+import "SOURCE_URL/CommandLedger.js" as CommandLedger
 import "SOURCE_URL/SafeText.js" as SafeText
 TestCase {
     name: "DiagnosticCommandTimeout"
@@ -106,6 +107,7 @@ print(json.dumps({"ok": True}))
 LIVE_QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/Guards.js" as Guards
+import "SOURCE_URL/CommandLedger.js" as CommandLedger
 import "SOURCE_URL/SafeText.js" as SafeText
 TestCase {
     name: "DiagnosticLiveCompletion"
