@@ -110,7 +110,7 @@ TestCase {
 
     function test_replyReportsTheTestedAddress() {
         verify(run("models"))
-        accept(helperSource.connected[0], {stdout: listed})
+        accept(helperSource.connected[0], {stdout: listed, "exit code": 0, "exit status": 0})
         verify(actionText.indexOf("Connection works") === 0, actionText)
         compare(availableModels, ["qwen3:4b"])
     }
@@ -122,7 +122,7 @@ TestCase {
         verify(!busy)
         compare(keyStatus, "unavailable")
         verify(helperSource.disconnected.indexOf(source) >= 0)
-        accept(source, {stdout: JSON.stringify({status: "present"})})
+        accept(source, {stdout: JSON.stringify({status: "present"}), "exit code": 0, "exit status": 0})
         compare(keyStatus, "unavailable")
     }
 
@@ -139,7 +139,7 @@ TestCase {
         verify(!busy, "disabling AI Insights must retire a running helper")
         verify(helperSource.disconnected.indexOf(source) >= 0)
         var reply = data.action === "models" ? listed : JSON.stringify({status: "present"})
-        accept(source, {stdout: reply})
+        accept(source, {stdout: reply, "exit code": 0, "exit status": 0})
         compare(actionText, "")
         compare(keyStatus, "")
         compare(availableModels, [])
@@ -147,7 +147,7 @@ TestCase {
         compare(helperSource.connected.length, 1)
         cfg_aiInsightsEnabled = true
         verify(run("models"), "re-enabling settings must permit an explicit connection test")
-        accept(helperSource.connected[1], {stdout: listed})
+        accept(helperSource.connected[1], {stdout: listed, "exit code": 0, "exit status": 0})
         verify(actionText.indexOf("Connection works") === 0)
     }
 
@@ -162,7 +162,7 @@ TestCase {
 
     function test_editingModelClearsThePreviousConnectionVerdict() {
         verify(run("models"))
-        accept(helperSource.connected[0], {stdout: listed})
+        accept(helperSource.connected[0], {stdout: listed, "exit code": 0, "exit status": 0})
         verify(actionText.indexOf("qwen3:4b") >= 0)
         cfg_aiInsightsModel = "unlisted-model"
         compare(actionText, "", "the old verdict must not describe the newly chosen model")
@@ -178,7 +178,7 @@ TestCase {
         cfg_aiInsightsOllamaEndpoint = "https://ollama.example.net"
         verify(!busy)
         verify(helperSource.disconnected.indexOf(source) >= 0)
-        accept(source, {stdout: listed})
+        accept(source, {stdout: listed, "exit code": 0, "exit status": 0})
         compare(actionText, "")
         compare(availableModels, [])
     }
@@ -186,7 +186,7 @@ TestCase {
     // A finished result describes the address it tested, not an edited one.
     function test_endpointChangeClearsTheFinishedResult() {
         verify(run("models"))
-        accept(helperSource.connected[0], {stdout: listed})
+        accept(helperSource.connected[0], {stdout: listed, "exit code": 0, "exit status": 0})
         verify(actionText.length > 0)
         compare(availableModels, ["qwen3:4b"])
         compare(modelCombo.editText, "qwen3:4b")
@@ -200,7 +200,7 @@ TestCase {
     // belongs to the settings, not to the tested address, and must survive.
     function test_endpointChangeKeepsTheChosenModel() {
         verify(run("models"))
-        accept(helperSource.connected[0], {stdout: listed})
+        accept(helperSource.connected[0], {stdout: listed, "exit code": 0, "exit status": 0})
         compare(modelCombo.editText, "qwen3:4b")
         cfg_aiInsightsOllamaEndpoint = "http://127.0.0.1:11434"
         compare(availableModels, [])
@@ -221,13 +221,48 @@ TestCase {
         for (var i = 0; i < replies.length; i++) {
             keyStatus = "unavailable"
             verify(run("models"))
-            accept(helperSource.connected[helperSource.connected.length - 1], {stdout: replies[i][0]})
+            accept(helperSource.connected[helperSource.connected.length - 1],
+                {stdout: replies[i][0], "exit code": 0, "exit status": 0})
             compare(keyStatus, replies[i][1], replies[i][0])
         }
         keyStatus = ""
     }
 
     // A listing stopped by the shell bound reports a timeout, not a format error.
+    function test_failedHelperCannotConfirmSuccess_data() {
+        return [
+            {tag: "models", action: "models", stdout: listed},
+            {tag: "key status", action: "key-status", stdout: JSON.stringify({status: "present"})},
+            {tag: "store key", action: "set-key", stdout: JSON.stringify({status: "saved"})},
+            {tag: "remove key", action: "clear-key", stdout: JSON.stringify({status: "cleared"})}
+        ]
+    }
+    function test_failedHelperCannotConfirmSuccess(data) {
+        verify(run(data.action))
+        accept(activeSource, {stdout: data.stdout, "exit code": 1, "exit status": 0})
+        verify(!busy)
+        compare(availableModels, [])
+        if (data.action === "key-status") {
+            compare(keyStatus, "unavailable")
+        } else {
+            verify(actionFailed)
+            verify(actionText.indexOf("Connection works") < 0)
+            verify(actionText.indexOf("API key saved") < 0)
+            verify(actionText.indexOf("API key removed") < 0)
+        }
+    }
+
+    function test_walletOperationsConfirmNormalExits() {
+        verify(run("set-key"))
+        accept(activeSource, {stdout: JSON.stringify({status: "saved"}), "exit code": 0, "exit status": 0})
+        verify(!actionFailed)
+        compare(actionText, "API key saved in the system wallet.")
+        verify(run("clear-key"))
+        accept(activeSource, {stdout: JSON.stringify({status: "cleared"}), "exit code": 0, "exit status": 0})
+        verify(!actionFailed)
+        compare(actionText, "API key removed from the system wallet.")
+    }
+
     function test_stoppedListingReportsTimeout() {
         verify(run("models"))
         accept(helperSource.connected[0], {stdout: "", "exit code": 124})
@@ -494,7 +529,7 @@ class AiInsightsSettingsTests(unittest.TestCase):
                 capture_output=True, text=True, timeout=30)
         output = result.stdout + result.stderr
         self.assertEqual(result.returncode, 0, output)
-        self.assertIn("Totals: 15 passed, 0 failed", output)
+        self.assertIn("Totals: 20 passed, 0 failed", output)
 
     def test_clear_button_rearms_when_a_new_insight_arrives(self):
         insights = Surface("insights", ROOT)

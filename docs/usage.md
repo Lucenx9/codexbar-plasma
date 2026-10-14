@@ -765,7 +765,9 @@ rather than claiming it will answer; OpenRouter's Zero Data Retention routing is
 checked only when an insight is generated. Changing the model clears the
 previous test result. Disabling AI Insights on this settings page retires any
 pending connection test or wallet operation and ignores its late reply. The card
-appears at the end of **Overview**. Without an Overview tab (one provider, or a
+and settings reject success replies from a helper that exits with an error or
+crashes; a failed generation keeps the previous insight available.
+The card appears at the end of **Overview**. Without an Overview tab (one provider, or a
 fixed provider in Diagnostics), it appears in the provider view instead. The
 card's **Generate insight** button creates the first insight; afterwards the
 wand button in its header refreshes it. The Overview refresh button still

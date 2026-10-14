@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Reject AI Insights success replies from failed helper processes in the popup
+  and settings, including model lists and wallet-operation confirmations.
 - Preserve the last successful session list when a failed CLI scan writes valid
   JSON, and reject widget updater success reports from failed processes.
 - Keep provider detail sections visible and restorable when live usage arrives
