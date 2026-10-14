@@ -433,6 +433,33 @@ TestCase {
         compare(JSON.stringify(normalized).indexOf("secret"), -1)
     }
 
+    function test_diagnosticFetchErrorDoesNotFailTheCommand() {
+        var report = { schemaVersion: "1.0", provider: "codex", auth: {}, settings: {},
+            fetchAttempts: [], error: { category: "unknown", safeDescription: "Fetch failed" } }
+        var before = JSON.stringify(report)
+        compare(ProviderConfigProtocol.diagnosticOutcome(report, "loader warning", 0).outcome, "success")
+        compare(ProviderConfigProtocol.diagnosticOutcome([report], "", 0).outcome, "success")
+        compare(ProviderConfigProtocol.diagnosticOutcome(report, "", 3).outcome, "exitCodeError")
+        compare(ProviderConfigProtocol.diagnosticOutcome(report, "", 124).outcome, "timeout")
+        compare(JSON.stringify(report), before)
+        // Config writes keep treating the same error field as command failure.
+        compare(ProviderConfigProtocol.commandOutcome(report, "", 0).outcome, "envelopeError")
+    }
+
+    function test_incompleteDiagnosticCannotBypassCommandErrors() {
+        var report = { schemaVersion: "1.0", provider: "codex", auth: {}, settings: {},
+            fetchAttempts: [], error: {} }
+        for (var field of ["schemaVersion", "provider", "auth", "settings", "fetchAttempts"]) {
+            var incomplete = JSON.parse(JSON.stringify(report))
+            delete incomplete[field]
+            compare(ProviderConfigProtocol.diagnosticOutcome(incomplete, "", 0).outcome, "envelopeError")
+        }
+        compare(ProviderConfigProtocol.diagnosticOutcome(repeated(report,
+            ProviderConfigProtocol.maximumProviderItems + 1), "", 0).outcome, "envelopeError")
+        report.status = "failed"
+        compare(ProviderConfigProtocol.diagnosticOutcome(report, "", 0).outcome, "statusError")
+    }
+
     function test_diagnosticUsesOnlyFirstArrayItemAndStrictShapes() {
         var normalized = ProviderConfigProtocol.normalizeProviderDiagnostic([
             { provider: "first", auth: { configured: 1 }, settings: [] },
