@@ -30,7 +30,8 @@ Controls.ItemDelegate {
 
     PlainToolTip {
         parent: providerRow
-        visible: providerRow.hovered && (providerTitle.truncated || providerSubtitle.truncated)
+        visible: (providerRow.hovered || providerRow.visualFocus)
+            && (providerTitle.truncated || providerSubtitle.truncated)
         plainText: providerTitle.text + "\n" + providerSubtitle.text
     }
 

@@ -144,12 +144,24 @@ Rectangle {
                 }
 
                 PlainPlasmaLabel {
+                    id: insightMetaLabel
+
                     visible: card.metaText.length > 0
                     text: card.metaText
                     opacity: applet.secondaryTextOpacity
                     font: Kirigami.Theme.smallFont
                     Layout.fillWidth: true
                     elide: Text.ElideRight
+
+                    HoverHandler {
+                        id: insightMetaHover
+                    }
+
+                    PlainToolTip {
+                        parent: insightMetaLabel
+                        visible: insightMetaLabel.truncated && insightMetaHover.hovered
+                        plainText: insightMetaLabel.text
+                    }
                 }
             }
 
