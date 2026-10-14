@@ -908,7 +908,9 @@ PlasmoidItem {
             accountKey: snapshot.accountKey,
             rows: rows,
             primaryRow: rows.length > 0 && rows[0].lane === "primary" ? rows[0] : null,
-            providerDetails: snapshot.providerDetails,
+            // Nested signal values can be Qt sequences; the pure visibility
+            // filters consume JavaScript arrays, as do freshly parsed snapshots.
+            providerDetails: Array.from(snapshot.providerDetails),
             usageDashboard: dashboard ? {kpis: dashboard.kpis.map(dashboardDisplayRow), rows: dashboard.rows.map(dashboardDisplayRow)} : null,
             providerCost: providerCostSection(providerID, snapshot.providerCost),
             resetCredits: resetCreditsSection(providerID, snapshot.resetCredits),

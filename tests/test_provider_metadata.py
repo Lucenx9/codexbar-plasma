@@ -37,8 +37,30 @@ import "SOURCE_URL/PacePresentation.js" as PacePresentation
 import "SOURCE_URL/ResetPresentation.js" as ResetPresentation
 import "SOURCE_URL/UsageCache.js" as UsageCache
 import "SOURCE_URL/CostPresentation.js" as CostPresentation
+import "SOURCE_URL/PopupHiddenSections.js" as PopupHiddenSections
 TestCase {
     name: "ProviderMetadata"
+    property list<var> nativeDetailSections: [
+        {title: "Budgets", rows: [{label: "Requests", value: "7"}]}
+    ]
+
+    function test_nativeDetailListsRemainVisibleAndRestorable() {
+        var applet = createTemporaryObject(harness, this, {});
+        var normalized = ProviderSnapshot.normalize({provider: "codex", usage: {}}, 1234);
+        // Nested lists crossing a QVariant boundary are Qt sequences rather
+        // than JavaScript Arrays, as in the live usage-controller signal.
+        normalized.providerDetails = nativeDetailSections;
+        var presented = applet.presentProviderSnapshot(normalized);
+        var visible = PopupHiddenSections.visibleSections(presented.providerDetails, [], "codex");
+        compare(visible.length, 1);
+        compare(visible[0].title, "Budgets");
+        var hidden = PopupHiddenSections.hidden([], "codex", PopupHiddenSections.sectionKey(visible[0]));
+        compare(PopupHiddenSections.visibleSections(presented.providerDetails, hidden, "codex").length, 0);
+        compare(PopupHiddenSections.hiddenSections(presented.providerDetails, hidden, "codex").length, 1);
+        hidden = PopupHiddenSections.restored(hidden, "codex", PopupHiddenSections.sectionKey(visible[0]));
+        compare(PopupHiddenSections.visibleSections(presented.providerDetails, hidden, "codex").length, 1);
+        compare(nativeDetailSections.length, 1);
+    }
     // The production display-name table, with the catalog strings stubbed the
     // way the page harnesses below stub i18n itself.
     Components.ProviderNames {

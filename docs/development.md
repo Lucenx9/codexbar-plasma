@@ -1157,6 +1157,11 @@ usage-row component keep amounts visible independently of popup pace.
 
 `make check` covers the runner's portable isolation and failure-handling tests
 and lints the capture QML.
+`test_provider_metadata.py` also passes a native Qt list through the production
+snapshot adapter and hidden-section filters: nested lists received over a QML
+signal must become JavaScript arrays before those filters consume them.
+`tst_interactive_chart.qml` checks the painted peak guideline for both local
+cost bars and CLI detail bars, while keeping line charts free of that guide.
 `make smoke` additionally requires the graphical environment and reports a
 failure rather than silently skipping when that environment is unavailable.
 
