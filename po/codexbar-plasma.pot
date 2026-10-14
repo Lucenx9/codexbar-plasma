@@ -986,6 +986,10 @@ msgid "Abacus AI"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Aerostack"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
 msgid "ai&"
 msgstr ""
 
@@ -1066,6 +1070,10 @@ msgid "Copilot"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Cosmic AI"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Crof"
 msgstr ""
 
@@ -1099,6 +1107,10 @@ msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
 msgid "ElevenLabs"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Exa"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
@@ -1163,6 +1175,10 @@ msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
 msgid "Langdock"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Linkup"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
@@ -1262,7 +1278,15 @@ msgid "Replicate"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Sail Research"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Sakana AI"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Sofya"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
@@ -1279,6 +1303,14 @@ msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
 msgid "T3 Chat"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Tavily"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
+msgid "TinyApi"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
@@ -1319,6 +1351,10 @@ msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
 msgid "xAI"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
+msgid "X API"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml

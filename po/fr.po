@@ -3727,3 +3727,39 @@ msgstr "Utilisation estimée ; ce n’est pas un quota de compte mesuré."
 #: contents/ui/components/UsageWindowText.qml
 msgid "Usage confidence is unknown; account quota is unverified."
 msgstr "La fiabilité de l’utilisation est inconnue ; le quota du compte n’est pas vérifié."
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Aerostack"
+msgstr "Aerostack"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Cosmic AI"
+msgstr "Cosmic AI"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Exa"
+msgstr "Exa"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Linkup"
+msgstr "Linkup"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Sail Research"
+msgstr "Sail Research"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Sofya"
+msgstr "Sofya"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Tavily"
+msgstr "Tavily"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "TinyApi"
+msgstr "TinyApi"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "X API"
+msgstr "X API"

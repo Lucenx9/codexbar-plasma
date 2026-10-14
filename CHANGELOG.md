@@ -10,6 +10,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Added
+
+- Complete fallback names, provider artwork, colors, documentation and dashboard
+  links for the nine providers added in CodexBar 0.74.0. Offer supported single
+  API-key setup for Tavily, Linkup, Aerostack, Sail Research, and Sofya; keep
+  incomplete or macOS-only setup actions hidden for the other four.
+
 ### Fixed
 
 - Qualify CLI-estimated usage percentages in the panel and popup, preserving

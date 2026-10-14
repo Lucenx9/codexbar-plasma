@@ -30,6 +30,7 @@ SCENARIOS += ("popup-content", "popup-hidden-rows", "popup-hidden-sections", "re
 SCENARIOS += ("privacy-cost-details",)
 SCENARIOS += ("usage-retention", "usage-cache-restart")
 SCENARIOS += ("estimated-usage", "estimated-panel")
+SCENARIOS += ("providers-0740",)
 SCENARIOS += ("empty-providers", "usage-error", "usage-recovery", "cli-missing")
 SCENARIOS += ("ai-insights", "ai-insights-it", "ai-insights-mismatch", "ai-insights-error", "ai-insights-single",
               "settings-ai-insights", "settings-ai-insights-narrow")
@@ -142,6 +143,9 @@ def response(args, scenario, now):
         if scenario == "panel-matrix-four":
             providers += ("gemini", "cursor")
         rows = [{"provider": key, "enabled": True} for key in providers]
+        if scenario == "providers-0740":
+            rows.extend({"provider": key, "enabled": False} for key in (
+                "tavily", "linkup", "tinyapi", "exa", "cosmic", "aerostack", "sailresearch", "sofya", "xapi"))
         if scenario == "provider-settings":
             rows.extend({"provider": key, "enabled": False} for key in ("gemini", "cursor", "openrouter"))
         if scenario.startswith("settings-providers"):

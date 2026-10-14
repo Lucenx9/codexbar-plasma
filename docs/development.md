@@ -1158,6 +1158,9 @@ information enabled. Every settings page has a capture, and each `-narrow`
 variant renders at 420 pixels with 13-point text. `settings-providers` lists a
 twelve-provider synthetic roster with the longest bundled title and an unknown
 ID, then selects a provider and shows its redacted fixture diagnostics.
+`providers-0740` checks artwork and documentation/dashboard actions for all nine
+providers introduced in CLI 0.74.0, offers API-key setup only for the five
+complete Linux flows, and captures Aerostack selected in the provider settings.
 `settings-providers-error` and `settings-diagnostics-error` capture failed CLI
 responses. `panel-information`, `panel-information-minimal`, and
 `panel-information-single` capture grouped text at a 24-pixel panel height, including
