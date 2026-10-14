@@ -18,12 +18,19 @@ function boundedMessage(value) {
 
 // Settings use the shared CLI record contract, projected to enabled identities.
 // Outcomes leave localized error wording and process state to the QML owner.
-function response(stdoutValue, stderrValue) {
+function response(stdoutValue, stderrValue, exitCode) {
+    var code = exitCode === undefined ? 0 : Number(exitCode);
+    var processFailure = code !== 0 ? {
+        outcome: "exitCodeError", providers: [], message: boundedMessage(stderrValue), exitCode: code
+    } : null;
     var text = SafeText.cliJsonText(stdoutValue);
     if (text === null) {
         return { outcome: "tooLarge", providers: [], message: "" };
     }
     if (text.trim().length === 0) {
+        if (processFailure) {
+            return processFailure;
+        }
         var stderr = boundedMessage(stderrValue);
         return { outcome: stderr.length > 0 ? "cliError" : "empty", providers: [], message: stderr };
     }
@@ -36,6 +43,9 @@ function response(stdoutValue, stderrValue) {
     var message = ProviderConfigProtocol.commandError(payload);
     if (message.length > 0) {
         return { outcome: "cliError", providers: [], message: message };
+    }
+    if (processFailure) {
+        return processFailure;
     }
     var records = ProviderConfigProtocol.normalizeProviderList(payload, providerTitle);
     var providers = [];

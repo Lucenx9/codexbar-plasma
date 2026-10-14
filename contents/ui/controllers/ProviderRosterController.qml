@@ -108,7 +108,7 @@ Item {
         providerRosterError = i18n("Loading providers timed out. Try again.")
     }
 
-    function handleProviderRosterData(sourceName, stdoutText, stderrText) {
+    function handleProviderRosterData(sourceName, stdoutText, stderrText, exitCode) {
         if (!CommandLedger.find(providerRosterCommands, sourceName)) {
             return
         }
@@ -116,9 +116,13 @@ Item {
         providerRosterCommands = CommandLedger.closed(providerRosterCommands, sourceName)
         providerRosterLoading = false
 
-        var result = ProviderRoster.response(stdoutText, stderrText)
+        var result = ProviderRoster.response(stdoutText, stderrText, exitCode)
         enabledProviderRoster = result.providers
         switch (result.outcome) {
+        case "exitCodeError":
+            providerRosterError = result.message.length > 0
+                ? result.message : i18n("codexbar exited with code %1", result.exitCode)
+            break
         case "empty":
             providerRosterError = i18n("codexbar did not return provider data.")
             break
@@ -143,12 +147,13 @@ Item {
             var rawStdoutText = data && data["stdout"] ? data["stdout"] : ""
             var stdoutText = SafeText.cliJsonText(rawStdoutText)
             var stderrText = data && data["stderr"] ? data["stderr"] : ""
+            var exitCode = data && data["exit code"] !== undefined ? Number(data["exit code"]) : 0
             if (stdoutText === null) {
                 stdoutText = ""
                 stderrText = i18n("codexbar response exceeded the supported size.")
             }
             disconnectSource(sourceName)
-            controller.handleProviderRosterData(sourceName, stdoutText, stderrText)
+            controller.handleProviderRosterData(sourceName, stdoutText, stderrText, exitCode)
         }
     }
 

@@ -309,7 +309,12 @@ synchronized.
   itself stays process-free. Queued loads recheck activation before starting a
   command, and deactivation clears loading and error state. `ProviderRoster.js`
   projects the shared provider-list contract into bounded enabled identities
-  and semantic errors; QML owns localization and state updates.
+  and semantic errors; QML owns localization and state updates. The DataSource
+  forwards the process exit code, so failed commands cannot supply selectable
+  providers even with valid JSON. Structured CLI errors and redacted stderr
+  remain readable; otherwise QML reports the exit code.
+  `test_provider_roster_exit.py` exercises this boundary with real isolated
+  successful and failed CLI processes.
 - `ProviderCostPresentation.js` classifies provider costs as balances, points,
   allowances, or spend, and validates reset-credit counts. It preserves the
   established provider exceptions, bounds display metadata, and keeps plain

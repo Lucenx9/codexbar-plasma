@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Reject enabled-provider lists from failed CLI processes in Popup and Panel
+  settings, and show the CLI error or exit code instead of selectable providers.
 - Preserve the last successful session list when a failed CLI scan writes valid
   JSON, and reject widget updater success reports from failed processes.
 - Keep provider detail sections visible and restorable when live usage arrives

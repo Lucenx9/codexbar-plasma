@@ -6,6 +6,23 @@ import "../contents/ui/SafeText.js" as SafeText
 TestCase {
     name: "ProviderRoster"
 
+    function test_failedProcessesCannotSupplyEnabledProviders() {
+        var payload = '{"provider":"codex","enabled":true}';
+        for (var code of [1, 7, 124, 137, NaN]) {
+            var result = ProviderRoster.response(payload, "", code);
+            compare(result.outcome, "exitCodeError");
+            compare(result.providers, []);
+        }
+        compare(ProviderRoster.response(payload, "loader warning", 0).outcome, "success");
+        compare(ProviderRoster.response("", "", 7).outcome, "exitCodeError");
+        var secret = "sk-abcdefghijklmnopqrstuvwxyz1234567890";
+        var failure = ProviderRoster.response(payload, "api_key=" + secret, 7);
+        verify(failure.message.indexOf(secret) < 0);
+        compare(failure.providers, []);
+        compare(ProviderRoster.response('{"error":{"message":"Structured failure"}}',
+            "stderr noise", 7).message, "Structured failure");
+    }
+
     function test_projectsOnlyBoundedEnabledIdentities() {
         var result = ProviderRoster.response(JSON.stringify([
             null, [], {provider: "constructor", enabled: true},
