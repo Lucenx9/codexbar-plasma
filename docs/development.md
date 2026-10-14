@@ -574,8 +574,16 @@ clipboard interoperability with every Wayland application or portal backend.
   setting. `tst_popup_hidden_sections.qml` covers persistence and identity;
   `popup-hidden-sections` smoke coverage exercises hide/restore and privacy on
   the real applet, saving synthetic before/after captures.
+- `ProviderSnapshot.js` preserves usage confidence as `exact`, `estimated`,
+  `unknown`, or empty for legacy payloads, stamping every quota row. The shared
+  `ProviderNormalizer.authoritativeQuota` guard gates quota decisions; unknown
+  or malformed confidence never becomes measured quota. Privacy and the quota
+  cache retain this semantic value. `tst_usage_confidence.qml` exercises display,
+  retention, ranking, visibility, notifications, and AI Insights at public
+  interfaces. The `estimated-usage` and `estimated-panel` smoke scenarios verify
+  the root adapters, rendered qualifier, and panel badge with synthetic data.
 - `ProviderAutoSelect.js` ranks the roster for the automatic provider
-  selection. Consumption decides it, taking the busiest quota row or the
+  selection. Measured consumption decides it, taking the busiest authoritative quota row or the
   provider cost meter, whichever reports further along; incident severity only
   breaks equal-consumption ties, so it cannot outrank even a fractional usage
   difference. Providers with no percentage at all are ordered by

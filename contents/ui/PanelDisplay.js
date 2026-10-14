@@ -1,4 +1,5 @@
 .pragma library
+.import "ProviderNormalizer.js" as Normalizer
 
 var percentMode = "percent";
 var paceMode = "pace";
@@ -27,18 +28,18 @@ function rowHasPercent(row) {
 }
 
 function rowHasPace(row) {
-    return row !== null && row !== undefined && hasFiniteNumber(row.pacePercent) && row.pacePercent >= 0;
+    return row !== null && row !== undefined && Normalizer.authoritativeQuota(row) && hasFiniteNumber(row.pacePercent) && row.pacePercent >= 0;
 }
 
 function rowHasReset(row) {
-    if (!row) {
+    if (!row || !Normalizer.authoritativeQuota(row)) {
         return false;
     }
     return (typeof row.resetsAt === "string" && row.resetsAt.trim().length > 0) || (typeof row.resetDescription === "string" && row.resetDescription.trim().length > 0) || (typeof row.reset === "string" && row.reset.trim().length > 0);
 }
 
 function rowHasRunOut(row) {
-    return row !== null && row !== undefined && row.paceOnTop === false && hasFiniteNumber(row.paceEtaSeconds) && row.paceEtaSeconds > 0;
+    return row !== null && row !== undefined && Normalizer.authoritativeQuota(row) && row.paceOnTop === false && hasFiniteNumber(row.paceEtaSeconds) && row.paceEtaSeconds > 0;
 }
 
 function rowSupportsMode(row, value) {

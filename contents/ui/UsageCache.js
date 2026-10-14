@@ -229,7 +229,9 @@ function encode(items, context, nowMs) {
             windows.extraRateWindows = extras
         }
         if (Object.keys(windows).length > 0) {
-            snapshots.push({ provider: item.provider, measuredAt: item.lastGoodAtMs, windows: windows })
+            var confidence = Normalizer.usageConfidence(item.dataConfidence)
+            snapshots.push({ provider: item.provider, measuredAt: item.lastGoodAtMs,
+                dataConfidence: confidence, windows: windows })
         }
     }
     if (snapshots.length === 0) {
@@ -265,7 +267,8 @@ function decode(raw, context, nowMs) {
                 || !recent(item.measuredAt, nowMs) || !Normalizer.isCliRecord(item.windows)) {
             continue
         }
-        var usage = { updatedAt: new Date(item.measuredAt).toISOString() }
+        var usage = { updatedAt: new Date(item.measuredAt).toISOString(),
+            dataConfidence: Normalizer.usageConfidence(item.dataConfidence) }
         var count = 0
         for (var j = 0; j < lanes.length; j++) {
             var lane = lanes[j]

@@ -221,6 +221,20 @@ function normalizeCodexCreditLimit(providerID, creditLimit) {
     }
 }
 
+// Missing confidence keeps legacy payloads compatible. Future or malformed
+// values are bounded to a semantic unknown, never promoted to measured quota.
+function usageConfidence(value) {
+    if (value === undefined || value === "") {
+        return ""
+    }
+    return value === "exact" || value === "estimated" ? value : "unknown"
+}
+
+function authoritativeQuota(row) {
+    var confidence = usageConfidence(row && row.dataConfidence)
+    return confidence === "" || confidence === "exact"
+}
+
 // The numeric half of one usage row. `null` when the payload carries no window
 // record at all, which is how the caller distinguishes "no such window" from
 // "window present but percentage unknown" (`hasPercent === false`).

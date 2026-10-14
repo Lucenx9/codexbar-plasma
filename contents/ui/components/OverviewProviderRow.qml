@@ -31,7 +31,7 @@ Rectangle {
             .join(" \u00b7 ")
     }
     readonly property string percentText: hasUsage
-        ? i18n("%1% %2", Math.round(shownPercent), applet.percentSuffix())
+        ? applet.usagePercentText(usageRow)
         : ""
     // Screen readers get what the row shows beside its title: the quota the
     // meter draws, the account or status detail, and the reset.

@@ -94,8 +94,10 @@ object from an allowlist. It never copies an input record.
   unavailable, or empty provider is left out entirely, so retained numbers are
   never presented as current consumption and a model cannot mention a provider
   it has no data for. Without any current provider no request is made.
-- Quotas are those rows with a known percentage, at most four per provider and
-  eight providers. Forecasts come only from the CLI pace record already
+- Quotas are rows with a known percentage and authoritative usage confidence,
+  at most four per provider and eight providers. Estimated and unknown-confidence
+  usage rows are omitted, so they cannot produce account-headroom signals.
+  Legacy payloads without confidence keep their existing behavior. Forecasts come only from the CLI pace record already
   normalized by `ProviderNormalizer.rateWindowMetrics`; nothing is extrapolated.
 - Spend and token comparisons require the cost history already loaded for the
   **Usage & Spend** range: all fourteen complete days before today, each with a

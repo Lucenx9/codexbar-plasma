@@ -74,6 +74,7 @@ class ResetPresentationTests(unittest.TestCase):
 import QtTest
 import "SOURCE_URL/ResetPresentation.js" as ResetPresentation
 import "SOURCE_URL/PrivacyPresentation.js" as PrivacyPresentation
+import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
 import "SOURCE_URL/components" as Components
 TestCase {
     id: testCase

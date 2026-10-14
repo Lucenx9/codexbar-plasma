@@ -25,12 +25,17 @@ function resetsAtText(value) {
     return Normalizer.boundedDisplayText(value === undefined || value === null ? "" : value, 128);
 }
 
-function windowSnapshot(window, pace, usageKnown, lane, label, receivedAtMs) {
+function windowSnapshot(window, pace, usageKnown, lane, label, receivedAtMs, confidence) {
+    var authoritative = Normalizer.authoritativeQuota({dataConfidence: confidence});
+    if (!authoritative) {
+        pace = null;
+    }
     var metrics = Normalizer.rateWindowMetrics(window, pace, usageKnown);
     if (metrics === null) {
         return null;
     }
     var result = Guards.copyObject(metrics);
+    result.dataConfidence = confidence;
     result.lane = lane;
     result.label = label;
     result.paceObservedAtMs = receivedAtMs;
@@ -43,6 +48,11 @@ function windowSnapshot(window, pace, usageKnown, lane, label, receivedAtMs) {
     result.resetValue = usableEpochMs(window.resetsAt) ? window.resetsAt
         : (typeof window.resetsAt === "string" ? Normalizer.boundedDisplayText(window.resetsAt, 500) : "");
     result.paceParts = PacePresentation.summaryParts(pace);
+    if (!authoritative) {
+        result.resetsAt = "";
+        result.resetDescription = "";
+        result.resetValue = "";
+    }
     return result;
 }
 
@@ -77,13 +87,15 @@ function normalize(item, receivedAtMs) {
     }
     var providerID = Normalizer.providerSnapshotKey(item.provider || "unknown") || "unknown";
     var usage = Normalizer.isCliRecord(item.usage) ? item.usage : {};
+    var confidence = Normalizer.usageConfidence(Guards.hasOwnKey(usage, "dataConfidence")
+        ? usage.dataConfidence : undefined);
     var pace = Normalizer.isCliRecord(item.pace) ? item.pace : {};
     var laneLabels = Normalizer.isCliRecord(item.rateWindowLabels) ? item.rateWindowLabels : {};
     var rows = [];
     var lanes = ["primary", "secondary", "tertiary"];
     for (var i = 0; i < lanes.length; i++) {
         var lane = lanes[i];
-        var row = windowSnapshot(usage[lane], pace[lane], true, lane, null, receivedAtMs);
+        var row = windowSnapshot(usage[lane], pace[lane], true, lane, null, receivedAtMs, confidence);
         if (row) {
             row.cliLabel = cliLaneLabel(laneLabels, lane);
             rows.push(row);
@@ -95,7 +107,7 @@ function normalize(item, receivedAtMs) {
         if (Normalizer.isCliRecord(extra) && Normalizer.isCliRecord(extra.window)) {
             var label = extra.title || extra.id;
             var extraRow = windowSnapshot(extra.window, null, extra.usageKnown !== false, "extra",
-                label ? Normalizer.boundedDisplayText(label, 120) : null, receivedAtMs);
+                label ? Normalizer.boundedDisplayText(label, 120) : null, receivedAtMs, confidence);
             if (extraRow) {
                 extraRow.windowId = Normalizer.extraWindowID(extra.id);
                 rows.push(extraRow);
@@ -136,7 +148,7 @@ function normalize(item, receivedAtMs) {
     }
     var remaining = credits ? Normalizer.strictFiniteNumber(credits.remaining) : NaN;
     return {
-        provider: providerID, displayName: displayName,
+        provider: providerID, displayName: displayName, dataConfidence: confidence,
         source: Normalizer.boundedDisplayText(item.source || "", 120),
         version: Normalizer.boundedDisplayText(item.version || "", 120),
         account: Normalizer.boundedDisplayText(account, 256),

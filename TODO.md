@@ -90,18 +90,6 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Implementable on Linux
 
-- [ ] Preserve `usage.dataConfidence` and qualify estimated quota percentages.
-  Official Linux 0.74.0 and 0.74.1 emit OpenCode Go local cost-derived windows
-  with `source: "local"` and `dataConfidence: "estimated"`; Plasma preserves
-  the percentages but discards confidence. These fixed denominators do not
-  establish account quota or billing-cycle headroom. Done when bounded generic
-  confidence survives normalization, panel/popup estimates are visibly
-  qualified, quota/pace/reset notifications and automatic provider selection
-  do not treat estimates as authoritative quota, and direct tests cover
-  estimated, exact, missing, and unknown confidence without breaking old
-  payloads. Keep scanning and estimate arithmetic in the CLI.
-  [Verified mismatch](docs/research/2026-10-14-macos-parity-0.74.1.md#linux-cli-contract-changes-since-0740).
-
 - [ ] Bundle fallback names, original icons, links, and brand colors for the
   nine providers added in official 0.74.0: Tavily, Linkup, TinyApi, Exa,
   Cosmic AI, Aerostack, Sail Research, Sofya, and X API. Plasma covers the
