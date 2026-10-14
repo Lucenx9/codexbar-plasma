@@ -232,7 +232,7 @@ function provider(snapshot, enabled, labels) {
         account: hasText(snapshot, "account") ? labels.account : "",
         organization: "", loginMethod: "", source: "", version: "", planText: "",
         rows: presentedRows, primaryRow: primaryRow,
-        providerDetails: [], usageDashboard: null,
+        providerDetails: [], usageDashboard: null, subscriptionDates: [],
         providerCost: providerCost(field(snapshot, "providerCost", null)),
         resetCredits: resetCredits(field(snapshot, "resetCredits", null)),
         tokenCost: cost(field(snapshot, "tokenCost", null), true),

@@ -54,6 +54,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Show official CLI plan renewal and expiration dates separately from quota
+  resets. Date-only values keep their calendar day without a time; privacy mode
+  and retained quotas hide subscription dates. Missing or invalid dates stay omitted.
 - **Providers → Settings and diagnostics** can save a provider's source mode
   with official CLI 0.73.0 or later. Automatic clears its saved override;
   unsupported modes show the CLI error, and General's global override keeps

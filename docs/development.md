@@ -357,6 +357,18 @@ synchronized.
   `Qt.formatDateTime` pattern would always write English names. Valid
   timestamps take precedence over descriptions; missing or invalid metadata
   preserves the existing text fallback without discarding healthy quotas.
+- `SubscriptionDates.js` validates only the official usage renewal/expiration
+  fields and true date-only flags, returning at most two semantic dates. It
+  rejects impossible calendar values before ISO timestamp parsing. The shared
+  `TimeLabels` formats full regional dates and clocks; flagged dates use their
+  serialized calendar day without time-zone conversion. `main.qml` supplies
+  translated plan labels and the popup renders them separately from quota rows.
+  Privacy and stale quota projection remove subscription enrichment; it never
+  enters the persisted quota cache. `tst_subscription_dates.qml` covers these
+  public normalization, response, account, privacy, retention, and Overview paths.
+  `make check-qml-logic` runs it in UTC, Europe/Rome, and America/Los_Angeles.
+  The `subscription-dates` smoke scenario verifies the real popup,
+  privacy toggle, failed refresh, quota-empty snapshot, and cached account path.
 - Pure applet modules live in `contents/ui/*.js`; their public interfaces have
   direct tests in `tests/tst_*.qml`. Configuration is declared in
   `contents/config/main.xml` and bound through `cfg_*` in config pages and
@@ -537,8 +549,8 @@ clipboard interoperability with every Wayland application or portal backend.
   runtime share its parsing so the checkboxes cannot drift from the applied
   selection. It also classifies eligibility: a snapshot carrying an error and
   nothing else has no row, while any surviving quota, credit balance, Codex
-  monthly limit, cost figure, or placeholder keeps the provider visible. QML
-  binds the resulting rows and localizes them; the module reads no root state.
+  monthly limit, subscription date, cost figure, or placeholder keeps the provider
+  visible. QML binds the resulting rows and localizes them; the module reads no root state.
 - `PopupHiddenRows.js` owns the popup's hidden usage rows without effects.
   Entries store a validated provider ID and a row key (`primary`, `secondary`,
   `tertiary`, or `extra:<CLI window ID>`) and no provider prose, so the Popup

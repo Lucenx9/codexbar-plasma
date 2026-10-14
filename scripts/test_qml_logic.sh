@@ -23,6 +23,13 @@ run_qml_tests() {
 TZ=America/Los_Angeles QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
   run_qml_tests -input "$ROOT_DIR/tests"
 
+# The main run covers Los Angeles. Calendar-only subscription dates must also
+# preserve the same day in UTC and on the other side of midnight in Rome.
+for subscription_timezone in UTC Europe/Rome; do
+  TZ="$subscription_timezone" QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+    run_qml_tests -input "$ROOT_DIR/tests/tst_subscription_dates.qml"
+done
+
 # Plasma KCMs use the desktop controls style, whose native buttons do not have
 # a QML content item and whose scrollbars reserve layout space. Exercise both
 # paths as well as the default test style.

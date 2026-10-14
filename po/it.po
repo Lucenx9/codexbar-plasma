@@ -3719,3 +3719,16 @@ msgstr "Utilizzo stimato; non è una quota misurata dell’account."
 #: contents/ui/components/UsageWindowText.qml
 msgid "Usage confidence is unknown; account quota is unverified."
 msgstr "L’attendibilità dell’utilizzo è sconosciuta; la quota dell’account non è verificata."
+
+#: contents/ui/main.qml
+msgid "Plan renews on %1"
+msgstr "Il piano si rinnova il %1"
+
+#: contents/ui/main.qml
+msgid "Plan expires on %1"
+msgstr "Il piano scade il %1"
+
+#: contents/ui/components/TimeLabels.qml
+msgctxt "Full regional date %1 and clock time %2 for a subscription renewal or expiration"
+msgid "%1, %2"
+msgstr "%1, %2"
