@@ -107,7 +107,7 @@ Item {
         id: providerSettingsPreview
         parent: capture.applet.fullRepresentationItem
         anchors.fill: parent
-        active: capture.scenario === "provider-settings"
+        active: capture.scenario === "provider-settings" || capture.scenario === "providers-0740"
         visible: active
         z: 100
         sourceComponent: Rectangle {
@@ -119,6 +119,8 @@ Item {
                 onLoaded: {
                     capture.providerSettingsPage = item;
                     item.cfg_commandPath = capture.applet.commandPath;
+                    if (capture.scenario === "providers-0740")
+                        item.selectedProviderID = "aerostack";
                 }
             }
         }
@@ -1243,6 +1245,24 @@ Item {
     }
 
     function scenarioReady() {
+        if (scenario === "providers-0740") {
+            var page = providerSettingsPage;
+            if (!page || page.loading || page.providers.length !== 11) return false;
+            page.selectedProviderID = "aerostack";
+            var supported = ["tavily", "linkup", "aerostack", "sailresearch", "sofya"];
+            var added = supported.concat(["tinyapi", "exa", "cosmic", "xapi"]);
+            for (var provider of added) {
+                var actions = page.providerActionRows({provider: provider, enabled: false});
+                verifyScenario(actions.filter(function(action) { return action.action === "set-api-key"; }).length
+                    === (supported.indexOf(provider) >= 0 ? 1 : 0), "incorrect API-key setup reachability for " + provider);
+                verifyScenario(actions.filter(function(action) { return action.action === "docs"; }).length === 1
+                    && actions.filter(function(action) { return action.action === "dashboard"; }).length === 1,
+                    "missing documentation or dashboard for " + provider);
+                verifyScenario(page.providerIconSource(provider).toString().indexOf(provider + ".svg") >= 0,
+                    "generic icon still used for " + provider);
+            }
+            return true;
+        }
         if (scenario.indexOf("ai-insights") === 0)
             return aiInsightsReady();
         if (scenario === "cost-period") {
@@ -2289,7 +2309,7 @@ Item {
             if (capture.panelAppearanceScenario) capture.verifyCapsulePanel();
             var popup = capture.settingsScenario ? configurationPreview.item
                 : capture.scenario === "panel-rules" || capture.panelAppearanceScenario || capture.panelDefaultsScenario
-                ? panelPreview.item : (capture.scenario === "provider-settings"
+                ? panelPreview.item : (capture.scenario === "provider-settings" || capture.scenario === "providers-0740"
                     ? providerSettingsPreview.item : capture.applet.fullRepresentationItem);
             if (capture.scenario.indexOf("share-usage") === 0)
                 popup = capture.findItem(capture.applet.shareUsageWindow.contentItem, "shareUsageCard");

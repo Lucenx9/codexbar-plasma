@@ -3734,3 +3734,39 @@ msgstr "El plan vence el %1"
 msgctxt "Full regional date %1 and clock time %2 for a subscription renewal or expiration"
 msgid "%1, %2"
 msgstr "%1, %2"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Aerostack"
+msgstr "Aerostack"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Cosmic AI"
+msgstr "Cosmic AI"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Exa"
+msgstr "Exa"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Linkup"
+msgstr "Linkup"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Sail Research"
+msgstr "Sail Research"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Sofya"
+msgstr "Sofya"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Tavily"
+msgstr "Tavily"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "TinyApi"
+msgstr "TinyApi"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "X API"
+msgstr "X API"

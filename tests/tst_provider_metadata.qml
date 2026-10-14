@@ -4,6 +4,26 @@ import "../contents/ui/ProviderIdentity.js" as ProviderIdentity
 
 TestCase {
     name: "ProviderMetadata"
+    function test_official074ProviderMetadata_data() {
+        return [
+            {tag: "tavily", provider: "tavily", color: [120 / 255, 176 / 255, 161 / 255], dashboard: "https://app.tavily.com"},
+            {tag: "linkup", provider: "linkup", color: [32 / 255, 32 / 255, 32 / 255], dashboard: "https://app.linkup.so/organization/billing"},
+            {tag: "tinyapi", provider: "tinyapi", color: [249 / 255, 115 / 255, 22 / 255], dashboard: "https://tinyapi.rest/dashboard"},
+            {tag: "exa", provider: "exa", color: [1 / 255, 67 / 255, 217 / 255], dashboard: "https://dashboard.exa.ai/api-keys"},
+            {tag: "cosmic", provider: "cosmic", color: [41 / 255, 171 / 255, 226 / 255], dashboard: "https://app.cosmicjs.com"},
+            {tag: "aerostack", provider: "aerostack", color: [99 / 255, 102 / 255, 241 / 255], dashboard: "https://app.aerostack.dev/settings/billing"},
+            {tag: "sailresearch", provider: "sailresearch", color: [44 / 255, 70 / 255, 129 / 255], dashboard: "https://app.sailresearch.com"},
+            {tag: "sofya", provider: "sofya", color: [176 / 255, 184 / 255, 32 / 255], dashboard: "https://sofya.co/dashboard"},
+            {tag: "xapi", provider: "xapi", color: [113 / 255, 118 / 255, 123 / 255], dashboard: "https://console.x.com"}
+        ];
+    }
+    function test_official074ProviderMetadata(data) {
+        compare(ProviderIdentity.providerCliArgument(data.provider), data.provider);
+        compare(ProviderIdentity.providerBrandColorChannels(data.provider), data.color);
+        compare(ProviderIdentity.providerDashboardUrl(data.provider), data.dashboard);
+        compare(ProviderIdentity.providerDocsUrl(data.provider), "https://github.com/steipete/CodexBar/blob/main/docs/" + data.provider + ".md");
+        compare(ProviderIdentity.providerIconFileName(data.provider), data.provider + ".svg");
+    }
 
     // Expected fallback metadata is independent of the production table layout.
     // Preserve the contracts formerly checked by parity and theme scripts.

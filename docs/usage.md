@@ -401,10 +401,15 @@ Provider-specific editable settings depend on the official CLI contract.
   usage through the existing provider-config revision. General's source override
   still takes precedence globally for widget requests. Older or unrecognized
   CLI versions omit the editor.
+- Single API-key setup for Tavily, Linkup, Aerostack, Sail Research, and Sofya
+  uses the official Linux CLI writer verified at 0.74.0. Exa and Cosmic AI have
+  metadata and dashboard links, but their additional key/project IDs have no
+  supported writer. TinyApi and X API are web-only on macOS. Those four expose
+  no unsupported key action; the missing Linux setup remains tracked in TODO.
 - Generic API key setup for Fireworks, when the selected CLI reports version
   0.54.0 or later and can discover the account slug from the key.
-- Fallback names, icons, and documentation links for all 91 providers in the
-  official CodexBar 0.73.0 registry, plus colors, links, and aliases where
+- Fallback names, icons, and documentation links for all 100 providers in the
+  official CodexBar 0.74.0 registry, plus colors, links, and aliases where
   upstream defines them; fork-only provider assets, and those for providers a
   later CLI retired, remain available for compatibility.
   Providers without bundled artwork use the theme's generic statistics icon

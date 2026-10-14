@@ -10,6 +10,16 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Added
+
+- Show official CLI plan renewal and expiration dates separately from quota
+  resets. Date-only values keep their calendar day without a time; privacy mode
+  and retained quotas hide subscription dates. Missing or invalid dates stay omitted.
+- Complete fallback names, provider artwork, colors, documentation and dashboard
+  links for the nine providers added in CodexBar 0.74.0. Offer supported single
+  API-key setup for Tavily, Linkup, Aerostack, Sail Research, and Sofya; keep
+  incomplete or macOS-only setup actions hidden for the other four.
+
 ### Fixed
 
 - Qualify CLI-estimated usage percentages in the panel and popup, preserving
@@ -54,9 +64,6 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
-- Show official CLI plan renewal and expiration dates separately from quota
-  resets. Date-only values keep their calendar day without a time; privacy mode
-  and retained quotas hide subscription dates. Missing or invalid dates stay omitted.
 - **Providers → Settings and diagnostics** can save a provider's source mode
   with official CLI 0.73.0 or later. Automatic clears its saved override;
   unsupported modes show the CLI error, and General's global override keeps

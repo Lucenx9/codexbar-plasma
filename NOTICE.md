@@ -10,6 +10,13 @@ The upstream MIT copyright notice for Peter Steinberger is retained in
 LICENSE for that material. CodexBar's MIT license at v0.67.0:
 https://github.com/steipete/CodexBar/blob/v0.67.0/LICENSE
 
+The Aerostack, Cosmic AI, Exa, Linkup, Sail Research, Sofya, Tavily, TinyApi,
+and X API icons are copied from CodexBar v0.74.0, commit
+c2f22ccf8751efc8fe697bfe4714769107965274:
+https://github.com/steipete/CodexBar/tree/v0.74.0/Sources/CodexBar/Resources
+They use the same retained MIT notice:
+https://github.com/steipete/CodexBar/blob/v0.74.0/LICENSE
+
 The Poe provider icon (contents/icons/providers/poe.svg) is adapted from
 "Poe App Logo" by SVG Stack for theme coloring:
 https://svgstack.com/icon/poe-app-logo-3748
