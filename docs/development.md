@@ -1007,7 +1007,10 @@ boundaries, missing tools, privacy and fixed probes. No `diagnose`, raw config,
 provider fetching, hardware/hostname fields or network requests enter collection.
 The `settings-diagnostics*` smoke scenarios run that page inside an applet and
 assert that it displays the package metadata version and associates the command
-path's form label with the editable field.
+path's form label with the editable field. They also check that the command-path
+row fits the visible page and stays within its 24-grid-unit bound. The narrow
+scenario uses 420 pixels with 13-point text; this reproduces clipped controls
+and explanations when the nested row cannot shrink with its parent form.
 
 `make check` disables unqualified-name warnings because Plasma injects helpers
 such as `i18n()` as context properties. It validates AppStream metadata when

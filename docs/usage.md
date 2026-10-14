@@ -590,6 +590,8 @@ fields; track proposed extensions in the issue tracker.
   probe runs only when asked; a changed command path clears its previous result.
   The widget version is available as soon as Diagnostics opens. The command
   path has a screen-reader label and supports the form label's keyboard shortcut.
+  Its field yields space to **Use PATH** in narrow dialogs with larger text,
+  keeping the button and the form's explanations inside the page.
   **Popup** and **Notifications** keep their text and controls still while the
   page opens, including while the Popup provider list arrives.
 - **Popup** helper notes use smaller secondary text beneath the controls.

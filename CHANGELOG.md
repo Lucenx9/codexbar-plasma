@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep the Diagnostics command path and Use PATH button inside narrow settings
+  pages with larger text, so the form's explanations and fields are not clipped.
 - Reject enabled-provider lists from failed CLI processes in Popup and Panel
   settings, and show the CLI error or exit code instead of selectable providers.
 - Reveal truncated AI Insights metadata on hover and provider identities in

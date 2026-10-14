@@ -450,6 +450,7 @@ KCM.SimpleKCM {
 
             Kirigami.FormData.label: i18n("Command path:")
             Kirigami.FormData.buddyFor: commandPathField
+            Layout.fillWidth: true
             Layout.preferredWidth: Kirigami.Units.gridUnit * 24
             // FormLayout can stretch nested layouts as the KCM grows, so cap
             // this row to keep its trailing action inside the viewport.
