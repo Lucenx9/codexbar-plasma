@@ -158,6 +158,21 @@ TestCase {
                 {tag: "structured", script: "structured"},
                 {tag: "missing", script: "missing"}];
     }
+    function test_failedProcessCannotReportSuccess_data() {
+        return [{tag: "available", script: "failed-available"},
+                {tag: "installed", script: "failed-installed"},
+                {tag: "current", script: "failed-current"}];
+    }
+    function test_failedProcessCannotReportSuccess(data) {
+        var updater = create(data.script, {initialAvailableVersion: "2.0"});
+        updater.runNow(data.script === "failed-installed");
+        tryCompare(updater, "busy", false);
+        verify(updater.errorText.length > 0);
+        compare(updater.availableVersion, "2.0");
+        compare(succeeded.count, 0);
+        compare(available.count, 0);
+        compare(installed.count, 0);
+    }
     function test_invalidResults(data) {
         var updater = create(data.script, {updateChecksEnabled: true});
         tryCompare(recorded, "count", 1);
@@ -166,6 +181,9 @@ TestCase {
         compare(succeeded.count, 0);
         compare(available.count, 0);
         compare(installed.count, 0);
+        if (data.script === "structured") {
+            compare(updater.errorText, "Widget updater is missing the required tool: jq");
+        }
         updater.updateChecksEnabled = false;
     }
     // A missing updater script is a packaging error, not a generic failure:
@@ -222,12 +240,15 @@ class WidgetUpdateControllerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="codexbar updater 'test-") as temporary:
             directory = Path(temporary)
             scripts = {
+                **{"failed-" + status: '#!/bin/sh\nprintf \'%s\\n\' \'{"status":"'
+                   + status + '","remoteVersion":"2.0"}\'\nexit 1\n'
+                   for status in ("available", "installed", "current")},
                 "normal": NORMAL, "queued": NORMAL, "disable": NORMAL,
                 "installfail": NORMAL.replace('{"status":"installed","remoteVersion":"2.0"}',
                                               '{"status":"error","errorCode":"release_download_failed"}'),
                 "captured": '#!/bin/sh\nsleep 0.2\nprintf \'%s\\n\' \'{"status":"available","remoteVersion":"2.0"}\'\n',
                 "malformed": '#!/bin/sh\nprintf \'%s\\n\' \'{broken\'\n',
-                "structured": '#!/bin/sh\nprintf \'%s\\n\' \'{"status":"error","errorCode":"missing_tool","errorDetail":"jq"}\'\n',
+                "structured": '#!/bin/sh\nprintf \'%s\\n\' \'{"status":"error","errorCode":"missing_tool","errorDetail":"jq"}\'\nexit 1\n',
                 "longdetail": '#!/bin/sh\nprintf \'%s\\n\' \'{"status":"error","errorCode":"missing_tool","errorDetail":"'
                               + "D" * 500 + '"}\'\n',
                 "late": '''#!/bin/sh

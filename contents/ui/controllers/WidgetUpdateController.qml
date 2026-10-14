@@ -269,7 +269,7 @@ Item {
             controller.statusRecorded(updateStatusText, updateErrorText, availableVersion);
         }
 
-        function handleUpdateData(sourceName, stdoutText, stderrText) {
+        function handleUpdateData(sourceName, stdoutText, stderrText, exitCode) {
             if (sourceName !== connectedUpdateCommandSource) {
                 return;
             }
@@ -292,6 +292,11 @@ Item {
             }
 
             var resultIntent = UpdateLogic.resultIntent(payload, installMode);
+            if (resultIntent.successful && exitCode !== 0) {
+                finishUpdateCommand(sourceName, false);
+                setWidgetUpdateState(i18n("Widget update failed."), boundedCliMessage(stderrText) || i18n("Widget update check failed."));
+                return;
+            }
             applyUpdateResultIntent(resultIntent);
             finishUpdateCommand(sourceName, resultIntent.successful);
         }
@@ -359,7 +364,7 @@ Item {
                     stdoutText = "";
                     stderrText = i18n("Widget updater response exceeded the supported size.");
                 }
-                lifecycle.handleUpdateData(sourceName, stdoutText, stderrText);
+                lifecycle.handleUpdateData(sourceName, stdoutText, stderrText, data ? data["exit code"] : undefined);
             }
         }
     }
