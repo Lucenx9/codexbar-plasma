@@ -47,7 +47,7 @@ Item {
         if (!command) return
         activeAction = action
         serial += 1
-        activeSource = CommandLedger.withRunNonce(command, serial)
+        activeSource = CommandLedger.withRunNonce(command, serial, Date.now() + "-" + Math.random())
         deadline.restart()
         processSource.connectSource(activeSource)
     }

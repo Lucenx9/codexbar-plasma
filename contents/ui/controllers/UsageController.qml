@@ -157,7 +157,7 @@ Item {
                 return "";
             }
             commandRunSerial += 1;
-            return CommandLedger.withRunNonce(command, commandRunSerial);
+            return CommandLedger.withRunNonce(command, commandRunSerial, Date.now() + "-" + Math.random());
         }
 
         function connectUsageCommand(sourceName, descriptor) {

@@ -10,16 +10,26 @@ TestCase {
     }
 
     function test_runNonceMakesEveryStartADistinctSource() {
-        compare(CommandLedger.withRunNonce("codexbar usage", 1),
-                "CODEXBAR_PLASMA_RUN=1 codexbar usage")
-        verify(CommandLedger.withRunNonce("codexbar usage", 1)
-               !== CommandLedger.withRunNonce("codexbar usage", 2))
+        compare(CommandLedger.withRunNonce("codexbar usage", 1, "request-a"),
+                "CODEXBAR_PLASMA_RUN=1 CODEXBAR_PLASMA_REQUEST='request-a' codexbar usage")
+        verify(CommandLedger.withRunNonce("codexbar usage", 1, "request-a")
+               !== CommandLedger.withRunNonce("codexbar usage", 2, "request-a"))
+        verify(CommandLedger.withRunNonce("codexbar usage", 1, "request-a")
+               !== CommandLedger.withRunNonce("codexbar usage", 1, "request-b"))
     }
 
     function test_runNonceRefusesAnEmptyCommand() {
-        compare(CommandLedger.withRunNonce("", 3), "")
-        compare(CommandLedger.withRunNonce(null, 3), "")
-        compare(CommandLedger.withRunNonce(undefined, 3), "")
+        compare(CommandLedger.withRunNonce("", 3, "request-a"), "")
+        compare(CommandLedger.withRunNonce(null, 3, "request-a"), "")
+        compare(CommandLedger.withRunNonce(undefined, 3, "request-a"), "")
+    }
+
+    function test_runNonceRequiresAndQuotesTheRequestIdentity() {
+        compare(CommandLedger.withRunNonce("codexbar usage", 1), "")
+        compare(CommandLedger.withRunNonce("codexbar usage", 1, ""), "")
+        compare(CommandLedger.withRunNonce("codexbar usage", 1, {}), "")
+        compare(CommandLedger.withRunNonce("codexbar usage", 1, "a'; literal"),
+            "CODEXBAR_PLASMA_RUN=1 CODEXBAR_PLASMA_REQUEST='a'\\''; literal' codexbar usage")
     }
 
     function test_descriptorCoercesKindAndProvider() {
@@ -97,8 +107,8 @@ TestCase {
     // The rule the whole module exists for: a reply from a run that has already
     // been retired must not be routed, because a newer run owns the result.
     function test_aRetiredRunIsNoLongerRoutable() {
-        var first = CommandLedger.withRunNonce("codexbar usage", 1)
-        var second = CommandLedger.withRunNonce("codexbar usage", 2)
+        var first = CommandLedger.withRunNonce("codexbar usage", 1, "request-a")
+        var second = CommandLedger.withRunNonce("codexbar usage", 2, "request-b")
 
         var commands = CommandLedger.opened(({}), first, entry("usage", "", 10))
         // A refresh retires the older run before starting the newer one.

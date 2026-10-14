@@ -99,7 +99,7 @@ Item {
             }
             lastAttemptAtMs = nowMs;
             runSerial += 1;
-            var source = CommandLedger.withRunNonce(commandSource, runSerial);
+            var source = CommandLedger.withRunNonce(commandSource, runSerial, Date.now() + "-" + Math.random());
             var descriptor = CommandLedger.descriptor("cost", "", nowMs, commandTimeoutMs);
             descriptor.historyDays = controller.historyDays;
             descriptor.historyPeriod = controller.historyPeriod;

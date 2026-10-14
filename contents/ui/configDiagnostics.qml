@@ -105,7 +105,7 @@ KCM.SimpleKCM {
             return
         }
         supportSerial += 1
-        supportSource = CommandLedger.withRunNonce(command, supportSerial)
+        supportSource = CommandLedger.withRunNonce(command, supportSerial, Date.now() + "-" + Math.random())
         supportDeadline.restart()
         supportDataSource.connectSource(supportSource)
     }
@@ -295,7 +295,7 @@ KCM.SimpleKCM {
             return ""
         }
         commandRunSerial += 1
-        return "CODEXBAR_PLASMA_RUN=" + commandRunSerial + " " + command
+        return CommandLedger.withRunNonce(command, commandRunSerial, Date.now() + "-" + Math.random())
     }
 
     function finishDiagnosticCommand(sourceName) {

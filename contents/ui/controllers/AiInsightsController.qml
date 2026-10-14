@@ -156,7 +156,7 @@ Item {
             serial += 1
             activeContextKey = controller.contextKey
             activeSnapshotId = controller.snapshotId
-            activeSource = CommandLedger.withRunNonce(command, serial)
+            activeSource = CommandLedger.withRunNonce(command, serial, Date.now() + "-" + Math.random())
             // Persisted before the request, so a restart cannot repeat it at once.
             controller.attemptStarted(new Date().toISOString())
             deadline.restart()

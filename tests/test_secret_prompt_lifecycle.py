@@ -271,7 +271,8 @@ TestCase {
         // carries RUN=1: the probe observes the effect, not the property.
         configSource = freshSource();
         runCommand("probe-cmd", {kind: "probe", timeoutMs: 1000});
-        compare(configSource.connected[0], "CODEXBAR_PLASMA_RUN=1 probe-cmd");
+        verify(configSource.connected[0].startsWith("CODEXBAR_PLASMA_RUN=1 CODEXBAR_PLASMA_REQUEST="));
+        verify(configSource.connected[0].endsWith(" probe-cmd"));
     }
     function test_runCommandsMintDistinctNonceSources() {
         configSource = freshSource();
@@ -281,10 +282,12 @@ TestCase {
         runCommand("version-cmd", {kind: "version", timeoutMs: 1000});
         compare(commandRunSerial, 2);
         compare(configSource.connected.length, 2);
-        compare(configSource.connected[0], "CODEXBAR_PLASMA_RUN=1 list-cmd");
-        compare(configSource.connected[1], "CODEXBAR_PLASMA_RUN=2 version-cmd");
-        compare(commands["CODEXBAR_PLASMA_RUN=1 list-cmd"].kind, "list");
-        compare(commands["CODEXBAR_PLASMA_RUN=2 version-cmd"].kind, "version");
+        verify(configSource.connected[0].startsWith("CODEXBAR_PLASMA_RUN=1 CODEXBAR_PLASMA_REQUEST="));
+        verify(configSource.connected[0].endsWith(" list-cmd"));
+        verify(configSource.connected[1].startsWith("CODEXBAR_PLASMA_RUN=2 CODEXBAR_PLASMA_REQUEST="));
+        verify(configSource.connected[1].endsWith(" version-cmd"));
+        compare(commands[configSource.connected[0]].kind, "list");
+        compare(commands[configSource.connected[1]].kind, "version");
     }
     // A reload retires the in-flight list run first, so its late result finds
     // no ledger entry instead of overwriting the fresh providers.
