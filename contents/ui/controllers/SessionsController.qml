@@ -180,7 +180,7 @@ Item {
         engine: "executable"
         interval: 0
         onNewData: function (sourceName, data) {
-            lifecycle.acceptReply(sourceName, data ? data["stdout"] : "", data ? data["stderr"] : "");
+            lifecycle.acceptReply(sourceName, data && data["exit code"] === 0 ? data["stdout"] : "", data ? data["stderr"] : "");
         }
     }
 

@@ -146,6 +146,8 @@ work and upstream contract requirements.
   when periodic usage refresh is slower or disabled. Failed scans respect the
   same cadence from the failure or timeout, so reopening the popup or
   revisiting the tab does not repeat a failed scan immediately.
+  A scan that exits with an error preserves the previous list and timestamp,
+  even if it writes valid JSON. Only a successful empty scan clears the list.
   The Sessions refresh button can retry immediately; changing the CLI command
   clears the retry cooldown. Each card shows the project, a state marked with
   the theme's positive color while active, the provider (or `OMP` for an OMP
@@ -651,6 +653,8 @@ fields; track proposed extensions in the issue tracker.
   notification opens the release page on GitHub when clicked, where supported.
   Failed upgrades restore the previous widget package so installation can be
   retried. A failed first installation removes its partial package.
+  A failed updater process cannot announce success, advance the successful-check
+  time, or clear a known update offer, even if its JSON reports success.
 
 ### CLI release checks and installed versions
 
