@@ -22,6 +22,8 @@ TestCase {
             {tag: "failed-json", script: "failed-json", error: "codexbar exited with code 7", count: 0},
             {tag: "failed-empty", script: "failed-empty", error: "codexbar exited with code 7", count: 0},
             {tag: "failed-stderr", script: "failed-stderr", error: "Synthetic failure", count: 0},
+            {tag: "failed-malformed-stderr", script: "failed-malformed-stderr", error: "Synthetic failure", count: 0},
+            {tag: "failed-malformed-empty", script: "failed-malformed-empty", error: "codexbar exited with code 7", count: 0},
             {tag: "failed-envelope", script: "failed-envelope", error: "Synthetic structured failure", count: 0}
         ];
     }
@@ -57,6 +59,8 @@ class ProviderRosterExitTests(unittest.TestCase):
                 "failed-json": f"printf '%s\\n' {record}\nexit 7\n",
                 "failed-empty": "exit 7\n",
                 "failed-stderr": f"printf '%s\\n' {record}\nprintf '%s\\n' 'Synthetic failure' >&2\nexit 7\n",
+                "failed-malformed-stderr": "printf '%s\\n' '{'\nprintf '%s\\n' 'Synthetic failure' >&2\nexit 7\n",
+                "failed-malformed-empty": "printf '%s\\n' '{'\nexit 7\n",
                 "failed-envelope": "printf '%s\\n' '{\"error\":{\"message\":\"Synthetic structured failure\"}}'\nexit 7\n",
             }
             for name, body in scripts.items():

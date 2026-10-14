@@ -313,6 +313,8 @@ synchronized.
   forwards the process exit code, so failed commands cannot supply selectable
   providers even with valid JSON. Structured CLI errors and redacted stderr
   remain readable; otherwise QML reports the exit code.
+  Malformed stdout from a failed process must not replace its error with a JSON
+  parser message.
   `test_provider_roster_exit.py` exercises this boundary with real isolated
   successful and failed CLI processes.
 - `ProviderCostPresentation.js` classifies provider costs as balances, points,

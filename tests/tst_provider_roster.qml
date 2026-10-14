@@ -6,6 +6,19 @@ import "../contents/ui/SafeText.js" as SafeText
 TestCase {
     name: "ProviderRoster"
 
+    function test_failedProcessErrorsSurviveMalformedStdout() {
+        for (var text of ["{", "Synthetic CLI banner"]) {
+            var result = ProviderRoster.response(text, "Synthetic failure", 7);
+            compare(result.outcome, "exitCodeError");
+            compare(result.message, "Synthetic failure");
+            compare(result.providers, []);
+            result = ProviderRoster.response(text, "", 7);
+            compare(result.outcome, "exitCodeError");
+            compare(result.exitCode, 7);
+            compare(ProviderRoster.response(text, "", 0).outcome, "invalidJson");
+        }
+    }
+
     function test_failedProcessesCannotSupplyEnabledProviders() {
         var payload = '{"provider":"codex","enabled":true}';
         for (var code of [1, 7, 124, 137, NaN]) {

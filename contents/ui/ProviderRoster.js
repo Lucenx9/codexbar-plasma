@@ -38,7 +38,7 @@ function response(stdoutValue, stderrValue, exitCode) {
     try {
         payload = JSON.parse(text);
     } catch (error) {
-        return { outcome: "invalidJson", providers: [], message: boundedMessage(error.message) };
+        return processFailure || { outcome: "invalidJson", providers: [], message: boundedMessage(error.message) };
     }
     var message = ProviderConfigProtocol.commandError(payload);
     if (message.length > 0) {
