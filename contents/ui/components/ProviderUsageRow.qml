@@ -13,6 +13,7 @@ ColumnLayout {
     readonly property bool showPace: applet.showPopupPace !== false
     readonly property string summaryText: typeof rowData.summaryText === "string"
         ? rowData.summaryText : ""
+    readonly property string confidenceText: applet.usageConfidenceText(rowData)
     readonly property bool hideable: applet.popupUsageRowHideable(rowData)
     // Match the copy action's compact target so the header keeps its height.
     readonly property real actionSize: Kirigami.Units.iconSizes.smallMedium + Kirigami.Units.smallSpacing
@@ -86,7 +87,7 @@ ColumnLayout {
             objectName: "usagePercentLabel"
 
             visible: usageRow.rowData.hasPercent
-            text: i18n("%1% %2", Math.round(usageRow.shownPercent), usageRow.applet.percentSuffix())
+            text: usageRow.applet.usagePercentText(usageRow.rowData)
             font.weight: Font.DemiBold
             horizontalAlignment: Text.AlignRight
             elide: Text.ElideRight
@@ -194,5 +195,15 @@ ColumnLayout {
             Layout.alignment: Qt.AlignBaseline
             Layout.maximumWidth: Kirigami.Units.gridUnit * 14
         }
+    }
+
+    PlainPlasmaLabel {
+        objectName: "usageConfidenceLabel"
+        visible: usageRow.confidenceText.length > 0
+        text: usageRow.confidenceText
+        font: Kirigami.Theme.smallFont
+        opacity: usageRow.applet.secondaryTextOpacity
+        Layout.fillWidth: true
+        wrapMode: Text.WordWrap
     }
 }

@@ -4,6 +4,7 @@ import org.kde.kirigami as Kirigami
 import "../PanelElements.js" as PanelElements
 import "../PanelTextFit.js" as PanelTextFit
 import "../ThemeContrast.js" as ThemeContrast
+import "../ProviderNormalizer.js" as Normalizer
 
 Item {
     id: compactRoot
@@ -553,6 +554,27 @@ Item {
                             Layout.alignment: Qt.AlignVCenter
                             Layout.preferredWidth: compactRoot.meterIconSize
                             Layout.preferredHeight: compactRoot.meterIconSize
+
+                            PlainPlasmaLabel {
+                                objectName: "panelConfidenceMarker"
+                                visible: compactMeter.quotaRows.some(function(row) {
+                                    return !Normalizer.authoritativeQuota(row)
+                                })
+                                anchors.bottom: parent.bottom
+                                anchors.right: parent.right
+                                text: compactMeter.quotaRows.some(function(row) {
+                                    return Normalizer.usageConfidence(row.dataConfidence) === "unknown"
+                                }) ? "?" : "~"
+                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                font.bold: true
+                                color: Kirigami.Theme.textColor
+                                Rectangle {
+                                    anchors.fill: parent
+                                    z: -1
+                                    radius: Kirigami.Units.smallSpacing / 2
+                                    color: Kirigami.Theme.backgroundColor
+                                }
+                            }
 
                             Rectangle {
                                 id: meterIncidentBadge

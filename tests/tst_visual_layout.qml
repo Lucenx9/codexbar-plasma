@@ -1,5 +1,6 @@
 import QtQuick
 import QtTest
+import "../contents/ui/components" as Components
 import "../contents/ui/CostPresentation.js" as CostPresentation
 import "../contents/ui/SafeText.js" as SafeText
 import "../contents/ui/ThemeContrast.js" as ThemeContrast
@@ -13,6 +14,15 @@ TestCase {
     height: 240
     visible: true
     property var holders: []
+
+    Components.UsageWindowText {
+        id: usageLabels
+        function i18n(source) {
+            for (var i = 1; i < arguments.length; i++)
+                source = source.replace("%" + i, String(arguments[i]));
+            return source;
+        }
+    }
 
     QtObject {
         id: applet
@@ -235,6 +245,8 @@ TestCase {
         function hidePopupUsageRow(providerID, row) {
             hiddenUsageRowRequest = {provider: providerID, label: row.label};
         }
+        function usagePercentText(row) { return usageLabels.percentText(row, false); }
+        function usageConfidenceText(row) { return usageLabels.confidenceText(row); }
         function percentSuffix() {
             return "left";
         }

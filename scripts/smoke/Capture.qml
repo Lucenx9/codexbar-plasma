@@ -45,10 +45,10 @@ Item {
     readonly property bool readmePanelScenario: scenario.indexOf("readme-panel-") === 0
     readonly property bool verticalPanelScenario: scenario.indexOf("panel-vertical") === 0
     readonly property bool capsulePanelScenario: verticalPanelScenario || scenario === "panel-small" || scenario === "panel-dual-edge"
-    readonly property bool standardPanelScenario: scenario === "panel-standard" || scenario === "readme-panel-standard"
+    readonly property bool standardPanelScenario: scenario === "estimated-panel" || scenario === "panel-standard" || scenario === "readme-panel-standard"
         || scenario === "panel-vertical" || scenario === "panel-small" || scenario === "panel-dual-edge"
         || scenario === "panel-information" || scenario === "panel-information-single"
-    readonly property bool panelAppearanceScenario: scenario === "panel-standard" || scenario === "panel-minimal"
+    readonly property bool panelAppearanceScenario: scenario === "estimated-panel" || scenario === "panel-standard" || scenario === "panel-minimal"
         || scenario === "panel-minimal-single" || readmePanelScenario || capsulePanelScenario || panelInformationScenario
     readonly property bool readmeScenario: scenario.indexOf("readme-") === 0
     readonly property int expectedProviderCount: scenario === "empty-providers" || scenario === "usage-error" || scenario === "cli-missing" ? 0
@@ -1811,6 +1811,14 @@ Item {
         if (!codex || codex.rows.length !== 2 || codex.error.length > 0)
             return false;
         if (panelAppearanceScenario) {
+            if (scenario === "estimated-panel") {
+                if (!compactPanelItem) return false;
+                var confidenceMarkers = namedItems(compactPanelItem, "panelConfidenceMarker").filter(function(item) { return item.visible; });
+                verifyScenario(confidenceMarkers.length === 1 && confidenceMarkers[0].text === "~",
+                    "estimated meter lost its visible confidence marker");
+                verifyScenario(applet.panelMeterDescription(codex).indexOf(i18n("%1 (estimated)", i18n("%1% %2", 95, i18n("used")))) >= 0,
+                    "estimated panel tooltip is unqualified");
+            }
             var expectedClaudeRows = scenario === "panel-dual-edge" ? 1 : 2;
             if (expectedProviderCount >= 2 && (!claude || claude.error.length > 0 || claude.rows.length !== expectedClaudeRows))
                 return false;
@@ -1847,6 +1855,18 @@ Item {
             return verifyCostCoverage();
         if (scenario.indexOf("popup-cost-") === 0)
             return applet.selectedProviderID === "codex" && verifyCostDetails();
+        if (scenario === "estimated-usage") {
+            verifyScenario(codex.rows[0].dataConfidence === "estimated", "confidence disappeared in the root adapter");
+            verifyScenario(applet.quotaSeverity(codex.rows[0]) === "" && applet.quotaWarningMarkers(codex.rows[0]).length === 0,
+                "estimated quota gained warning colours or threshold markers");
+            verifyScenario(applet.autoSelectedProviderIndex(applet.providers) === applet.providerIndexForID("claude"),
+                "estimated quota won automatic selection");
+            verifyScenario(applet.notificationObservationRows(codex)[0].dataConfidence === "estimated",
+                "notification adapter discarded confidence");
+            return applet.selectedProviderID === "codex"
+                && hasVisibleText(applet.fullRepresentationItem, i18n("%1 (estimated)", i18n("%1% %2", 95, i18n("used"))))
+                && hasVisibleText(applet.fullRepresentationItem, i18n("Estimated usage; not a measured account quota."));
+        }
         if (scenario === "popup-content")
             return verifyPopupContent();
         if (scenario === "popup-hidden-rows")
@@ -2109,7 +2129,7 @@ Item {
                     popup.Window.window.width = 640;
                     popup.Window.window.height = 880;
                     capture.applet.openProviderFromPanel("codex");
-                } else if (capture.scenario === "popup-content" || capture.scenario === "popup-hidden-rows"
+                } else if (capture.scenario === "estimated-usage" || capture.scenario === "popup-content" || capture.scenario === "popup-hidden-rows"
                         || capture.scenario === "popup-hidden-sections") {
                     capture.applet.openProviderFromPanel("codex");
                 } else if (capture.scenario.indexOf("privacy-") === 0) {

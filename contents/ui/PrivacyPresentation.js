@@ -45,6 +45,7 @@ function quota(row, enabled, label) {
     return {
         lane: known(field(row, "lane", ""), ["primary", "secondary", "tertiary", "extra", "monthlyCredits"], "extra"),
         label: label,
+        dataConfidence: Normalizer.usageConfidence(field(row, "dataConfidence", undefined)),
         hasPercent: field(row, "hasPercent", false) === true && isFinite(used) && isFinite(left),
         usedPercent: numeric(row, "usedPercent", 0),
         leftPercent: numeric(row, "leftPercent", 0),
@@ -227,6 +228,7 @@ function provider(snapshot, enabled, labels) {
     return {
         provider: field(snapshot, "provider", ""),
         title: labels.title,
+        dataConfidence: Normalizer.usageConfidence(field(snapshot, "dataConfidence", undefined)),
         account: hasText(snapshot, "account") ? labels.account : "",
         organization: "", loginMethod: "", source: "", version: "", planText: "",
         rows: presentedRows, primaryRow: primaryRow,

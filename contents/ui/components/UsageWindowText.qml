@@ -1,11 +1,38 @@
 import QtQuick
 import "../ResetPresentation.js" as ResetPresentation
 import "../PacePresentation.js" as PacePresentation
+import "../ProviderNormalizer.js" as Normalizer
 
 QtObject {
     id: root
 
     property TimeLabels dateLabels
+
+    function percentText(row, showUsed) {
+        if (!row || !row.hasPercent) return "";
+        var text = i18n("%1% %2", Math.round(showUsed ? row.usedPercent : row.leftPercent),
+            showUsed ? i18n("used") : i18n("left"));
+        switch (Normalizer.usageConfidence(row.dataConfidence)) {
+        case "estimated":
+            return i18n("%1 (estimated)", text);
+        case "unknown":
+            return i18n("%1 (confidence unknown)", text);
+        default:
+            return text;
+        }
+    }
+
+    function confidenceText(row) {
+        if (!row || !row.hasPercent) return "";
+        switch (Normalizer.usageConfidence(row.dataConfidence)) {
+        case "estimated":
+            return i18n("Estimated usage; not a measured account quota.");
+        case "unknown":
+            return i18n("Usage confidence is unknown; account quota is unverified.");
+        default:
+            return "";
+        }
+    }
 
     function resetText(window, nowMs, absolute) {
         var parts = ResetPresentation.parts(window, nowMs, absolute);

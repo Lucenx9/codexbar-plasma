@@ -18,14 +18,14 @@ function usedPercent(item) {
     var best = -1;
     var rows = item.rows || [];
     for (var i = 0; i < rows.length; i++) {
-        if (rows[i] && rows[i].hasPercent) {
+        if (rows[i] && rows[i].hasPercent && Normalizer.authoritativeQuota(rows[i])) {
             var used = Number(rows[i].usedPercent);
             if (isFinite(used)) {
                 best = Math.max(best, Normalizer.clamp(used, 0, 100));
             }
         }
     }
-    if (item.providerCost && item.providerCost.percentUsed >= 0) {
+    if (Normalizer.authoritativeQuota(item) && item.providerCost && item.providerCost.percentUsed >= 0) {
         var providerCostUsed = Number(item.providerCost.percentUsed);
         if (isFinite(providerCostUsed)) {
             best = Math.max(best, Normalizer.clamp(providerCostUsed, 0, 100));

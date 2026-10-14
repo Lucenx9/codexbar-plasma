@@ -186,7 +186,8 @@ msgstr ""
 #: contents/ui/components/PanelText.qml
 #: contents/ui/components/ProviderCostDetails.qml
 #: contents/ui/components/SpendView.qml contents/ui/configPopup.qml
-#: contents/ui/configProviders.qml scripts/smoke/Capture.qml
+#: contents/ui/configProviders.qml contents/ui/main.qml
+#: scripts/smoke/Capture.qml
 msgid "%1: %2"
 msgstr ""
 
@@ -370,6 +371,7 @@ msgid "%1 (%2)"
 msgstr ""
 
 #: contents/ui/components/CostText.qml
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
 msgid "%1 (estimated)"
 msgstr ""
 
@@ -591,13 +593,6 @@ msgstr ""
 msgid "Use the arrow keys to inspect chart points"
 msgstr ""
 
-#: contents/ui/components/OverviewProviderRow.qml
-#: contents/ui/components/PanelSettingsPreview.qml
-#: contents/ui/components/PanelText.qml
-#: contents/ui/components/ProviderUsageRow.qml
-msgid "%1% %2"
-msgstr ""
-
 #: contents/ui/components/PanelRuleEditor.qml
 msgid "Show each provider meter"
 msgstr ""
@@ -639,13 +634,21 @@ msgid "min"
 msgstr ""
 
 #: contents/ui/components/PanelSettingsPreview.qml
-#: contents/ui/components/PanelText.qml contents/ui/main.qml
+#: contents/ui/components/PanelText.qml
+#: contents/ui/components/UsageWindowText.qml contents/ui/main.qml
 msgid "left"
 msgstr ""
 
 #: contents/ui/components/PanelSettingsPreview.qml
-#: contents/ui/components/PanelText.qml contents/ui/main.qml
+#: contents/ui/components/PanelText.qml
+#: contents/ui/components/UsageWindowText.qml contents/ui/main.qml
+#: scripts/smoke/Capture.qml
 msgid "used"
+msgstr ""
+
+#: contents/ui/components/PanelSettingsPreview.qml
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
+msgid "%1% %2"
 msgstr ""
 
 #: contents/ui/components/PanelSettingsPreview.qml
@@ -745,7 +748,7 @@ msgstr ""
 msgid "Tertiary"
 msgstr ""
 
-#: contents/ui/components/PanelSettingsPreview.qml contents/ui/main.qml
+#: contents/ui/components/PanelSettingsPreview.qml
 msgid "%1: %2% %3"
 msgstr ""
 
@@ -1765,6 +1768,18 @@ msgctxt ""
 "Abbreviated month %1, day of the month %2 and clock time %3, such as Oct 7, "
 "14:30"
 msgid "%1 %2, %3"
+msgstr ""
+
+#: contents/ui/components/UsageWindowText.qml
+msgid "%1 (confidence unknown)"
+msgstr ""
+
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
+msgid "Estimated usage; not a measured account quota."
+msgstr ""
+
+#: contents/ui/components/UsageWindowText.qml
+msgid "Usage confidence is unknown; account quota is unverified."
 msgstr ""
 
 #: contents/ui/components/UsageWindowText.qml

@@ -160,6 +160,7 @@ import QtTest
 import "SOURCE_URL/components" as Components
 import org.kde.kirigami as Kirigami
 import "SOURCE_URL/QuotaThresholds.js" as QuotaThresholds
+import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
 TestCase {
     name: "QuotaMarkers"
     property bool showQuotaWarningMarkers: true

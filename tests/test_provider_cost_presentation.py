@@ -160,6 +160,10 @@ import "SOURCE_URL/CostPresentation.js" as CostPresentation
 TestCase {
     id: testCase
     name: "CreditUsageRow"
+    Components.UsageWindowText {
+        id: usageLabels
+        function i18n(source) { return applet.i18n.apply(applet, arguments); }
+    }
     Components.ProviderCostDetails {
         id: providerCostDetails
         numberFormat: CostPresentation.numberFormat(",", ".")
@@ -187,6 +191,8 @@ TestCase {
         function resetLabel(value) { return value; }
         function usageResetText(row) { return row.resetsAt || ""; }
         function withAlpha(color, alpha) { return Qt.rgba(0, 0, 1, alpha); }
+        function usagePercentText(row) { return usageLabels.percentText(row, false); }
+        function usageConfidenceText(row) { return usageLabels.confidenceText(row); }
         function percentSuffix() { return "left"; }
         function quotaMeterColor() { return "blue"; }
         function quotaWarningMarkers() { return []; }

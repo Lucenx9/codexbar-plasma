@@ -29,6 +29,7 @@ SCENARIOS += ("popup-scroll", "popup-scroll-large")
 SCENARIOS += ("popup-content", "popup-hidden-rows", "popup-hidden-sections", "refresh-on-open", "privacy-provider", "privacy-spend", "privacy-sessions")
 SCENARIOS += ("privacy-cost-details",)
 SCENARIOS += ("usage-retention", "usage-cache-restart")
+SCENARIOS += ("estimated-usage", "estimated-panel")
 SCENARIOS += ("empty-providers", "usage-error", "usage-recovery", "cli-missing")
 SCENARIOS += ("ai-insights", "ai-insights-it", "ai-insights-mismatch", "ai-insights-error", "ai-insights-single",
               "settings-ai-insights", "settings-ai-insights-narrow")
@@ -59,6 +60,12 @@ def usage(provider, scenario, now):
     if scenario.startswith("ai-insights") and provider == "codex":
         snapshot["pace"] = {"primary": {"stage": "ahead", "deltaPercent": 13,
             "expectedUsedPercent": 30, "willLastToReset": False, "etaSeconds": 3600}}
+    if scenario in ("estimated-usage", "estimated-panel") and provider == "codex":
+        snapshot["source"] = "local"
+        snapshot["usage"]["dataConfidence"] = "estimated"
+        snapshot["usage"]["primary"]["usedPercent"] = 95
+        snapshot["pace"] = {"primary": {"expectedUsedPercent": 30,
+            "willLastToReset": False, "etaSeconds": 3600}}
     if scenario in MATRIX_SCENARIOS:
         if provider == "codex":
             snapshot["credits"] = {"remaining": 125}

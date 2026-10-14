@@ -2,6 +2,7 @@
 
 .import "Guards.js" as Guards
 .import "PanelDisplay.js" as PanelDisplay
+.import "ProviderNormalizer.js" as Normalizer
 
 var conditions = ["always", "usageAtLeast", "resetWithin", "runOut"];
 var maximumResetMinutes = 10080;
@@ -64,6 +65,9 @@ function matches(value, row, nowMs) {
         return true;
     }
     if (!row || typeof row !== "object" || Array.isArray(row)) {
+        return false;
+    }
+    if (!Normalizer.authoritativeQuota(row)) {
         return false;
     }
     if (rule.condition === "usageAtLeast") {

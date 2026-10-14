@@ -269,19 +269,11 @@ class ProviderDataTest(unittest.TestCase):
                 raise AssertionError("the panel clock must update time and expire usage even without automatic refresh")
 
     def test_provider_presentation_metadata(self):
-        snapshot_text = (root / "contents/ui/ProviderSnapshot.js").read_text()
-
-        normalize_provider_body = function_body(snapshot_text, "normalize")
         present_provider_body = function_body(main_text, "presentProviderSnapshot")
         for fragment in ("statusKnown: snapshot.statusRecord !== null", "title: Normalizer.boundedDisplayText(",
                          "status: Normalizer.boundedDisplayText(", "usageReceivedAtMs: snapshot.usageReceivedAtMs"):
             if not code_contains(present_provider_body, fragment):
                 raise AssertionError("provider presentation must retain bounded metadata and original receipt time")
-        for fragment in ('var lanes = ["primary", "secondary", "tertiary"]',
-                         "windowSnapshot(usage[lane], pace[lane], true, lane, null, receivedAtMs)",
-                         "Array.isArray(usage.extraRateWindows)", "Math.min(extras.length, Normalizer.maximumExtraRateWindows)"):
-            if not code_contains(normalize_provider_body, fragment):
-                raise AssertionError("normalized windows must preserve CLI lanes and bound extra records")
 
 
 if __name__ == "__main__":

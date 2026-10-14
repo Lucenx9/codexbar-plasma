@@ -901,6 +901,7 @@ PlasmoidItem {
             title: Normalizer.boundedDisplayText(providerTitle(providerID,
                 snapshot.displayName === null ? providerDisplayNames[providerID] : snapshot.displayName), 120),
             source: snapshot.source,
+            dataConfidence: snapshot.dataConfidence,
             version: snapshot.version,
             account: snapshot.account,
             organization: snapshot.organization,
@@ -975,7 +976,7 @@ PlasmoidItem {
 
     function usageResetText(row) {
         row = PrivacyPresentation.quota(row, privacyMode, "")
-        if (!row) {
+        if (!row || !Normalizer.authoritativeQuota(row)) {
             return ""
         }
         if (row.resetsAt || row.resetDescription) {
@@ -1057,7 +1058,7 @@ PlasmoidItem {
     }
 
     function quotaWarningMarkers(row) {
-        if (!showQuotaWarningMarkers || !row || !row.hasPercent) {
+        if (!showQuotaWarningMarkers || !row || !row.hasPercent || !Normalizer.authoritativeQuota(row)) {
             return []
         }
         return QuotaThresholds.markers(
@@ -1072,7 +1073,7 @@ PlasmoidItem {
     // this one level; the provider accent stays in charge below the warning
     // step, and the same setting that hides the markers hides the colour.
     function quotaSeverity(row) {
-        if (!showQuotaWarningMarkers || !row || !row.hasPercent) {
+        if (!showQuotaWarningMarkers || !row || !row.hasPercent || !Normalizer.authoritativeQuota(row)) {
             return ""
         }
         return QuotaThresholds.level(row.usedPercent, quotaWarningPercent, quotaCriticalPercent)
@@ -1153,7 +1154,7 @@ PlasmoidItem {
     }
 
     function paceWarningActive(row) {
-        return row && row.paceOnTop === false && Number(row.paceEtaSeconds) > 0
+        return row && Normalizer.authoritativeQuota(row) && row.paceOnTop === false && Number(row.paceEtaSeconds) > 0
     }
 
     function paceSummaryText(pace) {
@@ -1176,7 +1177,7 @@ PlasmoidItem {
     readonly property int limitResetFloor: 5
 
     function quotaNotificationLevel(row) {
-        if (!row || !row.hasPercent) {
+        if (!row || !row.hasPercent || !Normalizer.authoritativeQuota(row)) {
             return ""
         }
         return QuotaThresholds.level(
@@ -1201,6 +1202,7 @@ PlasmoidItem {
                 label: row && row.label ? String(row.label) : "",
                 resetsAt: row && row.resetsAt ? String(row.resetsAt) : "",
                 hasPercent: row && row.hasPercent === true,
+                dataConfidence: row ? row.dataConfidence : "",
                 usedPercent: row ? Number(row.usedPercent) : NaN,
                 quotaLevel: quotaNotificationLevel(row),
                 paceKnown: row && row.paceKnown === true,
@@ -1629,7 +1631,8 @@ PlasmoidItem {
 
     function switcherCandidateRows(item) {
         return PanelDisplay.candidateRows(item ? item.rows : null,
-            item ? providerKey(item.provider) : "", item ? item.providerCost : null,
+            item ? providerKey(item.provider) : "",
+            item && Normalizer.authoritativeQuota(item) ? item.providerCost : null,
             i18n("Included plan"))
     }
 
@@ -1643,8 +1646,7 @@ PlasmoidItem {
 
     function panelMeterDescription(item) {
         var description = panelMeterRows(item).map(function(row) {
-            var text = i18n("%1: %2% %3", row.label, Math.round(displayPercent(row)),
-                usageBarsShowUsed ? i18n("used") : i18n("left"))
+            var text = i18n("%1: %2", row.label, usagePercentText(row))
             var reset = resetTextForRow(row)
             return reset.length > 0 ? i18n("%1 - %2", text, reset) : text
         }).join(". ")
@@ -1674,7 +1676,7 @@ PlasmoidItem {
         var parts = []
         var row = switcherMetricRow(item)
         if (row && row.hasPercent) {
-            var text = i18n("%1: %2% %3", row.label, Math.round(displayPercent(row)), percentSuffix())
+            var text = i18n("%1: %2", row.label, usagePercentText(row))
             var reset = resetTextForRow(row)
             parts.push(reset.length > 0 ? i18n("%1 - %2", text, reset) : text)
         }
@@ -1726,6 +1728,14 @@ PlasmoidItem {
         return OverviewProviders.placeholderText(item)
     }
 
+    function usagePercentText(row) {
+        return usageWindowText.percentText(row, usageBarsShowUsed)
+    }
+
+    function usageConfidenceText(row) {
+        return usageWindowText.confidenceText(row)
+    }
+
     function displayPercent(row) {
         if (!row || !row.hasPercent) {
             return 0
@@ -1734,7 +1744,7 @@ PlasmoidItem {
     }
 
     function paceMarkerPercent(row) {
-        if (!row || row.pacePercent < 0) {
+        if (!row || row.pacePercent < 0 || !Normalizer.authoritativeQuota(row)) {
             return -1
         }
         return usageBarsShowUsed ? row.pacePercent : clamp(100 - row.pacePercent, 0, 100)

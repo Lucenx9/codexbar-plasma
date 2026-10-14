@@ -15,6 +15,7 @@ QtObject {
     property bool showPercent: false
     property bool showCredits: false
     property var numberFormat: ({})
+    property UsageWindowText usageLabels: UsageWindowText {}
 
     function displayText(row, mode, resetText, runOutText) {
         if (mode === "pace") {
@@ -39,12 +40,11 @@ QtObject {
         if (!row || !row.hasPercent) {
             return ""
         }
-        return i18n("%1% %2", Math.round(root.usageBarsShowUsed ? row.usedPercent : row.leftPercent),
-            root.usageBarsShowUsed ? i18n("used") : i18n("left"))
+        return usageLabels.percentText(row, root.usageBarsShowUsed)
     }
 
     function paceText(row) {
-        if (!row || row.pacePercent < 0) {
+        if (!row || row.pacePercent < 0 || !Normalizer.authoritativeQuota(row)) {
             return ""
         }
         var shownPace = root.usageBarsShowUsed ? row.pacePercent

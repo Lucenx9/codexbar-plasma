@@ -3736,3 +3736,16 @@ msgid ""
 "Automatic clears its saved override. General's source override takes "
 "precedence in the widget."
 msgstr "Wählen Sie eine Quelle zum Speichern. CodexBar prüft die Unterstützung für diesen Anbieter; Automatisch entfernt seine gespeicherte Vorgabe. Die Quellenvorgabe unter Allgemein hat im Widget Vorrang."
+
+#: contents/ui/components/UsageWindowText.qml
+#, kde-format
+msgid "%1 (confidence unknown)"
+msgstr "%1 (Verlässlichkeit unbekannt)"
+
+#: contents/ui/components/UsageWindowText.qml
+msgid "Estimated usage; not a measured account quota."
+msgstr "Geschätzte Nutzung; kein gemessenes Kontokontingent."
+
+#: contents/ui/components/UsageWindowText.qml
+msgid "Usage confidence is unknown; account quota is unverified."
+msgstr "Die Verlässlichkeit der Nutzung ist unbekannt; das Kontokontingent ist nicht bestätigt."

@@ -1,5 +1,6 @@
 import QtQuick
 import QtTest
+import "../contents/ui/components" as Components
 
 TestCase {
     id: testCase
@@ -18,6 +19,15 @@ TestCase {
             planText: "Pro",
             hasIncident: false
         })
+
+    Components.UsageWindowText {
+        id: usageLabels
+        function i18n(source) {
+            for (var i = 1; i < arguments.length; i++)
+                source = source.replace("%" + i, String(arguments[i]));
+            return source;
+        }
+    }
 
     QtObject {
         id: applet
@@ -66,6 +76,8 @@ TestCase {
         function lastGoodUsageText() {
             return "Last known usage, 8 minutes ago";
         }
+        function usagePercentText(row) { return usageLabels.percentText(row, false); }
+        function usageConfidenceText(row) { return usageLabels.confidenceText(row); }
         function percentSuffix() {
             return "left";
         }

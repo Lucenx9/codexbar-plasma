@@ -1,4 +1,5 @@
 .pragma library
+.import "ProviderNormalizer.js" as Normalizer
 .import "Guards.js" as Guards
 .import "NotificationMemo.js" as NotificationMemo
 
@@ -154,11 +155,19 @@ function clearObservedRowState(nextMemo, observation) {
 
 function primeScope(nextMemo, observation, options) {
     nextMemo[scopePrimedKey(observation)] = "1"
+    var observedRows = Array.isArray(observation.rows) ? observation.rows : []
+    for (var rowIndex = 0; rowIndex < observedRows.length; rowIndex++) {
+        if (!Normalizer.authoritativeQuota(observedRows[rowIndex])) {
+            delete nextMemo[quotaKey(observation, observedRows[rowIndex], rowIndex)]
+            delete nextMemo[paceKey(observation, observedRows[rowIndex], rowIndex)]
+            delete nextMemo[resetKey(observation, observedRows[rowIndex], rowIndex)]
+        }
+    }
     if (!options || options.quotaEnabled !== false) {
         var rows = Array.isArray(observation.rows) ? observation.rows : []
         for (var i = 0; i < rows.length; i++) {
             var level = String(rows[i] && rows[i].quotaLevel || "")
-            if (level.length > 0) {
+            if (Normalizer.authoritativeQuota(rows[i]) && level.length > 0) {
                 nextMemo[quotaKey(observation, rows[i], i)] = level
             }
         }
@@ -166,7 +175,7 @@ function primeScope(nextMemo, observation, options) {
     if (!options || options.paceEnabled !== false) {
         var paceRows = Array.isArray(observation.rows) ? observation.rows : []
         for (var paceIndex = 0; paceIndex < paceRows.length; paceIndex++) {
-            if (paceRows[paceIndex] && paceRows[paceIndex].paceActive === true) {
+            if (paceRows[paceIndex] && Normalizer.authoritativeQuota(paceRows[paceIndex]) && paceRows[paceIndex].paceActive === true) {
                 nextMemo[paceKey(observation, paceRows[paceIndex], paceIndex)] = "1"
             }
         }
@@ -180,7 +189,7 @@ function primeScope(nextMemo, observation, options) {
         for (var resetIndex = 0; resetIndex < resetRows.length; resetIndex++) {
             var row = resetRows[resetIndex]
             var used = Number(row && row.usedPercent)
-            if (row && row.hasPercent === true && isFinite(used) && used >= armThreshold) {
+            if (row && Normalizer.authoritativeQuota(row) && row.hasPercent === true && isFinite(used) && used >= armThreshold) {
                 nextMemo[resetKey(observation, row, resetIndex)] = "1"
             }
         }
@@ -192,6 +201,9 @@ function processQuota(previousMemo, nextMemo, observation, observationIndex, int
     for (var i = 0; i < rows.length; i++) {
         var level = String(rows[i] && rows[i].quotaLevel || "")
         var key = quotaKey(observation, rows[i], i)
+        if (!Normalizer.authoritativeQuota(rows[i])) {
+            continue
+        }
         var previousLevel = String(previousMemo && previousMemo[key] || "")
         if (level.length > 0
                 && NotificationMemo.severityRank(level) > NotificationMemo.severityRank(previousLevel)) {
@@ -218,6 +230,9 @@ function processPace(previousMemo, nextMemo, observation, observationIndex, inte
     for (var i = 0; i < rows.length; i++) {
         var row = rows[i]
         var key = paceKey(observation, row, i)
+        if (!Normalizer.authoritativeQuota(row)) {
+            continue
+        }
         if (!row || row.paceActive !== true) {
             // Carry only an unavailable forecast. Pace remains authoritative
             // when usage percentage is unknown, so a valid recovery still
@@ -252,6 +267,9 @@ function processReset(previousMemo, nextMemo, observation, observationIndex, opt
     for (var i = 0; i < rows.length; i++) {
         var row = rows[i]
         var key = resetKey(observation, row, i)
+        if (!Normalizer.authoritativeQuota(row)) {
+            continue
+        }
         var wasArmed = previousMemo && previousMemo[key] === "1"
         var used = Number(row && row.usedPercent)
         if (!row || row.hasPercent !== true || !isFinite(used)) {

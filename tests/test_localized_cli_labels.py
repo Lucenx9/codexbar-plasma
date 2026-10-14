@@ -95,6 +95,12 @@ class LocalizedCliLabelTests(unittest.TestCase):
                 cases.append({"tag": language, "messages": messages, "labels": labels,
                               "plurals": plural_messages, "counts": count_labels[language],
                               "durations": duration_rows, "singularZero": language in ("fr", "pt_BR"),
+                              "confidence": {
+                                  "estimated": translated("%1 (estimated)", translated("%1% %2", 95, translated("used"))),
+                                  "unknown": translated("%1 (confidence unknown)", translated("%1% %2", 95, translated("used"))),
+                                  "note": translated("Estimated usage; not a measured account quota."),
+                                  "unknownNote": translated("Usage confidence is unknown; account quota is unverified."),
+                              },
                               "periods": {
                                   "month": translated("Month to date"),
                                   "all": translated("All history"),
@@ -157,6 +163,12 @@ TestCase {
             compare(paceEtaText(duration.seconds), duration.expected, String(duration.seconds));
         for (var invalid of [null, false, 0, -1, "invalid", NaN, Infinity, -Infinity])
             compare(paceEtaText(invalid), i18n("now"));
+        var estimate = {hasPercent: true, usedPercent: 95, leftPercent: 5, dataConfidence: "estimated"};
+        compare(usageWindowText.percentText(estimate, true), row.confidence.estimated);
+        compare(usageWindowText.confidenceText(estimate), row.confidence.note);
+        estimate.dataConfidence = "unknown";
+        compare(usageWindowText.percentText(estimate, true), row.confidence.unknown);
+        compare(usageWindowText.confidenceText(estimate), row.confidence.unknownNote);
         var units = ["tokens", "requests", "points"];
         for (var u = 0; u < units.length; u++) {
             var singular = row.counts[u][0];

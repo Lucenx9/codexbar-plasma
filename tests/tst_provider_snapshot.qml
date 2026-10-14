@@ -7,6 +7,42 @@ import "../contents/ui/ResetPresentation.js" as ResetPresentation
 
 TestCase {
     name: "ProviderSnapshot"
+    function test_confidenceSurvivesWithoutPromotingEstimates_data() {
+        return [
+            {tag: "estimated", confidence: "estimated", expected: "estimated", authoritative: false},
+            {tag: "exact", confidence: "exact", expected: "exact", authoritative: true},
+            {tag: "missing", confidence: undefined, expected: "", authoritative: true},
+            {tag: "empty", confidence: "", expected: "unknown", authoritative: false},
+            {tag: "explicit-undefined", confidence: undefined, explicit: true, expected: "unknown", authoritative: false},
+            {tag: "null", confidence: null, expected: "unknown", authoritative: false},
+            {tag: "boolean", confidence: false, expected: "unknown", authoritative: false},
+            {tag: "array", confidence: ["exact"], expected: "unknown", authoritative: false},
+            {tag: "future", confidence: "futureConfidence", expected: "unknown", authoritative: false},
+            {tag: "malformed", confidence: {toString: null}, expected: "unknown", authoritative: false},
+            {tag: "oversized", confidence: "x".repeat(10000), expected: "unknown", authoritative: false}
+        ];
+    }
+    function test_confidenceSurvivesWithoutPromotingEstimates(data) {
+        var input = {provider: "unknown-provider", usage: {
+            dataConfidence: data.confidence,
+            primary: {usedPercent: 95, resetsAt: "2026-10-14T14:00:00Z", windowMinutes: 300},
+            extraRateWindows: [{id: "extra", window: {usedPercent: 20}}]
+        }, pace: {primary: {expectedUsedPercent: 50, willLastToReset: false, etaSeconds: 60}}};
+        if (data.confidence === undefined && data.explicit !== true) {
+            delete input.usage.dataConfidence;
+        }
+        var before = JSON.stringify(input);
+        var result = ProviderSnapshot.normalize(input, 1000);
+        compare(result.dataConfidence, data.expected);
+        compare(result.rows[0].dataConfidence, data.expected);
+        compare(result.rows[1].dataConfidence, data.expected);
+        compare(result.rows[0].usedPercent, 95);
+        compare(result.rows[0].leftPercent, 5);
+        compare(result.rows[0].paceKnown, data.authoritative);
+        compare(result.rows[0].resetsAt.length > 0, data.authoritative);
+        compare(result.rows[0].paceParts.length > 0, data.authoritative);
+        compare(JSON.stringify(input), before);
+    }
     function test_receiptTimeAndForecastAreExplicit() {
         var result = ProviderSnapshot.normalize({
             provider: "codex",
@@ -78,6 +114,16 @@ TestCase {
         compare(result.credits, null);
         compare(result.statusRecord.indicator, "");
         verify(JSON.stringify(result).indexOf("private-token") < 0);
+    }
+    function test_confidenceMustBeAnOwnContractField() {
+        function InheritedUsage() {}
+        InheritedUsage.prototype.dataConfidence = "estimated";
+        var usage = new InheritedUsage();
+        usage.primary = {usedPercent: 50};
+        var result = ProviderSnapshot.normalize({provider: "unknown-provider", usage: usage}, 1000);
+        compare(result.dataConfidence, "");
+        compare(result.rows[0].dataConfidence, "");
+        compare(result.rows[0].usedPercent, 50);
     }
     // A numeric CLI reset date has to survive as a parsable date: the live
     // countdown, the panel "resets within" rule and absolute formatting all

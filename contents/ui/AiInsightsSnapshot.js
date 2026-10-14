@@ -1,4 +1,5 @@
 .pragma library
+.import "ProviderNormalizer.js" as Normalizer
 .import "Guards.js" as Guards
 
 // Builds the only data AI Insights may send: an explicit allowlist of
@@ -29,7 +30,7 @@ function hours(ms) {
 }
 
 function quota(row, nowMs) {
-    if (field(row, "hasPercent") !== true || !finite(field(row, "usedPercent"))) {
+    if (!Normalizer.authoritativeQuota(row) || field(row, "hasPercent") !== true || !finite(field(row, "usedPercent"))) {
         return null
     }
     var result = {

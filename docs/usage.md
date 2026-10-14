@@ -65,6 +65,20 @@ work and upstream contract requirements.
   incident notices, errors, and usage details scroll below them. Switching
   provider or account starts the details at the top; refreshing the same account
   keeps the scroll position.
+- CLI usage marked `dataConfidence: "estimated"` keeps its numeric meters, but
+  percentages say "estimated" in panel text, tooltips, Overview, and provider
+  details. A `~` badge marks estimated panel meters when text is hidden. The
+  provider detail explains that these values are not measured account quotas.
+  Unknown confidence, including an explicitly empty CLI/cache value, has a `?`
+  badge and an unverified-quota label.
+  These rows have no quota warning colors, threshold or pace markers, reset
+  countdowns, run-out forecasts, or quota/pace/reset notifications. They do not
+  rank automatic provider selection by consumption or satisfy conditional panel
+  visibility rules other than Always. Provider status remains independent.
+  Confidence survives privacy mode, failed-refresh retention, and newly saved
+  quota caches. Older CLI payloads and caches without the field keep their
+  existing behavior; OpenCode Go estimates already saved by an older widget
+  gain their qualifier on the next successful refresh.
 - A plain credit balance has no allowance denominator and stays meter-free.
   A monthly Codex credit meter appears only when the CLI provides the validated
   `credits.codexCreditLimit` record. Its limit never applies to a plain balance.
@@ -88,8 +102,8 @@ work and upstream contract requirements.
   Missing data does not satisfy a condition. Reset conditions update each minute;
   the provider icon remains available when all conditional elements are hidden.
 - Auto-select highest-usage provider for the compact panel and provider detail
-  focus. Consumption takes precedence even for fractional percentage differences;
-  incident severity breaks equal-consumption ties, then saved provider order.
+  focus. Measured consumption takes precedence even for fractional percentage
+  differences; incident severity breaks equal-consumption ties, then saved provider order.
 - Panel providers can be limited to a chosen set in **Panel → Panel
   providers**. The choice lists the enabled providers in their saved order, is
   limited to the four meters the panel can draw, and can also be left automatic
@@ -293,8 +307,8 @@ as last known and included when the merged snapshot is saved.
 The disk cache is limited to 64 KiB of UTF-8 on both save and restore. It holds
 at most 64 providers and only their primary, secondary,
 tertiary, and up to 24 extra quota windows per provider, with only percentages,
-reset timestamps, measurement timestamps, identifier-shaped extra window IDs,
-and an opaque configuration fingerprint. It contains no account identities, credentials,
+bounded semantic usage confidence, reset timestamps, measurement timestamps,
+identifier-shaped extra window IDs, and an opaque configuration fingerprint. It contains no account identities, credentials,
 provider prose, cost history, session data, or paths. Entries older than 24 hours,
 future-dated entries, corrupt records, and unsupported cache versions are ignored.
 Supplemental sections (cost, credits, detail views, token costs) are hidden
