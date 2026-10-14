@@ -98,7 +98,7 @@ Item {
             refreshTimer.stop();
             errorText = "";
             runSerial += 1;
-            var source = CommandLedger.withRunNonce(commandSource, runSerial);
+            var source = CommandLedger.withRunNonce(commandSource, runSerial, Date.now() + "-" + Math.random());
             var descriptor = CommandLedger.descriptor("sessions", "", Date.now(), sessionsCommandTimeoutMs);
             commands = CommandLedger.opened(commands, source, descriptor);
             sessionsSource.connectSource(source);

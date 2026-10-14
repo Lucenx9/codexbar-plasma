@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep popup refreshes, update checks, and settings requests independent across
+  widget instances and reopened pages. Matching local counters could make
+  Plasma reuse another request's process and return its older result.
 - Keep provider detail sections visible and restorable when live usage arrives
   through Qt's native list representation.
 - Draw the peak reference line for provider detail bar charts, matching local

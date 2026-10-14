@@ -189,7 +189,7 @@ Item {
             setWidgetUpdateState(i18n("Checking for widget updates…"), "", false);
             connectedUpdateInstallMode = installMode;
             commandRunSerial += 1;
-            connectedUpdateCommandSource = CommandLedger.withRunNonce(buildUpdateCommand(installMode), commandRunSerial);
+            connectedUpdateCommandSource = CommandLedger.withRunNonce(buildUpdateCommand(installMode), commandRunSerial, Date.now() + "-" + Math.random());
             updateSource.connectSource(connectedUpdateCommandSource);
             updateCommandTimeoutTimer.interval = installMode ? widgetAutoUpdateTimeoutMs : widgetUpdateCheckTimeoutMs;
             updateCommandTimeoutTimer.restart();

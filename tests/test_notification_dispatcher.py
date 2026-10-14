@@ -48,6 +48,19 @@ TRANSPORT = '''property var connected: []
         }'''
 
 TRANSPORT_TESTS = '''
+    function test_separateDispatchersDoNotShareARequest() {
+        var first = create();
+        var second = create();
+        var firstSource = first.send("same", "body", "normal");
+        var secondSource = second.send("same", "body", "normal");
+        verify(firstSource !== secondSource);
+        first.testSource.newData(firstSource, {"exit code": 0});
+        verify(!first.sending);
+        verify(second.sending);
+        second.testSource.newData(secondSource, {"exit code": 0});
+        verify(!second.sending);
+    }
+
     function test_immediateRepliesAndRepeatedMessages() {
         var subject = create();
         subject.testSource.immediate = true;

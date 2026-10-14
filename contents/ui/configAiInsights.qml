@@ -154,7 +154,7 @@ KCM.SimpleKCM {
         }
         commandSerial += 1
         activeAction = action
-        activeSource = CommandLedger.withRunNonce(command, commandSerial)
+        activeSource = CommandLedger.withRunNonce(command, commandSerial, Date.now() + "-" + Math.random())
         actionDeadline.interval = action === "set-key" ? 340000 : 50000
         actionDeadline.restart()
         helperSource.connectSource(activeSource)
