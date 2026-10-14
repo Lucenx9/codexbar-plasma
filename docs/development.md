@@ -875,8 +875,13 @@ during the production watcher connection, matching Plasma's shared-source
 behavior. It checks that the new poll stays connected and retired replies are
 ignored. `tests/test_secret_prompt_lifecycle.py` executes the generated secret
 prompt commands with synthetic dialog and CLI processes and shortened timeouts.
-It checks cancellation, process termination, late submission, and the total
-deadline needed to preserve the full save timeout.
+Each phase gets three seconds, with two-second delays for successful late
+replies: the combined flow exceeds one phase's deadline while allowing process
+startup and scheduling time. Child shutdown is checked within two seconds of
+the parent exiting, so asynchronous signal delivery cannot cause a false leak
+failure. Cancellation, TERM/KILL escalation and stdin-only secret delivery
+remain required. The production ledger deadline must cover both phases and
+the disconnect margin.
 
 `tests/test_sessions_controller.py` instantiates the production Sessions module
 with temporary synthetic CLI executables and real Plasma DataSource/timers.
