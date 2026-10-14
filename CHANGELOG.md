@@ -12,11 +12,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
-- Reject AI Insights success replies from failed helper processes in the popup
-  and settings, including model lists and wallet-operation confirmations.
+- Reject enabled-provider lists from failed CLI processes in Popup and Panel
+  settings, and show the CLI error or exit code instead of selectable providers.
 - Keep popup refreshes, update checks, and settings requests independent across
   widget instances and reopened pages. Matching local counters could make
   Plasma reuse another request's process and return its older result.
+- Reject AI Insights success replies from failed helper processes in the popup
+  and settings, including model lists and wallet-operation confirmations.
 - Preserve the last successful session list when a failed CLI scan writes valid
   JSON, and reject widget updater success reports from failed processes.
 - Keep provider detail sections visible and restorable when live usage arrives
