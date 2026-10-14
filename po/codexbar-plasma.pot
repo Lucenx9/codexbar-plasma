@@ -2833,11 +2833,11 @@ msgid "%1 action completed"
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "codexbar did not return diagnostics."
+msgid "Could not parse codexbar diagnostics: %1"
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "Could not parse codexbar diagnostics: %1"
+msgid "codexbar did not return diagnostics."
 msgstr ""
 
 #: contents/ui/configProviders.qml contents/ui/main.qml

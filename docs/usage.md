@@ -325,6 +325,8 @@ an error. A successful empty list clears it.
 Provider settings diagnostics also keep their last successful result and show
 an error when the CLI process fails or returns an invalid response. A failed
 process cannot replace the result even when it prints valid diagnostic JSON.
+An error inside a successful diagnostic report describes a failed provider fetch;
+its authentication, settings, and attempt details remain available for inspection.
 
 Provider-specific editable settings depend on the official CLI contract.
 

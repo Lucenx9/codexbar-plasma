@@ -109,8 +109,8 @@ function commandError(payload) {
     return ""
 }
 
-// Classified result of one finished provider command run (configuration write
-// or redacted diagnostic). `payload` is the already-parsed
+// Classified result of one finished provider command run (enable/disable,
+// set-api-key, descriptor field or action). `payload` is the already-parsed
 // stdout JSON, or undefined when stdout was empty; `stderrText` and
 // `exitCode` are the raw process results.
 //
@@ -193,6 +193,23 @@ function setApiKeyOutcomeIsSuccess(result) {
     return result !== null
         && result !== undefined
         && (result.outcome === "success" || result.outcome === "empty")
+}
+
+// Linux CLI 0.74.1 diagnostic schema 1.0 reports failed provider fetches in
+// `error` while the diagnostic command itself exits successfully. That report
+// still carries useful auth/settings/attempt data. Only a shaped report gets
+// this treatment; command error envelopes retain their existing semantics.
+function diagnosticOutcome(payload, stderrText, exitCode) {
+    var report = Array.isArray(payload) ? payload[0] : payload
+    if (commandPayloadIsSupported(payload) && isCliRecord(report)
+            && report.schemaVersion === "1.0" && boundedProviderID(report.provider).length > 0
+            && isCliRecord(report.auth) && isCliRecord(report.settings)
+            && Array.isArray(report.fetchAttempts)) {
+        var commandResult = Guards.copyObject(report)
+        delete commandResult.error
+        return commandOutcome(commandResult, stderrText, exitCode)
+    }
+    return commandOutcome(payload, stderrText, exitCode)
 }
 
 function commandPayloadIsSupported(payload) {

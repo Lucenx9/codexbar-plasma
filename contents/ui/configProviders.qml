@@ -708,7 +708,7 @@ KCM.SimpleKCM {
             }
         }
 
-        var result = ProviderConfigProtocol.commandOutcome(payload, stderrText, exitCode)
+        var result = ProviderConfigProtocol.diagnosticOutcome(payload, stderrText, exitCode)
         if (result.outcome !== "success") {
             setProviderDiagnosticError(descriptor.provider,
                 result.outcome === "empty" || result.outcome === "invalidPayload"

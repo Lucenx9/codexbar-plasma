@@ -83,6 +83,23 @@ TestCase {
         compare(diagnostic.authConfigured, false);
         compare(diagnosticError, "");
     }
+    function test_reportWithFetchFailureIsStillADiagnostic_data() {
+        var report = { schemaVersion: "1.0", provider: "codex", source: "failed",
+            auth: { configured: false, modes: [] }, settings: { sourceMode: "auto" },
+            fetchAttempts: [{ kind: "cli", wasAvailable: false }],
+            error: { category: "unknown", safeDescription: "Synthetic fetch failure" } };
+        return [{ tag: "object", payload: JSON.stringify(report) },
+            { tag: "array", payload: JSON.stringify([report]) }];
+    }
+    function test_reportWithFetchFailureIsStillADiagnostic(data) {
+        deliver(data.payload, "loader warning", 0);
+        compare(diagnostic.provider, "codex");
+        compare(diagnostic.source, "failed");
+        compare(diagnostic.fetchAttempts, 1);
+        compare(diagnosticError, "");
+        deliver(data.payload, "", 3);
+        compare(diagnosticError, "codexbar exited with code 3");
+    }
     function test_firstFailedDiagnosticStaysAbsent() {
         diagnostic = null;
         deliver('{"provider":"codex"}', "", 3);
