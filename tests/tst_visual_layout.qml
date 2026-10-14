@@ -1117,7 +1117,11 @@ TestCase {
         }
     }
 
-    function test_providerRowRevealsTruncatedIdentityOnHover() {
+    function test_providerRowRevealsTruncatedIdentity_data() {
+        return [{tag: "hover", keyboard: false}, {tag: "keyboard", keyboard: true}];
+    }
+
+    function test_providerRowRevealsTruncatedIdentity(data) {
         var identity = {
             provider: "example-provider-with-an-unusually-long-identifier",
             displayName: "Example <provider> & an unusually long display name",
@@ -1140,18 +1144,25 @@ TestCase {
         tryCompare(title, "truncated", true);
         mouseMove(testCase, testCase.width - 1, testCase.height - 1);
         wait(300);
-        mouseMove(row, row.width / 2, row.height / 2);
+        if (data.keyboard)
+            row.forceActiveFocus(Qt.TabFocusReason);
+        else
+            mouseMove(row, row.width / 2, row.height / 2);
         tryCompare(tip, "visible", true);
         compare(tip.plainText, identity.displayName + "\n" + identity.provider);
         compare(tip.text, SafeText.plainTextAsRichText(tip.plainText));
         compare(tip.parent, row);
         mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+        testCase.forceActiveFocus();
         tryCompare(tip, "visible", false);
 
         // The name fits but the ID does not; it must still be discoverable.
         row.modelData = Object.assign({}, identity, {displayName: "Example"});
         tryCompare(title, "truncated", false);
-        mouseMove(row, row.width / 2, row.height / 2);
+        if (data.keyboard)
+            row.forceActiveFocus(Qt.TabFocusReason);
+        else
+            mouseMove(row, row.width / 2, row.height / 2);
         tryCompare(tip, "visible", true);
 
         row.modelData = Object.assign({}, identity, {provider: "example", displayName: "Example"});

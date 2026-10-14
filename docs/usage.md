@@ -595,6 +595,8 @@ fields; track proposed extensions in the issue tracker.
 - **Popup** helper notes use smaller secondary text beneath the controls.
   The reorder buttons in **Panel** and **Popup**, and the reload button in
   **Providers**, reveal their labels on keyboard focus as well as hover.
+  Truncated names and IDs in the **Providers** list reveal their full text on
+  keyboard focus as well as hover.
 - **Panel** starts with the preview, side-by-side Standard/Minimal choices, and
   provider meters. Text and controls keep their horizontal position as the page
   opens. **Additional information** contains the selected provider's
@@ -777,7 +779,9 @@ fixed provider in Diagnostics), it appears in the provider view instead. The
 card's **Generate insight** button creates the first insight; afterwards the
 wand button in its header refreshes it. The Overview refresh button still
 refreshes usage only. The card shows the summary with the provider, model, and
-the insight's age; **Show details** expands the highlights.
+the insight's age. Hover over that line when it is truncated to read its full
+text; **Show details** expands the highlights. The enable switch's helper note
+in settings aligns with its label, matching the other settings pages.
 
 - **Ollama** runs models on your computer. The default address is
   `http://localhost:11434` and needs no API key. Install a model first, for
