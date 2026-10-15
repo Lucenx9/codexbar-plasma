@@ -94,8 +94,11 @@ and implementable now**. It would need its own bounded decoder, user-selected
 SSH host, process lifecycle, availability/partial notices, and token-only
 presentation. It must not replace generic history totals, claim account-wide
 coverage, infer prices, persist request identities, or run SSH by default.
-That feature remains separate implementation work in TODO; this change does
-not add SSH settings or another history scan.
+The widget now consumes this contract through a separate, opt-in manual
+[identified-token section](../usage.md#identified-codex-token-subtotal).
+Ordinary cost scans remain separate. A follow-up official-binary probe also
+confirms that an unavailable local source omits `subtotal` from its failure
+envelope, rather than requiring explicit null.
 
 ## Reset-credit inventory
 

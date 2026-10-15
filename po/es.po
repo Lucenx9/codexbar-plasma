@@ -1730,6 +1730,7 @@ msgid "Diagnostic command timed out. Try again."
 msgstr ""
 "Se ha agotado el tiempo de espera del diagnóstico. Vuelva a intentarlo."
 
+#: contents/ui/components/IdentifiedTokensSection.qml
 #: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
 #: contents/ui/controllers/AccountsController.qml
 #: contents/ui/controllers/CostController.qml
@@ -3782,3 +3783,120 @@ msgstr "FLORA"
 #: contents/ui/components/ProviderNames.qml
 msgid "Parallel"
 msgstr "Parallel"
+
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "Loading identified tokens timed out. Try again."
+msgstr "Se agotó el tiempo de carga de los tokens identificados. Inténtelo de nuevo."
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "codexbar could not be started. Check its configured path."
+msgstr "No se pudo iniciar codexbar. Compruebe la ruta configurada."
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid ""
+"No selected source supplied identified Codex data. Check local history and "
+"SSH setup."
+msgstr "Ninguna fuente seleccionada proporcionó datos identificados de Codex. Compruebe el historial local y la configuración SSH."
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid ""
+"Could not load identified Codex data. Use codexbar 0.75.0 or later on each "
+"selected source."
+msgstr "No se pudieron cargar los datos identificados de Codex. Use codexbar 0.75.0 o posterior en cada fuente seleccionada."
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "Identified Codex tokens"
+msgstr "Tokens identificados de Codex"
+
+#: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
+msgid ""
+"Manual subtotal of identified requests only. No prices; this is not account-"
+"wide usage."
+msgstr "Subtotal manual solo de las solicitudes identificadas. Sin precios; no representa el uso total de la cuenta."
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "%1 across %2"
+msgstr "%1 en %2"
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "No identified subtotal loaded."
+msgstr "No se ha cargado ningún subtotal identificado."
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "UTC window: %1 to %2"
+msgstr "Intervalo UTC: de %1 a %2"
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "Last %1 UTC day"
+msgid_plural "Last %1 UTC days"
+msgstr[0] "Último %1 día UTC"
+msgstr[1] "Últimos %1 días UTC"
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "Source requested: this computer"
+msgstr "Fuente solicitada: este equipo"
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "Sources requested: this computer + SSH"
+msgstr "Fuentes solicitadas: este equipo + SSH"
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid ""
+"Local data is unavailable. This subtotal contains the available SSH data "
+"only."
+msgstr "Los datos locales no están disponibles. Este subtotal contiene solo los datos SSH disponibles."
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid ""
+"SSH data is unavailable. This subtotal contains the available local data "
+"only."
+msgstr "Los datos SSH no están disponibles. Este subtotal contiene solo los datos locales disponibles."
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "Some requests could not be included. This subtotal is partial."
+msgstr "Algunas solicitudes no se pudieron incluir. Este subtotal es parcial."
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "Conflicts: %1; excluded: %2"
+msgstr "Conflictos: %1; excluidas: %2"
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "Load local subtotal"
+msgstr "Cargar subtotal local"
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "Load local + SSH subtotal"
+msgstr "Cargar subtotal local + SSH"
+
+#: contents/ui/configGeneral.qml
+msgid "Show identified Codex token subtotal"
+msgstr "Mostrar el subtotal de tokens identificados de Codex"
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"Manual loads in Usage & Spend only. Requires codexbar 0.75.0 or later. "
+"Prices are unavailable; this is not account-wide usage."
+msgstr "Carga manual solo en Uso y gasto. Requiere codexbar 0.75.0 o posterior. Sin precios; no representa el uso total de la cuenta."
+
+#: contents/ui/configGeneral.qml
+msgid "Identified window:"
+msgstr "Intervalo identificado:"
+
+#: contents/ui/configGeneral.qml
+msgid "Optional SSH host:"
+msgstr "Host SSH opcional:"
+
+#: contents/ui/configGeneral.qml
+msgid "SSH alias or user@host"
+msgstr "Alias SSH o usuario@host"
+
+#: contents/ui/configGeneral.qml
+msgid "Enter one SSH alias or user@host without spaces or command options."
+msgstr "Introduzca un alias SSH o usuario@host sin espacios ni opciones de comando."
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"SSH runs only with the separate local + SSH button. Configure authentication "
+"and trusted host keys beforehand; no SSH prompts are shown."
+msgstr "SSH se ejecuta solo con el botón independiente local + SSH. Configure antes la autenticación y las claves de host de confianza; no se muestran solicitudes de SSH."

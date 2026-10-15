@@ -139,6 +139,16 @@ PlasmoidItem {
     property string providerConfigStamp: ""
     readonly property int maximumCostHistoryPoints: Normalizer.maximumCostHistoryPoints
     readonly property bool costLoading: costController.loading
+    readonly property bool identifiedTokensEnabled: Plasmoid.configuration.identifiedTokensEnabled === true
+    readonly property bool identifiedTokensLoading: identifiedTokensController.loading
+    readonly property bool identifiedTokensSshAvailable: identifiedTokensController.sshAvailable
+    readonly property int identifiedTokensHistoryDays: identifiedTokensController.historyDays
+    readonly property var identifiedTokensSnapshot: identifiedTokensController.snapshot
+    readonly property string identifiedTokensErrorKind: identifiedTokensController.errorKind
+
+    function loadIdentifiedTokens(includeRemote) {
+        return identifiedTokensController.request(includeRemote === true)
+    }
     readonly property var tokenCosts: presentTokenCosts(costController.costs)
     property var costTrustNoticeStates: ({})
     readonly property string costErrorText: costController.errorText
@@ -163,7 +173,7 @@ PlasmoidItem {
     readonly property var overviewProviderItems: overviewProviders()
     readonly property bool globalNavigationAvailable: provider.length === 0
     readonly property bool overviewAvailable: globalNavigationAvailable && providers.length > 1 && overviewProviderItems.length > 0
-    readonly property bool spendAvailable: globalNavigationAvailable && costUsageEnabled
+    readonly property bool spendAvailable: globalNavigationAvailable && (costUsageEnabled || identifiedTokensEnabled)
     readonly property bool sessionsAvailable: globalNavigationAvailable
     readonly property int selectedProviderIndex: providerIndexForID(selectedProviderID)
     readonly property bool globalViewSelected: selectionInitialized && selectedProviderID.length === 0
@@ -2100,6 +2110,14 @@ PlasmoidItem {
         historyPeriod: root.costHistoryPeriod
         costUsageEnabled: root.costUsageEnabled
         active: root.spendSelected && root.expanded
+    }
+
+    Controllers.IdentifiedTokensController {
+        id: identifiedTokensController
+        commandPath: root.commandPath
+        collectionEnabled: root.identifiedTokensEnabled
+        sshHost: Plasmoid.configuration.identifiedTokensSshHost || ""
+        historyDays: Math.max(1, Math.min(365, Number(Plasmoid.configuration.identifiedTokensHistoryDays) || 30))
     }
 
     Controllers.SessionsController {

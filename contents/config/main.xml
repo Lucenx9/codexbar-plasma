@@ -55,6 +55,20 @@
       <label>Load local usage and spend history.</label>
       <default>true</default>
     </entry>
+    <entry name="identifiedTokensEnabled" type="Bool">
+      <label>Show the manual identified Codex token subtotal.</label>
+      <default>false</default>
+    </entry>
+    <entry name="identifiedTokensSshHost" type="String">
+      <label>Optional SSH host for an explicitly requested identified subtotal.</label>
+      <default></default>
+    </entry>
+    <entry name="identifiedTokensHistoryDays" type="Int">
+      <label>Independent identified-token window in UTC days.</label>
+      <default>30</default>
+      <min>1</min>
+      <max>365</max>
+    </entry>
     <entry name="costHistoryDays" type="Int">
       <label>Local usage and spend history window in days.</label>
       <default>30</default>

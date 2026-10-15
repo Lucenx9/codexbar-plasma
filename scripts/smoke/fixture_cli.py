@@ -31,6 +31,7 @@ SCENARIOS += ("privacy-cost-details",)
 SCENARIOS += ("usage-retention", "usage-cache-restart")
 SCENARIOS += ("estimated-usage", "estimated-panel")
 SCENARIOS += ("subscription-dates",)
+SCENARIOS += ("identified-local", "identified-partial", "identified-ssh-failure", "identified-only")
 
 SCENARIOS += ("providers-0740",)
 SCENARIOS += ("empty-providers", "usage-error", "usage-recovery", "cli-missing")
@@ -180,6 +181,24 @@ def response(args, scenario, now):
                               "state": "active", "source": "desktopApp", "lastActivityAt": now.isoformat()},
                              {"provider": "claude", "projectName": "Another project",
                               "state": "idle", "source": "cli", "lastActivityAt": now.isoformat()}]}
+    if args[:3] == ["cost", "--provider", "codex"] and "--identified-only" in args:
+        end = int(args[args.index("--identified-end") + 1])
+        days = int(args[args.index("--days") + 1])
+        partial = scenario == "identified-partial"
+        ledger = dict(schemaVersion=1, provider="codex", startUnixMs=end - end % 86400000 - (days - 1) * 86400000,
+                      endUnixMs=end, records=[dict(id=key * 64, timestampUnixMs=end, inputTokens=tokens,
+                                                 outputTokens=10, cacheReadTokens=40, reasoningTokens=5)
+                                              for key, tokens in (("a", 100), ("b", 200))],
+                      conflictingIDs=["a" * 64] if partial else [], excludedCount=2 if partial else 0,
+                      partial=partial)
+        if scenario == "identified-ssh-failure":
+            assert args[args.index("--remote") + 1] == "build@host"
+            return dict(reports=[dict(host="local", ledger=ledger), dict(host="build@host", error="synthetic SSH failure")],
+                        subtotal=dict(kind="identified-request-subtotal", totalTokens=320, requestCount=2,
+                                      conflictCount=0, excludedCount=0, partial=False, costUSD=None),
+                        allSourcesAvailable=False, partial=True)
+        assert "--remote" not in args
+        return ledger
     # CLI 0.67.0 calendar periods: an English label and, for all history, the
     # days since year 1, as the official CLI reports them.
     if (args[:5] == ["cost", "--format", "json", "--json-only", "--period"]
@@ -315,6 +334,8 @@ def main():
         # kills the process group after capturing the loading/restored state.
         time.sleep(MAX_SCENARIO_TIMEOUT_SECONDS + 1)
     print(result if isinstance(result, str) else json.dumps(result))
+    if scenario == "identified-ssh-failure" and "--identified-only" in sys.argv:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

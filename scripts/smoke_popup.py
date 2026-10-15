@@ -118,6 +118,11 @@ def stage_applet(work, scenario, image_path, theme=None):
                 "autoUpdateEnabled": "false", "updateNotificationsEnabled": "false"}
     if scenario == "cli-missing":
         defaults["commandPath"] = str(work / "codexbar-not-installed")
+    if scenario.startswith("identified-"):
+        defaults.update(identifiedTokensEnabled="true", identifiedTokensSshHost="build@host",
+                        identifiedTokensHistoryDays="7")
+        if scenario == "identified-only":
+            defaults["costUsageEnabled"] = "false"
     if scenario.startswith("ai-insights"):
         defaults.update(aiInsightsEnabled="true", aiInsightsModel="fixture-model")
     for key, value in defaults.items():

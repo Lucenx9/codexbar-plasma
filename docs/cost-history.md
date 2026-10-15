@@ -141,6 +141,34 @@ Track [explicit cost availability](../TODO.md#cost-availability),
 [Cursor Linux cost](../TODO.md#cursor-cost), and
 [service-tier totals](../TODO.md#service-tier-totals) in TODO.
 
+## Identified-request subtotals
+
+The optional identified Codex section is a separate manual path, documented in
+the [usage guide](usage.md#identified-codex-token-subtotal). Its
+[pure decoder](../contents/ui/IdentifiedTokens.js) validates the exact requested
+UTC window, schema, safe integer counts, up to 50,000 records/conflict IDs per
+ledger, and the shared 4 MiB frontend JSON cap. This ceiling is deliberately
+stricter than the CLI's 32 MiB ledger transport limit; larger results are
+unavailable, never silently truncated. Duplicate ledger IDs and unsafe sums
+are rejected. Only aggregate counts leave the decoder.
+
+Successful local-only output is a ledger. Its subtotal sums input plus output
+for records outside `conflictingIDs`. With SSH, the CLI owns cross-source
+deduplication; the frontend validates the reports and bounds of its emitted
+subtotal. A single available source must match that source's aggregate.
+An exit-1 envelope can retain data when a source fails; an exit-0 partial
+subtotal can exclude requests. Availability and request completeness remain
+independent. With no available source, the CLI may omit `subtotal` rather than
+encode null. This was rechecked with the official 0.75.0 binary in an isolated
+missing-native-root fixture.
+
+No prices are inferred and no account-wide coverage is claimed. The
+[controller](../contents/ui/controllers/IdentifiedTokensController.qml) starts
+only on an explicit local or local + SSH action. Context changes, timeout and
+destruction retire requests without starting replacements. Ordinary history,
+provider totals, chart selection, sharing and AI Insights do not consume these
+results or start their scans.
+
 ## Pinned CLI evidence
 
 The focused [0.75.0 verification](research/2026-10-15-codex-contracts-0.75.0.md)
@@ -157,7 +185,7 @@ The scoped implementation used official CodexBar v0.56.8, commit
 `6ef82690b4a718a21fac42b72a102df07e475509`, and its
 [`CLICostCommand.swift`](https://github.com/steipete/CodexBar/blob/6ef82690b4a718a21fac42b72a102df07e475509/Sources/CodexBarCLI/CLICostCommand.swift).
 The existing daily model fields are `modelName`, `cost`, and `totalTokens`.
-This adds no command or provider-specific source and does not replace the full
+That scoped implementation added no command or provider-specific source and did not replace the full
 [0.56.2 parity baseline](research/2026-09-01-macos-parity-0.56.2.md).
 
 The incomplete-request counts were verified in official Linux 0.60.5 output;

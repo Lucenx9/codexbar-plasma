@@ -439,6 +439,53 @@ hour, including while the popup is closed, so provider cost summaries are ready.
 Opening Usage & Spend also refreshes stale history. Sessions are loaded only
 while their tab is open.
 
+### Identified Codex token subtotal
+
+![Synthetic identified-token subtotal retaining local data after an SSH failure](codexbar-plasma-identified-tokens.png)
+
+Enable **General → Usage history → Show identified Codex token subtotal** to
+add a separate section to the global **Usage & Spend** tab. It is off by
+default and requires official `codexbar` 0.75.0 or later on each selected
+computer. Choose its independent 1–365 day window in General. This window
+starts at midnight UTC and ends at the exact load time displayed in the result;
+it does not follow the cost chart's calendar periods or range selector.
+
+**Load local subtotal** scans only this computer, even when an SSH host is
+saved. To include another computer, enter one SSH alias or `user@host` in
+**Optional SSH host**, apply the settings, and choose **Load local + SSH
+subtotal**. The host accepts ASCII letters, digits and `._-@:%[]`, at most
+255 characters, with no leading `-`, spaces, or command options. The SSH button
+is available only for a valid host. Configure authentication and trusted host
+keys outside the widget first. The CLI uses batch SSH with strict host-key
+checking; the widget does not prompt for passwords or accept unknown host keys.
+
+Enabling the section, opening the popup, changing its settings, or refreshing
+ordinary cost history does not start an identified scan or SSH. Each load
+requires its own button. The section remains available when ordinary local
+usage and spend history is disabled. Selecting a single provider in General
+hides the global tabs, including Usage & Spend.
+
+The subtotal covers identified requests found in the selected native Codex
+histories, **not account-wide usage**. The CLI deduplicates shared identities
+across sources. Input includes cached input and output includes reasoning;
+these breakdowns are not added again. Prices are unavailable. The number is
+kept separate from cost totals, charts, sharing, AI Insights, and quota data.
+
+Unavailable local or SSH data leaves the other source's validated subtotal
+visible with a warning. Conflicting or excluded requests have a separate
+partial-data notice and counts, even when every source responded. An empty
+available history measures zero; unavailable data does not. The displayed UTC
+window identifies the snapshot, which changes only after another manual load.
+
+Results stay in memory until another load, a relevant setting change, or widget
+destruction. Request identities, raw ledgers, SSH errors and host labels are
+never included in the displayed or persisted result. The configured SSH host
+remains editable in General, including in privacy mode. Loads time out after
+120 seconds. Responses above the frontend's 4 MiB JSON limit or outside its
+supported schema/count bounds are rejected, without truncating a subtotal.
+Real SSH authentication and connectivity remain untested; regression checks
+use synthetic subprocess transport.
+
 ### Share usage
 
 ![Synthetic aggregate usage card with repository attribution](codexbar-plasma-share.png)

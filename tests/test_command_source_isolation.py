@@ -23,6 +23,7 @@ TestCase {
         case "WidgetUpdateController": return subject.availableVersion;
         case "UsageController": return observed.items.length ? observed.items[0].version : "";
         case "CostController": return subject.costs.codex ? subject.costs.codex.historyLabel : "";
+        case "IdentifiedTokensController": return subject.snapshot ? "0.62." + subject.snapshot.totalTokens : "";
         case "SessionsController": return subject.sessions.length ? subject.sessions[0].projectName : "";
         case "ProviderRosterController": return subject.enabledProviderRoster.length ? subject.enabledProviderRoster[0].displayName : "";
         default: return subject.result.version;
@@ -36,6 +37,7 @@ TestCase {
             {tag: "widget", controller: "WidgetUpdateController", options: {}, start: "runNow"},
             {tag: "usage", controller: "UsageController", options: {provider: "codex", refreshIntervalSec: 0}, start: "refresh", loading: "loading"},
             {tag: "cost", controller: "CostController", options: {}, start: "refresh", argument: true, loading: "loading"},
+            {tag: "identified", controller: "IdentifiedTokensController", options: {collectionEnabled: true}, start: "request", argument: false, loading: "loading"},
             {tag: "sessions", controller: "SessionsController", options: {active: true}, start: "refresh", loading: "loading"},
             {tag: "roster", controller: "ProviderRosterController", options: {}, loading: "providerRosterLoading"}
         ];
@@ -95,6 +97,13 @@ elif "--action" in sys.argv:
                   path="/home/test/.local/share/codexbar-plasma/cli/current/codexbar")
 elif "usage" in sys.argv:
     result = dict(provider="codex", version=version, usage=dict(primary=dict(usedPercent=0)))
+elif "--identified-only" in sys.argv:
+    end = int(sys.argv[sys.argv.index("--identified-end") + 1])
+    days = int(sys.argv[sys.argv.index("--days") + 1])
+    result = dict(schemaVersion=1, provider="codex", startUnixMs=end - end % 86400000 - (days - 1) * 86400000,
+                  endUnixMs=end, records=[dict(id="a" * 64, timestampUnixMs=end, inputTokens=number,
+                                             outputTokens=0, cacheReadTokens=0)],
+                  conflictingIDs=[], excludedCount=0, partial=False)
 elif "cost" in sys.argv:
     result = [dict(provider="codex", historyLabel=version, totals=dict(totalCost=number))]
 elif "sessions" in sys.argv:
@@ -113,7 +122,7 @@ class CommandSourceIsolationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="codexbar-request-isolation-") as directory:
             path = Path(directory)
             for name in ("local-versions", "release-checks", "managed-cli", "widget",
-                         "usage", "cost", "sessions", "roster"):
+                         "usage", "cost", "identified", "sessions", "roster"):
                 helper = path / name
                 helper.write_text(HELPER)
                 helper.chmod(0o700)

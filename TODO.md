@@ -98,20 +98,6 @@ Issues linked below preserve discussion; this file owns parity status.
   Later probes verify only their named cases. Older blockers below retain their
   last verified version; source inspection is not authenticated output evidence.
 
-## Implementable on Linux
-
-- [ ] Add an optional identified-request Codex token subtotal, separately from
-  generic cost history. Official Linux 0.75.0 verifies local ledgers, cross-source
-  strong-identity deduplication, conflicting/excluded requests, and retained
-  subtotals when local or remote collection fails. Prices are explicitly null;
-  partial results can exit 0, while an unavailable source exits 1 with useful
-  remaining data. Done when an explicit opt-in, bounded decoder and SSH host
-  input preserve those availability semantics, never claim account-wide usage,
-  never persist request identities, and leave existing cost scans unchanged.
-  Do not run SSH by default or infer prices. Real SSH authentication/connectivity
-  remains untested; the transport probe used a controlled subprocess fixture.
-  [Evidence](docs/research/2026-10-15-codex-contracts-0.75.0.md#identified-local-and-remote-requests).
-
 ## Blocked on official Linux CLI contracts
 
 These are useful Linux features once the named contract exists. Do not fill

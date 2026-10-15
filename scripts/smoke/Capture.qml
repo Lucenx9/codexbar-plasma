@@ -13,6 +13,7 @@ Item {
     required property string imagePath
     property int subscriptionDatesStep: 0
     property bool prepared: false
+    property bool identifiedRequested: false
     property bool navigationVerified: false
     property var navigationTooltip: null
     property bool navigationTooltipVerified: false
@@ -1245,6 +1246,34 @@ Item {
     }
 
     function scenarioReady() {
+        if (scenario.indexOf("identified-") === 0) {
+            var popup = applet.fullRepresentationItem;
+            if (!identifiedRequested) {
+                var button = findItem(popup, scenario === "identified-ssh-failure" ? "identifiedSshButton" : "identifiedLocalButton");
+                if (!button || !button.visible || applet.costLoading) return false;
+                verifyScenario(applet.identifiedTokensSnapshot === null && !applet.identifiedTokensLoading,
+                    "identified collection started without a manual action");
+                costSnapshot = JSON.stringify(applet.tokenCosts);
+                button.clicked();
+                identifiedRequested = true;
+                return false;
+            }
+            if (applet.identifiedTokensLoading || !applet.identifiedTokensSnapshot) return false;
+            var value = applet.identifiedTokensSnapshot;
+            verifyScenario(value.totalTokens === (scenario === "identified-partial" ? 210 : 320), "wrong identified subtotal");
+            verifyScenario(value.allSourcesAvailable === (scenario !== "identified-ssh-failure"), "wrong identified availability");
+            verifyScenario(value.requestsPartial === (scenario === "identified-partial"), "wrong identified request quality");
+            verifyScenario(JSON.stringify(applet.tokenCosts) === costSnapshot && !applet.costLoading, "identified scan changed generic costs");
+            verifyScenario(!/records|reports|build@host|costUSD/.test(JSON.stringify(value)), "identified result leaked wire data");
+            verifyScenario(hasVisibleText(popup, i18n("Manual subtotal of identified requests only. No prices; this is not account-wide usage.")),
+                "identified scope caption is missing");
+            var section = findItem(popup, "identifiedTokensSection");
+            verifyScenario(section !== null && section.mapToItem(popup, 0, 0).y < 200,
+                "identified section must stay near the top when generic costs are disabled");
+            if (scenario === "identified-only")
+                verifyScenario(applet.spendAvailable && Object.keys(applet.tokenCosts).length === 0, "identified-only view started generic costs");
+            return true;
+        }
         if (scenario === "providers-0740") {
             var page = providerSettingsPage;
             if (!page || page.loading || page.providers.length !== 11) return false;
@@ -2158,7 +2187,11 @@ Item {
                         && !(capture.scenario === "usage-cache-restart" && capture.cacheRestart)
                         && (capture.applet.loading || capture.applet.providers.length !== capture.expectedProviderCount))
                     return;
-                if (capture.scenario.indexOf("share-usage") === 0) {
+                if (capture.scenario.indexOf("identified-") === 0) {
+                    popup.Window.window.width = 640;
+                    popup.Window.window.height = 700;
+                    capture.applet.selectGlobalView("spend");
+                } else if (capture.scenario.indexOf("share-usage") === 0) {
                     if (capture.applet.costLoading || capture.applet.spendProviderCosts().length === 0)
                         return;
                     capture.applet.selectGlobalView("spend");
