@@ -8,13 +8,19 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.75.0](https://github.com/steipete/CodexBar/releases/tag/v0.75.0),
-  commit `4668969c8507d75e2f173b72a742c92f97e60344`, checked 2026-10-15.
-- Coverage: the [0.75.0 review](docs/research/2026-10-15-macos-parity-0.75.0.md)
-  against Plasma `ca9f586` verifies the 103-provider registry, Command Code/fal
-  API-key setup, FLORA's missing workspace writer, Parallel's cookie-only setup,
-  identified-cost failure semantics, and unchanged carried blockers. Positive
-  throughput and billing output remain unverified. The focused
+- Last release reviewed: [CodexBar 0.76.0](https://github.com/steipete/CodexBar/releases/tag/v0.76.0),
+  commit `2d8b1409a1649dce60f3610ebe4eab52b92545de`, checked 2026-10-15.
+- Coverage: the [0.76.0 review](docs/research/2026-10-15-macos-parity-0.76.0.md)
+  against Plasma `8554f93` verifies the 104-provider registry, Claude Platform's
+  blocked Linux cookie setup, stable concurrent usage order, fast-probe output,
+  the new notice archive member, and unchanged carried blockers. The managed
+  installer compatibility fix is tracked in
+  [PR #524](https://github.com/Lucenx9/codexbar-plasma/pull/524); authenticated
+  Claude Platform and Claude OAuth identity output remain unverified. The
+  [0.75.0 review](docs/research/2026-10-15-macos-parity-0.75.0.md) verifies
+  Command Code/fal API-key setup, FLORA's missing workspace writer, Parallel's
+  cookie-only setup, identified-cost failure semantics, and source-only
+  throughput. The focused
   [Codex contract verification](docs/research/2026-10-15-codex-contracts-0.75.0.md)
   against Plasma `bcd777b` verifies native mixed/unpriced costs, identified
   local/remote deduplication and failure output, and usable reset-credit
@@ -113,8 +119,8 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   [Evidence](docs/research/2026-10-15-macos-parity-0.75.0.md#linux-cli-contract-changes).
 
 - [ ] Enable generic settings and token-account editing through official
-  descriptors and writes. Linux 0.75.0 still rejects `config providers
-  --descriptors` (103 records, same four keys); its provider records have no
+  descriptors and writes. Linux 0.76.0 still rejects `config providers
+  --descriptors` (104 records, same four keys); its provider records have no
   descriptor. Helmcode and TypeSafe make this concrete: both are cookie-only,
   both refuse `--source api`, and their documented `cookieSource`/`cookieHeader`
   config path has no supported writer, so they stay metadata-only on Linux.
@@ -138,6 +144,10 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   usage attempts `claude.ai` instead of reporting no available strategy
   (verified 0.69.0 vs 0.72.0); browser import stays macOS-only and no writer
   exists for the cookie fields, so setup stays blocked.
+  0.76.0 adds Claude Platform with the same browser/manual-cookie boundary:
+  its descriptor accepts a manual `Cookie` header containing `sessionKey`, but
+  Auto/Web usage is macOS-only through supported configuration, API-key setup
+  is refused, and no writer exists for the cookie fields.
   0.74.0 adds Exa's API key ID (`EXA_API_KEY_ID`) and Cosmic AI's project ID
   (`COSMIC_PROJECT_ID`): both providers store a key, then refuse to fetch
   until that environment-only field is set, and `--workspace-id` is refused.
@@ -162,7 +172,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.75.0 still has no
+  flow, CLI-auth setup, and token-account actions. Linux 0.76.0 still has no
   generic `config action` command (`set-api-key` and `set-source` are field
   writers; the `usage_updated` hook event is CLI automation surface, not a setup
   action). Done when supported actions expose validated
@@ -197,7 +207,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Cursor cost
 
 - [ ] Show Cursor cost history through the generic Linux `cost` path. Linux
-  0.75.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
+  0.76.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
   Code, and Pi as supported; the 0.74.0 `cursor-agent` login (#4397) changes
   usage authentication only;
   the descriptor gate keeps the new cookie-source availability errors unreachable.
@@ -254,7 +264,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 - [ ] Offer display-currency selection and conversion through an official Linux
   contract. The 0.56.2 audit records no display-currency setter or descriptor;
   the scoped 0.57.0, 0.58.0, 0.60.4, 0.67.0, 0.69.0, 0.72.0, 0.73.0,
-  0.74.0, 0.74.1, and 0.75.0 config probes expose neither,
+  0.74.0, 0.74.1, 0.75.0, and 0.76.0 config probes expose neither,
   although macOS 0.67.0 adds twelve spend-estimate currencies. Plasma currently
   displays the CLI-emitted currency. Done when released settings and converted
   amounts define currency, rate provenance, and unavailable-conversion behavior,
@@ -275,6 +285,10 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
   0.66.0 Atlas Cloud and Vercel AI Gateway plugins likewise report USD balances
   only as `details` row text, as do the 0.74.0 Linkup, Sail Research, Sofya,
   Exa, and Ollama API-key credit rows (source-observed).
+  The 0.76.0 Claude Platform source adds a typed `providerCost` prepaid balance,
+  but authenticated Linux output is unverified and Plasma currently discards
+  its explicit `balance` field. Do not infer balance semantics from its period
+  text.
   Done when the widget can display
   that record without parsing provider text,
   overriding a real quota, or treating a balance as an allowance.
@@ -284,6 +298,16 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ## Verify before accepting implementation work
 
 These are unresolved Linux candidates, not confirmed missing features.
+
+- [ ] Verify authenticated Claude Platform output from an official Linux CLI
+  once a supported cookie writer/action exists. Confirm primary API credits,
+  purchased-credit and grant-expiry lanes, reset descriptions, billing details,
+  organization identity, and `providerCost` balance/current-spend semantics.
+  Plasma already consumes most generic fields, but it must not parse period
+  prose or treat a prepaid balance as an allowance. Done when emitted output
+  establishes whether the existing generic presentation is sufficient and any
+  remaining balance contract is explicit.
+  [Review](docs/research/2026-10-15-macos-parity-0.76.0.md).
 
 - [ ] Verify 0.75.0 OpenAI `usage.throughput` output, minute/model buckets,
   delayed and pending minutes, and per-credential manual rate-limit contracts.
@@ -426,8 +450,11 @@ These are unresolved Linux candidates, not confirmed missing features.
   quota restoration are implemented; account identity and credential recovery
   cases still need the named official CLI probes. At 0.60.4 the token-account
   label helper preserves `accountID`, but the Claude usage payload still carries
-  no account email (`usage.identity` holds only `providerID`), so the frontend
-  cannot show a Claude account email.
+  no account email (`usage.identity` holds only `providerID`). The 0.76.0
+  release says Claude OAuth accounts now include email, and Plasma already
+  consumes `usage.identity.accountEmail`, but no authenticated Linux record was
+  observed. Verify the emitted shape and multi-account behavior before closing
+  this candidate.
   [Release coverage](docs/research/2026-09-09-macos-parity-0.57.0.md#release-coverage).
 - [ ] Evaluate the weekly reserve indicator against a pinned macOS behavior and
   an official Linux field. Record accept/reject and, if accepted, a concrete
