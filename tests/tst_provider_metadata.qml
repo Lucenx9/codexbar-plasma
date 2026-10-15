@@ -4,6 +4,28 @@ import "../contents/ui/ProviderIdentity.js" as ProviderIdentity
 
 TestCase {
     name: "ProviderMetadata"
+    function test_official076ClaudePlatformMetadata_data() {
+        return [
+            {tag: "canonical", provider: "claudeplatform"},
+            {tag: "uppercase", provider: "CLAUDEPLATFORM"},
+            {tag: "alias", provider: "claude-platform"},
+            {tag: "uppercase-alias", provider: "CLAUDE-PLATFORM"}
+        ];
+    }
+    function test_official076ClaudePlatformMetadata(data) {
+        compare(ProviderIdentity.resolveProviderKey(data.provider), "claudeplatform");
+        compare(ProviderIdentity.providerCliArgument(data.provider), "claudeplatform");
+        compare(ProviderIdentity.providerBrandColorChannels(data.provider),
+            [204 / 255, 124 / 255, 94 / 255]);
+        compare(ProviderIdentity.providerDashboardUrl(data.provider),
+            "https://platform.claude.com/settings/billing");
+        compare(ProviderIdentity.providerLoginUrl(data.provider), "https://platform.claude.com/");
+        compare(ProviderIdentity.providerStatusUrl(data.provider), "https://status.claude.com/");
+        compare(ProviderIdentity.providerDocsUrl(data.provider),
+            "https://github.com/steipete/CodexBar/blob/main/docs/claudeplatform.md");
+        compare(ProviderIdentity.providerIconFileName(data.provider), "claude.svg");
+    }
+
     function test_official074ProviderMetadata_data() {
         return [
             {tag: "tavily", provider: "tavily", color: [120 / 255, 176 / 255, 161 / 255], dashboard: "https://app.tavily.com"},

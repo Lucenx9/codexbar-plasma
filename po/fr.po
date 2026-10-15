@@ -794,6 +794,10 @@ msgid "Claude"
 msgstr "Claude"
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Claude Platform"
+msgstr "Claude Platform"
+
+#: contents/ui/components/ProviderNames.qml
 msgid "ClawRouter"
 msgstr "ClawRouter"
 

@@ -414,7 +414,7 @@ Provider-specific editable settings depend on the official CLI contract.
   docs/dashboard/login links.
 - The widget also has a renderer for the proposed
   [provider settings descriptor](cli-provider-settings-descriptor.md).
-  Scoped checks through CLI 0.75.0 still find no descriptors, so cookie, base
+  Scoped checks through CLI 0.76.0 still find no descriptors, so cookie, base
   URL, workspace/project, region, and other descriptor-backed editors remain
   unavailable. CLI 0.73.0 separately supports persistent source writes through
   `codexbar config set-source --provider <id> --source <mode>`; `auto` clears
@@ -442,8 +442,13 @@ Provider-specific editable settings depend on the official CLI contract.
   fal needs a key with billing read access. FLORA and Parallel have metadata
   and links, but no key setup action. FLORA also needs a workspace ID with no
   supported Linux writer, and Parallel needs an unavailable cookie setup action.
-- Fallback names, icons, and documentation links for all 103 providers in the
-  official CodexBar 0.75.0 registry, plus colors, links, and aliases where
+- Claude Platform has its own fallback name, the shared Claude icon and brand
+  color, and Console billing, login, status and documentation links. Its
+  `claude-platform` alias resolves to `claudeplatform`, separately from Claude.
+  CLI 0.76.0 has no supported Linux cookie setup action for it; opening the
+  login page does not configure CLI authentication.
+- Fallback names, icons, and documentation links for all 104 providers in the
+  official CodexBar 0.76.0 registry, plus colors, links, and aliases where
   upstream defines them; fork-only provider assets, and those for providers a
   later CLI retired, remain available for compatibility.
   Providers without bundled artwork use the theme's generic statistics icon
