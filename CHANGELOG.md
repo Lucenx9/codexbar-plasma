@@ -10,9 +10,11 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.48 - 2026-10-15
+
 ### Added
 
-- Add fallback names, original provider icons, colors, and links for Parallel,
+- Add fallback names, provider icons, colors, and links for Parallel,
   fal, and FLORA from CodexBar 0.75.0. Offer secure single API-key setup for
   Command Code and fal with CLI 0.75.0 or later; keep incomplete FLORA and
   unsupported Parallel key setup hidden.
@@ -70,6 +72,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Keep hidden popup row and detail-section choices when long provider IDs
   require JSON escaping. A valid saved list could previously exceed the read
   limit and make every saved choice disappear.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.47...v0.2.48)
 
 ## 0.2.47 - 2026-10-11
 
