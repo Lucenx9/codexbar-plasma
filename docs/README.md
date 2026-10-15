@@ -133,6 +133,10 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   103-provider registry, Command Code/fal API-key reachability, FLORA workspace
   and Parallel cookie blockers, identified-cost failure semantics, source-only
   throughput changes, and bubblewrap-isolated carried-blocker checks.
+- [0.76.0 release review](research/2026-10-15-macos-parity-0.76.0.md): the
+  104-provider registry and Claude Platform's blocked Linux cookie setup,
+  stable concurrent usage order, notice-archive compatibility, fast-probe
+  verification, and carried blockers rechecked with the isolated official CLI.
 - [0.75.0 Codex contract verification](research/2026-10-15-codex-contracts-0.75.0.md):
   synthetic native partial-priced cost output, identified-request local/remote
   merge and failure semantics, authoritative reset-credit inventory, and the
