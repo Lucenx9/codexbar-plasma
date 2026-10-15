@@ -23,6 +23,7 @@ from . import cli_release
 
 MAX_ARCHIVE = 160 * 1024 * 1024
 MAX_EXPANDED = 600 * 1024 * 1024
+MAX_NOTICE = 16 * 1024 * 1024
 RELEASE_DIRECTORY = re.compile(r"releases/v" + cli_release.VERSION + r"-[a-f0-9]{16}")
 DOWNLOAD_PREFIX = "https://github.com/steipete/CodexBar/releases/download/"
 # A refused download and an unreachable server need different answers, so the
@@ -255,7 +256,7 @@ class ExpandedArchive:
 
 
 def unpack(archive, destination):
-    """Allow only the official executable, alias, VERSION and flat resource bundle."""
+    """Allow only the official executable, alias, metadata and flat resource bundle."""
     seen = set()
     expanded = 0
     with gzip.open(archive, "rb") as compressed, \
@@ -267,16 +268,18 @@ def unpack(archive, destination):
                 raise ValueError("archive_name")
             seen.add(name)
             is_resource = re.fullmatch(r"CodexBar_CodexBarCore\.bundle/[A-Za-z0-9_.-]+", name) is not None
+            is_notice = name == "THIRD_PARTY_NOTICES"
             if name == "codexbar" and member.issym() and member.linkname == "CodexBarCLI":
                 continue  # Create this single known alias ourselves after extraction.
             if name == "CodexBar_CodexBarCore.bundle" and member.isdir():
                 (destination / name).mkdir(exist_ok=True)
                 continue
-            if not member.isfile() or not (name in ("CodexBarCLI", "VERSION") or is_resource):
+            if not member.isfile() or not (name in ("CodexBarCLI", "VERSION") or is_notice or is_resource):
                 raise ValueError("archive_type")
             expanded += member.size
             if expanded > MAX_EXPANDED or member.size < 0 \
                     or (name == "VERSION" and member.size > 128) \
+                    or (is_notice and member.size > MAX_NOTICE) \
                     or (is_resource and member.size > 16 * 1024 * 1024):
                 raise ValueError("archive_size")
             target = destination / name

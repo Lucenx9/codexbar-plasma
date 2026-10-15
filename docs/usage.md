@@ -842,10 +842,12 @@ automatic updates. No package-manager command or privilege prompt is used.
 Downloads select the official x86_64 or aarch64 asset for the running glibc or
 musl environment. Unknown environments fail without changing the active copy.
 Both the GitHub asset SHA-256 digest and published checksum must match; only
-expected archive entries are accepted. A staged `--version` probe must report
-the requested stable version before an atomic symlink switch. Unlike widget
-releases, official CLI 0.62.0 releases are not marked immutable, so CLI downloads
-use pinned tag/asset URLs and digest verification without requiring that flag.
+expected archive entries are accepted. The optional third-party notice must be
+an exact, bounded regular file and is stored without execute permissions. A
+staged `--version` probe must report the requested stable version before an
+atomic symlink switch. Unlike widget releases, official CLI 0.62.0 releases are
+not marked immutable, so CLI downloads use pinned tag/asset URLs and digest
+verification without requiring that flag.
 A download, extraction or compatibility failure leaves the active copy available.
 The status names which kind of failure occurred: a refused download that failed
 verification, an unreachable release server, or a system with no official build.

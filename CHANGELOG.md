@@ -18,6 +18,12 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   Requires official CLI 0.75.0 or later and GNU `timeout`, bounds the command's
   process group independently of the frontend deadline, and remains off by default.
 
+### Fixed
+
+- Accept the bounded third-party notice file shipped in official CLI 0.76.0
+  archives, so managed updates can install the release without weakening the
+  archive allowlist, checksum checks, or staged version probe.
+
 ## 0.2.48 - 2026-10-15
 
 ### Added
