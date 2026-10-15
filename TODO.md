@@ -14,7 +14,12 @@ Issues linked below preserve discussion; this file owns parity status.
   against Plasma `ca9f586` verifies the 103-provider registry, Command Code/fal
   API-key setup, FLORA's missing workspace writer, Parallel's cookie-only setup,
   identified-cost failure semantics, and unchanged carried blockers. Positive
-  throughput, billing, and identified-history output remain unverified.
+  throughput and billing output remain unverified. The focused
+  [Codex contract verification](docs/research/2026-10-15-codex-contracts-0.75.0.md)
+  against Plasma `bcd777b` verifies native mixed/unpriced costs, identified
+  local/remote deduplication and failure output, and usable reset-credit
+  inventory. Seeded historical scanner state also verifies known-model partial
+  subtotals; imported incomplete model rows remain unverified.
 - Previous coverage: the 0.74.1 release delta against Plasma `abe8f7d`. The
   [0.74.1 review](docs/research/2026-10-14-macos-parity-0.74.1.md) verifies
   unchanged registry/help and empty envelopes, rechecks descriptor/action,
@@ -92,6 +97,20 @@ Issues linked below preserve discussion; this file owns parity status.
 - Full CLI baseline remains the [0.56.2 audit](docs/research/2026-09-01-macos-parity-0.56.2.md).
   Later probes verify only their named cases. Older blockers below retain their
   last verified version; source inspection is not authenticated output evidence.
+
+## Implementable on Linux
+
+- [ ] Add an optional identified-request Codex token subtotal, separately from
+  generic cost history. Official Linux 0.75.0 verifies local ledgers, cross-source
+  strong-identity deduplication, conflicting/excluded requests, and retained
+  subtotals when local or remote collection fails. Prices are explicitly null;
+  partial results can exit 0, while an unavailable source exits 1 with useful
+  remaining data. Done when an explicit opt-in, bounded decoder and SSH host
+  input preserve those availability semantics, never claim account-wide usage,
+  never persist request identities, and leave existing cost scans unchanged.
+  Do not run SSH by default or infer prices. Real SSH authentication/connectivity
+  remains untested; the transport probe used a controlled subprocess fixture.
+  [Evidence](docs/research/2026-10-15-codex-contracts-0.75.0.md#identified-local-and-remote-requests).
 
 ## Blocked on official Linux CLI contracts
 
@@ -292,29 +311,16 @@ These are unresolved Linux candidates, not confirmed missing features.
   Done when official output supports a bounded Plasma design or establishes
   the exact missing CLI contract.
   [Review](docs/research/2026-10-15-macos-parity-0.75.0.md).
-- [ ] Verify 0.75.0 identified-request local/SSH subtotals with synthetic
-  history, strong-identity deduplication, unavailable prices, and partial remote
-  failures. Empty native history exits 1 with explicit partial/unavailable
-  reports. Decide useful Plasma scope only after positive output verification;
-  preserve the current generic cost path.
-  [Review](docs/research/2026-10-15-macos-parity-0.75.0.md).
-
-- [ ] Verify the 0.73.0 top-level `resetCredits` usage record on Linux. Source
-  adds Codex `available` and optional `nextExpiresAt` projected from live
-  inventory, while Plasma reads `usage.codexResetCredits.availableCount`.
-  Empty Pi usage has neither field. Reproduce nonzero, zero, and expired
-  inventory in an isolated official CLI before deciding how to normalize the
-  new shape and preserve legacy fallback. Private `codexbar-linux --snapshot`
-  fields belong to the separate desktop app and are not evidence for standard
-  `usage` output. The payload source is unchanged through 0.74.1.
-  [Source and limits](docs/research/2026-10-07-macos-parity-0.73.0.md#unverified-in-this-review).
-- [ ] Verify 0.73.0 partial-priced Codex daily/model output and imported
-  incomplete model rows (#4273, #4278, #4279, #4299) against Plasma's cost trust
-  and sharing rules. Empty cost envelopes are unchanged; they cannot establish
-  how priced subtotals and request counts survive mixed unpriced requests.
-  Use synthetic recorded history with known and unknown pricing, then accept
-  a frontend change only for a demonstrated mismatch; keep pricing in the CLI.
-  [Review limits](docs/research/2026-10-07-macos-parity-0.73.0.md#unverified-in-this-review).
+- [ ] Verify imported incomplete model rows (#4299) against Plasma's cost trust
+  and sharing rules. Linux 0.75.0 synthetic native history verifies mixed
+  priced/unknown-model subtotals, fully unpriced amounts, token preservation,
+  coverage and privacy-safe sharing; seeded historical scanner state also
+  verifies known-model partial subtotals (#4273, #4278, #4279). Those shapes
+  need no fix. Imported incomplete rows remain unverified: import depends on
+  an application preference with no established supported Linux writer.
+  Do not treat its source as emitted output or add config/cache manipulation to QML. Accept a
+  frontend change only for a demonstrated mismatch; keep pricing in the CLI.
+  [Verified scope and limits](docs/research/2026-10-15-codex-contracts-0.75.0.md#partial-priced-native-history).
 - [ ] Adopt `qmlformat` once it can format this tree readably. Measured at
   6.11.2 on 2026-09-23. With wrapping disabled, its default, it joins wrapped
   expressions into lines up to 2570 characters. Any `MaxColumnWidth` rewraps by

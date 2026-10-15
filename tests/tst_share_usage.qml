@@ -14,6 +14,73 @@ TestCase {
             models: [{ label: "model", tokens: tokens, cost: value, currency: currency }] }
     }
 
+    // Reduced from checksum-verified official Linux 0.75.0 output using
+    // synthetic native Codex history. Unpriced tokens survive every view.
+    function test_official075PartialPricingPreservesTotalsAndSharing_data() {
+        return [{tag: "mixed", priced: true}, {tag: "all-unpriced", priced: false}]
+    }
+    function test_official075PartialPricingPreservesTotalsAndSharing(data) {
+        var models = [{modelName: "gpt-5-synthetic-unpriced", totalTokens: 110}]
+        var totalTokens = data.priced ? 220 : 110
+        var coverage = {priced: data.priced ? 1 : 0, unpriced: 1, estimated: 0, unmetered: 0}
+        var totals = {totalTokens: totalTokens, coverage: coverage}
+        var day = {date: "2026-10-15", totalTokens: totalTokens, modelBreakdowns: models}
+        if (data.priced) {
+            models.push({modelName: "gpt-5", totalTokens: 110, cost: 0.000225})
+            totals.totalCost = 0.000225
+            day.totalCost = 0.000225
+        }
+        var item = {provider: "codex", historyDays: 7, reportingPeriod: "rolling:7",
+            currencyCode: "USD", updatedAt: "2026-10-15T08:52:08Z",
+            historyCoverageIsEstablished: true, coverage: coverage,
+            provenance: data.priced ? "listPriceEstimate" : "unknown", totals: totals, daily: [day]}
+        var normalized = CostResponse.response(JSON.stringify([item]), "", 7).costs.codex
+        compare(normalized.totals.tokens, totalTokens)
+        compare(normalized.totals.cost, data.priced ? 0.000225 : null)
+        compare(normalized.trust.coverage.unpriced, 1)
+        var unpriced = normalized.models.find(function(row) { return row.label === "gpt-5-synthetic-unpriced" })
+        compare(unpriced.tokens, 110)
+        compare(unpriced.cost, null)
+        var measuredDay = normalized.daily.find(function(row) { return row.label === "2026-10-15" })
+        compare(measuredDay.tokens, totalTokens)
+        compare(measuredDay.cost, data.priced ? 0.000225 : null)
+        for (var snapshot of [normalized, Privacy.cost(normalized, true)]) {
+            var shared = ShareUsage.snapshot([snapshot], 7, "", false)
+            compare(shared.tokens, totalTokens)
+            compare(shared.currencies, data.priced ? [{currency: "USD", cost: 0.000225}] : [])
+            verify(shared.partial)
+        }
+    }
+
+    function test_official075HistoricalPricingKeepsSameModelSubtotal() {
+        // Three native gpt-5 requests, one marked without retained historical
+        // pricing in an isolated scanner cache, still carry all 330 tokens.
+        var coverage = {priced: 2, unpriced: 1, unmetered: 0, estimated: 0}
+        var item = {provider: "codex", historyDays: 7, currencyCode: "USD",
+            updatedAt: "2026-10-15T08:52:08Z", historyCoverageIsEstablished: true,
+            coverage: coverage, provenance: "listPriceEstimate",
+            totals: {totalTokens: 330, totalCost: 0.00045, coverage: coverage},
+            daily: [{date: "2026-10-15", totalTokens: 330, totalCost: 0.00045,
+                modelBreakdowns: [{modelName: "gpt-5", totalTokens: 330, cost: 0.00045}]}]}
+        var normalized = CostResponse.response(JSON.stringify([item]), "", 7).costs.codex
+        compare(normalized.valueMode, "partial")
+        compare(normalized.models[0].tokens, 330)
+        compare(normalized.models[0].cost, 0.00045)
+        for (var snapshot of [normalized, Privacy.cost(normalized, true)]) {
+            // The owning QML adapter supplies anonymous localized model labels
+            // after privacy removes the original names.
+            snapshot.tokenRanking.rows.forEach(function(row, index) {
+                if (!row.label) row.label = "Model " + (index + 1)
+            })
+            var shared = ShareUsage.snapshot([snapshot], 7, "", false)
+            compare(shared.tokens, 330)
+            compare(shared.currencies, [{currency: "USD", cost: 0.00045}])
+            compare(shared.models[0].tokens, 330)
+            compare(shared.models[0].cost, 0.00045)
+            verify(shared.partial)
+        }
+    }
+
     function test_separateCurrenciesAndUnknownValues() {
         var data = ShareUsage.snapshot([cost("codex", 100, 2, "USD"), cost("claude", 50, 3, "EUR"),
             cost("muse", 20, null, "USD"), cost("pi", null, 0, "USD")], 30, "2026-09-22T12:00:00Z", false)
