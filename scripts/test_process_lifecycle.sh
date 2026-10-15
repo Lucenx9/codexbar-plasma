@@ -695,13 +695,6 @@ if 'printf \'%s\' \\"$value\\" | " + boundedCommandLine' not in providers.functi
 set_api_key_result_body = providers.function_body("handleSetApiKeyResult")
 if "markPending(descriptor.provider, false)" not in set_api_key_result_body:
     raise AssertionError("set-api-key timeout cleanup is incomplete: markPending(descriptor.provider, false)")
-if "ProviderConfigProtocol.commandOutcome(" not in set_api_key_result_body:
-    raise AssertionError(
-        "set-api-key results must classify through ProviderConfigProtocol.commandOutcome"
-    )
-if "ProviderConfigProtocol.setApiKeyOutcomeIsSuccess(result)" not in set_api_key_result_body:
-    raise AssertionError("set-api-key results must use the tested empty-output decision")
-
 # Timeout recognition is covered behaviorally by tst_provider_config_protocol;
 # the page owns only the localized wording and pending-state cleanup.
 require_all(

@@ -22,6 +22,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Bound and redact provider settings JSON parsing errors through the shared
+  reply protocol, preserving list, write, and diagnostic compatibility.
 - Preserve the last notified quota threshold across estimated or unknown-confidence
   usage, so unchanged measured usage does not repeat a quota warning.
 - Qualify CLI-estimated usage percentages in the panel and popup, preserving

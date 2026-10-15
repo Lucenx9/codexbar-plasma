@@ -313,6 +313,15 @@ synchronized.
 - `contents/ui/configProviders.qml` owns provider setup processes, prompts,
   configuration writes, and effects. Its pure protocol and command-planning
   modules live in `contents/ui/config/`.
+  `ProviderConfigProtocol.response` reads bounded stdout and classifies replies
+  from explicit command profiles. Full lists and diagnostics return normalized
+  display data; writes return their accepted payload. The `setApiKey` profile
+  alone permits legacy empty successful output. The `enabledRoster` profile
+  retains the read-only roster's tolerant record projection and failed-exit
+  precedence; `ProviderRoster.js` selects enabled identities from those records.
+  JSON parsing errors are bounded and redacted before QML localizes them.
+  Direct QtTests exercise raw stdout, stderr, and exit codes through this shared
+  interface; page tests retain effects, pending state, retries, and stale replies.
 - `contents/ui/controllers/ProviderRosterController.qml` owns the read-only
   enabled-provider roster for settings pages: one bounded `config providers`
   list command per load with nonce, timeout, and stale-reply retirement.

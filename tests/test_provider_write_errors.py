@@ -62,6 +62,47 @@ TestCase {
         compare(page.statusText, "");
         compare(page.errorText, "codex: codexbar command failed.");
     }
+
+    function test_onlyApiKeyWriteAcceptsEmptySuccess() {
+        var keyPage = createTemporaryObject(harness, this);
+        keyPage.handleSetApiKeyResult({provider: "codex"}, "", "", 0);
+        verify(!keyPage.pending);
+        compare(keyPage.writes, 1);
+        compare(keyPage.revisions, 1);
+        compare(keyPage.statusText, "codex API key saved");
+        compare(keyPage.errorText, "");
+        var togglePage = createTemporaryObject(harness, this);
+        togglePage.handleToggleResult({provider: "codex", desiredEnabled: true}, "", "", 0);
+        verify(!togglePage.pending);
+        compare(togglePage.writes, 0);
+        compare(togglePage.revisions, 0);
+        verify(togglePage.errorText.length > 0);
+    }
+
+    function test_apiKeyCancellationDoesNotCommit() {
+        var page = createTemporaryObject(harness, this);
+        page.errorText = "previous failure";
+        page.statusText = "previous save";
+        page.handleSetApiKeyResult({provider: "codex"}, '{"status":"cancelled"}', "", 0);
+        verify(!page.pending);
+        compare(page.writes, 0);
+        compare(page.revisions, 0);
+        compare(page.errorText, "");
+        compare(page.statusText, "");
+    }
+
+    function test_failedExitCannotCommitValidWriteJson() {
+        for (var handler of ["handleToggleResult", "handleSetApiKeyResult"]) {
+            var page = createTemporaryObject(harness, this);
+            page[handler]({provider: "codex", desiredEnabled: true},
+                '{"provider":"codex","enabled":true}', "", 7);
+            verify(!page.pending);
+            compare(page.writes, 0);
+            compare(page.revisions, 0);
+            compare(page.statusText, "");
+            compare(page.errorText, "codex: codexbar exited with code 7");
+        }
+    }
 }
 '''
 
