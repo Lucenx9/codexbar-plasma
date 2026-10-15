@@ -619,6 +619,9 @@ clipboard interoperability with every Wayland application or portal backend.
   visible while quota automation, warning colors, conditional visibility and
   automatic selection retain the conservative `authoritativeQuota` gate.
   `percentOnly` retains its limited-detail qualifier and `…` panel badge.
+  Privacy retains at most six bounded semantic pace parts, dropping prose
+  fallbacks and unknown fields. The root relocalizes those parts for the popup;
+  the observation clock continues to advance the private run-out forecast.
   Raw CLI/cache fields
   use `usageConfidenceField`: only an absent field gets the legacy empty marker;
   explicitly empty or undefined values become unknown. Cache writes omit the
@@ -636,6 +639,10 @@ clipboard interoperability with every Wayland application or portal backend.
   run-out summary and its marker with the official 0.76.0 synthetic CLI shape.
   The exhausted scenario checks that no missing session reset or forecast is
   invented. See the [pinned contract probe](research/2026-10-15-claude-details-0.76.0.md).
+  The pace scenario also enables privacy and verifies the rendered summary
+  while account identity stays hidden. `tst_privacy_presentation.qml` covers
+  malformed semantic parts; `test_forecast_clock.py` executes the private popup
+  label across receipt, elapsed and exhausted forecast times.
 - `ProviderAutoSelect.js` ranks the roster for the automatic provider
   selection. Measured consumption decides it, taking the busiest authoritative quota row or the
   provider cost meter, whichever reports further along; incident severity only

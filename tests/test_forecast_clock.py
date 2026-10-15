@@ -112,6 +112,7 @@ import "SOURCE_URL/components" as Components
 import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
 import "SOURCE_URL/ProviderSnapshot.js" as ProviderSnapshot
 import "SOURCE_URL/PacePresentation.js" as PacePresentation
+import "SOURCE_URL/PrivacyPresentation.js" as PrivacyPresentation
 import "SOURCE_URL/Guards.js" as Guards
 TestCase {
     name: "PopupPaceClock"
@@ -125,6 +126,10 @@ TestCase {
             }
             property double receivedAtMs: Date.UTC(2026, 8, 24, 12)
             property double panelClockMs: receivedAtMs
+            property bool privacyMode: false
+            property QtObject rateWindowLabels: QtObject {
+                function labelForLane() { return "Usage"; }
+            }
 
             SOURCE_FUNCTIONS
 
@@ -133,6 +138,10 @@ TestCase {
             }
             function i18np(one, many, count) { return i18n(count === 1 ? one : many, count); }
             function resetText() { return ""; }
+            function providerDisplayTitle() { return "Claude"; }
+            function statusBadgeText() { return ""; }
+            function costPresentation() { return null; }
+            function providerKey(value) { return value; }
         }
     }
 
@@ -140,7 +149,10 @@ TestCase {
         return [
             {tag: "at receipt", elapsedMinutes: 0, expected: "Expected 40% used | Runs out in 2 hours"},
             {tag: "later", elapsedMinutes: 90, expected: "Expected 40% used | Runs out in 30 minutes"},
-            {tag: "passed", elapsedMinutes: 150, expected: "Expected 40% used | Runs out now"}
+            {tag: "passed", elapsedMinutes: 150, expected: "Expected 40% used | Runs out now"},
+            {tag: "private receipt", privateMode: true, elapsedMinutes: 0, expected: "Expected 40% used | Runs out in 2 hours"},
+            {tag: "private later", privateMode: true, elapsedMinutes: 90, expected: "Expected 40% used | Runs out in 30 minutes"},
+            {tag: "private passed", privateMode: true, elapsedMinutes: 150, expected: "Expected 40% used | Runs out now"}
         ];
     }
 
@@ -150,7 +162,9 @@ TestCase {
         var applet = createTemporaryObject(harness, this);
         var row = applet.presentUsageWindow(ProviderSnapshot.windowSnapshot({usedPercent: 70}, {
             expectedUsedPercent: 40, willLastToReset: false, etaSeconds: 7200
-        }, true, "primary", "Session", applet.receivedAtMs), "codex");
+        }, true, "primary", "Session", applet.receivedAtMs, "percentOnly"), "claude");
+        applet.privacyMode = !!data.privateMode;
+        row = applet.providerPresentation({provider: "claude", rows: [row], primaryRow: row}).rows[0];
         applet.panelClockMs = applet.receivedAtMs + data.elapsedMinutes * 60000;
         var usageRow = {applet: applet, rowData: row, showPace: true, summaryText: ""};
         compare((function() { return PACE_LABEL_TEXT; })(), data.expected);
@@ -199,7 +213,7 @@ class ForecastClockTests(unittest.TestCase):
             label.id_block("usagePaceLabel"), re.M | re.S).group(1)
         applet.texts = {main: source}
         functions = []
-        for name in ("presentUsageWindow", "paceSummaryPartsText", "paceEtaText", "copyObject", "usagePaceText"):
+        for name in ("presentUsageWindow", "paceSummaryPartsText", "paceEtaText", "copyObject", "usagePaceText", "providerPresentation"):
             match = re.search(r"function " + name + r"\([^)]*\)", source)
             if match:
                 functions.append(match.group(0) + " {" + applet.function_body(name) + "}")

@@ -73,3 +73,6 @@ visibility, automatic provider selection and AI Insights quota facts. Estimated,
 unknown and malformed confidence retain their existing suppression. Reset dates
 survive privacy projection and the quota cache; forecasts follow the existing
 live/retained snapshot lifecycle and are not added to the disk quota cache.
+Privacy forwards only bounded semantic forecast parts, excluding prose
+fallbacks and unknown fields. QML localizes these parts after projection, so the
+popup's private forecast remains visible and advances from its observation time.

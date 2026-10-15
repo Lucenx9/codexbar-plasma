@@ -1999,6 +1999,16 @@ Item {
                     "reported panel ETA disappeared or enabled automated pace warnings");
                 verifyScenario(hasVisibleText(applet.fullRepresentationItem, applet.usagePaceText(claude.rows[1])),
                     "reported pace summary disappeared");
+                if (!navigationVerified) {
+                    applet.Plasmoid.configuration.privacyMode = true;
+                    navigationVerified = true;
+                    return false;
+                }
+                var privateClaude = applet.providerPresentation(claude);
+                verifyScenario(privateClaude.rows[1].pace.length > 0
+                    && hasVisibleText(applet.fullRepresentationItem, applet.usagePaceText(privateClaude.rows[1]))
+                    && !hasVisibleText(applet.fullRepresentationItem, "demo@example.com"),
+                    "private popup lost structured pace or exposed account identity");
             } else {
                 verifyScenario(applet.usagePaceText(claude.rows[1]) === "", "missing forecast was invented");
             }

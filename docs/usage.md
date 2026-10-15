@@ -92,6 +92,8 @@ work and upstream contract requirements.
   infer missing reset dates or forecasts. Official Linux CLI 0.76.0 can emit
   both resets and pace with `percentOnly`, as verified by the
   [Claude detail contract probe](research/2026-10-15-claude-details-0.76.0.md).
+  Privacy mode preserves structured expected usage and run-out forecasts while
+  hiding account identity and prose-only forecast fallbacks.
   Estimated and unknown-confidence rows still suppress these details.
   These incomplete readings have no quota warning colors, threshold markers,
   or quota/pace/reset notifications. They do not

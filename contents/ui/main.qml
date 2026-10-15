@@ -743,6 +743,9 @@ PlasmoidItem {
                 return rateWindowLabels.labelForLane(providerKey(item.provider), row.lane)
             })
         })
+        for (var i = 0; i < result.rows.length; i++) {
+            result.rows[i].pace = paceSummaryPartsText(result.rows[i].paceParts)
+        }
         result.tokenCost = costPresentation(item.tokenCost)
         return result
     }
