@@ -101,6 +101,7 @@ ColumnLayout {
             }
 
             PlainPlasmaLabel {
+                visible: view.applet.costUsageEnabled !== false
                 text: view.applet.spendTotalLine()
                 opacity: view.applet.secondaryTextOpacity
                 Layout.fillWidth: true
@@ -110,6 +111,7 @@ ColumnLayout {
 
         PlasmaComponents.ToolButton {
             id: shareButton
+            visible: view.applet.costUsageEnabled !== false
             objectName: "shareUsageButton"
             Layout.alignment: Qt.AlignTop
             icon.name: "document-share"
@@ -124,6 +126,7 @@ ColumnLayout {
         }
 
         Components.RefreshButton {
+            visible: view.applet.costUsageEnabled !== false
             Layout.alignment: Qt.AlignTop
             busy: view.applet.costLoading
             label: i18n("Refresh local history")
@@ -133,6 +136,7 @@ ColumnLayout {
 
     RowLayout {
         id: historyControlsRow
+        visible: view.applet.costUsageEnabled !== false
 
         Layout.fillWidth: true
         Layout.rightMargin: Kirigami.Units.smallSpacing
@@ -201,9 +205,16 @@ ColumnLayout {
 
         ColumnLayout {
             width: Math.max(0, parent.width - Kirigami.Units.smallSpacing)
-            height: view.providerCosts.length > 0
+            height: view.providerCosts.length > 0 || view.applet.identifiedTokensEnabled === true
                 ? implicitHeight : Math.max(implicitHeight, spendHistoryScroll.availableHeight)
             spacing: Kirigami.Units.largeSpacing
+
+            Loader {
+                Layout.fillWidth: true
+                active: view.applet.identifiedTokensEnabled === true
+                visible: active
+                sourceComponent: Components.IdentifiedTokensSection { applet: view.applet }
+            }
 
             Components.PlainNote {
                 visible: view.applet.costErrorText.length > 0
@@ -247,7 +258,7 @@ ColumnLayout {
             }
 
             Item {
-                visible: !view.applet.costLoading
+                visible: view.applet.costUsageEnabled !== false && !view.applet.costLoading
                     && view.providerCosts.length === 0
                     && view.applet.costErrorText.length === 0
                 implicitHeight: emptySpendPlaceholder.implicitHeight

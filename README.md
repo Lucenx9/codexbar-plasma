@@ -111,6 +111,9 @@ for its limits.
 - Optional AI Insights only: `python3` and GNU `timeout`; for OpenRouter or
   OpenAI keys also `kdialog`, `secret-tool`, and a Secret Service provider such
   as KWallet. Nothing is required while the feature is off.
+- Optional identified Codex token subtotals: `codexbar` 0.75.0 or later and GNU `timeout`.
+  Including an SSH source also requires that CLI on the remote computer and
+  working noninteractive SSH authentication with trusted host keys.
 - `curl`, `jq`, `python3`, `sha256sum`, GNU `timeout`, and util-linux `flock` for
   the bundled release updater. CLI release checks and managed installs also use `python3` and GNU `timeout`. GNU `timeout`
   also bounds CLI writes after a secret prompt.
@@ -161,6 +164,9 @@ themes.
 - **Usage & Spend** with cost/token charts, a 7/30/90-day, month-to-date, or
   all-history range, an activity
   heatmap, and provider, model, and project breakdowns when the CLI supplies them.
+- An optional manual Codex identified-request token subtotal, with separate
+  local and local + SSH actions, an independent UTC window, and partial-data
+  notices. It is off by default and has no prices or account-wide coverage.
 - A local **Sessions** tab. Transcript paths and working directories are never
   displayed or opened.
 - Refresh on popup opening, plus optional privacy mode and automatic widget updates.

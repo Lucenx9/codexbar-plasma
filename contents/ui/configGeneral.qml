@@ -8,6 +8,7 @@ import "components" as Components
 import "controllers" as Controllers
 import "UpdateLogic.js" as UpdateLogic
 import "ManagedCli.js" as ManagedCli
+import "IdentifiedTokens.js" as IdentifiedTokens
 import "general/ConfigValueSync.js" as ConfigValueSync
 
 KCM.SimpleKCM {
@@ -37,6 +38,12 @@ KCM.SimpleKCM {
     property bool cfg_includeStatusDefault: false
     property alias cfg_costUsageEnabled: costUsageEnabledCheck.checked
     property bool cfg_costUsageEnabledDefault: true
+    property alias cfg_identifiedTokensEnabled: identifiedTokensCheck.checked
+    property bool cfg_identifiedTokensEnabledDefault: false
+    property alias cfg_identifiedTokensSshHost: identifiedSshHostField.text
+    property string cfg_identifiedTokensSshHostDefault: ""
+    property alias cfg_identifiedTokensHistoryDays: identifiedDaysSpin.value
+    property int cfg_identifiedTokensHistoryDaysDefault: 30
     property int cfg_costHistoryDays: 30
     property int cfg_costHistoryDaysDefault: 30
     property bool cfg_enableNotifications
@@ -324,6 +331,9 @@ KCM.SimpleKCM {
             [cfg_refreshInterval, cfg_refreshIntervalDefault],
             [cfg_includeStatus, cfg_includeStatusDefault],
             [cfg_costUsageEnabled, cfg_costUsageEnabledDefault],
+            [cfg_identifiedTokensEnabled, cfg_identifiedTokensEnabledDefault],
+            [cfg_identifiedTokensSshHost, cfg_identifiedTokensSshHostDefault],
+            [cfg_identifiedTokensHistoryDays, cfg_identifiedTokensHistoryDaysDefault],
             [cfg_costHistoryDays, cfg_costHistoryDaysDefault],
             [cfg_costHistoryMetric, cfg_costHistoryMetricDefault],
             [cfg_costHistoryPeriod, cfg_costHistoryPeriodDefault],
@@ -388,6 +398,9 @@ KCM.SimpleKCM {
         cfg_refreshInterval = cfg_refreshIntervalDefault
         cfg_includeStatus = cfg_includeStatusDefault
         cfg_costUsageEnabled = cfg_costUsageEnabledDefault
+        cfg_identifiedTokensEnabled = cfg_identifiedTokensEnabledDefault
+        cfg_identifiedTokensSshHost = cfg_identifiedTokensSshHostDefault
+        cfg_identifiedTokensHistoryDays = cfg_identifiedTokensHistoryDaysDefault
         applyCostHistoryRangeTransition(ConfigValueSync.historyRangeAfterUserEdit(
             cfg_costHistoryDaysDefault, cfg_costHistoryPeriodDefault,
             persistedCostHistoryDays, persistedCostHistoryPeriod))
@@ -599,6 +612,63 @@ KCM.SimpleKCM {
                 page.editCostHistoryDays(value)
                 value = Qt.binding(function() { return page.cfg_costHistoryDays })
             }
+        }
+
+        Controls.CheckBox {
+            id: identifiedTokensCheck
+            objectName: "identifiedTokensCheck"
+            implicitWidth: 0
+            Layout.fillWidth: true
+            text: i18n("Show identified Codex token subtotal")
+        }
+
+        Components.PlainControlsLabel {
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            text: i18n("Manual loads in Usage & Spend only. Requires codexbar 0.75.0 or later. Prices are unavailable; this is not account-wide usage.")
+            wrapMode: Text.WordWrap
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
+        }
+
+        Controls.SpinBox {
+            id: identifiedDaysSpin
+            objectName: "identifiedDaysSpin"
+            Kirigami.FormData.label: i18n("Identified window:")
+            from: 1
+            to: 365
+            value: 30
+            editable: true
+            enabled: identifiedTokensCheck.checked
+            textFromValue: function(value, locale) { return i18np("%1 day", "%1 days", value) }
+            valueFromText: function(text, locale) {
+                var match = text.match(/\d+/)
+                return match ? parseInt(match[0], 10) : value
+            }
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 8
+        }
+
+        Controls.TextField {
+            id: identifiedSshHostField
+            objectName: "identifiedSshHostField"
+            Kirigami.FormData.label: i18n("Optional SSH host:")
+            placeholderText: i18n("SSH alias or user@host")
+            maximumLength: 255
+            enabled: identifiedTokensCheck.checked
+            Layout.fillWidth: true
+        }
+
+        Components.PlainControlsLabel {
+            Layout.fillWidth: true
+            Layout.preferredWidth: Kirigami.Units.gridUnit * 24
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 24
+            text: identifiedSshHostField.text.length > 0 && !IdentifiedTokens.validHost(identifiedSshHostField.text)
+                ? i18n("Enter one SSH alias or user@host without spaces or command options.")
+                : i18n("SSH runs only with the separate local + SSH button. Configure authentication and trusted host keys beforehand; no SSH prompts are shown.")
+            wrapMode: Text.WordWrap
+            font: Kirigami.Theme.smallFont
+            opacity: 0.7
         }
 
         Kirigami.Separator {

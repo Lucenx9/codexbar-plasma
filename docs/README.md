@@ -31,7 +31,10 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
 - [Provider settings descriptor](cli-provider-settings-descriptor.md): proposed
   upstream CLI contract for generic settings. It is not a shipped contract.
 - [Cost history](cost-history.md): daily model data, selection behavior, and
-  the pinned Linux CLI evidence behind the popup.
+  the pinned Linux CLI evidence behind the popup, plus the separate manual
+  identified Codex token subtotal and its decoder limits.
+- [Identified-token screenshot](codexbar-plasma-identified-tokens.png): synthetic
+  local subtotal retained after an SSH-source failure, used in the usage guide.
 - [AI Insights](ai-insights.md): the optional insight card's boundary decision,
   allowlisted snapshot, language selection, request and credential contracts,
   scheduling, and tests.

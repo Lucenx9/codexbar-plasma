@@ -414,6 +414,9 @@ TestCase {
             cfg_includeStatus: true,
             cfg_costUsageEnabled: false,
             cfg_costHistoryDays: 90,
+            cfg_identifiedTokensEnabled: true,
+            cfg_identifiedTokensSshHost: "build@host",
+            cfg_identifiedTokensHistoryDays: 7,
             cfg_costHistoryMetric: "tokens",
             cfg_quotaWarningPercent: 70,
             cfg_quotaCriticalPercent: 90,
@@ -446,6 +449,9 @@ TestCase {
         compare(page.cfg_includeStatus, false);
         compare(page.cfg_costUsageEnabled, true);
         compare(page.cfg_costHistoryDays, 30);
+        compare(page.cfg_identifiedTokensEnabled, false);
+        compare(page.cfg_identifiedTokensSshHost, "");
+        compare(page.cfg_identifiedTokensHistoryDays, 30);
         compare(page.cfg_costHistoryMetric, "cost");
         compare(page.cfg_costHistoryPeriod, "");
         compare(page.cfg_quotaWarningPercent, 80);

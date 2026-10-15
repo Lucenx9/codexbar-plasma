@@ -589,6 +589,101 @@ msgstr ""
 msgid "Usage dashboard"
 msgstr ""
 
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "Loading identified tokens timed out. Try again."
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+#: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
+#: contents/ui/controllers/AccountsController.qml
+#: contents/ui/controllers/CostController.qml
+#: contents/ui/controllers/ProviderRosterController.qml
+#: contents/ui/controllers/SessionsController.qml
+#: contents/ui/controllers/UsageController.qml
+msgid "codexbar response exceeded the supported size."
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid ""
+"Could not start identified-token collection. Check codexbar and GNU timeout."
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid ""
+"No selected source supplied identified Codex data. Check local history and "
+"SSH setup."
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid ""
+"Could not load identified Codex data. Use codexbar 0.75.0 or later on each "
+"selected source."
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "Identified Codex tokens"
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml scripts/smoke/Capture.qml
+msgid ""
+"Manual subtotal of identified requests only. No prices; this is not account-"
+"wide usage."
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "%1 across %2"
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "No identified subtotal loaded."
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "UTC window: %1 to %2"
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "Last %1 UTC day"
+msgid_plural "Last %1 UTC days"
+msgstr[0] ""
+msgstr[1] ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "Source requested: this computer"
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "Sources requested: this computer + SSH"
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid ""
+"Local data is unavailable. This subtotal contains the available SSH data "
+"only."
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid ""
+"SSH data is unavailable. This subtotal contains the available local data "
+"only."
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "Some requests could not be included. This subtotal is partial."
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "Conflicts: %1; excluded: %2"
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "Load local subtotal"
+msgstr ""
+
+#: contents/ui/components/IdentifiedTokensSection.qml
+msgid "Load local + SSH subtotal"
+msgstr ""
+
 #: contents/ui/components/InteractiveChart.qml
 msgid "Use the arrow keys to inspect chart points"
 msgstr ""
@@ -2101,15 +2196,6 @@ msgstr ""
 msgid "Diagnostic command timed out. Try again."
 msgstr ""
 
-#: contents/ui/configDiagnostics.qml contents/ui/configProviders.qml
-#: contents/ui/controllers/AccountsController.qml
-#: contents/ui/controllers/CostController.qml
-#: contents/ui/controllers/ProviderRosterController.qml
-#: contents/ui/controllers/SessionsController.qml
-#: contents/ui/controllers/UsageController.qml
-msgid "codexbar response exceeded the supported size."
-msgstr ""
-
 #: contents/ui/configDiagnostics.qml
 msgid "No diagnostic output."
 msgstr ""
@@ -2332,6 +2418,38 @@ msgstr ""
 
 #: contents/ui/configGeneral.qml
 msgid "History window:"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Show identified Codex token subtotal"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"Manual loads in Usage & Spend only. Requires codexbar 0.75.0 or later. "
+"Prices are unavailable; this is not account-wide usage."
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Identified window:"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Optional SSH host:"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "SSH alias or user@host"
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid "Enter one SSH alias or user@host without spaces or command options."
+msgstr ""
+
+#: contents/ui/configGeneral.qml
+msgid ""
+"SSH runs only with the separate local + SSH button. Configure authentication "
+"and trusted host keys beforehand; no SSH prompts are shown."
 msgstr ""
 
 #: contents/ui/configGeneral.qml
