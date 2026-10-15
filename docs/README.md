@@ -126,6 +126,10 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   history and the Plasma normalizer, xAI generic detail-row compatibility,
   CLI-owned Command Code fixes, unchanged registry/help and empty envelopes,
   and carried blockers rechecked with bubblewrap-isolated official binaries.
+- [0.75.0 release review](research/2026-10-15-macos-parity-0.75.0.md): the
+  103-provider registry, Command Code/fal API-key reachability, FLORA workspace
+  and Parallel cookie blockers, identified-cost failure semantics, source-only
+  throughput changes, and bubblewrap-isolated carried-blocker checks.
 - [Settings decisions](research/2026-09-08-settings-experience.md): Panel disclosure and text grouping,
   Plasma settings, privacy, refresh behavior, the macOS 0.56.8 comparison, and
   the shared settings visual conventions.

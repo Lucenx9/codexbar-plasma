@@ -8,9 +8,14 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Review baseline
 
-- Last release reviewed: [CodexBar 0.74.1](https://github.com/steipete/CodexBar/releases/tag/v0.74.1),
-  commit `7c08c0ae783b72040b728757eb85a6cfe4fc2443`, checked 2026-10-14.
-- Coverage: the 0.74.1 release delta against Plasma `abe8f7d`. The
+- Last release reviewed: [CodexBar 0.75.0](https://github.com/steipete/CodexBar/releases/tag/v0.75.0),
+  commit `4668969c8507d75e2f173b72a742c92f97e60344`, checked 2026-10-15.
+- Coverage: the [0.75.0 review](docs/research/2026-10-15-macos-parity-0.75.0.md)
+  against Plasma `ca9f586` verifies the 103-provider registry, Command Code/fal
+  API-key setup, FLORA's missing workspace writer, Parallel's cookie-only setup,
+  identified-cost failure semantics, and unchanged carried blockers. Positive
+  throughput, billing, and identified-history output remain unverified.
+- Previous coverage: the 0.74.1 release delta against Plasma `abe8f7d`. The
   [0.74.1 review](docs/research/2026-10-14-macos-parity-0.74.1.md) verifies
   unchanged registry/help and empty envelopes, rechecks descriptor/action,
   Cursor cost, currency, and ClinePass-label blockers, and confirms OpenCode
@@ -90,6 +95,13 @@ Issues linked below preserve discussion; this file owns parity status.
 
 ## Implementable on Linux
 
+- [ ] Add static metadata for Parallel, fal, and FLORA from the 0.75.0
+  103-provider registry, preserving generic fallbacks. Add supported stdin
+  API-key setup for Command Code and fal; both writers and API runtime entry
+  are verified at 0.75.0, but Plasma excludes them from its setup allowlist.
+  FLORA workspace setup and Parallel cookie actions remain blocked below.
+  Done when mappings/actions have regression coverage and updated usage docs.
+  [Evidence](docs/research/2026-10-15-macos-parity-0.75.0.md#linux-cli-contract-changes).
 
 ## Blocked on official Linux CLI contracts
 
@@ -98,9 +110,16 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 
 ### Provider settings
 
+- [ ] Support FLORA workspace ID setup once an official writer exists.
+  Linux 0.75.0 stores its key but requires `FLORA_WORKSPACE_ID` at runtime;
+  `--workspace-id` remains z.ai-only. Parallel refuses API-key/API source and
+  needs the generic cookie action below. Done when released descriptors/writers
+  enable safe setup without QML config editing.
+  [Evidence](docs/research/2026-10-15-macos-parity-0.75.0.md#linux-cli-contract-changes).
+
 - [ ] Enable generic settings and token-account editing through official
-  descriptors and writes. Linux 0.74.1 still rejects `config providers
-  --descriptors` (100 records, same four keys); its provider records have no
+  descriptors and writes. Linux 0.75.0 still rejects `config providers
+  --descriptors` (103 records, same four keys); its provider records have no
   descriptor. Helmcode and TypeSafe make this concrete: both are cookie-only,
   both refuse `--source api`, and their documented `cookieSource`/`cookieHeader`
   config path has no supported writer, so they stay metadata-only on Linux.
@@ -148,7 +167,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Provider onboarding
 
 - [ ] Add CLI-described browser-cookie import, local-file setup, OAuth/device
-  flow, CLI-auth setup, and token-account actions. Linux 0.74.1 still has no
+  flow, CLI-auth setup, and token-account actions. Linux 0.75.0 still has no
   generic `config action` command (`set-api-key` and `set-source` are field
   writers; the `usage_updated` hook event is CLI automation surface, not a setup
   action). Done when supported actions expose validated
@@ -183,7 +202,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ### Cursor cost
 
 - [ ] Show Cursor cost history through the generic Linux `cost` path. Linux
-  0.74.1 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
+  0.75.0 still rejects Cursor and lists Antigravity, Claude, Codex, Muse
   Code, and Pi as supported; the 0.74.0 `cursor-agent` login (#4397) changes
   usage authentication only;
   the descriptor gate keeps the new cookie-source availability errors unreachable.
@@ -240,7 +259,7 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 - [ ] Offer display-currency selection and conversion through an official Linux
   contract. The 0.56.2 audit records no display-currency setter or descriptor;
   the scoped 0.57.0, 0.58.0, 0.60.4, 0.67.0, 0.69.0, 0.72.0, 0.73.0,
-  0.74.0, and 0.74.1 config probes expose neither,
+  0.74.0, 0.74.1, and 0.75.0 config probes expose neither,
   although macOS 0.67.0 adds twelve spend-estimate currencies. Plasma currently
   displays the CLI-emitted currency. Done when released settings and converted
   amounts define currency, rate provenance, and unavailable-conversion behavior,
@@ -270,6 +289,21 @@ these gaps with provider scraping, auth flows, or config parsing in QML.
 ## Verify before accepting implementation work
 
 These are unresolved Linux candidates, not confirmed missing features.
+
+- [ ] Verify 0.75.0 OpenAI `usage.throughput` output, minute/model buckets,
+  delayed and pending minutes, and per-credential manual rate-limit contracts.
+  Source has an encoded throughput field, but no authenticated Linux output
+  was observed. Verify Claude spend-only monthly caps/resets too; its macOS
+  UTC rollover helper is not an emitted authoritative reset.
+  Done when official output supports a bounded Plasma design or establishes
+  the exact missing CLI contract.
+  [Review](docs/research/2026-10-15-macos-parity-0.75.0.md).
+- [ ] Verify 0.75.0 identified-request local/SSH subtotals with synthetic
+  history, strong-identity deduplication, unavailable prices, and partial remote
+  failures. Empty native history exits 1 with explicit partial/unavailable
+  reports. Decide useful Plasma scope only after positive output verification;
+  preserve the current generic cost path.
+  [Review](docs/research/2026-10-15-macos-parity-0.75.0.md).
 
 - [ ] Verify the 0.73.0 top-level `resetCredits` usage record on Linux. Source
   adds Codex `available` and optional `nextExpiresAt` projected from live
