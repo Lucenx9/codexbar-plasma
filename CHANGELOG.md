@@ -20,6 +20,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve an announced pace warning across incomplete readings with the same
+  reset timestamp, preventing duplicate warnings when complete data returns.
 - Restore CLI-reported reset countdowns, expected usage and run-out forecasts
   for Claude percentage-only readings in popup and panel views, including
   structured forecasts in privacy mode. Missing details

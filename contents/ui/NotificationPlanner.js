@@ -235,6 +235,9 @@ function processPace(previousMemo, nextMemo, observation, observationIndex, inte
         var row = rows[i]
         var key = paceKey(observation, row, i)
         if (!Normalizer.authoritativeQuota(row)) {
+            if (previousMemo && previousMemo[key] === "1") {
+                nextMemo[key] = "1"
+            }
             continue
         }
         if (!row || row.paceActive !== true) {

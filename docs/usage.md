@@ -103,6 +103,9 @@ work and upstream contract requirements.
   returning measured usage at the same threshold does not repeat the warning.
   A measured recovery clears that threshold, and a later measured crossing can
   notify again. Unverified readings disarm pending limit-reset notifications.
+  An announced pace warning also survives incomplete readings of the same
+  window, so returning complete data does not repeat it. A measured recovery
+  or a new reset window can establish a new warning.
   Confidence, including limited detail, survives privacy mode, failed-refresh
   retention, and newly saved quota caches. Older CLI payloads and caches without the field keep their
   existing behavior; OpenCode Go estimates already saved by an older widget

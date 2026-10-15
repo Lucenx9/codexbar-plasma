@@ -344,6 +344,46 @@ TestCase {
             {tag: "unknown-high", confidence: "unknown", used: 100}
         ];
     }
+
+    function test_degradedConfidenceKeepsNotifiedPace_data() {
+        return [
+            {tag: "percent-only-active", confidence: "percentOnly", active: true},
+            {tag: "percent-only-quiet", confidence: "percentOnly", active: false},
+            {tag: "estimated-active", confidence: "estimated", active: true},
+            {tag: "estimated-quiet", confidence: "estimated", active: false},
+            {tag: "unknown-active", confidence: "unknown", active: true},
+            {tag: "unknown-quiet", confidence: "unknown", active: false}
+        ];
+    }
+    function test_degradedConfidenceKeepsNotifiedPace(data) {
+        var options = {mode: "prime", quotaEnabled: false, paceEnabled: true,
+            resetEnabled: false, statusEnabled: false};
+        var measured = observation("exact", 85, "", true);
+        measured.rows[0].resetsAt = "2026-10-18T12:00:00Z";
+        var degraded = observation(data.confidence, 85, "", data.active);
+        degraded.rows[0].resetsAt = measured.rows[0].resetsAt;
+        var result = Notifications.transition([measured], {}, options);
+        options.mode = "observe";
+        var before = JSON.stringify(result.nextMemo);
+        var partial = Notifications.transition([degraded], result.nextMemo, options);
+        compare(partial.intents.length, 0);
+        compare(JSON.stringify(result.nextMemo), before);
+        result = Notifications.transition([measured], partial.nextMemo, options);
+        compare(result.intents.length, 0);
+        measured.rows[0].paceActive = false;
+        result = Notifications.transition([measured], result.nextMemo, options);
+        compare(result.intents.length, 0);
+        measured.rows[0].paceActive = true;
+        result = Notifications.transition([measured], result.nextMemo, options);
+        compare(result.intents.length, 1);
+        compare(result.intents[0].kind, "pace");
+        result = Notifications.transition([measured], result.nextMemo, options);
+        compare(result.intents.length, 0);
+        measured.rows[0].resetsAt = "2026-10-25T12:00:00Z";
+        result = Notifications.transition([measured], result.nextMemo, options);
+        compare(result.intents.length, 1);
+        compare(result.intents[0].kind, "pace");
+    }
     function test_degradedConfidenceKeepsNotifiedQuotaLevel(data) {
         var options = {mode: "prime", quotaEnabled: true, paceEnabled: false,
             resetEnabled: false, statusEnabled: false};
