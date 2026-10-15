@@ -485,6 +485,11 @@ with separate currencies and no subscription-fee inference. Claude 0.57.0
 `--breakdown` is text-only; existing JSON daily/model views already consume its
 underlying data.
 
+Claude percentage-only reset and pace fields are supported through the generic
+usage presentation, verified with official Linux CLI 0.76.0 in the
+[focused contract probe](docs/research/2026-10-15-claude-details-0.76.0.md).
+An absent forecast or reset is not reconstructed from a quota percentage.
+
 macOS-only features do not enter this backlog. The [release review](docs/research/2026-09-09-macos-parity-0.57.0.md#excluded-from-the-linux-backlog)
 records exclusions. Provider parsing, pricing, authentication, and scanning
 fixes are CLI-owned; a new upstream implementation is not a missing QML port.

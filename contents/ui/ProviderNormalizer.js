@@ -242,6 +242,12 @@ function authoritativeQuota(row) {
     return confidence === "" || confidence === "exact"
 }
 
+// Percentage-only readings can carry explicit CLI resets and forecasts.
+// Present those details without authorizing quota automation from the reading.
+function canPresentQuotaDetails(row) {
+    return !!row && (authoritativeQuota(row) || usageConfidence(row.dataConfidence) === "percentOnly")
+}
+
 // The numeric half of one usage row. `null` when the payload carries no window
 // record at all, which is how the caller distinguishes "no such window" from
 // "window present but percentage unknown" (`hasPercent === false`).

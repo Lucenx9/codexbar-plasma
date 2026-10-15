@@ -27,8 +27,8 @@ function resetsAtText(value) {
 }
 
 function windowSnapshot(window, pace, usageKnown, lane, label, receivedAtMs, confidence) {
-    var authoritative = Normalizer.authoritativeQuota({dataConfidence: confidence});
-    if (!authoritative) {
+    var presentDetails = Normalizer.canPresentQuotaDetails({dataConfidence: confidence});
+    if (!presentDetails) {
         pace = null;
     }
     var metrics = Normalizer.rateWindowMetrics(window, pace, usageKnown);
@@ -49,7 +49,7 @@ function windowSnapshot(window, pace, usageKnown, lane, label, receivedAtMs, con
     result.resetValue = usableEpochMs(window.resetsAt) ? window.resetsAt
         : (typeof window.resetsAt === "string" ? Normalizer.boundedDisplayText(window.resetsAt, 500) : "");
     result.paceParts = PacePresentation.summaryParts(pace);
-    if (!authoritative) {
+    if (!presentDetails) {
         result.resetsAt = "";
         result.resetDescription = "";
         result.resetValue = "";

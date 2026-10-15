@@ -105,9 +105,9 @@ TestCase {
         compare(result.rows[1].dataConfidence, data.expected);
         compare(result.rows[0].usedPercent, 95);
         compare(result.rows[0].leftPercent, 5);
-        compare(result.rows[0].paceKnown, data.authoritative);
-        compare(result.rows[0].resetsAt.length > 0, data.authoritative);
-        compare(result.rows[0].paceParts.length > 0, data.authoritative);
+        compare(result.rows[0].paceKnown, data.authoritative || data.confidence === "percentOnly");
+        compare(result.rows[0].resetsAt.length > 0, data.authoritative || data.confidence === "percentOnly");
+        compare(result.rows[0].paceParts.length > 0, data.authoritative || data.confidence === "percentOnly");
         compare(JSON.stringify(input), before);
     }
     function test_receiptTimeAndForecastAreExplicit() {

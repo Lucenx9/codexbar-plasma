@@ -992,7 +992,7 @@ PlasmoidItem {
 
     function usageResetText(row) {
         row = PrivacyPresentation.quota(row, privacyMode, "")
-        if (!row || !Normalizer.authoritativeQuota(row)) {
+        if (!Normalizer.canPresentQuotaDetails(row)) {
             return ""
         }
         if (row.resetsAt || row.resetDescription) {
@@ -1760,7 +1760,7 @@ PlasmoidItem {
     }
 
     function paceMarkerPercent(row) {
-        if (!row || row.pacePercent < 0 || !Normalizer.authoritativeQuota(row)) {
+        if (!row || row.pacePercent < 0 || !Normalizer.canPresentQuotaDetails(row)) {
             return -1
         }
         return usageBarsShowUsed ? row.pacePercent : clamp(100 - row.pacePercent, 0, 100)
@@ -1968,7 +1968,7 @@ PlasmoidItem {
     // countdown the pace data does not support.
     // Account options retain their own receipt time across later refreshes.
     function runOutTextForRow(row) {
-        if (!paceWarningActive(row)) {
+        if (!PanelDisplay.rowHasRunOut(row)) {
             return ""
         }
         return paceEtaText(PanelDisplay.remainingSeconds(

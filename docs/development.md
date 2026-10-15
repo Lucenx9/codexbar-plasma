@@ -613,9 +613,13 @@ clipboard interoperability with every Wayland application or portal backend.
 - `ProviderSnapshot.js` preserves usage confidence as `exact`, `estimated`,
   `percentOnly`, `unknown`, or empty for legacy payloads, stamping every quota
   row. The shared `ProviderNormalizer.authoritativeQuota` guard gates quota decisions; unknown
-  or malformed confidence never becomes measured quota. `percentOnly` retains
-  the same conservative quota guards, with a limited-detail qualifier and `…`
-  panel badge rather than an unknown-confidence warning. Raw CLI/cache fields
+  or malformed confidence never becomes measured quota. `canPresentQuotaDetails`
+  separately admits `percentOnly` for explicit CLI resets and forecasts in the
+  snapshot, popup, panel modes and pace marker. This keeps supplied details
+  visible while quota automation, warning colors, conditional visibility and
+  automatic selection retain the conservative `authoritativeQuota` gate.
+  `percentOnly` retains its limited-detail qualifier and `…` panel badge.
+  Raw CLI/cache fields
   use `usageConfidenceField`: only an absent field gets the legacy empty marker;
   explicitly empty or undefined values become unknown. Cache writes omit the
   legacy marker and restore field absence. Privacy retains the semantic value.
@@ -628,6 +632,10 @@ clipboard interoperability with every Wayland application or portal backend.
   `percent-only-usage` and `percent-only-panel` exercise the Claude primary and
   secondary windows, limited-detail note, root/notification adapters, quota
   guards and panel badge. The usage scenario also supports `--language it`.
+  `percent-only-pace` verifies reported weekly resets, expected usage, the live
+  run-out summary and its marker with the official 0.76.0 synthetic CLI shape.
+  The exhausted scenario checks that no missing session reset or forecast is
+  invented. See the [pinned contract probe](research/2026-10-15-claude-details-0.76.0.md).
 - `ProviderAutoSelect.js` ranks the roster for the automatic provider
   selection. Measured consumption decides it, taking the busiest authoritative quota row or the
   provider cost meter, whichever reports further along; incident severity only

@@ -20,6 +20,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Restore CLI-reported reset countdowns, expected usage and run-out forecasts
+  for Claude percentage-only readings in popup and panel views. Missing details
+  stay omitted; estimated/unknown data and automatic quota safeguards keep their
+  existing behavior.
 - Recognize Claude CLI's `percentOnly` usage confidence as limited detail
   instead of unknown. Preserve it through privacy mode, retained usage and
   quota caches, with translated panel/popup text and a distinct panel badge.
