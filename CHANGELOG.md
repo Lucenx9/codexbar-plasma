@@ -10,6 +10,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+## 0.2.49 - 2026-10-15
+
 ### Added
 
 - Optional manual identified Codex token subtotals in Usage & Spend, with
@@ -37,6 +39,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Accept the bounded third-party notice file shipped in official CLI 0.76.0
   archives, so managed updates can install the release without weakening the
   archive allowlist, checksum checks, or staged version probe.
+
+[Full diff](https://github.com/Lucenx9/codexbar-plasma/compare/v0.2.48...v0.2.49)
 
 ## 0.2.48 - 2026-10-15
 
