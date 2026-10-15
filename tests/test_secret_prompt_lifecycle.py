@@ -32,6 +32,7 @@ TestCase {
     }
     function displayNameForProvider(provider) { return provider; }
     function providerCliArgument(provider) { return provider; }
+    function providerByID(provider) { return {provider: provider, enabled: false}; }
     function isPending(provider) { return false; }
     function isFieldPending(provider, field) { return false; }
     function markPending(provider, pending, desired) {}
@@ -766,6 +767,25 @@ TestCase {
         compare(supportsApiKeySetup("commandcode"), false);
         compare(supportsApiKeySetup("fal"), false);
     }
+    function test_apiKeyActionWaitsForReloadAndVersionProbe() {
+        pending = ({});
+        commands = ({});
+        loading = false;
+        var item = {provider: "openai", enabled: true, displayName: "OpenAI"};
+        function keyEnabled() {
+            return providerActionRows(item).filter(function(row) {
+                return row.action === "set-api-key";
+            })[0].enabled;
+        }
+        verify(keyEnabled());
+        loading = true;
+        verify(!keyEnabled());
+        loading = false;
+        commands = CommandLedger.opened(commands, "version", {kind: "version"});
+        verify(!keyEnabled());
+        commands = ({});
+        verify(keyEnabled());
+    }
     // Action rows offer set-api-key for key providers and a dashboard link
     // only when no descriptor action already opens the dashboard.
     function test_actionRowsGuardDashboardAndOfferApiKey() {
@@ -826,6 +846,7 @@ WIRING_FUNCTIONS = (
     "copyObject", "hasOwnKey", "providerKey", "providerMapKey", "descriptorPendingKey",
     "descriptorPendingFieldKey", "providerIconSource", "shellQuote", "writeDescriptorField",
     "promptDescriptorSecret", "runDescriptorAction", "handleDescriptorActionResult",
+    "retireProviderDiagnostic", "invalidateProviderDiagnostic",
     "handleDescriptorFieldResult", "handleListResult", "handleDiagnoseResult", "handleData",
     "shouldRetryProviderListWithoutDescriptors", "descriptorListUnsupportedMessage",
     "boundedCliMessage", "providerByID", "firstSelectableProvider",

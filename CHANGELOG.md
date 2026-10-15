@@ -10,6 +10,17 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Fixed
+
+- Preserve keyboard focus in provider rows while a toggle is pending and after
+  the list refreshes, without moving focus away from another control.
+- Clear outdated provider diagnostics after a successful configuration change,
+  including API key setup, and ignore older diagnostic replies. Failed changes
+  and cancelled prompts keep the last diagnostic result available.
+- Keep known provider setup controls visible while reloading the same CLI,
+  preserve a provider's enablement while its API key prompt is open, and report
+  missing write replies as command failures.
+
 ## 0.2.49 - 2026-10-15
 
 ### Added

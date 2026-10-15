@@ -93,6 +93,7 @@ KCM.SimpleKCM {
     property var providerDiagnosticErrors: ({})
     property var providerDiagnosticLoading: ({})
     property string selectedProviderID: ""
+    property var providerListFocus: null
 
     readonly property var visibleProviders: ProviderList.filteredProviders(providers, filterText, filterScope)
     readonly property var providerSettingsGroups: ProviderOrder.settingsGroups(
@@ -130,9 +131,6 @@ KCM.SimpleKCM {
         reloadDeferredBySourceWrite = false
         disconnectCommandsByKind("list")
         disconnectCommandsByKind("version")
-        fireworksSingleKeySetupSupported = false
-        commandCodeFalApiKeySetupSupported = false
-        providerSourceSetupSupported = false
         if (commandPath.length === 0) {
             errorText = i18n("Set the codexbar command path in Diagnostics.")
             providers = []
@@ -250,7 +248,8 @@ KCM.SimpleKCM {
         }
         errorText = ""
         statusText = ""
-        markPending(providerID, true, true)
+        var item = providerByID(providerID)
+        markPending(providerID, true, item ? item.enabled : false)
         var cliProviderID = providerCliArgument(providerID)
 
         var prompt = i18n("API key for %1", displayNameForProvider(providerID))
@@ -287,14 +286,7 @@ KCM.SimpleKCM {
             return
         }
         // A diagnostic started before this write can describe the old source.
-        for (var sourceName in commands) {
-            if (hasOwnKey(commands, sourceName) && commands[sourceName].kind === "diagnose"
-                    && commands[sourceName].provider === providerID) {
-                configSource.disconnectSource(sourceName)
-                commands = CommandLedger.closed(commands, sourceName)
-            }
-        }
-        setProviderDiagnosticLoading(providerID, false)
+        retireProviderDiagnostic(providerID)
         errorText = ""
         statusText = ""
         markPending(providerID, true, providerByID(providerID).enabled)
@@ -488,8 +480,8 @@ KCM.SimpleKCM {
             return
         }
         updateProviderEnabled(descriptor.provider, result.value.enabled)
+        invalidateProviderDiagnostic(descriptor.provider)
         bumpProviderConfigRevision()
-        setProviderDiagnostic(descriptor.provider, null)
         errorText = ""
         statusText = i18n("%1 setting saved", displayNameForProvider(descriptor.provider))
         if (selectedProviderID === descriptor.provider) {
@@ -541,8 +533,8 @@ KCM.SimpleKCM {
         if (result.outcome !== "success") {
             markPending(descriptor.provider, false)
             errorText = result.outcome === "invalidJson"
-                ? providerCommandFailureText(result)
-                : i18n("%1: %2", displayNameForProvider(descriptor.provider), providerCommandFailureText(result))
+                ? providerCommandFailureText(result, "command")
+                : i18n("%1: %2", displayNameForProvider(descriptor.provider), providerCommandFailureText(result, "command"))
             return
         }
         var payload = result.value
@@ -553,6 +545,7 @@ KCM.SimpleKCM {
         }
         updateProviderEnabled(descriptor.provider, newEnabled)
         markPending(descriptor.provider, false)
+        invalidateProviderDiagnostic(descriptor.provider)
         bumpProviderConfigRevision()
         errorText = ""
         statusText = i18n("%1 saved", displayNameForProvider(descriptor.provider))
@@ -568,8 +561,8 @@ KCM.SimpleKCM {
         }
         if (result.outcome !== "success") {
             errorText = result.outcome === "invalidJson"
-                ? providerCommandFailureText(result)
-                : i18n("%1: %2", displayNameForProvider(descriptor.provider), providerCommandFailureText(result))
+                ? providerCommandFailureText(result, "command")
+                : i18n("%1: %2", displayNameForProvider(descriptor.provider), providerCommandFailureText(result, "command"))
             return
         }
         var payload = result.value
@@ -578,6 +571,7 @@ KCM.SimpleKCM {
         } else {
             updateProviderEnabled(descriptor.provider, true)
         }
+        invalidateProviderDiagnostic(descriptor.provider)
         bumpProviderConfigRevision()
         errorText = ""
         statusText = i18n("%1 API key saved", displayNameForProvider(descriptor.provider))
@@ -597,6 +591,7 @@ KCM.SimpleKCM {
         if (result.value && !Array.isArray(result.value) && result.value.enabled !== undefined) {
             updateProviderEnabled(descriptor.provider, result.value.enabled === true)
         }
+        invalidateProviderDiagnostic(descriptor.provider)
         bumpProviderConfigRevision()
         errorText = ""
         statusText = i18n("%1 setting saved", displayNameForProvider(descriptor.provider))
@@ -624,10 +619,28 @@ KCM.SimpleKCM {
                 return
             }
         }
+        invalidateProviderDiagnostic(descriptor.provider)
         bumpProviderConfigRevision()
         errorText = ""
         statusText = i18n("%1 action completed", displayNameForProvider(descriptor.provider))
         page.reload(true)
+    }
+
+    function retireProviderDiagnostic(providerID) {
+        for (var sourceName in commands) {
+            if (hasOwnKey(commands, sourceName) && commands[sourceName].kind === "diagnose"
+                    && commands[sourceName].provider === providerID) {
+                configSource.disconnectSource(sourceName)
+                commands = CommandLedger.closed(commands, sourceName)
+            }
+        }
+        setProviderDiagnosticLoading(providerID, false)
+    }
+
+    function invalidateProviderDiagnostic(providerID) {
+        retireProviderDiagnostic(providerID)
+        setProviderDiagnostic(providerID, null)
+        setProviderDiagnosticError(providerID, "")
     }
 
     function handleDiagnoseResult(descriptor, stdoutText, stderrText, exitCode) {
@@ -813,7 +826,8 @@ KCM.SimpleKCM {
             })
         }
         if (supportsApiKeySetup(item.provider) && !descriptorHasField(item, "apiKey")) {
-            rows.push({ title: i18n("Set API key…"), icon: "password-show-off", action: "set-api-key", enabled: !isPending(item.provider) })
+            rows.push({ title: i18n("Set API key…"), icon: "password-show-off", action: "set-api-key", enabled: !isPending(item.provider) && !loading
+                && !CommandLedger.hasKind(commands, "version") })
         }
         var docs = providerDocsUrl(item.provider)
         if (docs.length > 0) {

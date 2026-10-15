@@ -48,6 +48,7 @@ TestCase {
         property string sessionsErrorText: "Loading sessions timed out. Try again."
         property string selectedAccount: ""
         property string selectedProviderID: "codex"
+        property var providerListFocus: null
         property int providerToggleCount: 0
         property bool providerEnabled: false
         property bool incidentOnMeter: true
