@@ -40,6 +40,15 @@ The installed `/usr/local/bin/codexbar` reports 0.74.1 and was not replaced.
   or environment-specific workaround belongs in QML. Parallel refuses both
   API-key setup and API source. Its browser-session setup remains blocked
   on generic cookie actions.
+- OpenAI Admin API audio-token totals are a CLI-owned correction. The plugin
+  now treats `input_audio_tokens` and `output_audio_tokens` as breakdowns of
+  the already inclusive `input_tokens` and `output_tokens`, rather than adding
+  them again, in both daily/model history and live buckets. Plasma's
+  `ProviderNormalizer.js` prefers explicit `totalTokens` and has no audio-field
+  addition, so no frontend arithmetic change is established. Verify nonzero
+  audio breakdowns together with the pending OpenAI Linux output case before
+  claiming corrected end-to-end totals. This review inspected the tagged
+  plugin only; it did not reproduce an authenticated audio response.
 - `cost --identified-only --provider codex --json` is accepted. With no native
   history it exits 1 with `allSourcesAvailable: false`, `partial: true`, and
   a local report saying identified usage is unavailable. Help documents

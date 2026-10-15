@@ -292,6 +292,10 @@ These are unresolved Linux candidates, not confirmed missing features.
 
 - [ ] Verify 0.75.0 OpenAI `usage.throughput` output, minute/model buckets,
   delayed and pending minutes, and per-credential manual rate-limit contracts.
+  Include nonzero audio breakdowns in daily/model and live totals: 0.75.0 fixes
+  CLI double-counting because input/output totals already include audio.
+  Plasma prefers explicit totals; verify their end-to-end preservation without
+  adding audio breakdowns again.
   Source has an encoded throughput field, but no authenticated Linux output
   was observed. Verify Claude spend-only monthly caps/resets too; its macOS
   UTC rollover helper is not an emitted authoritative reset.
