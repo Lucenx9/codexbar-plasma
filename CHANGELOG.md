@@ -10,6 +10,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ## Unreleased
 
+### Fixed
+
+- Include icon-to-label spacing in the account selector button's padding calculation to prevent premature text truncation and improve label alignment.
+
 ## 0.2.48 - 2026-10-15
 
 ### Added

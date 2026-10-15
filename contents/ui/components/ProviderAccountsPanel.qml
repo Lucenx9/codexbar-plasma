@@ -134,7 +134,7 @@ ColumnLayout {
                 readonly property string subtitle: accountsPanel.applet.accountSubtitle(modelData)
                 readonly property bool accountSelected: accountsPanel.applet.accountIsSelected(modelData, accountsPanel.providerData)
                 readonly property string fullLabel: subtitle.length > 0 ? label + " · " + subtitle : label
-                readonly property real labelPadding: icon.width + Kirigami.Units.largeSpacing * 2
+                readonly property real labelPadding: icon.width + Kirigami.Units.smallSpacing + Kirigami.Units.largeSpacing * 2
                 readonly property bool textTruncated: accountFontMetrics.advanceWidth(fullLabel)
                     > Math.max(0, width - labelPadding)
 
