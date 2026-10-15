@@ -29,6 +29,7 @@ QtObject {
             "bifrost": i18n("Bifrost"),
             "chutes": i18n("Chutes"),
             "claude": i18n("Claude"),
+            "claudeplatform": i18n("Claude Platform"),
             "clawrouter": i18n("ClawRouter"),
             "clinepass": i18n("ClinePass"),
             "codebuff": i18n("Codebuff"),

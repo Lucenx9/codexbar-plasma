@@ -21,6 +21,7 @@ TestCase {
 
     function test_lateAddedProvidersHaveBundledFallbackTitles_data() {
         return [
+            { tag: "claudeplatform", key: "claudeplatform", title: "Claude Platform" },
             { tag: "fal", key: "fal", title: "fal" },
             { tag: "flora", key: "flora", title: "FLORA" },
             { tag: "parallel", key: "parallel", title: "Parallel" },

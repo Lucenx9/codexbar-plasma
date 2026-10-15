@@ -20,6 +20,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Complete Claude Platform fallback metadata from CodexBar 0.76.0, including
+  its name, shared Claude icon and color, alias, and Console links. Linux cookie
+  setup remains unavailable in the official CLI.
 - Preserve an announced pace warning across incomplete readings with the same
   reset timestamp, preventing duplicate warnings when complete data returns.
 - Restore CLI-reported reset countdowns, expected usage and run-out forecasts

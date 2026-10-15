@@ -179,12 +179,12 @@ themes.
 Provider authentication and data support come from the CLI. The widget includes
 per-provider source selection in **Providers → Settings and diagnostics** with
 CLI 0.73.0 or later; General's source override takes precedence. It also includes
-fallback metadata for all 103 providers in the official CodexBar 0.75.0 registry,
+fallback metadata for all 104 providers in the official CodexBar 0.76.0 registry,
 covering names, icons, and documentation links, with brand colors and dashboard
 and status links where upstream defines them. Available metrics and setup
 actions vary by provider. Command Code and fal offer single API-key setup with
 CLI 0.75.0 or later. The proposed generic provider-settings descriptor is
-not available in CLI 0.75.0; its additional editors remain unavailable.
+not available in CLI 0.76.0; its additional editors remain unavailable.
 
 <!-- Web links to guides also work in the installed package, which omits those files. -->
 See the [usage and settings guide](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md)

@@ -1137,6 +1137,10 @@ msgid "Claude"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
+msgid "Claude Platform"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
 msgid "ClawRouter"
 msgstr ""
 

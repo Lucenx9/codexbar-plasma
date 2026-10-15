@@ -104,15 +104,6 @@ Issues linked below preserve discussion; this file owns parity status.
   Later probes verify only their named cases. Older blockers below retain their
   last verified version; source inspection is not authenticated output evidence.
 
-## Plasma-native and implementable now
-
-- [ ] Add Claude Platform's fallback provider metadata and bundled icon mapping.
-  Official Linux CLI 0.76.0 lists `claudeplatform`; `make check-provider-icons`
-  fails with `missing bundled provider icon mapping: claudeplatform` on Plasma
-  `ee93a5e`, before the separate Claude `percentOnly` fix. Keep the graceful
-  unknown-provider fallback until this metadata is added. Authenticated usage
-  and cookie setup remain separately blocked below.
-
 ## Blocked on official Linux CLI contracts
 
 These are useful Linux features once the named contract exists. Do not fill
