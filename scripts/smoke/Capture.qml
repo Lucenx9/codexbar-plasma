@@ -1984,15 +1984,37 @@ Item {
                 && hasVisibleText(applet.fullRepresentationItem, i18n("%1 (estimated)", i18n("%1% %2", 95, i18n("used"))))
                 && hasVisibleText(applet.fullRepresentationItem, i18n("Estimated usage; not a measured account quota."));
         }
-        if (scenario === "percent-only-usage") {
+        if (scenario === "percent-only-usage" || scenario === "percent-only-pace") {
             verifyScenario(claude.rows[0].dataConfidence === "percentOnly", "limited confidence disappeared in the root adapter");
             verifyScenario(applet.quotaSeverity(claude.rows[1]) === "" && applet.quotaWarningMarkers(claude.rows[1]).length === 0,
                 "limited-detail quota gained warning colours or threshold markers");
             verifyScenario(applet.notificationObservationRows(claude)[0].dataConfidence === "percentOnly",
                 "notification adapter discarded limited confidence");
+            verifyScenario(applet.usageResetText(claude.rows[0]) === "" && applet.usageResetText(claude.rows[1]).length > 0,
+                "reported weekly reset disappeared or missing session reset was invented");
+            if (scenario === "percent-only-pace") {
+                verifyScenario(applet.paceMarkerPercent(claude.rows[1]) === 43,
+                    "reported pace marker disappeared");
+                verifyScenario(applet.runOutTextForRow(claude.rows[1]).length > 0 && !applet.paceWarningActive(claude.rows[1]),
+                    "reported panel ETA disappeared or enabled automated pace warnings");
+                verifyScenario(hasVisibleText(applet.fullRepresentationItem, applet.usagePaceText(claude.rows[1])),
+                    "reported pace summary disappeared");
+                if (!navigationVerified) {
+                    applet.Plasmoid.configuration.privacyMode = true;
+                    navigationVerified = true;
+                    return false;
+                }
+                var privateClaude = applet.providerPresentation(claude);
+                verifyScenario(privateClaude.rows[1].pace.length > 0
+                    && hasVisibleText(applet.fullRepresentationItem, applet.usagePaceText(privateClaude.rows[1]))
+                    && !hasVisibleText(applet.fullRepresentationItem, "demo@example.com"),
+                    "private popup lost structured pace or exposed account identity");
+            } else {
+                verifyScenario(applet.usagePaceText(claude.rows[1]) === "", "missing forecast was invented");
+            }
             return applet.selectedProviderID === "claude"
                 && hasVisibleText(applet.fullRepresentationItem, i18n("%1 (limited detail)", i18n("%1% %2", 0, i18n("used"))))
-                && hasVisibleText(applet.fullRepresentationItem, i18n("%1 (limited detail)", i18n("%1% %2", 100, i18n("used"))))
+                && hasVisibleText(applet.fullRepresentationItem, i18n("%1 (limited detail)", i18n("%1% %2", scenario === "percent-only-pace" ? 80 : 100, i18n("used"))))
                 && hasVisibleText(applet.fullRepresentationItem, i18n("Usage percentages are available; quota details are limited."));
         }
         if (scenario === "popup-content")
@@ -2261,7 +2283,7 @@ Item {
                     popup.Window.window.width = 640;
                     popup.Window.window.height = 880;
                     capture.applet.openProviderFromPanel("codex");
-                } else if (capture.scenario === "percent-only-usage") {
+                } else if (capture.scenario === "percent-only-usage" || capture.scenario === "percent-only-pace") {
                     capture.applet.openProviderFromPanel("claude");
                 } else if (capture.scenario === "subscription-dates" || capture.scenario === "estimated-usage" || capture.scenario === "popup-content" || capture.scenario === "popup-hidden-rows"
                         || capture.scenario === "popup-hidden-sections") {

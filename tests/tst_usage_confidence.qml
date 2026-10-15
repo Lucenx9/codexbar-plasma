@@ -28,6 +28,10 @@ TestCase {
         return source;
     }
 
+    function i18np(one, many, count) {
+        return i18n(count === 1 ? one : many, count);
+    }
+
     function provider(confidence, percent) {
         var input = {
             provider: "opencodego",
@@ -92,9 +96,12 @@ TestCase {
         compare(panelText.displayText(item.rows[1], "percent", "", ""), "100% used (limited detail)");
         for (var row of item.rows) {
             compare(row.dataConfidence, "percentOnly");
-            compare(row.resetsAt, "");
             verify(!row.paceKnown);
         }
+        compare(item.rows[0].resetsAt, "");
+        compare(item.rows[1].resetsAt, input.usage.secondary.resetsAt);
+        compare(text.resetText(item.rows[1], nowMs, false), "1d 10h");
+        compare(PanelDisplay.rowForMode(item.rows, "resetTime"), item.rows[1]);
     }
 
     function degradedConfidence_data() {
@@ -103,6 +110,25 @@ TestCase {
             {tag: "percent-only", confidence: "percentOnly"},
             {tag: "unknown", confidence: "unknown"}
         ];
+    }
+
+    function test_claudeReportedPaceSurvivesLimitedDetail() {
+        var item = Snapshot.normalize({provider: "claude", source: "claude", usage: {
+            dataConfidence: "percentOnly",
+            secondary: {usedPercent: 80, windowMinutes: 10080, resetsAt: "2026-10-18T12:00:00Z"}
+        }, pace: {secondary: {stage: "farAhead", deltaPercent: 37, expectedUsedPercent: 43,
+            willLastToReset: false, etaSeconds: 64800}}}, nowMs);
+        var row = item.rows[0];
+        verify(row.paceKnown);
+        compare(row.pacePercent, 43);
+        compare(row.paceEtaSeconds, 64800);
+        compare(text.paceSummaryPartsText(row.paceParts), "37% in deficit | Expected 43% used | Runs out in 18 hours");
+        compare(panelText.paceText(row), "43% used, behind pace");
+        for (var mode of ["pace", "resetTime", "runOut"])
+            compare(PanelDisplay.rowForMode(item.rows, mode), row);
+        compare(AutoSelect.usedPercent(item), -1);
+        for (var condition of ["usageAtLeast", "resetWithin", "runOut"])
+            verify(!PanelRules.matches({condition: condition, resetMinutes: 10080}, row, nowMs));
     }
 
     function test_estimatesCannotWinAutomaticQuotaSelection_data() { return degradedConfidence_data(); }
@@ -134,8 +160,8 @@ TestCase {
         }
     }
 
-    function test_panelKeepsPercentagesWithoutQuotaTimingOrThresholds_data() { return degradedConfidence_data(); }
-    function test_panelKeepsPercentagesWithoutQuotaTimingOrThresholds(data) {
+    function test_panelDetailsRespectConfidence_data() { return degradedConfidence_data(); }
+    function test_panelDetailsRespectConfidence(data) {
         var row = provider(data.confidence, 95).rows[0];
         // Guards also protect adapters fed older in-memory rows.
         row.pacePercent = 30;
@@ -145,8 +171,9 @@ TestCase {
         row.resetDescription = "Synthetic reset";
         compare(PanelDisplay.rowForMode([row], "percent"), row);
         compare(PanelDisplay.meterRows([row], "auto"), [row]);
-        for (var mode of ["pace", "resetTime", "runOut"])
-            compare(PanelDisplay.rowForMode([row], mode), null);
+        compare(PanelDisplay.rowForMode([row], "resetTime"), data.confidence === "percentOnly" ? row : null);
+        for (var mode of ["pace", "runOut"])
+            compare(PanelDisplay.rowForMode([row], mode), data.confidence === "percentOnly" ? row : null);
         verify(PanelRules.matches({
             condition: "always"
         }, row, nowMs));
@@ -202,6 +229,8 @@ TestCase {
         });
         compare(privateItem.dataConfidence, data.confidence);
         compare(privateItem.rows[0].dataConfidence, data.confidence);
+        var reset = item.rows[0].resetsAt ? new Date(item.rows[0].resetsAt).toISOString() : "";
+        compare(privateItem.rows[0].resetsAt, reset);
         var fresh = Cache.reconcile([], [item], nowMs);
         var retained = Cache.reconcile(fresh, [
             {
@@ -216,6 +245,7 @@ TestCase {
         var decoded = Cache.decode(encoded, context, nowMs);
         compare(decoded[0].usage.dataConfidence, data.confidence || undefined);
         compare(Snapshot.normalize(decoded[0], nowMs).rows[0].dataConfidence, data.confidence);
+        compare(Snapshot.normalize(decoded[0], nowMs).rows[0].resetsAt, reset);
         var hostile = JSON.parse(encoded);
         hostile.snapshots[0].dataConfidence = {
             secret: "private-token"
@@ -313,6 +343,46 @@ TestCase {
             {tag: "unknown-low", confidence: "unknown", used: 0},
             {tag: "unknown-high", confidence: "unknown", used: 100}
         ];
+    }
+
+    function test_degradedConfidenceKeepsNotifiedPace_data() {
+        return [
+            {tag: "percent-only-active", confidence: "percentOnly", active: true},
+            {tag: "percent-only-quiet", confidence: "percentOnly", active: false},
+            {tag: "estimated-active", confidence: "estimated", active: true},
+            {tag: "estimated-quiet", confidence: "estimated", active: false},
+            {tag: "unknown-active", confidence: "unknown", active: true},
+            {tag: "unknown-quiet", confidence: "unknown", active: false}
+        ];
+    }
+    function test_degradedConfidenceKeepsNotifiedPace(data) {
+        var options = {mode: "prime", quotaEnabled: false, paceEnabled: true,
+            resetEnabled: false, statusEnabled: false};
+        var measured = observation("exact", 85, "", true);
+        measured.rows[0].resetsAt = "2026-10-18T12:00:00Z";
+        var degraded = observation(data.confidence, 85, "", data.active);
+        degraded.rows[0].resetsAt = measured.rows[0].resetsAt;
+        var result = Notifications.transition([measured], {}, options);
+        options.mode = "observe";
+        var before = JSON.stringify(result.nextMemo);
+        var partial = Notifications.transition([degraded], result.nextMemo, options);
+        compare(partial.intents.length, 0);
+        compare(JSON.stringify(result.nextMemo), before);
+        result = Notifications.transition([measured], partial.nextMemo, options);
+        compare(result.intents.length, 0);
+        measured.rows[0].paceActive = false;
+        result = Notifications.transition([measured], result.nextMemo, options);
+        compare(result.intents.length, 0);
+        measured.rows[0].paceActive = true;
+        result = Notifications.transition([measured], result.nextMemo, options);
+        compare(result.intents.length, 1);
+        compare(result.intents[0].kind, "pace");
+        result = Notifications.transition([measured], result.nextMemo, options);
+        compare(result.intents.length, 0);
+        measured.rows[0].resetsAt = "2026-10-25T12:00:00Z";
+        result = Notifications.transition([measured], result.nextMemo, options);
+        compare(result.intents.length, 1);
+        compare(result.intents[0].kind, "pace");
     }
     function test_degradedConfidenceKeepsNotifiedQuotaLevel(data) {
         var options = {mode: "prime", quotaEnabled: true, paceEnabled: false,

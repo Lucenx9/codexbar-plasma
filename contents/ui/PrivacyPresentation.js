@@ -33,6 +33,29 @@ function errorText(value, enabled, hiddenText) {
     return enabled ? (typeof value === "string" && value.length > 0 ? hiddenText : "") : value
 }
 
+function quotaPaceParts(parts) {
+    if (!Array.isArray(parts)) return []
+    var result = []
+    for (var i = 0; i < Math.min(parts.length, 6); i++) {
+        var part = parts[i]
+        var kind = field(part, "kind", "")
+        if (kind === "onTrack" || kind === "lasts") {
+            result.push({kind: kind})
+        } else if (kind === "expected" || kind === "deficit" || kind === "reserve") {
+            var percent = numeric(part, "percent", NaN)
+            if (percent >= 0 && percent <= 100) {
+                result.push({kind: kind, percent: Math.round(percent)})
+            }
+        } else if (kind === "runsOut") {
+            var seconds = numeric(part, "seconds", NaN)
+            if (seconds >= 0 && seconds <= Normalizer.maximumPaceEtaSeconds) {
+                result.push({kind: kind, seconds: seconds})
+            }
+        }
+    }
+    return result
+}
+
 function quota(row, enabled, label) {
     if (!enabled) {
         return row
@@ -54,6 +77,7 @@ function quota(row, enabled, label) {
         paceOnTop: field(row, "paceOnTop", false) === true,
         paceEtaSeconds: numeric(row, "paceEtaSeconds", 0),
         paceObservedAtMs: numeric(row, "paceObservedAtMs", NaN),
+        paceParts: Normalizer.canPresentQuotaDetails(row) ? quotaPaceParts(field(row, "paceParts", [])) : [],
         resetsAt: timestamp(field(row, "resetsAt", "")),
         // The window length is not identifying and lets cost split by quota week.
         windowMinutes: numeric(row, "windowMinutes", 0),

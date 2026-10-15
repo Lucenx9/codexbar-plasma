@@ -31,6 +31,7 @@ SCENARIOS += ("privacy-cost-details",)
 SCENARIOS += ("usage-retention", "usage-cache-restart")
 SCENARIOS += ("estimated-usage", "estimated-panel")
 SCENARIOS += ("percent-only-usage", "percent-only-panel")
+SCENARIOS += ("percent-only-pace",)
 SCENARIOS += ("subscription-dates",)
 SCENARIOS += ("identified-local", "identified-partial", "identified-ssh-failure", "identified-only")
 
@@ -75,11 +76,15 @@ def usage(provider, scenario, now):
         snapshot["usage"]["primary"]["usedPercent"] = 95
         snapshot["pace"] = {"primary": {"expectedUsedPercent": 30,
             "willLastToReset": False, "etaSeconds": 3600}}
-    if scenario in ("percent-only-usage", "percent-only-panel") and provider == "claude":
+    if scenario in ("percent-only-usage", "percent-only-panel", "percent-only-pace") and provider == "claude":
         snapshot["source"] = "claude"
         snapshot["usage"]["dataConfidence"] = "percentOnly"
         snapshot["usage"]["primary"].update(usedPercent=0, resetsAt=None)
         snapshot["usage"]["secondary"]["usedPercent"] = 100
+        if scenario == "percent-only-pace":
+            snapshot["usage"]["secondary"]["usedPercent"] = 80
+            snapshot["pace"] = {"secondary": {"stage": "farAhead", "deltaPercent": 37,
+                "expectedUsedPercent": 43, "willLastToReset": False, "etaSeconds": 64800}}
     if scenario in MATRIX_SCENARIOS:
         if provider == "codex":
             snapshot["credits"] = {"remaining": 125}

@@ -20,6 +20,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve an announced pace warning across incomplete readings with the same
+  reset timestamp, preventing duplicate warnings when complete data returns.
+- Restore CLI-reported reset countdowns, expected usage and run-out forecasts
+  for Claude percentage-only readings in popup and panel views, including
+  structured forecasts in privacy mode. Missing details
+  stay omitted; estimated/unknown data and automatic quota safeguards keep their
+  existing behavior.
 - Recognize Claude CLI's `percentOnly` usage confidence as limited detail
   instead of unknown. Preserve it through privacy mode, retained usage and
   quota caches, with translated panel/popup text and a distinct panel badge.

@@ -142,6 +142,10 @@ macOS app; the guides describe supported behavior. Agents maintain both through 
   synthetic native partial-priced cost output, identified-request local/remote
   merge and failure semantics, authoritative reset-credit inventory, and the
   seeded historical-pricing output and remaining import verification limits.
+- [0.76.0 Claude detail contract](research/2026-10-15-claude-details-0.76.0.md):
+  official Linux output for percentage-only resets and pace through an isolated
+  synthetic Claude CLI, plus separate authenticated CLI/OAuth observations and
+  exhausted-window forecast semantics.
 - [Settings decisions](research/2026-09-08-settings-experience.md): Panel disclosure and text grouping,
   Plasma settings, privacy, refresh behavior, the macOS 0.56.8 comparison, and
   the shared settings visual conventions.

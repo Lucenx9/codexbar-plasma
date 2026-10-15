@@ -86,16 +86,26 @@ work and upstream contract requirements.
   are limited. This value was verified in official Linux CLI 0.74.1 output from
   `codexbar usage --provider claude --format json --json-only`, with
   `source: "claude"`, numeric primary/secondary percentages, a null primary
-  reset and a secondary reset timestamp. It is preserved as a distinct state,
-  without promoting it to complete measured quota data.
-  These rows have no quota warning colors, threshold or pace markers, reset
-  countdowns, run-out forecasts, or quota/pace/reset notifications. They do not
+  reset and a secondary reset timestamp. It is preserved as a distinct state.
+  Percentage-only rows show explicit CLI resets and pace forecasts in the popup
+  and panel, including expected usage, run-out text and pace markers. They never
+  infer missing reset dates or forecasts. Official Linux CLI 0.76.0 can emit
+  both resets and pace with `percentOnly`, as verified by the
+  [Claude detail contract probe](research/2026-10-15-claude-details-0.76.0.md).
+  Privacy mode preserves structured expected usage and run-out forecasts while
+  hiding account identity and prose-only forecast fallbacks.
+  Estimated and unknown-confidence rows still suppress these details.
+  These incomplete readings have no quota warning colors, threshold markers,
+  or quota/pace/reset notifications. They do not
   rank automatic provider selection by consumption or satisfy conditional panel
   visibility rules other than Always. Provider status remains independent.
   A previously notified quota threshold survives these unverified readings, so
   returning measured usage at the same threshold does not repeat the warning.
   A measured recovery clears that threshold, and a later measured crossing can
   notify again. Unverified readings disarm pending limit-reset notifications.
+  An announced pace warning also survives incomplete readings of the same
+  window, so returning complete data does not repeat it. A measured recovery
+  or a new reset window can establish a new warning.
   Confidence, including limited detail, survives privacy mode, failed-refresh
   retention, and newly saved quota caches. Older CLI payloads and caches without the field keep their
   existing behavior; OpenCode Go estimates already saved by an older widget

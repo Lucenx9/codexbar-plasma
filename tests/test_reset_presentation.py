@@ -139,6 +139,19 @@ TestCase {
         compare(observedReset, "");
         privacyMode = false;
         compare(observedReset, "Synthetic fallback");
+        panelClockMs = Date.UTC(2026, 8, 13, 12);
+        row = {dataConfidence: "percentOnly", resetsAt: "2026-09-13T13:00:00Z"};
+        resetTimesShowAbsolute = false;
+        compare(observedReset, data.hour);
+        panelClockMs += 60000;
+        compare(observedReset, data.minutes);
+        privacyMode = true;
+        compare(observedReset, data.minutes);
+        for (var confidence of ["estimated", "unknown", "future-value"]) {
+            row = {dataConfidence: confidence, resetsAt: "2026-09-13T13:00:00Z"};
+            compare(observedReset, "");
+        }
+        privacyMode = false;
         row = {reset: "Legacy reset"};
         compare(observedReset, "Legacy reset");
         row = null;

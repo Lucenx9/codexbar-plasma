@@ -44,7 +44,7 @@ QtObject {
     }
 
     function paceText(row) {
-        if (!row || row.pacePercent < 0 || !Normalizer.authoritativeQuota(row)) {
+        if (!row || row.pacePercent < 0 || !Normalizer.canPresentQuotaDetails(row)) {
             return ""
         }
         var shownPace = root.usageBarsShowUsed ? row.pacePercent

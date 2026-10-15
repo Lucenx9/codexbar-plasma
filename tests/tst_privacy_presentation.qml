@@ -65,6 +65,38 @@ TestCase {
         compare(Privacy.provider(source, false, labels()), source)
     }
 
+    function test_quotaPreservesOnlyBoundedSemanticPaceParts() {
+        var row = quota()
+        row.dataConfidence = "percentOnly"
+        row.paceParts = [
+            {kind: "fallback", text: "confidential prose"},
+            {kind: "expected", percent: 43, text: "confidential extra"},
+            {kind: "runsOut", seconds: 64800, token: "confidential token"}
+        ]
+        var before = JSON.stringify(row)
+        var result = Privacy.quota(row, true, "Usage")
+        compare(result.paceParts, [{kind: "expected", percent: 43}, {kind: "runsOut", seconds: 64800}])
+        verify(JSON.stringify(result).indexOf("confidential") < 0)
+        compare(JSON.stringify(row), before)
+        result.paceParts[0].percent = 20
+        compare(row.paceParts[1].percent, 43)
+        for (var confidence of ["estimated", "unknown"]) {
+            row.dataConfidence = confidence
+            compare(Privacy.quota(row, true, "Usage").paceParts, [])
+        }
+        row.dataConfidence = "exact"
+        row.paceParts = [null, [], {kind: "expected", percent: "43"},
+            {kind: "expected", percent: Infinity}, {kind: "expected", percent: -1},
+            {kind: "runsOut", seconds: 31536001}]
+        compare(Privacy.quota(row, true, "Usage").paceParts, [])
+        row.paceParts = [{kind: "onTrack"}, {kind: "deficit", percent: 5},
+            {kind: "reserve", percent: 2}, {kind: "expected", percent: 0},
+            {kind: "lasts"}, {kind: "runsOut", seconds: 0}]
+        compare(Privacy.quota(row, true, "Usage").paceParts, row.paceParts)
+        while (row.paceParts.length < 100) row.paceParts.push({kind: "onTrack"})
+        compare(Privacy.quota(row, true, "Usage").paceParts.length, 6)
+    }
+
     function test_costKeepsMissingAndZeroAmountsWhileRemovingNames() {
         var source = cost()
         var before = JSON.stringify(source)
