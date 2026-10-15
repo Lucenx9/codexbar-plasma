@@ -240,9 +240,11 @@ If the probe cannot identify the CLI, installation waits until **Retry** succeed
 or the selected command is confirmed missing. **Automatically update the
 managed CLI daily** is optional and off by default; it acts only while the
 managed command path is selected. Downloads match the host architecture/libc,
-verify GitHub SHA-256 metadata and the published checksum, and switch atomically
-after a version probe. A restored version stays selected until a newer release
-arrives or you explicitly update again. See [managed CLI details](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#managed-cli).
+verify GitHub SHA-256 metadata and the published checksum, accept only bounded
+expected archive entries (including the optional third-party notice), and
+switch atomically after a version probe. A restored version stays selected
+until a newer release arrives or you explicitly update again. See
+[managed CLI details](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/usage.md#managed-cli).
 
 For a source checkout, see the [development update commands](https://github.com/Lucenx9/codexbar-plasma/blob/main/docs/development.md#work-from-a-checkout).
 The source-checkout helper `./install.sh` checks for `kpackagetool6` and

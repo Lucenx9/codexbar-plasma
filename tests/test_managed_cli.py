@@ -156,6 +156,24 @@ class ManagedCliTests(unittest.TestCase):
             self.operation("update")
         self.assertEqual(cli.status(self.root)["version"], "0.62.0")
 
+    def test_install_accepts_bounded_third_party_notices(self):
+        notice = tarfile.TarInfo("THIRD_PARTY_NOTICES")
+        notice.size = 128
+        self.publish(extra=notice)
+
+        result = self.operation("install")
+
+        self.assertEqual(result["status"], "installed")
+        installed = self.root / os.readlink(self.root / "current") / notice.name
+        self.assertEqual(installed.read_bytes(), b"x" * notice.size)
+        self.assertEqual(installed.stat().st_mode & 0o777, 0o600)
+
+        self.publish(extra=notice)
+        with tempfile.TemporaryDirectory(dir=self.base) as directory, \
+                patch.object(cli, "MAX_NOTICE", notice.size - 1), \
+                self.assertRaisesRegex(ValueError, "archive_size"):
+            cli.unpack(self.payload, Path(directory))
+
     def test_binary_staged_files_report_unverified(self):
         self.operation("install")
         self.publish("0.63.0")
@@ -216,6 +234,7 @@ class ManagedCliTests(unittest.TestCase):
                                        ("CodexBar_CodexBarCore.bundle/..", tarfile.REGTYPE, "", 0),
                                        ("CodexBarCLI", tarfile.REGTYPE, "", 0),
                                        ("CodexBar_CodexBarCore.bundle/bad", tarfile.SYMTYPE, "/etc", 0),
+                                       ("THIRD_PARTY_NOTICES", tarfile.SYMTYPE, "VERSION", 0),
                                        ("device", tarfile.CHRTYPE, "", 0),
                                        ("CodexBar_CodexBarCore.bundle/big", tarfile.REGTYPE, "", 100)]:
             item = tarfile.TarInfo(name)
