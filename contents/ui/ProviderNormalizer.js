@@ -227,7 +227,7 @@ function usageConfidence(value) {
     if (value === undefined || value === "") {
         return ""
     }
-    return value === "exact" || value === "estimated" ? value : "unknown"
+    return value === "exact" || value === "estimated" || value === "percentOnly" ? value : "unknown"
 }
 
 // CLI and persisted records use field absence for legacy confidence. The empty

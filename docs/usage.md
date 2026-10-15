@@ -81,6 +81,13 @@ work and upstream contract requirements.
   provider detail explains that these values are not measured account quotas.
   Unknown confidence, including an explicitly empty CLI/cache value, has a `?`
   badge and an unverified-quota label.
+  CLI `dataConfidence: "percentOnly"` instead says "limited detail", with a `…`
+  panel badge and a note that usage percentages are available but quota details
+  are limited. This value was verified in official Linux CLI 0.74.1 output from
+  `codexbar usage --provider claude --format json --json-only`, with
+  `source: "claude"`, numeric primary/secondary percentages, a null primary
+  reset and a secondary reset timestamp. It is preserved as a distinct state,
+  without promoting it to complete measured quota data.
   These rows have no quota warning colors, threshold or pace markers, reset
   countdowns, run-out forecasts, or quota/pace/reset notifications. They do not
   rank automatic provider selection by consumption or satisfy conditional panel
@@ -89,8 +96,8 @@ work and upstream contract requirements.
   returning measured usage at the same threshold does not repeat the warning.
   A measured recovery clears that threshold, and a later measured crossing can
   notify again. Unverified readings disarm pending limit-reset notifications.
-  Confidence survives privacy mode, failed-refresh retention, and newly saved
-  quota caches. Older CLI payloads and caches without the field keep their
+  Confidence, including limited detail, survives privacy mode, failed-refresh
+  retention, and newly saved quota caches. Older CLI payloads and caches without the field keep their
   existing behavior; OpenCode Go estimates already saved by an older widget
   gain their qualifier on the next successful refresh.
 - A plain credit balance has no allowance denominator and stays meter-free.

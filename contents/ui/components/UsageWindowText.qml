@@ -15,6 +15,8 @@ QtObject {
         switch (Normalizer.usageConfidence(row.dataConfidence)) {
         case "estimated":
             return i18n("%1 (estimated)", text);
+        case "percentOnly":
+            return i18n("%1 (limited detail)", text);
         case "unknown":
             return i18n("%1 (confidence unknown)", text);
         default:
@@ -27,6 +29,8 @@ QtObject {
         switch (Normalizer.usageConfidence(row.dataConfidence)) {
         case "estimated":
             return i18n("Estimated usage; not a measured account quota.");
+        case "percentOnly":
+            return i18n("Usage percentages are available; quota details are limited.");
         case "unknown":
             return i18n("Usage confidence is unknown; account quota is unverified.");
         default:

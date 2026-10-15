@@ -1920,12 +1920,20 @@ msgctxt ""
 msgid "%1 %2, %3"
 msgstr ""
 
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
+msgid "%1 (limited detail)"
+msgstr ""
+
 #: contents/ui/components/UsageWindowText.qml
 msgid "%1 (confidence unknown)"
 msgstr ""
 
 #: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
 msgid "Estimated usage; not a measured account quota."
+msgstr ""
+
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
+msgid "Usage percentages are available; quota details are limited."
 msgstr ""
 
 #: contents/ui/components/UsageWindowText.qml

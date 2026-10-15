@@ -98,8 +98,10 @@ class LocalizedCliLabelTests(unittest.TestCase):
                               "confidence": {
                                   "estimated": translated("%1 (estimated)", translated("%1% %2", 95, translated("used"))),
                                   "unknown": translated("%1 (confidence unknown)", translated("%1% %2", 95, translated("used"))),
+                                  "percentOnly": translated("%1 (limited detail)", translated("%1% %2", 95, translated("used"))),
                                   "note": translated("Estimated usage; not a measured account quota."),
                                   "unknownNote": translated("Usage confidence is unknown; account quota is unverified."),
+                                  "limitedNote": translated("Usage percentages are available; quota details are limited."),
                               },
                               "periods": {
                                   "month": translated("Month to date"),
@@ -169,6 +171,9 @@ TestCase {
         estimate.dataConfidence = "unknown";
         compare(usageWindowText.percentText(estimate, true), row.confidence.unknown);
         compare(usageWindowText.confidenceText(estimate), row.confidence.unknownNote);
+        estimate.dataConfidence = "percentOnly";
+        compare(usageWindowText.percentText(estimate, true), row.confidence.percentOnly);
+        compare(usageWindowText.confidenceText(estimate), row.confidence.limitedNote);
         var units = ["tokens", "requests", "points"];
         for (var u = 0; u < units.length; u++) {
             var singular = row.counts[u][0];

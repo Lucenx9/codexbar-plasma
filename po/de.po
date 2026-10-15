@@ -3928,3 +3928,11 @@ msgid ""
 "SSH runs only with the separate local + SSH button. Configure authentication "
 "and trusted host keys beforehand; no SSH prompts are shown."
 msgstr "SSH wird nur über die separate Schaltfläche lokal + SSH ausgeführt. Richten Sie Authentifizierung und vertrauenswürdige Hostschlüssel vorher ein; SSH zeigt keine Eingabeaufforderungen an."
+
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
+msgid "%1 (limited detail)"
+msgstr "%1 (eingeschränkte Details)"
+
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
+msgid "Usage percentages are available; quota details are limited."
+msgstr "Nutzungsprozentsätze sind verfügbar; Quotendetails sind eingeschränkt."

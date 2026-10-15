@@ -47,10 +47,10 @@ Item {
     readonly property bool readmePanelScenario: scenario.indexOf("readme-panel-") === 0
     readonly property bool verticalPanelScenario: scenario.indexOf("panel-vertical") === 0
     readonly property bool capsulePanelScenario: verticalPanelScenario || scenario === "panel-small" || scenario === "panel-dual-edge"
-    readonly property bool standardPanelScenario: scenario === "estimated-panel" || scenario === "panel-standard" || scenario === "readme-panel-standard"
+    readonly property bool standardPanelScenario: scenario === "estimated-panel" || scenario === "percent-only-panel" || scenario === "panel-standard" || scenario === "readme-panel-standard"
         || scenario === "panel-vertical" || scenario === "panel-small" || scenario === "panel-dual-edge"
         || scenario === "panel-information" || scenario === "panel-information-single"
-    readonly property bool panelAppearanceScenario: scenario === "estimated-panel" || scenario === "panel-standard" || scenario === "panel-minimal"
+    readonly property bool panelAppearanceScenario: scenario === "estimated-panel" || scenario === "percent-only-panel" || scenario === "panel-standard" || scenario === "panel-minimal"
         || scenario === "panel-minimal-single" || readmePanelScenario || capsulePanelScenario || panelInformationScenario
     readonly property bool readmeScenario: scenario.indexOf("readme-") === 0
     readonly property int expectedProviderCount: scenario === "empty-providers" || scenario === "usage-error" || scenario === "cli-missing" ? 0
@@ -1926,6 +1926,14 @@ Item {
                 verifyScenario(applet.panelMeterDescription(codex).indexOf(i18n("%1 (estimated)", i18n("%1% %2", 95, i18n("used")))) >= 0,
                     "estimated panel tooltip is unqualified");
             }
+            if (scenario === "percent-only-panel") {
+                if (!compactPanelItem) return false;
+                var limitedMarkers = namedItems(compactPanelItem, "panelConfidenceMarker").filter(function(item) { return item.visible; });
+                verifyScenario(limitedMarkers.length === 1 && limitedMarkers[0].text === "…",
+                    "limited-detail meter lost its visible confidence marker");
+                verifyScenario(applet.panelMeterDescription(claude).indexOf(i18n("%1 (limited detail)", i18n("%1% %2", 0, i18n("used")))) >= 0,
+                    "limited-detail panel tooltip is unqualified");
+            }
             var expectedClaudeRows = scenario === "panel-dual-edge" ? 1 : 2;
             if (expectedProviderCount >= 2 && (!claude || claude.error.length > 0 || claude.rows.length !== expectedClaudeRows))
                 return false;
@@ -1975,6 +1983,17 @@ Item {
             return applet.selectedProviderID === "codex"
                 && hasVisibleText(applet.fullRepresentationItem, i18n("%1 (estimated)", i18n("%1% %2", 95, i18n("used"))))
                 && hasVisibleText(applet.fullRepresentationItem, i18n("Estimated usage; not a measured account quota."));
+        }
+        if (scenario === "percent-only-usage") {
+            verifyScenario(claude.rows[0].dataConfidence === "percentOnly", "limited confidence disappeared in the root adapter");
+            verifyScenario(applet.quotaSeverity(claude.rows[1]) === "" && applet.quotaWarningMarkers(claude.rows[1]).length === 0,
+                "limited-detail quota gained warning colours or threshold markers");
+            verifyScenario(applet.notificationObservationRows(claude)[0].dataConfidence === "percentOnly",
+                "notification adapter discarded limited confidence");
+            return applet.selectedProviderID === "claude"
+                && hasVisibleText(applet.fullRepresentationItem, i18n("%1 (limited detail)", i18n("%1% %2", 0, i18n("used"))))
+                && hasVisibleText(applet.fullRepresentationItem, i18n("%1 (limited detail)", i18n("%1% %2", 100, i18n("used"))))
+                && hasVisibleText(applet.fullRepresentationItem, i18n("Usage percentages are available; quota details are limited."));
         }
         if (scenario === "popup-content")
             return verifyPopupContent();
@@ -2242,6 +2261,8 @@ Item {
                     popup.Window.window.width = 640;
                     popup.Window.window.height = 880;
                     capture.applet.openProviderFromPanel("codex");
+                } else if (capture.scenario === "percent-only-usage") {
+                    capture.applet.openProviderFromPanel("claude");
                 } else if (capture.scenario === "subscription-dates" || capture.scenario === "estimated-usage" || capture.scenario === "popup-content" || capture.scenario === "popup-hidden-rows"
                         || capture.scenario === "popup-hidden-sections") {
                     capture.applet.openProviderFromPanel("codex");
