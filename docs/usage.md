@@ -100,6 +100,11 @@ work and upstream contract requirements.
   text is disabled.
   A Codex extra usage record with nothing used and no cap is an empty
   placeholder and stays hidden; purchased credits remain in the Credits row.
+- Codex reset credits use the CLI's usable-inventory summary when supplied.
+  A reported zero hides the section even if the legacy aggregate is positive,
+  so expired or redeemed credits are not shown as available. Older payloads
+  without the summary retain the legacy count. A failed optional credit fetch
+  does not hide healthy quotas.
 - Panel text modes for percent used or left, pace, usage plus pace, reset time,
   and a run-out forecast that shows the predicted duration only while the CLI
   expects the quota to run out before its reset.

@@ -286,6 +286,7 @@ TestCase {
     function test_staleRetentionDropsSupplementalSections() {
         var item = snapshot("codex", 72);
         item.providerCost = { percentUsed: 32 };
+        item.resetCredits = { availableCount: 2 };
         item.codexCreditLimit = { title: "t", used: 1, limit: 2, remaining: 1, usedPercent: 50, leftPercent: 50, resetsAt: "" };
         item.providerDetails = [{ title: "t", rows: [] }];
         var previous = Cache.reconcile([], [item], nowMs);

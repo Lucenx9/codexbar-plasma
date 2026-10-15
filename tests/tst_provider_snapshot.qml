@@ -7,6 +7,72 @@ import "../contents/ui/ResetPresentation.js" as ResetPresentation
 
 TestCase {
     name: "ProviderSnapshot"
+
+    function test_resetCreditInventoryOverridesLegacyAggregate_data() {
+        return [
+            {tag: "usable", summary: {available: 2, nextExpiresAt: "2026-10-16T00:00:00Z"}, expected: {availableCount: 2}},
+            {tag: "empty", summary: {available: 0}, expected: null},
+            {tag: "expired", summary: {available: 0}, legacy: 1, expected: null},
+            {tag: "null", summary: null, expected: null},
+            {tag: "undefined", summary: undefined, expected: null},
+            {tag: "missing-count", summary: {}, expected: null},
+            {tag: "array", summary: [{available: 2}], expected: null},
+            {tag: "string", summary: {available: "2"}, expected: null},
+            {tag: "boolean", summary: {available: true}, expected: null},
+            {tag: "negative", summary: {available: -1}, expected: null},
+            {tag: "fraction", summary: {available: 1.5}, expected: null},
+            {tag: "infinite", summary: {available: Infinity}, expected: null},
+            {tag: "nan", summary: {available: NaN}, expected: null},
+            {tag: "unsafe", summary: {available: Number.MAX_SAFE_INTEGER + 1}, expected: null},
+            {tag: "object-count", summary: {available: {toString: null}}, expected: null},
+            {tag: "inherited-count", summary: Object.create({available: 2}), expected: null}
+        ];
+    }
+    function test_resetCreditInventoryOverridesLegacyAggregate(data) {
+        var item = {provider: "codex", resetCredits: data.summary, usage: {
+            primary: {usedPercent: 25},
+            codexResetCredits: {availableCount: data.legacy === undefined ? 99 : data.legacy}
+        }};
+        var before = JSON.stringify(item);
+        var snapshot = ProviderSnapshot.normalize(item, 1000);
+        compare(snapshot.resetCredits, data.expected);
+        compare(snapshot.rows[0].usedPercent, 25);
+        compare(JSON.stringify(item), before);
+        if (snapshot.resetCredits) {
+            verify(JSON.stringify(snapshot.resetCredits).indexOf("nextExpiresAt") < 0);
+            snapshot.resetCredits.availableCount = 3;
+            compare(item.resetCredits.available, 2);
+        }
+    }
+    function test_resetCreditsKeepAbsentSummaryFallback() {
+        var item = {provider: "codex", usage: {primary: {usedPercent: 25},
+            codexResetCredits: {availableCount: 2}}};
+        compare(ProviderSnapshot.normalize(item, 1000).resetCredits, {availableCount: 2});
+        item.usage.codexResetCredits.availableCount = "2";
+        compare(ProviderSnapshot.normalize(item, 1000).resetCredits, {availableCount: 2});
+        item.usage.codexResetCredits.availableCount = 0;
+        compare(ProviderSnapshot.normalize(item, 1000).resetCredits, null);
+        delete item.usage.codexResetCredits;
+        compare(ProviderSnapshot.normalize(item, 1000).resetCredits, null);
+        // An inherited summary is not an emitted CLI field.
+        item = Object.create({resetCredits: {available: 99}});
+        item.provider = "codex";
+        item.usage = {codexResetCredits: {availableCount: 2}};
+        compare(ProviderSnapshot.normalize(item, 1000).resetCredits, {availableCount: 2});
+    }
+    function test_topLevelOnlyResetCreditsPreserveHealthyQuotas() {
+        var item = {provider: "codex", resetCredits: {available: 2},
+            usage: {primary: {usedPercent: 25}}};
+        compare(ProviderSnapshot.normalize(item, 1000).resetCredits, {availableCount: 2});
+        delete item.resetCredits;
+        var failedEnrichment = ProviderSnapshot.normalize(item, 1000);
+        compare(failedEnrichment.resetCredits, null);
+        compare(failedEnrichment.rows[0].usedPercent, 25);
+        verify(!failedEnrichment.commandFailed);
+        item.provider = "claude";
+        item.resetCredits = {available: 2};
+        compare(ProviderSnapshot.normalize(item, 1000).resetCredits, null);
+    }
     function test_confidenceSurvivesWithoutPromotingEstimates_data() {
         return [
             {tag: "estimated", confidence: "estimated", expected: "estimated", authoritative: false},

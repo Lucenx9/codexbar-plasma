@@ -80,6 +80,28 @@ function costFields(cost) {
     };
 }
 
+// The current CLI projects usable inventory at observation time. Its raw
+// legacy aggregate can still include expired credits, so only field absence
+// permits the older fallback, never a reported zero or malformed summary.
+function resetCreditSnapshot(providerID, item, usage) {
+    var current = Guards.hasOwnKey(item, "resetCredits");
+    if (current && providerID !== "codex") {
+        return null;
+    }
+    var record = current ? item.resetCredits : usage.codexResetCredits;
+    var field = current ? "available" : "availableCount";
+    if (!Normalizer.isCliRecord(record) || !Guards.hasOwnKey(record, field)) {
+        return null;
+    }
+    var count = current ? record[field] : Normalizer.strictFiniteNumber(record[field]);
+    if (!current) {
+        return count > 0 ? {availableCount: count} : null;
+    }
+    return typeof count === "number" && isFinite(count) && count > 0
+        && Math.floor(count) === count && count <= Number.MAX_SAFE_INTEGER
+        ? {availableCount: count} : null;
+}
+
 // Shared by usage refreshes and account discovery. Only bounded semantic data
 // survives; QML adds localized labels, provider links, and the current costs.
 function normalize(item, receivedAtMs) {
@@ -121,9 +143,6 @@ function normalize(item, receivedAtMs) {
     var error = Normalizer.isCliRecord(item.error) ? item.error : null;
     var errorMessage = error ? message(Normalizer.safeScalarText(error.message)) : "";
     var status = Normalizer.isCliRecord(item.status) ? item.status : null;
-    // An unusable count renders nothing, so it must not count as supplemental data.
-    var resetCount = Normalizer.isCliRecord(usage.codexResetCredits)
-        ? Normalizer.strictFiniteNumber(usage.codexResetCredits.availableCount) : Number.NaN;
     var credits = Normalizer.isCliRecord(item.credits) ? item.credits : null;
     var codexCreditLimit = Normalizer.normalizeCodexCreditLimit(providerID,
         credits && Guards.hasOwnKey(credits, "codexCreditLimit") ? credits.codexCreditLimit : null);
@@ -161,7 +180,7 @@ function normalize(item, receivedAtMs) {
         rows: rows, providerDetails: providerDetails, usageDashboard: dashboard,
         subscriptionDates: subscriptionDates,
         providerCost: costFields(usage.providerCost),
-        resetCredits: resetCount > 0 ? {availableCount: resetCount} : null,
+        resetCredits: resetCreditSnapshot(providerID, item, usage),
         codexCreditLimit: codexCreditLimit,
         credits: isFinite(remaining) ? remaining : null,
         statusRecord: status ? {indicator: Normalizer.boundedDisplayText(Normalizer.safeScalarText(status.indicator), 500),

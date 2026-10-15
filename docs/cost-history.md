@@ -143,6 +143,16 @@ Track [explicit cost availability](../TODO.md#cost-availability),
 
 ## Pinned CLI evidence
 
+The focused [0.75.0 verification](research/2026-10-15-codex-contracts-0.75.0.md)
+confirms that native mixed priced/unpriced history retains its priced USD
+subtotal and every measured token count. Fully unpriced history omits costs
+instead of reporting zero. Existing normalization and sharing preserve both
+shapes, including their incomplete/estimated notice and privacy projection.
+The separate experimental identified-request local/SSH subtotal has no prices
+and is not consumed by the widget's generic cost path. A synthetic historical
+scanner-cache fixture also verifies known-model partial subtotals and their
+sharing notice. Imported incomplete rows remain unverified.
+
 The scoped implementation used official CodexBar v0.56.8, commit
 `6ef82690b4a718a21fac42b72a102df07e475509`, and its
 [`CLICostCommand.swift`](https://github.com/steipete/CodexBar/blob/6ef82690b4a718a21fac42b72a102df07e475509/Sources/CodexBarCLI/CLICostCommand.swift).

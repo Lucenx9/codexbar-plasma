@@ -26,6 +26,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Use the official CLI's usable Codex reset-credit inventory instead of its
+  potentially stale legacy aggregate. A current zero hides expired credits;
+  older payloads retain their existing fallback.
 - Bound and redact provider settings JSON parsing errors through the shared
   reply protocol, preserving list, write, and diagnostic compatibility.
 - Preserve the last notified quota threshold across estimated or unknown-confidence
