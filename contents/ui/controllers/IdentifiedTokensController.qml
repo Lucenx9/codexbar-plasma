@@ -26,7 +26,7 @@ Item {
         }
         lifecycle.runSerial++;
         var source = CommandLedger.withRunNonce(plan.command, lifecycle.runSerial, Date.now() + "-" + Math.random());
-        var descriptor = CommandLedger.descriptor("identified", "codex", Date.now(), 120000);
+        var descriptor = CommandLedger.descriptor("identified", "codex", Date.now(), IdentifiedTokens.requestDeadlineMs);
         descriptor.plan = plan;
         descriptor.context = lifecycle.context;
         lifecycle.commands = CommandLedger.opened(lifecycle.commands, source, descriptor);

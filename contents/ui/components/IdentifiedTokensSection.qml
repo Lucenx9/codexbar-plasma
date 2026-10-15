@@ -13,7 +13,7 @@ ColumnLayout {
         case "": return "";
         case "timeout": return i18n("Loading identified tokens timed out. Try again.");
         case "tooLarge": return i18n("codexbar response exceeded the supported size.");
-        case "commandUnavailable": return i18n("codexbar could not be started. Check its configured path.");
+        case "commandUnavailable": return i18n("Could not start identified-token collection. Check codexbar and GNU timeout.");
         case "unavailable": return i18n("No selected source supplied identified Codex data. Check local history and SSH setup.");
         default: return i18n("Could not load identified Codex data. Use codexbar 0.75.0 or later on each selected source.");
         }

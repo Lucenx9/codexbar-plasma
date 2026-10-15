@@ -15,7 +15,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 - Optional manual identified Codex token subtotals in Usage & Spend, with
   separate local and local + SSH actions, an independent UTC day window,
   source-availability and excluded-request notices, and no inferred prices.
-  Requires official CLI 0.75.0 or later and remains off by default.
+  Requires official CLI 0.75.0 or later and GNU `timeout`, bounds the command's
+  process group independently of the frontend deadline, and remains off by default.
 
 ## 0.2.48 - 2026-10-15
 

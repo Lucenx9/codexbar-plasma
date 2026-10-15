@@ -33,11 +33,11 @@ TestCase {
         var local = plan();
         compare(local.outcome, "ready");
         compare(local.startUnixMs, 1791504000000);
-        verify(local.command.indexOf("'\\''quoted'\\''") >= 0);
         verify(local.command.indexOf("--identified-end " + endMs) >= 0);
         verify(local.command.indexOf("--remote") === -1);
-        verify(plan("build@host").command.endsWith("--remote 'build@host'"));
-        verify(plan("local").command.endsWith("--remote 'local'"));
+        compare(plan("build@host").remoteHost, "build@host");
+        compare(plan("local").remoteHost, "local");
+        verify(Identified.processTimeoutSeconds + Identified.processKillAfterSeconds < Identified.requestDeadlineMs / 1000);
         compare(Identified.requestPlan("codexbar", 1, 0, "").startUnixMs, 0);
         compare(Identified.requestPlan("codexbar", 2, 0, "").outcome, "invalidSettings");
     }

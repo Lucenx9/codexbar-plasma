@@ -111,7 +111,7 @@ for its limits.
 - Optional AI Insights only: `python3` and GNU `timeout`; for OpenRouter or
   OpenAI keys also `kdialog`, `secret-tool`, and a Secret Service provider such
   as KWallet. Nothing is required while the feature is off.
-- Optional identified Codex token subtotals: `codexbar` 0.75.0 or later.
+- Optional identified Codex token subtotals: `codexbar` 0.75.0 or later and GNU `timeout`.
   Including an SSH source also requires that CLI on the remote computer and
   working noninteractive SSH authentication with trusted host keys.
 - `curl`, `jq`, `python3`, `sha256sum`, GNU `timeout`, and util-linux `flock` for

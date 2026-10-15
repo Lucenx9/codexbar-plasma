@@ -5,6 +5,9 @@
 var maximumRecords = 50000;
 var maximumCount = 9007199254740991;
 var dayMs = 86400000;
+var processTimeoutSeconds = 110;
+var processKillAfterSeconds = 5;
+var requestDeadlineMs = 120000;
 
 function validHost(host) {
     return typeof host === "string" && host.length > 0 && host.length <= 255
@@ -33,7 +36,12 @@ function requestPlan(commandPath, days, endUnixMs, remoteHost) {
         + " cost --provider codex --days " + days
         + " --identified-only --identified-end " + endUnixMs + " --json";
     if (remoteHost.length > 0) command += " --remote " + Guards.shellQuote(remoteHost);
-    return {outcome: "ready", command: command, historyDays: days,
+    // Keep timeout outside the engine-owned shell's lifetime. Disconnecting
+    // that shell must not remove the bound from its CLI/SSH descendants.
+    var script = "command -v timeout >/dev/null 2>&1 || exit 127\n"
+        + "timeout --kill-after=" + processKillAfterSeconds + "s " + processTimeoutSeconds + "s " + command
+        + " &\nwait $!";
+    return {outcome: "ready", command: "/bin/sh -c " + Guards.shellQuote(script), historyDays: days,
         startUnixMs: start, endUnixMs: endUnixMs, remoteHost: remoteHost};
 }
 

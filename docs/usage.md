@@ -446,7 +446,8 @@ while their tab is open.
 Enable **General → Usage history → Show identified Codex token subtotal** to
 add a separate section to the global **Usage & Spend** tab. It is off by
 default and requires official `codexbar` 0.75.0 or later on each selected
-computer. Choose its independent 1–365 day window in General. This window
+computer, plus GNU `timeout` on this computer. Choose its independent 1–365 day
+window in General. This window
 starts at midnight UTC and ends at the exact load time displayed in the result;
 it does not follow the cost chart's calendar periods or range selector.
 
@@ -481,7 +482,12 @@ Results stay in memory until another load, a relevant setting change, or widget
 destruction. Request identities, raw ledgers, SSH errors and host labels are
 never included in the displayed or persisted result. The configured SSH host
 remains editable in General, including in privacy mode. Loads time out after
-120 seconds. Responses above the frontend's 4 MiB JSON limit or outside its
+120 seconds in the frontend. An independent GNU process-group timeout sends
+TERM after 110 seconds and KILL after another 5 seconds, before the frontend
+deadline. It keeps bounding the CLI and its group after a settings change or
+widget destruction retires the reply; retirement alone is not process
+termination. Without `timeout`, collection refuses to run. Responses above the
+frontend's 4 MiB JSON limit or outside its
 supported schema/count bounds are rejected, without truncating a subtotal.
 Real SSH authentication and connectivity remain untested; regression checks
 use synthetic subprocess transport.

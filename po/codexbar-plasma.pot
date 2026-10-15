@@ -604,7 +604,8 @@ msgid "codexbar response exceeded the supported size."
 msgstr ""
 
 #: contents/ui/components/IdentifiedTokensSection.qml
-msgid "codexbar could not be started. Check its configured path."
+msgid ""
+"Could not start identified-token collection. Check codexbar and GNU timeout."
 msgstr ""
 
 #: contents/ui/components/IdentifiedTokensSection.qml

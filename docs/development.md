@@ -112,7 +112,10 @@ synchronized.
   and the localized label adapter. Configuration and effects stay in QML.
 - `contents/ui/controllers/IdentifiedTokensController.qml` owns the opt-in
   identified Codex scan, its manual local/SSH action, nonce, 120-second deadline
-  and disconnect lifecycle. It has no startup or refresh timer. Settings changes
+  and disconnect lifecycle. Its independent GNU process-group timeout sends
+  TERM at 110 seconds and KILL after a 5-second grace; a waiting shell preserves
+  this bound after source disconnection. It has no startup or refresh timer.
+  Settings changes
   retire outstanding requests and clear transient results. `IdentifiedTokens.js`
   validates the captured UTC window, bounded ledger/envelope and exit status,
   then returns aggregate counts without request IDs, hosts or raw errors.

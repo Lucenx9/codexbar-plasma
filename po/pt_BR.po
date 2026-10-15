@@ -3771,8 +3771,8 @@ msgid "Loading identified tokens timed out. Try again."
 msgstr "O carregamento dos tokens identificados excedeu o tempo limite. Tente novamente."
 
 #: contents/ui/components/IdentifiedTokensSection.qml
-msgid "codexbar could not be started. Check its configured path."
-msgstr "Não foi possível iniciar codexbar. Verifique o caminho configurado."
+msgid "Could not start identified-token collection. Check codexbar and GNU timeout."
+msgstr "Não foi possível iniciar a coleta dos tokens identificados. Verifique codexbar e GNU timeout."
 
 #: contents/ui/components/IdentifiedTokensSection.qml
 msgid ""

@@ -169,6 +169,13 @@ destruction retire requests without starting replacements. Ordinary history,
 provider totals, chart selection, sharing and AI Insights do not consume these
 results or start their scans.
 
+The command runs under a separate GNU `timeout` process group: TERM at 110
+seconds, KILL after a 5-second grace, before the 120-second controller deadline.
+A waiting shell keeps that supervisor alive if Plasma disconnects the source
+early. Missing `timeout` fails closed. The real-engine lifecycle fixture
+shortens only the GNU deadlines for stubborn CLI/child processes and verifies
+that both stop, including after settings changes or controller destruction.
+
 ## Pinned CLI evidence
 
 The focused [0.75.0 verification](research/2026-10-15-codex-contracts-0.75.0.md)
