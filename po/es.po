@@ -1902,14 +1902,8 @@ msgid "Custom"
 msgstr "Personalizado"
 
 #: contents/ui/configGeneral.qml
-msgid "Custom interval:"
-msgstr "Intervalo personalizado:"
-
-#: contents/ui/configGeneral.qml
-msgid "%1 second"
-msgid_plural "%1 seconds"
-msgstr[0] "%1 segundo"
-msgstr[1] "%1 segundos"
+msgid "Custom interval (seconds):"
+msgstr "Intervalo personalizado (segundos):"
 
 #: contents/ui/configGeneral.qml
 msgid "Refresh when opening the popup"
@@ -1957,8 +1951,8 @@ msgid "Load local usage and spend history"
 msgstr "Cargar el historial local de uso y gastos"
 
 #: contents/ui/configGeneral.qml
-msgid "History window:"
-msgstr "Período del historial:"
+msgid "History window (days):"
+msgstr "Período del historial (días):"
 
 #: contents/ui/configGeneral.qml
 msgid "Updates"
@@ -1969,8 +1963,8 @@ msgid "Check for widget updates"
 msgstr "Buscar actualizaciones del widget"
 
 #: contents/ui/configGeneral.qml
-msgid "Check every:"
-msgstr "Comprobar cada:"
+msgid "Check every (hours):"
+msgstr "Comprobar cada (horas):"
 
 #: contents/ui/configGeneral.qml
 msgid "Notify when a widget update is available"
@@ -2100,8 +2094,8 @@ msgid "Quota warnings"
 msgstr "Avisos de cuota"
 
 #: contents/ui/configNotifications.qml
-msgid "Quota warning at:"
-msgstr "Aviso de cuota al:"
+msgid "Quota warning (% used):"
+msgstr "Aviso de cuota (% usado):"
 
 #: contents/ui/configNotifications.qml contents/ui/main.qml
 #, kde-format
@@ -2109,8 +2103,8 @@ msgid "%1% used"
 msgstr "%1 % usado"
 
 #: contents/ui/configNotifications.qml
-msgid "Quota critical at:"
-msgstr "Cuota crítica al:"
+msgid "Quota critical (% used):"
+msgstr "Cuota crítica (% usado):"
 
 #: contents/ui/configNotifications.qml
 msgid "Thresholds also set warning colors and markers on usage meters."
@@ -3710,9 +3704,9 @@ msgstr "Web"
 #: contents/ui/configProviders.qml
 msgid ""
 "Choose a source to save. CodexBar validates support for this provider; "
-"Automatic clears its saved override. General's source override takes "
-"precedence in the widget."
-msgstr "Elija una fuente para guardar. CodexBar verifica si el proveedor la admite; Automático borra su fuente forzada guardada. La fuente forzada en General tiene prioridad en el widget."
+"Automatic clears its saved override. The source override in Diagnostics "
+"takes precedence in the widget."
+msgstr "Elija una fuente para guardar. CodexBar verifica si el proveedor la admite; Automático borra su fuente forzada guardada. La fuente forzada en Diagnóstico tiene prioridad en el widget."
 
 #: contents/ui/components/UsageWindowText.qml
 #, kde-format
@@ -3884,8 +3878,8 @@ msgid ""
 msgstr "Carga manual solo en Uso y gasto. Requiere codexbar 0.75.0 o posterior. Sin precios; no representa el uso total de la cuenta."
 
 #: contents/ui/configGeneral.qml
-msgid "Identified window:"
-msgstr "Intervalo identificado:"
+msgid "Identified window (days):"
+msgstr "Intervalo identificado (días):"
 
 #: contents/ui/configGeneral.qml
 msgid "Optional SSH host:"
@@ -3912,3 +3906,15 @@ msgstr "%1 (detalles limitados)"
 #: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
 msgid "Usage percentages are available; quota details are limited."
 msgstr "Los porcentajes de uso están disponibles; los detalles de la cuota son limitados."
+
+#: contents/ui/config/ProviderDescriptorField.qml
+msgid "Set %1"
+msgstr "Establecer %1"
+
+#: contents/ui/config/ProviderDescriptorField.qml
+msgid "Save %1"
+msgstr "Guardar %1"
+
+#: contents/ui/configDiagnostics.qml
+msgid "Diagnostic output"
+msgstr "Salida del diagnóstico"

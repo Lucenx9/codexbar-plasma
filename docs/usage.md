@@ -437,7 +437,7 @@ Provider-specific editable settings depend on the official CLI contract.
   expose the saved mode; inspect redacted settings to request source details.
   Changes are saved immediately, independently of Apply and Cancel. A successful
   save preserves provider enablement and credentials and invalidates cached
-  usage through the existing provider-config revision. General's source override
+  usage through the existing provider-config revision. The source override in Diagnostics
   still takes precedence globally for widget requests. Older or unrecognized
   CLI versions omit the editor.
 - Single API-key setup for Tavily, Linkup, Aerostack, Sail Research, and Sofya
@@ -697,8 +697,12 @@ fields; track proposed extensions in the issue tracker.
   section. The provider lists in **Popup** and **Panel** settings require a
   successful CLI process. Failed loads show the CLI error or exit code even
   when the process writes valid provider JSON.
+  Changing the CLI path immediately clears the previous CLI's list and retires
+  its pending replies, including while **Panel providers** is collapsed.
   Explanatory text is set in small secondary type below the control
   it describes, and dependent options are indented under the option they need.
+  Number fields keep units in their labels so multi-digit keyboard edits work
+  with the KDE desktop style.
   **Diagnostics** also reports the widget version, and, after **Check
   versions**, the CLI version and the absolute command the shell resolved.
   **Support report → Collect support report** gathers an offline Markdown
@@ -729,12 +733,16 @@ fields; track proposed extensions in the issue tracker.
   path has a screen-reader label and supports the form label's keyboard shortcut.
   Its field yields space to **Use PATH** in narrow dialogs with larger text,
   keeping the button and the form's explanations inside the page.
+  Provider option controls and their Set/Save actions expose the field title
+  to screen readers; Diagnostics override fields and output also have names.
   **Popup** and **Notifications** keep their text and controls still while the
   page opens, including while the Popup provider list arrives.
 - **Popup** helper notes use smaller secondary text beneath the controls.
   The reorder buttons in **Panel** and **Popup**, and the reload button in
   **Providers**, reveal their labels on keyboard focus as well as hover.
   Truncated names and IDs in the **Providers** list reveal their full text on
+  keyboard focus as well as hover.
+  The predictive-notification explanation in **Notifications** also appears on
   keyboard focus as well as hover.
 - **Panel** starts with the preview, side-by-side Standard/Minimal choices, and
   provider meters. Text and controls keep their horizontal position as the page

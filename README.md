@@ -178,7 +178,7 @@ themes.
 
 Provider authentication and data support come from the CLI. The widget includes
 per-provider source selection in **Providers → Settings and diagnostics** with
-CLI 0.73.0 or later; General's source override takes precedence. It also includes
+CLI 0.73.0 or later; the source override in Diagnostics takes precedence. It also includes
 fallback metadata for all 104 providers in the official CodexBar 0.76.0 registry,
 covering names, icons, and documentation links, with brand colors and dashboard
 and status links where upstream defines them. Available metrics and setup

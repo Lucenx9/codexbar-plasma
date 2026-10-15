@@ -343,7 +343,9 @@ synchronized.
   provider-selection section being expanded and reads the command path and
   provider order at runtime instead of claiming their `cfg_*` keys, so the page
   itself stays process-free. Queued loads recheck activation before starting a
-  command, and deactivation clears loading and error state. `ProviderRoster.js`
+  command, and deactivation clears loading and error state. Command-path changes
+  synchronously retire pending requests and clear the previous roster/error,
+  even while inactive, before queuing an active reload. `ProviderRoster.js`
   projects the shared provider-list contract into bounded enabled identities
   and semantic errors; QML owns localization and state updates. The DataSource
   forwards the process exit code, so failed commands cannot supply selectable
@@ -693,6 +695,13 @@ clipboard interoperability with every Wayland application or portal backend.
 - Give settings `TabButton` instances an explicit `baselineOffset` when their
   layout does not use baseline alignment. Older KDE desktop styles expose no
   content item but still derive the default baseline from it.
+- Keep editable Settings spin boxes numeric, with units in the form label.
+  The KDE desktop style commits each keystroke; formatting a unit suffix into
+  the editor rewrites its text mid-entry and can drop subsequent digits.
+  `test_settings_numbers.py` types into the production editors with both Basic
+  and KDE desktop styles, including localized-number round trips. The desktop
+  run of `tst_settings_pages.qml` also keeps Custom refresh visible while a
+  typed interval passes through a preset prefix.
 - Prefer declarative bindings. Move repeated or expensive calculations into
   helpers or cached properties. Avoid heavy JavaScript in delegates, compact
   rendering, timers, and DataSource callbacks; profile before optimizing.

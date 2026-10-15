@@ -42,6 +42,7 @@ ColumnLayout {
         Controls.Button {
             objectName: "descriptorSecretButton"
             text: i18n("Set…")
+            Accessible.name: i18n("Set %1", modelData.title)
             icon.name: "password-show-off"
             enabled: fieldRoot.providerAvailable && !fieldRoot.writePending
             onClicked: if (fieldRoot.providerAvailable) fieldRoot.secretPromptRequested(modelData)
@@ -66,6 +67,7 @@ ColumnLayout {
             Layout.fillWidth: true
             text: modelData.valueText
             placeholderText: SafeText.plainTextAsRichText(modelData.description)
+            Accessible.name: modelData.title
             Accessible.description: modelData.description
             inputMethodHints: modelData.kind === "number" ? Qt.ImhDigitsOnly : Qt.ImhNone
             enabled: fieldRoot.providerAvailable && !fieldRoot.writePending
@@ -74,6 +76,7 @@ ColumnLayout {
         Controls.Button {
             objectName: "descriptorTextSaveButton"
             text: i18n("Save")
+            Accessible.name: i18n("Save %1", modelData.title)
             icon.name: "document-save"
             enabled: fieldRoot.providerAvailable && !fieldRoot.writePending
             onClicked: if (fieldRoot.providerAvailable) fieldRoot.writeRequested(modelData, descriptorTextField.text)
@@ -102,6 +105,7 @@ ColumnLayout {
             Layout.fillWidth: true
             model: modelData.options
             textRole: "title"
+            Accessible.name: modelData.title
             valueRole: "id"
             currentIndex: modelData.selectedOptionIndex
             enabled: fieldRoot.providerAvailable
@@ -123,6 +127,7 @@ ColumnLayout {
             objectName: "descriptorEnumSaveButton"
 
             text: i18n("Save")
+            Accessible.name: i18n("Save %1", modelData.title)
             icon.name: "document-save"
             enabled: fieldRoot.providerAvailable
                 && descriptorEnumBox.currentIndex >= 0
@@ -158,6 +163,8 @@ ColumnLayout {
             objectName: "descriptorBooleanBox"
             checked: modelData.value === true || String(modelData.value).toLowerCase() === "true"
             plainText: modelData.description
+            Accessible.name: modelData.title
+            Accessible.description: modelData.description
             implicitWidth: 0
             Layout.fillWidth: true
             enabled: fieldRoot.providerAvailable && !fieldRoot.writePending

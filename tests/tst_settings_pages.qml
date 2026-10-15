@@ -189,6 +189,13 @@ TestCase {
         });
         compare(fields.length, 1);
         compare(fields[0].Accessible.name, "Command path:");
+        var overrideNames = {"Provider id (blank = all enabled)": "Provider:", "Provider default (blank)": "Source:"};
+        var overrides = all.filter(function(item) {
+            return item instanceof Controls.TextField && overrideNames[item.placeholderText] !== undefined;
+        });
+        compare(overrides.length, 2);
+        overrides.forEach(function(item) { compare(item.Accessible.name, overrideNames[item.placeholderText]); });
+        compare(findChild(page, "diagnosticOutputArea").Accessible.name, "Diagnostic output");
     }
 
     function test_supportReportCollectionAndCopy() {
@@ -504,9 +511,9 @@ TestCase {
         compare(intervalSpin.valueFromText("1.200 seconds", Qt.locale()), 1200);
         compare(intervalSpin.valueFromText("1\u202f200 seconds", Qt.locale()), 1200);
         compare(intervalSpin.valueFromText("3600 seconds", Qt.locale()), 3600);
-        // Units are spelled out and pluralized, matching the hour-based fields.
-        compare(intervalSpin.textFromValue(1, Qt.locale()), "1 second");
-        compare(intervalSpin.textFromValue(120, Qt.locale()), "120 seconds");
+        // Units live in the form label so desktop-style typing stays numeric.
+        compare(intervalSpin.textFromValue(1, Qt.locale()), "1");
+        compare(intervalSpin.textFromValue(120, Qt.locale()), "120");
         compare(presetCombo.model[1].text, "1 minute");
         compare(presetCombo.model[3].text, "5 minutes");
         compare(intervalSpin.valueFromText(intervalSpin.textFromValue(1200, Qt.locale()), Qt.locale()), 1200);
@@ -770,6 +777,30 @@ TestCase {
             compare(page[cases[i].key], !before);
             keyClick(Qt.Key_Space);
             compare(page[cases[i].key], before);
+        }
+    }
+
+    function test_customRefreshStaysVisibleWhileTypingAPresetPrefix() {
+        var page = createPage("../contents/ui/configGeneral.qml", {cfg_refreshInterval: 45});
+        if (!page) return;
+        var combo = findChild(page, "refreshPresetCombo");
+        var spin = findChild(page, "refreshIntervalSpin");
+        var nextControl = findChild(page, "refreshOnOpenCheck");
+        for (var target of [1200, 600, 3000, 120]) {
+            page.cfg_refreshInterval = 45;
+            compare(combo.currentValue, -1);
+            spin.contentItem.forceActiveFocus(Qt.TabFocusReason);
+            spin.contentItem.selectAll();
+            for (var digit of String(target)) {
+                keyClick(Qt.Key_0 + Number(digit));
+                verify(spin.visible);
+                compare(combo.currentValue, -1);
+            }
+            keyClick(Qt.Key_Return);
+            compare(page.cfg_refreshInterval, target);
+            nextControl.forceActiveFocus(Qt.TabFocusReason);
+            compare(combo.currentValue, target === 120 ? 120 : -1);
+            compare(spin.visible, target !== 120);
         }
     }
 
