@@ -818,7 +818,7 @@ WIRING_FUNCTIONS = (
     "boundedCliMessage", "providerByID", "firstSelectableProvider",
     "providerDiagnosticFor", "providerDiagnosticErrorFor", "setProviderDiagnostic",
     "setProviderDiagnosticError", "setProviderDiagnosticLoading",
-    "parseCommandPayload", "providerCommandFailureText", "markFieldPending", "isFieldPending",
+    "providerCommandFailureText", "markFieldPending", "isFieldPending",
     "isPending", "providerDiagnosticLoadingFor", "descriptorFieldRows", "descriptorActionRows",
     "descriptorHasField", "descriptorHasAction", "appendSettingsRow", "providerSettingsRows",
     "providerActionRows", "descriptorActionIcon", "providerCliCommandText",

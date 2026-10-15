@@ -150,9 +150,19 @@ KCM.SimpleKCM {
     }
 
     // Localizes the classified command result. The precedence decision itself
-    // lives in ProviderConfigProtocol.commandOutcome; only the words live here.
-    function providerCommandFailureText(result) {
+    // lives in ProviderConfigProtocol.response; only the words live here.
+    function providerCommandFailureText(result, context) {
         switch (result.outcome) {
+        case "tooLarge":
+            return i18n("codexbar response exceeded the supported size.")
+        case "invalidJson":
+            if (context === "list") {
+                return i18n("Could not parse codexbar provider JSON: %1", result.message)
+            }
+            if (context === "diagnostic") {
+                return i18n("Could not parse codexbar diagnostics: %1", result.message)
+            }
+            return i18n("Could not parse codexbar response: %1", result.message)
         case "stderrError":
             return result.message
         case "envelopeError":
@@ -165,6 +175,12 @@ KCM.SimpleKCM {
         case "exitCodeError":
             return i18n("codexbar exited with code %1", Number(result.exitCode))
         default:
+            if (context === "diagnostic" && (result.outcome === "empty" || result.outcome === "invalidPayload")) {
+                return i18n("codexbar did not return diagnostics.")
+            }
+            if (context === "command") {
+                return i18n("codexbar did not return command data.")
+            }
             return i18n("codexbar did not return provider data.")
         }
     }
@@ -451,12 +467,13 @@ KCM.SimpleKCM {
 
     function applySetSourceResult(descriptor, stdoutText, stderrText, exitCode) {
         markPending(descriptor.provider, false)
-        var result = parseCommandPayload(stdoutText, stderrText, exitCode)
-        if (result.cancelled) {
+        var result = ProviderConfigProtocol.response(stdoutText, stderrText, exitCode, "command")
+        if (result.outcome === "cancelled") {
             return
         }
-        if (result.errorMessage.length > 0) {
-            errorText = i18n("%1: %2", displayNameForProvider(descriptor.provider), result.errorMessage)
+        if (result.outcome !== "success") {
+            errorText = i18n("%1: %2", displayNameForProvider(descriptor.provider),
+                providerCommandFailureText(result, "command"))
             return
         }
         if (!ProviderSource.resultMatches(result.value,
@@ -486,40 +503,14 @@ KCM.SimpleKCM {
             return
         }
         loading = false
-        var trimmed = stdoutText.trim()
-        if (trimmed.length === 0) {
-            errorText = stderrText.trim().length > 0
-                ? boundedCliMessage(stderrText)
-                : i18n("codexbar did not return provider data.")
-            return
-        }
-
-        var payload
-        try {
-            payload = JSON.parse(trimmed)
-        } catch (error) {
-            errorText = i18n("Could not parse codexbar provider JSON: %1", error.message)
-            return
-        }
-
-        var parseError = ProviderConfigProtocol.commandError(payload)
-        if (parseError.length > 0) {
-            errorText = parseError
-            return
-        }
-
-        // An empty provider roster is valid, unlike an empty write result.
-        var outcome = ProviderConfigProtocol.commandOutcome(
-            Array.isArray(payload) && payload.length === 0 ? ({}) : payload,
-            stderrText, exitCode)
-        if (outcome.outcome !== "success") {
-            errorText = providerCommandFailureText(outcome)
-            return
-        }
-
-        var next = ProviderConfigProtocol.normalizeProviderList(payload, function(identifier) {
+        var result = ProviderConfigProtocol.response(stdoutText, stderrText, exitCode, "list", function(identifier) {
             return page.providerTitle(identifier)
         })
+        if (result.outcome !== "success") {
+            errorText = providerCommandFailureText(result, "list")
+            return
+        }
+        var next = result.value
         providers = next
         if (!providerByID(selectedProviderID)) {
             selectedProviderID = firstSelectableProvider(next)
@@ -540,26 +531,15 @@ KCM.SimpleKCM {
     }
 
     function handleToggleResult(descriptor, stdoutText, stderrText, exitCode) {
-        var trimmed = stdoutText.trim()
-        var payload
-        if (trimmed.length > 0) {
-            try {
-                payload = JSON.parse(trimmed)
-            } catch (error) {
-                markPending(descriptor.provider, false)
-                errorText = i18n("Could not parse codexbar response: %1", error.message)
-                return
-            }
-        }
-
-        var result = ProviderConfigProtocol.commandOutcome(payload, stderrText, exitCode)
+        var result = ProviderConfigProtocol.response(stdoutText, stderrText, exitCode, "command")
         if (result.outcome !== "success") {
             markPending(descriptor.provider, false)
-            errorText = i18n("%1: %2", displayNameForProvider(descriptor.provider),
-                providerCommandFailureText(result))
+            errorText = result.outcome === "invalidJson"
+                ? providerCommandFailureText(result)
+                : i18n("%1: %2", displayNameForProvider(descriptor.provider), providerCommandFailureText(result))
             return
         }
-
+        var payload = result.value
         // Trust the enabled value the CLI reports back; fall back to desired.
         var newEnabled = descriptor.desiredEnabled
         if (payload && !Array.isArray(payload) && payload.enabled !== undefined) {
@@ -574,33 +554,19 @@ KCM.SimpleKCM {
 
     function handleSetApiKeyResult(descriptor, stdoutText, stderrText, exitCode) {
         markPending(descriptor.provider, false)
-
-        var trimmed = stdoutText.trim()
-        var payload
-        if (trimmed.length > 0) {
-            try {
-                payload = JSON.parse(trimmed)
-            } catch (error) {
-                errorText = i18n("Could not parse codexbar response: %1", error.message)
-                return
-            }
-        }
-
-        var result = ProviderConfigProtocol.commandOutcome(payload, stderrText, exitCode)
+        var result = ProviderConfigProtocol.response(stdoutText, stderrText, exitCode, "setApiKey")
         if (result.outcome === "cancelled") {
             statusText = ""
             errorText = ""
             return
         }
-        // Older CLI builds completed set-api-key with exit 0 and no JSON. Keep
-        // that successful pair while requiring shaped data for every other
-        // printed response.
-        if (!ProviderConfigProtocol.setApiKeyOutcomeIsSuccess(result)) {
-            errorText = i18n("%1: %2", displayNameForProvider(descriptor.provider),
-                providerCommandFailureText(result))
+        if (result.outcome !== "success") {
+            errorText = result.outcome === "invalidJson"
+                ? providerCommandFailureText(result)
+                : i18n("%1: %2", displayNameForProvider(descriptor.provider), providerCommandFailureText(result))
             return
         }
-
+        var payload = result.value
         if (payload && !Array.isArray(payload) && payload.enabled !== undefined) {
             updateProviderEnabled(descriptor.provider, payload.enabled === true)
         } else {
@@ -613,17 +579,17 @@ KCM.SimpleKCM {
 
     function handleDescriptorFieldResult(descriptor, stdoutText, stderrText, exitCode) {
         markFieldPending(descriptor.provider, descriptor.fieldID, false)
-        var payload = parseCommandPayload(stdoutText, stderrText, exitCode)
-        if (payload.cancelled) {
+        var result = ProviderConfigProtocol.response(stdoutText, stderrText, exitCode, "command")
+        if (result.outcome === "cancelled") {
             return
         }
-        if (payload.errorMessage.length > 0) {
-            errorText = i18n("%1: %2", displayNameForProvider(descriptor.provider), payload.errorMessage)
+        if (result.outcome !== "success") {
+            errorText = i18n("%1: %2", displayNameForProvider(descriptor.provider),
+                providerCommandFailureText(result, "command"))
             return
         }
-
-        if (payload.value && !Array.isArray(payload.value) && payload.value.enabled !== undefined) {
-            updateProviderEnabled(descriptor.provider, payload.value.enabled === true)
+        if (result.value && !Array.isArray(result.value) && result.value.enabled !== undefined) {
+            updateProviderEnabled(descriptor.provider, result.value.enabled === true)
         }
         bumpProviderConfigRevision()
         errorText = ""
@@ -633,17 +599,17 @@ KCM.SimpleKCM {
 
     function handleDescriptorActionResult(descriptor, stdoutText, stderrText, exitCode) {
         markFieldPending(descriptor.provider, descriptor.actionID, false)
-        var payload = parseCommandPayload(stdoutText, stderrText, exitCode)
-        if (payload.cancelled) {
+        var result = ProviderConfigProtocol.response(stdoutText, stderrText, exitCode, "command")
+        if (result.outcome === "cancelled") {
             return
         }
-        if (payload.errorMessage.length > 0) {
-            errorText = i18n("%1: %2", displayNameForProvider(descriptor.provider), payload.errorMessage)
+        if (result.outcome !== "success") {
+            errorText = i18n("%1: %2", displayNameForProvider(descriptor.provider),
+                providerCommandFailureText(result, "command"))
             return
         }
-
-        if (payload.value && !Array.isArray(payload.value) && payload.value.url) {
-            var url = String(payload.value.url).trim()
+        if (result.value && !Array.isArray(result.value) && result.value.url) {
+            var url = String(result.value.url).trim()
             var safeUrl = ProviderDescriptor.safeHttpsUrl(url)
             if (safeUrl.length > 0) {
                 Qt.openUrlExternally(safeUrl)
@@ -658,68 +624,15 @@ KCM.SimpleKCM {
         page.reload(true)
     }
 
-    function parseCommandPayload(stdoutText, stderrText, exitCode) {
-        var trimmed = stdoutText.trim()
-        var payload
-        if (trimmed.length > 0) {
-            try {
-                payload = JSON.parse(trimmed)
-            } catch (error) {
-                return {
-                    value: null,
-                    cancelled: false,
-                    errorMessage: i18n("Could not parse codexbar response: %1", error.message)
-                }
-            }
-        }
-
-        var result = ProviderConfigProtocol.commandOutcome(payload, stderrText, exitCode)
-        if (result.outcome === "cancelled") {
-            return { value: null, cancelled: true, errorMessage: "" }
-        }
-        if (result.outcome === "empty" || result.outcome === "invalidPayload") {
-            return {
-                value: null,
-                cancelled: false,
-                errorMessage: i18n("codexbar did not return command data.")
-            }
-        }
-        if (result.outcome !== "success") {
-            return {
-                value: null,
-                cancelled: false,
-                errorMessage: providerCommandFailureText(result)
-            }
-        }
-        return { value: payload, cancelled: false, errorMessage: "" }
-    }
-
     function handleDiagnoseResult(descriptor, stdoutText, stderrText, exitCode) {
         setProviderDiagnosticLoading(descriptor.provider, false)
-
-        var trimmed = stdoutText.trim()
-        var payload
-        if (trimmed.length > 0) {
-            try {
-                payload = JSON.parse(trimmed)
-            } catch (error) {
-                setProviderDiagnosticError(descriptor.provider, i18n("Could not parse codexbar diagnostics: %1", error.message))
-                return
-            }
-        }
-
-        var result = ProviderConfigProtocol.diagnosticOutcome(payload, stderrText, exitCode)
+        var result = ProviderConfigProtocol.response(stdoutText, stderrText, exitCode, "diagnostic")
         if (result.outcome !== "success") {
-            setProviderDiagnosticError(descriptor.provider,
-                result.outcome === "empty" || result.outcome === "invalidPayload"
-                    ? i18n("codexbar did not return diagnostics.")
-                    : providerCommandFailureText(result))
+            setProviderDiagnosticError(descriptor.provider, providerCommandFailureText(result, "diagnostic"))
             return
         }
 
-        setProviderDiagnostic(
-            descriptor.provider,
-            ProviderConfigProtocol.normalizeProviderDiagnostic(payload))
+        setProviderDiagnostic(descriptor.provider, result.value)
         setProviderDiagnosticError(descriptor.provider, "")
     }
 

@@ -293,7 +293,7 @@ class ProviderSourceTests(unittest.TestCase):
     def test_source_writes_and_lifecycle(self):
         source = (ROOT / "contents/ui/configProviders.qml").read_text()
         surface = Surface("providers", ROOT)
-        names = ("setProviderSource", "handleSetSourceResult", "parseCommandPayload",
+        names = ("setProviderSource", "handleSetSourceResult",
                  "providerCommandFailureText", "handleCliVersionResult", "handleData",
                  "applySetSourceResult", "runReloadDeferredBySourceWrite",
                  "providerByID", "markPending", "isPending", "runCommand", "copyObject",

@@ -116,6 +116,13 @@ TestCase {
         compare(diagnostic.provider, "previous");
         compare(diagnosticError, "codexbar command timed out. Try again.");
     }
+    function test_invalidJsonKeepsDiagnosticAndRedactsParserDetail() {
+        var secret = "sk-abcdefghijklmnopqrstuvwxyz1234567890";
+        deliver('{"api_key":"' + secret, "", 0);
+        compare(diagnostic.provider, "previous");
+        verify(diagnosticError.indexOf("Could not parse codexbar diagnostics:") === 0);
+        verify(diagnosticError.indexOf(secret) < 0);
+    }
     function test_retiredReplyCannotReplaceDiagnostic() {
         handleData("retired", '[{"provider":"codex"}]', "", 0);
         compare(diagnostic.provider, "previous");

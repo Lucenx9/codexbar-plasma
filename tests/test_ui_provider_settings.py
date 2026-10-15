@@ -74,28 +74,6 @@ class ProviderSettingsTest(unittest.TestCase):
             raise AssertionError("the Providers page must gate versioned capabilities through the bounded CLI parser")
 
     def test_mutation_results(self):
-        # Successful provider commands must be classified by the shared outcome
-        # contract, never re-inlined with stderr consulted before the parsed payload:
-        # loader diagnostics make successful runs print to stderr, and the inlined
-        # order reported those runs as failures. The classification call itself is
-        # executed-covered (forcing a literal success in handleToggleResult turns the
-        # write-errors test red), so the surface pin is removed.
-
-        # Failure precedence for provider mutations lives in
-        # ProviderConfigProtocol.commandOutcome, covered adversarially by
-        # tests/tst_provider_config_protocol.qml. The pages must classify results by
-        # delegating to it instead of re-inlining an ordering around stderr.
-        for mutation_handler in (
-            function_body(providers_text, "handleToggleResult"),
-            function_body(providers_text, "handleSetApiKeyResult"),
-            function_body(providers_text, "parseCommandPayload"),
-        ):
-            if "ProviderConfigProtocol.commandOutcome(" not in mutation_handler:
-                raise AssertionError(
-                    "provider mutation handlers must classify CLI results through "
-                    "ProviderConfigProtocol.commandOutcome"
-                )
-
         handle_data_body = function_body(providers_text, "handleData")
         for handler_call in (
             "handleSetApiKeyResult(descriptor, stdoutText, stderrText, exitCode)",
@@ -107,9 +85,6 @@ class ProviderSettingsTest(unittest.TestCase):
                     "Provider mutation handlers must receive the executable exit code; "
                     f"missing {handler_call!r}"
                 )
-
-        if "codexbar did not return command data." not in function_body(providers_text, "parseCommandPayload"):
-            raise AssertionError("parseCommandPayload must reject an empty successful descriptor response")
 
     def test_failed_reload_preserves_provider_list(self):
         provider_list_result_body = function_body(providers_text, "handleListResult")

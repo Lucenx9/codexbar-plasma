@@ -2826,12 +2826,33 @@ msgid "Set the codexbar command path in Diagnostics."
 msgstr ""
 
 #: contents/ui/configProviders.qml
+#: contents/ui/controllers/ProviderRosterController.qml
+msgid "Could not parse codexbar provider JSON: %1"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Could not parse codexbar diagnostics: %1"
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "Could not parse codexbar response: %1"
+msgstr ""
+
+#: contents/ui/configProviders.qml
 #: contents/ui/controllers/AccountsController.qml contents/ui/main.qml
 msgid "codexbar command failed."
 msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "codexbar command timed out. Try again."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "codexbar did not return diagnostics."
+msgstr ""
+
+#: contents/ui/configProviders.qml
+msgid "codexbar did not return command data."
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -2858,20 +2879,7 @@ msgid "%1 command timed out. Try again."
 msgstr ""
 
 #: contents/ui/configProviders.qml
-msgid "codexbar did not return command data."
-msgstr ""
-
-#: contents/ui/configProviders.qml
 msgid "%1 setting saved"
-msgstr ""
-
-#: contents/ui/configProviders.qml
-#: contents/ui/controllers/ProviderRosterController.qml
-msgid "Could not parse codexbar provider JSON: %1"
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "Could not parse codexbar response: %1"
 msgstr ""
 
 #: contents/ui/configProviders.qml
@@ -2888,14 +2896,6 @@ msgstr ""
 
 #: contents/ui/configProviders.qml
 msgid "%1 action completed"
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "Could not parse codexbar diagnostics: %1"
-msgstr ""
-
-#: contents/ui/configProviders.qml
-msgid "codexbar did not return diagnostics."
 msgstr ""
 
 #: contents/ui/configProviders.qml contents/ui/main.qml

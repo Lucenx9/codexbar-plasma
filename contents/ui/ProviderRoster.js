@@ -12,42 +12,12 @@ function providerTitle(value) {
     return words.join(" ");
 }
 
-function boundedMessage(value) {
-    return SafeText.cliMessage(SafeText.stripLoaderDiagnostics(value), SafeText.maximumCliMessageLength);
-}
-
 // Settings use the shared CLI record contract, projected to enabled identities.
 // Outcomes leave localized error wording and process state to the QML owner.
 function response(stdoutValue, stderrValue, exitCode) {
-    var code = exitCode === undefined ? 0 : Number(exitCode);
-    var processFailure = code !== 0 ? {
-        outcome: "exitCodeError", providers: [], message: boundedMessage(stderrValue), exitCode: code
-    } : null;
-    var text = SafeText.cliJsonText(stdoutValue);
-    if (text === null) {
-        return { outcome: "tooLarge", providers: [], message: "" };
-    }
-    if (text.trim().length === 0) {
-        if (processFailure) {
-            return processFailure;
-        }
-        var stderr = boundedMessage(stderrValue);
-        return { outcome: stderr.length > 0 ? "cliError" : "empty", providers: [], message: stderr };
-    }
-    var payload;
-    try {
-        payload = JSON.parse(text);
-    } catch (error) {
-        return processFailure || { outcome: "invalidJson", providers: [], message: boundedMessage(error.message) };
-    }
-    var message = ProviderConfigProtocol.commandError(payload);
-    if (message.length > 0) {
-        return { outcome: "cliError", providers: [], message: message };
-    }
-    if (processFailure) {
-        return processFailure;
-    }
-    var records = ProviderConfigProtocol.normalizeProviderList(payload, providerTitle);
+    var result = ProviderConfigProtocol.response(
+        stdoutValue, stderrValue, exitCode, "enabledRoster", providerTitle);
+    var records = result.outcome === "success" ? result.value : [];
     var providers = [];
     for (var i = 0; i < records.length; i++) {
         if (records[i].enabled) {
@@ -57,5 +27,5 @@ function response(stdoutValue, stderrValue, exitCode) {
             });
         }
     }
-    return { outcome: "success", providers: providers, message: "" };
+    return { outcome: result.outcome, providers: providers, message: result.message, exitCode: result.exitCode };
 }

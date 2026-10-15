@@ -355,6 +355,8 @@ an error when the CLI process fails or returns an invalid response. A failed
 process cannot replace the result even when it prints valid diagnostic JSON.
 An error inside a successful diagnostic report describes a failed provider fetch;
 its authentication, settings, and attempt details remain available for inspection.
+JSON parsing errors in provider settings are bounded and redact credentials
+before they appear in the error message.
 
 Provider-specific editable settings depend on the official CLI contract.
 

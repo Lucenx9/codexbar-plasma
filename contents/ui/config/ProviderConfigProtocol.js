@@ -4,15 +4,99 @@
 .import "../SafeText.js" as SafeText
 .import "ProviderDescriptor.js" as ProviderDescriptor
 
-// Pure trust boundary for `codexbar config providers` and redacted provider
-// diagnostics. The Providers page keeps JSON error localization, process state,
-// selection, retries, and effects; this module only returns bounded display data
-// or classifies the one compatibility error needed before a retry.
+// Reads bounded CLI replies and applies the selected provider command contract.
+// QML retains localization, process state, selection, retries, and effects.
 
 var maximumProviderItems = 256
 var maximumDiagnosticListItems = 64
 var maximumCliVersionTextLength = 128
 var unsupportedDescriptorPattern = /(?:unknown|unrecognized|unexpected|unsupported)\s+(?:option|argument)|invalid option/
+
+// list: full Providers-page records; enabledRoster: tolerant read-only roster.
+// command: shaped write results; setApiKey: also accepts legacy empty success.
+// diagnostic: shaped fetch errors remain useful when the command succeeds.
+// Only successful replies carry a value; errors contain bounded, redacted text.
+function response(stdoutText, stderrText, exitCode, kind, fallbackTitleResolver) {
+    if (["list", "enabledRoster", "command", "setApiKey", "diagnostic"].indexOf(kind) < 0) {
+        return { outcome: "invalidPayload", message: "" }
+    }
+    var parsed = parsedResponse(stdoutText)
+    if (kind === "enabledRoster") {
+        return enabledRosterResponse(parsed, stderrText, exitCode, fallbackTitleResolver)
+    }
+    if (parsed.outcome === "tooLarge" || parsed.outcome === "invalidJson" || parsed.outcome === "invalidPayload") {
+        return parsed
+    }
+    // The Providers page historically reports missing list data before checking
+    // the process exit. Writes and diagnostics classify empty exits below.
+    if (kind === "list" && parsed.outcome === "empty") {
+        var stderrMessage = boundedCliMessage(stderrText)
+        return { outcome: stderrMessage.length > 0 ? "stderrError" : "empty", message: stderrMessage }
+    }
+    var payload = parsed.value
+    var outcome = kind === "diagnostic"
+        ? diagnosticOutcome(payload, stderrText, exitCode)
+        : commandOutcome(kind === "list" && Array.isArray(payload) && payload.length === 0
+            ? ({}) : payload, stderrText, exitCode)
+    if (kind === "setApiKey" && outcome.outcome === "empty") {
+        outcome = { outcome: "success", message: "" }
+    }
+    if (outcome.outcome !== "success") {
+        return outcome
+    }
+    if (kind === "list") {
+        outcome.value = normalizeProviderList(payload, fallbackTitleResolver)
+    } else if (kind === "diagnostic") {
+        outcome.value = normalizeProviderDiagnostic(payload)
+    } else {
+        outcome.value = payload
+    }
+    return outcome
+}
+
+function parsedResponse(stdoutText) {
+    if (SafeText.isStructuredValue(stdoutText)) {
+        return { outcome: "invalidPayload", message: "" }
+    }
+    var text = SafeText.cliJsonText(stdoutText)
+    if (text === null) {
+        return { outcome: "tooLarge", message: "" }
+    }
+    if (text.trim().length === 0) {
+        return { outcome: "empty", message: "" }
+    }
+    try {
+        return { outcome: "success", message: "", value: JSON.parse(text) }
+    } catch (error) {
+        return { outcome: "invalidJson", message: boundedCliMessage(error.message) }
+    }
+}
+
+function enabledRosterResponse(parsed, stderrText, exitCode, fallbackTitleResolver) {
+    // This projection accepts malformed records as an empty roster and caps
+    // oversized record arrays. Failed exits still cannot supply providers.
+    var code = exitCode === undefined ? 0 : Number(exitCode)
+    var processFailure = code !== 0 ? {
+        outcome: "exitCodeError", message: boundedCliMessage(stderrText), exitCode: code
+    } : null
+    if (parsed.outcome === "tooLarge") {
+        return parsed
+    }
+    if (parsed.outcome === "empty") {
+        var message = boundedCliMessage(stderrText)
+        return processFailure || { outcome: message.length > 0 ? "cliError" : "empty", message: message }
+    }
+    if (parsed.outcome === "invalidJson" || parsed.outcome === "invalidPayload") {
+        return processFailure || parsed
+    }
+    var envelopeMessage = commandError(parsed.value)
+    if (envelopeMessage.length > 0) {
+        return { outcome: "cliError", message: envelopeMessage }
+    }
+    return processFailure || {
+        outcome: "success", message: "", value: normalizeProviderList(parsed.value, fallbackTitleResolver)
+    }
+}
 
 function providerListResultIsCurrent(descriptor, currentRevision) {
     if (!isCliRecord(descriptor)
@@ -189,12 +273,6 @@ function commandOutcome(payload, stderrText, exitCode) {
     return ({ outcome: "success", message: "" })
 }
 
-function setApiKeyOutcomeIsSuccess(result) {
-    return result !== null
-        && result !== undefined
-        && (result.outcome === "success" || result.outcome === "empty")
-}
-
 // Linux CLI 0.74.1 diagnostic schema 1.0 reports failed provider fetches in
 // `error` while the diagnostic command itself exits successfully. That report
 // still carries useful auth/settings/attempt data. Only a shaped report gets
@@ -237,16 +315,9 @@ function descriptorUnsupportedMessage(stdoutText, stderrText) {
         return stderrMessage
     }
 
-    var trimmed = String(stdoutText || "").trim()
-    if (trimmed.length === 0) {
-        return ""
-    }
-    try {
-        var message = commandError(JSON.parse(trimmed))
-        return isDescriptorUnsupportedMessage(message) ? message : ""
-    } catch (error) {
-        return ""
-    }
+    var parsed = parsedResponse(stdoutText)
+    var message = parsed.outcome === "success" ? commandError(parsed.value) : ""
+    return isDescriptorUnsupportedMessage(message) ? message : ""
 }
 
 function normalizeProviderDiagnostic(payload) {

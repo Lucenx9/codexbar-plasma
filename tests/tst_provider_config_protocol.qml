@@ -1,9 +1,19 @@
 import QtQuick
 import QtTest
 import "../contents/ui/config/ProviderConfigProtocol.js" as ProviderConfigProtocol
+import "../contents/ui/SafeText.js" as SafeText
 
 TestCase {
     name: "ProviderConfigProtocol"
+
+    function commandResponse(payload, stderrText, exitCode) {
+        return ProviderConfigProtocol.response(payload === undefined ? "" : JSON.stringify(payload),
+            stderrText, exitCode, "command")
+    }
+
+    function diagnosticResponse(payload, stderrText, exitCode) {
+        return ProviderConfigProtocol.response(JSON.stringify(payload), stderrText, exitCode, "diagnostic")
+    }
 
     function repeated(value, count) {
         var values = []
@@ -11,6 +21,81 @@ TestCase {
             values.push(value)
         }
         return values
+    }
+
+    function test_rawRepliesBoundAndRedactParserErrors() {
+        var secret = "sk-abcdefghijklmnopqrstuvwxyz1234567890"
+        var oversized = "x".repeat(SafeText.maximumCliJsonLength + 1)
+        for (var kind of ["list", "enabledRoster", "command", "setApiKey", "diagnostic"]) {
+            var result = ProviderConfigProtocol.response('{"api_key":"' + secret, "", 0, kind)
+            compare(result.outcome, "invalidJson")
+            verify(result.value === undefined)
+            verify(result.message.indexOf(secret) < 0)
+            verify(result.message.length <= SafeText.maximumCliMessageLength)
+            result = ProviderConfigProtocol.response(oversized, "", 0, kind)
+            compare(result.outcome, "tooLarge")
+            verify(result.value === undefined)
+            compare(result.message, "")
+        }
+        compare(ProviderConfigProtocol.response("{}", "", 0, "unknown").outcome, "invalidPayload")
+        for (var value of [[], {}, {toString: null}]) {
+            for (var kind of ["list", "enabledRoster", "command", "setApiKey", "diagnostic"]) {
+                var malformed = ProviderConfigProtocol.response(value, "", 0, kind)
+                compare(malformed.outcome, "invalidPayload")
+                verify(malformed.value === undefined)
+            }
+        }
+    }
+
+    function test_rawRepliesPreserveCommandSpecificEmptyAndParsePrecedence() {
+        compare(ProviderConfigProtocol.response("[]", "", 0, "list").outcome, "success")
+        compare(ProviderConfigProtocol.response("[]", "", 0, "command").outcome, "invalidPayload")
+        compare(ProviderConfigProtocol.response("", "", 124, "list").outcome, "empty")
+        compare(ProviderConfigProtocol.response("", "", 124, "command").outcome, "timeout")
+        compare(ProviderConfigProtocol.response("", "", 124, "diagnostic").outcome, "timeout")
+        compare(ProviderConfigProtocol.response("{", "failed", 7, "list").outcome, "invalidJson")
+        var enabled = ProviderConfigProtocol.response("{", "failed", 7, "enabledRoster")
+        compare(enabled.outcome, "exitCodeError")
+        compare(enabled.message, "failed")
+        compare(enabled.exitCode, 7)
+        verify(enabled.value === undefined)
+    }
+
+    function test_fullAndEnabledRosterProfilesKeepTheirRecordContracts() {
+        var payload = JSON.stringify([
+            {provider: "codex", enabled: true, displayName: "Codex"},
+            {provider: "claude", enabled: false},
+            {provider: "future", enabled: true}
+        ])
+        for (var kind of ["list", "enabledRoster"]) {
+            var result = ProviderConfigProtocol.response(payload, "loader noise", 0, kind,
+                function(provider) { return "Fallback " + provider })
+            compare(result.outcome, "success")
+            compare(result.value.length, 3)
+            compare(result.value[1].displayName, "Fallback claude")
+            verify(!result.value[1].enabled)
+            var failed = ProviderConfigProtocol.response(payload, "", 7, kind)
+            compare(failed.outcome, "exitCodeError")
+            verify(failed.value === undefined)
+        }
+        var mixed = '[null,{"provider":"codex","enabled":true}]'
+        compare(ProviderConfigProtocol.response(mixed, "", 0, "list").outcome, "invalidPayload")
+        compare(ProviderConfigProtocol.response(mixed, "", 0, "enabledRoster").value.length, 1)
+        payload = JSON.stringify(repeated({provider: "codex", enabled: true}, 300))
+        compare(ProviderConfigProtocol.response(payload, "", 0, "list").outcome, "invalidPayload")
+        compare(ProviderConfigProtocol.response(payload, "", 0, "enabledRoster").value.length, 256)
+    }
+
+    function test_successfulDiagnosticReturnsOnlyItsDisplayProjection() {
+        var payload = {provider: "codex", auth: {configured: true, apiKey: "private"},
+            settings: {workspace: "private"}, fetchAttempts: [{headers: "private"}]}
+        var result = ProviderConfigProtocol.response(JSON.stringify(payload), "", 0, "diagnostic")
+        compare(result.outcome, "success")
+        compare(result.value.provider, "codex")
+        verify(result.value.authConfigured)
+        compare(result.value.settingsKeys, "workspace")
+        compare(result.value.fetchAttempts, 1)
+        verify(JSON.stringify(result.value).indexOf("private") < 0)
     }
 
     function provider(providerID, overrides) {
@@ -207,31 +292,31 @@ TestCase {
         }
     }
 
-    function test_commandOutcomeTreatsHealthyEnvelopeAsSuccessDespiteStderr() {
+    function test_commandResponseTreatsHealthyEnvelopeAsSuccessDespiteStderr() {
         var loaderNoise = "/usr/lib/x86_64-linux-gnu/libcurl.so.4:"
             + " no version information available"
             + " (required by /usr/local/bin/codexbar)"
-        var result = ProviderConfigProtocol.commandOutcome(
+        var result = commandResponse(
             { provider: "codex", enabled: true }, loaderNoise, 0)
         compare(result.outcome, "success")
-        verify(result.value === undefined)
-        compare(ProviderConfigProtocol.commandOutcome(
+        compare(result.value.provider, "codex")
+        compare(commandResponse(
             [{ provider: "codex", enabled: false }], loaderNoise, 0).outcome, "success")
-        verify(ProviderConfigProtocol.commandOutcome({}, loaderNoise, 0).outcome === "success")
+        verify(commandResponse({}, loaderNoise, 0).outcome === "success")
     }
 
-    function test_commandOutcomeRejectsUnsupportedPayloadShapes() {
+    function test_commandResponseRejectsUnsupportedPayloadShapes() {
         var inputs = [null, true, 1, "ok", [], [{ provider: "codex" }, "bad"]]
         inputs.push(repeated({}, ProviderConfigProtocol.maximumProviderItems + 1))
         for (var i = 0; i < inputs.length; i++) {
-            compare(ProviderConfigProtocol.commandOutcome(inputs[i], "", 0).outcome,
+            compare(commandResponse(inputs[i], "", 0).outcome,
                 "invalidPayload")
         }
     }
 
-    function test_commandOutcomePrefersTheCliEnvelopeOverStderrAndExitCodes() {
+    function test_commandResponsePrefersTheCliEnvelopeOverStderrAndExitCodes() {
         var secret = "sk-abcdefghijklmnop"
-        var result = ProviderConfigProtocol.commandOutcome(
+        var result = commandResponse(
             { error: { message: "Authorization: Bearer " + secret } },
             "token=" + secret + " ambient noise",
             1)
@@ -241,7 +326,7 @@ TestCase {
         verify(result.message.length <= 500)
     }
 
-    function test_commandOutcomeRejectsErrorsWithoutReadableMessages_data() {
+    function test_commandResponseRejectsErrorsWithoutReadableMessages_data() {
         return [
             {tag: "missing", error: {}},
             {tag: "empty", error: {message: ""}},
@@ -252,115 +337,117 @@ TestCase {
         ]
     }
 
-    function test_commandOutcomeRejectsErrorsWithoutReadableMessages(data) {
+    function test_commandResponseRejectsErrorsWithoutReadableMessages(data) {
         var payload = {provider: "codex", error: data.error}
-        var result = ProviderConfigProtocol.commandOutcome(payload, "", 0)
+        var result = commandResponse(payload, "", 0)
         compare(result.outcome, "envelopeError")
         compare(result.message, "")
-        verify(!ProviderConfigProtocol.setApiKeyOutcomeIsSuccess(result))
-        compare(ProviderConfigProtocol.commandOutcome([payload], "", 0).outcome,
+        compare(ProviderConfigProtocol.response(JSON.stringify(payload), "", 0, "setApiKey").outcome, "envelopeError")
+        compare(commandResponse([payload], "", 0).outcome,
             "envelopeError")
     }
 
-    function test_commandOutcomeClassifiesCancellationOnACleanExit() {
+    function test_commandResponseClassifiesCancellationOnACleanExit() {
         var cases = [
             { cancelled: true },
             { status: "cancelled" },
             { status: "Canceled" }
         ]
         for (var i = 0; i < cases.length; i++) {
-            var result = ProviderConfigProtocol.commandOutcome(cases[i], "", 0)
+            var result = commandResponse(cases[i], "", 0)
             compare(result.outcome, "cancelled")
             verify(result.value === undefined)
         }
     }
 
-    function test_commandOutcomeClassifiesStatusFlaggedFailures() {
-        var failed = ProviderConfigProtocol.commandOutcome(
+    function test_commandResponseClassifiesStatusFlaggedFailures() {
+        var failed = commandResponse(
             { status: "failed", message: "token=" + "sk-abcdefghijklmnop" }, "", 0)
         compare(failed.outcome, "statusError")
         verify(failed.message.indexOf("[redacted]") !== -1)
 
-        var bare = ProviderConfigProtocol.commandOutcome({ status: "error" }, "", 0)
+        var bare = commandResponse({ status: "error" }, "", 0)
         compare(bare.outcome, "statusError")
         compare(bare.message, "")
     }
 
-    function test_commandOutcomeRejectsUnknownDescriptorStatuses() {
+    function test_commandResponseRejectsUnknownDescriptorStatuses() {
         var statuses = ["queued", "unknown", "", null, true]
         for (var i = 0; i < statuses.length; i++) {
-            var result = ProviderConfigProtocol.commandOutcome(
+            var result = commandResponse(
                 { status: statuses[i] }, "", 0)
             compare(result.outcome, "invalidPayload")
         }
 
-        compare(ProviderConfigProtocol.commandOutcome(
+        compare(commandResponse(
             { status: "ok" }, "", 0).outcome, "success")
     }
 
-    function test_commandOutcomeRejectsStatusBearingArrays() {
+    function test_commandResponseRejectsStatusBearingArrays() {
         var payloads = [
             [{ status: "queued" }],
             [{ provider: "codex" }, { status: "ok" }]
         ]
         for (var i = 0; i < payloads.length; i++) {
-            compare(ProviderConfigProtocol.commandOutcome(
+            compare(commandResponse(
                 payloads[i], "", 0).outcome, "invalidPayload")
         }
     }
 
-    function test_commandOutcomeRejectsStructuredDescriptorStatuses() {
+    function test_commandResponseRejectsStructuredDescriptorStatuses() {
         var statuses = [["ok"], ["cancelled"], ["error"], { value: "ok" }]
         for (var i = 0; i < statuses.length; i++) {
-            compare(ProviderConfigProtocol.commandOutcome(
+            compare(commandResponse(
                 { status: statuses[i] }, "", 0).outcome, "invalidPayload")
         }
     }
 
-    function test_commandOutcomeKeepsHistoricalFailurePrecedence() {
-        compare(ProviderConfigProtocol.commandOutcome({ provider: "x" }, "", 124).outcome,
+    function test_commandResponseKeepsHistoricalFailurePrecedence() {
+        compare(commandResponse({ provider: "x" }, "", 124).outcome,
             "timeout")
-        compare(ProviderConfigProtocol.commandOutcome({ provider: "x" },
+        compare(commandResponse({ provider: "x" },
             "ambient stderr", 137).outcome, "stderrError")
-        var exited = ProviderConfigProtocol.commandOutcome({ provider: "x" }, "", 3)
+        var exited = commandResponse({ provider: "x" }, "", 3)
         compare(exited.outcome, "exitCodeError")
         compare(exited.exitCode, 3)
 
-        compare(ProviderConfigProtocol.commandOutcome(
+        compare(commandResponse(
             { cancelled: true }, "ambient stderr", 0).outcome, "stderrError")
-        compare(ProviderConfigProtocol.commandOutcome(
+        compare(commandResponse(
             { cancelled: true }, "", 7).outcome, "exitCodeError")
-        compare(ProviderConfigProtocol.commandOutcome(
+        compare(commandResponse(
             { status: "failed" }, "ambient stderr", 0).outcome, "stderrError")
-        compare(ProviderConfigProtocol.commandOutcome(
+        compare(commandResponse(
             { status: "failed" }, "", 7).outcome, "exitCodeError")
 
         // Without a payload, stderr keeps its historical priority over generic
         // exit codes, but a printed-nothing timeout still names the timeout.
-        compare(ProviderConfigProtocol.commandOutcome(null, "disk full", 7).outcome,
+        compare(commandResponse(null, "disk full", 7).outcome,
             "stderrError")
-        compare(ProviderConfigProtocol.commandOutcome(null, "disk full", 124).outcome,
+        compare(commandResponse(null, "disk full", 124).outcome,
             "stderrError")
-        compare(ProviderConfigProtocol.commandOutcome(null, "", 9).outcome, "exitCodeError")
-        compare(ProviderConfigProtocol.commandOutcome(null, "", 124).outcome, "timeout")
-        compare(ProviderConfigProtocol.commandOutcome(null, "", 0).outcome, "invalidPayload")
-        compare(ProviderConfigProtocol.commandOutcome(undefined, "", 0).outcome, "empty")
+        compare(commandResponse(null, "", 9).outcome, "exitCodeError")
+        compare(commandResponse(null, "", 124).outcome, "timeout")
+        compare(commandResponse(null, "", 0).outcome, "invalidPayload")
+        compare(commandResponse(undefined, "", 0).outcome, "empty")
     }
 
     function test_setApiKeyAllowsOnlySupportedOrActuallyEmptyOutput() {
-        verify(ProviderConfigProtocol.setApiKeyOutcomeIsSuccess(
-            ProviderConfigProtocol.commandOutcome({ provider: "codex" }, "", 0)))
-        verify(ProviderConfigProtocol.setApiKeyOutcomeIsSuccess(
-            ProviderConfigProtocol.commandOutcome(undefined, "", 0)))
-        verify(!ProviderConfigProtocol.setApiKeyOutcomeIsSuccess(
-            ProviderConfigProtocol.commandOutcome(null, "", 0)))
-        verify(!ProviderConfigProtocol.setApiKeyOutcomeIsSuccess(
-            ProviderConfigProtocol.commandOutcome("ok", "", 0)))
+        compare(ProviderConfigProtocol.response('{"provider":"codex"}', "", 0, "setApiKey").outcome, "success")
+        var empty = ProviderConfigProtocol.response("", "", 0, "setApiKey")
+        compare(empty.outcome, "success")
+        verify(empty.value === undefined)
+        for (var text of ["null", '"ok"', "[]", "true"]) {
+            compare(ProviderConfigProtocol.response(text, "", 0, "setApiKey").outcome, "invalidPayload")
+        }
+        compare(ProviderConfigProtocol.response("", "", 1, "setApiKey").outcome, "exitCodeError")
+        compare(ProviderConfigProtocol.response("", "", 124, "setApiKey").outcome, "timeout")
+        compare(ProviderConfigProtocol.response("", "write failed", 0, "setApiKey").outcome, "stderrError")
     }
 
-    function test_commandOutcomeRedactsTheStandaloneStderrReason() {
+    function test_commandResponseRedactsTheStandaloneStderrReason() {
         var secret = "sk-abcdefghijklmnop"
-        var result = ProviderConfigProtocol.commandOutcome(
+        var result = commandResponse(
             null, "request failed with api_key=" + secret + repeated("y", 700).join(""), 1)
         compare(result.outcome, "stderrError")
         compare(result.message.indexOf(secret), -1)
@@ -437,13 +524,13 @@ TestCase {
         var report = { schemaVersion: "1.0", provider: "codex", auth: {}, settings: {},
             fetchAttempts: [], error: { category: "unknown", safeDescription: "Fetch failed" } }
         var before = JSON.stringify(report)
-        compare(ProviderConfigProtocol.diagnosticOutcome(report, "loader warning", 0).outcome, "success")
-        compare(ProviderConfigProtocol.diagnosticOutcome([report], "", 0).outcome, "success")
-        compare(ProviderConfigProtocol.diagnosticOutcome(report, "", 3).outcome, "exitCodeError")
-        compare(ProviderConfigProtocol.diagnosticOutcome(report, "", 124).outcome, "timeout")
+        compare(diagnosticResponse(report, "loader warning", 0).outcome, "success")
+        compare(diagnosticResponse([report], "", 0).outcome, "success")
+        compare(diagnosticResponse(report, "", 3).outcome, "exitCodeError")
+        compare(diagnosticResponse(report, "", 124).outcome, "timeout")
         compare(JSON.stringify(report), before)
         // Config writes keep treating the same error field as command failure.
-        compare(ProviderConfigProtocol.commandOutcome(report, "", 0).outcome, "envelopeError")
+        compare(commandResponse(report, "", 0).outcome, "envelopeError")
     }
 
     function test_incompleteDiagnosticCannotBypassCommandErrors() {
@@ -452,12 +539,12 @@ TestCase {
         for (var field of ["schemaVersion", "provider", "auth", "settings", "fetchAttempts"]) {
             var incomplete = JSON.parse(JSON.stringify(report))
             delete incomplete[field]
-            compare(ProviderConfigProtocol.diagnosticOutcome(incomplete, "", 0).outcome, "envelopeError")
+            compare(diagnosticResponse(incomplete, "", 0).outcome, "envelopeError")
         }
-        compare(ProviderConfigProtocol.diagnosticOutcome(repeated(report,
+        compare(diagnosticResponse(repeated(report,
             ProviderConfigProtocol.maximumProviderItems + 1), "", 0).outcome, "envelopeError")
         report.status = "failed"
-        compare(ProviderConfigProtocol.diagnosticOutcome(report, "", 0).outcome, "statusError")
+        compare(diagnosticResponse(report, "", 0).outcome, "statusError")
     }
 
     function test_diagnosticUsesOnlyFirstArrayItemAndStrictShapes() {
