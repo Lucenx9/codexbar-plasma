@@ -231,6 +231,7 @@ TestCase {
     property string selectedProviderID: ""
     property bool providerDescriptorsUnavailable: false
     property bool fireworksSingleKeySetupSupported: false
+    property bool commandCodeFalApiKeySetupSupported: false
     property bool providerSourceSetupSupported: false
     property var pending: ({})
     property var providerFieldPending: ({})
@@ -752,6 +753,18 @@ TestCase {
         fireworksSingleKeySetupSupported = true;
         compare(supportsApiKeySetup("fireworks"), true);
         fireworksSingleKeySetupSupported = false;
+        compare(supportsApiKeySetup("fal"), false);
+        compare(supportsApiKeySetup("flora"), false);
+        compare(supportsApiKeySetup("parallel"), false);
+        commandCodeFalApiKeySetupSupported = true;
+        compare(supportsApiKeySetup("commandcode"), true);
+        compare(supportsApiKeySetup("command-code"), true);
+        compare(supportsApiKeySetup("fal"), true);
+        compare(supportsApiKeySetup("flora"), false);
+        compare(supportsApiKeySetup("parallel"), false);
+        commandCodeFalApiKeySetupSupported = false;
+        compare(supportsApiKeySetup("commandcode"), false);
+        compare(supportsApiKeySetup("fal"), false);
     }
     // Action rows offer set-api-key for key providers and a dashboard link
     // only when no descriptor action already opens the dashboard.

@@ -21,6 +21,9 @@ TestCase {
 
     function test_lateAddedProvidersHaveBundledFallbackTitles_data() {
         return [
+            { tag: "fal", key: "fal", title: "fal" },
+            { tag: "flora", key: "flora", title: "FLORA" },
+            { tag: "parallel", key: "parallel", title: "Parallel" },
             { tag: "aerostack", key: "aerostack", title: "Aerostack" },
             { tag: "cosmic", key: "cosmic", title: "Cosmic AI" },
             { tag: "exa", key: "exa", title: "Exa" },

@@ -3770,3 +3770,15 @@ msgstr "TinyApi"
 #: contents/ui/components/ProviderNames.qml
 msgid "X API"
 msgstr "X API"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "fal"
+msgstr "fal"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "FLORA"
+msgstr "FLORA"
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Parallel"
+msgstr "Parallel"

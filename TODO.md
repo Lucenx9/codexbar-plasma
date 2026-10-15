@@ -93,16 +93,6 @@ Issues linked below preserve discussion; this file owns parity status.
   Later probes verify only their named cases. Older blockers below retain their
   last verified version; source inspection is not authenticated output evidence.
 
-## Implementable on Linux
-
-- [ ] Add static metadata for Parallel, fal, and FLORA from the 0.75.0
-  103-provider registry, preserving generic fallbacks. Add supported stdin
-  API-key setup for Command Code and fal; both writers and API runtime entry
-  are verified at 0.75.0, but Plasma excludes them from its setup allowlist.
-  FLORA workspace setup and Parallel cookie actions remain blocked below.
-  Done when mappings/actions have regression coverage and updated usage docs.
-  [Evidence](docs/research/2026-10-15-macos-parity-0.75.0.md#linux-cli-contract-changes).
-
 ## Blocked on official Linux CLI contracts
 
 These are useful Linux features once the named contract exists. Do not fill
