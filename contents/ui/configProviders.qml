@@ -62,6 +62,7 @@ KCM.SimpleKCM {
     property string statusText: ""
     property bool providerDescriptorsUnavailable: false
     property bool fireworksSingleKeySetupSupported: false
+    property bool commandCodeFalApiKeySetupSupported: false
     property bool providerSourceSetupSupported: false
     // provider id -> true while an enable/disable command is in flight
     property var pending: ({})
@@ -116,6 +117,7 @@ KCM.SimpleKCM {
         selectedProviderID = ""
         providerDescriptorsUnavailable = false
         fireworksSingleKeySetupSupported = false
+        commandCodeFalApiKeySetupSupported = false
         providerSourceSetupSupported = false
         Qt.callLater(reload)
     }
@@ -129,6 +131,7 @@ KCM.SimpleKCM {
         disconnectCommandsByKind("list")
         disconnectCommandsByKind("version")
         fireworksSingleKeySetupSupported = false
+        commandCodeFalApiKeySetupSupported = false
         providerSourceSetupSupported = false
         if (commandPath.length === 0) {
             errorText = i18n("Set the codexbar command path in Diagnostics.")
@@ -404,6 +407,7 @@ KCM.SimpleKCM {
             errorText = i18n("Loading providers timed out. Try again.")
         } else if (descriptor.kind === "version") {
             fireworksSingleKeySetupSupported = false
+            commandCodeFalApiKeySetupSupported = false
             providerSourceSetupSupported = false
         } else if (descriptor.kind === "diagnose") {
             setProviderDiagnosticLoading(descriptor.provider, false)
@@ -456,6 +460,8 @@ KCM.SimpleKCM {
     function handleCliVersionResult(stdoutText, exitCode) {
         fireworksSingleKeySetupSupported = Number(exitCode) === 0
             && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 54, 0)
+        commandCodeFalApiKeySetupSupported = Number(exitCode) === 0
+            && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 75, 0)
         providerSourceSetupSupported = Number(exitCode) === 0
             && ProviderConfigProtocol.cliVersionAtLeast(stdoutText, 0, 73, 0)
     }
@@ -1070,6 +1076,9 @@ KCM.SimpleKCM {
         switch (providerKey(providerID)) {
         case "fireworks":
             return fireworksSingleKeySetupSupported
+        case "commandcode":
+        case "fal":
+            return commandCodeFalApiKeySetupSupported
         case "aerostack":
         case "linkup":
         case "sailresearch":

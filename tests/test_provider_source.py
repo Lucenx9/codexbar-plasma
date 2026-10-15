@@ -27,6 +27,7 @@ TestCase {
             property string commandPath: "codexbar"
             property bool providerSourceSetupSupported: true
             property bool fireworksSingleKeySetupSupported: false
+            property bool commandCodeFalApiKeySetupSupported: false
             property int configCommandTimeoutMs: 60000
             property int configSecretPromptTimeoutMs: 60000
             property real configSecretPromptDialogTimeoutSeconds: 30
@@ -127,8 +128,16 @@ TestCase {
         }
         page.handleCliVersionResult("CodexBar 0.74.0", 1);
         verify(!page.providerSourceSetupSupported);
+        verify(!page.commandCodeFalApiKeySetupSupported);
         page.handleCliVersionResult("CodexBar 0.73.0", 0);
         verify(page.providerSourceSetupSupported);
+        verify(!page.commandCodeFalApiKeySetupSupported);
+        page.handleCliVersionResult("CodexBar 0.75.0-rc1", 0);
+        verify(!page.commandCodeFalApiKeySetupSupported);
+        page.handleCliVersionResult("CodexBar 0.75.0", 1);
+        verify(!page.commandCodeFalApiKeySetupSupported);
+        page.handleCliVersionResult("CodexBar 0.75.0", 0);
+        verify(page.commandCodeFalApiKeySetupSupported);
         page.setProviderSource("missing", "auto");
         compare(Object.keys(page.commands).length, 0);
         page.setProviderSource("future", "api");

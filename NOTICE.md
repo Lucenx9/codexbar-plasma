@@ -17,6 +17,12 @@ https://github.com/steipete/CodexBar/tree/v0.74.0/Sources/CodexBar/Resources
 They use the same retained MIT notice:
 https://github.com/steipete/CodexBar/blob/v0.74.0/LICENSE
 
+The Parallel, fal, and FLORA icons are copied from CodexBar v0.75.0, commit
+4668969c8507d75e2f173b72a742c92f97e60344:
+https://github.com/steipete/CodexBar/tree/v0.75.0/Sources/CodexBar/Resources
+They use the same retained MIT notice:
+https://github.com/steipete/CodexBar/blob/v0.75.0/LICENSE
+
 The Poe provider icon (contents/icons/providers/poe.svg) is adapted from
 "Poe App Logo" by SVG Stack for theme coloring:
 https://svgstack.com/icon/poe-app-logo-3748

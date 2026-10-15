@@ -12,6 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Added
 
+- Add fallback names, original provider icons, colors, and links for Parallel,
+  fal, and FLORA from CodexBar 0.75.0. Offer secure single API-key setup for
+  Command Code and fal with CLI 0.75.0 or later; keep incomplete FLORA and
+  unsupported Parallel key setup hidden.
 - Show official CLI plan renewal and expiration dates separately from quota
   resets. Date-only values keep their calendar day without a time; privacy mode
   and retained quotas hide subscription dates. Missing or invalid dates stay omitted.

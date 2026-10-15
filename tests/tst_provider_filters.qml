@@ -131,6 +131,72 @@ TestCase {
         }
     }
 
+    function test_official075ApiKeySetupFollowsCliVersionLifecycle() {
+        var page = createProvidersPage();
+        if (!page)
+            return;
+
+        function actionCount(provider, name) {
+            return page.providerActionRows({provider: provider, enabled: false}).filter(
+                function(action) { return action.action === name; }).length;
+        }
+
+        var closed = [
+            {stdout: "CodexBar 0.74.1", code: 0},
+            {stdout: "CodexBar 0.75.0-rc1", code: 0},
+            {stdout: "unknown", code: 0},
+            {stdout: "CodexBar 0.75.0", code: 1}
+        ];
+        for (var i = 0; i < closed.length; i++) {
+            page.handleCliVersionResult(closed[i].stdout, closed[i].code);
+            verify(!page.commandCodeFalApiKeySetupSupported, closed[i].stdout);
+            compare(actionCount("commandcode", "set-api-key"), 0);
+            compare(actionCount("command-code", "set-api-key"), 0);
+            compare(actionCount("COMMANDCODE", "set-api-key"), 0);
+            compare(actionCount("fal", "set-api-key"), 0);
+            compare(actionCount("FAL", "set-api-key"), 0);
+            compare(actionCount("flora", "set-api-key"), 0);
+            compare(actionCount("parallel", "set-api-key"), 0);
+            compare(actionCount("future-provider", "set-api-key"), 0);
+        }
+
+        page.handleCliVersionResult("CodexBar 0.75.0", 0);
+        verify(page.commandCodeFalApiKeySetupSupported);
+        compare(actionCount("commandcode", "set-api-key"), 1);
+        compare(actionCount("command-code", "set-api-key"), 1);
+        compare(actionCount("COMMANDCODE", "set-api-key"), 1);
+        compare(actionCount("fal", "set-api-key"), 1);
+        compare(actionCount("FAL", "set-api-key"), 1);
+        compare(actionCount("flora", "set-api-key"), 0);
+        compare(actionCount("parallel", "set-api-key"), 0);
+        compare(actionCount("future-provider", "set-api-key"), 0);
+
+        compare(actionCount("fal", "docs"), 1);
+        compare(actionCount("fal", "dashboard"), 1);
+        compare(actionCount("fal", "login"), 1);
+        compare(actionCount("flora", "docs"), 1);
+        compare(actionCount("flora", "dashboard"), 1);
+        compare(actionCount("flora", "login"), 1);
+        compare(actionCount("parallel", "docs"), 1);
+        compare(actionCount("parallel", "dashboard"), 1);
+        compare(actionCount("parallel", "login"), 1);
+        compare(actionCount("future-provider", "docs"), 0);
+        compare(actionCount("future-provider", "dashboard"), 0);
+        compare(actionCount("future-provider", "login"), 0);
+
+        page.handleConfigCommandTimeout({kind: "version"});
+        verify(!page.commandCodeFalApiKeySetupSupported);
+        compare(actionCount("commandcode", "set-api-key"), 0);
+        compare(actionCount("fal", "set-api-key"), 0);
+
+        page.handleCliVersionResult("CodexBar 0.76.0", 0);
+        verify(page.commandCodeFalApiKeySetupSupported);
+        page.handleCommandPathChanged();
+        verify(!page.commandCodeFalApiKeySetupSupported);
+        compare(actionCount("commandcode", "set-api-key"), 0);
+        compare(actionCount("fal", "set-api-key"), 0);
+    }
+
     // The reload tooltip speaks the button's accessible name through the safe
     // wrapper, so assistive technology and the visible tip never disagree.
     // The explicit parent is declarative nesting spelled out: dropping it

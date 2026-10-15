@@ -25,6 +25,47 @@ TestCase {
         compare(ProviderIdentity.providerIconFileName(data.provider), data.provider + ".svg");
     }
 
+    function test_official075ProviderMetadata_data() {
+        return [
+            {tag: "fal", provider: "fal",
+                color: [124 / 255, 58 / 255, 237 / 255],
+                dashboard: "https://fal.ai/dashboard/billing",
+                login: "https://fal.ai/dashboard/keys"},
+            {tag: "FAL", provider: "FAL",
+                color: [124 / 255, 58 / 255, 237 / 255],
+                dashboard: "https://fal.ai/dashboard/billing",
+                login: "https://fal.ai/dashboard/keys"},
+            {tag: "flora", provider: "flora",
+                color: [17 / 255, 17 / 255, 17 / 255],
+                dashboard: "https://app.flora.ai",
+                login: "https://app.flora.ai/projects?openSettings=true&initialTab=apiKeys"},
+            {tag: "FLORA", provider: "FLORA",
+                color: [17 / 255, 17 / 255, 17 / 255],
+                dashboard: "https://app.flora.ai",
+                login: "https://app.flora.ai/projects?openSettings=true&initialTab=apiKeys"},
+            {tag: "parallel", provider: "parallel",
+                color: [29 / 255, 28 / 255, 26 / 255],
+                dashboard: "https://platform.parallel.ai",
+                login: "https://platform.parallel.ai/login"},
+            {tag: "PARALLEL", provider: "PARALLEL",
+                color: [29 / 255, 28 / 255, 26 / 255],
+                dashboard: "https://platform.parallel.ai",
+                login: "https://platform.parallel.ai/login"}
+        ];
+    }
+    function test_official075ProviderMetadata(data) {
+        var key = data.provider.toLowerCase();
+        compare(ProviderIdentity.resolveProviderKey(data.provider), key);
+        compare(ProviderIdentity.providerCliArgument(data.provider), key);
+        compare(ProviderIdentity.providerBrandColorChannels(data.provider), data.color);
+        compare(ProviderIdentity.providerDashboardUrl(data.provider), data.dashboard);
+        compare(ProviderIdentity.providerLoginUrl(data.provider), data.login);
+        compare(ProviderIdentity.providerStatusUrl(data.provider), "");
+        compare(ProviderIdentity.providerDocsUrl(data.provider),
+            "https://github.com/steipete/CodexBar/blob/main/docs/" + key + ".md");
+        compare(ProviderIdentity.providerIconFileName(data.provider), key + ".svg");
+    }
+
     // Expected fallback metadata is independent of the production table layout.
     // Preserve the contracts formerly checked by parity and theme scripts.
 

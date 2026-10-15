@@ -1118,7 +1118,15 @@ msgid "Droid"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
+msgid "fal"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
 msgid "Fireworks"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
+msgid "FLORA"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
@@ -1251,6 +1259,10 @@ msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
 msgid "OpenCode Go"
+msgstr ""
+
+#: contents/ui/components/ProviderNames.qml
+msgid "Parallel"
 msgstr ""
 
 #: contents/ui/components/ProviderNames.qml
