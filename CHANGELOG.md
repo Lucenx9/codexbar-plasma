@@ -12,6 +12,14 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Preserve every typed digit in Settings number fields with the KDE desktop
+  style. Keep seconds, days, hours and percent-used units in their labels.
+- Point provider source-override guidance to Diagnostics.
+- Name provider option controls, override fields and diagnostic output for
+  screen readers, including each field's Set and Save actions.
+- Retire Settings provider-list requests immediately when the CLI path changes,
+  and clear the previous CLI's list even while Panel providers is collapsed.
+- Show the predictive-notification explanation on keyboard focus as well as hover.
 - Preserve keyboard focus in provider rows while a toggle is pending and after
   the list refreshes, without moving focus away from another control.
 - Clear outdated provider diagnostics after a successful configuration change,

@@ -309,7 +309,7 @@ KCM.SimpleKCM {
 
     onCfg_refreshIntervalChanged: {
         var nextIndex = refreshPresetIndex(cfg_refreshInterval)
-        if (refreshPresetCombo.currentIndex !== nextIndex) {
+        if (!refreshIntervalSpin.activeFocus && refreshPresetCombo.currentIndex !== nextIndex) {
             refreshPresetCombo.currentIndex = nextIndex
         }
     }
@@ -488,22 +488,18 @@ KCM.SimpleKCM {
         Controls.SpinBox {
             id: refreshIntervalSpin
             objectName: "refreshIntervalSpin"
-            Kirigami.FormData.label: i18n("Custom interval:")
+            Kirigami.FormData.label: i18n("Custom interval (seconds):")
             from: 0
             to: 3600
             stepSize: 10
             editable: true
             visible: refreshPresetCombo.currentValue < 0
-            textFromValue: function(value, locale) {
-                return value <= 0 ? i18n("No periodic refresh") : i18np("%1 second", "%1 seconds", value)
+            onActiveFocusChanged: if (!activeFocus) {
+                refreshPresetCombo.currentIndex = page.refreshPresetIndex(page.cfg_refreshInterval)
             }
-            // "No periodic refresh" and cleared text carry no digits. Keeping the
-            // current value leaves the stored interval alone instead of writing
-            // an unrelated preset over it.
-            // i18np() localizes "%1", so values from 1000 up render with a group
-            // separator ("1,200 seconds", "1.200 seconds", "1 200 seconds"). Read the separated
-            // groups as one number; otherwise leaving the field would parse
-            // only the leading "1" and refresh every second.
+            // Keep unparsable edits unchanged and read localized grouping as
+            // one number. Units stay in the label: the KDE style commits each
+            // keystroke, so an in-field suffix would swallow later digits.
             valueFromText: function(text, locale) {
                 var match = text.match(/\d{1,3}(?:[\s.,'\u00a0\u202f]\d{3})+(?!\d)|\d+/)
                 return match ? parseInt(match[0].replace(/\D/g, ""), 10) : value
@@ -590,13 +586,10 @@ KCM.SimpleKCM {
         Controls.SpinBox {
             id: costHistoryDaysSpin
             objectName: "costHistoryDaysSpin"
-            Kirigami.FormData.label: i18n("History window:")
+            Kirigami.FormData.label: i18n("History window (days):")
             from: 1
             to: 365
             editable: true
-            textFromValue: function(value, locale) {
-                return i18np("%1 day", "%1 days", value)
-            }
             valueFromText: function(text, locale) {
                 var match = text.match(/\d+/)
                 return match ? parseInt(match[0], 10) : page.cfg_costHistoryDays
@@ -635,13 +628,12 @@ KCM.SimpleKCM {
         Controls.SpinBox {
             id: identifiedDaysSpin
             objectName: "identifiedDaysSpin"
-            Kirigami.FormData.label: i18n("Identified window:")
+            Kirigami.FormData.label: i18n("Identified window (days):")
             from: 1
             to: 365
             value: 30
             editable: true
             enabled: identifiedTokensCheck.checked
-            textFromValue: function(value, locale) { return i18np("%1 day", "%1 days", value) }
             valueFromText: function(text, locale) {
                 var match = text.match(/\d+/)
                 return match ? parseInt(match[0], 10) : value
@@ -686,14 +678,11 @@ KCM.SimpleKCM {
         Controls.SpinBox {
             id: autoUpdateIntervalHoursSpin
             objectName: "autoUpdateIntervalHoursSpin"
-            Kirigami.FormData.label: i18n("Check every:")
+            Kirigami.FormData.label: i18n("Check every (hours):")
             from: 1
             to: 168
             editable: true
             enabled: updateChecksEnabledCheck.checked
-            textFromValue: function(value, locale) {
-                return i18np("%1 hour", "%1 hours", value)
-            }
             valueFromText: function(text, locale) {
                 var match = text.match(/\d+/)
                 return match ? parseInt(match[0], 10) : value

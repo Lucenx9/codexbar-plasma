@@ -284,7 +284,7 @@ TestCase {
         });
         compare(combos.length, 1);
         var boxes = all.filter(function(item) {
-            return item instanceof Controls.CheckBox && item.Accessible.name === "Enable everything"
+            return item instanceof Controls.CheckBox && item.Accessible.name === "Flag"
                 && controlVisibleInRow(item);
         });
         compare(boxes.length, 1);
@@ -422,9 +422,10 @@ TestCase {
         compare(fields.length, 1);
         compare(fields[0].placeholderText, SafeText.plainTextAsRichText(description));
         var boxes = all.filter(function(item) {
-            return item instanceof Controls.CheckBox && item.Accessible.name === flag;
+            return item instanceof Controls.CheckBox && item.Accessible.name === "Flag";
         });
         compare(boxes.length, 1);
+        compare(boxes[0].Accessible.description, flag);
         compare(boxes[0].text, SafeText.plainTextAsRichText(flag));
         // Every field row instantiates an enum box; only the enum field feeds
         // it options, so match the one that owns our hostile option.

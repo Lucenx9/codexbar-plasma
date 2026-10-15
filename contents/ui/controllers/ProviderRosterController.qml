@@ -28,7 +28,15 @@ Item {
     // activation spawns one CLI list command, not two.
     Component.onCompleted: if (active) Qt.callLater(loadProviderRoster)
 
-    onCommandPathChanged: if (active) Qt.callLater(loadProviderRoster)
+    onCommandPathChanged: {
+        // Retire the old CLI synchronously; its reply can arrive before the
+        // queued replacement load, including while the section is collapsed.
+        disconnectProviderRosterCommands()
+        enabledProviderRoster = []
+        providerRosterLoading = false
+        providerRosterError = ""
+        if (active) Qt.callLater(loadProviderRoster)
+    }
 
     onActiveChanged: {
         if (active) {

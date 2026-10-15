@@ -43,13 +43,10 @@ KCM.SimpleKCM {
         Controls.SpinBox {
             id: quotaWarningPercentSpin
             objectName: "quotaWarningPercentSpin"
-            Kirigami.FormData.label: i18n("Quota warning at:")
+            Kirigami.FormData.label: i18n("Quota warning (% used):")
             from: 1
             to: 99
             editable: true
-            textFromValue: function(value, locale) {
-                return i18n("%1% used", value)
-            }
             // Unparsable text keeps the current threshold. Substituting the
             // schema default here would move a configured threshold silently.
             valueFromText: function(text, locale) {
@@ -62,16 +59,13 @@ KCM.SimpleKCM {
         Controls.SpinBox {
             id: quotaCriticalPercentSpin
             objectName: "quotaCriticalPercentSpin"
-            Kirigami.FormData.label: i18n("Quota critical at:")
+            Kirigami.FormData.label: i18n("Quota critical (% used):")
             // Keeping the floor on the warning value makes the "critical is never
             // below warning" rule visible here instead of only correcting it at
             // runtime, where the widget would silently ignore the entered number.
             from: quotaWarningPercentSpin.value
             to: 100
             editable: true
-            textFromValue: function(value, locale) {
-                return i18n("%1% used", value)
-            }
             valueFromText: function(text, locale) {
                 var match = text.match(/\d+/)
                 return match ? parseInt(match[0], 10) : value
@@ -125,7 +119,7 @@ KCM.SimpleKCM {
                 Components.PlainToolTip {
                     parent: notifyPredictivePaceWarningsCheck
                     plainText: i18n("Uses the pace forecast reported by codexbar.")
-                    visible: notifyPredictivePaceWarningsCheck.hovered
+                    visible: notifyPredictivePaceWarningsCheck.hovered || notifyPredictivePaceWarningsCheck.visualFocus
                     delay: Kirigami.Units.toolTipDelay
                 }
             }

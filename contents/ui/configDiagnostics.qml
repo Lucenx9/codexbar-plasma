@@ -587,6 +587,7 @@ KCM.SimpleKCM {
         Controls.TextField {
             id: providerField
             Kirigami.FormData.label: i18n("Provider:")
+            Accessible.name: i18n("Provider:")
             Layout.preferredWidth: Kirigami.Units.gridUnit * 18
             placeholderText: i18n("Provider id (blank = all enabled)")
         }
@@ -594,6 +595,7 @@ KCM.SimpleKCM {
         Controls.TextField {
             id: sourceField
             Kirigami.FormData.label: i18n("Source:")
+            Accessible.name: i18n("Source:")
             Layout.preferredWidth: Kirigami.Units.gridUnit * 18
             placeholderText: i18n("Provider default (blank)")
         }
@@ -690,6 +692,7 @@ KCM.SimpleKCM {
                 text: page.diagnosticOutput
                 font.family: "monospace"
                 placeholderText: i18n("Diagnostic output appears here.")
+                Accessible.name: i18n("Diagnostic output")
             }
         }
     }

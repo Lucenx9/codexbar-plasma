@@ -14,7 +14,7 @@ rechecks descriptor/action absence. Linux now supports the separate
 `auto` clears the override without changing enablement or credentials. This
 is a shipped command, not the generic descriptor or `config set` proposal.
 Plasma offers version-gated controls for this separate writer under
-**Providers → Settings and diagnostics**; General's global override retains
+**Providers → Settings and diagnostics**; the global override in Diagnostics retains
 precedence for widget requests.
 ClinePass labeled-key writes still fail with the z.ai-only restriction.
 The scoped [0.74.0 review](research/2026-10-11-macos-parity-0.74.0.md) finds

@@ -10,7 +10,11 @@ TestCase {
     height: 250
     visible: true
 
-    function i18n(text) { return text; }
+    function i18n(text) {
+        for (var i = 1; i < arguments.length; i++)
+            text = text.replace("%" + i, arguments[i]);
+        return text;
+    }
 
     Component { id: spyComponent; SignalSpy {} }
 
@@ -140,6 +144,27 @@ TestCase {
         next.value = true;
         item.modelData = next;
         compare(box.checked, true);
+    }
+
+    function test_controlsUseFieldTitleAsAccessibleName_data() {
+        return [
+            {tag: "secret", kind: "secret", names: {descriptorSecretButton: "Set Setting"}},
+            {tag: "text", kind: "text", names: {descriptorTextField: "Setting", descriptorTextSaveButton: "Save Setting"}},
+            {tag: "enum", kind: "enum", names: {descriptorEnumBox: "Setting", descriptorEnumSaveButton: "Save Setting"}},
+            {tag: "boolean", kind: "boolean", names: {descriptorBooleanBox: "Setting"}}
+        ];
+    }
+
+    function test_controlsUseFieldTitleAsAccessibleName(data) {
+        var item = createField(data.kind);
+        if (!item) return;
+        if (data.kind === "boolean") {
+            var next = field("boolean", 0);
+            next.description = "";
+            item.modelData = next;
+        }
+        for (var name in data.names)
+            compare(findChild(item, name).Accessible.name, data.names[name]);
     }
 
     function test_pendingAndMissingProviderDisableControls_data() {

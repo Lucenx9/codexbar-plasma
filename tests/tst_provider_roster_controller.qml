@@ -129,6 +129,40 @@ TestCase {
         tryVerify(function() { return controller.commandRunSerial === 2; }, 10000);
     }
 
+    function test_commandPathChangeImmediatelyRetiresOldReplies() {
+        failOnWarning(qprocessAndAnimationDriverFilter());
+        var controller = createController();
+        if (!controller) return;
+        controller.active = true;
+        controller.loadProviderRoster();
+        var oldSource = Object.keys(controller.providerRosterCommands)[0];
+        verify(oldSource !== undefined);
+        controller.commandPath = "/usr/bin/false";
+        // No event-loop turn: the replacement load is still queued.
+        verify(!controller.hasPendingProviderRosterCommands());
+        verify(!controller.providerRosterLoading);
+        controller.handleProviderRosterData(oldSource, '{"provider":"stale","enabled":true}', "", 0);
+        compare(controller.enabledProviderRoster, []);
+        compare(controller.providerRosterError, "");
+        controller.handleProviderRosterData(oldSource, "", "Old CLI failure", 7);
+        compare(controller.providerRosterError, "");
+        tryVerify(function() { return controller.commandRunSerial === 2; }, 10000);
+    }
+
+    function test_inactiveCommandChangeClearsPreviousRosterWithoutLoading() {
+        failOnWarning(/.*/);
+        var controller = createController();
+        if (!controller) return;
+        controller.enabledProviderRoster = [{provider: "codex", displayName: "Codex"}];
+        controller.providerRosterError = "Old CLI failure";
+        controller.commandPath = "/usr/bin/false";
+        compare(controller.enabledProviderRoster, []);
+        compare(controller.providerRosterError, "");
+        verify(!controller.providerRosterLoading);
+        wait(1);
+        compare(controller.commandRunSerial, 0);
+    }
+
     // An overdue roster command releases loading with the timeout error,
     // and its late reply is dropped instead of replacing the outcome.
     function test_expiredCommandsSurfaceTimeoutAndDropLateReplies() {

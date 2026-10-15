@@ -770,8 +770,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: contents/ui/components/PanelSettingsPreview.qml
-#: contents/ui/components/UsageWindowText.qml contents/ui/configGeneral.qml
-#: scripts/smoke/Capture.qml
+#: contents/ui/components/UsageWindowText.qml scripts/smoke/Capture.qml
 msgid "%1 hour"
 msgid_plural "%1 hours"
 msgstr[0] ""
@@ -780,7 +779,7 @@ msgstr[1] ""
 #: contents/ui/components/PanelSettingsPreview.qml
 #: contents/ui/components/ShareUsageWindow.qml
 #: contents/ui/components/SpendView.qml
-#: contents/ui/components/UsageWindowText.qml contents/ui/configGeneral.qml
+#: contents/ui/components/UsageWindowText.qml
 msgid "%1 day"
 msgid_plural "%1 days"
 msgstr[0] ""
@@ -959,7 +958,6 @@ msgid "%1: %2 / %3"
 msgstr ""
 
 #: contents/ui/components/ProviderCostDetails.qml
-#: contents/ui/configNotifications.qml
 #, kde-format
 msgid "%1% used"
 msgstr ""
@@ -1988,8 +1986,16 @@ msgid "Set…"
 msgstr ""
 
 #: contents/ui/config/ProviderDescriptorField.qml
+msgid "Set %1"
+msgstr ""
+
+#: contents/ui/config/ProviderDescriptorField.qml
 #: contents/ui/configProviders.qml
 msgid "Save"
+msgstr ""
+
+#: contents/ui/config/ProviderDescriptorField.qml
+msgid "Save %1"
 msgstr ""
 
 #: contents/ui/configAiInsights.qml
@@ -2358,6 +2364,10 @@ msgstr ""
 msgid "Diagnostic output appears here."
 msgstr ""
 
+#: contents/ui/configDiagnostics.qml
+msgid "Diagnostic output"
+msgstr ""
+
 #: contents/ui/configGeneral.qml
 msgid "Last checked: never"
 msgstr ""
@@ -2379,14 +2389,8 @@ msgid "Custom"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
-msgid "Custom interval:"
+msgid "Custom interval (seconds):"
 msgstr ""
-
-#: contents/ui/configGeneral.qml
-msgid "%1 second"
-msgid_plural "%1 seconds"
-msgstr[0] ""
-msgstr[1] ""
 
 #: contents/ui/configGeneral.qml
 msgid "Refresh when opening the popup"
@@ -2429,7 +2433,7 @@ msgid "Load local usage and spend history"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
-msgid "History window:"
+msgid "History window (days):"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -2443,7 +2447,7 @@ msgid ""
 msgstr ""
 
 #: contents/ui/configGeneral.qml
-msgid "Identified window:"
+msgid "Identified window (days):"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -2473,7 +2477,7 @@ msgid "Check for widget updates"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
-msgid "Check every:"
+msgid "Check every (hours):"
 msgstr ""
 
 #: contents/ui/configGeneral.qml
@@ -2593,11 +2597,11 @@ msgid "Quota warnings"
 msgstr ""
 
 #: contents/ui/configNotifications.qml
-msgid "Quota warning at:"
+msgid "Quota warning (% used):"
 msgstr ""
 
 #: contents/ui/configNotifications.qml
-msgid "Quota critical at:"
+msgid "Quota critical (% used):"
 msgstr ""
 
 #: contents/ui/configNotifications.qml
@@ -3204,8 +3208,8 @@ msgstr ""
 #: contents/ui/configProviders.qml
 msgid ""
 "Choose a source to save. CodexBar validates support for this provider; "
-"Automatic clears its saved override. General's source override takes "
-"precedence in the widget."
+"Automatic clears its saved override. The source override in Diagnostics "
+"takes precedence in the widget."
 msgstr ""
 
 #: contents/ui/configProviders.qml

@@ -50,7 +50,8 @@ if [[ -x "$QT_PATHS_TOOL" ]] \
   QT_QUICK_CONTROLS_STYLE=org.kde.desktop QT_QPA_PLATFORMTHEME=kde \
     QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
     run_qml_tests -input "$ROOT_DIR/tests/tst_settings_pages.qml" \
-    SettingsPages::test_generalRtlLoadsWithoutWarnings
+    SettingsPages::test_generalRtlLoadsWithoutWarnings \
+    SettingsPages::test_customRefreshStaysVisibleWhileTypingAPresetPrefix
   QT_QUICK_CONTROLS_STYLE=org.kde.desktop QT_QPA_PLATFORMTHEME=kde \
     QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
     run_qml_tests -input "$ROOT_DIR/tests/tst_provider_filters.qml"

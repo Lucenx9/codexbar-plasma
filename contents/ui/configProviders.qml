@@ -1591,7 +1591,7 @@ KCM.SimpleKCM {
 
                         Components.PlainControlsLabel {
                             Layout.fillWidth: true
-                            text: i18n("Choose a source to save. CodexBar validates support for this provider; Automatic clears its saved override. General's source override takes precedence in the widget.")
+                            text: i18n("Choose a source to save. CodexBar validates support for this provider; Automatic clears its saved override. The source override in Diagnostics takes precedence in the widget.")
                             opacity: page.secondaryTextOpacity
                             font: Kirigami.Theme.smallFont
                             wrapMode: Text.WordWrap
