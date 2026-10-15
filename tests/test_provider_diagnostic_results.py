@@ -15,17 +15,35 @@ from qml_surfaces import Surface
 QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/CommandLedger.js" as CommandLedger
+import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/SafeText.js" as SafeText
 import "SOURCE_URL/config/ProviderConfigProtocol.js" as ProviderConfigProtocol
+import "SOURCE_URL/config/ProviderSource.js" as ProviderSource
 TestCase {
+    id: page
     name: "ProviderDiagnosticResults"
     property string commandPath: "codexbar"
     property var commands: ({})
     property var diagnostic: null
     property string diagnosticError: ""
     property bool diagnosticLoading: false
+    property string errorText: ""
+    property string statusText: ""
+    property string selectedProviderID: "codex"
+    property QtObject providerSourceBox: QtObject { property int currentIndex: 1 }
+    property QtObject configSource: QtObject {
+        function disconnectSource(source) {}
+    }
     SOURCE_FUNCTIONS
-    function i18n(text, value) { return text.replace("%1", value); }
+    function i18n(text, first, second) { return text.replace("%1", first).replace("%2", second); }
+    function displayNameForProvider(provider) { return provider; }
+    function providerCliArgument(provider) { return provider; }
+    function markPending(provider, value) {}
+    function markFieldPending(provider, field, value) {}
+    function updateProviderEnabled(provider, enabled) {}
+    function bumpProviderConfigRevision() {}
+    function reload(preserve) {}
+    function runReloadDeferredBySourceWrite() {}
     function setProviderDiagnostic(provider, value) { diagnostic = value; }
     function setProviderDiagnosticError(provider, value) { diagnosticError = value; }
     function setProviderDiagnosticLoading(provider, value) { diagnosticLoading = value; }
@@ -135,6 +153,43 @@ TestCase {
         compare(diagnostic.provider, "previous");
         compare(diagnosticError, "previous failure");
     }
+    function mutationCases() {
+        return ["handleToggleResult", "handleSetApiKeyResult", "handleSetSourceResult",
+            "handleDescriptorFieldResult", "handleDescriptorActionResult"].map(function(handler) {
+                return {tag: handler, handler: handler};
+            });
+    }
+    function test_successfulWriteInvalidatesOldDiagnostic_data() { return mutationCases(); }
+    function test_successfulWriteInvalidatesOldDiagnostic(data) {
+        commands = CommandLedger.opened(commands, "old-diagnostic", {
+            kind: "diagnose", provider: "codex", commandPathSignature: commandPath });
+        commands = CommandLedger.opened(commands, "other-diagnostic", {
+            kind: "diagnose", provider: "claude", commandPathSignature: commandPath });
+        diagnosticLoading = true;
+        this[data.handler]({provider: "codex", desiredEnabled: true, sourceMode: "api"},
+            '{"provider":"codex","enabled":true,"source":"api"}', "", 0);
+        compare(diagnostic, null);
+        compare(diagnosticError, "");
+        verify(!diagnosticLoading);
+        compare(CommandLedger.find(commands, "old-diagnostic"), null);
+        verify(CommandLedger.find(commands, "other-diagnostic") !== null);
+        handleData("old-diagnostic", '{"provider":"codex","auth":{"configured":false}}', "", 0);
+        compare(diagnostic, null);
+        deliver('{"provider":"codex","auth":{"configured":true}}', "", 0);
+        verify(diagnostic.authConfigured);
+    }
+    function test_failedWritePreservesDiagnostic_data() { return mutationCases(); }
+    function test_failedWritePreservesDiagnostic(data) {
+        this[data.handler]({provider: "codex", sourceMode: "api"},
+            '{"error":{"message":"Synthetic failure"}}', "", 1);
+        compare(diagnostic.provider, "previous");
+        compare(diagnosticError, "previous failure");
+    }
+    function test_cancelledKeyPromptPreservesDiagnostic() {
+        handleSetApiKeyResult({provider: "codex"}, '{"cancelled":true}', "", 0);
+        compare(diagnostic.provider, "previous");
+        compare(diagnosticError, "previous failure");
+    }
 }
 '''
 
@@ -146,7 +201,10 @@ class ProviderDiagnosticResultsTests(unittest.TestCase):
         surface.texts = {ROOT / "contents/ui/configProviders.qml": source}
         functions = []
         for name in ("handleData", "handleDiagnoseResult", "boundedCliMessage",
-                     "providerCommandFailureText"):
+                     "providerCommandFailureText", "handleToggleResult", "handleSetApiKeyResult",
+                     "handleSetSourceResult", "applySetSourceResult", "handleDescriptorFieldResult",
+                     "handleDescriptorActionResult", "retireProviderDiagnostic",
+                     "invalidateProviderDiagnostic", "hasOwnKey"):
             signature = re.search(r"function " + name + r"\([^)]*\)", source).group(0)
             functions.append(signature + " {" + surface.function_body(name) + "}")
         qml = (QML.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())

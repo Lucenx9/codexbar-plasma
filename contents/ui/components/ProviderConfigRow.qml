@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
@@ -18,6 +19,24 @@ Controls.ItemDelegate {
     down: false
     highlighted: providerData.provider === configPage.selectedProviderID
     onClicked: configPage.selectedProviderID = providerData.provider
+    onActiveFocusChanged: if (activeFocus) configPage.providerListFocus = ({
+        provider: providerData.provider, control: "row"
+    })
+    // Array models recreate every row. Restore focus only when the old control
+    // was destroyed and no other control has claimed focus in the meantime.
+    Component.onCompleted: Qt.callLater(function() {
+        var remembered = configPage.providerListFocus
+        var window = providerRow.Window.window
+        if (!remembered || remembered.provider !== providerData.provider || !window
+                || (window.activeFocusItem && window.activeFocusItem !== window.contentItem)) {
+            return
+        }
+        if (remembered.control === "switch") {
+            enabledSwitch.forceActiveFocus(Qt.TabFocusReason)
+        } else if (remembered.control === "row") {
+            providerRow.forceActiveFocus(Qt.TabFocusReason)
+        }
+    })
     readonly property color selectedForeground: ThemeContrast.readableTextColor(
         Kirigami.Theme.highlightedTextColor, Kirigami.Theme.highlightColor)
     readonly property color selectedSecondaryForeground: ThemeContrast.readableTextColor(
@@ -87,11 +106,17 @@ Controls.ItemDelegate {
         }
 
         Controls.Switch {
+            id: enabledSwitch
+
+            onActiveFocusChanged: if (activeFocus) providerRow.configPage.providerListFocus = ({
+                provider: providerRow.providerData.provider, control: "switch"
+            })
             Accessible.name: i18n("Enable %1", providerRow.providerData.displayName)
             checked: providerRow.configPage.visualEnabled(providerRow.providerData.provider, providerRow.providerData.enabled)
-            enabled: !providerRow.configPage.isPending(providerRow.providerData.provider)
             onClicked: {
-                providerRow.configPage.setEnabled(providerRow.providerData.provider, !providerRow.providerData.enabled)
+                if (!providerRow.configPage.isPending(providerRow.providerData.provider)) {
+                    providerRow.configPage.setEnabled(providerRow.providerData.provider, !providerRow.providerData.enabled)
+                }
                 // Clicking severs the declarative binding on `checked`; restore it so the
                 // switch reverts when a toggle fails or its pending state clears.
                 checked = Qt.binding(function() {

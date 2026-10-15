@@ -68,6 +68,7 @@ TestCase {
             function bumpProviderConfigRevision() { revisions++; }
             function setProviderDiagnostic(provider, value) { diagnosticsCleared++; }
             function setProviderDiagnosticLoading(provider, value) {}
+            function setProviderDiagnosticError(provider, value) {}
             function providerConfigRevisionValue() { return revisions; }
             function shellQuote(value) { return Guards.shellQuote(value); }
         }
@@ -118,6 +119,29 @@ TestCase {
         compare(page.providerSourceBox.currentIndex, 1);
         compare(page.cfg_source, "web");
         compare(page.errorText.length > 0, data.tag !== "cancelled");
+    }
+    function test_reloadRetainsCapabilitiesUntilVersionResult() {
+        var page = createTemporaryObject(harness, this);
+        page.handleCliVersionResult("CodexBar 0.76.0", 0);
+        page.reload();
+        verify(page.fireworksSingleKeySetupSupported);
+        verify(page.commandCodeFalApiKeySetupSupported);
+        verify(page.providerSourceSetupSupported);
+        page.handleCliVersionResult("CodexBar 0.72.0", 0);
+        verify(page.fireworksSingleKeySetupSupported);
+        verify(!page.commandCodeFalApiKeySetupSupported);
+        verify(!page.providerSourceSetupSupported);
+        page.handleCliVersionResult("unknown", 1);
+        verify(!page.fireworksSingleKeySetupSupported);
+    }
+    function test_apiKeyPromptKeepsCurrentEnablement() {
+        var page = createTemporaryObject(harness, this);
+        page.setApiKey("codex");
+        verify(page.isPending("codex"));
+        verify(!page.visualEnabled("codex", false));
+        page.setApiKey("future");
+        verify(page.isPending("future"));
+        verify(page.visualEnabled("future", true));
     }
     function test_gateAndUnknownProvider() {
         var page = createTemporaryObject(harness, this);
@@ -302,7 +326,8 @@ class ProviderSourceTests(unittest.TestCase):
     def test_source_writes_and_lifecycle(self):
         source = (ROOT / "contents/ui/configProviders.qml").read_text()
         surface = Surface("providers", ROOT)
-        names = ("setProviderSource", "handleSetSourceResult",
+        names = ("setProviderSource", "handleSetSourceResult", "setApiKey", "visualEnabled",
+                 "retireProviderDiagnostic", "invalidateProviderDiagnostic",
                  "providerCommandFailureText", "handleCliVersionResult", "handleData",
                  "applySetSourceResult", "runReloadDeferredBySourceWrite",
                  "providerByID", "markPending", "isPending", "runCommand", "copyObject",

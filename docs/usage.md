@@ -372,11 +372,17 @@ existing installation, use **Diagnostics** to set the absolute executable path.
 
 A failed provider-list refresh in settings keeps the last loaded list and shows
 an error. A successful empty list clears it.
+Reloading the same CLI keeps known setup controls visible while its version is
+checked again. API key setup waits until that check and the list reload finish.
 Provider settings diagnostics also keep their last successful result and show
 an error when the CLI process fails or returns an invalid response. A failed
 process cannot replace the result even when it prints valid diagnostic JSON.
 An error inside a successful diagnostic report describes a failed provider fetch;
 its authentication, settings, and attempt details remain available for inspection.
+Saving a provider configuration change clears that provider's previous diagnostic
+result and error. Older diagnostic replies cannot restore them. Select **Inspect
+redacted settings** again to inspect the new configuration. Failed changes and
+cancelled prompts preserve the last diagnostic result.
 JSON parsing errors in provider settings are bounded and redact credentials
 before they appear in the error message.
 
@@ -385,6 +391,9 @@ Provider-specific editable settings depend on the official CLI contract.
 - Search providers by name or ID and filter All, Enabled, or Disabled locally.
   Clear filters restores the list without changing selection or provider settings.
   Hover a row whose name or ID is cut short to read both in full.
+  Keyboard focus stays on the provider row or switch when the list refreshes.
+  A pending switch keeps focus and ignores repeated activation until its command
+  finishes. Moving to another control during the command keeps focus there.
 - Provider enable/disable and setup actions write CodexBar configuration
   immediately; Apply and Cancel cover widget settings only.
   A CLI error with an empty or malformed message shows a generic failure
@@ -392,6 +401,8 @@ Provider-specific editable settings depend on the official CLI contract.
   CLI 0.65.0 drops user provider plugin entries and their stored secrets when
   `config disable` runs. Update to CLI 0.66.0 before disabling a provider if
   you use user plugins.
+- Opening an API key prompt preserves the provider's current enabled state
+  until a successful save reports its new state.
 - API key and secret prompts stay open while you type. A prompt left open for
   about 15 minutes closes by itself, the provider's actions unlock again, and
   the prompt can be reopened. Submitting near that limit still allows the full

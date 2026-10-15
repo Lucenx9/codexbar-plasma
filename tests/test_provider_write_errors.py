@@ -33,6 +33,7 @@ TestCase {
             function markPending(provider, value) { pending = value; }
             function updateProviderEnabled(provider, value) { writes++; }
             function bumpProviderConfigRevision() { revisions++; }
+            function invalidateProviderDiagnostic(provider) {}
         }
     }
 
@@ -76,7 +77,16 @@ TestCase {
         verify(!togglePage.pending);
         compare(togglePage.writes, 0);
         compare(togglePage.revisions, 0);
-        verify(togglePage.errorText.length > 0);
+        compare(togglePage.errorText, "codex: codexbar did not return command data.");
+    }
+
+    function test_invalidWritePayloadNamesCommandData() {
+        for (var handler of ["handleToggleResult", "handleSetApiKeyResult"]) {
+            var page = createTemporaryObject(harness, this);
+            page[handler]({provider: "codex"}, "true", "", 0);
+            compare(page.errorText, "codex: codexbar did not return command data.");
+            compare(page.revisions, 0);
+        }
     }
 
     function test_apiKeyCancellationDoesNotCommit() {
