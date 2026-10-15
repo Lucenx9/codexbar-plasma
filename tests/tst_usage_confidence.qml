@@ -78,8 +78,36 @@ TestCase {
         compare(text.percentText(null, true), "");
     }
 
-    function test_estimatesCannotWinAutomaticQuotaSelection() {
-        var estimated = provider("estimated", 95);
+    function test_claudePercentOnlyShowsLimitedDetail() {
+        var input = {provider: "claude", source: "claude", usage: {
+            dataConfidence: "percentOnly",
+            primary: {usedPercent: 0, windowMinutes: 300, resetsAt: null},
+            secondary: {usedPercent: 100, windowMinutes: 10080, resetsAt: "2026-10-15T22:00:00Z"}
+        }};
+        var item = Snapshot.normalize(input, nowMs);
+        compare(item.dataConfidence, "percentOnly");
+        compare(text.percentText(item.rows[0], false), "100% left (limited detail)");
+        compare(text.percentText(item.rows[1], false), "0% left (limited detail)");
+        compare(text.confidenceText(item.rows[0]), "Usage percentages are available; quota details are limited.");
+        compare(panelText.displayText(item.rows[1], "percent", "", ""), "100% used (limited detail)");
+        for (var row of item.rows) {
+            compare(row.dataConfidence, "percentOnly");
+            compare(row.resetsAt, "");
+            verify(!row.paceKnown);
+        }
+    }
+
+    function degradedConfidence_data() {
+        return [
+            {tag: "estimated", confidence: "estimated"},
+            {tag: "percent-only", confidence: "percentOnly"},
+            {tag: "unknown", confidence: "unknown"}
+        ];
+    }
+
+    function test_estimatesCannotWinAutomaticQuotaSelection_data() { return degradedConfidence_data(); }
+    function test_estimatesCannotWinAutomaticQuotaSelection(data) {
+        var estimated = provider(data.confidence, 95);
         var measured = provider("exact", 50);
         measured.provider = "codex";
         var before = JSON.stringify(estimated);
@@ -93,7 +121,7 @@ TestCase {
         estimated.providerCost = null;
         estimated.rows[0].dataConfidence = "unknown";
         compare(AutoSelect.usedPercent(estimated), -1);
-        estimated.rows[0].dataConfidence = "estimated";
+        estimated.rows[0].dataConfidence = data.confidence;
         // Provider status remains independent of usage confidence.
         estimated.statusSeverity = "critical";
         measured.rows[0].usedPercent = 0;
@@ -106,8 +134,9 @@ TestCase {
         }
     }
 
-    function test_panelKeepsPercentagesWithoutQuotaTimingOrThresholds() {
-        var row = provider("estimated", 95).rows[0];
+    function test_panelKeepsPercentagesWithoutQuotaTimingOrThresholds_data() { return degradedConfidence_data(); }
+    function test_panelKeepsPercentagesWithoutQuotaTimingOrThresholds(data) {
+        var row = provider(data.confidence, 95).rows[0];
         // Guards also protect adapters fed older in-memory rows.
         row.pacePercent = 30;
         row.paceOnTop = false;
@@ -144,6 +173,10 @@ TestCase {
             {
                 tag: "estimated",
                 confidence: "estimated"
+            },
+            {
+                tag: "percent-only",
+                confidence: "percentOnly"
             },
             {
                 tag: "unknown",
@@ -223,16 +256,7 @@ TestCase {
     }
 
     function test_estimatesNeitherNotifyNorArmOrConsumeQuotaTransitions_data() {
-        return [
-            {
-                tag: "estimated",
-                confidence: "estimated"
-            },
-            {
-                tag: "unknown",
-                confidence: "unknown"
-            }
-        ];
+        return degradedConfidence_data();
     }
     function test_estimatesNeitherNotifyNorArmOrConsumeQuotaTransitions(data) {
         var options = {
@@ -284,6 +308,8 @@ TestCase {
         return [
             {tag: "estimated-low", confidence: "estimated", used: 0},
             {tag: "estimated-high", confidence: "estimated", used: 100},
+            {tag: "percent-only-low", confidence: "percentOnly", used: 0},
+            {tag: "percent-only-high", confidence: "percentOnly", used: 100},
             {tag: "unknown-low", confidence: "unknown", used: 0},
             {tag: "unknown-high", confidence: "unknown", used: 100}
         ];
@@ -319,8 +345,9 @@ TestCase {
         compare(result.intents[0].severity, "major");
     }
 
-    function test_insightsDoNotClaimEstimatedAccountHeadroom() {
-        var estimated = provider("estimated", 95);
+    function test_insightsDoNotClaimEstimatedAccountHeadroom_data() { return degradedConfidence_data(); }
+    function test_insightsDoNotClaimEstimatedAccountHeadroom(data) {
+        var estimated = provider(data.confidence, 95);
         var measured = provider("exact", 50);
         measured.provider = "codex";
         var snapshot = JSON.parse(Insights.build([estimated, measured], nowMs, 80).text);

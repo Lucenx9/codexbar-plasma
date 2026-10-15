@@ -30,6 +30,7 @@ SCENARIOS += ("popup-content", "popup-hidden-rows", "popup-hidden-sections", "re
 SCENARIOS += ("privacy-cost-details",)
 SCENARIOS += ("usage-retention", "usage-cache-restart")
 SCENARIOS += ("estimated-usage", "estimated-panel")
+SCENARIOS += ("percent-only-usage", "percent-only-panel")
 SCENARIOS += ("subscription-dates",)
 SCENARIOS += ("identified-local", "identified-partial", "identified-ssh-failure", "identified-only")
 
@@ -74,6 +75,11 @@ def usage(provider, scenario, now):
         snapshot["usage"]["primary"]["usedPercent"] = 95
         snapshot["pace"] = {"primary": {"expectedUsedPercent": 30,
             "willLastToReset": False, "etaSeconds": 3600}}
+    if scenario in ("percent-only-usage", "percent-only-panel") and provider == "claude":
+        snapshot["source"] = "claude"
+        snapshot["usage"]["dataConfidence"] = "percentOnly"
+        snapshot["usage"]["primary"].update(usedPercent=0, resetsAt=None)
+        snapshot["usage"]["secondary"]["usedPercent"] = 100
     if scenario in MATRIX_SCENARIOS:
         if provider == "codex":
             snapshot["credits"] = {"remaining": 125}

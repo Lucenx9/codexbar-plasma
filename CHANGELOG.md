@@ -20,6 +20,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Recognize Claude CLI's `percentOnly` usage confidence as limited detail
+  instead of unknown. Preserve it through privacy mode, retained usage and
+  quota caches, with translated panel/popup text and a distinct panel badge.
+  Existing protections for incomplete quota data remain in place.
 - Accept the bounded third-party notice file shipped in official CLI 0.76.0
   archives, so managed updates can install the release without weakening the
   archive allowlist, checksum checks, or staged version probe.

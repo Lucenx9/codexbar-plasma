@@ -76,6 +76,7 @@ TestCase {
     function test_confidenceSurvivesWithoutPromotingEstimates_data() {
         return [
             {tag: "estimated", confidence: "estimated", expected: "estimated", authoritative: false},
+            {tag: "percent-only", confidence: "percentOnly", expected: "percentOnly", authoritative: false},
             {tag: "exact", confidence: "exact", expected: "exact", authoritative: true},
             {tag: "missing", confidence: undefined, expected: "", authoritative: true},
             {tag: "empty", confidence: "", expected: "unknown", authoritative: false},
