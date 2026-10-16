@@ -17,6 +17,8 @@ Item {
     property bool navigationVerified: false
     property var navigationTooltip: null
     property bool navigationTooltipVerified: false
+    property var providerTabWidths: []
+    property int providerTabSelectionStep: 0
     property bool detailBeforeCaptured: false
     property bool hiddenRowsCaptured: false
     property bool cacheRestart: false
@@ -409,6 +411,13 @@ Item {
             "a truncated provider name lost its complete tooltip text");
         navigationTooltip = focusedTip;
         var tabs = strip.focusableTabs(lastFocused);
+        providerTabWidths = tabs.filter(function(item) {
+            return item.parent && item.parent.modelData;
+        }).map(function(item) {
+            return {tab: item.parent, width: item.parent.width};
+        });
+        verifyScenario(providerTabWidths.length === applet.providers.length,
+            "provider width checks did not collect every production tab");
         var first = tabs[0];
         var last = tabs[tabs.length - 1];
         verifyScenario(last === lastFocused && tabs.length >= visited,
@@ -427,6 +436,23 @@ Item {
         applet.selectGlobalView("overview");
         verifyScenario(strip.contentX === 0, "selection was not revealed immediately");
         navigationVerified = true;
+    }
+
+    function verifyProviderTabSelectionWidths() {
+        // The readiness timer allows a layout pass after each selection.
+        for (var probe of providerTabWidths) {
+            verifyScenario(probe.tab.width === probe.width,
+                "selection changed provider tab width: " + probe.tab.modelData.provider);
+        }
+        if (providerTabSelectionStep <= providerTabWidths.length) {
+            if (providerTabSelectionStep < providerTabWidths.length)
+                applet.selectedProviderID = providerTabWidths[providerTabSelectionStep].tab.modelData.provider;
+            else
+                applet.selectGlobalView("overview");
+            providerTabSelectionStep++;
+            return false;
+        }
+        return true;
     }
 
     function verifyCostRefreshError() {
@@ -1907,7 +1933,7 @@ Item {
                 navigationTooltipVerified = true;
                 applet.fullRepresentationItem.forceActiveFocus(Qt.OtherFocusReason);
             }
-            return true;
+            return verifyProviderTabSelectionWidths();
         }
         if (scenario === "loading")
             return applet.loading && applet.providers.length === 0;
