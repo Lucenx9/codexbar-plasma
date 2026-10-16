@@ -368,31 +368,25 @@ if 'case "sessions"' in applet.id_block("usageSource"):
     raise AssertionError("Sessions replies must leave the shared usage source")
 require_all(
     sessions_text,
-    ("CommandLedger.withRunNonce(",
-     'engine: "executable"', "running: controller.loading",
-     "lifecycle.expireRequests(Date.now())", "Component.onDestruction: lifecycle.retireRequests()",
+    ("CliProcess {", "readonly property bool loading: request.busy", "request.start(",
+     "request.cancel()", "onCompleted:", "onTimedOut:",
      "Loading sessions timed out. Try again."),
-    "Sessions must own nonce, process, timeout, and destruction cleanup",
+    "Sessions must adapt the shared process while owning refresh and presentation",
 )
 def controller_function(text, name):
     start = text.index("function " + name + "(")
     return Surface._match_braces(text, text.index("{", start))
 
-
-reply = controller_function(sessions_text, "acceptReply")
-require_all(
-    " ".join(reply.split()),
-    ("if (!CommandLedger.find(commands, sourceName)) { return; }",),
-    "Sessions must return immediately for a retired source",
-)
-if reply.index("CommandLedger.find(commands, sourceName)") > reply.index("finishRequest(sourceName)"):
-    raise AssertionError("Sessions must reject retired replies before committing a result")
-finish = controller_function(sessions_text, "finishRequest")
-if finish.index("CommandLedger.closed(") > finish.index("disconnectSource("):
-    raise AssertionError("Sessions must retire a request before disconnect callbacks")
-request = controller_function(sessions_text, "requestRefresh")
-if request.index("CommandLedger.opened(") > request.index("connectSource("):
-    raise AssertionError("Sessions must register a request before synchronous replies")
+# The shared component's synchronous replies, cancellation, reentrancy,
+# deadlines and destruction are executed in test_cli_process.py. Keep only
+# ownership wiring here rather than repeating those implementation assertions.
+process_text = (root / "contents/ui/controllers/CliProcess.qml").read_text()
+require_all(process_text, ('engine: "executable"', "CommandLedger.withRunNonce(",
+                          "Component.onDestruction:", "onNewData:", "Timer {"),
+            "the shared process owns transport, identities, deadlines and teardown")
+for forbidden in ("Plasmoid.configuration", "i18n(", "CostResponse", "SessionResponse", "root."):
+    if forbidden in process_text:
+        raise AssertionError("shared process must not own domain response policy or root effects")
 
 require_all(
     applet.function_body("startProviderFallback"),
@@ -533,32 +527,23 @@ for body in (usage.function_body("handleCommandTimeout"), applet.id_block("usage
         raise AssertionError("cost processes must leave the shared usage dispatcher")
 require_all(
     cost_text,
-    ('engine: "executable"', "running: controller.loading", "lifecycle.expireRequests(Date.now())",
-     "Component.onDestruction: lifecycle.retireRequests()", "Loading cost data timed out. Try again.",
+    ("CliProcess {", "readonly property bool loading: request.busy", "request.cancel()",
+     "onCompleted:", "onTimedOut:", "Loading cost data timed out. Try again.",
      "interval: CostRefreshPolicy.automaticRefreshCheckIntervalMs", "running: lifecycle.commandSource.length > 0",
      "running: controller.active", "CostRefreshPolicy.isNewBucketDay(lifecycle.lastAttemptAtMs, Date.now())",
      "snapshotContext === lifecycle.commandSource", "Qt.callLater(refreshChangedSource)"),
-    "cost controller must own process cleanup, hourly scans, day rollover, and context projection",
+    "cost must adapt the shared process and retain refresh and context policies",
 )
 require_ordered(
     controller_function(cost_text, "requestRefresh"),
-    ("CostRefreshPolicy.refreshAction(", "retireRequests()", "lastAttemptAtMs = nowMs",
-     "CommandLedger.withRunNonce(", "descriptor.historyDays = controller.historyDays",
-     "descriptor.context = commandSource", "CommandLedger.opened(", "connectSource("),
-    "cost runs must capture their context, replace older runs, and register before connecting",
+    ("CostRefreshPolicy.refreshAction(", "request.cancel()", "lastAttemptAtMs = nowMs",
+     "request.start(commandSource", "historyDays: controller.historyDays", "context: commandSource"),
+    "cost runs must apply refresh policy and capture their immutable response context",
 )
-require_ordered(
-    controller_function(cost_text, "acceptReply"),
-    ("CommandLedger.find(commands, sourceName)", "if (!descriptor)", "return;",
-     "finishRequest(sourceName)", "CostResponse.response(stdoutText, stderrText, descriptor.historyDays, exitCode)",
-     "snapshotContext === descriptor.context", "Normalizer.mergeCostSnapshotsAfterPartialFailure("),
-    "only live cost replies may commit or retain snapshots from the captured context",
-)
-require_ordered(
-    controller_function(cost_text, "finishRequest"),
-    ("CommandLedger.closed(", "disconnectSource("),
-    "cost commands must retire before disconnect callbacks",
-)
+for text in (cost_text, sessions_text):
+    for forbidden in ("Plasma5Support", "CommandLedger", "connectSource(", "disconnectSource("):
+        if forbidden in text:
+            raise AssertionError("Cost and Sessions must delegate transport ownership to CliProcess")
 require_all(applet.function_body("refreshCost"), ("costController.refresh(force)",),
             "manual cost refresh must reach the controller")
 require_all(applet.function_body("refreshSpendIfStale"),

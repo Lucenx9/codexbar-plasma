@@ -1,6 +1,4 @@
 import QtQuick
-import org.kde.plasma.plasma5support as Plasma5Support
-import "../CommandLedger.js" as CommandLedger
 import "../CostRefreshPolicy.js" as CostRefreshPolicy
 import "../CostResponse.js" as CostResponse
 import "../Guards.js" as Guards
@@ -19,7 +17,7 @@ Item {
     property bool active: false
 
     readonly property var costs: lifecycle.snapshotContext === lifecycle.commandSource ? lifecycle.snapshot : ({})
-    readonly property bool loading: CommandLedger.hasKind(lifecycle.commands, "cost")
+    readonly property bool loading: request.busy
     readonly property string errorText: lifecycle.errorText
 
     function refresh(force) {
@@ -35,14 +33,11 @@ Item {
         lifecycle.initialized = true;
         Qt.callLater(lifecycle.refreshIfStale);
     }
-    Component.onDestruction: lifecycle.retireRequests()
 
     Item {
         id: lifecycle
 
         property bool initialized: false
-        property int runSerial: 0
-        property var commands: ({})
         property var snapshot: ({})
         property string snapshotContext: ""
         property string errorText: ""
@@ -65,7 +60,7 @@ Item {
                 // Invalidate live sources synchronously; coalesce setting changes
                 // before starting a scan. Keep the old snapshot private so a
                 // return to its context can reuse it until the next reply.
-                retireRequests();
+                request.cancel();
                 Qt.callLater(refreshChangedSource);
             }
         }
@@ -90,7 +85,7 @@ Item {
             if (action === CostRefreshPolicy.keepAction) {
                 return false;
             }
-            retireRequests();
+            request.cancel();
             errorText = "";
             if (action === CostRefreshPolicy.clearAction) {
                 snapshot = ({});
@@ -98,43 +93,14 @@ Item {
                 return false;
             }
             lastAttemptAtMs = nowMs;
-            runSerial += 1;
-            var source = CommandLedger.withRunNonce(commandSource, runSerial, Date.now() + "-" + Math.random());
-            var descriptor = CommandLedger.descriptor("cost", "", nowMs, commandTimeoutMs);
-            descriptor.historyDays = controller.historyDays;
-            descriptor.historyPeriod = controller.historyPeriod;
-            descriptor.context = commandSource;
-            commands = CommandLedger.opened(commands, source, descriptor);
-            costSource.connectSource(source);
-            return true;
+            return request.start(commandSource, {
+                historyDays: controller.historyDays,
+                historyPeriod: controller.historyPeriod,
+                context: commandSource
+            }, commandTimeoutMs);
         }
 
-        function finishRequest(sourceName) {
-            commands = CommandLedger.closed(commands, sourceName);
-            costSource.disconnectSource(sourceName);
-        }
-
-        function retireRequests() {
-            var sources = CommandLedger.sourcesOfKind(commands, "cost");
-            for (var i = 0; i < sources.length; i++) {
-                finishRequest(sources[i]);
-            }
-        }
-
-        function expireRequests(nowMs) {
-            var expired = CommandLedger.expired(commands, nowMs);
-            for (var i = 0; i < expired.length; i++) {
-                finishRequest(expired[i].sourceName);
-                errorText = i18n("Loading cost data timed out. Try again.");
-            }
-        }
-
-        function acceptReply(sourceName, stdoutText, stderrText, exitCode) {
-            var descriptor = CommandLedger.find(commands, sourceName);
-            if (!descriptor) {
-                return;
-            }
-            finishRequest(sourceName);
+        function acceptReply(descriptor, stdoutText, stderrText, exitCode) {
             var result = CostResponse.response(stdoutText, stderrText, descriptor.historyDays, exitCode);
             switch (result.outcome) {
             case "success":
@@ -166,13 +132,13 @@ Item {
         }
     }
 
-    Plasma5Support.DataSource {
-        id: costSource
-        engine: "executable"
-        interval: 0
-        onNewData: function (sourceName, data) {
-            lifecycle.acceptReply(sourceName, data ? data["stdout"] : "", data ? data["stderr"] : "", data ? data["exit code"] : null);
+    CliProcess {
+        id: request
+
+        onCompleted: function (context, stdoutText, stderrText, exitCode) {
+            lifecycle.acceptReply(context, stdoutText, stderrText, exitCode);
         }
+        onTimedOut: lifecycle.errorText = i18n("Loading cost data timed out. Try again.")
     }
 
     Timer {
@@ -191,12 +157,5 @@ Item {
                 lifecycle.refreshVisible();
             }
         }
-    }
-
-    Timer {
-        interval: 1000
-        repeat: true
-        running: controller.loading
-        onTriggered: lifecycle.expireRequests(Date.now())
     }
 }

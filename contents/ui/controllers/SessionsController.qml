@@ -1,6 +1,4 @@
 import QtQuick
-import org.kde.plasma.plasma5support as Plasma5Support
-import "../CommandLedger.js" as CommandLedger
 import "../Guards.js" as Guards
 import "../SessionRefreshPolicy.js" as SessionRefreshPolicy
 import "../SessionResponse.js" as SessionResponse
@@ -13,7 +11,7 @@ Item {
     property bool active: false
 
     readonly property var sessions: lifecycle.snapshot
-    readonly property bool loading: CommandLedger.hasKind(lifecycle.commands, "sessions")
+    readonly property bool loading: request.busy
     readonly property string errorText: lifecycle.errorText
     readonly property double lastUpdatedAtMs: lifecycle.lastCompletedAtMs
 
@@ -34,14 +32,11 @@ Item {
         lifecycle.initialized = true;
         Qt.callLater(lifecycle.refreshIfStale);
     }
-    Component.onDestruction: lifecycle.retireRequests()
 
     Item {
         id: lifecycle
 
         property bool initialized: false
-        property int runSerial: 0
-        property var commands: ({})
         property var snapshot: []
         property string errorText: ""
         property double lastFinishedAtMs: -1
@@ -57,7 +52,7 @@ Item {
             }
             // Retire the old source before clearing its snapshot. A queued
             // refresh rechecks visibility and uses the final command path.
-            retireRequests();
+            request.cancel();
             snapshot = [];
             errorText = "";
             lastFinishedAtMs = -1;
@@ -97,12 +92,7 @@ Item {
             }
             refreshTimer.stop();
             errorText = "";
-            runSerial += 1;
-            var source = CommandLedger.withRunNonce(commandSource, runSerial, Date.now() + "-" + Math.random());
-            var descriptor = CommandLedger.descriptor("sessions", "", Date.now(), sessionsCommandTimeoutMs);
-            commands = CommandLedger.opened(commands, source, descriptor);
-            sessionsSource.connectSource(source);
-            return true;
+            return request.start(commandSource, null, sessionsCommandTimeoutMs);
         }
 
         function refreshIfStale() {
@@ -119,35 +109,7 @@ Item {
             }
         }
 
-        function finishRequest(sourceName) {
-            commands = CommandLedger.closed(commands, sourceName);
-            sessionsSource.disconnectSource(sourceName);
-        }
-
-        function retireRequests() {
-            var sources = CommandLedger.sourcesOfKind(commands, "sessions");
-            for (var i = 0; i < sources.length; i++) {
-                finishRequest(sources[i]);
-            }
-        }
-
-        function expireRequests(nowMs) {
-            var expired = CommandLedger.expired(commands, nowMs);
-            for (var i = 0; i < expired.length; i++) {
-                finishRequest(expired[i].sourceName);
-                lastFinishedAtMs = nowMs;
-                errorText = i18n("Loading sessions timed out. Try again.");
-            }
-            if (expired.length > 0) {
-                scheduleRefresh();
-            }
-        }
-
-        function acceptReply(sourceName, stdoutText, stderrText, exitCode) {
-            if (!CommandLedger.find(commands, sourceName)) {
-                return;
-            }
-            finishRequest(sourceName);
+        function acceptReply(stdoutText, stderrText, exitCode) {
             lastFinishedAtMs = Date.now();
             var result = SessionResponse.response(stdoutText, stderrText, exitCode);
             switch (result.outcome) {
@@ -177,13 +139,16 @@ Item {
         }
     }
 
-    Plasma5Support.DataSource {
-        id: sessionsSource
+    CliProcess {
+        id: request
 
-        engine: "executable"
-        interval: 0
-        onNewData: function (sourceName, data) {
-            lifecycle.acceptReply(sourceName, data ? data["stdout"] : "", data ? data["stderr"] : "", data ? data["exit code"] : null);
+        onCompleted: function (context, stdoutText, stderrText, exitCode) {
+            lifecycle.acceptReply(stdoutText, stderrText, exitCode);
+        }
+        onTimedOut: {
+            lifecycle.lastFinishedAtMs = Date.now();
+            lifecycle.errorText = i18n("Loading sessions timed out. Try again.");
+            lifecycle.scheduleRefresh();
         }
     }
 
@@ -192,12 +157,5 @@ Item {
 
         repeat: false
         onTriggered: lifecycle.refreshIfStale()
-    }
-
-    Timer {
-        interval: 1000
-        repeat: true
-        running: controller.loading
-        onTriggered: lifecycle.expireRequests(Date.now())
     }
 }
