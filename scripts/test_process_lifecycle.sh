@@ -453,7 +453,7 @@ require_ordered(
         "ProviderRosterCache.responseContextsMatch(",
         "scheduleUsageRefresh()",
         "return",
-        "var result = UsageResponse.roster(stdoutText, stderrText)",
+        "var result = UsageResponse.roster(",
         'if (result.outcome !== "success")',
         "return",
         "ProviderRosterCache.remember(",
