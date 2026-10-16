@@ -87,6 +87,9 @@ applet = Surface("applet", root)
 usage = Surface("applet", root)
 usage_path = root / "contents/ui/controllers/UsageController.qml"
 usage.texts = {usage_path: usage_path.read_text()}
+ledger = Surface("applet", root)
+ledger_path = root / "contents/ui/CommandLedger.js"
+ledger.texts = {ledger_path: ledger_path.read_text()}
 providers = Surface("providers", root)
 popup = Surface("popup", root)
 diagnostics = Surface("diagnostics", root)
@@ -191,7 +194,7 @@ require_all(
     "command timeout scan is incomplete",
 )
 require_all(
-    applet.function_body("expired"),
+    ledger.function_body("expired"),
     ("Number(entry.deadlineMs)", "Number(nowMs)", "isFinite(now)", "now < deadline"),
     "the ledger deadline scan is incomplete",
 )
