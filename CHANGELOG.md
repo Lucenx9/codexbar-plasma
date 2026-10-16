@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Align popup Usage dashboard summaries in equal columns with the same label
+  spacing as Cost summaries, and reveal truncated summary labels and values on hover.
 - Align provider icons across Popup settings lists, follow the theme's text
   color, and give stacked restore actions consistent spacing.
 - Keep popup tabs at a stable width when selected. Use consistent small

@@ -1349,7 +1349,7 @@ Item {
                             visible: usageDashboardSection.kpis.length > 0
                             Layout.fillWidth: true
                             columns: 2
-                            columnSpacing: Kirigami.Units.smallSpacing
+                            columnSpacing: Kirigami.Units.largeSpacing
                             rowSpacing: Kirigami.Units.smallSpacing / 2
 
                             Repeater {
@@ -1359,21 +1359,40 @@ Item {
                                     required property var modelData
 
                                     Layout.fillWidth: true
-                                    spacing: 0
+                                    Layout.preferredWidth: 1
+                                    spacing: Kirigami.Units.smallSpacing / 2
 
                                     PlainPlasmaLabel {
+                                        id: dashboardKpiLabel
+
                                         text: modelData.label
                                         opacity: applet.secondaryTextOpacity
-                                        font.pixelSize: Kirigami.Theme.smallFont.pixelSize
+                                        font: Kirigami.Theme.smallFont
                                         Layout.fillWidth: true
                                         elide: Text.ElideRight
+
+                                        HoverHandler { id: dashboardKpiLabelHover }
+
+                                        PlainToolTip {
+                                            visible: dashboardKpiLabel.truncated && dashboardKpiLabelHover.hovered
+                                            plainText: dashboardKpiLabel.text
+                                        }
                                     }
 
                                     PlainPlasmaLabel {
+                                        id: dashboardKpiValue
+
                                         text: modelData.value
                                         font.weight: Font.DemiBold
                                         Layout.fillWidth: true
                                         elide: Text.ElideRight
+
+                                        HoverHandler { id: dashboardKpiValueHover }
+
+                                        PlainToolTip {
+                                            visible: dashboardKpiValue.truncated && dashboardKpiValueHover.hovered
+                                            plainText: dashboardKpiValue.text
+                                        }
                                     }
                                 }
                             }

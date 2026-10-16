@@ -218,8 +218,10 @@ work and upstream contract requirements.
   Provider selection checkboxes preserve literal characters such as `&`, `<`,
   and `>` in display names, including with KDE desktop styles.
 - Usage dashboard summaries for provider payloads that expose API spend,
-  request, token, model, or dashboard fields through the CLI. Long values stay
-  within half the row and show their full text on hover.
+  request, token, model, or dashboard fields through the CLI. Summary metrics
+  use equal columns aligned with the Cost summaries. Truncated summary labels
+  and values show their full text on hover. Long detail values stay within
+  half the row and also show their full text on hover.
 - Declarative provider detail sections from the CLI `usage.details` contract,
   including labeled rows, secondary values, and keyboard/pointer-inspectable
   bar/line charts. A row that carries a valid `progress` used/total pair, such

@@ -108,6 +108,10 @@ def usage(provider, scenario, now):
             "currentDay": {"costUSD": 1.25, "totalTokens": 1200},
             "topModels": [{"name": ("Example model " * 8).strip(), "requests": 0}],
         }
+        if provider == "codex":
+            snapshot["usage"]["openAIAPIUsage"] = {
+                "currentMonth": {"costUSD": 1234.56, "totalTokens": 987654321},
+            }
         if provider == "claude":
             snapshot["usage"]["details"] = [{"title": "Generic details",
                                              "rows": [{"label": "Requests", "value": "7"}]}]

@@ -46,6 +46,7 @@ TestCase {
                 property bool showPopupProviderDetails: true
                 property real secondaryTextOpacity: 0.7
                 property real valueTextOpacity: 0.85
+                property real compactMeterTrackHeight: 5
                 property var presentedProviderData: ({
                     provider: "codex",
                     providerDetails: [{
@@ -67,6 +68,7 @@ TestCase {
                 function popupDetailSectionHideable(section) { return section.title.length > 0; }
                 function hidePopupDetailSection(providerID, section) {}
                 function providerReadableColor(provider, bg) { return "#3aa655"; }
+                function withAlpha(color, alpha) { return Qt.rgba(color.r, color.g, color.b, alpha); }
             }
             ColumnLayout {
                 DETAILS_BLOCK
@@ -125,6 +127,46 @@ TestCase {
 
     function test_longDashboardValueStaysInsidePopup_data() {
         return [{tag: "narrow", width: 240}, {tag: "normal", width: 540}];
+    }
+
+    function test_dashboardKpisShareWidthAndExposeElidedText_data() {
+        return [{tag: "narrow", width: 240}, {tag: "normal", width: 540}];
+    }
+
+    function test_dashboardKpisShareWidthAndExposeElidedText(data) {
+        failOnWarning(/Qt Quick Layouts: Detected recursive rearrange/);
+        var subject = createSubject();
+        subject.width = data.width;
+        var longLabel = "A long dashboard source ".repeat(5);
+        var longValue = "$1,234,567.89 and 987,654,321 tokens ".repeat(2);
+        subject.applet.presentedProviderData = {
+            provider: "codex", providerDetails: [],
+            usageDashboard: {kpis: [{label: longLabel, value: longValue},
+                {label: "API", value: "0"}], rows: []}
+        };
+        var all = [];
+        walkTree(subject, all);
+        var labels = [longLabel, longValue, "API", "0"].map(function(text) {
+            return all.filter(function(item) { return item.text === text; })[0];
+        });
+        tryVerify(function() { return labels[0].width > 0 && labels[0].truncated; });
+        fuzzyCompare(labels[0].width, labels[2].width, 1);
+        verify(labels[1].truncated);
+        for (var i = 0; i < labels.length; i++) {
+            var label = labels[i];
+            verify(label.mapToItem(subject, 0, 0).x >= 0);
+            verify(label.mapToItem(subject, label.width, 0).x <= subject.width + 1);
+            var tip = label.data.filter(function(item) { return item.plainText !== undefined; })[0];
+            verify(tip !== undefined);
+            compare(tip.plainText, label.text);
+            mouseMove(testCase, testCase.width - 1, testCase.height - 1);
+            wait(100);
+            mouseMove(label, label.width / 2, label.height / 2);
+            if (label.truncated)
+                tryCompare(tip, "visible", true);
+            else
+                compare(tip.visible, false);
+        }
     }
 
     function test_longDashboardValueStaysInsidePopup(data) {
