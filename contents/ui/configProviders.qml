@@ -17,6 +17,7 @@ import "config" as ProviderConfig
 import "config/ProviderConfigProtocol.js" as ProviderConfigProtocol
 import "config/ProviderDescriptor.js" as ProviderDescriptor
 import "config/ProviderList.js" as ProviderList
+import "config/ProviderOperations.js" as ProviderOperations
 import "config/ProviderSource.js" as ProviderSource
 
 KCM.SimpleKCM {
@@ -64,13 +65,7 @@ KCM.SimpleKCM {
     property bool fireworksSingleKeySetupSupported: false
     property bool commandCodeFalApiKeySetupSupported: false
     property bool providerSourceSetupSupported: false
-    // provider id -> true while an enable/disable command is in flight
-    property var pending: ({})
-    // A roster reload requested while a source write runs waits for it to finish.
-    property bool reloadDeferredBySourceWrite: false
-    // provider id -> desired enabled value while the CLI command is in flight
-    property var pendingDesired: ({})
-    property var providerFieldPending: ({})
+    property var operationState: ProviderOperations.initialState()
     // running command source -> descriptor { kind, provider, desiredEnabled, fieldID, actionID }
     property var commands: ({})
     property int commandRunSerial: 0
@@ -91,7 +86,6 @@ KCM.SimpleKCM {
     readonly property real secondaryTextOpacity: 0.7
     property var providerDiagnostics: ({})
     property var providerDiagnosticErrors: ({})
-    property var providerDiagnosticLoading: ({})
     property string selectedProviderID: ""
     property var providerListFocus: null
 
@@ -124,11 +118,12 @@ KCM.SimpleKCM {
     }
 
     function reload(preserveMessages, retainedErrorText) {
-        if (CommandLedger.hasKind(commands, "setSource")) {
-            reloadDeferredBySourceWrite = true
+        var decision = ProviderOperations.reloadRequested(operationState,
+            CommandLedger.hasKind(commands, "setSource"), preserveMessages, retainedErrorText)
+        operationState = decision.state
+        if (!decision.reload) {
             return
         }
-        reloadDeferredBySourceWrite = false
         disconnectCommandsByKind("list")
         disconnectCommandsByKind("version")
         if (commandPath.length === 0) {
@@ -138,8 +133,8 @@ KCM.SimpleKCM {
             return
         }
         loading = true
-        errorText = retainedErrorText ? String(retainedErrorText) : ""
-        if (preserveMessages !== true) {
+        errorText = decision.retainedErrorText
+        if (!decision.preserveMessages) {
             statusText = ""
         }
         runProviderListCommand(true, errorText)
@@ -278,7 +273,7 @@ KCM.SimpleKCM {
 
     function setProviderSource(providerID, mode) {
         if (loading || !providerSourceSetupSupported || !providerByID(providerID) || isPending(providerID)
-                || ProviderSource.hasPendingFields(providerFieldPending, providerMapKey(providerID))) {
+                || hasPendingFields(providerID)) {
             return
         }
         var plan = ProviderSource.planWrite(commandPath, providerCliArgument(providerID), mode)
@@ -337,21 +332,17 @@ KCM.SimpleKCM {
             }
         }
         commands = ({})
-        pending = ({})
-        pendingDesired = ({})
-        providerFieldPending = ({})
-        providerDiagnosticLoading = ({})
-        reloadDeferredBySourceWrite = false
+        operationState = ProviderOperations.initialState()
         loading = false
     }
 
     function runReloadDeferredBySourceWrite() {
-        if (!reloadDeferredBySourceWrite || CommandLedger.hasKind(commands, "setSource")) {
-            return
+        var decision = ProviderOperations.deferredReload(operationState,
+            CommandLedger.hasKind(commands, "setSource"), errorText)
+        operationState = decision.state
+        if (decision.reload) {
+            reload(decision.preserveMessages, decision.retainedErrorText)
         }
-        // Deferred reloads come from completed writes, so keep the source
-        // write's own error visible while and after the roster refreshes.
-        reload(true, errorText)
     }
 
     function runCommand(command, descriptor) {
@@ -715,22 +706,12 @@ KCM.SimpleKCM {
     }
 
     function providerDiagnosticLoadingFor(providerID) {
-        var key = providerMapKey(providerID)
-        return key.length > 0 && hasOwnKey(providerDiagnosticLoading, key) && providerDiagnosticLoading[key] === true
+        return ProviderOperations.isDiagnosticPending(operationState, providerMapKey(providerID))
     }
 
     function setProviderDiagnosticLoading(providerID, value) {
-        var key = providerMapKey(providerID)
-        if (key.length === 0) {
-            return
-        }
-        var next = copyObject(providerDiagnosticLoading)
-        if (value) {
-            next[key] = true
-        } else {
-            delete next[key]
-        }
-        providerDiagnosticLoading = next
+        operationState = ProviderOperations.diagnosticPendingChanged(
+            operationState, providerMapKey(providerID), value)
     }
 
 
@@ -747,34 +728,16 @@ KCM.SimpleKCM {
     }
 
     function isPending(providerID) {
-        var key = providerMapKey(providerID)
-        return key.length > 0 && hasOwnKey(pending, key) && pending[key] === true
+        return ProviderOperations.isProviderPending(operationState, providerMapKey(providerID))
     }
 
     function visualEnabled(providerID, fallback) {
-        var key = providerMapKey(providerID)
-        if (key.length > 0 && hasOwnKey(pendingDesired, key)) {
-            return pendingDesired[key] === true
-        }
-        return fallback === true
+        return ProviderOperations.enabledValue(operationState, providerMapKey(providerID), fallback)
     }
 
     function markPending(providerID, value, desiredEnabled) {
-        var key = providerMapKey(providerID)
-        if (key.length === 0) {
-            return
-        }
-        var next = copyObject(pending)
-        var desired = copyObject(pendingDesired)
-        if (value) {
-            next[key] = true
-            desired[key] = desiredEnabled === true
-        } else {
-            delete next[key]
-            delete desired[key]
-        }
-        pending = next
-        pendingDesired = desired
+        operationState = ProviderOperations.providerPendingChanged(
+            operationState, providerMapKey(providerID), value, desiredEnabled)
     }
 
     function clearProviderFilters() {
@@ -1054,36 +1017,16 @@ KCM.SimpleKCM {
     }
 
     function isFieldPending(providerID, fieldID) {
-        var key = descriptorPendingKey(providerID, fieldID)
-        return key.length > 0 && hasOwnKey(providerFieldPending, key) && providerFieldPending[key] === true
+        return ProviderOperations.fieldPending(operationState, providerMapKey(providerID), fieldID)
     }
 
     function markFieldPending(providerID, fieldID, value) {
-        var key = descriptorPendingKey(providerID, fieldID)
-        if (key.length === 0) {
-            return
-        }
-        var next = copyObject(providerFieldPending)
-        if (value) {
-            next[key] = true
-        } else {
-            delete next[key]
-        }
-        providerFieldPending = next
+        operationState = ProviderOperations.fieldPendingChanged(
+            operationState, providerMapKey(providerID), fieldID, value)
     }
 
-    function descriptorPendingKey(providerID, fieldID) {
-        var provider = providerMapKey(providerID)
-        var field = descriptorPendingFieldKey(fieldID)
-        return provider.length > 0 && field.length > 0 ? provider + "::" + field : ""
-    }
-
-    function descriptorPendingFieldKey(fieldID) {
-        var value = String(fieldID || "").trim()
-        if (value.length === 0 || value.length > 128) {
-            return ""
-        }
-        return JSON.stringify(value)
+    function hasPendingFields(providerID) {
+        return ProviderOperations.hasFieldOperations(operationState, providerMapKey(providerID))
     }
 
     function supportsApiKeySetup(providerID) {
@@ -1569,8 +1512,7 @@ KCM.SimpleKCM {
                                 enabled: page.selectedProvider !== null
                                     && !page.loading
                                     && !page.isPending(page.selectedProvider.provider)
-                                    && !ProviderSource.hasPendingFields(page.providerFieldPending,
-                                        page.providerMapKey(page.selectedProvider.provider))
+                                    && !page.hasPendingFields(page.selectedProvider.provider)
                             }
 
                             Controls.Button {
@@ -1581,8 +1523,7 @@ KCM.SimpleKCM {
                                     && !page.loading
                                     && providerSourceBox.currentIndex >= 0
                                     && !page.isPending(page.selectedProvider.provider)
-                                    && !ProviderSource.hasPendingFields(page.providerFieldPending,
-                                        page.providerMapKey(page.selectedProvider.provider))
+                                    && !page.hasPendingFields(page.selectedProvider.provider)
                                 onClicked: if (page.selectedProvider) page.setProviderSource(
                                     page.selectedProvider.provider,
                                     ProviderSource.modes[providerSourceBox.currentIndex])

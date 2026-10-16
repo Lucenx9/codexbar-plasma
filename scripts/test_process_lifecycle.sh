@@ -601,9 +601,7 @@ require_all(
     (
         "configSource.disconnectSource(sourceName)",
         "commands = ({})",
-        "pending = ({})",
-        "providerFieldPending = ({})",
-        "providerDiagnosticLoading = ({})",
+        "operationState = ProviderOperations.initialState()",
     ),
     "config command retirement is incomplete",
 )
