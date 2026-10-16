@@ -134,6 +134,13 @@ print(os.environ.get("CLI_OUTPUT", json.dumps({"status": os.environ.get("CLI_STA
                               env=self.env, input=BOOTSTRAP.read_text(), text=True,
                               start_new_session=True, capture_output=True, timeout=30)
 
+    def run_readme_unattended(self):
+        command = re.search(r"For unattended or scripted setup.*?```sh\n(.*?)\n```",
+                            README.read_text(), re.S).group(1)
+        return subprocess.run([shutil.which("sh"), "-c", command], env=self.env,
+                              text=True, input="", start_new_session=True,
+                              capture_output=True, timeout=30)
+
     def run_readme(self, *args, input_answers=None, shell=None):
         command = re.search(r"### Quick install from a terminal.*?```sh\n(.*?)\n```",
                             README.read_text(), re.S).group(1)
@@ -210,6 +217,45 @@ print(os.environ.get("CLI_OUTPUT", json.dumps({"status": os.environ.get("CLI_STA
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("widget installed", result.stderr)
         self.assertNotIn("managed-cli", self.calls())
+
+    def test_readme_unattended_command_runs_from_sh(self):
+        result = self.run_readme_unattended()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("widget installed", result.stderr)
+        self.assertNotIn("managed-cli", self.calls())
+        self.assertNotIn("[y/N]", result.stderr)
+
+    def test_unattended_command_propagates_empty_download_failure(self):
+        for status in (6, 22, 28, 63):
+            with self.subTest(status=status):
+                self.fake("curl", f'printf "%s\\n" "curl: ({status}) synthetic download failure" >&2\nexit {status}')
+                result = self.run_readme_unattended()
+                self.assertEqual(result.returncode, status, result.stderr)
+                self.assertIn("synthetic download failure", result.stderr)
+                self.assertEqual(self.calls(), "")
+                self.assertFalse(self.installed.exists())
+
+    def test_interactive_download_failure_remains_visible(self):
+        self.fake("curl", 'printf "%s\\n" "curl: (22) synthetic download failure" >&2\nexit 22')
+        result = self.run_readme()
+        self.assertIn("synthetic download failure", result.stderr)
+        self.assertEqual(self.calls(), "")
+        self.assertFalse(self.installed.exists())
+
+    def test_readme_bootstrap_download_is_bounded(self):
+        result = self.run_readme()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        arguments = (self.root / "downloads").read_text().splitlines()
+        bootstrap_url = "https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/setup.sh"
+        first_request = arguments[:arguments.index(bootstrap_url)]
+        for flag, value in (("--connect-timeout", "10"), ("--max-time", "30"),
+                            ("--max-filesize", "65536"), ("--max-redirs", "5")):
+            self.assertEqual(first_request[first_request.index(flag) + 1], value)
+
+    def test_unattended_command_propagates_installer_failure(self):
+        (self.root / "update-widget.sh").write_text("exit 7\n# codexbar-plasma-updater-end\n")
+        result = self.run_readme_unattended()
+        self.assertEqual(result.returncode, 7)
 
     def test_headless_bootstrap_in_posix_mode_skips_prompts(self):
         self.env["POSIXLY_CORRECT"] = "1"

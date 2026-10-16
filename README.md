@@ -19,7 +19,7 @@ From a terminal in your Plasma 6 desktop session, run this as your regular user,
 without `sudo`. Bash must be installed; your terminal can use another shell.
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/setup.sh | bash
+curl -fsSL --connect-timeout 10 --max-time 30 --max-filesize 65536 --max-redirs 5 https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/setup.sh | bash
 ```
 
 This runs a small bootstrap from this repository's `main` branch. It downloads
@@ -50,10 +50,17 @@ choose and run it with `bash FILE`. The full installer is
 [`scripts/update-widget.sh`](https://github.com/Lucenx9/codexbar-plasma/blob/main/scripts/update-widget.sh),
 which you can also download, inspect, and run with `bash FILE --setup`.
 
-For unattended setup, replace the final `bash` with `bash -s -- --no-input`;
-append `--with-cli` to explicitly install or reuse the private CLI too. Selecting
-it in widget settings is still required. A CLI failure leaves the widget
-installed and returns a nonzero status.
+The interactive pipeline can return success if the initial download fails
+without sending a script. For unattended or scripted setup, use this form to
+report download failures with a nonzero exit status and suppress optional prompts:
+
+```sh
+bash -o pipefail -c 'curl -fsSL --connect-timeout 10 --max-time 30 --max-filesize 65536 --max-redirs 5 https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/setup.sh | bash -s -- --no-input'
+```
+
+Add `--with-cli` after `--no-input`, inside the quotes, to explicitly install
+or reuse the private CLI too. Selecting it in widget settings is still
+required. A CLI failure leaves the widget installed and returns a nonzero status.
 
 </details>
 
