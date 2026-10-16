@@ -92,6 +92,80 @@ TestCase {
         compare(SessionResponse.response(payload, "", 1).outcome, "commandFailed");
         compare(UsageResponse.roster(payload, "", 1).outcome, "commandFailed");
     }
+    // docs/cli.md (0.76.0) exit codes: the process exits with the code of its
+    // last failed fetch and records that code on the provider's error.
+    function test_documentedFailureExitCodesKeepTheirStructuredErrors_data() {
+        return [1, 2, 3, 4].map(function (code) {
+            return {
+                tag: String(code),
+                code: code
+            };
+        });
+    }
+    function test_documentedFailureExitCodesKeepTheirStructuredErrors(data) {
+        var record = failure("codex");
+        record.error.code = data.code;
+        var text = JSON.stringify([record,
+            {
+                provider: "pi",
+                usage: {
+                    primary: {
+                        usedPercent: 10
+                    }
+                }
+            }
+        ]);
+        var usage = UsageResponse.response(text, "", "", 1000, data.code);
+        compare(usage.outcome, "success");
+        compare(usage.items.length, 2);
+        verify(usage.items[0].commandFailed);
+        compare(UsageResponse.response(JSON.stringify([record]), "", "codex", 1000, data.code).outcome, "success");
+        record.error.code = data.code === 1 ? 2 : 1;
+        compare(CliResponse.decode(JSON.stringify([record]), "", data.code, 256).outcome, "commandFailed");
+    }
+    function test_runtimeAndCostProviderErrorsExplainTheExit() {
+        // 0.76.0 Linux: `usage --source web` reports kind "runtime"; cost
+        // provider errors carry no kind.
+        var web = failure("codex");
+        web.error.kind = "runtime";
+        web.error.message = "Error: selected source requires web support and is only supported on macOS.";
+        var usage = UsageResponse.response(JSON.stringify([web]), "", "codex", 1000, 1);
+        compare(usage.outcome, "success");
+        verify(usage.items[0].commandFailed);
+        var timedOut = {
+            provider: "codex",
+            error: {
+                code: 4,
+                message: "Cost scan timed out"
+            }
+        };
+        var cost = CostResponse.response(JSON.stringify([timedOut,
+            {
+                provider: "pi",
+                totals: {
+                    totalCost: 2
+                }
+            }
+        ]), "", 30, 4);
+        compare(cost.outcome, "partial");
+        compare(cost.failedProviders, ["codex"]);
+        compare(cost.costs.pi.totals.cost, 2);
+        compare(cost.message, "Cost scan timed out");
+    }
+    function test_cliPseudoProviderExplainsOnlyArgumentErrors() {
+        for (var kind of ["config", "runtime", undefined]) {
+            var record = {
+                provider: "cli",
+                error: {
+                    code: 1,
+                    message: "Whole-command failure"
+                }
+            };
+            if (kind !== undefined)
+                record.error.kind = kind;
+            compare(CliResponse.decode(JSON.stringify([record]), "", 1, 256).outcome, "commandFailed");
+        }
+    }
     function test_mixedUsageAndCostKeepHealthySiblings() {
         var text = JSON.stringify([failure("codex"),
             {

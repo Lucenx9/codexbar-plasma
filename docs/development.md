@@ -1392,15 +1392,19 @@ localization, cache writes and stale-reply handling. Missing or nonnumeric exit
 codes fail closed. Fixtures must pass an explicit status too.
 
 Sessions and usage's provider-roster discovery require exit 0. Usage, account
-usage and cost also accept exit 1 when the consumed record window contains an
-identified provider/CLI error with numeric `error.code: 1` and `error.kind` of
-`provider` or `args`. This preserves healthy siblings, named failed accounts,
+usage and cost also accept the CLI's documented fetch-failure exits 1 through 4
+(unexpected, missing binary, parse, timeout) when the consumed record window
+contains an identified error whose numeric `error.code` equals the exit code.
+The CLI exits with its last failed fetch's code. A provider record explains the
+exit with `error.kind` `provider`, `runtime` (for example, `--source web` on
+Linux) or no kind (cost); the `cli` record explains it only with `args`. This
+preserves healthy siblings, named failed accounts,
 missing-token-account empty lists and older-CLI argument diagnostics. Cost
 argument errors fail the entire scan without replacing its snapshot or context;
 returning to a previously successful range can still show its retained data. An
-unexplained success/empty JSON payload at exit 1 cannot replace data. Other
-nonzero exits, including timeout and shell launch failures, carry no replacement
-payload. Empty stdout remains a failure; the existing usage fallback may recover
+unexplained success/empty JSON payload at those exits cannot replace data. Other
+nonzero exits, including widget timeouts and shell launch failures, carry no
+replacement payload. Empty stdout remains a failure; the existing usage fallback may recover
 it. `IdentifiedTokens.js` has its separate ledger contract and is not migrated.
 
 Verified on 2026-10-16 with the official Linux 0.76.0 archive, SHA-256
