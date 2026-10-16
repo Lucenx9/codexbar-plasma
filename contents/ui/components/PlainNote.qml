@@ -61,6 +61,7 @@ Rectangle {
         }
 
         PlasmaComponents.ToolButton {
+            id: closeButton
             objectName: "plainNoteCloseButton"
             visible: noteRoot.showCloseButton
             icon.name: "window-close-symbolic"
@@ -73,6 +74,14 @@ Rectangle {
             Layout.topMargin: -noteRoot.padding / 2
             Layout.bottomMargin: -noteRoot.padding / 2
             onClicked: noteRoot.visible = false
+
+            // Match every other icon-only ToolButton: Accessible.name covers
+            // screen readers, and the tooltip covers pointer and keyboard focus.
+            PlainToolTip {
+                objectName: "plainNoteCloseToolTip"
+                plainText: closeButton.text
+                visible: closeButton.hovered || closeButton.visualFocus
+            }
         }
     }
 

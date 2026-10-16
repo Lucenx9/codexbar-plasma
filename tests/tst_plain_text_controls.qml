@@ -157,6 +157,14 @@ TestCase {
         compare(label.textFormat, Text.PlainText)
         compare(label.text, activeMarkup)
         verify(close.visible)
+        compare(close.Accessible.name, "Close")
+        // Icon-only close must expose a tooltip like every other icon-only
+        // ToolButton, for pointer hover and keyboard focus.
+        var tip = findChild(close, "plainNoteCloseToolTip")
+        verify(tip)
+        compare(tip.plainText, "Close")
+        close.forceActiveFocus(Qt.TabFocusReason)
+        tryCompare(tip, "visible", true)
         close.clicked()
         verify(!note.visible)
     }
