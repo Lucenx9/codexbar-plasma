@@ -41,14 +41,16 @@ function rowIdentityValue(row, useResetTimestamp) {
     if (!row) {
         return ""
     }
-    return String(useResetTimestamp
+    var windowID = row.lane === "extra" ? Normalizer.extraWindowID(row.windowId) : ""
+    var value = String(useResetTimestamp
         ? (row.resetsAt ? row.resetsAt : "")
         : (row.label ? row.label : ""))
+    return JSON.stringify([windowID, windowID.length > 0 && !useResetTimestamp ? "" : value])
 }
 
-// Occurrence ordinal among rows sharing the same lane and identity. Numbering
-// duplicates instead of keying on the absolute index keeps baseline state
-// stable when the CLI inserts or reorders unrelated usage windows.
+// Named extra windows use their CLI ID; legacy rows fall back to label/reset.
+// Numbering duplicate identities instead of keying on the absolute index keeps
+// baseline state stable when the CLI inserts or reorders unrelated windows.
 function rowOccurrence(rows, index, useResetTimestamp) {
     var lane = rows[index] && rows[index].lane ? String(rows[index].lane) : ""
     var identity = rowIdentityValue(rows[index], useResetTimestamp)
