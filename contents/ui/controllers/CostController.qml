@@ -96,23 +96,23 @@ Item {
             return request.start(commandSource, {
                 historyDays: controller.historyDays,
                 historyPeriod: controller.historyPeriod,
-                context: commandSource
+                commandSource: commandSource
             }, commandTimeoutMs);
         }
 
-        function acceptReply(descriptor, stdoutText, stderrText, exitCode) {
-            var result = CostResponse.response(stdoutText, stderrText, descriptor.historyDays, exitCode);
+        function acceptReply(run, stdoutText, stderrText, exitCode) {
+            var result = CostResponse.response(stdoutText, stderrText, run.historyDays, exitCode);
             switch (result.outcome) {
             case "success":
             case "partial":
-                var previous = snapshotContext === descriptor.context ? snapshot : ({});
+                var previous = snapshotContext === run.commandSource ? snapshot : ({});
                 snapshot = Normalizer.mergeCostSnapshotsAfterPartialFailure(previous, result.costs, result.failedProviders);
-                snapshotContext = descriptor.context;
+                snapshotContext = run.commandSource;
                 errorText = result.outcome === "success" ? "" : (result.message.length > 0 ? result.message : i18n("Some cost data could not be refreshed."));
                 break;
             case "commandFailed":
                 errorText = result.message || i18n("codexbar command failed.");
-                if (result.argumentsRejected && descriptor.historyPeriod.length > 0) {
+                if (result.argumentsRejected && run.historyPeriod.length > 0) {
                     errorText = i18n("Month to date and All history need codexbar 0.67.0 or later.");
                 }
                 break;

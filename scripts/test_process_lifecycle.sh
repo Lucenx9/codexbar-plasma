@@ -537,7 +537,7 @@ require_all(
 require_ordered(
     controller_function(cost_text, "requestRefresh"),
     ("CostRefreshPolicy.refreshAction(", "request.cancel()", "lastAttemptAtMs = nowMs",
-     "request.start(commandSource", "historyDays: controller.historyDays", "context: commandSource"),
+     "request.start(commandSource", "historyDays: controller.historyDays", "commandSource: commandSource"),
     "cost runs must apply refresh policy and capture their immutable response context",
 )
 for text in (cost_text, sessions_text):

@@ -263,7 +263,8 @@ synchronized.
   Structured updater errors remain readable when the process exits nonzero.
 - `contents/ui/controllers/SessionsController.qml` owns Sessions command construction,
   refresh scheduling, snapshots, and attempt/success timestamps. Its
-  `CliProcess` child owns executable requests and deadlines. Its inputs are the CLI path, refresh interval, and whether the
+  `CliProcess` child owns executable requests and deadlines. Its inputs are the
+  CLI path, refresh interval, and whether the
   Sessions tab is open; `SessionRefreshPolicy.staleAfterMs` caps the visible
   rescan cadence at 30 seconds, matching the macOS local session monitor. `refresh()` requests a manual scan; read-only outputs
   expose normalized sessions, loading, error text, and the last successful
