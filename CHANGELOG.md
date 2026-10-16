@@ -29,6 +29,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   reject impossible calendar dates such as February 30 as a cost scan day
   instead of rolling them into the next month, and never split an emoji or
   other paired character when shortening display text.
+- Never split an emoji or other paired character when truncating notification
+  titles and bodies, AI Insights summaries, cost labels, or support-report
+  text (leftover sites after the shared SafeText display truncate).
 - Simplify terminal quick installation to `curl ... | bash` with a small
   bootstrap that downloads the full installer before execution, preserves
   interactive prompts, and supports other calling shells and headless setup.

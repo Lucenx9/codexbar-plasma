@@ -119,6 +119,18 @@ TestCase {
         compare(NotificationCommand.command(title + "extra", body + "extra", "normal"), expected)
     }
 
+    // Same surrogate rule as SafeText: never leave notify-send with half an emoji.
+    function test_truncationKeepsSurrogatePairsWhole() {
+        var emoji = "\uD83D\uDE00"
+        var title = "t".repeat(NotificationCommand.maximumTitleLength - 1) + emoji
+        var body = "b".repeat(NotificationCommand.maximumBodyLength - 1) + emoji
+        var command = NotificationCommand.command(title, body, "normal")
+        verify(command.indexOf("\uD83D") < 0)
+        var expectedTitle = "t".repeat(NotificationCommand.maximumTitleLength - 1)
+        var expectedBody = "b".repeat(NotificationCommand.maximumBodyLength - 1)
+        compare(NotificationCommand.command(expectedTitle, expectedBody, "normal"), command)
+    }
+
     function test_actionlessSendsStayOnThePlainCommand() {
         var plain = NotificationCommand.command("title", "body", "normal")
 

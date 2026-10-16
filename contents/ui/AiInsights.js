@@ -1,5 +1,6 @@
 .pragma library
 .import "Guards.js" as Guards
+.import "SafeText.js" as SafeText
 
 // Pure AI Insights policy: language, request context, persisted cache,
 // scheduling, helper commands, and helper replies. QML owns the process,
@@ -150,7 +151,10 @@ function plainText(value, limit) {
     }
     var text = value.replace(controlCharacters, " ")
         .replace(/\s+/g, " ").trim()
-    return text.length > limit ? text.slice(0, limit - 1) + "\u2026" : text
+    if (text.length <= limit) {
+        return text
+    }
+    return SafeText.truncatedText(text, limit - 1) + "\u2026"
 }
 
 function highlights(value) {

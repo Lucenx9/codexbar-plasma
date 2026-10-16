@@ -1,12 +1,13 @@
 .pragma library
 .import "Guards.js" as Guards
+.import "SafeText.js" as SafeText
 
 var maximumTitleLength = 256
 var maximumBodyLength = 1024
 var maximumActionLabelLength = 64
 
 function boundedText(value, maximumLength) {
-    return value.slice(0, maximumLength).trim()
+    return SafeText.truncatedText(value, maximumLength).trim()
 }
 
 // A default action makes the notification body clickable. The action name is
