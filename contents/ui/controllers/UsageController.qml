@@ -368,7 +368,7 @@ Item {
                 failUsageRefresh(i18n("Loading provider configuration timed out. Try again."));
                 return;
             case "providerFallback":
-                parseProviderFallbackOutput(sourceName, descriptor.providerID, "", i18n("Loading usage timed out. Try again."), 124);
+                parseProviderFallbackOutput(sourceName, descriptor.providerID, "", i18n("Loading usage timed out. Try again."), null);
                 return;
             default:
                 finishUsageCommandSource(sourceName);
@@ -501,8 +501,7 @@ Item {
             // A shell that cannot run the configured executable reports it the
             // same way for every command kind, so classify before dispatching.
             // One reachable command clears the classification for all of them.
-            lifecycle.commandPathFailed = Guards.isCommandPathFailure(
-                data ? data["exit code"] : null);
+            lifecycle.commandPathFailed = Guards.isCommandPathFailure(exitCode);
             switch (descriptor.kind) {
             case "providerConfig":
                 lifecycle.finishUsageCommandSource(sourceName);

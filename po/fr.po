@@ -2509,7 +2509,10 @@ msgid "Set the codexbar command path in Diagnostics."
 msgstr "Définissez le chemin de la commande codexbar dans Diagnostic."
 
 #: contents/ui/configProviders.qml
-#: contents/ui/controllers/AccountsController.qml contents/ui/main.qml
+#: contents/ui/controllers/AccountsController.qml
+#: contents/ui/controllers/CostController.qml
+#: contents/ui/controllers/SessionsController.qml
+#: contents/ui/controllers/UsageController.qml contents/ui/main.qml
 msgid "codexbar command failed."
 msgstr "La commande codexbar a échoué."
 
