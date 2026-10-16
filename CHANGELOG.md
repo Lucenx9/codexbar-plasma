@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Align provider identity icon surface borders in Overview rows and Usage & Spend
+  provider breakdown rows with the header tile styling.
 - Simplify terminal quick installation to `curl ... | bash` with a small
   bootstrap that downloads the full installer before execution, preserves
   interactive prompts, and supports other calling shells and headless setup.
