@@ -778,6 +778,27 @@ TestCase {
         }
     }
 
+    function test_globalTabSelectionKeepsWidth() {
+        var tab = createControl("GlobalTab", {
+            applet: applet,
+            title: "Usage & Spend",
+            iconName: "office-chart-bar",
+            tabHeight: 32
+        });
+        if (!tab)
+            return;
+        var initialWidth = tab.implicitWidth;
+        tab.selected = true;
+        compare(tab.implicitWidth, initialWidth, "Selecting a tab must not shift its neighbours");
+        tab.selected = false;
+        compare(tab.implicitWidth, initialWidth);
+        tab.title = "A longer translated history title";
+        verify(tab.implicitWidth > initialWidth);
+        var translatedWidth = tab.implicitWidth;
+        tab.selected = true;
+        compare(tab.implicitWidth, translatedWidth);
+    }
+
     function test_globalTabActivationAndNavigation() {
         var strip = {
             claimed: null,

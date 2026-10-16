@@ -1145,6 +1145,8 @@ leaving the plot or clearing its points preserves the reserved readout space.
 
 `tabs-overflow` checks the Overview subset count and keyboard tooltips for a
 long provider title, alongside navigation across the overflowing strip.
+It selects every production provider tab and returns to Overview, checking
+after each layout pass that selection never changes any provider tab's width.
 `legacy-dashboard` checks a long top-model value stays within half its row,
 elides, and retains its complete tooltip text. `test_usage_dashboard.py` also
 executes the production block at 240 and 540 pixels and checks full-text hover.

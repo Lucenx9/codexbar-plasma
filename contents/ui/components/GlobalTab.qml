@@ -29,7 +29,7 @@ Rectangle {
     Layout.preferredWidth: showLabel
         ? Math.max(
             Kirigami.Units.gridUnit * 5.2,
-            tabLabel.implicitWidth + Kirigami.Units.gridUnit * 2.2)
+            Math.ceil(tabLabelSizing.implicitWidth) + Kirigami.Units.gridUnit * 2.2)
         : tabHeight
     Layout.preferredHeight: tabHeight
     implicitWidth: Layout.preferredWidth
@@ -119,6 +119,17 @@ Rectangle {
         parent: tabMouse
         visible: (!tab.showLabel || tab.textTruncated) && (tabMouse.containsMouse || tabFocus.visualFocus)
         plainText: tab.title
+    }
+
+    // Reserve the selected label's width so changing its weight cannot move
+    // adjacent tabs or make the strip start overflowing on selection.
+    PlainPlasmaLabel {
+        id: tabLabelSizing
+
+        visible: false
+        Accessible.ignored: true
+        text: tab.title
+        font.weight: Font.DemiBold
     }
 
     RowLayout {

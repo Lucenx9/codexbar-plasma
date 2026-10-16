@@ -107,6 +107,7 @@ ColumnLayout {
                     i18np("%1 local session", "%1 local sessions", view.applet.sessions.length)]
                     .filter(function(part) { return part.length > 0 })
                     .join(" \u00b7 ")
+                font: Kirigami.Theme.smallFont
                 opacity: view.applet.secondaryTextOpacity
                 Layout.fillWidth: true
                 elide: Text.ElideRight
