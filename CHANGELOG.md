@@ -24,7 +24,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   including cost argument errors and returning from an unsupported history range.
 - Make terminal quick-install instructions easier to follow, clarify the
   required private CLI selection, and report setup progress, the installed
-  widget version, and all missing command-line dependencies together.
+  widget version, and all missing command-line dependencies together before
+  running platform and user checks.
 - Report malformed private CLI setup replies as a CLI setup failure while
   preserving the successfully installed widget.
 - Align provider icons across Popup settings lists, follow the theme's text

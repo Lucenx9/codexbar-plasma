@@ -29,11 +29,8 @@ WITH_CLI=false
 INSTALL_OPTION="-u"
 INSTALLED_ROOT=""
 
-ROOT_DIR=""
-if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
-  ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-fi
-METADATA_PATH="${ROOT_DIR}/metadata.json"
+METADATA_PATH=""
+METADATA_SPECIFIED=false
 RELEASE_JSON=""
 TMP_DIR=""
 
@@ -349,6 +346,7 @@ while [[ $# -gt 0 ]]; do
   --metadata)
     [[ $# -ge 2 ]] || { usage >&2; exit 2; }
     METADATA_PATH="$2"
+    METADATA_SPECIFIED=true
     shift 2
     ;;
   --release-json)
@@ -369,6 +367,16 @@ done
 
 if [[ "$SETUP" == true ]]; then
   [[ "$MODE" == install ]] || { usage >&2; exit 2; }
+  missing_commands=()
+  for required_command in uname id jq sort head tail grep wc curl kpackagetool6 python3 sha256sum timeout flock mkdir mktemp rm; do
+    command -v "$required_command" >/dev/null 2>&1 || missing_commands+=("$required_command")
+  done
+  if [[ ${#missing_commands[@]} -gt 0 ]]; then
+    printf 'Missing required commands:' >&2
+    printf ' %s' "${missing_commands[@]}" >&2
+    printf '\nInstall the distribution packages providing these commands, then rerun setup without sudo.\n' >&2
+    exit 1
+  fi
   [[ "$(uname -s)" == Linux ]] || { printf '%s\n' 'Setup requires Linux with KDE Plasma 6.' >&2; exit 1; }
   [[ "$(id -u)" != 0 ]] || { printf '%s\n' 'Run setup as your desktop user, without sudo.' >&2; exit 1; }
   data_home="${XDG_DATA_HOME:-${HOME:-}/.local/share}"
@@ -388,24 +396,19 @@ if [[ "$SETUP" == true ]]; then
 elif [[ "$NO_INPUT" == true || "$WITH_CLI" == true ]]; then
   usage >&2
   exit 2
+elif [[ "$METADATA_SPECIFIED" == false ]]; then
+  ROOT_DIR=""
+  if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
+    ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  fi
+  METADATA_PATH="${ROOT_DIR}/metadata.json"
 fi
 
 if [[ "$MODE" != "check" && "$MODE" != "install" ]]; then
   fail "invalid_invocation" "invalid update mode: $MODE"
 fi
 
-if [[ "$SETUP" == true ]]; then
-  missing_commands=()
-  for required_command in jq sort head tail grep wc curl kpackagetool6 python3 sha256sum timeout flock mkdir mktemp rm; do
-    command -v "$required_command" >/dev/null 2>&1 || missing_commands+=("$required_command")
-  done
-  if [[ ${#missing_commands[@]} -gt 0 ]]; then
-    printf 'Missing required commands:' >&2
-    printf ' %s' "${missing_commands[@]}" >&2
-    printf '\nInstall the distribution packages providing these commands, then rerun setup without sudo.\n' >&2
-    exit 1
-  fi
-elif ! command -v jq >/dev/null 2>&1; then
+if ! command -v jq >/dev/null 2>&1; then
   printf '{"status":"error","message":"missing required command: jq","localVersion":"","remoteVersion":"","assetUrl":"","errorCode":"missing_tool","errorDetail":"jq","releaseUrl":""}\n'
   exit 1
 fi

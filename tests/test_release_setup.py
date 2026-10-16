@@ -222,16 +222,25 @@ print(os.environ.get("CLI_OUTPUT", json.dumps({"status": os.environ.get("CLI_STA
         self.assertEqual(self.calls(), "")
 
     def test_all_missing_dependencies_are_reported_before_download(self):
-        for tool in ("jq", "kpackagetool6", "python3"):
+        for tool in ("dirname", "uname", "id", "jq", "kpackagetool6", "python3"):
             (self.bin / tool).unlink()
         self.fake("curl", 'echo download >> "$FIXTURE/calls"; exit 99')
         result = self.run_setup()
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Missing required commands: jq kpackagetool6 python3", result.stderr)
+        self.assertIn("Missing required commands: uname id jq kpackagetool6 python3", result.stderr)
         self.assertIn("distribution packages", result.stderr)
+        self.assertNotIn("command not found", result.stderr)
+        self.assertNotIn("Setup requires Linux", result.stderr)
         self.assertEqual(result.stdout, "")
         self.assertEqual(self.calls(), "")
         self.assertFalse(Path(self.env["XDG_DATA_HOME"]).exists())
+
+    def test_standalone_setup_does_not_need_dirname(self):
+        (self.bin / "dirname").unlink()
+        result = self.run_setup()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("widget installed", result.stderr)
+        self.assertNotIn("command not found", result.stderr)
 
     def test_update_modes_keep_json_without_setup_progress(self):
         metadata = self.root / "local.json"
