@@ -460,7 +460,8 @@ TestCase {
         // CLI 0.66.0 rejects `--period` with an args error record.
         var rejected = parse([{ provider: "cli", source: "cli",
             error: { kind: "args", code: 1, message: "Unknown option --period" } }]);
-        compare(rejected.outcome, "partial");
+        compare(rejected.outcome, "commandFailed");
+        compare(rejected.costs, undefined);
         compare(rejected.argumentsRejected, true);
         var failed = parse([{ provider: "codex", error: { kind: "provider", message: "failed" } }]);
         compare(failed.argumentsRejected, false);

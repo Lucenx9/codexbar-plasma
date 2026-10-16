@@ -1378,7 +1378,9 @@ Sessions and usage's provider-roster discovery require exit 0. Usage, account
 usage and cost also accept exit 1 when the consumed record window contains an
 identified provider/CLI error with numeric `error.code: 1` and `error.kind` of
 `provider` or `args`. This preserves healthy siblings, named failed accounts,
-missing-token-account empty lists and older-CLI argument diagnostics. An
+missing-token-account empty lists and older-CLI argument diagnostics. Cost
+argument errors fail the entire scan without replacing its snapshot or context;
+returning to a previously successful range can still show its retained data. An
 unexplained success/empty JSON payload at exit 1 cannot replace data. Other
 nonzero exits, including timeout and shell launch failures, carry no replacement
 payload. Empty stdout remains a failure; the existing usage fallback may recover

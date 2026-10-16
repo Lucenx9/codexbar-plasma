@@ -116,6 +116,10 @@ function response(stdoutValue, stderrValue, requestedHistoryDays, exitCode) {
             costs[cost.provider] = cost;
         }
     }
+    // Argument rejection describes the entire command, not a failed provider.
+    // No replacement snapshot exists, including for a different history range.
+    if (argumentsRejected)
+        return {outcome: "commandFailed", message: message, argumentsRejected: true};
     return {outcome: failedProviders.length > 0 ? "partial" : "success",
         costs: costs, failedProviders: failedProviders, message: message,
         argumentsRejected: argumentsRejected};

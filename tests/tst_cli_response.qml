@@ -144,9 +144,9 @@ TestCase {
             }
         ]);
         var result = CostResponse.response(text, "", 30, 1);
-        compare(result.outcome, "partial");
+        compare(result.outcome, "commandFailed");
         verify(result.argumentsRejected);
-        compare(result.costs, {});
+        compare(result.costs, undefined);
     }
     function test_boundedRedactedEnvelope_data() {
         return [

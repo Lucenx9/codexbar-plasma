@@ -18,7 +18,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
   its loaded total.
 - Reject usage, cost, account and provider-list JSON from failed CLI processes
   without discarding the CLI's supported structured errors or healthy partial
-  results. Failed refreshes preserve existing data under their retention rules.
+  results. Failed refreshes preserve existing data under their retention rules,
+  including cost argument errors and returning from an unsupported history range.
 - Align provider icons across Popup settings lists, follow the theme's text
   color, and give stacked restore actions consistent spacing.
 - Keep popup tabs at a stable width when selected. Use consistent small

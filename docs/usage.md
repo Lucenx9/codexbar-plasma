@@ -197,7 +197,9 @@ work and upstream contract requirements.
   retention rules. The CLI's structured exit-1 provider errors remain usable:
   healthy sibling results survive, failed accounts remain identifiable, and a
   confirmed missing-token-account result can clear that provider's account list.
-  Provider-list discovery requires a successful process exit.
+  Cost argument errors retain the previous snapshot too, including when returning
+  from an unsupported history range. Provider-list discovery requires a successful
+  process exit.
 - Local **Sessions** tab backed by `sessions --json-v2`; transcript paths and
   working directories are never rendered or opened. While the tab is visible,
   it rescans every 30 seconds, or at the refresh interval when that is shorter,
