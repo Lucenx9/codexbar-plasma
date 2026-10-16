@@ -30,6 +30,7 @@ import "SOURCE_URL/Guards.js" as Guards
 import "SOURCE_URL/QuotaThresholds.js" as QuotaThresholds
 import "SOURCE_URL/CostPresentation.js" as CostPresentation
 import "SOURCE_URL/UsageCache.js" as UsageCache
+import "SOURCE_URL/ProviderSnapshot.js" as ProviderSnapshot
 import "SOURCE_URL/components" as Components
 TestCase {
     name: "NotificationWiring"
@@ -92,6 +93,30 @@ TestCase {
     function receive(items) {
         markNotificationProvidersFresh(items);
         providers = items;
+    }
+    function test_namedWindowReorderDoesNotInventQuotaCrossingsOrResets() {
+        var nearLimit = {id: "requests", title: "Daily", window: {usedPercent: 85}};
+        var empty = {id: "tokens", title: "Daily", window: {usedPercent: 0}};
+        var payload = {provider: "codex", usage: {extraRateWindows: [nearLimit, empty]}};
+        providers = [ProviderSnapshot.normalize(payload, 1000)];
+        compare(providers[0].rows[0].windowId, "requests");
+        compare(providers[0].rows[0].usedPercent, 85);
+        compare(providers[0].rows[1].windowId, "tokens");
+        compare(providers[0].rows[1].usedPercent, 0);
+        var initial = observe("prime");
+
+        payload.usage.extraRateWindows = [empty, nearLimit];
+        providers = [ProviderSnapshot.normalize(payload, 2000)];
+        var reordered = observe("observe", initial.nextMemo);
+        compare(reordered.intents.map(function(intent) { return intent.kind; }).join(","), "");
+
+        nearLimit.window.usedPercent = 0;
+        providers = [ProviderSnapshot.normalize(payload, 3000)];
+        var reset = observe("observe", reordered.nextMemo);
+        compare(reset.intents.length, 1);
+        compare(reset.intents[0].kind, "reset");
+        compare(reset.intents[0].rowIndex, 1);
+        compare(observe("observe", reset.nextMemo).intents.length, 0);
     }
     function test_oldSuccessfulQuotaPreservesNotificationBaseline_data() {
         return [

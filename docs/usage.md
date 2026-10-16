@@ -695,6 +695,8 @@ fields; track proposed extensions in the issue tracker.
   heavily used limit resets back to empty. A temporarily omitted usage window
   preserves its notification baseline: returning at the same threshold does
   not repeat a warning, and a previously armed reset can still be reported.
+  Named extra windows keep separate baselines by their CLI IDs, even when
+  their labels match or their display order changes.
   A status page that briefly cannot be reached does not announce an ongoing
   incident again once it answers. Notification text is shown
   literally: markup in provider or status text never becomes a link, emphasis,

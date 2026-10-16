@@ -488,6 +488,24 @@ TestCase {
         compare(unchanged.intents.length, 0)
     }
 
+    function test_namedWindowsKeepTheirBaselinesWhenReordered() {
+        var nearLimit = usageRow("minor", 85, false, "Daily", "extra")
+        nearLimit.windowId = "requests"
+        var empty = usageRow("", 0, false, "Daily", "extra")
+        empty.windowId = "tokens"
+        var initial = transition("prime", [observation("", "", [nearLimit, empty])])
+
+        var reordered = transition("observe", [observation("", "", [empty, nearLimit])], initial.nextMemo)
+        compare(intentKinds(reordered), "", "Reordering unchanged named windows must not announce a quota crossing or reset")
+
+        var reset = usageRow("", 0, false, "Daily", "extra")
+        reset.windowId = "requests"
+        var changed = transition("observe", [observation("", "", [empty, reset])], reordered.nextMemo)
+        compare(intentKinds(changed), "reset")
+        compare(changed.intents[0].rowIndex, 1)
+        compare(transition("observe", [observation("", "", [empty, reset])], changed.nextMemo).intents.length, 0)
+    }
+
     function test_intentsKeepStatusQuotaPaceResetOrdering() {
         var initialRows = [
             usageRow("minor", 85, false, "Weekly", "secondary"),

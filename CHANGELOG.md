@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep quota warning and limit-reset notifications attached to each named usage
+  window's CLI ID, so reordering windows with the same label cannot invent a
+  quota crossing or report a reset for the wrong window.
 - Show why a provider fetch failed in **Inspect redacted settings**: the
   redacted fetch error and each attempt's outcome now appear instead of only
   an attempt count.

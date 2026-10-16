@@ -1180,6 +1180,7 @@ PlasmoidItem {
             var row = sourceRows[i]
             result.push({
                 lane: row && row.lane ? String(row.lane) : "",
+                windowId: row ? Normalizer.extraWindowID(row.windowId) : "",
                 label: row && row.label ? String(row.label) : "",
                 resetsAt: row && row.resetsAt ? String(row.resetsAt) : "",
                 hasPercent: row && row.hasPercent === true,
