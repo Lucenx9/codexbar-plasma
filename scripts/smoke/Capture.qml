@@ -2142,7 +2142,8 @@ Item {
                 return false;
             var dashboard = codex.usageDashboard;
             var dashboardSection = findItem(applet.fullRepresentationItem, "usageDashboardSection");
-            verifyScenario(dashboard !== null && dashboard.rows.length === 3, "legacy dashboard rows missing");
+            verifyScenario(dashboard !== null && dashboard.rows.length === 4, "legacy dashboard rows missing");
+            verifyScenario(dashboard.kpis.length === 2, "legacy dashboard must exercise both KPI columns");
             verifyScenario(dashboard.kpis[0].value === "0", "legacy dashboard lost explicit zero");
             verifyScenario(dashboard.rows[0].label === "Credits remaining", "legacy label adapter failed");
             verifyScenario(dashboard.rows[1].value === "$1.25 · 1.2K tokens", "legacy period formatting changed");
@@ -2159,7 +2160,7 @@ Item {
                 "the elided dashboard value lost its complete text");
             verifyScenario(claude.usageDashboard === null && claude.providerDetails.length === 1,
                 "legacy dashboard overrode generic details");
-            return dashboardSection !== null && dashboardSection.visible && dashboardSection.rows.length === 3;
+            return dashboardSection !== null && dashboardSection.visible && dashboardSection.rows.length === 4;
         }
         if (scenario === "panel-rules") {
             verifyScenario(applet.providers === panelUsageSnapshot, "panel settings reloaded usage");
