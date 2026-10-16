@@ -194,7 +194,8 @@ work and upstream contract requirements.
   day. It stays hidden for ranges that fill a single column.
 - Usage, cost and account refreshes reject results from process failures even
   when stdout contains valid JSON, preserving existing data under their normal
-  retention rules. The CLI's structured exit-1 provider errors remain usable:
+  retention rules. The CLI's structured provider errors remain usable at
+  its documented failure exits 1 through 4:
   healthy sibling results survive, failed accounts remain identifiable, and a
   confirmed missing-token-account result can clear that provider's account list.
   Cost argument errors retain the previous snapshot too, including when returning
