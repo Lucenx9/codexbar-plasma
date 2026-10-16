@@ -41,15 +41,14 @@ function version(value) {
 // No arbitrary diagnostic JSON is appended to the report.
 function sharedText(value, limit) {
     if (typeof value !== "string") return ""
-    return SafeText.cliDiagnostic(value, SafeText.maximumDiagnosticLength)
+    return SafeText.truncatedText(SafeText.cliDiagnostic(value, SafeText.maximumDiagnosticLength)
         .replace(/\/(?:home|Users)\/[^\/\s]+/g, "/home/[user]")
         .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[email]")
         .replace(/\b(?:account|org|organization|workspace|project)[-_ ]?id["']?\s*[:=]\s*(?:"(?:[^"\\\r\n]|\\.)*"?|'(?:[^'\\\r\n]|\\.)*'?|[^\s,;]+)/gi, "identifier=[redacted]")
         .replace(/\b(?:acct|org|proj|workspace)_[A-Za-z0-9_-]+\b/g, "[identifier]")
         .replace(/\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/g, "[token]")
         .replace(/\b(?:https?|wss?):\/\/[^\s"'<>]+/gi, "[url]")
-        .replace(/[\x00-\x1f\x7f\u0060<>]/g, " ")
-        .slice(0, limit || 1024)
+        .replace(/[\x00-\x1f\x7f\u0060<>]/g, " "), limit || 1024)
 }
 
 function response(text) {

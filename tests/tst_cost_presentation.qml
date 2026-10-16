@@ -1636,4 +1636,10 @@ TestCase {
         compare(CostPresentation.todayAmounts(null, 0), null);
         compare(CostPresentation.todayAmounts({scanDay: "2026-09-23"}, 0), null);
     }
+    function test_truncationKeepsSurrogatePairsWhole() {
+        var emoji = "\uD83D\uDE00"
+        compare(CostPresentation.boundedText("a".repeat(119) + emoji, 120), "a".repeat(119))
+        compare(CostPresentation.boundedText("a".repeat(118) + emoji, 120), "a".repeat(118) + emoji)
+    }
+
 }

@@ -105,4 +105,11 @@ TestCase {
         verify(text.indexOf("Source override (Diagnostics form): cli") >= 0)
         verify(text.indexOf("invalid/omitted") === -1)
     }
+    function test_truncationKeepsSurrogatePairsWhole() {
+        var emoji = "\uD83D\uDE00"
+        var text = SupportReport.sharedText("a".repeat(1023) + emoji, 1024)
+        compare(text.charCodeAt(text.length - 1) >= 0xD800 && text.charCodeAt(text.length - 1) <= 0xDBFF, false)
+        compare(text, "a".repeat(1023))
+    }
+
 }

@@ -82,6 +82,10 @@ TestCase {
         compare(parsed.snapshotId, "aaaa")
         var bounded = AiInsights.parseCache(AiInsights.cacheText(entry({summary: new Array(900).join("x")})))
         compare(bounded.summary.length, AiInsights.maximumSummaryLength)
+        var emoji = "\uD83D\uDE00"
+        var split = "x".repeat(AiInsights.maximumSummaryLength - 2) + emoji + "y"
+        compare(AiInsights.plainText(split, AiInsights.maximumSummaryLength),
+            "x".repeat(AiInsights.maximumSummaryLength - 2) + "\u2026")
     }
 
     function test_cacheRejectsMalformedRecords() {

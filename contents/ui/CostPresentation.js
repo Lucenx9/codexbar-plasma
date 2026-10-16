@@ -1,5 +1,6 @@
 .pragma library
 .import "Guards.js" as Guards
+.import "SafeText.js" as SafeText
 .import "ProviderNormalizer.js" as Normalizer
 
 // Cost and spend presentation: number formatting, chart geometry, and the row
@@ -43,8 +44,7 @@ function boundedText(value, limit) {
     if (value === null || value === undefined) {
         return ""
     }
-    var text = String(value)
-    return text.length > limit ? text.slice(0, limit) : text
+    return SafeText.truncatedText(String(value), limit)
 }
 
 // The metric the charts currently plot. Cost and tokens share one payload, so
