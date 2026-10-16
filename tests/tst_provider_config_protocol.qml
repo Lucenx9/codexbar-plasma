@@ -543,6 +543,37 @@ TestCase {
         compare(commandResponse(report, "", 0).outcome, "envelopeError")
     }
 
+    function test_diagnosticKeepsFetchErrorAndAttemptOutcomes() {
+        // Shape of a real CLI 0.76.0 `diagnose --redact` report without credentials.
+        var report = { schemaVersion: "1.0", provider: "tavily", auth: { configured: false, modes: [] },
+            settings: { sourceMode: "auto" }, source: "failed", sourceMode: "auto",
+            fetchAttempts: [{ kind: "api", outcome: "skipped", strategyID: "tavily.js", wasAvailable: false }],
+            error: { category: "auth", safeDescription: "Authentication or setup issue - check provider credentials" } }
+        var result = diagnosticResponse(report, "", 0)
+        compare(result.outcome, "success")
+        compare(result.value.fetchError, "Authentication or setup issue - check provider credentials")
+        compare(result.value.fetchAttemptOutcomes, "api skipped")
+        compare(result.value.fetchAttempts, 1)
+
+        report.error = { category: "auth" }
+        compare(diagnosticResponse(report, "", 0).value.fetchError, "auth")
+        delete report.error
+        compare(diagnosticResponse(report, "", 0).value.fetchError, "")
+    }
+
+    function test_diagnosticFetchDetailsAreBoundedAndRedacted() {
+        var normalized = ProviderConfigProtocol.normalizeProviderDiagnostic({
+            fetchAttempts: [{ kind: "oauth", outcome: "succeeded" }, { kind: { nested: true }, outcome: "failed" },
+                "malformed", { kind: "web" }, null],
+            error: { category: ["auth"], safeDescription: "Bearer sk-ant-api03-" + "a".repeat(40) + "\n" + "x".repeat(600) }
+        })
+        compare(normalized.fetchAttemptOutcomes, "oauth succeeded")
+        compare(normalized.fetchAttempts, 5)
+        verify(normalized.fetchError.indexOf("sk-ant-api03") < 0)
+        verify(normalized.fetchError.length <= 240)
+        compare(ProviderConfigProtocol.normalizeProviderDiagnostic({ error: "text" }).fetchError, "")
+    }
+
     function test_incompleteDiagnosticCannotBypassCommandErrors() {
         var report = { schemaVersion: "1.0", provider: "codex", auth: {}, settings: {},
             fetchAttempts: [], error: {} }

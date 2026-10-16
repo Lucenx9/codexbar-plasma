@@ -69,6 +69,14 @@ TestCase {
             verify(text.indexOf(secret) === -1, secret)
     }
 
+    function test_escapedAndUnterminatedQuotedIdentifiersStayRedacted() {
+        var text = SupportReport.sharedText('{"account_id":"abc\\"PRIVATE_ESCAPED"} '
+            + "workspace_id='a\\'PRIVATE_SINGLE' next project_id=\"PRIVATE_CUT tail", 1024)
+        for (var secret of ["PRIVATE_ESCAPED", "PRIVATE_SINGLE", "PRIVATE_CUT"])
+            verify(text.indexOf(secret) === -1, text)
+        verify(text.indexOf("next") !== -1, text)
+    }
+
     function test_unknownFieldsDoNotEnterCliNormalization() {
         var value = payload()
         value.selected.secret = {nested: {account: "PRIVATE_MARKER"}}

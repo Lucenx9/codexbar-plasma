@@ -334,8 +334,38 @@ function normalizeProviderDiagnostic(payload) {
         authConfigured: auth.configured === true,
         authModes: boundedDiagnosticList(auth.modes),
         settingsKeys: boundedDiagnosticList(ownDiagnosticKeys(settings)),
-        fetchAttempts: Array.isArray(item.fetchAttempts) ? item.fetchAttempts.length : 0
+        fetchAttempts: Array.isArray(item.fetchAttempts) ? item.fetchAttempts.length : 0,
+        fetchAttemptOutcomes: boundedDiagnosticList(fetchAttemptOutcomes(item.fetchAttempts)),
+        fetchError: diagnosticFetchError(item.error)
     }
+}
+
+// Each attempt reads "<kind> <outcome>", such as "oauth succeeded".
+function fetchAttemptOutcomes(attempts) {
+    var outcomes = []
+    if (!Array.isArray(attempts)) {
+        return outcomes
+    }
+    var limit = Math.min(attempts.length, maximumDiagnosticListItems)
+    for (var i = 0; i < limit; i++) {
+        var attempt = attempts[i]
+        if (isCliRecord(attempt) && typeof attempt.kind === "string" && typeof attempt.outcome === "string") {
+            outcomes.push(attempt.kind + " " + attempt.outcome)
+        }
+    }
+    return outcomes
+}
+
+// Schema 1.0 reports a failed fetch as {category, safeDescription}.
+function diagnosticFetchError(error) {
+    if (!isCliRecord(error)) {
+        return ""
+    }
+    var description = typeof error.safeDescription === "string" ? SafeText.cliMessage(error.safeDescription, 240) : ""
+    if (description.length > 0) {
+        return description
+    }
+    return typeof error.category === "string" ? SafeText.cliMessage(error.category, 120) : ""
 }
 
 function isCliRecord(value) {

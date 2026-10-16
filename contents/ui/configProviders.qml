@@ -70,6 +70,11 @@ KCM.SimpleKCM {
     property var commands: ({})
     property int commandRunSerial: 0
     readonly property int configCommandTimeoutMs: 60000
+    // Shell-side bound for provider diagnostics, as on the Diagnostics page:
+    // 50s plus 5s kill grace stays below configCommandTimeoutMs, so a hung
+    // fetch cannot outlive the dialog after the QML deadline retires it.
+    readonly property int providerDiagnosticTimeoutSeconds: 50
+    readonly property int providerDiagnosticKillAfterSeconds: 5
     readonly property int configSecretCommandTimeoutSeconds: 60
     readonly property int configSecretCommandKillAfterSeconds: 5
     // Bound kdialog itself because disconnecting its shell can orphan it.
@@ -303,12 +308,12 @@ KCM.SimpleKCM {
         setProviderDiagnosticLoading(providerID, true)
         setProviderDiagnosticError(providerID, "")
         var cliProviderID = providerCliArgument(providerID)
-        var command = [
+        var command = Guards.boundedShellCommand([
             shellQuote(commandPath),
             "diagnose --provider",
             shellQuote(cliProviderID),
             "--format json --redact"
-        ].join(" ")
+        ].join(" "), providerDiagnosticTimeoutSeconds, providerDiagnosticKillAfterSeconds)
         runCommand(command, {
             kind: "diagnose",
             provider: providerID,
@@ -843,10 +848,11 @@ KCM.SimpleKCM {
 
         if (diagnostic) {
             appendSettingsRow(rows, i18n("Source"), diagnostic.source)
+            appendSettingsRow(rows, i18n("Fetch error"), diagnostic.fetchError)
             appendSettingsRow(rows, i18n("Source mode"), diagnostic.sourceMode)
             appendSettingsRow(rows, i18n("Auth modes"), diagnostic.authModes)
             rows.push({ label: i18n("Auth configured"), value: diagnostic.authConfigured ? i18n("Yes") : i18n("No") })
-            rows.push({ label: i18n("Fetch attempts"), value: String(diagnostic.fetchAttempts) })
+            rows.push({ label: i18n("Fetch attempts"), value: diagnostic.fetchAttemptOutcomes || String(diagnostic.fetchAttempts) })
             appendSettingsRow(rows, i18n("Settings keys"), diagnostic.settingsKeys)
         } else {
             rows.push({ label: i18n("Provider diagnostics"), value: i18n("Inspect redacted settings to view source and authentication details") })

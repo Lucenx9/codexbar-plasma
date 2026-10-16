@@ -12,6 +12,13 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Show why a provider fetch failed in **Inspect redacted settings**: the
+  redacted fetch error and each attempt's outcome now appear instead of only
+  an attempt count.
+- Stop a hung provider diagnostic in provider settings at the same 50-second
+  shell bound as the Diagnostics page, so it no longer outlives the dialog.
+- Keep escaped and unterminated quoted account, organization, workspace and
+  project identifiers fully redacted in support reports.
 - Treat a CLI process reply without an exit status as a failure in provider
   settings, provider rosters, Diagnostics and notification actions, so a
   missing status can no longer confirm a saved key or a clean diagnostic.

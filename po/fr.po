@@ -2662,6 +2662,10 @@ msgid "Fetch attempts"
 msgstr "Tentatives de récupération"
 
 #: contents/ui/configProviders.qml
+msgid "Fetch error"
+msgstr "Erreur de récupération"
+
+#: contents/ui/configProviders.qml
 msgid "Settings keys"
 msgstr "Clés de configuration"
 
