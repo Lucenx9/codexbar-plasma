@@ -12,6 +12,9 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Keep popup tabs at a stable width when selected. Use consistent small
+  header metadata, section headings and provider-row padding, and align
+  provider actions more closely with the content.
 - Preserve every typed digit in Settings number fields with the KDE desktop
   style. Keep seconds, days, hours and percent-used units in their labels.
 - Point provider source-override guidance to Diagnostics.

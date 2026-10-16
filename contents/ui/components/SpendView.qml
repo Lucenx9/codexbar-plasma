@@ -103,6 +103,7 @@ ColumnLayout {
             PlainPlasmaLabel {
                 visible: view.applet.costUsageEnabled !== false
                 text: view.applet.spendTotalLine()
+                font: Kirigami.Theme.smallFont
                 opacity: view.applet.secondaryTextOpacity
                 Layout.fillWidth: true
                 elide: Text.ElideRight
@@ -144,7 +145,7 @@ ColumnLayout {
 
         PlainPlasmaLabel {
             text: i18n("History")
-            opacity: view.applet.secondaryTextOpacity
+            font.weight: Font.DemiBold
             Layout.fillWidth: true
             elide: Text.ElideRight
         }
@@ -529,7 +530,7 @@ ColumnLayout {
                         required property var modelData
 
                         Layout.fillWidth: true
-                        implicitHeight: spendProviderRow.implicitHeight + Kirigami.Units.smallSpacing * 1.5
+                        implicitHeight: spendProviderRow.implicitHeight + Kirigami.Units.largeSpacing
                         radius: view.applet.nestedSurfaceRadius
                         // A passive display row: no hover state, because every
                         // other highlighted surface in the popup acts on click
@@ -544,8 +545,7 @@ ColumnLayout {
                             id: spendProviderRow
 
                             anchors.fill: parent
-                            anchors.leftMargin: Kirigami.Units.smallSpacing
-                            anchors.rightMargin: Kirigami.Units.smallSpacing
+                            anchors.margins: Kirigami.Units.largeSpacing / 2
                             spacing: Kirigami.Units.smallSpacing
 
                             Rectangle {

@@ -378,7 +378,7 @@ Item {
                                 ? Math.min(
                                     Kirigami.Units.gridUnit * 7,
                                     Math.max(Kirigami.Units.gridUnit * 4.2,
-                                        providerTabLabel.implicitWidth + Kirigami.Units.gridUnit * 2.2))
+                                        Math.ceil(providerTabLabelSizing.implicitWidth) + Kirigami.Units.gridUnit * 2.2))
                                 : providerTabsFlickable.height
                             Layout.preferredHeight: providerTabsFlickable.height
                             radius: applet.roundedSurfaceRadius
@@ -463,6 +463,15 @@ Item {
                                 visible: (!applet.showPopupTabLabels || providerTabLabel.truncated)
                                     && (providerTabMouse.containsMouse || providerFocus.visualFocus)
                                 plainText: modelData.title
+                            }
+
+                            PlainPlasmaLabel {
+                                id: providerTabLabelSizing
+
+                                visible: false
+                                Accessible.ignored: true
+                                text: providerTab.modelData.title
+                                font.weight: Font.DemiBold
                             }
 
                             RowLayout {
@@ -778,6 +787,7 @@ Item {
                         text: [applet.lastUpdatedText, countText]
                             .filter(function(part) { return part.length > 0 })
                             .join(" \u00b7 ")
+                        font: Kirigami.Theme.smallFont
                         opacity: applet.secondaryTextOpacity
                         Layout.fillWidth: true
                         elide: Text.ElideRight
@@ -1464,6 +1474,8 @@ Item {
 
                                 Controls.ItemDelegate {
                                     Layout.fillWidth: true
+                                    leftPadding: Kirigami.Units.smallSpacing
+                                    rightPadding: Kirigami.Units.smallSpacing
                                     text: modelData.title
                                     icon.name: modelData.icon
                                     enabled: modelData.enabled

@@ -178,6 +178,9 @@ work and upstream contract requirements.
 - Popup tabs follow the usual tab keyboard pattern: Left and Right move focus
   between tabs and wrap around at either end, Home and End jump to the first
   and last tab, and Enter or Space opens the focused tab.
+  Selecting a tab keeps its width stable, so neighbouring tabs stay in place.
+  Overview, Usage & Spend, Sessions and provider headers use the theme's smaller
+  text for summary and update metadata beneath their titles.
 - Global **Usage & Spend** tab with a Cost/Tokens selector, a range selector
   (7, 30, or 90 days, **Month to date**, or **All history**), interactive daily chart, activity heatmap, and provider totals that
   keep different currencies separate. Chart and heatmap dates use the system
