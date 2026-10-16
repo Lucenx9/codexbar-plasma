@@ -40,12 +40,13 @@ For those, use `make install` or `./install.sh`. Release-package users can use
 
 ### Standalone release setup
 
-The [Quick install](../README.md#quick-install-from-a-terminal) command pipes
-[`setup.sh`](../setup.sh) into Bash. This small bootstrap downloads
-`scripts/update-widget.sh` completely into a shell variable before running it
-with `bash -c` and `--setup`. Its body is one brace group so a truncated bootstrap
-cannot execute a partial body. The updater download has HTTPS, time, and size
-bounds, and must end with `# codexbar-plasma-updater-end`; keep that marker last.
+The [Quick install](../README.md#quick-install-from-a-terminal) command runs a
+Bash `pipefail` wrapper that curls [`setup.sh`](../setup.sh) into Bash with the
+same HTTPS, time, size, and redirect bounds as the updater fetch. This small
+bootstrap downloads `scripts/update-widget.sh` completely into a shell variable
+before running it with `bash -c` and `--setup`. Its body is one brace group so a
+truncated bootstrap cannot execute a partial body. The updater download must end
+with `# codexbar-plasma-updater-end`; keep that marker last.
 The bootstrap accepts only `--with-cli`, `--no-input`, and help flags. It keeps
 terminal stdin when available, otherwise opens the controlling terminal at
 `/dev/tty` for the child, or uses `/dev/null` when no terminal is available.

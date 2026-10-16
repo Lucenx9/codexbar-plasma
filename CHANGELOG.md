@@ -12,9 +12,10 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
-- Simplify terminal quick installation to `curl ... | bash` with a small
-  bootstrap that downloads the full installer before execution, preserves
-  interactive prompts, and supports other calling shells and headless setup.
+- Simplify terminal quick installation to a bounded `curl | bash` bootstrap
+  under Bash `pipefail` that downloads the full installer before execution,
+  preserves interactive prompts, and supports other calling shells and headless
+  setup.
 - Show a Close tooltip on dismissible notes for pointer hover and keyboard
   focus, matching every other icon-only ToolButton in the applet.
 - Align popup Usage dashboard summaries in equal columns with the same label
