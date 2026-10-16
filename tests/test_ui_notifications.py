@@ -245,11 +245,11 @@ class NotificationsTest(unittest.TestCase):
             raise AssertionError("NotificationPlanner must not use provider-controlled status text as incident identity")
 
     def test_fresh_data_clears_suppression(self):
-        for fresh_function in ("commitUsageSnapshot",):
+        for fresh_function in ("applyUsageTransition",):
             fresh_body = function_body(main_text, fresh_function)
-            fresh_index = fresh_body.find("markNotificationProvidersFresh(nextProviders)")
-            received_index = fresh_body.find("markUsageSnapshotReceived()")
-            providers_index = fresh_body.find("providers = nextProviders")
+            fresh_index = fresh_body.find("markNotificationProvidersFresh(result.providers)")
+            received_index = fresh_body.find("markUsageSnapshotReceived(result.nowMs)")
+            providers_index = fresh_body.find("providers = result.providers")
             if fresh_index < 0 or providers_index < 0 or fresh_index > providers_index:
                 raise AssertionError(f"{fresh_function} must mark fresh provider data before publishing it")
             if received_index < 0 or received_index > providers_index:

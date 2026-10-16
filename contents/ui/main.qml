@@ -27,6 +27,8 @@ import "PrivacyPresentation.js" as PrivacyPresentation
 import "ProviderNormalizer.js" as Normalizer
 import "ProviderOrder.js" as ProviderOrder
 import "UsageCache.js" as UsageCache
+import "UsageState.js" as UsageState
+import "ProviderViewModel.js" as ProviderViewModel
 import "QuotaThresholds.js" as QuotaThresholds
 import "SafeText.js" as SafeText
 import "ThemeContrast.js" as ThemeContrast
@@ -309,8 +311,8 @@ PlasmoidItem {
         }
     }
 
-    function markUsageSnapshotReceived() {
-        var nowMs = Date.now()
+    function markUsageSnapshotReceived(nowMs) {
+        nowMs = nowMs === undefined ? Date.now() : nowMs
         panelClockMs = nowMs
     }
 
@@ -324,26 +326,49 @@ PlasmoidItem {
         return Qt.md5(JSON.stringify([usageIdentityContext, accounts, providerConfigStamp]))
     }
 
+    // The sole cache writer. Pure transitions decide data and label semantics;
+    // QML retains notification ordering, localization and configuration effects.
+    function applyUsageTransition(result) {
+        if (!result) {
+            return
+        }
+        if (result.refreshCompleted) {
+            markNotificationProvidersFresh(result.providers)
+        }
+        if (result.receivedFreshUsage) {
+            markUsageSnapshotReceived(result.nowMs)
+        }
+        providers = result.providers
+        switch (result.label) {
+        case "stale":
+            lastUpdatedText = i18n("Showing last known usage")
+            break
+        case "updated":
+            lastUpdatedText = i18n("Updated %1", timeLabels.clockTime(result.nowMs))
+            break
+        case "clear":
+            lastUpdatedText = ""
+            break
+        }
+        if (result.cacheValue !== null) {
+            Plasmoid.configuration.usageCache = result.cacheValue
+        }
+        if (result.advanceClock) {
+            panelClockMs = result.nowMs
+        }
+    }
+
     function invalidateUsageData(providerID) {
         if (!usageLifecycleInitialized) {
             return
         }
         usageController.reset()
-        providers = providerID ? providers.map(function(item) {
-            return item.provider === providerID ? root.normalizeProvider({ provider: providerID }) : item
-        }) : []
-        // A single-provider reset must not discard healthy providers'
-        // persisted quotas; rewrite the disk cache from what remains.
-        var context = usageCacheContext()
-        if (context.length > 0) {
-            Plasmoid.configuration.usageCache = UsageCache.encode(providers, context, Date.now())
-        } else if (!providerID) {
-            Plasmoid.configuration.usageCache = ""
-        }
+        applyUsageTransition(UsageState.invalidated(providers, providerID,
+            providerID ? normalizeProvider({provider: providerID}) : null,
+            usageCacheContext(), Date.now()))
         if (!providerID) {
             accountsController.reset()
         }
-        lastUpdatedText = ""
     }
 
     function restoreUsageCache() {
@@ -360,34 +385,12 @@ PlasmoidItem {
             item.tokenCost = null
             return item
         })
-        var merged = UsageCache.restore(cachedProviders, providers, nowMs, selectedAccounts)
-        if (merged.length === 0) {
-            Plasmoid.configuration.usageCache = UsageCache.encode(providers, context, nowMs)
-            return
-        }
-        providers = ProviderOrder.orderedItems(merged, providerOrderRaw)
-        Plasmoid.configuration.usageCache = UsageCache.encode(providers, context, nowMs)
-        if (providers.some(function(item) { return item.usageStale === true })) {
-            lastUpdatedText = i18n("Showing last known usage")
-        }
+        applyUsageTransition(UsageState.restored(providers, cachedProviders,
+            selectedAccounts, providerOrderRaw, context, nowMs))
     }
 
     function commitUsageSnapshot(items) {
-        var nowMs = Date.now()
-        var nextProviders = UsageCache.reconcile(providers, items, nowMs)
-        markNotificationProvidersFresh(nextProviders)
-        var hasFreshUsage = nextProviders.some(function(item) { return !item.usageStale && item.error.length === 0 })
-        if (hasFreshUsage) {
-            markUsageSnapshotReceived()
-        }
-        providers = nextProviders
-        lastUpdatedText = nextProviders.some(function(item) { return item.usageStale === true })
-            ? i18n("Showing last known usage")
-            : hasFreshUsage ? i18n("Updated %1", timeLabels.clockTime(nowMs)) : ""
-        var context = usageCacheContext()
-        if (context.length > 0) {
-            Plasmoid.configuration.usageCache = UsageCache.encode(nextProviders, context, nowMs)
-        }
+        applyUsageTransition(UsageState.accepted(providers, items, usageCacheContext(), Date.now()))
     }
 
     function failUsageRefresh(message) {
@@ -395,14 +398,7 @@ PlasmoidItem {
         var failures = providers.map(function(item) {
             return root.normalizeProvider(root.providerErrorPayload(item.provider, message))
         })
-        providers = UsageCache.reconcile(providers, failures, nowMs)
-        lastUpdatedText = providers.some(function(item) { return item.usageStale === true })
-            ? i18n("Showing last known usage") : ""
-        var context = usageCacheContext()
-        if (context.length > 0) {
-            Plasmoid.configuration.usageCache = UsageCache.encode(providers, context, nowMs)
-        }
-        panelClockMs = nowMs
+        applyUsageTransition(UsageState.failed(providers, failures, usageCacheContext(), nowMs))
     }
 
     function expireStaleUsage(nowMs) {
@@ -410,25 +406,13 @@ PlasmoidItem {
         if (expired.length === 0) {
             return
         }
-        providers = providers.map(function(item) {
-            if (expired.indexOf(item.provider) < 0) {
-                return item
-            }
-            var replacement = UsageCache.withCurrentStatus(root.normalizeProvider(root.providerErrorPayload(item.provider,
-                item.error || i18n("Cached usage has expired. Refresh to try again."))), item)
-            // withCurrentStatus copies a fresh error snapshot, which carries
-            // no measurement contract; expired quotas keep no measurement.
-            replacement.lastGoodAtMs = 0
-            replacement.usageStale = false
-            return replacement
+        var replacements = providers.filter(function(item) {
+            return expired.indexOf(item.provider) >= 0
+        }).map(function(item) {
+            return root.normalizeProvider(root.providerErrorPayload(item.provider,
+                item.error || i18n("Cached usage has expired. Refresh to try again.")))
         })
-        if (!providers.some(function(item) { return item.usageStale === true })) {
-            lastUpdatedText = ""
-        }
-        var context = usageCacheContext()
-        if (context.length > 0) {
-            Plasmoid.configuration.usageCache = UsageCache.encode(providers, context, nowMs)
-        }
+        applyUsageTransition(UsageState.expired(providers, replacements, usageCacheContext(), nowMs))
     }
 
     function lastGoodUsageText(item) {
@@ -907,46 +891,24 @@ PlasmoidItem {
 
     function presentProviderSnapshot(snapshot) {
         var providerID = snapshot.provider
-        var rows = snapshot.rows.map(function(row) { return root.presentUsageWindow(row, providerID) })
         var dashboard = snapshot.usageDashboard
-        return {
-            provider: providerID,
-            title: Normalizer.boundedDisplayText(providerTitle(providerID,
-                snapshot.displayName === null ? providerDisplayNames[providerID] : snapshot.displayName), 120),
-            source: snapshot.source,
-            dataConfidence: snapshot.dataConfidence,
-            version: snapshot.version,
-            account: snapshot.account,
-            organization: snapshot.organization,
-            loginMethod: snapshot.loginMethod,
-            accountKey: snapshot.accountKey,
-            rows: rows,
-            primaryRow: rows.length > 0 && rows[0].lane === "primary" ? rows[0] : null,
-            // Nested signal values can be Qt sequences; the pure visibility
-            // filters consume JavaScript arrays, as do freshly parsed snapshots.
-            providerDetails: Array.from(snapshot.providerDetails),
-            subscriptionDates: Array.from(snapshot.subscriptionDates),
+        return ProviderViewModel.presented(snapshot, {
+            title: providerTitle(providerID,
+                snapshot.displayName === null ? providerDisplayNames[providerID] : snapshot.displayName),
+            rows: snapshot.rows.map(function(row) { return root.presentUsageWindow(row, providerID) }),
             usageDashboard: dashboard ? {kpis: dashboard.kpis.map(dashboardDisplayRow), rows: dashboard.rows.map(dashboardDisplayRow)} : null,
             providerCost: providerCostSection(providerID, snapshot.providerCost),
             resetCredits: resetCreditsSection(providerID, snapshot.resetCredits),
             tokenCost: providerTokenCost(providerID),
-            codexCreditLimit: snapshot.codexCreditLimit,
-            planText: Normalizer.boundedDisplayText(planText(providerID, snapshot.planMethod), 120),
+            planText: planText(providerID, snapshot.planMethod),
             dashboardUrl: providerDashboardUrl(providerID),
             statusUrl: safeStatusUrl(providerID, snapshot.statusUrl),
             changelogUrl: providerChangelogUrl(providerID),
-            credits: snapshot.credits,
-            status: Normalizer.boundedDisplayText(snapshot.statusRecord ? statusText(snapshot.statusRecord) : "", 500),
-            statusKnown: snapshot.statusRecord !== null,
-            statusSeverity: snapshot.statusSeverity,
-            statusIncidentKey: snapshot.statusIncidentKey,
-            hasIncident: snapshot.statusSeverity.length > 0,
+            status: snapshot.statusRecord ? statusText(snapshot.statusRecord) : "",
             error: snapshot.commandFailed ? (snapshot.error || i18n("codexbar command failed.")) : "",
             placeholder: snapshot.placeholder === "limitsUnavailable" ? i18n("Limits not available")
-                : (snapshot.placeholder === "noUsage" ? i18n("No usage yet") : ""),
-            usageReceivedAtMs: snapshot.usageReceivedAtMs,
-            updatedAt: snapshot.updatedAt
-        }
+                : (snapshot.placeholder === "noUsage" ? i18n("No usage yet") : "")
+        })
     }
 
     function subscriptionDateText(date) {

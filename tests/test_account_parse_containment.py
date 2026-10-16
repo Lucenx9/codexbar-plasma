@@ -23,6 +23,7 @@ QML = '''import QtQuick
 import QtTest
 import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
 import "SOURCE_URL/ProviderSnapshot.js" as ProviderSnapshot
+import "SOURCE_URL/ProviderViewModel.js" as ProviderViewModel
 import "SOURCE_URL/AccountResponse.js" as AccountResponse
 import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
 import "SOURCE_URL/Guards.js" as Guards
