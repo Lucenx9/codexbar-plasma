@@ -8,8 +8,8 @@ function initialState() {
     return {providers: {}, fields: {}, diagnostics: {}, reloadDeferred: false}
 }
 
-function changed(state, map, key, active, value) {
-    if (key.length === 0)
+function withPendingEntry(state, map, key, active, value) {
+    if (["providers", "fields", "diagnostics"].indexOf(map) < 0 || key.length === 0)
         return state
     var next = Guards.copyObject(state)
     next[map] = Guards.copyObject(state[map])
@@ -21,7 +21,7 @@ function changed(state, map, key, active, value) {
 }
 
 function providerPendingChanged(state, provider, active, desiredEnabled) {
-    return changed(state, "providers", Identity.providerMapKey(provider), active, desiredEnabled === true)
+    return withPendingEntry(state, "providers", Identity.providerMapKey(provider), active, desiredEnabled === true)
 }
 
 function isProviderPending(state, provider) {
@@ -30,7 +30,9 @@ function isProviderPending(state, provider) {
 }
 
 function enabledValue(state, provider, fallback) {
-    return isProviderPending(state, provider) ? state.providers[provider] === true : fallback === true
+    var key = Identity.providerMapKey(provider)
+    return key.length > 0 && Guards.hasOwnKey(state.providers, key)
+        ? state.providers[key] === true : fallback === true
 }
 
 function fieldKey(provider, fieldID) {
@@ -41,7 +43,7 @@ function fieldKey(provider, fieldID) {
 }
 
 function fieldPendingChanged(state, provider, fieldID, active) {
-    return changed(state, "fields", fieldKey(provider, fieldID), active, true)
+    return withPendingEntry(state, "fields", fieldKey(provider, fieldID), active, true)
 }
 
 function fieldPending(state, provider, fieldID) {
@@ -62,7 +64,7 @@ function hasFieldOperations(state, provider) {
 }
 
 function diagnosticPendingChanged(state, provider, active) {
-    return changed(state, "diagnostics", Identity.providerMapKey(provider), active, true)
+    return withPendingEntry(state, "diagnostics", Identity.providerMapKey(provider), active, true)
 }
 
 function isDiagnosticPending(state, provider) {

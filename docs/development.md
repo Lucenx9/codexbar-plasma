@@ -1442,8 +1442,9 @@ scoped usage failures, and the pre-existing nonce/timeout/stale-result behavior.
 
 `config/ProviderSource.js` plans allowlisted source-mode writes and validates
 matching provider/source result records. The Providers page owns the CLI 0.73.0
-capability gate, execution, deadlines, pending state, revision writes and
-diagnostic invalidation. `tests/tst_provider_source.qml` covers its pure boundary;
+capability gate, execution, deadlines, revision writes and
+diagnostic invalidation; `ProviderOperations.js` owns pending state and deferred
+reload decisions. `tests/tst_provider_source.qml` covers its pure boundary;
 `tests/test_provider_source.py` executes the production page handlers for
 clearing, failure, cancellation, timeout, command retirement, selection changes,
 serialization of source writes with provider-list reloads, and exclusion while
