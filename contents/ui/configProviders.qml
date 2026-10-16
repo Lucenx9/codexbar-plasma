@@ -148,6 +148,10 @@ KCM.SimpleKCM {
     // Localizes the classified command result. The precedence decision itself
     // lives in ProviderConfigProtocol.response; only the words live here.
     function providerCommandFailureText(result, context) {
+        // A process without an exit status explains no more than missing data.
+        if (result.outcome === "exitCodeError" && isFinite(result.exitCode)) {
+            return i18n("codexbar exited with code %1", Number(result.exitCode))
+        }
         switch (result.outcome) {
         case "tooLarge":
             return i18n("codexbar response exceeded the supported size.")
@@ -168,8 +172,6 @@ KCM.SimpleKCM {
                 : i18n("codexbar command failed.")
         case "timeout":
             return i18n("codexbar command timed out. Try again.")
-        case "exitCodeError":
-            return i18n("codexbar exited with code %1", Number(result.exitCode))
         default:
             if (context === "diagnostic" && (result.outcome === "empty" || result.outcome === "invalidPayload")) {
                 return i18n("codexbar did not return diagnostics.")
@@ -508,7 +510,8 @@ KCM.SimpleKCM {
             providerDescriptorsUnavailable = !ProviderConfigProtocol
                 .providerListHasSupportedDescriptors(next)
         }
-        errorText = descriptor.retainedErrorText ? String(descriptor.retainedErrorText) : ""
+        // reload() already restored the retained error; anything newer came from
+        // a write that failed while this list was in flight.
     }
 
     function shouldRetryProviderListWithoutDescriptors(stdoutText, stderrText) {
@@ -1176,7 +1179,7 @@ KCM.SimpleKCM {
             var rawStdoutText = data && data["stdout"] ? data["stdout"] : ""
             var stdoutText = SafeText.cliJsonText(rawStdoutText)
             var stderrText = data && data["stderr"] ? data["stderr"] : ""
-            var exitCode = data && data["exit code"] !== undefined ? Number(data["exit code"]) : 0
+            var exitCode = Guards.exitCode(data ? data["exit code"] : undefined)
             if (stdoutText === null) {
                 stdoutText = ""
                 stderrText = i18n("codexbar response exceeded the supported size.")

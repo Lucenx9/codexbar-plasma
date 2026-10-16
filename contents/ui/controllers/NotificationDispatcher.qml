@@ -1,6 +1,7 @@
 import QtQuick
 import org.kde.plasma.plasma5support as Plasma5Support
 import "../CommandLedger.js" as CommandLedger
+import "../Guards.js" as Guards
 import "../NotificationCommand.js" as NotificationCommand
 
 Item {
@@ -68,7 +69,7 @@ Item {
         }
 
         function actionActivated(data) {
-            var exitCode = data && data["exit code"] !== undefined ? Number(data["exit code"]) : 0
+            var exitCode = Guards.exitCode(data ? data["exit code"] : undefined)
             if (exitCode !== 0)
                 return false
             var stdoutText = data && typeof data["stdout"] === "string" ? data["stdout"] : ""

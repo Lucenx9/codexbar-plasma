@@ -66,6 +66,14 @@ TestCase {
         compare(SafeText.cliMessage(false, 500), "false")
     }
 
+    function test_truncationKeepsSurrogatePairsWhole() {
+        compare(SafeText.boundedDisplayText("a".repeat(119) + "\uD83D\uDE00", 120), "a".repeat(119))
+        compare(SafeText.boundedDisplayText("a".repeat(118) + "\uD83D\uDE00", 120), "a".repeat(118) + "\uD83D\uDE00")
+        compare(SafeText.cliMessage("a".repeat(119) + "\uD83D\uDE00", 120), "a".repeat(119))
+        var longest = SafeText.maximumDiagnosticLength
+        compare(SafeText.cliDiagnostic("a".repeat(longest - 1) + "\uD83D\uDE00", longest), "a".repeat(longest - 1))
+    }
+
     function test_skipsBoundedLeadingPaddingBeforeMessage() {
         compare(SafeText.boundedDisplayText(" ".repeat(5000) + "quota exceeded", 500), "quota exceeded")
         compare(SafeText.cliMessage(" ".repeat(5000) + "quota exceeded", 500), "quota exceeded")

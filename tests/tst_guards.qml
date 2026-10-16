@@ -5,6 +5,14 @@ import "../contents/ui/Guards.js" as Guards
 TestCase {
     name: "Guards"
 
+    function test_exitCodeFailsClosedWithoutANumericStatus() {
+        compare(Guards.exitCode(0), 0)
+        compare(Guards.exitCode("0"), 0)
+        compare(Guards.exitCode(" 127 "), 127)
+        for (var value of [undefined, null, "", "x", "1.5", [0], {}, true])
+            verify(isNaN(Guards.exitCode(value)), String(value))
+    }
+
     function test_hasOwnKeyFindsOwnPropertiesOnly() {
         var item = { present: 1, falsy: 0, empty: "" }
         verify(Guards.hasOwnKey(item, "present"))

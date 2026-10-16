@@ -622,6 +622,11 @@ function localCalendarDateKey(value) {
     if (dateOnly) {
         return dateOnly.key
     }
+    // Date() rolls an impossible day such as February 30 into the next month.
+    var datePrefix = /^\s*(\d{4}-\d{2}-\d{2})/.exec(value)
+    if (datePrefix && !parsedCalendarDateKey(datePrefix[1])) {
+        return ""
+    }
     var date = new Date(value)
     if (!isFinite(date.getTime())) {
         return ""
@@ -908,6 +913,19 @@ function normalizeCostProjects(items, currency) {
     return result
 }
 
+// A record without any cost or token amount is not a day of usage. The daily
+// history skips it; the model history also needs it to lack model breakdowns.
+function costRecordHasAmounts(item) {
+    return isFinite(firstStrictFiniteNumber(item.totalCost, item.costUSD))
+        || isFinite(firstStrictFiniteNumber(item.totalTokens, item.tokens))
+        || [item.inputTokens, item.outputTokens, item.cacheReadTokens,
+            firstStrictFiniteNumber(item.cacheCreationTokens, item.cacheWriteTokens)]
+            .some(function(part) {
+                var value = strictFiniteNumber(part)
+                return isFinite(value) && value >= 0
+            })
+}
+
 function normalizeCostDaily(items, currency, days, updatedAt, maximumDays) {
     var result = []
     if (!items || !Array.isArray(items)) {
@@ -932,14 +950,10 @@ function normalizeCostDaily(items, currency, days, updatedAt, maximumDays) {
         var cacheReadTokens = strictFiniteNumber(item.cacheReadTokens)
         var cacheCreationTokens = firstStrictFiniteNumber(
             item.cacheCreationTokens, item.cacheWriteTokens)
-        var hasTokenParts = (isFinite(inputTokens) && inputTokens >= 0)
-            || (isFinite(outputTokens) && outputTokens >= 0)
-            || (isFinite(cacheReadTokens) && cacheReadTokens >= 0)
-            || (isFinite(cacheCreationTokens) && cacheCreationTokens >= 0)
         if (!isFinite(tokens)) {
             tokens = sumTokenParts(inputTokens, outputTokens, cacheReadTokens, cacheCreationTokens)
         }
-        if (!isFinite(cost) && !isFinite(tokens) && !hasTokenParts) {
+        if (!costRecordHasAmounts(item)) {
             var blockedDate = parsedCalendarDateKey(label)
             if (blockedDate) {
                 blockedDateKeys[blockedDate.key] = true
@@ -1019,13 +1033,12 @@ function normalizeCostModels(items, currency, days, updatedAt, includeTokenRanki
     var historyDays = Math.floor(boundedHistoryDays(days, maximumDays))
     var firstItem = Math.max(0, items.length - historyDays)
     var window = costHistoryCalendarWindow(historyDays, updatedAt, maximumDays)
-    var firstInspectedItem = window
-        ? Math.max(0, items.length - maximumCostHistoryScanItems) : firstItem
+    var firstInspectedItem = Math.max(0, items.length - maximumCostHistoryScanItems)
     var modelDays = []
     for (var itemIndex = items.length - 1; itemIndex >= firstInspectedItem
             && modelDays.length < historyDays; itemIndex--) {
         var item = isCliRecord(items[itemIndex]) ? items[itemIndex] : null
-        if (!item) {
+        if (!item || (!hasOwnKey(item, "modelBreakdowns") && !costRecordHasAmounts(item))) {
             continue
         }
         if (window) {
@@ -1045,7 +1058,8 @@ function normalizeCostModels(items, currency, days, updatedAt, includeTokenRanki
     var summary = costModelSummary(modelDays, currency, includeTokenRanking)
     if (summary.tokenRanking) {
         summary.tokenRanking.sourceTruncated = summary.tokenRanking.sourceTruncated
-            || (window !== null && firstInspectedItem > 0)
+            || (firstInspectedItem > 0
+                && (window !== null || modelDays.length < historyDays))
     }
     return summary
 }

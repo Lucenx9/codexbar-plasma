@@ -139,6 +139,15 @@ function plainButtonText(value, hasContentItem) {
         : plainTextAsMnemonicLabel(value)
 }
 
+// Never end on the first half of a surrogate pair, whether this cut or the
+// earlier inspection bound split it: a lone half renders as a replacement
+// character.
+function truncatedText(text, limit) {
+    var result = text.length > limit ? text.slice(0, limit) : text
+    var code = result.charCodeAt(result.length - 1)
+    return code >= 0xD800 && code <= 0xDBFF ? result.slice(0, -1) : result
+}
+
 function boundedDisplayText(value, maximumLength) {
     if (isStructuredValue(value)) {
         return ""
@@ -149,7 +158,7 @@ function boundedDisplayText(value, maximumLength) {
         .replace(/[\u0000-\u001f\u007f]/g, " ")
         .replace(/\s+/g, " ")
         .trim()
-    return text.length > limit ? text.slice(0, limit) : text
+    return truncatedText(text, limit)
 }
 
 // Dynamic-loader warnings reach stderr before the CLI produces any output, so
@@ -212,5 +221,5 @@ function cliDiagnostic(value, maximumLength) {
         .replace(/\r\n?/g, "\n")
         .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, " ")
         .trim()
-    return text.length > limit ? text.slice(0, limit) : text
+    return truncatedText(text, limit)
 }

@@ -274,6 +274,16 @@ TestCase {
             {modelBreakdowns: [{modelName: "current", cost: 2, totalTokens: 10}]}
         ], "USD", 1, undefined, true).tokenRanking
         compare(legacy.sourceTruncated, false)
+
+        // Empty records do not spend that tail, but a scan that stops before
+        // filling it has lost data.
+        var unanchored = [{modelBreakdowns: [{modelName: "old", cost: 1, totalTokens: 5}]}]
+        for (i = 0; i < Normalizer.maximumCostHistoryScanItems - 1; i++)
+            unanchored.push({})
+        unanchored.push({modelBreakdowns: [{modelName: "current", cost: 2, totalTokens: 10}]})
+        var exhausted = Normalizer.normalizeCostModels(unanchored, "USD", 2, undefined, true).tokenRanking
+        compare(exhausted.rows.length, 1)
+        compare(exhausted.sourceTruncated, true)
     }
 
     function test_localPngUrl_data() {

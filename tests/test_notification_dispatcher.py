@@ -267,7 +267,7 @@ class NotificationDispatcherTests(unittest.TestCase):
         # so synchronous cached replies and replies after retirement are explicit.
         source = CONTROLLER.read_text()
         source = source.replace('import org.kde.plasma.plasma5support as Plasma5Support\n', '')
-        for module in ("CommandLedger", "NotificationCommand"):
+        for module in ("CommandLedger", "Guards", "NotificationCommand"):
             source = source.replace('"../' + module + '.js"',
                                     json.dumps((ROOT / "contents/ui" / (module + ".js")).as_uri()))
         source = source.replace('id: controller', 'id: controller\n    property alias testSource: notificationSource', 1)
