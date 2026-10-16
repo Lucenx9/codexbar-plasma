@@ -15,18 +15,15 @@ theme; provider accent colors stay consistent across themes.
 
 ### Quick install from a terminal
 
-In a Bash terminal in your Plasma 6 desktop session, run this as your regular
-user, without `sudo`:
+From a terminal in your Plasma 6 desktop session, run this as your regular user,
+without `sudo`. Bash must be installed; your terminal can use another shell.
 
 ```sh
-(
-  installer=$(curl -fsS --max-time 30 --max-filesize 65536 \
-    https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/scripts/update-widget.sh) &&
-  bash -c "$installer" codexbar-setup --setup
-)
+curl -fsSL -m 30 --max-filesize 65536 https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/setup.sh | bash
 ```
 
-This downloads and runs the installer from this repository's `main` branch.
+This runs a small bootstrap from this repository's `main` branch. It downloads
+the complete installer before running it and keeps prompts in your terminal.
 It installs the latest stable **release package** for your user, with no Git
 checkout or build. It reports missing command-line dependencies before
 downloading the package. The [runtime requirements](#requirements) still apply.
@@ -47,14 +44,23 @@ default to No; without a terminal they are skipped.
 <summary>Download verification, script inspection, and unattended setup</summary>
 
 The installer verifies the package's GitHub SHA-256 digests, published checksum,
-applet ID and version. The bootstrap keeps the downloaded script in shell
-memory. To inspect it first, download the URL above to a file you choose and
-run it with `bash FILE --setup`.
+applet ID and version. The bootstrap keeps the downloaded installer in shell
+memory. To inspect the bootstrap first, download the URL above to a file you
+choose and run it with `bash FILE`. The full installer is
+[`scripts/update-widget.sh`](https://github.com/Lucenx9/codexbar-plasma/blob/main/scripts/update-widget.sh),
+which you can also download, inspect, and run with `bash FILE --setup`.
 
-For unattended setup, add `--no-input` after `--setup` in the command;
-add `--with-cli` to explicitly install or reuse the private CLI too. Selecting
-it in widget settings is still required. A CLI failure leaves the widget
-installed and returns a nonzero status.
+The interactive pipeline can return success if the initial download fails
+without sending a script. For unattended or scripted setup, use this form to
+report download failures with a nonzero exit status and suppress optional prompts:
+
+```sh
+bash -o pipefail -c 'curl -fsSL --connect-timeout 10 --max-time 30 --max-filesize 65536 --max-redirs 5 --proto "=https" --proto-redir "=https" https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/setup.sh | bash -s -- --no-input'
+```
+
+Add `--with-cli` after `--no-input`, inside the quotes, to explicitly install
+or reuse the private CLI too. Selecting it in widget settings is still
+required. A CLI failure leaves the widget installed and returns a nonzero status.
 
 </details>
 

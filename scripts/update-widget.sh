@@ -658,3 +658,4 @@ fi
 
 setup_changed=true
 finish_setup
+# codexbar-plasma-updater-end

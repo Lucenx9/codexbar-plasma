@@ -1,18 +1,22 @@
 """Exercise standalone setup with isolated downloads, installs and CLI effects."""
 import hashlib
+import fcntl
 import json
 import os
 import pty
 from pathlib import Path
 import re
 import shutil
+import shlex
 import subprocess
 import tempfile
+import termios
 import unittest
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts/update-widget.sh"
+BOOTSTRAP = ROOT / "setup.sh"
 README = ROOT / "README.md"
 
 
@@ -30,9 +34,12 @@ class ReleaseSetupTests(unittest.TestCase):
         self.env = {"PATH": str(self.bin), "HOME": str(self.root / "home"),
                     "XDG_DATA_HOME": str(self.root / "data with spaces"), "FIXTURE": str(self.root)}
         self.installed = Path(self.env["XDG_DATA_HOME"]) / "plasma/plasmoids/app.codexbar.plasma"
+        shutil.copyfile(SCRIPT, self.root / "update-widget.sh")
+        shutil.copyfile(BOOTSTRAP, self.root / "setup.sh")
         self.fake("id", 'printf "%s\\n" "${TEST_UID:-1000}"')
         self.fake("systemctl", 'echo restart >> "$FIXTURE/calls"')
         self.fake("curl", '''
+printf '%s\\n' "$@" >> "$FIXTURE/downloads"
 output=""
 for arg in "$@"; do
   [[ "$arg" == https://* ]] && url="$arg"
@@ -43,6 +50,7 @@ while [[ $# -gt 0 ]]; do
 done
 case "$url" in
   */latest) file=release.json ;;
+  */main/setup.sh) file=setup.sh ;;
   */main/scripts/update-widget.sh) file=update-widget.sh ;;
   *.sha256) file=codexbar-plasma.plasmoid.sha256 ;;
   *.plasmoid) file=codexbar-plasma.plasmoid ;;
@@ -121,6 +129,46 @@ print(os.environ.get("CLI_OUTPUT", json.dumps({"status": os.environ.get("CLI_STA
         path = self.root / "calls"
         return path.read_text() if path.exists() else ""
 
+    def run_bootstrap(self, *args):
+        return subprocess.run([str(self.bin / "bash"), "-s", "--", *args],
+                              env=self.env, input=BOOTSTRAP.read_text(), text=True,
+                              start_new_session=True, capture_output=True, timeout=30)
+
+    def run_readme_unattended(self):
+        command = re.search(r"For unattended or scripted setup.*?```sh\n(.*?)\n```",
+                            README.read_text(), re.S).group(1)
+        return subprocess.run([shutil.which("sh"), "-c", command], env=self.env,
+                              text=True, input="", start_new_session=True,
+                              capture_output=True, timeout=30)
+
+    def run_readme(self, *args, input_answers=None, shell=None):
+        command = re.search(r"### Quick install from a terminal.*?```sh\n(.*?)\n```",
+                            README.read_text(), re.S).group(1)
+        if args:
+            # Keep args on the piped bootstrap Bash, including inside a pipefail wrapper.
+            if "| bash'" in command:
+                command = command.replace(
+                    "| bash'", "| bash -s -- " + shlex.join(args) + "'", 1)
+            else:
+                command += " -s -- " + shlex.join(args)
+        invocation = [shell or str(self.bin / "bash"), "-c", command]
+        if input_answers is None:
+            return subprocess.run(invocation, env=self.env, text=True, input="",
+                                  start_new_session=True, capture_output=True, timeout=30)
+        master, slave = pty.openpty()
+
+        def acquire_terminal():
+            os.setsid()
+            fcntl.ioctl(0, termios.TIOCSCTTY, 0)
+
+        try:
+            os.write(master, input_answers.encode())
+            return subprocess.run(invocation, env=self.env, text=True, stdin=slave,
+                                  preexec_fn=acquire_terminal, capture_output=True, timeout=30)
+        finally:
+            os.close(master)
+            os.close(slave)
+
     def test_fresh_install_and_rerun(self):
         result = self.run_setup()
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -156,29 +204,182 @@ print(os.environ.get("CLI_OUTPUT", json.dumps({"status": os.environ.get("CLI_STA
         self.assertIn(" -i ", self.calls())
 
     def test_readme_command_prompts_from_the_terminal(self):
-        # Run the documented command verbatim, with curl serving this checkout's
-        # installer. Piping the script into Bash made stdin the script itself, so
-        # a user at a real terminal never saw the CLI or restart prompts.
-        command = re.search(r"### Quick install from a terminal.*?```sh\n(.*?)\n```",
-                            README.read_text(), re.S).group(1)
-        shutil.copyfile(SCRIPT, self.root / "update-widget.sh")
-        master, slave = pty.openpty()
-        try:
-            os.write(master, b"y\n")
-            result = subprocess.run([str(self.bin / "bash"), "-c", command], env=self.env, text=True,
-                                    stdin=slave, capture_output=True, timeout=30)
-        finally:
-            os.close(master)
-            os.close(slave)
+        # The exact README pipeline must recover its controlling terminal even
+        # though the consumer Bash reads the bootstrap from a pipe.
+        result = self.run_readme(input_answers="y\n")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("Install or reuse the private official CodexBar CLI?", result.stderr)
         self.assertIn("managed-cli", self.calls())
         # Without a terminal the same command stays non-interactive.
         (self.root / "calls").write_text("")
-        result = subprocess.run([str(self.bin / "bash"), "-c", command], env=self.env, text=True,
-                                input="y\n", capture_output=True, timeout=30)
+        result = self.run_readme()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertNotIn("managed-cli", self.calls())
+        self.assertNotIn("/dev/tty", result.stderr)
+
+    def test_readme_pipeline_runs_from_sh(self):
+        result = self.run_readme(shell=shutil.which("sh"))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("widget installed", result.stderr)
+        self.assertNotIn("managed-cli", self.calls())
+
+    def test_readme_unattended_command_runs_from_sh(self):
+        result = self.run_readme_unattended()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("widget installed", result.stderr)
+        self.assertNotIn("managed-cli", self.calls())
+        self.assertNotIn("[y/N]", result.stderr)
+
+    def test_unattended_command_propagates_empty_download_failure(self):
+        for status in (6, 22, 28, 63):
+            with self.subTest(status=status):
+                self.fake("curl", f'printf "%s\\n" "curl: ({status}) synthetic download failure" >&2\nexit {status}')
+                result = self.run_readme_unattended()
+                self.assertEqual(result.returncode, status, result.stderr)
+                self.assertIn("synthetic download failure", result.stderr)
+                self.assertEqual(self.calls(), "")
+                self.assertFalse(self.installed.exists())
+
+    def test_readme_bootstrap_download_is_bounded(self):
+        result = self.run_readme()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        arguments = (self.root / "downloads").read_text().splitlines()
+        bootstrap_url = "https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/setup.sh"
+        first_request = arguments[:arguments.index(bootstrap_url)]
+        for flag, value in (("-m", "30"), ("--max-filesize", "65536")):
+            self.assertEqual(first_request[first_request.index(flag) + 1], value)
+
+    def test_unattended_command_propagates_installer_failure(self):
+        (self.root / "update-widget.sh").write_text("exit 7\n# codexbar-plasma-updater-end\n")
+        result = self.run_readme_unattended()
+        self.assertEqual(result.returncode, 7)
+
+    def test_headless_bootstrap_in_posix_mode_skips_prompts(self):
+        self.env["POSIXLY_CORRECT"] = "1"
+        result = self.run_bootstrap()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("widget installed", result.stderr)
+        self.assertNotIn("managed-cli", self.calls())
+        self.assertNotIn("/dev/tty", result.stderr)
+
+    def test_downloaded_bootstrap_keeps_terminal_stdin(self):
+        master, slave = pty.openpty()
+        try:
+            os.write(master, b"y\n")
+            result = subprocess.run([str(self.bin / "bash"), str(self.root / "setup.sh")],
+                                    env=self.env, text=True, stdin=slave,
+                                    start_new_session=True, capture_output=True, timeout=30)
+        finally:
+            os.close(master)
+            os.close(slave)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("managed-cli", self.calls())
+
+    def test_readme_pipeline_keeps_restart_consent(self):
+        self.installed.mkdir(parents=True)
+        metadata = self.installed / "metadata.json"
+        for answer, restart in (("\n", False), ("y\n", True)):
+            with self.subTest(answer=answer):
+                metadata.write_text(json.dumps({"KPackageStructure": "Plasma/Applet",
+                    "KPlugin": {"Id": "app.codexbar.plasma", "Version": "1.0.0"}}))
+                self.fake("codexbar", "exit 0")
+                (self.root / "calls").write_text("")
+                result = self.run_readme(input_answers=answer)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("Restart Plasma panels and desktop", result.stderr)
+                self.assertEqual("restart" in self.calls(), restart)
+
+    def test_bootstrap_no_input_ignores_available_terminal(self):
+        result = self.run_readme("--no-input", input_answers="y\n")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("[y/N]", result.stderr)
+        self.assertNotIn("managed-cli", self.calls())
+        self.assertNotIn("restart", self.calls())
+
+    def test_bootstrap_with_cli_is_explicit_without_a_terminal(self):
+        result = self.run_bootstrap("--no-input", "--with-cli")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("managed-cli", self.calls())
+        self.assertNotIn("[y/N]", result.stderr)
+
+    def test_bootstrap_rejects_unknown_options_before_download(self):
+        for option in ("--check", "--install", "--metadata", "--release-json"):
+            with self.subTest(option=option):
+                result = self.run_bootstrap(option)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("Unsupported setup option", result.stderr)
+                self.assertFalse((self.root / "downloads").exists())
+                self.assertEqual(self.calls(), "")
+
+    def test_bootstrap_help_does_not_download(self):
+        for option in ("-h", "--help"):
+            with self.subTest(option=option):
+                result = self.run_bootstrap(option)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("--no-input", result.stdout)
+                self.assertFalse((self.root / "downloads").exists())
+
+    def test_bootstrap_does_not_execute_a_failed_download(self):
+        self.fake("curl", '''
+printf '%s\\n' 'echo executed >> "$FIXTURE/calls"' '# codexbar-plasma-updater-end'
+exit 22
+''')
+        result = self.run_bootstrap()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Could not download the installer", result.stderr)
+        self.assertEqual(self.calls(), "")
+
+    def test_bootstrap_rejects_empty_and_incomplete_downloads(self):
+        for body in ("", 'echo executed >> "$FIXTURE/calls"\n'):
+            with self.subTest(body=body):
+                (self.root / "update-widget.sh").write_text(body)
+                result = self.run_bootstrap()
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("Installer download is incomplete", result.stderr)
+                self.assertEqual(self.calls(), "")
+
+    def test_truncated_bootstrap_does_not_start_downloads(self):
+        truncated = BOOTSTRAP.read_text().rsplit("}", 1)[0]
+        result = subprocess.run([str(self.bin / "bash"), "-s"], env=self.env,
+                                input=truncated, text=True, start_new_session=True,
+                                capture_output=True, timeout=30)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse((self.root / "downloads").exists())
+        self.assertEqual(self.calls(), "")
+
+    def test_bootstrap_preserves_installer_exit_status(self):
+        (self.root / "update-widget.sh").write_text("exit 7\n# codexbar-plasma-updater-end\n")
+        result = self.run_bootstrap()
+        self.assertEqual(result.returncode, 7)
+
+    def test_bootstrap_fetch_is_bounded_and_https_only(self):
+        result = self.run_bootstrap("--no-input")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        arguments = (self.root / "downloads").read_text().splitlines()
+        for flag, value in (("--connect-timeout", "10"), ("--max-time", "30"),
+                            ("--max-filesize", "65536"), ("--max-redirs", "5"),
+                            ("--proto", "=https"), ("--proto-redir", "=https")):
+            self.assertEqual(arguments[arguments.index(flag) + 1], value)
+
+    def test_readme_pipeline_keeps_curl_failure_visible(self):
+        self.fake("curl", 'printf "%s\\n" "curl: (22) synthetic download failure" >&2\nexit 22')
+        result = self.run_readme()
+        self.assertIn("synthetic download failure", result.stderr)
+        self.assertEqual(self.calls(), "")
+        self.assertFalse(self.installed.exists())
+
+    def test_readme_scripted_fetch_is_bounded_and_https_only(self):
+        result = self.run_readme_unattended()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        arguments = (self.root / "downloads").read_text().splitlines()
+        # First fetch is the bootstrap; later lines are the updater fetch.
+        setup_url = "https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/setup.sh"
+        end = arguments.index(setup_url) + 1
+        bootstrap_args = arguments[:end]
+        for flag, value in (("--connect-timeout", "10"), ("--max-time", "30"),
+                            ("--max-filesize", "65536"), ("--max-redirs", "5"),
+                            ("--proto", "=https"), ("--proto-redir", "=https")):
+            self.assertEqual(bootstrap_args[bootstrap_args.index(flag) + 1], value)
 
     def test_upgrade_never_restarts_without_consent(self):
         self.installed.mkdir(parents=True)

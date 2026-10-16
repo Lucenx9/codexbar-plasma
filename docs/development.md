@@ -40,12 +40,27 @@ For those, use `make install` or `./install.sh`. Release-package users can use
 
 ### Standalone release setup
 
-`scripts/update-widget.sh --setup` is also the downloadable installer documented
-in [Quick install](../README.md#quick-install-from-a-terminal). It must work as a
-single file outside a checkout. The README bootstrap downloads it completely
-into a shell variable and runs it with `bash -c`, keeping the terminal as stdin
-so setup prompts work; piping the script into `bash -s` would make stdin the
-script and silently skip every prompt. Setup reads the
+The [Quick install](../README.md#quick-install-from-a-terminal) command pipes
+[`setup.sh`](../setup.sh) into Bash, with a 30-second total timeout and 64 KiB
+size limit on that first download. The classic interactive pipeline can report
+success if curl fails before producing a script; the separate unattended
+example invokes Bash with `pipefail` so scripts receive that download failure,
+and also bounds connection time and redirects and enforces HTTPS-only transfers.
+Both examples work from a non-Bash calling shell. This small bootstrap downloads
+`scripts/update-widget.sh` completely into a shell variable before running it
+with `bash -c` and `--setup`. Its body is one brace group so a truncated bootstrap
+cannot execute a partial body. The updater download has HTTPS, time, and size
+bounds, and must end with `# codexbar-plasma-updater-end`; keep that marker last.
+The bootstrap accepts only `--with-cli`, `--no-input`, and help flags. It keeps
+terminal stdin when available, otherwise opens the controlling terminal at
+`/dev/tty` for the child, or uses `/dev/null` when no terminal is available.
+`--no-input` always selects `/dev/null`. It requires Bash, but the calling shell
+does not need to be Bash. The checkout's `install.sh` remains the source-build
+installer; `setup.sh` is not shipped in the widget package.
+
+The updater's `--setup` entry point must still work as a single file outside a
+checkout. Piping that full updater directly into Bash skips its prompts; the
+bootstrap restores terminal input before starting it. Setup reads the
 installed user package metadata under the absolute `XDG_DATA_HOME`, falling
 back to `~/.local/share`. An absent package uses version `0.0.0` for the shared
 release validation. Setup rejects invalid existing package metadata, including
@@ -86,7 +101,7 @@ the update modes keep their JSON output contract.
 
 Run `make check-python-test_release_setup check-update-widget check-shellcheck`
 while editing. Setup tests run the standalone script from a file, stdin, and the exact README
-command under a pseudo-terminal, with
+pipeline under a controlling pseudo-terminal, with
 synthetic release archives, temporary user data, and recording tools; they never
 install into the real desktop or download a CLI. Run `make check` and
 `make package` before PR delivery. Keep the README command and installer help
