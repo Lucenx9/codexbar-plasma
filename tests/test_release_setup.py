@@ -145,7 +145,12 @@ print(os.environ.get("CLI_OUTPUT", json.dumps({"status": os.environ.get("CLI_STA
         command = re.search(r"### Quick install from a terminal.*?```sh\n(.*?)\n```",
                             README.read_text(), re.S).group(1)
         if args:
-            command += " -s -- " + shlex.join(args)
+            # Keep args on the piped bootstrap Bash, including inside a pipefail wrapper.
+            if "| bash'" in command:
+                command = command.replace(
+                    "| bash'", "| bash -s -- " + shlex.join(args) + "'", 1)
+            else:
+                command += " -s -- " + shlex.join(args)
         invocation = [shell or str(self.bin / "bash"), "-c", command]
         if input_answers is None:
             return subprocess.run(invocation, env=self.env, text=True, input="",
@@ -235,21 +240,13 @@ print(os.environ.get("CLI_OUTPUT", json.dumps({"status": os.environ.get("CLI_STA
                 self.assertEqual(self.calls(), "")
                 self.assertFalse(self.installed.exists())
 
-    def test_interactive_download_failure_remains_visible(self):
-        self.fake("curl", 'printf "%s\\n" "curl: (22) synthetic download failure" >&2\nexit 22')
-        result = self.run_readme()
-        self.assertIn("synthetic download failure", result.stderr)
-        self.assertEqual(self.calls(), "")
-        self.assertFalse(self.installed.exists())
-
     def test_readme_bootstrap_download_is_bounded(self):
         result = self.run_readme()
         self.assertEqual(result.returncode, 0, result.stderr)
         arguments = (self.root / "downloads").read_text().splitlines()
         bootstrap_url = "https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/setup.sh"
         first_request = arguments[:arguments.index(bootstrap_url)]
-        for flag, value in (("--connect-timeout", "10"), ("--max-time", "30"),
-                            ("--max-filesize", "65536"), ("--max-redirs", "5")):
+        for flag, value in (("-m", "30"), ("--max-filesize", "65536")):
             self.assertEqual(first_request[first_request.index(flag) + 1], value)
 
     def test_unattended_command_propagates_installer_failure(self):
@@ -363,6 +360,26 @@ exit 22
                             ("--max-filesize", "65536"), ("--max-redirs", "5"),
                             ("--proto", "=https"), ("--proto-redir", "=https")):
             self.assertEqual(arguments[arguments.index(flag) + 1], value)
+
+    def test_readme_pipeline_keeps_curl_failure_visible(self):
+        self.fake("curl", 'printf "%s\\n" "curl: (22) synthetic download failure" >&2\nexit 22')
+        result = self.run_readme()
+        self.assertIn("synthetic download failure", result.stderr)
+        self.assertEqual(self.calls(), "")
+        self.assertFalse(self.installed.exists())
+
+    def test_readme_scripted_fetch_is_bounded_and_https_only(self):
+        result = self.run_readme_unattended()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        arguments = (self.root / "downloads").read_text().splitlines()
+        # First fetch is the bootstrap; later lines are the updater fetch.
+        setup_url = "https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/setup.sh"
+        end = arguments.index(setup_url) + 1
+        bootstrap_args = arguments[:end]
+        for flag, value in (("--connect-timeout", "10"), ("--max-time", "30"),
+                            ("--max-filesize", "65536"), ("--max-redirs", "5"),
+                            ("--proto", "=https"), ("--proto-redir", "=https")):
+            self.assertEqual(bootstrap_args[bootstrap_args.index(flag) + 1], value)
 
     def test_upgrade_never_restarts_without_consent(self):
         self.installed.mkdir(parents=True)

@@ -19,7 +19,7 @@ From a terminal in your Plasma 6 desktop session, run this as your regular user,
 without `sudo`. Bash must be installed; your terminal can use another shell.
 
 ```sh
-curl -fsSL --connect-timeout 10 --max-time 30 --max-filesize 65536 --max-redirs 5 https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/setup.sh | bash
+curl -fsSL -m 30 --max-filesize 65536 https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/setup.sh | bash
 ```
 
 This runs a small bootstrap from this repository's `main` branch. It downloads
@@ -55,7 +55,7 @@ without sending a script. For unattended or scripted setup, use this form to
 report download failures with a nonzero exit status and suppress optional prompts:
 
 ```sh
-bash -o pipefail -c 'curl -fsSL --connect-timeout 10 --max-time 30 --max-filesize 65536 --max-redirs 5 https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/setup.sh | bash -s -- --no-input'
+bash -o pipefail -c 'curl -fsSL --connect-timeout 10 --max-time 30 --max-filesize 65536 --max-redirs 5 --proto "=https" --proto-redir "=https" https://raw.githubusercontent.com/Lucenx9/codexbar-plasma/main/setup.sh | bash -s -- --no-input'
 ```
 
 Add `--with-cli` after `--no-input`, inside the quotes, to explicitly install
