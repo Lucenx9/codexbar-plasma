@@ -73,8 +73,16 @@ non-terminal stdin suppress prompts; `--with-cli` explicitly requests private
 CLI installation even without a terminal. The installed package's existing
 `manage-cli.py --action install` owns that operation, including offline reuse,
 download verification and locking. Setup never edits provider or widget config,
-and reports CLI failure separately from successful widget installation. Shell
-installer messages are technical English; the widget's QML catalogs are unchanged.
+and reports CLI failure separately from successful widget installation.
+CLI helper replies without a recognized success status, including malformed
+JSON, report a CLI setup failure while leaving the installed widget available.
+Installer messages are technical English; the widget's QML catalogs are unchanged.
+Setup lists all missing required commands together before invoking its platform
+and user guards, fetching release metadata, or changing the user package. It
+does not resolve a checkout path or require `dirname`. Its progress messages
+identify release discovery, download, verification, lock acquisition, and
+installation. Successful setup also reports the installed widget version. These messages are setup-only;
+the update modes keep their JSON output contract.
 
 Run `make check-python-test_release_setup check-update-widget check-shellcheck`
 while editing. Setup tests run the standalone script from a file, stdin, and the exact README

@@ -82,7 +82,7 @@ INNER
             archive.writestr("scripts/manage-cli.py", '''import json, os, pathlib
 with (pathlib.Path(os.environ["FIXTURE"]) / "calls").open("a") as stream:
     stream.write("managed-cli\\n")
-print(json.dumps({"status": os.environ.get("CLI_STATUS", "ready")}))
+print(os.environ.get("CLI_OUTPUT", json.dumps({"status": os.environ.get("CLI_STATUS", "ready")})))
 ''')
         digest = hashlib.sha256(package.read_bytes()).hexdigest()
         checksum = self.root / (package.name + ".sha256")
@@ -126,6 +126,14 @@ print(json.dumps({"status": os.environ.get("CLI_STATUS", "ready")}))
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(" -i ", self.calls())
         self.assertIn("widget installed", result.stderr)
+        self.assertIn("Installed widget version: 9.9.9", result.stderr)
+        stages = ["Checking the latest stable widget release",
+                  "Latest stable widget release: v9.9.9",
+                  "Downloading widget v9.9.9", "Verifying download integrity",
+                  "Waiting for the widget installation lock", "Installing widget v9.9.9",
+                  "widget installed"]
+        positions = [result.stderr.index(stage) for stage in stages]
+        self.assertEqual(positions, sorted(positions))
         self.assertNotIn("restart Plasma", result.stderr)
         self.assertIn("Install and select managed CLI", result.stdout)
         self.assertNotIn("restart", self.calls())
@@ -133,6 +141,9 @@ print(json.dumps({"status": os.environ.get("CLI_STATUS", "ready")}))
         result = self.run_setup()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("widget is current", result.stderr)
+        self.assertIn("Installed widget version: 9.9.9", result.stderr)
+        self.assertNotIn("Downloading widget", result.stderr)
+        self.assertNotIn("Installing widget", result.stderr)
         self.assertEqual(before, self.calls())
 
     def test_stdin_bootstrap_runs_setup_without_checkout_path(self):
@@ -145,10 +156,11 @@ print(json.dumps({"status": os.environ.get("CLI_STATUS", "ready")}))
         self.assertIn(" -i ", self.calls())
 
     def test_readme_command_prompts_from_the_terminal(self):
-        # Run the documented one-liner verbatim, with curl serving this checkout's
+        # Run the documented command verbatim, with curl serving this checkout's
         # installer. Piping the script into Bash made stdin the script itself, so
         # a user at a real terminal never saw the CLI or restart prompts.
-        command = re.search(r"^\(installer=\$\(curl .*\)$", README.read_text(), re.M).group(0)
+        command = re.search(r"### Quick install from a terminal.*?```sh\n(.*?)\n```",
+                            README.read_text(), re.S).group(1)
         shutil.copyfile(SCRIPT, self.root / "update-widget.sh")
         master, slave = pty.openpty()
         try:
@@ -206,7 +218,69 @@ print(json.dumps({"status": os.environ.get("CLI_STATUS", "ready")}))
         (self.bin / "kpackagetool6").unlink()
         result = self.run_setup()
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("missing required command: kpackagetool6", result.stderr)
+        self.assertIn("Missing required commands: kpackagetool6", result.stderr)
+        self.assertEqual(self.calls(), "")
+
+    def test_all_missing_dependencies_are_reported_before_download(self):
+        for tool in ("dirname", "uname", "id", "jq", "kpackagetool6", "python3"):
+            (self.bin / tool).unlink()
+        self.fake("curl", 'echo download >> "$FIXTURE/calls"; exit 99')
+        result = self.run_setup()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Missing required commands: uname id jq kpackagetool6 python3", result.stderr)
+        self.assertIn("distribution packages", result.stderr)
+        self.assertNotIn("command not found", result.stderr)
+        self.assertNotIn("Setup requires Linux", result.stderr)
+        self.assertEqual(result.stdout, "")
+        self.assertEqual(self.calls(), "")
+        self.assertFalse(Path(self.env["XDG_DATA_HOME"]).exists())
+
+    def test_standalone_setup_does_not_need_dirname(self):
+        (self.bin / "dirname").unlink()
+        result = self.run_setup()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("widget installed", result.stderr)
+        self.assertNotIn("command not found", result.stderr)
+
+    def test_update_modes_keep_json_without_setup_progress(self):
+        metadata = self.root / "local.json"
+        metadata.write_text(json.dumps({"KPlugin": {"Version": "0.0.0"}}))
+        for mode, expected in (("--check", "available"), ("--install", "installed")):
+            with self.subTest(mode=mode):
+                result = subprocess.run([str(self.bin / "bash"), str(SCRIPT), mode,
+                                         "--metadata", str(metadata)], env=self.env,
+                                        input="", text=True, capture_output=True, timeout=30)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(json.loads(result.stdout)["status"], expected)
+                self.assertEqual(result.stderr, "")
+
+    def test_update_mode_missing_jq_still_returns_json(self):
+        (self.bin / "jq").unlink()
+        result = subprocess.run([str(self.bin / "bash"), str(SCRIPT), "--check"],
+                                env=self.env, input="", text=True,
+                                capture_output=True, timeout=30)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(json.loads(result.stdout)["errorCode"], "missing_tool")
+        self.assertEqual(result.stderr, "")
+
+    def test_update_install_missing_dependency_still_returns_json(self):
+        (self.bin / "kpackagetool6").unlink()
+        result = subprocess.run([str(self.bin / "bash"), str(SCRIPT), "--install"],
+                                env=self.env, input="", text=True,
+                                capture_output=True, timeout=30)
+        self.assertNotEqual(result.returncode, 0)
+        reply = json.loads(result.stdout)
+        self.assertEqual(reply["errorCode"], "missing_tool")
+        self.assertEqual(reply["errorDetail"], "kpackagetool6")
+        self.assertEqual(result.stderr, "")
+
+    def test_invalid_release_version_is_not_printed_in_progress(self):
+        self.release["tag_name"] = "v9.9.9\x1b[31m"
+        self.save_release()
+        result = self.run_setup()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotIn("\x1b", result.stderr + result.stdout)
+        self.assertNotIn("Latest stable widget release:", result.stderr)
         self.assertEqual(self.calls(), "")
 
     def test_invalid_existing_metadata_is_preserved(self):
@@ -311,9 +385,22 @@ exit 1
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("managed-cli", self.calls())
         self.assertIn("Use managed CLI, then Apply", result.stdout)
+        self.assertIn("Private CLI is ready. Select it in widget settings", result.stdout)
+        self.assertGreater(result.stdout.index("Add Widgets"), result.stdout.index("Private CLI is ready"))
         result = self.run_setup("--with-cli", CLI_STATUS="unverified")
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("Widget is installed, but CLI setup failed", result.stderr)
+
+    def test_malformed_cli_reply_preserves_widget_and_reports_recovery(self):
+        for reply in ("garbage", "null", '"ready"', '{"status": []}', '{}'):
+            with self.subTest(reply=reply):
+                result = self.run_setup("--with-cli", CLI_OUTPUT=reply)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("Widget is installed, but CLI setup failed", result.stderr)
+                self.assertIn("Retry in General -> Managed CLI", result.stderr)
+                self.assertNotIn("jq:", result.stderr)
+                self.assertEqual(json.loads((self.installed / "metadata.json").read_text())
+                                 ["KPlugin"]["Version"], "9.9.9")
 
     def test_refuses_root_before_download(self):
         result = self.run_setup(TEST_UID="0")
