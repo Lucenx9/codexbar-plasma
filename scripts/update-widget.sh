@@ -63,6 +63,10 @@ emit_status() {
   local release_url="${8:-}"
   if [[ "$SETUP" == true ]]; then
     printf '%s\n' "$message" >&2
+    case "$status" in
+      installed) printf 'Installed widget version: %s\n' "${remote_version#v}" >&2 ;;
+      current) printf 'Installed widget version: %s\n' "$local_version" >&2 ;;
+    esac
     return
   fi
   jq -n \
@@ -90,6 +94,12 @@ require_command() {
     || fail "missing_tool" "missing required command: $1" "$1"
 }
 
+setup_progress() {
+  if [[ "$SETUP" == true ]]; then
+    printf '%s\n' "$1" >&2
+  fi
+}
+
 # Setup is explicitly interactive only when stdin is a terminal. Download the
 # script completely before running it; piped/headless runs never wait for input.
 confirm_setup() {
@@ -103,7 +113,6 @@ confirm_setup() {
 finish_setup() {
   [[ "$SETUP" == true ]] || return 0
   local cli_result cli_status
-  printf '%s\n' 'Add CodexBar through your panel: Add Widgets -> CodexBar.'
   if command -v codexbar >/dev/null 2>&1 && [[ "$WITH_CLI" == false ]]; then
     printf '%s\n' 'Found codexbar on PATH. If Plasma cannot find it, set this path in Diagnostics:'
     command -v codexbar
@@ -113,10 +122,10 @@ finish_setup() {
       printf '%s\n' 'Widget is installed, but CLI setup failed. Retry in General -> Managed CLI.' >&2
       return 1
     fi
-    cli_status="$(jq -r '.status // "error"' <<< "$cli_result")"
+    cli_status="$(jq -er '.status | select(type == "string")' <<< "$cli_result" 2>/dev/null)" || cli_status=error
     case "$cli_status" in
       ready|installed)
-        printf '%s\n' 'In widget settings, select General -> Managed CLI -> Use managed CLI, then Apply.'
+        printf '%s\n' 'Private CLI is ready. Select it in widget settings: General -> Managed CLI -> Use managed CLI, then Apply.'
         ;;
       *)
         printf '%s\n' 'Widget is installed, but CLI setup failed. Retry in General -> Managed CLI.' >&2
@@ -126,6 +135,7 @@ finish_setup() {
   else
     printf '%s\n' 'Set up the CLI in General -> Managed CLI -> Install and select managed CLI, then Apply.'
   fi
+  printf '%s\n' 'If CodexBar is not on your panel, add it through Add Widgets -> CodexBar.'
   printf '%s\n' 'Enable and configure your providers in widget settings -> Providers.'
   if [[ "$INSTALL_OPTION" == -u && "$setup_changed" == true ]]; then
     if command -v systemctl >/dev/null 2>&1 && confirm_setup 'Restart Plasma panels and desktop now to load the update?'; then
@@ -384,7 +394,18 @@ if [[ "$MODE" != "check" && "$MODE" != "install" ]]; then
   fail "invalid_invocation" "invalid update mode: $MODE"
 fi
 
-if ! command -v jq >/dev/null 2>&1; then
+if [[ "$SETUP" == true ]]; then
+  missing_commands=()
+  for required_command in jq sort head tail grep wc curl kpackagetool6 python3 sha256sum timeout flock mkdir mktemp rm; do
+    command -v "$required_command" >/dev/null 2>&1 || missing_commands+=("$required_command")
+  done
+  if [[ ${#missing_commands[@]} -gt 0 ]]; then
+    printf 'Missing required commands:' >&2
+    printf ' %s' "${missing_commands[@]}" >&2
+    printf '\nInstall the distribution packages providing these commands, then rerun setup without sudo.\n' >&2
+    exit 1
+  fi
+elif ! command -v jq >/dev/null 2>&1; then
   printf '{"status":"error","message":"missing required command: jq","localVersion":"","remoteVersion":"","assetUrl":"","errorCode":"missing_tool","errorDetail":"jq","releaseUrl":""}\n'
   exit 1
 fi
@@ -433,6 +454,7 @@ if [[ ! "$local_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 fi
 
 if [[ -z "$RELEASE_JSON" ]]; then
+  setup_progress 'Checking the latest stable widget release...'
   [[ -n "$TMP_DIR" ]] || TMP_DIR="$(mktemp -d)"
   RELEASE_JSON="${TMP_DIR}/release.json"
   release_url="https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest"
@@ -490,6 +512,8 @@ if [[ "$is_draft" == "true" || "$is_prerelease" == "true" ]]; then
   exit 0
 fi
 
+setup_progress "Latest stable widget release: $remote_version."
+
 if ! version_gt "$remote_version" "$local_version"; then
   emit_status "current" "widget is current" "$local_version" "$remote_version" "$asset_url"
   finish_setup
@@ -522,6 +546,7 @@ if [[ -z "$TMP_DIR" ]]; then
 fi
 package_path="${TMP_DIR}/${ASSET_NAME}"
 checksum_path="${TMP_DIR}/${CHECKSUM_NAME}"
+setup_progress "Downloading widget $remote_version and its checksum..."
 curl --fail --location --show-error --silent \
   --connect-timeout "$CURL_CONNECT_TIMEOUT_SECONDS" \
   --max-time "$CURL_CHECKSUM_MAX_TIME_SECONDS" \
@@ -542,6 +567,7 @@ curl --fail --location --show-error --silent \
   -H "User-Agent: CodexBar-Plasma-Updater" \
   "$asset_url" --output "$package_path" \
   || fail "release_download_failed" "failed to download release asset"
+setup_progress 'Verifying download integrity and widget package...'
 actual_checksum_size="$(wc -c < "$checksum_path")"
 actual_asset_size="$(wc -c < "$package_path")"
 if [[ "$actual_checksum_size" != "$checksum_size" ]]; then
@@ -571,6 +597,7 @@ fi
 package_version="$(normalize_version "$remote_version")"
 validate_package_manifest "$package_path" "$package_version" \
   || fail "package_invalid" "widget package manifest does not match the release"
+setup_progress 'Waiting for the widget installation lock...'
 acquire_install_lock \
   || fail "package_install_failed" "another widget installation did not finish in time"
 # Another instance may have installed this release while this one downloaded it.
@@ -601,6 +628,7 @@ fi
 widget_backup="$(snapshot_widget_package "$installed_widget_root")" \
   || fail "package_install_failed" "could not back up installed widget; update stopped"
 install_succeeded=false
+setup_progress "Installing widget $remote_version for the current user..."
 if timeout --kill-after="${KPACKAGE_INSTALL_KILL_AFTER_SECONDS}s" \
   "${KPACKAGE_INSTALL_MAX_TIME_SECONDS}s" \
   kpackagetool6 -t Plasma/Applet "$INSTALL_OPTION" "$package_path" >&2; then
