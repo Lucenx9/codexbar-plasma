@@ -488,6 +488,8 @@ computer, plus GNU `timeout` on this computer. Choose its independent 1–365 da
 window in General. This window
 starts at midnight UTC and ends at the exact load time displayed in the result;
 it does not follow the cost chart's calendar periods or range selector.
+The loaded token/request subtotal is emphasized; the unloaded placeholder uses
+secondary text.
 
 **Load local subtotal** scans only this computer, even when an SSH host is
 saved. To include another computer, enter one SSH alias or `user@host` in

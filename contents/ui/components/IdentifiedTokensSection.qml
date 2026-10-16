@@ -23,7 +23,7 @@ ColumnLayout {
 
     PlainHeading {
         text: i18n("Identified Codex tokens")
-        level: 3
+        level: 4
         type: Kirigami.Heading.Type.Primary
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
@@ -42,6 +42,8 @@ ColumnLayout {
             ? i18n("%1 across %2", section.applet.usageCountText(section.snapshot.totalTokens, "tokens"),
                 section.applet.usageCountText(section.snapshot.requestCount, "requests"))
             : i18n("No identified subtotal loaded.")
+        font.weight: section.snapshot ? Font.DemiBold : Font.Normal
+        opacity: section.snapshot ? 1 : section.applet.secondaryTextOpacity
         Layout.fillWidth: true
         wrapMode: Text.WordWrap
     }
