@@ -325,7 +325,7 @@ KCM.SimpleKCM {
         var rawStdoutText = data && data["stdout"] ? data["stdout"] : ""
         var stdoutText = SafeText.cliJsonText(rawStdoutText)
         var stderrText = data && data["stderr"] ? data["stderr"] : ""
-        var exitCode = data && data["exit code"] !== undefined ? Number(data["exit code"]) : 0
+        var exitCode = Guards.exitCode(data ? data["exit code"] : undefined)
         if (stdoutText === null) {
             stdoutText = ""
             stderrText = i18n("codexbar response exceeded the supported size.")
@@ -350,7 +350,9 @@ KCM.SimpleKCM {
                 ? safeError
                 : (shellTimeout
                     ? i18n("Diagnostic command timed out. Try again.")
-                    : i18n("codexbar exited with code %1", Number(exitCode))))
+                    : (isFinite(exitCode)
+                        ? i18n("codexbar exited with code %1", Number(exitCode))
+                        : i18n("codexbar command failed."))))
             : ""
     }
 

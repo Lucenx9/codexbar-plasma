@@ -263,6 +263,16 @@ TestCase {
         compare(actionText, "API key removed from the system wallet.")
     }
 
+    function test_cancelledKeyPromptClearsTheEarlierVerdict() {
+        verify(run("clear-key"))
+        accept(activeSource, {stdout: JSON.stringify({status: "cleared"}), "exit code": 0, "exit status": 0})
+        compare(actionText, "API key removed from the system wallet.")
+        verify(run("set-key"))
+        accept(activeSource, {stdout: JSON.stringify({status: "cancelled"}), "exit code": 0, "exit status": 0})
+        compare(actionText, "")
+        verify(!actionFailed)
+    }
+
     function test_stoppedListingReportsTimeout() {
         verify(run("models"))
         accept(helperSource.connected[0], {stdout: "", "exit code": 124})
@@ -529,7 +539,7 @@ class AiInsightsSettingsTests(unittest.TestCase):
                 capture_output=True, text=True, timeout=30)
         output = result.stdout + result.stderr
         self.assertEqual(result.returncode, 0, output)
-        self.assertIn("Totals: 20 passed, 0 failed", output)
+        self.assertIn("Totals: 21 passed, 0 failed", output)
 
     def test_clear_button_rearms_when_a_new_insight_arrives(self):
         insights = Surface("insights", ROOT)

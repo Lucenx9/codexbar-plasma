@@ -75,7 +75,8 @@ function parsedResponse(stdoutText) {
 function enabledRosterResponse(parsed, stderrText, exitCode, fallbackTitleResolver) {
     // This projection accepts malformed records as an empty roster and caps
     // oversized record arrays. Failed exits still cannot supply providers.
-    var code = exitCode === undefined ? 0 : Number(exitCode)
+    // Pure callers may omit the status; process owners pass Guards.exitCode().
+    var code = exitCode === undefined ? 0 : Guards.exitCode(exitCode)
     var processFailure = code !== 0 ? {
         outcome: "exitCodeError", message: boundedCliMessage(stderrText), exitCode: code
     } : null
@@ -238,7 +239,7 @@ function commandOutcome(payload, stderrText, exitCode) {
         || statusCancelled
         || statusFailed
     var supportedPayload = commandPayloadIsSupported(payload)
-    var code = Number(exitCode)
+    var code = Guards.exitCode(exitCode)
     var timedOut = code === 124 || code === 137
 
     if (supportedPayload && statusSupported && !cancelled && !statusFailed && code === 0) {

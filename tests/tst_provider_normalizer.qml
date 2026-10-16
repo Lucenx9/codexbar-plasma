@@ -1471,6 +1471,25 @@ TestCase {
         compare(models.rows[0].cost, 3);
     }
 
+    function test_emptyRecordsDoNotConsumeTheModelHistoryBudget() {
+        var daily = [
+            {date: "2026-10-12", totalCost: 1, modelBreakdowns: [{modelName: "model", cost: 1}]},
+            {date: "2026-10-13", totalCost: 2, modelBreakdowns: [{modelName: "model", cost: 2}]},
+            {}
+        ];
+        var rows = Normalizer.normalizeCostDaily(daily, "USD", 2, "2026-10-13");
+        var models = Normalizer.normalizeCostModels(daily, "USD", 2, "2026-10-13");
+        compare(rows[0].cost + rows[1].cost, 3);
+        compare(models.rows[0].cost, 3);
+        compare(Normalizer.normalizeCostModels(daily, "USD", 2).rows[0].cost, 3);
+    }
+
+    function test_invalidCalendarDatesDoNotRollOverIntoAScanDay() {
+        compare(Normalizer.localCalendarDateKey("2026-02-30"), "");
+        compare(Normalizer.localCalendarDateKey("2026-02-30T10:00:00Z"), "");
+        compare(Normalizer.localCalendarDateKey("2026-02-28T10:00:00"), "2026-02-28");
+    }
+
     function test_costHistoryDoesNotFillAnExplicitlyMalformedDayWithZero() {
         var rows = Normalizer.normalizeCostDaily([
             { date: "2026-08-28", totalCost: 3, totalTokens: 30 },

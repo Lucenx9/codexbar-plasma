@@ -425,7 +425,7 @@ TestCase {
         providers = [];
         selectedProviderID = "";
         loading = true;
-        errorText = "stale";
+        errorText = "";
         page = freshPage();
         var currentRevision = providerConfigRevisionValue();
         handleListResult({includeDescriptors: false, providerConfigRevision: currentRevision},
@@ -435,6 +435,29 @@ TestCase {
         compare(selectedProviderID, "codex");
         compare(loading, false);
         compare(errorText, "");
+    }
+    function test_missingExitStatusReadsAsMissingData() {
+        compare(providerCommandFailureText({outcome: "exitCodeError", exitCode: 7}, "list"),
+            "codexbar exited with code 7");
+        compare(providerCommandFailureText({outcome: "exitCodeError", exitCode: NaN}, "list"),
+            "codexbar did not return provider data.");
+        compare(providerCommandFailureText({outcome: "exitCodeError", exitCode: NaN}, "command"),
+            "codexbar did not return command data.");
+    }
+    // reload() resets the banner when the list starts, so an error present at
+    // completion came from a write that failed while the list was in flight.
+    function test_listResultKeepsAWriteFailureFromItsFlight() {
+        providers = [];
+        loading = true;
+        errorText = "";
+        page = freshPage();
+        var currentRevision = providerConfigRevisionValue();
+        // A toggle that failed after the list started.
+        errorText = "Codex: toggle failed";
+        handleListResult({includeDescriptors: false, providerConfigRevision: currentRevision},
+            '[{"provider": "codex", "displayName": "Codex", "enabled": true}]', "", 0);
+        compare(providers.length, 1);
+        compare(errorText, "Codex: toggle failed");
     }
 
     function test_listExitStatusControlsRosterReplacement_data() {

@@ -61,6 +61,16 @@ TestCase {
         verify(enabled.value === undefined)
     }
 
+    function test_missingExitCodesFailClosed() {
+        var payload = JSON.stringify([{provider: "codex", enabled: true}])
+        for (var exitCode of [NaN, null, "", "x", [0]]) {
+            compare(ProviderConfigProtocol.response("", "", exitCode, "setApiKey").outcome, "exitCodeError")
+            compare(ProviderConfigProtocol.response(payload, "", exitCode, "enabledRoster").outcome, "exitCodeError")
+        }
+        compare(ProviderConfigProtocol.response("", "", "0", "setApiKey").outcome, "success")
+        compare(ProviderConfigProtocol.response(payload, "", "0", "enabledRoster").outcome, "success")
+    }
+
     function test_fullAndEnabledRosterProfilesKeepTheirRecordContracts() {
         var payload = JSON.stringify([
             {provider: "codex", enabled: true, displayName: "Codex"},

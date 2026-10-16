@@ -53,6 +53,15 @@ function shellQuote(value) {
 var commandNotFoundExitCode = 127
 var commandNotExecutableExitCode = 126
 
+// The numeric exit status, or NaN when the engine reported none. A missing or
+// malformed status is a failure, never an implicit 0.
+function exitCode(value) {
+    if (typeof value === "number") {
+        return value
+    }
+    return typeof value === "string" && /^\s*-?\d+\s*$/.test(value) ? Number(value) : Number.NaN
+}
+
 function isCommandPathFailure(exitCode) {
     // The engine reports the code as a number or a string. Anything else,
     // including a single-element array that would coerce to 127, is not an

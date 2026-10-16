@@ -196,6 +196,9 @@ KCM.SimpleKCM {
                 report(i18n("kdialog is required to enter an API key."), true)
             } else if (saved === "unavailable") {
                 report(i18n("Could not save the API key. The system wallet is unavailable."), true)
+            } else {
+                // Cancelled: an earlier verdict must not read as this prompt's result.
+                report("", false)
             }
             Qt.callLater(refreshKeyStatus)
         } else if (action === "clear-key") {

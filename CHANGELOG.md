@@ -12,6 +12,16 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Treat a CLI process reply without an exit status as a failure in provider
+  settings, provider rosters, Diagnostics and notification actions, so a
+  missing status can no longer confirm a saved key or a clean diagnostic.
+- Keep a provider write error visible when an in-flight provider list finishes
+  after it, and clear an earlier AI Insights verdict when the API key prompt
+  is cancelled.
+- Keep empty cost records from displacing real days in the model cost history,
+  reject impossible calendar dates such as February 30 as a cost scan day
+  instead of rolling them into the next month, and never split an emoji or
+  other paired character when shortening display text.
 - Simplify terminal quick installation to `curl ... | bash` with a small
   bootstrap that downloads the full installer before execution, preserves
   interactive prompts, and supports other calling shells and headless setup.

@@ -129,7 +129,10 @@ Item {
         switch (result.outcome) {
         case "exitCodeError":
             providerRosterError = result.message.length > 0
-                ? result.message : i18n("codexbar exited with code %1", result.exitCode)
+                ? result.message
+                : (isFinite(result.exitCode)
+                    ? i18n("codexbar exited with code %1", result.exitCode)
+                    : i18n("codexbar did not return provider data."))
             break
         case "empty":
             providerRosterError = i18n("codexbar did not return provider data.")
@@ -155,7 +158,7 @@ Item {
             var rawStdoutText = data && data["stdout"] ? data["stdout"] : ""
             var stdoutText = SafeText.cliJsonText(rawStdoutText)
             var stderrText = data && data["stderr"] ? data["stderr"] : ""
-            var exitCode = data && data["exit code"] !== undefined ? Number(data["exit code"]) : 0
+            var exitCode = Guards.exitCode(data ? data["exit code"] : undefined)
             if (stdoutText === null) {
                 stdoutText = ""
                 stderrText = i18n("codexbar response exceeded the supported size.")
