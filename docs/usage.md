@@ -391,8 +391,10 @@ checked again. API key setup waits until that check and the list reload finish.
 Provider settings diagnostics also keep their last successful result and show
 an error when the CLI process fails or returns an invalid response. A failed
 process cannot replace the result even when it prints valid diagnostic JSON.
-An error inside a successful diagnostic report describes a failed provider fetch;
-its authentication, settings, and attempt details remain available for inspection.
+An error inside a successful diagnostic report describes a failed provider fetch.
+**Fetch error** shows the CLI's redacted description of that failure, and
+**Fetch attempts** lists each attempt's kind and outcome, such as
+`oauth succeeded`; authentication and settings details remain available too.
 Saving a provider configuration change clears that provider's previous diagnostic
 result and error. Older diagnostic replies cannot restore them. Select **Inspect
 redacted settings** again to inspect the new configuration. Failed changes and

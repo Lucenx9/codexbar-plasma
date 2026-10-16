@@ -2646,6 +2646,10 @@ msgid "Fetch attempts"
 msgstr "Tentativas de obtenção"
 
 #: contents/ui/configProviders.qml
+msgid "Fetch error"
+msgstr "Erro de obtenção"
+
+#: contents/ui/configProviders.qml
 msgid "Settings keys"
 msgstr "Chaves das configurações"
 

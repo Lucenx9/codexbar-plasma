@@ -45,6 +45,31 @@ function shellQuote(value) {
     return "'" + String(value).replace(/'/g, "'\\''") + "'"
 }
 
+// Wrap a command so the shell kills a hung child on schedule; disconnectSource
+// cannot. When GNU timeout is absent the raw command runs instead, so callers
+// keep working without coreutils. `sh -c` carries the conditional because a
+// run-nonce prefix (`NAME=value` assignment) is only valid before a simple
+// command, not before `if`.
+// `--foreground` keeps the bound silent: without it, a `--kill-after`
+// escalation SIGKILLs timeout's process group including timeout itself, and
+// any shell reaping that signalled child may announce it with `Killed` on
+// stderr, which would outrank the caller's timeout message. In the foreground
+// the signals go to the hung child only, timeout exits 124/137 normally, and
+// stderr stays empty so the CLI's own error text still flows through.
+// Trade-off: children the CLI itself spawns are not timed out, accepted
+// because callers run leaf JSON dumps.
+function boundedShellCommand(command, timeoutSeconds, killAfterSeconds) {
+    if (command.length === 0) {
+        return ""
+    }
+    var bounded = "timeout --foreground --kill-after=" + shellQuote(killAfterSeconds + "s")
+        + " " + shellQuote(timeoutSeconds + "s")
+        + " " + command
+    var script = "if command -v timeout >/dev/null 2>&1 && timeout --foreground --kill-after=1s 1s true >/dev/null 2>&1; then "
+        + bounded + "; else " + command + "; fi"
+    return "sh -c " + shellQuote(script)
+}
+
 // POSIX shells report 127 for a command that could not be found and 126 for one
 // that exists but could not be executed. Both mean the configured command path
 // is wrong, which needs a different answer from a provider or network failure.

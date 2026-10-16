@@ -114,6 +114,7 @@ TestCase {
         compare(diagnostic.provider, "codex");
         compare(diagnostic.source, "failed");
         compare(diagnostic.fetchAttempts, 1);
+        compare(diagnostic.fetchError, "Synthetic fetch failure");
         compare(diagnosticError, "");
         deliver(data.payload, "", 3);
         compare(diagnosticError, "codexbar exited with code 3");

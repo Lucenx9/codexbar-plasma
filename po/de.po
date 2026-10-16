@@ -2669,6 +2669,10 @@ msgid "Fetch attempts"
 msgstr "Abrufversuche"
 
 #: contents/ui/configProviders.qml
+msgid "Fetch error"
+msgstr "Abruffehler"
+
+#: contents/ui/configProviders.qml
 msgid "Settings keys"
 msgstr "Einstellungsschlüssel"
 

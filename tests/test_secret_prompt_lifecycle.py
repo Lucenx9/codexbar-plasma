@@ -595,6 +595,8 @@ TestCase {
         verify(command.indexOf("diagnose --provider") !== -1);
         verify(command.indexOf("--format json --redact") !== -1);
         verify(command.indexOf("codex") !== -1);
+        // The shell kills a hung diagnose before the QML deadline retires it.
+        verify(/timeout --foreground --kill-after=\S*5s\S* \S*50s\S* \S*codexbar\S* diagnose/.test(command), command);
         compare(providerDiagnosticLoadingFor("codex"), true);
         setProviderDiagnosticLoading("codex", false);
     }
@@ -673,6 +675,16 @@ TestCase {
         var enriched = providerSettingsRows({provider: "openai", enabled: true});
         var enrichedLabels = enriched.map(function(row) { return row.label; });
         verify(enrichedLabels.indexOf("Source") !== -1);
+        verify(enrichedLabels.indexOf("Fetch error") === -1);
+        compare(enriched[enrichedLabels.indexOf("Fetch attempts")].value, "2");
+        setProviderDiagnostic("openai", {source: "failed", sourceMode: "auto",
+            authModes: "", authConfigured: false, fetchAttempts: 1,
+            fetchAttemptOutcomes: "api skipped", fetchError: "Check provider credentials", settingsKeys: ""});
+        var failed = providerSettingsRows({provider: "openai", enabled: true});
+        var failedLabels = failed.map(function(row) { return row.label; });
+        compare(failed[failedLabels.indexOf("Fetch error")].value, "Check provider credentials");
+        compare(failedLabels.indexOf("Fetch error"), failedLabels.indexOf("Source") + 1);
+        compare(failed[failedLabels.indexOf("Fetch attempts")].value, "api skipped");
         providerDiagnostics = ({});
     }
     // The CLI helper prints the redacted diagnose, the toggle and, for key
@@ -893,7 +905,10 @@ class ProviderCommandWiringTests(unittest.TestCase):
             r"^    readonly property int configSecret\w+:.*(?:\n[ \t]{8,}\S.*)*", source, re.MULTILINE)
         qml = QML_WIRING.replace("SOURCE_URL", (ROOT / "contents/ui").as_uri())
         qml = qml.replace("SOURCE_FUNCTIONS", "\n".join(functions))
-        qml = qml.replace("SOURCE_PROPERTIES", "\n".join([serial, command_timeout] + secret_prompt_timeouts))
+        diagnostic_timeouts = re.findall(
+            r"^    readonly property int providerDiagnostic\w+: \d+$", source, re.MULTILINE)
+        qml = qml.replace("SOURCE_PROPERTIES", "\n".join(
+            [serial, command_timeout] + secret_prompt_timeouts + diagnostic_timeouts))
         fixture = cls.directory / "tst_provider_wiring.qml"
         fixture.write_text(qml)
         result = subprocess.run(

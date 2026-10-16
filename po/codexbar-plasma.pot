@@ -3100,6 +3100,10 @@ msgid "Source"
 msgstr ""
 
 #: contents/ui/configProviders.qml
+msgid "Fetch error"
+msgstr ""
+
+#: contents/ui/configProviders.qml
 msgid "Source mode"
 msgstr ""
 

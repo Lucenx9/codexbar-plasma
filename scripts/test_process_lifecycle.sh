@@ -625,6 +625,8 @@ for function_name in ("runProviderListCommand", "setEnabled", "loadProviderSetti
     body = providers.function_body(function_name)
     if "timeoutMs: configCommandTimeoutMs" not in body:
         raise AssertionError(f"noninteractive {function_name} commands must be bounded")
+if "Guards.boundedShellCommand(" not in providers.function_body("loadProviderSettings"):
+    raise AssertionError("provider diagnostics must let the shell kill a hung CLI child")
 # Interactive prompts own one long escape-hatch deadline so a wedged kdialog
 # cannot disable a provider's actions until the page reopens. They must never
 # share the short noninteractive deadline, which would kill a live dialog.
