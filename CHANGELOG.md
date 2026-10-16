@@ -12,6 +12,8 @@ For earlier versions, see [GitHub Releases](https://github.com/Lucenx9/codexbar-
 
 ### Fixed
 
+- Show a Close tooltip on dismissible notes for pointer hover and keyboard
+  focus, matching every other icon-only ToolButton in the applet.
 - Align popup Usage dashboard summaries in equal columns with the same label
   spacing as Cost summaries, and reveal truncated summary labels and values on hover.
   Match the identified Codex subtotal heading to other sections and emphasize
