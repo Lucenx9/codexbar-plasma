@@ -251,14 +251,14 @@ class ProviderDataTest(unittest.TestCase):
         restore_body = function_body(main_text, "restoreUsageCache")
         restore_steps = [restore_body.find(fragment) for fragment in (
             "UsageCache.decode(", "root.normalizeProvider(payload)", "item.tokenCost = null",
-            "UsageCache.restore(cachedProviders, providers, nowMs, selectedAccounts)",
-            "providers = ProviderOrder.orderedItems(merged, providerOrderRaw)",
+            "UsageState.restored(providers, cachedProviders,",
+            "selectedAccounts, providerOrderRaw, context, nowMs)",
         )]
         if min(restore_steps) < 0 or restore_steps != sorted(restore_steps):
             raise AssertionError("startup cache restore must merge normalized, redacted quotas with early live results")
         if "providers.every(" in restore_body:
             raise AssertionError("a successful partial startup refresh must not bypass cached-provider restoration")
-        if "UsageCache.reconcile(providers, items, nowMs)" not in function_body(main_text, "commitUsageSnapshot"):
+        if "UsageState.accepted(providers, items, usageCacheContext(), Date.now())" not in function_body(main_text, "commitUsageSnapshot"):
             raise AssertionError(
                 "the live refresh must reconcile without an account pin; only the fingerprinted cache restore may skip "
                 "the account-key comparison for a provider whose explicit selection it verified"
@@ -268,11 +268,28 @@ class ProviderDataTest(unittest.TestCase):
             if not code_contains(panel_clock_body, fragment):
                 raise AssertionError("the panel clock must update time and expire usage even without automatic refresh")
 
+    def test_usage_cache_publication_has_one_effect_owner(self):
+        source = (root / "contents/ui/main.qml").read_text()
+        self.assertEqual(len(re.findall(r"Plasmoid\.configuration\.usageCache\s*=", source)), 1)
+        owner = function_body(source, "applyUsageTransition")
+        self.assertIn("result.cacheValue !== null", owner)
+        self.assertIn("Plasmoid.configuration.usageCache = result.cacheValue", owner)
+        for name in ("invalidateUsageData", "restoreUsageCache", "commitUsageSnapshot",
+                     "failUsageRefresh", "expireStaleUsage"):
+            self.assertIn("applyUsageTransition(", function_body(source, name))
+        for name in ("UsageState.js", "ProviderViewModel.js"):
+            pure = (root / "contents/ui" / name).read_text()
+            for effect in ("Plasmoid.", "root.", "i18n(", "Date.now(", "Qt."):
+                self.assertNotIn(effect, pure)
+
     def test_provider_presentation_metadata(self):
         present_provider_body = function_body(main_text, "presentProviderSnapshot")
+        if not code_contains(present_provider_body, "ProviderViewModel.presented(snapshot,"):
+            raise AssertionError("provider presentation must use the shared projection")
+        projection = (root / "contents/ui/ProviderViewModel.js").read_text()
         for fragment in ("statusKnown: snapshot.statusRecord !== null", "title: Normalizer.boundedDisplayText(",
                          "status: Normalizer.boundedDisplayText(", "usageReceivedAtMs: snapshot.usageReceivedAtMs"):
-            if not code_contains(present_provider_body, fragment):
+            if not code_contains(projection, fragment):
                 raise AssertionError("provider presentation must retain bounded metadata and original receipt time")
 
 

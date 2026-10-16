@@ -109,7 +109,19 @@ synchronized.
   source and does not use a one-shot nonce.
 - `contents/ui/main.qml` owns provider notification policy and routing,
   account coordination, selected state, quota-cache persistence, configuration updates, and external
-  effects. Its adapters supply the panel and popup.
+  effects. Its adapters supply the panel and popup. `UsageState.js` plans live
+  commits, failures, restore, invalidation and expiry from explicit snapshots,
+  cache context and time. Its publication result distinguishes no cache write
+  (`null`) from clearing the cache (`""`), and gives semantic update-label and
+  clock/notification decisions. `applyUsageTransition` is the single persisted
+  usage-cache writer; it clears notification suppression before publishing fresh
+  data and keeps localization and configuration effects in QML.
+  `ProviderViewModel.js` projects normalized snapshots and explicit localized
+  decorations into the shared popup/account model. It bounds display metadata,
+  converts Qt sequences to arrays and preserves receipt time without copying
+  unknown fields. `main.qml` still localizes rows, costs, labels and provider URLs.
+  Direct `tst_usage_state.qml` and `tst_provider_view_model.qml` cover these
+  boundaries; existing metadata/reset fixtures exercise the production adapters.
 - `contents/ui/PanelDisplay.js` constructs compact quota candidates from explicit
   normalized rows, canonical provider identity, optional provider cost and a
   QML-localized included-plan label. It preserves provider preference order and
@@ -417,7 +429,8 @@ synchronized.
   `contents/config/main.xml` and bound through `cfg_*` in config pages and
   `Plasmoid.configuration` at runtime.
 - `UsageCache.js` reconciles failed usage snapshots and projects a bounded quota
-  cache. `main.qml` owns context invalidation, configuration reads/writes, and
+  cache. `UsageState.js` composes its retention rules into publication decisions.
+  `main.qml` owns context invalidation effects, configuration reads/writes, and
   stale notification suppression. Its minute timer expires retained measurements
   even when automatic refresh is disabled. Persisted records never bypass
   normalization.

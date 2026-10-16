@@ -28,6 +28,7 @@ import QtTest
 import "SOURCE_URL/components" as Components
 import "SOURCE_URL/ProviderNormalizer.js" as Normalizer
 import "SOURCE_URL/ProviderSnapshot.js" as ProviderSnapshot
+import "SOURCE_URL/ProviderViewModel.js" as ProviderViewModel
 import "SOURCE_URL/UsageResponse.js" as UsageResponse
 import "SOURCE_URL/ProviderIdentity.js" as ProviderIdentity
 import "SOURCE_URL/ProviderOrder.js" as ProviderOrder
